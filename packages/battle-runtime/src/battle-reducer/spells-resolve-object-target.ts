@@ -263,11 +263,7 @@ function resolveObjectTargetSpellAttackCore(
         )
       : null;
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.invocation.procedure === "spellAttackDamage" &&
-    input.invocation.objectHitEffect.kind === "igniteFlammableUnattended" &&
-    ignitionFact === null
-  ) {
+  if (objectTargetIgnitionFactIsMissing(input, ignitionFact)) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
@@ -584,6 +580,17 @@ function resolveObjectTargetSpellAttackCore(
     objectDamages: [objectDamage],
     objectIgnitions,
   };
+}
+
+function objectTargetIgnitionFactIsMissing(
+  input: ObjectTargetSpellAttackCoreInput,
+  ignitionFact: ReturnType<typeof spellObjectIgnitionFact>,
+): boolean {
+  return (
+    input.invocation.procedure === "spellAttackDamage" &&
+    input.invocation.objectHitEffect.kind === "igniteFlammableUnattended" &&
+    ignitionFact === null
+  );
 }
 
 function resolvedObjectTargetSpellAttackResult(input: {

@@ -4836,7 +4836,9 @@ function assertLevelOneHuntersMark(input: {
     _tag: "Right",
     right: expect.arrayContaining([
       expect.objectContaining({
-        unitId: rangerFavoredEnemyUnitId,
+        tag: "spellAccessFreeCast",
+        sourceUnitId: rangerFavoredEnemyUnitId,
+        spellId: authoredUnitId("hunters_mark"),
         count: 2,
         expended: 1,
       }),
@@ -4863,7 +4865,9 @@ function assertLevelOneHuntersMark(input: {
     _tag: "Right",
     right: expect.arrayContaining([
       expect.objectContaining({
-        unitId: rangerFavoredEnemyUnitId,
+        tag: "spellAccessFreeCast",
+        sourceUnitId: rangerFavoredEnemyUnitId,
+        spellId: authoredUnitId("hunters_mark"),
         count: 2,
         expended: 0,
       }),

@@ -1217,58 +1217,115 @@ export function validateSpellTargetList(
     return antimagicInterdiction;
   }
   const seen = new Set<CombatantId>();
+  const entryIssue = validateSpellTargetListEntries(
+    state,
+    actorId,
+    invocation,
+    targetIds,
+    facts,
+    seen,
+  );
+  if (entryIssue !== null) return entryIssue;
+  const areaIssue = validateSpellTargetListArea(
+    state,
+    actorId,
+    invocation,
+    targetIds,
+    facts,
+  );
+  if (areaIssue !== null) return areaIssue;
+  return null;
+}
+
+function validateSpellTargetListEntries(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation<MechanicalTargetListSpellInvocation>,
+  targetIds: readonly CombatantId[],
+  facts: readonly BattleSpellTargetListSpatialFact[],
+  seen: Set<CombatantId>,
+): string | null {
   for (const targetId of targetIds) {
-    if (seen.has(targetId)) {
-      return "Spell target list must not repeat a target.";
-    }
-    seen.add(targetId);
+    const issue = validateSpellTargetListEntry(
+      state,
+      actorId,
+      invocation,
+      targetId,
+      facts,
+      seen,
+    );
+    if (issue !== null) return issue;
+  }
+  return null;
+}
+
+function validateSpellTargetListEntry(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation<MechanicalTargetListSpellInvocation>,
+  targetId: CombatantId,
+  facts: readonly BattleSpellTargetListSpatialFact[],
+  seen: Set<CombatantId>,
+): string | null {
+  if (seen.has(targetId)) return "Spell target list must not repeat a target.";
+  seen.add(targetId);
+  if (
+    invocation.targeting.kind !== "pointOriginSphereTargetList" &&
+    !spellTargetSatisfiesNonDispositionRequirements(
+      state,
+      actorId,
+      targetId,
+      invocation,
+      facts,
+    )
+  ) {
+    return "Spell targets must be combatants within the selected spell's supported range.";
+  }
+  if (
+    spellInvocationRequiresKnownWillingTarget(invocation) &&
+    !spellTargetIsKnownWilling(actorId, targetId, invocation, facts)
+  ) {
+    return "Spell targets must be known willing combatants.";
+  }
+  return null;
+}
+
+function validateSpellTargetListArea(
+  state: BattleState,
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation<MechanicalTargetListSpellInvocation>,
+  targetIds: readonly CombatantId[],
+  facts: readonly BattleSpellTargetListSpatialFact[],
+): string | null {
+  if (
+    invocation.procedure !== "directHitPointRestoration" ||
+    invocation.targeting.kind !== "pointOriginSphereTargetList"
+  ) {
+    return null;
+  }
+  const expectedRadiusFeet = invocation.targeting.area.radiusFeet;
+  const matchingAreaFacts = facts.filter(
+    (fact) =>
+      fact.kind === "spellTargetsInPointOriginSphere" &&
+      fact.casterId === actorId &&
+      fact.sourceProcedureRef === invocation.sourceProcedureRef &&
+      fact.areaId.length > 0 &&
+      fact.radiusFeet === expectedRadiusFeet &&
+      sameCombatantIdSet(fact.targetIds, targetIds),
+  );
+  if (matchingAreaFacts.length !== 1) {
+    return "Area healing targets must share one selected point-origin Sphere.";
+  }
+  for (const targetId of targetIds) {
     if (
-      invocation.targeting.kind !== "pointOriginSphereTargetList" &&
-      !spellTargetSatisfiesNonDispositionRequirements(
+      !spellTargetHasNonSpatialPrerequisites(
         state,
         actorId,
         targetId,
         invocation,
-        facts,
       )
     ) {
       return "Spell targets must be combatants within the selected spell's supported range.";
-    }
-    if (
-      spellInvocationRequiresKnownWillingTarget(invocation) &&
-      !spellTargetIsKnownWilling(actorId, targetId, invocation, facts)
-    ) {
-      return "Spell targets must be known willing combatants.";
-    }
-  }
-  if (
-    invocation.procedure === "directHitPointRestoration" &&
-    invocation.targeting.kind === "pointOriginSphereTargetList"
-  ) {
-    const expectedRadiusFeet = invocation.targeting.area.radiusFeet;
-    const matchingAreaFacts = facts.filter(
-      (fact) =>
-        fact.kind === "spellTargetsInPointOriginSphere" &&
-        fact.casterId === actorId &&
-        fact.sourceProcedureRef === invocation.sourceProcedureRef &&
-        fact.areaId.length > 0 &&
-        fact.radiusFeet === expectedRadiusFeet &&
-        sameCombatantIdSet(fact.targetIds, targetIds),
-    );
-    if (matchingAreaFacts.length !== 1) {
-      return "Area healing targets must share one selected point-origin Sphere.";
-    }
-    for (const targetId of targetIds) {
-      if (
-        !spellTargetHasNonSpatialPrerequisites(
-          state,
-          actorId,
-          targetId,
-          invocation,
-        )
-      ) {
-        return "Spell targets must be combatants within the selected spell's supported range.";
-      }
     }
   }
   return null;

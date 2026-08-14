@@ -218,6 +218,7 @@ describe("Admin Mirror publisher", () => {
       initialCombatants: [
         {
           admissionSource: { kind: "encounterParticipant" },
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           combatantId: "goblin",
           initiative: 10,
           kind: "statBlock",

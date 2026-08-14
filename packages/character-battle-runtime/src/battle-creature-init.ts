@@ -720,6 +720,47 @@ function characterBattleResourceInits(
   readonly CharacterBattleResourceInit[],
   BattleCreatureInitIssue
 > {
+  const admittedResourceProjection =
+    characterBattleResourceInitsFromAdmittedUnits(
+      build,
+      unitLibrary,
+      resourceExpenditures,
+      classLevels,
+      druidWildShapeFacts,
+      admittedUnits,
+    );
+  const spellAccessResourceProjection =
+    characterBattleResourceInitsFromSpellAccesses(
+      build,
+      unitLibrary,
+      resourceExpenditures,
+    );
+  const issues = [
+    ...admittedResourceProjection.issues,
+    ...spellAccessResourceProjection.issues,
+  ];
+  if (issues.length > 0) {
+    return battleCreatureInitIssue(issues.join("; "));
+  }
+  return Either.right([
+    ...admittedResourceProjection.resources,
+    ...spellAccessResourceProjection.resources,
+  ]);
+}
+
+type CharacterBattleResourceProjection = {
+  readonly resources: readonly CharacterBattleResourceInit[];
+  readonly issues: readonly string[];
+};
+
+function characterBattleResourceInitsFromAdmittedUnits(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+  resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
+  classLevels: CharacterBattleClassLevels,
+  druidWildShapeFacts: CharacterBuildDruidWildShapeFacts | undefined,
+  admittedUnits: readonly UnitRecord[],
+): CharacterBattleResourceProjection {
   const resources: CharacterBattleResourceInit[] = [];
   const issues: string[] = [];
   const buildUnitIds = new Set(
@@ -748,6 +789,16 @@ function characterBattleResourceInits(
       resources.push(init.right);
     }
   }
+  return { resources, issues };
+}
+
+function characterBattleResourceInitsFromSpellAccesses(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+  resourceExpenditures: readonly CharacterSheetResourceExpenditure[],
+): CharacterBattleResourceProjection {
+  const resources: CharacterBattleResourceInit[] = [];
+  const issues: string[] = [];
   for (const access of characterSheetSpellAccessesForBuild({
     build,
     unitLibrary,
@@ -782,10 +833,7 @@ function characterBattleResourceInits(
       usesRemaining: 1 - Number(expended),
     });
   }
-  if (issues.length > 0) {
-    return battleCreatureInitIssue(issues.join("; "));
-  }
-  return Either.right(resources);
+  return { resources, issues };
 }
 
 function characterBattleResourceInit(

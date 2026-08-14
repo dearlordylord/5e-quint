@@ -14,6 +14,7 @@ import {
   loadoutHoleId,
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
+import { statBlockCombatant } from "../test-support/mcp-acceptance-scenarios.ts";
 
 const BATTLE_DEMO_VERTICAL_TEST_TIMEOUT_MS = 10_000;
 
@@ -151,12 +152,14 @@ describe("end-user MCP vertical", () => {
       initialCombatants: [
         {
           kind: "characterSession",
+          ammunitionStocks: [],
           characterId: testCharacterId(draftId),
           combatantId: "fighter",
           initiative: 18,
         },
         {
           kind: "statBlock",
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
@@ -347,18 +350,21 @@ describe("end-user MCP vertical", () => {
       initialCombatants: [
         {
           kind: "characterSession",
+          ammunitionStocks: [],
           characterId: testCharacterId(fighterDraftId),
           combatantId: "fighter",
           initiative: 18,
         },
         {
           kind: "characterSession",
+          ammunitionStocks: [],
           characterId: testCharacterId(wizardDraftId),
           combatantId: "wizard",
           initiative: 14,
         },
         {
           kind: "statBlock",
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           statBlockId: "stat_block_skeleton",
           combatantId: "skeleton-a",
           initiative: 8,
@@ -366,6 +372,7 @@ describe("end-user MCP vertical", () => {
         },
         {
           kind: "statBlock",
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           statBlockId: "stat_block_skeleton",
           combatantId: "skeleton-b",
           initiative: 7,
@@ -373,6 +380,7 @@ describe("end-user MCP vertical", () => {
         },
         {
           kind: "statBlock",
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 6,
@@ -788,13 +796,21 @@ describe("end-user MCP vertical", () => {
     const started = callTool(root, "start_battle", {
       battleId: "battle:mcp-demo-scenario",
       initialCombatants: [
-        statBlockCombatant("goblin-a", "stat_block_goblin_warrior", 22),
+        statBlockCombatant("goblin-a", "stat_block_goblin_warrior", 22, [
+          { ammunition: "arrow", remaining: 20 },
+        ]),
         characterCombatant(bardDraftId, "bard", 21),
         characterCombatant(fighterDraftId, "fighter", 20),
         characterCombatant(wizardDraftId, "wizard", 19),
-        statBlockCombatant("goblin-b", "stat_block_goblin_warrior", 18),
-        statBlockCombatant("skeleton-a", "stat_block_skeleton", 16),
-        statBlockCombatant("skeleton-b", "stat_block_skeleton", 14),
+        statBlockCombatant("goblin-b", "stat_block_goblin_warrior", 18, [
+          { ammunition: "arrow", remaining: 20 },
+        ]),
+        statBlockCombatant("skeleton-a", "stat_block_skeleton", 16, [
+          { ammunition: "arrow", remaining: 20 },
+        ]),
+        statBlockCombatant("skeleton-b", "stat_block_skeleton", 14, [
+          { ammunition: "arrow", remaining: 20 },
+        ]),
       ],
     });
     if (started.snapshot === undefined) {
@@ -1070,7 +1086,9 @@ describe("end-user MCP vertical", () => {
       battleId: "battle:mcp-selected-light-identity",
       initialCombatants: [
         characterCombatant(wizardDraftId, wizardCombatantId, 18),
-        statBlockCombatant(goblinCombatantId, "stat_block_goblin_warrior", 7),
+        statBlockCombatant(goblinCombatantId, "stat_block_goblin_warrior", 7, [
+          { ammunition: "arrow", remaining: 20 },
+        ]),
       ],
     });
     expect(started.snapshot).toMatchObject({
@@ -1814,23 +1832,10 @@ function characterCombatant(
 ) {
   return {
     kind: "characterSession",
+    ammunitionStocks: [],
     characterId: testCharacterId(draftId),
     combatantId,
     initiative,
-  };
-}
-
-function statBlockCombatant(
-  combatantId: string,
-  statBlockId: string,
-  initiative: number,
-) {
-  return {
-    kind: "statBlock",
-    statBlockId,
-    combatantId,
-    initiative,
-    admissionSource: { kind: "encounterParticipant" },
   };
 }
 

@@ -128,6 +128,7 @@ import {
   canonicalHeldObjectIdsForActor,
   commandDropHeldObjectFactsHole,
   commandPendingEffectsForActor,
+  type CommandPendingEffect,
 } from "./command-procedure-discovery.ts";
 import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
 import { movementHole } from "./movement-holes.ts";
@@ -204,39 +205,31 @@ function discoverBattleActCandidatesInternal(
   );
 }
 
-function discoverBattleActsWithoutRouteEvents(
-  state: BattleState,
-  executionRegistry: SpellProcedureExecutionRegistry | null,
-  includeReady: boolean,
-): readonly BattleActDiscoveryCandidate[] {
-  const actorId = currentActorId(state);
-  const hasOpenStatBlockMultiattackDispatch =
-    currentActorHasOpenStatBlockMultiattackDispatch(state);
-  const tableEventActs = reportReadyTriggerActs(state, actorId);
-  if (state.interruptStack.length > 0) return tableEventActs;
-  if (state.subjectResolutionPhase.kind === "subjectContinuation") {
-    return tableEventActs;
-  }
-  const acts: BattleActDiscoveryCandidate[] =
-    hasOpenStatBlockMultiattackDispatch
-      ? [...tableEventActs]
-      : [...releaseGrappleActs(state), ...tableEventActs];
-  if (!state.combatants.has(actorId)) {
-    return acts;
-  }
-  const startTurnWebActs = webRestraintStartTurnSaveActs(state, actorId);
-  const commandGrovelEffects = commandPendingEffectsForActor(
-    state,
-    actorId,
-  ).filter((effect) => effect.option === "grovel");
+function commandPendingActs(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly tableEventActs: readonly BattleActDiscoveryCandidate[];
+  readonly startTurnWebActs: readonly BattleActDiscoveryCandidate[];
+}): readonly BattleActDiscoveryCandidate[] | null {
+  const pendingEffects = commandPendingEffectsForActor(
+    input.state,
+    input.actorId,
+  );
+  const commandActs = (
+    option: Extract<
+      (typeof pendingEffects)[number]["option"],
+      "grovel" | "drop" | "approach" | "flee"
+    >,
+  ) => pendingEffects.filter((effect) => effect.option === option);
+  const commandGrovelEffects = commandActs("grovel");
   if (commandGrovelEffects.length > 0) {
     return [
-      ...tableEventActs,
-      ...startTurnWebActs,
+      ...input.tableEventActs,
+      ...input.startTurnWebActs,
       ...commandGrovelEffects.map((effect) => ({
         subject: {
           tag: "runtimeCommand" as const,
-          actorId,
+          actorId: input.actorId,
           command: "commandGrovel" as const,
           effectRef: spellActiveEffectExecutionRef(effect),
         },
@@ -244,24 +237,21 @@ function discoverBattleActsWithoutRouteEvents(
       })),
     ];
   }
-  const commandDropEffects = commandPendingEffectsForActor(
-    state,
-    actorId,
-  ).filter((effect) => effect.option === "drop");
+  const commandDropEffects = commandActs("drop");
   if (commandDropEffects.length > 0) {
     return [
-      ...tableEventActs,
-      ...startTurnWebActs,
+      ...input.tableEventActs,
+      ...input.startTurnWebActs,
       ...commandDropEffects.map((effect) => {
         const subject = {
           tag: "runtimeCommand" as const,
-          actorId,
+          actorId: input.actorId,
           command: "commandDrop" as const,
           effectRef: spellActiveEffectExecutionRef(effect),
         };
         const canonicalObjectIds = canonicalHeldObjectIdsForActor(
-          state,
-          actorId,
+          input.state,
+          input.actorId,
         );
         return {
           subject,
@@ -273,69 +263,77 @@ function discoverBattleActsWithoutRouteEvents(
       }),
     ];
   }
-  const commandApproachEffects = commandPendingEffectsForActor(
-    state,
-    actorId,
-  ).filter((effect) => effect.option === "approach");
+  const commandApproachEffects = commandActs("approach");
   if (commandApproachEffects.length > 0) {
-    return [
-      ...tableEventActs,
-      ...startTurnWebActs,
-      ...commandApproachEffects.map((effect) => ({
-        subject: {
-          tag: "runtimeCommand" as const,
-          actorId,
-          command: "commandApproach" as const,
-          effectRef: spellActiveEffectExecutionRef(effect),
-        },
-        initialHoles: combatantCanMoveInState(state, actorId)
-          ? [movementHole(state, actorId)]
-          : [],
-      })),
-    ];
+    return commandMovementActs(input, commandApproachEffects, "approach");
   }
-  const commandFleeEffects = commandPendingEffectsForActor(
-    state,
-    actorId,
-  ).filter((effect) => effect.option === "flee");
-  if (commandFleeEffects.length > 0) {
-    return [
-      ...tableEventActs,
-      ...startTurnWebActs,
-      ...commandFleeEffects.map((effect) => ({
-        subject: {
-          tag: "runtimeCommand" as const,
-          actorId,
-          command: "commandFlee" as const,
-          effectRef: spellActiveEffectExecutionRef(effect),
-        },
-        initialHoles: combatantCanMoveInState(state, actorId)
-          ? [movementHole(state, actorId)]
-          : [],
-      })),
-    ];
-  }
-  if (state.currentTurnResources.commandHalt !== null) {
-    acts.push(...startTurnWebActs);
-    acts.push(...greaseGroundHazardEndTurnActs(state, actorId));
-    acts.push(...gustOfWindLineEndTurnSaveActs(state, actorId));
-    acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
-    acts.push(...moonbeamEndTurnSaveActs(state, actorId));
-    acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
-    acts.push(...cloudkillStrongWindDispersalActs(state, actorId));
-    acts.push(...webAreaRemovalActs(state, actorId));
-    acts.push(...wardingBondSeparationActs(state, actorId));
-    acts.push(endTurnAct(actorId));
-    acts.push(...readiedSpellReleaseActs(state, actorId));
-    acts.push(...discoverLegendaryActionActs(state));
-    return acts;
-  }
-  acts.push(...startTurnWebActs);
-  acts.push(...selfTransformationModeReplacementActs(state, actorId));
-  acts.push(...levitateAltitudeControlActs(state, actorId));
-  if (!combatantInsideActiveAntimagicFieldAura(state, actorId)) {
-    acts.push(...dragonsBreathExhaleActs(state, actorId));
-  }
+  const commandFleeEffects = commandActs("flee");
+  return commandFleeEffects.length > 0
+    ? commandMovementActs(input, commandFleeEffects, "flee")
+    : null;
+}
+
+function commandMovementActs(
+  input: {
+    readonly state: BattleState;
+    readonly actorId: CombatantId;
+    readonly tableEventActs: readonly BattleActDiscoveryCandidate[];
+    readonly startTurnWebActs: readonly BattleActDiscoveryCandidate[];
+  },
+  effects: readonly CommandPendingEffect[],
+  command: "approach" | "flee",
+): readonly BattleActDiscoveryCandidate[] {
+  return [
+    ...input.tableEventActs,
+    ...input.startTurnWebActs,
+    ...effects.map((effect) => ({
+      subject: {
+        tag: "runtimeCommand" as const,
+        actorId: input.actorId,
+        command:
+          command === "approach"
+            ? ("commandApproach" as const)
+            : ("commandFlee" as const),
+        effectRef: spellActiveEffectExecutionRef(effect),
+      },
+      initialHoles: combatantCanMoveInState(input.state, input.actorId)
+        ? [movementHole(input.state, input.actorId)]
+        : [],
+    })),
+  ];
+}
+
+function commandHaltActs(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly acts: BattleActDiscoveryCandidate[];
+  readonly startTurnWebActs: readonly BattleActDiscoveryCandidate[];
+}): readonly BattleActDiscoveryCandidate[] | null {
+  if (input.state.currentTurnResources.commandHalt === null) return null;
+  input.acts.push(...input.startTurnWebActs);
+  input.acts.push(...greaseGroundHazardEndTurnActs(input.state, input.actorId));
+  input.acts.push(...gustOfWindLineEndTurnSaveActs(input.state, input.actorId));
+  input.acts.push(...flamingSphereEndTurnSaveActs(input.state, input.actorId));
+  input.acts.push(...moonbeamEndTurnSaveActs(input.state, input.actorId));
+  input.acts.push(
+    ...fogCloudStrongWindDispersalActs(input.state, input.actorId),
+  );
+  input.acts.push(
+    ...cloudkillStrongWindDispersalActs(input.state, input.actorId),
+  );
+  input.acts.push(...webAreaRemovalActs(input.state, input.actorId));
+  input.acts.push(...wardingBondSeparationActs(input.state, input.actorId));
+  input.acts.push(endTurnAct(input.actorId));
+  input.acts.push(...readiedSpellReleaseActs(input.state, input.actorId));
+  input.acts.push(...discoverLegendaryActionActs(input.state));
+  return input.acts;
+}
+
+function appendOrdinaryAttackActs(
+  state: BattleState,
+  actorId: CombatantId,
+  acts: BattleActDiscoveryCandidate[],
+): void {
   const attackActionOptions = attackActionOptionsForActor(
     state,
     actorId,
@@ -371,6 +369,50 @@ function discoverBattleActsWithoutRouteEvents(
       }),
     );
   }
+}
+
+function discoverBattleActsWithoutRouteEvents(
+  state: BattleState,
+  executionRegistry: SpellProcedureExecutionRegistry | null,
+  includeReady: boolean,
+): readonly BattleActDiscoveryCandidate[] {
+  const actorId = currentActorId(state);
+  const hasOpenStatBlockMultiattackDispatch =
+    currentActorHasOpenStatBlockMultiattackDispatch(state);
+  const tableEventActs = reportReadyTriggerActs(state, actorId);
+  if (state.interruptStack.length > 0) return tableEventActs;
+  if (state.subjectResolutionPhase.kind === "subjectContinuation") {
+    return tableEventActs;
+  }
+  const acts: BattleActDiscoveryCandidate[] =
+    hasOpenStatBlockMultiattackDispatch
+      ? [...tableEventActs]
+      : [...releaseGrappleActs(state), ...tableEventActs];
+  if (!state.combatants.has(actorId)) {
+    return acts;
+  }
+  const startTurnWebActs = webRestraintStartTurnSaveActs(state, actorId);
+  const commandActs = commandPendingActs({
+    state,
+    actorId,
+    tableEventActs,
+    startTurnWebActs,
+  });
+  if (commandActs !== null) return commandActs;
+  const haltedActs = commandHaltActs({
+    state,
+    actorId,
+    acts,
+    startTurnWebActs,
+  });
+  if (haltedActs !== null) return haltedActs;
+  acts.push(...startTurnWebActs);
+  acts.push(...selfTransformationModeReplacementActs(state, actorId));
+  acts.push(...levitateAltitudeControlActs(state, actorId));
+  if (!combatantInsideActiveAntimagicFieldAura(state, actorId)) {
+    acts.push(...dragonsBreathExhaleActs(state, actorId));
+  }
+  appendOrdinaryAttackActs(state, actorId, acts);
   acts.push(...pactOfTheChainFamiliarAttackActs(state, actorId));
   if (hasOpenStatBlockMultiattackDispatch) {
     acts.push(...movementActs(state, actorId));

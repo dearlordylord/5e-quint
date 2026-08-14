@@ -4836,7 +4836,7 @@ function rangerFavoredEnemyHuntersMarkSdkHelperNeedles() {
       needles: [
         "const act = huntersMarkFavoredEnemyBonusActionSpellAct(",
         "usesRemaining: 2",
-        'tag: "classFeatureFreeCast"',
+        'tag: "spellAccessFreeCast"',
         "requiresTableSpatialFact: true",
         "spellSlotUsesThisTurn).toEqual([])",
         "usesRemaining: 1",
@@ -4845,7 +4845,7 @@ function rangerFavoredEnemyHuntersMarkSdkHelperNeedles() {
         "breakBattleConcentration(",
         "settleCharacterSheetFromBattle({",
         "characterSheetSpellSlots(settled)",
-        "favoredEnemyHuntersMarkFreeCasts",
+        'sourceUnitId: authoredUnitId("ranger_favored_enemy")',
         "characterSheetResources(settled, unitLibrary)",
         "startLongRest({",
         'timing: { tag: "noPriorLongRest" }',
@@ -4860,7 +4860,7 @@ function rangerFavoredEnemyHuntersMarkSdkHelperNeedles() {
       anchor: "function huntersMarkFavoredEnemyBonusActionSpellAct",
       needles: [
         'candidate.subject.tag === "bonusActionSpell"',
-        'invocation?.tag === "classFeatureFreeCast"',
+        'invocation?.tag === "spellAccessFreeCast"',
         "invocation.spellId === huntersMarkSpellId",
         "rangerFavoredEnemyUnitId",
         'invocation.procedure === "markedDamageRider"',
@@ -4885,7 +4885,7 @@ function rangerSpellListHuntersMarkSdkHelperNeedles() {
     {
       anchor: "function assertLevelOneHuntersMarkSpellSlot",
       needles: [
-        'tag: "favoredEnemyHuntersMarkFreeCasts"',
+        'tag: "spellAccessFreeCast"',
         "expended: resourceCount(2)",
         "huntersMarkSpellSlotBonusActionSpellAct(session, input.casterId)",
         "usesRemaining: 0",
@@ -4897,7 +4897,7 @@ function rangerSpellListHuntersMarkSdkHelperNeedles() {
         "{ spellLevel: 1, count: 2, expended: 1 }",
         "expectLevelOneHuntersMarkActiveEffect({",
         "characterSheetSpellSlots(settled)",
-        '{ tag: "favoredEnemyHuntersMarkFreeCasts", expended: 2 }',
+        'sourceUnitId: authoredUnitId("ranger_favored_enemy")',
       ],
     },
     rangerHuntersMarkActiveEffectHelperNeedle(),

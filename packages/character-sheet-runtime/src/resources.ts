@@ -651,11 +651,23 @@ function characterSheetResourceExpenditureCapacity(input: {
       "Expected Character Sheet resource expenditure.",
     );
   }
-  const expenditure = input.expenditure;
+  return characterSheetSpellAccessFreeCastExpenditureCapacity({
+    freeCastResources: input.freeCastResources,
+    expenditure: input.expenditure,
+  });
+}
+
+function characterSheetSpellAccessFreeCastExpenditureCapacity(input: {
+  readonly freeCastResources: readonly CharacterSheetSpellAccessFreeCastResource[];
+  readonly expenditure: Extract<
+    CharacterSheetResourceExpenditure,
+    { readonly tag: "spellAccessFreeCast" }
+  >;
+}): Either.Either<ResourceCount, CharacterSheetIssue> {
   const freeCastResource = input.freeCastResources.find(
     (resource) =>
-      resource.sourceUnitId === expenditure.sourceUnitId &&
-      resource.spellId === expenditure.spellId,
+      resource.sourceUnitId === input.expenditure.sourceUnitId &&
+      resource.spellId === input.expenditure.spellId,
   );
   /* v8 ignore start -- Malformed stored sheet: a free-cast expenditure tag names no retained class-feature resource. */
   if (freeCastResource === undefined) {
@@ -704,14 +716,27 @@ function characterSheetResourceExpendituresMatch(
     first.tag === "spellAccessFreeCast" &&
     second.tag === "spellAccessFreeCast"
   ) {
-    return (
-      first.sourceUnitId === second.sourceUnitId &&
-      first.spellId === second.spellId
-    );
+    return characterSheetFreeCastExpendituresMatch(first, second);
   }
   return true;
 }
 /* v8 ignore stop */
+
+function characterSheetFreeCastExpendituresMatch(
+  first: Extract<
+    CharacterSheetResourceExpenditure,
+    { readonly tag: "spellAccessFreeCast" }
+  >,
+  second: Extract<
+    CharacterSheetResourceExpenditure,
+    { readonly tag: "spellAccessFreeCast" }
+  >,
+): boolean {
+  return (
+    first.sourceUnitId === second.sourceUnitId &&
+    first.spellId === second.spellId
+  );
+}
 
 function layOnHandsResourceForBuild(
   build: CharacterBuild,

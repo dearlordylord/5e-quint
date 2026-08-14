@@ -1201,10 +1201,7 @@ export function resolveSaveGateDamageSpellAct(input: {
   readonly opensSpellCastReactionWindow?: boolean;
 }): BattleResolutionResult {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.invocation.targeting.kind !== "singleCombatant" &&
-    input.fillSet.targetId !== undefined
-  ) {
+  if (saveGateDamageTargetFillContradiction(input)) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
     return invalidResult(
       input.input.state,
@@ -2136,6 +2133,19 @@ export function resolveSaveGateDamageSpellAct(input: {
     droppedObjects: [],
     handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
+}
+
+function saveGateDamageTargetFillContradiction(input: {
+  readonly invocation: Extract<
+    BattleExecutableSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+}): boolean {
+  return (
+    input.invocation.targeting.kind !== "singleCombatant" &&
+    input.fillSet.targetId !== undefined
+  );
 }
 
 function applySaveGatedDamageFailedSaveConditionEffects(

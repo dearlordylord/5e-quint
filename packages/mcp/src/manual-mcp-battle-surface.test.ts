@@ -938,11 +938,13 @@ describe("manual MCP battle surface coverage", () => {
       statBlock(root, { combatantId: goblinId, initiative: 10 }),
     ]);
 
-    const huntersMark = requireSpellAct(root, "hunters_mark");
-    expect(huntersMark.subject.tag).toBe("bonusActionSpell");
-    expect(huntersMark.presentation.invocation.tag).toBe(
-      "classFeatureFreeCast",
+    const huntersMark = requireSpellActWithInvocationTag(
+      root,
+      "hunters_mark",
+      "spellAccessFreeCast",
     );
+    expect(huntersMark.subject.tag).toBe("bonusActionSpell");
+    expect(huntersMark.presentation.invocation.tag).toBe("spellAccessFreeCast");
     const target = requireHole(huntersMark.initialHoles, "targetChoice");
     const afterTarget = call(root, "fill_battle_hole", {
       subject: huntersMark.subject,
@@ -1323,7 +1325,10 @@ function character(
       invocationFeatures: input.invocationFeatures ?? [],
       classLevels: input.classLevels ?? [
         {
-          className: input.spellcasting?.sourceClassName ?? "fighter",
+          className:
+            input.spellcasting?.spellcastingSource.tag === "classSpellcasting"
+              ? input.spellcasting.spellcastingSource.className
+              : "fighter",
           level: 1,
         },
       ],
@@ -1455,14 +1460,18 @@ function spellcasting(
   },
 ): NonNullable<CharacterCreatureInit["spellcasting"]> {
   return {
-    sourceClassName: input.sourceClassName,
-    spellcastingAbilityModifier: input.abilityModifier,
+    spellcastingSource: {
+      tag: "classSpellcasting",
+      className: input.sourceClassName,
+      abilityModifier: input.abilityModifier,
+    },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
     cantrips: (input.cantrips ?? []).map((id) => requireSpell(root, id)),
     preparedSpells: (input.preparedSpells ?? []).map((id) =>
       requireSpell(root, id),
     ),
+    spellAccesses: [],
     featurePreparedSpells: (input.featurePreparedSpells ?? []).map((entry) => ({
       sourceUnitId: authoredUnitId(entry.sourceUnitId),
       spell: requireSpell(root, entry.spellId),
@@ -1548,6 +1557,30 @@ function requireSpellAct(root: Root, spellId: string): SpellBattleAct {
     !hasProcedureRef(act.subject)
   ) {
     throw new Error(`Expected MCP spell act: ${spellId}`);
+  }
+  return { ...act, presentation: act.presentation, subject: act.subject };
+}
+
+function requireSpellActWithInvocationTag(
+  root: Root,
+  spellId: string,
+  invocationTag: SpellBattleAct["presentation"]["invocation"]["tag"],
+): SpellBattleAct {
+  const discovered = call(root, "discover_battle_acts", {});
+  const act = discovered.availableActs.find(
+    (candidate) =>
+      candidate.presentation?.kind === "spell" &&
+      candidate.presentation.invocation?.spellId === spellId &&
+      candidate.presentation.invocation.tag === invocationTag,
+  );
+  if (
+    act === undefined ||
+    act.presentation?.kind !== "spell" ||
+    !hasProcedureRef(act.subject)
+  ) {
+    throw new Error(
+      `Expected MCP spell act ${spellId} with invocation ${invocationTag}.`,
+    );
   }
   return { ...act, presentation: act.presentation, subject: act.subject };
 }

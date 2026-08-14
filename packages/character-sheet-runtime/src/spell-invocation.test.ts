@@ -26,6 +26,15 @@ import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 describe("Character Sheet runtime / spell invocation", () => {
   test("a non-spellcasting build has no spellbook Ritual Access", () => {
     const build = armorClassBuild({ startingClass: "class_fighter" });
+    const sheet = requireRight(
+      parseCharacterSheet(
+        storedAvailableSheetInput({
+          characterId: "character:non-spellcaster-ritual",
+          build,
+        }),
+        unitLibrary,
+      ),
+    );
     expect(
       requireRight(
         characterSheetSpellbookRitualAccessesForBuild({
@@ -46,6 +55,19 @@ describe("Character Sheet runtime / spell invocation", () => {
         authoredUnitId("synthetic_unprepared_spell"),
       ),
     ).toBe(false);
+    expect(
+      characterSheetSpellInvocation({
+        sheet,
+        unitLibrary,
+        spellId: authoredUnitId("detect_magic"),
+        invocation: { kind: "ritual" },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Ritual spell invocation requires spellcasting Spell Access.",
+      },
+    });
   });
 
   test("invokes a Book of Shadows Ritual only while the book is on the character", () => {

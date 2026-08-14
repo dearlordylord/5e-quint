@@ -195,6 +195,28 @@ describe("Character Sheet runtime / restoration and death spells", () => {
     ]);
     expect(result.target.conditions).toEqual(["petrified"]);
     expect(result.deferredMechanics).toEqual([]);
+
+    const selfTarget = { ...caster, conditions: ["charmed"] as const };
+    const selfTargetResult = requireRight(
+      castGreaterRestorationOnSheet({
+        caster: selfTarget,
+        target: selfTarget,
+        unitLibrary,
+        spellId: authoredUnitId("greater_restoration"),
+        castLevel: spellSlotLevel(5),
+        casting: {
+          ...completedTouchCasting,
+          materialComponent: {
+            tag: "consumedMaterialComponent",
+            costGp: 100,
+            consumed: true,
+          },
+        },
+        effect: { tag: "condition", condition: "charmed" },
+      }),
+    );
+    expect(selfTargetResult.caster.conditions).toEqual([]);
+    expect(selfTargetResult.target.conditions).toEqual([]);
   });
 
   test(raiseDeadSheetSessionTestName, () => {

@@ -601,12 +601,14 @@ export async function verifyBaselineVertical(client: Client) {
     initialCombatants: [
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId: testCharacterId(draftId),
         combatantId: "fighter",
         initiative: 18,
       },
       {
         kind: "statBlock",
+        ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
         statBlockId: "stat_block_goblin_warrior",
         combatantId: "goblin",
         initiative: 7,
@@ -771,19 +773,27 @@ export async function verifyWidthVertical(client: Client) {
     initialCombatants: [
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId: testCharacterId(fighterDraftId),
         combatantId: "fighter",
         initiative: 18,
       },
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId: testCharacterId(wizardDraftId),
         combatantId: "wizard",
         initiative: 14,
       },
-      statBlockCombatant("skeleton-a", "stat_block_skeleton", 8),
-      statBlockCombatant("skeleton-b", "stat_block_skeleton", 7),
-      statBlockCombatant("goblin", "stat_block_goblin_warrior", 6),
+      statBlockCombatant("skeleton-a", "stat_block_skeleton", 8, [
+        { ammunition: "arrow", remaining: 20 },
+      ]),
+      statBlockCombatant("skeleton-b", "stat_block_skeleton", 7, [
+        { ammunition: "arrow", remaining: 20 },
+      ]),
+      statBlockCombatant("goblin", "stat_block_goblin_warrior", 6, [
+        { ammunition: "arrow", remaining: 20 },
+      ]),
     ],
   });
   assert.deepEqual(get(started, "snapshot.turnOrder"), [
@@ -1058,11 +1068,12 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
     initialCombatants: [
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId: testCharacterId(wizardDraftId),
         combatantId: "wizard-level-3",
         initiative: 16,
       },
-      statBlockCombatant("sphinx", "stat_block_sphinx_of_wonder", 8),
+      statBlockCombatant("sphinx", "stat_block_sphinx_of_wonder", 8, []),
     ],
   });
   assert.deepEqual(get(started, "snapshot.turnOrder"), [
@@ -1217,11 +1228,12 @@ export async function verifyLevelFourWizardVertical(client: Client) {
     initialCombatants: [
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId: testCharacterId(wizardDraftId),
         combatantId: "wizard-level-4",
         initiative: 16,
       },
-      statBlockCombatant("sphinx", "stat_block_sphinx_of_wonder", 8),
+      statBlockCombatant("sphinx", "stat_block_sphinx_of_wonder", 8, []),
     ],
   });
   assert.deepEqual(get(started, "snapshot.turnOrder"), [
@@ -1355,11 +1367,12 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
     initialCombatants: [
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId: testCharacterId(levelFiveWizardFireballDraftId),
         combatantId: levelFiveWizardFireballCombatantId,
         initiative: 16,
       },
-      statBlockCombatant("sphinx", "stat_block_sphinx_of_wonder", 8),
+      statBlockCombatant("sphinx", "stat_block_sphinx_of_wonder", 8, []),
     ],
   });
   assert.equal(
@@ -1476,18 +1489,21 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
     initialCombatants: [
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId: testCharacterId(iceKnifeCasterDraftId),
         combatantId: iceKnifeCasterCombatantId,
         initiative: 18,
       },
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId: testCharacterId(iceKnifePrimaryDraftId),
         combatantId: iceKnifePrimaryCombatantId,
         initiative: 12,
       },
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId: testCharacterId(iceKnifeSecondaryDraftId),
         combatantId: iceKnifeSecondaryCombatantId,
         initiative: 10,
@@ -1685,11 +1701,14 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
     initialCombatants: [
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId,
         combatantId: levelSixRogueExpertiseCombatantId,
         initiative: 16,
       },
-      statBlockCombatant("goblin", "stat_block_goblin_warrior", 8),
+      statBlockCombatant("goblin", "stat_block_goblin_warrior", 8, [
+        { ammunition: "arrow", remaining: 20 },
+      ]),
     ],
   });
   assert.equal(
@@ -1865,11 +1884,14 @@ export async function verifyLevelNineRangerExpertiseBattleHandoff(
     initialCombatants: [
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId,
         combatantId: levelNineRangerExpertiseCombatantId,
         initiative: 16,
       },
-      statBlockCombatant("goblin", "stat_block_goblin_warrior", 8),
+      statBlockCombatant("goblin", "stat_block_goblin_warrior", 8, [
+        { ammunition: "arrow", remaining: 20 },
+      ]),
     ],
   });
   assert.equal(
@@ -1997,11 +2019,14 @@ export async function verifyLevelTenFighterChampionBattleHandoff(
     initialCombatants: [
       {
         kind: "characterSession",
+        ammunitionStocks: [],
         characterId,
         combatantId: levelTenFighterChampionCombatantId,
         initiative: 16,
       },
-      statBlockCombatant("goblin", "stat_block_goblin_warrior", 8),
+      statBlockCombatant("goblin", "stat_block_goblin_warrior", 8, [
+        { ammunition: "arrow", remaining: 20 },
+      ]),
     ],
   });
   assert.equal(
@@ -3461,13 +3486,18 @@ function attackTargetFill(subject: JsonObject, value: string) {
   };
 }
 
-function statBlockCombatant(
+export function statBlockCombatant(
   combatantId: string,
   statBlockId: string,
   initiative: number,
+  ammunitionStocks: readonly {
+    readonly ammunition: "arrow";
+    readonly remaining: number;
+  }[],
 ) {
   return {
     kind: "statBlock",
+    ammunitionStocks,
     statBlockId,
     combatantId,
     initiative,

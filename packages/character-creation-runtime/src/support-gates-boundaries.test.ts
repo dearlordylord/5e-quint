@@ -9,6 +9,7 @@ import {
   unitSource,
 } from "./hole-factories.ts";
 import {
+  BACKGROUND_EQUIPMENT_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
   progressionOptionId,
@@ -203,6 +204,26 @@ describe("character creation support-profile boundaries", () => {
         CHARACTER_CREATION_SUPPORT_PROFILE,
       ),
     ).toBeUndefined();
+
+    const surfacedBackgroundEquipmentHole = choiceHole({
+      source: unitSource(
+        authoredUnitId("synthetic_background_with_item_bundle"),
+        BACKGROUND_EQUIPMENT_CHOICE_KEY,
+      ),
+      cardinality: exactChoiceCardinality(1),
+      options: surfacedEquipmentHole.options,
+    });
+    if (surfacedBackgroundEquipmentHole?.kind !== "choice") {
+      throw new Error(
+        "The surfaced background equipment fixture must be a choice hole.",
+      );
+    }
+    expect(
+      supportedHoleOptionIds(
+        surfacedBackgroundEquipmentHole,
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ),
+    ).toEqual(["option_a", "option_b"]);
 
     const unsupportedLoadoutHole = choiceHole({
       source: loadoutSource(

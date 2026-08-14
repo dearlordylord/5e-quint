@@ -1317,6 +1317,23 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         route,
         occupants: [occupant],
       });
+    const deriveAtDestination = (
+      occupant: Parameters<
+        typeof deriveOrdinaryMovementTableRouteFacts
+      >[0]["occupants"][number],
+    ) =>
+      deriveOrdinaryMovementTableRouteFacts({
+        moverId: fighterId,
+        moverSize: "medium",
+        route: {
+          positionsEnteredBeforeDestination: [],
+          destination: {
+            positionId: destination,
+            distanceFeet: movementFeet(10),
+          },
+        },
+        occupants: [occupant],
+      });
 
     expect(derive(living)).toMatchObject({
       tag: "invalid",
@@ -1358,6 +1375,31 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         occupiedPositions: [occupied],
       }),
     ).toEqual({ tag: "routeFacts", difficultTerrainSteps: [] });
+    expect(
+      deriveAtDestination({
+        ...living,
+        occupiedPositions: [destination],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "livingCreatureDestination",
+      tokenId: occupantId,
+      message:
+        "A creature cannot willingly end its movement in another creature's space.",
+    });
+    expect(
+      deriveAtDestination({
+        kind: "corpse",
+        tokenId: occupantId,
+        occupiedPositions: [destination],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "corpseDestinationUnsupported",
+      tokenId: occupantId,
+      message:
+        "Scenario movement does not yet adjudicate ending in a corpse's space.",
+    });
   });
 
   test("Creature-space Movement facts require an Incapacitated occupant or an admitted permission profile", () => {

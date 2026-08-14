@@ -1288,6 +1288,7 @@ export type AuthoredSpellSource = SpellRecord;
 export type AuthoredUnitSource = UnitRecord;
 export type DragonbornSpeciesSource = DragonbornSpeciesRecord;
 export type StatBlockId = StatBlockRecord["id"];
+export type ChallengeRating = StatBlockRecord["challengeRating"];
 export type StatBlockMechanics = StatBlockRecord["statBlock"];
 
 export type SpellFreeCastGrant = Extract<

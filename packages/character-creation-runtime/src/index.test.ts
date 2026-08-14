@@ -9941,7 +9941,7 @@ describe("character creation finalization", () => {
         {
           kind: "authoredCatalogItem",
           itemId: testCharacterEquipmentItemId("main", "weapon_quarterstaff"),
-          authoredItemId: "wizard_arcane_focus_quarterstaff",
+          authoredItemId: "Arcane Focus (Quarterstaff)",
           spellcastingFocusKind: "arcane",
           quantity: 1,
         },
@@ -10159,11 +10159,13 @@ describe("character creation finalization", () => {
         equipment: { selectedUnitIds: [] },
       },
     });
-    expect(completeSelections).toBeDefined();
-    if (completeSelections === undefined) return;
+    if (completeSelections === undefined) {
+      throw new Error("Expected a complete Wizard selection fixture.");
+    }
     const wizardUnit = unitLibrary.requireUnit("class_wizard");
-    expect(wizardUnit.kind).toBe("class");
-    if (wizardUnit.kind !== "class") return;
+    if (wizardUnit.kind !== "class") {
+      throw new Error("Expected class_wizard to be a class Unit.");
+    }
     const unsupportedGrantCatalog = unitLibraryReplacingUnits([
       {
         ...wizardUnit,
@@ -10188,6 +10190,49 @@ describe("character creation finalization", () => {
             tag: "unsupportedStartingCurrency",
             sourceUnitId: "class_wizard",
             coinsGp: 1e-12,
+          },
+        },
+      ],
+    });
+  });
+
+  test("rejects an individually exact starting grant outside the CP domain", () => {
+    const wizard = completeWizardDraft({ classEquipmentOption: "option_a" });
+    const completeSelections = finalizedSelections({
+      ...wizard,
+      selections: {
+        ...wizard.selections,
+        equipment: { selectedUnitIds: [] },
+      },
+    });
+    if (completeSelections === undefined) {
+      throw new Error("Expected a complete Wizard selection fixture.");
+    }
+    const wizardUnit = unitLibrary.requireUnit("class_wizard");
+    if (wizardUnit.kind !== "class") {
+      throw new Error("Expected class_wizard to be a class Unit.");
+    }
+    const unsupportedGrantCatalog = unitLibraryReplacingUnits([
+      {
+        ...wizardUnit,
+        startingEquipment: startingEquipmentChoicesWithCoins(
+          wizardUnit.startingEquipment,
+          "option_a",
+          90_071_992_547_410,
+        ),
+      },
+    ]);
+
+    expect(
+      finalizedBuildEquipment(completeSelections, unsupportedGrantCatalog),
+    ).toMatchObject({
+      _tag: "Left",
+      left: [
+        {
+          cause: {
+            tag: "unsupportedStartingCurrency",
+            sourceUnitId: "class_wizard",
+            coinsGp: 90_071_992_547_410,
           },
         },
       ],

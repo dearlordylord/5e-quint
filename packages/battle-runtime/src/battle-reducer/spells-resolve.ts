@@ -516,6 +516,7 @@ function actionSpellProfileResolutionInput(
     { readonly procedure: "persistentArmorEffect" }
   >,
 ): ActionSpellBattleResolutionInput & { readonly castingState?: BattleState } {
+  void _invocation;
   return { ...input, state: castingState };
 }
 

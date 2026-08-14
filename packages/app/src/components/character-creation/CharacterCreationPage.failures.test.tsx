@@ -16,6 +16,7 @@ const pageFailures = vi.hoisted(() => ({
 vi.mock("#/components/character-creation/characterCreationRuntime.ts", async (importOriginal) => {
   const actual = await importOriginal<typeof CharacterCreationRuntime>()
   const { Either } = await import("effect")
+  const { unitId } = await import("@dnd/shared/game-facts")
   const { Hp, resourceCount, spellSlotLevel } = await import("@dnd/shared/types")
   return {
     ...actual,
@@ -85,10 +86,11 @@ vi.mock("#/components/character-creation/characterCreationRuntime.ts", async (im
                 {
                   count: resourceCount(2),
                   expended: resourceCount(1),
-                  tag: "classFeatureUseCount",
-                  unitId: "synthetic:resource"
+                  sourceUnitId: unitId("synthetic:resource-source"),
+                  spellId: unitId("synthetic:resource-spell"),
+                  tag: "spellAccessFreeCast"
                 }
-              ] as never,
+              ],
               tempHp: Hp(2)
             })
           : summary
@@ -157,7 +159,7 @@ describe("CharacterCreationPage failure presentation", () => {
       expect(screen.getByText(/2 temp/)).toBeTruthy()
       expect(screen.getByText("Level 1: 1/3")).toBeTruthy()
       expect(screen.getByText("Level 2: 1/2")).toBeTruthy()
-      expect(screen.getByText("synthetic:resource: 1/2")).toBeTruthy()
+      expect(screen.getByText("synthetic:resource-source: 1/2")).toBeTruthy()
     } finally {
       pageFailures.richSummary = false
     }

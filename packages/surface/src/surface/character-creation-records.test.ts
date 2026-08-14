@@ -346,7 +346,7 @@ describe("character-creation Surface records", () => {
             items: [
               { kind: "unit_ref", unitId: "weapon_dagger", quantity: 2 },
               {
-                authoredItemId: "wizard_arcane_focus_quarterstaff",
+                authoredItemId: "Arcane Focus (Quarterstaff)",
                 kind: "unit_ref_with_spellcasting_focus",
                 spellcastingFocusKind: "arcane",
                 unitId: "weapon_quarterstaff",

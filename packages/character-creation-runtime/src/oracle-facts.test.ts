@@ -10,6 +10,7 @@ import {
 
 import {
   boundedChoiceCardinality,
+  characterBuildCatalogEquipmentItem,
   characterBuildFact,
   classUnitId,
   characterDraftId,
@@ -444,6 +445,16 @@ describe("Character Creation owner facts", () => {
             itemId: offHandWeaponItemId,
             quantity: PositiveInteger(1),
           },
+          {
+            kind: "authoredStartingItem",
+            itemName: "Synthetic adventuring pack",
+            quantity: PositiveInteger(1),
+          },
+          {
+            kind: "selectedToolItem",
+            toolProficiencyId: toolProficiencyId("thieves_tools"),
+            quantity: PositiveInteger(1),
+          },
         ],
         loadout: {
           armor: armorItemId,
@@ -461,6 +472,13 @@ describe("Character Creation owner facts", () => {
         kind: "draconicAncestry",
         ancestorId: "synthetic_ancestor",
       },
+    });
+    expect(
+      characterBuildCatalogEquipmentItem({ itemId: mainWeaponItemId }),
+    ).toEqual({
+      kind: "catalogItem",
+      itemId: mainWeaponItemId,
+      quantity: PositiveInteger(1),
     });
 
     const offHandWeaponFact = characterBuildFact({
@@ -719,6 +737,17 @@ describe("Character Creation owner facts", () => {
     ).toContain("Creation Hole identity must match its owner source");
 
     const buildFact = characterBuildFact(syntheticBuild());
+    expect(
+      parseErrorMessage(
+        decodeCharacterBuildFact({
+          ...buildFact,
+          equipment: {
+            ...buildFact.equipment,
+            startingEquipmentCurrencyRemainderCp: -1,
+          },
+        }),
+      ),
+    ).toContain("invalid copper-piece amount");
     expect(
       parseErrorMessage(
         decodeCharacterBuildFact({

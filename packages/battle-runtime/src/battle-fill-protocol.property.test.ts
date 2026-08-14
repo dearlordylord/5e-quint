@@ -437,7 +437,7 @@ describe("battle fill protocol boundary owners", () => {
       });
       expectInvalid(
         result,
-        "Fill targetChoice does not match the Attack replay holes.",
+        "Target choice fill uses an unexpected Attack hole.",
       );
       expect(stateSnapshot(catalog.state)).toEqual(before);
     }

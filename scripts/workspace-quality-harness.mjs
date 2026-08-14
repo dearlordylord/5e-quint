@@ -237,10 +237,9 @@ function checkDuplication() {
         process.stderr.write(result.stderr);
         throw new Error(`${packageName} duplication analysis failed.`);
       }
-      const report = JSON.parse(
-        readFileSync(join(reportDirectory, "jscpd-report.json"), "utf8"),
+      const percentage = duplicationPercentage(
+        join(reportDirectory, "jscpd-report.json"),
       );
-      const percentage = report.statistics.total.percentage;
       if (percentage > policy.duplicationCeiling) {
         throw new Error(
           `${packageName} duplication is ${percentage}%; the ratchet allows at most ${policy.duplicationCeiling}% (target 2%).`,
@@ -253,6 +252,12 @@ function checkDuplication() {
       rmSync(reportDirectory, { recursive: true, force: true });
     }
   }
+}
+
+function duplicationPercentage(reportPath) {
+  if (!existsSync(reportPath)) return 0;
+  const report = JSON.parse(readFileSync(reportPath, "utf8"));
+  return report.statistics.total.percentage;
 }
 
 async function checkCyclomaticComplexity(pruneBaseline) {
@@ -425,6 +430,18 @@ function selfTest() {
       inventoryIssues(productionPackageNames(classified), configured),
       { missing: ["unlisted-package"], stale: configured },
     );
+
+    const absentDuplicationReport = join(
+      fixtureRoot,
+      "absent-jscpd-report.json",
+    );
+    assert.equal(duplicationPercentage(absentDuplicationReport), 0);
+    const duplicationReport = join(fixtureRoot, "jscpd-report.json");
+    writeFileSync(
+      duplicationReport,
+      JSON.stringify({ statistics: { total: { percentage: 1.25 } } }),
+    );
+    assert.equal(duplicationPercentage(duplicationReport), 1.25);
 
     const coverageFixture = join(fixtureRoot, "coverage-fixture");
     const coverageSource = join(coverageFixture, "src");

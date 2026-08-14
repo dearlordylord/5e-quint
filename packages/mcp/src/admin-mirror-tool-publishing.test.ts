@@ -62,6 +62,7 @@ describe("Admin Mirror MCP tool publishing", () => {
       initialCombatants: [
         {
           admissionSource: { kind: "encounterParticipant" },
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           combatantId: "goblin",
           initiative: 12,
           kind: "statBlock",
@@ -69,6 +70,7 @@ describe("Admin Mirror MCP tool publishing", () => {
         },
         {
           admissionSource: { kind: "encounterParticipant" },
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           combatantId: "skeleton",
           initiative: 8,
           kind: "statBlock",
@@ -83,6 +85,7 @@ describe("Admin Mirror MCP tool publishing", () => {
       initialCombatants: [
         {
           admissionSource: { kind: "encounterParticipant" },
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           combatantId: "second-goblin",
           initiative: 10,
           kind: "statBlock",

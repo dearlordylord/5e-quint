@@ -882,13 +882,11 @@ function characterResourceExpendituresFromBattle(input: {
   }
   const nextExpenditures = input.sheet.resourceExpenditures.filter(
     (expenditure) =>
-      expenditure.tag !== "spellAccessFreeCast" &&
-      (expenditure.tag !== "useCountResource" ||
-        !isCharacterSheetUseCountResourceUnitId(expenditure.unitId) ||
-        !battleUseCountResourceUnitIds.has(expenditure.unitId)) &&
-      (expenditure.tag !== "pointPoolResource" ||
-        !isCharacterSheetPointPoolResourceUnitId(expenditure.unitId) ||
-        !battlePointPoolResourceUnitIds.has(expenditure.unitId)),
+      retainedCharacterSheetResourceExpenditure(
+        expenditure,
+        battleUseCountResourceUnitIds,
+        battlePointPoolResourceUnitIds,
+      ),
   );
   const nextFreeCastExpenditures: CharacterSheetResourceExpenditure[] = [];
   const nextUseCountExpenditures: CharacterSheetResourceExpenditure[] = [];
@@ -905,37 +903,16 @@ function characterResourceExpendituresFromBattle(input: {
   }
   for (const resource of battleResources) {
     const resourceUnit = resource.ownership.unit;
-    if (
-      resource.ownership.purpose.tag === "spellAccessFreeCast" &&
-      !characterBattleResourceIsPointPool(resource.state)
-    ) {
-      if (!isFixedUseCountBattleResourceState(resource.state)) {
-        return characterSheetBattleHandoffIssue(
-          "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
-        );
-      }
-      const spellId = resource.ownership.purpose.spellId;
-      const sheetCount = sheetFreeCastResourceCapacity({
+    const freeCastExpenditure =
+      characterSheetSpellAccessFreeCastExpenditureFromBattle({
+        resource,
         sheetResources: sheetResources.right,
-        sourceUnitId: resourceUnit.id,
-        spellId,
       });
-      if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
-      if (resource.state.resource.cap.uses !== sheetCount.right) {
-        return characterSheetBattleHandoffIssue(
-          "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
-        );
-      }
-      const expended =
-        resource.state.resource.cap.uses - resource.state.usesRemaining;
-      if (expended > 0) {
-        nextFreeCastExpenditures.push({
-          tag: "spellAccessFreeCast",
-          sourceUnitId: resourceUnit.id,
-          spellId,
-          expended: resourceCount(expended),
-        });
-      }
+    if (Either.isLeft(freeCastExpenditure)) {
+      return Either.left(freeCastExpenditure.left);
+    }
+    if (freeCastExpenditure.right !== null) {
+      nextFreeCastExpenditures.push(freeCastExpenditure.right);
       continue;
     }
     if (
@@ -948,45 +925,16 @@ function characterResourceExpendituresFromBattle(input: {
         "Class feature battle resources require a matching class level during battle handoff.",
       );
     }
-    const pointPoolUnitId =
-      characterSheetPointPoolResourceUnitIdForBattleResource(resource);
-    if (
-      pointPoolUnitId !== null &&
-      characterBattleResourceIsPointPool(resource.state)
-    ) {
-      const maxPoints = characterBattleResourceMaxPoints({
-        unit: resourceUnit,
-        classLevels: input.combatant.origin.classLevels,
-      });
-      if (maxPoints === undefined) {
-        return characterSheetBattleHandoffIssue(
-          "Class feature point-pool resources must carry finite remaining points during battle handoff.",
-        );
-      }
-      const sheetCount = sheetPointPoolResourceCapacity({
-        sheetResources: sheetResources.right,
-        unitId: pointPoolUnitId,
-      });
-      if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
-      if (maxPoints !== sheetCount.right) {
-        return characterSheetBattleHandoffIssue(
-          "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
-        );
-      }
-      const expended =
-        Number(maxPoints) - Number(resource.state.pointsRemaining);
-      if (expended < 0) {
-        return characterSheetBattleHandoffIssue(
-          "Class feature point-pool remaining points exceed the battle resource cap during battle handoff.",
-        );
-      }
-      if (expended > 0) {
-        nextPointPoolExpenditures.push({
-          tag: "pointPoolResource",
-          unitId: pointPoolUnitId,
-          expended: resourceCount(expended),
-        });
-      }
+    const pointPoolExpenditure = characterSheetPointPoolExpenditureFromBattle({
+      resource,
+      classLevels: input.combatant.origin.classLevels,
+      sheetResources: sheetResources.right,
+    });
+    if (Either.isLeft(pointPoolExpenditure)) {
+      return Either.left(pointPoolExpenditure.left);
+    }
+    if (pointPoolExpenditure.right !== null) {
+      nextPointPoolExpenditures.push(pointPoolExpenditure.right);
       continue;
     }
     const profile = classFeatureSpellFreeCastProfileForResource(
@@ -1086,6 +1034,121 @@ function characterResourceExpendituresFromBattle(input: {
       ? []
       : [druidWildShapeExpenditure.right]),
   ]);
+}
+
+function characterSheetPointPoolExpenditureFromBattle(input: {
+  readonly resource: OwnedCharacterBattleResource;
+  readonly classLevels: CharacterBattleClassLevels;
+  readonly sheetResources: readonly CharacterSheetResourceState[];
+}): Either.Either<
+  Extract<
+    CharacterSheetResourceExpenditure,
+    { readonly tag: "pointPoolResource" }
+  > | null,
+  CharacterSheetBattleHandoffIssue
+> {
+  const pointPoolUnitId =
+    characterSheetPointPoolResourceUnitIdForBattleResource(input.resource);
+  if (
+    pointPoolUnitId === null ||
+    !characterBattleResourceIsPointPool(input.resource.state)
+  ) {
+    return Either.right(null);
+  }
+  const maxPoints = characterBattleResourceMaxPoints({
+    unit: input.resource.ownership.unit,
+    classLevels: input.classLevels,
+  });
+  if (maxPoints === undefined) {
+    return characterSheetBattleHandoffIssue(
+      "Class feature point-pool resources must carry finite remaining points during battle handoff.",
+    );
+  }
+  const sheetCount = sheetPointPoolResourceCapacity({
+    sheetResources: input.sheetResources,
+    unitId: pointPoolUnitId,
+  });
+  if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
+  if (maxPoints !== sheetCount.right) {
+    return characterSheetBattleHandoffIssue(
+      "Class feature point-pool battle capacity must match Character Sheet resource capacity.",
+    );
+  }
+  const expended =
+    Number(maxPoints) - Number(input.resource.state.pointsRemaining);
+  if (expended < 0) {
+    return characterSheetBattleHandoffIssue(
+      "Class feature point-pool remaining points exceed the battle resource cap during battle handoff.",
+    );
+  }
+  return expended > 0
+    ? Either.right({
+        tag: "pointPoolResource",
+        unitId: pointPoolUnitId,
+        expended: resourceCount(expended),
+      })
+    : Either.right(null);
+}
+
+function characterSheetSpellAccessFreeCastExpenditureFromBattle(input: {
+  readonly resource: OwnedCharacterBattleResource;
+  readonly sheetResources: readonly CharacterSheetResourceState[];
+}): Either.Either<
+  Extract<
+    CharacterSheetResourceExpenditure,
+    { readonly tag: "spellAccessFreeCast" }
+  > | null,
+  CharacterSheetBattleHandoffIssue
+> {
+  if (
+    input.resource.ownership.purpose.tag !== "spellAccessFreeCast" ||
+    characterBattleResourceIsPointPool(input.resource.state)
+  ) {
+    return Either.right(null);
+  }
+  if (!isFixedUseCountBattleResourceState(input.resource.state)) {
+    return characterSheetBattleHandoffIssue(
+      "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
+    );
+  }
+  const spellId = input.resource.ownership.purpose.spellId;
+  const sheetCount = sheetFreeCastResourceCapacity({
+    sheetResources: input.sheetResources,
+    sourceUnitId: input.resource.ownership.unit.id,
+    spellId,
+  });
+  if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
+  if (input.resource.state.resource.cap.uses !== sheetCount.right) {
+    return characterSheetBattleHandoffIssue(
+      "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
+    );
+  }
+  const expended =
+    input.resource.state.resource.cap.uses - input.resource.state.usesRemaining;
+  return expended > 0
+    ? Either.right({
+        tag: "spellAccessFreeCast",
+        sourceUnitId: input.resource.ownership.unit.id,
+        spellId,
+        expended: resourceCount(expended),
+      })
+    : Either.right(null);
+}
+
+function retainedCharacterSheetResourceExpenditure(
+  expenditure: CharacterSheetResourceExpenditure,
+  battleUseCountResourceUnitIds: ReadonlySet<CharacterSheetUseCountResourceUnitId>,
+  battlePointPoolResourceUnitIds: ReadonlySet<CharacterSheetPointPoolResourceUnitId>,
+): boolean {
+  return (
+    expenditure.tag !== "spellAccessFreeCast" &&
+    (expenditure.tag !== "useCountResource" ||
+      !isCharacterSheetUseCountResourceUnitId(expenditure.unitId) ||
+      !battleUseCountResourceUnitIds.has(expenditure.unitId)) &&
+    (expenditure.tag !== "pointPoolResource" ||
+      !isCharacterSheetPointPoolResourceUnitId(expenditure.unitId) ||
+      !battlePointPoolResourceUnitIds.has(expenditure.unitId))
+  );
 }
 
 type OwnedCharacterBattleResource = {

@@ -338,17 +338,11 @@ function stateAfterCounteredSpellCast(
     };
   }
   /* v8 ignore stop */
-  const metamagicSpend = spendSpellCastMetamagicResources({
-    state: {
-      ...committedState.right,
-      currentTurnResources: wastedResources.right,
-    },
-    actorId: frame.casterId,
-    applications:
-      frame.metamagicCommitment.kind === "none"
-        ? []
-        : frame.metamagicCommitment.applications,
-  });
+  const metamagicSpend = spendCounteredSpellMetamagic(
+    committedState.right,
+    wastedResources.right,
+    frame,
+  );
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (Either.isLeft(metamagicSpend)) {
     return { tag: "invalid", message: metamagicSpend.left };
@@ -373,6 +367,21 @@ function stateAfterCounteredSpellCast(
       ],
     },
   };
+}
+
+function spendCounteredSpellMetamagic(
+  state: BattleState,
+  currentTurnResources: BattleState["currentTurnResources"],
+  frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
+): Either.Either<BattleState, string> {
+  return spendSpellCastMetamagicResources({
+    state: { ...state, currentTurnResources },
+    actorId: frame.casterId,
+    applications:
+      frame.metamagicCommitment.kind === "none"
+        ? []
+        : frame.metamagicCommitment.applications,
+  });
 }
 
 function commitCounteredSpellPayment(

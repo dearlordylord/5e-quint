@@ -1866,9 +1866,7 @@ function battleSubjectKey(subject: BattleSubject): string {
               : null,
             "areaId" in command ? command.areaId : null,
             "trigger" in command ? command.trigger : null,
-            "areaMembershipTrigger" in command
-              ? JSON.stringify(command.areaMembershipTrigger)
-              : null,
+            runtimeCommandAreaMembershipTrigger(command),
             "relevantEffect" in command ? command.relevantEffect : null,
           ]),
         ),
@@ -1876,4 +1874,12 @@ function battleSubjectKey(subject: BattleSubject): string {
       ),
     ),
   );
+}
+
+function runtimeCommandAreaMembershipTrigger(
+  command: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>,
+): string | null {
+  return "areaMembershipTrigger" in command
+    ? JSON.stringify(command.areaMembershipTrigger)
+    : null;
 }

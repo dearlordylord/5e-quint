@@ -4,6 +4,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import { classCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
@@ -18,6 +19,7 @@ import {
   copperPieceAmount,
   fightingStyleFeatUnitId,
   sorcererClassUnitId,
+  sorcererMetamagicOptionId,
   sorcererLevelGain,
   warlockClassUnitId,
   warlockLevelGain,
@@ -26,10 +28,15 @@ import {
   weaponMasteryWeaponUnitId,
   type CharacterBuild,
   type CharacterBuildFeature,
+  type CharacterBuildSpellcasting,
+  type CharacterBuildSpellcastingSource,
   type CharacterBuildFighterFightingStyleReplacementLevelGain,
+  type CharacterBuildWarlockLevelGain,
   type ClassUnitId,
+  type SorcererMetamagicOptionId,
   type UnitCatalog,
 } from "./index.ts";
+import { classSpellcastingCreationAtLevel } from "./class-spellcasting.ts";
 
 const catalogResult = buildUnitCatalog({ collections: [srdUnitCollection] });
 if (catalogResult.tag !== "ok") {
@@ -58,9 +65,22 @@ const paladinUnitId = parsedClassUnitId("class_paladin");
 const sorcererUnitId = parsedClassUnitId("class_sorcerer");
 const warlockUnitId = parsedClassUnitId("class_warlock");
 const wizardUnitId = parsedClassUnitId("class_wizard");
+const typedWarlockClassUnitId = (() => {
+  const parsed = warlockClassUnitId({
+    unitLibrary,
+    classUnitId: warlockUnitId,
+  });
+  if (Either.isLeft(parsed)) {
+    throw new Error("The Warlock test fixture must use a Warlock class.");
+  }
+  return parsed.right;
+})();
 const fixedHitPoints = { tag: "fixedHigherLevelGain" } as const;
 const fighterWeaponMasterySourceUnitId = authoredUnitId(
   "fighter_weapon_mastery",
+);
+const warlockInvocationSourceUnitId = authoredUnitId(
+  "warlock_eldritch_invocations",
 );
 
 function buildForClass(
@@ -126,6 +146,109 @@ function fighterLevelThreeBuild(
       ],
     },
   };
+}
+
+function classAdvancementEntries(
+  classUnitId: ClassUnitId,
+  classLevel: number,
+): CharacterBuild["progression"]["advancements"] {
+  return Array.from({ length: classLevel - 1 }, () => ({
+    classUnitId,
+    hitPointRule: fixedHitPoints,
+  }));
+}
+
+function spellcastingBuild(input: {
+  readonly classUnitId: ClassUnitId;
+  readonly classLevel: number;
+  readonly cantrips?: readonly UnitRecord["id"][];
+  readonly preparedSpells?: readonly UnitRecord["id"][];
+  readonly pactMagicSlotPool?: CharacterBuildSpellcasting["slotPools"]["pactMagic"];
+  readonly additionalSource?: boolean;
+  readonly features?: readonly CharacterBuildFeature[];
+}): CharacterBuild {
+  const classRecord = unitLibrary.requireUnit(input.classUnitId);
+  if (classRecord.kind !== "class") {
+    throw new Error("The spellcasting fixture must use a class Unit.");
+  }
+  const facts = classCreationFacts(classRecord);
+  if (!("spellcasting" in facts)) {
+    throw new Error("The spellcasting fixture must use spellcasting facts.");
+  }
+  const row = classSpellcastingCreationAtLevel(
+    facts.spellcasting,
+    input.classLevel,
+  );
+  if (row === undefined) {
+    throw new Error(
+      "The spellcasting fixture must use a supported class level.",
+    );
+  }
+
+  const source: CharacterBuildSpellcastingSource = {
+    sourceUnitId: input.classUnitId,
+    spellcastingAbility: facts.spellcasting.spellcastingAbility,
+    cantrips:
+      input.cantrips ??
+      row.cantripAccess?.spellIds.slice(0, row.cantripAccess.choose) ??
+      [],
+    spellbook: [],
+    preparedSpells:
+      input.preparedSpells ??
+      (row.preparedAccess.kind === "prepared_from_class_spell_list"
+        ? row.preparedAccess.spells
+            .slice(0, row.preparedAccess.choose)
+            .map((spell) => spell.spellId)
+        : row.preparedAccess.spellIds.slice(0, row.preparedAccess.choose)),
+    spellcastingFocuses:
+      "spellcastingFocus" in facts.spellcasting
+        ? [facts.spellcasting.spellcastingFocus]
+        : [facts.spellcasting.spellcastingFocuses[0]],
+  };
+
+  const slotPools: CharacterBuildSpellcasting["slotPools"] =
+    row.kind === "pact_magic_spellcasting_creation"
+      ? {
+          pactMagic: input.pactMagicSlotPool ?? {
+            kind: "pactMagic",
+            count: row.pactSlotProjection.count,
+            slotLevel: row.pactSlotProjection.spellLevel,
+          },
+        }
+      : {
+          spellcasting: {
+            kind: "spellcasting",
+            slots: row.spellSlotProjection.slots,
+          },
+        };
+
+  const additionalSource = input.additionalSource
+    ? [{ ...source, sourceUnitId: authoredUnitId("class_wizard") }]
+    : [];
+  return {
+    ...buildForClass(input.classUnitId, input.features),
+    progression: {
+      startingClass: input.classUnitId,
+      advancements: classAdvancementEntries(
+        input.classUnitId,
+        input.classLevel,
+      ),
+    },
+    spellcasting: {
+      sources: [source, ...additionalSource],
+      slotPools,
+    },
+  };
+}
+
+function parsedSorcererMetamagicOption(
+  optionId: string,
+): SorcererMetamagicOptionId {
+  const parsed = sorcererMetamagicOptionId(optionId);
+  if (Either.isLeft(parsed)) {
+    throw new Error(`Expected a Sorcerer Metamagic option: ${optionId}.`);
+  }
+  return parsed.right;
 }
 
 function fightingStyleReplacement(
@@ -989,6 +1112,444 @@ describe("Character Build advancement typed boundaries", () => {
       left: {
         code: "unknownSorcererMetamagicOption",
         optionId: "synthetic_unknown",
+      },
+    });
+  });
+
+  test("rejects plain Sorcerer and Warlock gains from inconsistent retained choices", () => {
+    const sorcererWithExtraOption = buildForClass(sorcererUnitId, [
+      {
+        kind: "selectedSorcererMetamagicOption",
+        selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
+        optionId: parsedSorcererMetamagicOption("sorcerer_empowered_spell"),
+      },
+    ]);
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: sorcererWithExtraOption,
+        unitLibrary,
+        levelGain: {
+          tag: "classLevelGain",
+          classUnitId: sorcererUnitId,
+          hitPointRule: fixedHitPoints,
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidSorcererMetamagicSelectionCount",
+        expectedCount: 0,
+        actualCount: 1,
+      },
+    });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: buildForClass(sorcererUnitId),
+        unitLibrary,
+        levelGain: {
+          tag: "classLevelGain",
+          classUnitId: sorcererUnitId,
+          hitPointRule: fixedHitPoints,
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidSorcererMetamagicGainCount",
+        expectedGains: 2,
+        actualGains: 0,
+      },
+    });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: spellcastingBuild({
+          classUnitId: warlockUnitId,
+          classLevel: 11,
+        }),
+        unitLibrary,
+        levelGain: {
+          tag: "classLevelGain",
+          classUnitId: warlockUnitId,
+          hitPointRule: fixedHitPoints,
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidEldritchInvocationSelectionCount",
+        warlockLevel: 12,
+        actualCount: 0,
+      },
+    });
+  });
+
+  test("keeps unrelated spellcasting sources while applying prepared-spell gains", () => {
+    const build = spellcastingBuild({
+      classUnitId: paladinUnitId,
+      classLevel: 2,
+      preparedSpells: [
+        authoredUnitId("heroism"),
+        authoredUnitId("searing_smite"),
+        authoredUnitId("bless"),
+      ],
+      additionalSource: true,
+      features: [
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: authoredUnitId("paladin_weapon_mastery"),
+          unitId: authoredUnitId("weapon_longsword"),
+        },
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: authoredUnitId("paladin_weapon_mastery"),
+          unitId: authoredUnitId("weapon_dagger"),
+        },
+      ],
+    });
+    const result = advanceCharacterBuildClassLevel({
+      build,
+      unitLibrary,
+      levelGain: {
+        tag: "classLevelGainWithListPreparedSpellcasting",
+        classUnitId: paladinUnitId,
+        hitPointRule: fixedHitPoints,
+        preparedSpellcasting: {
+          gainedPreparedSpells: [authoredUnitId("command")],
+        },
+      },
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Right",
+      right: {
+        spellcasting: {
+          sources: [
+            {
+              sourceUnitId: "class_paladin",
+              preparedSpells: ["heroism", "searing_smite", "bless", "command"],
+            },
+            { sourceUnitId: "class_wizard" },
+          ],
+        },
+      },
+    });
+  });
+
+  test("rejects plain Fighter Weapon Mastery advancement without retained choices", () => {
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: fighterBuild(),
+        unitLibrary,
+        levelGain: {
+          tag: "classLevelGain",
+          classUnitId: fighterUnitId,
+          hitPointRule: fixedHitPoints,
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidWeaponMasterySelectionCount",
+        expectedCount: 3,
+        actualCount: 0,
+      },
+    });
+  });
+
+  test("keeps repeatable Warlock invocation identities distinct by Origin feat", () => {
+    const originFeatChoice = {
+      kind: "originFeat",
+      featUnitId: authoredUnitId("feat_savage_attacker"),
+    } as const;
+    const build = spellcastingBuild({
+      classUnitId: warlockUnitId,
+      classLevel: 1,
+      features: [
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: warlockInvocationSourceUnitId,
+          selection: {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("lessons_of_the_first_ones"),
+            repeatableChoice: originFeatChoice,
+          },
+        },
+      ],
+    });
+    const gain = warlockLevelGain({
+      unitLibrary,
+      classUnitId: warlockUnitId,
+      hitPointRule: fixedHitPoints,
+      pactMagic: {
+        gainedCantrips: [],
+        gainedPreparedSpells: [authoredUnitId("hex")],
+      },
+      gainedInvocations: [
+        {
+          kind: "nonRepeatable",
+          invocationId: eldritchInvocationId("armor_of_shadows"),
+        },
+        {
+          kind: "nonRepeatable",
+          invocationId: eldritchInvocationId("devils_sight"),
+        },
+      ],
+    });
+    if (Either.isLeft(gain)) {
+      throw new Error(
+        `Expected Origin feat invocation gain: ${gain.left.message}`,
+      );
+    }
+
+    const advanced = advanceCharacterBuildClassLevel({
+      build,
+      unitLibrary,
+      levelGain: gain.right,
+    });
+    if (Either.isLeft(advanced)) {
+      throw new Error(
+        `Expected Origin feat invocation gain: ${advanced.left.message}`,
+      );
+    }
+    expect(advanced.right.features).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: warlockInvocationSourceUnitId,
+          selection: {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("lessons_of_the_first_ones"),
+            repeatableChoice: originFeatChoice,
+          },
+        },
+      ]),
+    );
+
+    const sameOriginReplacementGain: CharacterBuildWarlockLevelGain = {
+      ...gain.right,
+      eldritchInvocations: {
+        ...gain.right.eldritchInvocations,
+        replacement: {
+          replaceInvocation: {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("lessons_of_the_first_ones"),
+            repeatableChoice: {
+              kind: "originFeat",
+              featUnitId: authoredUnitId("feat_savage_attacker"),
+            },
+          },
+          selectedInvocation: {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("lessons_of_the_first_ones"),
+            repeatableChoice: originFeatChoice,
+          },
+        },
+      },
+    };
+    const replacedWithSameOrigin = advanceCharacterBuildClassLevel({
+      build,
+      unitLibrary,
+      levelGain: sameOriginReplacementGain,
+    });
+    if (Either.isLeft(replacedWithSameOrigin)) {
+      throw new Error(
+        `Expected same-Origin invocation replacement: ${replacedWithSameOrigin.left.message}`,
+      );
+    }
+    expect(replacedWithSameOrigin.right.features).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: warlockInvocationSourceUnitId,
+          selection: {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("lessons_of_the_first_ones"),
+            repeatableChoice: originFeatChoice,
+          },
+        },
+      ]),
+    );
+
+    const mismatchedChoiceReplacementGain: CharacterBuildWarlockLevelGain = {
+      ...gain.right,
+      eldritchInvocations: {
+        ...gain.right.eldritchInvocations,
+        replacement: {
+          replaceInvocation: {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("lessons_of_the_first_ones"),
+            repeatableChoice: {
+              kind: "knownWarlockCantrip",
+              cantripId: authoredUnitId("eldritch_blast"),
+            },
+          },
+          selectedInvocation: {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("lessons_of_the_first_ones"),
+            repeatableChoice: {
+              kind: "knownWarlockCantrip",
+              cantripId: authoredUnitId("eldritch_blast"),
+            },
+          },
+        },
+      },
+    };
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: mismatchedChoiceReplacementGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { code: "missingSelectedEldritchInvocation" },
+    });
+  });
+
+  test("rejects malformed or unavailable repeatable Warlock choices at advancement", () => {
+    const source = spellcastingBuild({
+      classUnitId: warlockUnitId,
+      classLevel: 1,
+      features: [
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: warlockInvocationSourceUnitId,
+          selection: {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("repelling_blast"),
+          },
+        },
+      ],
+    });
+    const gainWithMalformedCurrentSelection: CharacterBuildWarlockLevelGain = {
+      tag: "warlockLevelGain",
+      classUnitId: typedWarlockClassUnitId,
+      hitPointRule: fixedHitPoints,
+      pactMagic: {
+        gainedCantrips: [],
+        gainedPreparedSpells: [authoredUnitId("hex")],
+      },
+      eldritchInvocations: {
+        gainedInvocations: [
+          {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("armor_of_shadows"),
+          },
+          {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("devils_sight"),
+          },
+        ],
+      },
+    };
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: source,
+        unitLibrary,
+        levelGain: gainWithMalformedCurrentSelection,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "missingRepeatableEldritchInvocationChoice",
+        invocationId: "repelling_blast",
+      },
+    });
+
+    const knownCantripBuild = spellcastingBuild({
+      classUnitId: warlockUnitId,
+      classLevel: 1,
+      cantrips: [authoredUnitId("chill_touch"), authoredUnitId("mage_hand")],
+      features: [
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: warlockInvocationSourceUnitId,
+          selection: {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("armor_of_shadows"),
+          },
+        },
+      ],
+    });
+    const unavailableKnownCantripGain: CharacterBuildWarlockLevelGain = {
+      ...gainWithMalformedCurrentSelection,
+      eldritchInvocations: {
+        gainedInvocations: [
+          {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("repelling_blast"),
+            repeatableChoice: {
+              kind: "knownWarlockCantrip",
+              cantripId: authoredUnitId("eldritch_blast"),
+            },
+          },
+          {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("devils_sight"),
+          },
+        ],
+      },
+    };
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: knownCantripBuild,
+        unitLibrary,
+        levelGain: unavailableKnownCantripGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidRepeatableEldritchInvocationChoice",
+        invocationId: "repelling_blast",
+      },
+    });
+
+    const invalidRuleChoiceGain: CharacterBuildWarlockLevelGain = {
+      ...gainWithMalformedCurrentSelection,
+      eldritchInvocations: {
+        gainedInvocations: [
+          {
+            kind: "repeatable",
+            invocationId: eldritchInvocationId("repelling_blast"),
+            repeatableChoice: {
+              kind: "knownWarlockCantrip",
+              cantripId: authoredUnitId("fire_bolt"),
+            },
+          },
+          {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("devils_sight"),
+          },
+        ],
+      },
+    };
+    const validInvocationBuild = spellcastingBuild({
+      classUnitId: warlockUnitId,
+      classLevel: 1,
+      features: [
+        {
+          kind: "selectedEldritchInvocation",
+          selectedFromUnitId: warlockInvocationSourceUnitId,
+          selection: {
+            kind: "nonRepeatable",
+            invocationId: eldritchInvocationId("armor_of_shadows"),
+          },
+        },
+      ],
+    });
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: validInvocationBuild,
+        unitLibrary,
+        levelGain: invalidRuleChoiceGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidRepeatableEldritchInvocationChoice",
+        invocationId: "repelling_blast",
       },
     });
   });

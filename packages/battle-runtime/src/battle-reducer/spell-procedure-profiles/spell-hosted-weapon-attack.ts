@@ -328,18 +328,10 @@ function resolveSpellHostedWeaponAttack(
       input.invocation,
       input.actorId,
     );
-  const pendingAttackDamageAdditions:
-    | ReadonlyNonEmptyArray<AttackSpellDamageAddition>
-    | undefined =
-    input.input.pendingAttackDamageAdditions === undefined
-      ? hostedWeaponDamageAdditions
-      : hostedWeaponDamageAdditions === undefined
-        ? input.input.pendingAttackDamageAdditions
-        : [
-            input.input.pendingAttackDamageAdditions[0],
-            ...input.input.pendingAttackDamageAdditions.slice(1),
-            ...hostedWeaponDamageAdditions,
-          ];
+  const pendingAttackDamageAdditions = combinedAttackDamageAdditions(
+    input.input.pendingAttackDamageAdditions,
+    hostedWeaponDamageAdditions,
+  );
   const {
     replayingInterruptedProcedure: _replayingInterruptedProcedure,
     handledInterruptTrigger: _handledInterruptTrigger,
@@ -393,6 +385,15 @@ function resolveSpellHostedWeaponAttack(
         startConcentration: false,
       }),
   );
+}
+
+function combinedAttackDamageAdditions(
+  pending: ReadonlyNonEmptyArray<AttackSpellDamageAddition> | undefined,
+  hosted: ReadonlyNonEmptyArray<AttackSpellDamageAddition> | undefined,
+): ReadonlyNonEmptyArray<AttackSpellDamageAddition> | undefined {
+  if (pending === undefined) return hosted;
+  if (hosted === undefined) return pending;
+  return [pending[0], ...pending.slice(1), ...hosted];
 }
 
 function spellHostedWeaponAttack(

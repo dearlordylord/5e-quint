@@ -107,20 +107,12 @@ export function spendSpellCastResources(input: {
           input.actorId,
         );
   const actionCost = spellCastActionCost(input);
-  const spent =
-    actionCost === "bonusAction"
-      ? spendActivationResource(spellCastState.currentTurnResources, {
-          kind: "bonusAction",
-        })
-      : spendAction(spellCastState.currentTurnResources, "magic");
+  const spent = spendSpellCastAction(
+    spellCastState.currentTurnResources,
+    actionCost,
+  );
   if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.errorState,
-      "staleSubject",
-      actionCost === "bonusAction"
-        ? "Bonus Action spell is no longer available for the current actor."
-        : "Magic action is no longer available for the current actor.",
-    );
+    return invalidResult(input.errorState, "staleSubject", spent.left);
   }
   const shouldStartConcentration =
     input.startConcentration ?? spellRequiresConcentration(input.invocation);
@@ -211,6 +203,23 @@ export function spendSpellCastResources(input: {
     applications: metamagicApplications,
     shouldStartConcentration,
   });
+}
+
+function spendSpellCastAction(
+  resources: BattleTurnResources,
+  actionCost: "magicAction" | "bonusAction",
+): Either.Either<BattleTurnResources, string> {
+  const spent =
+    actionCost === "bonusAction"
+      ? spendActivationResource(resources, { kind: "bonusAction" })
+      : spendAction(resources, "magic");
+  return Either.isLeft(spent)
+    ? Either.left(
+        actionCost === "bonusAction"
+          ? "Bonus Action spell is no longer available for the current actor."
+          : "Magic action is no longer available for the current actor.",
+      )
+    : Either.right(spent.right);
 }
 
 function finishSpellCastResourceSpend(input: {

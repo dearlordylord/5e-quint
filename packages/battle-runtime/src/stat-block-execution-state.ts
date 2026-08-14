@@ -7,10 +7,10 @@ import {
 } from "@dnd/shared/types";
 import { Brand } from "effect";
 import type {
+  ChallengeRating,
   CreatureLimitedUse,
   StatBlockId,
   StatBlockMechanics,
-  StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import type {
   StatBlockAttackActionOption,
@@ -33,7 +33,7 @@ import type {
 
 export type BattleStatBlockExecutionSource = {
   readonly id: StatBlockId;
-  readonly challengeRating: StatBlockRecord["challengeRating"];
+  readonly challengeRating: ChallengeRating;
   readonly statBlock: StatBlockMechanics;
 };
 

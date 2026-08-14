@@ -340,6 +340,29 @@ describe("choice-selection structural equality", () => {
     expect(
       hasPurchasedUnit(draft, authoredUnitId("synthetic_absent_purchase")),
     ).toBe(false);
+    const { equipment: omittedEquipment, ...selectionsWithoutEquipment } =
+      draft.selections;
+    expect(omittedEquipment).toBeUndefined();
+    expect(
+      hasPurchasedUnit(
+        { ...draft, selections: selectionsWithoutEquipment },
+        authoredUnitId("synthetic_absent_purchase"),
+      ),
+    ).toBe(false);
+    expect(
+      hasPurchasedUnit(
+        {
+          ...draft,
+          selections: {
+            ...draft.selections,
+            equipment: {
+              selectedUnitIds: [authoredUnitId("weapon_quarterstaff")],
+            },
+          },
+        },
+        authoredUnitId("weapon_quarterstaff"),
+      ),
+    ).toBe(true);
     expect(choiceOptionIdsFitHole(abilityScoreHole, [])).toBe(false);
     const unsupportedArtisanToolChoice = {
       kind: "tool_category_choice",

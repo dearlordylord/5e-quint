@@ -238,6 +238,7 @@ import type {
   BattleAttackHostSubject,
   BattleAttackDamageEvent,
   BattleAttackRollHole,
+  BattleAttackRollRelationshipFact,
   BattleAttackRollResult,
   BattleAfterDamageEvent,
   AttackDamageRider,
@@ -1181,15 +1182,7 @@ function resolveOrdinaryObjectAttack<
   readonly spendAttackProcedure: SpendAttackProcedure<Attack>;
 }): BattleResolutionResult {
   const { attack, attackerId, fillSet } = input;
-  if (
-    input.input.subject.tag !== "action" ||
-    input.input.subject.action !== "attack" ||
-    !ordinaryObjectAttackOptionIsSupported(
-      input.input.state,
-      attackerId,
-      attack,
-    )
-  ) {
+  if (ordinaryObjectAttackIsUnsupported(input)) {
     return invalidResult(
       input.input.state,
       "unsupportedActOption",
@@ -1200,23 +1193,12 @@ function resolveOrdinaryObjectAttack<
     fillSet.target.spatialFacts.length === 1
       ? fillSet.target.spatialFacts[0]
       : undefined;
-  const objectFactIssues =
-    objectFact === undefined
-      ? ["exactly one object attack table fact is required"]
-      : [
-          ...(objectFact.actorId === attackerId
-            ? []
-            : ["the table fact actor does not match the attacker"]),
-          ...(objectFact.objectId === fillSet.target.objectId
-            ? []
-            : ["the table fact object does not match the selected object"]),
-          ...(objectFact.cover === "total"
-            ? ["Total Cover prevents direct targeting"]
-            : []),
-          ...(attackTargetConstraint(attack).kind === objectFact.range.kind
-            ? []
-            : ["the table range fact does not satisfy the selected attack"]),
-        ];
+  const objectFactIssues = ordinaryObjectAttackTargetIssues({
+    objectFact,
+    attackerId,
+    objectId: fillSet.target.objectId,
+    attack,
+  });
   if (objectFact === undefined || objectFactIssues.length > 0) {
     return invalidResult(
       input.input.state,
@@ -1224,107 +1206,290 @@ function resolveOrdinaryObjectAttack<
       `Invalid object attack target: ${objectFactIssues.join("; ")}.`,
     );
   }
-  if (fillSet.attackRoll === undefined) {
-    if (fillSet.damageRoll !== undefined) {
-      return invalidResult(
-        input.input.state,
-        "invalidFill",
-        ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
-      );
-    }
-    return needsHolesResult(input.input.state, input.input.subject, [
-      attackRollHole(
-        input.input.state.combatants.get(attackerId),
-        attack,
-        requiredOrdinaryObjectAttackRollMode(
-          input.input.state,
-          attackerId,
-          attack,
-          objectFact,
-        ),
-      ),
-    ]);
+  const rollPreparation = prepareOrdinaryObjectAttackRoll({
+    input: input.input,
+    attack,
+    attackerId,
+    fillSet,
+    objectFact,
+  });
+  if (rollPreparation.tag === "result") return rollPreparation.result;
+  const rollOutcome = resolveOrdinaryObjectAttackRoll({
+    input: input.input,
+    attack,
+    attackerId,
+    fillSet,
+    objectFact,
+    rollPreparation,
+  });
+  if (rollOutcome.tag === "result") return rollOutcome.result;
+  if (rollOutcome.tag === "miss") {
+    return input.spendAttackProcedure(rollOutcome.state, attackerId, attack, {
+      kind: "acceptedAttack",
+    });
   }
-  if (
-    !attackRollResultIsValid(fillSet.attackRoll) ||
-    fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined ||
-    fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined ||
-    fillSet.attackRoll.spellAttackReroll !== undefined
-  ) {
-    return invalidResult(
+  return resolveOrdinaryObjectAttackHit({
+    ...input,
+    objectFact,
+    attackRolledState: rollOutcome.state,
+    effectiveAttackRoll: rollOutcome.effectiveAttackRoll,
+  });
+}
+
+type OrdinaryObjectAttackTableFact =
+  OrdinaryObjectAttackFillSet["target"]["spatialFacts"][number];
+
+function ordinaryObjectAttackIsUnsupported<
+  Attack extends BoundSupportedAttackActionOption,
+>(input: {
+  readonly input: AttackProcedureResolutionInput;
+  readonly attack: Attack;
+  readonly attackerId: CombatantId;
+}): boolean {
+  return (
+    input.input.subject.tag !== "action" ||
+    input.input.subject.action !== "attack" ||
+    !ordinaryObjectAttackOptionIsSupported(
       input.input.state,
-      "invalidFill",
-      "Object attack roll does not match the ordinary attack-roll protocol.",
-    );
+      input.attackerId,
+      input.attack,
+    )
+  );
+}
+
+function ordinaryObjectAttackTargetIssues<
+  Attack extends BoundSupportedAttackActionOption,
+>(input: {
+  readonly objectFact: OrdinaryObjectAttackTableFact | undefined;
+  readonly attackerId: CombatantId;
+  readonly objectId: OrdinaryObjectAttackFillSet["target"]["objectId"];
+  readonly attack: Attack;
+}): readonly string[] {
+  return input.objectFact === undefined
+    ? ["exactly one object attack table fact is required"]
+    : [
+        ...(input.objectFact.actorId === input.attackerId
+          ? []
+          : ["the table fact actor does not match the attacker"]),
+        ...(input.objectFact.objectId === input.objectId
+          ? []
+          : ["the table fact object does not match the selected object"]),
+        ...(input.objectFact.cover === "total"
+          ? ["Total Cover prevents direct targeting"]
+          : []),
+        ...(attackTargetConstraint(input.attack).kind ===
+        input.objectFact.range.kind
+          ? []
+          : ["the table range fact does not satisfy the selected attack"]),
+      ];
+}
+
+type OrdinaryObjectAttackRollPreparation =
+  | { readonly tag: "result"; readonly result: BattleResolutionResult }
+  | {
+      readonly tag: "ready";
+      readonly effectiveAttackRoll: BattleAttackRollResult;
+    };
+
+type OrdinaryObjectAttackRollContext<
+  Attack extends BoundSupportedAttackActionOption,
+> = {
+  readonly input: AttackProcedureResolutionInput;
+  readonly attack: Attack;
+  readonly attackerId: CombatantId;
+  readonly fillSet: OrdinaryObjectAttackFillSet;
+  readonly objectFact: OrdinaryObjectAttackTableFact;
+};
+
+function prepareOrdinaryObjectAttackRoll<
+  Attack extends BoundSupportedAttackActionOption,
+>(
+  input: OrdinaryObjectAttackRollContext<Attack>,
+): OrdinaryObjectAttackRollPreparation {
+  const attackRoll = input.fillSet.attackRoll;
+  if (attackRoll === undefined) {
+    return input.fillSet.damageRoll !== undefined
+      ? {
+          tag: "result",
+          result: invalidResult(
+            input.input.state,
+            "invalidFill",
+            ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
+          ),
+        }
+      : {
+          tag: "result",
+          result: needsHolesResult(input.input.state, input.input.subject, [
+            attackRollHole(
+              input.input.state.combatants.get(input.attackerId),
+              input.attack,
+              requiredOrdinaryObjectAttackRollMode(
+                input.input.state,
+                input.attackerId,
+                input.attack,
+                input.objectFact,
+              ),
+            ),
+          ]),
+        };
   }
   const requiredRollMode = requiredOrdinaryObjectAttackRollMode(
     input.input.state,
-    attackerId,
-    attack,
-    objectFact,
+    input.attackerId,
+    input.attack,
+    input.objectFact,
   );
-  if (
-    !input.input.state.currentTurnResources.attackRollMadeThisTurn &&
-    !attackRollModeMatches(fillSet.attackRoll, requiredRollMode)
-  ) {
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Attack roll mode does not match the current object attack rule.",
-    );
+  const rollIssue = ordinaryObjectAttackRollIssue({
+    context: input,
+    attackRoll,
+    requiredRollMode,
+  });
+  if (rollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.input.state, "invalidFill", rollIssue),
+    };
   }
-  const attacker = input.input.state.combatants.get(attackerId);
+  const rerollResult = ordinaryObjectAttackRerollResult({
+    context: input,
+    attackRoll,
+    requiredRollMode,
+  });
+  if (rerollResult !== null) return rerollResult;
+  return {
+    tag: "ready",
+    effectiveAttackRoll: effectiveD20TestNaturalOneRerollAttackRoll(attackRoll),
+  };
+}
+
+function ordinaryObjectAttackRollIssue<
+  Attack extends BoundSupportedAttackActionOption,
+>(input: {
+  readonly context: OrdinaryObjectAttackRollContext<Attack>;
+  readonly attackRoll: BattleAttackRollResult;
+  readonly requiredRollMode: ReturnType<
+    typeof requiredOrdinaryObjectAttackRollMode
+  >;
+}): string | null {
+  if (
+    !attackRollResultIsValid(input.attackRoll) ||
+    input.attackRoll.activatedOngoingFeatureProcedureRef !== undefined ||
+    input.attackRoll.missToHitReplacementProcedureRef !== undefined ||
+    input.attackRoll.spellAttackReroll !== undefined
+  ) {
+    return "Object attack roll does not match the ordinary attack-roll protocol.";
+  }
+  if (
+    !input.context.input.state.currentTurnResources.attackRollMadeThisTurn &&
+    !attackRollModeMatches(input.attackRoll, input.requiredRollMode)
+  ) {
+    return "Attack roll mode does not match the current object attack rule.";
+  }
+  return null;
+}
+
+function ordinaryObjectAttackRerollResult<
+  Attack extends BoundSupportedAttackActionOption,
+>(input: {
+  readonly context: OrdinaryObjectAttackRollContext<Attack>;
+  readonly attackRoll: BattleAttackRollResult;
+  readonly requiredRollMode: ReturnType<
+    typeof requiredOrdinaryObjectAttackRollMode
+  >;
+}): { readonly tag: "result"; readonly result: BattleResolutionResult } | null {
+  const attacker = input.context.input.state.combatants.get(
+    input.context.attackerId,
+  );
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
       actor: attacker,
-      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
-      rollMode: fillSet.attackRoll.rollMode,
-      rolledD20s: fillSet.attackRoll.rolledD20s,
-      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+      originalNaturalD20: Number(input.attackRoll.naturalD20),
+      rollMode: input.attackRoll.rollMode,
+      rolledD20s: input.attackRoll.rolledD20s,
+      decision: input.attackRoll.d20TestNaturalOneReroll,
     })
   ) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      attackRollHoleWithD20TestNaturalOneRerollOption(
-        attackRollHole(attacker, attack, requiredRollMode),
+    return {
+      tag: "result",
+      result: needsHolesResult(
+        input.context.input.state,
+        input.context.input.subject,
+        [
+          attackRollHoleWithD20TestNaturalOneRerollOption(
+            attackRollHole(
+              attacker,
+              input.context.attack,
+              input.requiredRollMode,
+            ),
+          ),
+        ],
       ),
-    ]);
+    };
   }
   const rerollIssue = d20TestNaturalOneRerollRollIssue({
     actor: attacker,
-    total: fillSet.attackRoll.total,
-    originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
-    rollMode: fillSet.attackRoll.rollMode,
-    rolledD20s: fillSet.attackRoll.rolledD20s,
-    decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
+    total: input.attackRoll.total,
+    originalNaturalD20: Number(input.attackRoll.naturalD20),
+    rollMode: input.attackRoll.rollMode,
+    rolledD20s: input.attackRoll.rolledD20s,
+    decision: input.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode: input.requiredRollMode,
     otherD20RerollPresent: false,
   });
-  if (rerollIssue !== null) {
-    return invalidResult(input.input.state, "invalidFill", rerollIssue);
-  }
-  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
-    fillSet.attackRoll,
-  );
+  return rerollIssue === null
+    ? null
+    : {
+        tag: "result",
+        result: invalidResult(
+          input.context.input.state,
+          "invalidFill",
+          rerollIssue,
+        ),
+      };
+}
+
+type OrdinaryObjectAttackRollOutcome =
+  | { readonly tag: "result"; readonly result: BattleResolutionResult }
+  | { readonly tag: "miss"; readonly state: BattleState }
+  | {
+      readonly tag: "hit";
+      readonly state: BattleState;
+      readonly effectiveAttackRoll: BattleAttackRollResult;
+    };
+
+function resolveOrdinaryObjectAttackRoll<
+  Attack extends BoundSupportedAttackActionOption,
+>(input: {
+  readonly input: AttackProcedureResolutionInput;
+  readonly attack: Attack;
+  readonly attackerId: CombatantId;
+  readonly fillSet: OrdinaryObjectAttackFillSet;
+  readonly objectFact: OrdinaryObjectAttackTableFact;
+  readonly rollPreparation: Extract<
+    OrdinaryObjectAttackRollPreparation,
+    { readonly tag: "ready" }
+  >;
+}): OrdinaryObjectAttackRollOutcome {
   const coverBonus =
-    objectFact.cover === "half"
+    input.objectFact.cover === "half"
       ? 2
-      : objectFact.cover === "threeQuarters"
+      : input.objectFact.cover === "threeQuarters"
         ? 5
         : 0;
   const hit = attackRollHitsWithCriticalThreshold(
-    effectiveAttackRoll,
-    Number(objectFact.armorClass) + coverBonus,
+    input.rollPreparation.effectiveAttackRoll,
+    Number(input.objectFact.armorClass) + coverBonus,
     criticalThresholdForAttack(
-      input.input.state.combatants.get(attackerId),
-      attack,
+      input.input.state.combatants.get(input.attackerId),
+      input.attack,
     ),
   );
   const attackRollState = battleStateAfterTargetActionEarlyEndForActor(
     input.input.state,
-    attackerId,
+    input.attackerId,
   );
   const attackRollObservedState = {
-    ...revealHidden(attackRollState, attackerId),
+    ...revealHidden(attackRollState, input.attackerId),
     currentTurnResources: {
       ...attackRollState.currentTurnResources,
       attackRollMadeThisTurn: true,
@@ -1332,37 +1497,54 @@ function resolveOrdinaryObjectAttack<
   };
   const attackRolledState = consumeSelfAttackRollEffects(
     attackRollObservedState,
-    attackerId,
+    input.attackerId,
   );
   if (!hit) {
-    if (fillSet.damageRoll !== undefined) {
-      return invalidResult(
-        input.input.state,
-        "invalidFill",
-        "Attack damage can only be filled after a hit.",
-      );
-    }
-    return input.spendAttackProcedure(attackRolledState, attackerId, attack, {
-      kind: "acceptedAttack",
-    });
+    return input.fillSet.damageRoll !== undefined
+      ? {
+          tag: "result",
+          result: invalidResult(
+            input.input.state,
+            "invalidFill",
+            "Attack damage can only be filled after a hit.",
+          ),
+        }
+      : { tag: "miss", state: attackRolledState };
   }
+  return {
+    tag: "hit",
+    state: attackRolledState,
+    effectiveAttackRoll: input.rollPreparation.effectiveAttackRoll,
+  };
+}
 
+function resolveOrdinaryObjectAttackHit<
+  Attack extends BoundSupportedAttackActionOption,
+>(input: {
+  readonly input: AttackProcedureResolutionInput;
+  readonly attack: Attack;
+  readonly attackerId: CombatantId;
+  readonly fillSet: OrdinaryObjectAttackFillSet;
+  readonly objectFact: OrdinaryObjectAttackTableFact;
+  readonly attackRolledState: BattleState;
+  readonly effectiveAttackRoll: BattleAttackRollResult;
+  readonly spendAttackProcedure: SpendAttackProcedure<Attack>;
+}): BattleResolutionResult {
   const spellWeaponDamageRiders = activeSpellWeaponDamageRiders(
-    attackRolledState.combatants.get(attackerId),
-    attack,
+    input.attackRolledState.combatants.get(input.attackerId),
+    input.attack,
   );
   const damage = ordinaryObjectAttackDamage({
     input: input.input,
-    attack,
-    attackerId,
-    fillSet,
-    attackRolledState,
-    effectiveAttackRoll,
+    attack: input.attack,
+    attackerId: input.attackerId,
+    fillSet: input.fillSet,
+    attackRolledState: input.attackRolledState,
+    effectiveAttackRoll: input.effectiveAttackRoll,
     spellWeaponDamageRiders,
   });
   if (damage.tag === "resolution") return damage.result;
-  const damageEntries = damage.entries;
-  const primaryDamage = damageEntries[0];
+  const primaryDamage = damage.entries[0];
   if (primaryDamage === undefined) {
     return invalidResult(
       input.input.state,
@@ -1371,19 +1553,29 @@ function resolveOrdinaryObjectAttack<
     );
   }
   const objectDamage = objectDamageOutcomeFromComponents({
-    objectId: fillSet.target.objectId,
-    components: [primaryDamage, ...damageEntries.slice(1)],
-    disposition: objectFact.damageDisposition,
+    objectId: input.fillSet.target.objectId,
+    components: [primaryDamage, ...damage.entries.slice(1)],
+    disposition: input.objectFact.damageDisposition,
   });
   const spent = input.spendAttackProcedure(
-    attackRolledState,
-    attackerId,
-    attack,
+    input.attackRolledState,
+    input.attackerId,
+    input.attack,
     { kind: "acceptedAttack" },
   );
   return spent.tag === "resolved"
-    ? { ...spent, ...nonEmptyArrayProperty("objectDamages", [objectDamage]) }
+    ? {
+        ...spent,
+        ...nonEmptyArrayProperty("objectDamages", [objectDamage]),
+      }
     : spent;
+}
+
+function selectedAttackTargetIsValid(
+  target: BattleCreatureState | undefined,
+  attackerId: CombatantId,
+): target is BattleCreatureState {
+  return target !== undefined && target.combatantId !== attackerId;
 }
 
 type OrdinaryObjectAttackDamage =
@@ -1555,7 +1747,7 @@ export function resolveSelectedAttackProcedure<
 
   const target = input.state.combatants.get(fillSet.targetId);
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (target == null || target.combatantId === attackerId) {
+  if (!selectedAttackTargetIsValid(target, attackerId)) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
@@ -4306,90 +4498,19 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
 }):
   | { readonly tag: "ok"; readonly state: BattleState }
   | { readonly tag: "result"; readonly result: BattleResolutionResult } {
-  const decisionHole = weaponMasteryCleaveDecisionHole(
-    input.state,
-    input.subject.actorId,
-    input.firstTargetId,
-    input.attack,
-  );
-  const decision = resolveAdditionalWeaponAttackDecision({
-    kind: "weaponMasteryTurn",
-    state: input.state,
-    subject: input.subject,
-    decisionHole,
-    attack: input.attack,
-    fills: weaponMasteryCleaveAdditionalWeaponAttackFills(input.fillSet),
-  });
-  if (decision.tag !== "use") return decision;
-  const primaryAttack = decision.attack;
-  const cleaveAttack = weaponMasteryCleaveExtraAttack(primaryAttack);
-  if (input.fillSet.weaponMasteryCleaveTarget === undefined) {
-    return {
-      tag: "result",
-      result: needsHolesResult(input.state, input.subject, [
-        weaponMasteryCleaveTargetHole(
-          input.state,
-          input.subject.actorId,
-          input.firstTargetId,
-        ),
-      ]),
-    };
-  }
-  const secondTargetId = input.fillSet.weaponMasteryCleaveTarget.value;
-  const cleaveTargetFacts = additionalWeaponAttackTargetSpatialFacts(
-    input.fillSet.weaponMasteryCleaveTarget,
-  );
-  /* v8 ignore start -- Malformed fill: the selected second target must satisfy the spatial constraints encoded by the emitted Cleave target hole. */
-  if (
-    !weaponMasteryCleaveTargetIsLegal({
-      state: input.state,
-      attackerId: input.subject.actorId,
-      firstTargetId: input.firstTargetId,
-      secondTargetId,
-      attack: cleaveAttack,
-      targetSpatialFacts: cleaveTargetFacts,
-    })
-  ) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Weapon Mastery Cleave second target must be within 5 feet of the first target and within the attacker's reach.",
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  const cleaveAttackRoll = resolveAdditionalWeaponAttackRoll({
-    state: input.state,
-    subject: input.subject,
-    attack: cleaveAttack,
-    family: decision.family,
-    targetId: secondTargetId,
-    targetSpatialFacts: cleaveTargetFacts,
-    attackRollHole: weaponMasteryCleaveAttackRollHole(
-      input.state,
-      input.subject.actorId,
-      secondTargetId,
-      cleaveAttack,
-      cleaveTargetFacts,
-    ),
-  });
-  if (cleaveAttackRoll.tag === "result") return cleaveAttackRoll;
+  const preparation = prepareWeaponMasteryCleaveAttack(input);
+  if (preparation.tag !== "prepared") return preparation;
+  const {
+    decision,
+    primaryAttack,
+    cleaveAttack,
+    secondTargetId,
+    cleaveTargetFacts,
+    targetRelationshipFacts,
+    cleaveAttackRoll,
+    secondTarget,
+  } = preparation;
   const effectiveCleaveAttackRoll = cleaveAttackRoll.attackRoll;
-  const secondTarget = input.state.combatants.get(secondTargetId);
-  /* v8 ignore start -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
-  if (secondTarget === undefined) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Weapon Mastery Cleave second target is no longer in this battle.",
-      ),
-    };
-  }
-  /* v8 ignore stop */
   const cleaveCriticalThreshold = criticalThresholdForAttack(
     input.state.combatants.get(input.subject.actorId),
     cleaveAttack,
@@ -4433,7 +4554,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
         input.subject.actorId,
         secondTargetId,
         null,
-        input.fillSet.weaponMasteryCleaveTarget.relationshipFacts ?? [],
+        targetRelationshipFacts,
       ),
       input.subject.actorId,
       secondTargetId,
@@ -4705,6 +4826,131 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   };
 }
 
+type WeaponMasteryCleaveDecisionUse = Extract<
+  AdditionalWeaponAttackDecisionResolution<WeaponMasteryTurnAdditionalWeaponAttackFamily>,
+  { readonly tag: "use" }
+>;
+
+type WeaponMasteryCleavePreparation =
+  | { readonly tag: "ok"; readonly state: BattleState }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult }
+  | {
+      readonly tag: "prepared";
+      readonly decision: WeaponMasteryCleaveDecisionUse;
+      readonly primaryAttack: WeaponMasteryCleaveDecisionUse["attack"];
+      readonly cleaveAttack: ReturnType<typeof weaponMasteryCleaveExtraAttack>;
+      readonly secondTargetId: CombatantId;
+      readonly cleaveTargetFacts: readonly BattleTargetSpatialFact[];
+      readonly targetRelationshipFacts: readonly BattleAttackRollRelationshipFact[];
+      readonly cleaveAttackRoll: Extract<
+        AdditionalWeaponAttackRollResolution,
+        { readonly tag: "ok" }
+      >;
+      readonly secondTarget: BattleCreatureState;
+    };
+
+function prepareWeaponMasteryCleaveAttack(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: BattleCreatureState["combatantId"];
+  readonly attack: SupportedAttackActionOption;
+  readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
+}): WeaponMasteryCleavePreparation {
+  const decision = resolveAdditionalWeaponAttackDecision({
+    kind: "weaponMasteryTurn",
+    state: input.state,
+    subject: input.subject,
+    decisionHole: weaponMasteryCleaveDecisionHole(
+      input.state,
+      input.subject.actorId,
+      input.firstTargetId,
+      input.attack,
+    ),
+    attack: input.attack,
+    fills: weaponMasteryCleaveAdditionalWeaponAttackFills(input.fillSet),
+  });
+  if (decision.tag !== "use") return decision;
+  const primaryAttack = decision.attack;
+  const cleaveAttack = weaponMasteryCleaveExtraAttack(primaryAttack);
+  const targetFill = input.fillSet.weaponMasteryCleaveTarget;
+  if (targetFill === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        weaponMasteryCleaveTargetHole(
+          input.state,
+          input.subject.actorId,
+          input.firstTargetId,
+        ),
+      ]),
+    };
+  }
+  const secondTargetId = targetFill.value;
+  const cleaveTargetFacts =
+    additionalWeaponAttackTargetSpatialFacts(targetFill);
+  /* v8 ignore start -- Malformed fill: the selected second target must satisfy the spatial constraints encoded by the emitted Cleave target hole. */
+  if (
+    !weaponMasteryCleaveTargetIsLegal({
+      state: input.state,
+      attackerId: input.subject.actorId,
+      firstTargetId: input.firstTargetId,
+      secondTargetId,
+      attack: cleaveAttack,
+      targetSpatialFacts: cleaveTargetFacts,
+    })
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Weapon Mastery Cleave second target must be within 5 feet of the first target and within the attacker's reach.",
+      ),
+    };
+  }
+  /* v8 ignore stop */
+  const cleaveAttackRoll = resolveAdditionalWeaponAttackRoll({
+    state: input.state,
+    subject: input.subject,
+    attack: cleaveAttack,
+    family: decision.family,
+    targetId: secondTargetId,
+    targetSpatialFacts: cleaveTargetFacts,
+    attackRollHole: weaponMasteryCleaveAttackRollHole(
+      input.state,
+      input.subject.actorId,
+      secondTargetId,
+      cleaveAttack,
+      cleaveTargetFacts,
+    ),
+  });
+  if (cleaveAttackRoll.tag === "result") return cleaveAttackRoll;
+  const secondTarget = input.state.combatants.get(secondTargetId);
+  /* v8 ignore start -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
+  if (secondTarget === undefined) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Weapon Mastery Cleave second target is no longer in this battle.",
+      ),
+    };
+  }
+  /* v8 ignore stop */
+  return {
+    tag: "prepared",
+    decision,
+    primaryAttack,
+    cleaveAttack,
+    secondTargetId,
+    cleaveTargetFacts,
+    targetRelationshipFacts: targetFill.relationshipFacts ?? [],
+    cleaveAttackRoll,
+    secondTarget,
+  };
+}
+
 function cleaveFillIsAbsent(
   fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
 ): boolean {
@@ -4899,100 +5145,18 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
 }):
   | { readonly tag: "ok"; readonly state: BattleState }
   | { readonly tag: "result"; readonly result: BattleResolutionResult } {
-  const decisionHole = huntersPreyHordeBreakerDecisionHole(
-    input.state,
-    input.subject.actorId,
-    input.firstTargetId,
-    input.attack,
-  );
-  const decision = resolveAdditionalWeaponAttackDecision({
-    kind: "procedureExecution",
-    state: input.state,
-    subject: input.subject,
-    decisionHole,
-    attack: input.attack,
-    fills: huntersPreyHordeBreakerAdditionalWeaponAttackFills(input.fillSet),
-    selection: huntersPreyHordeBreakerSelection(
-      input.state,
-      input.subject.actorId,
-      input.firstTargetId,
-      input.attack,
-    ),
-  });
-  if (decision.tag !== "use") return decision;
-  const hordeBreakerAttack = decision.attack;
-  const { procedureRef } = decision.family;
-  if (input.fillSet.huntersPreyHordeBreakerTarget === undefined) {
-    return {
-      tag: "result",
-      result: needsHolesResult(input.state, input.subject, [
-        huntersPreyHordeBreakerTargetHole(
-          input.state,
-          input.subject.actorId,
-          input.firstTargetId,
-          procedureRef,
-        ),
-      ]),
-    };
-  }
-  const secondTargetId = input.fillSet.huntersPreyHordeBreakerTarget.value;
-  const targetFacts = additionalWeaponAttackTargetSpatialFacts(
-    input.fillSet.huntersPreyHordeBreakerTarget,
-  );
-  if (
-    !huntersPreyHordeBreakerTargetIsLegal({
-      state: input.state,
-      attackerId: input.subject.actorId,
-      sourceProcedureRef: procedureRef,
-      firstTargetId: input.firstTargetId,
-      secondTargetId,
-      attack: hordeBreakerAttack,
-      targetSpatialFacts: targetFacts,
-    })
-  ) {
-    /* v8 ignore start -- Malformed fill: the second target must satisfy the spatial constraints encoded by the emitted Horde Breaker target hole. */
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Hunter's Prey Horde Breaker second target must be different, within 5 feet of the original target, within weapon range, and not already attacked this turn.",
-      ),
-    };
-    /* v8 ignore stop */
-  }
-  const hordeBreakerAttackRoll = resolveAdditionalWeaponAttackRoll({
-    state: input.state,
-    subject: input.subject,
-    attack: hordeBreakerAttack,
-    family: decision.family,
-    targetId: secondTargetId,
-    targetSpatialFacts: targetFacts,
-    attackRollHole: huntersPreyHordeBreakerAttackRollHole(
-      input.state,
-      input.subject.actorId,
-      secondTargetId,
-      hordeBreakerAttack,
-      targetFacts,
-    ),
-  });
-  if (hordeBreakerAttackRoll.tag === "result") {
-    return hordeBreakerAttackRoll;
-  }
+  const preparation = prepareHuntersPreyHordeBreakerAttack(input);
+  if (preparation.tag !== "prepared") return preparation;
+  const {
+    decision,
+    hordeBreakerAttack,
+    secondTargetId,
+    targetFacts,
+    targetRelationshipFacts,
+    hordeBreakerAttackRoll,
+    secondTarget,
+  } = preparation;
   const effectiveHordeBreakerAttackRoll = hordeBreakerAttackRoll.attackRoll;
-  const secondTarget = input.state.combatants.get(secondTargetId);
-  /* v8 ignore start -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
-  if (secondTarget === undefined) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Hunter's Prey Horde Breaker second target is no longer in this battle.",
-      ),
-    };
-  }
-  /* v8 ignore stop */
   const criticalThreshold = criticalThresholdForAttack(
     input.state.combatants.get(input.subject.actorId),
     hordeBreakerAttack,
@@ -5008,7 +5172,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       input.subject.actorId,
       secondTargetId,
       null,
-      input.fillSet.huntersPreyHordeBreakerTarget.relationshipFacts ?? [],
+      targetRelationshipFacts,
     ),
     input.subject.actorId,
     secondTargetId,
@@ -5310,6 +5474,140 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       critical,
       handledInterruptTrigger: input.handledInterruptTrigger,
     }),
+  };
+}
+
+type HuntersPreyHordeBreakerDecisionUse = Extract<
+  AdditionalWeaponAttackDecisionResolution<ProcedureExecutionAdditionalWeaponAttackFamily>,
+  { readonly tag: "use" }
+>;
+
+type HuntersPreyHordeBreakerPreparation =
+  | { readonly tag: "ok"; readonly state: BattleState }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult }
+  | {
+      readonly tag: "prepared";
+      readonly decision: HuntersPreyHordeBreakerDecisionUse;
+      readonly hordeBreakerAttack: HuntersPreyHordeBreakerDecisionUse["attack"];
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly secondTargetId: CombatantId;
+      readonly targetFacts: readonly BattleTargetSpatialFact[];
+      readonly targetRelationshipFacts: readonly BattleAttackRollRelationshipFact[];
+      readonly hordeBreakerAttackRoll: Extract<
+        AdditionalWeaponAttackRollResolution,
+        { readonly tag: "ok" }
+      >;
+      readonly secondTarget: BattleCreatureState;
+    };
+
+function prepareHuntersPreyHordeBreakerAttack(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: BattleCreatureState["combatantId"];
+  readonly attack: SupportedAttackActionOption;
+  readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
+}): HuntersPreyHordeBreakerPreparation {
+  const decision = resolveAdditionalWeaponAttackDecision({
+    kind: "procedureExecution",
+    state: input.state,
+    subject: input.subject,
+    decisionHole: huntersPreyHordeBreakerDecisionHole(
+      input.state,
+      input.subject.actorId,
+      input.firstTargetId,
+      input.attack,
+    ),
+    attack: input.attack,
+    fills: huntersPreyHordeBreakerAdditionalWeaponAttackFills(input.fillSet),
+    selection: huntersPreyHordeBreakerSelection(
+      input.state,
+      input.subject.actorId,
+      input.firstTargetId,
+      input.attack,
+    ),
+  });
+  if (decision.tag !== "use") return decision;
+  const hordeBreakerAttack = decision.attack;
+  const { procedureRef } = decision.family;
+  const targetFill = input.fillSet.huntersPreyHordeBreakerTarget;
+  if (targetFill === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        huntersPreyHordeBreakerTargetHole(
+          input.state,
+          input.subject.actorId,
+          input.firstTargetId,
+          procedureRef,
+        ),
+      ]),
+    };
+  }
+  const secondTargetId = targetFill.value;
+  const targetFacts = additionalWeaponAttackTargetSpatialFacts(targetFill);
+  /* v8 ignore start -- Malformed fill: the second target must satisfy the spatial constraints encoded by the emitted Horde Breaker target hole. */
+  if (
+    !huntersPreyHordeBreakerTargetIsLegal({
+      state: input.state,
+      attackerId: input.subject.actorId,
+      sourceProcedureRef: procedureRef,
+      firstTargetId: input.firstTargetId,
+      secondTargetId,
+      attack: hordeBreakerAttack,
+      targetSpatialFacts: targetFacts,
+    })
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Hunter's Prey Horde Breaker second target must be different, within 5 feet of the original target, within weapon range, and not already attacked this turn.",
+      ),
+    };
+  }
+  /* v8 ignore stop */
+  const hordeBreakerAttackRoll = resolveAdditionalWeaponAttackRoll({
+    state: input.state,
+    subject: input.subject,
+    attack: hordeBreakerAttack,
+    family: decision.family,
+    targetId: secondTargetId,
+    targetSpatialFacts: targetFacts,
+    attackRollHole: huntersPreyHordeBreakerAttackRollHole(
+      input.state,
+      input.subject.actorId,
+      secondTargetId,
+      hordeBreakerAttack,
+      targetFacts,
+    ),
+  });
+  if (hordeBreakerAttackRoll.tag === "result") {
+    return hordeBreakerAttackRoll;
+  }
+  const secondTarget = input.state.combatants.get(secondTargetId);
+  /* v8 ignore start -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
+  if (secondTarget === undefined) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Hunter's Prey Horde Breaker second target is no longer in this battle.",
+      ),
+    };
+  }
+  /* v8 ignore stop */
+  return {
+    tag: "prepared",
+    decision,
+    hordeBreakerAttack,
+    procedureRef,
+    secondTargetId,
+    targetFacts,
+    targetRelationshipFacts: targetFill.relationshipFacts ?? [],
+    hordeBreakerAttackRoll,
+    secondTarget,
   };
 }
 

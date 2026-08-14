@@ -1806,54 +1806,103 @@ function finalizedMagicInitiateSpellAccesses(
     }),
   ];
 
-  return selectedFeatUnitIds.flatMap((featUnitId) => {
-    const featUnit = unitLibrary.getUnit(featUnitId);
-    if (Option.isNone(featUnit)) return [];
-    const facts = readMagicInitiateSpellAccessSourceFacts(featUnit.value);
-    if (facts.tag !== "readable") return [];
+  return selectedFeatUnitIds.flatMap((featUnitId) =>
+    finalizedMagicInitiateSpellAccessForFeat({
+      selections,
+      featUnitId,
+      unitLibrary,
+    }),
+  );
+}
 
-    const cantrips = selectedUnitChoiceOptionUnitIds(
-      selections,
-      featUnitId,
-      ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
-    );
-    const levelOneSpells = selectedUnitChoiceOptionUnitIds(
-      selections,
-      featUnitId,
-      ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
-    );
-    const abilityOptionIds = selectedUnitChoiceOptionIds(
-      selections,
-      featUnitId,
-      ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
-    );
-    const firstCantrip = cantrips[0];
-    const secondCantrip = cantrips[1];
-    const levelOneSpell = levelOneSpells[0];
-    const spellcastingAbility = magicInitiateSpellcastingAbility(
-      abilityOptionIds[0],
-    );
-    if (
-      firstCantrip === undefined ||
-      secondCantrip === undefined ||
-      cantrips.length !== facts.value.selectedCantrips.count ||
-      levelOneSpell === undefined ||
-      levelOneSpells.length !== facts.value.selectedLevelOneSpell.count ||
-      spellcastingAbility === undefined ||
-      abilityOptionIds.length !== 1
-    ) {
-      return [];
-    }
-
-    return [
-      {
-        featUnitId,
-        spellcastingAbility,
-        cantrips: [firstCantrip, secondCantrip],
-        levelOneSpell,
-      },
-    ];
+function finalizedMagicInitiateSpellAccessForFeat(input: {
+  readonly selections: FinalizedCharacterSelections;
+  readonly featUnitId: UnitRecord["id"];
+  readonly unitLibrary: UnitCatalog;
+}): readonly CharacterBuildMagicInitiateSpellAccess[] {
+  const featUnit = input.unitLibrary.getUnit(input.featUnitId);
+  if (Option.isNone(featUnit)) return [];
+  const facts = readMagicInitiateSpellAccessSourceFacts(featUnit.value);
+  if (facts.tag !== "readable") return [];
+  const cantrips = selectedUnitChoiceOptionUnitIds(
+    input.selections,
+    input.featUnitId,
+    ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+  );
+  const levelOneSpells = selectedUnitChoiceOptionUnitIds(
+    input.selections,
+    input.featUnitId,
+    ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
+  );
+  const abilityOptionIds = selectedUnitChoiceOptionIds(
+    input.selections,
+    input.featUnitId,
+    ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
+  );
+  const firstCantrip = cantrips[0];
+  const secondCantrip = cantrips[1];
+  const levelOneSpell = levelOneSpells[0];
+  const spellcastingAbility = magicInitiateSpellcastingAbility(
+    abilityOptionIds[0],
+  );
+  const selection = finalizedMagicInitiateSpellAccessSelection({
+    cantrips,
+    expectedCantripCount: facts.value.selectedCantrips.count,
+    firstCantrip,
+    secondCantrip,
+    levelOneSpells,
+    expectedLevelOneSpellCount: facts.value.selectedLevelOneSpell.count,
+    levelOneSpell,
+    spellcastingAbility,
+    abilityOptionCount: abilityOptionIds.length,
   });
+  return selection === undefined
+    ? []
+    : [
+        {
+          featUnitId: input.featUnitId,
+          spellcastingAbility: selection.spellcastingAbility,
+          cantrips: selection.cantrips,
+          levelOneSpell: selection.levelOneSpell,
+        },
+      ];
+}
+
+function finalizedMagicInitiateSpellAccessSelection(input: {
+  readonly cantrips: readonly UnitRecord["id"][];
+  readonly expectedCantripCount: number;
+  readonly firstCantrip: UnitRecord["id"] | undefined;
+  readonly secondCantrip: UnitRecord["id"] | undefined;
+  readonly levelOneSpells: readonly UnitRecord["id"][];
+  readonly expectedLevelOneSpellCount: number;
+  readonly levelOneSpell: UnitRecord["id"] | undefined;
+  readonly spellcastingAbility:
+    | CharacterBuildMagicInitiateSpellAccess["spellcastingAbility"]
+    | undefined;
+  readonly abilityOptionCount: number;
+}):
+  | {
+      readonly spellcastingAbility: CharacterBuildMagicInitiateSpellAccess["spellcastingAbility"];
+      readonly cantrips: readonly [UnitRecord["id"], UnitRecord["id"]];
+      readonly levelOneSpell: UnitRecord["id"];
+    }
+  | undefined {
+  if (
+    input.firstCantrip === undefined ||
+    input.secondCantrip === undefined ||
+    input.cantrips.length !== input.expectedCantripCount ||
+    input.levelOneSpell === undefined ||
+    input.levelOneSpells.length !== input.expectedLevelOneSpellCount ||
+    input.spellcastingAbility === undefined ||
+    input.abilityOptionCount !== 1
+  ) {
+    return undefined;
+  }
+  return {
+    spellcastingAbility: input.spellcastingAbility,
+    cantrips: [input.firstCantrip, input.secondCantrip],
+    levelOneSpell: input.levelOneSpell,
+  };
 }
 
 function selectedUnitChoiceOptionIds(
@@ -2019,65 +2068,102 @@ function hitPointMaximumGrantBonusTotal(
     ...(Either.isRight(speciesTraitIds) ? speciesTraitIds.right : []),
   ]);
   for (const sourceUnitId of sourceUnitIds) {
-    const unit = unitLibrary.getUnit(sourceUnitId);
-    if (Option.isNone(unit)) {
-      issues.push(
-        characterBuildProjectionIssue({
-          tag: "missingHitPointMaximumGrantSourceUnit",
-          sourceUnitId,
-        }),
-      );
-      continue;
-    }
-    if (
-      unit.value.kind !== "class_feature" &&
-      unit.value.kind !== "species_trait"
-    ) {
-      continue;
-    }
-    const sourceClassLevel =
-      unit.value.kind === "class_feature"
-        ? classLevelForUnit(
-            build.progression,
-            classUnitId(authoredUnitId(`class_${unit.value.className}`)),
-          )
-        : undefined;
-    const components: PassiveMechanics[] =
-      unit.value.mechanics.family === "composite"
-        ? unit.value.mechanics.parts.filter(
-            (part): part is PassiveMechanics => part.family === "passive",
-          )
-        : unit.value.mechanics.family === "passive"
-          ? [unit.value.mechanics]
-          : [];
-
-    for (const component of components) {
-      for (const grant of component.grants) {
-        if (grant.kind !== "modify_max_hp" || grant.direction !== "increase") {
-          continue;
-        }
-        const bonus = deterministicHitPointMaximumDelta(grant.delta, {
-          characterLevel: computeTotalLevel(build.progression),
-          sourceClassLevel,
-        });
-        if (bonus === undefined) {
-          issues.push(
-            characterBuildProjectionIssue({
-              tag: "unsupportedHitPointMaximumGrant",
-              sourceUnitId,
-            }),
-          );
-          continue;
-        }
-        total += bonus;
-      }
-    }
+    const projection = hitPointMaximumGrantBonusForSourceUnit({
+      build,
+      unitLibrary,
+      sourceUnitId,
+    });
+    total += projection.total;
+    issues.push(...projection.issues);
   }
 
   const collectedIssues = nonEmptyReadonlyArray(issues);
   return collectedIssues === undefined
     ? Either.right(total)
     : Either.left(collectedIssues);
+}
+
+type HitPointMaximumGrantProjection = {
+  readonly total: number;
+  readonly issues: readonly CharacterBuildProjectionIssue[];
+};
+
+function hitPointMaximumGrantBonusForSourceUnit(input: {
+  readonly build: Pick<CharacterBuild, "progression">;
+  readonly unitLibrary: UnitCatalog;
+  readonly sourceUnitId: UnitRecord["id"];
+}): HitPointMaximumGrantProjection {
+  const unit = input.unitLibrary.getUnit(input.sourceUnitId);
+  if (Option.isNone(unit)) {
+    return {
+      total: 0,
+      issues: [
+        characterBuildProjectionIssue({
+          tag: "missingHitPointMaximumGrantSourceUnit",
+          sourceUnitId: input.sourceUnitId,
+        }),
+      ],
+    };
+  }
+  if (
+    unit.value.kind !== "class_feature" &&
+    unit.value.kind !== "species_trait"
+  ) {
+    return { total: 0, issues: [] };
+  }
+  const sourceClassLevel =
+    unit.value.kind === "class_feature"
+      ? classLevelForUnit(
+          input.build.progression,
+          classUnitId(authoredUnitId(`class_${unit.value.className}`)),
+        )
+      : undefined;
+  const components: PassiveMechanics[] =
+    unit.value.mechanics.family === "composite"
+      ? unit.value.mechanics.parts.filter(
+          (part): part is PassiveMechanics => part.family === "passive",
+        )
+      : unit.value.mechanics.family === "passive"
+        ? [unit.value.mechanics]
+        : [];
+  return hitPointMaximumGrantBonusForComponents({
+    components,
+    characterLevel: computeTotalLevel(input.build.progression),
+    sourceClassLevel,
+    sourceUnitId: input.sourceUnitId,
+  });
+}
+
+function hitPointMaximumGrantBonusForComponents(input: {
+  readonly components: readonly PassiveMechanics[];
+  readonly characterLevel: number;
+  readonly sourceClassLevel: number | undefined;
+  readonly sourceUnitId: UnitRecord["id"];
+}): HitPointMaximumGrantProjection {
+  let total = 0;
+  const issues: CharacterBuildProjectionIssue[] = [];
+  for (const component of input.components) {
+    for (const grant of component.grants) {
+      if (grant.kind !== "modify_max_hp" || grant.direction !== "increase") {
+        continue;
+      }
+      const bonus = deterministicHitPointMaximumDelta(grant.delta, {
+        characterLevel: input.characterLevel,
+        sourceClassLevel: input.sourceClassLevel,
+      });
+      if (bonus === undefined) {
+        issues.push(
+          characterBuildProjectionIssue({
+            tag: "unsupportedHitPointMaximumGrant",
+            sourceUnitId: input.sourceUnitId,
+          }),
+        );
+        continue;
+      }
+      total += bonus;
+    }
+  }
+  return { total, issues };
 }
 
 function deterministicHitPointMaximumDelta(
@@ -3409,13 +3495,25 @@ function isSupportedEquipmentSelection(
     startingClassUnitId(selections.progression),
     supportProfile,
   );
-  if (
-    !selections.equipment.selectedUnitIds.every((unitId) =>
-      (supportedUnitIds as readonly string[]).includes(unitId),
-    )
-  ) {
+  if (!supportedEquipmentUnitIdsAreSupported(selections, supportedUnitIds)) {
     return false;
   }
+  return isSupportedCoinEquipmentSelection(selections, unitLibrary);
+}
+
+function supportedEquipmentUnitIdsAreSupported(
+  selections: FinalizedCharacterSelections,
+  supportedUnitIds: readonly UnitRecord["id"][],
+): boolean {
+  return selections.equipment.selectedUnitIds.every((unitId) =>
+    (supportedUnitIds as readonly string[]).includes(unitId),
+  );
+}
+
+function isSupportedCoinEquipmentSelection(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+): boolean {
   if (selections.equipment.selectedUnitIds.length === 0) return true;
 
   const startingClassId = startingClassUnitId(selections.progression);
@@ -3427,19 +3525,28 @@ function isSupportedEquipmentSelection(
   if (classFacts.tag !== "readable" || backgroundFacts.tag !== "readable") {
     return false;
   }
+  const classChoice = selectedStartingEquipmentForBuild(
+    selections,
+    startingClassId,
+    CLASS_EQUIPMENT_CHOICE_KEY,
+    classFacts.value.startingEquipment,
+  );
+  const backgroundChoice = selectedStartingEquipmentForBuild(
+    selections,
+    selections.background,
+    BACKGROUND_EQUIPMENT_CHOICE_KEY,
+    backgroundFacts.value.startingEquipment,
+  );
+  return isCoinGrantStartingEquipmentChoices(classChoice, backgroundChoice);
+}
+
+function isCoinGrantStartingEquipmentChoices(
+  classChoice: StartingEquipmentChoice | undefined,
+  backgroundChoice: StartingEquipmentChoice | undefined,
+): boolean {
   return (
-    selectedStartingEquipmentForBuild(
-      selections,
-      startingClassId,
-      CLASS_EQUIPMENT_CHOICE_KEY,
-      classFacts.value.startingEquipment,
-    )?.kind === "coin_grant" &&
-    selectedStartingEquipmentForBuild(
-      selections,
-      selections.background,
-      BACKGROUND_EQUIPMENT_CHOICE_KEY,
-      backgroundFacts.value.startingEquipment,
-    )?.kind === "coin_grant"
+    classChoice?.kind === "coin_grant" &&
+    backgroundChoice?.kind === "coin_grant"
   );
 }
 

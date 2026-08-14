@@ -8,6 +8,7 @@ import type {
   BattleResolutionResult,
   BattleSnapshot,
   BattleState,
+  BattleAcceptedAttackAmmunitionSpend,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
@@ -337,17 +338,7 @@ function battleResolutionWithExecutionSnapshot(
     result.tag === "resolved"
       ? completedReportedReadyResumePhase(inputState, result.state)
       : undefined;
-  const continuationHandledInterruptTrigger =
-    result.tag !== "invalid" &&
-    result.state.subjectResolutionPhase.kind === "subjectContinuation"
-      ? (result.state.subjectResolutionPhase.handledInterruptTrigger ??
-        handledInterruptTrigger)
-      : handledInterruptTrigger;
-  const continuationAcceptedAttackAmmunitionSpend =
-    result.tag !== "invalid" &&
-    result.state.subjectResolutionPhase.kind === "subjectContinuation"
-      ? result.state.subjectResolutionPhase.acceptedAttackAmmunitionSpend
-      : undefined;
+  const continuation = continuationMetadata(result, handledInterruptTrigger);
   const phasedResult =
     result.tag === "invalid"
       ? result
@@ -362,12 +353,12 @@ function battleResolutionWithExecutionSnapshot(
                     subject: battleSubjectForReplay(result.subject),
                     ...optionalProperty(
                       "acceptedAttackAmmunitionSpend",
-                      continuationAcceptedAttackAmmunitionSpend,
+                      continuation.acceptedAttackAmmunitionSpend,
                     ),
-                    ...(continuationHandledInterruptTrigger !== undefined
+                    ...(continuation.handledInterruptTrigger !== undefined
                       ? {
                           handledInterruptTrigger:
-                            continuationHandledInterruptTrigger,
+                            continuation.handledInterruptTrigger,
                         }
                       : {}),
                   }
@@ -385,6 +376,33 @@ function battleResolutionWithExecutionSnapshot(
   return {
     ...phasedResult,
     snapshot,
+  };
+}
+
+function continuationMetadata(
+  result: BattleResolutionResult,
+  handledInterruptTrigger: BattleInterruptTrigger | undefined,
+): {
+  readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
+  readonly acceptedAttackAmmunitionSpend:
+    | BattleAcceptedAttackAmmunitionSpend
+    | undefined;
+} {
+  if (
+    result.tag === "invalid" ||
+    result.state.subjectResolutionPhase.kind !== "subjectContinuation"
+  ) {
+    return {
+      handledInterruptTrigger,
+      acceptedAttackAmmunitionSpend: undefined,
+    };
+  }
+  return {
+    handledInterruptTrigger:
+      result.state.subjectResolutionPhase.handledInterruptTrigger ??
+      handledInterruptTrigger,
+    acceptedAttackAmmunitionSpend:
+      result.state.subjectResolutionPhase.acceptedAttackAmmunitionSpend,
   };
 }
 

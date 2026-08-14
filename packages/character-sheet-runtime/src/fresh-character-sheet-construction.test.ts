@@ -1,4 +1,5 @@
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import { spellSlotLevel } from "@dnd/shared/types";
 import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -21,6 +22,7 @@ import {
   isFreshSpellcastingCharacterSheet,
   parseFreshCharacterSheet,
 } from "./index.ts";
+import { freshCharacterSheetFromParsedState } from "./fresh-character-sheet.ts";
 
 describe("fresh Character Sheet construction", () => {
   test("returns freshness-narrowed facts with one spelling for empty state", () => {
@@ -69,6 +71,78 @@ describe("fresh Character Sheet construction", () => {
         })({ ...projection, displayName: "presentation must stay outside" }),
       ),
     ).toBe(true);
+  });
+
+  test("parses a fresh nonspellcasting sheet and rejects retained play state", () => {
+    const result = createFreshCharacterSheet({
+      characterId: characterSheetId("character:parsed-fresh-nonspellcaster"),
+      build,
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
+    });
+    if (Either.isLeft(result)) {
+      throw new Error(
+        `Valid nonspellcasting fixture must construct: ${JSON.stringify(result.left)}`,
+      );
+    }
+
+    const parsed = freshCharacterSheetFromParsedState(result.right);
+    expect(parsed).toHaveProperty("_tag", "Right");
+    if (Either.isRight(parsed)) {
+      expect(parsed.right.conditions).toEqual([]);
+      expect(parsed.right.hitPointMaximumReduction).toBe(0);
+    }
+
+    expect(
+      freshCharacterSheetFromParsedState({
+        ...result.right,
+        conditions: ["blinded"],
+      }),
+    ).toEqual(
+      Either.left("Fresh Character Sheet requires unspent initial play state."),
+    );
+  });
+
+  test("parses a fresh spellcasting sheet and rejects spent spell slots", () => {
+    const result = createFreshCharacterSheet({
+      characterId: characterSheetId("character:parsed-fresh-spellcaster"),
+      build: wizardBuild({ wizardAdvancements: 0 }),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
+    });
+    if (Either.isLeft(result)) {
+      throw new Error(
+        `Valid spellcasting fixture must construct: ${JSON.stringify(result.left)}`,
+      );
+    }
+    if (!isFreshSpellcastingCharacterSheet(result.right)) {
+      throw new Error(
+        "Expected the parsed fixture to retain spellcasting state.",
+      );
+    }
+
+    const parsed = freshCharacterSheetFromParsedState(result.right);
+    expect(parsed).toHaveProperty("_tag", "Right");
+    if (Either.isRight(parsed)) {
+      expect(parsed.right.spellSlotExpenditures).toEqual([]);
+      expect(parsed.right.createdSpellSlots).toEqual([]);
+      expect(parsed.right.pactSlotExpenditure).toBeUndefined();
+    }
+
+    expect(
+      freshCharacterSheetFromParsedState({
+        ...result.right,
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
+        ],
+      }),
+    ).toEqual(
+      Either.left("Fresh Character Sheet requires unspent initial play state."),
+    );
   });
 
   test("rejects a valid stored sheet whose current HP is already depleted", () => {

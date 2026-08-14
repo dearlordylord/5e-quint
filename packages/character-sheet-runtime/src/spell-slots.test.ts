@@ -610,4 +610,79 @@ describe("Character Sheet runtime / spell slots", () => {
       characterSheetSpellSlotSourceState(second)?.createdSpellSlots,
     ).toEqual([{ spellLevel: 1, count: 2, expended: 0 }]);
   });
+
+  test("spends and creates slots across ordinary and created-only levels", () => {
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:synthetic-created-only-level"),
+        build: sorcererFontOfMagicBuild({
+          sorcererAdvancements: 4,
+          spellSlots: [{ spellLevel: 1, count: 4 }],
+        }),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const createdLevelTwo = requireRight(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet,
+        unitLibrary,
+        spellLevel: spellSlotLevel(2),
+      }),
+    );
+    expect(characterSheetSpellSlots(createdLevelTwo)).toEqual([
+      { spellLevel: 1, count: 4, expended: 0 },
+      { spellLevel: 2, count: 1, expended: 0 },
+    ]);
+
+    const spentCreatedLevelTwo = requireRight(
+      convertFontOfMagicSpellSlotToSorceryPoints({
+        sheet: createdLevelTwo,
+        unitLibrary,
+        spellLevel: spellSlotLevel(2),
+      }),
+    );
+    const spentOrdinaryLevelOne = requireRight(
+      convertFontOfMagicSpellSlotToSorceryPoints({
+        sheet: spentCreatedLevelTwo,
+        unitLibrary,
+        spellLevel: spellSlotLevel(1),
+        spellSlotSource: "ordinary",
+      }),
+    );
+    expect(characterSheetSpellSlotSourceState(spentOrdinaryLevelOne)).toEqual({
+      ordinarySpellSlotExpenditures: [
+        { spellLevel: spellSlotLevel(1), expended: 1 },
+      ],
+      createdSpellSlots: [
+        { spellLevel: spellSlotLevel(2), expended: 1, count: 1 },
+      ],
+    });
+
+    const createdLevelOne = requireRight(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet: spentOrdinaryLevelOne,
+        unitLibrary,
+        spellLevel: spellSlotLevel(1),
+      }),
+    );
+    const createdLevelTwoAgain = requireRight(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet: createdLevelOne,
+        unitLibrary,
+        spellLevel: spellSlotLevel(2),
+      }),
+    );
+
+    expect(characterSheetSpellSlotSourceState(createdLevelTwoAgain)).toEqual({
+      ordinarySpellSlotExpenditures: [
+        { spellLevel: spellSlotLevel(1), expended: 1 },
+      ],
+      createdSpellSlots: [
+        { spellLevel: spellSlotLevel(1), count: 1, expended: 0 },
+        { spellLevel: spellSlotLevel(2), count: 2, expended: 1 },
+      ],
+    });
+  });
 });

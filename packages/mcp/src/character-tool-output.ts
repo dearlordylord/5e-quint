@@ -39,12 +39,37 @@ const CharacterSheetHitDieDisplayRowSchema = Schema.Struct({
   total: PositiveIntegerSchema,
   spent: NonNegativeIntegerSchema,
 });
-const CharacterSheetResourceDisplayRowSchema = Schema.Struct({
-  tag: Schema.String,
-  unitId: Schema.String,
+const CharacterSheetUnitResourceDisplayRowSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("layOnHandsHealingPool"),
+    unitId: Schema.String,
+    count: NonNegativeIntegerSchema,
+    expended: NonNegativeIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("useCountResource"),
+    unitId: Schema.String,
+    count: NonNegativeIntegerSchema,
+    expended: NonNegativeIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("pointPoolResource"),
+    unitId: Schema.String,
+    count: NonNegativeIntegerSchema,
+    expended: NonNegativeIntegerSchema,
+  }),
+);
+const CharacterSheetSpellAccessFreeCastDisplayRowSchema = Schema.Struct({
+  tag: Schema.Literal("spellAccessFreeCast"),
+  sourceUnitId: Schema.String,
+  spellId: Schema.String,
   count: NonNegativeIntegerSchema,
   expended: NonNegativeIntegerSchema,
 });
+const CharacterSheetResourceDisplayRowSchema = Schema.Union(
+  CharacterSheetUnitResourceDisplayRowSchema,
+  CharacterSheetSpellAccessFreeCastDisplayRowSchema,
+);
 const DraftChoiceCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("draft"),
   path: Schema.Literal(...CHARACTER_DRAFT_CHOICE_PATHS),

@@ -21,10 +21,10 @@ import type { CombatantId, InitiativeScore } from "./identity.ts";
 import { findPresentFamiliarById } from "./find-familiar-state.ts";
 import {
   findCompanionEntryByOwner,
+  findFamiliarDisappearedAtZeroHitPointsState,
   setCompanion,
   type BattleCompanionCurrentHitPoints,
   type BattleCompanionDismissedForeverState,
-  type BattleCompanionDisappearedAtZeroHitPointsState,
   type BattleCompanionHitPoints,
   type BattleCompanionIdentity,
   type BattleCompanionPlacement,
@@ -109,25 +109,6 @@ export function findFamiliarTemporarilyDismissedState(input: {
   };
 }
 
-export function findFamiliarDisappearedAtZeroHitPointsState(input: {
-  readonly storedForm: BattleCompanionStoredForm;
-  readonly identity: BattleCompanionIdentity;
-  readonly protocol: BattleCompanionProtocol;
-  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-  readonly ownerId: CombatantId;
-  readonly reactionAvailable: boolean;
-}): BattleCompanionDisappearedAtZeroHitPointsState {
-  return {
-    ...input.storedForm,
-    status: "disappearedAtZeroHitPoints",
-    ownerId: input.ownerId,
-    identity: input.identity,
-    protocol: input.protocol,
-    creatureTypeOverride: input.creatureTypeOverride,
-    reactionAvailable: input.reactionAvailable,
-  };
-}
-
 export function presentFindFamiliarHitPoints(
   state: BattleState,
   familiarId: CombatantId | undefined,
@@ -193,51 +174,26 @@ export function temporarilyDismissFindFamiliar(
   if (spent.tag === "invalid") {
     return spent;
   }
-  const hitPoints = presentFindFamiliarHitPoints(input.state, familiarId);
-  /* v8 ignore start -- Present-companion lifecycle invariant: zero-HP damage processing transitions and removes the familiar atomically before a dismissal can observe it as present. */
-  if (typeof hitPoints === "string") {
-    return invalidFindFamiliarResult(input.state, "invalidFill", hitPoints);
-  }
-  /* v8 ignore stop */
-  const reactionAvailable =
-    input.state.combatants.get(familiarId)?.reactionAvailable;
-  /* v8 ignore start -- Present-companion lifecycle invariant: the same live combatant that supplied retained Hit Points owns its Reaction availability. */
-  if (reactionAvailable === undefined) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "missingCombatant",
-      "Present Find Familiar combatant is missing.",
-    );
-  }
-  /* v8 ignore stop */
-  const retainedForm = retainedStoredFormForPresentCompanion({
-    state: input.state,
-    companionId: familiarId,
-    companion: familiar,
-  });
-  /* v8 ignore start -- Present-companion invariant: dismissal receives the form and live Stat Block combatant admitted together; a retained-form mismatch requires externally corrupted companion state. */
-  if (typeof retainedForm === "string") {
-    return invalidFindFamiliarResult(input.state, "invalidFill", retainedForm);
-  }
-  /* v8 ignore stop */
-  const combatant = input.state.combatants.get(familiarId);
-  /* v8 ignore start -- The present companion and its live combatant are admitted and removed atomically. */
-  if (combatant === undefined) {
+  const dismissalFacts = temporarilyDismissFindFamiliarFacts(
+    input,
+    familiar,
+    familiarId,
+  );
+  if (typeof dismissalFacts === "string") {
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
-      "Present Find Familiar combatant is missing.",
+      dismissalFacts,
     );
   }
-  /* v8 ignore stop */
   const nextFamiliar = findFamiliarTemporarilyDismissedState({
-    storedForm: retainedForm,
+    storedForm: dismissalFacts.retainedForm,
     identity: familiar.identity,
     protocol: familiar.protocol,
     creatureTypeOverride: familiar.creatureTypeOverride,
-    hitPoints,
-    ammunitionStocks: combatant.ammunitionStocks,
-    reactionAvailable,
+    hitPoints: dismissalFacts.hitPoints,
+    ammunitionStocks: dismissalFacts.ammunitionStocks,
+    reactionAvailable: dismissalFacts.reactionAvailable,
     reappearanceCombatantId: familiarId,
     ownerId: input.casterId,
   });
@@ -259,6 +215,44 @@ export function temporarilyDismissFindFamiliar(
     }),
     findFamiliarCompanionLifecycleRouteEvents(),
   );
+}
+
+type TemporarilyDismissFindFamiliarFacts = {
+  readonly hitPoints: BattleCompanionHitPoints;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
+  readonly reactionAvailable: boolean;
+  readonly retainedForm: BattleCompanionStoredForm;
+};
+
+function temporarilyDismissFindFamiliarFacts(
+  input: FindFamiliarLifecycleInputBase,
+  familiar: Extract<BattleCompanionState, { readonly status: "present" }>,
+  familiarId: CombatantId,
+): TemporarilyDismissFindFamiliarFacts | string {
+  const hitPoints = presentFindFamiliarHitPoints(input.state, familiarId);
+  /* v8 ignore start -- Present-companion lifecycle invariant: zero-HP damage processing transitions and removes the familiar atomically before a dismissal can observe it as present. */
+  if (typeof hitPoints === "string") return hitPoints;
+  /* v8 ignore stop */
+  const combatant = input.state.combatants.get(familiarId);
+  /* v8 ignore start -- Present-companion lifecycle invariant: the same live combatant that supplied retained Hit Points owns its Reaction availability. */
+  if (combatant === undefined) {
+    return "Present Find Familiar combatant is missing.";
+  }
+  /* v8 ignore stop */
+  const retainedForm = retainedStoredFormForPresentCompanion({
+    state: input.state,
+    companionId: familiarId,
+    companion: familiar,
+  });
+  /* v8 ignore start -- Present-companion invariant: dismissal receives the form and live Stat Block combatant admitted together; a retained-form mismatch requires externally corrupted companion state. */
+  if (typeof retainedForm === "string") return retainedForm;
+  /* v8 ignore stop */
+  return {
+    hitPoints,
+    ammunitionStocks: combatant.ammunitionStocks,
+    reactionAvailable: combatant.reactionAvailable,
+    retainedForm,
+  };
 }
 
 export function permanentlyDismissFindFamiliar(

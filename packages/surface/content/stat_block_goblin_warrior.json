@@ -63,13 +63,13 @@
           "reachFeet": 5
         },
         {
+          "ammunition": "arrow",
           "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",
             "value": 4
           },
           "attackType": "ranged",
-          "ammunition": "arrow",
           "name": "Shortbow",
           "onHit": [
             {

@@ -1,6 +1,6 @@
 import { type CharacterDraft, createCharacterDraft, type CreationBatchFillIssue } from "@dnd/character-creation-runtime"
 import type { CharacterSheet } from "@dnd/character-sheet-runtime"
-import { Either } from "effect"
+import { Either, Match } from "effect"
 import { useCallback, useEffect, useState } from "react"
 
 import { CHARACTER_CREATION_PRESETS } from "#/components/character-creation/characterCreationPresets.ts"
@@ -8,6 +8,7 @@ import {
   appendStoredCharacterSheet,
   applyCharacterCreationFill,
   assessCharacterDraft,
+  type CharacterSheetSummary,
   characterSheetSummary,
   createCharacterSheetFromDraft
 } from "#/components/character-creation/characterCreationRuntime.ts"
@@ -29,6 +30,16 @@ function currentStepIndex(step: StepId): number {
 
 function issueKey(issue: CreationBatchFillIssue): string {
   return `${issue.tag}-${issue.code}-${issue.message}`
+}
+
+function characterSheetResourceSourceUnitId(resource: CharacterSheetSummary["resources"][number]): string {
+  return Match.value(resource).pipe(
+    Match.when({ tag: "layOnHandsHealingPool" }, ({ unitId }) => unitId),
+    Match.when({ tag: "spellAccessFreeCast" }, ({ sourceUnitId }) => sourceUnitId),
+    Match.when({ tag: "useCountResource" }, ({ unitId }) => unitId),
+    Match.when({ tag: "pointPoolResource" }, ({ unitId }) => unitId),
+    Match.exhaustive
+  )
 }
 
 export function CharacterCreationPage() {
@@ -313,7 +324,10 @@ export function CharacterCreationPage() {
                           {summary.right.resources.length === 0
                             ? "No tracked resources"
                             : summary.right.resources
-                                .map((resource) => `${resource.unitId}: ${resource.expended}/${resource.count}`)
+                                .map(
+                                  (resource) =>
+                                    `${characterSheetResourceSourceUnitId(resource)}: ${resource.expended}/${resource.count}`
+                                )
                                 .join(", ")}
                         </dd>
                       </div>

@@ -5859,28 +5859,7 @@ type BattleCreatureSnapshotInvariantInput =
 function battleCreatureSnapshotInvariantsHold(
   snapshot: BattleCreatureSnapshotInvariantInput,
 ): boolean {
-  if (
-    new Set(snapshot.activeEffectRefs).size !== snapshot.activeEffectRefs.length
-  ) {
-    return false;
-  }
-  if (
-    new Set(snapshot.ammunitionStocks.map((stock) => stock.ammunition)).size !==
-    snapshot.ammunitionStocks.length
-  ) {
-    return false;
-  }
-  if (
-    !snapshot.activeEffectRefs.every((effectRef) =>
-      battleActiveEffectExecutionRefOrdinalIsBefore(
-        effectRef,
-        snapshot.origin.execution.scopeRef,
-        snapshot.nextActiveEffectOrdinal,
-      ),
-    )
-  ) {
-    return false;
-  }
+  if (!battleCreatureSnapshotCommonInvariantsHold(snapshot)) return false;
   if (snapshot.origin.kind === "statBlock") {
     return battleStatBlockExecutionScopeRefBelongsToCombatant(
       snapshot.origin.execution.scopeRef,
@@ -5957,6 +5936,29 @@ function battleCreatureSnapshotInvariantsHold(
         (form) => form.execution.scopeRef,
       ),
     ).size === characterOrigin.druidWildShapeAvailableForms.length
+  );
+}
+
+function battleCreatureSnapshotCommonInvariantsHold(
+  snapshot: BattleCreatureSnapshotInvariantInput,
+): boolean {
+  if (
+    new Set(snapshot.activeEffectRefs).size !== snapshot.activeEffectRefs.length
+  ) {
+    return false;
+  }
+  if (
+    new Set(snapshot.ammunitionStocks.map((stock) => stock.ammunition)).size !==
+    snapshot.ammunitionStocks.length
+  ) {
+    return false;
+  }
+  return snapshot.activeEffectRefs.every((effectRef) =>
+    battleActiveEffectExecutionRefOrdinalIsBefore(
+      effectRef,
+      snapshot.origin.execution.scopeRef,
+      snapshot.nextActiveEffectOrdinal,
+    ),
   );
 }
 
@@ -7572,68 +7574,143 @@ function pendingInterruptChoiceOwnsBoundProcedure(input: {
   readonly readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[];
   readonly readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[];
 }): boolean {
-  const { choice, combatants, readiedSpells, readiedResponses } = input;
+  const { choice } = input;
   if (choice.kind === "releaseReadiedMovement") {
-    return readiedResponses.some(
-      (readied) =>
-        readied.actorId === choice.reactorId &&
-        readied.actorId === choice.readiedMovementActorId &&
-        readied.response.kind === "movement",
+    return pendingReadiedMovementChoiceOwnsBoundResponse(
+      choice,
+      input.readiedResponses,
     );
   }
   if (choice.kind === "releaseReadiedAction") {
-    return (
-      choice.subject.tag === "runtimeCommand" &&
-      choice.subject.command === "releaseReadiedAction" &&
-      choice.subject.reactorId === choice.reactorId &&
-      readiedResponses.some(
-        (readied) =>
-          readied.actorId === choice.reactorId &&
-          readied.response.kind === "action",
-      )
+    return pendingReadiedActionChoiceOwnsBoundResponse(
+      choice,
+      input.readiedResponses,
     );
   }
   if (choice.kind === "reactionRollOrDamageReduction") {
     return serializedReactionModifierProcedureRefIsBound(
-      combatants,
+      input.combatants,
       choice.reactorId,
       choice.choice.procedureRef,
     );
   }
   if (choice.kind === "releaseReadiedSpell") {
-    if (
-      choice.subject.tag !== "runtimeCommand" ||
-      choice.subject.command !== "releaseReadiedSpell"
-    ) {
-      return false;
-    }
-    const procedureRef = choice.subject.procedureRef;
-    return (
-      serializedSpellProcedureRefIsBound(
-        combatants,
-        choice.reactorId,
-        procedureRef,
-      ) &&
-      readiedSpells.some(
-        (readied) =>
-          readied.casterId === choice.reactorId &&
-          readied.procedureRef === procedureRef,
-      )
+    return pendingReadiedSpellChoiceOwnsBoundResponse(
+      choice,
+      input.combatants,
+      input.readiedSpells,
     );
   }
   if (
     choice.kind === "castTriggeredReactionSpell" ||
     choice.kind === "castAttackHitBonusActionSpell"
   ) {
-    if (
-      choice.subject.tag !== "runtimeCommand" ||
-      (choice.subject.command !== "castTriggeredReactionSpell" &&
-        choice.subject.command !== "castAttackHitBonusActionSpell")
-    ) {
-      return false;
-    }
-    return serializedImmediateSpellChoiceIsBound(combatants, choice);
+    return pendingImmediateSpellChoiceOwnsBoundProcedure(
+      choice,
+      input.combatants,
+    );
   }
+  return pendingAttackChoiceOwnsBoundProcedure(
+    choice,
+    input.combatants,
+    input.readiedResponses,
+  );
+}
+
+function pendingReadiedMovementChoiceOwnsBoundResponse(
+  choice: Extract<
+    EncodedBattleInterruptChoice,
+    { readonly kind: "releaseReadiedMovement" }
+  >,
+  readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
+): boolean {
+  return readiedResponses.some(
+    (readied) =>
+      readied.actorId === choice.reactorId &&
+      readied.actorId === choice.readiedMovementActorId &&
+      readied.response.kind === "movement",
+  );
+}
+
+function pendingReadiedActionChoiceOwnsBoundResponse(
+  choice: Extract<
+    EncodedBattleInterruptChoice,
+    { readonly kind: "releaseReadiedAction" }
+  >,
+  readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
+): boolean {
+  return (
+    choice.subject.tag === "runtimeCommand" &&
+    choice.subject.command === "releaseReadiedAction" &&
+    choice.subject.reactorId === choice.reactorId &&
+    readiedResponses.some(
+      (readied) =>
+        readied.actorId === choice.reactorId &&
+        readied.response.kind === "action",
+    )
+  );
+}
+
+function pendingReadiedSpellChoiceOwnsBoundResponse(
+  choice: Extract<
+    EncodedBattleInterruptChoice,
+    { readonly kind: "releaseReadiedSpell" }
+  >,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[],
+): boolean {
+  if (
+    choice.subject.tag !== "runtimeCommand" ||
+    choice.subject.command !== "releaseReadiedSpell"
+  ) {
+    return false;
+  }
+  const procedureRef = choice.subject.procedureRef;
+  return (
+    serializedSpellProcedureRefIsBound(
+      combatants,
+      choice.reactorId,
+      procedureRef,
+    ) &&
+    readiedSpells.some(
+      (readied) =>
+        readied.casterId === choice.reactorId &&
+        readied.procedureRef === procedureRef,
+    )
+  );
+}
+
+function pendingImmediateSpellChoiceOwnsBoundProcedure(
+  choice: Extract<
+    EncodedBattleInterruptChoice,
+    | { readonly kind: "castTriggeredReactionSpell" }
+    | { readonly kind: "castAttackHitBonusActionSpell" }
+  >,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  if (
+    choice.subject.tag !== "runtimeCommand" ||
+    (choice.subject.command !== "castTriggeredReactionSpell" &&
+      choice.subject.command !== "castAttackHitBonusActionSpell")
+  ) {
+    return false;
+  }
+  return serializedImmediateSpellChoiceIsBound(combatants, choice);
+}
+
+function pendingAttackChoiceOwnsBoundProcedure(
+  choice: Exclude<
+    EncodedBattleInterruptChoice,
+    | { readonly kind: "releaseReadiedMovement" }
+    | { readonly kind: "releaseReadiedAction" }
+    | { readonly kind: "reactionRollOrDamageReduction" }
+    | { readonly kind: "releaseReadiedSpell" }
+    | { readonly kind: "castTriggeredReactionSpell" }
+    | { readonly kind: "castAttackHitBonusActionSpell" }
+  >,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
+): boolean {
   if (
     choice.subject.tag !== "runtimeCommand" ||
     (choice.subject.command !== "opportunityAttack" &&
@@ -7642,32 +7719,47 @@ function pendingInterruptChoiceOwnsBoundProcedure(input: {
   ) {
     return false;
   }
-  const attackSubject = choice.subject;
-  if (
-    choice.kind === "releaseReadiedAttack" &&
-    attackSubject.tag === "runtimeCommand" &&
-    attackSubject.command === "releaseReadiedAttack" &&
-    "procedureRef" in attackSubject &&
-    "targetId" in attackSubject
-  ) {
-    const subjectProcedureRef = attackSubject.procedureRef;
-    const subjectTargetId = attackSubject.targetId;
-    return (
-      combatants.some(
-        (combatant) => combatant.combatantId === subjectTargetId,
-      ) &&
-      readiedResponses.some(
-        (readied) =>
-          readied.actorId === choice.reactorId &&
-          readied.response.kind === "attack" &&
-          readied.response.procedureRef === subjectProcedureRef,
-      )
+  if (choice.kind === "releaseReadiedAttack") {
+    return pendingReadiedAttackChoiceOwnsBoundProcedure(
+      choice,
+      combatants,
+      readiedResponses,
     );
   }
   return serializedAttackProcedureRefIsBound(
     combatants,
     choice.reactorId,
     choice.subject.procedureRef,
+  );
+}
+
+function pendingReadiedAttackChoiceOwnsBoundProcedure(
+  choice: Extract<
+    EncodedBattleInterruptChoice,
+    { readonly kind: "releaseReadiedAttack" }
+  >,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
+): boolean {
+  const attackSubject = choice.subject;
+  if (
+    attackSubject.tag !== "runtimeCommand" ||
+    attackSubject.command !== "releaseReadiedAttack" ||
+    !("procedureRef" in attackSubject) ||
+    !("targetId" in attackSubject)
+  ) {
+    return false;
+  }
+  const subjectProcedureRef = attackSubject.procedureRef;
+  const subjectTargetId = attackSubject.targetId;
+  return (
+    combatants.some((combatant) => combatant.combatantId === subjectTargetId) &&
+    readiedResponses.some(
+      (readied) =>
+        readied.actorId === choice.reactorId &&
+        readied.response.kind === "attack" &&
+        readied.response.procedureRef === subjectProcedureRef,
+    )
   );
 }
 
@@ -7853,7 +7945,7 @@ function battleSnapshotInvariantsHold(
     ),
   );
   return (
-    liveCombatantIds.size === snapshot.combatants.length &&
+    battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
     new Set([...executionScopeRefs, ...retiredExecutionScopeRefs]).size ===
       executionScopeRefs.length + retiredExecutionScopeRefs.length &&
     cursorByCombatant.size === snapshot.executionScopeCursors.length &&
@@ -7896,35 +7988,7 @@ function battleSnapshotInvariantsHold(
     snapshot.readiedResponses.actionsOrMovements.every((readied) =>
       serializedReadiedResponseIsBound(snapshot.combatants, readied),
     ) &&
-    (snapshot.pendingInterrupt === null ||
-      (snapshot.pendingInterrupt.choices.every((choice) =>
-        serializedInterruptChoiceOwnsBoundSubjectReferences(
-          choice,
-          snapshot.combatants,
-        ),
-      ) &&
-        serializedBattleHoleOwnsBoundExecutionReferences({
-          hole: snapshot.pendingInterrupt.decisionHole,
-          combatants: snapshot.combatants,
-          boundExecutionRefs,
-          expectedProcedureRefs: undefined,
-        }) &&
-        snapshot.pendingInterrupt.choices.every(
-          (choice) =>
-            pendingInterruptChoiceOwnsBoundProcedure({
-              choice,
-              combatants: snapshot.combatants,
-              readiedSpells: snapshot.readiedResponses.spells,
-              readiedResponses: snapshot.readiedResponses.actionsOrMovements,
-            }) &&
-            serializedBattleHolesOwnBoundExecutionReferences({
-              holes: choice.initialHoles,
-              combatants: snapshot.combatants,
-              boundExecutionRefs,
-              expectedProcedureRefs:
-                serializedInterruptChoiceProcedureRefs(choice),
-            }),
-        ))) &&
+    battleSnapshotPendingInterruptIsValid(snapshot, boundExecutionRefs) &&
     snapshot.lightEmitters.every((emitter) =>
       serializedLightEmitterOwnsSource(emitter, snapshot.combatants),
     ) &&
@@ -7960,6 +8024,50 @@ function battleSnapshotInvariantsHold(
               snapshot.battleId,
             );
     })
+  );
+}
+
+function battleSnapshotLiveCombatantIdsAreUnique(
+  snapshot: BattleSnapshotInvariantInput,
+  liveCombatantIds: ReadonlySet<CombatantId>,
+): boolean {
+  return liveCombatantIds.size === snapshot.combatants.length;
+}
+
+function battleSnapshotPendingInterruptIsValid(
+  snapshot: BattleSnapshotInvariantInput,
+  boundExecutionRefs: ReadonlySet<string>,
+): boolean {
+  const pendingInterrupt = snapshot.pendingInterrupt;
+  if (pendingInterrupt === null) return true;
+  return (
+    pendingInterrupt.choices.every((choice) =>
+      serializedInterruptChoiceOwnsBoundSubjectReferences(
+        choice,
+        snapshot.combatants,
+      ),
+    ) &&
+    serializedBattleHoleOwnsBoundExecutionReferences({
+      hole: pendingInterrupt.decisionHole,
+      combatants: snapshot.combatants,
+      boundExecutionRefs,
+      expectedProcedureRefs: undefined,
+    }) &&
+    pendingInterrupt.choices.every(
+      (choice) =>
+        pendingInterruptChoiceOwnsBoundProcedure({
+          choice,
+          combatants: snapshot.combatants,
+          readiedSpells: snapshot.readiedResponses.spells,
+          readiedResponses: snapshot.readiedResponses.actionsOrMovements,
+        }) &&
+        serializedBattleHolesOwnBoundExecutionReferences({
+          holes: choice.initialHoles,
+          combatants: snapshot.combatants,
+          boundExecutionRefs,
+          expectedProcedureRefs: serializedInterruptChoiceProcedureRefs(choice),
+        }),
+    )
   );
 }
 

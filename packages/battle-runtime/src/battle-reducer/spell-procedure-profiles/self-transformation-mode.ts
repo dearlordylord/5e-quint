@@ -147,17 +147,8 @@ function selfTransformationModeSpellProjection(input: {
   ) {
     return null;
   }
-  const [phase, secondPhase] = spell.mechanics.phases;
-  if (
-    phase === undefined ||
-    secondPhase !== undefined ||
-    phase.kind !== "direct" ||
-    phase.attachment.kind !== "self" ||
-    phase.effects !== undefined ||
-    phase.mode?.allowsMidDurationSwitchAs !== "magic_action"
-  ) {
-    return null;
-  }
+  const phase = selfTransformationModePhase(spell.mechanics.phases);
+  if (phase === null) return null;
   const modeProjection = selfTransformationModeOptionsProjection(
     phase.mode.options,
     input.spellcastingAbilityModifier,
@@ -175,6 +166,28 @@ function selfTransformationModeSpellProjection(input: {
       durationTicks: SELF_TRANSFORMATION_DURATION_TICKS,
     },
   };
+}
+
+function selfTransformationModePhase(phases: readonly SpellActivationPhase[]):
+  | (Extract<SpellActivationPhase, { readonly kind: "direct" }> & {
+      readonly mode: NonNullable<
+        Extract<SpellActivationPhase, { readonly kind: "direct" }>["mode"]
+      >;
+    })
+  | null {
+  const [phase, secondPhase] = phases;
+  if (
+    phase === undefined ||
+    secondPhase !== undefined ||
+    phase.kind !== "direct" ||
+    phase.attachment.kind !== "self" ||
+    phase.effects !== undefined ||
+    phase.mode === undefined ||
+    phase.mode.allowsMidDurationSwitchAs !== "magic_action"
+  ) {
+    return null;
+  }
+  return { ...phase, mode: phase.mode };
 }
 
 function selfTransformationModeOptionsProjection(

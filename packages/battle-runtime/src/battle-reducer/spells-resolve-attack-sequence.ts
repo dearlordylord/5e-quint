@@ -1091,7 +1091,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     }
   | Exclude<BattleResolutionResult, { readonly tag: "resolved" }> {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (input.partFill.mirrorImageDuplicateRoll !== undefined) {
+  if (spellObjectPartHasMirrorImageDuplicateRoll(input.partFill)) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
@@ -1137,10 +1137,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.invocation,
   );
   /* v8 ignore start -- Malformed resolution input: visible-object attacks require the sight fact requested alongside the selected object target. */
-  if (
-    sightFact === null &&
-    objectTargetAttackNeedsSightFact(input.state, input.target.objectId)
-  ) {
+  if (spellObjectPartSightFactMissing(input, sightFact)) {
     const partName = spellAttackSequencePartName();
     return invalidResult(
       input.input.state,
@@ -1359,6 +1356,22 @@ function resolveSpellAttackSequenceObjectPart(input: {
         ? []
         : [sourceDamageRollPenaltyRoll.holeId],
   };
+}
+
+function spellObjectPartHasMirrorImageDuplicateRoll(
+  partFill: SpellAttackSequencePartFillSet,
+): boolean {
+  return partFill.mirrorImageDuplicateRoll !== undefined;
+}
+
+function spellObjectPartSightFactMissing(
+  input: Parameters<typeof resolveSpellAttackSequenceObjectPart>[0],
+  sightFact: ReturnType<typeof spellObjectTargetSightFact>,
+): boolean {
+  return (
+    sightFact === null &&
+    objectTargetAttackNeedsSightFact(input.state, input.target.objectId)
+  );
 }
 
 function validateSpellAttackSequencePartAttackRoll(

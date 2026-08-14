@@ -37,6 +37,27 @@ import { INITIAL_TURN_RESOURCES } from "./battle-runtime-protocol.ts";
 import { characterSpellProcedure } from "../character-execution-queries.ts";
 import { isReadiedSpellInvocation } from "./spells-discovery.ts";
 
+function readiedActionCheckpointMatches(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "releaseReadiedAction";
+      }
+    >
+  >,
+): boolean {
+  const activeInterrupt = currentInterruptCheckpoint(
+    input.state,
+  )?.activeInterrupt;
+  return (
+    activeInterrupt !== undefined &&
+    activeInterrupt.responderId === input.subject.reactorId &&
+    sameBattleSubject(activeInterrupt.subject, input.subject)
+  );
+}
+
 export function resolveReleaseReadiedActionCommand(
   input: BattleResolutionInputForSubject<
     Extract<
@@ -49,14 +70,7 @@ export function resolveReleaseReadiedActionCommand(
   >,
   resolveAction: (input: BattleResolutionInput) => BattleResolutionResult,
 ): BattleResolutionResult {
-  const activeInterrupt = currentInterruptCheckpoint(
-    input.state,
-  )?.activeInterrupt;
-  if (
-    activeInterrupt === undefined ||
-    activeInterrupt.responderId !== input.subject.reactorId ||
-    !sameBattleSubject(activeInterrupt.subject, input.subject)
-  ) {
+  if (!readiedActionCheckpointMatches(input)) {
     return invalidResult(
       input.state,
       "staleSubject",

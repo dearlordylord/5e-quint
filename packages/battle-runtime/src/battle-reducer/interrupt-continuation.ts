@@ -130,25 +130,11 @@ export function resumeInterruptedProcedure(
     });
   }
   if (continuation.kind === "movement") {
-    const result = resolveMoveAfterMovement({
+    return resumeMovementContinuation(
       state,
-      subject: continuation.subject,
-      movement: continuation.movement,
-      remainingFills: [],
-    });
-    return result.tag !== "needsHoles"
-      ? result
-      : {
-          ...result,
-          state: {
-            ...result.state,
-            subjectResolutionPhase: {
-              kind: "subjectContinuation",
-              subject: result.subject,
-              handledInterruptTrigger,
-            },
-          },
-        };
+      continuation,
+      handledInterruptTrigger,
+    );
   }
   if (continuation.kind === "movementThenAfterDamageSequence") {
     return openAfterDamageSequenceInterruptWindow({
@@ -242,6 +228,35 @@ export function resumeInterruptedProcedure(
 
   continuation satisfies never;
   throw new Error("Unhandled interrupted procedure variant.");
+}
+
+function resumeMovementContinuation(
+  state: BattleState,
+  continuation: Extract<
+    BattleInterruptedProcedure,
+    { readonly kind: "movement" }
+  >,
+  handledInterruptTrigger: BattleInterruptTrigger,
+): BattleResolutionResult {
+  const result = resolveMoveAfterMovement({
+    state,
+    subject: continuation.subject,
+    movement: continuation.movement,
+    remainingFills: [],
+  });
+  return result.tag !== "needsHoles"
+    ? result
+    : {
+        ...result,
+        state: {
+          ...result.state,
+          subjectResolutionPhase: {
+            kind: "subjectContinuation",
+            subject: result.subject,
+            handledInterruptTrigger,
+          },
+        },
+      };
 }
 
 export class InterruptContinuationExecution {

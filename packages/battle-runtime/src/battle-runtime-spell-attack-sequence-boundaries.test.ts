@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DieRollResult } from "@dnd/shared/types";
+import { classLevel, DieRollResult } from "@dnd/shared/types";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import type { BattleFill } from "./battle-state-execution.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
@@ -15,20 +15,26 @@ import {
 import {
   battleId,
   attackRollFill,
+  barbarianRageUnit,
   cantripSpellInvocationRef,
   characterBattleFeatureInitForTest,
+  characterSpellInvocationForProcedureRefForTest,
   combatantId,
   damageRollFillWithGroups,
   findHole,
   requireCharacterSpellProcedureRefForTest,
+  requireCharacterUnitProcedureRefForTest,
   requireHole,
+  rageResource,
   resolveBattleSubject,
+  supportedBattleUnitRef,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
   animalFriendshipUnitId,
   eldritchBlastUnitId,
   rayOfFrostUnitId,
+  scorchingRayUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   characterCreature,
@@ -44,6 +50,10 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { startBattle } from "./index.ts";
+import {
+  spellAttackSequencePartTargetHole,
+  spellTargetHole,
+} from "./battle-reducer/spells-targeting.ts";
 
 const friendshipSourceId = combatantId(
   "spell-attack-boundary-friendship-source",
@@ -299,6 +309,80 @@ describe("battle runtime: spell attack sequence public boundaries", () => {
     expect(rerolled).toMatchObject({ tag: "needsHoles" });
     expect(requireHole(rerolled, "rolledDice")).toMatchObject({
       kind: "rolledDice",
+    });
+  });
+
+  test("Rage asks spell attack target holes for the enemy relationship fact", () => {
+    const rage = barbarianRageUnit();
+    const session = spellBattle({
+      preparedSpells: [spellRecord(scorchingRayUnitId)],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterSpellcastingSourceClassName: "wizard",
+      casterClassLevels: [
+        { className: "barbarian", level: 1 },
+        { className: "wizard", level: 3 },
+      ],
+      casterResources: [rageResource()],
+      casterUnitRefs: [supportedBattleUnitRef(rage)],
+      casterUnitFeatures: [
+        characterBattleFeatureInitForTest(rage, [
+          { className: "barbarian", level: classLevel(1) },
+          { className: "wizard", level: classLevel(3) },
+        ]),
+      ],
+    });
+    const scorchingRay = spellAct({
+      session,
+      spellId: scorchingRayUnitId,
+      slotLevel: 2,
+    });
+    const scorchingRayInvocation =
+      characterSpellInvocationForProcedureRefForTest(
+        session,
+        spellCasterId,
+        scorchingRay.subject.procedureRef,
+      );
+    if (scorchingRayInvocation.procedure !== "spellAttackSequence") {
+      throw new Error("Expected Scorching Ray attack sequence invocation.");
+    }
+
+    const raging = resolveBattleSubject({
+      state: session.state,
+      subject: {
+        tag: "unitFeature",
+        actorId: spellCasterId,
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          session,
+          spellCasterId,
+          "barbarian_rage",
+        ),
+      },
+      fills: [],
+    });
+    if (raging.tag !== "resolved") {
+      throw new Error("Expected Rage activation to resolve.");
+    }
+
+    expect(
+      spellTargetHole(raging.state, spellCasterId, scorchingRayInvocation),
+    ).toMatchObject({
+      relationshipFactRequest: {
+        kind: "attackRollTargetIsEnemy",
+        attackerId: spellCasterId,
+      },
+    });
+    expect(
+      spellAttackSequencePartTargetHole(
+        raging.state,
+        spellCasterId,
+        scorchingRayInvocation,
+        0,
+      ),
+    ).toMatchObject({
+      relationshipFactRequest: {
+        kind: "attackRollTargetIsEnemy",
+        attackerId: spellCasterId,
+      },
     });
   });
 

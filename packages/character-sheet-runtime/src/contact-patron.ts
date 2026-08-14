@@ -53,12 +53,7 @@ export function castContactPatron(input: {
   if (Either.isLeft(feature)) return Either.left(feature.left);
   const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(feature.right);
   /* v8 ignore start -- The retained Contact Patron resource and its authored free-cast grant are one correlated support profile. */
-  if (
-    grants === null ||
-    grants.profile.resourceTag !==
-      CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG ||
-    grants.profile.spellId !== CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID
-  ) {
+  if (!hasContactPatronFreeCastProfile(grants)) {
     return characterSheetIssue(
       "Contact Patron requires the supported class-feature spell free-cast profile.",
     );
@@ -114,6 +109,17 @@ export function castContactPatron(input: {
   });
   if (Either.isLeft(sheet)) return Either.left(sheet.left);
   return Either.right({ sheet: sheet.right, invocation: invocation.right });
+}
+
+function hasContactPatronFreeCastProfile(
+  grants: ReturnType<typeof supportedClassFeatureSpellFreeCastGrantsForUnit>,
+): boolean {
+  return (
+    grants !== null &&
+    grants.profile.resourceTag ===
+      CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG &&
+    grants.profile.spellId === CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID
+  );
 }
 
 function contactPatronFreeCastResource(input: {

@@ -16,6 +16,7 @@ import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID
 } from "@dnd/battle-runtime"
 import { DieRollResult, movementFeet } from "@dnd/shared/types"
+import { Match } from "effect"
 
 type ReadonlyNonEmptyArray<T> = readonly [T, ...ReadonlyArray<T>]
 
@@ -128,14 +129,16 @@ export function requireCounterspellProcedureRef(
   spellId: string,
   slotLevel: number
 ): CounterspellTriggerFact["sourceProcedureRef"] {
-  const source = context.characters
-    .get(reactorId)
-    ?.spellPresentationSources.find(
-      (candidate) =>
-        candidate.invocation.procedure === "counterspell" &&
-        candidate.invocation.spell.id === spellId &&
-        Number(candidate.invocation.resource.slotLevel) === slotLevel
-    )
+  const source = context.characters.get(reactorId)?.spellPresentationSources.find(
+    (candidate) =>
+      candidate.invocation.procedure === "counterspell" &&
+      candidate.invocation.spell.id === spellId &&
+      Match.value(candidate.invocation.resource).pipe(
+        Match.when({ tag: "spellSlot" }, ({ slotLevel: selectedSlotLevel }) => Number(selectedSlotLevel) === slotLevel),
+        Match.when({ tag: "spellAccessFreeCast" }, ({ castLevel }) => Number(castLevel) === slotLevel),
+        Match.exhaustive
+      )
+  )
   /* v8 ignore next -- defensive failure after fixture-authored spell presentation setup */
   if (source === undefined) {
     throw new Error("Expected Counterspell procedure presentation source.")

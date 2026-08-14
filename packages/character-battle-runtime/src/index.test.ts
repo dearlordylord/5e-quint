@@ -105,6 +105,7 @@ import {
   type CharacterSheetCompanionFormSelection,
   type CharacterSheetRebuildInput,
   type CharacterSheetRetainedCompanionManifestation,
+  type CharacterSheetWithSpellSlots,
 } from "@dnd/character-sheet-runtime";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -6860,6 +6861,38 @@ describe("Character Build battle projection", () => {
       _tag: "Left",
       left: { message: expect.stringContaining("Unknown Unit") },
     });
+
+    const authoredPactBuild = pactBladeInvocationBuild(
+      authoredUnitId("weapon_quarterstaff"),
+    );
+    const authoredPactItemId =
+      authoredPactBuild.equipment.loadout.weapon?.itemId;
+    if (authoredPactItemId === undefined) {
+      throw new Error("Expected the Pact weapon loadout fixture.");
+    }
+    expect(
+      characterPactBladeBondedWeaponItemId({
+        build: {
+          ...authoredPactBuild,
+          equipment: {
+            ...authoredPactBuild.equipment,
+            owned: authoredPactBuild.equipment.owned.map((item) =>
+              item.kind === "catalogItem" && item.itemId === authoredPactItemId
+                ? {
+                    ...item,
+                    kind: "authoredCatalogItem" as const,
+                    authoredItemId: "synthetic_pact_arcane_focus",
+                    spellcastingFocusKind: "arcane" as const,
+                  }
+                : item,
+            ),
+          },
+        },
+        unitLibrary,
+        itemId: authoredPactItemId,
+      }),
+    ).toEqual(Either.right(authoredPactItemId));
+
     expect(
       characterPactBladeBondedWeaponItemId({
         build: {
@@ -9702,6 +9735,512 @@ describe("Character Build battle projection", () => {
   });
 });
 
+describe("Character battle runtime boundary coverage", () => {
+  test("routes a Character Sheet resource-projection rejection", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:init-resource-boundary"),
+        build: sorcererMetamagicBuild(),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const malformedSheet = {
+      ...sheet,
+      resourceExpenditures: [
+        {
+          tag: "pointPoolResource" as const,
+          unitId: authoredUnitId("sorcerer_font_of_magic"),
+          expended: resourceCount(99),
+        },
+      ],
+    };
+
+    expect(
+      characterSheetBattleInitWithRoute({
+        sheet: malformedSheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: combatantId("init-resource-boundary"),
+        displayName: "Resource boundary",
+        initiative: initiativeScore(12),
+        ammunitionStocks: [],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        issue: {
+          message: expect.stringContaining(
+            "point-pool expenditure exceeds its battle resource cap",
+          ),
+        },
+        routeEvents: [
+          {
+            kind: "rejectCharacterBattleHandoff",
+            holes: ["settlementConflict"],
+          },
+        ],
+      },
+    });
+  });
+
+  test("propagates a proficiency projection rejection from CharacterBuild init", () => {
+    const init = battleCreatureInitFromCharacterBuild({
+      combatantId: combatantId("init-proficiencies-boundary"),
+      characterId: characterId("character:init-proficiencies-boundary"),
+      displayName: "Proficiencies boundary",
+      build: build,
+      initiative: initiativeScore(12),
+      ammunitionStocks: [],
+      unitLibrary: unitCatalogWithoutUnitIds("background_soldier"),
+    });
+
+    expect(init).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("background"),
+      },
+    });
+  });
+
+  test("rejects an over-cap Magic Initiate free-cast expenditure during init", () => {
+    const result = characterBattleResourceInitsFromBuild(
+      magicInitiateMonkBuild(),
+      unitLibrary,
+      [
+        {
+          tag: "spellAccessFreeCast",
+          sourceUnitId: authoredUnitId("feat_magic_initiate_wizard"),
+          spellId: authoredUnitId("burning_hands"),
+          expended: resourceCount(2),
+        },
+      ],
+    );
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "Spell Access free-cast expenditure exceeds its battle resource cap",
+        ),
+      },
+    });
+  });
+
+  test("retains a point-pool resource without persisted Font of Magic facts", () => {
+    const fontOfMagic = authoredUnitId("sorcerer_font_of_magic");
+    const buildWithoutSorcererFontFacts = {
+      ...defenseBuild({ wearingArmor: false }),
+      spellcasting: {
+        sources: [
+          {
+            sourceUnitId: fontOfMagic,
+            spellcastingAbility: "int" as const,
+            cantrips: [],
+            spellbook: [],
+            preparedSpells: [],
+            spellcastingFocuses: ["arcane_focus" as const],
+          },
+        ],
+        slotPools: {
+          spellcasting: {
+            kind: "spellcasting" as const,
+            slots: [],
+          },
+        },
+      },
+    } satisfies CharacterBuild;
+
+    const result = characterBattleResourceInitsFromBuild(
+      buildWithoutSorcererFontFacts,
+      unitLibrary,
+      [],
+    );
+
+    expect(result).toMatchObject({ _tag: "Right" });
+    if (Either.isRight(result)) {
+      expect(result.right).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            unit: expect.objectContaining({ id: fontOfMagic }),
+          }),
+        ]),
+      );
+      expect(
+        result.right.find(({ unit }) => unit.id === fontOfMagic),
+      ).not.toHaveProperty("pointsRemaining");
+    }
+  });
+
+  test("preserves a zero-hit-point resource with no mechanics resource field", () => {
+    const result = characterBattleResourceInitsFromBuild(
+      monkBuild({ str: 12, dex: 16 }),
+      unitLibrary,
+      [
+        {
+          tag: "useCountResource",
+          unitId: authoredUnitId("orc_relentless_endurance"),
+          expended: resourceCount(0),
+        },
+      ],
+    );
+
+    expect(result).toMatchObject({ _tag: "Right" });
+    if (Either.isRight(result)) {
+      expect(
+        result.right.find(
+          ({ unit }) => unit.id === authoredUnitId("orc_relentless_endurance"),
+        ),
+      ).toEqual(
+        expect.objectContaining({
+          unit: expect.objectContaining({ id: "orc_relentless_endurance" }),
+        }),
+      );
+      expect(
+        result.right.find(
+          ({ unit }) => unit.id === authoredUnitId("orc_relentless_endurance"),
+        ),
+      ).not.toHaveProperty("usesRemaining");
+    }
+  });
+
+  test("rejects a battle Spell Slot spend beyond malformed source availability", () => {
+    const sheet = requireSheetWithSpellSlots(
+      expectRight(
+        rebuildCharacterSheetFixture({
+          characterId: characterSheetId("character:slot-availability-boundary"),
+          build: sorcererMetamagicBuild(),
+          currentHp: Hp(24),
+          tempHp: Hp(0),
+          unitLibrary,
+        }),
+      ),
+    );
+    const malformedSheet: CharacterSheetWithSpellSlots = {
+      ...sheet,
+      spellSlotExpenditures: [
+        { spellLevel: spellSlotLevel(3), expended: resourceCount(0) },
+      ],
+      createdSpellSlots: [
+        {
+          spellLevel: spellSlotLevel(3),
+          count: resourceCount(1),
+          expended: resourceCount(2),
+        },
+      ],
+    };
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet: malformedSheet,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:slot-availability-boundary"),
+          spellcasting: {
+            ...handoffSpellcastingState(),
+            spellSlots: [
+              {
+                spellLevel: spellSlotLevel(1),
+                count: resourceCount(4),
+                expended: resourceCount(0),
+              },
+              {
+                spellLevel: spellSlotLevel(2),
+                count: resourceCount(3),
+                expended: resourceCount(0),
+              },
+              {
+                spellLevel: spellSlotLevel(3),
+                count: resourceCount(3),
+                expended: resourceCount(3),
+              },
+            ],
+          },
+        },
+        hp: Hp(24),
+        maxHp: sheetMaximumHp(sheet),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toEqual(
+      Either.left({
+        tag: "characterSheetBattleHandoffIssue",
+        message:
+          "Battle handoff Spell Slot expenditure exceeds available Character Sheet Spell Slots.",
+      }),
+    );
+  });
+
+  test("routes settlement when a retained grant source Unit is unavailable", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:resource-catalog-boundary"),
+        build: sorcererMetamagicBuild(),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary: unitCatalogWithoutUnitIds("sorcerer_font_of_magic"),
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:resource-catalog-boundary"),
+        },
+        hp: Hp(24),
+        maxHp: sheetMaximumHp(sheet),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toEqual(
+      Either.left({
+        tag: "characterSheetIssue",
+        message:
+          "Cannot derive Hit Point maximum without grant source Unit: sorcerer_font_of_magic.",
+      }),
+    );
+  });
+
+  test("rejects a non-fixed Magic Initiate resource during settlement", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:non-fixed-free-cast-boundary"),
+        build: magicInitiateMonkBuild(),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "non-fixed-free-cast-boundary",
+    );
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: unitLibrary.requireUnit("feat_magic_initiate_wizard"),
+          purpose: {
+            tag: "spellAccessFreeCast",
+            spellId: authoredUnitId("burning_hands"),
+          },
+        },
+      ],
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:non-fixed-free-cast-boundary"),
+          resources: [
+            {
+              resourcePoolRef,
+              resource: { kind: "use_count", cap: { kind: "unlimited" } },
+              usedThisTurn: false,
+            },
+          ],
+        },
+        hp: Hp(8),
+        maxHp: sheetMaximumHp(sheet),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toEqual(
+      Either.left({
+        tag: "characterSheetBattleHandoffIssue",
+        message:
+          "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
+      }),
+    );
+  });
+
+  test("rejects a battle free-cast resource without a matching sheet access", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:unknown-free-cast-boundary"),
+        build: magicInitiateMonkBuild(),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "unknown-free-cast-boundary",
+    );
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: unitLibrary.requireUnit("feat_magic_initiate_wizard"),
+          purpose: {
+            tag: "spellAccessFreeCast",
+            spellId: authoredUnitId("shield"),
+          },
+        },
+      ],
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:unknown-free-cast-boundary"),
+          resources: [
+            {
+              resourcePoolRef,
+              resource: {
+                kind: "use_count",
+                cap: { kind: "fixed", uses: resourceCount(1) },
+              },
+              usedThisTurn: false,
+              usesRemaining: resourceCount(1),
+            },
+          ],
+        },
+        hp: Hp(8),
+        maxHp: sheetMaximumHp(sheet),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "Spell Access free-cast battle resource requires matching Character Sheet resource capacity",
+        ),
+      },
+    });
+  });
+
+  test("rejects a Magic Initiate battle capacity mismatch during settlement", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:free-cast-capacity-boundary"),
+        build: magicInitiateMonkBuild(),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "free-cast-capacity-boundary",
+    );
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: unitLibrary.requireUnit("feat_magic_initiate_wizard"),
+          purpose: {
+            tag: "spellAccessFreeCast",
+            spellId: authoredUnitId("burning_hands"),
+          },
+        },
+      ],
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:free-cast-capacity-boundary"),
+          resources: [
+            {
+              resourcePoolRef,
+              resource: {
+                kind: "use_count",
+                cap: { kind: "fixed", uses: resourceCount(2) },
+              },
+              usedThisTurn: false,
+              usesRemaining: resourceCount(2),
+            },
+          ],
+        },
+        hp: Hp(8),
+        maxHp: sheetMaximumHp(sheet),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toEqual(
+      Either.left({
+        tag: "characterSheetBattleHandoffIssue",
+        message:
+          "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
+      }),
+    );
+  });
+
+  test("rejects a Druid Wild Shape battle capacity mismatch during settlement", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:wild-shape-capacity-boundary"),
+        build: druidWildShapeBuild(),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        unitLibrary,
+        statBlockCatalog,
+        druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      }),
+    );
+    const wildShapeUnit = unitLibrary.requireUnit("druid_wild_shape");
+    const wildShapeResource = characterBattleResourceForUnit(wildShapeUnit);
+    if (!hasLimitedCharacterBattleResourceCap(wildShapeResource)) {
+      throw new Error("Expected limited Druid Wild Shape resource.");
+    }
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "wild-shape-capacity-boundary",
+    );
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: wildShapeUnit,
+          purpose: { tag: "unitResource" },
+        },
+      ],
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:wild-shape-capacity-boundary"),
+          classLevels: parsedClassLevelsForTest("druid", 10),
+          resources: [
+            {
+              resourcePoolRef,
+              resource: wildShapeResource,
+              usedThisTurn: false,
+              usesRemaining: resourceCount(2),
+            },
+          ],
+        },
+        hp: Hp(15),
+        maxHp: sheetMaximumHp(sheet),
+        tempHp: Hp(0),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining(
+          "Druid Wild Shape battle capacity must match Character Sheet resource capacity",
+        ),
+      },
+    });
+  });
+});
+
 function monkBuild(input: {
   readonly level?: number;
   readonly weaponUnitId?: string;
@@ -11305,6 +11844,27 @@ function fighterWithLayOnHandsResourceBuild(): CharacterBuild {
         unitId: authoredUnitId("paladin_lay_on_hands"),
       },
     ],
+  };
+}
+
+function requireSheetWithSpellSlots(
+  sheet: CharacterSheet,
+): CharacterSheetWithSpellSlots {
+  if (
+    sheet.build.spellcasting === undefined ||
+    sheet.spellSlotExpenditures === undefined ||
+    sheet.createdSpellSlots === undefined
+  ) {
+    throw new Error("Expected a spellcasting Character Sheet fixture.");
+  }
+  return {
+    ...sheet,
+    build: {
+      ...sheet.build,
+      spellcasting: sheet.build.spellcasting,
+    },
+    spellSlotExpenditures: sheet.spellSlotExpenditures,
+    createdSpellSlots: sheet.createdSpellSlots,
   };
 }
 

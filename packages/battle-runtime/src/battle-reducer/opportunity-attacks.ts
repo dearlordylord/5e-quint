@@ -1,5 +1,5 @@
 import { Match } from "effect";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import type { BoundSupportedAttackActionOption } from "../battle-action-options.ts";
 import { spendAmmunitionForAcceptedAttackPendingContinuation } from "../battle-ammunition.ts";
 // Opportunity attack resolution owns the movement-triggered Reaction procedure.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -112,6 +112,7 @@ import type {
   BattleAttackRollResult,
   BattleCreatureState,
   BattleHoleId,
+  BattleHiddenState,
   BattlePendingAttackDamageReduction,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
@@ -165,6 +166,26 @@ type ReactionAttackDamagePath =
       readonly cunningStrike: CunningStrikeContext | null;
     };
 
+type ReactionAttackCommandContext = {
+  readonly input: OpportunityAttackResolutionInput;
+  readonly commandLabel: string;
+  readonly target: BattleCreatureState;
+  readonly attack: BoundSupportedAttackActionOption;
+  readonly fillSet: ResolvedAttackFillSet;
+};
+
+type ReactionAttackRollPreparation =
+  | { readonly tag: "result"; readonly result: BattleResolutionResult }
+  | {
+      readonly tag: "ready";
+      readonly effectiveAttackRoll: BattleAttackRollResult;
+      readonly hiddenBeforeAttack: BattleHiddenState | null;
+      readonly attackRollRelationshipFacts: Exclude<
+        ReturnType<typeof parseAttackRollRelationshipFacts>,
+        null
+      >;
+    };
+
 export function resolveOpportunityAttackCommand(
   input: OpportunityAttackResolutionInput,
 ): BattleResolutionResult {
@@ -179,6 +200,192 @@ export function resolveOpportunityAttackCommand(
   readiedResponses.delete(input.subject.reactorId);
   const state = { ...result.state, readiedResponses };
   return { ...result, state, snapshot: snapshotBattle(state) };
+}
+
+function reactionAttackRollHoleWithRelationshipFacts(input: {
+  readonly state: BattleState;
+  readonly reactorId: BattleCreatureState["combatantId"];
+  readonly targetId: BattleCreatureState["combatantId"];
+  readonly attack: BoundSupportedAttackActionOption;
+  readonly reactor: BattleCreatureState | undefined;
+  readonly requiredRollMode: ReturnType<typeof requiredAttackRollMode>;
+}): ReturnType<typeof attackRollHole> {
+  return {
+    ...attackRollHole(input.reactor, input.attack, input.requiredRollMode),
+    ...(ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.state,
+      input.reactorId,
+      "attackRollAgainstEnemy",
+    )
+      ? {
+          relationshipFactRequest: {
+            kind: "attackRollTargetIsEnemy" as const,
+            attackerId: input.reactorId,
+            targetId: input.targetId,
+          },
+        }
+      : {}),
+  };
+}
+
+function reactionAttackMissingRollResult(
+  input: ReactionAttackCommandContext,
+  requiredRollMode: ReturnType<typeof requiredAttackRollMode>,
+): BattleResolutionResult {
+  if (
+    input.fillSet.damageRoll != null ||
+    input.fillSet.damageDispositionFilled
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      `${input.commandLabel} attack roll must be filled before damage.`,
+    );
+  }
+  return needsHolesResult(input.input.state, input.input.subject, [
+    reactionAttackRollHoleWithRelationshipFacts({
+      state: input.input.state,
+      reactorId: input.input.subject.reactorId,
+      targetId: input.input.subject.targetId,
+      attack: input.attack,
+      reactor: input.input.state.combatants.get(input.input.subject.reactorId),
+      requiredRollMode,
+    }),
+  ]);
+}
+
+function reactionAttackRollIssue(input: {
+  readonly context: ReactionAttackCommandContext;
+  readonly attackRoll: BattleAttackRollResult;
+  readonly requiredRollMode: ReturnType<typeof requiredAttackRollMode>;
+}): string | null {
+  if (!attackRollResultIsValid(input.attackRoll)) {
+    return `${input.context.commandLabel} attack roll result is outside the d20 attack-roll protocol.`;
+  }
+  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+    input.attackRoll,
+  );
+  if (spellAttackRerollIssue !== null) return spellAttackRerollIssue;
+  if (!attackRollModeMatches(input.attackRoll, input.requiredRollMode)) {
+    return `${input.context.commandLabel} attack roll mode does not match the current attack-roll rule.`;
+  }
+  return null;
+}
+
+function reactionAttackRerollResult(input: {
+  readonly context: ReactionAttackCommandContext;
+  readonly attackRoll: BattleAttackRollResult;
+  readonly reactor: BattleCreatureState | undefined;
+  readonly requiredRollMode: ReturnType<typeof requiredAttackRollMode>;
+}): BattleResolutionResult | null {
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: input.reactor,
+      originalNaturalD20: Number(input.attackRoll.naturalD20),
+      rollMode: input.attackRoll.rollMode,
+      rolledD20s: input.attackRoll.rolledD20s,
+      decision: input.attackRoll.d20TestNaturalOneReroll,
+    })
+  ) {
+    return needsHolesResult(
+      input.context.input.state,
+      input.context.input.subject,
+      [
+        attackRollHoleWithD20TestNaturalOneRerollOption(
+          reactionAttackRollHoleWithRelationshipFacts({
+            state: input.context.input.state,
+            reactorId: input.context.input.subject.reactorId,
+            targetId: input.context.input.subject.targetId,
+            attack: input.context.attack,
+            reactor: input.reactor,
+            requiredRollMode: input.requiredRollMode,
+          }),
+        ),
+      ],
+    );
+  }
+  const rerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: input.reactor,
+    total: input.attackRoll.total,
+    originalNaturalD20: Number(input.attackRoll.naturalD20),
+    rollMode: input.attackRoll.rollMode,
+    rolledD20s: input.attackRoll.rolledD20s,
+    decision: input.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode: input.requiredRollMode,
+  });
+  return rerollIssue === null
+    ? null
+    : invalidResult(input.context.input.state, "invalidFill", rerollIssue);
+}
+
+function prepareReactionAttackRoll(
+  input: ReactionAttackCommandContext,
+): ReactionAttackRollPreparation {
+  const requiredRollMode = requiredAttackRollMode(
+    input.input.state,
+    input.input.subject.reactorId,
+    input.input.subject.targetId,
+    input.attack,
+    input.fillSet.targetSpatialFacts,
+  );
+  const attackRoll = input.fillSet.attackRoll;
+  if (attackRoll == null) {
+    return {
+      tag: "result",
+      result: reactionAttackMissingRollResult(input, requiredRollMode),
+    };
+  }
+  const rollIssue = reactionAttackRollIssue({
+    context: input,
+    attackRoll,
+    requiredRollMode,
+  });
+  if (rollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.input.state, "invalidFill", rollIssue),
+    };
+  }
+  const reactor = input.input.state.combatants.get(
+    input.input.subject.reactorId,
+  );
+  const rerollResult = reactionAttackRerollResult({
+    context: input,
+    attackRoll,
+    reactor,
+    requiredRollMode,
+  });
+  if (rerollResult !== null) {
+    return { tag: "result", result: rerollResult };
+  }
+  const attackRollRelationshipFacts = parseAttackRollRelationshipFacts(
+    input.fillSet.attackRollRelationshipFacts,
+    input.input.subject.reactorId,
+    input.input.subject.targetId,
+    ongoingFeatureEnemyRelationshipDecisionRequired(
+      input.input.state,
+      input.input.subject.reactorId,
+      "attackRollAgainstEnemy",
+    ),
+  );
+  if (attackRollRelationshipFacts === null) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.input.state,
+        "invalidFill",
+        `${input.commandLabel} relationship facts must answer the attack-roll hole request.`,
+      ),
+    };
+  }
+  return {
+    tag: "ready",
+    effectiveAttackRoll: effectiveD20TestNaturalOneRerollAttackRoll(attackRoll),
+    hiddenBeforeAttack:
+      input.input.state.combatants.get(input.input.subject.reactorId)?.hidden ??
+      null,
+    attackRollRelationshipFacts,
+  };
 }
 
 function resolveReactionAttackCommand(
@@ -254,149 +461,44 @@ function resolveReactionAttackCommand(
     );
   }
   /* v8 ignore stop */
-  const requiredRollMode = requiredAttackRollMode(
-    input.state,
-    subject.reactorId,
-    subject.targetId,
+  const context: ReactionAttackCommandContext = {
+    input,
+    commandLabel,
+    target,
     attack,
-    fillSet.targetSpatialFacts,
-  );
-  if (fillSet.attackRoll == null) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (fillSet.damageRoll != null || fillSet.damageDispositionFilled) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        `${commandLabel} attack roll must be filled before damage.`,
-      );
-    }
-    /* v8 ignore stop */
-    return needsHolesResult(input.state, input.subject, [
-      {
-        ...attackRollHole(
-          input.state.combatants.get(subject.reactorId),
-          attack,
-          requiredRollMode,
-        ),
-        ...(ongoingFeatureEnemyRelationshipDecisionRequired(
-          input.state,
-          subject.reactorId,
-          "attackRollAgainstEnemy",
-        )
-          ? {
-              relationshipFactRequest: {
-                kind: "attackRollTargetIsEnemy" as const,
-                attackerId: subject.reactorId,
-                targetId: subject.targetId,
-              },
-            }
-          : {}),
-      },
-    ]);
-  }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!attackRollResultIsValid(fillSet.attackRoll)) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      `${commandLabel} attack roll result is outside the d20 attack-roll protocol.`,
-    );
-  }
-  /* v8 ignore stop */
-  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
-    fillSet.attackRoll,
-  );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (spellAttackRerollIssue !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", spellAttackRerollIssue);
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      `${commandLabel} attack roll mode does not match the current attack-roll rule.`,
-    );
-  }
-  /* v8 ignore stop */
-  const reactor = input.state.combatants.get(subject.reactorId);
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: reactor,
-      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
-      rollMode: fillSet.attackRoll.rollMode,
-      rolledD20s: fillSet.attackRoll.rolledD20s,
-      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-    })
-  ) {
-    return needsHolesResult(input.state, input.subject, [
-      attackRollHoleWithD20TestNaturalOneRerollOption({
-        ...attackRollHole(reactor, attack, requiredRollMode),
-        ...(ongoingFeatureEnemyRelationshipDecisionRequired(
-          input.state,
-          subject.reactorId,
-          "attackRollAgainstEnemy",
-        )
-          ? {
-              relationshipFactRequest: {
-                kind: "attackRollTargetIsEnemy" as const,
-                attackerId: subject.reactorId,
-                targetId: subject.targetId,
-              },
-            }
-          : {}),
-      }),
-    ]);
-  }
-  const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: reactor,
-    total: fillSet.attackRoll.total,
-    originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
-    rollMode: fillSet.attackRoll.rollMode,
-    rolledD20s: fillSet.attackRoll.rolledD20s,
-    decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
+    fillSet,
+  };
+  const rollPreparation = prepareReactionAttackRoll(context);
+  if (rollPreparation.tag === "result") return rollPreparation.result;
+  return resolveReactionAttackAfterRoll({
+    context,
+    pendingAttackDamageReductions,
+    rollPreparation,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (d20TestNaturalOneRerollIssue !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      d20TestNaturalOneRerollIssue,
-    );
-  }
-  /* v8 ignore stop */
-  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
-    fillSet.attackRoll,
-  );
-  const hiddenBeforeAttack =
-    input.state.combatants.get(subject.reactorId)?.hidden ?? null;
-  const attackRollRelationshipFacts = parseAttackRollRelationshipFacts(
-    fillSet.attackRollRelationshipFacts,
-    subject.reactorId,
-    subject.targetId,
-    ongoingFeatureEnemyRelationshipDecisionRequired(
-      input.state,
-      subject.reactorId,
-      "attackRollAgainstEnemy",
-    ),
-  );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (attackRollRelationshipFacts === null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      `${commandLabel} relationship facts must answer the attack-roll hole request.`,
-    );
-  }
-  /* v8 ignore stop */
+}
+
+function resolveReactionAttackAfterRoll(afterRollInput: {
+  readonly context: ReactionAttackCommandContext;
+  readonly pendingAttackDamageReductions: readonly BattlePendingAttackDamageReduction[];
+  readonly rollPreparation: Extract<
+    ReactionAttackRollPreparation,
+    { readonly tag: "ready" }
+  >;
+}): BattleResolutionResult {
+  const {
+    input: resolutionInput,
+    target,
+    attack,
+    fillSet,
+  } = afterRollInput.context;
+  const { subject } = resolutionInput;
+  const {
+    effectiveAttackRoll,
+    hiddenBeforeAttack,
+    attackRollRelationshipFacts,
+  } = afterRollInput.rollPreparation;
+  const { pendingAttackDamageReductions } = afterRollInput;
+  const input = resolutionInput;
   let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(input.state, subject.reactorId),
@@ -445,69 +547,26 @@ function resolveReactionAttackCommand(
     return invalidResult(input.state, "invalidFill", frenzyDamageType.message);
   }
   /* v8 ignore stop */
-  const eligibleDamageRiders = hit
-    ? eligibleAttackDamageRiders(
-        attackRolledState,
-        subject.reactorId,
-        subject.targetId,
-        attack,
-        effectiveAttackRoll,
-        [],
-        frenzyDamageType,
-      )
-    : [];
-  const eligibleDamageDiceChoiceUnitIds = hit
-    ? eligibleWeaponDamageDiceRollChoiceProcedureRefs(
-        attackRolledState,
-        subject.reactorId,
-        attack,
-      )
-    : [];
-  const eligibleDamageDieFloorChoiceUnitIds = hit
-    ? eligibleAttackDamageDieFloorProcedureRefs(
-        attackRolledState,
-        subject.reactorId,
-        attack,
-        attack.procedureRef,
-      )
-    : [];
-  const spellWeaponDamageRiders = hit
-    ? activeSpellWeaponDamageRiders(
-        attackRolledState.combatants.get(subject.reactorId),
-        attack,
-      )
-    : [];
-  const spellMarkedDamageRiders = hit
-    ? activeMarkedDamageRiders(
-        attackRolledState.combatants.get(subject.reactorId),
-        subject.targetId,
-      )
-    : [];
-  const selectedDamageRiders =
-    fillSet.damageRoll === undefined
-      ? []
-      : (selectedAttackDamageRiders(
-          eligibleDamageRiders,
-          fillSet.damageRoll.selectedAttackDamageRiderProcedureRefs,
-        ) ?? []);
-  const eligibleCunningStrikeDamageOptions = hit
-    ? eligibleCunningStrikeContexts({
-        state: attackRolledState,
-        attackerId: subject.reactorId,
-        targetId: subject.targetId,
-        eligibleAttackDamageRiders: eligibleDamageRiders,
-        hiddenBeforeAttack,
-      })
-    : [];
-  const selectedCunningStrike = selectedCunningStrikeContext(
+  const hitFacts = reactionAttackHitFacts({
+    state: attackRolledState,
+    subject,
+    attack,
+    fillSet,
+    effectiveAttackRoll,
+    hit,
+    hiddenBeforeAttack,
+    frenzyDamageType,
+  });
+  const {
+    eligibleDamageRiders,
+    eligibleDamageDiceChoiceUnitIds,
+    eligibleDamageDieFloorChoiceUnitIds,
+    spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
     eligibleCunningStrikeDamageOptions,
-    fillSet.damageRoll?.cunningStrikeOption,
-  );
-  const selectedDamageRidersAfterCunningStrikeCost =
-    attackDamageRidersAfterCunningStrikeCost(
-      selectedDamageRiders,
-      selectedCunningStrike,
-    );
+    selectedCunningStrike,
+    selectedDamageRidersAfterCunningStrikeCost,
+  } = hitFacts;
   if (hit && input.handledInterruptTrigger !== "attackHit") {
     const reactionWindow = maybeOpenInterruptWindow(
       attackRolledState,
@@ -553,236 +612,445 @@ function resolveReactionAttackCommand(
     return remarkableAthleteMovement.result;
   }
   attackRolledState = remarkableAthleteMovement.state;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !hit &&
-    (fillSet.damageRoll != null ||
-      fillSet.damageDispositionFilled ||
-      fillSet.sourceDamageRollPenaltyRolls.length > 0)
-  ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      `${commandLabel} damage can only be filled after a hit.`,
-    );
-  }
-  /* v8 ignore stop */
-  if (!hit) {
-    const relationshipIssue =
-      fillSet.damageRelationshipDecisions.unexpectedFillForAbsentEvent(
-        ATTACK_ROLL_HOLE_ID,
-      );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (relationshipIssue !== null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(input.state, "invalidFill", relationshipIssue);
-    }
-    /* v8 ignore stop */
-    return {
-      tag: "resolved",
-      state: attackRolledState,
-      snapshot: snapshotBattle(attackRolledState),
-    };
-  }
-  const fixedDamageAmount =
-    spellMarkedDamageRiders.length > 0 || spellWeaponDamageRiders.length > 0
-      ? null
-      : fixedAttackDamageAmount(
-          attackRolledState,
-          attackRolledState.combatants.get(subject.reactorId),
-          target,
-          attack,
-          effectiveAttackRoll,
-        );
-  if (fixedDamageAmount !== null) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (fillSet.damageRoll != null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Fixed attack damage does not use a rolled damage fill.",
-      );
-    }
-    /* v8 ignore stop */
-    const fixedDamageByTypeBeforeTargetAdjustments =
-      fixedAttackDamageByTypeEntries(
-        attackRolledState,
-        attackRolledState.combatants.get(subject.reactorId),
-        attack,
-        effectiveAttackRoll,
-      );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (fixedDamageByTypeBeforeTargetAdjustments === null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        `${commandLabel} fixed damage is no longer available.`,
-      );
-    }
-    /* v8 ignore stop */
-    return resolveReactionAttackDamageTransaction({
-      resolutionInput: input,
-      fillSet,
-      preConsumptionState: attackRolledState,
-      target,
-      attack,
-      effectiveAttackRoll,
-      critical,
-      pendingAttackDamageReductions,
-      path: {
-        kind: "fixed",
-        damageByTypeBeforeTargetAdjustments:
-          fixedDamageByTypeBeforeTargetAdjustments,
-      },
-    });
-  }
-  if (fillSet.damageRoll == null) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Source damage roll penalty does not match an active source-side damage penalty.",
-      );
-    }
-    /* v8 ignore stop */
-    return needsHolesResult(attackRolledState, input.subject, [
-      attackDamageHole(
-        attack,
-        critical,
-        effectiveAttackRoll,
-        eligibleDamageRiders,
-        spellWeaponDamageRiders,
-        spellMarkedDamageRiders,
-        ongoingFeatureDamageModifier(
-          attackRolledState,
-          attackRolledState.combatants.get(subject.reactorId),
-          attack,
-        ),
-        eligibleDamageDiceChoiceUnitIds,
-        eligibleDamageDieFloorChoiceUnitIds,
-        cunningStrikeDamageRollOptions(eligibleCunningStrikeDamageOptions),
-      ),
-    ]);
-  }
-  const selectedDamageDiceChoice = selectedWeaponDamageDiceRollChoice(
-    eligibleDamageDiceChoiceUnitIds,
-    fillSet.damageRoll.weaponDamageDiceRollChoice,
-  );
-  const damageValidation = validateAttackDamageFill(
-    fillSet.damageRoll,
+  return resolveReactionAttackDamagePath({
+    context: afterRollInput.context,
+    pendingAttackDamageReductions,
+    attackRolledState,
+    target,
     attack,
-    critical,
+    fillSet,
     effectiveAttackRoll,
+    critical,
+    hit,
+    eligibleDamageRiders,
+    eligibleDamageDiceChoiceUnitIds,
+    eligibleDamageDieFloorChoiceUnitIds,
+    spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
+    eligibleCunningStrikeDamageOptions,
+    selectedCunningStrike,
+    selectedDamageRidersAfterCunningStrikeCost,
+  });
+}
+
+type ReactionAttackHitFacts = {
+  readonly eligibleDamageRiders: readonly AttackDamageRider[];
+  readonly eligibleDamageDiceChoiceUnitIds: ReturnType<
+    typeof eligibleWeaponDamageDiceRollChoiceProcedureRefs
+  >;
+  readonly eligibleDamageDieFloorChoiceUnitIds: ReturnType<
+    typeof eligibleAttackDamageDieFloorProcedureRefs
+  >;
+  readonly spellWeaponDamageRiders: ReturnType<
+    typeof activeSpellWeaponDamageRiders
+  >;
+  readonly spellMarkedDamageRiders: ReturnType<typeof activeMarkedDamageRiders>;
+  readonly eligibleCunningStrikeDamageOptions: ReturnType<
+    typeof eligibleCunningStrikeContexts
+  >;
+  readonly selectedCunningStrike: CunningStrikeContext | null;
+  readonly selectedDamageRidersAfterCunningStrikeCost: readonly AttackDamageRider[];
+};
+
+type ReactionAttackHitRiderFacts = Pick<
+  ReactionAttackHitFacts,
+  "eligibleDamageRiders" | "spellWeaponDamageRiders" | "spellMarkedDamageRiders"
+>;
+
+function reactionAttackHitRiderFacts(input: {
+  readonly state: BattleState;
+  readonly subject: OpportunityAttackResolutionInput["subject"];
+  readonly attack: BoundSupportedAttackActionOption;
+  readonly effectiveAttackRoll: BattleAttackRollResult;
+  readonly hit: boolean;
+  readonly frenzyDamageType: Exclude<
+    ReturnType<typeof frenzyDamageTypeDecision>,
+    { readonly tag: "decisionRequired" | "invalid" }
+  >;
+}): ReactionAttackHitRiderFacts {
+  return {
+    eligibleDamageRiders: input.hit
+      ? eligibleAttackDamageRiders(
+          input.state,
+          input.subject.reactorId,
+          input.subject.targetId,
+          input.attack,
+          input.effectiveAttackRoll,
+          [],
+          input.frenzyDamageType,
+        )
+      : [],
+    spellWeaponDamageRiders: input.hit
+      ? activeSpellWeaponDamageRiders(
+          input.state.combatants.get(input.subject.reactorId),
+          input.attack,
+        )
+      : [],
+    spellMarkedDamageRiders: input.hit
+      ? activeMarkedDamageRiders(
+          input.state.combatants.get(input.subject.reactorId),
+          input.subject.targetId,
+        )
+      : [],
+  };
+}
+
+function reactionAttackHitFacts(input: {
+  readonly state: BattleState;
+  readonly subject: OpportunityAttackResolutionInput["subject"];
+  readonly attack: BoundSupportedAttackActionOption;
+  readonly fillSet: ResolvedAttackFillSet;
+  readonly effectiveAttackRoll: BattleAttackRollResult;
+  readonly hit: boolean;
+  readonly hiddenBeforeAttack: BattleHiddenState | null;
+  readonly frenzyDamageType: Exclude<
+    ReturnType<typeof frenzyDamageTypeDecision>,
+    { readonly tag: "decisionRequired" | "invalid" }
+  >;
+}): ReactionAttackHitFacts {
+  const riderFacts = reactionAttackHitRiderFacts(input);
+  const {
     eligibleDamageRiders,
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
-    ongoingFeatureDamageModifier(
-      attackRolledState,
-      attackRolledState.combatants.get(subject.reactorId),
-      attack,
-    ),
+  } = riderFacts;
+  const selectedDamageRiders =
+    input.fillSet.damageRoll === undefined
+      ? []
+      : (selectedAttackDamageRiders(
+          eligibleDamageRiders,
+          input.fillSet.damageRoll.selectedAttackDamageRiderProcedureRefs,
+        ) ?? []);
+  const eligibleDamageDiceChoiceUnitIds = input.hit
+    ? eligibleWeaponDamageDiceRollChoiceProcedureRefs(
+        input.state,
+        input.subject.reactorId,
+        input.attack,
+      )
+    : [];
+  const eligibleDamageDieFloorChoiceUnitIds = input.hit
+    ? eligibleAttackDamageDieFloorProcedureRefs(
+        input.state,
+        input.subject.reactorId,
+        input.attack,
+        input.attack.procedureRef,
+      )
+    : [];
+  const eligibleCunningStrikeDamageOptions = input.hit
+    ? eligibleCunningStrikeContexts({
+        state: input.state,
+        attackerId: input.subject.reactorId,
+        targetId: input.subject.targetId,
+        eligibleAttackDamageRiders: eligibleDamageRiders,
+        hiddenBeforeAttack: input.hiddenBeforeAttack,
+      })
+    : [];
+  const selectedCunningStrike = selectedCunningStrikeContext(
+    eligibleCunningStrikeDamageOptions,
+    input.fillSet.damageRoll?.cunningStrikeOption,
+  );
+  return {
+    eligibleDamageRiders,
     eligibleDamageDiceChoiceUnitIds,
     eligibleDamageDieFloorChoiceUnitIds,
+    spellWeaponDamageRiders,
+    spellMarkedDamageRiders,
     eligibleCunningStrikeDamageOptions,
-  );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (damageValidation !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", damageValidation);
+    selectedCunningStrike,
+    selectedDamageRidersAfterCunningStrikeCost:
+      attackDamageRidersAfterCunningStrikeCost(
+        selectedDamageRiders,
+        selectedCunningStrike,
+      ),
+  };
+}
+
+type ReactionAttackDamagePathInput = {
+  readonly context: ReactionAttackCommandContext;
+  readonly pendingAttackDamageReductions: readonly BattlePendingAttackDamageReduction[];
+  readonly attackRolledState: BattleState;
+  readonly target: BattleCreatureState;
+  readonly attack: BoundSupportedAttackActionOption;
+  readonly fillSet: ResolvedAttackFillSet;
+  readonly effectiveAttackRoll: BattleAttackRollResult;
+  readonly critical: boolean;
+  readonly hit: boolean;
+  readonly eligibleDamageRiders: readonly AttackDamageRider[];
+  readonly eligibleDamageDiceChoiceUnitIds: ReturnType<
+    typeof eligibleWeaponDamageDiceRollChoiceProcedureRefs
+  >;
+  readonly eligibleDamageDieFloorChoiceUnitIds: ReturnType<
+    typeof eligibleAttackDamageDieFloorProcedureRefs
+  >;
+  readonly spellWeaponDamageRiders: ReturnType<
+    typeof activeSpellWeaponDamageRiders
+  >;
+  readonly spellMarkedDamageRiders: ReturnType<typeof activeMarkedDamageRiders>;
+  readonly eligibleCunningStrikeDamageOptions: ReturnType<
+    typeof eligibleCunningStrikeContexts
+  >;
+  readonly selectedCunningStrike: CunningStrikeContext | null;
+  readonly selectedDamageRidersAfterCunningStrikeCost: readonly AttackDamageRider[];
+};
+
+function resolveReactionAttackDamagePath(
+  input: ReactionAttackDamagePathInput,
+): BattleResolutionResult {
+  if (!input.hit) return resolveReactionAttackMiss(input);
+  const fixedDamageAmount =
+    input.spellMarkedDamageRiders.length > 0 ||
+    input.spellWeaponDamageRiders.length > 0
+      ? null
+      : fixedAttackDamageAmount(
+          input.attackRolledState,
+          input.attackRolledState.combatants.get(
+            input.context.input.subject.reactorId,
+          ),
+          input.target,
+          input.attack,
+          input.effectiveAttackRoll,
+        );
+  if (fixedDamageAmount !== null) {
+    return resolveReactionAttackFixedDamage(input);
   }
-  /* v8 ignore stop */
-  const damageSource = attackRolledState.combatants.get(subject.reactorId);
+  const damageRoll = input.fillSet.damageRoll;
+  if (damageRoll === undefined)
+    return resolveReactionAttackMissingDamage(input);
+  return resolveReactionAttackRolledDamage({ ...input, damageRoll });
+}
+
+function resolveReactionAttackMiss(
+  input: ReactionAttackDamagePathInput,
+): BattleResolutionResult {
+  const { context, attackRolledState } = input;
+  const { input: resolutionInput, fillSet } = context;
+  if (
+    fillSet.damageRoll != null ||
+    fillSet.damageDispositionFilled ||
+    fillSet.sourceDamageRollPenaltyRolls.length > 0
+  ) {
+    return invalidResult(
+      resolutionInput.state,
+      "invalidFill",
+      `${context.commandLabel} damage can only be filled after a hit.`,
+    );
+  }
+  const relationshipIssue =
+    fillSet.damageRelationshipDecisions.unexpectedFillForAbsentEvent(
+      ATTACK_ROLL_HOLE_ID,
+    );
+  if (relationshipIssue !== null) {
+    return invalidResult(
+      resolutionInput.state,
+      "invalidFill",
+      relationshipIssue,
+    );
+  }
+  return {
+    tag: "resolved",
+    state: attackRolledState,
+    snapshot: snapshotBattle(attackRolledState),
+  };
+}
+
+function resolveReactionAttackFixedDamage(
+  input: ReactionAttackDamagePathInput,
+): BattleResolutionResult {
+  const { context, attackRolledState } = input;
+  const { input: resolutionInput, fillSet } = context;
+  if (fillSet.damageRoll != null) {
+    return invalidResult(
+      resolutionInput.state,
+      "invalidFill",
+      "Fixed attack damage does not use a rolled damage fill.",
+    );
+  }
+  const fixedDamageByTypeBeforeTargetAdjustments =
+    fixedAttackDamageByTypeEntries(
+      attackRolledState,
+      attackRolledState.combatants.get(context.input.subject.reactorId),
+      input.attack,
+      input.effectiveAttackRoll,
+    );
+  if (fixedDamageByTypeBeforeTargetAdjustments === null) {
+    return invalidResult(
+      resolutionInput.state,
+      "invalidFill",
+      `${context.commandLabel} fixed damage is no longer available.`,
+    );
+  }
+  return resolveReactionAttackDamageTransaction({
+    resolutionInput,
+    fillSet,
+    preConsumptionState: attackRolledState,
+    target: input.target,
+    attack: input.attack,
+    effectiveAttackRoll: input.effectiveAttackRoll,
+    critical: input.critical,
+    pendingAttackDamageReductions: input.pendingAttackDamageReductions,
+    path: {
+      kind: "fixed",
+      damageByTypeBeforeTargetAdjustments:
+        fixedDamageByTypeBeforeTargetAdjustments,
+    },
+  });
+}
+
+function resolveReactionAttackMissingDamage(
+  input: ReactionAttackDamagePathInput,
+): BattleResolutionResult {
+  const { context, attackRolledState } = input;
+  const { input: resolutionInput, fillSet } = context;
+  if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
+    return invalidResult(
+      resolutionInput.state,
+      "invalidFill",
+      "Source damage roll penalty does not match an active source-side damage penalty.",
+    );
+  }
+  return needsHolesResult(attackRolledState, resolutionInput.subject, [
+    attackDamageHole(
+      input.attack,
+      input.critical,
+      input.effectiveAttackRoll,
+      input.eligibleDamageRiders,
+      input.spellWeaponDamageRiders,
+      input.spellMarkedDamageRiders,
+      ongoingFeatureDamageModifier(
+        attackRolledState,
+        attackRolledState.combatants.get(context.input.subject.reactorId),
+        input.attack,
+      ),
+      input.eligibleDamageDiceChoiceUnitIds,
+      input.eligibleDamageDieFloorChoiceUnitIds,
+      cunningStrikeDamageRollOptions(input.eligibleCunningStrikeDamageOptions),
+    ),
+  ]);
+}
+
+type ReactionAttackDamageRoll = NonNullable<
+  ResolvedAttackFillSet["damageRoll"]
+>;
+
+function resolveReactionAttackRolledDamage(
+  input: ReactionAttackDamagePathInput & {
+    readonly damageRoll: ReactionAttackDamageRoll;
+  },
+): BattleResolutionResult {
+  const { context, attackRolledState } = input;
+  const { input: resolutionInput, fillSet } = context;
+  const selectedDamageDiceChoice = selectedWeaponDamageDiceRollChoice(
+    input.eligibleDamageDiceChoiceUnitIds,
+    input.damageRoll.weaponDamageDiceRollChoice,
+  );
+  const damageValidation = validateAttackDamageFill(
+    input.damageRoll,
+    input.attack,
+    input.critical,
+    input.effectiveAttackRoll,
+    input.eligibleDamageRiders,
+    input.spellWeaponDamageRiders,
+    input.spellMarkedDamageRiders,
+    ongoingFeatureDamageModifier(
+      attackRolledState,
+      attackRolledState.combatants.get(context.input.subject.reactorId),
+      input.attack,
+    ),
+    input.eligibleDamageDiceChoiceUnitIds,
+    input.eligibleDamageDieFloorChoiceUnitIds,
+    input.eligibleCunningStrikeDamageOptions,
+  );
+  if (damageValidation !== null) {
+    return invalidResult(
+      resolutionInput.state,
+      "invalidFill",
+      damageValidation,
+    );
+  }
+  const damageSource = attackRolledState.combatants.get(
+    context.input.subject.reactorId,
+  );
   const damageRollByType = attackDamageByTypeEntries(
     attackRolledState,
     damageSource,
-    attack,
-    attack.procedureRef,
-    fillSet.damageRoll,
-    critical,
-    effectiveAttackRoll,
-    selectedDamageRidersAfterCunningStrikeCost,
-    spellWeaponDamageRiders,
-    spellMarkedDamageRiders,
+    input.attack,
+    input.attack.procedureRef,
+    input.damageRoll,
+    input.critical,
+    input.effectiveAttackRoll,
+    input.selectedDamageRidersAfterCunningStrikeCost,
+    input.spellWeaponDamageRiders,
+    input.spellMarkedDamageRiders,
   );
   const expectedSourcePenaltyHole =
     sourceDamageRollPenaltyRollHoleForDamageRoll(
       damageSource,
       damageAmountByTypeEntriesToMap(damageRollByType),
-      fillSet.damageRoll.holeId,
+      input.damageRoll.holeId,
     );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     unexpectedSourceDamageRollPenaltyRoll(
       fillSet.sourceDamageRollPenaltyRolls,
       expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
     ) !== undefined
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
-      input.state,
+      resolutionInput.state,
       "invalidFill",
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-  /* v8 ignore stop */
   const sourcePenalty = applyAvailableSourceDamageRollPenalty(
     damageSource,
     damageAmountByTypeEntriesToMap(damageRollByType),
-    fillSet.damageRoll.holeId,
+    input.damageRoll.holeId,
     sourceDamageRollPenaltyRollForDamageRoll(
       fillSet.sourceDamageRollPenaltyRolls,
       damageSource,
       damageAmountByTypeEntriesToMap(damageRollByType),
-      fillSet.damageRoll.holeId,
+      input.damageRoll.holeId,
     ),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (sourcePenalty.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
-      input.state,
+      resolutionInput.state,
       "invalidFill",
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-  /* v8 ignore stop */
   if (sourcePenalty.tag === "needsHoles") {
-    return needsHolesResult(attackRolledState, input.subject, [
+    return needsHolesResult(attackRolledState, resolutionInput.subject, [
       ...sourcePenalty.holes,
     ]);
   }
   return resolveReactionAttackDamageTransaction({
-    resolutionInput: input,
+    resolutionInput,
     fillSet,
     preConsumptionState: attackRolledState,
-    target,
-    attack,
-    effectiveAttackRoll,
-    critical,
-    pendingAttackDamageReductions,
+    target: input.target,
+    attack: input.attack,
+    effectiveAttackRoll: input.effectiveAttackRoll,
+    critical: input.critical,
+    pendingAttackDamageReductions: input.pendingAttackDamageReductions,
     path: {
       kind: "rolled",
       damageRollByType: damageAmountByTypeMapEntries(
         sourcePenalty.damageByType,
       ),
-      damageEventHoleId: fillSet.damageRoll.holeId,
-      attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+      damageEventHoleId: input.damageRoll.holeId,
+      attackDamageRiders: input.selectedDamageRidersAfterCunningStrikeCost,
       weaponDamageDiceRollChoice: selectedDamageDiceChoice,
-      cunningStrike: selectedCunningStrike,
+      cunningStrike: input.selectedCunningStrike,
     },
   });
 }
+
 function resolveReactionAttackDamageTransaction(input: {
   readonly resolutionInput: OpportunityAttackResolutionInput;
   readonly fillSet: ResolvedAttackFillSet;
   readonly preConsumptionState: BattleState;
   readonly target: BattleCreatureState;
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly effectiveAttackRoll: BattleAttackRollResult;
   readonly critical: boolean;
   readonly pendingAttackDamageReductions: readonly BattlePendingAttackDamageReduction[];

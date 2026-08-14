@@ -1023,6 +1023,8 @@ export function armorClassBuild(input: {
   readonly advancements?: readonly string[];
   readonly armor?: string;
   readonly shield?: boolean;
+  readonly weapon?: string;
+  readonly offHandWeapon?: string;
   readonly features?: CharacterBuild["features"];
 }): CharacterBuild {
   const armorItemId =
@@ -1043,6 +1045,24 @@ export function armorClassBuild(input: {
           ),
         })
       : undefined;
+  const weaponItemId =
+    input.weapon === undefined
+      ? undefined
+      : characterEquipmentItemId({
+          slot: "main",
+          unitId: expectRight(
+            characterEquipmentItemUnitId(authoredUnitId(input.weapon)),
+          ),
+        });
+  const offHandWeaponItemId =
+    input.offHandWeapon === undefined
+      ? undefined
+      : characterEquipmentItemId({
+          slot: "off",
+          unitId: expectRight(
+            characterEquipmentItemUnitId(authoredUnitId(input.offHandWeapon)),
+          ),
+        });
   return {
     progression: {
       startingClass: classUnitId(authoredUnitId(input.startingClass)),
@@ -1086,10 +1106,26 @@ export function armorClassBuild(input: {
                 itemId: shieldItemId,
               }),
             ]),
+        ...(weaponItemId === undefined
+          ? []
+          : [characterBuildCatalogEquipmentItem({ itemId: weaponItemId })]),
+        ...(offHandWeaponItemId === undefined
+          ? []
+          : [
+              characterBuildCatalogEquipmentItem({
+                itemId: offHandWeaponItemId,
+              }),
+            ]),
       ],
       loadout: {
         ...(armorItemId === undefined ? {} : { armor: armorItemId }),
         ...(shieldItemId === undefined ? {} : { shield: shieldItemId }),
+        ...(weaponItemId === undefined
+          ? {}
+          : { weapon: { itemId: weaponItemId, grip: "one_handed" } }),
+        ...(offHandWeaponItemId === undefined
+          ? {}
+          : { offHandWeapon: { itemId: offHandWeaponItemId } }),
       },
     },
   };

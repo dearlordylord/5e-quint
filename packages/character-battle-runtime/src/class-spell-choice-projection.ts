@@ -5,7 +5,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import { Match, Option } from "effect";
 
-const CLASS_SPELL_CHOICE_KINDS = ["cantrip", "leveledSpell"] as const;
+export const CLASS_SPELL_CHOICE_KINDS = ["cantrip", "leveledSpell"] as const;
 export type ClassSpellChoiceKind = (typeof CLASS_SPELL_CHOICE_KINDS)[number];
 
 export function classSpellChoiceIsRuntimeDetached(input: {

@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
-import type { BattleInterruptProcedureSelection } from "./index.ts";
-import { classLevel } from "@dnd/shared/types";
+import {
+  opportunityAttackLeavesReach,
+  type BattleInterruptProcedureSelection,
+} from "./index.ts";
+import { classLevel, movementFeet } from "@dnd/shared/types";
 import {
   attackExecutionSelectionForSubjectForTest,
   attackDamageDispositionFill,
@@ -60,6 +63,30 @@ import {
   savageAttackerUnitId,
   speciesHalflingLuckUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
+
+test("opportunity attacks are provoked only when movement leaves reach", () => {
+  expect(
+    opportunityAttackLeavesReach({
+      beforeDistanceFeet: movementFeet(5),
+      afterDistanceFeet: movementFeet(10),
+      reachFeet: movementFeet(5),
+    }),
+  ).toBe(true);
+  expect(
+    opportunityAttackLeavesReach({
+      beforeDistanceFeet: movementFeet(5),
+      afterDistanceFeet: movementFeet(5),
+      reachFeet: movementFeet(5),
+    }),
+  ).toBe(false);
+  expect(
+    opportunityAttackLeavesReach({
+      beforeDistanceFeet: movementFeet(10),
+      afterDistanceFeet: movementFeet(15),
+      reachFeet: movementFeet(5),
+    }),
+  ).toBe(false);
+});
 
 function retaliationBoundarySession(
   input: {

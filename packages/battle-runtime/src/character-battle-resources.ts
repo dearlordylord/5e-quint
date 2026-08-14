@@ -709,18 +709,36 @@ export function characterBattleResourceInitIssue(
   classLevels: CharacterBattleClassLevels,
 ): string | null {
   if (input.spellAccessFreeCast !== undefined) {
-    return !Number.isInteger(input.spellAccessFreeCast.count) ||
-      input.spellAccessFreeCast.count < 1 ||
-      !Number.isInteger(input.usesRemaining) ||
-      input.usesRemaining < 0 ||
-      input.usesRemaining > input.spellAccessFreeCast.count
-      ? "Spell Access free-cast battle resource requires bounded positive use-count state."
-      : null;
+    return spellAccessFreeCastResourceInitIssue(input);
   }
   const resource = characterBattleResourceForUnitOrNull(input.unit);
   if (resource === null) {
     return "Character battle resources must be supported resource Units.";
   }
+  return characterBattleResourceStateInitIssue(input, classLevels, resource);
+}
+
+function spellAccessFreeCastResourceInitIssue(
+  input: CharacterBattleResourceInit & {
+    readonly spellAccessFreeCast: NonNullable<
+      CharacterBattleResourceInit["spellAccessFreeCast"]
+    >;
+  },
+): string | null {
+  return !Number.isInteger(input.spellAccessFreeCast.count) ||
+    input.spellAccessFreeCast.count < 1 ||
+    !Number.isInteger(input.usesRemaining) ||
+    input.usesRemaining < 0 ||
+    input.usesRemaining > input.spellAccessFreeCast.count
+    ? "Spell Access free-cast battle resource requires bounded positive use-count state."
+    : null;
+}
+
+function characterBattleResourceStateInitIssue(
+  input: CharacterBattleResourceInit,
+  classLevels: CharacterBattleClassLevels,
+  resource: CharacterBattleResourceExecutionFacts,
+): string | null {
   if (
     resource.kind === "point_pool" &&
     (input.usesRemaining !== undefined ||
@@ -731,23 +749,42 @@ export function characterBattleResourceInitIssue(
   if (resource.kind !== "point_pool" && input.pointsRemaining !== undefined) {
     return "Use-count character battle resources must not carry point-pool state.";
   }
-  if (resource.kind === "point_pool" && input.pointsRemaining !== undefined) {
-    if (!Number.isInteger(input.pointsRemaining) || input.pointsRemaining < 0) {
-      return "Point-pool character battle resource remaining points must be a nonnegative integer.";
-    }
-    const maxPoints = characterBattleResourceMaxPoints({
-      unit: input.unit,
-      classLevels,
-    });
-    if (maxPoints === undefined) {
-      return "Point-pool character battle resource requires a finite cap.";
-    }
-    if (input.pointsRemaining > maxPoints) {
-      return "Point-pool character battle resource remaining points must not exceed its maximum.";
-    }
+  return resource.kind === "point_pool"
+    ? pointPoolResourceInitIssue(input, classLevels)
+    : useCountResourceInitIssue(input, resource);
+}
+
+function pointPoolResourceInitIssue(
+  input: CharacterBattleResourceInit,
+  classLevels: CharacterBattleClassLevels,
+): string | null {
+  if (input.pointsRemaining === undefined) return null;
+  if (!Number.isInteger(input.pointsRemaining) || input.pointsRemaining < 0) {
+    return "Point-pool character battle resource remaining points must be a nonnegative integer.";
   }
-  return resource.kind === "use_count" &&
-    resource.cap.kind === "ability_modifier" &&
+  const maxPoints = characterBattleResourceMaxPoints({
+    unit: input.unit,
+    classLevels,
+  });
+  if (maxPoints === undefined) {
+    return "Point-pool character battle resource requires a finite cap.";
+  }
+  return input.pointsRemaining > maxPoints
+    ? "Point-pool character battle resource remaining points must not exceed its maximum."
+    : null;
+}
+
+function useCountResourceInitIssue(
+  input: CharacterBattleResourceInit,
+  resource: Extract<
+    CharacterBattleResourceExecutionFacts,
+    { readonly kind: "use_count" }
+  >,
+): string | null {
+  if (input.pointsRemaining !== undefined) {
+    return "Use-count character battle resources must not carry point-pool state.";
+  }
+  return resource.cap.kind === "ability_modifier" &&
     input.usesRemaining === undefined &&
     input.capAbilityModifier === undefined
     ? "Ability-modifier resource cap requires the projected ability modifier."
@@ -1039,16 +1076,25 @@ export function characterSpellcastingStateInitIssue(
   )[],
   sourceUnits: readonly UnitRecord[],
 ): string | null {
+  const issues = [
+    ...spellcastingAccessInitIssues(input, spellAccessUnits, sourceUnits),
+    ...spellSlotInitIssues(input),
+    ...spellSlotExpenditureInitIssues(input),
+    ...featurePreparedSpellAccessInitIssues(input, spellAccessUnits),
+  ];
+  return issues.length === 0 ? null : [...new Set(issues)].join("; ");
+}
+
+function spellcastingAccessInitIssues(
+  input: CharacterBattleSpellcastingInit,
+  spellAccessUnits: readonly (
+    | CharacterBattleResourceInit
+    | CharacterBattleFeatureInit
+  )[],
+  sourceUnits: readonly UnitRecord[],
+): readonly string[] {
   const issues: string[] = [];
-  if (
-    input.spellcastingSource.tag === "spellAccessOnly" &&
-    (input.cantrips.length > 0 ||
-      input.preparedSpells.length > 0 ||
-      input.featurePreparedSpells.length > 0 ||
-      input.spellbookRitualSpellAccesses.length > 0 ||
-      (input.bookOfShadowsSpellAccesses?.length ?? 0) > 0 ||
-      input.invocationSpellAccesses.length > 0)
-  ) {
+  if (spellcastingSourceCarriesClassAccess(input)) {
     issues.push(
       "Spell-Access-only casting must not contain class Spell Access.",
     );
@@ -1061,34 +1107,72 @@ export function characterSpellcastingStateInitIssue(
         spellAccessUnits,
         sourceUnits,
       ),
+      ...spellAccessEntryInitIssues(source, spellAccessKeys),
     );
-    for (const access of magicInitiateSpellAccessEntries(source)) {
-      const key = `${source.source.sourceUnit.id}\u0000${access.spell.id}`;
-      if (spellAccessKeys.has(key)) {
-        issues.push("Spell Access source-and-spell keys must be unique.");
-      }
-      spellAccessKeys.add(key);
-      if (
-        (access.preparation === "learnedCantrip" &&
-          access.spell.mechanics.level !== 0) ||
-        (access.preparation === "alwaysPrepared" &&
-          access.spell.mechanics.level < 1)
-      ) {
-        issues.push(
-          "Spell Access preparation must match the Spell Definition level.",
-        );
-      }
+  }
+  return issues;
+}
+
+function spellcastingSourceCarriesClassAccess(
+  input: CharacterBattleSpellcastingInit,
+): boolean {
+  return (
+    input.spellcastingSource.tag === "spellAccessOnly" &&
+    classSpellAccessIsPresent(input)
+  );
+}
+
+function classSpellAccessIsPresent(
+  input: CharacterBattleSpellcastingInit,
+): boolean {
+  return (
+    input.cantrips.length > 0 ||
+    input.preparedSpells.length > 0 ||
+    input.featurePreparedSpells.length > 0 ||
+    input.spellbookRitualSpellAccesses.length > 0 ||
+    (input.bookOfShadowsSpellAccesses?.length ?? 0) > 0 ||
+    input.invocationSpellAccesses.length > 0
+  );
+}
+
+function spellAccessEntryInitIssues(
+  source: CharacterBattleSpellAccessInit,
+  spellAccessKeys: Set<string>,
+): readonly string[] {
+  const issues: string[] = [];
+  for (const access of magicInitiateSpellAccessEntries(source)) {
+    const key = `${source.source.sourceUnit.id}\u0000${access.spell.id}`;
+    if (spellAccessKeys.has(key)) {
+      issues.push("Spell Access source-and-spell keys must be unique.");
+    }
+    spellAccessKeys.add(key);
+    if (spellAccessPreparationHasWrongLevel(access)) {
+      issues.push(
+        "Spell Access preparation must match the Spell Definition level.",
+      );
     }
   }
+  return issues;
+}
+
+function spellAccessPreparationHasWrongLevel(
+  access: ReturnType<typeof magicInitiateSpellAccessEntries>[number],
+): boolean {
+  return (
+    (access.preparation === "learnedCantrip" &&
+      access.spell.mechanics.level !== 0) ||
+    (access.preparation === "alwaysPrepared" &&
+      access.spell.mechanics.level < 1)
+  );
+}
+
+function spellSlotInitIssues(
+  input: CharacterBattleSpellcastingInit,
+): readonly string[] {
+  const issues: string[] = [];
   const spellSlotLevels = new Set<number>();
   for (const slot of input.spellSlots) {
-    if (
-      !Number.isInteger(slot.spellLevel) ||
-      slot.spellLevel < 1 ||
-      slot.spellLevel > 9 ||
-      !Number.isInteger(slot.count) ||
-      slot.count < 0
-    ) {
+    if (spellSlotHasInvalidCapacity(slot)) {
       issues.push(
         "Spell Slot level must be 1-9 and count must be a non-negative integer.",
       );
@@ -1098,37 +1182,71 @@ export function characterSpellcastingStateInitIssue(
     }
     spellSlotLevels.add(slot.spellLevel);
   }
+  return issues;
+}
 
+function spellSlotHasInvalidCapacity(
+  slot: CharacterBattleSpellcastingInit["spellSlots"][number],
+): boolean {
+  return (
+    !Number.isInteger(slot.spellLevel) ||
+    slot.spellLevel < 1 ||
+    slot.spellLevel > 9 ||
+    !Number.isInteger(slot.count) ||
+    slot.count < 0
+  );
+}
+
+function spellSlotExpenditureInitIssues(
+  input: CharacterBattleSpellcastingInit,
+): readonly string[] {
   const spellSlotExpenditures = input.spellSlotExpenditures;
-  if (spellSlotExpenditures !== undefined) {
-    if (spellSlotExpenditures.length !== input.spellSlots.length) {
+  if (spellSlotExpenditures === undefined) return [];
+  const issues: string[] = [];
+  if (spellSlotExpenditures.length !== input.spellSlots.length) {
+    issues.push("Spell Slot expenditure state must match slot capacity.");
+  }
+  const expenditureLevels = new Set<number>();
+  for (const expenditure of spellSlotExpenditures) {
+    const capacity = input.spellSlots.find(
+      (slot) => slot.spellLevel === expenditure.spellLevel,
+    );
+    if (
+      capacity === undefined ||
+      expenditureLevels.has(expenditure.spellLevel)
+    ) {
       issues.push("Spell Slot expenditure state must match slot capacity.");
+      continue;
     }
-    const expenditureLevels = new Set<number>();
-    for (const expenditure of spellSlotExpenditures) {
-      const capacity = input.spellSlots.find(
-        (slot) => slot.spellLevel === expenditure.spellLevel,
+    expenditureLevels.add(expenditure.spellLevel);
+    if (spellSlotExpenditureHasInvalidCount(expenditure, capacity.count)) {
+      issues.push(
+        "Spell Slot expenditure must be an integer between zero and count.",
       );
-      if (
-        capacity === undefined ||
-        expenditureLevels.has(expenditure.spellLevel)
-      ) {
-        issues.push("Spell Slot expenditure state must match slot capacity.");
-        continue;
-      }
-      expenditureLevels.add(expenditure.spellLevel);
-      if (
-        !Number.isInteger(expenditure.expended) ||
-        expenditure.expended < 0 ||
-        expenditure.expended > capacity.count
-      ) {
-        issues.push(
-          "Spell Slot expenditure must be an integer between zero and count.",
-        );
-      }
     }
   }
+  return issues;
+}
 
+function spellSlotExpenditureHasInvalidCount(
+  expenditure: CharacterBattleSpellSlotExpenditureInit,
+  capacity: number,
+): boolean {
+  return (
+    !Number.isInteger(expenditure.expended) ||
+    expenditure.expended < 0 ||
+    expenditure.expended > capacity
+  );
+}
+
+function featurePreparedSpellAccessInitIssues(
+  input: CharacterBattleSpellcastingInit,
+  spellAccessUnits: readonly (
+    | CharacterBattleResourceInit
+    | CharacterBattleFeatureInit
+  )[],
+): readonly string[] {
+  const issues: string[] = [];
   for (const featureSpell of input.featurePreparedSpells) {
     if (
       !spellAccessUnits.some((source) =>
@@ -1144,7 +1262,7 @@ export function characterSpellcastingStateInitIssue(
       );
     }
   }
-  return issues.length === 0 ? null : [...new Set(issues)].join("; ");
+  return issues;
 }
 
 function magicInitiateSpellAccessSourceInitIssues(
@@ -1162,10 +1280,45 @@ function magicInitiateSpellAccessSourceInitIssues(
       "Feat Spell Access source must carry supported Magic Initiate mechanics.",
     ];
   }
+  const entries = magicInitiateSpellAccessEntries(access);
+  const issues = magicInitiateSourceInvariantIssues(
+    access,
+    facts,
+    spellAccessUnits,
+    sourceUnits,
+  );
+  const spellList = access.source.spellList;
+  for (const access of entries) {
+    issues.push(
+      ...magicInitiateSpellAccessEntryIssues(
+        access,
+        spellList,
+        spellAccessUnits,
+        source.sourceUnit.id,
+      ),
+    );
+  }
+  return issues;
+}
+
+type ReadableMagicInitiateSourceFacts = Extract<
+  ReturnType<typeof readMagicInitiateSpellAccessSourceFacts>,
+  { readonly tag: "readable" }
+>;
+
+function magicInitiateSourceInvariantIssues(
+  access: CharacterBattleSpellAccessInit,
+  facts: ReadableMagicInitiateSourceFacts,
+  spellAccessUnits: readonly (
+    | CharacterBattleResourceInit
+    | CharacterBattleFeatureInit
+  )[],
+  sourceUnits: readonly UnitRecord[],
+): string[] {
+  const sourceId = access.source.sourceUnit.id;
   const sourceIsOwned =
-    sourceUnits.some((unit) => unit.id === source.sourceUnit.id) ||
-    spellAccessUnits.some(({ unit }) => unit.id === source.sourceUnit.id);
-  const spellList = source.spellList;
+    sourceUnits.some((unit) => unit.id === sourceId) ||
+    spellAccessUnits.some(({ unit }) => unit.id === sourceId);
   const entries = magicInitiateSpellAccessEntries(access);
   const cantripAccesses = entries.filter(
     (entry) => entry.preparation === "learnedCantrip",
@@ -1177,81 +1330,137 @@ function magicInitiateSpellAccessSourceInitIssues(
     (candidate): candidate is CharacterBattleSpellAccessFreeCastResourceInit =>
       "spellAccessFreeCast" in candidate &&
       candidate.spellAccessFreeCast !== undefined &&
-      candidate.unit.id === source.sourceUnit.id,
+      candidate.unit.id === sourceId,
   );
-  const selectedLeveledSpellId = access.levelOneSpell.id;
-  const issues = [
+  const source = access.source;
+  return [
     ...(sourceIsOwned
       ? []
       : ["Feat Spell Access must reference a character source Unit."]),
-    ...(spellList.className === facts.value.spellList
+    ...(source.spellList?.className === facts.value.spellList
       ? []
       : [
           "Magic Initiate Spell Access list source must match its parsed source mechanics.",
         ]),
-    ...(cantripAccesses.length === facts.value.selectedCantrips.count &&
-    new Set(cantripAccesses.map((access) => access.spell.id)).size ===
-      cantripAccesses.length
+    ...(cantripsMatchMagicInitiateFacts(cantripAccesses, facts)
       ? []
       : [
           "Magic Initiate Spell Access must contain exactly two distinct cantrips.",
         ]),
-    ...(leveledAccesses.length === facts.value.selectedLevelOneSpell.count &&
-    access.levelOneSpell.mechanics.level ===
-      facts.value.selectedLevelOneSpell.spellLevel
+    ...(leveledSpellMatchesMagicInitiateFacts(access, leveledAccesses, facts)
       ? []
       : [
           "Magic Initiate Spell Access must contain exactly one level-1 spell.",
         ]),
-    ...(sourceFreeCastResources.length === 1 &&
-    sourceFreeCastResources[0]?.spellAccessFreeCast.spellId ===
-      selectedLeveledSpellId &&
-    sourceFreeCastResources[0].spellAccessFreeCast.count === 1
+    ...(freeCastMatchesMagicInitiateFacts(
+      sourceFreeCastResources,
+      access.levelOneSpell.id,
+    )
       ? []
       : [
           "Magic Initiate Spell Access must have exactly one one-use free-cast resource for its level-1 spell.",
         ]),
   ];
-  for (const access of entries) {
-    const isListed =
-      spellList !== undefined &&
-      (access.preparation === "learnedCantrip"
-        ? spellList.cantrips.some((spellId) => spellId === access.spell.id)
-        : spellList.leveled.some(
-            ({ spellId, spellLevel }) =>
-              spellId === access.spell.id &&
-              spellLevel === access.spell.mechanics.level,
-          ));
-    const matchingFreeCasts = spellAccessUnits.filter(
-      (
-        candidate,
-      ): candidate is CharacterBattleSpellAccessFreeCastResourceInit =>
-        "spellAccessFreeCast" in candidate &&
-        candidate.spellAccessFreeCast !== undefined &&
-        candidate.unit.id === source.sourceUnit.id &&
-        candidate.spellAccessFreeCast.spellId === access.spell.id,
-    );
-    issues.push(
-      ...(isListed
-        ? []
-        : [
-            "Magic Initiate Spell Access must reference a spell on its canonical spell list.",
-          ]),
-      ...(access.preparation === "alwaysPrepared"
-        ? matchingFreeCasts.length === 1 &&
-          matchingFreeCasts[0]?.spellAccessFreeCast.count === 1
-          ? []
-          : [
-              "Magic Initiate Spell Access must correlate with exactly one matching free-cast resource for its leveled spell only.",
-            ]
-        : matchingFreeCasts.length === 0
-          ? []
-          : [
-              "Magic Initiate cantrip Spell Access must not have a free-cast resource.",
-            ]),
-    );
+}
+
+function cantripsMatchMagicInitiateFacts(
+  cantripAccesses: readonly {
+    readonly spell: SpellRecord;
+    readonly preparation: "learnedCantrip";
+  }[],
+  facts: ReadableMagicInitiateSourceFacts,
+): boolean {
+  return (
+    cantripAccesses.length === facts.value.selectedCantrips.count &&
+    new Set(cantripAccesses.map((access) => access.spell.id)).size ===
+      cantripAccesses.length
+  );
+}
+
+function leveledSpellMatchesMagicInitiateFacts(
+  access: CharacterBattleSpellAccessInit,
+  leveledAccesses: readonly {
+    readonly spell: SpellRecord;
+    readonly preparation: "alwaysPrepared";
+  }[],
+  facts: ReadableMagicInitiateSourceFacts,
+): boolean {
+  return (
+    leveledAccesses.length === facts.value.selectedLevelOneSpell.count &&
+    access.levelOneSpell.mechanics.level ===
+      facts.value.selectedLevelOneSpell.spellLevel
+  );
+}
+
+function freeCastMatchesMagicInitiateFacts(
+  resources: readonly CharacterBattleSpellAccessFreeCastResourceInit[],
+  spellId: SpellRecord["id"],
+): boolean {
+  return (
+    resources.length === 1 &&
+    resources[0]?.spellAccessFreeCast.spellId === spellId &&
+    resources[0].spellAccessFreeCast.count === 1
+  );
+}
+
+function magicInitiateSpellAccessEntryIssues(
+  access: ReturnType<typeof magicInitiateSpellAccessEntries>[number],
+  spellList: CharacterBattleSpellAccessInit["source"]["spellList"],
+  spellAccessUnits: readonly (
+    | CharacterBattleResourceInit
+    | CharacterBattleFeatureInit
+  )[],
+  sourceUnitId: UnitRecord["id"],
+): readonly string[] {
+  const isListed = magicInitiateSpellIsListed(access, spellList);
+  const matchingFreeCasts = spellAccessUnits.filter(
+    (candidate): candidate is CharacterBattleSpellAccessFreeCastResourceInit =>
+      "spellAccessFreeCast" in candidate &&
+      candidate.spellAccessFreeCast !== undefined &&
+      candidate.unit.id === sourceUnitId &&
+      candidate.spellAccessFreeCast.spellId === access.spell.id,
+  );
+  return [
+    ...(isListed
+      ? []
+      : [
+          "Magic Initiate Spell Access must reference a spell on its canonical spell list.",
+        ]),
+    ...magicInitiateFreeCastEntryIssue(access, matchingFreeCasts),
+  ];
+}
+
+function magicInitiateSpellIsListed(
+  access: ReturnType<typeof magicInitiateSpellAccessEntries>[number],
+  spellList: CharacterBattleSpellAccessInit["source"]["spellList"],
+): boolean {
+  if (spellList === undefined) return false;
+  return access.preparation === "learnedCantrip"
+    ? spellList.cantrips.some((spellId) => spellId === access.spell.id)
+    : spellList.leveled.some(
+        ({ spellId, spellLevel }) =>
+          spellId === access.spell.id &&
+          spellLevel === access.spell.mechanics.level,
+      );
+}
+
+function magicInitiateFreeCastEntryIssue(
+  access: ReturnType<typeof magicInitiateSpellAccessEntries>[number],
+  matchingFreeCasts: readonly CharacterBattleSpellAccessFreeCastResourceInit[],
+): readonly string[] {
+  if (access.preparation === "alwaysPrepared") {
+    return matchingFreeCasts.length === 1 &&
+      matchingFreeCasts[0]?.spellAccessFreeCast.count === 1
+      ? []
+      : [
+          "Magic Initiate Spell Access must correlate with exactly one matching free-cast resource for its leveled spell only.",
+        ];
   }
-  return issues;
+  return matchingFreeCasts.length === 0
+    ? []
+    : [
+        "Magic Initiate cantrip Spell Access must not have a free-cast resource.",
+      ];
 }
 
 function magicInitiateSpellAccessEntries(

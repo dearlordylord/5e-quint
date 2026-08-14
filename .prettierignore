@@ -2,6 +2,9 @@
 packages/surface/content/*.json
 packages/surface/publication/*.json
 
+# Local coverage-report scratch directories contain generated reporter assets.
+**/coverage_tmp*/**
+
 # Generated Unit coverage bytes are owned by unit-profile-coverage-check.cjs.
 plans/unit-profile-coverage/unit-matrix.json
 plans/unit-profile-coverage/UNIT_REPORT.md

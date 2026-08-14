@@ -234,11 +234,7 @@ export function resolveBattleSubject(
   const reportsReadyTrigger =
     input.subject.tag === "runtimeCommand" &&
     input.subject.command === "reportReadyTrigger";
-  if (
-    phase.kind === "subjectContinuation" &&
-    !reportsReadyTrigger &&
-    !sameBattleSubject(phase.subject, input.subject)
-  ) {
+  if (hasStaleSubjectContinuation(phase, reportsReadyTrigger, input.subject)) {
     return {
       tag: "invalid",
       reason: "staleSubject",
@@ -273,6 +269,18 @@ export function resolveBattleSubject(
     : mechanical;
   const routeEvents = battleReducerRouteForResolution(admission.input, result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
+}
+
+function hasStaleSubjectContinuation(
+  phase: BattleResolutionInput["state"]["subjectResolutionPhase"],
+  reportsReadyTrigger: boolean,
+  subject: BattleSubject,
+): boolean {
+  return (
+    phase.kind === "subjectContinuation" &&
+    !reportsReadyTrigger &&
+    !sameBattleSubject(phase.subject, subject)
+  );
 }
 
 function mechanicalResultWithPreservedSubjectPhase(

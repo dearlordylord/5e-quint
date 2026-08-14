@@ -22,6 +22,7 @@ node_modules
 .ralphrc
 .ralph_backup_*
 coverage/
+coverage_tmp*/
 dist/
 __pycache__/
 _apalache-out/

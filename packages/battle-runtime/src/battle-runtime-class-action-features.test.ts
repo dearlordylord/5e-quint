@@ -3207,6 +3207,47 @@ describe("battle runtime: class action features", () => {
       label: "Choose a Brutal Strike effect",
       choices: ["forceful_blow", "hamstring_blow", "decline"],
     });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(target, goblinId),
+          unitFeatureDecisionFill(decision, "use"),
+          attackRollFill(roll, {
+            total: 5,
+            naturalD20: 3,
+            activatedOngoingFeatureProcedureRef:
+              requireRecklessAttackProcedureRef(state),
+          }),
+          unitFeatureDecisionFill(effectDecision, "decline"),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "A Brutal Strike effect can be chosen only after the selected attack roll hits.",
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(target, goblinId),
+          unitFeatureDecisionFill(decision, "use"),
+          attackRollFill(roll, {
+            total: 15,
+            naturalD20: 10,
+            activatedOngoingFeatureProcedureRef:
+              requireRecklessAttackProcedureRef(state),
+          }),
+          unitFeatureDecisionFill(effectDecision, "use"),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Brutal Strike effect choice is not admitted at level 9.",
+    });
     const afterEffect = resolveBattleSubject({
       state: afterRoll.state,
       subject: attackSubject,

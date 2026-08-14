@@ -23,6 +23,7 @@ import {
   druidCircleLandBuild,
   druidWildShapeFixtureKnownFormStatBlockIds,
   empoweredEvocationDamageRollModifier,
+  parseCharacterSheet,
   requireRight,
   removeSelfRestorationConditionAtTurnEnd,
   unitLibrary,
@@ -173,6 +174,9 @@ describe("Character Sheet runtime / passive defenses", () => {
         },
       },
     });
+    expect(
+      requireRight(parseCharacterSheet(sheet, unitLibrary)).fiendishResilience,
+    ).toEqual({ damageType: "fire" });
 
     const shortRested = requireRight(
       completeShortRest({

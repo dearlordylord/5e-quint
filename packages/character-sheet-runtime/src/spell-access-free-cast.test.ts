@@ -227,6 +227,14 @@ describe("Character Sheet Spell Access free casts", () => {
     expect(
       Either.isLeft(parseCharacterSheet(invalidExpenditure, unitLibrary)),
     ).toBe(true);
+
+    const duplicateExpenditure = JSON.parse(JSON.stringify(spent));
+    duplicateExpenditure.resourceExpenditures.push(
+      duplicateExpenditure.resourceExpenditures[0],
+    );
+    expect(
+      Either.isLeft(parseCharacterSheet(duplicateExpenditure, unitLibrary)),
+    ).toBe(true);
   });
 
   test("stored reconstruction rejects duplicate and accepts distinct Magic Initiate spell lists", () => {

@@ -45,6 +45,7 @@ import { battleCreaturePresentationDisplayName } from "./stat-block-presentation
 import {
   battlePresentedSnapshot,
   BattlePresentedSnapshotSchema,
+  isBattleRuntimeSession,
 } from "./index.ts";
 import {
   battleRuntimeContextForTest,
@@ -61,6 +62,17 @@ import {
 } from "./character-class-level.ts";
 
 describe("battle runtime: setup and discovery", () => {
+  test("recognizes only nominal battle runtime sessions", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-runtime-session-guard"),
+      combatants: [characterSeed({ initiative: 10 })],
+    });
+
+    expect(isBattleRuntimeSession(session)).toBe(true);
+    expect(isBattleRuntimeSession(session.state)).toBe(false);
+    expect(isBattleRuntimeSession(null)).toBe(false);
+  });
+
   test("battle ids must be non-empty trimmed strings", () => {
     expect(() => battleId("")).toThrow();
     expect(() => battleId("   ")).toThrow();

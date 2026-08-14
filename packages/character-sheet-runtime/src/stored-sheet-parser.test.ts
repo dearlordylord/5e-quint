@@ -398,6 +398,12 @@ describe("stored Character Sheet resource and optional feature-state parsers", (
         unitId: "sorcerer_font_of_magic",
         expended: 3,
       },
+      {
+        tag: "spellAccessFreeCast",
+        sourceUnitId: "feat_magic_initiate_wizard",
+        spellId: "burning_hands",
+        expended: 1,
+      },
     ];
     expect(parseStoredResourceExpenditures(value)).toEqual(Either.right(value));
   });
@@ -412,6 +418,59 @@ describe("stored Character Sheet resource and optional feature-state parsers", (
       name: "unknown expenditure",
       value: [{ tag: "unknown", expended: 0 }],
       expected: "Expected Character Sheet resource expenditure.",
+    },
+    {
+      name: "non-record expenditure",
+      value: [null],
+      expected: "Expected Character Sheet resource expenditure.",
+    },
+    {
+      name: "invalid use-count expenditure count",
+      value: [
+        {
+          tag: "useCountResource",
+          unitId: "druid_wild_shape",
+          expended: -1,
+        },
+      ],
+      expected: "Expected nonnegative resource count.",
+    },
+    {
+      name: "invalid point-pool expenditure count",
+      value: [
+        {
+          tag: "pointPoolResource",
+          unitId: "sorcerer_font_of_magic",
+          expended: -1,
+        },
+      ],
+      expected: "Expected nonnegative resource count.",
+    },
+    {
+      name: "invalid Spell Access free-cast expenditure count",
+      value: [
+        {
+          tag: "spellAccessFreeCast",
+          sourceUnitId: "feat_magic_initiate_wizard",
+          spellId: "burning_hands",
+          expended: -1,
+        },
+      ],
+      expected: "Expected nonnegative resource count.",
+    },
+    {
+      name: "extra Spell Access free-cast field",
+      value: [
+        {
+          tag: "spellAccessFreeCast",
+          sourceUnitId: "feat_magic_initiate_wizard",
+          spellId: "burning_hands",
+          expended: 0,
+          count: 1,
+        },
+      ],
+      expected:
+        "Character Sheet Spell Access free-cast expenditure must contain exactly tag, source Unit id, spell Unit id, and expended count.",
     },
     {
       name: "extra keyed field",
@@ -1036,6 +1095,108 @@ describe("stored Character Build parser", () => {
         },
       },
       expected: "Character Build owned equipment item id is invalid.",
+    },
+    {
+      name: "a blank authored starting item",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          owned: [
+            { kind: "authoredStartingItem", itemName: "  ", quantity: 1 },
+          ],
+          loadout: {},
+        },
+      },
+      expected: "Character Build authored starting equipment item is invalid.",
+    },
+    {
+      name: "an unsupported selected tool item",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          owned: [
+            {
+              kind: "selectedToolItem",
+              toolProficiencyId: "synthetic_tool",
+              quantity: 1,
+            },
+          ],
+          loadout: {},
+        },
+      },
+      expected: "Character Build selected-tool equipment item is invalid.",
+    },
+    {
+      name: "a malformed authored catalog item",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          owned: [
+            {
+              kind: "authoredCatalogItem",
+              itemId: "main:weapon_quarterstaff",
+              authoredItemId: "",
+              spellcastingFocusKind: "arcane",
+              quantity: 1,
+            },
+          ],
+          loadout: {},
+        },
+      },
+      expected: "Character Build authored catalog equipment item is invalid.",
+    },
+    {
+      name: "an invalid authored catalog item id",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          owned: [
+            {
+              kind: "authoredCatalogItem",
+              itemId: "invalid",
+              authoredItemId: "synthetic_focus",
+              spellcastingFocusKind: "arcane",
+              quantity: 1,
+            },
+          ],
+          loadout: {},
+        },
+      },
+      expected:
+        "Character Build authored catalog equipment item id is invalid.",
+    },
+    {
+      name: "an unknown owned equipment item kind",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          owned: [{ kind: "unknown", itemId: "invalid", quantity: 1 }],
+          loadout: {},
+        },
+      },
+      expected: "Character Build owned equipment item is invalid.",
+    },
+    {
+      name: "a weapon loadout with an extra field",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          ...fighterBuild.equipment,
+          loadout: {
+            weapon: {
+              itemId: "main:weapon_quarterstaff",
+              grip: "one_handed",
+              extra: true,
+            },
+          },
+        },
+      },
+      expected: "Character Build weapon loadout is invalid.",
     },
     {
       name: "a loadout item that is not owned",

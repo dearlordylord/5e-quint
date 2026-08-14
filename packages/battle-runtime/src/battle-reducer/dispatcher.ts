@@ -333,6 +333,77 @@ function resolveBattleSubjectInternal(
   return resolveBattleSubjectAfterD20TestNaturalOneReroll(input, options);
 }
 
+function interruptSubjectRequiresCheckpoint(
+  input: AdmittedBattleResolutionInput,
+  options: ResolveBattleSubjectInternalOptions,
+): boolean {
+  return (
+    input.state.interruptStack.length > 0 &&
+    options.interruptRouteOptions.replayingInterruptedProcedure !== true &&
+    options.readiedActionActorId === undefined &&
+    !(
+      input.subject.tag === "runtimeCommand" &&
+      input.subject.command === "reportReadyTrigger"
+    )
+  );
+}
+
+function resolvePendingInterruptSubject(input: {
+  readonly input: AdmittedBattleResolutionInput;
+  readonly options: ResolveBattleSubjectInternalOptions;
+}): BattleResolutionResult | null {
+  if (!interruptSubjectRequiresCheckpoint(input.input, input.options)) {
+    return null;
+  }
+  const activeFrame = currentInterruptFrame(input.input.state);
+  if (activeFrame !== null) {
+    const activeContinuation = resolveActiveInterruptContinuation({
+      state: input.input.state,
+      frame: activeFrame,
+      subject: input.input.subject,
+      fills: input.input.fills,
+      execution: interruptContinuationExecution(
+        input.options.executionRegistry,
+        input.options.attackResolvers,
+      ),
+    });
+    if (activeContinuation.tag === "resolved") {
+      return activeContinuation.result;
+    }
+    const nonContinuationFrame = activeContinuation.frame;
+    /* v8 ignore start -- Defensive stale-subject rejection: these typed cleanup frames are resolved by their dedicated witness APIs, not ordinary subject dispatch. */
+    if (nonContinuationFrame.kind === "flySpeedGrantEndFallCleanup") {
+      return invalidResult(
+        input.input.state,
+        "staleSubject",
+        "Fly Speed end-fall witness must be resolved before other battle subjects.",
+      );
+    }
+    if (nonContinuationFrame.kind === "fallDamageLandingMitigation") {
+      return invalidResult(
+        input.input.state,
+        "staleSubject",
+        "Fall damage landing mitigation must be resolved before other battle subjects.",
+      );
+    }
+    /* v8 ignore stop */
+    if (nonContinuationFrame.frame.activeInterrupt !== undefined) {
+      return resolveActiveInterruptProcedure({
+        resolution: input.input,
+        execution: interruptLifecycleExecution(
+          input.options.executionRegistry,
+          input.options.attackResolvers,
+        ),
+      });
+    }
+  }
+  return invalidResult(
+    input.input.state,
+    "staleSubject",
+    "A pending interrupt checkpoint must be resolved before the interrupted procedure can continue.",
+  );
+}
+
 function resolveBattleSubjectAfterD20TestNaturalOneReroll(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
@@ -345,63 +416,11 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
           handledInterruptTrigger:
             interruptRouteOptions.handledInterruptTrigger,
         };
-  if (
-    input.state.interruptStack.length > 0 &&
-    interruptRouteOptions.replayingInterruptedProcedure !== true &&
-    options.readiedActionActorId === undefined &&
-    !(
-      input.subject.tag === "runtimeCommand" &&
-      input.subject.command === "reportReadyTrigger"
-    )
-  ) {
-    const activeFrame = currentInterruptFrame(input.state);
-    if (activeFrame !== null) {
-      const activeContinuation = resolveActiveInterruptContinuation({
-        state: input.state,
-        frame: activeFrame,
-        subject: input.subject,
-        fills: input.fills,
-        execution: interruptContinuationExecution(
-          options.executionRegistry,
-          options.attackResolvers,
-        ),
-      });
-      if (activeContinuation.tag === "resolved") {
-        return activeContinuation.result;
-      }
-      const nonContinuationFrame = activeContinuation.frame;
-      /* v8 ignore start -- Defensive stale-subject rejection: these typed cleanup frames are resolved by their dedicated witness APIs, not ordinary subject dispatch. */
-      if (nonContinuationFrame.kind === "flySpeedGrantEndFallCleanup") {
-        return invalidResult(
-          input.state,
-          "staleSubject",
-          "Fly Speed end-fall witness must be resolved before other battle subjects.",
-        );
-      }
-      if (nonContinuationFrame.kind === "fallDamageLandingMitigation") {
-        return invalidResult(
-          input.state,
-          "staleSubject",
-          "Fall damage landing mitigation must be resolved before other battle subjects.",
-        );
-      }
-      /* v8 ignore stop */
-      if (nonContinuationFrame.frame.activeInterrupt !== undefined) {
-        return resolveActiveInterruptProcedure({
-          resolution: input,
-          execution: interruptLifecycleExecution(
-            options.executionRegistry,
-            options.attackResolvers,
-          ),
-        });
-      }
-    }
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "A pending interrupt checkpoint must be resolved before the interrupted procedure can continue.",
-    );
-  }
+  const pendingInterruptResult = resolvePendingInterruptSubject({
+    input,
+    options,
+  });
+  if (pendingInterruptResult !== null) return pendingInterruptResult;
 
   const actorId = battleSubjectActorId(input.subject);
   if (

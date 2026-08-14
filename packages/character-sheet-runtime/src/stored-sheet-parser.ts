@@ -428,88 +428,116 @@ export function parseStoredResourceExpenditures(
   }
   const expenditures: CharacterSheetResourceExpenditure[] = [];
   for (const expenditure of value) {
-    if (
-      !isRecord(expenditure) ||
-      (expenditure.tag !== "layOnHandsHealingPool" &&
-        expenditure.tag !== "useCountResource" &&
-        expenditure.tag !== "pointPoolResource" &&
-        expenditure.tag !== "spellAccessFreeCast")
-    ) {
+    const parsed = parseStoredResourceExpenditure(expenditure);
+    if (Either.isLeft(parsed)) return Either.left(parsed.left);
+    expenditures.push(parsed.right);
+  }
+  return Either.right(expenditures);
+}
+
+function parseStoredResourceExpenditure(
+  value: unknown,
+): Either.Either<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
+  if (!isRecord(value)) {
+    return characterSheetIssue(
+      "Expected Character Sheet resource expenditure.",
+    );
+  }
+  switch (value.tag) {
+    case "layOnHandsHealingPool":
+      return parseStoredLayOnHandsResourceExpenditure(value);
+    case "useCountResource":
+      return parseStoredUseCountResourceExpenditure(value);
+    case "pointPoolResource":
+      return parseStoredPointPoolResourceExpenditure(value);
+    case "spellAccessFreeCast":
+      return parseStoredSpellAccessFreeCastExpenditure(value);
+    default:
       return characterSheetIssue(
         "Expected Character Sheet resource expenditure.",
       );
-    }
-    if (
-      expenditure.tag === "useCountResource" ||
-      expenditure.tag === "pointPoolResource"
-    ) {
-      if (!recordHasExactKeys(expenditure, ["tag", "unitId", "expended"])) {
-        return characterSheetIssue(
-          "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
-        );
-      }
-    } else if (expenditure.tag === "spellAccessFreeCast") {
-      if (
-        !recordHasExactKeys(expenditure, [
-          "tag",
-          "sourceUnitId",
-          "spellId",
-          "expended",
-        ]) ||
-        typeof expenditure.sourceUnitId !== "string" ||
-        typeof expenditure.spellId !== "string"
-      ) {
-        return characterSheetIssue(
-          "Character Sheet Spell Access free-cast expenditure must contain exactly tag, source Unit id, spell Unit id, and expended count.",
-        );
-      }
-    } else if (!recordHasExactKeys(expenditure, ["tag", "expended"])) {
-      return characterSheetIssue(
-        "Character Sheet tagged resource expenditure must contain exactly tag and expended count.",
-      );
-    }
-    const expended = parseResourceCount(expenditure.expended);
-    if (Either.isLeft(expended)) return Either.left(expended.left);
-    if (expenditure.tag === "useCountResource") {
-      const unitId = parseUseCountResourceExpenditureUnitId(expenditure);
-      if (Either.isLeft(unitId)) return Either.left(unitId.left);
-      expenditures.push({
-        tag: expenditure.tag,
-        unitId: unitId.right,
-        expended: expended.right,
-      });
-      continue;
-    }
-    if (expenditure.tag === "pointPoolResource") {
-      const unitId = parsePointPoolResourceExpenditureUnitId(expenditure);
-      if (Either.isLeft(unitId)) return Either.left(unitId.left);
-      expenditures.push({
-        tag: expenditure.tag,
-        unitId: unitId.right,
-        expended: expended.right,
-      });
-      continue;
-    }
-    if (expenditure.tag === "spellAccessFreeCast") {
-      if (
-        typeof expenditure.sourceUnitId !== "string" ||
-        typeof expenditure.spellId !== "string"
-      ) {
-        return characterSheetIssue(
-          "Character Sheet Spell Access free-cast expenditure requires string Unit ids.",
-        );
-      }
-      expenditures.push({
-        tag: expenditure.tag,
-        sourceUnitId: authoredUnitId(expenditure.sourceUnitId),
-        spellId: authoredUnitId(expenditure.spellId),
-        expended: expended.right,
-      });
-      continue;
-    }
-    expenditures.push({ tag: expenditure.tag, expended: expended.right });
   }
-  return Either.right(expenditures);
+}
+
+function parseStoredUseCountResourceExpenditure(
+  value: Readonly<Record<string, unknown>>,
+): Either.Either<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
+  if (!recordHasExactKeys(value, ["tag", "unitId", "expended"])) {
+    return characterSheetIssue(
+      "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
+    );
+  }
+  const expended = parseResourceCount(value.expended);
+  if (Either.isLeft(expended)) return Either.left(expended.left);
+  const unitId = parseUseCountResourceExpenditureUnitId(value);
+  if (Either.isLeft(unitId)) return Either.left(unitId.left);
+  return Either.right({
+    tag: "useCountResource",
+    unitId: unitId.right,
+    expended: expended.right,
+  });
+}
+
+function parseStoredPointPoolResourceExpenditure(
+  value: Readonly<Record<string, unknown>>,
+): Either.Either<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
+  if (!recordHasExactKeys(value, ["tag", "unitId", "expended"])) {
+    return characterSheetIssue(
+      "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
+    );
+  }
+  const expended = parseResourceCount(value.expended);
+  if (Either.isLeft(expended)) return Either.left(expended.left);
+  const unitId = parsePointPoolResourceExpenditureUnitId(value);
+  if (Either.isLeft(unitId)) return Either.left(unitId.left);
+  return Either.right({
+    tag: "pointPoolResource",
+    unitId: unitId.right,
+    expended: expended.right,
+  });
+}
+
+function parseStoredSpellAccessFreeCastExpenditure(
+  value: Readonly<Record<string, unknown>>,
+): Either.Either<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
+  if (
+    !recordHasExactKeys(value, [
+      "tag",
+      "sourceUnitId",
+      "spellId",
+      "expended",
+    ]) ||
+    typeof value.sourceUnitId !== "string" ||
+    typeof value.spellId !== "string"
+  ) {
+    return characterSheetIssue(
+      "Character Sheet Spell Access free-cast expenditure must contain exactly tag, source Unit id, spell Unit id, and expended count.",
+    );
+  }
+  const expended = parseResourceCount(value.expended);
+  if (Either.isLeft(expended)) return Either.left(expended.left);
+  return Either.right({
+    tag: "spellAccessFreeCast",
+    sourceUnitId: authoredUnitId(value.sourceUnitId),
+    spellId: authoredUnitId(value.spellId),
+    expended: expended.right,
+  });
+}
+
+function parseStoredLayOnHandsResourceExpenditure(
+  value: Readonly<Record<string, unknown>>,
+): Either.Either<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
+  if (!recordHasExactKeys(value, ["tag", "expended"])) {
+    return characterSheetIssue(
+      "Character Sheet tagged resource expenditure must contain exactly tag and expended count.",
+    );
+  }
+  const expended = parseResourceCount(value.expended);
+  if (Either.isLeft(expended)) return Either.left(expended.left);
+  return Either.right({
+    tag: "layOnHandsHealingPool",
+    expended: expended.right,
+  });
 }
 
 export function parseStoredDruidWildShapeKnownForms(
@@ -684,6 +712,16 @@ export function parseCharacterBuild(
     magicInitiateSpellAccesses: magicInitiateSpellAccesses.right,
     equipment: equipment.right,
   };
+  const validation = validateParsedCharacterBuild(build, unitLibrary);
+  return Either.isLeft(validation)
+    ? Either.left(validation.left)
+    : Either.right(build);
+}
+
+function validateParsedCharacterBuild(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): Either.Either<void, CharacterSheetIssue> {
   const bookOfShadowsIssue = storedBookOfShadowsSelectionIssue(
     build,
     unitLibrary,
@@ -702,7 +740,7 @@ export function parseCharacterBuild(
   );
   return Either.isLeft(sorcererMetamagicIssue)
     ? Either.left(sorcererMetamagicIssue.left)
-    : Either.right(build);
+    : Either.right(undefined);
 }
 
 type DraconicAncestryDamageTypeSource =
@@ -1968,90 +2006,13 @@ function parseStoredEquipment(
   if (Either.isLeft(startingEquipmentCurrencyRemainderCp)) {
     return Either.left(startingEquipmentCurrencyRemainderCp.left);
   }
-  const owned: CharacterBuildEquipment["owned"][number][] = [];
-  for (const item of value.owned) {
-    if (!isRecord(item) || !isPositiveInteger(item.quantity)) {
-      return characterSheetIssue(
-        "Character Build owned equipment item is invalid.",
-      );
-    }
-    if (item.kind === "authoredStartingItem") {
-      if (typeof item.itemName !== "string" || item.itemName.trim() === "") {
-        return characterSheetIssue(
-          "Character Build authored starting equipment item is invalid.",
-        );
-      }
-      owned.push({
-        kind: "authoredStartingItem",
-        itemName: item.itemName,
-        quantity: PositiveInteger(item.quantity),
-      });
-      continue;
-    }
-    if (item.kind === "selectedToolItem") {
-      if (
-        typeof item.toolProficiencyId !== "string" ||
-        !isCharacterBuildToolProficiencyId(item.toolProficiencyId)
-      ) {
-        return characterSheetIssue(
-          "Character Build selected-tool equipment item is invalid.",
-        );
-      }
-      owned.push({
-        kind: "selectedToolItem",
-        toolProficiencyId: toolProficiencyId(item.toolProficiencyId),
-        quantity: PositiveInteger(item.quantity),
-      });
-      continue;
-    }
-    if (item.kind === "authoredCatalogItem") {
-      if (
-        typeof item.itemId !== "string" ||
-        typeof item.authoredItemId !== "string" ||
-        item.authoredItemId.trim() === "" ||
-        item.spellcastingFocusKind !== "arcane"
-      ) {
-        return characterSheetIssue(
-          "Character Build authored catalog equipment item is invalid.",
-        );
-      }
-      const parsedItemId = parseCharacterEquipmentItemId(item.itemId);
-      if (Either.isLeft(parsedItemId)) {
-        return characterSheetIssue(
-          "Character Build authored catalog equipment item id is invalid.",
-        );
-      }
-      owned.push({
-        kind: "authoredCatalogItem",
-        itemId: characterEquipmentItemId(parsedItemId.right),
-        authoredItemId: item.authoredItemId,
-        spellcastingFocusKind: "arcane",
-        quantity: PositiveInteger(item.quantity),
-      });
-      continue;
-    }
-    if (item.kind !== "catalogItem" || typeof item.itemId !== "string") {
-      return characterSheetIssue(
-        "Character Build owned equipment item is invalid.",
-      );
-    }
-    const parsedItemId = parseCharacterEquipmentItemId(item.itemId);
-    if (Either.isLeft(parsedItemId)) {
-      return characterSheetIssue(
-        "Character Build owned equipment item id is invalid.",
-      );
-    }
-    owned.push({
-      kind: "catalogItem",
-      itemId: characterEquipmentItemId(parsedItemId.right),
-      quantity: PositiveInteger(item.quantity),
-    });
-  }
+  const owned = parseStoredOwnedEquipment(value.owned);
+  if (Either.isLeft(owned)) return Either.left(owned.left);
   const loadout = parseStoredLoadout(value.loadout);
   /* v8 ignore next -- Malformed stored build: raw loadout fields are parsed before CharacterBuildEquipment is constructed. */
   if (Either.isLeft(loadout)) return Either.left(loadout.left);
   const ownedItemIds = new Set(
-    owned.flatMap((item) =>
+    owned.right.flatMap((item) =>
       item.kind === "catalogItem" || item.kind === "authoredCatalogItem"
         ? [item.itemId]
         : [],
@@ -2071,8 +2032,150 @@ function parseStoredEquipment(
   return Either.right({
     startingEquipmentCurrencyRemainderCp:
       startingEquipmentCurrencyRemainderCp.right,
-    owned,
+    owned: owned.right,
     loadout: loadout.right,
+  });
+}
+
+function parseStoredOwnedEquipment(
+  value: readonly unknown[],
+): Either.Either<
+  readonly CharacterBuildEquipment["owned"][number][],
+  CharacterSheetIssue
+> {
+  const owned: CharacterBuildEquipment["owned"][number][] = [];
+  for (const item of value) {
+    const parsed = parseStoredOwnedEquipmentItem(item);
+    if (Either.isLeft(parsed)) return Either.left(parsed.left);
+    owned.push(parsed.right);
+  }
+  return Either.right(owned);
+}
+
+function parseStoredOwnedEquipmentItem(
+  value: unknown,
+): Either.Either<
+  CharacterBuildEquipment["owned"][number],
+  CharacterSheetIssue
+> {
+  if (!isRecord(value) || !isPositiveInteger(value.quantity)) {
+    return characterSheetIssue(
+      "Character Build owned equipment item is invalid.",
+    );
+  }
+  const quantity = value.quantity;
+  if (value.kind === "authoredStartingItem") {
+    return parseStoredAuthoredStartingEquipmentItem(value, quantity);
+  }
+  if (value.kind === "selectedToolItem") {
+    return parseStoredSelectedToolEquipmentItem(value, quantity);
+  }
+  if (value.kind === "authoredCatalogItem") {
+    return parseStoredAuthoredCatalogEquipmentItem(value, quantity);
+  }
+  if (value.kind !== "catalogItem" || typeof value.itemId !== "string") {
+    return characterSheetIssue(
+      "Character Build owned equipment item is invalid.",
+    );
+  }
+  return parseStoredCatalogEquipmentItem(value, quantity);
+}
+
+function parseStoredAuthoredStartingEquipmentItem(
+  value: Readonly<Record<string, unknown>>,
+  quantity: number,
+): Either.Either<
+  CharacterBuildEquipment["owned"][number],
+  CharacterSheetIssue
+> {
+  if (typeof value.itemName !== "string" || value.itemName.trim() === "") {
+    return characterSheetIssue(
+      "Character Build authored starting equipment item is invalid.",
+    );
+  }
+  return Either.right({
+    kind: "authoredStartingItem",
+    itemName: value.itemName,
+    quantity: PositiveInteger(quantity),
+  });
+}
+
+function parseStoredSelectedToolEquipmentItem(
+  value: Readonly<Record<string, unknown>>,
+  quantity: number,
+): Either.Either<
+  CharacterBuildEquipment["owned"][number],
+  CharacterSheetIssue
+> {
+  if (
+    typeof value.toolProficiencyId !== "string" ||
+    !isCharacterBuildToolProficiencyId(value.toolProficiencyId)
+  ) {
+    return characterSheetIssue(
+      "Character Build selected-tool equipment item is invalid.",
+    );
+  }
+  return Either.right({
+    kind: "selectedToolItem",
+    toolProficiencyId: toolProficiencyId(value.toolProficiencyId),
+    quantity: PositiveInteger(quantity),
+  });
+}
+
+function parseStoredAuthoredCatalogEquipmentItem(
+  value: Readonly<Record<string, unknown>>,
+  quantity: number,
+): Either.Either<
+  CharacterBuildEquipment["owned"][number],
+  CharacterSheetIssue
+> {
+  if (
+    typeof value.itemId !== "string" ||
+    typeof value.authoredItemId !== "string" ||
+    value.authoredItemId.trim() === "" ||
+    value.spellcastingFocusKind !== "arcane"
+  ) {
+    return characterSheetIssue(
+      "Character Build authored catalog equipment item is invalid.",
+    );
+  }
+  const parsedItemId = parseCharacterEquipmentItemId(value.itemId);
+  if (Either.isLeft(parsedItemId)) {
+    return characterSheetIssue(
+      "Character Build authored catalog equipment item id is invalid.",
+    );
+  }
+  return Either.right({
+    kind: "authoredCatalogItem",
+    itemId: characterEquipmentItemId(parsedItemId.right),
+    authoredItemId: value.authoredItemId,
+    spellcastingFocusKind: "arcane",
+    quantity: PositiveInteger(quantity),
+  });
+}
+
+function parseStoredCatalogEquipmentItem(
+  value: Readonly<Record<string, unknown>>,
+  quantity: number,
+): Either.Either<
+  CharacterBuildEquipment["owned"][number],
+  CharacterSheetIssue
+> {
+  if (typeof value.itemId !== "string") {
+    return characterSheetIssue(
+      "Character Build owned equipment item is invalid.",
+    );
+  }
+  const parsedItemId = parseCharacterEquipmentItemId(value.itemId);
+  if (Either.isLeft(parsedItemId)) {
+    return characterSheetIssue(
+      "Character Build owned equipment item id is invalid.",
+    );
+  }
+  return Either.right({
+    kind: "catalogItem",
+    itemId: characterEquipmentItemId(parsedItemId.right),
+    quantity: PositiveInteger(quantity),
   });
 }
 

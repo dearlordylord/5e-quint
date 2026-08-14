@@ -7,12 +7,14 @@ import {
   type CharacterBattleSpellListFact,
   type CharacterBattleMetamagicInit,
   characterBattleMetamagicState,
+  characterBattleResourceForUnit,
   characterBattleResourceMaxPoints,
   characterBattleResourceMaxUses,
   characterBattleResourceSupportedForUnit,
   characterResourceState,
   characterSpellcastingState,
   effectiveCharacterBattleCantrips,
+  effectiveCharacterBattlePreparedSpells,
   parseCharacterBattleInvocationSpellAccesses,
   parseCharacterBattleClassLevels,
 } from "./character-battle-resources.ts";
@@ -50,6 +52,7 @@ import {
   unitLibrary,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
+  bardicInspirationUnit,
   characterSeed,
   decodeUnitRecordSync,
   findFamiliarInput,
@@ -90,6 +93,16 @@ function expectBattleStartIssue(
   expect(Either.isLeft(result)).toBe(true);
   if (Either.isLeft(result)) {
     expect(battleStateInitIssueMessage(result.left)).toBe(message);
+  }
+}
+
+function expectBattleStartIssueContaining(
+  result: ReturnType<typeof startBattle>,
+  message: string,
+) {
+  expect(Either.isLeft(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    expect(battleStateInitIssueMessage(result.left)).toContain(message);
   }
 }
 
@@ -250,9 +263,57 @@ describe("character battle resource projections", () => {
   });
 
   test("does not admit a spell as a character battle resource", () => {
+    const spell = spellRecord("acid_splash");
+    expect(characterBattleResourceSupportedForUnit(spell)).toBe(false);
+    expect(() => characterBattleResourceForUnit(spell)).toThrow(
+      "Character battle resources must be supported resource Units.",
+    );
+  });
+
+  test("requires the projected ability modifier for an ability-scaled resource cap", () => {
+    expect(() =>
+      characterBattleResourceMaxUses({
+        unit: bardicInspirationUnit(),
+        classLevels: classLevelsFor("bard", 1),
+      }),
+    ).toThrow(
+      "Ability-modifier resource cap requires the projected ability modifier.",
+    );
+  });
+
+  test("does not project class-bound Book of Shadows spells for a Spell-Access-only caster", () => {
+    const bookOfShadowsSpellAccesses = [
+      {
+        tag: "bookOfShadows" as const,
+        bookPresence: { tag: "onPerson" as const },
+        cantrips: [
+          spellRecord("poison_spray"),
+          spellRecord("chill_touch"),
+          spellRecord("starry_wisp"),
+        ] as const,
+        ritualSpells: [
+          spellRecord("detect_magic"),
+          spellRecord("detect_poison_and_disease"),
+        ] as const,
+        spellcastingFocus: "book_of_shadows" as const,
+      },
+    ];
+    const spellcastingSource = { tag: "spellAccessOnly" as const };
+
     expect(
-      characterBattleResourceSupportedForUnit(spellRecord("acid_splash")),
-    ).toBe(false);
+      effectiveCharacterBattleCantrips({
+        cantrips: [],
+        bookOfShadowsSpellAccesses,
+        spellcastingSource,
+      }),
+    ).toEqual([]);
+    expect(
+      effectiveCharacterBattlePreparedSpells({
+        preparedSpells: [],
+        bookOfShadowsSpellAccesses,
+        spellcastingSource,
+      }),
+    ).toEqual([]);
   });
 
   test("deduplicates admitted cantrips by their spell identity", () => {
@@ -541,6 +602,9 @@ describe("character battle resource projections", () => {
   test("admits direct Magic Initiate access for a noncaster only with canonical evidence", () => {
     const startDirectAccess = (
       access: ReturnType<typeof directMagicInitiateSpellAccess>,
+      characterUnitRefs: Parameters<
+        typeof characterSeed
+      >[0]["characterUnitRefs"] = [],
     ) =>
       startBattle({
         battleId: battleId("character-battle-resource-direct-magic-initiate"),
@@ -550,14 +614,109 @@ describe("character battle resource projections", () => {
             attack: null,
             classLevels: [{ className: "fighter", level: 1 }],
             resources: access.resources,
+            characterUnitRefs,
             spellcasting: access.spellcasting,
           }),
           statBlockCreatureInit({ initiative: 10 }),
         ],
       });
 
-    const valid = startDirectAccess(directMagicInitiateSpellAccess());
+    const validAccess = directMagicInitiateSpellAccess();
+    const [baseSpellAccess] = validAccess.spellcasting.spellAccesses;
+    if (baseSpellAccess === undefined) {
+      throw new Error("Expected Magic Initiate spell access fixture.");
+    }
+    const valid = startDirectAccess(validAccess);
     expect(Either.isRight(valid)).toBe(true);
+
+    expectBattleStartIssue(
+      startDirectAccess(
+        directMagicInitiateSpellAccess({
+          classCantrips: [spellRecord("fire_bolt")],
+        }),
+      ),
+      "Spell-Access-only casting must not contain class Spell Access.",
+    );
+
+    expectBattleStartIssue(
+      startDirectAccess({
+        ...validAccess,
+        spellcasting: {
+          ...validAccess.spellcasting,
+          spellAccesses: [baseSpellAccess, baseSpellAccess],
+        },
+      }),
+      "Spell Access source-and-spell keys must be unique.",
+    );
+
+    const nonzeroLearnedCantrip = {
+      ...spellRecord("ray_of_frost"),
+      mechanics: {
+        ...spellRecord("ray_of_frost").mechanics,
+        level: 1 as const,
+      },
+    };
+    expectBattleStartIssue(
+      startDirectAccess(
+        directMagicInitiateSpellAccess({
+          cantrips: [nonzeroLearnedCantrip, spellRecord("acid_splash")],
+        }),
+      ),
+      "Spell Access preparation must match the Spell Definition level.",
+    );
+
+    const alwaysPreparedLevelMismatch = startDirectAccess(
+      directMagicInitiateSpellAccess({
+        levelOneSpell: spellRecord("ray_of_frost"),
+      }),
+    );
+    expectBattleStartIssueContaining(
+      alwaysPreparedLevelMismatch,
+      "Magic Initiate Spell Access must contain exactly one level-1 spell.",
+    );
+
+    const unownedSourceUnit = {
+      ...baseSpellAccess.source.sourceUnit,
+      id: authoredUnitId("synthetic_unowned_magic_initiate"),
+    };
+    const unownedSourceResult = startDirectAccess({
+      ...validAccess,
+      spellcasting: {
+        ...validAccess.spellcasting,
+        spellAccesses: [
+          {
+            ...baseSpellAccess,
+            source: {
+              ...baseSpellAccess.source,
+              sourceUnit: unownedSourceUnit,
+            },
+          },
+        ],
+      },
+    });
+    expectBattleStartIssueContaining(
+      unownedSourceResult,
+      "Feat Spell Access must reference a character source Unit.",
+    );
+
+    const duplicateCantrips = startDirectAccess(
+      directMagicInitiateSpellAccess({
+        cantrips: [spellRecord("ray_of_frost"), spellRecord("ray_of_frost")],
+      }),
+    );
+    expectBattleStartIssueContaining(
+      duplicateCantrips,
+      "Magic Initiate Spell Access must contain exactly two distinct cantrips.",
+    );
+
+    const missingResourceResult = startDirectAccess(
+      { ...validAccess, resources: [] },
+      [{ unit: baseSpellAccess.source.sourceUnit, supportProfiles: [] }],
+    );
+    expectBattleStartIssueContaining(
+      missingResourceResult,
+      "Magic Initiate Spell Access must have exactly one one-use free-cast resource for its level-1 spell.",
+    );
 
     const fabricatedCantrip = {
       ...spellRecord("ray_of_frost"),
@@ -596,6 +755,16 @@ describe("character battle resource projections", () => {
         "Magic Initiate Spell Access must have exactly one one-use free-cast resource for its level-1 spell.",
       );
     }
+
+    const cantripFreeCast = startDirectAccess(
+      directMagicInitiateSpellAccess({
+        resourceSpellId: spellRecord("ray_of_frost").id,
+      }),
+    );
+    expectBattleStartIssueContaining(
+      cantripFreeCast,
+      "Magic Initiate cantrip Spell Access must not have a free-cast resource.",
+    );
 
     const malformedSourceUnit = unitLibrary.requireUnit("feat_grappler");
     if (malformedSourceUnit.kind !== "feat") {
@@ -676,6 +845,7 @@ function directMagicInitiateSpellAccess(
     readonly levelOneSpell?: SpellRecord;
     readonly spellList?: CharacterBattleSpellListFact;
     readonly resourceSpellId?: SpellRecord["id"];
+    readonly classCantrips?: readonly SpellRecord[];
   } = {},
 ) {
   const defaultSource = unitLibrary.requireUnit("feat_magic_initiate_wizard");
@@ -705,7 +875,7 @@ function directMagicInitiateSpellAccess(
       spellcastingSource: { tag: "spellAccessOnly" as const },
       proficiencyBonus: proficiencyBonus(2),
       canCastSpells: true,
-      cantrips: [],
+      cantrips: input.classCantrips ?? [],
       preparedSpells: [],
       featurePreparedSpells: [],
       spellAccesses: [

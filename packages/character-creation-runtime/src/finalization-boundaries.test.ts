@@ -19,6 +19,7 @@ import {
   characterBuildResources,
   characterBuildSpellcastingSlotCapacity,
   characterBuildUnitRefs,
+  finalizedBuildEquipment,
   finalizedClassChoiceFeatures,
   finalizedSelections,
   isSupportedBackgroundAbilityScoreIncrease,
@@ -421,11 +422,19 @@ describe("character finalization boundaries", () => {
             selectedFromUnitId: authoredUnitId("synthetic_feature_source"),
             unitId: missingFeatureUnitId,
           },
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: authoredUnitId("species_orc"),
+            unitId: authoredUnitId("orc_relentless_endurance"),
+          },
         ],
       },
       unitLibrary,
     ).map((resource) => resource.unitId);
     expect(resourceUnitIds).toContain(authoredUnitId("fighter_second_wind"));
+    expect(resourceUnitIds).toContain(
+      authoredUnitId("orc_relentless_endurance"),
+    );
     expect(resourceUnitIds).not.toContain(missingFeatureUnitId);
   });
 
@@ -485,6 +494,38 @@ describe("character finalization boundaries", () => {
         ],
       });
     }
+  });
+
+  test("scales retained character-axis Hit Point grants by total level", () => {
+    const featureUnitId = authoredUnitId(
+      "synthetic_character_axis_hit_point_bonus",
+    );
+    const build = projectionBuild(classUnitId(authoredUnitId("class_fighter")));
+
+    expect(
+      characterBuildHitPoints(
+        {
+          ...build,
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: authoredUnitId("synthetic_feature_source"),
+              unitId: featureUnitId,
+            },
+          ],
+        },
+        catalogWithHitPointMaximumFeature(featureUnitId, {
+          kind: "linear_per_level",
+          axis: "character",
+          base: { dice: 0, dieSize: 1, flat: 1 },
+          perLevel: { flat: 1 },
+          startingAtLevel: 1,
+        }),
+      ),
+    ).toMatchObject({
+      _tag: "Right",
+      right: { maximum: 11 },
+    });
   });
 
   test("omits unavailable feature grants and absent ordinary slot pools", () => {
@@ -803,5 +844,52 @@ describe("character finalization boundaries", () => {
     for (const selections of unsupportedSelections) {
       expect(allFinalizedChoicesSupported(selections, unitLibrary)).toBe(false);
     }
+  });
+
+  test("accumulates starting-equipment owner failures independently", () => {
+    const bothUnknown = selectionsWithStartingClass(
+      classUnitId(authoredUnitId("synthetic_unknown_class")),
+    );
+    expect(
+      finalizedBuildEquipment(
+        {
+          ...bothUnknown,
+          background: authoredUnitId("synthetic_unknown_background"),
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: [
+        { cause: { tag: "unknownUnit", role: "class" } },
+        { cause: { tag: "unknownUnit", role: "background" } },
+      ],
+    });
+
+    expect(finalizedBuildEquipment(bothUnknown, unitLibrary)).toMatchObject({
+      _tag: "Left",
+      left: [{ cause: { tag: "unknownUnit", role: "class" } }],
+    });
+
+    const fighter = selectionsWithStartingClass(
+      classUnitId(authoredUnitId("class_fighter")),
+    );
+    expect(
+      finalizedBuildEquipment(
+        {
+          ...fighter,
+          background: authoredUnitId("synthetic_unknown_background"),
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: [{ cause: { tag: "unknownUnit", role: "background" } }],
+    });
+
+    expect(finalizedBuildEquipment(fighter, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: { startingEquipmentCurrencyRemainderCp: 0 },
+    });
   });
 });

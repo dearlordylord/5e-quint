@@ -963,6 +963,19 @@ function isCreatureOnlyTargetSelection(
   );
 }
 
+function targetSelectionMatchesCreatureType(
+  targetSelection: TargetSelection | null,
+  creatureType: CreatureType,
+): boolean {
+  if (targetSelection === null || !("typeFilter" in targetSelection)) {
+    return false;
+  }
+  return (
+    targetSelection.typeFilter?.length === 1 &&
+    targetSelection.typeFilter[0] === creatureType
+  );
+}
+
 function creatureTypeCharmedSaveGateConditionSpell(input: {
   readonly spell: BattleSpellAdmissionSource;
   readonly duration: { readonly unit: "hour"; readonly amount: 1 | 24 };
@@ -1004,8 +1017,10 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
     targetSelection === null ||
     targetSelection.mode !== "choose_up_to" ||
     !isCreatureOnlyTargetSelection(targetSelection) ||
-    targetSelection.typeFilter?.length !== 1 ||
-    targetSelection.typeFilter[0] !== input.targetCreatureType ||
+    !targetSelectionMatchesCreatureType(
+      targetSelection,
+      input.targetCreatureType,
+    ) ||
     failedEffect?.kind !== "apply_condition" ||
     failedEffect.condition !== "charmed"
   ) {
@@ -1213,8 +1228,7 @@ export function supportedSaveGateDamageProfile(
       saveGatedDamagePhaseCount(postSaveAreaEffect) ||
     phase?.kind !== "save_gate" ||
     targeting === null ||
-    (phase.onSuccess.kind !== "none" &&
-      phase.onSuccess.kind !== "half_damage") ||
+    !saveGateDamageSuccessIsSupported(phase) ||
     failedSaveEffects === null
   ) {
     return [];
@@ -1278,6 +1292,14 @@ export function supportedSaveGateDamageProfile(
   };
 
   return [{ ...damageSpellSource(input), ...saveGatedInvocation }];
+}
+
+function saveGateDamageSuccessIsSupported(
+  phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
+): boolean {
+  return (
+    phase.onSuccess.kind === "none" || phase.onSuccess.kind === "half_damage"
+  );
 }
 
 function isDamageType(value: unknown): value is DamageType {

@@ -42,6 +42,7 @@
     "test:mbt:magical-darkness-point-origin-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/magical-darkness-point-origin-lifecycle.mbt.test.ts",
     "test:mbt:mirror-image-hit-interception": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/mirror-image-hit-interception.mbt.test.ts",
     "test:mbt:moonbeam-movable-zone": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/moonbeam-movable-zone.mbt.test.ts",
+    "test:mbt:ordinary-object-attack": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/battle-runtime-ordinary-object-attack.mbt.test.ts",
     "test:mbt:quickened-spell-governor": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/quickened-spell-governor.mbt.test.ts",
     "test:mbt:sorcerer-metamagic-subtle-selected-identity": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts",
     "test:mbt:ray-of-enfeeblement-lifecycle": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/ray-of-enfeeblement-lifecycle.mbt.test.ts",

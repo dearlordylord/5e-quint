@@ -100,6 +100,41 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   });
 
   test.each([
+    {
+      characterId: "character:stored-knocked-out",
+      hitPoints: { tag: "knockedOut", tempHp: 0 },
+      expectedTag: "knockedOut",
+    },
+    {
+      characterId: "character:stored-zero-hp",
+      hitPoints: {
+        tag: "zero",
+        tempHp: 0,
+        lifecycle: {
+          tag: "unstable",
+          deathSaves: { successes: 1, failures: 1 },
+        },
+      },
+      expectedTag: "zero",
+    },
+  ] as const)(
+    "retains $expectedTag Hit Point state through full sheet parsing",
+    ({ characterId, hitPoints, expectedTag }) => {
+      const parsed = requireRight(
+        parseCharacterSheet(
+          {
+            ...storedAvailableSheetInput({ characterId, build }),
+            hitPoints,
+          },
+          unitLibrary,
+        ),
+      );
+
+      expect(parsed.hitPoints.tag).toBe(expectedTag);
+    },
+  );
+
+  test.each([
     { value: null, expectedTag: "Left" },
     { value: {}, expectedTag: "Left" },
     {

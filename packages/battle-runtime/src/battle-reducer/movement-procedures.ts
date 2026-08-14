@@ -204,32 +204,47 @@ function resolveMoveCommand(
     input.state,
     movement.movement,
   );
-  if (
-    threats.length > 0 &&
-    input.handledInterruptTrigger !== "opportunityAttack"
-  ) {
-    const reactionWindow = maybeOpenInterruptWindow(
-      input.state,
-      {
-        trigger: "opportunityAttack",
-        moverId: input.subject.actorId,
-        threats,
-        continuation: {
-          kind: "movement",
-          subject: input.subject,
-          movement: movement.movement,
-        },
-      },
-      undefined,
-    );
-    if (reactionWindow !== null) return reactionWindow;
-  }
+  const reactionWindow = movementOpportunityReactionWindow(
+    input,
+    movement.movement,
+    threats,
+  );
+  if (reactionWindow !== null) return reactionWindow;
   return resolveMoveAfterMovement({
     state: input.state,
     subject: input.subject,
     movement: movement.movement,
     remainingFills: input.fills.slice(1),
   });
+}
+
+function movementOpportunityReactionWindow(
+  input: AdmittedBattleResolutionInput & {
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  },
+  movement: BattleResolvedMovement,
+  threats: readonly BattleOpportunityAttackThreat[],
+): BattleResolutionResult | null {
+  if (
+    threats.length === 0 ||
+    input.handledInterruptTrigger === "opportunityAttack"
+  ) {
+    return null;
+  }
+  return maybeOpenInterruptWindow(
+    input.state,
+    {
+      trigger: "opportunityAttack",
+      moverId: input.subject.actorId,
+      threats,
+      continuation: {
+        kind: "movement",
+        subject: input.subject,
+        movement,
+      },
+    },
+    undefined,
+  );
 }
 
 type JumpMovementReplacementEffect = Extract<
@@ -1517,44 +1532,79 @@ function validateCreatureSpaceTraversalMovementFact(
   /* v8 ignore stop */
   const seenOccupants = new Set<CombatantId>();
   for (const occupiedSpace of fact.occupiedSpaces) {
-    /* v8 ignore start -- Malformed traversal witness: the table adapter lists other creatures whose spaces the mover crosses, never the mover itself. */
-    if (occupiedSpace.occupantId === mover.combatantId) {
-      return CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE;
-    }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed traversal witness: the table adapter emits each occupied creature once, so this rejects only a caller-mutated duplicate. */
-    if (seenOccupants.has(occupiedSpace.occupantId)) {
-      return CREATURE_SPACE_TRAVERSAL_REPEATED_OCCUPANT_MESSAGE;
-    }
-    /* v8 ignore stop */
+    const occupantIssue = creatureSpaceTraversalOccupantIssue(
+      state,
+      mover,
+      occupiedSpace.occupantId,
+      seenOccupants,
+      largerCreatureSpacePermission,
+    );
+    if (occupantIssue !== null) return occupantIssue;
     seenOccupants.add(occupiedSpace.occupantId);
-    const occupant = state.combatants.get(occupiedSpace.occupantId);
-    /* v8 ignore start -- Malformed traversal witness: occupied-space selection is drawn from this battle, so this rejects only a caller-mutated foreign identity. */
-    if (occupant === undefined) {
-      return CREATURE_SPACE_TRAVERSAL_UNKNOWN_OCCUPANT_MESSAGE;
-    }
-    /* v8 ignore stop */
-    if (zeroHpLifecycleIsTerminal(occupant)) {
-      return CREATURE_SPACE_TRAVERSAL_TERMINAL_OCCUPANT_MESSAGE;
-    }
-    if (!isIncapacitated(occupant.conditions)) {
-      /* v8 ignore start -- Malformed creature-space traversal fill: ordinary movers may cross only Incapacitated occupants; the exceptional profile separately admits larger creatures. */
-      if (!largerCreatureSpacePermission) {
-        return CREATURE_SPACE_TRAVERSAL_MISSING_PERMISSION_MESSAGE;
-      }
-      /* v8 ignore stop */
-      /* v8 ignore start -- Malformed traversal witness: the admitted exceptional table fact includes only creature spaces larger than the mover. */
-      if (
-        !creatureSizeIsLargerThanSelf(
-          combatantEffectiveSize(mover),
-          combatantEffectiveSize(occupant),
-        )
-      ) {
-        return CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE;
-      }
-      /* v8 ignore stop */
-    }
   }
+  return creatureSpaceTraversalDestinationIssue(fact);
+}
+
+function creatureSpaceTraversalOccupantIssue(
+  state: BattleState,
+  mover: BattleCreatureState,
+  occupantId: CombatantId,
+  seenOccupants: ReadonlySet<CombatantId>,
+  largerCreatureSpacePermission: boolean,
+): string | null {
+  /* v8 ignore start -- Malformed traversal witness: the table adapter lists other creatures whose spaces the mover crosses, never the mover itself. */
+  if (occupantId === mover.combatantId) {
+    return CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE;
+  }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed traversal witness: the table adapter emits each occupied creature once, so this rejects only a caller-mutated duplicate. */
+  if (seenOccupants.has(occupantId)) {
+    return CREATURE_SPACE_TRAVERSAL_REPEATED_OCCUPANT_MESSAGE;
+  }
+  /* v8 ignore stop */
+  const occupant = state.combatants.get(occupantId);
+  /* v8 ignore start -- Malformed traversal witness: occupied-space selection is drawn from this battle, so this rejects only a caller-mutated foreign identity. */
+  if (occupant === undefined) {
+    return CREATURE_SPACE_TRAVERSAL_UNKNOWN_OCCUPANT_MESSAGE;
+  }
+  /* v8 ignore stop */
+  if (zeroHpLifecycleIsTerminal(occupant)) {
+    return CREATURE_SPACE_TRAVERSAL_TERMINAL_OCCUPANT_MESSAGE;
+  }
+  return creatureSpaceTraversalPermissionIssue(
+    mover,
+    occupant,
+    largerCreatureSpacePermission,
+  );
+}
+
+function creatureSpaceTraversalPermissionIssue(
+  mover: BattleCreatureState,
+  occupant: BattleCreatureState,
+  largerCreatureSpacePermission: boolean,
+): string | null {
+  if (isIncapacitated(occupant.conditions)) return null;
+  /* v8 ignore start -- Malformed creature-space traversal fill: ordinary movers may cross only Incapacitated occupants; the exceptional profile separately admits larger creatures. */
+  if (!largerCreatureSpacePermission) {
+    return CREATURE_SPACE_TRAVERSAL_MISSING_PERMISSION_MESSAGE;
+  }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed traversal witness: the admitted exceptional table fact includes only creature spaces larger than the mover. */
+  if (
+    !creatureSizeIsLargerThanSelf(
+      combatantEffectiveSize(mover),
+      combatantEffectiveSize(occupant),
+    )
+  ) {
+    return CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE;
+  }
+  /* v8 ignore stop */
+  return null;
+}
+
+function creatureSpaceTraversalDestinationIssue(
+  fact: BattleCreatureSpaceTraversalMovementFact,
+): string | null {
   /* v8 ignore start -- Malformed traversal destination: the table adapter cannot select a position already named as occupied while labeling it unoccupied. */
   if (
     fact.destination.kind === "unoccupiedSpace" &&

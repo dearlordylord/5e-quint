@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
+import * as ParseResult from "effect/ParseResult";
 import { damageAmount, difficultyClass, Hp, Round } from "@dnd/shared/types";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -155,6 +156,204 @@ describe("battle runtime: ordinary object attacks", () => {
         },
       ],
       snapshot: { turn: { actionResources: [] } },
+    });
+  });
+
+  test("rejects contradictory object target, roll, and damage protocol facts", () => {
+    const state = fighterVsGoblinBattle();
+    const subject = fighterAttackSubject(state, "Longsword");
+    const targetHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const objectId = battleObjectId("synthetic_protocol_target");
+    const baseFact = {
+      kind: "attackObjectTarget" as const,
+      actorId: fighterId,
+      objectId,
+      range: { kind: "meleeReach" as const },
+      attackerCanSeeObject: true,
+      cover: "none" as const,
+      armorClass: armorClass(15),
+      damageDisposition: { kind: "hitPoints" as const, hitPoints: Hp(30) },
+    };
+    const targetFill = {
+      kind: "objectTargetChoice",
+      holeId: targetHole.holeId,
+      value: objectId,
+      spatialFacts: [baseFact],
+    } as const satisfies BattleFill;
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [{ ...targetFill, spatialFacts: [] }],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining(
+        "exactly one object attack table fact is required",
+      ),
+    });
+
+    const contradictoryFact = {
+      ...baseFact,
+      actorId: goblinId,
+      objectId: battleObjectId("synthetic_other_target"),
+      range: {
+        kind: "rangedRange" as const,
+        band: "normal" as const,
+        enemyWithin5FeetCanSeeAttacker: false,
+      },
+      cover: "total" as const,
+    };
+    const contradictoryTarget = resolveBattleSubject({
+      state,
+      subject,
+      fills: [{ ...targetFill, spatialFacts: [contradictoryFact] }],
+    });
+    expect(contradictoryTarget).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining(
+        "the table fact actor does not match the attacker",
+      ),
+    });
+    expect(contradictoryTarget).toMatchObject({
+      message: expect.stringContaining(
+        "the table fact object does not match the selected object",
+      ),
+    });
+    expect(contradictoryTarget).toMatchObject({
+      message: expect.stringContaining("Total Cover prevents direct targeting"),
+    });
+    expect(contradictoryTarget).toMatchObject({
+      message: expect.stringContaining(
+        "the table range fact does not satisfy the selected attack",
+      ),
+    });
+
+    const rollHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [targetFill] }),
+      "attackRoll",
+    );
+    const hitFill = attackRollFill(rollHole, {
+      total: 18,
+      naturalD20: 13,
+    });
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill, hitFill],
+      }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFill(damageHole, 4);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill, damageFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Attack roll must be filled before attack damage.",
+    });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill,
+          attackRollFill(rollHole, {
+            total: 18,
+            naturalD20: 13,
+            activatedOngoingFeatureProcedureRef:
+              battleProcedureExecutionRefForTest("forged-object-roll-feature"),
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Object attack roll does not match the ordinary attack-roll protocol.",
+    });
+
+    const fighter = state.combatants.get(fighterId);
+    if (fighter === undefined) {
+      throw new Error("Expected the fighter object-attack fixture.");
+    }
+    const disadvantagedState = {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...fighter,
+        activeEffects: [
+          ...fighter.activeEffects,
+          {
+            kind: "nextAttackRollBySelf" as const,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "object-roll-mode-validation",
+            ),
+            sourceCombatantId: goblinId,
+            mode: "disadvantage" as const,
+            expiresAt: {
+              kind: "endOfTurn" as const,
+              combatantId: fighterId,
+              round: Round(1),
+            },
+          },
+        ],
+      }),
+    };
+    const disadvantagedTargetHole = requireHole(
+      resolveBattleSubject({ state: disadvantagedState, subject, fills: [] }),
+      "targetChoice",
+    );
+    const disadvantagedTargetFill = {
+      ...targetFill,
+      holeId: disadvantagedTargetHole.holeId,
+    };
+    const disadvantagedRollHole = requireHole(
+      resolveBattleSubject({
+        state: disadvantagedState,
+        subject,
+        fills: [disadvantagedTargetFill],
+      }),
+      "attackRoll",
+    );
+    expect(
+      resolveBattleSubject({
+        state: disadvantagedState,
+        subject,
+        fills: [
+          disadvantagedTargetFill,
+          attackRollFill(disadvantagedRollHole, {
+            total: 18,
+            naturalD20: 13,
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Attack roll mode does not match the current object attack rule.",
+    });
+
+    const missFill = attackRollFill(rollHole, {
+      total: 8,
+      naturalD20: 3,
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill, missFill, damageFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Attack damage can only be filled after a hit.",
     });
   });
 
@@ -391,6 +590,34 @@ describe("battle runtime: ordinary object attacks", () => {
       snapshot: { turn: { actionResources: [] } },
     });
     expect("objectDamages" in result).toBe(false);
+
+    const threeQuartersTargetFill = {
+      ...targetFill,
+      spatialFacts: [
+        { ...targetFill.spatialFacts[0], cover: "threeQuarters" as const },
+      ],
+    };
+    const threeQuartersRollHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [threeQuartersTargetFill],
+      }),
+      "attackRoll",
+    );
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          threeQuartersTargetFill,
+          attackRollFill(threeQuartersRollHole, {
+            total: 19,
+            naturalD20: 14,
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "resolved" });
   });
 
   test("long range gives Disadvantage while being hidden does not grant Advantage against an object", () => {
@@ -474,14 +701,21 @@ describe("battle runtime: ordinary object attacks", () => {
         Schema.encodeSync(BattleObjectDamageOutcomeSchema)(outcome),
       ),
     ).toEqual(outcome);
+    const inconsistentTotal = Schema.decodeUnknownEither(
+      BattleObjectDamageOutcomeSchema,
+    )({
+      ...outcome,
+      rolledDamage: 15,
+    });
+    expect(Either.isLeft(inconsistentTotal)).toBe(true);
+    if (!Either.isLeft(inconsistentTotal)) {
+      throw new Error("Expected inconsistent object damage to be rejected.");
+    }
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleObjectDamageOutcomeSchema)({
-          ...outcome,
-          rolledDamage: 15,
-        }),
-      ),
-    ).toBe(true);
+      ParseResult.TreeFormatter.formatErrorSync(inconsistentTotal.left),
+    ).toContain(
+      "Object damage components, totals, Hit Point transition, and destruction state must agree.",
+    );
     expect(
       Either.isLeft(
         Schema.decodeUnknownEither(BattleObjectDamageOutcomeSchema)({
@@ -526,6 +760,40 @@ describe("battle runtime: ordinary object attacks", () => {
     );
 
     expect(targetHole.attack?.acceptsObjectTarget).toBeUndefined();
+    const objectId = battleObjectId("synthetic_unarmed_object");
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            kind: "objectTargetChoice",
+            holeId: targetHole.holeId,
+            value: objectId,
+            spatialFacts: [
+              {
+                kind: "attackObjectTarget",
+                actorId: fighterId,
+                objectId,
+                range: { kind: "meleeReach" },
+                attackerCanSeeObject: true,
+                cover: "none",
+                armorClass: armorClass(15),
+                damageDisposition: {
+                  kind: "hitPoints",
+                  hitPoints: Hp(30),
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "This attack procedure does not support an ordinary object target.",
+    });
   });
 
   test("Stat Block attacks use the same object target and damage outcome path", () => {

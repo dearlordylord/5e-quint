@@ -51,16 +51,8 @@ export function removeBattleCombatants(input: {
     input.combatantIds,
   );
   if (removeIds.size === 0) return Either.right(input.state);
-  for (const id of removeIds) {
-    if (!input.state.combatants.has(id)) {
-      return battleStateInitIssue(
-        "Cannot remove a combatant that is not in this battle.",
-      );
-    }
-  }
-  if (removeIds.size >= input.state.combatants.size) {
-    return battleStateInitIssue("Cannot remove every combatant from a battle.");
-  }
+  const removalIssue = combatantRemovalIssue(input.state, removeIds);
+  if (removalIssue !== null) return battleStateInitIssue(removalIssue);
   const executionScopeCursors = new Map(input.state.executionScopeCursors);
   for (const id of removeIds) {
     const combatant = input.state.combatants.get(id);
@@ -177,6 +169,21 @@ export function removeBattleCombatants(input: {
           : input.state.legendaryActionWindow,
     }),
   );
+}
+
+function combatantRemovalIssue(
+  state: BattleState,
+  removeIds: ReadonlySet<CombatantId>,
+): string | null {
+  for (const id of removeIds) {
+    if (!state.combatants.has(id)) {
+      return "Cannot remove a combatant that is not in this battle.";
+    }
+  }
+  if (removeIds.size >= state.combatants.size) {
+    return "Cannot remove every combatant from a battle.";
+  }
+  return null;
 }
 
 function hidePrerequisiteReferencedCombatantIds(

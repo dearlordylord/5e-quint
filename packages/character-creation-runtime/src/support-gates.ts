@@ -493,33 +493,37 @@ export function supportedHoleOptionIds(
     return loadoutChoice == null ? undefined : [loadoutChoice.optionId];
   }
 
-  if (
-    hole.kind === "choice" &&
-    (source.choiceKey === CLASS_CANTRIP_CHOICE_KEY ||
-      source.choiceKey === CLASS_PREPARED_SPELL_CHOICE_KEY ||
-      source.choiceKey === WIZARD_CANTRIP_CHOICE_KEY ||
-      source.choiceKey === WIZARD_SPELLBOOK_CHOICE_KEY ||
-      source.choiceKey === WIZARD_PREPARED_SPELL_CHOICE_KEY ||
-      source.choiceKey === ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY ||
-      source.choiceKey ===
-        ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY ||
-      source.choiceKey ===
-        ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY)
-  ) {
-    return hole.options.map((option) => option.optionId);
-  }
+  return supportedUnitChoiceOptionIds(hole, source, supportProfile);
+}
 
-  if (
-    hole.kind === "choice" &&
-    source.choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY
-  ) {
-    return hole.options.map((option) => option.optionId);
-  }
+const SUPPORTED_ALL_UNIT_CHOICE_KEYS = [
+  CLASS_CANTRIP_CHOICE_KEY,
+  CLASS_PREPARED_SPELL_CHOICE_KEY,
+  WIZARD_CANTRIP_CHOICE_KEY,
+  WIZARD_SPELLBOOK_CHOICE_KEY,
+  WIZARD_PREPARED_SPELL_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
+  BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+  CLASS_EQUIPMENT_CHOICE_KEY,
+  BACKGROUND_EQUIPMENT_CHOICE_KEY,
+  GNOMISH_LINEAGE_CHOICE_KEY,
+  GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
+] as const satisfies readonly UnitChoiceKey[];
 
+const SUPPORTED_ALL_UNIT_CHOICE_KEY_SET: ReadonlySet<UnitChoiceKey> = new Set(
+  SUPPORTED_ALL_UNIT_CHOICE_KEYS,
+);
+
+function supportedUnitChoiceOptionIds(
+  hole: CreationHole,
+  source: UnitChoiceSource,
+  supportProfile: CharacterCreationSupportProfile,
+): readonly CreationChoiceOptionId[] | undefined {
   if (
     hole.kind === "choice" &&
-    (source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY ||
-      source.choiceKey === BACKGROUND_EQUIPMENT_CHOICE_KEY)
+    SUPPORTED_ALL_UNIT_CHOICE_KEY_SET.has(source.choiceKey)
   ) {
     return hole.options.map((option) => option.optionId);
   }
@@ -536,15 +540,6 @@ export function supportedHoleOptionIds(
         ),
       );
   }
-
-  if (
-    hole.kind === "choice" &&
-    (source.choiceKey === GNOMISH_LINEAGE_CHOICE_KEY ||
-      source.choiceKey === GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY)
-  ) {
-    return hole.options.map((option) => option.optionId);
-  }
-
   return mappedUnitOptionIdsForSource(source, supportProfile);
 }
 

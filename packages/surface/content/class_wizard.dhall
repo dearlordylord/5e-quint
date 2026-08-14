@@ -375,7 +375,7 @@
         , kind = "unit_ref_with_spellcasting_focus"
         , quantity = None Natural
         , unitId = Some "weapon_quarterstaff"
-        , authoredItemId = Some "wizard_arcane_focus_quarterstaff"
+        , authoredItemId = Some "Arcane Focus (Quarterstaff)"
         , spellcastingFocusKind = Some "arcane"
         }
       , { itemName = Some "Robe"

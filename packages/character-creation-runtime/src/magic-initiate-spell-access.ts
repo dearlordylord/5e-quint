@@ -72,13 +72,28 @@ export function parseCharacterBuildMagicInitiateSpellAccesses(input: {
     else accesses.push(parsed.right);
   });
 
+  issues.push(
+    ...magicInitiateGrantInstanceIssues(grantInstances, accesses),
+    ...magicInitiateParsedSpellListIssues(accesses, input.unitLibrary),
+  );
+
+  const firstIssue = issues[0];
+  return firstIssue === undefined
+    ? Either.right(accesses)
+    : Either.left([firstIssue, ...issues.slice(1)]);
+}
+
+function magicInitiateGrantInstanceIssues(
+  grantInstances: readonly MagicInitiateGrantInstance[],
+  accesses: readonly CharacterBuildMagicInitiateSpellAccess[],
+): readonly CharacterBuildMagicInitiateSpellAccessIssue[] {
+  const issues: CharacterBuildMagicInitiateSpellAccessIssue[] = [];
   if (hasDuplicateValues(grantInstances.map((grant) => grant.spellList))) {
     issues.push({
       message:
         "Character Build cannot acquire Magic Initiate more than once for the same spell list.",
     });
   }
-
   const expectedSourceCounts = new Map<UnitRecord["id"], number>();
   for (const grant of grantInstances) {
     expectedSourceCounts.set(
@@ -99,25 +114,25 @@ export function parseCharacterBuildMagicInitiateSpellAccesses(input: {
       });
     }
   }
+  return issues;
+}
 
+function magicInitiateParsedSpellListIssues(
+  accesses: readonly CharacterBuildMagicInitiateSpellAccess[],
+  unitLibrary: UnitCatalog,
+): readonly CharacterBuildMagicInitiateSpellAccessIssue[] {
   const parsedSpellLists = accesses.flatMap((access) => {
-    const grant = magicInitiateGrantInstance(
-      access.featUnitId,
-      input.unitLibrary,
-    );
+    const grant = magicInitiateGrantInstance(access.featUnitId, unitLibrary);
     return grant === undefined ? [] : [grant.spellList];
   });
-  if (hasDuplicateValues(parsedSpellLists)) {
-    issues.push({
-      message:
-        "Character Build Magic Initiate Spell Accesses must use distinct spell lists.",
-    });
-  }
-
-  const firstIssue = issues[0];
-  return firstIssue === undefined
-    ? Either.right(accesses)
-    : Either.left([firstIssue, ...issues.slice(1)]);
+  return hasDuplicateValues(parsedSpellLists)
+    ? [
+        {
+          message:
+            "Character Build Magic Initiate Spell Accesses must use distinct spell lists.",
+        },
+      ]
+    : [];
 }
 
 /**
@@ -223,29 +238,14 @@ function parseMagicInitiateSpellAccessEntry(input: {
       className: sourceFacts.value.spellList,
       unitLibrary: input.unitLibrary,
     });
-    if (
-      spellList === undefined ||
-      cantrips[0] === cantrips[1] ||
-      !cantrips.every((spellId) => spellList.cantrips.includes(spellId))
-    ) {
-      issues.push({
+    issues.push(
+      ...magicInitiateSpellListIssues({
         index: input.index,
-        message:
-          "Magic Initiate cantrips must be two distinct cantrips from the selected spell list.",
-      });
-    }
-    if (
-      spellList === undefined ||
-      !spellList.leveled.some(
-        (spell) => spell.spellId === levelOneSpell && spell.spellLevel === 1,
-      )
-    ) {
-      issues.push({
-        index: input.index,
-        message:
-          "Magic Initiate level-1 spell must come from the selected spell list.",
-      });
-    }
+        spellList,
+        cantrips,
+        levelOneSpell,
+      }),
+    );
   }
 
   const firstIssue = issues[0];
@@ -257,6 +257,54 @@ function parseMagicInitiateSpellAccessEntry(input: {
     cantrips,
     levelOneSpell,
   });
+}
+
+function magicInitiateSpellListIssues(input: {
+  readonly index: number;
+  readonly spellList: ReturnType<typeof classSpellListForClassName>;
+  readonly cantrips: readonly [UnitRecord["id"], UnitRecord["id"]];
+  readonly levelOneSpell: UnitRecord["id"];
+}): readonly CharacterBuildMagicInitiateSpellAccessIssue[] {
+  const issues: CharacterBuildMagicInitiateSpellAccessIssue[] = [];
+  const spellList = input.spellList;
+  if (spellList === undefined) {
+    issues.push(
+      {
+        index: input.index,
+        message:
+          "Magic Initiate cantrips must be two distinct cantrips from the selected spell list.",
+      },
+      {
+        index: input.index,
+        message:
+          "Magic Initiate level-1 spell must come from the selected spell list.",
+      },
+    );
+    return issues;
+  }
+  if (
+    input.cantrips[0] === input.cantrips[1] ||
+    !input.cantrips.every((spellId) => spellList.cantrips.includes(spellId))
+  ) {
+    issues.push({
+      index: input.index,
+      message:
+        "Magic Initiate cantrips must be two distinct cantrips from the selected spell list.",
+    });
+  }
+  if (
+    !spellList.leveled.some(
+      (spell) =>
+        spell.spellId === input.levelOneSpell && spell.spellLevel === 1,
+    )
+  ) {
+    issues.push({
+      index: input.index,
+      message:
+        "Magic Initiate level-1 spell must come from the selected spell list.",
+    });
+  }
+  return issues;
 }
 
 function magicInitiateGrantInstances(
@@ -326,11 +374,19 @@ function isMagicInitiateSpellAccessInput(value: unknown): value is {
     ]) &&
     typeof value.featUnitId === "string" &&
     isMagicInitiateAbility(value.spellcastingAbility) &&
-    Array.isArray(value.cantrips) &&
-    value.cantrips.length === 2 &&
-    typeof value.cantrips[0] === "string" &&
-    typeof value.cantrips[1] === "string" &&
+    isMagicInitiateCantripPair(value.cantrips) &&
     typeof value.levelOneSpell === "string"
+  );
+}
+
+function isMagicInitiateCantripPair(
+  value: unknown,
+): value is readonly [string, string] {
+  return (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    typeof value[0] === "string" &&
+    typeof value[1] === "string"
   );
 }
 

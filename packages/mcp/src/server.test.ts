@@ -360,12 +360,23 @@ describe("MCP server route", () => {
     if (druid.kind !== "class") {
       throw new Error("Expected the Druid class Unit.");
     }
-    const build = characterBuildForClassProgression({
-      base: fighterCharacterBuild(root.unitLibrary),
-      classUnit: druid,
-      keepClassChoices: false,
-      level: 2,
-    });
+    const build = {
+      ...characterBuildForClassProgression({
+        base: fighterCharacterBuild(root.unitLibrary),
+        classUnit: druid,
+        keepClassChoices: false,
+        level: 2,
+      }),
+      background: unitId("background_sage"),
+      magicInitiateSpellAccesses: [
+        {
+          featUnitId: unitId("feat_magic_initiate_wizard"),
+          spellcastingAbility: "int" as const,
+          cantrips: [unitId("fire_bolt"), unitId("light")] as const,
+          levelOneSpell: unitId("burning_hands"),
+        },
+      ],
+    };
     const characterId = testCharacterId(draftId);
     root.sessionStore.characters.set(
       availableCharacterSessionRight({
@@ -389,9 +400,21 @@ describe("MCP server route", () => {
       expect.objectContaining({
         characterId,
         status: "available",
-        resources: expect.arrayContaining([
-          expect.objectContaining({ tag: "useCountResource" }),
-        ]),
+        resources: [
+          {
+            tag: "spellAccessFreeCast",
+            sourceUnitId: "feat_magic_initiate_wizard",
+            spellId: "burning_hands",
+            count: 1,
+            expended: 0,
+          },
+          {
+            tag: "useCountResource",
+            unitId: "druid_wild_shape",
+            count: 2,
+            expended: 0,
+          },
+        ],
       }),
     ]);
 
@@ -625,6 +648,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter",
         build: fighterCharacterBuild(root.unitLibrary),
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -715,6 +739,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter / Wizard",
         build: multiclassBuild,
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -759,6 +784,7 @@ describe("MCP server route", () => {
           },
         },
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -817,6 +843,7 @@ describe("MCP server route", () => {
         displayName: "Champion Fighter",
         build: supportedBuild,
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -870,6 +897,7 @@ describe("MCP server route", () => {
           displayName: "Unsupported Critical Range Fighter",
           build: unsupportedBuild,
           initiative: initiativeScore(12),
+          resourceExpenditures: [],
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -897,6 +925,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Rogue",
         build: rogueBuild,
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -941,6 +970,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Rogue",
         build: rogueBuild,
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -982,6 +1012,7 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Rogue",
           build: rogueCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(12),
+          resourceExpenditures: [],
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -1011,6 +1042,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Rogue",
         build: buildWithoutCunningAction,
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -1045,6 +1077,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Rogue",
         build: evasionBuild,
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -1089,6 +1122,7 @@ describe("MCP server route", () => {
           displayName: "Unsupported Evasion Rogue",
           build: evasionBuild,
           initiative: initiativeScore(12),
+          resourceExpenditures: [],
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -1117,6 +1151,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Rogue",
         build: rogueBuild,
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -1177,6 +1212,7 @@ describe("MCP server route", () => {
           displayName: "Unsupported Rogue",
           build: unsupportedBuild,
           initiative: initiativeScore(12),
+          resourceExpenditures: [],
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -1233,6 +1269,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter 2",
         build: fighterTwoCharacterBuild(root.unitLibrary),
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -1274,6 +1311,7 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Fighter",
           build: fighterCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(12),
+          resourceExpenditures: [],
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -1319,6 +1357,7 @@ describe("MCP server route", () => {
         displayName: "Orc Soldier Fighter",
         build: fighterTwoLightWeaponBuild(root.unitLibrary),
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
       },
       statBlockBattleInput: {
         combatantId: goblinId,
@@ -1367,18 +1406,44 @@ describe("MCP server route", () => {
     const resourcesSchema = jsonSchemaObject(
       availableRowSchema?.properties?.resources,
     );
-    const resourceRowSchema = jsonSchemaObject(resourcesSchema?.items);
+    const unitResourceRowSchema = findSchemaWithProperty(
+      resourcesSchema?.items,
+      "unitId",
+    );
+    const spellAccessResourceRowSchema = findSchemaWithProperty(
+      resourcesSchema?.items,
+      "sourceUnitId",
+    );
 
     expect(availableRowSchema?.required).toContain("resources");
-    expect(resourceRowSchema?.required).toEqual(
+    expect(unitResourceRowSchema?.required).toEqual(
       expect.arrayContaining(["tag", "unitId", "count", "expended"]),
     );
-    expect(resourceRowSchema?.properties).toMatchObject({
+    expect(unitResourceRowSchema?.properties).toMatchObject({
       tag: { type: "string" },
       unitId: { type: "string" },
       count: { type: "integer", minimum: 0 },
       expended: { type: "integer", minimum: 0 },
     });
+    expect(spellAccessResourceRowSchema?.required).toEqual(
+      expect.arrayContaining([
+        "tag",
+        "sourceUnitId",
+        "spellId",
+        "count",
+        "expended",
+      ]),
+    );
+    expect(spellAccessResourceRowSchema?.properties).toMatchObject({
+      tag: { type: "string", enum: ["spellAccessFreeCast"] },
+      sourceUnitId: { type: "string" },
+      spellId: { type: "string" },
+      count: { type: "integer", minimum: 0 },
+      expended: { type: "integer", minimum: 0 },
+    });
+    expect(spellAccessResourceRowSchema?.properties).not.toHaveProperty(
+      "unitId",
+    );
   });
 
   test("does not expose retained companion creation HP inputs in the MCP schema", () => {
@@ -2413,6 +2478,7 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Fighter",
           build: fighterCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(7),
+          resourceExpenditures: [],
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -2486,6 +2552,7 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Fighter",
           build: fighterCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(7),
+          resourceExpenditures: [],
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -2554,6 +2621,7 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Rogue",
           build: rogueCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(18),
+          resourceExpenditures: [],
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -4810,6 +4878,7 @@ describe("MCP server route", () => {
           displayName: "Orc Soldier Fighter",
           build: fighterCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(18),
+          resourceExpenditures: [],
         },
         statBlockBattleInput: {
           combatantId: goblinId,
@@ -5809,6 +5878,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Orc Soldier Fighter",
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
         build: {
           ...build,
           equipment: {
@@ -5855,6 +5925,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Armored Spellcaster",
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -5906,6 +5977,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Shield Spellcaster",
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -5958,6 +6030,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Acid Splash Spellcaster",
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -6089,6 +6162,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Fire Bolt Spellcaster",
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -6249,6 +6323,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Sorcerous Burst Spellcaster",
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
         build: {
           ...build,
           progression: characterBuildForClassProgression({
@@ -6606,6 +6681,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Starry Wisp Spellcaster",
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -6747,6 +6823,7 @@ describe("MCP server route", () => {
         characterId: characterId("fighter-character"),
         displayName: "Readied Spell Fighter",
         initiative: initiativeScore(12),
+        resourceExpenditures: [],
         build: {
           ...build,
           progression: wizardProgression(root),
@@ -7016,6 +7093,7 @@ describe("MCP server route", () => {
           build: fighterCharacterBuild(root.unitLibrary),
           initiative: initiativeScore(12),
           currentHp: Hp(13),
+          resourceExpenditures: [],
         },
         statBlockBattleInput: {
           combatantId: goblinId,

@@ -158,6 +158,7 @@ export type {
   CharacterSheetId,
   CharacterSheetInput,
   CharacterSheetRebuildInput,
+  CharacterSheetWithSpellSlots,
   CharacterSheetIssue,
   CharacterSheetJumpDistanceAbility,
   CharacterSheetJumpDistanceAbilityInput,

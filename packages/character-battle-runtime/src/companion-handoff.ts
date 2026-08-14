@@ -9,6 +9,7 @@ import {
   type BattleCompanionStoredForm,
   type BattleAmmunitionStock,
   type CompanionBattleAdmissionFormEligibility,
+  type CompanionBattleAdmissionInput,
   type CompanionBattleEmbodiedAdmissionManifestation,
   type CompanionBattleStoredAdmissionManifestation,
   type BattleState,
@@ -113,36 +114,31 @@ export function admitCharacterSheetCompanionToBattle(
     initialCombatantOrder: input.initialCombatantOrder,
   };
   if (manifestation.right.tag === "embodiedOutsideBattle") {
-    const admission = {
+    return admitProjectedCharacterSheetCompanion(input, {
       ...admissionBase,
       companionId: manifestation.right.companionId,
       manifestation: manifestation.right.manifestation,
-    };
-    if ("session" in input) {
-      const admitted = admitCompanionToBattleRuntime({
-        ...admission,
-        session: input.session,
-      });
-      return Either.isLeft(admitted)
-        ? characterSheetBattleHandoffIssue(
-            battleStateInitIssueMessage(admitted.left),
-          )
-        : Either.right(admitted.right);
-    }
-    const admitted = admitCompanionToBattle({
-      ...admission,
-      state: input.state,
     });
-    return Either.isLeft(admitted)
-      ? characterSheetBattleHandoffIssue(
-          battleStateInitIssueMessage(admitted.left),
-        )
-      : Either.right(admitted.right);
   }
-  const admission = {
+  return admitProjectedCharacterSheetCompanion(input, {
     ...admissionBase,
     manifestation: manifestation.right.manifestation,
-  };
+  });
+}
+
+type CompanionAdmissionWithoutState<Input> = Input extends unknown
+  ? Omit<Input, "state">
+  : never;
+
+function admitProjectedCharacterSheetCompanion(
+  input:
+    | CharacterSheetCompanionBattleAdmissionInput
+    | CharacterSheetCompanionBattleRuntimeAdmissionInput,
+  admission: CompanionAdmissionWithoutState<CompanionBattleAdmissionInput>,
+): Either.Either<
+  BattleState | BattleRuntimeSession,
+  CharacterSheetBattleHandoffIssue
+> {
   if ("session" in input) {
     const admitted = admitCompanionToBattleRuntime({
       ...admission,

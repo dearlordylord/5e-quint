@@ -2428,49 +2428,16 @@ export function spendAttackAction(
     };
   }
 
-  const multiattackResources =
-    attack.kind === "statBlockAttack" && statBlockAttackSection === "actions"
-      ? state.currentTurnResources.actionResources.filter(
-          (resource): resource is StatBlockMultiattackActionResource =>
-            isStatBlockMultiattackActionResource(resource, actorId),
-        )
-      : [];
-  let spentTurnResources: BattleTurnResources;
-  let spentResource: RuntimeActionResource | null;
-  if (
-    multiattackResources.length > 0 &&
-    attack.kind === "statBlockAttack" &&
-    statBlockAttackSection === "actions"
-  ) {
-    const spent = spendMatchingActionResource(
-      state.currentTurnResources,
-      "attack",
-      (resource) =>
-        isStatBlockMultiattackActionResource(resource, actorId) &&
-        attack.procedureRef !== undefined &&
-        resource.attackProcedureRef === attack.procedureRef,
-    );
-    if (Either.isLeft(spent)) {
-      return invalidResult(
-        state,
-        "staleSubject",
-        "Attack is no longer available for the current actor.",
-      );
-    }
-    spentTurnResources = spent.right;
-    spentResource = null;
-  } else {
-    const spent = spendAttackActionResource(state.currentTurnResources);
-    if (Either.isLeft(spent)) {
-      return invalidResult(
-        state,
-        "staleSubject",
-        "Attack is no longer available for the current actor.",
-      );
-    }
-    spentTurnResources = spent.right.state;
-    spentResource = spent.right.spentResource;
+  const spent = spendAttackTurnResources(
+    state,
+    actorId,
+    attack,
+    statBlockAttackSection,
+  );
+  if (Either.isLeft(spent)) {
+    return invalidResult(state, "staleSubject", spent.left);
   }
+  const { spentTurnResources, spentResource } = spent.right;
   const afterExtraAttackResource =
     spentResource === null
       ? spentTurnResources
@@ -2518,4 +2485,52 @@ export function spendAttackAction(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+function spendAttackTurnResources(
+  state: BattleState,
+  actorId: CombatantId,
+  attack: BoundSupportedAttackActionOption,
+  statBlockAttackSection: ReturnType<typeof statBlockAttackProcedureSection>,
+): Either.Either<
+  {
+    readonly spentTurnResources: BattleTurnResources;
+    readonly spentResource: RuntimeActionResource | null;
+  },
+  string
+> {
+  const multiattackResources =
+    attack.kind === "statBlockAttack" && statBlockAttackSection === "actions"
+      ? state.currentTurnResources.actionResources.filter(
+          (resource): resource is StatBlockMultiattackActionResource =>
+            isStatBlockMultiattackActionResource(resource, actorId),
+        )
+      : [];
+  if (
+    multiattackResources.length > 0 &&
+    attack.kind === "statBlockAttack" &&
+    statBlockAttackSection === "actions"
+  ) {
+    const spent = spendMatchingActionResource(
+      state.currentTurnResources,
+      "attack",
+      (resource) =>
+        isStatBlockMultiattackActionResource(resource, actorId) &&
+        attack.procedureRef !== undefined &&
+        resource.attackProcedureRef === attack.procedureRef,
+    );
+    return Either.isLeft(spent)
+      ? Either.left("Attack is no longer available for the current actor.")
+      : Either.right({
+          spentTurnResources: spent.right,
+          spentResource: null,
+        });
+  }
+  const spent = spendAttackActionResource(state.currentTurnResources);
+  return Either.isLeft(spent)
+    ? Either.left("Attack is no longer available for the current actor.")
+    : Either.right({
+        spentTurnResources: spent.right.state,
+        spentResource: spent.right.spentResource,
+      });
 }

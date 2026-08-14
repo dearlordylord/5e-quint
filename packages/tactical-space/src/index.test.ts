@@ -4,11 +4,13 @@ import {
   CELL_SIZE_FEET,
   type Arena,
   type ArenaDefinition,
+  type ArenaSnapshot,
   type CellCoordinate,
   type CellDefinition,
   type CoverDegree,
   type ProspectiveStep,
   type Result,
+  type SpatialSnapshot,
   type SpatialState,
   type StepPreview,
   type TokenId,
@@ -62,6 +64,19 @@ function expectFailure<Value, Error>(
   error: Error,
 ): void {
   expect(result).toEqual({ tag: "error", error });
+}
+
+function uncheckedBoundaryValue<Value>(input: unknown): Value {
+  return input as Value;
+}
+
+function restoreEvidence(arenaEvidence: unknown, stateEvidence: unknown) {
+  // Cast evidence: persisted snapshot data is untrusted at this restoration
+  // boundary; these tests deliberately supply malformed encoded evidence.
+  return restoreState(
+    arenaEvidence as ArenaSnapshot,
+    stateEvidence as SpatialSnapshot,
+  );
 }
 
 function place(
@@ -154,6 +169,134 @@ describe("public arena and state seam", () => {
     ).toEqual(value(relationBetween(state, token("source"), token("target"))));
   });
 
+  it("rejects each class of inconsistent restore evidence", () => {
+    const map = arena(squareDefinition(2, 1));
+    const arenaEvidence = arenaSnapshot(map);
+    const state = place(createState(map), "source", { x: 0, y: 0 });
+    const stateEvidence = snapshot(state);
+
+    const malformedArenaEvidence = {
+      ...arenaEvidence,
+      cells: arenaEvidence.cells.map((cell, index) =>
+        index === 0 ? { ...cell, terrain: "unknown" } : cell,
+      ),
+    };
+    expect(restoreEvidence(malformedArenaEvidence, stateEvidence)).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-spatial-snapshot",
+        message: "Arena evidence no longer decodes as a tactical arena.",
+      },
+    });
+
+    const mismatchedArenaEvidence = {
+      ...arenaEvidence,
+      cellSizeFeet: 10,
+    };
+    expect(restoreEvidence(mismatchedArenaEvidence, stateEvidence)).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-spatial-snapshot",
+        message: "Spatial evidence does not identify the supplied arena.",
+      },
+    });
+    expect(
+      restoreEvidence(arenaEvidence, {
+        ...stateEvidence,
+        arenaFingerprint: "sha256:wrong",
+      }),
+    ).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-spatial-snapshot",
+        message: "Spatial evidence does not identify the supplied arena.",
+      },
+    });
+
+    expect(
+      restoreEvidence(arenaEvidence, {
+        ...stateEvidence,
+        revision: -1,
+      }),
+    ).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-spatial-snapshot",
+        message:
+          "Spatial evidence requires a nonnegative safe-integer revision.",
+      },
+    });
+
+    expect(
+      restoreEvidence(arenaEvidence, {
+        ...stateEvidence,
+        placements: [
+          {
+            token: "",
+            coordinate: arenaEvidence.cells[0].coordinate,
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-spatial-snapshot",
+        message: "Spatial evidence contains an invalid or duplicate placement.",
+      },
+    });
+    expect(
+      restoreEvidence(arenaEvidence, {
+        ...stateEvidence,
+        placements: [
+          {
+            token: "source",
+            coordinate: { x: 99, y: 99 },
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-spatial-snapshot",
+        message: "Spatial evidence contains an invalid or duplicate placement.",
+      },
+    });
+    expect(
+      restoreEvidence(arenaEvidence, {
+        ...stateEvidence,
+        placements: [
+          {
+            token: "source",
+            coordinate: arenaEvidence.cells[0].coordinate,
+          },
+          {
+            token: "source",
+            coordinate: arenaEvidence.cells[1].coordinate,
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-spatial-snapshot",
+        message: "Spatial evidence contains an invalid or duplicate placement.",
+      },
+    });
+
+    expect(
+      restoreEvidence(arenaEvidence, {
+        ...stateEvidence,
+        fingerprint: "sha256:wrong",
+      }),
+    ).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-spatial-snapshot",
+        message: "Spatial evidence fingerprint does not match its placements.",
+      },
+    });
+  });
+
   it("rejects protected-occupant Cover with no protective degree", () => {
     const result = parseArena({
       cells: [
@@ -181,6 +324,47 @@ describe("public arena and state seam", () => {
       tag: "error",
       issues: [{ tag: "invalid-cover", path: "boundaries[0].cover" }],
     });
+  });
+
+  it("rejects every malformed protected-occupant Cover component", () => {
+    const cells = [
+      { x: 0, y: 0, terrain: "ordinary" as const },
+      { x: 1, y: 0, terrain: "ordinary" as const },
+      { x: 2, y: 0, terrain: "ordinary" as const },
+    ];
+    const between = [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+    ] as const;
+
+    for (const cover of [
+      { kind: "unsupported", degree: "half" },
+      { kind: "protected-occupant", degree: "unsupported" },
+      {
+        kind: "protected-occupant",
+        degree: "half",
+        protectedCell: { x: "bad", y: 0 },
+      },
+      {
+        kind: "protected-occupant",
+        degree: "half",
+        protectedCell: { x: 2, y: 0 },
+      },
+    ]) {
+      expect(
+        parseArena({
+          cells,
+          boundaries: [
+            {
+              between,
+              traversal: "open",
+              sight: "open",
+              cover,
+            },
+          ],
+        }),
+      ).toMatchObject({ tag: "error", issues: [{ tag: "invalid-cover" }] });
+    }
   });
 
   it("finds occupied cells crossed away from their centers", () => {
@@ -886,9 +1070,8 @@ describe("public movement error protocol", () => {
     const state = place(createState(map), "mover", { x: 0, y: 0 });
     const mover = token("mover");
     // Route planning explicitly promises a typed function-boundary failure.
-    const invalidEvaluator = undefined as unknown as Parameters<
-      typeof planRoute
-    >[3];
+    const invalidEvaluator =
+      uncheckedBoundaryValue<Parameters<typeof planRoute>[3]>(undefined);
 
     expectFailure(
       planRoute(
@@ -1070,9 +1253,8 @@ describe("public movement error protocol", () => {
     );
     const state = place(createState(map), "mover", { x: 0, y: 0 });
     const mover = token("mover");
-    const invalidEvaluator = undefined as unknown as Parameters<
-      typeof previewStep
-    >[3];
+    const invalidEvaluator =
+      uncheckedBoundaryValue<Parameters<typeof previewStep>[3]>(undefined);
     // previewStep publicly promises invalid-coordinate rejection for a value
     // that only counterfeits the erased coordinate brand.
     const forgedCoordinate = Object.freeze({ x: 0, y: 0 }) as CellCoordinate;
@@ -1160,13 +1342,13 @@ describe("public movement error protocol", () => {
     });
     expectFailure(
       previewRelation(
-        null as unknown as StepPreview,
+        uncheckedBoundaryValue<StepPreview>(null),
         token("target"),
         "before",
       ),
       { tag: "forged-preview" },
     );
-    expectFailure(commitPreview(state, "forged" as unknown as StepPreview), {
+    expectFailure(commitPreview(state, uncheckedBoundaryValue("forged")), {
       tag: "forged-preview",
     });
 
@@ -1650,6 +1832,55 @@ describe("state-bound step preview and commitment", () => {
     });
     expect(snapshot(routeOrigin).revision).toBe(2);
     expect(snapshot(afterSecond).revision).toBe(4);
+  });
+});
+
+describe("intervening-token ray boundary", () => {
+  it("reports unknown endpoints and distinguishes ray interior from endpoints", () => {
+    const map = arena(squareDefinition(2, 4));
+    let state = createState(map);
+    state = place(state, "source", { x: 0, y: 0 });
+    state = place(state, "target", { x: 0, y: 3 });
+    state = place(state, "source-coincident", { x: 0, y: 0 });
+    state = place(state, "target-coincident", { x: 0, y: 3 });
+    state = place(state, "on-ray", { x: 0, y: 1 });
+    state = place(state, "off-ray", { x: 1, y: 1 });
+
+    expect(interveningTokens(state, token("missing"), token("target"))).toEqual(
+      {
+        tag: "error",
+        error: { tag: "unknown-token", token: token("missing") },
+      },
+    );
+    expect(interveningTokens(state, token("source"), token("missing"))).toEqual(
+      {
+        tag: "error",
+        error: { tag: "unknown-token", token: token("missing") },
+      },
+    );
+    expect(
+      value(interveningTokens(state, token("source"), token("target"))),
+    ).toEqual({
+      source: token("source"),
+      target: token("target"),
+      tokens: [token("on-ray")],
+    });
+  });
+
+  it("handles reverse rays with negative rational denominators", () => {
+    const map = arena(squareDefinition(5, 4));
+    let state = createState(map);
+    state = place(state, "source", { x: 4, y: 3 });
+    state = place(state, "target", { x: 0, y: 1 });
+    state = place(state, "interior", { x: 2, y: 2 });
+
+    expect(
+      value(interveningTokens(state, token("source"), token("target"))),
+    ).toEqual({
+      source: token("source"),
+      target: token("target"),
+      tokens: [token("interior")],
+    });
   });
 });
 

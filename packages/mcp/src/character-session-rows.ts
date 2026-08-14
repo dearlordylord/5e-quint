@@ -8,7 +8,7 @@ import {
   type CharacterSheetResourceState,
 } from "@dnd/character-sheet-runtime";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Either, Match } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -82,10 +82,41 @@ function characterListRow(
 function characterSheetResourceDisplayRow(
   resource: CharacterSheetResourceState,
 ) {
-  return {
-    tag: resource.tag,
-    unitId: resource.unitId,
-    count: resource.count,
-    expended: resource.expended,
-  };
+  return Match.value(resource).pipe(
+    Match.when({ tag: "spellAccessFreeCast" }, (freeCast) => ({
+      tag: freeCast.tag,
+      sourceUnitId: freeCast.sourceUnitId,
+      spellId: freeCast.spellId,
+      count: freeCast.count,
+      expended: freeCast.expended,
+    })),
+    Match.when(
+      { tag: "layOnHandsHealingPool" },
+      ({ tag, unitId, count, expended }) => ({
+        tag,
+        unitId,
+        count,
+        expended,
+      }),
+    ),
+    Match.when(
+      { tag: "useCountResource" },
+      ({ tag, unitId, count, expended }) => ({
+        tag,
+        unitId,
+        count,
+        expended,
+      }),
+    ),
+    Match.when(
+      { tag: "pointPoolResource" },
+      ({ tag, unitId, count, expended }) => ({
+        tag,
+        unitId,
+        count,
+        expended,
+      }),
+    ),
+    Match.exhaustive,
+  );
 }

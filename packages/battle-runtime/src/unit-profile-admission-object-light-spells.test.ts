@@ -28,6 +28,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   spellAct,
   spellDistantObjectLightTargetFill,
+  spellDistantTouchedObjectTargetFill,
   spellObjectLightTargetFill,
   spellTouchedObjectTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
@@ -656,6 +657,68 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       reason: "invalidFill",
     });
     expect(sorceryPointsRemaining(session.state)).toEqual(resourceCount(1));
+  });
+
+  test("Distant Spell projects a touched object target to the 30-foot witness", () => {
+    const spell = spellRecord(continualFlameUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "sorcerer", level: 3 }],
+      casterResources: [
+        {
+          unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+          pointsRemaining: resourceCount(1),
+        },
+      ],
+      casterMetamagic: {
+        sorceryPointResourceUnitId: parseSharedUnitId("sorcerer_font_of_magic"),
+        spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+        knownOptions: [distantMetamagicOption()],
+      },
+    });
+    const distantAct = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          continualFlameUnitId &&
+        battleActSpellPresentation(candidate)?.invocation.procedure ===
+          "objectLight" &&
+        candidate.subject.metamagic?.some(
+          (selection) => selection.effectKind === DISTANT_METAMAGIC_EFFECT_KIND,
+        ) === true,
+    );
+    expect(distantAct).toBeDefined();
+    if (distantAct === undefined || distantAct.subject.tag !== "actionSpell") {
+      throw new Error("Expected Distant Continual Flame spell act.");
+    }
+
+    const objectId = battleObjectId("unit-profile-distant-continual-flame");
+    const resolved = resolveBattleSubject({
+      state: session.state,
+      subject: distantAct.subject,
+      fills: [
+        spellDistantTouchedObjectTargetFill({
+          hole: requireHole(distantAct.initialHoles, "objectTargetChoice"),
+          objectId,
+          spellId: continualFlameUnitId,
+          casterId: spellCasterId,
+          rangeFeet: movementFeet(30),
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      state: {
+        lightEmitters: [
+          expect.objectContaining({
+            sourceProcedureRef: distantAct.subject.procedureRef,
+            attachment: { kind: "object", objectId },
+          }),
+        ],
+      },
+    });
   });
 
   test("continual flame does not replace the caster's prior continual flame emitter", () => {

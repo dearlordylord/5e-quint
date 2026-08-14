@@ -1327,50 +1327,60 @@ function selectedStartingEquipmentUnitIdsForDraft(input: {
   const progression = input.draft.selections.progression;
   const classUnitId =
     progression == null ? undefined : startingClassUnitId(progression);
-  const backgroundUnitId = input.draft.selections.background;
-  const classUnit =
-    classUnitId == null
-      ? Option.none()
-      : input.unitLibrary.getUnit(classUnitId);
-  const backgroundUnit =
-    backgroundUnitId == null
-      ? Option.none()
-      : input.unitLibrary.getUnit(backgroundUnitId);
-  const classFacts = Option.isSome(classUnit)
-    ? readClassCreationFacts(classUnit.value)
-    : undefined;
-  const backgroundFacts = Option.isSome(backgroundUnit)
-    ? readBackgroundCreationFacts(backgroundUnit.value)
-    : undefined;
-
   return [
-    ...(classUnitId != null && classFacts?.tag === "readable"
-      ? startingEquipmentUnitIds(
-          selectedStartingEquipmentChoice(
-            input.draft,
-            startingEquipmentChoiceHole(
-              unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
-              classFacts.value.startingEquipment,
-            ),
-            classFacts.value.startingEquipment,
-            input.supportProfile,
-          ),
-        )
-      : []),
-    ...(backgroundUnitId != null && backgroundFacts?.tag === "readable"
-      ? startingEquipmentUnitIds(
-          selectedStartingEquipmentChoice(
-            input.draft,
-            startingEquipmentChoiceHole(
-              unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
-              backgroundFacts.value.startingEquipment,
-            ),
-            backgroundFacts.value.startingEquipment,
-            input.supportProfile,
-          ),
-        )
-      : []),
+    ...selectedClassStartingEquipmentUnitIdsForDraft(input, classUnitId),
+    ...selectedBackgroundStartingEquipmentUnitIdsForDraft(input),
   ];
+}
+
+function selectedClassStartingEquipmentUnitIdsForDraft(
+  input: {
+    readonly draft: CharacterDraft;
+    readonly unitLibrary: UnitCatalog;
+    readonly supportProfile: CharacterCreationSupportProfile;
+  },
+  classUnitId: UnitRecord["id"] | undefined,
+): readonly UnitRecord["id"][] {
+  if (classUnitId == null) return [];
+  const classUnit = input.unitLibrary.getUnit(classUnitId);
+  if (Option.isNone(classUnit)) return [];
+  const classFacts = readClassCreationFacts(classUnit.value);
+  if (classFacts.tag !== "readable") return [];
+  return startingEquipmentUnitIds(
+    selectedStartingEquipmentChoice(
+      input.draft,
+      startingEquipmentChoiceHole(
+        unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
+        classFacts.value.startingEquipment,
+      ),
+      classFacts.value.startingEquipment,
+      input.supportProfile,
+    ),
+  );
+}
+
+function selectedBackgroundStartingEquipmentUnitIdsForDraft(input: {
+  readonly draft: CharacterDraft;
+  readonly unitLibrary: UnitCatalog;
+  readonly supportProfile: CharacterCreationSupportProfile;
+}): readonly UnitRecord["id"][] {
+  const backgroundUnitId = input.draft.selections.background;
+  if (backgroundUnitId == null) return [];
+  const backgroundUnit = input.unitLibrary.getUnit(backgroundUnitId);
+  if (Option.isNone(backgroundUnit)) return [];
+  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
+  if (backgroundFacts.tag !== "readable") return [];
+  return startingEquipmentUnitIds(
+    selectedStartingEquipmentChoice(
+      input.draft,
+      startingEquipmentChoiceHole(
+        unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
+        backgroundFacts.value.startingEquipment,
+      ),
+      backgroundFacts.value.startingEquipment,
+      input.supportProfile,
+    ),
+  );
 }
 
 export function startingEquipmentUnitIds(

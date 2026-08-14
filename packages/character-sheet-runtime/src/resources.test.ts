@@ -15,6 +15,10 @@ import { describe, expect, test } from "vitest";
 import type { CharacterSheetResourceExpenditure } from "./index.ts";
 import type { CharacterBuild } from "./test-support.test-support.ts";
 import {
+  resourceExpendituresFromInput,
+  spendCharacterSheetSpellAccessFreeCast,
+} from "./resources.ts";
+import {
   DieRollResult,
   DRUID_WILD_SHAPE_UNIT_ID,
   Hp,
@@ -63,6 +67,64 @@ type OverCapacityResourceCase = {
 };
 
 describe("Character Sheet runtime / resources", () => {
+  test("reconstructs a positive Paladin Lay On Hands expenditure", () => {
+    const result = resourceExpendituresFromInput({
+      build: armorClassBuild({ startingClass: "class_paladin" }),
+      unitLibrary,
+      resourceExpenditures: [
+        {
+          tag: "layOnHandsHealingPool",
+          expended: resourceCount(2),
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Right",
+      right: [{ tag: "layOnHandsHealingPool", expended: 2 }],
+    });
+  });
+
+  test.each([
+    {
+      name: "unknown source",
+      resource: {
+        sourceUnitId: authoredUnitId("class_ranger"),
+        spellId: authoredUnitId("hunters_mark"),
+      },
+    },
+    {
+      name: "unknown spell",
+      resource: {
+        sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+        spellId: authoredUnitId("mage_armor"),
+      },
+    },
+  ])("rejects a free-cast spend with an $name", ({ resource }) => {
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:free-cast-identity-gate"),
+        build: armorClassBuild({ startingClass: "class_ranger" }),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(
+      spendCharacterSheetSpellAccessFreeCast({
+        sheet,
+        unitLibrary,
+        resource,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Spell Access free cast requires matching Spell Access.",
+      },
+    });
+  });
+
   test("projects no Monk-only facts for a non-Monk build", () => {
     const sheet = requireRight(
       rebuildCharacterSheetFixture({

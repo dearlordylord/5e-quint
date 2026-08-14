@@ -84788,7 +84788,7 @@
           "needles": [
             "const act = huntersMarkFavoredEnemyBonusActionSpellAct(",
             "usesRemaining: 2",
-            "tag: \"classFeatureFreeCast\"",
+            "tag: \"spellAccessFreeCast\"",
             "requiresTableSpatialFact: true",
             "spellSlotUsesThisTurn).toEqual([])",
             "usesRemaining: 1",
@@ -84797,7 +84797,7 @@
             "breakBattleConcentration(",
             "settleCharacterSheetFromBattle({",
             "characterSheetSpellSlots(settled)",
-            "favoredEnemyHuntersMarkFreeCasts",
+            "sourceUnitId: authoredUnitId(\"ranger_favored_enemy\")",
             "characterSheetResources(settled, unitLibrary)",
             "startLongRest({",
             "timing: { tag: \"noPriorLongRest\" }",
@@ -84825,7 +84825,7 @@
           "anchor": "function huntersMarkFavoredEnemyBonusActionSpellAct",
           "needles": [
             "candidate.subject.tag === \"bonusActionSpell\"",
-            "invocation?.tag === \"classFeatureFreeCast\"",
+            "invocation?.tag === \"spellAccessFreeCast\"",
             "invocation.spellId === huntersMarkSpellId",
             "rangerFavoredEnemyUnitId",
             "invocation.procedure === \"markedDamageRider\""
@@ -84893,7 +84893,7 @@
         {
           "anchor": "function assertLevelOneHuntersMarkSpellSlot",
           "needles": [
-            "tag: \"favoredEnemyHuntersMarkFreeCasts\"",
+            "tag: \"spellAccessFreeCast\"",
             "expended: resourceCount(2)",
             "huntersMarkSpellSlotBonusActionSpellAct(session, input.casterId)",
             "usesRemaining: 0",
@@ -84905,7 +84905,7 @@
             "{ spellLevel: 1, count: 2, expended: 1 }",
             "expectLevelOneHuntersMarkActiveEffect({",
             "characterSheetSpellSlots(settled)",
-            "{ tag: \"favoredEnemyHuntersMarkFreeCasts\", expended: 2 }"
+            "sourceUnitId: authoredUnitId(\"ranger_favored_enemy\")"
           ]
         },
         {

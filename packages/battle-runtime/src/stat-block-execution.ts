@@ -361,6 +361,30 @@ function admittedMultiattackDispatch(
   actionAttacks: readonly AdmittedAttackOccurrence[],
   limitedUseDispatchCountByAttack: Map<AdmittedAttackOccurrence, number>,
 ): AdmittedMultiattackDispatch | null {
+  const count = validMultiattackDispatchCount(dispatch);
+  if (count === null) return null;
+  const candidates = actionAttacks.filter(
+    (attack) => attack.source.name === dispatch.name,
+  );
+  const [candidate] = candidates;
+  if (candidate === undefined || candidates.length !== 1) return null;
+  if (
+    !recordAdmittedLimitedUseDispatch(
+      candidate,
+      count,
+      limitedUseDispatchCountByAttack,
+    )
+  )
+    return null;
+  return {
+    attack: candidate,
+    count: PositiveInteger(count),
+  };
+}
+
+function validMultiattackDispatchCount(
+  dispatch: CreatureNamedMultiattack["dispatches"][number],
+): number | null {
   if (
     dispatch.count.kind !== "literal" ||
     dispatch.count.value < 1 ||
@@ -368,22 +392,20 @@ function admittedMultiattackDispatch(
   ) {
     return null;
   }
-  const candidates = actionAttacks.filter(
-    (attack) => attack.source.name === dispatch.name,
-  );
-  const [candidate] = candidates;
-  if (candidate === undefined || candidates.length !== 1) return null;
-  if (candidate.limitedUse !== undefined) {
-    const totalDispatchCount =
-      (limitedUseDispatchCountByAttack.get(candidate) ?? 0) +
-      dispatch.count.value;
-    if (totalDispatchCount > 1) return null;
-    limitedUseDispatchCountByAttack.set(candidate, totalDispatchCount);
-  }
-  return {
-    attack: candidate,
-    count: PositiveInteger(dispatch.count.value),
-  };
+  return dispatch.count.value;
+}
+
+function recordAdmittedLimitedUseDispatch(
+  candidate: AdmittedAttackOccurrence,
+  count: number,
+  limitedUseDispatchCountByAttack: Map<AdmittedAttackOccurrence, number>,
+): boolean {
+  if (candidate.limitedUse === undefined) return true;
+  const totalDispatchCount =
+    (limitedUseDispatchCountByAttack.get(candidate) ?? 0) + count;
+  if (totalDispatchCount > 1) return false;
+  limitedUseDispatchCountByAttack.set(candidate, totalDispatchCount);
+  return true;
 }
 
 function allocateStatBlockExecution(

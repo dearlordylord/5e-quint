@@ -1,9 +1,14 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE
 import { resourceCount } from "@dnd/shared/types";
+import * as Either from "effect/Either";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
+  ammunitionStockIssues,
+  missingRequiredAmmunitionKinds,
+  requiredAmmunitionKinds,
+  battleAmmunitionStock,
   spendAmmunitionForAcceptedAttack,
   spendAmmunitionForAcceptedAttackPendingContinuation,
 } from "./battle-ammunition.ts";
@@ -25,12 +30,137 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   battleId,
+  battleStateInitIssueMessage,
   combatantId,
   discoverBattleActs,
   resolveBattleSubject,
+  startBattle,
 } from "./index.ts";
 
 describe("ammunition lifecycle", () => {
+  it("rejects duplicate stocks and reports missing required stock at admission", () => {
+    const skeleton = skeletonCreatureInit({ initiative: 10 });
+    if (skeleton.creatureInit.kind !== "statBlock") return;
+    const withStocks = (
+      ammunitionStocks: typeof skeleton.creatureInit.ammunitionStocks,
+    ) => ({
+      ...skeleton,
+      creatureInit: { ...skeleton.creatureInit, ammunitionStocks },
+    });
+
+    const duplicate = startBattle({
+      battleId: battleId("battle-ammunition-duplicate-stock"),
+      combatants: [
+        withStocks([
+          battleAmmunitionStock("arrow", 20),
+          battleAmmunitionStock("arrow", 19),
+        ]),
+      ],
+    });
+    expect(Either.isLeft(duplicate)).toBe(true);
+    if (Either.isRight(duplicate)) return;
+    expect(battleStateInitIssueMessage(duplicate.left)).toBe(
+      "Duplicate ammunition stock for ammunition kind: arrow",
+    );
+
+    const missing = startBattle({
+      battleId: battleId("battle-ammunition-missing-stock"),
+      combatants: [withStocks([])],
+    });
+    expect(Either.isLeft(missing)).toBe(true);
+    if (Either.isRight(missing)) return;
+    expect(battleStateInitIssueMessage(missing.left)).toBe(
+      "Stat Block battle initialization requires an explicit arrow ammunition stock.",
+    );
+  });
+
+  it("derives distinct required and missing ammunition kinds across attack shapes", () => {
+    const attacks = [
+      { attackType: "melee" as const },
+      { attackType: "ranged" as const },
+      { attackType: "ranged" as const, ammunition: "arrow" as const },
+      { attackType: "ranged" as const, ammunition: "arrow" as const },
+      { attackType: "ranged" as const, ammunition: "bolt" as const },
+    ];
+
+    expect(requiredAmmunitionKinds(attacks)).toEqual(["arrow", "bolt"]);
+    expect(
+      missingRequiredAmmunitionKinds(attacks, [
+        battleAmmunitionStock("arrow", 20),
+      ]),
+    ).toEqual(["bolt"]);
+    expect(
+      ammunitionStockIssues([
+        battleAmmunitionStock("arrow", 20),
+        battleAmmunitionStock("bolt", 20),
+        battleAmmunitionStock("arrow", 19),
+      ]),
+    ).toEqual(["Duplicate ammunition stock for ammunition kind: arrow"]);
+  });
+
+  it("does not spend without an actor or positive stock and preserves other stocks", () => {
+    const initial = wizardVsSkeletonBattle().state;
+    const shortbow = attackActionOptionsForActor(initial, skeletonId).find(
+      (attack) =>
+        attack.kind === "statBlockAttack" &&
+        attack.attack.ammunition === "arrow",
+    );
+    expect(shortbow).toBeDefined();
+    if (shortbow?.kind !== "statBlockAttack") return;
+    const actor = initial.combatants.get(skeletonId);
+    expect(actor).toBeDefined();
+    if (actor === undefined) return;
+
+    const stocked = {
+      ...initial,
+      combatants: new Map(initial.combatants).set(skeletonId, {
+        ...actor,
+        ammunitionStocks: [
+          battleAmmunitionStock("arrow", 1),
+          battleAmmunitionStock("bolt", 7),
+        ],
+      }),
+    };
+    const spent = spendAmmunitionForAcceptedAttack({
+      state: stocked,
+      actorId: skeletonId,
+      attack: shortbow,
+    });
+    expect(spent.combatants.get(skeletonId)?.ammunitionStocks).toEqual([
+      battleAmmunitionStock("arrow", 0),
+      battleAmmunitionStock("bolt", 7),
+    ]);
+
+    const exhausted = {
+      ...stocked,
+      combatants: new Map(stocked.combatants).set(skeletonId, {
+        ...actor,
+        ammunitionStocks: [
+          battleAmmunitionStock("arrow", 0),
+          battleAmmunitionStock("bolt", 7),
+        ],
+      }),
+    };
+    expect(
+      spendAmmunitionForAcceptedAttack({
+        state: exhausted,
+        actorId: skeletonId,
+        attack: shortbow,
+      }),
+    ).toBe(exhausted);
+
+    const combatants = new Map(initial.combatants);
+    combatants.delete(skeletonId);
+    const missingActor = { ...initial, combatants };
+    expect(
+      spendAmmunitionForAcceptedAttack({
+        state: missingActor,
+        actorId: skeletonId,
+        attack: shortbow,
+      }),
+    ).toBe(missingActor);
+  });
+
   it("requires positive matching stock and spends an accepted attack exactly once across continuation", () => {
     const initial = wizardVsSkeletonBattle().state;
     const shortbow = attackActionOptionsForActor(initial, skeletonId).find(

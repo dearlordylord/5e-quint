@@ -166,6 +166,7 @@ const BATTLE_RUNTIME_LEAF_MODULES = new Set([
   "battle-runtime-movement-presentation-route-facts.qnt",
   "battle-runtime-next-attack-roll-mode-route-facts.qnt",
   "battle-runtime-object-light-rider-route-facts.qnt",
+  "battle-runtime-ordinary-object-attack.qnt",
   "battle-runtime-opportunity-attack-denial-route-facts.qnt",
   "battle-runtime-reaction-kinds.qnt",
   "battle-runtime-reducer-route.qnt",

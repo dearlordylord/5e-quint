@@ -105,6 +105,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetRetainedCompanionResolvedFormProof",
   "CharacterSheetRetainedCompanionState",
   "CharacterSheetRebuildInput",
+  "CharacterSheetWithSpellSlots",
   "CharacterSheetResourceExpenditure",
   "CharacterSheetResourceState",
   "CharacterSheetSpellAccess",
@@ -246,6 +247,11 @@ const EXPECTED_MOVED_FUNCTIONS = [
   },
 ];
 const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
+  {
+    name: "CharacterSheetWithSpellSlots",
+    reason:
+      "Character Sheet owns the narrowed durable Spell Slot state; exporting the type lets battle settlement require proved slot-bearing sheets without casts or reconstructing the correlation between build spellcasting and mutable slot fields.",
+  },
   {
     name: "CharacterSheetRebuildInput",
     reason:

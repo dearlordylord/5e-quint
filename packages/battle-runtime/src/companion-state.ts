@@ -94,6 +94,25 @@ export type BattleCompanionDisappearedAtZeroHitPointsState =
       readonly status: "disappearedAtZeroHitPoints";
     };
 
+export function findFamiliarDisappearedAtZeroHitPointsState(input: {
+  readonly storedForm: BattleCompanionStoredForm;
+  readonly identity: BattleCompanionIdentity;
+  readonly protocol: BattleCompanionProtocol;
+  readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
+  readonly ownerId: CombatantId;
+  readonly reactionAvailable: boolean;
+}): BattleCompanionDisappearedAtZeroHitPointsState {
+  return {
+    ...input.storedForm,
+    status: "disappearedAtZeroHitPoints",
+    ownerId: input.ownerId,
+    identity: input.identity,
+    protocol: input.protocol,
+    creatureTypeOverride: input.creatureTypeOverride,
+    reactionAvailable: input.reactionAvailable,
+  };
+}
+
 export type BattleCompanionAbsentState =
   | BattleCompanionTemporarilyDismissedState
   | BattleCompanionDisappearedAtZeroHitPointsState;

@@ -86,6 +86,7 @@ import type {
 import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
+  repeatedDamageAllocationActionKind,
   repeatedDamageAllocationInvocationFacts,
   repeatedDamageAllocationInvocationResourceFacts,
 } from "./battle-reducer/spell-procedure-profiles/repeated-damage-allocation-facts.ts";
@@ -210,15 +211,14 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     if (invocation.procedure !== "repeatedDamageAllocation") {
       throw new Error("Expected repeated-damage-allocation invocation.");
     }
-    expect(
-      repeatedDamageAllocationInvocationResourceFacts(
-        repeatedDamageAllocationInvocationFacts({
-          invocation,
-          targetCount: 1,
-          targetsAreValid: true,
-        }),
-      ),
-    ).toMatchObject({
+    const resourceFacts = repeatedDamageAllocationInvocationResourceFacts(
+      repeatedDamageAllocationInvocationFacts({
+        invocation,
+        targetCount: 1,
+        targetsAreValid: true,
+      }),
+    );
+    expect(resourceFacts).toMatchObject({
       invocationAction: "magicAction",
       hasSpellAccess: true,
       selectedSlotLevel: 1,
@@ -231,6 +231,7 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       },
       targetsAreValid: true,
     });
+    expect(repeatedDamageAllocationActionKind(resourceFacts)).toBe("magic");
     expect(act.initialHoles).toEqual([
       expect.objectContaining({
         kind: "spellTargetAllocation",

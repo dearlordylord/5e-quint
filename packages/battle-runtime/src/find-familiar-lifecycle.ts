@@ -22,7 +22,6 @@ import {
   familiarMaxHp,
   familiarStatBlockWithCreatureTypeOverride,
   findFamiliarCurrentHitPoints,
-  findFamiliarDisappearedAtZeroHitPointsState,
   findFamiliarIdentityIssue,
   findFamiliarPresentState,
   findFamiliarTemporarilyDismissedState,
@@ -33,6 +32,7 @@ import {
   spendFindFamiliarMagicAction,
   withFindFamiliarCombatant,
 } from "./find-familiar-lifecycle-execution.ts";
+import { findFamiliarDisappearedAtZeroHitPointsState } from "./companion-state.ts";
 
 import type {
   BattleAmmunitionStock,

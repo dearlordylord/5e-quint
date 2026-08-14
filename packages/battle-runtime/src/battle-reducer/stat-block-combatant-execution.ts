@@ -13,6 +13,7 @@ import {
   battleExecutionScopeInitialOrNextOrdinal,
   battleStatBlockExecutionScopeRefBelongsToBattle,
   battleStatBlockExecutionScopeRefBelongsToCombatant,
+  type BattleExecutionScopeOrdinal,
   type CombatantId,
   type InitiativeScore,
 } from "../identity.ts";
@@ -20,6 +21,7 @@ import {
   admittedBattleStatBlockCombatantMaxHp,
   type AdmittedBattleStatBlockCombatant,
 } from "../stat-block-combatant-execution-state.ts";
+import { statBlockAttackActionOptions } from "../stat-block-execution-state.ts";
 import type {
   BattleState,
   BattleStateInitIssue,
@@ -30,7 +32,6 @@ import {
   ammunitionStockIssues,
   missingRequiredAmmunitionKinds,
 } from "../battle-ammunition.ts";
-import { statBlockAttackActionOptions } from "../stat-block-execution.ts";
 import type { BattleAmmunitionStock } from "../battle-state-execution.ts";
 
 export function addBattleStatBlockCombatant(input: {
@@ -46,67 +47,25 @@ export function addBattleStatBlockCombatant(input: {
   };
 }): Either.Either<BattleState, BattleStateInitIssue> {
   const { combatant } = input;
-  if (input.state.combatants.has(combatant.combatantId)) {
-    return battleStateInitIssue(
-      `Duplicate combatant id: ${combatant.combatantId}`,
-    );
-  }
-  if (combatant.admission.combatantId !== combatant.combatantId) {
-    return battleStateInitIssue(
-      "Stat Block combatant admission belongs to a different combatant.",
-    );
-  }
-  if (combatant.admission.battleId !== input.state.battleId) {
-    return battleStateInitIssue(
-      "Stat Block combatant admission belongs to a different battle.",
-    );
-  }
-  if (
-    !battleStatBlockExecutionScopeRefBelongsToBattle(
-      combatant.admission.origin.execution.scopeRef,
-      input.state.battleId,
-    ) ||
-    !battleStatBlockExecutionScopeRefBelongsToCombatant(
-      combatant.admission.origin.execution.scopeRef,
-      combatant.combatantId,
-    )
-  ) {
-    return battleStateInitIssue(
-      "Stat Block combatant admission execution scope belongs to a different destination.",
-    );
-  }
+  const identityIssue = statBlockCombatantIdentityIssue(input);
+  if (identityIssue !== null) return battleStateInitIssue(identityIssue);
   const allocation = input.state.executionScopeCursors.get(
     combatant.combatantId,
   );
-  const currentScopeOrdinal = battleExecutionScopeInitialOrNextOrdinal(
-    allocation?.nextScopeOrdinal,
-  );
-  if (currentScopeOrdinal !== combatant.admission.cursorTransition.from) {
-    return battleStateInitIssue(
-      "Stat Block combatant admission does not match the current execution-scope cursor.",
-    );
-  }
   const maxHp = admittedBattleStatBlockCombatantMaxHp(combatant.admission);
-  if (combatant.currentHp > maxHp) {
-    return battleStateInitIssue(
-      "Battle initialization current HP exceeds max HP.",
-    );
-  }
+  const preflightIssue = statBlockCombatantPreflightIssue(
+    combatant,
+    allocation,
+    maxHp,
+  );
+  if (preflightIssue !== null) return battleStateInitIssue(preflightIssue);
   const { initialization, origin } = combatant.admission;
   const ammunitionStocks = combatant.ammunitionStocks;
-  const ammunitionIssues = ammunitionStockIssues(ammunitionStocks);
-  const missingKinds = missingRequiredAmmunitionKinds(
-    statBlockAttackActionOptions(origin.execution).map(
-      (option) => option.attack,
-    ),
+  const ammunitionIssue = statBlockCombatantAmmunitionIssue(
+    origin,
     ammunitionStocks,
   );
-  if (ammunitionIssues.length > 0 || missingKinds.length > 0) {
-    return battleStateInitIssue(
-      ammunitionIssues[0] ??
-        `Stat Block battle initialization requires an explicit ${missingKinds[0]} ammunition stock.`,
-    );
-  }
+  if (ammunitionIssue !== null) return battleStateInitIssue(ammunitionIssue);
   const creature: StatBlockBattleCreatureState = {
     combatantId: combatant.combatantId,
     initiative: combatant.initiative,
@@ -167,4 +126,94 @@ export function addBattleStatBlockCombatant(input: {
     ),
     executionScopeCursors,
   });
+}
+
+function statBlockCombatantIdentityIssue(input: {
+  readonly state: BattleState;
+  readonly combatant: {
+    readonly combatantId: CombatantId;
+    readonly admission: AdmittedBattleStatBlockCombatant;
+  };
+}): string | null {
+  const { combatant } = input;
+  if (input.state.combatants.has(combatant.combatantId)) {
+    return `Duplicate combatant id: ${combatant.combatantId}`;
+  }
+  if (combatant.admission.combatantId !== combatant.combatantId) {
+    return "Stat Block combatant admission belongs to a different combatant.";
+  }
+  if (combatant.admission.battleId !== input.state.battleId) {
+    return "Stat Block combatant admission belongs to a different battle.";
+  }
+  if (
+    !battleStatBlockExecutionScopeRefBelongsToBattle(
+      combatant.admission.origin.execution.scopeRef,
+      input.state.battleId,
+    ) ||
+    !battleStatBlockExecutionScopeRefBelongsToCombatant(
+      combatant.admission.origin.execution.scopeRef,
+      combatant.combatantId,
+    )
+  ) {
+    return "Stat Block combatant admission execution scope belongs to a different destination.";
+  }
+  return null;
+}
+
+function statBlockCombatantCursorIssue(
+  combatant: {
+    readonly combatantId: CombatantId;
+    readonly admission: AdmittedBattleStatBlockCombatant;
+  },
+  allocation:
+    | { readonly nextScopeOrdinal: BattleExecutionScopeOrdinal }
+    | { readonly nextScopeOrdinal?: undefined }
+    | undefined,
+): string | null {
+  const currentScopeOrdinal = battleExecutionScopeInitialOrNextOrdinal(
+    allocation?.nextScopeOrdinal,
+  );
+  if (currentScopeOrdinal !== combatant.admission.cursorTransition.from) {
+    return "Stat Block combatant admission does not match the current execution-scope cursor.";
+  }
+  return null;
+}
+
+function statBlockCombatantPreflightIssue(
+  combatant: {
+    readonly combatantId: CombatantId;
+    readonly admission: AdmittedBattleStatBlockCombatant;
+    readonly currentHp: Hp;
+  },
+  allocation:
+    | { readonly nextScopeOrdinal: BattleExecutionScopeOrdinal }
+    | { readonly nextScopeOrdinal?: undefined }
+    | undefined,
+  maxHp: Hp,
+): string | null {
+  const cursorIssue = statBlockCombatantCursorIssue(combatant, allocation);
+  if (cursorIssue !== null) return cursorIssue;
+  return combatant.currentHp > maxHp
+    ? "Battle initialization current HP exceeds max HP."
+    : null;
+}
+
+function statBlockCombatantAmmunitionIssue(
+  origin: AdmittedBattleStatBlockCombatant["origin"],
+  ammunitionStocks: readonly BattleAmmunitionStock[],
+): string | null {
+  const ammunitionIssues = ammunitionStockIssues(ammunitionStocks);
+  const missingKinds = missingRequiredAmmunitionKinds(
+    statBlockAttackActionOptions(origin.execution).map(
+      (option) => option.attack,
+    ),
+    ammunitionStocks,
+  );
+  if (ammunitionIssues.length > 0 || missingKinds.length > 0) {
+    return (
+      ammunitionIssues[0] ??
+      `Stat Block battle initialization requires an explicit ${missingKinds[0]} ammunition stock.`
+    );
+  }
+  return null;
 }

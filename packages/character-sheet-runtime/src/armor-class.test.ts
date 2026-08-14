@@ -225,6 +225,22 @@ describe("Character Sheet runtime / armor class", () => {
     expect(currentArmorClass(state)).toBe(16);
   });
 
+  test("retains main-hand and off-hand weapon use in Armor Class state", () => {
+    const state = requireRight(
+      characterSheetArmorClassState({
+        build: armorClassBuild({
+          startingClass: "class_fighter",
+          weapon: "weapon_longsword",
+          offHandWeapon: "weapon_dagger",
+        }),
+        unitLibrary,
+      }),
+    );
+
+    expect(state.leftHandUse).toBe("offWeapon");
+    expect(state.rightHandUse).toBe("mainWeapon");
+  });
+
   test("projects Armor Class selected-reference qRoute through the public projection entrypoint", () => {
     const projection = requireRight(
       characterSheetArmorClassProjection({

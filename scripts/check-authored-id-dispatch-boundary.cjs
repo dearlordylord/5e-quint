@@ -332,7 +332,7 @@ function assertBattleReplayExecutionBoundary() {
       relativePath: "packages/battle-runtime/src/battle-state-execution.ts",
       patterns: [/readonly (?:invocation|spell|unit):/],
       sliceStart: "export type BattleReadiedSpell =",
-      sliceEnd: "export type BattleReadiedMovement =",
+      sliceEnd: "export type BattleAttackDamageCriticalConsequence =",
     },
     {
       relativePath:

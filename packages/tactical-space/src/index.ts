@@ -38,7 +38,7 @@ export type BoundaryCoverDefinition =
       readonly protectedCell: CoordinateInput;
     }>;
 
-const DIRECTIONS = Object.freeze([
+export const DIRECTIONS = Object.freeze([
   "same-horizontal-position",
   "north",
   "north-east",
@@ -51,7 +51,7 @@ const DIRECTIONS = Object.freeze([
 ] as const) satisfies ReadonlyArray<string>;
 export type Direction = (typeof DIRECTIONS)[number];
 
-const PREVIEW_RELATION_PHASES = ["before", "after"] as const;
+export const PREVIEW_RELATION_PHASES = ["before", "after"] as const;
 export type PreviewRelationPhase = (typeof PREVIEW_RELATION_PHASES)[number];
 
 const PREVIEW_RELATION_POLICIES = {
@@ -497,6 +497,272 @@ export function parseCoordinate(
   return success(coordinate);
 }
 
+type ParsedBoundaryInput = Readonly<{
+  readonly first: CellCoordinate;
+  readonly second: CellCoordinate;
+  readonly attributes: ParsedBoundaryAttributes;
+}>;
+
+type ParsedBoundaryAttributes = Readonly<{
+  readonly traversal: BoundaryOpenness | undefined;
+  readonly sight: BoundaryOpenness | undefined;
+  readonly cover: ArenaBoundary["cover"] | undefined;
+}>;
+
+type RawBoundaryRecord = Readonly<
+  Record<string, unknown> & { readonly between: readonly unknown[] }
+>;
+
+function isRawBoundaryRecord(input: unknown): input is RawBoundaryRecord {
+  return isRecord(input) && Array.isArray(input.between);
+}
+
+function readRawBoundaryRecord(
+  rawBoundary: unknown,
+  index: number,
+  issues: ArenaIssue[],
+): RawBoundaryRecord | undefined {
+  const path = `boundaries[${index}]`;
+  if (!isRawBoundaryRecord(rawBoundary)) {
+    issues.push(
+      arenaIssue(
+        "invalid-boundary-shape",
+        path,
+        "A boundary requires a pair of cell coordinates.",
+      ),
+    );
+    return undefined;
+  }
+  if (rawBoundary.between.length !== 2) {
+    issues.push(
+      arenaIssue(
+        "invalid-boundary-shape",
+        `${path}.between`,
+        "A boundary requires exactly two cell coordinates.",
+      ),
+    );
+    return undefined;
+  }
+  return rawBoundary;
+}
+
+function boundaryAttributeOrIssue<T>(
+  value: T | undefined,
+  issue: ArenaIssue,
+  issues: ArenaIssue[],
+): T | undefined {
+  if (value !== undefined) return value;
+  issues.push(issue);
+  return undefined;
+}
+
+function readBoundaryAttributes(
+  rawBoundary: RawBoundaryRecord,
+  path: string,
+  issues: ArenaIssue[],
+): ParsedBoundaryAttributes {
+  const traversal = boundaryAttributeOrIssue(
+    readBoundaryOpenness(rawBoundary.traversal),
+    arenaIssue(
+      "invalid-traversal",
+      `${path}.traversal`,
+      "Traversal must be open or blocked.",
+    ),
+    issues,
+  );
+  const sight = boundaryAttributeOrIssue(
+    readBoundaryOpenness(rawBoundary.sight),
+    arenaIssue(
+      "invalid-sight",
+      `${path}.sight`,
+      "Sight must be open or blocked.",
+    ),
+    issues,
+  );
+  const cover = boundaryAttributeOrIssue(
+    readBoundaryCover(rawBoundary.cover),
+    arenaIssue(
+      "invalid-cover",
+      `${path}.cover`,
+      "Cover must declare an intervening or protected-occupant degree; protected-occupant Cover must name one boundary endpoint.",
+    ),
+    issues,
+  );
+  return { traversal, sight, cover };
+}
+
+function readParsedBoundaryInput(
+  rawBoundary: unknown,
+  index: number,
+  issues: ArenaIssue[],
+): ParsedBoundaryInput | undefined {
+  const path = `boundaries[${index}]`;
+  const boundaryRecord = readRawBoundaryRecord(rawBoundary, index, issues);
+  if (boundaryRecord === undefined) return undefined;
+  const first = readBoundaryCoordinate(
+    boundaryRecord.between[0],
+    `${path}.between[0]`,
+    issues,
+  );
+  const second = readBoundaryCoordinate(
+    boundaryRecord.between[1],
+    `${path}.between[1]`,
+    issues,
+  );
+  const attributes = readBoundaryAttributes(boundaryRecord, path, issues);
+  if (first === undefined || second === undefined) {
+    return undefined;
+  }
+  return {
+    first,
+    second,
+    attributes,
+  };
+}
+
+function recordBoundaryCoverIssue(
+  boundary: ParsedBoundaryInput,
+  path: string,
+  issues: ArenaIssue[],
+): boolean {
+  const { cover } = boundary.attributes;
+  if (cover === undefined || cover.kind !== "protected-occupant") return true;
+  const validEndpoint =
+    sameCoordinate(cover.protectedCell, boundary.first) ||
+    sameCoordinate(cover.protectedCell, boundary.second);
+  if (!validEndpoint) {
+    issues.push(
+      arenaIssue(
+        "invalid-cover",
+        `${path}.cover.protectedCell`,
+        "Protected-occupant Cover must name one boundary endpoint.",
+      ),
+    );
+  }
+  return validEndpoint;
+}
+
+function recordBoundaryCellIssue(
+  coordinate: CellCoordinate,
+  path: string,
+  cellByKey: ReadonlyMap<string, ArenaCell>,
+  issues: ArenaIssue[],
+): boolean {
+  if (cellByKey.has(coordinateKey(coordinate))) return true;
+  issues.push(
+    arenaIssue(
+      "missing-boundary-cell",
+      path,
+      "A boundary endpoint must name an authored cell.",
+    ),
+  );
+  return false;
+}
+
+function recordBoundaryCellIssues(
+  boundary: ParsedBoundaryInput,
+  path: string,
+  cellByKey: ReadonlyMap<string, ArenaCell>,
+  issues: ArenaIssue[],
+): boolean {
+  return [
+    recordBoundaryCellIssue(
+      boundary.first,
+      `${path}.between[0]`,
+      cellByKey,
+      issues,
+    ),
+    recordBoundaryCellIssue(
+      boundary.second,
+      `${path}.between[1]`,
+      cellByKey,
+      issues,
+    ),
+  ].every(Boolean);
+}
+
+function recordBoundaryAdjacencyIssue(
+  boundary: ParsedBoundaryInput,
+  path: string,
+  issues: ArenaIssue[],
+): boolean {
+  if (areOrthogonalNeighbours(boundary.first, boundary.second)) return true;
+  issues.push(
+    arenaIssue(
+      "invalid-boundary-adjacency",
+      `${path}.between`,
+      "A boundary must join orthogonally adjacent cells.",
+    ),
+  );
+  return false;
+}
+
+function recordBoundaryDuplicateIssue(
+  key: string,
+  path: string,
+  seenBoundaryKeys: Set<string>,
+  issues: ArenaIssue[],
+): boolean {
+  const duplicate = seenBoundaryKeys.has(key);
+  if (duplicate) {
+    issues.push(
+      arenaIssue(
+        "duplicate-boundary",
+        path,
+        "Each pair of adjacent cells may have only one boundary.",
+      ),
+    );
+  }
+  seenBoundaryKeys.add(key);
+  return !duplicate;
+}
+
+function parseArenaBoundary(
+  rawBoundary: unknown,
+  index: number,
+  cellByKey: ReadonlyMap<string, ArenaCell>,
+  seenBoundaryKeys: Set<string>,
+  boundaries: ArenaBoundary[],
+  boundaryByKey: Map<string, ArenaBoundary>,
+  issues: ArenaIssue[],
+): void {
+  const parsed = readParsedBoundaryInput(rawBoundary, index, issues);
+  if (parsed === undefined) return;
+  const path = `boundaries[${index}]`;
+  const key = boundaryKey(parsed.first, parsed.second);
+  const { traversal, sight, cover } = parsed.attributes;
+  const valid = [
+    recordBoundaryCoverIssue(parsed, path, issues),
+    recordBoundaryCellIssues(parsed, path, cellByKey, issues),
+    recordBoundaryAdjacencyIssue(parsed, path, issues),
+    recordBoundaryDuplicateIssue(key, path, seenBoundaryKeys, issues),
+    traversal !== undefined,
+    sight !== undefined,
+    cover !== undefined,
+  ].every(Boolean);
+  if (
+    !valid ||
+    boundaryByKey.has(key) ||
+    traversal === undefined ||
+    sight === undefined ||
+    cover === undefined
+  ) {
+    return;
+  }
+  const [canonicalFirst, canonicalSecond] = canonicalPair(
+    parsed.first,
+    parsed.second,
+  );
+  const boundary = freezeValue({
+    between: [canonicalFirst, canonicalSecond] as const,
+    traversal,
+    sight,
+    cover,
+  });
+  boundaries.push(boundary);
+  boundaryByKey.set(key, boundary);
+}
+
 export function parseArena(input: unknown): ArenaParseResult {
   const issues: ArenaIssue[] = [];
   if (!isRecord(input)) {
@@ -575,150 +841,17 @@ export function parseArena(input: unknown): ArenaParseResult {
       ),
     );
   } else {
-    rawBoundaries.forEach((rawBoundary, index) => {
-      const path = `boundaries[${index}]`;
-      if (!isRecord(rawBoundary) || !Array.isArray(rawBoundary.between)) {
-        issues.push(
-          arenaIssue(
-            "invalid-boundary-shape",
-            path,
-            "A boundary requires a pair of cell coordinates.",
-          ),
-        );
-        return;
-      }
-      if (rawBoundary.between.length !== 2) {
-        issues.push(
-          arenaIssue(
-            "invalid-boundary-shape",
-            `${path}.between`,
-            "A boundary requires exactly two cell coordinates.",
-          ),
-        );
-        return;
-      }
-      const first = readBoundaryCoordinate(
-        rawBoundary.between[0],
-        `${path}.between[0]`,
+    rawBoundaries.forEach((rawBoundary, index) =>
+      parseArenaBoundary(
+        rawBoundary,
+        index,
+        cellByKey,
+        seenBoundaryKeys,
+        boundaries,
+        boundaryByKey,
         issues,
-      );
-      const second = readBoundaryCoordinate(
-        rawBoundary.between[1],
-        `${path}.between[1]`,
-        issues,
-      );
-      const traversal = readBoundaryOpenness(rawBoundary.traversal);
-      if (traversal === undefined) {
-        issues.push(
-          arenaIssue(
-            "invalid-traversal",
-            `${path}.traversal`,
-            "Traversal must be open or blocked.",
-          ),
-        );
-      }
-      const sight = readBoundaryOpenness(rawBoundary.sight);
-      if (sight === undefined) {
-        issues.push(
-          arenaIssue(
-            "invalid-sight",
-            `${path}.sight`,
-            "Sight must be open or blocked.",
-          ),
-        );
-      }
-      const cover = readBoundaryCover(rawBoundary.cover);
-      if (cover === undefined) {
-        issues.push(
-          arenaIssue(
-            "invalid-cover",
-            `${path}.cover`,
-            "Cover must declare an intervening or protected-occupant degree; protected-occupant Cover must name one boundary endpoint.",
-          ),
-        );
-      }
-      if (first === undefined || second === undefined) {
-        return;
-      }
-      if (
-        cover?.kind === "protected-occupant" &&
-        !sameCoordinate(cover.protectedCell, first) &&
-        !sameCoordinate(cover.protectedCell, second)
-      ) {
-        issues.push(
-          arenaIssue(
-            "invalid-cover",
-            `${path}.cover.protectedCell`,
-            "Protected-occupant Cover must name one boundary endpoint.",
-          ),
-        );
-      }
-      const key = boundaryKey(first, second);
-      if (!cellByKey.has(coordinateKey(first))) {
-        issues.push(
-          arenaIssue(
-            "missing-boundary-cell",
-            `${path}.between[0]`,
-            "A boundary endpoint must name an authored cell.",
-          ),
-        );
-      }
-      if (!cellByKey.has(coordinateKey(second))) {
-        issues.push(
-          arenaIssue(
-            "missing-boundary-cell",
-            `${path}.between[1]`,
-            "A boundary endpoint must name an authored cell.",
-          ),
-        );
-      }
-      if (!areOrthogonalNeighbours(first, second)) {
-        issues.push(
-          arenaIssue(
-            "invalid-boundary-adjacency",
-            `${path}.between`,
-            "A boundary must join orthogonally adjacent cells.",
-          ),
-        );
-      }
-      if (seenBoundaryKeys.has(key)) {
-        issues.push(
-          arenaIssue(
-            "duplicate-boundary",
-            path,
-            "Each pair of adjacent cells may have only one boundary.",
-          ),
-        );
-      }
-      seenBoundaryKeys.add(key);
-      if (
-        traversal === undefined ||
-        sight === undefined ||
-        cover === undefined ||
-        (cover.kind === "protected-occupant" &&
-          !sameCoordinate(cover.protectedCell, first) &&
-          !sameCoordinate(cover.protectedCell, second)) ||
-        !cellByKey.has(coordinateKey(first)) ||
-        !cellByKey.has(coordinateKey(second)) ||
-        !areOrthogonalNeighbours(first, second) ||
-        boundaryByKey.has(key)
-      ) {
-        return;
-      }
-      const [canonicalFirst, canonicalSecond] = canonicalPair(first, second);
-      const canonicalBetween: readonly [CellCoordinate, CellCoordinate] = [
-        canonicalFirst,
-        canonicalSecond,
-      ];
-      const boundary = freezeValue({
-        between: canonicalBetween,
-        traversal,
-        sight,
-        cover,
-      });
-      boundaries.push(boundary);
-      boundaryByKey.set(key, boundary);
-    });
+      ),
+    );
   }
 
   const spanIssue = authoredArenaSpanIssue(cells);
@@ -774,10 +907,18 @@ export function snapshot(state: SpatialState): SpatialSnapshot {
   return makeStateSnapshot(data, arenaDataOf(data.arena));
 }
 
-export function restoreState(
+function invalidRestoredState(
+  message: string,
+): Result<never, RestoreStateError> {
+  return failure({
+    tag: "invalid-spatial-snapshot",
+    message,
+  });
+}
+
+function restoreArenaEvidence(
   arenaEvidence: ArenaSnapshot,
-  stateEvidence: SpatialSnapshot,
-): Result<SpatialState, RestoreStateError> {
+): Result<Arena, RestoreStateError> {
   const parsedArena = parseArena({
     cells: arenaEvidence.cells.map(({ coordinate, terrain }) => ({
       x: coordinate.x,
@@ -786,60 +927,103 @@ export function restoreState(
     })),
     boundaries: arenaEvidence.boundaries,
   });
-  if (parsedArena.tag === "error") {
-    return failure({
-      tag: "invalid-spatial-snapshot",
-      message: "Arena evidence no longer decodes as a tactical arena.",
-    });
-  }
-  const restoredArenaSnapshot = arenaSnapshot(parsedArena.value);
-  if (
-    arenaEvidence.cellSizeFeet !== CELL_SIZE_FEET ||
-    restoredArenaSnapshot.fingerprint !== arenaEvidence.fingerprint ||
-    stateEvidence.arenaFingerprint !== arenaEvidence.fingerprint
-  ) {
-    return failure({
-      tag: "invalid-spatial-snapshot",
-      message: "Spatial evidence does not identify the supplied arena.",
-    });
-  }
-  if (
-    !Number.isSafeInteger(stateEvidence.revision) ||
-    stateEvidence.revision < 0
-  ) {
-    return failure({
-      tag: "invalid-spatial-snapshot",
-      message: "Spatial evidence requires a nonnegative safe-integer revision.",
-    });
-  }
-  const cells = arenaDataOf(parsedArena.value).cells;
+  return parsedArena.tag === "error"
+    ? invalidRestoredState(
+        "Arena evidence no longer decodes as a tactical arena.",
+      )
+    : success(parsedArena.value);
+}
+
+function restoredArenaIdentityMatches(
+  arenaEvidence: ArenaSnapshot,
+  stateEvidence: SpatialSnapshot,
+  restoredArena: Arena,
+): boolean {
+  const restoredFingerprint = arenaSnapshot(restoredArena).fingerprint;
+  return [
+    arenaEvidence.cellSizeFeet === CELL_SIZE_FEET,
+    restoredFingerprint === arenaEvidence.fingerprint,
+    stateEvidence.arenaFingerprint === arenaEvidence.fingerprint,
+  ].every(Boolean);
+}
+
+function restoredRevisionIsValid(stateEvidence: SpatialSnapshot): boolean {
+  return (
+    Number.isSafeInteger(stateEvidence.revision) && stateEvidence.revision >= 0
+  );
+}
+
+function restoreStatePlacements(
+  cells: ReadonlyMap<string, ArenaCell>,
+  stateEvidence: SpatialSnapshot,
+): Result<Map<TokenId, CellCoordinate>, RestoreStateError> {
   const placements = new Map<TokenId, CellCoordinate>();
   for (const placement of stateEvidence.placements) {
     const token = parseTokenId(placement.token);
+    if (token.tag === "error") {
+      return invalidRestoredState(
+        "Spatial evidence contains an invalid or duplicate placement.",
+      );
+    }
     const coordinate = cells.get(coordinateKey(placement.coordinate));
-
-    if (
-      token.tag === "error" ||
-      coordinate === undefined ||
-      placements.has(token.value)
-    ) {
-      return failure({
-        tag: "invalid-spatial-snapshot",
-        message: "Spatial evidence contains an invalid or duplicate placement.",
-      });
+    if (coordinate === undefined) {
+      return invalidRestoredState(
+        "Spatial evidence contains an invalid or duplicate placement.",
+      );
+    }
+    if (placements.has(token.value)) {
+      return invalidRestoredState(
+        "Spatial evidence contains an invalid or duplicate placement.",
+      );
     }
     placements.set(token.value, coordinate.coordinate);
   }
-  const restored = makeState(
-    parsedArena.value,
-    stateEvidence.revision,
-    placements,
+  return success(placements);
+}
+
+function restoredStateFingerprintMatches(
+  restored: SpatialState,
+  stateEvidence: SpatialSnapshot,
+): boolean {
+  return snapshot(restored).fingerprint === stateEvidence.fingerprint;
+}
+
+export function restoreState(
+  arenaEvidence: ArenaSnapshot,
+  stateEvidence: SpatialSnapshot,
+): Result<SpatialState, RestoreStateError> {
+  const arenaResult = restoreArenaEvidence(arenaEvidence);
+  if (arenaResult.tag === "error") return arenaResult;
+  if (
+    !restoredArenaIdentityMatches(
+      arenaEvidence,
+      stateEvidence,
+      arenaResult.value,
+    )
+  ) {
+    return invalidRestoredState(
+      "Spatial evidence does not identify the supplied arena.",
+    );
+  }
+  if (!restoredRevisionIsValid(stateEvidence)) {
+    return invalidRestoredState(
+      "Spatial evidence requires a nonnegative safe-integer revision.",
+    );
+  }
+  const placements = restoreStatePlacements(
+    arenaDataOf(arenaResult.value).cells,
+    stateEvidence,
   );
-  if (snapshot(restored).fingerprint !== stateEvidence.fingerprint) {
-    return failure({
-      tag: "invalid-spatial-snapshot",
-      message: "Spatial evidence fingerprint does not match its placements.",
-    });
+  if (placements.tag === "error") return placements;
+  const restored = makeState(
+    arenaResult.value,
+    stateEvidence.revision,
+    placements.value,
+  );
+  if (!restoredStateFingerprintMatches(restored, stateEvidence)) {
+    return invalidRestoredState(
+      "Spatial evidence fingerprint does not match its placements.",
+    );
   }
   return success(restored);
 }
@@ -1804,6 +1988,11 @@ type Rational = Readonly<{
   readonly denominator: bigint;
 }>;
 
+type RationalInterval = Readonly<{
+  readonly lower: Rational;
+  readonly upper: Rational;
+}>;
+
 function compareRational(first: Rational, second: Rational): number {
   const difference =
     first.numerator * second.denominator - second.numerator * first.denominator;
@@ -1816,6 +2005,39 @@ function rational(numerator: bigint, denominator: bigint): Rational {
     : { numerator, denominator };
 }
 
+function rayAxisInteriorInterval(
+  source: CellCoordinate,
+  target: CellCoordinate,
+  cell: CellCoordinate,
+  axis: "x" | "y",
+): RationalInterval | null | undefined {
+  const start = BigInt(source[axis]) * 2n;
+  const delta = (BigInt(target[axis]) - BigInt(source[axis])) * 2n;
+  const minimum = BigInt(cell[axis]) * 2n - 1n;
+  const maximum = BigInt(cell[axis]) * 2n + 1n;
+  if (delta === 0n) {
+    return start <= minimum || start >= maximum ? null : undefined;
+  }
+  const first = rational(minimum - start, delta);
+  const second = rational(maximum - start, delta);
+  const ascending = compareRational(first, second) < 0;
+  return {
+    lower: ascending ? first : second,
+    upper: ascending ? second : first,
+  };
+}
+
+function intersectRationalIntervals(
+  current: RationalInterval,
+  next: RationalInterval,
+): RationalInterval | undefined {
+  const lower =
+    compareRational(next.lower, current.lower) > 0 ? next.lower : current.lower;
+  const upper =
+    compareRational(next.upper, current.upper) < 0 ? next.upper : current.upper;
+  return compareRational(lower, upper) >= 0 ? undefined : { lower, upper };
+}
+
 function rayCrossesCellInterior(
   source: CellCoordinate,
   target: CellCoordinate,
@@ -1824,26 +2046,19 @@ function rayCrossesCellInterior(
   if (sameCoordinate(cell, source) || sameCoordinate(cell, target)) {
     return false;
   }
-  let lower: Rational = { numerator: 0n, denominator: 1n };
-  let upper: Rational = { numerator: 1n, denominator: 1n };
+  let interval: RationalInterval = {
+    lower: { numerator: 0n, denominator: 1n },
+    upper: { numerator: 1n, denominator: 1n },
+  };
   for (const axis of ["x", "y"] as const) {
-    const start = BigInt(source[axis]) * 2n;
-    const delta = (BigInt(target[axis]) - BigInt(source[axis])) * 2n;
-    const minimum = BigInt(cell[axis]) * 2n - 1n;
-    const maximum = BigInt(cell[axis]) * 2n + 1n;
-    if (delta === 0n) {
-      if (start <= minimum || start >= maximum) return false;
-      continue;
-    }
-    const first = rational(minimum - start, delta);
-    const second = rational(maximum - start, delta);
-    const axisLower = compareRational(first, second) < 0 ? first : second;
-    const axisUpper = compareRational(first, second) < 0 ? second : first;
-    if (compareRational(axisLower, lower) > 0) lower = axisLower;
-    if (compareRational(axisUpper, upper) < 0) upper = axisUpper;
-    if (compareRational(lower, upper) >= 0) return false;
+    const axisInterval = rayAxisInteriorInterval(source, target, cell, axis);
+    if (axisInterval === null) return false;
+    if (axisInterval === undefined) continue;
+    const intersection = intersectRationalIntervals(interval, axisInterval);
+    if (intersection === undefined) return false;
+    interval = intersection;
   }
-  return compareRational(lower, upper) < 0;
+  return compareRational(interval.lower, interval.upper) < 0;
 }
 
 function rationalCoordinateInRange(
