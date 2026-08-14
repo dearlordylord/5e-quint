@@ -8,6 +8,14 @@ Use the `context.sdk` operations exactly as typed. They are the canonical
 invent a second command vocabulary, inspect repository implementation or tests,
 or import unrecorded runtime operations.
 
+Use `context.random.rollDie({ draw, sides })` for every die result. Give each
+independent roll in a continuation a concise unique `draw` name. The supervisor
+generates one seed when the run starts, retains it in `evidence/program.ts` and
+the transcript header, and derives each result from that seed, continuation
+number, and draw name. This makes the authored program reproducible without a
+hidden mutable random cursor. `Math.random()` is rejected during continuation
+execution.
+
 The declaration graph under `declarations/` is part of the supplied public SDK
 surface. Inspect or search those `.d.ts` files whenever a surfaced hole requests
 a fact whose exact `BattleFill` shape is unclear. Do not guess repeated fill

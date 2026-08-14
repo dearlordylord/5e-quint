@@ -11,6 +11,7 @@ import type { ScenarioSession } from "./scenario-session.ts";
 import type { ScenarioSessionUpdateIssue } from "./scenario-session.ts";
 import type { ScenarioRelationResult } from "./scenario-session.ts";
 import type { CoordinateInput } from "../../../packages/tactical-space/src/index.ts";
+import type { PlayerRandom } from "./player-random.ts";
 
 export type ScenarioBattleResolutionResult =
   | (BattleRuntimeResolutionResult extends infer Result
@@ -88,6 +89,7 @@ export type JsonValue =
 export type PlayerContinuationContext = {
   readonly session: ScenarioSession;
   readonly sdk: PlayerSdk;
+  readonly random: PlayerRandom;
 };
 
 export type PlayerContinuationOutcome =

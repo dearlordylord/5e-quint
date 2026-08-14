@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { constants } from "node:fs";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import {
   appendFileSync,
   closeSync,
@@ -50,6 +50,7 @@ import {
   type ScenarioSession,
 } from "./scenario-session.ts";
 import { isJsonValue } from "./json-value.ts";
+import { playerRandomForContinuation } from "./player-random.ts";
 import { decodeSdkCallInput, type SdkCallInput } from "./sdk-replay-input.ts";
 import {
   parseSdkTranscript,
@@ -79,6 +80,7 @@ const PrefixSchema = Schema.Struct({
   frozenByteLength: NonNegativeIntegerSchema,
   frozenSha256: HashSchema,
   continuationCount: NonNegativeIntegerSchema,
+  playerRandomSeed: HashSchema,
   run: Schema.Union(
     Schema.Struct({ kind: Schema.Literal("active") }),
     Schema.Struct({
@@ -89,8 +91,12 @@ const PrefixSchema = Schema.Struct({
 });
 type FrozenPrefix = Schema.Schema.Type<typeof PrefixSchema>;
 
-const PROGRAM_PREFIX = `import type { PlayerContinuation } from "@dnd/player-sdk";
+function programPrefix(playerRandomSeed: string): string {
+  return `import type { PlayerContinuation } from "@dnd/player-sdk";
+
+export const PLAYER_RANDOM_SEED = "${playerRandomSeed}";
 `;
+}
 
 function fail(message: string): never {
   throw new Error(message);
@@ -208,6 +214,7 @@ async function initialize(
   }
   const characters = await evaluateScenarioCharacters(charactersPath);
   if (characters.tag === "invalid") fail(characters.message);
+  const playerRandomSeed = randomBytes(32).toString("hex");
   const headerIdentity = {
     type: "sdk-player-header",
     scenarioId,
@@ -215,6 +222,7 @@ async function initialize(
     startedAt: new Date().toISOString(),
     consumerIsolation,
     replaySupervisorSha256,
+    playerRandomSeed,
     charactersSha256: sha256Text(readFileSync(charactersPath, "utf8")),
     characterObservation: characters.observation,
     scenarioSha256,
@@ -270,12 +278,13 @@ async function initialize(
     }),
     Match.when({ tag: "ready" }, ({ session }) => {
       const initialSession = jsonValue(session);
-      const program = PROGRAM_PREFIX;
+      const program = programPrefix(playerRandomSeed);
       writeFileSync(programPath, program, "utf8");
       atomicJson(prefixPath, {
         frozenByteLength: Buffer.byteLength(program),
         frozenSha256: sha256Text(program),
         continuationCount: 0,
+        playerRandomSeed,
         run: { kind: "active" },
       } satisfies FrozenPrefix);
       appendFileSync(
@@ -661,6 +670,7 @@ function appendFrozenContinuation(prefix: FrozenPrefix, body: string): number {
     frozenByteLength: Buffer.byteLength(program),
     frozenSha256: sha256Text(program),
     continuationCount: continuation,
+    playerRandomSeed: prefix.playerRandomSeed,
     run: { kind: "active" },
   } satisfies FrozenPrefix);
   return continuation;
@@ -865,10 +875,29 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     if (typeof submitted.continueBattle !== "function") {
       fail("Continuation must export continueBattle.");
     }
-    const outcome = validateOutcome(
-      await submitted.continueBattle({ session: currentSession, sdk }),
-      currentSession,
-    );
+    const ambientRandom = Math.random;
+    Math.random = () => {
+      throw new Error(
+        "Player continuations must use context.random with a retained draw name instead of Math.random().",
+      );
+    };
+    const outcome = await (async (): Promise<PlayerContinuationOutcome> => {
+      try {
+        return validateOutcome(
+          await submitted.continueBattle({
+            session: currentSession,
+            sdk,
+            random: playerRandomForContinuation(
+              prefix.playerRandomSeed,
+              prefix.continuationCount + 1,
+            ),
+          }),
+          currentSession,
+        );
+      } finally {
+        Math.random = ambientRandom;
+      }
+    })();
     if (frozenContinuation === undefined) {
       fail("Continuation made no observable SDK call and remains editable.");
     }

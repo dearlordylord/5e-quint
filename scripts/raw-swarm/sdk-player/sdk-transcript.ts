@@ -38,6 +38,7 @@ const HeaderCommonFields = {
     "instructionalFallback",
   ),
   replaySupervisorSha256: HashSchema,
+  playerRandomSeed: HashSchema,
   scenarioSha256: HashSchema,
   scenarioReviewSha256: HashSchema,
   charactersSha256: HashSchema,
