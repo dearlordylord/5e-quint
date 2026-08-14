@@ -258,6 +258,15 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
     expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
       'kind: "objectTargetChoice" as const',
     );
+    expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
+      "For a repeated-damage allocation",
+    );
+    expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
+      "`allocations[i].count` die results",
+    );
+    expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
+      "those results belong only to allocation",
+    );
     expect(
       filesBelow(destination).some((path) => path.endsWith("supervisor.mjs")),
     ).toBe(false);

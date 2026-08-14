@@ -14,6 +14,30 @@ a fact whose exact `BattleFill` shape is unclear. Do not guess repeated fill
 shapes from compiler acceptance alone: the runtime boundary rejects fields that
 belong to another discriminated branch, and its error identifies the mismatch.
 
+For a repeated-damage allocation, the later `rolledDice` fill has one group for
+each entry in the earlier `spellTargetAllocation.value.allocations` array, in
+that same order. Group `i` must contain exactly
+`allocations[i].count` die results, and those results belong only to allocation
+`i`. This is one group per allocation entry, not one flat group for the whole
+cast and not one group per individual die. For example, three one-effect
+allocation entries require three one-result groups:
+
+```ts
+allocations: [
+  { targetId: targetA, count: 1 },
+  { targetId: targetB, count: 1 },
+  { targetId: targetC, count: 1 },
+];
+rolledDice.value: [
+  { results: [dieA] },
+  { results: [dieB] },
+  { results: [dieC] },
+];
+```
+
+A single allocation with `count: 3` instead uses one group containing three
+die results.
+
 The supervisor owns one linear SDK-session lineage. Start with `context.session`,
 pass that exact current value to each operation, and replace your local session
 with every resolution result's `session`. Stale or foreign sessions are rejected.
