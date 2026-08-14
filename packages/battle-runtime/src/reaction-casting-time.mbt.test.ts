@@ -524,7 +524,10 @@ function reactionCastingTimeBattle(input: {
   readonly triggerCreatureSpellSlots: CharacterSpellcastingInit["spellSlots"];
   readonly reactorPreparedSpells: readonly SpellRecord[];
   readonly reactorClassName?:
-    | CharacterSpellcastingInit["sourceClassName"]
+    | Extract<
+        CharacterSpellcastingInit["spellcastingSource"],
+        { readonly tag: "classSpellcasting" }
+      >["className"]
     | undefined;
   readonly reactorSpellSlots: CharacterSpellcastingInit["spellSlots"];
 }): BattleRuntimeSession {
@@ -558,18 +561,25 @@ function reactionCastingTimeBattle(input: {
 }
 
 function characterSpellcasting(input: {
-  readonly sourceClassName: CharacterSpellcastingInit["sourceClassName"];
+  readonly sourceClassName: Extract<
+    CharacterSpellcastingInit["spellcastingSource"],
+    { readonly tag: "classSpellcasting" }
+  >["className"];
   readonly preparedSpells: readonly SpellRecord[];
   readonly spellSlots: CharacterSpellcastingInit["spellSlots"];
 }): CharacterSpellcastingInit {
   return {
-    sourceClassName: input.sourceClassName,
-    spellcastingAbilityModifier: abilityModifier(3),
+    spellcastingSource: {
+      tag: "classSpellcasting",
+      className: input.sourceClassName,
+      abilityModifier: abilityModifier(3),
+    },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
     cantrips: [],
     preparedSpells: input.preparedSpells,
     featurePreparedSpells: [],
+    spellAccesses: [],
     spellbookRitualSpellAccesses: [],
     invocationSpellAccesses: [],
     spellSlots: input.spellSlots,
@@ -579,7 +589,10 @@ function characterSpellcasting(input: {
 function reactionCastingTimeCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
-  readonly className: CharacterSpellcastingInit["sourceClassName"];
+  readonly className: Extract<
+    CharacterSpellcastingInit["spellcastingSource"],
+    { readonly tag: "classSpellcasting" }
+  >["className"];
   readonly initiative: number;
   readonly spellcasting: CharacterSpellcastingInit;
 }): BattleCreatureInit {

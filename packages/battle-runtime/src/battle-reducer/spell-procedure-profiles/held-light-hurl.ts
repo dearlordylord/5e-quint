@@ -41,7 +41,7 @@ import type {
 import { Schema } from "effect";
 import {
   AttackBonus,
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   DamageTypeSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
@@ -88,7 +88,7 @@ function resolveHeldLightHurl(
 
 const HeldLightHurlInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: ClassCantripSpellAccessSchema,
+    access: CantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("heldLightHurl"),
     sourceEffectRef: BattleActiveEffectExecutionRef,

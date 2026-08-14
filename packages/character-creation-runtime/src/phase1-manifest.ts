@@ -268,6 +268,12 @@ export const CLASS_FEATURE_PROFICIENCY_CHOICE_KEY =
   "class_feature_proficiency_choice" satisfies UnitChoiceKey;
 export const ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY =
   "origin_feat_proficiency_choice" satisfies UnitChoiceKey;
+export const ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY =
+  "origin_feat_magic_initiate_cantrip_choice" satisfies UnitChoiceKey;
+export const ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY =
+  "origin_feat_magic_initiate_level_one_spell_choice" satisfies UnitChoiceKey;
+export const ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY =
+  "origin_feat_magic_initiate_spellcasting_ability_choice" satisfies UnitChoiceKey;
 export const SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY =
   "species_trait_proficiency_choice" satisfies UnitChoiceKey;
 export const GNOMISH_LINEAGE_CHOICE_KEY =

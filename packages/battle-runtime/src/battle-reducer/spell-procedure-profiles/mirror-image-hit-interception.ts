@@ -60,7 +60,7 @@ import {
 } from "./profile.ts";
 import {
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 function mirrorImageHitInterceptionShape(
@@ -122,14 +122,14 @@ function admitMirrorImageHitInterception(
   if (shape === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly MirrorImageHitInterceptionSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "mirrorImageHitInterception",
               spell,
               actionCost: "magicAction",
@@ -197,7 +197,7 @@ const MirrorImageHitInterceptionInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("mirrorImageHitInterception"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
@@ -219,3 +219,4 @@ export const mirrorImageHitInterceptionProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverMirrorImageHitInterceptionCastAct,
   resolve: resolveMirrorImageHitInterception,
 };
+import { spellInvocationResourceForCastOption } from "./profile.ts";

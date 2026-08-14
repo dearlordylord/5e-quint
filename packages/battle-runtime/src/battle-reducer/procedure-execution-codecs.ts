@@ -24,9 +24,10 @@ import {
 import {
   DamageDieSizeSchema,
   DamageTypeSchema,
+  SpellAccessFreeCastExecutionResourceSchema,
+  SpellSlotInvocationResourceSchema,
   MovementDeltaFeet,
   MovementFeet,
-  SpellSlotLevel,
 } from "./codec-building-blocks.ts";
 
 export const LiteralUnitSupportProcedureExecutionSchema = Schema.Literal(
@@ -616,15 +617,8 @@ export const BrutalStrikeProcedureExecutionSchema = Schema.Struct({
 
 export const SpellInvocationResourceExecutionSchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("none") }),
-  Schema.Struct({
-    tag: Schema.Literal("spellSlot"),
-    slotLevel: SpellSlotLevel,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("classFeatureFreeCast"),
-    resourcePoolRef: BattleResourcePoolExecutionRef,
-    resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
+  SpellSlotInvocationResourceSchema,
+  SpellAccessFreeCastExecutionResourceSchema,
 );
 
 const MechanicalResourceSpendSchema = Schema.Struct({

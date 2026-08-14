@@ -51,7 +51,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type MagicalDarknessPointOriginSpellInvocation = Extract<
@@ -83,7 +83,7 @@ function admitMagicalDarknessPointOrigin(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly MagicalDarknessPointOriginSpellInvocation[] => {
       if (Number(slot.spellLevel) < DARKNESS_LEVEL) {
         return [];
@@ -91,7 +91,7 @@ function admitMagicalDarknessPointOrigin(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "magicalDarknessPointOrigin",
           spell,
           targeting: {
@@ -184,7 +184,7 @@ const MagicalDarknessPointOriginInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("magicalDarknessPointOrigin"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: Schema.Struct({
@@ -206,3 +206,4 @@ export const magicalDarknessPointOriginProfile = {
   "magicalDarknessPointOrigin",
   MagicalDarknessPointOriginSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

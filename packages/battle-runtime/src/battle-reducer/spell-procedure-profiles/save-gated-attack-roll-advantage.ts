@@ -40,7 +40,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 const FailedSaveAttackRollAdvantageEffectSchema = Schema.Struct({
@@ -64,7 +64,7 @@ function admitSaveGatedAttackRollAdvantage(
   return supportedPreparedSaveGateAttackRollAdvantageProfile(
     ctx.actor.combatantId,
     spell,
-    ctx.actor.origin.spellcasting.spellSlots,
+    ctx.spellCastOptions,
   ).filter(isSaveGatedAttackRollAdvantageInvocation);
 }
 
@@ -98,7 +98,7 @@ const SaveGatedAttackRollAdvantageInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedAttackRollAdvantage"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       ability: AbilitySchema,

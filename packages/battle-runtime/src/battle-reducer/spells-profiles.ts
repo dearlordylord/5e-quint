@@ -20,8 +20,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
+// UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 
-import { movementFeet } from "@dnd/shared/types";
+import { movementFeet, spellSlotLevel } from "@dnd/shared/types";
 import {
   type BattleCreatureState,
   type BattleSpellAdmissionSource,
@@ -43,7 +45,9 @@ export * from "./spells-profiles-attack-damage.ts";
 import { admitPersistentArmorEffectInvocationSpellAccess } from "./spell-procedure-profiles/persistent-armor-effect.ts";
 import { admitRegisteredSpellProcedures } from "./spell-procedure-profiles/admission-registry.ts";
 import { spellAdmissionContextFor } from "./spell-procedure-profiles/admission-context.ts";
+import { spellInvocationResourceForCastOption } from "./spell-procedure-profiles/profile.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
+import { characterBattleResourcePoolRefHasUsesRemaining } from "../character-battle-resource-execution.ts";
 
 export function admittedSpellActs(
   actor: BattleCreatureState,
@@ -66,29 +70,86 @@ export function admittedSpellActs(
   const admittedSpellSources = [...preparedSpells, ...cantrips].map(
     admittedSpellToAdmissionSource,
   );
-
-  const profileAdmissions = admittedSpellSources.flatMap((spell) =>
-    admitRegisteredSpellProcedures(spell, admissionContext),
+  admittedSpellSources.push(
+    ...spellcasting.spellAccesses.map(admittedSpellToAdmissionSource),
   );
+
+  const actorResources = actor.origin.resources;
+  const profileAdmissions = admittedSpellSources.flatMap((spell) =>
+    admitRegisteredSpellProcedures(spell, {
+      ...admissionContext,
+      castingSource: spell.castingSource,
+      spellCastOptions: [
+        ...admissionContext.spellCastOptions,
+        ...(spell.mechanics.level === 0
+          ? []
+          : spell.spellAccessFreeCastResourcePoolRefs
+              .filter((resourcePoolRef) =>
+                characterBattleResourcePoolRefHasUsesRemaining(
+                  actorResources,
+                  resourcePoolRef,
+                ),
+              )
+              .map((resourcePoolRef) => ({
+                spellLevel: spellSlotLevel(spell.mechanics.level),
+                payment: {
+                  tag: "spellAccessFreeCast" as const,
+                  resourcePoolRef,
+                },
+              }))),
+      ],
+    }),
+  );
+  const spellcastingSource = spellcasting.spellcastingSource;
 
   const admittedInvocations = [
     ...profileAdmissions,
     ...spellcasting.invocationSpellAccesses.flatMap((access) =>
-      access.tag === "armorOfShadowsMageArmor"
+      access.tag === "armorOfShadowsMageArmor" &&
+      spellcastingSource.tag === "classSpellcasting"
         ? admitPersistentArmorEffectInvocationSpellAccess(actor.combatantId, {
-            spell: spellRecordToAdmissionSource(access.admission.authoredSpell),
+            spell: spellRecordToAdmissionSource(
+              access.admission.authoredSpell,
+              {
+                tag: "classSpellcasting",
+                className: spellcastingSource.className,
+                abilityModifier: spellcastingSource.abilityModifier,
+              },
+            ),
             executionFacts: access.admission.executionFacts,
           }).map((invocation) => ({
             ...invocation,
-            spell: spellRecordToAdmissionSource(access.admission.authoredSpell),
+            spell: spellRecordToAdmissionSource(
+              access.admission.authoredSpell,
+              {
+                tag: "classSpellcasting",
+                className: spellcastingSource.className,
+                abilityModifier: spellcastingSource.abilityModifier,
+              },
+            ),
           }))
         : [],
     ),
     ...admittedSpellSources.flatMap((spell) =>
-      supportedPreparedHellishRebukeReactionSpellProfile(
-        spell,
-        spellcasting.spellSlots,
-      ).map((invocation) => ({ ...invocation, spell })),
+      supportedPreparedHellishRebukeReactionSpellProfile(spell, [
+        ...admissionContext.spellCastOptions,
+        ...(spell.mechanics.level === 0
+          ? []
+          : spell.spellAccessFreeCastResourcePoolRefs
+              .filter((resourcePoolRef) =>
+                characterBattleResourcePoolRefHasUsesRemaining(
+                  actorResources,
+                  resourcePoolRef,
+                ),
+              )
+              .map((resourcePoolRef) => ({
+                spellLevel: spellSlotLevel(spell.mechanics.level),
+                payment: {
+                  tag: "spellAccessFreeCast" as const,
+                  resourcePoolRef,
+                },
+              }))),
+      ]).map((invocation) => ({ ...invocation, spell })),
     ),
   ].filter(
     (invocation) =>
@@ -99,7 +160,7 @@ export function admittedSpellActs(
 
 export function supportedPreparedHellishRebukeReactionSpellProfile(
   spell: BattleSpellAdmissionSource,
-  spellSlots: CharacterBattleSpellcastingState["spellSlots"],
+  spellSlots: readonly import("./spell-procedure-profiles/profile.ts").SpellAdmissionCastOption[],
 ): readonly SupportedSpellInvocation[] {
   if (
     spell.mechanics.family !== "triggered_reaction" ||
@@ -148,7 +209,7 @@ export function supportedPreparedHellishRebukeReactionSpellProfile(
       : [
           {
             access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            resource: spellInvocationResourceForCastOption(slot),
             procedure: "saveGatedDamage" as const,
             spell,
             castingTime: { kind: "reaction" as const },

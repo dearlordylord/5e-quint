@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   ALIGNMENT_MORALITIES,
@@ -16,6 +17,7 @@ import {
   eldritchInvocationRepeatableChoiceSatisfiesRule,
   isCharacterBuildToolProficiencyId,
   languageFromSurfaceLanguageId,
+  parseCharacterBuildMagicInitiateSpellAccesses,
   parseCharacterEquipmentItemId,
   progressionClassUnitIds,
   sorcererMetamagicOptionId,
@@ -69,10 +71,7 @@ import {
   allLeveledSpellsFromAnyClassSpellList,
 } from "@dnd/surface/surface/unit-catalog";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
-import {
-  isSupportedClassFeatureSpellFreeCastResourceTag,
-  spellHasTopLevelRitualTag,
-} from "@dnd/surface/surface/types";
+import { spellHasTopLevelRitualTag } from "@dnd/surface/surface/types";
 import type {
   DragonbornSpeciesRecord,
   SpellRecord,
@@ -430,7 +429,7 @@ export function parseStoredResourceExpenditures(
       (expenditure.tag !== "layOnHandsHealingPool" &&
         expenditure.tag !== "useCountResource" &&
         expenditure.tag !== "pointPoolResource" &&
-        !isSupportedClassFeatureSpellFreeCastResourceTag(expenditure.tag))
+        expenditure.tag !== "spellAccessFreeCast")
     ) {
       return characterSheetIssue(
         "Expected Character Sheet resource expenditure.",
@@ -443,6 +442,21 @@ export function parseStoredResourceExpenditures(
       if (!recordHasExactKeys(expenditure, ["tag", "unitId", "expended"])) {
         return characterSheetIssue(
           "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
+        );
+      }
+    } else if (expenditure.tag === "spellAccessFreeCast") {
+      if (
+        !recordHasExactKeys(expenditure, [
+          "tag",
+          "sourceUnitId",
+          "spellId",
+          "expended",
+        ]) ||
+        typeof expenditure.sourceUnitId !== "string" ||
+        typeof expenditure.spellId !== "string"
+      ) {
+        return characterSheetIssue(
+          "Character Sheet Spell Access free-cast expenditure must contain exactly tag, source Unit id, spell Unit id, and expended count.",
         );
       }
     } else if (!recordHasExactKeys(expenditure, ["tag", "expended"])) {
@@ -468,6 +482,23 @@ export function parseStoredResourceExpenditures(
       expenditures.push({
         tag: expenditure.tag,
         unitId: unitId.right,
+        expended: expended.right,
+      });
+      continue;
+    }
+    if (expenditure.tag === "spellAccessFreeCast") {
+      if (
+        typeof expenditure.sourceUnitId !== "string" ||
+        typeof expenditure.spellId !== "string"
+      ) {
+        return characterSheetIssue(
+          "Character Sheet Spell Access free-cast expenditure requires string Unit ids.",
+        );
+      }
+      expenditures.push({
+        tag: expenditure.tag,
+        sourceUnitId: authoredUnitId(expenditure.sourceUnitId),
+        spellId: authoredUnitId(expenditure.spellId),
         expended: expended.right,
       });
       continue;
@@ -616,6 +647,22 @@ export function parseCharacterBuild(
   const equipment = parseStoredEquipment(value.equipment);
   if (Either.isLeft(equipment)) return Either.left(equipment.left);
 
+  const magicInitiateSpellAccesses =
+    parseCharacterBuildMagicInitiateSpellAccesses({
+      value: value.magicInitiateSpellAccesses,
+      build: {
+        background: authoredUnitId(value.background),
+        species: authoredUnitId(value.species),
+        features: features.right,
+      },
+      unitLibrary,
+    });
+  if (Either.isLeft(magicInitiateSpellAccesses)) {
+    return characterSheetIssue(
+      magicInitiateSpellAccesses.left.map((issue) => issue.message).join(" "),
+    );
+  }
+
   const build: CharacterBuild = {
     progression: progression.right,
     background: authoredUnitId(value.background),
@@ -630,6 +677,7 @@ export function parseCharacterBuild(
       : { speciesChoiceFacts: speciesChoiceFacts.right }),
     features: features.right,
     ...(spellcasting === undefined ? {} : { spellcasting: spellcasting.right }),
+    magicInitiateSpellAccesses: magicInitiateSpellAccesses.right,
     equipment: equipment.right,
   };
   const bookOfShadowsIssue = storedBookOfShadowsSelectionIssue(

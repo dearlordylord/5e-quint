@@ -420,6 +420,7 @@ function wizard4BuildWithPactSlots(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     spellcasting: {
       sources: [
         {

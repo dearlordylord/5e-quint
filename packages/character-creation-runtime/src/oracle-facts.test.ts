@@ -207,6 +207,7 @@ function syntheticBuild(): CharacterBuild {
     },
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: { owned: [], loadout: {} },
   };
 }
@@ -532,6 +533,41 @@ describe("Character Creation owner facts", () => {
 
     expect(fact.spellcasting).toBeUndefined();
     expect(decodeCharacterBuildFact(fact)._tag).toBe("Right");
+  });
+
+  test("round-trips exact Magic Initiate spell-access selections", () => {
+    const fact = characterBuildFact({
+      ...syntheticBuild(),
+      magicInitiateSpellAccesses: [
+        {
+          featUnitId: authoredUnitId("synthetic_magic_initiate"),
+          spellcastingAbility: "int",
+          cantrips: [
+            authoredUnitId("synthetic_cantrip_a"),
+            authoredUnitId("synthetic_cantrip_b"),
+          ],
+          levelOneSpell: authoredUnitId("synthetic_level_one_spell"),
+        },
+      ],
+    });
+
+    expect(fact.magicInitiateSpellAccesses).toEqual([
+      {
+        featUnitId: "synthetic_magic_initiate",
+        spellcastingAbility: "int",
+        cantrips: ["synthetic_cantrip_a", "synthetic_cantrip_b"],
+        levelOneSpell: "synthetic_level_one_spell",
+      },
+    ]);
+    expect(decodeCharacterBuildFact(fact)).toHaveProperty("_tag", "Right");
+    expect(
+      decodeCharacterBuildFact({
+        ...fact,
+        magicInitiateSpellAccesses: [
+          { ...fact.magicInitiateSpellAccesses[0], cantrips: ["only_one"] },
+        ],
+      }),
+    ).toHaveProperty("_tag", "Left");
   });
 
   test("omits only the absent spellcasting slot-pool variant", () => {
@@ -1123,6 +1159,7 @@ describe("Character Creation owner facts", () => {
         { tag: "manifestAlignmentMismatch" },
         { tag: "unsupportedChoices" },
         { tag: "selectedFeatPrerequisitesNotMet" },
+        { tag: "duplicateMagicInitiateSpellList" },
         { tag: "missingSpellcastingFacts" },
         { tag: "preparedSpellSelectionMismatch" },
         { tag: "duplicateWizardSpellbookSelection" },

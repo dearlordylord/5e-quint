@@ -1303,7 +1303,11 @@ function sorcererMetamagicBattleWithOptions(
               { spellLevel: 3, count: 1 },
             ],
           }),
-          sourceClassName: "sorcerer",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "sorcerer",
+            abilityModifier: 3,
+          },
         },
       }),
       statBlockCreatureInit({

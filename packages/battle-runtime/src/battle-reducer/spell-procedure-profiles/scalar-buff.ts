@@ -111,7 +111,7 @@ import {
   MovementDeltaFeet,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverSubtleSpellMetamagicSelections } from "../metamagic.ts";
 
@@ -182,7 +182,7 @@ function admitScalarBuff(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly ScalarBuffInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -205,7 +205,7 @@ function admitScalarBuff(
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "scalarBuff",
               spell,
               actionCost: projection.actionCost,
@@ -492,7 +492,7 @@ function resolveScalarBuff(
 const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("scalarBuff"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction", "bonusAction"),
@@ -533,3 +533,4 @@ export const scalarBuffProfile = {
   discoverCastAct: discoverScalarBuffCastAct,
   resolve: resolveScalarBuff,
 } satisfies SpellProcedureDeclaration<"scalarBuff", ScalarBuffInvocation>;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

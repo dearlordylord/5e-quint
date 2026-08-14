@@ -1076,6 +1076,7 @@ function baseBuild(input: {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},

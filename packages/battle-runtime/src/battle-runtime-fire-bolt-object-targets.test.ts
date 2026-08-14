@@ -165,7 +165,11 @@ describe("battle runtime: Fire Bolt object targets", () => {
               cantrips: [spellRecord("sacred_flame")],
               preparedSpells: [],
             }),
-            sourceClassName: "cleric",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "cleric",
+              abilityModifier: 3,
+            },
           },
         }),
         skeletonCreatureInit({ initiative: 10 }),

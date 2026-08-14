@@ -800,60 +800,68 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         spellLevel: spellSlotLevel(1),
         count: resourceCount(1),
         expended: resourceCount(0),
+        payment: { tag: "slot" as const },
       },
     ];
 
     expect(
-      supportedPreparedHideousLaughterProfile(spell, spellSlots),
+      supportedPreparedHideousLaughterProfile(
+        spellAdmissionSource(spell),
+        spellSlots,
+      ),
     ).toHaveLength(1);
 
     expect(
       supportedPreparedHideousLaughterProfile(
-        hideousLaughterWithPhase(spell, (phase) => {
-          if (phase.onFail.kind !== "composite") {
-            throw new Error("Expected Hideous Laughter composite failure.");
-          }
-          return {
-            ...phase,
-            onFail: {
-              ...phase.onFail,
-              effects: [
-                ...phase.onFail.effects,
-                { kind: "apply_condition", condition: "charmed" },
-              ],
-            },
-          } satisfies ActivationPhase;
-        }),
+        spellAdmissionSource(
+          hideousLaughterWithPhase(spell, (phase) => {
+            if (phase.onFail.kind !== "composite") {
+              throw new Error("Expected Hideous Laughter composite failure.");
+            }
+            return {
+              ...phase,
+              onFail: {
+                ...phase.onFail,
+                effects: [
+                  ...phase.onFail.effects,
+                  { kind: "apply_condition", condition: "charmed" },
+                ],
+              },
+            } satisfies ActivationPhase;
+          }),
+        ),
         spellSlots,
       ),
     ).toEqual([]);
 
     expect(
       supportedPreparedHideousLaughterProfile(
-        hideousLaughterWithPhase(spell, (phase) => {
-          if (phase.repeatSaves === undefined) {
-            throw new Error("Expected Hideous Laughter repeat saves.");
-          }
-          const repeatSaves = phase.repeatSaves.map((repeatSave) =>
-            repeatSave.cadence === "on_target_takes_damage"
-              ? {
-                  ...repeatSave,
-                  onFailAgain: {
-                    kind: "apply_condition",
-                    condition: "charmed",
-                  } satisfies EffectAtom,
-                }
-              : repeatSave,
-          );
-          const firstRepeatSave = repeatSaves[0];
-          if (firstRepeatSave === undefined) {
-            throw new Error("Expected Hideous Laughter repeat save.");
-          }
-          return {
-            ...phase,
-            repeatSaves: [firstRepeatSave, ...repeatSaves.slice(1)],
-          } satisfies ActivationPhase;
-        }),
+        spellAdmissionSource(
+          hideousLaughterWithPhase(spell, (phase) => {
+            if (phase.repeatSaves === undefined) {
+              throw new Error("Expected Hideous Laughter repeat saves.");
+            }
+            const repeatSaves = phase.repeatSaves.map((repeatSave) =>
+              repeatSave.cadence === "on_target_takes_damage"
+                ? {
+                    ...repeatSave,
+                    onFailAgain: {
+                      kind: "apply_condition",
+                      condition: "charmed",
+                    } satisfies EffectAtom,
+                  }
+                : repeatSave,
+            );
+            const firstRepeatSave = repeatSaves[0];
+            if (firstRepeatSave === undefined) {
+              throw new Error("Expected Hideous Laughter repeat save.");
+            }
+            return {
+              ...phase,
+              repeatSaves: [firstRepeatSave, ...repeatSaves.slice(1)],
+            } satisfies ActivationPhase;
+          }),
+        ),
         spellSlots,
       ),
     ).toEqual([]);
@@ -864,6 +872,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         spellLevel: spellSlotLevel(1),
         count: resourceCount(1),
         expended: resourceCount(0),
+        payment: { tag: "slot" as const },
       },
     ];
     const colorSprayWithRepeatSave = spellWithSaveGateRepeatSaves(

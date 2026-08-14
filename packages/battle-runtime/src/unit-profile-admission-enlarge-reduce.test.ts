@@ -195,13 +195,17 @@ function quickenedCreatureSizeAct(input?: {
     ...(input?.targetCanCounterspell === true
       ? {
           targetSpellcasting: {
-            sourceClassName: "wizard",
-            spellcastingAbilityModifier: abilityModifier(3),
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "wizard",
+              abilityModifier: abilityModifier(3),
+            },
             proficiencyBonus: proficiencyBonus(2),
             canCastSpells: true,
             cantrips: [],
             preparedSpells: [spellRecord("counterspell")],
             featurePreparedSpells: [],
+            spellAccesses: [],
             spellbookRitualSpellAccesses: [],
             invocationSpellAccesses: [],
             spellSlots: [{ spellLevel: 3, count: 1 }],
@@ -1315,13 +1319,17 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetPreparedSpells: [spell],
       targetSpellcasting: {
-        sourceClassName: "wizard",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [spell],
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 2, count: 1 }],

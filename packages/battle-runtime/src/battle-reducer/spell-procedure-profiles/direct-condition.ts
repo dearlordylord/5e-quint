@@ -1,3 +1,4 @@
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-direct-condition
@@ -50,7 +51,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type DirectConditionResolveInput =
@@ -66,7 +67,7 @@ function admitDirectCondition(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly DirectConditionSpellInvocation[] {
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly DirectConditionSpellInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -88,7 +89,7 @@ function admitDirectCondition(
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "directCondition",
               spell,
               actionCost: "magicAction",
@@ -240,7 +241,7 @@ function resolveDirectCondition(
 const DirectConditionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("directCondition"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),

@@ -523,13 +523,17 @@ function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
           { className: "druid", level: 3 },
         ],
         spellcasting: {
-          sourceClassName: "druid",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "druid",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
           preparedSpells: [cureWoundsSpell, barkskinSpell],
           featurePreparedSpells: [],
+          spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [
             {

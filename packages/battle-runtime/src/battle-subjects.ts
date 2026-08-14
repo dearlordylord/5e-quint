@@ -29,6 +29,7 @@ import {
   BattleObjectId,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
+  BattleSpellAccessExecutionRef,
   CombatantId,
   BattleStatBlockProcedureExecutionRef,
   BattleStatBlockExecutionScopeRef,
@@ -305,24 +306,36 @@ export const SPELL_SLOT_PROCEDURES = [
   "featherFallMitigation",
 ] as const;
 export type SpellSlotProcedure = (typeof SPELL_SLOT_PROCEDURES)[number];
+export const SpellInvocationSourceRefSchema = Schema.Union(
+  Schema.Struct({ tag: Schema.Literal("classSpellcasting") }),
+  Schema.Struct({
+    tag: Schema.Literal("spellAccess"),
+    spellAccessRef: BattleSpellAccessExecutionRef,
+  }),
+);
+export type SpellInvocationSourceRef =
+  typeof SpellInvocationSourceRefSchema.Type;
 
 export const SpellInvocationRefSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("cantrip"),
     spellId: SpellId,
+    source: SpellInvocationSourceRefSchema,
     procedure: Schema.Literal(...CANTRIP_SPELL_PROCEDURES),
   }),
   Schema.Struct({
     tag: Schema.Literal("spellSlot"),
     spellId: SpellId,
+    source: SpellInvocationSourceRefSchema,
     slotLevel: SpellSlotLevel,
     procedure: Schema.Literal(...SPELL_SLOT_PROCEDURES),
   }),
   Schema.Struct({
-    tag: Schema.Literal("classFeatureFreeCast"),
+    tag: Schema.Literal("spellAccessFreeCast"),
     spellId: SpellId,
+    source: SpellInvocationSourceRefSchema,
     resourcePoolRef: BattleResourcePoolExecutionRef,
-    procedure: Schema.Literal("afterHitDamage", "markedDamageRider"),
+    procedure: Schema.Literal(...SPELL_SLOT_PROCEDURES),
   }),
   Schema.Struct({
     tag: Schema.Literal("armorOfShadows"),
@@ -345,13 +358,39 @@ export const SpellInvocationRefSchema = Schema.Union(
 export type SpellInvocationRef = typeof SpellInvocationRefSchema.Type;
 export type SpellInvocationRefEncoded = typeof SpellInvocationRefSchema.Encoded;
 
-export function cantripSpellInvocationRef(
+export function scopedCantripSpellInvocationRef(
   rawSpellId: string,
   procedure: CantripSpellProcedure,
+  source: SpellInvocationSourceRef,
 ): SpellInvocationRef {
   return {
     tag: "cantrip",
     spellId: makeSpellId(rawSpellId),
+    source,
+    procedure,
+  };
+}
+
+export function cantripSpellInvocationRef(
+  rawSpellId: string,
+  procedure: CantripSpellProcedure,
+): SpellInvocationRef {
+  return scopedCantripSpellInvocationRef(rawSpellId, procedure, {
+    tag: "classSpellcasting",
+  });
+}
+
+export function scopedSpellSlotInvocationRef(
+  rawSpellId: string,
+  rawSlotLevel: number,
+  procedure: SpellSlotProcedure,
+  source: SpellInvocationSourceRef,
+): SpellInvocationRef {
+  return {
+    tag: "spellSlot",
+    spellId: makeSpellId(rawSpellId),
+    source,
+    slotLevel: spellSlotLevel(rawSlotLevel),
     procedure,
   };
 }
@@ -361,12 +400,9 @@ export function spellSlotInvocationRef(
   rawSlotLevel: number,
   procedure: SpellSlotProcedure,
 ): SpellInvocationRef {
-  return {
-    tag: "spellSlot",
-    spellId: makeSpellId(rawSpellId),
-    slotLevel: spellSlotLevel(rawSlotLevel),
-    procedure,
-  };
+  return scopedSpellSlotInvocationRef(rawSpellId, rawSlotLevel, procedure, {
+    tag: "classSpellcasting",
+  });
 }
 
 export function spellEffectInvocationRef(
@@ -387,17 +423,41 @@ export function spellEffectInvocationRef(
   };
 }
 
-export function classFeatureFreeCastSpellInvocationRef(
+export function scopedSpellAccessFreeCastSpellInvocationRef(
   rawSpellId: string,
   resourcePoolRef: BattleResourcePoolExecutionRef,
-  procedure: "afterHitDamage" | "markedDamageRider",
+  procedure: SpellSlotProcedure,
+  source: Extract<
+    SpellInvocationRef,
+    { readonly tag: "spellAccessFreeCast" }
+  >["source"],
+): SpellInvocationRef;
+export function scopedSpellAccessFreeCastSpellInvocationRef(
+  rawSpellId: string,
+  resourcePoolRef: BattleResourcePoolExecutionRef,
+  procedure: SpellSlotProcedure,
+  source: SpellInvocationSourceRef,
 ): SpellInvocationRef {
   return {
-    tag: "classFeatureFreeCast",
+    tag: "spellAccessFreeCast",
     spellId: makeSpellId(rawSpellId),
+    source,
     resourcePoolRef,
     procedure,
   };
+}
+
+export function spellAccessFreeCastSpellInvocationRef(
+  rawSpellId: string,
+  resourcePoolRef: BattleResourcePoolExecutionRef,
+  procedure: SpellSlotProcedure,
+): SpellInvocationRef {
+  return scopedSpellAccessFreeCastSpellInvocationRef(
+    rawSpellId,
+    resourcePoolRef,
+    procedure,
+    { tag: "classSpellcasting" },
+  );
 }
 
 export function armorOfShadowsSpellInvocationRef(

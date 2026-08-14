@@ -1240,6 +1240,7 @@ function classBuild(input: {
     ),
     proficiencyChoices: input.proficiencyChoices ?? [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},

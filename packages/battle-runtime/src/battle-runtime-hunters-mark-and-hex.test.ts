@@ -80,7 +80,11 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
                 spellRecord("magic_missile"),
               ],
             }),
-            sourceClassName: "fighter",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "fighter",
+              abilityModifier: 3,
+            },
           },
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -848,7 +852,11 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
               cantrips: [],
               preparedSpells: [spellRecord("hunters_mark")],
             }),
-            sourceClassName: "ranger",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "ranger",
+              abilityModifier: 3,
+            },
           },
         }),
         characterSeed({
@@ -1395,7 +1403,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
           spell: {
             ...baseSpell,
             action: "transfer",
-            resource: { tag: "spellSlot", slotLevel: 1 },
+            resource: {
+              tag: "spellSlot",
+              slotLevel: 1,
+            },
             activeEffect: {
               kind: "spellMarkedDamageRider",
               sourceCombatantId: fighterId,
@@ -1425,7 +1436,11 @@ function hexWarlockSeed() {
         preparedSpells: [spellRecord("hex")],
         spellSlots: [{ spellLevel: 1, count: 1 }],
       }),
-      sourceClassName: "warlock",
+      spellcastingSource: {
+        tag: "classSpellcasting",
+        className: "warlock",
+        abilityModifier: 3,
+      },
     },
   });
 }

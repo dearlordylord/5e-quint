@@ -24,12 +24,19 @@ import type {
   SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 export { SpellRuleExecutionFactsSchema } from "../../procedure-execution/spell-rule-facts.ts";
-import type { CombatantId } from "../../identity.ts";
+import type {
+  BattleResourcePoolExecutionRef,
+  CombatantId,
+} from "../../identity.ts";
 import type { CharacterBattleSpellcastingExecutionState } from "../../character-battle-resource-execution.ts";
 import type {
+  CantripSpellAccess,
+  LeveledSpellInvocationResource,
   PreparedSpellAccess,
+  SpellAccessFreeCastInvocationResource,
   SpellSlotInvocationResource,
 } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import { cantripSpellAccessForCastingSource } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
   ongoingSpellEffectRefKey,
@@ -62,23 +69,49 @@ export type SpellAdmissionBattleProjection = {
 
 export type SpellAdmissionContext = {
   readonly actor: SpellAdmissionActor;
+  readonly castingSource: BattleSpellAdmissionSource["castingSource"];
   readonly battle: SpellAdmissionBattleProjection | undefined;
+  readonly spellCastOptions: readonly SpellAdmissionCastOption[];
 };
+
+export type SpellAdmissionCastOption = {
+  readonly spellLevel: SpellSlotLevel;
+  readonly payment:
+    | { readonly tag: "slot" }
+    | {
+        readonly tag: "spellAccessFreeCast";
+        readonly resourcePoolRef: BattleResourcePoolExecutionRef;
+      };
+};
+
+export function cantripSpellAccessFor(
+  castingSource: BattleSpellAdmissionSource["castingSource"],
+): CantripSpellAccess {
+  return cantripSpellAccessForCastingSource(castingSource);
+}
 
 export type PreparedSpellSlotInvocationBase<
   S extends Pick<BattleSpellAdmissionSource, "mechanics"> =
     BattleSpellAdmissionSource,
 > = {
   readonly access: PreparedSpellAccess;
-  readonly resource: SpellSlotInvocationResource;
+  readonly resource: LeveledSpellInvocationResource;
   readonly spell: S;
 };
-type PreparedSpellSlots =
-  SpellAdmissionContext["actor"]["origin"]["spellcasting"]["spellSlots"];
 
-// Callers use this when their prepared spell admission exposes one executable
-// choice per slot level that can cast the spell. The helper keeps that level
-// comparison and the paired access/resource facts together for those callers.
+export function spellInvocationResourceForCastOption(
+  option: SpellAdmissionCastOption,
+): SpellSlotInvocationResource | SpellAccessFreeCastInvocationResource {
+  return option.payment.tag === "slot"
+    ? { tag: "spellSlot", slotLevel: option.spellLevel }
+    : {
+        tag: "spellAccessFreeCast",
+        castLevel: option.spellLevel,
+        resourcePoolRef: option.payment.resourcePoolRef,
+      };
+}
+type PreparedSpellCastOptions = SpellAdmissionContext["spellCastOptions"];
+
 export function preparedSpellSlotInvocations<
   S extends Pick<BattleSpellAdmissionSource, "mechanics">,
   I,
@@ -92,7 +125,7 @@ export function preparedSpellSlotInvocations<
 ): readonly I[] {
   return preparedSpellSlotInvocationsFrom(
     spell,
-    ctx.actor.origin.spellcasting.spellSlots,
+    ctx.spellCastOptions,
     complete,
   );
 }
@@ -102,26 +135,23 @@ export function preparedSpellSlotInvocationsFrom<
   I,
 >(
   spell: S,
-  spellSlots: PreparedSpellSlots,
+  castOptions: PreparedSpellCastOptions,
   complete: (
     base: PreparedSpellSlotInvocationBase<S>,
     slotLevel: SpellSlotLevel,
   ) => I | null,
 ): readonly I[] {
-  return spellSlots.flatMap((slot): readonly I[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
+  return castOptions.flatMap((castOption): readonly I[] => {
+    if (Number(castOption.spellLevel) < spell.mechanics.level) {
       return [];
     }
     const invocation = complete(
       {
         access: { tag: "prepared" },
-        resource: {
-          tag: "spellSlot",
-          slotLevel: slot.spellLevel,
-        },
+        resource: spellInvocationResourceForCastOption(castOption),
         spell,
       },
-      slot.spellLevel,
+      castOption.spellLevel,
     );
     return invocation === null ? [] : [invocation];
   });

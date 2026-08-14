@@ -43,7 +43,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverSpellMetamagicSelections } from "../metamagic-support.ts";
 import { spellTargetListHole } from "../spells-holes-fills.ts";
@@ -63,7 +63,7 @@ function admitAbilityD20TestRollModeSaveGate(
   return supportedPreparedAbilityD20TestRollModeSaveGateProfile(
     ctx.actor.combatantId,
     spell,
-    ctx.actor.origin.spellcasting.spellSlots,
+    ctx.spellCastOptions,
   ).filter(isAbilityD20TestRollModeSaveGateInvocation);
 }
 
@@ -125,7 +125,7 @@ const AbilityD20TestRollModeSaveGateInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("abilityD20TestRollModeSaveGate"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),

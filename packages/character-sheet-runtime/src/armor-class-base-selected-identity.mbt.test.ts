@@ -700,6 +700,7 @@ function armorClassBuild(input: {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [
         ...(armorItemId === undefined || input.armor === undefined

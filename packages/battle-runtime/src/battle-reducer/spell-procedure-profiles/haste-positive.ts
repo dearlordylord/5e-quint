@@ -49,7 +49,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import type {
   SpellAdmissionContext,
@@ -101,14 +101,14 @@ function admitHastePositive(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly HastePositiveSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "hastePositive",
               spell,
               actionCost: "magicAction",
@@ -490,7 +490,7 @@ function isHastePositiveActiveEffect(
 const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("hastePositive"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
@@ -549,3 +549,4 @@ export const hastePositiveProfile = {
   "hastePositive",
   HastePositiveSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

@@ -752,6 +752,7 @@ function weaponMasteryBuild(input: {
       selectedFromUnitId: input.featureUnitId,
       unitId,
     })),
+    magicInitiateSpellAccesses: [],
     equipment: { owned: [], loadout: {} },
   };
 }

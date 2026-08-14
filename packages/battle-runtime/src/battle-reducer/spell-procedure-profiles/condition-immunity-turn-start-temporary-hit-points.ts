@@ -1,3 +1,4 @@
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
@@ -58,7 +59,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 function admitConditionImmunityAndTurnStartTemporaryHitPoints(
@@ -69,12 +70,12 @@ function admitConditionImmunityAndTurnStartTemporaryHitPoints(
     conditionImmunityAndTurnStartTemporaryHitPointsSpellProjection(
       ctx.actor.combatantId,
       spell,
-      ctx.actor.origin.spellcasting.spellcastingAbilityModifier,
+      ctx.castingSource.abilityModifier,
     );
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (
       slot,
     ): readonly ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation[] => {
@@ -91,7 +92,7 @@ function admitConditionImmunityAndTurnStartTemporaryHitPoints(
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "conditionImmunityAndTurnStartTemporaryHitPoints",
               spell,
               actionCost: "magicAction",
@@ -321,7 +322,7 @@ const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal(
         "conditionImmunityAndTurnStartTemporaryHitPoints",
       ),

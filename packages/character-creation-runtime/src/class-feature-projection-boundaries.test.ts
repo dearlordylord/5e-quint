@@ -101,6 +101,7 @@ function buildWithRetainedFeatures(
     },
     proficiencyChoices: [],
     features,
+    magicInitiateSpellAccesses: [],
     equipment: { owned: [], loadout: {} },
   };
 }

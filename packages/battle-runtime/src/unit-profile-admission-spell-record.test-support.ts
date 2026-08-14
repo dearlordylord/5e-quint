@@ -8,6 +8,7 @@ import { expect } from "vitest";
 import { type BattleCreatureInit } from "./index.ts";
 import { unitLibrary } from "./unit-profile-admission-catalog.test-support.ts";
 import { unitId as parseUnitId } from "@dnd/shared/game-facts";
+import { abilityModifier } from "@dnd/shared/types";
 import type { BattleSpellAdmissionSource } from "./battle-state-execution.ts";
 import type { BattleResourcePoolExecutionRef } from "./identity.ts";
 
@@ -27,14 +28,19 @@ export function decodeSpellRecordForTest(raw: unknown): SpellRecord {
 
 export function spellAdmissionSource(
   spell: SpellRecord,
-  classFeatureFreeCastResourcePoolRefs?: readonly BattleResourcePoolExecutionRef[],
+  spellAccessFreeCastResourcePoolRefs?: readonly BattleResourcePoolExecutionRef[],
 ): BattleSpellAdmissionSource {
   return {
     id: spell.id,
     name: spell.name,
     mechanics: spell.mechanics,
-    classFeatureFreeCastResourcePoolRefs:
-      classFeatureFreeCastResourcePoolRefs ?? [],
+    castingSource: {
+      tag: "classSpellcasting",
+      className: "wizard",
+      abilityModifier: abilityModifier(3),
+    },
+    spellAccessFreeCastResourcePoolRefs:
+      spellAccessFreeCastResourcePoolRefs ?? [],
   };
 }
 

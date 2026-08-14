@@ -268,7 +268,11 @@ function wildShapeBattle(input: {
             cantrips: [spellRecord("produce_flame")],
             preparedSpells: [spellRecord("cure_wounds")],
           }),
-          sourceClassName: "druid",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "druid",
+            abilityModifier: 3,
+          },
         },
       }),
       statBlockCreatureInit({ initiative: 10 }),

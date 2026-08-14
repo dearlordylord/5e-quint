@@ -45,7 +45,12 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { damageSpellSource } from "../spells-invocation-guards.ts";
-import type { CharacterBattleSpellcastingExecutionState } from "../../character-battle-resource-execution.ts";
+import { isCantripSpellAccess } from "../../procedure-execution/spell-invocation-vocabulary.ts";
+import {
+  cantripSpellAccessFor,
+  spellInvocationResourceForCastOption,
+  type SpellAdmissionContext,
+} from "./profile.ts";
 import type { CombatantId } from "../../identity.ts";
 import type {
   SaveGatedConditionSpellTargeting,
@@ -185,7 +190,7 @@ export function supportedCantripSaveGateDamageProfile(
 ): readonly SupportedSpellInvocation[] {
   return supportedSaveGateDamageProfile({
     spell,
-    access: { tag: "classCantrip" },
+    access: cantripSpellAccessFor(spell.castingSource),
     resource: { tag: "none" },
     characterLevel,
   });
@@ -193,16 +198,16 @@ export function supportedCantripSaveGateDamageProfile(
 
 export function supportedPreparedSaveGateDamageProfile(
   spell: BattleSpellAdmissionSource,
-  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
+  castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly SupportedSpellInvocation[] {
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+  return castOptions.flatMap((slot): readonly SupportedSpellInvocation[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
     return supportedSaveGateDamageProfile({
       spell,
       access: { tag: "prepared" },
-      resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+      resource: spellInvocationResourceForCastOption(slot),
       slotLevel: slot.spellLevel,
     });
   });
@@ -210,21 +215,21 @@ export function supportedPreparedSaveGateDamageProfile(
 
 export function supportedPreparedSaveGateConditionProfile(
   spell: BattleSpellAdmissionSource,
-  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
+  castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly SupportedSpellInvocation[] {
   const conditionSpell = supportedSaveGateConditionSpell(spell);
   if (conditionSpell === null) {
     return [];
   }
 
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+  return castOptions.flatMap((slot): readonly SupportedSpellInvocation[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
     return [
       {
         access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        resource: spellInvocationResourceForCastOption(slot),
         procedure: "saveGatedCondition",
         spell,
         ability: conditionSpell.phase.ability,
@@ -256,7 +261,7 @@ export function supportedSaveGateConditionSpell(
 export function supportedPreparedSaveGateAttackRollAdvantageProfile(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
-  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
+  castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly SupportedSpellInvocation[] {
   const attackRollAdvantageSpell = faerieFireSaveGateAttackRollAdvantageSpell(
     actorId,
@@ -266,7 +271,7 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
     return [];
   }
 
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+  return castOptions.flatMap((slot): readonly SupportedSpellInvocation[] => {
     /* v8 ignore start -- Domain invariant: this profile admits only level-1 Faerie Fire, and SpellSlotLevel cannot represent a slot below level 1. */
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
@@ -275,7 +280,7 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
     return [
       {
         access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        resource: spellInvocationResourceForCastOption(slot),
         procedure: "saveGatedAttackRollAdvantage",
         spell,
         ability: attackRollAdvantageSpell.phase.ability,
@@ -291,21 +296,21 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
 export function supportedPreparedAbilityD20TestRollModeSaveGateProfile(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
-  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
+  castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly SupportedSpellInvocation[] {
   const d20Lifecycle = abilityD20TestRollModeSaveGateSpell(actorId, spell);
   if (d20Lifecycle === null) {
     return [];
   }
 
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+  return castOptions.flatMap((slot): readonly SupportedSpellInvocation[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
     return [
       {
         access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        resource: spellInvocationResourceForCastOption(slot),
         procedure: "abilityD20TestRollModeSaveGate",
         spell,
         actionCost: "magicAction",
@@ -325,7 +330,7 @@ export function supportedPreparedAbilityD20TestRollModeSaveGateProfile(
 export function supportedPreparedSaveGateConditionImmunityProfile(
   actorId: CombatantId,
   spell: BattleSpellAdmissionSource,
-  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
+  castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly SupportedSpellInvocation[] {
   const conditionImmunitySpell = calmEmotionsSaveGateConditionImmunitySpell(
     actorId,
@@ -335,14 +340,14 @@ export function supportedPreparedSaveGateConditionImmunityProfile(
     return [];
   }
 
-  return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+  return castOptions.flatMap((slot): readonly SupportedSpellInvocation[] => {
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
     return [
       {
         access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        resource: spellInvocationResourceForCastOption(slot),
         procedure: "saveGatedConditionImmunity",
         spell,
         actionCost: "magicAction",
@@ -1199,7 +1204,7 @@ export function supportedSaveGateDamageProfile(
         )
       : null;
   if (
-    (input.access.tag === "classCantrip"
+    (isCantripSpellAccess(input.access)
       ? spell.mechanics.level !== 0
       : spell.mechanics.level < 1) ||
     !spellHasActionCastingTime(spell) ||

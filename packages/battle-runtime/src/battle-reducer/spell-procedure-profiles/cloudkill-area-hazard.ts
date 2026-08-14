@@ -1,3 +1,4 @@
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-area-spell.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
@@ -35,7 +36,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
@@ -92,7 +93,7 @@ function admitCloudkillAreaHazard(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly CloudkillAreaHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < CLOUDKILL_LEVEL) {
         return [];
@@ -108,7 +109,7 @@ function admitCloudkillAreaHazard(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "cloudkillAreaHazard",
           spell,
           ability: "con",
@@ -223,7 +224,7 @@ function resolveCloudkillAreaHazard(
 const CloudkillAreaHazardInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("cloudkillAreaHazard"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("con"),

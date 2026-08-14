@@ -47,7 +47,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { spellTargetListHole } from "../spells-holes-fills.ts";
 
@@ -77,15 +77,12 @@ function admitHideousLaughter(
   spell: HideousLaughterSpellInvocation["spell"],
   ctx: SpellAdmissionContext,
 ): readonly HideousLaughterSpellInvocation[] {
-  return supportedPreparedHideousLaughterProfile(
-    spell,
-    ctx.actor.origin.spellcasting.spellSlots,
-  );
+  return supportedPreparedHideousLaughterProfile(spell, ctx.spellCastOptions);
 }
 
 export function supportedPreparedHideousLaughterProfile(
   spell: HideousLaughterSpellInvocation["spell"],
-  spellSlots: SpellAdmissionContext["actor"]["origin"]["spellcasting"]["spellSlots"],
+  castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly HideousLaughterSpellInvocation[] {
   const hideousLaughter = hideousLaughterSpell(spell);
   if (hideousLaughter === null) {
@@ -94,7 +91,7 @@ export function supportedPreparedHideousLaughterProfile(
 
   return preparedSpellSlotInvocationsFrom(
     spell,
-    spellSlots,
+    castOptions,
     (base, slotLevel) => ({
       ...base,
       procedure: "hideousLaughter",
@@ -240,7 +237,7 @@ function resolveHideousLaughter(
 const HideousLaughterInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("hideousLaughter"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),

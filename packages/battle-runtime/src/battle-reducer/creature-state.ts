@@ -447,6 +447,7 @@ export function battleCreatureStateAdmissionFromInit(
           classLevels,
           resources,
           resourceOwnership,
+          execution.right.execution.scopeRef,
         ),
       ),
       Match.exhaustive,
@@ -956,6 +957,9 @@ function characterSpellcastingInitAdmission(
   const spellcastingStateIssue = characterSpellcastingStateInitIssue(
     spellcasting,
     spellAccessUnits,
+    creatureInit.characterUnitRefs.flatMap(({ unit }) =>
+      "name" in unit && "provenance" in unit ? [unit] : [],
+    ),
   );
   if (spellcastingStateIssue !== null) {
     return {
@@ -1003,7 +1007,8 @@ function characterSpellbookRitualSpellAccessAdmissionIssue(
   }
   if (
     spellcasting.spellbookRitualSpellAccesses.length > 0 &&
-    spellcasting.sourceClassName !== "wizard"
+    (spellcasting.spellcastingSource.tag !== "classSpellcasting" ||
+      spellcasting.spellcastingSource.className !== "wizard")
   ) {
     return "Spellbook Ritual Spell Access requires Wizard spellcasting.";
   }
@@ -1023,9 +1028,9 @@ function characterSpellcastingSourceClassIssue(
   spellcasting: NonNullable<CharacterBattleCreatureInit["spellcasting"]>,
   classLevels: CharacterBattleClassLevels,
 ): string | null {
-  return classLevels.some(
-    (classLevel) => classLevel.className === spellcasting.sourceClassName,
-  )
+  const source = spellcasting.spellcastingSource;
+  return source.tag === "spellAccessOnly" ||
+    classLevels.some((classLevel) => classLevel.className === source.className)
     ? null
     : "Battle spellcasting source class must match a character class level.";
 }

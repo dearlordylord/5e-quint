@@ -36,7 +36,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { resolveSleetStormAreaHazardSpellAct } from "../spells-resolve-area-effects.ts";
@@ -94,7 +94,7 @@ function admitSleetStormAreaHazard(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly SleetStormAreaHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < SLEET_STORM_LEVEL) {
         return [];
@@ -102,7 +102,7 @@ function admitSleetStormAreaHazard(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "sleetStormAreaHazard",
           spell,
           ability: "dex",
@@ -242,7 +242,7 @@ function resolveSleetStormAreaHazard(
 const SleetStormAreaHazardInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("sleetStormAreaHazard"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("dex"),
@@ -267,3 +267,4 @@ export const sleetStormAreaHazardProfile = {
   "sleetStormAreaHazard",
   SleetStormAreaHazardSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

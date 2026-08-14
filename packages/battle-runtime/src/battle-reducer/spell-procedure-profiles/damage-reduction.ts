@@ -49,12 +49,13 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { cantripSpellAccessFor } from "./profile.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -168,7 +169,7 @@ function admitDamageReduction(
   }
   return [
     {
-      access: { tag: "classCantrip" },
+      access: cantripSpellAccessFor(spell.castingSource),
       resource: { tag: "none" },
       procedure: "damageReduction",
       spell,
@@ -244,7 +245,7 @@ function resolveDamageReduction(
 
 export const DamageReductionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: ClassCantripSpellAccessSchema,
+    access: CantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("damageReduction"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

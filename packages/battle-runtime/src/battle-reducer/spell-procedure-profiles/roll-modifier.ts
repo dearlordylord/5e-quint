@@ -88,6 +88,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
@@ -96,13 +97,13 @@ import {
 import {
   BATTLE_SURFACE_ABILITIES,
   BATTLE_SURFACE_SKILLS,
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
   RollModifierSpellSaveGateSchema,
   RollModifierSpellTargetingSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   BATTLE_D20_ROLL_MODIFIER_DIE_SIZES,
@@ -158,7 +159,7 @@ function admitRollModifier(
       out.push(
         buildRollModifierInvocation(
           spell,
-          { tag: "classCantrip" },
+          cantripSpellAccessFor(spell.castingSource),
           { tag: "none" },
           projection,
         ),
@@ -166,7 +167,7 @@ function admitRollModifier(
     }
   }
   if (spell.mechanics.level >= 1) {
-    for (const slot of ctx.actor.origin.spellcasting.spellSlots) {
+    for (const slot of ctx.spellCastOptions) {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         continue;
       }
@@ -180,7 +181,7 @@ function admitRollModifier(
           buildRollModifierInvocation(
             spell,
             { tag: "prepared" },
-            { tag: "spellSlot", slotLevel: slot.spellLevel },
+            spellInvocationResourceForCastOption(slot),
             projection,
           ),
         );
@@ -400,12 +401,9 @@ function resolveRollModifier(
 }
 
 const RollModifierInvocationCommonFields = {
-  access: Schema.Union(
-    PreparedSpellAccessSchema,
-    ClassCantripSpellAccessSchema,
-  ),
+  access: Schema.Union(PreparedSpellAccessSchema, CantripSpellAccessSchema),
   resource: Schema.Union(
-    SpellSlotInvocationResourceSchema,
+    LeveledSpellInvocationResourceSchema,
     NoSpellInvocationResourceSchema,
   ),
   procedure: Schema.Literal("rollModifier"),
@@ -449,3 +447,4 @@ export const rollModifierProfile: SpellProcedureDeclaration<
   executionSchema: RollModifierInvocationSchema,
   resolve: resolveRollModifier,
 };
+import { spellInvocationResourceForCastOption } from "./profile.ts";

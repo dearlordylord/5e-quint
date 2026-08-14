@@ -778,7 +778,11 @@ function castHeightenedGustOfWindWithSelectedTarget(): BattleState {
             preparedSpells: [spell],
             spellSlots: [{ spellLevel: 2, count: 1 }],
           }),
-          sourceClassName: "sorcerer",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "sorcerer",
+            abilityModifier: 3,
+          },
         },
       }),
       statBlockCreatureInit({

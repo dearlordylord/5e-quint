@@ -33,7 +33,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverActionSpellAreaCastAct } from "../spell-area-cast-discovery.ts";
 import { supportedDamageAmountExpr } from "../spells-execution-facts.ts";
@@ -90,7 +90,7 @@ function admitInsectPlagueAreaHazard(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly InsectPlagueAreaHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < INSECT_PLAGUE_LEVEL) {
         return [];
@@ -106,7 +106,7 @@ function admitInsectPlagueAreaHazard(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "insectPlagueAreaHazard",
           spell,
           ability: "con",
@@ -231,7 +231,7 @@ function resolveInsectPlagueAreaHazard(
 const InsectPlagueAreaHazardInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("insectPlagueAreaHazard"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("con"),
@@ -259,3 +259,4 @@ export const insectPlagueAreaHazardProfile = {
   "insectPlagueAreaHazard",
   InsectPlagueAreaHazardSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

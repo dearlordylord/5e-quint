@@ -1,4 +1,9 @@
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
+import type {
+  LeveledSpellInvocationResource,
+  NoSpellInvocationResource,
+} from "../procedure-execution/spell-invocation-vocabulary.ts";
+import { Match } from "effect";
 import {
   parseBattleSpellEffectLevel,
   type BattleSpellEffectLevel,
@@ -21,9 +26,22 @@ function requireBattleSpellEffectLevel(value: number): BattleSpellEffectLevel {
 export function spellInvocationEffectiveSpellLevel(
   invocation: RuntimeSpellProcedureExecution,
 ): BattleSpellEffectLevel {
+  return spellInvocationCastLevel(invocation);
+}
+
+export function spellInvocationCastLevel(
+  invocation: RuntimeSpellProcedureExecution,
+): BattleSpellEffectLevel {
+  const resource: NoSpellInvocationResource | LeveledSpellInvocationResource =
+    invocation.resource;
   return requireBattleSpellEffectLevel(
-    invocation.resource.tag === "spellSlot"
-      ? Number(invocation.resource.slotLevel)
-      : invocation.spellRuleFacts.level,
+    Match.value(resource).pipe(
+      Match.when({ tag: "spellSlot" }, ({ slotLevel }) => Number(slotLevel)),
+      Match.when({ tag: "spellAccessFreeCast" }, ({ castLevel }) =>
+        Number(castLevel),
+      ),
+      Match.when({ tag: "none" }, () => invocation.spellRuleFacts.level),
+      Match.exhaustive,
+    ),
   );
 }

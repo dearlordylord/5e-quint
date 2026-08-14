@@ -10,6 +10,8 @@ import {
   spellSlotLevel,
   type ProficiencyBonus,
 } from "@dnd/shared/types";
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
+// UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 import { zeroHitPointReplacementUnitProfile } from "@dnd/shared-algebras/zero-hit-point-replacement-algebra";
 import type {
   ActivationResource,
@@ -51,8 +53,10 @@ import {
 } from "@dnd/surface/surface/find-familiar-forms";
 import {
   battleResourcePoolExecutionRef,
+  battleSpellAccessExecutionRef,
   type BattleCharacterExecutionScopeRef,
   type BattleResourcePoolExecutionRef,
+  type BattleSpellAccessExecutionRef,
 } from "./identity.ts";
 import {
   admitPersistentArmorEffectSpell,
@@ -69,6 +73,7 @@ import {
   type UnlimitedActivationResource,
 } from "./character-battle-resource-execution.ts";
 import type { BattleSpellAdmissionSource } from "./battle-state-execution.ts";
+import { readMagicInitiateSpellAccessSourceFacts } from "@dnd/surface/surface/character-creation-readers";
 export {
   characterBattleResourceIsPointPool,
   characterBattleResourceIsUnlimited,
@@ -94,6 +99,7 @@ export { SORCERER_METAMAGIC_EFFECT_KINDS as CHARACTER_BATTLE_METAMAGIC_EFFECT_KI
 
 export type CharacterBattleUseCountResourceInit = {
   readonly unit: UnitRecord;
+  readonly spellAccessFreeCast?: never;
   readonly usesRemaining?: number;
   readonly capAbilityModifier?: AbilityModifier;
   readonly pointsRemaining?: never;
@@ -101,14 +107,27 @@ export type CharacterBattleUseCountResourceInit = {
 
 export type CharacterBattlePointPoolResourceInit = {
   readonly unit: UnitRecord;
+  readonly spellAccessFreeCast?: never;
   readonly pointsRemaining?: number;
   readonly usesRemaining?: never;
   readonly capAbilityModifier?: never;
 };
 
+export type CharacterBattleSpellAccessFreeCastResourceInit = {
+  readonly unit: UnitRecord;
+  readonly spellAccessFreeCast: {
+    readonly spellId: SpellRecord["id"];
+    readonly count: number;
+  };
+  readonly usesRemaining: number;
+  readonly pointsRemaining?: never;
+  readonly capAbilityModifier?: never;
+};
+
 export type CharacterBattleResourceInit =
   | CharacterBattleUseCountResourceInit
-  | CharacterBattlePointPoolResourceInit;
+  | CharacterBattlePointPoolResourceInit
+  | CharacterBattleSpellAccessFreeCastResourceInit;
 
 export type CharacterBattleFeatureInit = SupportedUnitFeatureFacts & {
   readonly unit: UnitRecord;
@@ -164,6 +183,12 @@ type PactOfTheChainFindFamiliarSpellProfileParseResult =
 export type CharacterBattleResourceOwnership = {
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
   readonly unit: UnitRecord;
+  readonly purpose:
+    | { readonly tag: "unitResource" }
+    | {
+        readonly tag: "spellAccessFreeCast";
+        readonly spellId: SpellRecord["id"];
+      };
 };
 
 export type CharacterBattleResourceAdmission = {
@@ -183,7 +208,17 @@ export function admitCharacterBattleResources(
     );
     return {
       state: characterResourceState(init, classLevels, resourcePoolRef),
-      ownership: { resourcePoolRef, unit: init.unit },
+      ownership: {
+        resourcePoolRef,
+        unit: init.unit,
+        purpose:
+          init.spellAccessFreeCast === undefined
+            ? { tag: "unitResource" as const }
+            : {
+                tag: "spellAccessFreeCast" as const,
+                spellId: init.spellAccessFreeCast.spellId,
+              },
+      },
     };
   });
   return {
@@ -205,6 +240,26 @@ export type CharacterBattleSpellSlotExpenditureInit = {
 export type CharacterBattleFeaturePreparedSpellInit = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly spell: SpellRecord;
+};
+
+export type CharacterBattleSpellListFact = {
+  readonly className: ClassName;
+  readonly cantrips: readonly UnitRecord["id"][];
+  readonly leveled: readonly {
+    readonly spellId: UnitRecord["id"];
+    readonly spellLevel: number;
+  }[];
+};
+
+export type CharacterBattleSpellAccessInit = {
+  readonly source: {
+    readonly tag: "feat";
+    readonly sourceUnit: Extract<UnitRecord, { readonly kind: "feat" }>;
+    readonly spellList: CharacterBattleSpellListFact;
+  };
+  readonly spellcastingAbilityModifier: number;
+  readonly cantrips: readonly [SpellRecord, SpellRecord];
+  readonly levelOneSpell: SpellRecord;
 };
 
 export type CharacterBattleSpellbookRitualSpellAccessInit = {
@@ -271,17 +326,27 @@ export type CharacterBattleSpellSlotState = {
 
 export type CharacterBattleAdmittedSpell = {
   readonly spell: SpellRecord;
-  readonly classFeatureFreeCastResourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
+  readonly castingSource:
+    | {
+        readonly tag: "classSpellcasting";
+        readonly className: ClassName;
+        readonly abilityModifier: AbilityModifier;
+      }
+    | {
+        readonly tag: "spellAccess";
+        readonly spellAccessRef: BattleSpellAccessExecutionRef;
+        readonly abilityModifier: AbilityModifier;
+      };
+  readonly spellAccessFreeCastResourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
 };
 
-export type CharacterBattleSpellcastingInit = {
-  readonly sourceClassName: ClassName;
-  readonly spellcastingAbilityModifier: number;
+type CharacterBattleSpellcastingInitBase = {
   readonly proficiencyBonus: ProficiencyBonus;
   readonly canCastSpells: boolean;
   readonly cantrips: readonly SpellRecord[];
   readonly preparedSpells: readonly SpellRecord[];
   readonly featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[];
+  readonly spellAccesses: readonly CharacterBattleSpellAccessInit[];
   readonly spellbookRitualSpellAccesses: readonly CharacterBattleSpellbookRitualSpellAccessInit[];
   readonly bookOfShadowsSpellAccesses?: readonly CharacterBattleBookOfShadowsSpellAccessInit[];
   readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[];
@@ -289,45 +354,56 @@ export type CharacterBattleSpellcastingInit = {
   readonly spellSlotExpenditures?: readonly CharacterBattleSpellSlotExpenditureInit[];
 };
 
+export type CharacterBattleSpellcastingInit =
+  CharacterBattleSpellcastingInitBase & {
+    readonly spellcastingSource:
+      | {
+          readonly tag: "classSpellcasting";
+          readonly className: ClassName;
+          readonly abilityModifier: number;
+        }
+      | { readonly tag: "spellAccessOnly" };
+  };
+
 export type CharacterBattleSpellcastingState = Omit<
   CharacterBattleSpellcastingInit,
-  | "spellcastingAbilityModifier"
+  | "spellcastingSource"
   | "cantrips"
   | "preparedSpells"
   | "featurePreparedSpells"
+  | "spellAccesses"
   | "spellbookRitualSpellAccesses"
   | "bookOfShadowsSpellAccesses"
   | "invocationSpellAccesses"
   | "spellSlots"
   | "spellSlotExpenditures"
 > & {
-  readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly spellcastingSource:
+    | {
+        readonly tag: "classSpellcasting";
+        readonly className: ClassName;
+        readonly abilityModifier: AbilityModifier;
+      }
+    | { readonly tag: "spellAccessOnly" };
   readonly cantrips: readonly CharacterBattleAdmittedSpell[];
   readonly preparedSpells: readonly CharacterBattleAdmittedSpell[];
+  readonly spellAccesses: readonly CharacterBattleAdmittedSpell[];
   readonly spellbookRitualSpellAccesses: readonly CharacterBattleSpellbookRitualSpellAccessInit[];
   readonly bookOfShadowsSpellAccesses: readonly CharacterBattleBookOfShadowsSpellAccessInit[];
   readonly invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessState[];
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];
 };
 
-export type CharacterBattleSpellcastingExecutionState = {
-  readonly sourceClassName: ClassName;
-  readonly spellcastingAbilityModifier: AbilityModifier;
-  readonly proficiencyBonus: ProficiencyBonus;
-  readonly canCastSpells: boolean;
-  readonly spellSlots: readonly CharacterBattleSpellSlotState[];
-  readonly pactOfTheChainFindFamiliarInvocationMode: PactOfTheChainFindFamiliarInvocationMode | null;
-};
+export type { CharacterBattleSpellcastingExecutionState } from "./character-battle-resource-execution.ts";
 
 export function characterSpellcastingExecutionState(
   state: CharacterBattleSpellcastingState,
-): CharacterBattleSpellcastingExecutionState {
+): import("./character-battle-resource-execution.ts").CharacterBattleSpellcastingExecutionState {
   const hasPactOfTheChainFindFamiliar = state.invocationSpellAccesses.some(
     (access) => access.tag === "pactOfTheChainFindFamiliar",
   );
   return {
-    sourceClassName: state.sourceClassName,
-    spellcastingAbilityModifier: state.spellcastingAbilityModifier,
+    spellcastingSource: state.spellcastingSource,
     proficiencyBonus: state.proficiencyBonus,
     canCastSpells: state.canCastSpells,
     spellSlots: state.spellSlots,
@@ -340,16 +416,26 @@ export function characterSpellcastingExecutionState(
 export function effectiveCharacterBattleCantrips(
   spellcasting: Pick<
     CharacterBattleSpellcastingState,
-    "bookOfShadowsSpellAccesses" | "cantrips"
+    "bookOfShadowsSpellAccesses" | "cantrips" | "spellcastingSource"
   >,
 ): readonly CharacterBattleAdmittedSpell[] {
+  const castingSource = spellcasting.spellcastingSource;
   return distinctAdmittedSpellsById([
     ...spellcasting.cantrips,
     ...bookOfShadowsOnPersonAccesses(spellcasting).flatMap((access) =>
-      access.cantrips.map((spell) => ({
-        spell,
-        classFeatureFreeCastResourcePoolRefs: [],
-      })),
+      castingSource.tag === "spellAccessOnly"
+        ? []
+        : access.cantrips.map(
+            (spell): CharacterBattleAdmittedSpell => ({
+              spell,
+              castingSource: {
+                tag: "classSpellcasting",
+                className: castingSource.className,
+                abilityModifier: castingSource.abilityModifier,
+              },
+              spellAccessFreeCastResourcePoolRefs: [],
+            }),
+          ),
     ),
   ]);
 }
@@ -357,16 +443,26 @@ export function effectiveCharacterBattleCantrips(
 export function effectiveCharacterBattlePreparedSpells(
   spellcasting: Pick<
     CharacterBattleSpellcastingState,
-    "bookOfShadowsSpellAccesses" | "preparedSpells"
+    "bookOfShadowsSpellAccesses" | "preparedSpells" | "spellcastingSource"
   >,
 ): readonly CharacterBattleAdmittedSpell[] {
+  const castingSource = spellcasting.spellcastingSource;
   return distinctAdmittedSpellsById([
     ...spellcasting.preparedSpells,
     ...bookOfShadowsOnPersonAccesses(spellcasting).flatMap((access) =>
-      access.ritualSpells.map((spell) => ({
-        spell,
-        classFeatureFreeCastResourcePoolRefs: [],
-      })),
+      castingSource.tag === "spellAccessOnly"
+        ? []
+        : access.ritualSpells.map(
+            (spell): CharacterBattleAdmittedSpell => ({
+              spell,
+              castingSource: {
+                tag: "classSpellcasting",
+                className: castingSource.className,
+                abilityModifier: castingSource.abilityModifier,
+              },
+              spellAccessFreeCastResourcePoolRefs: [],
+            }),
+          ),
     ),
   ]);
 }
@@ -374,11 +470,15 @@ export function effectiveCharacterBattlePreparedSpells(
 function distinctAdmittedSpellsById(
   spells: readonly CharacterBattleAdmittedSpell[],
 ): readonly CharacterBattleAdmittedSpell[] {
-  const seen = new Set<SpellRecord["id"]>();
+  const seen = new Set<string>();
   const result: CharacterBattleAdmittedSpell[] = [];
   for (const spell of spells) {
-    if (seen.has(spell.spell.id)) continue;
-    seen.add(spell.spell.id);
+    const key =
+      spell.castingSource.tag === "spellAccess"
+        ? `${spell.castingSource.spellAccessRef}\u0000${spell.spell.id}`
+        : `${spell.castingSource.className}\u0000${spell.spell.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     result.push(spell);
   }
   return result;
@@ -391,19 +491,22 @@ export function admittedSpellToAdmissionSource(
     id: admitted.spell.id,
     name: admitted.spell.name,
     mechanics: admitted.spell.mechanics,
-    classFeatureFreeCastResourcePoolRefs:
-      admitted.classFeatureFreeCastResourcePoolRefs,
+    castingSource: admitted.castingSource,
+    spellAccessFreeCastResourcePoolRefs:
+      admitted.spellAccessFreeCastResourcePoolRefs,
   };
 }
 
 export function spellRecordToAdmissionSource(
   spell: SpellRecord,
+  castingSource: CharacterBattleAdmittedSpell["castingSource"],
 ): BattleSpellAdmissionSource {
   return {
     id: spell.id,
     name: spell.name,
     mechanics: spell.mechanics,
-    classFeatureFreeCastResourcePoolRefs: [],
+    castingSource,
+    spellAccessFreeCastResourcePoolRefs: [],
   };
 }
 
@@ -502,7 +605,16 @@ export function characterResourceState(
     throw new Error(initIssue);
   }
   /* v8 ignore stop */
-  const resource = characterBattleResourceForUnit(input.unit);
+  const resource =
+    input.spellAccessFreeCast === undefined
+      ? characterBattleResourceForUnit(input.unit)
+      : {
+          kind: "use_count" as const,
+          cap: {
+            kind: "fixed" as const,
+            uses: input.spellAccessFreeCast.count,
+          },
+        };
   const base = { resourcePoolRef };
   if (resource.kind === "point_pool") {
     const defaultPointsRemaining = supportedResourceCapForLevel(
@@ -596,6 +708,15 @@ export function characterBattleResourceInitIssue(
   input: CharacterBattleResourceInit,
   classLevels: CharacterBattleClassLevels,
 ): string | null {
+  if (input.spellAccessFreeCast !== undefined) {
+    return !Number.isInteger(input.spellAccessFreeCast.count) ||
+      input.spellAccessFreeCast.count < 1 ||
+      !Number.isInteger(input.usesRemaining) ||
+      input.usesRemaining < 0 ||
+      input.usesRemaining > input.spellAccessFreeCast.count
+      ? "Spell Access free-cast battle resource requires bounded positive use-count state."
+      : null;
+  }
   const resource = characterBattleResourceForUnitOrNull(input.unit);
   if (resource === null) {
     return "Character battle resources must be supported resource Units.";
@@ -804,7 +925,7 @@ export function classFeatureSpellFreeCastProfileForResource(
   return classFeatureSpellFreeCastProfileForUnit(resource.unit);
 }
 
-export function characterResourceIsClassFeatureFreeCastForSpell(
+export function characterResourceIsSpellAccessFreeCastForSpell(
   resource: CharacterBattleResourceOwnership,
   spellId: SpellRecord["id"],
 ): boolean {
@@ -889,17 +1010,21 @@ function unitHasSupportedAbilityModifierBattleResourceProfile(
 
 function admittedSpellWithFreeCastRefs(
   spell: SpellRecord,
+  castingSource: CharacterBattleAdmittedSpell["castingSource"],
   resources: readonly CharacterBattleResourceState[],
   resourceOwnership: readonly CharacterBattleResourceOwnership[],
 ): CharacterBattleAdmittedSpell {
   return {
     spell,
-    classFeatureFreeCastResourcePoolRefs: resourceOwnership.flatMap((owner) => {
+    castingSource,
+    spellAccessFreeCastResourcePoolRefs: resourceOwnership.flatMap((owner) => {
       const resource = resources.find(
         (candidate) => candidate.resourcePoolRef === owner.resourcePoolRef,
       );
       return resource !== undefined &&
-        characterResourceIsClassFeatureFreeCastForSpell(owner, spell.id)
+        ((owner.purpose.tag === "spellAccessFreeCast" &&
+          owner.purpose.spellId === spell.id) ||
+          characterResourceIsSpellAccessFreeCastForSpell(owner, spell.id))
         ? [resource.resourcePoolRef]
         : [];
     }),
@@ -912,7 +1037,49 @@ export function characterSpellcastingStateInitIssue(
     | CharacterBattleResourceInit
     | CharacterBattleFeatureInit
   )[],
+  sourceUnits: readonly UnitRecord[],
 ): string | null {
+  const issues: string[] = [];
+  if (
+    input.spellcastingSource.tag === "spellAccessOnly" &&
+    (input.cantrips.length > 0 ||
+      input.preparedSpells.length > 0 ||
+      input.featurePreparedSpells.length > 0 ||
+      input.spellbookRitualSpellAccesses.length > 0 ||
+      (input.bookOfShadowsSpellAccesses?.length ?? 0) > 0 ||
+      input.invocationSpellAccesses.length > 0)
+  ) {
+    issues.push(
+      "Spell-Access-only casting must not contain class Spell Access.",
+    );
+  }
+  const spellAccessKeys = new Set<string>();
+  for (const source of input.spellAccesses) {
+    issues.push(
+      ...magicInitiateSpellAccessSourceInitIssues(
+        source,
+        spellAccessUnits,
+        sourceUnits,
+      ),
+    );
+    for (const access of magicInitiateSpellAccessEntries(source)) {
+      const key = `${source.source.sourceUnit.id}\u0000${access.spell.id}`;
+      if (spellAccessKeys.has(key)) {
+        issues.push("Spell Access source-and-spell keys must be unique.");
+      }
+      spellAccessKeys.add(key);
+      if (
+        (access.preparation === "learnedCantrip" &&
+          access.spell.mechanics.level !== 0) ||
+        (access.preparation === "alwaysPrepared" &&
+          access.spell.mechanics.level < 1)
+      ) {
+        issues.push(
+          "Spell Access preparation must match the Spell Definition level.",
+        );
+      }
+    }
+  }
   const spellSlotLevels = new Set<number>();
   for (const slot of input.spellSlots) {
     if (
@@ -922,10 +1089,12 @@ export function characterSpellcastingStateInitIssue(
       !Number.isInteger(slot.count) ||
       slot.count < 0
     ) {
-      return "Spell Slot level must be 1-9 and count must be a non-negative integer.";
+      issues.push(
+        "Spell Slot level must be 1-9 and count must be a non-negative integer.",
+      );
     }
     if (spellSlotLevels.has(slot.spellLevel)) {
-      return "Spell Slot levels must be unique.";
+      issues.push("Spell Slot levels must be unique.");
     }
     spellSlotLevels.add(slot.spellLevel);
   }
@@ -933,7 +1102,7 @@ export function characterSpellcastingStateInitIssue(
   const spellSlotExpenditures = input.spellSlotExpenditures;
   if (spellSlotExpenditures !== undefined) {
     if (spellSlotExpenditures.length !== input.spellSlots.length) {
-      return "Spell Slot expenditure state must match slot capacity.";
+      issues.push("Spell Slot expenditure state must match slot capacity.");
     }
     const expenditureLevels = new Set<number>();
     for (const expenditure of spellSlotExpenditures) {
@@ -944,7 +1113,8 @@ export function characterSpellcastingStateInitIssue(
         capacity === undefined ||
         expenditureLevels.has(expenditure.spellLevel)
       ) {
-        return "Spell Slot expenditure state must match slot capacity.";
+        issues.push("Spell Slot expenditure state must match slot capacity.");
+        continue;
       }
       expenditureLevels.add(expenditure.spellLevel);
       if (
@@ -952,7 +1122,9 @@ export function characterSpellcastingStateInitIssue(
         expenditure.expended < 0 ||
         expenditure.expended > capacity.count
       ) {
-        return "Spell Slot expenditure must be an integer between zero and count.";
+        issues.push(
+          "Spell Slot expenditure must be an integer between zero and count.",
+        );
       }
     }
   }
@@ -967,10 +1139,142 @@ export function characterSpellcastingStateInitIssue(
         ),
       )
     ) {
-      return "Feature-prepared spells must trace to a character Unit grant.";
+      issues.push(
+        "Feature-prepared spells must trace to a character Unit grant.",
+      );
     }
   }
-  return null;
+  return issues.length === 0 ? null : [...new Set(issues)].join("; ");
+}
+
+function magicInitiateSpellAccessSourceInitIssues(
+  access: CharacterBattleSpellAccessInit,
+  spellAccessUnits: readonly (
+    | CharacterBattleResourceInit
+    | CharacterBattleFeatureInit
+  )[],
+  sourceUnits: readonly UnitRecord[],
+): readonly string[] {
+  const source = access.source;
+  const facts = readMagicInitiateSpellAccessSourceFacts(source.sourceUnit);
+  if (facts.tag !== "readable") {
+    return [
+      "Feat Spell Access source must carry supported Magic Initiate mechanics.",
+    ];
+  }
+  const sourceIsOwned =
+    sourceUnits.some((unit) => unit.id === source.sourceUnit.id) ||
+    spellAccessUnits.some(({ unit }) => unit.id === source.sourceUnit.id);
+  const spellList = source.spellList;
+  const entries = magicInitiateSpellAccessEntries(access);
+  const cantripAccesses = entries.filter(
+    (entry) => entry.preparation === "learnedCantrip",
+  );
+  const leveledAccesses = entries.filter(
+    (entry) => entry.preparation === "alwaysPrepared",
+  );
+  const sourceFreeCastResources = spellAccessUnits.filter(
+    (candidate): candidate is CharacterBattleSpellAccessFreeCastResourceInit =>
+      "spellAccessFreeCast" in candidate &&
+      candidate.spellAccessFreeCast !== undefined &&
+      candidate.unit.id === source.sourceUnit.id,
+  );
+  const selectedLeveledSpellId = access.levelOneSpell.id;
+  const issues = [
+    ...(sourceIsOwned
+      ? []
+      : ["Feat Spell Access must reference a character source Unit."]),
+    ...(spellList.className === facts.value.spellList
+      ? []
+      : [
+          "Magic Initiate Spell Access list source must match its parsed source mechanics.",
+        ]),
+    ...(cantripAccesses.length === facts.value.selectedCantrips.count &&
+    new Set(cantripAccesses.map((access) => access.spell.id)).size ===
+      cantripAccesses.length
+      ? []
+      : [
+          "Magic Initiate Spell Access must contain exactly two distinct cantrips.",
+        ]),
+    ...(leveledAccesses.length === facts.value.selectedLevelOneSpell.count &&
+    access.levelOneSpell.mechanics.level ===
+      facts.value.selectedLevelOneSpell.spellLevel
+      ? []
+      : [
+          "Magic Initiate Spell Access must contain exactly one level-1 spell.",
+        ]),
+    ...(sourceFreeCastResources.length === 1 &&
+    sourceFreeCastResources[0]?.spellAccessFreeCast.spellId ===
+      selectedLeveledSpellId &&
+    sourceFreeCastResources[0].spellAccessFreeCast.count === 1
+      ? []
+      : [
+          "Magic Initiate Spell Access must have exactly one one-use free-cast resource for its level-1 spell.",
+        ]),
+  ];
+  for (const access of entries) {
+    const isListed =
+      spellList !== undefined &&
+      (access.preparation === "learnedCantrip"
+        ? spellList.cantrips.some((spellId) => spellId === access.spell.id)
+        : spellList.leveled.some(
+            ({ spellId, spellLevel }) =>
+              spellId === access.spell.id &&
+              spellLevel === access.spell.mechanics.level,
+          ));
+    const matchingFreeCasts = spellAccessUnits.filter(
+      (
+        candidate,
+      ): candidate is CharacterBattleSpellAccessFreeCastResourceInit =>
+        "spellAccessFreeCast" in candidate &&
+        candidate.spellAccessFreeCast !== undefined &&
+        candidate.unit.id === source.sourceUnit.id &&
+        candidate.spellAccessFreeCast.spellId === access.spell.id,
+    );
+    issues.push(
+      ...(isListed
+        ? []
+        : [
+            "Magic Initiate Spell Access must reference a spell on its canonical spell list.",
+          ]),
+      ...(access.preparation === "alwaysPrepared"
+        ? matchingFreeCasts.length === 1 &&
+          matchingFreeCasts[0]?.spellAccessFreeCast.count === 1
+          ? []
+          : [
+              "Magic Initiate Spell Access must correlate with exactly one matching free-cast resource for its leveled spell only.",
+            ]
+        : matchingFreeCasts.length === 0
+          ? []
+          : [
+              "Magic Initiate cantrip Spell Access must not have a free-cast resource.",
+            ]),
+    );
+  }
+  return issues;
+}
+
+function magicInitiateSpellAccessEntries(
+  source: CharacterBattleSpellAccessInit,
+): readonly [
+  {
+    readonly spell: SpellRecord;
+    readonly preparation: "learnedCantrip";
+  },
+  {
+    readonly spell: SpellRecord;
+    readonly preparation: "learnedCantrip";
+  },
+  {
+    readonly spell: SpellRecord;
+    readonly preparation: "alwaysPrepared";
+  },
+] {
+  return [
+    { spell: source.cantrips[0], preparation: "learnedCantrip" },
+    { spell: source.cantrips[1], preparation: "learnedCantrip" },
+    { spell: source.levelOneSpell, preparation: "alwaysPrepared" },
+  ];
 }
 
 export function characterSpellcastingState(
@@ -978,32 +1282,96 @@ export function characterSpellcastingState(
   classLevels: readonly CharacterBattleClassLevel[],
   resources: readonly CharacterBattleResourceState[],
   resourceOwnership: readonly CharacterBattleResourceOwnership[],
+  scopeRef: BattleCharacterExecutionScopeRef,
 ): CharacterBattleSpellcastingState {
+  const spellcastingSource = input.spellcastingSource;
   const spellSlotExpenditures =
     input.spellSlotExpenditures ??
     input.spellSlots.map((slot) => ({
       spellLevel: slot.spellLevel,
       expended: resourceCount(0),
     }));
+  const spellAccessEntries = input.spellAccesses.flatMap((source) =>
+    magicInitiateSpellAccessEntries(source).map((access) => ({
+      source,
+      access,
+    })),
+  );
   return {
-    sourceClassName: spellcastingSourceClassName(
-      input.sourceClassName,
-      classLevels,
-    ),
-    spellcastingAbilityModifier: abilityModifier(
-      input.spellcastingAbilityModifier,
-    ),
+    spellcastingSource:
+      spellcastingSource.tag === "spellAccessOnly"
+        ? spellcastingSource
+        : {
+            ...spellcastingSource,
+            className: spellcastingSourceClassName(
+              spellcastingSource.className,
+              classLevels,
+            ),
+            abilityModifier: abilityModifier(
+              spellcastingSource.abilityModifier,
+            ),
+          },
     proficiencyBonus: input.proficiencyBonus,
     canCastSpells: input.canCastSpells,
-    cantrips: input.cantrips.map((spell) =>
-      admittedSpellWithFreeCastRefs(spell, resources, resourceOwnership),
-    ),
-    preparedSpells: preparedSpellsWithFeatureAccess(
-      input.preparedSpells,
-      input.featurePreparedSpells,
-    ).map((spell) =>
-      admittedSpellWithFreeCastRefs(spell, resources, resourceOwnership),
-    ),
+    cantrips:
+      spellcastingSource.tag === "spellAccessOnly"
+        ? []
+        : input.cantrips.map((spell) =>
+            admittedSpellWithFreeCastRefs(
+              spell,
+              {
+                tag: "classSpellcasting",
+                className: spellcastingSource.className,
+                abilityModifier: abilityModifier(
+                  spellcastingSource.abilityModifier,
+                ),
+              },
+              resources,
+              resourceOwnership,
+            ),
+          ),
+    preparedSpells:
+      spellcastingSource.tag === "spellAccessOnly"
+        ? []
+        : preparedSpellsWithFeatureAccess(
+            input.preparedSpells,
+            input.featurePreparedSpells,
+          ).map((spell) =>
+            admittedSpellWithFreeCastRefs(
+              spell,
+              {
+                tag: "classSpellcasting",
+                className: spellcastingSource.className,
+                abilityModifier: abilityModifier(
+                  spellcastingSource.abilityModifier,
+                ),
+              },
+              resources,
+              resourceOwnership,
+            ),
+          ),
+    spellAccesses: spellAccessEntries.map(({ source, access }, ordinal) => {
+      const sourceUnitId = source.source.sourceUnit.id;
+      return {
+        spell: access.spell,
+        castingSource: {
+          tag: "spellAccess" as const,
+          spellAccessRef: battleSpellAccessExecutionRef(
+            scopeRef,
+            NonNegativeInteger(ordinal),
+          ),
+          abilityModifier: abilityModifier(source.spellcastingAbilityModifier),
+        },
+        spellAccessFreeCastResourcePoolRefs: resourceOwnership.flatMap(
+          (owner) =>
+            owner.unit.id === sourceUnitId &&
+            owner.purpose.tag === "spellAccessFreeCast" &&
+            owner.purpose.spellId === access.spell.id
+              ? [owner.resourcePoolRef]
+              : [],
+        ),
+      };
+    }),
     spellbookRitualSpellAccesses: input.spellbookRitualSpellAccesses,
     bookOfShadowsSpellAccesses: input.bookOfShadowsSpellAccesses,
     invocationSpellAccesses: input.invocationSpellAccesses,

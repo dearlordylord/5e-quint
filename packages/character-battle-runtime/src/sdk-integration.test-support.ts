@@ -290,6 +290,7 @@ function levelFiveBaseBuild(input: {
     ...(input.spellcasting === undefined
       ? {}
       : { spellcasting: input.spellcasting }),
+    magicInitiateSpellAccesses: [],
     equipment: input.equipment ?? { owned: [], loadout: {} },
   };
 }

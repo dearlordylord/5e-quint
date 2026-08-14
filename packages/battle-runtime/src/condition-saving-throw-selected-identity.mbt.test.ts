@@ -1159,7 +1159,10 @@ function decodeHypnoticPatternSpellRecord(): SpellRecord {
 
 function conditionSpellBattle(
   spell: SpellRecord,
-  sourceClassName: CharacterSpellcastingInit["sourceClassName"],
+  sourceClassName: Extract<
+    CharacterSpellcastingInit["spellcastingSource"],
+    { readonly tag: "classSpellcasting" }
+  >["className"],
 ): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId(`condition-saving-throw-selected-identity-${spell.id}`),
@@ -1170,13 +1173,17 @@ function conditionSpellBattle(
         initiative: 20,
         className: sourceClassName,
         spellcasting: {
-          sourceClassName,
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: sourceClassName,
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
           preparedSpells: [spell],
           featurePreparedSpells: [],
+          spellAccesses: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
           spellSlots:

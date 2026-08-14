@@ -49,7 +49,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type WebRestraintHazardSpellInvocation = Extract<
@@ -97,7 +97,7 @@ function admitWebRestraintHazard(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly WebRestraintHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < WEB_LEVEL) {
         return [];
@@ -105,7 +105,7 @@ function admitWebRestraintHazard(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "webRestraintHazard",
           spell,
           ability: "dex",
@@ -237,7 +237,7 @@ function resolveWebRestraintHazard(
 const WebRestraintHazardInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("webRestraintHazard"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("dex"),
@@ -260,3 +260,4 @@ export const webRestraintHazardProfile = {
   "webRestraintHazard",
   WebRestraintHazardSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

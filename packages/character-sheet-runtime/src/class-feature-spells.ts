@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION
+// KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
@@ -20,6 +21,7 @@ import type {
   CharacterSheetClassFeaturePreparedSpellAccess,
   CharacterSheetClassFeatureSelectedReferenceProjection,
   CharacterSheetClassFeatureSelectedReferenceProjectionRoute,
+  CharacterSheetSpellAccess,
 } from "./sheet-types.ts";
 
 const CHARACTER_SHEET_CLASS_FEATURE_SELECTED_REFERENCE_ROUTE = [
@@ -65,6 +67,63 @@ export function characterSheetClassFeaturePreparedSpellAccessesForBuild(input: {
     }
   }
   return accesses;
+}
+
+export function characterSheetSpellAccessesForBuild(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): readonly CharacterSheetSpellAccess[] {
+  const classFeatureAccesses =
+    characterSheetClassFeaturePreparedSpellAccessesForBuild(input).flatMap(
+      (access) => {
+        const source = input.unitLibrary.getUnit(access.sourceUnitId);
+        if (Option.isNone(source) || source.value.kind !== "class_feature") {
+          return [];
+        }
+        const sourceClassName = source.value.className;
+        const spellcastingSource = input.build.spellcasting?.sources.find(
+          ({ sourceUnitId }) => {
+            const unit = input.unitLibrary.getUnit(sourceUnitId);
+            return (
+              Option.isSome(unit) &&
+              unit.value.kind === "class" &&
+              unit.value.className === sourceClassName
+            );
+          },
+        );
+        if (spellcastingSource === undefined) return [];
+        return access.spellIds.map(
+          (spellId): CharacterSheetSpellAccess => ({
+            source: "classFeature",
+            sourceUnitId: access.sourceUnitId,
+            spellId,
+            spellcastingAbility: spellcastingSource.spellcastingAbility,
+            preparation: "alwaysPrepared",
+          }),
+        );
+      },
+    );
+  const magicInitiateAccesses = input.build.magicInitiateSpellAccesses.flatMap(
+    (access): readonly CharacterSheetSpellAccess[] => [
+      ...access.cantrips.map(
+        (spellId): CharacterSheetSpellAccess => ({
+          source: "magicInitiate",
+          sourceUnitId: access.featUnitId,
+          spellId,
+          spellcastingAbility: access.spellcastingAbility,
+          preparation: "learnedCantrip",
+        }),
+      ),
+      {
+        source: "magicInitiate",
+        sourceUnitId: access.featUnitId,
+        spellId: access.levelOneSpell,
+        spellcastingAbility: access.spellcastingAbility,
+        preparation: "alwaysPrepared",
+      },
+    ],
+  );
+  return [...classFeatureAccesses, ...magicInitiateAccesses];
 }
 
 export function characterSheetClassFeatureSelectedReferenceProjection(input: {

@@ -51,13 +51,14 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -79,7 +80,7 @@ function admitThaumaturgyBoomingVoice(
     ? []
     : [
         {
-          access: { tag: "classCantrip" },
+          access: cantripSpellAccessFor(spell.castingSource),
           resource: { tag: "none" },
           procedure: "thaumaturgyBoomingVoice",
           spell,
@@ -232,7 +233,7 @@ function resolveThaumaturgyBoomingVoice(
 
 const ThaumaturgyBoomingVoiceInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: ClassCantripSpellAccessSchema,
+    access: CantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("thaumaturgyBoomingVoice"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

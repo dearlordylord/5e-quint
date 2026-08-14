@@ -371,6 +371,7 @@ function rejectBuildMaximumAboveBuildMaximumProjection(): BattleInitProjection {
     build: defenseBuild({ wearingArmor: false }),
     initiative: initiativeScore(20),
     ammunitionStocks: [],
+    resourceExpenditures: [],
     unitLibrary,
     hitPointMaximum: Hp(13),
   });
@@ -593,6 +594,7 @@ function defenseBuild(input: {
         unitId: authoredUnitId("defense"),
       },
     ],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [
         {
@@ -647,6 +649,7 @@ function sorcererMetamagicBuild(): CharacterBuild {
         ),
       },
     ],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},
@@ -699,6 +702,7 @@ function wizardRuntimeDetachedSpellChoiceBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: { owned: [], loadout: {} },
     spellcasting: {
       sources: [
@@ -742,6 +746,7 @@ function warlockPactMagicBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},

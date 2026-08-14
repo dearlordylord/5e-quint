@@ -448,6 +448,7 @@ function wizardBuild(input: {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     spellcasting: {
       sources: [
         {

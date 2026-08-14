@@ -42,13 +42,13 @@ import { Schema } from "effect";
 import {
   AttackBonus,
   CantripSpellAttackSequenceTargetingSchema,
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   DamageTypeSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
   PreparedSpellAttackSequenceTargetingSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   spellAdmissionCharacterLevel,
@@ -68,7 +68,7 @@ function admitSpellAttackSequence(
   if (spell.mechanics.level === 0) {
     return supportedCantripSpellAttackSequenceProfile(
       spell,
-      spellcasting.spellcastingAbilityModifier,
+      ctx.castingSource.abilityModifier,
       spellcasting.proficiencyBonus,
       spellAdmissionCharacterLevel(ctx),
     );
@@ -76,7 +76,7 @@ function admitSpellAttackSequence(
   return supportedPreparedSpellAttackSequenceProfile(
     spell,
     spellcasting.spellSlots,
-    spellcasting.spellcastingAbilityModifier,
+    ctx.castingSource.abilityModifier,
     spellcasting.proficiencyBonus,
   );
 }
@@ -110,7 +110,7 @@ function resolveSpellAttackSequence(
 const SpellAttackSequenceInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
-      access: ClassCantripSpellAccessSchema,
+      access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellAttackSequence"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
@@ -125,7 +125,7 @@ const SpellAttackSequenceInvocationSchema = spellProcedureExecutionSchema(
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellAttackSequence"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: PreparedSpellAttackSequenceTargetingSchema,

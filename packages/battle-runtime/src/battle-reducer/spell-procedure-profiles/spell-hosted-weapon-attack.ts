@@ -56,11 +56,12 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
 import {
   AbilityModifier,
   AttackBonus,
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   DamageTypeSchema,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -100,15 +101,15 @@ function admitSpellHostedWeaponAttack(
     )
     .map(
       ({ objectId, attack }): SpellHostedWeaponAttackInvocation => ({
-        access: { tag: "classCantrip" },
+        access: cantripSpellAccessFor(spell.castingSource),
         resource: { tag: "none" },
         procedure: "spellHostedWeaponAttack",
         spell,
         actionCost: "magicAction",
         componentWeapon: { objectId, attack },
-        spellcastingAbilityModifier: spellcasting.spellcastingAbilityModifier,
+        spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
         attackBonus: attackBonus(
-          Number(spellcasting.spellcastingAbilityModifier) +
+          Number(ctx.castingSource.abilityModifier) +
             Number(spellcasting.proficiencyBonus),
         ),
         damageTypeChoices: [
@@ -456,7 +457,7 @@ function spellHostedWeaponAttackBonusDamageAdditions(
 export const SpellHostedWeaponAttackInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
-      access: ClassCantripSpellAccessSchema,
+      access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("spellHostedWeaponAttack"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

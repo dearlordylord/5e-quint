@@ -36,7 +36,10 @@ import {
   type PositiveInteger as PositiveIntegerType,
 } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import type { SurfaceReadIssueCode } from "@dnd/surface/surface/character-creation-readers";
+import type {
+  MagicInitiateSpellAccessSourceFacts,
+  SurfaceReadIssueCode,
+} from "@dnd/surface/surface/character-creation-readers";
 import type {
   Ability,
   ActivationResource,
@@ -126,6 +129,9 @@ export const UNIT_CHOICE_KEYS = [
   "class_feature_proficiency_choice",
   "class_feature_language_choice",
   "origin_feat_proficiency_choice",
+  "origin_feat_magic_initiate_cantrip_choice",
+  "origin_feat_magic_initiate_level_one_spell_choice",
+  "origin_feat_magic_initiate_spellcasting_ability_choice",
   "species_trait_proficiency_choice",
   "gnome_lineage",
   "gnomish_lineage_spellcasting_ability",
@@ -1160,6 +1166,7 @@ export type CreationFinalizationUnsupportedCause =
   | { readonly tag: "manifestAlignmentMismatch" }
   | { readonly tag: "unsupportedChoices" }
   | { readonly tag: "selectedFeatPrerequisitesNotMet" }
+  | { readonly tag: "duplicateMagicInitiateSpellList" }
   | { readonly tag: "missingSpellcastingFacts" }
   | { readonly tag: "preparedSpellSelectionMismatch" }
   | { readonly tag: "duplicateWizardSpellbookSelection" }
@@ -1366,6 +1373,16 @@ export type CharacterBuildSpellcasting = {
   readonly slotPools: CharacterBuildSpellSlotPools;
 };
 
+export type MagicInitiateSpellcastingAbility =
+  MagicInitiateSpellAccessSourceFacts["spellcastingAbilityOptions"][number];
+
+export type CharacterBuildMagicInitiateSpellAccess = {
+  readonly featUnitId: UnitRecord["id"];
+  readonly spellcastingAbility: MagicInitiateSpellcastingAbility;
+  readonly cantrips: readonly [UnitRecord["id"], UnitRecord["id"]];
+  readonly levelOneSpell: UnitRecord["id"];
+};
+
 export type CharacterBuildSpellcastingSource = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly spellcastingAbility: Ability;
@@ -1527,6 +1544,7 @@ export type CharacterBuild = {
   readonly proficiencyChoices: readonly CharacterBuildProficiencyChoiceSubject[];
   readonly features: readonly CharacterBuildFeature[];
   readonly spellcasting?: CharacterBuildSpellcasting;
+  readonly magicInitiateSpellAccesses: readonly CharacterBuildMagicInitiateSpellAccess[];
   readonly equipment: CharacterBuildEquipment;
 };
 

@@ -4854,7 +4854,11 @@ function clericSorcererQuickenedCureWoundsBattle(): BattleRuntimeSession {
             preparedSpells: [spellRecord("cure_wounds")],
             spellSlots: [{ spellLevel: 1, count: 2 }],
           }),
-          sourceClassName: "cleric",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "cleric",
+            abilityModifier: 3,
+          },
         },
       }),
       characterSeed({
@@ -4905,7 +4909,11 @@ function metamagicBattle(input?: {
             ),
             spellSlots: [{ spellLevel: 1, count: 2 }],
           }),
-          sourceClassName: "sorcerer",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "sorcerer",
+            abilityModifier: 3,
+          },
         },
       }),
       characterSeed({
@@ -5007,9 +5015,10 @@ function saveMetamagicBattle(input: {
   readonly classLevels?: NonNullable<
     Parameters<typeof characterSeed>[0]["classLevels"]
   >;
-  readonly spellcastingSourceClassName?: ReturnType<
-    typeof wizardSpellcasting
-  >["sourceClassName"];
+  readonly spellcastingSourceClassName?: Extract<
+    ReturnType<typeof wizardSpellcasting>["spellcastingSource"],
+    { readonly tag: "classSpellcasting" }
+  >["className"];
   readonly spellcastingProficiencyBonus?: ProficiencyBonus;
   readonly cantrips?: readonly ("eldritch_blast" | "ray_of_frost")[];
   readonly preparedSpells?: readonly (
@@ -5070,7 +5079,11 @@ function saveMetamagicBattle(input: {
               }),
           proficiencyBonus:
             input.spellcastingProficiencyBonus ?? proficiencyBonus(3),
-          sourceClassName: input.spellcastingSourceClassName ?? "sorcerer",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: input.spellcastingSourceClassName ?? "sorcerer",
+            abilityModifier: 3,
+          },
         },
       }),
       characterSeed({
@@ -5130,7 +5143,11 @@ function quickenedProfileBattle(input: {
             preparedSpells: input.preparedSpells.map(spellRecord),
             spellSlots: input.spellSlots,
           }),
-          sourceClassName: "sorcerer",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "sorcerer",
+            abilityModifier: 3,
+          },
         },
       }),
       characterSeed({
@@ -5185,7 +5202,11 @@ function twinnedTargetCountBattle(
             preparedSpells: [spellRecord("bless")],
             spellSlots: [{ spellLevel: 1, count: 1 }],
           }),
-          sourceClassName: "cleric",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "cleric",
+            abilityModifier: 3,
+          },
         },
       }),
       characterSeed({
@@ -5241,7 +5262,11 @@ function commandMetamagicBattle(input: {
             preparedSpells: [spellRecord("command")],
             spellSlots: [{ spellLevel: 1, count: 2 }],
           }),
-          sourceClassName: "sorcerer",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "sorcerer",
+            abilityModifier: 3,
+          },
         },
       }),
       characterSeed({
@@ -5304,7 +5329,11 @@ function repeatSaveMetamagicBattle(input: {
             preparedSpells: [spellRecord(input.preparedSpell)],
             spellSlots: [{ spellLevel: input.spellSlotLevel, count: 1 }],
           }),
-          sourceClassName: "sorcerer",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "sorcerer",
+            abilityModifier: 3,
+          },
         },
       }),
       statBlockCreatureInit({
@@ -5348,7 +5377,11 @@ function sleepMetamagicBattle(input: {
             preparedSpells: [spellRecord("sleep")],
             spellSlots: [{ spellLevel: 1, count: 2 }],
           }),
-          sourceClassName: "sorcerer",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "sorcerer",
+            abilityModifier: 3,
+          },
         },
       }),
       statBlockCreatureInit({

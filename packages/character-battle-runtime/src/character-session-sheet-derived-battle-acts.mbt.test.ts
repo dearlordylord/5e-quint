@@ -697,6 +697,7 @@ function sheetDerivedBuild(input?: {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: wieldedWeapon
         ? [

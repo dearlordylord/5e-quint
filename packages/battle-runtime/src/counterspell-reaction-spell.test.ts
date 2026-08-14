@@ -1,4 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-counterspell spell.reaction-shield spell.invocation-damage-save-or-attack
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
 import * as Either from "effect/Either";
@@ -16,6 +17,7 @@ import {
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
+  classSpellListForSpellcastingClassRecord,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -40,11 +42,11 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { counterspellCapableReactors } from "./battle-reducer/counterspell-reaction-discovery.ts";
 import {
   cantripSpellInvocationRef,
   spellSlotInvocationRef,
+  spellAccessFreeCastSpellInvocationRef,
 } from "./battle-subjects.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
@@ -168,6 +170,69 @@ describe("Counterspell Reaction spell", () => {
         }),
       }),
     });
+  });
+
+  test("spends a source-scoped free cast when Counterspell ends the spell", () => {
+    const session = battleWithCounterspell({ casterSpellAccessFreeCast: true });
+    const caster = session.state.combatants.get(casterId);
+    if (caster?.origin.kind !== "character")
+      throw new Error("Expected character caster.");
+    const resourcePoolRef = caster.origin.resources[0]?.resourcePoolRef;
+    if (resourcePoolRef === undefined)
+      throw new Error("Expected free-cast resource.");
+    const invocationRef = spellAccessFreeCastSpellInvocationRef(
+      magicMissileUnitId,
+      resourcePoolRef,
+      "repeatedDamageAllocation",
+    );
+    const awaitingReaction = startMagicMissile({
+      session,
+      state: session.state,
+      slotLevel: 1,
+      invocationRef,
+      targetId: counterspellerId,
+      counterspellFacts: [
+        counterspellTriggerFact({
+          session,
+          reactorId: counterspellerId,
+          casterId,
+        }),
+      ],
+    });
+    const choice = requireCounterspellChoice(
+      awaitingReaction,
+      counterspellerId,
+      3,
+      session,
+    );
+    const resolved = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
+        counterspellDecision(
+          counterspellerId,
+          choice,
+          counterspellSavingThrowFills(choice, casterId, false),
+        ),
+      ),
+    });
+    if (resolved.tag !== "resolved")
+      throw new Error("Expected Counterspell to resolve.");
+    const afterCaster = resolved.state.combatants.get(casterId);
+    expect(
+      afterCaster?.origin.kind === "character"
+        ? afterCaster.origin.resources
+        : [],
+    ).toEqual(
+      expect.arrayContaining([expect.objectContaining({ usesRemaining: 0 })]),
+    );
+    expect(discoverBattleActCandidates(resolved.state)).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: expect.objectContaining({ invocation: invocationRef }),
+        }),
+      ]),
+    );
   });
 
   test("routes an incomplete Counterspell selection to its saving throw frontier", () => {
@@ -338,6 +403,89 @@ describe("Counterspell Reaction spell", () => {
             expect.objectContaining({ spellLevel: 4, expended: 1 }),
           ]),
         }),
+      }),
+    });
+  });
+
+  test("commits a source-scoped free cast only when the spell continues after Counterspell", () => {
+    const session = battleWithCounterspell({ casterSpellAccessFreeCast: true });
+    const caster = session.state.combatants.get(casterId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected character caster.");
+    }
+    const resourcePoolRef = caster.origin.resources[0]?.resourcePoolRef;
+    if (resourcePoolRef === undefined) {
+      throw new Error("Expected free-cast resource.");
+    }
+    const invocationRef = spellAccessFreeCastSpellInvocationRef(
+      magicMissileUnitId,
+      resourcePoolRef,
+      "repeatedDamageAllocation",
+    );
+    const awaitingReaction = startMagicMissile({
+      session,
+      state: session.state,
+      slotLevel: 1,
+      invocationRef,
+      targetId: counterspellerId,
+      counterspellFacts: [
+        counterspellTriggerFact({
+          session,
+          reactorId: counterspellerId,
+          casterId,
+        }),
+      ],
+    });
+    const choice = requireCounterspellChoice(
+      awaitingReaction,
+      counterspellerId,
+      3,
+      session,
+    );
+    const afterCounterspell = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
+        counterspellDecision(
+          counterspellerId,
+          choice,
+          counterspellSavingThrowFills(choice, casterId, true),
+        ),
+      ),
+    });
+    if (afterCounterspell.tag !== "needsHoles") {
+      throw new Error("Expected the free-cast spell to continue to damage.");
+    }
+    const casterBeforeDamage = afterCounterspell.state.combatants.get(casterId);
+    expect(
+      casterBeforeDamage?.origin.kind === "character"
+        ? casterBeforeDamage.origin.resources.find(
+            (resource) => resource.resourcePoolRef === resourcePoolRef,
+          )?.usesRemaining
+        : undefined,
+    ).toBe(1);
+
+    const resolved = finishMagicMissile({
+      state: afterCounterspell.state,
+      subject: awaitingReaction.subject,
+      slotLevel: 1,
+      damage: requireHole(afterCounterspell.holes, "rolledDice"),
+      dartCount: 3,
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected the continued free-cast spell to resolve.");
+    }
+    const casterAfterDamage = resolved.state.combatants.get(casterId);
+    expect(
+      casterAfterDamage?.origin.kind === "character"
+        ? casterAfterDamage.origin.resources.find(
+            (resource) => resource.resourcePoolRef === resourcePoolRef,
+          )?.usesRemaining
+        : undefined,
+    ).toBe(0);
+    expect(snapshotCombatant(resolved, casterId)).toMatchObject({
+      origin: expect.objectContaining({
+        spellcasting: expect.objectContaining({ spellSlots: [] }),
       }),
     });
   });
@@ -1097,9 +1245,19 @@ function battleWithCounterspell(
       | CharacterSpellcastingInit["spellSlots"]
       | undefined;
     readonly includeSecondCounterspeller?: boolean | undefined;
+    readonly casterSpellAccessFreeCast?: boolean | undefined;
   } = {},
 ): BattleRuntimeSession {
   const counterspell = srdSpellRecord(counterspellUnitId);
+  const magicMissile = srdSpellRecord(magicMissileUnitId);
+  const freeCastSource = {
+    id: authoredUnitId("feat_synthetic_counterspell_dabbler"),
+    kind: "feat",
+    category: "origin",
+    name: "Synthetic Counterspell Dabbler",
+    provenance: { kind: "synthetic-test", section: "counterspell regression" },
+    mechanics: { family: "magic_initiate", spellList: "wizard" },
+  } as const;
   const result = startBattle({
     battleId: battleId("counterspell-reaction-spell"),
     combatants: [
@@ -1107,9 +1265,31 @@ function battleWithCounterspell(
         combatantId: casterId,
         displayName: "Triggering caster",
         initiative: 20,
+        resources:
+          input.casterSpellAccessFreeCast === true
+            ? [
+                {
+                  unit: freeCastSource,
+                  spellAccessFreeCast: { spellId: magicMissile.id, count: 1 },
+                  usesRemaining: 1,
+                },
+              ]
+            : [],
+        characterUnitRefs:
+          input.casterSpellAccessFreeCast === true
+            ? [magicMissileUnitId, "ray_of_frost", "acid_splash"]
+                .map((unitId) => ({
+                  unit: unitLibrary.requireUnit(unitId),
+                  supportProfiles: [],
+                }))
+                .concat([{ unit: freeCastSource, supportProfiles: [] }])
+            : [],
         spellcasting: {
-          sourceClassName: "wizard",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "wizard",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: input.casterCantrips ?? [],
@@ -1117,9 +1297,30 @@ function battleWithCounterspell(
             srdSpellRecord(magicMissileUnitId),
           ],
           featurePreparedSpells: [],
+          spellAccesses:
+            input.casterSpellAccessFreeCast === true
+              ? [
+                  {
+                    source: {
+                      tag: "feat",
+                      sourceUnit: freeCastSource,
+                      spellList: wizardSpellListSource(),
+                    },
+                    spellcastingAbilityModifier: 3,
+                    cantrips: [
+                      srdSpellRecord("ray_of_frost"),
+                      srdSpellRecord("acid_splash"),
+                    ],
+                    levelOneSpell: magicMissile,
+                  },
+                ]
+              : [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
-          spellSlots: input.casterSlots ?? [{ spellLevel: 1, count: 1 }],
+          spellSlots:
+            input.casterSpellAccessFreeCast === true
+              ? []
+              : (input.casterSlots ?? [{ spellLevel: 1, count: 1 }]),
         },
       }),
       characterCreature({
@@ -1151,9 +1352,8 @@ function battleWithCounterspell(
         : []),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+    throw new Error(JSON.stringify(result.left));
   }
   return result.right;
 }
@@ -1167,19 +1367,38 @@ function counterspellSpellcasting(
   });
 }
 
+function wizardSpellListSource(): import("./index.ts").CharacterBattleSpellListFact {
+  const wizard = unitLibrary.requireUnit("class_wizard");
+  if (
+    wizard.kind !== "class" ||
+    wizard.className !== "wizard" ||
+    wizard.spellcasting?.kind !== "wizard_spellcasting_creation"
+  ) {
+    throw new Error("Expected Wizard spell-list source.");
+  }
+  return {
+    className: wizard.className,
+    ...classSpellListForSpellcastingClassRecord(wizard),
+  };
+}
+
 function wizardSpellcasting(input: {
   readonly cantrips?: readonly SpellRecord[] | undefined;
   readonly preparedSpells: readonly SpellRecord[];
   readonly spellSlots: CharacterSpellcastingInit["spellSlots"];
 }): CharacterSpellcastingInit {
   return {
-    sourceClassName: "wizard",
-    spellcastingAbilityModifier: abilityModifier(3),
+    spellcastingSource: {
+      tag: "classSpellcasting",
+      className: "wizard",
+      abilityModifier: abilityModifier(3),
+    },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
     cantrips: input.cantrips ?? [],
     preparedSpells: input.preparedSpells,
     featurePreparedSpells: [],
+    spellAccesses: [],
     spellbookRitualSpellAccesses: [],
     invocationSpellAccesses: [],
     spellSlots: input.spellSlots,
@@ -1191,6 +1410,14 @@ function characterCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
   readonly spellcasting: CharacterSpellcastingInit;
+  readonly resources?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"];
+  readonly characterUnitRefs?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"];
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
@@ -1200,7 +1427,7 @@ function characterCreature(input: {
       kind: "character",
       ammunitionStocks: [],
       characterId: characterId(`${input.combatantId}-character`),
-      characterUnitRefs: [],
+      characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: [{ className: "wizard", level: 7 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
@@ -1212,6 +1439,7 @@ function characterCreature(input: {
       maxHp: Hp(30),
       tempHp: Hp(0),
       selectedLoadout: {},
+      resources: input.resources ?? [],
       attack: null,
       unarmedStrike: {
         kind: "unarmedStrike",
@@ -1240,11 +1468,18 @@ function startMagicMissile(input: {
   readonly session: BattleRuntimeSession;
   readonly state: BattleState;
   readonly slotLevel: number;
+  readonly invocationRef?: Parameters<
+    typeof requireCharacterSpellProcedureRefForTest
+  >[2];
   readonly targetId: CombatantId;
   readonly handledInterruptTrigger?: "attackHit";
   readonly counterspellFacts: readonly CounterspellTriggerFact[];
 }): StartedMagicMissile {
-  const subject = magicMissileSubject(input.session, input.slotLevel);
+  const subject = magicMissileSubject(
+    input.session,
+    input.slotLevel,
+    input.invocationRef,
+  );
   const targetAllocationResult = resolveBattleSubject({
     state: input.state,
     subject,
@@ -1340,15 +1575,16 @@ function counterspellTriggerFact(input: {
 function magicMissileSubject(
   session: BattleRuntimeSession,
   slotLevel: number,
+  invocationRef = spellSlotInvocationRef(
+    magicMissileUnitId,
+    slotLevel,
+    "repeatedDamageAllocation",
+  ),
 ): BattleSubject {
   const procedureRef = requireCharacterSpellProcedureRefForTest(
     session,
     casterId,
-    spellSlotInvocationRef(
-      magicMissileUnitId,
-      slotLevel,
-      "repeatedDamageAllocation",
-    ),
+    invocationRef,
   );
   const subject = discoverBattleActCandidates(session.state).find(
     (act) =>

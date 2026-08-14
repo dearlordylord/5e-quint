@@ -255,6 +255,7 @@ function characterBuild(startingClass: string): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: { owned: [], loadout: {} },
   };
 }

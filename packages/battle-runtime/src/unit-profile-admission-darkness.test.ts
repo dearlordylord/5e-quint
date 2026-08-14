@@ -104,6 +104,7 @@ describe("battle runtime: Darkness", () => {
     const levelThree = supportedSpellActs(session.state, wizard).find(
       (invocation) =>
         invocation.procedure === "magicalDarknessPointOrigin" &&
+        invocation.resource.tag === "spellSlot" &&
         invocation.resource.slotLevel === 3,
     );
     expect(levelThree).toMatchObject({

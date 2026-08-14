@@ -1067,6 +1067,7 @@ export function armorClassBuild(input: {
     ),
     proficiencyChoices: [],
     features: input.features ?? [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [
         ...(armorItemId === undefined || input.armor === undefined

@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION
+// KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: runtime-owner CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_OPTION.PROJECTION CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
@@ -20,8 +20,10 @@ import {
   hp,
 } from "@dnd/shared/types";
 import {
+  MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS,
   readBackgroundCreationFacts,
   readClassCreationFacts,
+  readMagicInitiateSpellAccessSourceFacts,
   readSpeciesCreationFacts,
   type ClassCreationFacts,
   type SpeciesCreationFacts,
@@ -52,7 +54,9 @@ import {
   passiveGrantChoiceHoles,
   selectedClassFeatureAcquisitionGrantChoiceHoles,
   speciesLineageChoiceHoles,
+  magicInitiateSpellListsForUnitIds,
 } from "./discovery.ts";
+import { characterBuildSpeciesOriginFeatUnitIds } from "./magic-initiate-spell-access.ts";
 import { type CharacterProgression } from "./character-progression-algebra.ts";
 import {
   classUnitId,
@@ -114,6 +118,9 @@ import {
   EXACTLY_ONE_CHOICE,
   MULTICLASS_PROFICIENCY_CHOICE_KEYS,
   ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
   SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
@@ -178,6 +185,8 @@ import {
   type CharacterBuildGnomishLineageId,
   type CharacterBuildGnomishLineageSpellcastingAbility,
   type CharacterBuildFeature,
+  type CharacterBuildMagicInitiateSpellAccess,
+  type MagicInitiateSpellcastingAbility,
   type CharacterBuildHitPoints,
   type CharacterBuildLoadout,
   type CharacterBuildProficiencies,
@@ -496,6 +505,10 @@ export function executableSupportIssues(
         )
       : []),
     ...expectedValueIssue(
+      magicInitiateSpellListsAreDistinct(selections, unitLibrary),
+      { tag: "duplicateMagicInitiateSpellList" },
+    ),
+    ...expectedValueIssue(
       spellcastingFactsAuthoredForSelectedClassLevels(
         selections,
         dependencies.classFactsByUnitId.value,
@@ -527,6 +540,37 @@ export function executableSupportIssues(
         )
       : []),
   ];
+}
+
+function magicInitiateSpellListsAreDistinct(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+): boolean {
+  const background = unitLibrary.getUnit(selections.background);
+  const backgroundFacts = Option.isSome(background)
+    ? readBackgroundCreationFacts(background.value)
+    : undefined;
+  const backgroundFeatUnitIds =
+    backgroundFacts?.tag === "readable"
+      ? [backgroundFacts.value.originFeatId]
+      : [];
+  const features = finalizedClassChoiceFeaturesForSupportedChoices(
+    unitChoiceSelections(selections),
+  );
+  const spellLists = [
+    ...backgroundFeatUnitIds,
+    ...characterBuildSpeciesOriginFeatUnitIds({
+      species: selections.species,
+      features,
+      unitLibrary,
+    }),
+  ].flatMap((unitId) => {
+    const unit = unitLibrary.getUnit(unitId);
+    if (Option.isNone(unit)) return [];
+    const facts = readMagicInitiateSpellAccessSourceFacts(unit.value);
+    return facts.tag === "readable" ? [facts.value.spellList] : [];
+  });
+  return new Set(spellLists).size === spellLists.length;
 }
 
 type ExecutableSupportDependencies = {
@@ -1220,6 +1264,10 @@ function unsupportedFinalizationCauseMessage(
         "Selected feat prerequisites must be met before applying its Ability Score Increase.",
     ),
     Match.when(
+      { tag: "duplicateMagicInitiateSpellList" },
+      () => "Magic Initiate can be selected only once for each spell list.",
+    ),
+    Match.when(
       { tag: "missingSpellcastingFacts" },
       () =>
         "Finalized build must have authored spellcasting facts for the selected class levels.",
@@ -1665,6 +1713,11 @@ export function buildCharacterBuild(input: {
     ),
     ...abilityCheckBonusFeatures.right,
   ];
+  const magicInitiateSpellAccesses = finalizedMagicInitiateSpellAccesses(
+    selections,
+    buildFeatures,
+    input.unitLibrary,
+  );
   const classFeatureLanguages = finalizedClassFeatureLanguages({
     progression,
     originLanguages: selections.languages,
@@ -1706,8 +1759,116 @@ export function buildCharacterBuild(input: {
     ...(buildSpellcasting.right == null
       ? {}
       : { spellcasting: buildSpellcasting.right }),
+    magicInitiateSpellAccesses,
     equipment: buildEquipment.right,
   });
+}
+
+function finalizedMagicInitiateSpellAccesses(
+  selections: FinalizedCharacterSelections,
+  features: readonly CharacterBuildFeature[],
+  unitLibrary: UnitCatalog,
+): readonly CharacterBuildMagicInitiateSpellAccess[] {
+  const selectedFeatUnitIds = [
+    ...(() => {
+      const background = unitLibrary.getUnit(selections.background);
+      if (Option.isNone(background)) return [];
+      const facts = readBackgroundCreationFacts(background.value);
+      return facts.tag === "readable" ? [facts.value.originFeatId] : [];
+    })(),
+    ...characterBuildSpeciesOriginFeatUnitIds({
+      species: selections.species,
+      features,
+      unitLibrary,
+    }),
+  ];
+
+  return selectedFeatUnitIds.flatMap((featUnitId) => {
+    const featUnit = unitLibrary.getUnit(featUnitId);
+    if (Option.isNone(featUnit)) return [];
+    const facts = readMagicInitiateSpellAccessSourceFacts(featUnit.value);
+    if (facts.tag !== "readable") return [];
+
+    const cantrips = selectedUnitChoiceOptionUnitIds(
+      selections,
+      featUnitId,
+      ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+    );
+    const levelOneSpells = selectedUnitChoiceOptionUnitIds(
+      selections,
+      featUnitId,
+      ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
+    );
+    const abilityOptionIds = selectedUnitChoiceOptionIds(
+      selections,
+      featUnitId,
+      ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
+    );
+    const firstCantrip = cantrips[0];
+    const secondCantrip = cantrips[1];
+    const levelOneSpell = levelOneSpells[0];
+    const spellcastingAbility = magicInitiateSpellcastingAbility(
+      abilityOptionIds[0],
+    );
+    if (
+      firstCantrip === undefined ||
+      secondCantrip === undefined ||
+      cantrips.length !== facts.value.selectedCantrips.count ||
+      levelOneSpell === undefined ||
+      levelOneSpells.length !== facts.value.selectedLevelOneSpell.count ||
+      spellcastingAbility === undefined ||
+      abilityOptionIds.length !== 1
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        featUnitId,
+        spellcastingAbility,
+        cantrips: [firstCantrip, secondCantrip],
+        levelOneSpell,
+      },
+    ];
+  });
+}
+
+function selectedUnitChoiceOptionIds(
+  selections: FinalizedCharacterSelections,
+  unitId: UnitRecord["id"],
+  choiceKey: UnitChoiceKey,
+): readonly CreationChoiceOptionId[] {
+  return selections.choices.flatMap((selection) =>
+    selection.kind === "unitChoice" &&
+    selection.source.unitId === unitId &&
+    selection.source.choiceKey === choiceKey
+      ? selection.options.map(({ optionId }) => optionId)
+      : [],
+  );
+}
+
+function selectedUnitChoiceOptionUnitIds(
+  selections: FinalizedCharacterSelections,
+  unitId: UnitRecord["id"],
+  choiceKey: UnitChoiceKey,
+): readonly UnitRecord["id"][] {
+  return selections.choices.flatMap((selection) =>
+    selection.kind === "unitChoice" &&
+    selection.source.unitId === unitId &&
+    selection.source.choiceKey === choiceKey
+      ? selection.options.flatMap(({ unitRef }) =>
+          unitRef === undefined ? [] : [unitRef.unitId],
+        )
+      : [],
+  );
+}
+
+function magicInitiateSpellcastingAbility(
+  optionId: CreationChoiceOptionId | undefined,
+): MagicInitiateSpellcastingAbility | undefined {
+  return MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS.find(
+    (ability) => ability === optionId,
+  );
 }
 
 type CharacterHitPointMaximumFacts = {
@@ -2849,6 +3010,16 @@ function supportedFinalizationChoiceHoles(
 function speciesTraitGrantChoiceHolesForFinalization(
   input: SupportedFinalizationChoiceHoleInput,
 ): readonly ChoiceCreationHole[] {
+  const background = input.unitLibrary.getUnit(input.selections.background);
+  const backgroundFacts = Option.isSome(background)
+    ? readBackgroundCreationFacts(background.value)
+    : undefined;
+  const excludedMagicInitiateSpellLists = magicInitiateSpellListsForUnitIds(
+    backgroundFacts?.tag === "readable"
+      ? [backgroundFacts.value.originFeatId]
+      : [],
+    input.unitLibrary,
+  );
   return selectedSpeciesTraitUnitsForFinalization(input).flatMap((trait) => {
     if (trait.mechanics.family === "species_lineage_choice") {
       return speciesLineageChoiceHoles(trait.id, trait.mechanics);
@@ -2879,6 +3050,7 @@ function speciesTraitGrantChoiceHolesForFinalization(
         }),
         proficiencyChoiceKey: SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
         featChoiceKey: SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+        excludedMagicInitiateSpellLists,
       }),
     );
   });
@@ -3257,6 +3429,7 @@ export function characterBuildUnitRefs(
     | "features"
     | "equipment"
     | "spellcasting"
+    | "magicInitiateSpellAccesses"
   >,
   unitLibrary?: UnitCatalog,
 ): readonly UnitRef[] {
@@ -3299,6 +3472,11 @@ export function characterBuildUnitRefs(
               ...source.bookOfShadows.ritualSpells,
             ]),
       ]) ?? []),
+      ...build.magicInitiateSpellAccesses.flatMap((access) => [
+        access.featUnitId,
+        ...access.cantrips,
+        access.levelOneSpell,
+      ]),
     ),
   ]);
 }

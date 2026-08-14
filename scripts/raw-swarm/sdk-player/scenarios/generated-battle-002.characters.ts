@@ -10,6 +10,9 @@ type BuildPlan = {
   readonly cantrips: readonly string[];
   readonly spellbook: readonly string[];
   readonly preparedSpells: readonly string[];
+  readonly magicInitiateCantrips: readonly [string, string];
+  readonly magicInitiateLevelOneSpell: string;
+  readonly magicInitiateAbility: "int" | "wis" | "cha";
   readonly backgroundIncrease: string;
   readonly evocationSavantSpells: readonly string[];
   readonly abilityScoreIncrease: string;
@@ -45,6 +48,9 @@ const plans: readonly BuildPlan[] = [
       "scorching_ray",
       "web",
     ],
+    magicInitiateCantrips: ["Fire Bolt", "Light"],
+    magicInitiateLevelOneSpell: "Burning Hands",
+    magicInitiateAbility: "int",
     backgroundIncrease: "+1 CON, +1 INT, +1 WIS",
     evocationSavantSpells: ["chromatic_orb", "shatter"],
     abilityScoreIncrease: "INT +2",
@@ -78,6 +84,9 @@ const plans: readonly BuildPlan[] = [
       "shatter",
       "web",
     ],
+    magicInitiateCantrips: ["Chill Touch", "Light"],
+    magicInitiateLevelOneSpell: "Shield",
+    magicInitiateAbility: "int",
     backgroundIncrease: "+2 INT, +1 CON",
     evocationSavantSpells: ["acid_arrow", "scorching_ray"],
     abilityScoreIncrease: "CON +1, INT +1",
@@ -166,6 +175,13 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
       wizard_cantrip_choices: plan.cantrips,
       wizard_spellbook_choices: plan.spellbook,
       wizard_prepared_spell_choices: plan.preparedSpells,
+      origin_feat_magic_initiate_cantrip_choice: plan.magicInitiateCantrips,
+      origin_feat_magic_initiate_level_one_spell_choice: [
+        plan.magicInitiateLevelOneSpell,
+      ],
+      origin_feat_magic_initiate_spellcasting_ability_choice: [
+        plan.magicInitiateAbility,
+      ],
       background_ability_score_increase: [plan.backgroundIncrease],
       background_tool_choice: ["calligraphers_supplies"],
       background_equipment_choice: ["option_a (8 GP)"],
@@ -322,6 +338,11 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
         cantrips: plan.cantrips,
         spellbook: [...plan.spellbook, ...plan.evocationSavantSpells],
         preparedSpells: plan.preparedSpells,
+        magicInitiate: {
+          cantrips: plan.magicInitiateCantrips,
+          levelOneSpell: plan.magicInitiateLevelOneSpell,
+          spellcastingAbility: plan.magicInitiateAbility,
+        },
       })),
     },
   };

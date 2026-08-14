@@ -74,7 +74,11 @@ describe("combatant lifecycle route boundary", () => {
             ...wizardSpellcasting({
               cantrips: [spellRecord("spare_the_dying")],
             }),
-            sourceClassName: "cleric",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "cleric",
+              abilityModifier: 3,
+            },
           },
         }),
         characterSeed({

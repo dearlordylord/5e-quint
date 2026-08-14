@@ -57,7 +57,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 function admitWardingBond(
@@ -68,14 +68,14 @@ function admitWardingBond(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly WardingBondSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "wardingBond",
               spell,
               actionCost: "magicAction",
@@ -359,7 +359,7 @@ function resolveWardingBond(
 const WardingBondInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("wardingBond"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
@@ -378,3 +378,4 @@ export const wardingBondProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverWardingBondCastAct,
   resolve: resolveWardingBond,
 };
+import { spellInvocationResourceForCastOption } from "./profile.ts";

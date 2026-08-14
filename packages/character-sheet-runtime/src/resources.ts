@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS
+// KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-point-pool-resource
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-spell-free-cast-resource
@@ -34,7 +35,6 @@ import {
   type ResourceCount,
 } from "@dnd/shared/types";
 import {
-  supportedClassFeatureSpellFreeCastGrantsForUnit,
   type ChargePoolResource,
   type RestResetCadence,
   type SorcererSorcerousRestorationMechanics,
@@ -52,7 +52,8 @@ import {
   isCharacterSheetPointPoolResourceUnitId,
   isCharacterSheetUseCountResourceUnitId,
   type CharacterSheet,
-  type CharacterSheetClassFeatureSpellFreeCastResource,
+  type CharacterSheetSpellAccessFreeCastKey,
+  type CharacterSheetSpellAccessFreeCastResource,
   type CharacterSheetInput,
   type CharacterSheetIssue,
   type CharacterSheetLayOnHandsResource,
@@ -67,6 +68,7 @@ import {
   type CharacterSheetSorceryPointPoolResourceState,
   type CharacterSheetUseCountResource,
 } from "./sheet-types.ts";
+import { characterSheetSpellAccessesForBuild } from "./class-feature-spells.ts";
 
 const byKind = Match.discriminator("kind");
 
@@ -111,7 +113,7 @@ export function characterSheetResources(
     });
   }
 
-  const freeCastResources = classFeatureSpellFreeCastResourcesForBuild(
+  const freeCastResources = spellAccessFreeCastResourcesForBuild(
     sheet.build,
     unitLibrary,
   );
@@ -125,7 +127,10 @@ export function characterSheetResources(
       ...freeCastResource,
       expended:
         sheet.resourceExpenditures.find(
-          (expenditure) => expenditure.tag === freeCastResource.tag,
+          (expenditure) =>
+            expenditure.tag === "spellAccessFreeCast" &&
+            expenditure.sourceUnitId === freeCastResource.sourceUnitId &&
+            expenditure.spellId === freeCastResource.spellId,
         )?.expended ?? resourceCount(0),
     });
   }
@@ -454,7 +459,7 @@ export function resourceExpendituresFromInput(
     return Either.left(layOnHandsResource.left);
   }
   /* v8 ignore stop */
-  const freeCastResources = classFeatureSpellFreeCastResourcesForBuild(
+  const freeCastResources = spellAccessFreeCastResourcesForBuild(
     input.build,
     input.unitLibrary,
   );
@@ -586,7 +591,7 @@ function characterSheetResourceExpenditureCapacity(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly layOnHandsResource: CharacterSheetLayOnHandsResource | null;
-  readonly freeCastResources: readonly CharacterSheetClassFeatureSpellFreeCastResource[];
+  readonly freeCastResources: readonly CharacterSheetSpellAccessFreeCastResource[];
   readonly useCountResources: readonly CharacterSheetUseCountResource[];
   readonly pointPoolResources: readonly CharacterSheetPointPoolResource[];
   readonly expenditure: CharacterSheetResourceExpenditure;
@@ -641,13 +646,21 @@ function characterSheetResourceExpenditureCapacity(input: {
       resource: pointPoolResource,
     });
   }
+  if (input.expenditure.tag !== "spellAccessFreeCast") {
+    return characterSheetIssue(
+      "Expected Character Sheet resource expenditure.",
+    );
+  }
+  const expenditure = input.expenditure;
   const freeCastResource = input.freeCastResources.find(
-    (resource) => resource.tag === input.expenditure.tag,
+    (resource) =>
+      resource.sourceUnitId === expenditure.sourceUnitId &&
+      resource.spellId === expenditure.spellId,
   );
   /* v8 ignore start -- Malformed stored sheet: a free-cast expenditure tag names no retained class-feature resource. */
   if (freeCastResource === undefined) {
     return characterSheetIssue(
-      "Class feature spell free-cast expenditure requires the matching class feature.",
+      "Spell Access free-cast expenditure requires matching Spell Access.",
     );
   }
   /* v8 ignore stop */
@@ -664,6 +677,14 @@ function characterSheetResourceExpenditureWithExpended(
   if (expenditure.tag === "pointPoolResource") {
     return { tag: expenditure.tag, unitId: expenditure.unitId, expended };
   }
+  if (expenditure.tag === "spellAccessFreeCast") {
+    return {
+      tag: expenditure.tag,
+      sourceUnitId: expenditure.sourceUnitId,
+      spellId: expenditure.spellId,
+      expended,
+    };
+  }
   return { tag: expenditure.tag, expended };
 }
 
@@ -678,6 +699,15 @@ function characterSheetResourceExpendituresMatch(
   }
   if (first.tag === "pointPoolResource" && second.tag === "pointPoolResource") {
     return first.unitId === second.unitId;
+  }
+  if (
+    first.tag === "spellAccessFreeCast" &&
+    second.tag === "spellAccessFreeCast"
+  ) {
+    return (
+      first.sourceUnitId === second.sourceUnitId &&
+      first.spellId === second.spellId
+    );
   }
   return true;
 }
@@ -740,14 +770,14 @@ function layOnHandsHealingPoolResourceForUnit(
   /* v8 ignore stop */
 }
 
-function classFeatureSpellFreeCastResourcesForBuild(
+function spellAccessFreeCastResourcesForBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
 ): Either.Either<
-  readonly CharacterSheetClassFeatureSpellFreeCastResource[],
+  readonly CharacterSheetSpellAccessFreeCastResource[],
   CharacterSheetIssue
 > {
-  const resources: CharacterSheetClassFeatureSpellFreeCastResource[] = [];
+  const resources: CharacterSheetSpellAccessFreeCastResource[] = [];
   for (const featureUnitId of characterBuildFeatureUnitIds(
     build,
     unitLibrary,
@@ -755,28 +785,112 @@ function classFeatureSpellFreeCastResourcesForBuild(
     const unit = unitLibrary.getUnit(featureUnitId);
     /* v8 ignore next -- Malformed build/catalog correlation: every feature id returned from this admitted build must resolve in the same catalog. */
     if (Option.isNone(unit)) continue;
-    const resource = classFeatureSpellFreeCastResourceForUnit(unit.value);
-    if (resource !== null) {
-      resources.push({ unitId: featureUnitId, ...resource });
+    for (const resource of classFeatureSpellFreeCastResourcesForUnit(
+      unit.value,
+    )) {
+      resources.push({ sourceUnitId: featureUnitId, ...resource });
+    }
+  }
+  for (const access of characterSheetSpellAccessesForBuild({
+    build,
+    unitLibrary,
+  })) {
+    if (
+      access.source === "magicInitiate" &&
+      access.preparation === "alwaysPrepared"
+    ) {
+      resources.push({
+        tag: "spellAccessFreeCast",
+        sourceUnitId: access.sourceUnitId,
+        spellId: access.spellId,
+        count: resourceCount(1),
+      });
     }
   }
   return Either.right(resources);
 }
 
-function classFeatureSpellFreeCastResourceForUnit(
+function classFeatureSpellFreeCastResourcesForUnit(
   unit: UnitRecord,
-): Pick<
-  CharacterSheetClassFeatureSpellFreeCastResource,
-  "tag" | "count"
-> | null {
-  const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
-  if (grants === null) {
-    return null;
+): readonly Pick<
+  CharacterSheetSpellAccessFreeCastResource,
+  "tag" | "spellId" | "count"
+>[] {
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+    return [];
   }
-  return {
-    tag: grants.profile.resourceTag,
-    count: resourceCount(grants.freeCastGrant.count),
-  };
+  const preparedSpellIds = new Set(
+    unit.mechanics.grants.flatMap((grant) =>
+      grant.kind === "grant_spell_access" && grant.mode === "prepared"
+        ? [grant.spellId]
+        : [],
+    ),
+  );
+  return unit.mechanics.grants.flatMap(
+    (
+      grant,
+    ): readonly Pick<
+      CharacterSheetSpellAccessFreeCastResource,
+      "tag" | "spellId" | "count"
+    >[] =>
+      grant.kind === "grant_spell_free_casts" &&
+      typeof grant.count === "number" &&
+      grant.resetCadence === "long_rest" &&
+      preparedSpellIds.has(grant.spellId)
+        ? [
+            {
+              tag: "spellAccessFreeCast",
+              spellId: authoredUnitId(grant.spellId),
+              count: resourceCount(grant.count),
+            },
+          ]
+        : [],
+  );
+}
+
+export function spendCharacterSheetSpellAccessFreeCast(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly resource: CharacterSheetSpellAccessFreeCastKey;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const resources = spellAccessFreeCastResourcesForBuild(
+    input.sheet.build,
+    input.unitLibrary,
+  );
+  if (Either.isLeft(resources)) return Either.left(resources.left);
+  const resource = resources.right.find(
+    (candidate) =>
+      candidate.sourceUnitId === input.resource.sourceUnitId &&
+      candidate.spellId === input.resource.spellId,
+  );
+  if (resource === undefined) {
+    return characterSheetIssue(
+      "Spell Access free cast requires matching Spell Access.",
+    );
+  }
+  const existing = input.sheet.resourceExpenditures.find(
+    (expenditure) =>
+      expenditure.tag === "spellAccessFreeCast" &&
+      expenditure.sourceUnitId === resource.sourceUnitId &&
+      expenditure.spellId === resource.spellId,
+  );
+  const expended = existing?.expended ?? resourceCount(0);
+  if (expended >= resource.count) {
+    return characterSheetIssue("Spell Access free cast is exhausted.");
+  }
+  const resourceExpenditures = input.sheet.resourceExpenditures.filter(
+    (expenditure) =>
+      expenditure.tag !== "spellAccessFreeCast" ||
+      expenditure.sourceUnitId !== resource.sourceUnitId ||
+      expenditure.spellId !== resource.spellId,
+  );
+  resourceExpenditures.push({
+    tag: "spellAccessFreeCast",
+    sourceUnitId: resource.sourceUnitId,
+    spellId: resource.spellId,
+    expended: resourceCount(Number(expended) + 1),
+  });
+  return Either.right({ ...input.sheet, resourceExpenditures });
 }
 
 function classFeatureUseCountResourcesForBuild(

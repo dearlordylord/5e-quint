@@ -1458,6 +1458,7 @@ describe("battle fill protocol boundary owners", () => {
       {
         procedure: sacredInvocation.procedure,
         sourceProcedureRef: sacredInvocation.sourceProcedureRef,
+        spellRuleFacts: sacredInvocation.spellRuleFacts,
       },
     );
     expect(carefulHole.choices).not.toContain(wizardId);

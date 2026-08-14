@@ -1,3 +1,4 @@
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
@@ -35,7 +36,7 @@ import {
   DamageTypeSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import type {
   SpellAdmissionContext,
@@ -69,14 +70,14 @@ function admitChosenDamageResistance(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly ChosenDamageResistanceSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "chosenDamageResistance",
               spell,
               actionCost: "magicAction",
@@ -267,7 +268,7 @@ export const ChosenDamageResistanceInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("chosenDamageResistance"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),

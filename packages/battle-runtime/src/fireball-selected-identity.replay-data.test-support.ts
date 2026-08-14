@@ -64,7 +64,10 @@ export const fireballSelectedIdentityReplay = {
             expect(spellHoleInvocation(state, [savingThrow])).toEqual(
               expect.objectContaining({
                 procedure: "saveGatedDamage",
-                resource: { tag: "spellSlot", slotLevel: 3 },
+                resource: {
+                  tag: "spellSlot",
+                  slotLevel: 3,
+                },
                 ability: "dex",
                 targeting: { kind: "pointOriginSphere", radiusFeet: 20 },
                 damage: {

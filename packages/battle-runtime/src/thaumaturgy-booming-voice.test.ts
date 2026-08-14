@@ -300,7 +300,11 @@ function battleWithThaumaturgy(): BattleRuntimeSession {
             preparedSpells: [],
             spellSlots: [],
           }),
-          sourceClassName: "cleric",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "cleric",
+            abilityModifier: 3,
+          },
         },
       }),
       statBlockCreatureInit({ initiative: 10 }),

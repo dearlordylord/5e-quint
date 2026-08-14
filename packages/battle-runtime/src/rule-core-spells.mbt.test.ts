@@ -1811,8 +1811,11 @@ function spellcaster(input: {
     displayName: "Spellcaster",
     initiative: input.initiative,
     spellcasting: {
-      sourceClassName: "wizard",
-      spellcastingAbilityModifier: 3,
+      spellcastingSource: {
+        tag: "classSpellcasting",
+        className: "wizard",
+        abilityModifier: 3,
+      },
       proficiencyBonus: proficiencyBonus(2),
       canCastSpells: true,
       cantrips: [spellRecord("ray_of_frost"), spellRecord("acid_splash")],
@@ -1822,6 +1825,7 @@ function spellcaster(input: {
         spellRecord("mage_armor"),
       ],
       featurePreparedSpells: [],
+      spellAccesses: [],
       spellbookRitualSpellAccesses: [],
       invocationSpellAccesses: [],
       spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],

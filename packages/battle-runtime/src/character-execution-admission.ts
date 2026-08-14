@@ -1,4 +1,6 @@
 import { optionalProperty } from "./optional-property.ts";
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
+// UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 import { sameSpellProcedureExecution } from "./same-spell-procedure-execution.ts";
 import {
   characterStoredExecutionProcedureRef,
@@ -90,6 +92,7 @@ export type AuthoredSelectedSpellInvocation<
 import { Brand, Match } from "effect";
 import type { SpellRuleExecutionFacts } from "./procedure-execution/spell-rule-facts.ts";
 import type { SpellProcedureExecution } from "./procedure-execution/spell-procedure-execution.ts";
+import { isCantripSpellAccess } from "./procedure-execution/spell-invocation-vocabulary.ts";
 export type { SpellRuleExecutionFacts } from "./procedure-execution/spell-rule-facts.ts";
 export type { WeaponAttackOverrideSpellProcedureExecution } from "./procedure-execution/weapon-attack-override.ts";
 export type * from "./procedure-execution/spell-procedure-execution.ts";
@@ -1550,10 +1553,11 @@ export function characterSpellProcedureRefs(
 }
 
 function spellRuleExecutionFacts(
-  spell: Pick<BattleSpellAdmissionSource, "mechanics">,
+  spell: Pick<BattleSpellAdmissionSource, "mechanics" | "castingSource">,
 ): SpellRuleExecutionFacts {
   const mechanics = spell.mechanics;
   return {
+    castingSource: spell.castingSource,
     level: mechanics.level,
     range: mechanics.range,
     duration: mechanics.duration,
@@ -2194,7 +2198,7 @@ export function spellProcedureExecution(
       }),
       objectLight: (value) =>
         Match.value(value).pipe(
-          Match.when({ access: { tag: "classCantrip" } }, (value) => ({
+          Match.when({ access: isCantripSpellAccess }, (value) => ({
             spellRuleFacts,
             access: value.access,
             actionCost: value.actionCost,
@@ -2331,7 +2335,7 @@ export function spellProcedureExecution(
       }),
       saveGatedDamage: (value) =>
         Match.value(value).pipe(
-          Match.when({ access: { tag: "classCantrip" } }, (value) => ({
+          Match.when({ access: isCantripSpellAccess }, (value) => ({
             spellRuleFacts,
             ability: value.ability,
             access: value.access,
@@ -2451,7 +2455,7 @@ export function spellProcedureExecution(
       }),
       spellAttackDamage: (value) =>
         Match.value(value).pipe(
-          Match.when({ access: { tag: "classCantrip" } }, (value) => ({
+          Match.when({ access: isCantripSpellAccess }, (value) => ({
             spellRuleFacts,
             access: value.access,
             attackBonus: value.attackBonus,
@@ -2485,7 +2489,7 @@ export function spellProcedureExecution(
         ),
       spellAttackSequence: (value) =>
         Match.value(value).pipe(
-          Match.when({ access: { tag: "classCantrip" } }, (value) => ({
+          Match.when({ access: isCantripSpellAccess }, (value) => ({
             spellRuleFacts,
             access: value.access,
             attackBonus: value.attackBonus,

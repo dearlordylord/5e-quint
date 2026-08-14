@@ -140,7 +140,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        resource: { tag: "spellSlot", slotLevel: 3 },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: 3,
+        },
         ability: "wis",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 2 },
         targetCreatureTypes: ["humanoid"],
@@ -773,7 +776,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        resource: { tag: "spellSlot", slotLevel: 5 },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: 5,
+        },
         ability: "wis",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
         targetCreatureTypes: null,
@@ -848,7 +854,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [abilityHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedDamage",
-        resource: { tag: "spellSlot", slotLevel: 5 },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: 5,
+        },
         castingTime: { kind: "action" },
         ability: "con",
         targeting: { kind: "singleCombatant" },
@@ -1148,7 +1157,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [targetHole])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        resource: { tag: "spellSlot", slotLevel: 2 },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: 2,
+        },
         ability: "con",
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
         effect: {
@@ -1329,7 +1341,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        resource: { tag: "spellSlot", slotLevel: 1 },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: 1,
+        },
         ability: "con",
         targeting: { kind: "selfOriginCone", lengthFeet: 15 },
         effect: {
@@ -1382,7 +1397,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedCondition",
-        resource: { tag: "spellSlot", slotLevel: 1 },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: 1,
+        },
         ability: "str",
         targeting: { kind: "pointOriginCubeExcludingCaster", sideFeet: 20 },
         effect: {
@@ -1441,7 +1459,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "sleepTargetAdmission",
-        resource: { tag: "spellSlot", slotLevel: 1 },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: 1,
+        },
         ability: "wis",
         targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
         rangeFeet: 60,
@@ -1491,6 +1512,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         spellLevel: spellSlotLevel(1),
         count: resourceCount(1),
         expended: resourceCount(0),
+        payment: { tag: "slot" as const },
       },
     ];
 
@@ -1501,7 +1523,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       ),
     ).toEqual([]);
     expect(
-      supportedPreparedSleepTargetAdmissionProfile(spell, spellSlots),
+      supportedPreparedSleepTargetAdmissionProfile(
+        spellAdmissionSource(spell),
+        spellSlots,
+      ),
     ).toEqual([
       expect.objectContaining({
         procedure: "sleepTargetAdmission",
@@ -1611,7 +1636,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       expect.objectContaining({
         procedure: "directConditionRemoval",
         actionCost: "bonusAction",
-        resource: { tag: "spellSlot", slotLevel: 2 },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: 2,
+        },
         targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
         conditionChoices: ["blinded", "deafened", "paralyzed", "poisoned"],
         rangeFeet: 5,

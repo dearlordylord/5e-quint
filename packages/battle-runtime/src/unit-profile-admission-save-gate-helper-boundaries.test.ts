@@ -51,6 +51,7 @@ const preparedSlot = (level: number) => [
     spellLevel: spellSlotLevel(level),
     count: resourceCount(1),
     expended: resourceCount(0),
+    payment: { tag: "slot" as const },
   },
 ];
 

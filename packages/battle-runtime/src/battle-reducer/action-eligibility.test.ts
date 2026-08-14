@@ -117,7 +117,11 @@ describe("battle subject action eligibility", () => {
             ...wizardSpellcasting({
               preparedSpells: [spellRecord("hex")],
             }),
-            sourceClassName: "warlock",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "warlock",
+              abilityModifier: 3,
+            },
           },
         }),
         skeletonCreatureInit({ initiative: 10 }),

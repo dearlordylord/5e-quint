@@ -600,7 +600,11 @@ function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
               cantrips: [spellRecord("produce_flame")],
               preparedSpells: [spellRecord("cure_wounds")],
             }),
-            sourceClassName: "druid",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "druid",
+              abilityModifier: 3,
+            },
           },
         }),
         characterSeed({
@@ -613,7 +617,11 @@ function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
               preparedSpells: [spellRecord("hypnotic_pattern")],
               spellSlots: [{ spellLevel: 3, count: 1 }],
             }),
-            sourceClassName: "wizard",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "wizard",
+              abilityModifier: 3,
+            },
           },
         }),
       ],

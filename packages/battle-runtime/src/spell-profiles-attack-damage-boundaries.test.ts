@@ -174,7 +174,11 @@ function warlockSpellcasting(
   return {
     ...wizardSpellcasting(input),
     proficiencyBonus: proficiencyBonus(3),
-    sourceClassName: "warlock",
+    spellcastingSource: {
+      tag: "classSpellcasting",
+      className: "warlock",
+      abilityModifier: 3,
+    },
   };
 }
 

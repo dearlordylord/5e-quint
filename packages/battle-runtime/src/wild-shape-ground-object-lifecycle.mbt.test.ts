@@ -228,7 +228,11 @@ function initialRuntimeState(): RuntimeState {
             ...wizardSpellcasting({
               cantrips: [spellRecord("shillelagh")],
             }),
-            sourceClassName: "druid",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "druid",
+              abilityModifier: 3,
+            },
           },
         }),
         characterSeed({

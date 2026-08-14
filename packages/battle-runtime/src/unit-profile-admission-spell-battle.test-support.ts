@@ -153,15 +153,19 @@ export function spellBattle(input: {
         displayName: "Spellcaster",
         initiative: 20,
         spellcasting: {
-          sourceClassName:
-            input.casterSpellcastingSourceClassName ??
-            singleSpellcastingSourceClassName(casterClassLevels),
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className:
+              input.casterSpellcastingSourceClassName ??
+              singleSpellcastingSourceClassName(casterClassLevels),
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: input.casterProficiencyBonus ?? proficiencyBonus(2),
           canCastSpells: true,
           cantrips: input.cantrips ?? [],
           preparedSpells: input.preparedSpells ?? [],
           featurePreparedSpells: [],
+          spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
           spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
@@ -199,13 +203,17 @@ export function spellBattle(input: {
                 ? {}
                 : {
                     spellcasting: input.targetSpellcasting ?? {
-                      sourceClassName: "wizard",
-                      spellcastingAbilityModifier: abilityModifier(3),
+                      spellcastingSource: {
+                        tag: "classSpellcasting",
+                        className: "wizard",
+                        abilityModifier: abilityModifier(3),
+                      },
                       proficiencyBonus: proficiencyBonus(2),
                       canCastSpells: true,
                       cantrips: [],
                       preparedSpells: input.targetPreparedSpells ?? [],
                       featurePreparedSpells: [],
+                      spellAccesses: [],
                       spellbookRitualSpellAccesses: [],
                       invocationSpellAccesses: [],
                       spellSlots: [{ spellLevel: 1, count: 1 }],

@@ -60,7 +60,7 @@ import {
   SpellConditionEscapeSchema,
   SpellConditionRepeatSaveSchema,
   SpellSavingThrowRollModeRuleSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 const SpellFailedSaveConditionExpirationExecutionSchema = Schema.Union(
@@ -140,7 +140,7 @@ function admitSaveGatedCondition(
 ): readonly SaveGatedConditionSpellInvocation[] {
   return supportedPreparedSaveGateConditionProfile(
     spell,
-    ctx.actor.origin.spellcasting.spellSlots,
+    ctx.spellCastOptions,
   ).filter(isSaveGatedConditionInvocation);
 }
 
@@ -265,7 +265,7 @@ function resolveSaveGatedCondition(
 const SaveGatedConditionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("saveGatedCondition"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: AbilitySchema,

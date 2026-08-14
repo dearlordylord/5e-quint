@@ -338,13 +338,17 @@ function eldritchBlastBattle(): BattleState {
         currentHp: 12,
         classLevel: 5,
         spellcasting: {
-          sourceClassName: "warlock",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "warlock",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(3),
           canCastSpells: true,
           cantrips: [eldritchBlastSpellRecord()],
           preparedSpells: [],
           featurePreparedSpells: [],
+          spellAccesses: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
           spellSlots: [],
@@ -392,7 +396,10 @@ function battleCreature(input: {
       characterUnitRefs: [],
       classLevels: [
         {
-          className: input.spellcasting?.sourceClassName ?? "fighter",
+          className:
+            input.spellcasting?.spellcastingSource.tag === "classSpellcasting"
+              ? input.spellcasting.spellcastingSource.className
+              : "fighter",
           level: input.classLevel ?? 1,
         },
       ],

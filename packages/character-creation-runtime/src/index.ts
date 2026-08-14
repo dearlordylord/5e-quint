@@ -6,6 +6,13 @@ export {
 } from "./class-spellcasting.ts";
 
 export {
+  characterBuildSpeciesOriginFeatUnitIds,
+  parseCharacterBuildMagicInitiateSpellAccesses,
+  type MagicInitiateAbility,
+  type CharacterBuildMagicInitiateSpellAccessIssue,
+} from "./magic-initiate-spell-access.ts";
+
+export {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
   CHARACTER_CLASS_LEVELS,
@@ -76,6 +83,8 @@ export {
   type CharacterBuildHitDiePool,
   type CharacterBuildHitPoints,
   type CharacterBuildLoadout,
+  type CharacterBuildMagicInitiateSpellAccess,
+  type MagicInitiateSpellcastingAbility,
   type CharacterBuildOwnedEquipmentItem,
   type CharacterBuildPactMagicSlotPool,
   type CharacterBuildProficiencies,

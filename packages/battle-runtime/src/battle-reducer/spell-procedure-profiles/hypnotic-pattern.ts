@@ -69,7 +69,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   discoverSpellMetamagicSelections,
@@ -137,14 +137,14 @@ function admitHypnoticPattern(
   if (hypnoticPattern === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly HypnoticPatternSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "hypnoticPattern",
               spell,
               actionCost: "magicAction",
@@ -584,7 +584,7 @@ function breakConcentrationForIncapacitatedTargets(
 const HypnoticPatternInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("hypnoticPattern"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
@@ -609,3 +609,4 @@ export const hypnoticPatternProfile = {
   "hypnoticPattern",
   HypnoticPatternSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

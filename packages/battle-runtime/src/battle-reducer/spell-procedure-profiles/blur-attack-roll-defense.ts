@@ -1,3 +1,4 @@
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 import { replaceTargetSpellActiveEffect } from "../active-effect-replacement.ts";
@@ -53,7 +54,7 @@ import {
 } from "./profile.ts";
 import {
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 function blurAttackRollDefenseShape(
@@ -109,14 +110,14 @@ function admitBlurAttackRollDefense(
   if (shape === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly BlurAttackRollDefenseSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "blurAttackRollDefense",
               spell,
               actionCost: "magicAction",
@@ -179,7 +180,7 @@ function resolveBlurAttackRollDefense(
 const BlurAttackRollDefenseInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("blurAttackRollDefense"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),

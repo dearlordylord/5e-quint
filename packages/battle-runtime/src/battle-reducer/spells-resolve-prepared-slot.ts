@@ -3,10 +3,8 @@
 
 import { optionalProperty } from "../optional-property.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
-import { Either } from "effect";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
@@ -56,7 +54,6 @@ import {
   battleStateAfterTargetActionEarlyEndForActor,
   sanctuaryTargetingInterdictionCheck,
 } from "./sanctuary-targeting-interdiction.ts";
-import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applyPreparedSlotSpellDamage,
   repeatedDamageAllocationNegatedForTarget,
@@ -66,12 +63,6 @@ import {
   validateSpellDamageFill,
   validateSpellTargetAllocation,
 } from "./spells-holes-fills.ts";
-import { markSpellSlotExpendedThisTurn } from "./spell-turn-resources.ts";
-import {
-  repeatedDamageAllocationActionKind,
-  repeatedDamageAllocationInvocationFacts,
-  repeatedDamageAllocationInvocationResourceFacts,
-} from "./spell-procedure-profiles/repeated-damage-allocation-facts.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
@@ -712,45 +703,16 @@ export function resolvePreparedSlotSpellAct(input: {
     };
   }
 
-  const invocationResourceFacts =
-    repeatedDamageAllocationInvocationResourceFacts(
-      repeatedDamageAllocationInvocationFacts({
-        invocation: input.invocation,
-        targetCount: targetAllocation.allocations.length,
-        targetsAreValid: true,
-      }),
-    );
-  const spent = spendAction(
-    damaged.currentTurnResources,
-    repeatedDamageAllocationActionKind(invocationResourceFacts),
-  );
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "Magic action is no longer available for the current actor.",
-    );
+  const spent = spendSpellCastResources({
+    state: damaged,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+  });
+  if (spent.tag === "invalid") {
+    return spent;
   }
-  const slotTurnResources = markSpellSlotExpendedThisTurn(
-    spent.right,
-    input.actorId,
-  );
-  if (Either.isLeft(slotTurnResources)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  const slotted = expendSpellSlot(
-    damaged,
-    input.actorId,
-    invocationResourceFacts.selectedSlotLevel,
-  );
-  const nextState = {
-    ...slotted,
-    currentTurnResources: slotTurnResources.right,
-  };
+  const nextState = spent.state;
   if (input.opensAfterDamageReactionWindow !== false) {
     const afterDamageEvents = targetAllocation.allocations.flatMap(
       (allocation, allocationIndex): readonly BattleAfterDamageEvent[] => {

@@ -17,7 +17,7 @@ import type {
   WeaponAttackOverrideProcedureFacts,
 } from "../procedure-facts/weapon-attack-override.ts";
 import {
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   NoSpellInvocationResourceSchema,
 } from "./spell-invocation-codecs.ts";
 import {
@@ -435,7 +435,7 @@ export const SpellWeaponAttackOverrideTemplateSchema =
 export const WeaponAttackOverrideExecutionSchema =
   exactSchema<WeaponAttackOverrideSpellProcedureExecution>()(
     Schema.Struct({
-      access: ClassCantripSpellAccessSchema,
+      access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("weaponAttackOverride"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,

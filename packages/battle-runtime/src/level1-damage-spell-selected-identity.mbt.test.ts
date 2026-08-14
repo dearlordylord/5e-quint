@@ -1138,13 +1138,17 @@ function level1DamageSpellBattle(spell: SpellRecord): BattleState {
         initiative: 20,
         className: "wizard",
         spellcasting: {
-          sourceClassName: "wizard",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "wizard",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: isCantrip ? [spell] : [],
           preparedSpells: isCantrip ? [] : [spell],
           featurePreparedSpells: [],
+          spellAccesses: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
           spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -1369,7 +1373,10 @@ function assertSelectedSpellProcedureProfile(
     profile.tag === "spellSlot"
       ? {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: profile.slotLevel },
+          resource: {
+            tag: "spellSlot",
+            slotLevel: profile.slotLevel,
+          },
         }
       : {
           access: { tag: "classCantrip" },

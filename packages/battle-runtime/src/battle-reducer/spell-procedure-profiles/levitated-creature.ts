@@ -68,7 +68,7 @@ import {
 import {
   DcSourceSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type LevitatedCreatureInvocation = LevitatedCreatureSpellInvocation;
@@ -86,14 +86,14 @@ function admitLevitatedCreature(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly LevitatedCreatureInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               spell,
               actionCost: "magicAction",
               ...projection,
@@ -361,7 +361,7 @@ function applyLevitatedCreatureSpellEffect(
 const LevitatedCreatureInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("levitatedCreature"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
@@ -397,3 +397,4 @@ export const levitatedCreatureProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverLevitatedCreatureCastAct,
   resolve: resolveLevitatedCreature,
 };
+import { spellInvocationResourceForCastOption } from "./profile.ts";

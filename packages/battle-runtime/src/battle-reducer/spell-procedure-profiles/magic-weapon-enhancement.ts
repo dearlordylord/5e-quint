@@ -50,7 +50,7 @@ import {
 } from "./profile.ts";
 import {
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type MagicWeaponEnhancementInvocation = Extract<
@@ -77,7 +77,7 @@ function admitMagicWeaponEnhancement(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly MagicWeaponEnhancementInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -91,7 +91,7 @@ function admitMagicWeaponEnhancement(
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "magicWeaponEnhancement",
               spell,
               actionCost: "bonusAction",
@@ -332,7 +332,7 @@ export const MagicWeaponEnhancementInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("magicWeaponEnhancement"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
@@ -350,3 +350,4 @@ export const magicWeaponEnhancementProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverMagicWeaponEnhancementCastAct,
   resolve: resolveMagicWeaponEnhancement,
 };
+import { spellInvocationResourceForCastOption } from "./profile.ts";

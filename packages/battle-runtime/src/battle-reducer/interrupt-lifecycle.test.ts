@@ -382,7 +382,7 @@ describe("interrupt lifecycle", () => {
       castLevel: 0,
       components: [],
       castingResource: { kind: "alreadySpent" },
-      spellSlotCommitment: { kind: "pendingCasterSpellSlot" },
+      paymentCommitment: { kind: "pendingCasterSpellSlot" },
       metamagicCommitment: { kind: "none" },
       concentrationCommitment: { kind: "none" },
       targetIds: [],

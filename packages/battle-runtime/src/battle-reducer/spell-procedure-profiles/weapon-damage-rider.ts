@@ -40,7 +40,7 @@ import {
 } from "./profile.ts";
 import {
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type WeaponDamageRiderInvocation = Extract<
@@ -61,14 +61,14 @@ function admitWeaponDamageRider(
   if (activeEffect === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly WeaponDamageRiderInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "weaponDamageRider",
               spell,
               actionCost: "bonusAction",
@@ -209,7 +209,7 @@ function resolveWeaponDamageRider(
 const WeaponDamageRiderInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("weaponDamageRider"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
@@ -226,3 +226,4 @@ export const weaponDamageRiderProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverWeaponDamageRiderCastAct,
   resolve: resolveWeaponDamageRider,
 };
+import { spellInvocationResourceForCastOption } from "./profile.ts";

@@ -188,13 +188,17 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     const initialSession = spellBattle({
       cantrips: [spell],
       targetSpellcasting: {
-        sourceClassName: "wizard",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [rayOfFrost],
         preparedSpells: [],
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [],

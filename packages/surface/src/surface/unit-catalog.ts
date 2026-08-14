@@ -469,16 +469,29 @@ function classSpellListFromRecord(
   };
 }
 
+export function classSpellListForSpellcastingClassRecord(
+  classRecord: SpellcastingClassRecord,
+): ClassSpellList {
+  return classSpellListFromRecord(classRecord);
+}
+
+export function spellcastingClassRecordForClassName(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly className: string;
+}): SpellcastingClassRecord | undefined {
+  return input.unitLibrary
+    .listUnits()
+    .find(
+      (unit): unit is SpellcastingClassRecord =>
+        isSpellcastingClassRecord(unit) && unit.className === input.className,
+    );
+}
+
 export function classSpellListForClassName(input: {
   readonly unitLibrary: UnitCatalog;
   readonly className: string;
 }): ClassSpellList | undefined {
-  const classRecord = input.unitLibrary
-    .listUnits()
-    .find(
-      (unit) =>
-        isSpellcastingClassRecord(unit) && unit.className === input.className,
-    );
+  const classRecord = spellcastingClassRecordForClassName(input);
   return classRecord === undefined || !isSpellcastingClassRecord(classRecord)
     ? undefined
     : classSpellListFromRecord(classRecord);

@@ -46,7 +46,7 @@ import {
   DamageTypeSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type ChainedSpellAttackDamageInvocation = Extract<
@@ -71,7 +71,7 @@ function admitChainedSpellAttackDamage(
   return supportedPreparedChainedSpellAttackDamageProfile(
     spell,
     spellcasting.spellSlots,
-    spellcasting.spellcastingAbilityModifier,
+    ctx.castingSource.abilityModifier,
     spellcasting.proficiencyBonus,
   ).filter(isChainedSpellAttackDamageInvocation);
 }
@@ -102,7 +102,7 @@ export const ChainedSpellAttackDamageInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("chainedSpellAttackDamage"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: Schema.Struct({

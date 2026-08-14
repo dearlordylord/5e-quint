@@ -325,8 +325,11 @@ function startSpellcasterFixtureBattle(
         initiative: 12,
         className: usesWizardShockingGrasp ? "wizard" : "druid",
         spellcasting: {
-          sourceClassName: usesWizardShockingGrasp ? "wizard" : "druid",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: usesWizardShockingGrasp ? "wizard" : "druid",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: usesWizardShockingGrasp ? [shockingGraspSpell] : [],
@@ -334,6 +337,7 @@ function startSpellcasterFixtureBattle(
             ? []
             : [cureWoundsSpell, healingWordSpell, barkskinSpell],
           featurePreparedSpells: [],
+          spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
           spellSlots: usesWizardShockingGrasp
@@ -355,13 +359,17 @@ function startSpellcasterFixtureBattle(
           : {
               classLevel: 5,
               spellcasting: {
-                sourceClassName: "wizard",
-                spellcastingAbilityModifier: abilityModifier(3),
+                spellcastingSource: {
+                  tag: "classSpellcasting",
+                  className: "wizard",
+                  abilityModifier: abilityModifier(3),
+                },
                 proficiencyBonus: proficiencyBonus(3),
                 canCastSpells: true,
                 cantrips: [],
                 preparedSpells: [counterspellSpell],
                 featurePreparedSpells: [],
+                spellAccesses: [],
                 spellbookRitualSpellAccesses: [],
                 invocationSpellAccesses: [],
                 spellSlots: [{ spellLevel: 3, count: 1 }],
@@ -404,13 +412,17 @@ function startPactWarlockFixtureBattle(
           ? {}
           : { unitFeatures: input.ownerCharacterUnitFeatures }),
         spellcasting: {
-          sourceClassName: "warlock",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "warlock",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
           preparedSpells: [],
           featurePreparedSpells: [],
+          spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [
             {
@@ -430,13 +442,17 @@ function startPactWarlockFixtureBattle(
         ...(input.targetHasShield === true
           ? {
               spellcasting: {
-                sourceClassName: "wizard",
-                spellcastingAbilityModifier: abilityModifier(3),
+                spellcastingSource: {
+                  tag: "classSpellcasting",
+                  className: "wizard",
+                  abilityModifier: abilityModifier(3),
+                },
                 proficiencyBonus: proficiencyBonus(2),
                 canCastSpells: true,
                 cantrips: [],
                 preparedSpells: [shieldSpell],
                 featurePreparedSpells: [],
+                spellAccesses: [],
                 spellbookRitualSpellAccesses: [],
                 invocationSpellAccesses: [],
                 spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -469,13 +485,17 @@ function startWildCompanionDruidFixtureBattle(input: {
         initiative: 12,
         classLevels: [{ className: "druid", level: 2 }],
         spellcasting: {
-          sourceClassName: "druid",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "druid",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
           preparedSpells: [],
           featurePreparedSpells: [],
+          spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
           spellSlots: input.spellSlots ?? [],
@@ -546,13 +566,17 @@ function startWrongOwnerPactFixtureBattle(): BattleRuntimeSession {
         initiative: 14,
         className: "warlock",
         spellcasting: {
-          sourceClassName: "warlock",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "warlock",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
           preparedSpells: [],
           featurePreparedSpells: [],
+          spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [
             {
@@ -592,13 +616,17 @@ function startFindFamiliarSpellcasterFixtureBattle(): BattleRuntimeSession {
         displayName: "Caster",
         initiative: 12,
         spellcasting: {
-          sourceClassName: "wizard",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "wizard",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
           preparedSpells: [],
           featurePreparedSpells: [],
+          spellAccesses: [],
           spellbookRitualSpellAccesses: [
             {
               tag: "spellbookRitual",

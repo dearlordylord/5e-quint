@@ -3810,7 +3810,11 @@ function druidWildShapeCreatureInit(input?: DruidWildShapeCreatureInput) {
           ? {}
           : { spellSlots: input.spellSlots }),
       }),
-      sourceClassName: "druid",
+      spellcastingSource: {
+        tag: "classSpellcasting",
+        className: "druid",
+        abilityModifier: 3,
+      },
     },
   });
 }

@@ -305,6 +305,7 @@ function testBuild(input: {
     ),
     proficiencyChoices: input.proficiencyChoices ?? [],
     features: input.features ?? [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},

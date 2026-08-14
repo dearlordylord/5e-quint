@@ -38,7 +38,6 @@ import {
   combatantId,
   hasCondition,
   resolveBattleSubject,
-  resourceCount,
   spellSlotInvocationRef,
   spellSlotLevel,
 } from "./unit-profile-admission.test-support.ts";
@@ -52,8 +51,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
         [
           {
             spellLevel: spellSlotLevel(1),
-            count: resourceCount(1),
-            expended: resourceCount(0),
+            payment: { tag: "slot" as const },
           },
         ],
       ),
@@ -99,7 +97,10 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
     expect(spellHoleInvocation(session, [savingThrow])).toEqual(
       expect.objectContaining({
         procedure: "saveGatedConditionImmunity",
-        resource: { tag: "spellSlot", slotLevel: 2 },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: 2,
+        },
         ability: "cha",
         targeting: { kind: "pointOriginSphere", radiusFeet: 20 },
         targetCreatureTypes: ["humanoid"],

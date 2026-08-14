@@ -81,8 +81,13 @@ export type CharacterBattleSpellSlotState = {
   readonly expended: ResourceCount;
 };
 export type CharacterBattleSpellcastingExecutionState = {
-  readonly sourceClassName: ClassName;
-  readonly spellcastingAbilityModifier: AbilityModifier;
+  readonly spellcastingSource:
+    | {
+        readonly tag: "classSpellcasting";
+        readonly className: ClassName;
+        readonly abilityModifier: AbilityModifier;
+      }
+    | { readonly tag: "spellAccessOnly" };
   readonly proficiencyBonus: ProficiencyBonus;
   readonly canCastSpells: boolean;
   readonly spellSlots: readonly CharacterBattleSpellSlotState[];

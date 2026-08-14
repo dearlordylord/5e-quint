@@ -114,6 +114,7 @@
 {"profileId":"character-sheet.pact-slot-recovery","obligationIds":["SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS"]}
 {"profileId":"character-sheet.spellbook-ritual-invocation","obligationIds":["SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION"]}
 {"profileId":"character-sheet.class-feature-prepared-spell-access","obligationIds":["SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"]}
+{"profileId":"battle.spell-access-magic-initiate-casting","obligationIds":["BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING"]}
 {"profileId":"character-sheet.druid-circle-land-spell-access","obligationIds":["SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"]}
 {"profileId":"character-sheet.weapon-mastery-reselection","obligationIds":["SHEET.WEAPON_MASTERY.RESELECTION"]}
 {"profileId":"character-sheet.weapon-mastery-class-level-reselection","obligationIds":["SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION"]}

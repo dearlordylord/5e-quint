@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION
 import {
   statBlockId as authoredStatBlockId,
   unitId as authoredUnitId,
@@ -153,6 +154,9 @@ import {
   CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
   ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
   SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
@@ -2120,6 +2124,80 @@ describe("character creation hole discovery", () => {
     },
   );
 
+  test("Human Versatile excludes a Magic Initiate spell list already granted by the background", () => {
+    const draft = createTestDraft("draft:sage-human-versatile-repeatability");
+    const afterInitial = requireAcceptedBatch(
+      fillCreationHoles({
+        draft,
+        unitLibrary,
+        expectedRevision: draft.revision,
+        fills: initialManifestFills(
+          "13:class_fighter:level_1:maximum_hit_die",
+          authoredUnitId("species_human"),
+          authoredUnitId("background_sage"),
+        ),
+      }),
+    );
+    const versatileHole = discoverCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+    }).find(
+      (hole) =>
+        hole.kind === "choice" &&
+        hole.source.tag === "unitChoice" &&
+        hole.source.unitId === "species_human_versatile" &&
+        hole.source.choiceKey === SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+    );
+
+    expect(optionIds(versatileHole)).not.toContain(
+      "feat_magic_initiate_wizard",
+    );
+    expect(optionIds(versatileHole)).toEqual(
+      expect.arrayContaining([
+        "feat_magic_initiate_cleric",
+        "feat_magic_initiate_druid",
+      ]),
+    );
+  });
+
+  test("Human background and Versatile reject a duplicate Magic Initiate list but accept a different list", () => {
+    const duplicate = finalizeCharacterDraft({
+      draft: forceSageBackgroundOntoHumanVersatileWizardDraft(),
+      unitLibrary,
+    });
+    expect(duplicate.tag).toBe("invalid");
+    if (duplicate.tag === "invalid") {
+      expect(duplicate.issues).toContainEqual({
+        tag: "unsupportedFinalization",
+        cause: { tag: "duplicateMagicInitiateSpellList" },
+      });
+    }
+
+    const differentDraft = completeHumanVersatileOriginFeatDraftForBackground({
+      backgroundUnitId: authoredUnitId("background_sage"),
+      featUnitId: authoredUnitId("feat_magic_initiate_cleric"),
+      choices: {
+        cantrips: ["guidance", "sacred_flame"],
+        levelOneSpell: "bless",
+        ability: "wis",
+      },
+      skill: "athletics",
+    });
+    const different = finalizeCharacterDraft({
+      draft: differentDraft,
+      unitLibrary,
+    });
+    if (different.tag === "invalid") {
+      throw new Error(
+        JSON.stringify({
+          issues: different.issues,
+          choices: differentDraft.selections.choices,
+        }),
+      );
+    }
+    expect(different.tag).toBe("ready");
+  });
+
   test("opens purchase after the manifest coin equipment path is selected", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
@@ -3665,6 +3743,11 @@ describe("character creation finalization", () => {
       },
       expectedSkills: ["insight", "religion", "perception", "survival"],
       expectedOriginFeatUnitId: "feat_magic_initiate_cleric",
+      magicInitiate: {
+        cantrips: ["guidance", "sacred_flame"],
+        levelOneSpell: "bless",
+        ability: "wis",
+      },
     },
     {
       backgroundUnitId: "background_criminal",
@@ -3680,6 +3763,7 @@ describe("character creation finalization", () => {
       },
       expectedSkills: ["sleight_of_hand", "stealth", "perception", "survival"],
       expectedOriginFeatUnitId: "alert",
+      magicInitiate: false,
     },
     {
       backgroundUnitId: "background_sage",
@@ -3695,6 +3779,11 @@ describe("character creation finalization", () => {
       },
       expectedSkills: ["arcana", "history", "perception", "survival"],
       expectedOriginFeatUnitId: "feat_magic_initiate_wizard",
+      magicInitiate: {
+        cantrips: ["fire_bolt", "light"],
+        levelOneSpell: "burning_hands",
+        ability: "int",
+      },
     },
   ] as const)(
     "finalizes $backgroundUnitId option B without duplicated background state",
@@ -3705,11 +3794,13 @@ describe("character creation finalization", () => {
       expectedAbilityScores,
       expectedSkills,
       expectedOriginFeatUnitId,
+      magicInitiate,
     }) => {
       const draft = completeFighterDraftForBackground({
         backgroundUnitId: authoredUnitId(backgroundUnitId),
         asiOptionId,
         toolOptionId,
+        magicInitiate,
       });
       const result = finalizeCharacterDraft({ draft, unitLibrary });
 
@@ -3720,6 +3811,18 @@ describe("character creation finalization", () => {
 
       expect(result.build.background).toBe(backgroundUnitId);
       expect(result.build.spellcasting).toBeUndefined();
+      expect(result.build.magicInitiateSpellAccesses).toEqual(
+        magicInitiate === false
+          ? []
+          : [
+              {
+                featUnitId: expectedOriginFeatUnitId,
+                spellcastingAbility: magicInitiate.ability,
+                cantrips: magicInitiate.cantrips,
+                levelOneSpell: magicInitiate.levelOneSpell,
+              },
+            ],
+      );
       expect(result.build.abilityScores).toEqual(expectedAbilityScores);
       expect(
         expectRight(characterBuildProficiencies(result.build, unitLibrary)),
@@ -4227,18 +4330,27 @@ describe("character creation finalization", () => {
     {
       featUnitId: "feat_magic_initiate_cleric",
       spellList: "cleric",
+      cantrips: ["guidance", "sacred_flame"],
+      levelOneSpell: "bless",
+      ability: "wis",
     },
     {
       featUnitId: "feat_magic_initiate_druid",
       spellList: "druid",
+      cantrips: ["guidance", "produce_flame"],
+      levelOneSpell: "animal_friendship",
+      ability: "wis",
     },
     {
       featUnitId: "feat_magic_initiate_wizard",
       spellList: "wizard",
+      cantrips: ["fire_bolt", "light"],
+      levelOneSpell: "burning_hands",
+      ability: "int",
     },
   ] as const)(
     "retains Human Versatile $spellList Magic Initiate spell-access source facts",
-    ({ featUnitId, spellList }) => {
+    ({ featUnitId, spellList, cantrips, levelOneSpell, ability }) => {
       const feat = unitLibrary.requireUnit(featUnitId);
       expect(readMagicInitiateSpellAccessSourceFacts(feat)).toEqual({
         tag: "readable",
@@ -4275,11 +4387,46 @@ describe("character creation finalization", () => {
           hole.source.tag === "unitChoice" &&
           hole.source.unitId === featUnitId,
       );
-      expect(selectedFeatHoles).toEqual([]);
+      expect(selectedFeatHoles).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            cardinality: { tag: "exactly", count: 2 },
+            source: {
+              tag: "unitChoice",
+              unitId: featUnitId,
+              choiceKey: ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+            },
+          }),
+          expect.objectContaining({
+            cardinality: { tag: "exactly", count: 1 },
+            source: {
+              tag: "unitChoice",
+              unitId: featUnitId,
+              choiceKey: ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
+            },
+          }),
+          expect.objectContaining({
+            cardinality: { tag: "exactly", count: 1 },
+            source: {
+              tag: "unitChoice",
+              unitId: featUnitId,
+              choiceKey:
+                ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
+            },
+          }),
+        ]),
+      );
+      expect(selectedFeatHoles).toHaveLength(3);
+      expect(optionIds(selectedFeatHoles[0])).toEqual(
+        expect.arrayContaining([...cantrips]),
+      );
+      expect(optionIds(selectedFeatHoles[1])).toContain(levelOneSpell);
+      expect(optionIds(selectedFeatHoles[2])).toEqual(["int", "wis", "cha"]);
 
       const result = finalizeCharacterDraft({
         draft: completeHumanVersatileOriginFeatDraft(
           authoredUnitId(featUnitId),
+          { cantrips, levelOneSpell, ability },
         ),
         unitLibrary,
       });
@@ -4292,6 +4439,14 @@ describe("character creation finalization", () => {
         unitId: featUnitId,
       });
       expect(result.build.spellcasting).toBeUndefined();
+      expect(result.build.magicInitiateSpellAccesses).toEqual([
+        {
+          featUnitId,
+          spellcastingAbility: ability,
+          cantrips,
+          levelOneSpell,
+        },
+      ]);
       expect(
         characterBuildUnitRefs(result.build, unitLibrary).map(
           (ref) => ref.unitId,
@@ -11801,10 +11956,11 @@ function unitLibraryReplacingUnits(
 function initialManifestFills(
   progressionOptionId = "13:class_fighter:level_1:maximum_hit_die",
   speciesUnitId: UnitRecord["id"] = authoredUnitId("species_orc"),
+  backgroundUnitId: UnitRecord["id"] = authoredUnitId("background_soldier"),
 ): readonly CreationFill[] {
   return [
     choiceFill("cc:draft:draft.progression.initial", progressionOptionId),
-    choiceFill("cc:draft:draft.background", "background_soldier"),
+    choiceFill("cc:draft:draft.background", backgroundUnitId),
     choiceFill("cc:draft:draft.species", speciesUnitId),
     {
       kind: "abilityScores",
@@ -11837,14 +11993,155 @@ function completeManifestDraft(): CharacterDraft {
 
 function completeHumanVersatileOriginFeatDraft(
   featUnitId: UnitRecord["id"],
+  choices: {
+    readonly cantrips: readonly [string, string];
+    readonly levelOneSpell: string;
+    readonly ability: "int" | "wis" | "cha";
+  },
 ): CharacterDraft {
-  return completeManifestDraftAfterProgression(
-    humanVersatileOriginFeatDraftAfterSpeciesChoices(featUnitId),
+  return completeHumanVersatileOriginFeatDraftForBackground({
+    backgroundUnitId: authoredUnitId("background_soldier"),
+    featUnitId,
+    choices,
+  });
+}
+
+function completeHumanVersatileOriginFeatDraftForBackground(input: {
+  readonly backgroundUnitId: UnitRecord["id"];
+  readonly featUnitId: UnitRecord["id"];
+  readonly choices: {
+    readonly cantrips: readonly [string, string];
+    readonly levelOneSpell: string;
+    readonly ability: "int" | "wis" | "cha";
+  };
+  readonly skill?: string;
+}): CharacterDraft {
+  const afterSpeciesChoices = humanVersatileOriginFeatDraftAfterSpeciesChoices(
+    input.featUnitId,
+    input.backgroundUnitId,
+    input.skill,
   );
+  const backgroundMagicInitiateFills =
+    input.backgroundUnitId === "background_sage" &&
+    input.featUnitId !== "feat_magic_initiate_wizard"
+      ? [
+          choiceFill(
+            testUnitHoleId(
+              "feat_magic_initiate_wizard",
+              ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+            ),
+            "fire_bolt",
+            "light",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "feat_magic_initiate_wizard",
+              ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
+            ),
+            "burning_hands",
+          ),
+          choiceFill(
+            testUnitHoleId(
+              "feat_magic_initiate_wizard",
+              ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
+            ),
+            "int",
+          ),
+        ]
+      : [];
+  const afterFeatChoices = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterSpeciesChoices,
+      unitLibrary,
+      expectedRevision: afterSpeciesChoices.revision,
+      fills: [
+        ...backgroundMagicInitiateFills,
+        choiceFill(
+          testUnitHoleId(
+            input.featUnitId,
+            ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+          ),
+          ...input.choices.cantrips,
+        ),
+        choiceFill(
+          testUnitHoleId(
+            input.featUnitId,
+            ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
+          ),
+          input.choices.levelOneSpell,
+        ),
+        choiceFill(
+          testUnitHoleId(
+            input.featUnitId,
+            ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
+          ),
+          input.choices.ability,
+        ),
+      ],
+    }),
+  );
+  return completeManifestDraftAfterProgression(
+    afterFeatChoices,
+    input.backgroundUnitId,
+  );
+}
+
+function forceSageBackgroundOntoHumanVersatileWizardDraft(): CharacterDraft {
+  const draft = completeHumanVersatileOriginFeatDraft(
+    authoredUnitId("feat_magic_initiate_wizard"),
+    {
+      cantrips: ["fire_bolt", "light"],
+      levelOneSpell: "burning_hands",
+      ability: "int",
+    },
+  );
+  const backgroundChoiceKeys = new Set([
+    "background_ability_score_increase",
+    "background_tool_choice",
+    "background_equipment_choice",
+  ]);
+  return {
+    ...draft,
+    selections: {
+      ...draft.selections,
+      background: authoredUnitId("background_sage"),
+      backgroundAbilityScoreIncrease: {
+        kind: "twoAndOne",
+        plusTwo: "int",
+        plusOne: "wis",
+      },
+      choices: [
+        ...draft.selections.choices.filter(
+          (selection) =>
+            selection.kind !== "unitChoice" ||
+            selection.source.tag !== "unitChoice" ||
+            selection.source.unitId !== authoredUnitId("background_soldier") ||
+            !backgroundChoiceKeys.has(selection.source.choiceKey),
+        ),
+        selectedChoice(
+          "background_sage",
+          "background_ability_score_increase",
+          "two_and_one:int:wis",
+        ),
+        selectedChoice(
+          "background_sage",
+          "background_tool_choice",
+          "calligraphers_supplies",
+        ),
+        selectedChoice(
+          "background_sage",
+          "background_equipment_choice",
+          "option_b",
+        ),
+      ],
+    },
+  };
 }
 
 function humanVersatileOriginFeatDraftAfterSpeciesChoices(
   featUnitId: UnitRecord["id"],
+  backgroundUnitId: UnitRecord["id"] = authoredUnitId("background_soldier"),
+  skill?: string,
 ): CharacterDraft {
   const draft = createTestDraft(`draft:human-versatile-${featUnitId}`);
   const afterInitial = requireAcceptedBatch(
@@ -11855,6 +12152,7 @@ function humanVersatileOriginFeatDraftAfterSpeciesChoices(
       fills: initialManifestFills(
         "13:class_fighter:level_1:maximum_hit_die",
         authoredUnitId("species_human"),
+        backgroundUnitId,
       ),
     }),
   );
@@ -11871,7 +12169,8 @@ function humanVersatileOriginFeatDraftAfterSpeciesChoices(
             "species_human_skillful",
             SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
           ),
-          "arcana",
+          skill ??
+            (backgroundUnitId === "background_sage" ? "perception" : "arcana"),
         ),
         choiceFill(
           testUnitHoleId(
@@ -12083,7 +12382,9 @@ function completeFighterTwoDraft(): CharacterDraft {
 
 function completeManifestDraftAfterProgression(
   afterProgression: CharacterDraft,
+  backgroundUnitId: UnitRecord["id"] = authoredUnitId("background_soldier"),
 ): CharacterDraft {
+  const isSageBackground = backgroundUnitId === "background_sage";
   const afterChoices = requireAcceptedBatch(
     fillCreationHoles({
       draft: afterProgression,
@@ -12106,22 +12407,19 @@ function completeManifestDraftAfterProgression(
           "weapon_flail",
         ),
         choiceFill(
-          testUnitHoleId(
-            "background_soldier",
-            "background_ability_score_increase",
-          ),
-          "two_and_one:str:con",
+          testUnitHoleId(backgroundUnitId, "background_ability_score_increase"),
+          isSageBackground ? "two_and_one:int:wis" : "two_and_one:str:con",
         ),
         choiceFill(
-          testUnitHoleId("background_soldier", "background_tool_choice"),
-          "tool_dice_set",
+          testUnitHoleId(backgroundUnitId, "background_tool_choice"),
+          isSageBackground ? "calligraphers_supplies" : "tool_dice_set",
         ),
         choiceFill(
           testUnitHoleId("class_fighter", "class_equipment_choice"),
           "option_c",
         ),
         choiceFill(
-          testUnitHoleId("background_soldier", "background_equipment_choice"),
+          testUnitHoleId(backgroundUnitId, "background_equipment_choice"),
           "option_b",
         ),
       ],
@@ -12164,7 +12462,21 @@ function completeFighterDraftForBackground(input: {
   readonly backgroundUnitId: UnitRecord["id"];
   readonly asiOptionId: string;
   readonly toolOptionId: string;
+  readonly magicInitiate:
+    | false
+    | {
+        readonly cantrips: readonly [string, string];
+        readonly levelOneSpell: string;
+        readonly ability: "int" | "wis" | "cha";
+      };
 }): CharacterDraft {
+  const background = unitLibrary.requireUnit(input.backgroundUnitId);
+  if (background.kind !== "background") {
+    throw new Error(
+      "The background finalization fixture requires a background Unit.",
+    );
+  }
+  const originFeatUnitId = background.originFeatId;
   const draft = createTestDraft(`draft:complete-${input.backgroundUnitId}`);
   const afterInitial = requireAcceptedBatch(
     fillCreationHoles({
@@ -12196,11 +12508,44 @@ function completeFighterDraftForBackground(input: {
       ],
     }),
   );
+  const afterOriginFeatChoices =
+    input.magicInitiate === false
+      ? afterInitial
+      : requireAcceptedBatch(
+          fillCreationHoles({
+            draft: afterInitial,
+            unitLibrary,
+            expectedRevision: afterInitial.revision,
+            fills: [
+              choiceFill(
+                testUnitHoleId(
+                  originFeatUnitId,
+                  ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+                ),
+                ...input.magicInitiate.cantrips,
+              ),
+              choiceFill(
+                testUnitHoleId(
+                  originFeatUnitId,
+                  ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
+                ),
+                input.magicInitiate.levelOneSpell,
+              ),
+              choiceFill(
+                testUnitHoleId(
+                  originFeatUnitId,
+                  ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
+                ),
+                input.magicInitiate.ability,
+              ),
+            ],
+          }),
+        );
   const afterChoices = requireAcceptedBatch(
     fillCreationHoles({
-      draft: afterInitial,
+      draft: afterOriginFeatChoices,
       unitLibrary,
-      expectedRevision: afterInitial.revision,
+      expectedRevision: afterOriginFeatChoices.revision,
       fills: [
         choiceFill(
           testUnitHoleId("class_fighter", "class_skill_proficiency_choice"),

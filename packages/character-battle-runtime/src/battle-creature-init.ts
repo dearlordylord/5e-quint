@@ -43,9 +43,10 @@ import {
   type CharacterBuild,
   type CharacterBuildDruidWildShapeFacts,
 } from "@dnd/character-creation-runtime";
-import type {
-  CharacterSheetArmorClassBaseChoice,
-  CharacterSheetResourceExpenditure,
+import {
+  characterSheetSpellAccessesForBuild,
+  type CharacterSheetArmorClassBaseChoice,
+  type CharacterSheetResourceExpenditure,
 } from "@dnd/character-sheet-runtime";
 import {
   Hp,
@@ -65,7 +66,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Either, Option } from "effect";
 import {
   battleCreatureInitIssue,
   characterArmorClassState,
@@ -108,7 +109,7 @@ export type CharacterBuildCreatureInput = {
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
-  readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
+  readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
   readonly druidWildShapeAvailableForms?: readonly StatBlockRecord[];
   readonly ammunitionStocks: CharacterBattleCreatureInit["ammunitionStocks"];
   readonly armorClassBaseChoices?:
@@ -363,7 +364,7 @@ export function battleCreatureInitFromCharacterBuild(
     const resources = yield* characterBattleResourceInits(
       input.build,
       input.unitLibrary,
-      input.resourceExpenditures ?? [],
+      input.resourceExpenditures,
       parsedClassLevels.right,
       druidWildShapeFacts,
       admittedSupportProjection.unitRefs.map(({ unit }) => unit),
@@ -382,7 +383,8 @@ export function battleCreatureInitFromCharacterBuild(
       );
     }
     const spellcasting =
-      input.build.spellcasting === undefined
+      input.build.spellcasting === undefined &&
+      input.build.magicInitiateSpellAccesses.length === 0
         ? undefined
         : yield* characterSpellcasting({
             build: input.build,
@@ -393,6 +395,7 @@ export function battleCreatureInitFromCharacterBuild(
             ...(input.spellSlots === undefined
               ? {}
               : { spellSlots: input.spellSlots }),
+            resourceExpenditures: input.resourceExpenditures,
           });
     const unarmedStrike = yield* characterBaseUnarmedStrikeActionOption(
       input.build,
@@ -745,6 +748,40 @@ function characterBattleResourceInits(
       resources.push(init.right);
     }
   }
+  for (const access of characterSheetSpellAccessesForBuild({
+    build,
+    unitLibrary,
+  })) {
+    if (
+      access.source !== "magicInitiate" ||
+      access.preparation !== "alwaysPrepared"
+    ) {
+      continue;
+    }
+    const source = unitLibrary.getUnit(access.sourceUnitId);
+    if (Option.isNone(source)) {
+      issues.push("Spell Access free-cast source Unit must exist.");
+      continue;
+    }
+    const expended =
+      resourceExpenditures.find(
+        (candidate) =>
+          candidate.tag === "spellAccessFreeCast" &&
+          candidate.sourceUnitId === access.sourceUnitId &&
+          candidate.spellId === access.spellId,
+      )?.expended ?? resourceCount(0);
+    if (expended > 1) {
+      issues.push(
+        "Spell Access free-cast expenditure exceeds its battle resource cap.",
+      );
+      continue;
+    }
+    resources.push({
+      unit: source.value,
+      spellAccessFreeCast: { spellId: access.spellId, count: 1 },
+      usesRemaining: 1 - Number(expended),
+    });
+  }
   if (issues.length > 0) {
     return battleCreatureInitIssue(issues.join("; "));
   }
@@ -881,11 +918,14 @@ function characterBattlePersistedUsesRemaining(
   if (freeCastGrants !== null) {
     const expended =
       resourceExpenditures.find(
-        (expenditure) => expenditure.tag === freeCastGrants.profile.resourceTag,
+        (expenditure) =>
+          expenditure.tag === "spellAccessFreeCast" &&
+          expenditure.sourceUnitId === unit.id &&
+          expenditure.spellId === freeCastGrants.profile.spellId,
       )?.expended ?? 0;
     if (expended > freeCastGrants.freeCastGrant.count) {
       return battleCreatureInitIssue(
-        "Class feature spell free-cast expenditure exceeds its battle resource cap.",
+        "Spell Access free-cast expenditure exceeds its battle resource cap.",
       );
     }
     return Either.right(freeCastGrants.freeCastGrant.count - expended);

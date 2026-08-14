@@ -61,7 +61,7 @@ import {
   MovementFeet,
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type PersistentArmorInvocation = Extract<
@@ -153,20 +153,21 @@ function admitPersistentArmorEffect(
   const executionFacts = persistentArmorEffectExecutionFactsForSpell(spell);
   return executionFacts === null
     ? []
-    : [
-        buildPersistentArmorEffectInvocation(
-          ctx.actor.combatantId,
-          spell,
-          executionFacts,
-          {
-            access: { tag: "prepared" },
-            resource: {
-              tag: "spellSlot",
-              slotLevel: executionFacts.slotLevel,
-            },
-          },
-        ),
-      ];
+    : ctx.spellCastOptions.flatMap((option) =>
+        option.spellLevel < executionFacts.slotLevel
+          ? []
+          : [
+              buildPersistentArmorEffectInvocation(
+                ctx.actor.combatantId,
+                spell,
+                executionFacts,
+                {
+                  access: { tag: "prepared" },
+                  resource: spellInvocationResourceForCastOption(option),
+                },
+              ),
+            ],
+      );
 }
 
 export function admitPersistentArmorEffectInvocationSpellAccess(
@@ -335,7 +336,7 @@ const PersistentArmorEffectInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("persistentArmorEffect"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       rangeFeet: MovementFeet,
@@ -361,3 +362,4 @@ export const persistentArmorEffectProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverPersistentArmorEffectCastAct,
   resolve: resolvePersistentArmorEffect,
 };
+import { spellInvocationResourceForCastOption } from "./profile.ts";

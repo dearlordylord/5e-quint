@@ -45,6 +45,7 @@ import {
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
   battleActDruidWildShapePresentation,
+  battleActSpellPresentation,
   battleActUnitPresentation,
   battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleCreaturePresentationDisplayName,
@@ -133,8 +134,8 @@ import { describe, expect, test } from "vitest";
 
 import {
   admitCharacterSheetCompanionToBattle,
-  battleCreatureInitFromCharacterBuild,
-  battleCreatureInitFromCharacterBuildWithRoute,
+  battleCreatureInitFromCharacterBuild as battleCreatureInitFromCharacterBuildRuntime,
+  battleCreatureInitFromCharacterBuildWithRoute as battleCreatureInitFromCharacterBuildWithRouteRuntime,
   characterAttackActionOption,
   characterBaseUnarmedStrikeActionOption,
   characterBattleSupportProjection,
@@ -145,9 +146,9 @@ import {
   characterBattleResourceInitsFromBuild,
   characterBattleLoadoutFromBuild,
   characterOffHandAttackActionOption,
-  characterSpellcasting,
+  characterSpellcasting as characterSpellcastingRuntime,
   settleCharacterSheetFromBattle,
-  startBattleFromCharacterBuildAndStatBlock,
+  startBattleFromCharacterBuildAndStatBlock as startBattleFromCharacterBuildAndStatBlockRuntime,
   startBattleFromCharacterSheetAndStatBlock,
   characterBattleRuntimeIssueMessage,
 } from "./index.ts";
@@ -174,6 +175,64 @@ function battleCreatureInitFromStatBlock(
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
     }),
   );
+}
+
+type WithoutResourceExpenditures<
+  T extends { readonly resourceExpenditures: unknown },
+> = Omit<T, "resourceExpenditures"> & Partial<Pick<T, "resourceExpenditures">>;
+
+function battleCreatureInitFromCharacterBuild(
+  input: WithoutResourceExpenditures<
+    Parameters<typeof battleCreatureInitFromCharacterBuildRuntime>[0]
+  >,
+) {
+  return battleCreatureInitFromCharacterBuildRuntime({
+    ...input,
+    resourceExpenditures: input.resourceExpenditures ?? [],
+  });
+}
+
+function battleCreatureInitFromCharacterBuildWithRoute(
+  input: WithoutResourceExpenditures<
+    Parameters<typeof battleCreatureInitFromCharacterBuildWithRouteRuntime>[0]
+  >,
+) {
+  return battleCreatureInitFromCharacterBuildWithRouteRuntime({
+    ...input,
+    resourceExpenditures: input.resourceExpenditures ?? [],
+  });
+}
+
+function characterSpellcasting(
+  input: WithoutResourceExpenditures<
+    Parameters<typeof characterSpellcastingRuntime>[0]
+  >,
+) {
+  return characterSpellcastingRuntime({
+    ...input,
+    resourceExpenditures: input.resourceExpenditures ?? [],
+  });
+}
+
+function startBattleFromCharacterBuildAndStatBlock(
+  input: Omit<
+    Parameters<typeof startBattleFromCharacterBuildAndStatBlockRuntime>[0],
+    "character"
+  > & {
+    readonly character: WithoutResourceExpenditures<
+      Parameters<
+        typeof startBattleFromCharacterBuildAndStatBlockRuntime
+      >[0]["character"]
+    >;
+  },
+) {
+  return startBattleFromCharacterBuildAndStatBlockRuntime({
+    ...input,
+    character: {
+      ...input.character,
+      resourceExpenditures: input.character.resourceExpenditures ?? [],
+    },
+  });
 }
 
 const build = defenseBuild({ wearingArmor: false });
@@ -223,6 +282,196 @@ function rebuildCharacterSheetFixture(input: CharacterSheetTestInput) {
 }
 
 describe("Character Sheet battle handoff", () => {
+  test("projects Magic Initiate for a non-class caster without inventing slots", () => {
+    const magicInitiateMonk = magicInitiateMonkBuild();
+    const projection = expectRight(
+      characterSpellcasting({
+        build: magicInitiateMonk,
+        unitLibrary,
+        resourceExpenditures: [],
+      }),
+    );
+
+    expect(projection).toMatchObject({
+      spellcastingSource: { tag: "spellAccessOnly" },
+      spellSlots: [],
+      spellAccesses: [
+        expect.objectContaining({
+          cantrips: [
+            expect.objectContaining({ id: "fire_bolt" }),
+            expect.objectContaining({ id: "light" }),
+          ],
+          levelOneSpell: expect.objectContaining({ id: "burning_hands" }),
+          spellcastingAbilityModifier: 0,
+          source: expect.objectContaining({ tag: "feat" }),
+        }),
+      ],
+    });
+
+    const battle = expectRight(
+      startBattleFromCharacterBuildAndStatBlock({
+        battleId: battleId("magic-initiate-noncaster"),
+        character: {
+          combatantId: combatantId("magic-initiate-monk"),
+          characterId: characterId("character:magic-initiate-monk"),
+          displayName: "Magic Initiate Monk",
+          build: magicInitiateMonk,
+          initiative: initiativeScore(20),
+          ammunitionStocks: [],
+        },
+        statBlockBattleInput: {
+          combatantId: combatantId("magic-initiate-target"),
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        },
+        unitLibrary,
+      }),
+    );
+    const invocationRefs = new Set(
+      discoverBattleActs(battle).flatMap((act) => {
+        const invocation = battleActSpellPresentation(act)?.invocation;
+        return invocation === undefined ? [] : [JSON.stringify(invocation)];
+      }),
+    );
+    expect([...invocationRefs].map((ref) => JSON.parse(ref).spellId)).toEqual(
+      expect.arrayContaining(["fire_bolt", "light", "burning_hands"]),
+    );
+    expect(
+      [...invocationRefs].filter(
+        (ref) => JSON.parse(ref).tag === "spellAccessFreeCast",
+      ),
+    ).toHaveLength(1);
+  });
+
+  test("settles the exact Magic Initiate source and spell free-cast expenditure", () => {
+    const magicInitiateMonk = magicInitiateMonkBuild();
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:magic-initiate-settlement"),
+        build: magicInitiateMonk,
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const sourceUnit = unitLibrary.requireUnit("feat_magic_initiate_wizard");
+    const resourcePoolRef = battleResourcePoolExecutionRefForTest(
+      "magic-initiate-free-cast",
+    );
+    const settled = expectRight(
+      settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary,
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: sourceUnit,
+            purpose: {
+              tag: "spellAccessFreeCast",
+              spellId: authoredUnitId("burning_hands"),
+            },
+          },
+        ],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:magic-initiate-settlement"),
+            classLevels: parsedClassLevelsForTest("monk", 1),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: {
+                  kind: "use_count",
+                  cap: { kind: "fixed", uses: resourceCount(1) },
+                },
+                usedThisTurn: false,
+                usesRemaining: resourceCount(0),
+              },
+            ],
+          },
+          hp: Hp(8),
+          maxHp: sheetMaximumHp(sheet),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    );
+    expect(settled.resourceExpenditures).toEqual([
+      {
+        tag: "spellAccessFreeCast",
+        sourceUnitId: authoredUnitId("feat_magic_initiate_wizard"),
+        spellId: authoredUnitId("burning_hands"),
+        expended: 1,
+      },
+    ]);
+
+    const slottedBuild = {
+      ...wizardSpellcastingBuild(),
+      magicInitiateSpellAccesses: magicInitiateMonk.magicInitiateSpellAccesses,
+    };
+    const slottedSheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:magic-initiate-slot-cast"),
+        build: slottedBuild,
+        currentHp: Hp(7),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const slotSettled = expectRight(
+      settleHandoffBranchToCharacterSheet({
+        sheet: slottedSheet,
+        unitLibrary,
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: sourceUnit,
+            purpose: {
+              tag: "spellAccessFreeCast",
+              spellId: authoredUnitId("burning_hands"),
+            },
+          },
+        ],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:magic-initiate-slot-cast"),
+            classLevels: parsedClassLevelsForTest("wizard", 1),
+            spellcasting: handoffSpellcastingState({
+              spellSlots: [
+                {
+                  spellLevel: spellSlotLevel(1),
+                  count: resourceCount(2),
+                  expended: resourceCount(1),
+                },
+              ],
+            }),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: {
+                  kind: "use_count",
+                  cap: { kind: "fixed", uses: resourceCount(1) },
+                },
+                usedThisTurn: false,
+                usesRemaining: resourceCount(1),
+              },
+            ],
+          },
+          hp: Hp(7),
+          maxHp: sheetMaximumHp(slottedSheet),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    );
+    expect(slotSettled.resourceExpenditures).toEqual([]);
+    expect(characterSheetSpellSlots(slotSettled)).toEqual([
+      { spellLevel: 1, count: 2, expended: 1 },
+    ]);
+  });
+
   test("formats both character projection and battle-state initialization issues", () => {
     expect(
       characterBattleRuntimeIssueMessage({
@@ -781,7 +1030,11 @@ describe("Character Sheet battle handoff", () => {
     ).toMatchObject({
       _tag: "Left",
       left: {
-        issue: { message: expect.stringContaining("Unknown Unit") },
+        issue: {
+          message: expect.stringContaining(
+            "Cannot find species Unit: species_orc",
+          ),
+        },
       },
     });
     expect(
@@ -1009,6 +1262,7 @@ describe("Character Sheet battle handoff", () => {
     const ownership = (resourcePoolRef: typeof firstRef) => ({
       resourcePoolRef,
       unit: focusUnit,
+      purpose: { tag: "unitResource" as const },
     });
     const settle = (
       resources: readonly ReturnType<typeof resourceState>[],
@@ -1556,7 +1810,7 @@ describe("Character Sheet battle handoff", () => {
       sheet: retained,
       unitLibrary,
       ownerCombatantId: ownerId,
-      ammunitionStocks: [],
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       companionCombatantId: companionId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
@@ -1945,6 +2199,9 @@ describe("Character Sheet battle handoff", () => {
     ) {
       throw new Error("Expected embodied retained companion fixture.");
     }
+    if (companion.formAccess !== "findFamiliar") {
+      throw new Error("Expected Find Familiar companion fixture.");
+    }
     const storedCompanionBase = {
       ownerId: companion.ownerId,
       identity: companion.identity,
@@ -1952,6 +2209,7 @@ describe("Character Sheet battle handoff", () => {
       creatureTypeOverride: companion.creatureTypeOverride,
       formAccess: companion.formAccess,
       resolvedStatBlockId: authoredStatBlockId("stat_block_cat"),
+      reactionAvailable: true,
     } as const;
     const temporarilyDismissed = {
       ...storedCompanionBase,
@@ -3539,7 +3797,13 @@ describe("Character Sheet battle handoff", () => {
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
-      resourceOwnership: [{ resourcePoolRef, unit: driftedWildShapeUnit }],
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: driftedWildShapeUnit,
+          purpose: { tag: "unitResource" },
+        },
+      ],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -3577,7 +3841,13 @@ describe("Character Sheet battle handoff", () => {
       settleHandoffBranchToCharacterSheet({
         sheet: sheet.right,
         unitLibrary,
-        resourceOwnership: [{ resourcePoolRef, unit: wildShapeUnit }],
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: wildShapeUnit,
+            purpose: { tag: "unitResource" },
+          },
+        ],
         combatant: handoffBranchCombatant({
           origin: {
             kind: "character",
@@ -3623,8 +3893,16 @@ describe("Character Sheet battle handoff", () => {
         sheet: sheet.right,
         unitLibrary,
         resourceOwnership: [
-          { resourcePoolRef, unit: wildShapeUnit },
-          { resourcePoolRef: duplicateResourcePoolRef, unit: wildShapeUnit },
+          {
+            resourcePoolRef,
+            unit: wildShapeUnit,
+            purpose: { tag: "unitResource" },
+          },
+          {
+            resourcePoolRef: duplicateResourcePoolRef,
+            unit: wildShapeUnit,
+            purpose: { tag: "unitResource" },
+          },
         ],
         combatant: handoffBranchCombatant({
           origin: {
@@ -3673,7 +3951,11 @@ describe("Character Sheet battle handoff", () => {
         sheet: sheet.right,
         unitLibrary,
         resourceOwnership: [
-          { resourcePoolRef: mismatchedResourcePoolRef, unit: wildShapeUnit },
+          {
+            resourcePoolRef: mismatchedResourcePoolRef,
+            unit: wildShapeUnit,
+            purpose: { tag: "unitResource" },
+          },
         ],
         combatant: handoffBranchCombatant({
           origin: {
@@ -4730,8 +5012,11 @@ describe("Character Sheet battle handoff", () => {
             kind: "character",
             characterId: characterId("character:sorcerer-font-battle"),
             spellcasting: {
-              sourceClassName: "sorcerer",
-              spellcastingAbilityModifier: abilityModifier(3),
+              spellcastingSource: {
+                tag: "classSpellcasting",
+                className: "sorcerer",
+                abilityModifier: abilityModifier(3),
+              },
               proficiencyBonus: proficiencyBonus(3),
               canCastSpells: true,
               pactOfTheChainFindFamiliarInvocationMode: null,
@@ -4774,8 +5059,11 @@ describe("Character Sheet battle handoff", () => {
           kind: "character",
           characterId: characterId("character:sorcerer-font-battle"),
           spellcasting: {
-            sourceClassName: "sorcerer",
-            spellcastingAbilityModifier: abilityModifier(3),
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "sorcerer",
+              abilityModifier: abilityModifier(3),
+            },
             proficiencyBonus: proficiencyBonus(3),
             canCastSpells: true,
             pactOfTheChainFindFamiliarInvocationMode: null,
@@ -4864,8 +5152,11 @@ describe("Character Sheet battle handoff", () => {
             kind: "character",
             characterId: characterId("character:sorcerer-created-slot-spend"),
             spellcasting: {
-              sourceClassName: "sorcerer",
-              spellcastingAbilityModifier: abilityModifier(3),
+              spellcastingSource: {
+                tag: "classSpellcasting",
+                className: "sorcerer",
+                abilityModifier: abilityModifier(3),
+              },
               proficiencyBonus: proficiencyBonus(3),
               canCastSpells: true,
               pactOfTheChainFindFamiliarInvocationMode: null,
@@ -5192,7 +5483,13 @@ describe("Character Sheet battle handoff", () => {
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
-      resourceOwnership: [{ resourcePoolRef, unit: favoredEnemy }],
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: favoredEnemy,
+          purpose: { tag: "unitResource" },
+        },
+      ],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -5216,7 +5513,12 @@ describe("Character Sheet battle handoff", () => {
 
     const settled = expectRight(handoff);
     expect(settled.resourceExpenditures).toEqual([
-      { tag: "favoredEnemyHuntersMarkFreeCasts", expended: 1 },
+      {
+        tag: "spellAccessFreeCast",
+        sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+        spellId: authoredUnitId("hunters_mark"),
+        expended: 1,
+      },
     ]);
 
     const nextBattleResources = expectRight(
@@ -5256,7 +5558,13 @@ describe("Character Sheet battle handoff", () => {
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
-      resourceOwnership: [{ resourcePoolRef, unit: favoredEnemy }],
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: favoredEnemy,
+          purpose: { tag: "unitResource" },
+        },
+      ],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -5288,14 +5596,20 @@ describe("Character Sheet battle handoff", () => {
       _tag: "Left",
       left: {
         message:
-          "Class feature spell free-cast battle capacity must match Character Sheet resource capacity.",
+          "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
       },
     });
     expect(
       settleHandoffBranchToCharacterSheet({
         sheet: sheet.right,
         unitLibrary,
-        resourceOwnership: [{ resourcePoolRef, unit: favoredEnemy }],
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: favoredEnemy,
+            purpose: { tag: "unitResource" },
+          },
+        ],
         combatant: handoffBranchCombatant({
           origin: {
             kind: "character",
@@ -5320,7 +5634,7 @@ describe("Character Sheet battle handoff", () => {
       _tag: "Left",
       left: {
         message:
-          "Class feature spell free-cast remaining uses exceed the battle resource cap during battle handoff.",
+          "Spell Access free-cast remaining uses exceed the battle resource cap during battle handoff.",
       },
     });
   });
@@ -5367,7 +5681,13 @@ describe("Character Sheet battle handoff", () => {
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
-      resourceOwnership: [{ resourcePoolRef, unit: focusUnit }],
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: focusUnit,
+          purpose: { tag: "unitResource" },
+        },
+      ],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -5428,7 +5748,13 @@ describe("Character Sheet battle handoff", () => {
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
-      resourceOwnership: [{ resourcePoolRef, unit: driftedFocusUnit }],
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: driftedFocusUnit,
+          purpose: { tag: "unitResource" },
+        },
+      ],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -5465,7 +5791,13 @@ describe("Character Sheet battle handoff", () => {
       settleHandoffBranchToCharacterSheet({
         sheet: sheet.right,
         unitLibrary,
-        resourceOwnership: [{ resourcePoolRef, unit: focusUnit }],
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: focusUnit,
+            purpose: { tag: "unitResource" },
+          },
+        ],
         combatant: handoffBranchCombatant({
           origin: {
             kind: "character",
@@ -5559,7 +5891,13 @@ describe("Character Sheet battle handoff", () => {
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: recovered,
       unitLibrary,
-      resourceOwnership: [{ resourcePoolRef, unit: focusUnit }],
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: focusUnit,
+          purpose: { tag: "unitResource" },
+        },
+      ],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -5626,7 +5964,13 @@ describe("Character Sheet battle handoff", () => {
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
-      resourceOwnership: [{ resourcePoolRef, unit: driftedFontOfMagicUnit }],
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: driftedFontOfMagicUnit,
+          purpose: { tag: "unitResource" },
+        },
+      ],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -5662,7 +6006,13 @@ describe("Character Sheet battle handoff", () => {
       settleHandoffBranchToCharacterSheet({
         sheet: sheet.right,
         unitLibrary,
-        resourceOwnership: [{ resourcePoolRef, unit: fontOfMagicUnit }],
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: fontOfMagicUnit,
+            purpose: { tag: "unitResource" },
+          },
+        ],
         combatant: handoffBranchCombatant({
           origin: {
             kind: "character",
@@ -5713,7 +6063,13 @@ describe("Character Sheet battle handoff", () => {
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
-      resourceOwnership: [{ resourcePoolRef, unit: paladinsSmite }],
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: paladinsSmite,
+          purpose: { tag: "unitResource" },
+        },
+      ],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -5737,7 +6093,12 @@ describe("Character Sheet battle handoff", () => {
 
     const settled = expectRight(handoff);
     expect(settled.resourceExpenditures).toEqual([
-      { tag: "paladinsSmiteDivineSmiteFreeCast", expended: 1 },
+      {
+        tag: "spellAccessFreeCast",
+        sourceUnitId: authoredUnitId("paladin_paladins_smite"),
+        spellId: authoredUnitId("divine_smite"),
+        expended: 1,
+      },
     ]);
 
     const nextBattleResources = expectRight(
@@ -5779,7 +6140,13 @@ describe("Character Sheet battle handoff", () => {
     const handoff = settleHandoffBranchToCharacterSheet({
       sheet: sheet.right,
       unitLibrary,
-      resourceOwnership: [{ resourcePoolRef, unit: favoredEnemy }],
+      resourceOwnership: [
+        {
+          resourcePoolRef,
+          unit: favoredEnemy,
+          purpose: { tag: "unitResource" },
+        },
+      ],
       combatant: handoffBranchCombatant({
         origin: {
           kind: "character",
@@ -5813,7 +6180,7 @@ describe("Character Sheet battle handoff", () => {
       Either.left({
         tag: "characterSheetBattleHandoffIssue",
         message:
-          "Class feature spell free casts must use a fixed battle resource cap during battle handoff.",
+          "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
       }),
     );
   });
@@ -5837,7 +6204,11 @@ describe("Character Sheet battle handoff", () => {
         sheet,
         unitLibrary,
         resourceOwnership: [
-          { resourcePoolRef: resource.resourcePoolRef, unit },
+          {
+            resourcePoolRef: resource.resourcePoolRef,
+            unit,
+            purpose: { tag: "unitResource" },
+          },
         ],
         combatant: handoffBranchCombatant({
           origin: {
@@ -6016,7 +6387,7 @@ describe("Character Sheet battle handoff", () => {
       _tag: "Left",
       left: {
         message:
-          "Class feature spell free-cast battle resource requires matching Character Sheet resource capacity.",
+          "Spell Access free-cast battle resource requires matching Character Sheet resource capacity.",
       },
     });
     expect(
@@ -6138,7 +6509,11 @@ describe("Character Build battle projection", () => {
       }),
     ).toMatchObject({
       _tag: "Left",
-      left: { message: expect.stringContaining("Unknown Unit") },
+      left: {
+        message: expect.stringContaining(
+          "Cannot find species Unit: synthetic:missing-species",
+        ),
+      },
     });
     expect(
       battleCreatureInitFromCharacterBuild({
@@ -6150,7 +6525,11 @@ describe("Character Build battle projection", () => {
       }),
     ).toMatchObject({
       _tag: "Left",
-      left: { message: expect.stringContaining("Expected species Unit") },
+      left: {
+        message: expect.stringContaining(
+          "Cannot read species Unit class_fighter: unsupported Unit kind",
+        ),
+      },
     });
     expect(
       battleCreatureInitFromCharacterBuild({
@@ -6527,8 +6906,76 @@ describe("Character Build battle projection", () => {
     });
   });
 
+  test("reports every malformed Magic Initiate source instead of dropping access grants", () => {
+    const validAccess = magicInitiateMonkBuild().magicInitiateSpellAccesses[0];
+    if (validAccess === undefined) {
+      throw new Error("Expected Magic Initiate access fixture.");
+    }
+    const result = characterSpellcasting({
+      build: {
+        ...magicInitiateMonkBuild(),
+        magicInitiateSpellAccesses: [
+          validAccess,
+          { ...validAccess, featUnitId: authoredUnitId("class_fighter") },
+          {
+            ...validAccess,
+            featUnitId: authoredUnitId("synthetic:missing-magic-initiate"),
+          },
+        ],
+      },
+      unitLibrary,
+      resourceExpenditures: [],
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(result.left.message).toContain("class_fighter");
+      expect(result.left.message).toContain("synthetic:missing-magic-initiate");
+      expect(result.left.spellAccessIssues).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            accessIndex: 1,
+            featUnitId: authoredUnitId("class_fighter"),
+            cause: "invalidSpellSelection",
+          }),
+          expect.objectContaining({
+            accessIndex: 2,
+            featUnitId: authoredUnitId("synthetic:missing-magic-initiate"),
+            cause: "invalidSpellSelection",
+          }),
+        ]),
+      );
+    }
+  });
+
+  test("reports a missing canonical Magic Initiate spell list source", () => {
+    const result = characterSpellcasting({
+      build: magicInitiateMonkBuild(),
+      unitLibrary: {
+        getUnit: (id) =>
+          id === "class_wizard" ? Option.none() : unitLibrary.getUnit(id),
+        listUnits: () =>
+          unitLibrary.listUnits().filter((unit) => unit.id !== "class_wizard"),
+        requireUnit: (id) => unitLibrary.requireUnit(id),
+      },
+      resourceExpenditures: [],
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(result.left.message).toContain("selected spell list");
+      expect(result.left.spellAccessIssues).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ cause: "invalidBuildSpellAccess" }),
+        ]),
+      );
+    }
+  });
+
   test("reports missing and contradictory spellcasting projections", () => {
-    expect(characterSpellcasting({ build, unitLibrary })).toMatchObject({
+    expect(
+      characterSpellcasting({ build, unitLibrary, resourceExpenditures: [] }),
+    ).toMatchObject({
       _tag: "Left",
       left: { message: "Character build does not have spellcasting." },
     });
@@ -7214,7 +7661,9 @@ describe("Character Build battle projection", () => {
       [
         favoredEnemyRangerBuild(),
         {
-          tag: "favoredEnemyHuntersMarkFreeCasts",
+          tag: "spellAccessFreeCast",
+          sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+          spellId: authoredUnitId("hunters_mark"),
           expended: resourceCount(99),
         },
         "free-cast expenditure exceeds",
@@ -9313,6 +9762,7 @@ function monkBuild(input: {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [
         ...(weaponItemId === undefined || input.weaponUnitId === undefined
@@ -9356,6 +9806,21 @@ function monkBuild(input: {
         ...(shieldItemId === undefined ? {} : { shield: shieldItemId }),
       },
     },
+  };
+}
+
+function magicInitiateMonkBuild(): CharacterBuild {
+  return {
+    ...monkBuild({ str: 12, dex: 16 }),
+    background: authoredUnitId("background_sage"),
+    magicInitiateSpellAccesses: [
+      {
+        featUnitId: authoredUnitId("feat_magic_initiate_wizard"),
+        spellcastingAbility: "cha",
+        cantrips: [authoredUnitId("fire_bolt"), authoredUnitId("light")],
+        levelOneSpell: authoredUnitId("burning_hands"),
+      },
+    ],
   };
 }
 
@@ -9417,6 +9882,7 @@ function pactBladeInvocationBuild(
               },
             },
           ],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [
         characterBuildCatalogEquipmentItem({
@@ -9724,6 +10190,7 @@ function multiclassUnarmoredDefenseBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},
@@ -9769,6 +10236,7 @@ function defenseBuild(input: {
         unitId: authoredUnitId("defense"),
       },
     ],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [
         characterBuildCatalogEquipmentItem({
@@ -9972,6 +10440,7 @@ function trueStrikeWizardBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [
         characterBuildCatalogEquipmentItem({
@@ -10024,6 +10493,7 @@ function favoredEnemyRangerBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},
@@ -10107,6 +10577,7 @@ function favoredEnemyRangerResourceBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},
@@ -10142,6 +10613,7 @@ function paladinsSmitePaladinBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},
@@ -10301,6 +10773,7 @@ function armorOfShadowsWarlockBuild(
     ),
     proficiencyChoices: [],
     features,
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},
@@ -10480,6 +10953,7 @@ function druidDruidicBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},
@@ -10550,8 +11024,11 @@ function handoffSpellcastingState(
   } = {},
 ): CharacterBattleSpellcastingExecutionState {
   return {
-    sourceClassName: "wizard",
-    spellcastingAbilityModifier: abilityModifier(3),
+    spellcastingSource: {
+      tag: "classSpellcasting",
+      className: "wizard",
+      abilityModifier: abilityModifier(3),
+    },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
     pactOfTheChainFindFamiliarInvocationMode: null,
@@ -10571,8 +11048,11 @@ function pactMagicHandoffSpellcastingState(input: {
   readonly expended: ResourceCount;
 }): CharacterBattleSpellcastingExecutionState {
   return {
-    sourceClassName: "warlock",
-    spellcastingAbilityModifier: abilityModifier(2),
+    spellcastingSource: {
+      tag: "classSpellcasting",
+      className: "warlock",
+      abilityModifier: abilityModifier(2),
+    },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
     pactOfTheChainFindFamiliarInvocationMode: null,
@@ -10629,6 +11109,7 @@ function wizardWarlockBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},
@@ -10699,6 +11180,7 @@ function sorcererFontOfMagicBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},
@@ -10769,6 +11251,7 @@ function paladinBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},

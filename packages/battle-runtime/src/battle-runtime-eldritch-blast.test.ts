@@ -514,7 +514,11 @@ describe("battle runtime: Eldritch Blast", () => {
               preparedSpells: [],
               spellSlots: [{ spellLevel: 3, count: 2 }],
             }),
-            sourceClassName: "warlock",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "warlock",
+              abilityModifier: 3,
+            },
             proficiencyBonus: proficiencyBonus(3),
           },
         }),

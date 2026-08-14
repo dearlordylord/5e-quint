@@ -23,6 +23,7 @@ import {
   type CharacterSheetDivineInterventionInvocation,
   type CharacterSheetDivineInterventionResult,
   type CharacterSheetIssue,
+  type CharacterSheetResourceState,
   type CharacterSheetResourceExpenditure,
 } from "./sheet-types.ts";
 
@@ -131,7 +132,12 @@ function divineInterventionResource(input: {
   /* v8 ignore next -- Malformed build/catalog correlation: resource projection can fail only when retained admitted Units no longer resolve. */
   if (Either.isLeft(resources)) return Either.left(resources.left);
   const resource = resources.right.find(
-    (candidate) =>
+    (
+      candidate,
+    ): candidate is Extract<
+      CharacterSheetResourceState,
+      { readonly tag: "useCountResource" }
+    > =>
       candidate.tag === "useCountResource" &&
       candidate.unitId === input.featureUnitId,
   );

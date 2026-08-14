@@ -18,7 +18,7 @@ import { ConcentrationBattleActiveEffectExpirationSchema } from "../../active-ef
 //     grants additional movement budget rather than changing Speed.
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
-import { Either } from "effect";
+import { Either, Match } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -37,6 +37,7 @@ import { representedMovementSpeedKinds } from "../movement-speed.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "../sanctuary-targeting-interdiction.ts";
 import { expendSpellSlot } from "../spell-effects.ts";
+import { spendSpellAccessFreeCastResource } from "../spells-resolve-resources.ts";
 import {
   markSpellSlotExpendedThisTurn,
   spellActTurnResourceAvailable,
@@ -55,7 +56,7 @@ import {
 } from "./profile.ts";
 import {
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type ExpeditiousRetreatDashInvocation = Extract<
@@ -82,14 +83,14 @@ function admitExpeditiousRetreatDash(
   if (activeEffect === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly ExpeditiousRetreatDashInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "expeditiousRetreatDash",
               spell,
               actionCost: "bonusAction",
@@ -264,29 +265,56 @@ function resolveExpeditiousRetreatDash(
     );
   }
   /* v8 ignore stop */
-  const slotTurnResources = markSpellSlotExpendedThisTurn(
-    spent.right,
-    input.input.subject.actorId,
-  );
-  /* v8 ignore start -- Internal preflight invariant: spellActTurnResourceAvailable already proved this actor has no Spell Slot use in the unchanged turn-resource state. */
-  if (Either.isLeft(slotTurnResources)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
-  }
-  /* v8 ignore stop */
   const afterPriorConcentration = breakBattleConcentration(
     spellCastState,
     subject.actorId,
   );
-  const slotted = expendSpellSlot(
-    afterPriorConcentration,
-    subject.actorId,
-    input.invocation.resource.slotLevel,
+  const resourced = Match.value(input.invocation.resource).pipe(
+    Match.when({ tag: "spellAccessFreeCast" }, ({ resourcePoolRef }) =>
+      spendSpellAccessFreeCastResource(
+        {
+          ...afterPriorConcentration,
+          currentTurnResources: spent.right,
+        },
+        subject.actorId,
+        resourcePoolRef,
+        input.invocation,
+        input.input.state,
+      ),
+    ),
+    Match.when({ tag: "spellSlot" }, ({ slotLevel }) => {
+      const slotTurnResources = markSpellSlotExpendedThisTurn(
+        spent.right,
+        input.input.subject.actorId,
+      );
+      /* v8 ignore start -- Internal preflight invariant: spellActTurnResourceAvailable already proved this actor has no Spell Slot use in the unchanged turn-resource state. */
+      if (Either.isLeft(slotTurnResources)) {
+        return invalidResult(
+          input.input.state,
+          "staleSubject",
+          "This turn has already expended a Spell Slot.",
+        );
+      }
+      /* v8 ignore stop */
+      const slotted = expendSpellSlot(
+        afterPriorConcentration,
+        subject.actorId,
+        slotLevel,
+      );
+      return {
+        tag: "resolved" as const,
+        state: {
+          ...slotted,
+          currentTurnResources: slotTurnResources.right,
+        },
+      };
+    }),
+    Match.exhaustive,
   );
-  const effectHost = slotted.combatants.get(subject.actorId);
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const effectHost = resourced.state.combatants.get(subject.actorId);
   /* v8 ignore start -- Internal roster invariant: the caster lookup succeeded above, and concentration teardown plus Spell Slot expenditure do not remove combatants. */
   if (effectHost === undefined) {
     return invalidResult(
@@ -315,9 +343,11 @@ function resolveExpeditiousRetreatDash(
     ],
   };
   const effected = {
-    ...slotted,
-    currentTurnResources: slotTurnResources.right,
-    combatants: new Map(slotted.combatants).set(subject.actorId, effectedActor),
+    ...resourced.state,
+    combatants: new Map(resourced.state.combatants).set(
+      subject.actorId,
+      effectedActor,
+    ),
   };
   const dashed = applyDashToActor(
     effected,
@@ -335,7 +365,7 @@ function resolveExpeditiousRetreatDash(
 const ExpeditiousRetreatDashInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("expeditiousRetreatDash"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
@@ -352,3 +382,4 @@ export const expeditiousRetreatDashProfile = {
   "expeditiousRetreatDash",
   ExpeditiousRetreatDashInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

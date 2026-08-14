@@ -74,6 +74,7 @@ import {
   ATTACK_TARGET_HOLE_ID,
 } from "./battle-runtime-protocol.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
+import { isCantripSpellAccess } from "../procedure-execution/spell-invocation-vocabulary.ts";
 import { attackRollIsCriticalHit } from "./attack-resolution.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
@@ -1591,7 +1592,7 @@ function potentCantripAppliesToMissedSpellAttack(input: {
     input.actor?.origin.kind !== "character" ||
     input.invocation.procedure !== "spellAttackDamage" ||
     input.invocation.resource.tag !== "none" ||
-    input.invocation.access.tag !== "classCantrip" ||
+    !isCantripSpellAccess(input.invocation.access) ||
     !isSupportedDamageSpellInvocation(input.invocation)
   ) {
     return false;

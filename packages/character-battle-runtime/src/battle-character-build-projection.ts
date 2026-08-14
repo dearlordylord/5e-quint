@@ -1,7 +1,11 @@
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.martial-arts-attack-projection spell.invocation-marked-damage-rider
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
+// UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 import {
   scoreModifier,
+  type CharacterBattleSpellAccessInit,
+  type CharacterBattleSpellListFact,
   type CharacterBattleSpellSlotState,
   type CharacterBattleSpellbookRitualSpellAccessInit,
   type CharacterBattleInvocationFeature,
@@ -29,6 +33,7 @@ import {
   characterCreationIssueMessage,
   characterBuildFeatureUnitIds,
   characterBuildSpellcastingSlotCapacity,
+  parseCharacterBuildMagicInitiateSpellAccesses,
   classUnitIdToClassName,
   computeTotalLevel,
   characterEquipmentItemSourceFromId,
@@ -42,7 +47,9 @@ import {
   characterSheetArmorClassState,
   characterSheetUnarmoredArmorClassBase,
   characterSheetSpellbookRitualAccessesForBuild,
+  characterSheetSpellAccessesForBuild,
   type CharacterSheetArmorClassBaseChoice,
+  type CharacterSheetResourceExpenditure,
 } from "@dnd/character-sheet-runtime";
 import {
   armorClassDelta,
@@ -71,6 +78,8 @@ import { spellHasTopLevelRitualTag } from "@dnd/surface/surface/types";
 import {
   allCantripsFromAnyClassSpellList,
   allLeveledSpellsFromAnyClassSpellList,
+  classSpellListForSpellcastingClassRecord,
+  spellcastingClassRecordForClassName,
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
@@ -83,12 +92,38 @@ import {
 export type BattleCreatureInitIssue = {
   readonly tag: "battleCreatureInitIssue";
   readonly message: string;
+  readonly spellAccessIssues?: readonly CharacterBattleSpellAccessProjectionIssue[];
 };
+
+type CharacterBattleSpellAccessProjectionIssueBase = {
+  readonly tag: "characterBattleSpellAccessProjectionIssue";
+  readonly message: string;
+};
+
+export type CharacterBattleSpellAccessProjectionIssue =
+  | (CharacterBattleSpellAccessProjectionIssueBase & {
+      readonly accessIndex: number;
+      readonly featUnitId: UnitRecord["id"];
+      readonly cause:
+        | "missingSourceUnit"
+        | "unsupportedSourceUnit"
+        | "missingSpellListSource"
+        | "invalidSpellSelection";
+    })
+  | (CharacterBattleSpellAccessProjectionIssueBase & {
+      readonly issueIndex: number;
+      readonly cause: "invalidBuildSpellAccess";
+    });
 
 export function battleCreatureInitIssue(
   message: string,
+  spellAccessIssues: readonly CharacterBattleSpellAccessProjectionIssue[] = [],
 ): Either.Either<never, BattleCreatureInitIssue> {
-  return Either.left({ tag: "battleCreatureInitIssue", message });
+  return Either.left({
+    tag: "battleCreatureInitIssue",
+    message,
+    ...(spellAccessIssues.length === 0 ? {} : { spellAccessIssues }),
+  });
 }
 
 export function characterArmorClassState(input: {
@@ -774,6 +809,7 @@ export function characterSpellcasting(input: {
   readonly unitLibrary: UnitCatalog;
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
   readonly spellSlots?: readonly CharacterBattleSpellSlotState[];
+  readonly resourceExpenditures: readonly CharacterSheetResourceExpenditure[];
 }): Either.Either<
   NonNullable<
     Extract<
@@ -784,8 +820,47 @@ export function characterSpellcasting(input: {
   BattleCreatureInitIssue
 > {
   const { build, unitLibrary } = input;
+  const parsedMagicInitiateSpellAccesses =
+    parseCharacterBuildMagicInitiateSpellAccesses({
+      value: build.magicInitiateSpellAccesses,
+      build,
+      unitLibrary,
+    });
+  if (Either.isLeft(parsedMagicInitiateSpellAccesses)) {
+    const spellAccessIssues = parsedMagicInitiateSpellAccesses.left.map(
+      (issue, issueIndex): CharacterBattleSpellAccessProjectionIssue => {
+        const accessIndex = issue.index;
+        const access =
+          accessIndex === undefined
+            ? undefined
+            : build.magicInitiateSpellAccesses[accessIndex];
+        return access === undefined || accessIndex === undefined
+          ? {
+              tag: "characterBattleSpellAccessProjectionIssue",
+              issueIndex,
+              cause: "invalidBuildSpellAccess",
+              message: issue.message,
+            }
+          : {
+              tag: "characterBattleSpellAccessProjectionIssue",
+              accessIndex,
+              featUnitId: access.featUnitId,
+              cause: "invalidSpellSelection",
+              message: issue.message,
+            };
+      },
+    );
+    return battleCreatureInitIssue(
+      spellAccessIssues.map((issue) => issue.message).join("; "),
+      spellAccessIssues,
+    );
+  }
   const spellcasting = build.spellcasting;
-  if (spellcasting === undefined) {
+  const sheetSpellAccesses = characterSheetSpellAccessesForBuild({
+    build,
+    unitLibrary,
+  }).filter((access) => access.source === "magicInitiate");
+  if (spellcasting === undefined && sheetSpellAccesses.length === 0) {
     return battleCreatureInitIssue(
       "Character build does not have spellcasting.",
     );
@@ -794,30 +869,125 @@ export function characterSpellcasting(input: {
   if (Either.isLeft(canCastSpells)) {
     return battleCreatureInitIssue(canCastSpells.left.message);
   }
-  const sources = spellcastingSourcesWithOneAbilityAndClass({
-    unitLibrary,
-    sources: spellcasting.sources,
-  });
+  const sources =
+    spellcasting === undefined
+      ? Either.right(null)
+      : spellcastingSourcesWithOneAbilityAndClass({
+          unitLibrary,
+          sources: spellcasting.sources,
+        });
   if (Either.isLeft(sources)) {
     return battleCreatureInitIssue(sources.left.message);
   }
-  const cantrips = battleProjectedSpellRecordsForIds({
-    unitLibrary,
-    sourceClassName: sources.right.sourceClassName,
-    spellIds: sources.right.sources.flatMap((source) => source.cantrips),
-    selectionKind: "cantrip",
-  });
-  const preparedSpells = battleProjectedSpellRecordsForIds({
-    unitLibrary,
-    sourceClassName: sources.right.sourceClassName,
-    spellIds: sources.right.sources.flatMap((source) => source.preparedSpells),
-    selectionKind: "leveledSpell",
-  });
+  const cantrips =
+    sources.right === null
+      ? Either.right([] as readonly SpellRecord[])
+      : battleProjectedSpellRecordsForIds({
+          unitLibrary,
+          sourceClassName: sources.right.sourceClassName,
+          spellIds: sources.right.sources.flatMap((source) => source.cantrips),
+          selectionKind: "cantrip",
+        });
+  const preparedSpells =
+    sources.right === null
+      ? Either.right([] as readonly SpellRecord[])
+      : battleProjectedSpellRecordsForIds({
+          unitLibrary,
+          sourceClassName: sources.right.sourceClassName,
+          spellIds: sources.right.sources.flatMap(
+            (source) => source.preparedSpells,
+          ),
+          selectionKind: "leveledSpell",
+        });
   const spellRecordIssues = [cantrips, preparedSpells].flatMap((projection) =>
     Either.isLeft(projection) ? [projection.left.message] : [],
   );
   if (Either.isLeft(cantrips) || Either.isLeft(preparedSpells)) {
     return battleCreatureInitIssue(spellRecordIssues.join("; "));
+  }
+  const projectedSpellAccesses: CharacterBattleSpellAccessInit[] = [];
+  const spellAccessIssues: CharacterBattleSpellAccessProjectionIssue[] = [];
+  for (const [
+    accessIndex,
+    access,
+  ] of parsedMagicInitiateSpellAccesses.right.entries()) {
+    const sourceUnit = unitLibrary.getUnit(access.featUnitId);
+    if (Option.isNone(sourceUnit)) {
+      spellAccessIssues.push({
+        tag: "characterBattleSpellAccessProjectionIssue",
+        accessIndex,
+        featUnitId: access.featUnitId,
+        cause: "missingSourceUnit",
+        message: `Magic Initiate Spell Access source Unit is missing: ${access.featUnitId}.`,
+      });
+      continue;
+    }
+    if (
+      sourceUnit.value.kind !== "feat" ||
+      sourceUnit.value.mechanics.family !== "magic_initiate"
+    ) {
+      spellAccessIssues.push({
+        tag: "characterBattleSpellAccessProjectionIssue",
+        accessIndex,
+        featUnitId: access.featUnitId,
+        cause: "unsupportedSourceUnit",
+        message: `Magic Initiate Spell Access source Unit must be a magic_initiate feat: ${access.featUnitId}.`,
+      });
+      continue;
+    }
+    const spellListClassRecord = spellcastingClassRecordForClassName({
+      className: sourceUnit.value.mechanics.spellList,
+      unitLibrary,
+    });
+    if (spellListClassRecord === undefined) {
+      spellAccessIssues.push({
+        tag: "characterBattleSpellAccessProjectionIssue",
+        accessIndex,
+        featUnitId: access.featUnitId,
+        cause: "missingSpellListSource",
+        message: `Magic Initiate Spell Access canonical spell list source is missing: ${sourceUnit.value.mechanics.spellList}.`,
+      });
+      continue;
+    }
+    const spells = spellRecordsForIds(unitLibrary, [
+      access.cantrips[0],
+      access.cantrips[1],
+      access.levelOneSpell,
+    ] as const);
+    if (Either.isLeft(spells)) {
+      spellAccessIssues.push({
+        tag: "characterBattleSpellAccessProjectionIssue",
+        accessIndex,
+        featUnitId: access.featUnitId,
+        cause: "invalidSpellSelection",
+        message: spells.left.message,
+      });
+      continue;
+    }
+    const spellList: CharacterBattleSpellListFact = {
+      className: spellListClassRecord.className,
+      ...classSpellListForSpellcastingClassRecord(spellListClassRecord),
+    };
+    projectedSpellAccesses.push({
+      source: {
+        tag: "feat",
+        sourceUnit: sourceUnit.value,
+        spellList,
+      },
+      spellcastingAbilityModifier: Number(
+        battleAbilityModifier(
+          scoreModifier(build.abilityScores[access.spellcastingAbility]),
+        ),
+      ),
+      cantrips: [spells.right[0], spells.right[1]],
+      levelOneSpell: spells.right[2],
+    });
+  }
+  if (spellAccessIssues.length > 0) {
+    return battleCreatureInitIssue(
+      spellAccessIssues.map((issue) => issue.message).join("; "),
+      spellAccessIssues,
+    );
   }
   const featurePreparedSpells = featurePreparedSpellAccess({
     build,
@@ -843,7 +1013,7 @@ export function characterSpellcasting(input: {
 
   const bookOfShadowsSpellAccesses = bookOfShadowsSpellAccess({
     build,
-    spellcastingSources: spellcasting.sources,
+    spellcastingSources: spellcasting?.sources ?? [],
     unitLibrary,
     featurePreparedSpells: featurePreparedSpells.right,
     ...(input.bookOfShadowsPresence === undefined
@@ -863,10 +1033,18 @@ export function characterSpellcasting(input: {
     }));
 
   return Either.right({
-    sourceClassName: sources.right.sourceClassName,
-    spellcastingAbilityModifier: battleAbilityModifier(
-      scoreModifier(build.abilityScores[sources.right.spellcastingAbility]),
-    ),
+    spellcastingSource:
+      sources.right === null
+        ? { tag: "spellAccessOnly" }
+        : {
+            tag: "classSpellcasting",
+            className: sources.right.sourceClassName,
+            abilityModifier: battleAbilityModifier(
+              scoreModifier(
+                build.abilityScores[sources.right.spellcastingAbility],
+              ),
+            ),
+          },
     proficiencyBonus: proficiencyBonusForCharacterLevel(
       characterBuildLevel(build),
     ),
@@ -874,6 +1052,7 @@ export function characterSpellcasting(input: {
     cantrips: cantrips.right,
     preparedSpells: preparedSpells.right,
     featurePreparedSpells: featurePreparedSpells.right,
+    spellAccesses: projectedSpellAccesses,
     spellbookRitualSpellAccesses: spellbookRitualSpellAccesses.right,
     bookOfShadowsSpellAccesses: bookOfShadowsSpellAccesses.right,
     invocationSpellAccesses: invocationSpellAccesses.right,
@@ -945,9 +1124,9 @@ function spellbookRitualSpellAccess(input: {
 
 function bookOfShadowsSpellAccess(input: {
   readonly build: CharacterBuild;
-  readonly spellcastingSources: NonNullable<
-    CharacterBuild["spellcasting"]
-  >["sources"];
+  readonly spellcastingSources: ReadonlyArray<
+    NonNullable<CharacterBuild["spellcasting"]>["sources"][number]
+  >;
   readonly unitLibrary: UnitCatalog;
   readonly featurePreparedSpells: readonly CharacterBattleFeaturePreparedSpellInit[];
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;

@@ -92,7 +92,7 @@ import {
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
   SpellEffectSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   applySpellCreatedHeldObjectEffect,
@@ -176,7 +176,7 @@ function admitSpellCreatedHeldObject(
   ctx: SpellAdmissionContext,
 ): readonly SpellCreatedHeldObjectInvocation[] {
   const spellcasting = ctx.actor.origin.spellcasting;
-  return spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly SpellCreatedHeldObjectInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -185,7 +185,7 @@ function admitSpellCreatedHeldObject(
         actorId: ctx.actor.combatantId,
         spell,
         slotLevel: slot.spellLevel,
-        spellcastingAbilityModifier: spellcasting.spellcastingAbilityModifier,
+        spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
         proficiencyBonus: spellcasting.proficiencyBonus,
       });
       return activeEffect === null
@@ -193,7 +193,7 @@ function admitSpellCreatedHeldObject(
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "spellCreatedHeldObject",
               spell,
               actionCost: "bonusAction",
@@ -627,7 +627,7 @@ function spellCreatedHeldObjectHandStateError(
 const SpellCreatedHeldObjectInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("spellCreatedHeldObject"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
@@ -695,3 +695,4 @@ export const spellCreatedHeldObjectReEvokeProfile = {
   discoverCastAct: discoverSpellCreatedHeldObjectReEvokeCastAct,
   resolve: resolveSpellCreatedHeldObjectReEvoke,
 } satisfies SynthesizedSpellProcedureDeclaration<"spellCreatedHeldObjectReEvoke">;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

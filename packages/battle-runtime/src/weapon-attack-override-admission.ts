@@ -16,6 +16,7 @@ import {
 } from "./character-class-level.ts";
 import { type BattleObjectId, type CombatantId } from "./identity.ts";
 import type { WeaponAttackOverrideProcedureFacts } from "./procedure-facts/weapon-attack-override.ts";
+import { cantripSpellAccessForCastingSource } from "./procedure-execution/spell-invocation-vocabulary.ts";
 import { sameStringSet } from "./battle-reducer/spells-execution-facts.ts";
 import {
   loadoutHeldWeaponSlotIsUsable,
@@ -38,6 +39,7 @@ type WeaponAttackOverrideAdmissionActor = {
 
 export type WeaponAttackOverrideAdmissionContext = {
   readonly actor: WeaponAttackOverrideAdmissionActor;
+  readonly castingSource: BattleSpellAdmissionSource["castingSource"];
   readonly activeDruidWildShape: Pick<
     Parameters<typeof wildShapeCanUseWornLoadoutObject>[0],
     "formLimbs" | "equipmentDisposition"
@@ -71,7 +73,7 @@ export function admitWeaponAttackOverride(
   const spellcasting = ctx.actor.origin.spellcasting;
   return attachedWeaponAttacksEligibleForOverride(ctx).map(
     ({ itemId, slot, attack }): WeaponAttackOverrideInvocation => ({
-      access: { tag: "classCantrip" },
+      access: cantripSpellAccessForCastingSource(spell.castingSource),
       resource: { tag: "none" },
       procedure: "weaponAttackOverride",
       spell,
@@ -82,9 +84,9 @@ export function admitWeaponAttackOverride(
         kind: "spellWeaponAttackOverride",
         sourceCombatantId: ctx.actor.combatantId,
         weaponItemId: itemId,
-        spellcastingAbilityModifier: spellcasting.spellcastingAbilityModifier,
+        spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
         attackBonus: attackBonus(
-          Number(spellcasting.spellcastingAbilityModifier) +
+          Number(ctx.castingSource.abilityModifier) +
             Number(spellcasting.proficiencyBonus),
         ),
         damage: projection.damage,

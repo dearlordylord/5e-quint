@@ -53,7 +53,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type JumpMovementReplacementInvocation = Extract<
@@ -74,7 +74,7 @@ function admitJumpMovementReplacement(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly JumpMovementReplacementInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -88,7 +88,7 @@ function admitJumpMovementReplacement(
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "jumpMovementReplacement",
               spell,
               actionCost: "bonusAction",
@@ -278,7 +278,7 @@ function applyJumpMovementReplacementSpellEffect(
 const JumpMovementReplacementInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("jumpMovementReplacement"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
@@ -309,3 +309,4 @@ export const jumpMovementReplacementProfile = {
   "jumpMovementReplacement",
   JumpMovementReplacementInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

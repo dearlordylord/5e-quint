@@ -62,9 +62,9 @@
       "value": 400
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 216,
+      "denominator": 219,
       "numerator": 211,
-      "percent": "97.7%"
+      "percent": "96.3%"
     },
     "profileClassificationCoverage": {
       "denominator": 400,
@@ -72,49 +72,49 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 149,
-      "numerator": 147,
+      "denominator": 150,
+      "numerator": 148,
       "percent": "98.7%"
     },
     "qntProofCoverage": {
-      "denominator": 149,
-      "numerator": 141,
-      "percent": "94.6%"
+      "denominator": 150,
+      "numerator": 142,
+      "percent": "94.7%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 188,
-      "numerator": 162,
+      "denominator": 189,
+      "numerator": 163,
       "percent": "86.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 188,
-      "numerator": 186,
+      "denominator": 189,
+      "numerator": 187,
       "percent": "98.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 202,
-      "numerator": 170,
-      "percent": "84.2%"
+      "denominator": 205,
+      "numerator": 173,
+      "percent": "84.4%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 149,
-      "numerator": 149,
+      "denominator": 150,
+      "numerator": 150,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 149,
-      "numerator": 149,
+      "denominator": 150,
+      "numerator": 150,
       "percent": "100%"
     },
     "selectedIdentityReplayCoverage": {
-      "denominator": 196,
+      "denominator": 199,
       "numerator": 195,
-      "percent": "99.5%"
+      "percent": "98%"
     },
     "supportedProfileCoverage": {
       "denominator": 350,
-      "numerator": 216,
-      "percent": "61.7%"
+      "numerator": 219,
+      "percent": "62.6%"
     }
   },
   "metricSemantics": [
@@ -5221,6 +5221,36 @@
       ]
     },
     {
+      "id": "battle.spell-access-magic-initiate-casting",
+      "profileKind": "spell-invocation",
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/character-battle-resources.ts",
+        "packages/battle-runtime/src/character-execution-admission.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+        "packages/character-battle-runtime/src/battle-character-build-projection.ts",
+        "packages/character-battle-runtime/src/index.ts"
+      ],
+      "sourceBoundary": "Character Build and Character Sheet handoff facts provide typed Magic Initiate Spell Access source, selected spell, chosen spellcasting ability, and source-and-spell free-cast resource identity. Battle consumes those facts by shape, admits cantrip no-slot and level-one ordinary-slot or one-use free-cast payment options, spends one casting action with the selected payment as one transition, preserves class-versus-feat source identity and slot/free-cast independence, and settles free-cast expenditure through the existing Character Sheet projection. Target selection, geometry, spell effects, saves, damage, and authored Unit identity remain outside this access-and-payment profile.",
+      "taskRefs": [
+        "ISSUE-278-MAGIC-INITIATE-SPELL-ACCESS"
+      ],
+      "title": "Battle source-scoped Magic Initiate casting admits cantrip, ordinary-slot, and one-use free-cast options with atomic action payment",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-magic-initiate-spell-access-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-spellcasting-actions-and-slots.test.ts"
+        }
+      ]
+    },
+    {
       "id": "character-sheet.class-feature-spell-free-cast-resource",
       "profileKind": "character-sheet",
       "qntOwners": [],
@@ -7343,13 +7373,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 188,
-        "numerator": 162,
+        "denominator": 189,
+        "numerator": 163,
         "percent": "86.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 188,
-        "numerator": 186,
+        "denominator": 189,
+        "numerator": 187,
         "percent": "98.9%"
       }
     },
@@ -7855,7 +7885,7 @@
             "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
           }
         ],
         "profileId": "unit-feature.creature-space-movement-permission",
@@ -8261,7 +8291,7 @@
             "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
           },
           {
             "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
@@ -8512,7 +8542,7 @@
             "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
           },
           {
             "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
@@ -8603,7 +8633,7 @@
             "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
           },
           {
             "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
@@ -8625,7 +8655,7 @@
             "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+            "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
           },
           {
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -10058,6 +10088,22 @@
         "qntOwners": []
       },
       {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle source-scoped Magic Initiate cantrip and prepared level-one casting with independent free-cast and slot cast options"
+          }
+        ],
+        "profileId": "battle.spell-access-magic-initiate-casting",
+        "profileKind": "spell-invocation",
+        "qntOwners": [
+          "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt"
+        ]
+      },
+      {
         "joinStatus": "mapped-open",
         "obligations": [
           {
@@ -10589,9 +10635,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 202,
-          "numerator": 170,
-          "percent": "84.2%"
+          "denominator": 205,
+          "numerator": 173,
+          "percent": "84.4%"
         }
       },
       "units": [
@@ -11800,7 +11846,7 @@
                   "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
                 },
                 {
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -12127,7 +12173,7 @@
                   "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
@@ -12279,6 +12325,72 @@
             }
           ],
           "unitId": "feat_great_weapon_fighting"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle source-scoped Magic Initiate cantrip and prepared level-one casting with independent free-cast and slot cast options"
+                }
+              ],
+              "profileId": "battle.spell-access-magic-initiate-casting",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt"
+              ]
+            }
+          ],
+          "unitId": "feat_magic_initiate_cleric"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle source-scoped Magic Initiate cantrip and prepared level-one casting with independent free-cast and slot cast options"
+                }
+              ],
+              "profileId": "battle.spell-access-magic-initiate-casting",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt"
+              ]
+            }
+          ],
+          "unitId": "feat_magic_initiate_druid"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle source-scoped Magic Initiate cantrip and prepared level-one casting with independent free-cast and slot cast options"
+                }
+              ],
+              "profileId": "battle.spell-access-magic-initiate-casting",
+              "profileKind": "spell-invocation",
+              "qntOwners": [
+                "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt"
+              ]
+            }
+          ],
+          "unitId": "feat_magic_initiate_wizard"
         },
         {
           "joinStatus": "covered",
@@ -12803,7 +12915,7 @@
                   "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
@@ -13311,7 +13423,7 @@
                   "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                  "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
@@ -16214,8 +16326,59 @@
       "evidenceTag": "selected-identity-replay"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 2,
+    "rowCount": 5,
     "rows": [
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "feat",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-replay evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/feat_magic_initiate_cleric.json",
+        "support": {
+          "profileIds": [
+            "battle.spell-access-magic-initiate-casting"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "feat_magic_initiate_cleric"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "feat",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-replay evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/feat_magic_initiate_druid.json",
+        "support": {
+          "profileIds": [
+            "battle.spell-access-magic-initiate-casting"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "feat_magic_initiate_druid"
+      },
+      {
+        "catalogAdmissionStatus": "installed",
+        "collectionId": "srd-5.2.1",
+        "kind": "feat",
+        "selectedIdentity": {
+          "reason": "The Unit has no selected-identity-replay evidence.",
+          "status": "missing-witness"
+        },
+        "sourceRecordPath": "packages/surface/content/feat_magic_initiate_wizard.json",
+        "support": {
+          "profileIds": [
+            "battle.spell-access-magic-initiate-casting"
+          ],
+          "tag": "supported-profile"
+        },
+        "unitId": "feat_magic_initiate_wizard"
+      },
       {
         "catalogAdmissionStatus": "installed",
         "collectionId": "srd-5.2.1",
@@ -20586,6 +20749,22 @@
         "character-sheet.passive-defense-projection"
       ],
       "taskId": "L110D-09-MONK-PALADIN-WIZARD-LEVEL10-SHEET"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Focused battle Quint proof covers source-scoped Magic Initiate access identity, per-access ability, cantrip no-slot admission, ordinary-slot and free-cast payment independence, exact free-cast exhaustion, and atomic casting-action plus selected-payment spending.",
+      "profileIds": [
+        "battle.spell-access-magic-initiate-casting"
+      ],
+      "taskId": "ISSUE-278-MAGIC-INITIATE-SPELL-ACCESS"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused battle spellcasting contract tests cover Magic Initiate class and feat source separation, cantrip and level-one payment options, casting-action spending, free-cast versus ordinary-slot resource independence, and settlement of the selected source-and-spell free-cast expenditure.",
+      "profileIds": [
+        "battle.spell-access-magic-initiate-casting"
+      ],
+      "taskId": "ISSUE-278-MAGIC-INITIATE-SPELL-ACCESS"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -20630,14 +20809,14 @@
         "installedUnitDenominator": 13,
         "kind": "feat",
         "label": "Feat Units",
-        "profileFactDenominator": 11,
+        "profileFactDenominator": 14,
         "profileSubsetSupportedUnits": 0,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 8,
-        "selectedIdentityReplayGapUnits": 0,
+        "selectedIdentityReplayDenominator": 11,
+        "selectedIdentityReplayGapUnits": 3,
         "selectedIdentityReplayWitnessUnits": 8,
-        "supportedProfileUnits": 9,
-        "unsupportedOrOtherUnits": 4
+        "supportedProfileUnits": 12,
+        "unsupportedOrOtherUnits": 1
       },
       {
         "executableUnitDenominator": 191,
@@ -29567,17 +29746,59 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
-          "owner": "character-creation-runtime and future character-sheet spell-access owner",
-          "reason": "The feat Unit owns SRD authored identity and typed Magic Initiate spell-list source facts. Character finalization retains the selected feat ref without storing duplicate spell-access state; future character-sheet spell-access support should derive selected cantrips, selected level-1 Spell Access, spellcasting ability choice, and free-cast recharge from the feat's typed Magic Initiate facts. Selected Spell Definition profiles own static execution/profile facts, while runtime Spell Invocation remains owned by the spell invocation runtime boundary."
+          "owner": "character creation, Character Sheet Spell Access, character-battle composition, and battle Spell Invocation owners",
+          "reason": "The feat Unit owns authored spell-list source facts while durable selections, mutable free-cast expenditure, and runtime invocation identity remain in their owning character and battle domains."
         },
-        "reason": "Magic Initiate (Cleric) is an Origin feat spell-access selection source. Character creation retains selected Background or Human Versatile feat Unit refs plus the feat's typed spell-list source facts; selected cantrip ids, selected level-1 Spell Access, spellcasting ability choice, and one-free-Long Rest cast state belong to the character spell-access owner rather than promoted battle Unit execution.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "battle.spell-access-magic-initiate-casting"
+        ],
+        "rawRequirementIds": [],
+        "supportedMechanics": [
+          "Character Creation retains exactly two selected cantrips, one selected level-1 spell, one INT/WIS/CHA spellcasting ability, and the selected feat source identity.",
+          "Character Sheet derives source-and-spell keyed Spell Access and one Long Rest free-cast resource for the selected level-1 spell without duplicating Spell Slot state.",
+          "Battle projection supports non-class casters and preserves the feat access identity and selected ability on every cantrip, ordinary-slot, and free-cast invocation.",
+          "Battle discovery keeps same-spell class and feat invocations distinct, derives exactly one eligible free-cast act, and applies class-specific effects only to class spellcasting sources.",
+          "Battle resource spending atomically spends the casting action and exact access-owned free-cast pool while ordinary slot and free-cast payments remain independent.",
+          "Battle settlement writes the exact source-and-spell free-cast expenditure back to Character Sheet state."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "feat",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "battle.spell-access-magic-initiate-casting",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/character-battle-resources.ts",
+            "packages/battle-runtime/src/character-execution-admission.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+            "packages/character-battle-runtime/src/battle-character-build-projection.ts",
+            "packages/character-battle-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Build and Character Sheet handoff facts provide typed Magic Initiate Spell Access source, selected spell, chosen spellcasting ability, and source-and-spell free-cast resource identity. Battle consumes those facts by shape, admits cantrip no-slot and level-one ordinary-slot or one-use free-cast payment options, spends one casting action with the selected payment as one transition, preserves class-versus-feat source identity and slot/free-cast independence, and settles free-cast expenditure through the existing Character Sheet projection. Target selection, geometry, spell effects, saves, damage, and authored Unit identity remain outside this access-and-payment profile.",
+          "taskRefs": [
+            "ISSUE-278-MAGIC-INITIATE-SPELL-ACCESS"
+          ],
+          "title": "Battle source-scoped Magic Initiate casting admits cantrip, ordinary-slot, and one-use free-cast options with atomic action payment",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-magic-initiate-spell-access-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-spellcasting-actions-and-slots.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/feat_magic_initiate_cleric.json",
       "unitId": "feat_magic_initiate_cleric"
     },
@@ -29590,17 +29811,59 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
-          "owner": "character-creation-runtime and future character-sheet spell-access owner",
-          "reason": "The feat Unit owns SRD authored identity and typed Magic Initiate spell-list source facts. Character finalization retains the selected feat ref without storing duplicate spell-access state; future character-sheet spell-access support should derive selected cantrips, selected level-1 Spell Access, spellcasting ability choice, and free-cast recharge from the feat's typed Magic Initiate facts. Selected Spell Definition profiles own static execution/profile facts, while runtime Spell Invocation remains owned by the spell invocation runtime boundary."
+          "owner": "character creation, Character Sheet Spell Access, character-battle composition, and battle Spell Invocation owners",
+          "reason": "The feat Unit owns authored spell-list source facts while durable selections, mutable free-cast expenditure, and runtime invocation identity remain in their owning character and battle domains."
         },
-        "reason": "Magic Initiate (Druid) is an Origin feat spell-access selection source. Character creation retains selected Background or Human Versatile feat Unit refs plus the feat's typed spell-list source facts; selected cantrip ids, selected level-1 Spell Access, spellcasting ability choice, and one-free-Long Rest cast state belong to the character spell-access owner rather than promoted battle Unit execution.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "battle.spell-access-magic-initiate-casting"
+        ],
+        "rawRequirementIds": [],
+        "supportedMechanics": [
+          "Character Creation retains exactly two selected cantrips, one selected level-1 spell, one INT/WIS/CHA spellcasting ability, and the selected feat source identity.",
+          "Character Sheet derives source-and-spell keyed Spell Access and one Long Rest free-cast resource for the selected level-1 spell without duplicating Spell Slot state.",
+          "Battle projection supports non-class casters and preserves the feat access identity and selected ability on every cantrip, ordinary-slot, and free-cast invocation.",
+          "Battle discovery keeps same-spell class and feat invocations distinct, derives exactly one eligible free-cast act, and applies class-specific effects only to class spellcasting sources.",
+          "Battle resource spending atomically spends the casting action and exact access-owned free-cast pool while ordinary slot and free-cast payments remain independent.",
+          "Battle settlement writes the exact source-and-spell free-cast expenditure back to Character Sheet state."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "feat",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "battle.spell-access-magic-initiate-casting",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/character-battle-resources.ts",
+            "packages/battle-runtime/src/character-execution-admission.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+            "packages/character-battle-runtime/src/battle-character-build-projection.ts",
+            "packages/character-battle-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Build and Character Sheet handoff facts provide typed Magic Initiate Spell Access source, selected spell, chosen spellcasting ability, and source-and-spell free-cast resource identity. Battle consumes those facts by shape, admits cantrip no-slot and level-one ordinary-slot or one-use free-cast payment options, spends one casting action with the selected payment as one transition, preserves class-versus-feat source identity and slot/free-cast independence, and settles free-cast expenditure through the existing Character Sheet projection. Target selection, geometry, spell effects, saves, damage, and authored Unit identity remain outside this access-and-payment profile.",
+          "taskRefs": [
+            "ISSUE-278-MAGIC-INITIATE-SPELL-ACCESS"
+          ],
+          "title": "Battle source-scoped Magic Initiate casting admits cantrip, ordinary-slot, and one-use free-cast options with atomic action payment",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-magic-initiate-spell-access-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-spellcasting-actions-and-slots.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/feat_magic_initiate_druid.json",
       "unitId": "feat_magic_initiate_druid"
     },
@@ -29613,17 +29876,59 @@
       "claim": {
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
-          "owner": "character-creation-runtime and future character-sheet spell-access owner",
-          "reason": "The feat Unit owns SRD authored identity and typed Magic Initiate spell-list source facts. Character finalization retains the selected feat ref without storing duplicate spell-access state; future character-sheet spell-access support should derive selected cantrips, selected level-1 Spell Access, spellcasting ability choice, and free-cast recharge from the feat's typed Magic Initiate facts. Selected Spell Definition profiles own static execution/profile facts, while runtime Spell Invocation remains owned by the spell invocation runtime boundary."
+          "owner": "character creation, Character Sheet Spell Access, character-battle composition, and battle Spell Invocation owners",
+          "reason": "The feat Unit owns authored spell-list source facts while durable selections, mutable free-cast expenditure, and runtime invocation identity remain in their owning character and battle domains."
         },
-        "reason": "Magic Initiate (Wizard) is an Origin feat spell-access selection source. Character creation retains selected Background or Human Versatile feat Unit refs plus the feat's typed spell-list source facts; selected cantrip ids, selected level-1 Spell Access, spellcasting ability choice, and one-free-Long Rest cast state belong to the character spell-access owner rather than promoted battle Unit execution.",
-        "tag": "unsupported-profile"
+        "profileIds": [
+          "battle.spell-access-magic-initiate-casting"
+        ],
+        "rawRequirementIds": [],
+        "supportedMechanics": [
+          "Character Creation retains exactly two selected cantrips, one selected level-1 spell, one INT/WIS/CHA spellcasting ability, and the selected feat source identity.",
+          "Character Sheet derives source-and-spell keyed Spell Access and one Long Rest free-cast resource for the selected level-1 spell without duplicating Spell Slot state.",
+          "Battle projection supports non-class casters and preserves the feat access identity and selected ability on every cantrip, ordinary-slot, and free-cast invocation.",
+          "Battle discovery keeps same-spell class and feat invocations distinct, derives exactly one eligible free-cast act, and applies class-specific effects only to class spellcasting sources.",
+          "Battle resource spending atomically spends the casting action and exact access-owned free-cast pool while ordinary slot and free-cast payments remain independent.",
+          "Battle settlement writes the exact source-and-spell free-cast expenditure back to Character Sheet state."
+        ],
+        "tag": "supported-profile"
       },
       "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "feat",
-      "profiles": [],
+      "profiles": [
+        {
+          "id": "battle.spell-access-magic-initiate-casting",
+          "profileKind": "spell-invocation",
+          "qntOwners": [
+            "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/character-battle-resources.ts",
+            "packages/battle-runtime/src/character-execution-admission.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+            "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+            "packages/character-battle-runtime/src/battle-character-build-projection.ts",
+            "packages/character-battle-runtime/src/index.ts"
+          ],
+          "sourceBoundary": "Character Build and Character Sheet handoff facts provide typed Magic Initiate Spell Access source, selected spell, chosen spellcasting ability, and source-and-spell free-cast resource identity. Battle consumes those facts by shape, admits cantrip no-slot and level-one ordinary-slot or one-use free-cast payment options, spends one casting action with the selected payment as one transition, preserves class-versus-feat source identity and slot/free-cast independence, and settles free-cast expenditure through the existing Character Sheet projection. Target selection, geometry, spell effects, saves, damage, and authored Unit identity remain outside this access-and-payment profile.",
+          "taskRefs": [
+            "ISSUE-278-MAGIC-INITIATE-SPELL-ACCESS"
+          ],
+          "title": "Battle source-scoped Magic Initiate casting admits cantrip, ordinary-slot, and one-use free-cast options with atomic action payment",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-magic-initiate-spell-access-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/battle-runtime-spellcasting-actions-and-slots.test.ts"
+            }
+          ]
+        }
+      ],
       "sourceRecordPath": "packages/surface/content/feat_magic_initiate_wizard.json",
       "unitId": "feat_magic_initiate_wizard"
     },

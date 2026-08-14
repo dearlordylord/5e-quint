@@ -173,8 +173,9 @@ describe("Character Sheet runtime / Contact Patron", () => {
       _tag: "Right",
       right: expect.arrayContaining([
         {
-          unitId: authoredUnitId("warlock_contact_patron"),
-          tag: "contactPatronContactOtherPlaneFreeCast",
+          sourceUnitId: authoredUnitId("warlock_contact_patron"),
+          spellId: authoredUnitId("contact_other_plane"),
+          tag: "spellAccessFreeCast",
           count: 1,
           expended: 0,
         },
@@ -209,7 +210,9 @@ describe("Character Sheet runtime / Contact Patron", () => {
     expect(result.sheet.pactSlotExpenditure).toBeUndefined();
     expect(result.sheet.resourceExpenditures).toEqual([
       {
-        tag: "contactPatronContactOtherPlaneFreeCast",
+        tag: "spellAccessFreeCast",
+        sourceUnitId: authoredUnitId("warlock_contact_patron"),
+        spellId: authoredUnitId("contact_other_plane"),
         expended: 1,
       },
     ]);
@@ -257,7 +260,10 @@ function projectContactPatronInvocation(): ContactPatronSelectedIdentityProjecti
     resourceExpended:
       result.sheet.resourceExpenditures.find(
         (expenditure) =>
-          expenditure.tag === result.invocation.freeCastResourceTag,
+          expenditure.tag === "spellAccessFreeCast" &&
+          expenditure.sourceUnitId ===
+            result.invocation.freeCastResource.sourceUnitId &&
+          expenditure.spellId === result.invocation.freeCastResource.spellId,
       )?.expended ?? 0,
     savingThrowOutcome: result.invocation.savingThrow.outcome,
     questionCount: result.invocation.questions.count,

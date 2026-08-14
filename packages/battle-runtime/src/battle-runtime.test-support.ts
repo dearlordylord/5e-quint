@@ -205,7 +205,7 @@ import {
   characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,
   characterId,
-  classFeatureFreeCastSpellInvocationRef,
+  spellAccessFreeCastSpellInvocationRef,
   combatantId,
   concentrationSavingThrowDc,
   discoverBattleActs,
@@ -668,8 +668,8 @@ function sameSpellInvocationRef(
     return left.sourceCombatantId === right.sourceCombatantId;
   }
   if (
-    left.tag === "classFeatureFreeCast" &&
-    right.tag === "classFeatureFreeCast"
+    left.tag === "spellAccessFreeCast" &&
+    right.tag === "spellAccessFreeCast"
   ) {
     return left.resourcePoolRef === right.resourcePoolRef;
   }
@@ -3558,7 +3558,10 @@ export function characterSeed(input: {
     attack === null ? null : characterBattleCreatureInitWeaponAttack(attack);
   const classLevels = input.classLevels ?? [
     {
-      className: input.spellcasting?.sourceClassName ?? "fighter",
+      className:
+        input.spellcasting?.spellcastingSource.tag === "classSpellcasting"
+          ? input.spellcasting.spellcastingSource.className
+          : "fighter",
       level: input.classLevel ?? 1,
     },
   ];
@@ -5547,8 +5550,11 @@ export function wizardSpellcasting(input?: {
   >["spellcasting"]
 > {
   return {
-    sourceClassName: "wizard",
-    spellcastingAbilityModifier: 3,
+    spellcastingSource: {
+      tag: "classSpellcasting",
+      className: "wizard",
+      abilityModifier: 3,
+    },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
     cantrips: input?.cantrips ?? [
@@ -5557,6 +5563,7 @@ export function wizardSpellcasting(input?: {
     ],
     preparedSpells: input?.preparedSpells ?? [spellRecord("magic_missile")],
     featurePreparedSpells: [],
+    spellAccesses: [],
     spellbookRitualSpellAccesses: [],
     ...(input?.bookOfShadowsSpellAccesses === undefined
       ? {}
@@ -5839,7 +5846,7 @@ export {
   characterBattleResourceIsUseCount,
   characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,
-  classFeatureFreeCastSpellInvocationRef,
+  spellAccessFreeCastSpellInvocationRef,
   combatantCanSee,
   combatantId,
   concentrationSavingThrowDc,

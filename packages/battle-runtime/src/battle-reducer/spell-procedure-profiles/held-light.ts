@@ -47,6 +47,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { spellAdmissionCharacterLevel } from "./profile.ts";
+import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
@@ -55,7 +56,7 @@ import {
 } from "./profile.ts";
 import {
   AttackBonus,
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   DamageTypeSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
@@ -128,7 +129,7 @@ function admitHeldLight(
     ? []
     : [
         {
-          access: { tag: "classCantrip" },
+          access: cantripSpellAccessFor(spell.castingSource),
           resource: { tag: "none" },
           procedure: "heldLight",
           spell,
@@ -190,7 +191,7 @@ export function heldLightHurlMechanicalFacts(
     rangeFeet: movementFeet(60),
     attackKind: hurlOperation.effect.attackKind,
     attackBonus: attackBonus(
-      Number(ctx.actor.origin.spellcasting.spellcastingAbilityModifier) +
+      Number(ctx.castingSource.abilityModifier) +
         Number(ctx.actor.origin.spellcasting.proficiencyBonus),
     ),
   };
@@ -296,7 +297,7 @@ function resolveHeldLight(
 
 const HeldLightInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: ClassCantripSpellAccessSchema,
+    access: CantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("heldLight"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

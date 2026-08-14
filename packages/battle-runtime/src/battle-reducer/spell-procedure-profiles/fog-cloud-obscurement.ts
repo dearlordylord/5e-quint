@@ -45,7 +45,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type FogCloudObscurementSpellInvocation = Extract<
@@ -75,7 +75,7 @@ function admitFogCloudObscurement(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly FogCloudObscurementSpellInvocation[] => {
       const radiusFeet =
         fogCloud.radius.base +
@@ -84,7 +84,7 @@ function admitFogCloudObscurement(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "fogCloudObscurement",
           spell,
           targeting: {
@@ -171,7 +171,7 @@ function resolveFogCloudObscurement(
 const FogCloudObscurementInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("fogCloudObscurement"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: Schema.Struct({
@@ -192,3 +192,4 @@ export const fogCloudObscurementProfile = {
   "fogCloudObscurement",
   FogCloudObscurementSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

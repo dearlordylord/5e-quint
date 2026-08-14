@@ -52,7 +52,10 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import type {
   BattleActiveEffect,
   BattleState,
@@ -395,7 +398,7 @@ function directConditionInvocation(
       slotLevel: spellSlotLevel(spellSlotLevelForBattle(slotLevel)),
     },
     procedure: "directCondition",
-    spell: spellRecord(invisibilityUnitId),
+    spell: spellAdmissionSource(spellRecord(invisibilityUnitId)),
     actionCost: "magicAction",
     targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
     activeEffect: {

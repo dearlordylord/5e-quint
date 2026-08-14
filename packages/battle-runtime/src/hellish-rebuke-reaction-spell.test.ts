@@ -879,13 +879,17 @@ describe("Hellish Rebuke Reaction spell", () => {
     const hellishRebuke = srdSpellRecord(hellishRebukeUnitId);
     const state = battleWithHellishRebuke(hellishRebuke, {
       casterSpellcasting: {
-        sourceClassName: "wizard",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [hellishRebuke],
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [],
@@ -975,13 +979,17 @@ describe("Hellish Rebuke Reaction spell", () => {
     const hellishRebuke = srdSpellRecord(hellishRebukeUnitId);
     const state = battleWithHellishRebuke(hellishRebuke, {
       damagerSpellcasting: {
-        sourceClassName: "wizard",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [hellishRebuke],
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -1090,13 +1098,17 @@ describe("Hellish Rebuke Reaction spell", () => {
   test("is offered after caller-supplied Magic Missile damage facts from the damaging creature", () => {
     const state = battleWithHellishRebuke(srdSpellRecord(hellishRebukeUnitId), {
       damagerSpellcasting: {
-        sourceClassName: "wizard",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [srdSpellRecord(magicMissileUnitId)],
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -1177,13 +1189,17 @@ function battleWithHellishRebuke(
         displayName: "Hellish Rebuke caster",
         initiative: 10,
         spellcasting: input.casterSpellcasting ?? {
-          sourceClassName: "wizard",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "wizard",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
           preparedSpells: [spell],
           featurePreparedSpells: [],
+          spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
           spellSlots: [
@@ -1210,13 +1226,17 @@ function battleWithHellishRebukeOnCasterTurn(
       displayName: "Hellish Rebuke caster",
       initiative: 20,
       spellcasting: {
-        sourceClassName: "wizard",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [spell],
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -1239,13 +1259,17 @@ function battleWithThirdPartyHideousLaughter(
       displayName: "Hideous Laughter caster",
       initiative: 30,
       spellcasting: {
-        sourceClassName: "wizard",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [srdSpellRecord(hideousLaughterUnitId)],
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
@@ -1257,13 +1281,17 @@ function battleWithThirdPartyHideousLaughter(
       initiative: 20,
       classLevels: [{ className: "warlock", level: 3 }],
       spellcasting: {
-        sourceClassName: "warlock",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "warlock",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [hellishRebuke],
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 2, count: 1 }],

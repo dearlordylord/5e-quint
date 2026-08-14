@@ -65,8 +65,9 @@ import type { SpellRuleExecutionFacts } from "./spell-rule-facts.ts";
 import type { BattleSpellEffectLevel } from "./spell-effect-level.ts";
 import type {
   ArmorOfShadowsSpellAccess,
-  ClassCantripSpellAccess,
-  ClassFeatureFreeCastInvocationResource,
+  CantripSpellAccess,
+  LeveledSpellInvocationResource,
+  SpellAccessFreeCastInvocationResource,
   NoSpellInvocationResource,
   PreparedSpellAccess,
   RollModifierSpellSaveGate,
@@ -118,7 +119,7 @@ export type AbilityD20TestRollModeSaveGateSpellProcedureExecution =
     readonly failedSaveEffect: SpellActiveEffectTemplate<"abilityD20TestRollModeEndTurnSave">;
     readonly procedure: "abilityD20TestRollModeSaveGate";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly successEffect: SpellActiveEffectTemplate<"nextAttackRollBySelf">;
     readonly targeting: {
       readonly kind: "targetList";
@@ -143,7 +144,7 @@ export type AfterHitDamageSpellProcedureExecution =
     readonly procedure: "afterHitDamage";
     readonly resource:
       | SpellSlotInvocationResource
-      | ClassFeatureFreeCastInvocationResource;
+      | SpellAccessFreeCastInvocationResource;
   };
 
 export type AfterHitDamageAndIlluminationSpellProcedureExecution =
@@ -156,7 +157,7 @@ export type AfterHitDamageAndIlluminationSpellProcedureExecution =
       readonly damageType: DamageType;
     };
     readonly procedure: "afterHitDamageAndIllumination";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type AfterHitSaveGatedConditionSpellProcedureExecution =
@@ -167,7 +168,7 @@ export type AfterHitSaveGatedConditionSpellProcedureExecution =
     readonly dc: DcSource;
     readonly effect: SpellFailedSaveConditionEffect;
     readonly procedure: "afterHitSaveGatedCondition";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: { readonly kind: "singleCombatant" };
   };
 
@@ -181,7 +182,7 @@ export type AfterHitTimedDamageAndSaveSpellProcedureExecution =
       readonly damageType: DamageType;
     };
     readonly procedure: "afterHitTimedDamageAndSave";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type AntimagicFieldOngoingSpellSuppressionSpellProcedureExecution =
@@ -190,7 +191,7 @@ export type AntimagicFieldOngoingSpellSuppressionSpellProcedureExecution =
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "antimagicFieldOngoingSpellSuppression";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "selfOriginEmanation";
       readonly radiusFeet: MovementFeet;
@@ -221,7 +222,7 @@ export type AttackBurstSaveDamageSpellProcedureExecution =
     };
     readonly procedure: "attackBurstSaveDamage";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: { readonly kind: "singleCombatant" };
   };
 
@@ -231,7 +232,7 @@ export type BlurAttackRollDefenseSpellProcedureExecution =
     readonly actionCost: "magicAction";
     readonly activeEffect: SpellActiveEffectTemplate<"blurred">;
     readonly procedure: "blurAttackRollDefense";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type ChainedSpellAttackDamageSpellProcedureExecution =
@@ -244,7 +245,7 @@ export type ChainedSpellAttackDamageSpellProcedureExecution =
     readonly leapRangeFeet: MovementFeet;
     readonly procedure: "chainedSpellAttackDamage";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: { readonly kind: "singleCombatant" };
   };
 
@@ -260,7 +261,7 @@ export type ChosenDamageResistanceSpellProcedureExecution =
     } & { readonly durationTicks: ElapsedTimeTicks };
     readonly procedure: "chosenDamageResistance";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: SpellTargetListTargeting & {
       readonly requiredTargetDisposition: "willing";
     };
@@ -278,7 +279,7 @@ export type CloudkillAreaHazardSpellProcedureExecution =
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "cloudkillAreaHazard";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginSphere";
       readonly radiusFeet: MovementFeet;
@@ -291,7 +292,7 @@ export type CommandSpellProcedureExecution = SpellRuleExecutionFactsOwner & {
   readonly actionCost: "magicAction";
   readonly dc: DcSource;
   readonly procedure: "command";
-  readonly resource: SpellSlotInvocationResource;
+  readonly resource: LeveledSpellInvocationResource;
   readonly targeting: {
     readonly kind: "targetList";
     readonly minTargets: 1;
@@ -309,7 +310,7 @@ export type ConditionImmunityAndTurnStartTemporaryHitPointsSpellProcedureExecuti
     ];
     readonly procedure: "conditionImmunityAndTurnStartTemporaryHitPoints";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: SpellTargetListTargeting;
   };
 
@@ -330,7 +331,7 @@ export type ConditionRemovalProtectionSpellProcedureExecution =
       >;
     };
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: SpellTargetListTargeting;
   };
 
@@ -341,7 +342,7 @@ export type CounterspellSpellProcedureExecution =
     readonly dc: DcSource;
     readonly procedure: "counterspell";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly triggerComponents: readonly SpellComponent[];
     readonly targeting: { readonly kind: "singleCombatant" };
   };
@@ -358,7 +359,7 @@ export type CreatureSizeDecreaseSpellProcedureExecution =
     readonly dc: DcSource;
     readonly procedure: "creatureSizeDecrease";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: SpellTargetListTargeting;
   };
 
@@ -374,7 +375,7 @@ export type CreatureSizeIncreaseSpellProcedureExecution =
     readonly dc: DcSource;
     readonly procedure: "creatureSizeIncrease";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: SpellTargetListTargeting;
   };
 
@@ -385,13 +386,13 @@ export type CreatureTypeProtectionSpellProcedureExecution =
     readonly activeEffect: SpellActiveEffectTemplate<"creatureTypeProtection">;
     readonly procedure: "creatureTypeProtection";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: CreatureTypeProtectionSpellTargeting;
   };
 
 export type DamageReductionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly access: ClassCantripSpellAccess;
+    readonly access: CantripSpellAccess;
     readonly actionCost: "magicAction";
     readonly amount: { readonly dice: 1; readonly dieSize: 4 };
     readonly damageTypeChoices: readonly DamageType[];
@@ -406,7 +407,7 @@ export type DamageReductionSpellProcedureExecution =
 
 export type DancingLightsCombinedCastSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly access: ClassCantripSpellAccess;
+    readonly access: CantripSpellAccess;
     readonly actionCost: "magicAction";
     readonly dimRadiusFeet: MovementFeet;
     readonly expiresAt: {
@@ -424,7 +425,7 @@ export type DancingLightsCombinedCastSpellProcedureExecution =
 
 export type DancingLightsRepositionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly access: ClassCantripSpellAccess;
+    readonly access: CantripSpellAccess;
     readonly actionCost: "bonusAction";
     readonly activeEffectRef: BattleActiveEffectExecutionRef;
     readonly sourceDancingLightsProcedureRef: BattleProcedureExecutionRef;
@@ -437,7 +438,7 @@ export type DancingLightsRepositionSpellProcedureExecution =
 
 export type DancingLightsSeparateCastSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly access: ClassCantripSpellAccess;
+    readonly access: CantripSpellAccess;
     readonly actionCost: "magicAction";
     readonly dimRadiusFeet: MovementFeet;
     readonly expiresAt: {
@@ -460,7 +461,7 @@ export type DirectConditionSpellProcedureExecution =
     readonly activeEffect: DirectConditionSpellActiveEffectTemplate;
     readonly procedure: "directCondition";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: SpellTargetListTargeting;
   };
 
@@ -476,7 +477,7 @@ export type DirectConditionRemovalSpellProcedureExecution =
     ];
     readonly procedure: "directConditionRemoval";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: SpellTargetListTargeting;
   };
 
@@ -487,7 +488,7 @@ export type DirectHitPointRestorationSpellProcedureExecution =
     readonly healing: { readonly expr: DiceExpr };
     readonly procedure: "directHitPointRestoration";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: HealingSpellTargeting;
   };
 
@@ -502,7 +503,7 @@ export type DragonsBreathInitialSpellProcedureExecution =
     readonly damageTypeChoices: readonly DamageType[];
     readonly procedure: "dragonsBreathInitial";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "targetList";
       readonly minTargets: 1;
@@ -516,7 +517,7 @@ export type ExpeditiousRetreatDashSpellProcedureExecution =
     readonly actionCost: "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"spellDashBonusAction">;
     readonly procedure: "expeditiousRetreatDash";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type FeatherFallMitigationSpellProcedureExecution =
@@ -525,7 +526,7 @@ export type FeatherFallMitigationSpellProcedureExecution =
     readonly activeEffect: SpellActiveEffectTemplate<"featherFallMitigation">;
     readonly procedure: "featherFallMitigation";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "targetList";
       readonly minTargets: 1;
@@ -546,7 +547,7 @@ export type FlamingSphereSpellProcedureExecution =
     readonly procedure: "flamingSphere";
     readonly ramMaxMoveFeet: MovementFeet;
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginSphereDiameter";
       readonly diameterFeet: MovementFeet;
@@ -559,7 +560,7 @@ export type FogCloudObscurementSpellProcedureExecution =
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "fogCloudObscurement";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginSphere";
       readonly radiusFeet: MovementFeet;
@@ -574,7 +575,7 @@ export type GreaseGroundHazardSpellProcedureExecution =
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "greaseGroundHazard";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginCube";
       readonly sideFeet: MovementFeet;
@@ -594,7 +595,7 @@ export type GustOfWindLineSpellProcedureExecution =
     readonly procedure: "gustOfWindLine";
     readonly pushDistanceFeet: MovementFeet;
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "selfOriginLine";
       readonly lengthFeet: MovementFeet;
@@ -628,7 +629,7 @@ export type HastePositiveSpellProcedureExecution =
     };
     readonly procedure: "hastePositive";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: SpellTargetListTargeting & {
       readonly maxTargets: 1;
       readonly requiredTargetDisposition: "willing";
@@ -636,7 +637,7 @@ export type HastePositiveSpellProcedureExecution =
   };
 
 export type HeldLightSpellProcedureExecution = SpellRuleExecutionFactsOwner & {
-  readonly access: ClassCantripSpellAccess;
+  readonly access: CantripSpellAccess;
   readonly actionCost: "bonusAction";
   readonly expiresAt: BattleActiveEffectExpiration;
   readonly light: {
@@ -650,7 +651,7 @@ export type HeldLightSpellProcedureExecution = SpellRuleExecutionFactsOwner & {
 
 export type HeldLightHurlSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly access: ClassCantripSpellAccess;
+    readonly access: CantripSpellAccess;
     readonly attackBonus: AttackBonus;
     readonly attackKind: "ranged_spell_attack";
     readonly damage: {
@@ -672,7 +673,7 @@ export type HideousLaughterSpellProcedureExecution =
     readonly actionCost: "magicAction";
     readonly dc: DcSource;
     readonly procedure: "hideousLaughter";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "targetList";
       readonly minTargets: 1;
@@ -689,7 +690,7 @@ export type HypnoticPatternSpellProcedureExecution =
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "hypnoticPattern";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginCube";
       readonly sideFeet: MovementFeet;
@@ -708,7 +709,7 @@ export type InsectPlagueAreaHazardSpellProcedureExecution =
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "insectPlagueAreaHazard";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginSphere";
       readonly radiusFeet: MovementFeet;
@@ -722,7 +723,7 @@ export type JumpMovementReplacementSpellProcedureExecution =
     readonly activeEffect: SpellActiveEffectTemplate<"jumpMovementReplacement">;
     readonly procedure: "jumpMovementReplacement";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "targetList";
       readonly minTargets: 1;
@@ -744,7 +745,7 @@ export type LevitatedCreatureSpellProcedureExecution =
     readonly maxInitialRiseFeet: MovementFeet;
     readonly procedure: "levitatedCreature";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: SpellTargetListTargeting;
   };
 
@@ -755,7 +756,7 @@ export type MagicalDarknessPointOriginSpellProcedureExecution =
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "magicalDarknessPointOrigin";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginSphere";
       readonly radiusFeet: MovementFeet;
@@ -769,11 +770,11 @@ export type MagicWeaponEnhancementSpellProcedureExecution =
     readonly bonus: 1 | 2 | 3;
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "magicWeaponEnhancement";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type MakeStableSpellProcedureExecution = SpellRuleExecutionFactsOwner & {
-  readonly access: ClassCantripSpellAccess;
+  readonly access: CantripSpellAccess;
   readonly actionCost: "magicAction";
   readonly procedure: "makeStable";
   readonly rangeFeet: MovementFeet;
@@ -795,7 +796,7 @@ export type MarkedDamageRiderCastSpellProcedureExecution =
     readonly rangeFeet: MovementFeet;
     readonly resource:
       | SpellSlotInvocationResource
-      | ClassFeatureFreeCastInvocationResource;
+      | SpellAccessFreeCastInvocationResource;
     readonly retargetTiming: MarkedDamageRiderRetargetTiming;
     readonly targeting: { readonly kind: "singleCombatant" };
   };
@@ -813,7 +814,7 @@ export type MirrorImageHitInterceptionSpellProcedureExecution =
     readonly actionCost: "magicAction";
     readonly activeEffect: SpellActiveEffectTemplate<"mirrorImageDuplicates">;
     readonly procedure: "mirrorImageHitInterception";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type MoonbeamSpellProcedureExecution = SpellRuleExecutionFactsOwner & {
@@ -828,7 +829,7 @@ export type MoonbeamSpellProcedureExecution = SpellRuleExecutionFactsOwner & {
   readonly procedure: "moonbeam";
   readonly rangeFeet: MovementFeet;
   readonly repositionMaxMoveFeet: MovementFeet;
-  readonly resource: SpellSlotInvocationResource;
+  readonly resource: LeveledSpellInvocationResource;
   readonly targeting: {
     readonly kind: "pointOriginCylinder";
     readonly radiusFeet: MovementFeet;
@@ -847,7 +848,7 @@ export type ObjectContactDamageSpellProcedureExecution =
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "objectContactDamage";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: { readonly kind: "singleManufacturedMetalObject" };
   };
 
@@ -859,7 +860,7 @@ export type ObjectContactDamageRepeatSpellProcedureExecution = {
 
 export type ObjectLightClassCantripSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly access: ClassCantripSpellAccess;
+    readonly access: CantripSpellAccess;
     readonly actionCost: "magicAction";
     readonly expiresAt: BattleActiveEffectExpiration;
     readonly light: {
@@ -889,7 +890,7 @@ export type ObjectLightPreparedSpellProcedureExecution =
       readonly dimAdditionalFeet: MovementFeet;
     };
     readonly procedure: "objectLight";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "singleObject";
       readonly object: { readonly kind: "touchedObject" };
@@ -902,7 +903,7 @@ export type OngoingSpellEndSpellProcedureExecution =
     readonly actionCost: "magicAction";
     readonly procedure: "ongoingSpellEnd";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type PersistentArmorEffectPreparedSpellProcedureExecution =
@@ -911,7 +912,7 @@ export type PersistentArmorEffectPreparedSpellProcedureExecution =
     readonly activeEffect: PersistentArmorSpellActiveEffectTemplate;
     readonly procedure: "persistentArmorEffect";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type PersistentArmorEffectArmorOfShadowsSpellProcedureExecution =
@@ -932,7 +933,7 @@ export type RepeatedDamageAllocationSpellProcedureExecution =
     };
     readonly procedure: "repeatedDamageAllocation";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "repeatedEffectTargetAllocation";
       readonly repeatedEffectCount: number;
@@ -942,12 +943,14 @@ export type RepeatedDamageAllocationSpellProcedureExecution =
 export type RollModifierWithoutAbilityChoiceApplicationSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly abilityChoices: null;
-    readonly access: PreparedSpellAccess | ClassCantripSpellAccess;
+    readonly access: PreparedSpellAccess | CantripSpellAccess;
     readonly actionCost: "magicAction";
     readonly effect: SpellActiveEffectTemplate<"d20RollModifier">;
     readonly procedure: "rollModifier";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource | NoSpellInvocationResource;
+    readonly resource:
+      | LeveledSpellInvocationResource
+      | NoSpellInvocationResource;
     readonly saveGate: RollModifierSpellSaveGate | null;
     readonly skillChoices: readonly SurfaceSkill[] | null;
     readonly targeting: RollModifierSpellTargeting;
@@ -957,12 +960,14 @@ export type RollModifierWithAbilityChoiceApplicationSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly abilityChoiceApplication: "single" | "perTarget";
     readonly abilityChoices: readonly Ability[];
-    readonly access: PreparedSpellAccess | ClassCantripSpellAccess;
+    readonly access: PreparedSpellAccess | CantripSpellAccess;
     readonly actionCost: "magicAction";
     readonly effect: AbilityCheckRollModeSpellEffect;
     readonly procedure: "rollModifier";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource | NoSpellInvocationResource;
+    readonly resource:
+      | LeveledSpellInvocationResource
+      | NoSpellInvocationResource;
     readonly saveGate: RollModifierSpellSaveGate | null;
     readonly skillChoices: null;
     readonly targeting: RollModifierSpellTargeting;
@@ -975,7 +980,7 @@ export type SanctuaryTargetingInterdictionSpellProcedureExecution =
     readonly activeEffect: SpellActiveEffectTemplate<"sanctuaryWard">;
     readonly procedure: "sanctuaryTargetingInterdiction";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "targetList";
       readonly minTargets: 1;
@@ -991,7 +996,7 @@ export type SaveGatedAttackRollAdvantageSpellProcedureExecution =
     readonly effect: SpellActiveEffectTemplate<"faerieFireOutline">;
     readonly procedure: "saveGatedAttackRollAdvantage";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: SpellTargeting;
   };
 
@@ -1003,7 +1008,7 @@ export type SaveGatedConditionSpellProcedureExecution =
     readonly effect: SpellFailedSaveConditionEffect;
     readonly procedure: "saveGatedCondition";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
     readonly targetCreatureTypes: readonly CreatureType[] | null;
     readonly targeting: SaveGatedConditionSpellTargeting;
@@ -1021,7 +1026,7 @@ export type SaveGatedConditionImmunitySpellProcedureExecution =
     readonly dc: DcSource;
     readonly procedure: "saveGatedConditionImmunity";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targetCreatureTypes: readonly CreatureType[];
     readonly targeting: {
       readonly kind: "pointOriginSphere";
@@ -1032,7 +1037,7 @@ export type SaveGatedConditionImmunitySpellProcedureExecution =
 export type SaveGatedDamageClassCantripSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly ability: Ability;
-    readonly access: ClassCantripSpellAccess;
+    readonly access: CantripSpellAccess;
     readonly additionalDamageComponents: readonly {
       readonly expr: DiceExpr;
       readonly damageType: DamageType;
@@ -1079,7 +1084,7 @@ export type SaveGatedDamagePreparedSpellProcedureExecution =
     readonly postSaveAreaEffect?: SpellPostSaveAreaEffect | undefined;
     readonly procedure: "saveGatedDamage";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
     readonly successDamage: "none" | "half";
     readonly targeting: SaveGatedDamageSpellTargeting;
@@ -1091,7 +1096,7 @@ export type ScalarBuffSpellProcedureExecution = SpellRuleExecutionFactsOwner & {
   readonly effect: ScalarBuffSpellEffect;
   readonly procedure: "scalarBuff";
   readonly rangeFeet: MovementFeet;
-  readonly resource: SpellSlotInvocationResource;
+  readonly resource: LeveledSpellInvocationResource;
   readonly targeting: ScalarBuffSpellTargeting;
 };
 
@@ -1101,7 +1106,7 @@ export type SeeInvisibleObserverSightSpellProcedureExecution =
     readonly actionCost: "magicAction";
     readonly activeEffect: SpellActiveEffectTemplate<"seeInvisibleAndEthereal">;
     readonly procedure: "seeInvisibleObserverSight";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type SelfTeleportSpellProcedureExecution =
@@ -1110,7 +1115,7 @@ export type SelfTeleportSpellProcedureExecution =
     readonly actionCost: "bonusAction";
     readonly maxDistanceFeet: MovementFeet;
     readonly procedure: "selfTeleport";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type SelfTransformationModeSpellProcedureExecution =
@@ -1128,7 +1133,7 @@ export type SelfTransformationModeSpellProcedureExecution =
     ];
     readonly naturalWeaponFacts: SelfTransformationNaturalWeaponFacts;
     readonly procedure: "selfTransformationMode";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type ShieldReactionSpellProcedureExecution =
@@ -1137,7 +1142,7 @@ export type ShieldReactionSpellProcedureExecution =
     readonly armorClassBonus: number;
     readonly negatesRepeatedDamageAllocation: true;
     readonly procedure: "shieldReaction";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type SleepTargetAdmissionSpellProcedureExecution =
@@ -1147,7 +1152,7 @@ export type SleepTargetAdmissionSpellProcedureExecution =
     readonly dc: DcSource;
     readonly procedure: "sleepTargetAdmission";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginSphere";
       readonly radiusFeet: MovementFeet;
@@ -1162,7 +1167,7 @@ export type SleetStormAreaHazardSpellProcedureExecution =
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "sleetStormAreaHazard";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginCylinder";
       readonly radiusFeet: MovementFeet;
@@ -1180,7 +1185,7 @@ export type SlowActivePenaltiesSpellProcedureExecution =
     readonly maxTargets: 6;
     readonly procedure: "slowActivePenalties";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginCube";
       readonly sideFeet: MovementFeet;
@@ -1189,7 +1194,7 @@ export type SlowActivePenaltiesSpellProcedureExecution =
 
 export type SpellAttackDamageClassCantripSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly access: ClassCantripSpellAccess;
+    readonly access: CantripSpellAccess;
     readonly attackBonus: AttackBonus;
     readonly attackKind: "ranged_spell_attack" | "melee_spell_attack";
     readonly damage: SpellAttackDamagePayload;
@@ -1215,13 +1220,13 @@ export type SpellAttackDamagePreparedSpellProcedureExecution =
     readonly postDamageRiders: readonly SpellPostDamageRider[];
     readonly procedure: "spellAttackDamage";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: SpellAttackDamageTargeting;
   };
 
 export type SpellAttackSequenceClassCantripSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly access: ClassCantripSpellAccess;
+    readonly access: CantripSpellAccess;
     readonly attackBonus: AttackBonus;
     readonly attackKind: "ranged_spell_attack";
     readonly damage: {
@@ -1245,7 +1250,7 @@ export type SpellAttackSequencePreparedSpellProcedureExecution =
     };
     readonly procedure: "spellAttackSequence";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: PreparedSpellAttackSequenceTargeting;
   };
 
@@ -1258,7 +1263,7 @@ export type SpellCreatedHeldObjectSpellProcedureExecution =
       "sourceProcedureRef" | "effectRef"
     > & { readonly objectState: { readonly kind: "held" } };
     readonly procedure: "spellCreatedHeldObject";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type SpellCreatedHeldObjectAttackSpellProcedureExecution =
@@ -1290,7 +1295,7 @@ export type SpellCreatedHeldObjectReEvokeSpellProcedureExecution =
 
 export type SpellHostedWeaponAttackSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly access: ClassCantripSpellAccess;
+    readonly access: CantripSpellAccess;
     readonly actionCost: "magicAction";
     readonly attackBonus: AttackBonus;
     readonly bonusDamage: {
@@ -1315,7 +1320,7 @@ export type SpikeGrowthMovementHazardSpellProcedureExecution =
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "spikeGrowthMovementHazard";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginSphere";
       readonly radiusFeet: MovementFeet;
@@ -1338,7 +1343,7 @@ export type SpiritualWeaponAttackProxySpellProcedureExecution =
     readonly procedure: "spiritualWeaponAttackProxy";
     readonly rangeFeet: MovementFeet;
     readonly repeatMoveMaxFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: { readonly kind: "singleCombatant" };
   };
 
@@ -1350,7 +1355,7 @@ export type SpiritualWeaponRepeatAttackSpellProcedureExecution = {
 
 export type ThaumaturgyBoomingVoiceSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
-    readonly access: ClassCantripSpellAccess;
+    readonly access: CantripSpellAccess;
     readonly actionCost: "magicAction";
     readonly activeEffect: SpellActiveEffectTemplate<"thaumaturgyBoomingVoice">;
     readonly procedure: "thaumaturgyBoomingVoice";
@@ -1366,7 +1371,7 @@ export type WardingBondSpellProcedureExecution =
     readonly connectionRangeFeet: MovementFeet;
     readonly procedure: "wardingBond";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type WeaponDamageRiderSpellProcedureExecution =
@@ -1375,7 +1380,7 @@ export type WeaponDamageRiderSpellProcedureExecution =
     readonly actionCost: "bonusAction";
     readonly activeEffect: SpellActiveEffectTemplate<"spellWeaponDamageRider">;
     readonly procedure: "weaponDamageRider";
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
   };
 
 export type WebRestraintHazardSpellProcedureExecution =
@@ -1386,7 +1391,7 @@ export type WebRestraintHazardSpellProcedureExecution =
     readonly durationTicks: ElapsedTimeTicks;
     readonly procedure: "webRestraintHazard";
     readonly rangeFeet: MovementFeet;
-    readonly resource: SpellSlotInvocationResource;
+    readonly resource: LeveledSpellInvocationResource;
     readonly targeting: {
       readonly kind: "pointOriginCube";
       readonly sideFeet: MovementFeet;
@@ -1547,7 +1552,9 @@ type LiveDynamicSpellProcedureExecution<
 export type SpellProcedureKey = keyof SpellProcedureExecutionByProcedure;
 type AnySpellProcedureExecution =
   SpellProcedureExecutionByProcedure[SpellProcedureKey];
-type SpellProcedureInput<P extends SpellProcedureKey = SpellProcedureKey> =
+export type SpellProcedureInput<
+  P extends SpellProcedureKey = SpellProcedureKey,
+> =
   | Extract<AnySpellProcedureExecution, { readonly procedure: P }>
   | { readonly procedure: P; readonly access: unknown };
 type SpellProcedureExecutionForInput<Input extends SpellProcedureInput> =

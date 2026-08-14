@@ -64,7 +64,7 @@ import {
 import {
   DamageTypeSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type AfterHitDamageAndIlluminationInvocation =
@@ -94,13 +94,20 @@ function admitAfterHitDamageAndIllumination(
     return [];
   }
   return supportedSpellSlotDamageFacts({
-    slots: ctx.actor.origin.spellcasting.spellSlots,
+    slots: ctx.spellCastOptions,
     amount: projection.damageAmount,
     spellLevel: spell.mechanics.level,
   }).map(
-    ({ slotLevel, damageExpr }): AfterHitDamageAndIlluminationInvocation => ({
+    ({
+      slotLevel,
+      damageExpr,
+      payment,
+    }): AfterHitDamageAndIlluminationInvocation => ({
       access: { tag: "prepared" },
-      resource: { tag: "spellSlot", slotLevel },
+      resource: spellInvocationResourceForCastOption({
+        spellLevel: slotLevel,
+        payment,
+      }),
       procedure: "afterHitDamageAndIllumination",
       spell,
       actionCost: "bonusAction",
@@ -258,7 +265,7 @@ const AfterHitDamageAndIlluminationInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("afterHitDamageAndIllumination"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
@@ -279,3 +286,4 @@ export const afterHitDamageAndIlluminationProfile = {
   "afterHitDamageAndIllumination",
   AfterHitDamageAndIlluminationInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

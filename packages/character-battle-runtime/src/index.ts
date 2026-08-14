@@ -1,4 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.FEATURE_RESOURCES.TRANSITIONS CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION CHARACTER.BATTLE.HANDOFF.SETTLEMENT CHARACTER.BATTLE.HANDOFF.IDENTITY_CONFLICTS CHARACTER.LIFECYCLE.LAYER_PROJECTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
+// UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 import {
   combatantKnockedOutUnconscious,
   combatantHasActiveDruidWildShape,
@@ -66,11 +68,7 @@ import {
   EMPTY_CONDITION_STATE,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
-import {
-  isSupportedClassFeatureSpellFreeCastResourceTag,
-  type SupportedClassFeatureSpellFreeCastResourceTag,
-} from "@dnd/surface/surface/types";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
@@ -128,6 +126,7 @@ export {
   characterSpellcasting,
   getRequiredUnit,
   type BattleCreatureInitIssue,
+  type CharacterBattleSpellAccessProjectionIssue,
 } from "./battle-character-build-projection.ts";
 export {
   characterBattleSupportProjection,
@@ -883,7 +882,7 @@ function characterResourceExpendituresFromBattle(input: {
   }
   const nextExpenditures = input.sheet.resourceExpenditures.filter(
     (expenditure) =>
-      !isSupportedClassFeatureSpellFreeCastResourceTag(expenditure.tag) &&
+      expenditure.tag !== "spellAccessFreeCast" &&
       (expenditure.tag !== "useCountResource" ||
         !isCharacterSheetUseCountResourceUnitId(expenditure.unitId) ||
         !battleUseCountResourceUnitIds.has(expenditure.unitId)) &&
@@ -906,6 +905,39 @@ function characterResourceExpendituresFromBattle(input: {
   }
   for (const resource of battleResources) {
     const resourceUnit = resource.ownership.unit;
+    if (
+      resource.ownership.purpose.tag === "spellAccessFreeCast" &&
+      !characterBattleResourceIsPointPool(resource.state)
+    ) {
+      if (!isFixedUseCountBattleResourceState(resource.state)) {
+        return characterSheetBattleHandoffIssue(
+          "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
+        );
+      }
+      const spellId = resource.ownership.purpose.spellId;
+      const sheetCount = sheetFreeCastResourceCapacity({
+        sheetResources: sheetResources.right,
+        sourceUnitId: resourceUnit.id,
+        spellId,
+      });
+      if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
+      if (resource.state.resource.cap.uses !== sheetCount.right) {
+        return characterSheetBattleHandoffIssue(
+          "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
+        );
+      }
+      const expended =
+        resource.state.resource.cap.uses - resource.state.usesRemaining;
+      if (expended > 0) {
+        nextFreeCastExpenditures.push({
+          tag: "spellAccessFreeCast",
+          sourceUnitId: resourceUnit.id,
+          spellId,
+          expended: resourceCount(expended),
+        });
+      }
+      continue;
+    }
     if (
       resourceUnit.kind === "class_feature" &&
       !origin.classLevels.some(
@@ -966,29 +998,32 @@ function characterResourceExpendituresFromBattle(input: {
     ) {
       if (!isFixedUseCountBattleResourceState(resource.state)) {
         return characterSheetBattleHandoffIssue(
-          "Class feature spell free casts must use a fixed battle resource cap during battle handoff.",
+          "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
         );
       }
       const fixedUses = resource.state.resource.cap.uses;
       const sheetCount = sheetFreeCastResourceCapacity({
         sheetResources: sheetResources.right,
-        tag: profile.resourceTag,
+        sourceUnitId: resource.ownership.unit.id,
+        spellId: profile.spellId,
       });
       if (Either.isLeft(sheetCount)) return Either.left(sheetCount.left);
       if (resource.state.resource.cap.uses !== sheetCount.right) {
         return characterSheetBattleHandoffIssue(
-          "Class feature spell free-cast battle capacity must match Character Sheet resource capacity.",
+          "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
         );
       }
       const expended = fixedUses - resource.state.usesRemaining;
       if (expended < 0) {
         return characterSheetBattleHandoffIssue(
-          "Class feature spell free-cast remaining uses exceed the battle resource cap during battle handoff.",
+          "Spell Access free-cast remaining uses exceed the battle resource cap during battle handoff.",
         );
       }
       if (expended > 0) {
         nextFreeCastExpenditures.push({
-          tag: profile.resourceTag,
+          tag: "spellAccessFreeCast",
+          sourceUnitId: resource.ownership.unit.id,
+          spellId: profile.spellId,
           expended: resourceCount(expended),
         });
       }
@@ -1170,14 +1205,18 @@ function sheetUseCountResourceCapacity(input: {
 
 function sheetFreeCastResourceCapacity(input: {
   readonly sheetResources: readonly CharacterSheetResourceState[];
-  readonly tag: SupportedClassFeatureSpellFreeCastResourceTag;
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly spellId: UnitRecord["id"];
 }): Either.Either<ResourceCount, CharacterSheetBattleHandoffIssue> {
   const resource = input.sheetResources.find(
-    (candidate) => candidate.tag === input.tag,
+    (candidate) =>
+      candidate.tag === "spellAccessFreeCast" &&
+      candidate.sourceUnitId === input.sourceUnitId &&
+      candidate.spellId === input.spellId,
   );
   return resource === undefined
     ? characterSheetBattleHandoffIssue(
-        "Class feature spell free-cast battle resource requires matching Character Sheet resource capacity.",
+        "Spell Access free-cast battle resource requires matching Character Sheet resource capacity.",
       )
     : Either.right(resource.count);
 }
@@ -1311,17 +1350,17 @@ function combatantHasActiveBattleLocalState(
 
 function withDefinedCharacterBattleSheetState(
   sheet: CharacterSheet,
-): Partial<
-  Pick<
-    CharacterBuildCreatureInput,
-    | "conditions"
-    | "positiveHpUnconscious"
-    | "zeroHpLifecycle"
-    | "spellSlots"
-    | "bookOfShadowsPresence"
-    | "resourceExpenditures"
-  >
-> {
+): Pick<CharacterBuildCreatureInput, "resourceExpenditures"> &
+  Partial<
+    Pick<
+      CharacterBuildCreatureInput,
+      | "conditions"
+      | "positiveHpUnconscious"
+      | "zeroHpLifecycle"
+      | "spellSlots"
+      | "bookOfShadowsPresence"
+    >
+  > {
   const conditions = characterSheetInitialConditions(sheet);
   const positiveHpUnconscious = characterSheetPositiveHpUnconscious(sheet);
   const zeroHpLifecycle = characterSheetZeroHpLifecycle(sheet);

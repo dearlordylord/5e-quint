@@ -162,7 +162,11 @@ describe("extracted route owner boundaries", () => {
               preparedSpells: [spellRecord("hex")],
               spellSlots: [{ spellLevel: 1, count: 1 }],
             }),
-            sourceClassName: "warlock",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "warlock",
+              abilityModifier: 3,
+            },
           },
         }),
         skeletonCreatureInit({ initiative: 10 }),
@@ -330,7 +334,11 @@ describe("extracted route owner boundaries", () => {
             ...wizardSpellcasting({
               cantrips: [spellRecord("spare_the_dying")],
             }),
-            sourceClassName: "cleric",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "cleric",
+              abilityModifier: 3,
+            },
           },
         }),
         characterSeed({

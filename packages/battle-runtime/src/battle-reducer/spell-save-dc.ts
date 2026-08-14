@@ -19,12 +19,15 @@ export function spellSaveDcForCaster(
     return null;
   }
   const spellcasting = caster.origin.spellcasting;
-  if (spellcasting === undefined) {
+  if (
+    spellcasting === undefined ||
+    spellcasting.spellcastingSource.tag !== "classSpellcasting"
+  ) {
     return null;
   }
   return difficultyClass(
     8 +
-      Number(spellcasting.spellcastingAbilityModifier) +
+      Number(spellcasting.spellcastingSource.abilityModifier) +
       spellcasting.proficiencyBonus +
       activeOngoingFeatureSpellSaveDcBonus(state, caster),
   );
@@ -51,7 +54,9 @@ function activeOngoingFeatureSpellSaveDcBonus(
         total +
         profile.spellModifiers.reduce(
           (modifierTotal, modifier) =>
-            modifier.sourceClassName === spellcasting.sourceClassName
+            spellcasting.spellcastingSource.tag === "classSpellcasting" &&
+            modifier.sourceClassName ===
+              spellcasting.spellcastingSource.className
               ? modifierTotal + modifier.saveDcBonus
               : modifierTotal,
           0,

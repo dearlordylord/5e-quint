@@ -46,6 +46,7 @@ export {
 export {
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
   characterSheetClassFeatureSelectedReferenceProjection,
+  characterSheetSpellAccessesForBuild,
 } from "./class-feature-spells.ts";
 export {
   characterSheetDruidCircleLandPreparedSpellAccess,
@@ -76,6 +77,7 @@ export {
   characterSheetMonkUncannyMetabolismUseState,
   characterSheetMonksFocusSaveDc,
   characterSheetResources,
+  spendCharacterSheetSpellAccessFreeCast,
   useMonkUncannyMetabolismWhenRollingInitiative,
 } from "./resources.ts";
 export {
@@ -195,6 +197,10 @@ export type {
   CharacterSheetRetainedCompanionState,
   CharacterSheetResourceExpenditure,
   CharacterSheetResourceState,
+  CharacterSheetSpellAccess,
+  CharacterSheetSpellAccessFreeCastExpenditure,
+  CharacterSheetSpellAccessFreeCastKey,
+  CharacterSheetSpellAccessFreeCastResource,
   CharacterSheetRouteEvent,
   CharacterSheetRouteFact,
   CharacterSheetRouteFill,

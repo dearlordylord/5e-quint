@@ -67,6 +67,7 @@ import {
   type CharacterSheetLayOnHandsResult,
   type CharacterSheetPactSlotState,
   type CharacterSheetRouteOwner,
+  type CharacterSheetResourceExpenditure,
   type CharacterSheetShortRestBenefitHpGate,
   type CharacterSheetSpellRestBenefitInput,
   type CharacterSheetSpellRestBenefitRecipient,
@@ -1253,9 +1254,10 @@ function spendCharacterSheetResource(input: {
     );
   }
 
-  const nextExpenditures = input.sheet.resourceExpenditures.filter(
-    (expenditure) => expenditure.tag !== "layOnHandsHealingPool",
-  );
+  const nextExpenditures: CharacterSheetResourceExpenditure[] =
+    input.sheet.resourceExpenditures.filter(
+      (expenditure) => expenditure.tag !== "layOnHandsHealingPool",
+    );
   nextExpenditures.push({
     tag: "layOnHandsHealingPool",
     expended: resourceCount(resource.expended + input.amount),

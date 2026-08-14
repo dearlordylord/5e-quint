@@ -1,3 +1,4 @@
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-ongoing-spell-suppression
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -70,7 +71,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type AntimagicFieldOngoingSpellSuppressionInvocation = Extract<
@@ -102,7 +103,7 @@ function admitAntimagicFieldOngoingSpellSuppression(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly AntimagicFieldOngoingSpellSuppressionInvocation[] => {
       if (Number(slot.spellLevel) < ANTIMAGIC_FIELD_LEVEL) {
         return [];
@@ -110,7 +111,7 @@ function admitAntimagicFieldOngoingSpellSuppression(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "antimagicFieldOngoingSpellSuppression",
           spell,
           targeting: {
@@ -343,7 +344,7 @@ const AntimagicFieldOngoingSpellSuppressionInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("antimagicFieldOngoingSpellSuppression"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       targeting: Schema.Struct({

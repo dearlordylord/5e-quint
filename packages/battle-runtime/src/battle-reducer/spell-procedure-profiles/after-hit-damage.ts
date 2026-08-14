@@ -32,13 +32,12 @@ import {
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import type { CreatureType } from "@dnd/shared/game-facts";
-import { spellSlotLevel } from "@dnd/shared/types";
 import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
 } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Either, Match } from "effect";
 
 import {
   type AfterHitDamageSpellInvocation,
@@ -51,17 +50,15 @@ import {
   type BattleResourcePoolExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
-import { characterBattleResourcePoolRefHasUsesRemaining } from "../../character-battle-resource-execution.ts";
 import { battleCreatureType } from "../domain-helpers.ts";
 import { invalidResult } from "../result-helpers.ts";
 import {
   sameStringSet,
-  supportedDamageAmountExpr,
   supportedSpellSlotDamageFacts,
 } from "../spells-execution-facts.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import {
-  spendClassFeatureFreeCastResource,
+  spendSpellAccessFreeCastResource,
   spendSpellCastResources,
   type SpellCastResourceSpendResult,
 } from "../spells-resolve-resources.ts";
@@ -76,10 +73,9 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  ClassFeatureFreeCastExecutionResourceSchema,
   DamageTypeSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type AfterHitDamageInvocation = AfterHitDamageSpellInvocation;
@@ -94,51 +90,17 @@ function admitAfterHitDamage(
   if (projection === null) {
     return [];
   }
-  const freeCastSlotLevel = spellSlotLevel(spell.mechanics.level);
-  const freeCastDamageExpr = supportedDamageAmountExpr({
-    amount: projection.damageAmount,
-    spellLevel: spell.mechanics.level,
-    slotLevel: freeCastSlotLevel,
-  });
-  const freeCastInvocations: readonly AfterHitDamageInvocation[] =
-    freeCastDamageExpr === null
-      ? []
-      : spell.classFeatureFreeCastResourcePoolRefs
-          .filter((resourcePoolRef) =>
-            characterBattleResourcePoolRefHasUsesRemaining(
-              ctx.actor.origin.resources,
-              resourcePoolRef,
-            ),
-          )
-          .map(
-            (resourcePoolRef): AfterHitDamageInvocation => ({
-              access: { tag: "prepared" },
-              resource: {
-                tag: "classFeatureFreeCast",
-                resourcePoolRef,
-              },
-              procedure: "afterHitDamage",
-              spell,
-              actionCost: "bonusAction",
-              damage: {
-                expr: freeCastDamageExpr,
-                damageType: projection.damageType,
-              },
-              conditionalBonusDamage: {
-                targetCreatureTypes: projection.conditionalBonusTargetTypes,
-                expr: projection.conditionalBonusExpr,
-                damageType: projection.conditionalBonusDamageType,
-              },
-            }),
-          );
   const slotInvocations = supportedSpellSlotDamageFacts({
-    slots: ctx.actor.origin.spellcasting.spellSlots,
+    slots: ctx.spellCastOptions,
     amount: projection.damageAmount,
     spellLevel: spell.mechanics.level,
   }).map(
-    ({ slotLevel, damageExpr }): AfterHitDamageInvocation => ({
+    ({ slotLevel, damageExpr, payment }): AfterHitDamageInvocation => ({
       access: { tag: "prepared" },
-      resource: { tag: "spellSlot", slotLevel },
+      resource: spellInvocationResourceForCastOption({
+        spellLevel: slotLevel,
+        payment,
+      }),
       procedure: "afterHitDamage",
       spell,
       actionCost: "bonusAction",
@@ -153,7 +115,7 @@ function admitAfterHitDamage(
       },
     }),
   );
-  return [...freeCastInvocations, ...slotInvocations];
+  return slotInvocations;
 }
 
 function afterHitDamageSpellProjection(spell: BattleSpellAdmissionSource): {
@@ -242,20 +204,25 @@ function resolveAfterHitDamage(
     return spellCastReactionWindow;
   }
 
-  const resourced =
-    input.invocation.resource.tag === "classFeatureFreeCast"
-      ? spendAfterHitDamageFreeCastResource(
-          input.input.state,
-          input.input.subject.casterId,
-          input.invocation.resource.resourcePoolRef,
-          input.invocation,
-        )
-      : spendSpellCastResources({
-          state: input.input.state,
-          actorId: input.input.subject.casterId,
-          invocation: input.invocation,
-          errorState: input.input.state,
-        });
+  const resourced = Match.value(input.invocation.resource).pipe(
+    Match.when({ tag: "spellAccessFreeCast" }, ({ resourcePoolRef }) =>
+      spendAfterHitDamageFreeCastResource(
+        input.input.state,
+        input.input.subject.casterId,
+        resourcePoolRef,
+        input.invocation,
+      ),
+    ),
+    Match.when({ tag: "spellSlot" }, () =>
+      spendSpellCastResources({
+        state: input.input.state,
+        actorId: input.input.subject.casterId,
+        invocation: input.invocation,
+        errorState: input.input.state,
+      }),
+    ),
+    Match.exhaustive,
+  );
   if (resourced.tag === "invalid") {
     return resourced;
   }
@@ -314,7 +281,7 @@ function spendAfterHitDamageFreeCastResource(
       "Bonus Action spell is no longer available for the current actor.",
     );
   }
-  return spendClassFeatureFreeCastResource(
+  return spendSpellAccessFreeCastResource(
     {
       ...state,
       currentTurnResources: spentBonusAction.right,
@@ -329,10 +296,7 @@ function spendAfterHitDamageFreeCastResource(
 const AfterHitDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: Schema.Union(
-      SpellSlotInvocationResourceSchema,
-      ClassFeatureFreeCastExecutionResourceSchema,
-    ),
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("afterHitDamage"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("bonusAction"),
@@ -357,3 +321,4 @@ export const afterHitDamageProfile = {
   "afterHitDamage",
   AfterHitDamageInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

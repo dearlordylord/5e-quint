@@ -23,7 +23,7 @@ import {
   characterBattleResourceSupportedForUnit,
   characterSeed,
   characterSpellInvocationRefForProcedureRefForTest,
-  classFeatureFreeCastSpellInvocationRef,
+  spellAccessFreeCastSpellInvocationRef,
   damageRollFillWithGroups,
   discoverBattleActs,
   elapsedTimeTicks,
@@ -73,7 +73,11 @@ describe("battle runtime: Favored Enemy", () => {
                 spell: spellRecord("hunters_mark"),
               },
             ],
-            sourceClassName: "ranger",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "ranger",
+              abilityModifier: 3,
+            },
           },
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -83,7 +87,7 @@ describe("battle runtime: Favored Enemy", () => {
     const subject = {
       tag: "bonusActionSpell" as const,
       actorId: fighterId,
-      invocation: classFeatureFreeCastSpellInvocationRef(
+      invocation: spellAccessFreeCastSpellInvocationRef(
         "hunters_mark",
         characterResourcePoolRefForUnit(
           session,
@@ -183,7 +187,11 @@ describe("battle runtime: Favored Enemy", () => {
                 spell: spellRecord("hunters_mark"),
               },
             ],
-            sourceClassName: "ranger",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "ranger",
+              abilityModifier: 3,
+            },
           },
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -193,7 +201,7 @@ describe("battle runtime: Favored Enemy", () => {
     const subject = {
       tag: "bonusActionSpell" as const,
       actorId: fighterId,
-      invocation: classFeatureFreeCastSpellInvocationRef(
+      invocation: spellAccessFreeCastSpellInvocationRef(
         "hunters_mark",
         characterResourcePoolRefForUnit(
           session,
@@ -223,7 +231,7 @@ describe("battle runtime: Favored Enemy", () => {
     if (
       invocation === undefined ||
       invocation.procedure !== "markedDamageRider" ||
-      invocation.resource.tag !== "classFeatureFreeCast"
+      invocation.resource.tag !== "spellAccessFreeCast"
     ) {
       throw new Error("Expected Favored Enemy Hunter's Mark invocation.");
     }
@@ -381,7 +389,11 @@ describe("battle runtime: Favored Enemy", () => {
                 spell: spellRecord("hunters_mark"),
               },
             ],
-            sourceClassName: "ranger",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "ranger",
+              abilityModifier: 3,
+            },
           },
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -393,7 +405,7 @@ describe("battle runtime: Favored Enemy", () => {
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
           battleActSpellPresentation(candidate)?.invocation.tag ===
-            "classFeatureFreeCast" &&
+            "spellAccessFreeCast" &&
           battleActSpellPresentation(candidate)?.invocation.spellId ===
             "hunters_mark",
       ),
@@ -498,7 +510,7 @@ describe("battle runtime: Paladin's Smite", () => {
             }),
             choice.reactorId,
             choice.subject.procedureRef,
-          ).tag === "classFeatureFreeCast"
+          ).tag === "spellAccessFreeCast"
         );
       });
     if (
@@ -517,7 +529,7 @@ describe("battle runtime: Paladin's Smite", () => {
         smiteChoice.subject.procedureRef,
       ),
     ).toEqual(
-      classFeatureFreeCastSpellInvocationRef(
+      spellAccessFreeCastSpellInvocationRef(
         "divine_smite",
         characterResourcePoolRefForUnit(
           session,
@@ -660,7 +672,7 @@ describe("battle runtime: Paladin's Smite", () => {
           choice.subject.procedureRef,
         );
         return (
-          invocation.tag === "classFeatureFreeCast" &&
+          invocation.tag === "spellAccessFreeCast" &&
           invocation.spellId === "divine_smite"
         );
       }),
@@ -733,7 +745,7 @@ describe("battle runtime: Paladin's Smite", () => {
           choice.subject.procedureRef,
         );
         return (
-          invocation.tag === "classFeatureFreeCast" &&
+          invocation.tag === "spellAccessFreeCast" &&
           invocation.spellId === "divine_smite"
         );
       }),
@@ -804,7 +816,11 @@ function paladinsSmiteBattleSession(
               spell: spellRecord("divine_smite"),
             },
           ],
-          sourceClassName: "paladin",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "paladin",
+            abilityModifier: 3,
+          },
         },
       }),
       statBlockCreatureInit({ initiative: 10 }),

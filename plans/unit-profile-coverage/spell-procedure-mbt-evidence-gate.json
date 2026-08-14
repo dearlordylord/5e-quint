@@ -1920,13 +1920,25 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
+          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
             }
           ],
           "profileId": "spell.invocation-forced-reaction-movement",
@@ -2408,13 +2420,25 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
+          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
             }
           ],
           "profileId": "spell.invocation-expeditious-retreat-dash",
@@ -2892,13 +2916,25 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
+          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
             }
           ],
           "profileId": "spell.invocation-grease-ground-hazard",
@@ -4390,13 +4426,25 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
+          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
             }
           ],
           "profileId": "spell.invocation-jump-movement-replacement",
@@ -10752,13 +10800,25 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
+          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
             }
           ],
           "profileId": "spell.invocation-forced-reaction-movement",
@@ -11240,13 +11300,25 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
+          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
             }
           ],
           "profileId": "spell.invocation-expeditious-retreat-dash",
@@ -11724,13 +11796,25 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
+          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
             }
           ],
           "profileId": "spell.invocation-grease-ground-hazard",
@@ -13222,13 +13306,25 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
+          "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
               "qntSpecPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
               "stepAction": "step"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+            },
+            {
+              "kind": "contract-test",
+              "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
             }
           ],
           "profileId": "spell.invocation-jump-movement-replacement",

@@ -1571,7 +1571,11 @@ function metamagicBattle(input?: MetamagicBattleInput): BattleRuntimeSession {
               { spellLevel: 2, count: 2 },
             ],
           }),
-          sourceClassName: "sorcerer",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "sorcerer",
+            abilityModifier: 3,
+          },
         },
       }),
       characterSeed({

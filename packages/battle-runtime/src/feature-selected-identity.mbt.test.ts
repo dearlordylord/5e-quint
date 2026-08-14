@@ -17,6 +17,7 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   buildUnitCatalog,
+  classSpellListForSpellcastingClassRecord,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 
@@ -183,6 +184,18 @@ defineSelectedIdentityReplayAndQntReplay({
   ],
 });
 
+it("applies Innate Sorcery only to the class access when a feat grants the same spell", () => {
+  const activated = resolveInnateSorcery(
+    innateSorceryBattle("sorcerer", true),
+  ).state;
+  expect(spellAttackRollModeForRayOfFrost(activated, "classSpellcasting")).toBe(
+    "advantage",
+  );
+  expect(spellAttackRollModeForRayOfFrost(activated, "spellAccess")).toBe(
+    "none",
+  );
+});
+
 function expectedProjection(
   overrides: Partial<InnateSorcerySelectedIdentityProjection> = {},
 ): InnateSorcerySelectedIdentityProjection {
@@ -283,18 +296,29 @@ function resolveInnateSorceryWithRoute(state: BattleState): {
 
 function spellAttackRollModeForRayOfFrost(
   state: BattleState,
+  castingSourceTag?: "classSpellcasting" | "spellAccess",
 ): InnateSorcerySpellAttackRollMode {
-  const subject = rayOfFrostActionSpellAct(state).subject;
+  const subject = rayOfFrostActionSpellAct(state, castingSourceTag).subject;
+  const actor = requireCombatant(state, sorcererId);
+  if (actor.origin.kind !== "character") throw new Error("Expected character.");
+  const invocation = characterSpellProcedure(
+    actor.origin.execution,
+    subject.procedureRef,
+  );
+  if (invocation === undefined) throw new Error("Expected spell invocation.");
   const target = requireHole(
     resolveBattleSubject({ state, subject, fills: [] }),
     "targetChoice",
   );
   const attackRoll = requireHole(
-    resolveBattleSubject({
-      state,
-      subject,
-      fills: [spellTargetFill(target)],
-    }),
+    (() => {
+      const result = resolveBattleSubject({
+        state,
+        subject,
+        fills: [spellTargetFill(target, invocation.sourceProcedureRef)],
+      });
+      return result;
+    })(),
     "attackRoll",
   );
   return attackRoll.rollMode === "advantage" ||
@@ -305,7 +329,20 @@ function spellAttackRollModeForRayOfFrost(
 
 function innateSorceryBattle(
   sourceClassName: "sorcerer" | "wizard",
+  includeFeatAccess = false,
 ): BattleState {
+  const magicInitiateSource = unitLibrary.requireUnit(
+    "feat_magic_initiate_wizard",
+  );
+  const magicInitiateCantrip = unitLibrary.requireUnit("acid_splash");
+  const magicInitiateLevelOneSpell = unitLibrary.requireUnit("magic_missile");
+  if (
+    magicInitiateSource.kind !== "feat" ||
+    magicInitiateCantrip.kind !== "spell" ||
+    magicInitiateLevelOneSpell.kind !== "spell"
+  ) {
+    throw new Error("Expected Magic Initiate fixture Units.");
+  }
   return startBattleRight({
     battleId: battleId(`innate-sorcery-selected-identity-${sourceClassName}`),
     combatants: [
@@ -320,15 +357,49 @@ function innateSorceryBattle(
                 { className: "sorcerer", level: 1 },
                 { className: "wizard", level: 1 },
               ],
-        resources: [innateSorceryResource()],
+        resources: [
+          innateSorceryResource(),
+          ...(includeFeatAccess
+            ? [
+                {
+                  unit: magicInitiateSource,
+                  spellAccessFreeCast: {
+                    spellId: magicInitiateLevelOneSpell.id,
+                    count: 1,
+                  },
+                  usesRemaining: 1,
+                },
+              ]
+            : []),
+        ],
         spellcasting: {
-          sourceClassName,
-          spellcastingAbilityModifier: 3,
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: sourceClassName,
+            abilityModifier: 3,
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [spellRecord(rayOfFrostUnitId)],
           preparedSpells: [],
           featurePreparedSpells: [],
+          spellAccesses: includeFeatAccess
+            ? [
+                {
+                  source: {
+                    tag: "feat",
+                    sourceUnit: magicInitiateSource,
+                    spellList: wizardSpellListSource(),
+                  },
+                  spellcastingAbilityModifier: -1,
+                  cantrips: [
+                    spellRecord(rayOfFrostUnitId),
+                    magicInitiateCantrip,
+                  ],
+                  levelOneSpell: magicInitiateLevelOneSpell,
+                },
+              ]
+            : [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
           spellSlots: [],
@@ -419,6 +490,21 @@ function spellRecord(spellUnitId: typeof rayOfFrostUnitId): SpellRecord {
   return unit;
 }
 
+function wizardSpellListSource(): import("./index.ts").CharacterBattleSpellListFact {
+  const wizard = unitLibrary.requireUnit("class_wizard");
+  if (
+    wizard.kind !== "class" ||
+    wizard.className !== "wizard" ||
+    wizard.spellcasting?.kind !== "wizard_spellcasting_creation"
+  ) {
+    throw new Error("Expected Wizard spell-list source.");
+  }
+  return {
+    className: wizard.className,
+    ...classSpellListForSpellcastingClassRecord(wizard),
+  };
+}
+
 function innateSorceryResource(): NonNullable<
   Extract<
     BattleCreatureInit["creatureInit"],
@@ -473,7 +559,10 @@ function innateSorceryProcedureRef(state: BattleState) {
   return binding.procedureRef;
 }
 
-function rayOfFrostActionSpellAct(state: BattleState): AvailableBattleAct & {
+function rayOfFrostActionSpellAct(
+  state: BattleState,
+  castingSourceTag?: "classSpellcasting" | "spellAccess",
+): AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 } {
   const sorcerer = requireCombatant(state, sorcererId);
@@ -490,7 +579,10 @@ function rayOfFrostActionSpellAct(state: BattleState): AvailableBattleAct & {
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === sorcererId &&
       characterSpellProcedure(execution, candidate.subject.procedureRef)
-        ?.procedure === "spellAttackDamage",
+        ?.procedure === "spellAttackDamage" &&
+      (castingSourceTag === undefined ||
+        characterSpellProcedure(execution, candidate.subject.procedureRef)
+          ?.spellRuleFacts.castingSource.tag === castingSourceTag),
   );
   if (act === undefined) {
     throw new Error("Expected Ray of Frost action Spell act.");
@@ -500,6 +592,9 @@ function rayOfFrostActionSpellAct(state: BattleState): AvailableBattleAct & {
 
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  sourceProcedureRef = battleProcedureExecutionRefForTest(
+    String(rayOfFrostUnitId),
+  ),
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
   return {
     kind: "targetChoice",
@@ -510,9 +605,7 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId: sorcererId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(rayOfFrostUnitId),
-        ),
+        sourceProcedureRef,
       },
     ],
   };

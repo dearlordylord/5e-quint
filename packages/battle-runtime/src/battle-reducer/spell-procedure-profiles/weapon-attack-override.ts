@@ -110,6 +110,7 @@ export const weaponAttackOverrideProfile: WeaponAttackOverrideProfile = {
   admit: (spell, ctx) =>
     admitWeaponAttackOverride(spell, {
       actor: ctx.actor,
+      castingSource: ctx.castingSource,
       activeDruidWildShape: activeDruidWildShapeEffect(ctx.actor),
     }),
   discoverCastAct: (state, actorId, invocation) =>

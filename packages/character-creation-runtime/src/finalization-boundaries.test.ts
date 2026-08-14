@@ -702,6 +702,7 @@ describe("character finalization boundaries", () => {
           background: unitId,
           species: unitId,
           features: [],
+          magicInitiateSpellAccesses: [],
           equipment: { owned: [], loadout: {} },
           spellcasting: {
             sources: [

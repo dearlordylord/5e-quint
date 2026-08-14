@@ -103,6 +103,7 @@ import {
   type SupportedDamageSpellInvocation,
   validateRolledDiceFillForDiceExpr,
 } from "../battle-state-execution.ts";
+import type { SpellRuleExecutionFacts } from "../procedure-execution/spell-rule-facts.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
   ATTACK_ROLL_HOLE_INSTANCE,
@@ -246,6 +247,7 @@ export function selectedSpellAttackDamageProcedure(
 type CarefulSpellProcedureFacts = {
   readonly procedure: RuntimeSpellProcedure["procedure"];
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly spellRuleFacts: Pick<SpellRuleExecutionFacts, "castingSource">;
 };
 
 type SpellAttackDamageInvocationWithMaxDieAdditionalDiceLimit = Extract<
@@ -1192,15 +1194,10 @@ export function carefulSpellProtectedTargetsHole(
   actorId: CombatantId,
   invocation: CarefulSpellProcedureFacts,
 ): BattleSpellTargetListHole {
-  const actor = state.combatants.get(actorId);
-  const maxProtectedTargets =
-    actor?.origin.kind === "character" &&
-    actor.origin.spellcasting !== undefined
-      ? Math.max(
-          1,
-          Number(actor.origin.spellcasting.spellcastingAbilityModifier),
-        )
-      : 1;
+  const maxProtectedTargets = Math.max(
+    1,
+    Number(invocation.spellRuleFacts.castingSource.abilityModifier),
+  );
   return {
     kind: "spellTargetList",
     holeId: carefulSpellProtectedTargetsHoleId(invocation),

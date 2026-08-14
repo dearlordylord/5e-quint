@@ -107,6 +107,10 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetRebuildInput",
   "CharacterSheetResourceExpenditure",
   "CharacterSheetResourceState",
+  "CharacterSheetSpellAccess",
+  "CharacterSheetSpellAccessFreeCastExpenditure",
+  "CharacterSheetSpellAccessFreeCastKey",
+  "CharacterSheetSpellAccessFreeCastResource",
   "CharacterSheetRouteEvent",
   "CharacterSheetRouteFact",
   "CharacterSheetRouteFill",
@@ -168,6 +172,7 @@ const EXPECTED_EXPORTS = [
   "characterSheetUnarmoredArmorClassBase",
   "characterSheetClassFeaturePreparedSpellAccessesForBuild",
   "characterSheetClassFeatureSelectedReferenceProjection",
+  "characterSheetSpellAccessesForBuild",
   "characterSheetCompanion",
   "characterSheetConstructionIssuesSummary",
   "characterSheetCurrentHp",
@@ -218,11 +223,13 @@ const EXPECTED_EXPORTS = [
   "isCharacterSheetUseCountResourceUnitId",
   "isFreshSpellcastingCharacterSheet",
   "parseCharacterSheet",
+  "parseFreshCharacterSheet",
   "replaceOrdinarySpellSlotExpenditure",
   "replaceCharacterSheetSpellSlotSourceState",
   "replaceCharacterSheetCompanion",
   "rebuildCharacterSheet",
   "retainedCompanionProtocolFacts",
+  "spendCharacterSheetSpellAccessFreeCast",
   "startLongRest",
   "startShortRest",
   "timePassed",
@@ -313,6 +320,41 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "CharacterSheetClassFeatureSelectedReferenceProjectionRoute",
     reason:
       "Character Sheet owns the selected-reference retention and selected-reference build-projection route shape; exporting it keeps the route event tuple typed at the projection boundary.",
+  },
+  {
+    name: "CharacterSheetSpellAccess",
+    reason:
+      "Character Sheet owns the creature-facing Spell Access projection from canonical Character Build and installed Surface facts; exporting its type keeps source, ability, and preparation semantics together without storing duplicate access state.",
+  },
+  {
+    name: "CharacterSheetSpellAccessFreeCastKey",
+    reason:
+      "Character Sheet owns source-and-spell compound identity for limited Spell Access free casts; exporting the key prevents downstream consumers from reverting to class-only resource tags.",
+  },
+  {
+    name: "CharacterSheetSpellAccessFreeCastExpenditure",
+    reason:
+      "Character Sheet owns mutable nonzero free-cast expenditure keyed by Spell Access; exporting the expenditure type keeps storage and settlement on the canonical resource state.",
+  },
+  {
+    name: "CharacterSheetSpellAccessFreeCastResource",
+    reason:
+      "Character Sheet owns derived Spell Access free-cast capacity and mutable expenditure projection; exporting the resource type lets callers consume the canonical projection without duplicating capacity.",
+  },
+  {
+    name: "characterSheetSpellAccessesForBuild",
+    reason:
+      "Character Sheet owns class-feature and Magic Initiate Spell Access projection; exposing it lets battle handoff consume source-scoped access and selected ability without a parallel projector.",
+  },
+  {
+    name: "spendCharacterSheetSpellAccessFreeCast",
+    reason:
+      "Character Sheet owns exact free-cast expenditure and exhaustion; exposing the operation keeps source-and-spell matching and slot independence in one reducer boundary.",
+  },
+  {
+    name: "parseFreshCharacterSheet",
+    reason:
+      "Character Sheet owns stored fresh-state parsing; exporting the boundary lets callers validate the complete fresh invariant without reconstructing it from mutable parsing results.",
   },
   {
     name: "completeShortRestArcaneRecoveryWithRoute",

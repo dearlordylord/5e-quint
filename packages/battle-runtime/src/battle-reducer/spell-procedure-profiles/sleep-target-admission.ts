@@ -39,7 +39,7 @@ import {
 import {
   DcSourceSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverSpellMetamagicSelections } from "../metamagic-support.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
@@ -76,20 +76,20 @@ function admitSleepTargetAdmission(
 ): readonly SleepTargetAdmissionSpellInvocation[] {
   return supportedPreparedSleepTargetAdmissionProfile(
     spell,
-    ctx.actor.origin.spellcasting.spellSlots,
+    ctx.spellCastOptions,
   );
 }
 
 export function supportedPreparedSleepTargetAdmissionProfile(
   spell: SleepTargetAdmissionSpellInvocation["spell"],
-  spellSlots: SpellAdmissionContext["actor"]["origin"]["spellcasting"]["spellSlots"],
+  castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly SleepTargetAdmissionSpellInvocation[] {
   const sleep = sleepTargetAdmissionSpell(spell);
   if (sleep === null) {
     return [];
   }
 
-  return spellSlots.flatMap(
+  return castOptions.flatMap(
     (slot): readonly SleepTargetAdmissionSpellInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -97,7 +97,7 @@ export function supportedPreparedSleepTargetAdmissionProfile(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "sleepTargetAdmission",
           spell,
           ability: sleep.phase.ability,
@@ -230,7 +230,7 @@ function resolveSleepTargetAdmission(
 const SleepTargetAdmissionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("sleepTargetAdmission"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("wis"),
@@ -252,3 +252,4 @@ export const sleepTargetAdmissionProfile = {
   "sleepTargetAdmission",
   SleepTargetAdmissionSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

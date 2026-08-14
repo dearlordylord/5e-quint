@@ -36,6 +36,7 @@ import {
   openAfterDamageSequenceInterruptWindow,
 } from "./interrupt-execution.ts";
 import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
+import { spellInvocationCastLevel } from "./spells-effective-level.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
@@ -238,7 +239,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
   const concentrationHoles: BattleConcentrationSavingThrowHole[] = [];
   const hideousLaughterDamageRepeatSaveHoleIds = new Set<string>();
   const damageDispositionHoles: BattleAttackDamageDispositionHole[] = [];
-  const maxLeaps = Number(input.invocation.resource.slotLevel);
+  const maxLeaps = Number(spellInvocationCastLevel(input.invocation));
 
   for (let stepIndex = 0; stepIndex <= maxLeaps; stepIndex += 1) {
     const step = fillSet.steps[stepIndex] ?? emptyChainedSpellStepFills();
@@ -1035,7 +1036,7 @@ export function chainedSpellFillSet(
     | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
     | undefined;
   const steps = Array.from(
-    { length: Number(invocation.resource.slotLevel) + 1 },
+    { length: Number(spellInvocationCastLevel(invocation)) + 1 },
     () => emptyChainedSpellStepFills(),
   );
   const concentrationSavingThrows: Extract<
@@ -1366,7 +1367,7 @@ export function chainedSpellStepIndexForFill(
 ): number | null {
   for (
     let stepIndex = 0;
-    stepIndex <= Number(invocation.resource.slotLevel);
+    stepIndex <= Number(spellInvocationCastLevel(invocation));
     stepIndex += 1
   ) {
     if (

@@ -757,7 +757,10 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
           spell: {
             ...baseHole.spell,
             access: { tag: "classCantrip" },
-            resource: { tag: "spellSlot", slotLevel: 1 },
+            resource: {
+              tag: "spellSlot",
+              slotLevel: 1,
+            },
           },
         }),
       ),
@@ -813,7 +816,10 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
           spell: {
             ...baseHole.spell,
             access: { tag: "armorOfShadows" },
-            resource: { tag: "spellSlot", slotLevel: 1 },
+            resource: {
+              tag: "spellSlot",
+              slotLevel: 1,
+            },
           },
         }),
       ),

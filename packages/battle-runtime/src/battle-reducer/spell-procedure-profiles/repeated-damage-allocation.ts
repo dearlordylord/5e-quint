@@ -54,7 +54,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { repeatedDamageAllocationAdmissionFacts } from "./repeated-damage-allocation-facts.ts";
 
@@ -70,7 +70,6 @@ function admitRepeatedDamageAllocation(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly RepeatedDamageAllocationInvocation[] {
-  const spellcasting = ctx.actor.origin.spellcasting;
   if (spell.mechanics.family !== "activation") {
     return [];
   }
@@ -104,7 +103,7 @@ function admitRepeatedDamageAllocation(
   if (repeatedEffectCountForSlotLevel === null) {
     return [];
   }
-  return spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly RepeatedDamageAllocationInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -116,7 +115,10 @@ function admitRepeatedDamageAllocation(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: facts.selectedSlotLevel },
+          resource: spellInvocationResourceForCastOption({
+            spellLevel: facts.selectedSlotLevel,
+            payment: slot.payment,
+          }),
           procedure: "repeatedDamageAllocation",
           spell,
           targeting: {
@@ -165,7 +167,7 @@ function resolveRepeatedDamageAllocation(
 const RepeatedDamageAllocationInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("repeatedDamageAllocation"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: Schema.Struct({
@@ -189,3 +191,4 @@ export const repeatedDamageAllocationProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverRepeatedDamageAllocationCastAct,
   resolve: resolveRepeatedDamageAllocation,
 };
+import { spellInvocationResourceForCastOption } from "./profile.ts";

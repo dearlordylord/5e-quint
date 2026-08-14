@@ -1,3 +1,4 @@
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { optionalProperty } from "../../optional-property.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
@@ -85,7 +86,7 @@ import {
 import {
   MovementFeet as MovementFeetSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type DirectHitPointRestorationInvocation = Extract<
@@ -103,7 +104,7 @@ function admitDirectHitPointRestoration(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly DirectHitPointRestorationInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -112,14 +113,14 @@ function admitDirectHitPointRestoration(
         projection.amount,
         spell.mechanics.level,
         slot.spellLevel,
-        ctx.actor.origin.spellcasting.spellcastingAbilityModifier,
+        ctx.castingSource.abilityModifier,
       );
       return healingExpr === null
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "directHitPointRestoration",
               spell,
               actionCost: projection.actionCost,
@@ -391,13 +392,18 @@ function spellSlotHealingModifierAmount(
   if (actor?.origin.kind !== "character") {
     return 0;
   }
+  const castLevel = Match.value(invocation.resource).pipe(
+    Match.when({ tag: "spellSlot" }, ({ slotLevel }) => slotLevel),
+    Match.when({ tag: "spellAccessFreeCast" }, ({ castLevel }) => castLevel),
+    Match.exhaustive,
+  );
   return characterUnitProcedureBindings(actor.origin.execution).reduce(
     (total, { procedure }) =>
       procedure.kind === "unitFeature" &&
       procedure.execution.kind === "spellSlotHealingModifier"
         ? total +
           procedure.execution.healingModifier.bonus.flat +
-          Number(invocation.resource.slotLevel)
+          Number(castLevel)
         : total,
     0,
   );
@@ -406,7 +412,7 @@ function spellSlotHealingModifierAmount(
 const DirectHitPointRestorationInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("directHitPointRestoration"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction", "bonusAction"),

@@ -58,7 +58,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type AttackBurstSaveDamageResolveInput =
@@ -72,7 +72,7 @@ function admitAttackBurstSaveDamage(
   return supportedPreparedAttackBurstSaveDamageProfile(
     spell,
     spellcasting.spellSlots,
-    spellcasting.spellcastingAbilityModifier,
+    ctx.castingSource.abilityModifier,
     spellcasting.proficiencyBonus,
   );
 }
@@ -106,7 +106,7 @@ function resolveAttackBurstSaveDamage(
 const AttackBurstSaveDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("attackBurstSaveDamage"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: Schema.Struct({

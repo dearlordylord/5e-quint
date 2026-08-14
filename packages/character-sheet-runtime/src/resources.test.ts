@@ -111,7 +111,9 @@ describe("Character Sheet runtime / resources", () => {
           }),
         ),
         resource: {
-          unitId: authoredUnitId("ranger_favored_enemy"),
+          tag: "spellAccessFreeCast",
+          sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+          spellId: authoredUnitId("hunters_mark"),
           count: 2,
           expended: 0,
         },
@@ -203,7 +205,9 @@ describe("Character Sheet runtime / resources", () => {
       build: armorClassBuild({ startingClass: "class_ranger" }),
       resourceExpenditures: [
         {
-          tag: "favoredEnemyHuntersMarkFreeCasts",
+          tag: "spellAccessFreeCast",
+          sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+          spellId: authoredUnitId("hunters_mark"),
           expended: resourceCount(3),
         },
       ],
@@ -216,7 +220,9 @@ describe("Character Sheet runtime / resources", () => {
       }),
       resourceExpenditures: [
         {
-          tag: "paladinsSmiteDivineSmiteFreeCast",
+          tag: "spellAccessFreeCast",
+          sourceUnitId: authoredUnitId("paladin_paladins_smite"),
+          spellId: authoredUnitId("divine_smite"),
           expended: resourceCount(2),
         },
       ],
@@ -458,7 +464,9 @@ describe("Character Sheet runtime / resources", () => {
         unitLibrary,
         resourceExpenditures: [
           {
-            tag: "favoredEnemyHuntersMarkFreeCasts",
+            tag: "spellAccessFreeCast",
+            sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+            spellId: authoredUnitId("hunters_mark"),
             expended: resourceCount(1),
           },
         ],
@@ -469,7 +477,8 @@ describe("Character Sheet runtime / resources", () => {
       _tag: "Right",
       right: [
         {
-          unitId: authoredUnitId("ranger_favored_enemy"),
+          sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+          spellId: authoredUnitId("hunters_mark"),
           count: 2,
           expended: 1,
         },
@@ -485,7 +494,8 @@ describe("Character Sheet runtime / resources", () => {
       _tag: "Right",
       right: [
         {
-          unitId: authoredUnitId("ranger_favored_enemy"),
+          sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+          spellId: authoredUnitId("hunters_mark"),
           count: 2,
           expended: 0,
         },
@@ -506,7 +516,9 @@ describe("Character Sheet runtime / resources", () => {
         unitLibrary,
         resourceExpenditures: [
           {
-            tag: "paladinsSmiteDivineSmiteFreeCast",
+            tag: "spellAccessFreeCast",
+            sourceUnitId: authoredUnitId("paladin_paladins_smite"),
+            spellId: authoredUnitId("divine_smite"),
             expended: resourceCount(1),
           },
         ],
@@ -517,7 +529,8 @@ describe("Character Sheet runtime / resources", () => {
       _tag: "Right",
       right: expect.arrayContaining([
         expect.objectContaining({
-          unitId: authoredUnitId("paladin_paladins_smite"),
+          sourceUnitId: authoredUnitId("paladin_paladins_smite"),
+          spellId: authoredUnitId("divine_smite"),
           count: 1,
           expended: 1,
         }),
@@ -533,7 +546,8 @@ describe("Character Sheet runtime / resources", () => {
       _tag: "Right",
       right: expect.arrayContaining([
         expect.objectContaining({
-          unitId: authoredUnitId("paladin_paladins_smite"),
+          sourceUnitId: authoredUnitId("paladin_paladins_smite"),
+          spellId: authoredUnitId("divine_smite"),
           count: 1,
           expended: 0,
         }),

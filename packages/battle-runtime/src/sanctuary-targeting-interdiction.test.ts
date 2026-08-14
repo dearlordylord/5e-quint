@@ -1664,8 +1664,11 @@ function battleWithSanctuary(
         "Caster",
         20,
         {
-          sourceClassName: "cleric",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "cleric",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [
@@ -1682,6 +1685,7 @@ function battleWithSanctuary(
             srdSpellRecord(magicMissileUnitId),
           ],
           featurePreparedSpells: [],
+          spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
           spellSlots: [{ spellLevel: 1, count: 2 }],

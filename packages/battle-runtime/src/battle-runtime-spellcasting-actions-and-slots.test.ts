@@ -1,4 +1,7 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test battle.spell-access-magic-initiate-casting
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   battleActSpellPresentation,
@@ -11,13 +14,34 @@ import {
   resolveSpellAct,
 } from "./battle-reducer/spells-resolve.ts";
 import { spendSpellCastResources } from "./battle-reducer/spells-resolve-resources.ts";
+import { spellActTurnResourceAvailable } from "./battle-reducer/spell-turn-resources.ts";
 import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
 import { characterSpellProcedure } from "./character-execution-queries.ts";
-import type { BattleActiveEffect, BattleCreatureState } from "./index.ts";
+import type {
+  BattleActiveEffect,
+  BattleCreatureState,
+  CharacterBattleSpellListFact,
+} from "./index.ts";
 import type {
   BattleState,
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
+import { classSpellListForSpellcastingClassRecord } from "@dnd/surface/surface/unit-catalog";
+
+function wizardSpellListSource(): CharacterBattleSpellListFact {
+  const wizard = unitLibrary.requireUnit("class_wizard");
+  if (
+    wizard.kind !== "class" ||
+    wizard.className !== "wizard" ||
+    wizard.spellcasting?.kind !== "wizard_spellcasting_creation"
+  ) {
+    throw new Error("Expected Wizard spell-list source.");
+  }
+  return {
+    className: wizard.className,
+    ...classSpellListForSpellcastingClassRecord(wizard),
+  };
+}
 import {
   attackRollFill,
   battleId,
@@ -55,6 +79,7 @@ import {
   startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
+  unitLibrary,
   rangerFavoredEnemyResource,
   wizardId,
   wizardSpellcasting,
@@ -62,6 +87,262 @@ import {
 } from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: spellcasting actions and slots", () => {
+  test("same spell from class and feat access keeps distinct source and payment acts", () => {
+    const source = {
+      id: authoredUnitId("feat_synthetic_arcane_dabbler"),
+      kind: "feat",
+      category: "origin",
+      name: "Synthetic Arcane Dabbler",
+      provenance: { kind: "synthetic-test", section: "casting boundary" },
+      mechanics: { family: "magic_initiate", spellList: "wizard" },
+    } as const;
+    const burningHands = spellRecord("burning_hands");
+    const rayOfFrost = spellRecord("ray_of_frost");
+    const acidSplash = spellRecord("acid_splash");
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-source-scoped-spell-access"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Source-scoped caster",
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 1 }],
+          resources: [
+            {
+              unit: source,
+              spellAccessFreeCast: { spellId: burningHands.id, count: 1 },
+              usesRemaining: 1,
+            },
+          ],
+          characterUnitRefs: [
+            { unit: burningHands, supportProfiles: [] },
+            { unit: rayOfFrost, supportProfiles: [] },
+            { unit: acidSplash, supportProfiles: [] },
+          ],
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [rayOfFrost],
+              preparedSpells: [burningHands],
+              spellSlots: [{ spellLevel: 1, count: 1 }],
+            }),
+            spellAccesses: [
+              {
+                source: {
+                  tag: "feat",
+                  sourceUnit: source,
+                  spellList: wizardSpellListSource(),
+                },
+                spellcastingAbilityModifier: -1,
+                cantrips: [rayOfFrost, acidSplash],
+                levelOneSpell: burningHands,
+              },
+            ],
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const actor = session.state.combatants.get(fighterId);
+    if (actor?.origin.kind !== "character") {
+      throw new Error("Expected source-scoped character caster.");
+    }
+    const execution = actor.origin.execution;
+    const seenProcedureRefs = new Set<string>();
+    const invocations = discoverBattleActs(session).flatMap((act) => {
+      const presentation = battleActSpellPresentation(act);
+      if (
+        presentation?.invocation.spellId !== String(burningHands.id) ||
+        !("procedureRef" in act.subject)
+      ) {
+        return [];
+      }
+      if (seenProcedureRefs.has(act.subject.procedureRef)) return [];
+      seenProcedureRefs.add(act.subject.procedureRef);
+      const invocation = characterSpellProcedure(
+        execution,
+        act.subject.procedureRef,
+        actor,
+      );
+      return invocation === undefined ? [] : [invocation];
+    });
+
+    expect(
+      invocations.map((invocation) => ({
+        source: invocation.spellRuleFacts.castingSource,
+        payment:
+          invocation.resource.tag === "spellSlot"
+            ? "slot"
+            : invocation.resource.tag === "spellAccessFreeCast"
+              ? "spellAccessFreeCast"
+              : "none",
+      })),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          source: expect.objectContaining({
+            tag: "classSpellcasting",
+            className: "wizard",
+            abilityModifier: 3,
+          }),
+          payment: "slot",
+        }),
+        expect.objectContaining({
+          source: expect.objectContaining({
+            tag: "spellAccess",
+            abilityModifier: -1,
+          }),
+          payment: "slot",
+        }),
+        expect.objectContaining({
+          source: expect.objectContaining({
+            tag: "spellAccess",
+            abilityModifier: -1,
+          }),
+          payment: "spellAccessFreeCast",
+        }),
+      ]),
+    );
+    const featRefs = invocations.flatMap((invocation) =>
+      invocation.spellRuleFacts.castingSource.tag === "spellAccess"
+        ? [invocation.spellRuleFacts.castingSource.spellAccessRef]
+        : [],
+    );
+    expect(new Set(featRefs).size).toBe(1);
+
+    const featFreeInvocation = invocations.find(
+      (invocation) =>
+        invocation.spellRuleFacts.castingSource.tag === "spellAccess" &&
+        invocation.resource.tag === "spellAccessFreeCast",
+    );
+    const featSlotInvocation = invocations.find(
+      (invocation) =>
+        invocation.spellRuleFacts.castingSource.tag === "spellAccess" &&
+        invocation.resource.tag === "spellSlot",
+    );
+    if (
+      featFreeInvocation?.resource.tag !== "spellAccessFreeCast" ||
+      featSlotInvocation?.resource.tag !== "spellSlot"
+    ) {
+      throw new Error("Expected feat free-cast and Spell Slot invocations.");
+    }
+    const resourcePoolRef = featFreeInvocation.resource.resourcePoolRef;
+    const freeSpent = spendSpellCastResources({
+      state: session.state,
+      actorId: fighterId,
+      invocation: featFreeInvocation,
+      errorState: session.state,
+    });
+    if (freeSpent.tag !== "resolved") {
+      throw new Error("Expected the feat free cast to spend.");
+    }
+    const freeSpentActor = freeSpent.state.combatants.get(fighterId);
+    expect(
+      freeSpentActor?.origin.kind === "character"
+        ? freeSpentActor.origin.resources.find(
+            (resource) => resource.resourcePoolRef === resourcePoolRef,
+          )?.usesRemaining
+        : undefined,
+    ).toBe(0);
+    expect(expendedLevelOneSlots(freeSpent, fighterId)).toBe(0);
+    expect(
+      spendSpellCastResources({
+        state: freeSpent.state,
+        actorId: fighterId,
+        invocation: featFreeInvocation,
+        errorState: freeSpent.state,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const slotSpent = spendSpellCastResources({
+      state: session.state,
+      actorId: fighterId,
+      invocation: featSlotInvocation,
+      errorState: session.state,
+    });
+    if (slotSpent.tag !== "resolved") {
+      throw new Error("Expected the feat Spell Slot cast to spend.");
+    }
+    const slotSpentActor = slotSpent.state.combatants.get(fighterId);
+    expect(expendedLevelOneSlots(slotSpent, fighterId)).toBe(1);
+    expect(
+      slotSpentActor?.origin.kind === "character"
+        ? slotSpentActor.origin.resources.find(
+            (resource) => resource.resourcePoolRef === resourcePoolRef,
+          )?.usesRemaining
+        : undefined,
+    ).toBe(1);
+
+    const cantripInvocationRefs = new Set(
+      discoverBattleActs(session).flatMap((act) => {
+        const presentation = battleActSpellPresentation(act);
+        return presentation?.invocation.spellId === String(rayOfFrost.id)
+          ? [JSON.stringify(presentation.invocation)]
+          : [];
+      }),
+    );
+    expect(cantripInvocationRefs.size).toBe(2);
+    expect(
+      [...cantripInvocationRefs].map((ref) => JSON.parse(ref).source.tag),
+    ).toEqual(expect.arrayContaining(["classSpellcasting", "spellAccess"]));
+
+    const seenCantripProcedureRefs = new Set<string>();
+    const cantripInvocations = discoverBattleActs(session).flatMap((act) => {
+      const presentation = battleActSpellPresentation(act);
+      if (
+        presentation?.invocation.spellId !== String(rayOfFrost.id) ||
+        !("procedureRef" in act.subject) ||
+        seenCantripProcedureRefs.has(act.subject.procedureRef)
+      ) {
+        return [];
+      }
+      seenCantripProcedureRefs.add(act.subject.procedureRef);
+      const invocation = characterSpellProcedure(
+        execution,
+        act.subject.procedureRef,
+        actor,
+      );
+      return invocation === undefined ? [] : [invocation];
+    });
+    expect(
+      cantripInvocations.map((invocation) => ({
+        access: invocation.access.tag,
+        resource: invocation.resource.tag,
+        source: invocation.spellRuleFacts.castingSource,
+      })),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          access: "classCantrip",
+          resource: "none",
+          source: expect.objectContaining({
+            tag: "classSpellcasting",
+            abilityModifier: 3,
+          }),
+        }),
+        expect.objectContaining({
+          access: "spellAccessCantrip",
+          resource: "none",
+          source: expect.objectContaining({
+            tag: "spellAccess",
+            abilityModifier: -1,
+          }),
+        }),
+      ]),
+    );
+    const featCantripInvocation = cantripInvocations.find(
+      (invocation) => invocation.access.tag === "spellAccessCantrip",
+    );
+    if (
+      featCantripInvocation?.spellRuleFacts.castingSource.tag !== "spellAccess"
+    ) {
+      throw new Error("Expected a source-scoped cantrip invocation.");
+    }
+    expect(
+      featCantripInvocation.spellRuleFacts.castingSource.spellAccessRef,
+    ).toEqual(expect.any(String));
+  });
+
   test("resource spending reports a stale Magic action after admission", () => {
     const session = wizardVsSkeletonBattle();
     const act = discoverBattleActs(session).find(
@@ -156,8 +437,8 @@ describe("battle runtime: spellcasting actions and slots", () => {
     });
   });
 
-  test("generic spell resource spending rejects class-feature free casts", () => {
-    const favoredEnemy = rangerFavoredEnemyResource();
+  test("generic spell resource spending atomically spends action and free-cast pool", () => {
+    const favoredEnemy = rangerFavoredEnemyResource({ usesRemaining: 1 });
     const session = startBattleSessionRight({
       battleId: battleId("battle-resource-class-feature-free-cast"),
       combatants: [
@@ -176,7 +457,11 @@ describe("battle runtime: spellcasting actions and slots", () => {
                 spell: spellRecord("hunters_mark"),
               },
             ],
-            sourceClassName: "ranger",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "ranger",
+              abilityModifier: 3,
+            },
           },
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -185,6 +470,8 @@ describe("battle runtime: spellcasting actions and slots", () => {
     const act = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.tag ===
+          "spellAccessFreeCast" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
           "hunters_mark",
     );
@@ -202,23 +489,51 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     if (
       invocation === undefined ||
-      invocation.resource.tag !== "classFeatureFreeCast"
+      invocation.resource.tag !== "spellAccessFreeCast"
     ) {
       throw new Error("Expected Hunter's Mark class-feature invocation.");
     }
+    const freeCastResourcePoolRef = invocation.resource.resourcePoolRef;
+    const usesBefore = actor.origin.resources.find(
+      (resource) => resource.resourcePoolRef === freeCastResourcePoolRef,
+    )?.usesRemaining;
+    if (usesBefore === undefined) {
+      throw new Error("Expected limited free-cast resource pool.");
+    }
     expect(
-      spendSpellCastResources({
-        state: session.state,
-        actorId: fighterId,
+      spellActTurnResourceAvailable(
+        {
+          ...session.state.currentTurnResources,
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: fighterId },
+          ],
+        },
+        fighterId,
         invocation,
-        errorState: session.state,
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "unsupportedSubject",
-      message:
-        "Class feature free spell casts require procedure-specific resource spending.",
+      ),
+    ).toBe(true);
+    const resolved = spendSpellCastResources({
+      state: session.state,
+      actorId: fighterId,
+      invocation,
+      errorState: session.state,
     });
+    expect(resolved.tag).toBe("resolved");
+    if (resolved.tag !== "resolved") return;
+    expect(resolved.state.currentTurnResources.actionResources).not.toContain(
+      "bonusAction",
+    );
+    expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
+      [],
+    );
+    const updatedActor = resolved.state.combatants.get(fighterId);
+    expect(
+      updatedActor?.origin.kind === "character"
+        ? updatedActor.origin.resources.find(
+            (resource) => resource.resourcePoolRef === freeCastResourcePoolRef,
+          )?.usesRemaining
+        : undefined,
+    ).toBe(Number(usesBefore) - 1);
   });
 
   test("prepared Magic Missile asks for an active source damage penalty roll", () => {

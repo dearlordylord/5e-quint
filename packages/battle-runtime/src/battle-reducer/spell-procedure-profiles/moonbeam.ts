@@ -50,7 +50,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type MoonbeamSpellInvocation = Extract<
@@ -285,7 +285,7 @@ function resolveMoonbeam(input: MoonbeamResolveInput): BattleResolutionResult {
 const MoonbeamInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("moonbeam"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("con"),

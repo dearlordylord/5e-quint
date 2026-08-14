@@ -78,7 +78,7 @@ import {
   AbilitySchema,
   DcSourceSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { CONDITIONS as ALL_CONDITIONS } from "@dnd/shared/types";
 
@@ -420,7 +420,7 @@ const AfterHitSaveGatedConditionInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("afterHitSaveGatedCondition"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),

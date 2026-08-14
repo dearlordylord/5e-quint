@@ -48,7 +48,7 @@ import {
 import {
   DcSourceSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   commandOptionChoiceHole,
@@ -107,15 +107,12 @@ function admitCommand(
   spell: CommandSpellInvocation["spell"],
   ctx: SpellAdmissionContext,
 ): readonly CommandSpellInvocation[] {
-  return supportedPreparedCommandProfile(
-    spell,
-    ctx.actor.origin.spellcasting.spellSlots,
-  );
+  return supportedPreparedCommandProfile(spell, ctx.spellCastOptions);
 }
 
 export function supportedPreparedCommandProfile(
   spell: CommandSpellInvocation["spell"],
-  spellSlots: SpellAdmissionContext["actor"]["origin"]["spellcasting"]["spellSlots"],
+  castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly CommandSpellInvocation[] {
   const command = commandSpell(spell);
   if (command === null) {
@@ -124,7 +121,7 @@ export function supportedPreparedCommandProfile(
 
   return preparedSpellSlotInvocationsFrom(
     spell,
-    spellSlots,
+    castOptions,
     (base, slotLevel) => ({
       ...base,
       procedure: "command",
@@ -251,7 +248,7 @@ function resolveCommand(input: CommandResolveInput): BattleResolutionResult {
 const CommandInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("command"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),

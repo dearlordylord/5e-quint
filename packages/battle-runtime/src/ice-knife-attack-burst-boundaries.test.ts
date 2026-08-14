@@ -137,7 +137,11 @@ describe("Ice Knife attack-burst boundaries", () => {
               preparedSpells: [spellRecord("sanctuary")],
               spellSlots: [{ spellLevel: 1, count: 1 }],
             }),
-            sourceClassName: "cleric",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "cleric",
+              abilityModifier: 3,
+            },
           },
         }),
         characterSeed({
@@ -357,7 +361,11 @@ describe("Ice Knife attack-burst boundaries", () => {
               preparedSpells: [spellRecord("animal_friendship")],
               spellSlots: [{ spellLevel: 1, count: 1 }],
             }),
-            sourceClassName: "druid",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "druid",
+              abilityModifier: 3,
+            },
           },
         }),
         characterSeed({

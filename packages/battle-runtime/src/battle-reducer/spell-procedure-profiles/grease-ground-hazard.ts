@@ -44,7 +44,7 @@ import {
 import {
   DcSourceSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { Either, Schema } from "effect";
 
@@ -80,20 +80,20 @@ function admitGreaseGroundHazard(
 ): readonly GreaseGroundHazardSpellInvocation[] {
   return supportedPreparedGreaseGroundHazardProfile(
     spell,
-    ctx.actor.origin.spellcasting.spellSlots,
+    ctx.spellCastOptions,
   );
 }
 
 export function supportedPreparedGreaseGroundHazardProfile(
   spell: GreaseGroundHazardSpellInvocation["spell"],
-  spellSlots: SpellAdmissionContext["actor"]["origin"]["spellcasting"]["spellSlots"],
+  castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly GreaseGroundHazardSpellInvocation[] {
   const grease = greaseGroundHazardSpell(spell);
   if (grease === null) {
     return [];
   }
 
-  return spellSlots.flatMap(
+  return castOptions.flatMap(
     (slot): readonly GreaseGroundHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -101,7 +101,7 @@ export function supportedPreparedGreaseGroundHazardProfile(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "greaseGroundHazard",
           spell,
           ability: grease.phase.ability,
@@ -204,7 +204,7 @@ function resolveGreaseGroundHazard(
 const GreaseGroundHazardInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("greaseGroundHazard"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("dex"),
@@ -227,3 +227,4 @@ export const greaseGroundHazardProfile = {
   "greaseGroundHazard",
   GreaseGroundHazardSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

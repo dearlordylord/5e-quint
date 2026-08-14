@@ -3,6 +3,7 @@ import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import type { DurationBattleActiveEffectExpiration } from "../active-effect/expiration.ts";
 import type { BattleObjectId, CombatantId } from "../identity.ts";
 import type { HeldWeaponLoadoutSlot } from "../character-creature-execution-facts.ts";
+import type { CantripSpellAccess } from "../procedure-execution/spell-invocation-vocabulary.ts";
 
 /** Authored-identity-free facts shared by admission and execution. */
 export type SpellWeaponAttackOverrideTemplate = {
@@ -19,7 +20,7 @@ export type SpellWeaponAttackOverrideTemplate = {
 };
 
 export type WeaponAttackOverrideProcedureFacts = {
-  readonly access: { readonly tag: "classCantrip" };
+  readonly access: CantripSpellAccess;
   readonly actionCost: "bonusAction";
   readonly activeEffect: SpellWeaponAttackOverrideTemplate;
   readonly attachedWeaponSlot: HeldWeaponLoadoutSlot;

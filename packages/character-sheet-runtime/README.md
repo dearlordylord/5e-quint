@@ -58,6 +58,15 @@ Current executable state:
   derived from `CharacterBuild` and Surface Units, so sheet state cannot diverge
   from the authored pool, and unsupported non-spell feature resources are not
   representable here.
+- `characterSheetSpellAccessesForBuild` projects creature-owned Spell Access
+  from class-feature always-prepared grants and creation-retained Magic
+  Initiate selections. Magic Initiate cantrips remain learned access; its level
+  1 spell is always prepared and retains the feat-selected spellcasting ability.
+- `spellAccessFreeCast` is the generic limited free-cast resource. Its identity
+  is the Spell Access pair of source Unit and Spell Unit, capacity is derived
+  from the projected access or installed class-feature grant, and the sheet
+  stores only nonzero expenditure. Spending it does not alter ordinary or Pact
+  Spell Slots; Short Rest preserves expenditure and Long Rest clears it.
 - `spellSlotExpenditures` is present only for spellcasting builds and stores
   nonzero spent ordinary Spell Slots against build-derived capacity. Absence of
   a spell level means zero ordinary Spell Slots are expended at that level.

@@ -41,7 +41,7 @@ import type { TriggeredReactionSaveGatedDamageResolution } from "./resolution-co
 import { Schema } from "effect";
 import {
   AbilitySchema,
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
@@ -49,7 +49,7 @@ import {
   SpellFailedSavePostDamageRiderSchema,
   SpellPostSaveAreaEffectSchema,
   SpellSavingThrowRollModeRuleSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
   SpellDamageSchema,
 } from "../codec-building-blocks.ts";
 import { SpellFailedSaveConditionEffectExecutionSchema } from "./save-gated-condition.ts";
@@ -92,10 +92,7 @@ function admitSaveGatedDamage(
           spell,
           spellAdmissionCharacterLevel(ctx),
         )
-      : supportedPreparedSaveGateDamageProfile(
-          spell,
-          ctx.actor.origin.spellcasting.spellSlots,
-        );
+      : supportedPreparedSaveGateDamageProfile(spell, ctx.spellCastOptions);
   return invocations.filter(isSaveGatedDamageInvocation);
 }
 
@@ -283,14 +280,14 @@ const SaveGatedDamageCommonFields = {
 const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
-      access: ClassCantripSpellAccessSchema,
+      access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       castingTime: ActionSpellInvocationCastingTimeSchema,
       ...SaveGatedDamageCommonFields,
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       castingTime: Schema.Union(
         ActionSpellInvocationCastingTimeSchema,
         ReactionSpellInvocationCastingTimeSchema,

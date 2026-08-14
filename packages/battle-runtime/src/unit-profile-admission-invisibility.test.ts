@@ -292,13 +292,17 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
       preparedSpells: [spellRecord(invisibilityUnitId)],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetSpellcasting: {
-        sourceClassName: "wizard",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [spellRecord(blurUnitId)],
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -707,13 +711,17 @@ function wizardSpellcasting(input: {
   readonly spellSlots: CharacterSpellcastingInit["spellSlots"];
 }): CharacterSpellcastingInit {
   return {
-    sourceClassName: "wizard",
-    spellcastingAbilityModifier: abilityModifier(3),
+    spellcastingSource: {
+      tag: "classSpellcasting",
+      className: "wizard",
+      abilityModifier: abilityModifier(3),
+    },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
     cantrips: [],
     preparedSpells: input.preparedSpells,
     featurePreparedSpells: [],
+    spellAccesses: [],
     spellbookRitualSpellAccesses: [],
     invocationSpellAccesses: [],
     spellSlots: input.spellSlots,

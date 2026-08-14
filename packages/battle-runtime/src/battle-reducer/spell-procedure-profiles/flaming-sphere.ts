@@ -49,7 +49,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type FlamingSphereSpellInvocation = Extract<
@@ -256,7 +256,7 @@ function resolveFlamingSphere(
 const FlamingSphereInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("flamingSphere"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("dex"),

@@ -49,7 +49,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type SpikeGrowthMovementHazardSpellInvocation = Extract<
@@ -87,7 +87,7 @@ function admitSpikeGrowthMovementHazard(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly SpikeGrowthMovementHazardSpellInvocation[] => {
       if (Number(slot.spellLevel) < SPIKE_GROWTH_LEVEL) {
         return [];
@@ -95,7 +95,7 @@ function admitSpikeGrowthMovementHazard(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "spikeGrowthMovementHazard",
           spell,
           targeting: {
@@ -194,7 +194,7 @@ function resolveSpikeGrowthMovementHazard(
 const SpikeGrowthMovementHazardInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("spikeGrowthMovementHazard"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: Schema.Struct({
@@ -220,3 +220,4 @@ export const spikeGrowthMovementHazardProfile = {
   "spikeGrowthMovementHazard",
   SpikeGrowthMovementHazardSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

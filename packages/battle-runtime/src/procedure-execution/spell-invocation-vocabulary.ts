@@ -8,13 +8,28 @@ import type {
 /** Authored-identity-free access facts retained for spell execution. */
 export type PreparedSpellAccess = { readonly tag: "prepared" };
 
-/** Authored-identity-free spell-slot spend retained for spell execution. */
-export type SpellSlotInvocationResource = {
-  readonly tag: "spellSlot";
-  readonly slotLevel: SpellSlotLevel;
-};
-
 export type ClassCantripSpellAccess = { readonly tag: "classCantrip" };
+export type SpellAccessCantripSpellAccess = {
+  readonly tag: "spellAccessCantrip";
+};
+export type CantripSpellAccess =
+  | ClassCantripSpellAccess
+  | SpellAccessCantripSpellAccess;
+
+export function cantripSpellAccessForCastingSource(source: {
+  readonly tag: "classSpellcasting" | "spellAccess";
+}): CantripSpellAccess {
+  return source.tag === "classSpellcasting"
+    ? { tag: "classCantrip" }
+    : { tag: "spellAccessCantrip" };
+}
+
+export function isCantripSpellAccess(access: {
+  readonly tag: string;
+}): access is CantripSpellAccess {
+  return access.tag === "classCantrip" || access.tag === "spellAccessCantrip";
+}
+
 export type ArmorOfShadowsSpellAccess = {
   readonly tag: "armorOfShadows";
 };
@@ -23,10 +38,19 @@ export type SpellEffectSpellAccess = {
   readonly sourceCombatantId: CombatantId;
 };
 export type NoSpellInvocationResource = { readonly tag: "none" };
-export type ClassFeatureFreeCastInvocationResource = {
-  readonly tag: "classFeatureFreeCast";
+/** Authored-identity-free spell-slot spend retained for spell execution. */
+export type SpellSlotInvocationResource = {
+  readonly tag: "spellSlot";
+  readonly slotLevel: SpellSlotLevel;
+};
+export type SpellAccessFreeCastInvocationResource = {
+  readonly tag: "spellAccessFreeCast";
+  readonly castLevel: SpellSlotLevel;
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
 };
+export type LeveledSpellInvocationResource =
+  | SpellSlotInvocationResource
+  | SpellAccessFreeCastInvocationResource;
 
 export type RollModifierSpellSaveGate = {
   readonly ability: Ability;

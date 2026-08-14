@@ -382,6 +382,7 @@ function classBuild(input: {
     ),
     proficiencyChoices: [],
     features: input.features ?? [],
+    magicInitiateSpellAccesses: [],
     equipment: {
       owned: [],
       loadout: {},

@@ -313,6 +313,7 @@ function armorClassBuild(input: {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: { owned: [], loadout: {} },
   };
 }

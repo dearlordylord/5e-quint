@@ -17,12 +17,14 @@ import { unitId } from "@dnd/shared/game-facts";
 //     the Reaction.
 //   - UBIQUITOUS_LANGUAGE.md: Reaction, Armor Class (AC), Casting Time.
 
+import { Match, Schema } from "effect";
 import {
   type AvailableBattleAct,
   type BattleResolutionResult,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import { invalidResult } from "../result-helpers.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { applyShieldReactionSpellActiveEffect } from "../spells-active-effects.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
@@ -33,6 +35,7 @@ import {
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { completeReactionSpellSlotCast } from "../reaction-spell-resolution.ts";
 import { shieldReactionSpellMatchesTrigger } from "../shield-reaction-trigger.ts";
+import { spendSpellAccessFreeCastResource } from "../spells-resolve-resources.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -42,14 +45,13 @@ import type {
 // Required SRD cross-record reference: Shield explicitly also triggers when
 // targeted by the Magic Missile spell.
 const SHIELD_MAGIC_MISSILE_SPELL_ID = unitId("magic_missile");
-import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type ShieldReactionInvocation = Extract<
@@ -67,14 +69,14 @@ function admitShieldReaction(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly ShieldReactionInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "shieldReaction",
               spell,
               ...projection,
@@ -180,18 +182,39 @@ function resolveShieldReaction(
     input.input.subject.reactorId,
     input.invocation,
   );
-  return completeReactionSpellSlotCast({
-    effectedState: effected,
-    errorState: input.input.state,
-    casterId: input.input.subject.reactorId,
-    slotLevel: input.invocation.resource.slotLevel,
-  });
+  return Match.value(input.invocation.resource).pipe(
+    Match.when({ tag: "spellAccessFreeCast" }, ({ resourcePoolRef }) => {
+      const resourced = spendSpellAccessFreeCastResource(
+        effected,
+        input.input.subject.reactorId,
+        resourcePoolRef,
+        input.invocation,
+        input.input.state,
+      );
+      return resourced.tag === "invalid"
+        ? resourced
+        : {
+            tag: "resolved" as const,
+            state: resourced.state,
+            snapshot: snapshotBattle(resourced.state),
+          };
+    }),
+    Match.when({ tag: "spellSlot" }, ({ slotLevel }) =>
+      completeReactionSpellSlotCast({
+        effectedState: effected,
+        errorState: input.input.state,
+        casterId: input.input.subject.reactorId,
+        slotLevel,
+      }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 const ShieldReactionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("shieldReaction"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     armorClassBonus: Schema.Number,
@@ -208,3 +231,4 @@ export const shieldReactionProfile = {
   "shieldReaction",
   ShieldReactionInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

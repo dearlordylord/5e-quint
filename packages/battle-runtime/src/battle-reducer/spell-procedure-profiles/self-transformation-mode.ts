@@ -70,7 +70,7 @@ import {
   DamageDieSizeSchema,
   DamageTypeSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type SelfTransformationModeInvocation = Extract<
@@ -101,21 +101,20 @@ function admitSelfTransformationMode(
   const projection = selfTransformationModeSpellProjection({
     actorId: ctx.actor.combatantId,
     spell,
-    spellcastingAbilityModifier:
-      ctx.actor.origin.spellcasting.spellcastingAbilityModifier,
+    spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
     proficiencyBonus: ctx.actor.origin.spellcasting.proficiencyBonus,
   });
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly SelfTransformationModeInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "selfTransformationMode",
               spell,
               actionCost: "magicAction",
@@ -581,7 +580,7 @@ export const SelfTransformationModeInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("selfTransformationMode"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
@@ -614,3 +613,4 @@ export const selfTransformationModeProfile = {
   "selfTransformationMode",
   SelfTransformationModeInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

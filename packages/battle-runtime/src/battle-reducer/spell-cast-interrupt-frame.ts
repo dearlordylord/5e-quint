@@ -15,12 +15,12 @@ import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   SPELL_CAST_REACTION_FACTS_HOLE_INSTANCE,
 } from "./battle-runtime-protocol.ts";
+import { spellInvocationCastLevel } from "./spells-effective-level.ts";
 
 export function spellCastReactionFactsHole(input: {
   readonly casterId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
 }): BattleSpellCastReactionFactsHole {
-  const resource = input.invocation.resource;
   return {
     kind: "targetSpatialFacts",
     holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -29,10 +29,7 @@ export function spellCastReactionFactsHole(input: {
     spellBeingCast: {
       casterId: input.casterId,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
-      castLevel:
-        resource.tag === "spellSlot"
-          ? Number(resource.slotLevel)
-          : spellExecutionLevel(input.invocation),
+      castLevel: spellInvocationCastLevel(input.invocation),
       components: spellComponents(input.invocation),
     },
     requiresTableSpatialFact: true,
@@ -82,16 +79,18 @@ export function spellCastInterruptFrame(
     casterId: input.casterId,
     sourceProcedureRef: input.invocation.sourceProcedureRef,
     spellProcedure: input.invocation.procedure,
-    castLevel:
-      resource.tag === "spellSlot"
-        ? Number(resource.slotLevel)
-        : spellExecutionLevel(input.invocation),
+    castLevel: spellInvocationCastLevel(input.invocation),
     components: spellComponents(input.invocation),
     castingResource: input.castingResource,
-    spellSlotCommitment:
+    paymentCommitment:
       resource.tag === "spellSlot"
         ? { kind: "pendingCasterSpellSlot" }
-        : { kind: "none" },
+        : resource.tag === "spellAccessFreeCast"
+          ? {
+              kind: "spellAccessFreeCast",
+              resourcePoolRef: resource.resourcePoolRef,
+            }
+          : { kind: "none" },
     metamagicCommitment:
       input.metamagicApplications === undefined
         ? { kind: "none" }
@@ -118,10 +117,4 @@ export function spellComponents(
     ...(components.somatic ? (["S"] as const) : []),
     ...(components.hasMaterial ? (["M"] as const) : []),
   ];
-}
-
-function spellExecutionLevel(
-  invocation: BattleExecutableSpellInvocation,
-): number {
-  return invocation.spellRuleFacts.level;
 }

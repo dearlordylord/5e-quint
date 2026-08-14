@@ -196,7 +196,8 @@ type GlyphStoredSpellFacts =
   | GlyphStoredSpellProcedure;
 type GlyphStoredSpellCandidateFacts =
   | GlyphStoredSpellInvocationCandidate
-  | GlyphStoredSpellProcedureCandidate;
+  | GlyphStoredSpellProcedureCandidate
+  | GlyphStoredSpellFacts;
 type GlyphDurableOccurrenceStoredSpellReleaseCandidate = {
   readonly kind: "spellGlyph";
   readonly storedInvocation: GlyphStoredSpellInvocationCandidate;
@@ -1436,12 +1437,10 @@ function glyphStoredSpellInvocationHasExactlyOneTargetListTarget(
 function glyphStoredSpellInvocationTargetsSingleCreature(
   invocation: GlyphStoredSpellCandidateFacts,
 ): boolean {
-  return (
-    "targeting" in invocation &&
-    (invocation.targeting.kind === "singleCombatant" ||
-      invocation.targeting.kind === "singleCreatureOrObject" ||
-      glyphStoredSpellInvocationHasExactlyOneTargetListTarget(invocation))
-  );
+  if (!("targeting" in invocation)) {
+    return false;
+  }
+  return glyphStoredSpellInvocationHasExactlyOneTargetListTarget(invocation);
 }
 
 function isGlyphStoredSingleCreatureActiveEffectSpellInvocation(

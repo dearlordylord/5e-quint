@@ -68,7 +68,7 @@ import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
 } from "./profile.ts";
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -76,7 +76,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type OngoingSpellEndInvocation = Extract<
@@ -104,14 +104,14 @@ function admitOngoingSpellEnd(
   if (rangeFeet === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly OngoingSpellEndInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "ongoingSpellEnd",
               spell,
               actionCost: "magicAction",
@@ -408,7 +408,13 @@ function resolveOngoingSpellEndSpellAct(input: {
     input.input.state,
     selectedTarget,
   );
-  const casterSlotLevel = Number(input.invocation.resource.slotLevel);
+  const casterSlotLevel = Number(
+    Match.value(input.invocation.resource).pipe(
+      Match.when({ tag: "spellSlot" }, ({ slotLevel }) => slotLevel),
+      Match.when({ tag: "spellAccessFreeCast" }, ({ castLevel }) => castLevel),
+      Match.exhaustive,
+    ),
+  );
   const automaticallyEnded = targetOccurrences.filter(
     (occurrence) =>
       ongoingSpellOccurrenceSourceSpellLevel(occurrence) <= casterSlotLevel,
@@ -847,7 +853,7 @@ function uniqueConcentrationSources(
 const OngoingSpellEndInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("ongoingSpellEnd"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
@@ -864,3 +870,4 @@ export const ongoingSpellEndProfile = {
   "ongoingSpellEnd",
   OngoingSpellEndInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

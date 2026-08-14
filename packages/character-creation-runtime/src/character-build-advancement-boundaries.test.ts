@@ -86,6 +86,7 @@ function buildForClass(
     },
     proficiencyChoices: [],
     features,
+    magicInitiateSpellAccesses: [],
     equipment: { owned: [], loadout: {} },
   };
 }

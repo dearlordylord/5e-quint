@@ -161,6 +161,12 @@ export const BattleResourcePoolExecutionRef = Schema.NonEmptyTrimmedString.pipe(
 export type BattleResourcePoolExecutionRef =
   typeof BattleResourcePoolExecutionRef.Type;
 
+export const BattleSpellAccessExecutionRef = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("BattleSpellAccessExecutionRef"),
+);
+export type BattleSpellAccessExecutionRef =
+  typeof BattleSpellAccessExecutionRef.Type;
+
 export type BattleResourceOwningExecutionScopeRef =
   | BattleStatBlockExecutionScopeRef
   | BattleCharacterExecutionScopeRef;
@@ -353,6 +359,15 @@ export function battleResourcePoolExecutionRef(
 ): BattleResourcePoolExecutionRef {
   return BattleResourcePoolExecutionRef.make(
     JSON.stringify({ scopeRef, kind: "resourcePool", ordinal }),
+  );
+}
+
+export function battleSpellAccessExecutionRef(
+  scopeRef: BattleCharacterExecutionScopeRef,
+  ordinal: NonNegativeInteger,
+): BattleSpellAccessExecutionRef {
+  return BattleSpellAccessExecutionRef.make(
+    JSON.stringify({ scopeRef, kind: "spellAccess", ordinal }),
   );
 }
 

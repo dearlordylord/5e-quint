@@ -325,7 +325,10 @@ export const PreparedSpellAccessSchema = Schema.Struct({
   tag: Schema.Literal("prepared"),
 });
 
-export { ClassCantripSpellAccessSchema } from "../procedure-execution/spell-invocation-codecs.ts";
+export {
+  CantripSpellAccessSchema,
+  ClassCantripSpellAccessSchema,
+} from "../procedure-execution/spell-invocation-codecs.ts";
 
 export const ArmorOfShadowsSpellAccessSchema = Schema.Struct({
   tag: Schema.Literal("armorOfShadows"),
@@ -343,15 +346,22 @@ export const SpellSlotInvocationResourceSchema = Schema.Struct({
 
 export { NoSpellInvocationResourceSchema } from "../procedure-execution/spell-invocation-codecs.ts";
 
-export const ClassFeatureFreeCastInvocationResourceSchema = Schema.Struct({
-  tag: Schema.Literal("classFeatureFreeCast"),
+export const SpellAccessFreeCastInvocationResourceSchema = Schema.Struct({
+  tag: Schema.Literal("spellAccessFreeCast"),
+  castLevel: SpellSlotLevel,
   resourcePoolRef: BattleResourcePoolExecutionRef,
 });
 
-export const ClassFeatureFreeCastExecutionResourceSchema = Schema.Struct({
-  tag: Schema.Literal("classFeatureFreeCast"),
+export const SpellAccessFreeCastExecutionResourceSchema = Schema.Struct({
+  tag: Schema.Literal("spellAccessFreeCast"),
+  castLevel: SpellSlotLevel,
   resourcePoolRef: BattleResourcePoolExecutionRef,
 });
+
+export const LeveledSpellInvocationResourceSchema = Schema.Union(
+  SpellSlotInvocationResourceSchema,
+  SpellAccessFreeCastInvocationResourceSchema,
+);
 
 export const SingleCreatureOrObjectSpellTargetingSchema = Schema.Struct({
   kind: Schema.Literal("singleCreatureOrObject"),

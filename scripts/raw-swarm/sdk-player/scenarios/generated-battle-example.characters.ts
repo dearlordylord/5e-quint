@@ -210,6 +210,9 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
       background_ability_score_increase: ["+2 INT, +1 CON"],
       background_tool_choice: ["calligraphers_supplies"],
       background_equipment_choice: ["option_b (50 GP)"],
+      origin_feat_magic_initiate_cantrip_choice: ["Fire Bolt", "Light"],
+      origin_feat_magic_initiate_level_one_spell_choice: ["Shield"],
+      origin_feat_magic_initiate_spellcasting_ability_choice: ["int"],
     };
     if (hole.source.choiceKey === "wizard_spellbook_choices") {
       return hole.source.unitId === "class_wizard"

@@ -98,6 +98,7 @@ function retainedFeatureBuild(
       selectedFromUnitId: authoredUnitId("synthetic_feature_source"),
       unitId,
     })),
+    magicInitiateSpellAccesses: [],
     equipment: { owned: [], loadout: {} },
   };
 }

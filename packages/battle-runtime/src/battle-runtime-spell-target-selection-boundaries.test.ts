@@ -409,7 +409,11 @@ describe("spell target-selection public boundaries", () => {
           preparedSpells: [spellRecord(blessUnitId)],
           spellSlots: [{ spellLevel: 1, count: 1 }],
         }),
-        sourceClassName: "cleric",
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "cleric",
+          abilityModifier: 3,
+        },
       },
       extraTargetIds: [insideAuraId],
     });

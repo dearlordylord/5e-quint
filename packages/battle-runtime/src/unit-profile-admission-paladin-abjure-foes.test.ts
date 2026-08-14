@@ -456,8 +456,11 @@ function abjureFoesBattle(
         ],
         spellcasting: {
           ...wizardSpellcasting(),
-          sourceClassName: "paladin",
-          spellcastingAbilityModifier: 3,
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "paladin",
+            abilityModifier: 3,
+          },
         },
         attack: null,
       }),

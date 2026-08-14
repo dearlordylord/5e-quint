@@ -1190,8 +1190,11 @@ function battleSessionWithSanctuary(): BattleRuntimeSession {
     battleId: battleId("sanctuary-selected-identity"),
     combatants: [
       characterCreature(casterId, "Caster", 20, {
-        sourceClassName: "cleric",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "cleric",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [srdSpellRecord(fireBoltUnitId)],
@@ -1201,19 +1204,24 @@ function battleSessionWithSanctuary(): BattleRuntimeSession {
           srdSpellRecord(longstriderUnitId),
         ],
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 2 }],
       }),
       characterCreature(wardedId, "Warded", 15),
       characterCreature(attackerId, "Attacker", 10, {
-        sourceClassName: "wizard",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
         preparedSpells: [srdSpellRecord(flamingSphereUnitId)],
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -1236,7 +1244,10 @@ function characterCreature(
     { readonly kind: "character" }
   >["spellcasting"],
 ): BattleCreatureInit {
-  const className = spellcasting?.sourceClassName ?? "cleric";
+  const className =
+    spellcasting?.spellcastingSource.tag === "classSpellcasting"
+      ? spellcasting.spellcastingSource.className
+      : "cleric";
   const highestSpellSlotLevel =
     spellcasting?.spellSlots.reduce(
       (highest, slot) => Math.max(highest, slot.spellLevel),

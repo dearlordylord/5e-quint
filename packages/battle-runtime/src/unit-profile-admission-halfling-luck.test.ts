@@ -1431,7 +1431,11 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
               cantrips: [spellRecord("eldritch_blast")],
               preparedSpells: [],
             }),
-            sourceClassName: "warlock",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "warlock",
+              abilityModifier: 3,
+            },
           },
           characterUnitRefs: [unitRef],
           unitFeatures: [characterBattleFeatureInitForTest(unit)],

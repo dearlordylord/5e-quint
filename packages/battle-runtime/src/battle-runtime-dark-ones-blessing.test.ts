@@ -585,7 +585,11 @@ function darkOnesBlessingSession(input: {
                   cantrips: input.preparedSpells,
                   preparedSpells: [],
                 }),
-                sourceClassName: "warlock",
+                spellcastingSource: {
+                  tag: "classSpellcasting",
+                  className: "warlock",
+                  abilityModifier: 3,
+                },
               },
         tempHp: input.warlockTempHp ?? 0,
       }),

@@ -1,3 +1,4 @@
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { fillsBelongToDeclaredHoles } from "../fill-hole-protocol.ts";
 import { selectSingleSpellTarget } from "../single-spell-target.ts";
 import { openReactionThenResolveWillingTargetSave } from "../willing-target-save-gate.ts";
@@ -78,7 +79,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   discoverExtendedSpellMetamagicSelections,
@@ -134,7 +135,7 @@ function admitCreatureSizeChangeForProcedure<
   if (projections.length === 0) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap((slot) =>
+  return ctx.spellCastOptions.flatMap((slot) =>
     Number(slot.spellLevel) < spell.mechanics.level
       ? []
       : projections
@@ -147,7 +148,7 @@ function admitCreatureSizeChangeForProcedure<
           )
           .map((projection) => ({
             access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            resource: spellInvocationResourceForCastOption(slot),
             spell,
             actionCost: "magicAction",
             ...projection,
@@ -547,7 +548,7 @@ function creatureSizeChangeConcentrationWithMetamagic(
 
 const CreatureSizeChangeExecutionSchemaFields = {
   access: PreparedSpellAccessSchema,
-  resource: SpellSlotInvocationResourceSchema,
+  resource: LeveledSpellInvocationResourceSchema,
   spellRuleFacts: SpellRuleExecutionFactsSchema,
   actionCost: Schema.Literal("magicAction"),
   ability: Schema.Literal("con"),

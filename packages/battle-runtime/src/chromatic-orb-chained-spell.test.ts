@@ -906,13 +906,17 @@ function chromaticOrbSession(input: {
         displayName: "Spellcaster",
         initiative: 20,
         spellcasting: {
-          sourceClassName: "wizard",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "wizard",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
           preparedSpells: [input.spell ?? chromaticOrb],
           featurePreparedSpells: [],
+          spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
           spellSlots: [{ spellLevel: input.spellLevel, count: 1 }],
@@ -966,13 +970,17 @@ function chromaticOrbSession(input: {
         ...(input.readiedResponseCantrip === true
           ? {
               spellcasting: {
-                sourceClassName: "wizard" as const,
-                spellcastingAbilityModifier: abilityModifier(3),
+                spellcastingSource: {
+                  tag: "classSpellcasting",
+                  className: "wizard" as const,
+                  abilityModifier: abilityModifier(3),
+                },
                 proficiencyBonus: proficiencyBonus(2),
                 canCastSpells: true,
                 cantrips: [decodeSpellRecord(rayOfFrostInput)],
                 preparedSpells: [],
                 featurePreparedSpells: [],
+                spellAccesses: [],
                 spellbookRitualSpellAccesses: [],
                 invocationSpellAccesses: [],
                 spellSlots: [],

@@ -47,10 +47,11 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
 import {
   AttackBonus,
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
@@ -59,7 +60,7 @@ import {
   SpellAttackDamagePayloadSchema,
   SpellAttackDamageTargetingSchema,
   SpellPostDamageRiderSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   spellAdmissionCharacterLevel,
@@ -78,23 +79,22 @@ function admitSpellAttackDamage(
   if (spell.mechanics.level === 0) {
     return supportedSpellAttackDamageProfile({
       spell,
-      access: { tag: "classCantrip" },
+      access: cantripSpellAccessFor(ctx.castingSource),
       resource: { tag: "none" },
-      spellcastingAbilityModifier: spellcasting.spellcastingAbilityModifier,
+      spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
       proficiencyBonus: spellcasting.proficiencyBonus,
       characterLevel: spellAdmissionCharacterLevel(ctx),
     });
   }
-  return spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly SpellAttackDamageInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : supportedSpellAttackDamageProfile({
             spell,
             access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-            spellcastingAbilityModifier:
-              spellcasting.spellcastingAbilityModifier,
+            resource: spellInvocationResourceForCastOption(slot),
+            spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
             proficiencyBonus: spellcasting.proficiencyBonus,
             slotLevel: slot.spellLevel,
           }),
@@ -172,13 +172,13 @@ export const SpellAttackDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
       ...SpellAttackDamageInvocationCommonFields,
-      access: ClassCantripSpellAccessSchema,
+      access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
     }),
     Schema.Struct({
       ...SpellAttackDamageInvocationCommonFields,
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
     }),
   ),
 );
@@ -192,3 +192,4 @@ export const spellAttackDamageProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverSpellAttackDamageCastAct,
   resolve: resolveSpellAttackDamage,
 };
+import { spellInvocationResourceForCastOption } from "./profile.ts";

@@ -1560,13 +1560,17 @@ function movementCompelledMovementSpellBattle(
   return movementCompelledMovementBattle({
     caster: {
       spellcasting: {
-        sourceClassName: input.sourceClassName ?? "wizard",
-        spellcastingAbilityModifier: abilityModifier(3),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: input.sourceClassName ?? "wizard",
+          abilityModifier: abilityModifier(3),
+        },
         proficiencyBonus: proficiencyBonus(2),
         canCastSpells: true,
         cantrips: [],
         preparedSpells: input.preparedSpells ?? [],
         featurePreparedSpells: [],
+        spellAccesses: [],
         invocationSpellAccesses: [],
         spellbookRitualSpellAccesses: [],
         spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
@@ -1697,7 +1701,10 @@ function movementCompelledMovementCreature(input: {
       characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: input.classLevels ?? [
         {
-          className: input.spellcasting?.sourceClassName ?? "wizard",
+          className:
+            input.spellcasting?.spellcastingSource.tag === "classSpellcasting"
+              ? input.spellcasting.spellcastingSource.className
+              : "wizard",
           level: 1,
         },
       ],

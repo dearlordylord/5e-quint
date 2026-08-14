@@ -77,7 +77,7 @@ import { Schema } from "effect";
 import {
   DamageTypeSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   preparedSpellSlotInvocations,
@@ -456,7 +456,7 @@ function resolveObjectContactDamageRepeat(
 const ObjectContactDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("objectContactDamage"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),

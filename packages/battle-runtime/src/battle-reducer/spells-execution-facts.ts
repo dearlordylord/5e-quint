@@ -83,21 +83,22 @@ export function supportedDamageAmountExpr(input: {
 }
 
 export function supportedSpellSlotDamageFacts(input: {
-  readonly slots: readonly { readonly spellLevel: SpellSlotLevel }[];
+  readonly slots: readonly SpellAdmissionCastOption[];
   readonly amount: SurfaceDiceAmount;
   readonly spellLevel: number;
 }): readonly {
   readonly slotLevel: SpellSlotLevel;
   readonly damageExpr: DiceExpr;
+  readonly payment: SpellAdmissionCastOption["payment"];
 }[] {
-  return input.slots.flatMap(({ spellLevel: slotLevel }) => {
+  return input.slots.flatMap(({ spellLevel: slotLevel, payment }) => {
     if (Number(slotLevel) < input.spellLevel) return [];
     const damageExpr = supportedDamageAmountExpr({
       amount: input.amount,
       spellLevel: input.spellLevel,
       slotLevel,
     });
-    return damageExpr === null ? [] : [{ slotLevel, damageExpr }];
+    return damageExpr === null ? [] : [{ slotLevel, damageExpr, payment }];
   });
 }
 
@@ -131,6 +132,7 @@ import type {
   TargetSelection,
 } from "@dnd/surface/surface/types";
 import { isFixedDistancePointRange } from "@dnd/surface/surface/types";
+import type { SpellAdmissionCastOption } from "./spell-procedure-profiles/profile.ts";
 
 type ExplodingMaxDieThresholdTier = {
   readonly atLevel: number;

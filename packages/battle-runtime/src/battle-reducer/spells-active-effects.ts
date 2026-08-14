@@ -1263,7 +1263,7 @@ export function applyDancingLightsSpellEffect(
   };
   const repositionExecution: DancingLightsRepositionSpellProcedureExecution = {
     spellRuleFacts: invocation.spellRuleFacts,
-    access: { tag: "classCantrip" },
+    access: invocation.access,
     resource: { tag: "none" },
     procedure: "dancingLightsReposition",
     actionCost: "bonusAction",

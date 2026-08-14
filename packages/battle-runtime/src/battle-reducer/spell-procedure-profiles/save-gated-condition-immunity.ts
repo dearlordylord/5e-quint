@@ -46,7 +46,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 const ConditionImmunityActiveEffectTemplateSchema = Schema.Struct({
@@ -71,7 +71,7 @@ function admitSaveGatedConditionImmunity(
   return supportedPreparedSaveGateConditionImmunityProfile(
     ctx.actor.combatantId,
     spell,
-    ctx.actor.origin.spellcasting.spellSlots,
+    ctx.spellCastOptions,
   ).filter(isSaveGatedConditionImmunityInvocation);
 }
 
@@ -101,7 +101,7 @@ const SaveGatedConditionImmunityInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("saveGatedConditionImmunity"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),

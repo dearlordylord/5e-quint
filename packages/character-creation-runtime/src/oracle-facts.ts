@@ -1,5 +1,6 @@
 import { Either, Match, ParseResult, Schema } from "effect";
 
+import { MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS } from "@dnd/surface/surface/character-creation-readers";
 import {
   ABILITIES,
   ALIGNMENT_MORALITIES,
@@ -442,6 +443,15 @@ const SpellcastingSchema = Schema.Struct({
   }),
 });
 
+const MagicInitiateSpellAccessSchema = Schema.Struct({
+  featUnitId: UnitIdSchema,
+  spellcastingAbility: Schema.Literal(
+    ...MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS,
+  ),
+  cantrips: Schema.Tuple(UnitIdSchema, UnitIdSchema),
+  levelOneSpell: UnitIdSchema,
+});
+
 export const CharacterBuildFactSchema = Schema.Struct({
   progression: ProgressionSchema,
   background: UnitIdSchema,
@@ -462,6 +472,7 @@ export const CharacterBuildFactSchema = Schema.Struct({
   proficiencyChoices: Schema.Array(ProficiencyChoiceSchema),
   features: Schema.Array(FeatureSchema),
   spellcasting: Schema.optionalWith(SpellcastingSchema, { exact: true }),
+  magicInitiateSpellAccesses: Schema.Array(MagicInitiateSpellAccessSchema),
   equipment: EquipmentSchema,
 });
 export type CharacterBuildFact = Schema.Schema.Type<
@@ -666,6 +677,7 @@ const CreationFinalizationUnsupportedCauseFactSchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("manifestAlignmentMismatch") }),
   Schema.Struct({ tag: Schema.Literal("unsupportedChoices") }),
   Schema.Struct({ tag: Schema.Literal("selectedFeatPrerequisitesNotMet") }),
+  Schema.Struct({ tag: Schema.Literal("duplicateMagicInitiateSpellList") }),
   Schema.Struct({ tag: Schema.Literal("missingSpellcastingFacts") }),
   Schema.Struct({ tag: Schema.Literal("preparedSpellSelectionMismatch") }),
   Schema.Struct({ tag: Schema.Literal("duplicateWizardSpellbookSelection") }),
@@ -1359,6 +1371,7 @@ export function characterBuildFact(build: CharacterBuild): CharacterBuildFact {
     proficiencyChoices,
     features,
     spellcasting,
+    magicInitiateSpellAccesses,
     equipment,
     ...unprojected
   } = build;
@@ -1384,6 +1397,17 @@ export function characterBuildFact(build: CharacterBuild): CharacterBuildFact {
     ...(spellcasting === undefined
       ? {}
       : { spellcasting: spellcastingFact(spellcasting) }),
+    magicInitiateSpellAccesses: magicInitiateSpellAccesses.map((access) => {
+      const {
+        featUnitId,
+        spellcastingAbility,
+        cantrips,
+        levelOneSpell,
+        ...unprojectedAccess
+      } = access;
+      noUnprojectedFields(unprojectedAccess);
+      return { featUnitId, spellcastingAbility, cantrips, levelOneSpell };
+    }),
     equipment: equipmentFact(equipment),
   };
 }
@@ -1813,6 +1837,10 @@ function creationFinalizationUnsupportedCauseFact(
       return { tag };
     }),
     byTag("selectedFeatPrerequisitesNotMet", ({ tag, ...unprojected }) => {
+      noUnprojectedFields(unprojected);
+      return { tag };
+    }),
+    byTag("duplicateMagicInitiateSpellList", ({ tag, ...unprojected }) => {
       noUnprojectedFields(unprojected);
       return { tag };
     }),

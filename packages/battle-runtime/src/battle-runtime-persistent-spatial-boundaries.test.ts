@@ -596,7 +596,11 @@ describe("persistent spatial spell boundary procedures", () => {
               preparedSpells: [spellRecord(moonbeamUnitId)],
               spellSlots: [{ spellLevel: 2, count: 1 }],
             }),
-            sourceClassName: "druid",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "druid",
+              abilityModifier: 3,
+            },
           },
         }),
       ],

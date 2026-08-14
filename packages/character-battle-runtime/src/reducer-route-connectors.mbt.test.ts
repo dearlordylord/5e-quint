@@ -1318,6 +1318,7 @@ function featureResourceBaseBuild(input: {
       }),
     ),
     proficiencyChoices: [],
+    magicInitiateSpellAccesses: [],
     features: [],
     equipment: {
       owned: [],

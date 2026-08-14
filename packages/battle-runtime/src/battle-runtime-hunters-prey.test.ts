@@ -1868,7 +1868,11 @@ describe("battle runtime: Hunter's Prey", () => {
             ...wizardSpellcasting({
               preparedSpells: [spellRecord("hunters_mark")],
             }),
-            sourceClassName: "ranger",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "ranger",
+              abilityModifier: 3,
+            },
           },
           attack: testLongswordAttack(),
         }),

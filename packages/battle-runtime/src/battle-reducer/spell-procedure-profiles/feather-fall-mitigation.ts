@@ -26,7 +26,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Either, Match, Schema } from "effect";
 
 import {
   type AvailableBattleAct,
@@ -36,19 +36,20 @@ import {
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
+import { snapshotBattle } from "../interrupt-execution.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { stateAfterSpellCastDeclared } from "../spell-cast-declaration.ts";
 import { selectSpellTargetList } from "../spell-target-list-selection.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
 import { completeReactionSpellSlotCast } from "../reaction-spell-resolution.ts";
 import { featherFallReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
+import { spendSpellAccessFreeCastResource } from "../spells-resolve-resources.ts";
 
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
-import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -56,7 +57,7 @@ import {
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type FeatherFallMitigationInvocation = Extract<
@@ -77,14 +78,14 @@ function admitFeatherFallMitigation(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly FeatherFallMitigationInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "featherFallMitigation",
               spell,
               targeting: {
@@ -221,18 +222,39 @@ function resolveFeatherFallMitigation(
     },
     castingState,
   );
-  return completeReactionSpellSlotCast({
-    effectedState: effected,
-    errorState: input.input.state,
-    casterId: input.input.subject.reactorId,
-    slotLevel: input.invocation.resource.slotLevel,
-  });
+  return Match.value(input.invocation.resource).pipe(
+    Match.when({ tag: "spellAccessFreeCast" }, ({ resourcePoolRef }) => {
+      const resourced = spendSpellAccessFreeCastResource(
+        effected,
+        input.input.subject.reactorId,
+        resourcePoolRef,
+        input.invocation,
+        input.input.state,
+      );
+      return resourced.tag === "invalid"
+        ? resourced
+        : {
+            tag: "resolved" as const,
+            state: resourced.state,
+            snapshot: snapshotBattle(resourced.state),
+          };
+    }),
+    Match.when({ tag: "spellSlot" }, ({ slotLevel }) =>
+      completeReactionSpellSlotCast({
+        effectedState: effected,
+        errorState: input.input.state,
+        casterId: input.input.subject.reactorId,
+        slotLevel,
+      }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 const FeatherFallMitigationInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("featherFallMitigation"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     targeting: Schema.Struct({
@@ -258,3 +280,4 @@ export const featherFallMitigationProfile = {
   "featherFallMitigation",
   FeatherFallMitigationInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

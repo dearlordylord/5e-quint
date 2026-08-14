@@ -745,13 +745,17 @@ function attackSpellShapeBattle(
         displayName: "Attack spell caster",
         initiative: 20,
         spellcasting: {
-          sourceClassName: input.sourceClassName ?? "wizard",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: input.sourceClassName ?? "wizard",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: input.cantrips ?? [],
           preparedSpells: input.preparedSpells ?? [],
           featurePreparedSpells: [],
+          spellAccesses: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
           spellSlots: [{ spellLevel: 1, count: 2 }],
@@ -790,7 +794,10 @@ function attackSpellShapeCreature(input: {
       characterUnitRefs: [],
       classLevels: [
         {
-          className: input.spellcasting?.sourceClassName ?? "wizard",
+          className:
+            input.spellcasting?.spellcastingSource.tag === "classSpellcasting"
+              ? input.spellcasting.spellcastingSource.className
+              : "wizard",
           level: 1,
         },
       ],

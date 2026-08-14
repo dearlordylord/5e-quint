@@ -53,7 +53,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type GustOfWindLineSpellInvocation = Extract<
@@ -106,7 +106,7 @@ function admitGustOfWindLine(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly GustOfWindLineSpellInvocation[] => {
       if (Number(slot.spellLevel) < GUST_OF_WIND_LEVEL) {
         return [];
@@ -114,7 +114,7 @@ function admitGustOfWindLine(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "gustOfWindLine",
           spell,
           ability: "str",
@@ -260,7 +260,7 @@ function resolveGustOfWindLine(
 const GustOfWindLineInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("gustOfWindLine"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     ability: Schema.Literal("str"),
@@ -289,3 +289,4 @@ export const gustOfWindLineProfile = {
   "gustOfWindLine",
   GustOfWindLineSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

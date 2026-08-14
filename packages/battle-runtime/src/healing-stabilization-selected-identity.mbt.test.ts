@@ -236,13 +236,17 @@ function spareTheDyingBattle(): BattleState {
         displayName: "Spare the Dying caster",
         initiative: 20,
         spellcasting: {
-          sourceClassName: "cleric",
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "cleric",
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [spell],
           preparedSpells: [],
           featurePreparedSpells: [],
+          spellAccesses: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
           spellSlots: [],
@@ -303,7 +307,10 @@ function healingCreature(input: {
       characterUnitRefs: [],
       classLevels: [
         {
-          className: input.spellcasting?.sourceClassName ?? "fighter",
+          className:
+            input.spellcasting?.spellcastingSource.tag === "classSpellcasting"
+              ? input.spellcasting.spellcastingSource.className
+              : "fighter",
           level: 1,
         },
       ],

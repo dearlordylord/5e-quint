@@ -19,6 +19,10 @@ import {
 import type { BattleSpellAdmissionSource } from "../battle-state-execution.ts";
 import { Match } from "effect";
 import {
+  cantripSpellAccessForCastingSource,
+  isCantripSpellAccess,
+} from "../procedure-execution/spell-invocation-vocabulary.ts";
+import {
   SUPPORTED_POINT_SPHERE_SAVE_GATE_RADIUS_FEET,
   type BattleAttackKindForRedirect,
   type CantripSpellAttackSequenceTargeting,
@@ -365,7 +369,10 @@ export function supportedPreparedSpellAttackSequenceProfile(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: {
+            tag: "spellSlot",
+            slotLevel: slot.spellLevel,
+          },
           procedure: "spellAttackSequence",
           spell,
           targeting,
@@ -478,7 +485,10 @@ export function supportedPreparedChainedSpellAttackDamageProfile(
     return [
       {
         access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: slot.spellLevel,
+        },
         procedure: "chainedSpellAttackDamage",
         spell,
         targeting,
@@ -520,7 +530,10 @@ export function supportedPreparedAttackBurstSaveDamageProfile(
       return supportedAttackBurstSaveDamageProfile({
         spell,
         access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: slot.spellLevel,
+        },
         spellcastingAbilityModifier,
         proficiencyBonus,
         slotLevel: slot.spellLevel,
@@ -652,7 +665,7 @@ export function supportedSpellAttackDamageProfile(
     spell.mechanics.range,
   );
   if (
-    (input.access.tag === "classCantrip"
+    (isCantripSpellAccess(input.access)
       ? spell.mechanics.level !== 0
       : spell.mechanics.level < 1) ||
     spell.mechanics.castingTime.kind !== "action" ||
@@ -780,10 +793,10 @@ export function supportedSpellAttackDamageProfile(
     objectHitEffect: objectHitProjection.objectHitEffect,
   };
 
-  if (input.access.tag === "classCantrip" && input.resource.tag === "none") {
+  if (isCantripSpellAccess(input.access) && input.resource.tag === "none") {
     return [
       {
-        access: { tag: "classCantrip" },
+        access: input.access,
         resource: { tag: "none" },
         ...attackDamageInvocation,
       } satisfies SpellAttackDamageInvocation,
@@ -878,7 +891,7 @@ export function supportedCantripSpellAttackSequenceProfile(
   }
   return [
     {
-      access: { tag: "classCantrip" },
+      access: cantripSpellAccessForCastingSource(spell.castingSource),
       resource: { tag: "none" },
       procedure: "spellAttackSequence",
       spell,

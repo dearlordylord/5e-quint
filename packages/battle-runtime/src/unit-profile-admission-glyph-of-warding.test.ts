@@ -84,6 +84,7 @@ import {
   type BattleSpellCastReactionFact,
   type GlyphStoredSpellInvocationCandidate,
 } from "./battle-state-execution.ts";
+import type { BattleCreatureInit } from "./battle-init.ts";
 import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
   GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES,
@@ -4719,15 +4720,24 @@ function stateWithOrdinaryMindSpikeConcentration(
   };
 }
 
-function counterspellSpellcasting() {
+function counterspellSpellcasting(): NonNullable<
+  Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["spellcasting"]
+> {
   return {
-    sourceClassName: "wizard" as const,
-    spellcastingAbilityModifier: abilityModifier(3),
+    spellcastingSource: {
+      tag: "classSpellcasting",
+      className: "wizard" as const,
+      abilityModifier: abilityModifier(3),
+    },
     proficiencyBonus: proficiencyBonus(2),
     canCastSpells: true,
     cantrips: [],
     preparedSpells: [spellRecord(counterspellUnitId)],
     featurePreparedSpells: [],
+    spellAccesses: [],
     spellbookRitualSpellAccesses: [],
     invocationSpellAccesses: [],
     spellSlots: [{ spellLevel: 3 as const, count: 1 }],
@@ -5243,13 +5253,21 @@ function relationshipDecisionFill(
 function spiritualWeaponGlyphReleaseDriver(
   input: Parameters<typeof spellBattle>[0] = {},
 ) {
-  const storedInvocation = storedSpellInvocation(spiritualWeaponUnitId, 2);
+  const casterClassLevels = input.casterClassLevels ?? [
+    { className: "cleric" as const, level: 5 },
+  ];
+  const storedInvocation = storedSpellInvocation(
+    spiritualWeaponUnitId,
+    2,
+    undefined,
+    { casterClassLevels },
+  );
   const effect = requireCompletedGlyphEffect({
     anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
     release: { kind: "spellGlyph", storedInvocation },
   });
   const session = sessionWithGlyphEffect(effect, {
-    casterClassLevels: [{ className: "cleric", level: 5 }],
+    casterClassLevels,
     preparedSpells: [spellRecord(spiritualWeaponUnitId)],
     spellSlots: [{ spellLevel: 2, count: 1 }],
     ...input,

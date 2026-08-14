@@ -47,9 +47,10 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
 import {
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
@@ -124,7 +125,7 @@ function admitMakeStable(
   }
   return [
     {
-      access: { tag: "classCantrip" },
+      access: cantripSpellAccessFor(spell.castingSource),
       resource: { tag: "none" },
       procedure: "makeStable",
       spell,
@@ -220,7 +221,7 @@ function resolveMakeStable(
 
 const MakeStableInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: ClassCantripSpellAccessSchema,
+    access: CantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("makeStable"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

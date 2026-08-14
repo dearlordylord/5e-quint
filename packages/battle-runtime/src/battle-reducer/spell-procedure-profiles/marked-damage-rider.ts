@@ -28,7 +28,6 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import {
   MovementFeet,
   movementFeet,
-  spellSlotLevel,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import {
@@ -38,7 +37,6 @@ import {
   type EffectAtom,
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
-import { characterBattleResourcePoolRefHasUsesRemaining } from "../../character-battle-resource-execution.ts";
 import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { characterExecutionWithMarkedDamageRiderTransfer } from "../../character-execution-queries.ts";
@@ -79,7 +77,7 @@ import {
 import { HUNTERS_MARK_FINDING_SKILLS } from "../domain-constants.ts";
 import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import {
-  spendClassFeatureFreeCastResource,
+  spendSpellAccessFreeCastResource,
   startSpellEffectConcentration,
   type SpellCastResourceSpendResult,
 } from "../spells-resolve-resources.ts";
@@ -94,9 +92,8 @@ import type {
 import { Schema } from "effect";
 import {
   AbilitySchema,
-  ClassFeatureFreeCastExecutionResourceSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { DamageTypeSchema, DiceExprSchema } from "@dnd/surface/surface/schema";
 import {
@@ -144,41 +141,7 @@ function admitMarkedDamageRider(
     rangeFeet,
     retargetTiming,
   } = projection;
-  const favoredEnemyResourcePoolRef =
-    spell.classFeatureFreeCastResourcePoolRefs.find((resourcePoolRef) =>
-      characterBattleResourcePoolRefHasUsesRemaining(
-        ctx.actor.origin.resources,
-        resourcePoolRef,
-      ),
-    );
-  const favoredEnemyExpiresAt = markedDamageRiderConcentrationExpirationForSlot(
-    ctx.actor.combatantId,
-    duration,
-    spellSlotLevel(1),
-  );
-  const freeCastInvocations: readonly MarkedDamageRiderInvocation[] =
-    favoredEnemyResourcePoolRef === undefined || favoredEnemyExpiresAt === null
-      ? []
-      : [
-          {
-            access: { tag: "prepared" },
-            resource: {
-              tag: "classFeatureFreeCast",
-              resourcePoolRef: favoredEnemyResourcePoolRef,
-            },
-            procedure: "markedDamageRider",
-            action: "cast",
-            spell,
-            actionCost: "bonusAction",
-            targeting: { kind: "singleCombatant" },
-            damage: { expr, damageType },
-            abilityCheckBehavior,
-            retargetTiming,
-            rangeFeet,
-            expiresAt: favoredEnemyExpiresAt,
-          },
-        ];
-  const slotInvocations = ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  const slotInvocations = ctx.spellCastOptions.flatMap(
     (slot): readonly MarkedDamageRiderInvocation[] => {
       const expiresAt = markedDamageRiderConcentrationExpirationForSlot(
         ctx.actor.combatantId,
@@ -191,7 +154,7 @@ function admitMarkedDamageRider(
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "markedDamageRider",
               action: "cast",
               spell,
@@ -206,7 +169,7 @@ function admitMarkedDamageRider(
           ];
     },
   );
-  return [...freeCastInvocations, ...slotInvocations];
+  return slotInvocations;
 }
 
 function markedDamageRiderTransferIsAvailableOnTurn(
@@ -592,27 +555,32 @@ function resolveMarkedDamageRider(
     spent.right,
     input.actorId,
   );
-  const resourced =
-    input.invocation.resource.tag === "classFeatureFreeCast"
-      ? spendClassFeatureFreeCastResource(
-          {
-            ...concentrationBase,
-            currentTurnResources: turnResources,
-          },
-          input.actorId,
-          input.invocation.resource.resourcePoolRef,
-          input.invocation,
-          input.input.state,
-        )
-      : spendMarkedDamageRiderSpellSlot(
-          {
-            ...concentrationBase,
-            currentTurnResources: turnResources,
-          },
-          input.actorId,
-          input.invocation.resource.slotLevel,
-          input.input.state,
-        );
+  const resourced = Match.value(input.invocation.resource).pipe(
+    Match.when({ tag: "spellAccessFreeCast" }, ({ resourcePoolRef }) =>
+      spendSpellAccessFreeCastResource(
+        {
+          ...concentrationBase,
+          currentTurnResources: turnResources,
+        },
+        input.actorId,
+        resourcePoolRef,
+        input.invocation,
+        input.input.state,
+      ),
+    ),
+    Match.when({ tag: "spellSlot" }, ({ slotLevel }) =>
+      spendMarkedDamageRiderSpellSlot(
+        {
+          ...concentrationBase,
+          currentTurnResources: turnResources,
+        },
+        input.actorId,
+        slotLevel,
+        input.input.state,
+      ),
+    ),
+    Match.exhaustive,
+  );
   if (resourced.tag === "invalid") {
     return resourced;
   }
@@ -803,10 +771,7 @@ const MarkedDamageRiderInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: Schema.Union(
-        SpellSlotInvocationResourceSchema,
-        ClassFeatureFreeCastExecutionResourceSchema,
-      ),
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("markedDamageRider"),
       action: Schema.Literal("cast"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
@@ -854,3 +819,4 @@ export const markedDamageRiderProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverMarkedDamageRiderCastAct,
   resolve: resolveMarkedDamageRider,
 };
+import { spellInvocationResourceForCastOption } from "./profile.ts";

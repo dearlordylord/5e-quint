@@ -1,5 +1,6 @@
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
@@ -60,7 +61,7 @@ import {
   DamageTypeSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type DragonsBreathInitialInvocation = Extract<
@@ -74,7 +75,7 @@ function admitDragonsBreathInitial(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly DragonsBreathInitialInvocation[] {
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly DragonsBreathInitialInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -89,7 +90,7 @@ function admitDragonsBreathInitial(
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "dragonsBreathInitial",
               spell,
               actionCost: "bonusAction",
@@ -299,7 +300,7 @@ export const DragonsBreathInitialInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("dragonsBreathInitial"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),

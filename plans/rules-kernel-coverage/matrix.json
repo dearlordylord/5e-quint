@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 140,
-    "covered": 132,
+    "total": 143,
+    "covered": 135,
     "open": 2,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 109,
-      "character-creation": 14,
-      "character-sheet": 12,
+      "battle": 110,
+      "character-creation": 15,
+      "character-sheet": 13,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 132,
+      "covered": 135,
       "needs-qnt-owner": 2,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -5001,6 +5001,104 @@
         "UBIQUITOUS_LANGUAGE.md#Resource"
       ],
       "title": "Battle ammunition attacks require positive matching carried stock and expend one piece per accepted attack"
+    },
+    {
+      "id": "CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-creation-runtime/src/magic-initiate-spell-access.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/character-creation-runtime/character-creation-magic-initiate-spell-access.qnt"
+      ],
+      "reason": "The Surface Magic Initiate reader supplies the selected spell list, exact two-cantrip and one-level-1-spell requirements, and INT/WIS/CHA ability domain. Discovery exposes feat-source-scoped holes for background and Human grants, finalization retains each grant's exact tuple, and the creation-owned stored parser preserves background plus selected-feature grant occurrences, rejects duplicate acquired spell lists, and requires exact access multiplicity for every owned source. The paired QNT model ties each draft to its selected background or Human list and its proof tests cover all three same-list rejections, all six ordered distinct-list pairs, and both grant paths; Sheet free-cast lifecycle and battle casting invocation remain separate obligations.",
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/discovery.ts",
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/magic-initiate-spell-access.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Character-Origins.md#Parts of a Background",
+        ".references/srd-5.2.1/Character-Origins.md#Human",
+        ".references/srd-5.2.1/Feats.md#Magic Initiate"
+      ],
+      "title": "Character Creation Magic Initiate exact spell and ability choice closure across independent background and Human grant instances, rejecting duplicate spell lists"
+    },
+    {
+      "id": "SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "The replay follows the finite RAW lifecycle for one selected Spell Access: fresh keyed availability, exact keyed spend without Spell Slot change, Short Rest preservation, and Long Rest recovery. Focused contract and QNT proof tests cover compound-key equality, per-key isolation, and exhaustion; random branching would not add a distinct transition at this one-use resource boundary.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/character-sheet-runtime/src/spell-access-free-cast.mbt.test.ts",
+          "qntSpecPath": "packages/character-sheet-runtime/character-sheet-spell-access-free-cast.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-sheet-runtime/src/spell-access-free-cast.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/spell-access-free-cast.qnt",
+        "packages/character-sheet-runtime/character-sheet-spell-access-free-cast.mbt.qnt"
+      ],
+      "reason": "The generic Spell Access projection derives class-feature always-prepared and Magic Initiate learned/always-prepared facts from canonical build sources. Free-cast expenditure is keyed by source Unit plus Spell Unit, spends exactly one matching key without changing Spell Slots, survives Short Rest, clears every keyed entry on Long Rest, and stored reconstruction rejects duplicate background/species grant spell lists while accepting distinct lists.",
+      "runtime": "character-sheet",
+      "runtimeOwners": [
+        "packages/character-sheet-runtime/src/class-feature-spells.ts",
+        "packages/character-sheet-runtime/src/resources.ts",
+        "packages/character-sheet-runtime/src/rests.ts",
+        "packages/character-sheet-runtime/src/stored-sheet-parser.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Feats.md#Magic Initiate",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting without Slots"
+      ],
+      "title": "Character Sheet source-and-spell keyed Spell Access projection, exact free-cast spend, Long Rest recovery, and stored grant reconstruction"
+    },
+    {
+      "id": "BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-spellcasting-actions-and-slots.test.ts"
+        }
+      ],
+      "profiles": ["battle.spell-access-magic-initiate-casting"],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt"
+      ],
+      "reason": "Required spell-access execution references preserve source identity and ability for cantrip, ordinary-slot, and free-cast acts. The runtime and QNT admit free-cast and ordinary-slot payments as honest SpellAdmissionCastOption values, spend the casting action and exact source-and-spell pool atomically without marking a slot use, keep slot and free availability independent, and settle the exact expenditure to the Character Sheet.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/character-battle-resources.ts",
+        "packages/battle-runtime/src/character-execution-admission.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-resources.ts",
+        "packages/character-battle-runtime/src/battle-character-build-projection.ts",
+        "packages/character-battle-runtime/src/index.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Feats.md#Magic Initiate",
+        ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting without Slots"
+      ],
+      "title": "Battle source-scoped Magic Initiate cantrip and prepared level-one casting with independent free-cast and slot cast options"
     }
   ],
   "battleHoleFrontier": [
@@ -7523,6 +7621,10 @@
     {
       "obligationIds": ["SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"],
       "profileId": "character-sheet.class-feature-prepared-spell-access"
+    },
+    {
+      "obligationIds": ["BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING"],
+      "profileId": "battle.spell-access-magic-initiate-casting"
     },
     {
       "obligationIds": ["SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION"],
@@ -10826,6 +10928,48 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/ammunition-lifecycle-tests.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns Magic Initiate creation-time exact choice closure, the draft's selected background/Human spell-list identity, and the distinct-list admission rule; the proof-only action owner supplies every supported list pair and both grant paths.",
+      "obligationIds": ["CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION"],
+      "ownerPath": "packages/character-creation-runtime/character-creation-magic-initiate-spell-access.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused executable proofs for background and Human closure tied to their selected lists, all three same-list rejections, all six ordered distinct-list acceptances, incomplete choices, duplicate cantrips, off-list rejection, and action reachability of every supported list on both grant paths.",
+      "obligationIds": [],
+      "ownerPath": "packages/character-creation-runtime/character-creation-magic-initiate-spell-access-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Owns source-and-spell keyed state, exact one-use per-key free-cast spend, Spell Slot independence, Short Rest preservation, and Long Rest recovery across every keyed entry.",
+      "obligationIds": ["SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-access-free-cast.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused executable proofs for compound identity, per-key isolation, exhaustion, slot independence, and rest lifecycle.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-access-free-cast-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Bounded deterministic replay of the Character Sheet free-cast spend and rest lifecycle; reusable semantics live in the shared rule core.",
+      "obligationIds": ["SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE"],
+      "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-access-free-cast.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "Owns source-scoped class and feat Spell Access identity, per-access casting ability, distinct same-spell invocation identity, and independent ordinary-slot versus free-cast payment.",
+      "obligationIds": ["BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused executable proofs for distinct sources, per-access ability, free-cast exhaustion, atomic action-plus-payment spending, class-effect isolation, and slot/free payment independence.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-initiate-spell-access-tests.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -11189,6 +11333,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt",
       "role": "semantic-core"
     },
     {
@@ -11957,6 +12106,11 @@
       "ownerPath": "packages/character-battle-runtime/character-battle-reducer-route.qnt"
     },
     {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/character-creation-runtime/character-creation-magic-initiate-spell-access.qnt",
+      "role": "semantic-core"
+    },
+    {
       "category": "leaf-type-vocabulary",
       "classification": "exempt",
       "evidence": "Character-creation reducer-route vocabulary leaf for future route connectors; executable creation route coverage will be registered by connector owners.",
@@ -12178,6 +12332,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/shove-outcome.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-access-free-cast.qnt",
       "role": "semantic-core"
     },
     {
@@ -16666,6 +16825,86 @@
         "packages/shared-algebras/proofs/rule-core/ammunition-lifecycle.qnt"
       ],
       "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "membership",
+        "size"
+      ],
+      "obligationId": "CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION",
+      "proofOnly": [
+        "packages/character-creation-runtime/character-creation-magic-initiate-spell-access-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/character-creation-runtime/character-creation-magic-initiate-spell-access.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "forall",
+        "membership"
+      ],
+      "obligationId": "SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/spell-access-free-cast-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/spell-access-free-cast.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "set",
+        "forall",
+        "membership"
+      ],
+      "obligationId": "BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-magic-initiate-spell-access-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt"
+      ],
+      "status": "generation-subset-clean"
     }
   ],
   "generatorReadinessBacklog": [],
@@ -16817,6 +17056,7 @@
     }
   ],
   "profileIdsSeenFromUnitProfileCoverage": [
+    "battle.spell-access-magic-initiate-casting",
     "character-creation.bard-magical-secrets-spell-access",
     "character-creation.class-feature-advancement-replacement",
     "character-creation.class-feature-feat-choice",

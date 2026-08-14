@@ -664,7 +664,7 @@ function afterHitDivineFreeCastDamageReady(): AfterHitRuntimeState {
     afterHitChoiceReady("divineSmiteFreeCast"),
     divineSmiteUnitId,
     2,
-    { invocationTag: "classFeatureFreeCast" },
+    { invocationTag: "spellAccessFreeCast" },
   );
 }
 
@@ -1051,7 +1051,7 @@ function createAfterHitSpellsDriver(
       doChooseDivineSmiteFreeCast: () => {
         transition("doChooseDivineSmiteFreeCast", () =>
           chooseAfterHitDamageSpell(state, divineSmiteUnitId, 2, {
-            invocationTag: "classFeatureFreeCast",
+            invocationTag: "spellAccessFreeCast",
           }),
         );
       },
@@ -1282,7 +1282,11 @@ function paladinFreeCastBattle(): BattleRuntimeSession {
             preparedSpells: [],
             spellSlots: [{ spellLevel: 1, count: 1 }],
           }),
-          sourceClassName: "paladin",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "paladin",
+            abilityModifier: 3,
+          },
           featurePreparedSpells: [
             {
               sourceUnitId: resource.unit.id,

@@ -1,4 +1,4 @@
-// KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION
+// KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice unit-feature.hunters-prey character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Either, Match, Option } from "effect";
@@ -14,6 +14,7 @@ import { SUPPORTED_ABILITY_SCORE_METHODS } from "@dnd/shared-algebras/ability-sc
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
+  readMagicInitiateSpellAccessSourceFacts,
   readSpeciesCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
 import {
@@ -63,6 +64,9 @@ import {
   GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
   HUNTERS_PREY_CHOICE_KEY,
   ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
+  ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_CHOICE_KEY,
   SPECIES_ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
   SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
@@ -787,6 +791,8 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
               selection.source.unitId,
               grant,
               input.unitLibrary,
+              CLASS_FEATURE_FEAT_CHOICE_KEY,
+              [],
             );
             /* v8 ignore start -- The admitted acquisition feat grant produces a well-formed feat choice hole. */
             return hole === undefined ? [] : [hole];
@@ -1036,6 +1042,10 @@ function speciesTraitGrantChoiceHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
 }): readonly ChoiceCreationHole[] {
+  const backgroundMagicInitiateSpellLists = magicInitiateSpellListsForUnitIds(
+    backgroundOriginFeatUnitIds(input.draft, input.unitLibrary),
+    input.unitLibrary,
+  );
   return selectedSpeciesTraitUnits(input).flatMap((trait) => {
     if (trait.mechanics.family === "species_lineage_choice") {
       return speciesLineageChoiceHoles(trait.id, trait.mechanics);
@@ -1061,6 +1071,7 @@ function speciesTraitGrantChoiceHoles(input: {
         ),
         proficiencyChoiceKey: SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
         featChoiceKey: SPECIES_ORIGIN_FEAT_CHOICE_KEY,
+        excludedMagicInitiateSpellLists: backgroundMagicInitiateSpellLists,
       }),
     );
   });
@@ -1859,6 +1870,7 @@ export function classFeatureGrantChoiceHoles(
       passiveGrantChoiceHoles(featureUnitId, grant, unitLibrary, {
         ...input,
         knownLanguages,
+        excludedMagicInitiateSpellLists: [],
       }),
     );
     if (passiveGrantHoles.length > 0) {
@@ -1945,9 +1957,71 @@ export function originFeatGrantChoiceHoles(
   } = {},
 ): readonly ChoiceCreationHole[] {
   const feat = requireOriginFeat(unitLibrary, featUnitId);
-  if (feat === undefined || feat.mechanics.family !== "passive") {
+  if (feat === undefined) {
     return [];
   }
+
+  const magicInitiateFacts = readMagicInitiateSpellAccessSourceFacts(feat);
+  if (magicInitiateFacts.tag === "readable") {
+    const spellList = classSpellListForClassName({
+      className: magicInitiateFacts.value.spellList,
+      unitLibrary,
+    });
+    if (spellList === undefined) return [];
+
+    const unitOptions = (unitIds: readonly UnitRecord["id"][]) =>
+      unitIds.flatMap((unitId) => {
+        const unit = unitLibrary.getUnit(unitId);
+        return Option.isSome(unit) ? [unitOption(unit.value)] : [];
+      });
+
+    return [
+      choiceHole({
+        source: unitSource(
+          featUnitId,
+          ORIGIN_FEAT_MAGIC_INITIATE_CANTRIP_CHOICE_KEY,
+        ),
+        cardinality: exactChoiceCardinality(
+          magicInitiateFacts.value.selectedCantrips.count,
+        ),
+        options: unitOptions(spellList.cantrips),
+      }),
+      choiceHole({
+        source: unitSource(
+          featUnitId,
+          ORIGIN_FEAT_MAGIC_INITIATE_LEVEL_ONE_SPELL_CHOICE_KEY,
+        ),
+        cardinality: exactChoiceCardinality(
+          magicInitiateFacts.value.selectedLevelOneSpell.count,
+        ),
+        options: unitOptions(
+          spellList.leveled.flatMap(({ spellId, spellLevel }) =>
+            spellLevel ===
+            magicInitiateFacts.value.selectedLevelOneSpell.spellLevel
+              ? [spellId]
+              : [],
+          ),
+        ),
+      }),
+      choiceHole({
+        source: unitSource(
+          featUnitId,
+          ORIGIN_FEAT_MAGIC_INITIATE_SPELLCASTING_ABILITY_CHOICE_KEY,
+        ),
+        cardinality: exactChoiceCardinality(1),
+        options: magicInitiateFacts.value.spellcastingAbilityOptions.map(
+          (ability) => ({
+            optionId: creationChoiceOptionId(ability),
+            label: ability,
+          }),
+        ),
+      }),
+    ].flatMap((hole) =>
+      hole !== undefined && hole.kind === "choice" ? [hole] : [],
+    );
+  }
+
+  if (feat.mechanics.family !== "passive") return [];
 
   return feat.mechanics.grants.flatMap((grant) =>
     passiveGrantChoiceHoles(featUnitId, grant, unitLibrary, {
@@ -1955,6 +2029,7 @@ export function originFeatGrantChoiceHoles(
       ownedToolProficiencies: input.ownedToolProficiencies ?? [],
       proficiencyChoiceKey:
         input.proficiencyChoiceKey ?? ORIGIN_FEAT_PROFICIENCY_CHOICE_KEY,
+      excludedMagicInitiateSpellLists: [],
     }),
   );
 }
@@ -2150,6 +2225,7 @@ export function passiveGrantChoiceHoles(
     readonly knownLanguages?: readonly Language[];
     readonly proficiencyChoiceKey?: UnitChoiceKey;
     readonly featChoiceKey?: UnitChoiceKey;
+    readonly excludedMagicInitiateSpellLists: readonly ClassSpellListName[];
   },
 ): readonly ChoiceCreationHole[] {
   if (grant.kind === "grant_feat") {
@@ -2158,6 +2234,7 @@ export function passiveGrantChoiceHoles(
       grant,
       unitLibrary,
       input.featChoiceKey,
+      input.excludedMagicInitiateSpellLists,
     );
     /* v8 ignore start -- The admitted feat grant produces a well-formed choice hole. */
     return hole === undefined ? [] : [hole];
@@ -2726,13 +2803,19 @@ function featGrantFeatureHoleSource(
   grant: Extract<EffectAtom, { readonly kind: "grant_feat" }>,
   unitLibrary: UnitCatalog,
   choiceKey: UnitChoiceKey = CLASS_FEATURE_FEAT_CHOICE_KEY,
+  excludedMagicInitiateSpellLists: readonly ClassSpellListName[],
 ): ChoiceCreationHole | undefined {
   const categories = "category" in grant ? [grant.category] : grant.categories;
   const options = unitLibrary
     .listUnits()
     .filter(
       (unit): unit is FeatRecord =>
-        unit.kind === "feat" && categories.includes(unit.category),
+        unit.kind === "feat" &&
+        categories.includes(unit.category) &&
+        !magicInitiateFeatUsesAnySpellList(
+          unit,
+          excludedMagicInitiateSpellLists,
+        ),
     )
     .map(unitOption);
 
@@ -2743,6 +2826,44 @@ function featGrantFeatureHoleSource(
       options,
     }),
   );
+}
+
+function backgroundOriginFeatUnitIds(
+  draft: CharacterDraft,
+  unitLibrary: UnitCatalog,
+): readonly UnitRecord["id"][] {
+  const backgroundUnitId = draft.selections.background;
+  if (backgroundUnitId == null) return [];
+  const background = unitLibrary.getUnit(backgroundUnitId);
+  if (Option.isNone(background)) return [];
+  const facts = readBackgroundCreationFacts(background.value);
+  return facts.tag === "readable" ? [facts.value.originFeatId] : [];
+}
+
+export function magicInitiateSpellListsForUnitIds(
+  unitIds: readonly UnitRecord["id"][],
+  unitLibrary: UnitCatalog,
+): readonly ClassSpellListName[] {
+  return unitIds.flatMap((unitId) => {
+    const unit = unitLibrary.getUnit(unitId);
+    if (Option.isNone(unit)) return [];
+    const facts = readMagicInitiateSpellAccessSourceFacts(unit.value);
+    if (facts.tag !== "readable") return [];
+    return classSpellListForClassName({
+      className: facts.value.spellList,
+      unitLibrary,
+    }) === undefined
+      ? []
+      : [facts.value.spellList];
+  });
+}
+
+function magicInitiateFeatUsesAnySpellList(
+  feat: FeatRecord,
+  spellLists: readonly ClassSpellListName[],
+): boolean {
+  const facts = readMagicInitiateSpellAccessSourceFacts(feat);
+  return facts.tag === "readable" && spellLists.includes(facts.value.spellList);
 }
 
 function proficiencyGrantChoiceHoles(

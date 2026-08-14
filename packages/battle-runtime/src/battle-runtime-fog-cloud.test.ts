@@ -82,6 +82,7 @@ describe("battle runtime: Fog Cloud", () => {
     const levelThree = supportedSpellActs(session.state, wizard).find(
       (invocation) =>
         invocation.procedure === "fogCloudObscurement" &&
+        invocation.resource.tag === "spellSlot" &&
         invocation.resource.slotLevel === 3,
     );
     expect(levelThree).toMatchObject({

@@ -706,7 +706,6 @@ describe("scenario setup public-SDK boundary", () => {
     );
     expect(characters.tag).toBe("ready");
     if (characters.tag !== "ready") return;
-
     const result = await evaluateScenarioSetup(
       resolve(scenarioDirectory, "generated-battle-example.setup.ts"),
       characters.characterSheets,
@@ -1552,6 +1551,24 @@ describe("scenario setup public-SDK boundary", () => {
     );
     expect(characters.tag).toBe("ready");
     if (characters.tag !== "ready") return;
+    expect(characters.observation).toMatchObject({
+      characters: [
+        {
+          magicInitiate: {
+            cantrips: ["Fire Bolt", "Light"],
+            levelOneSpell: "Burning Hands",
+            spellcastingAbility: "int",
+          },
+        },
+        {
+          magicInitiate: {
+            cantrips: ["Chill Touch", "Light"],
+            levelOneSpell: "Shield",
+            spellcastingAbility: "int",
+          },
+        },
+      ],
+    });
 
     const result = await evaluateScenarioSetup(
       resolve(scenarioDirectory, "generated-battle-002.setup.ts"),

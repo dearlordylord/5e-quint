@@ -21,10 +21,14 @@ function isSpellAdmissionActor(
 export function spellAdmissionContextFor(
   actor: BattleCreatureState,
   state: BattleState | undefined,
-): SpellAdmissionContext | null {
+): Omit<SpellAdmissionContext, "castingSource"> | null {
   if (!isSpellAdmissionActor(actor)) return null;
   return {
     actor,
     battle: spellAdmissionBattleProjection(state),
+    spellCastOptions: actor.origin.spellcasting.spellSlots.map((slot) => ({
+      spellLevel: slot.spellLevel,
+      payment: { tag: "slot" },
+    })),
   };
 }

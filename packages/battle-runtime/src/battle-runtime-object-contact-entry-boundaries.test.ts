@@ -385,13 +385,17 @@ describe("Heat Metal object-contact public entry boundaries", () => {
     const targetSpellcasting: NonNullable<
       Parameters<typeof spellBattle>[0]["targetSpellcasting"]
     > = {
-      sourceClassName: "wizard",
-      spellcastingAbilityModifier: abilityModifier(3),
+      spellcastingSource: {
+        tag: "classSpellcasting",
+        className: "wizard",
+        abilityModifier: abilityModifier(3),
+      },
       proficiencyBonus: proficiencyBonus(2),
       canCastSpells: true,
       cantrips: [],
       preparedSpells: [spellRecord(antimagicFieldUnitId)],
       featurePreparedSpells: [],
+      spellAccesses: [],
       spellbookRitualSpellAccesses: [],
       invocationSpellAccesses: [],
       spellSlots: [{ spellLevel: 8, count: 1 }],

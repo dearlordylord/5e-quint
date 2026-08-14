@@ -224,13 +224,17 @@ export function combatProwessBattle(input: {
           ? {}
           : {
               spellcasting: {
-                sourceClassName: "wizard",
-                spellcastingAbilityModifier: abilityModifier(3),
+                spellcastingSource: {
+                  tag: "classSpellcasting",
+                  className: "wizard",
+                  abilityModifier: abilityModifier(3),
+                },
                 proficiencyBonus: proficiencyBonus(2),
                 canCastSpells: true,
                 cantrips: input.cantrips,
                 preparedSpells: [],
                 featurePreparedSpells: [],
+                spellAccesses: [],
                 spellbookRitualSpellAccesses: [],
                 invocationSpellAccesses: [],
                 spellSlots: [],
@@ -245,13 +249,17 @@ export function combatProwessBattle(input: {
           ? {}
           : {
               spellcasting: {
-                sourceClassName: "wizard",
-                spellcastingAbilityModifier: abilityModifier(3),
+                spellcastingSource: {
+                  tag: "classSpellcasting",
+                  className: "wizard",
+                  abilityModifier: abilityModifier(3),
+                },
                 proficiencyBonus: proficiencyBonus(2),
                 canCastSpells: true,
                 cantrips: [],
                 preparedSpells: input.targetPreparedSpells,
                 featurePreparedSpells: [],
+                spellAccesses: [],
                 spellbookRitualSpellAccesses: [],
                 invocationSpellAccesses: [],
                 spellSlots: [{ spellLevel: 1, count: 1 }],

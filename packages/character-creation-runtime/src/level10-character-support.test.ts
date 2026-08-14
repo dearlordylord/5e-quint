@@ -222,6 +222,7 @@ function bardLevelNineBuild(): CharacterBuild {
         unitId: authoredUnitId("bard_magical_secrets"),
       },
     ],
+    magicInitiateSpellAccesses: [],
     spellcasting: {
       sources: [
         {

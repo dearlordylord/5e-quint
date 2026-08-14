@@ -768,13 +768,14 @@ function ongoingFeatureGrantsSpellAttackRollMode(
     [...activeOngoingFeatureOccurrencesForCombatant(state, attacker)].some(
       ([key]) => {
         const profile = ongoingFeatureProfileForSourceKey(attacker, key);
+        const castingSource = spellInvocationCastingSource(invocation);
         return (
           profile !== null &&
           profile.spellModifiers.some(
             (modifier) =>
               modifier.attackRollMode === mode &&
-              modifier.sourceClassName ===
-                attacker.origin.spellcasting?.sourceClassName,
+              castingSource.tag === "classSpellcasting" &&
+              modifier.sourceClassName === castingSource.className,
           )
         );
       },
@@ -789,8 +790,15 @@ function spellInvocationIsFromSpellcastingSource(
   return (
     isCharacterBattleCreatureState(combatant) &&
     combatant.origin.spellcasting !== undefined &&
-    spellInvocationIsSpellcasting(invocation)
+    spellInvocationIsSpellcasting(invocation) &&
+    spellInvocationCastingSource(invocation).tag === "classSpellcasting"
   );
+}
+
+function spellInvocationCastingSource(invocation: RuntimeSpellProcedure) {
+  return "spellRuleFacts" in invocation
+    ? invocation.spellRuleFacts.castingSource
+    : invocation.spell.castingSource;
 }
 
 export function activeEffectGrantsAttackRollMode(

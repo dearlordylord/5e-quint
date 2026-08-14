@@ -1,5 +1,6 @@
 import type { SpellMechanics } from "@dnd/surface/surface/types";
 import type {
+  LeveledSpellInvocationResource,
   PreparedSpellAccess,
   ReadiedSpellInvocation,
   SpellSlotInvocationResource,
@@ -50,15 +51,26 @@ type GlyphStoredNonConcentrationSpellExecutionSource =
     };
   };
 
+type GlyphStoredPreparedSlotInvocation<Invocation> = Invocation extends {
+  readonly access: PreparedSpellAccess;
+  readonly resource: LeveledSpellInvocationResource;
+}
+  ? Omit<Invocation, "access" | "resource"> & {
+      readonly access: PreparedSpellAccess;
+      readonly resource: SpellSlotInvocationResource;
+    }
+  : never;
+
 type GlyphStoredConcentrationSaveGatedConditionInvocation = Extract<
-  SupportedSpellInvocation,
+  GlyphStoredPreparedSlotInvocation<SupportedSpellInvocation>,
   { readonly procedure: "saveGatedCondition" }
 > & {
   readonly spell: GlyphStoredConcentrationSpellExecutionSource;
 };
-type GlyphStoredReadiedSpellInvocation = ReadiedSpellInvocation & {
-  readonly spell: GlyphStoredNonConcentrationSpellExecutionSource;
-};
+type GlyphStoredReadiedSpellInvocation =
+  GlyphStoredPreparedSlotInvocation<ReadiedSpellInvocation> & {
+    readonly spell: GlyphStoredNonConcentrationSpellExecutionSource;
+  };
 type GlyphStoredSingleCreatureTargeting =
   | Extract<SpellTargeting, { readonly kind: "singleCombatant" }>
   | Extract<SpellTargeting, { readonly kind: "singleCreatureOrObject" }>
@@ -67,20 +79,20 @@ type GlyphStoredSingleCreatureTargeting =
       readonly maxTargets: 1;
     });
 type GlyphStoredConcentrationSaveGatedDamageInvocation = Extract<
-  ReadiedSpellInvocation,
+  GlyphStoredPreparedSlotInvocation<ReadiedSpellInvocation>,
   { readonly procedure: "saveGatedDamage" }
 > & {
   readonly spell: GlyphStoredConcentrationSpellExecutionSource;
   readonly targeting: GlyphStoredSingleCreatureTargeting;
 };
 type GlyphStoredGreaseGroundHazardInvocation = Extract<
-  SupportedSpellInvocation,
+  GlyphStoredPreparedSlotInvocation<SupportedSpellInvocation>,
   { readonly procedure: "greaseGroundHazard" }
 > & {
   readonly spell: GlyphStoredNonConcentrationSpellExecutionSource;
 };
 type GlyphStoredConcentrationHarmfulObjectInvocation = Extract<
-  SupportedSpellInvocation,
+  GlyphStoredPreparedSlotInvocation<SupportedSpellInvocation>,
   { readonly procedure: "spiritualWeaponAttackProxy" }
 > & {
   readonly spell: GlyphStoredConcentrationSpellExecutionSource;
@@ -95,20 +107,20 @@ type SupportedSpellInvocationForProcedure<
   : never;
 type GlyphStoredConcentrationSingleCreatureActiveEffectInvocationFor<
   P extends GlyphStoredSingleCreatureActiveEffectProcedure,
-> = SupportedSpellInvocationForProcedure<P> & {
-  readonly access: PreparedSpellAccess;
-  readonly resource: SpellSlotInvocationResource;
+> = GlyphStoredPreparedSlotInvocation<
+  SupportedSpellInvocationForProcedure<P>
+> & {
   readonly spell: GlyphStoredConcentrationSpellExecutionSource;
   readonly targeting: GlyphStoredSingleCreatureTargeting;
 };
 type GlyphStoredAreaOngoingInvocation = Extract<
-  SupportedSpellInvocation,
+  GlyphStoredPreparedSlotInvocation<SupportedSpellInvocation>,
   { readonly procedure: GlyphStoredAreaOngoingProcedure }
 > & {
   readonly spell: GlyphStoredConcentrationSpellExecutionSource;
 };
 export type GlyphStoredAreaControlInvocation = Extract<
-  SupportedSpellInvocation,
+  GlyphStoredPreparedSlotInvocation<SupportedSpellInvocation>,
   { readonly procedure: GlyphStoredAreaControlProcedure }
 > & {
   readonly spell: GlyphStoredConcentrationSpellExecutionSource;
@@ -117,24 +129,26 @@ export type GlyphStoredConcentrationSingleCreatureActiveEffectInvocation = {
   readonly [P in GlyphStoredSingleCreatureActiveEffectProcedure]: GlyphStoredConcentrationSingleCreatureActiveEffectInvocationFor<P>;
 }[GlyphStoredSingleCreatureActiveEffectProcedure];
 export type GlyphStoredConcentrationSelfTransformationInvocation =
-  SupportedSpellInvocationForProcedure<GlyphStoredSelfTransformationProcedure> & {
-    readonly access: PreparedSpellAccess;
-    readonly resource: SpellSlotInvocationResource;
+  GlyphStoredPreparedSlotInvocation<
+    SupportedSpellInvocationForProcedure<GlyphStoredSelfTransformationProcedure>
+  > & {
     readonly spell: GlyphStoredConcentrationSpellExecutionSource;
   };
 type GlyphStoredSpellInvocationCandidateWithSpellTargeting = Extract<
-  | ReadiedSpellInvocation
-  | Extract<
-      SupportedSpellInvocation,
-      {
-        readonly procedure:
-          | "greaseGroundHazard"
-          | "saveGatedCondition"
-          | "spiritualWeaponAttackProxy"
-          | GlyphStoredAreaOngoingProcedure
-          | GlyphStoredAreaControlProcedure;
-      }
-    >,
+  GlyphStoredPreparedSlotInvocation<
+    | ReadiedSpellInvocation
+    | Extract<
+        SupportedSpellInvocation,
+        {
+          readonly procedure:
+            | "greaseGroundHazard"
+            | "saveGatedCondition"
+            | "spiritualWeaponAttackProxy"
+            | GlyphStoredAreaOngoingProcedure
+            | GlyphStoredAreaControlProcedure;
+        }
+      >
+  >,
   {
     readonly access: PreparedSpellAccess;
     readonly resource: SpellSlotInvocationResource;

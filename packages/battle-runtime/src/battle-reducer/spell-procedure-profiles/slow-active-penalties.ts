@@ -61,7 +61,7 @@ import {
   DcSourceSchema,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
 import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
@@ -126,14 +126,14 @@ function admitSlowActivePenalties(
   if (slow === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly SlowActivePenaltiesSpellInvocation[] =>
       Number(slot.spellLevel) < SLOW_ACTIVE_PENALTIES_LEVEL
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "slowActivePenalties",
               spell,
               actionCost: "magicAction",
@@ -518,7 +518,7 @@ function validateSlowAreaWitness(
 const SlowActivePenaltiesInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("slowActivePenalties"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
@@ -544,3 +544,4 @@ export const slowActivePenaltiesProfile = {
   "slowActivePenalties",
   SlowActivePenaltiesSpellInvocation
 >;
+import { spellInvocationResourceForCastOption } from "./profile.ts";

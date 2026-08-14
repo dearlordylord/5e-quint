@@ -23,6 +23,7 @@ import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { characterUnitProcedureBindings } from "../character-execution-queries.ts";
+import { isCantripSpellAccess } from "../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -243,22 +244,9 @@ function metamagicApplicationsIncludeHeightened(
 }
 
 function carefulSpellProtectedTargetLimit(
-  state: BattleState,
-  actorId: CombatantId,
+  spellcastingAbilityModifier: number,
 ): number {
-  const actor = state.combatants.get(actorId);
-  /* v8 ignore start -- Internal Metamagic invariant: Careful Spell selection is admitted only for a character with an active spellcasting execution. */
-  if (
-    actor?.origin.kind !== "character" ||
-    actor.origin.spellcasting === undefined
-  ) {
-    return 1;
-  }
-  /* v8 ignore stop */
-  return Math.max(
-    1,
-    Number(actor.origin.spellcasting.spellcastingAbilityModifier),
-  );
+  return Math.max(1, spellcastingAbilityModifier);
 }
 
 export function saveMetamagicSelectionState(input: {
@@ -2238,7 +2226,7 @@ function potentCantripAppliesToSuccessfulSave(input: {
     input.actor?.origin.kind !== "character" ||
     input.target === undefined ||
     input.invocation.resource.tag !== "none" ||
-    input.invocation.access.tag !== "classCantrip"
+    !isCantripSpellAccess(input.invocation.access)
   ) {
     return false;
   }
@@ -3276,6 +3264,8 @@ export function validateSavingThrowOutcomes(
       allowedTargetIds: new Set([targetId]),
       carefulSpellProtectedTargetIds,
       heightenedSpellTargetId,
+      spellcastingAbilityModifier:
+        invocation.spellRuleFacts.castingSource.abilityModifier,
     });
   }
   if (targeting.kind === "targetList") {
@@ -3318,6 +3308,8 @@ export function validateSavingThrowOutcomes(
       allowedTargetIds: selectedTargets,
       carefulSpellProtectedTargetIds,
       heightenedSpellTargetId,
+      spellcastingAbilityModifier:
+        invocation.spellRuleFacts.castingSource.abilityModifier,
     });
   }
   /* v8 ignore start -- The public save-gate fill adapter rejects area-less values before this reducer validator; keep this defensive fallback for internal callers. */
@@ -3451,6 +3443,8 @@ export function validateSavingThrowOutcomes(
     allowedTargetIds: affectedTargets,
     carefulSpellProtectedTargetIds,
     heightenedSpellTargetId,
+    spellcastingAbilityModifier:
+      invocation.spellRuleFacts.castingSource.abilityModifier,
   });
 }
 
@@ -3461,11 +3455,11 @@ function validateSavingThrowOutcomeSelections(input: {
   readonly allowedTargetIds: ReadonlySet<CombatantId>;
   readonly carefulSpellProtectedTargetIds: readonly CombatantId[];
   readonly heightenedSpellTargetId: CombatantId | undefined;
+  readonly spellcastingAbilityModifier: number;
 }): string | null {
   if (input.carefulSpellProtectedTargetIds.length > 0) {
     const maxProtectedTargets = carefulSpellProtectedTargetLimit(
-      input.state,
-      input.actorId,
+      input.spellcastingAbilityModifier,
     );
     if (input.carefulSpellProtectedTargetIds.length > maxProtectedTargets) {
       return "Careful Spell protected target count must be between one and the caster's spellcasting ability modifier.";

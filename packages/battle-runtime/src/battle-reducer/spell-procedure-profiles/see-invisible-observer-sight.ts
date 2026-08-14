@@ -52,7 +52,7 @@ import {
 } from "./profile.ts";
 import {
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 function seeInvisibleObserverSightShape(
@@ -112,14 +112,14 @@ function admitSeeInvisibleObserverSight(
   if (shape === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly SeeInvisibleObserverSightSpellInvocation[] =>
       Number(slot.spellLevel) < spell.mechanics.level
         ? []
         : [
             {
               access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+              resource: spellInvocationResourceForCastOption(slot),
               procedure: "seeInvisibleObserverSight",
               spell,
               actionCost: "magicAction",
@@ -186,7 +186,7 @@ function resolveSeeInvisibleObserverSight(
 const SeeInvisibleObserverSightInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("seeInvisibleObserverSight"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
@@ -203,3 +203,4 @@ export const seeInvisibleObserverSightProfile: SpellProcedureDeclaration<
   discoverCastAct: discoverSeeInvisibleObserverSightCastAct,
   resolve: resolveSeeInvisibleObserverSight,
 };
+import { spellInvocationResourceForCastOption } from "./profile.ts";

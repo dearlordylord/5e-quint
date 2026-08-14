@@ -947,7 +947,11 @@ describe("level 1 SDK RAW integration", () => {
     ]);
     expect(
       requireRight(
-        characterSpellcasting({ build: wizardBuild, unitLibrary }),
+        characterSpellcasting({
+          build: wizardBuild,
+          unitLibrary,
+          resourceExpenditures: [],
+        }),
       ).cantrips.map((spell) => spell.id),
     ).toEqual([fireBoltSpellId, "ray_of_frost"]);
 
@@ -4731,7 +4735,7 @@ function assertLevelOneHuntersMark(input: {
     tag: "bonusActionSpell",
     actorId: input.casterId,
     invocation: {
-      tag: "classFeatureFreeCast",
+      tag: "spellAccessFreeCast",
       spellId: huntersMarkSpellId,
       procedure: "markedDamageRider",
     },
@@ -4820,7 +4824,12 @@ function assertLevelOneHuntersMark(input: {
     { spellLevel: 1, count: 2, expended: 0 },
   ]);
   expect(settled.resourceExpenditures).toEqual([
-    { tag: "favoredEnemyHuntersMarkFreeCasts", expended: 1 },
+    {
+      tag: "spellAccessFreeCast",
+      sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+      spellId: authoredUnitId("hunters_mark"),
+      expended: 1,
+    },
   ]);
   expect(characterSheetResources(settled, unitLibrary)).toMatchObject({
     _tag: "Right",
@@ -4877,7 +4886,9 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
     initiative: 20,
     resourceExpenditures: [
       {
-        tag: "favoredEnemyHuntersMarkFreeCasts",
+        tag: "spellAccessFreeCast",
+        sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+        spellId: authoredUnitId("hunters_mark"),
         expended: resourceCount(2),
       },
     ],
@@ -4999,7 +5010,12 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
     { spellLevel: 1, count: 2, expended: 1 },
   ]);
   expect(settled.resourceExpenditures).toEqual([
-    { tag: "favoredEnemyHuntersMarkFreeCasts", expended: 2 },
+    {
+      tag: "spellAccessFreeCast",
+      sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+      spellId: authoredUnitId("hunters_mark"),
+      expended: 2,
+    },
   ]);
 }
 
@@ -6651,6 +6667,7 @@ function levelOneSingleClassBuild(input: {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     ...(input.spellcasting === undefined
       ? {}
       : { spellcasting: input.spellcasting }),
@@ -8984,7 +9001,7 @@ function huntersMarkFavoredEnemyBonusActionSpellAct(
         candidate.subject.tag === "bonusActionSpell" &&
         candidate.subject.actorId === actorId &&
         candidate.subject.mode.tag === "cast" &&
-        invocation?.tag === "classFeatureFreeCast" &&
+        invocation?.tag === "spellAccessFreeCast" &&
         invocation.spellId === huntersMarkSpellId &&
         session.context.characters
           .get(actorId)

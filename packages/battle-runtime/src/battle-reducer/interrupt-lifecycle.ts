@@ -600,7 +600,7 @@ function stateForContinuingInterruptCheckpoint(
   frame: BattleInterruptCheckpoint,
 ): BattleState {
   return frame.trigger === "spellCast" &&
-    frame.spellSlotCommitment.kind === "pendingCasterSpellSlot"
+    frame.paymentCommitment.kind === "pendingCasterSpellSlot"
     ? {
         ...state,
         currentTurnResources: releasePendingSpellSlotUseThisTurn(

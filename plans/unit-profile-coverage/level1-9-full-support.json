@@ -19660,7 +19660,7 @@
                 "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
               },
               {
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -19928,7 +19928,7 @@
                 "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
               },
               {
                 "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
@@ -20472,7 +20472,7 @@
                 "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
               },
               {
                 "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
@@ -20980,7 +20980,7 @@
                 "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+                "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
               },
               {
                 "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",

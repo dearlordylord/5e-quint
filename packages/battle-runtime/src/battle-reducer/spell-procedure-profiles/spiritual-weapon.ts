@@ -78,7 +78,7 @@ import {
   AttackBonus,
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   preparedSpellSlotInvocations,
@@ -159,14 +159,13 @@ function admitSpiritualWeaponAttackProxy(
             kind: "fixedSpellAttackDamage",
             expr: {
               ...damageExpr,
-              flat: Number(spellcasting.spellcastingAbilityModifier),
+              flat: Number(ctx.castingSource.abilityModifier),
             },
             damageType: "force",
           },
           attackKind: "melee_spell_attack",
           attackBonus: spiritualWeaponAttackBonus({
-            spellcastingAbilityModifier:
-              spellcasting.spellcastingAbilityModifier,
+            spellcastingAbilityModifier: ctx.castingSource.abilityModifier,
             proficiencyBonus: spellcasting.proficiencyBonus,
           }),
         };
@@ -448,7 +447,7 @@ const SpiritualWeaponAttackProxyInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("spiritualWeaponAttackProxy"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),

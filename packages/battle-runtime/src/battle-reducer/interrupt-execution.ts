@@ -131,7 +131,7 @@ function stateForOpeningInterruptCheckpoint(
       : actionDeclaredState;
   if (
     frame.trigger !== "spellCast" ||
-    frame.spellSlotCommitment.kind === "none"
+    frame.paymentCommitment.kind !== "pendingCasterSpellSlot"
   ) {
     return castingState;
   }
@@ -491,7 +491,7 @@ export function maybeOpenPostCastReadySpellCastWindow(input: {
           castLevel: 0,
           components: [],
           castingResource: { kind: "alreadySpent" },
-          spellSlotCommitment: { kind: "none" },
+          paymentCommitment: { kind: "none" },
           metamagicCommitment: { kind: "none" },
           concentrationCommitment: { kind: "none" },
           targetIds: input.targetIds,

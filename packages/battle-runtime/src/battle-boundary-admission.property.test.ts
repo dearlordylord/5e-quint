@@ -2460,7 +2460,11 @@ describe("battle boundary admission owners", () => {
             ...wizardSpellcasting({
               preparedSpells: [spellRecord("sanctuary")],
             }),
-            sourceClassName: "cleric",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "cleric",
+              abilityModifier: 3,
+            },
           },
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -2588,7 +2592,11 @@ describe("battle boundary admission owners", () => {
                 spellRecord("cure_wounds"),
               ],
             }),
-            sourceClassName: "warlock",
+            spellcastingSource: {
+              tag: "classSpellcasting",
+              className: "warlock",
+              abilityModifier: 3,
+            },
             invocationSpellAccesses: [
               {
                 tag: "pactOfTheChainFindFamiliar",

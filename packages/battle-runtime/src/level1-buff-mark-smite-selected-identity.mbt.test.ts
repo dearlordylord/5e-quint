@@ -2599,13 +2599,17 @@ function level1BuffMarkSmiteSession(
           ? {}
           : { weaponProficiencies: input.weaponProficiencies }),
         spellcasting: {
-          sourceClassName,
-          spellcastingAbilityModifier: abilityModifier(3),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: sourceClassName,
+            abilityModifier: abilityModifier(3),
+          },
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: input.cantrips ?? [],
           preparedSpells: input.preparedSpells ?? [],
           featurePreparedSpells: [],
+          spellAccesses: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
           spellSlots: [{ spellLevel: 1, count: 2 }],

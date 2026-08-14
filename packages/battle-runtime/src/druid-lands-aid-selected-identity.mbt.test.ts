@@ -336,7 +336,11 @@ function landsAidBattle(
         ],
         spellcasting: {
           ...wizardSpellcasting(),
-          sourceClassName: "druid",
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "druid",
+            abilityModifier: 3,
+          },
         },
         attack: null,
         druidWildShapeAvailableForms: druidWildShapeAvailableForms(druidLevel),

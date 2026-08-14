@@ -11,6 +11,7 @@ import {
   type CharacterBuildHitDiePool,
   type CharacterBuildMonkUncannyMetabolismFacts,
   type CharacterBuildResource,
+  type MagicInitiateSpellcastingAbility,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
 import {
@@ -79,7 +80,6 @@ import {
   type UnitRecord,
   type UseCountResource,
 } from "@dnd/surface/surface/types";
-import { type SupportedClassFeatureSpellFreeCastResourceTag } from "@dnd/surface/surface/types";
 import { Brand, Either, Option, Schema } from "effect";
 
 export const WEAPON_PROFICIENCY_CATEGORY_VALUES = [
@@ -881,11 +881,20 @@ export type CharacterSheetRestFeatureUse =
     };
 
 export type CharacterSheetTaggedResourceExpenditure = {
-  readonly tag:
-    | "layOnHandsHealingPool"
-    | SupportedClassFeatureSpellFreeCastResourceTag;
+  readonly tag: "layOnHandsHealingPool";
   readonly expended: ResourceCount;
 };
+
+export type CharacterSheetSpellAccessFreeCastKey = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly spellId: UnitRecord["id"];
+};
+
+export type CharacterSheetSpellAccessFreeCastExpenditure =
+  CharacterSheetSpellAccessFreeCastKey & {
+    readonly tag: "spellAccessFreeCast";
+    readonly expended: ResourceCount;
+  };
 
 export type CharacterSheetUseCountResourceExpenditure = {
   readonly tag: "useCountResource";
@@ -901,6 +910,7 @@ export type CharacterSheetPointPoolResourceExpenditure = {
 
 export type CharacterSheetResourceExpenditure =
   | CharacterSheetTaggedResourceExpenditure
+  | CharacterSheetSpellAccessFreeCastExpenditure
   | CharacterSheetUseCountResourceExpenditure
   | CharacterSheetPointPoolResourceExpenditure;
 
@@ -909,11 +919,11 @@ export type CharacterSheetLayOnHandsResource = CharacterBuildResource & {
   readonly resource: ChargePoolResource;
 };
 
-export type CharacterSheetClassFeatureSpellFreeCastResource = {
-  readonly unitId: UnitRecord["id"];
-  readonly tag: SupportedClassFeatureSpellFreeCastResourceTag;
-  readonly count: ResourceCount;
-};
+export type CharacterSheetSpellAccessFreeCastResource =
+  CharacterSheetSpellAccessFreeCastKey & {
+    readonly tag: "spellAccessFreeCast";
+    readonly count: ResourceCount;
+  };
 
 export type CharacterSheetUseCountResource = CharacterBuildResource & {
   readonly unitId: UnitRecord["id"];
@@ -936,7 +946,7 @@ export type CharacterSheetResourceState =
       readonly count: ResourceCount;
       readonly expended: ResourceCount;
     })
-  | (CharacterSheetClassFeatureSpellFreeCastResource & {
+  | (CharacterSheetSpellAccessFreeCastResource & {
       readonly expended: ResourceCount;
     })
   | (CharacterSheetUseCountResource & {
@@ -1817,7 +1827,7 @@ export type CharacterSheetContactPatronInvocation = {
   readonly spellId: UnitRecord["id"];
   readonly spellLevel: SpellRecord["mechanics"]["level"];
   readonly featureUnitId: UnitRecord["id"];
-  readonly freeCastResourceTag: SupportedClassFeatureSpellFreeCastResourceTag;
+  readonly freeCastResource: CharacterSheetSpellAccessFreeCastKey;
   readonly spellSlotCost: { readonly kind: "none" };
   readonly preparationRequirement: "prepared";
   readonly requiredSpellAccess: "class_feature";
@@ -3732,6 +3742,22 @@ export type CharacterSheetClassFeaturePreparedSpellAccess = {
   readonly sourceUnitId: UnitRecord["id"];
   readonly spellIds: readonly UnitRecord["id"][];
 };
+
+export type CharacterSheetSpellAccess =
+  | {
+      readonly source: "classFeature";
+      readonly sourceUnitId: UnitRecord["id"];
+      readonly spellId: UnitRecord["id"];
+      readonly spellcastingAbility: Ability;
+      readonly preparation: "alwaysPrepared";
+    }
+  | {
+      readonly source: "magicInitiate";
+      readonly sourceUnitId: UnitRecord["id"];
+      readonly spellId: UnitRecord["id"];
+      readonly spellcastingAbility: MagicInitiateSpellcastingAbility;
+      readonly preparation: "learnedCantrip" | "alwaysPrepared";
+    };
 
 export type CharacterSheetSpellInvocation =
   | CharacterSheetSpellbookRitualInvocation

@@ -25,7 +25,7 @@ import {
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Either, Match } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleInterruptCheckpoint,
@@ -55,13 +55,18 @@ import {
   markSpellSlotExpendedThisTurn,
   releasePendingSpellSlotUseThisTurn,
 } from "../spell-turn-resources.ts";
-import { spendSpellCastMetamagicResources } from "../spells-resolve-resources.ts";
+import {
+  commitSpellAccessFreeCastResourceUse,
+  spendSpellAccessFreeCastResource,
+  spendSpellCastMetamagicResources,
+  type SpellCastResourceSpendResult,
+} from "../spells-resolve-resources.ts";
 import { hasSaveGateRepeatSaves } from "./_save-gate-helpers.ts";
 import { Schema } from "effect";
 import {
   MovementFeet,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
   preparedSpellSlotInvocations,
@@ -221,26 +226,49 @@ function resolveCounterspell(
     casterId: input.input.subject.reactorId,
     invocation: input.invocation,
   });
-  const slotted = expendSpellSlot(
-    castingState,
-    input.input.subject.reactorId,
-    input.invocation.resource.slotLevel,
+  const resourced: SpellCastResourceSpendResult = Match.value(
+    input.invocation.resource,
+  ).pipe(
+    Match.when({ tag: "spellAccessFreeCast" }, ({ resourcePoolRef }) =>
+      spendSpellAccessFreeCastResource(
+        castingState,
+        input.input.subject.reactorId,
+        resourcePoolRef,
+        input.invocation,
+        input.input.state,
+      ),
+    ),
+    Match.when({ tag: "spellSlot" }, ({ slotLevel }) => {
+      const slotted = expendSpellSlot(
+        castingState,
+        input.input.subject.reactorId,
+        slotLevel,
+      );
+      const nextTurnResources = markSpellSlotExpendedThisTurn(
+        slotted.currentTurnResources,
+        input.input.subject.reactorId,
+      );
+      if (Either.isLeft(nextTurnResources)) {
+        return invalidResult(
+          input.input.state,
+          "staleSubject",
+          "This turn has already expended a Spell Slot.",
+        );
+      }
+      return {
+        tag: "resolved" as const,
+        state: {
+          ...slotted,
+          currentTurnResources: nextTurnResources.right,
+        },
+      };
+    }),
+    Match.exhaustive,
   );
-  const nextTurnResources = markSpellSlotExpendedThisTurn(
-    slotted.currentTurnResources,
-    input.input.subject.reactorId,
-  );
-  if (Either.isLeft(nextTurnResources)) {
-    return invalidResult(
-      input.input.state,
-      "staleSubject",
-      "This turn has already expended a Spell Slot.",
-    );
+  if (resourced.tag === "invalid") {
+    return resourced;
   }
-  const counterspellState = {
-    ...slotted,
-    currentTurnResources: nextTurnResources.right,
-  };
+  const counterspellState = resourced.state;
   if (triggeringCasterSaveSucceeded) {
     return {
       tag: "resolved",
@@ -287,8 +315,12 @@ function stateAfterCounteredSpellCast(
     };
   }
   /* v8 ignore stop */
+  const committedState = commitCounteredSpellPayment(state, frame);
+  if (Either.isLeft(committedState)) {
+    return { tag: "invalid", message: committedState.left };
+  }
   const releasedResources =
-    frame.spellSlotCommitment.kind === "none"
+    frame.paymentCommitment.kind !== "pendingCasterSpellSlot"
       ? state.currentTurnResources
       : releasePendingSpellSlotUseThisTurn(
           state.currentTurnResources,
@@ -307,7 +339,10 @@ function stateAfterCounteredSpellCast(
   }
   /* v8 ignore stop */
   const metamagicSpend = spendSpellCastMetamagicResources({
-    state: { ...state, currentTurnResources: wastedResources.right },
+    state: {
+      ...committedState.right,
+      currentTurnResources: wastedResources.right,
+    },
     actorId: frame.casterId,
     applications:
       frame.metamagicCommitment.kind === "none"
@@ -338,6 +373,20 @@ function stateAfterCounteredSpellCast(
       ],
     },
   };
+}
+
+function commitCounteredSpellPayment(
+  state: BattleState,
+  frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
+): Either.Either<BattleState, string> {
+  if (frame.paymentCommitment.kind !== "spellAccessFreeCast") {
+    return Either.right(state);
+  }
+  return commitSpellAccessFreeCastResourceUse({
+    state,
+    actorId: frame.casterId,
+    resourcePoolRef: frame.paymentCommitment.resourcePoolRef,
+  });
 }
 
 function turnResourcesAfterWastedSpellCastingResource(
@@ -372,7 +421,7 @@ function counterspellReactionInterruptFrame(
 const CounterspellInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     access: PreparedSpellAccessSchema,
-    resource: SpellSlotInvocationResourceSchema,
+    resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("counterspell"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     triggerComponents: Schema.Array(Schema.Literal("V", "S", "M")),

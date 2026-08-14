@@ -1,3 +1,4 @@
+import { spellInvocationResourceForCastOption } from "./profile.ts";
 import { resolveAfterHitSlotSpellDamageCast } from "../after-hit-spell-resolution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
@@ -63,7 +64,7 @@ import {
 import {
   DamageTypeSchema,
   PreparedSpellAccessSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
 type AfterHitTimedDamageAndSaveInvocation =
@@ -101,7 +102,7 @@ function admitAfterHitTimedDamageAndSave(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
+  return ctx.spellCastOptions.flatMap(
     (slot): readonly AfterHitTimedDamageAndSaveInvocation[] => {
       if (Number(slot.spellLevel) < spell.mechanics.level) {
         return [];
@@ -122,7 +123,7 @@ function admitAfterHitTimedDamageAndSave(
       return [
         {
           access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+          resource: spellInvocationResourceForCastOption(slot),
           procedure: "afterHitTimedDamageAndSave",
           spell,
           actionCost: "bonusAction",
@@ -292,7 +293,7 @@ const AfterHitTimedDamageAndSaveInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("afterHitTimedDamageAndSave"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),

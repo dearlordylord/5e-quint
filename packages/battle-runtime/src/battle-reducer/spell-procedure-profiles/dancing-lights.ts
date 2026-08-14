@@ -57,13 +57,14 @@ import type {
   SpellProcedureProfileResolveInput,
   SynthesizedSpellProcedureDeclaration,
 } from "./profile.ts";
+import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   NoSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 
@@ -147,7 +148,7 @@ function dancingLightsCantripBase(
   profile: DancingLightsSpellProfile,
 ) {
   return {
-    access: { tag: "classCantrip" as const },
+    access: cantripSpellAccessFor(spell.castingSource),
     resource: { tag: "none" as const },
     spell,
     dimRadiusFeet: profile.dimRadiusFeet,
@@ -301,7 +302,7 @@ function resolveDancingLightsReposition(
 
 const DancingLightsSeparateCastInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: ClassCantripSpellAccessSchema,
+    access: CantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("dancingLightsSeparateCast"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
@@ -317,7 +318,7 @@ const DancingLightsSeparateCastInvocationSchema = spellProcedureExecutionSchema(
 
 const DancingLightsCombinedCastInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: ClassCantripSpellAccessSchema,
+    access: CantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("dancingLightsCombinedCast"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
@@ -333,7 +334,7 @@ const DancingLightsCombinedCastInvocationSchema = spellProcedureExecutionSchema(
 
 const DancingLightsRepositionInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
-    access: ClassCantripSpellAccessSchema,
+    access: CantripSpellAccessSchema,
     resource: NoSpellInvocationResourceSchema,
     procedure: Schema.Literal("dancingLightsReposition"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

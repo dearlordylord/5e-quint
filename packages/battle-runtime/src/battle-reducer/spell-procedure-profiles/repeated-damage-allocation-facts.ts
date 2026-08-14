@@ -1,4 +1,5 @@
 import { type SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
+import { Match } from "effect";
 
 import type { SpellProcedureExecution } from "../../character-execution.ts";
 
@@ -58,7 +59,11 @@ export function repeatedDamageAllocationAdmissionFactsForInvocation(
   invocation: RepeatedDamageAllocationInvocation,
 ): RepeatedDamageAllocationAdmissionFacts {
   return repeatedDamageAllocationAdmissionFacts({
-    selectedSlotLevel: invocation.resource.slotLevel,
+    selectedSlotLevel: Match.value(invocation.resource).pipe(
+      Match.when({ tag: "spellSlot" }, ({ slotLevel }) => slotLevel),
+      Match.when({ tag: "spellAccessFreeCast" }, ({ castLevel }) => castLevel),
+      Match.exhaustive,
+    ),
     repeatedEffectCount: invocation.targeting.repeatedEffectCount,
   });
 }

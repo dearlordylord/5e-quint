@@ -4,6 +4,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING
+// UNIT-PROFILE-COVERAGE: runtime-owner battle.spell-access-magic-initiate-casting
 
 import {
   spendAction,
@@ -146,12 +148,34 @@ export function spendSpellCastResources(input: {
       shouldStartConcentration,
     });
   }
-  if (input.invocation.resource.tag === "classFeatureFreeCast") {
-    return invalidResult(
+  if (input.invocation.resource.tag === "spellAccessFreeCast") {
+    const freeCast = spendSpellAccessFreeCastResource(
+      spellCastState,
+      input.actorId,
+      input.invocation.resource.resourcePoolRef,
+      input.invocation,
       input.errorState,
-      "unsupportedSubject",
-      "Class feature free spell casts require procedure-specific resource spending.",
     );
+    if (freeCast.tag === "invalid") return freeCast;
+    const resourced = {
+      ...freeCast.state,
+      currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
+        markInvocationLevelOnePlusSpellCastThisTurn(
+          spent.right,
+          input.actorId,
+          input.invocation,
+        ),
+        input.actorId,
+      ),
+    };
+    return finishSpellCastResourceSpend({
+      state: resourced,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.errorState,
+      applications: metamagicApplications,
+      shouldStartConcentration,
+    });
   }
   const slotTurnResources = markSpellSlotExpendedThisTurn(
     spent.right,
@@ -225,7 +249,7 @@ function markQuickenedLevelOnePlusSpellCastForApplications(
     : resources;
 }
 
-export function spendClassFeatureFreeCastResource(
+export function spendSpellAccessFreeCastResource(
   state: BattleState,
   actorId: CombatantId,
   resourcePoolRef: BattleResourcePoolExecutionRef,
@@ -241,7 +265,7 @@ export function spendClassFeatureFreeCastResource(
     return invalidResult(
       errorState,
       "staleSubject",
-      "Class feature free spell cast is no longer available for the current actor.",
+      "Spell Access free cast is no longer available for the current actor.",
     );
   }
   const resource = actor.origin.resources.find(
@@ -253,7 +277,7 @@ export function spendClassFeatureFreeCastResource(
     return invalidResult(
       errorState,
       "staleSubject",
-      "Class feature free spell cast is no longer available for the current actor.",
+      "Spell Access free cast is no longer available for the current actor.",
     );
   }
   return {
@@ -279,6 +303,44 @@ export function spendClassFeatureFreeCastResource(
       ),
     },
   };
+}
+
+export function commitSpellAccessFreeCastResourceUse(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly resourcePoolRef: BattleResourcePoolExecutionRef;
+}): Either.Either<BattleState, string> {
+  const actor = input.state.combatants.get(input.actorId);
+  if (actor?.origin.kind !== "character") {
+    return Either.left(
+      "Spell Access free cast is no longer available for the interrupted spell.",
+    );
+  }
+  const resource = actor.origin.resources.find(
+    (candidate) =>
+      candidate.resourcePoolRef === input.resourcePoolRef &&
+      resourceHasUsesRemaining(candidate),
+  );
+  if (resource === undefined) {
+    return Either.left(
+      "Spell Access free cast is no longer available for the interrupted spell.",
+    );
+  }
+  return Either.right({
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(input.actorId, {
+      ...actor,
+      origin: {
+        ...actor.origin,
+        resources: actor.origin.resources.map((candidate) =>
+          candidate.resourcePoolRef === input.resourcePoolRef &&
+          resourceHasUsesRemaining(candidate)
+            ? spendCharacterResourceUse(candidate)
+            : candidate,
+        ),
+      },
+    }),
+  });
 }
 
 export function spellRequiresConcentration(

@@ -39,7 +39,6 @@ import {
   type BattleExecutableSpellInvocation,
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import type { CharacterBattleSpellcastingExecutionState } from "../../character-battle-resource-execution.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
@@ -57,6 +56,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
@@ -64,12 +64,12 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  ClassCantripSpellAccessSchema,
+  CantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
   PreparedSpellAccessSchema,
   SizeSchema,
-  SpellSlotInvocationResourceSchema,
+  LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { discoverDistantSpellMetamagicSelections } from "../metamagic-support.ts";
 
@@ -155,6 +155,7 @@ function isObjectLightDirectPhase(
 
 function admitCantripObjectLight(
   spell: BattleSpellAdmissionSource,
+  ctx: SpellAdmissionContext,
 ): readonly ObjectLightInvocation[] {
   if (!isLightObjectSpell(spell)) {
     return [];
@@ -186,7 +187,7 @@ function admitCantripObjectLight(
     ? []
     : [
         {
-          access: { tag: "classCantrip" },
+          access: cantripSpellAccessFor(ctx.castingSource),
           resource: { tag: "none" },
           procedure: "objectLight",
           spell,
@@ -254,7 +255,7 @@ function isTouchedObjectLightDirectPhase(
 
 function admitPreparedObjectLight(
   spell: BattleSpellAdmissionSource,
-  spellSlots: CharacterBattleSpellcastingExecutionState["spellSlots"],
+  castOptions: SpellAdmissionContext["spellCastOptions"],
 ): readonly ObjectLightInvocation[] {
   if (!isContinualFlameObjectSpell(spell)) {
     return [];
@@ -279,13 +280,13 @@ function admitPreparedObjectLight(
   ) {
     return [];
   }
-  return spellSlots.flatMap((slot): readonly ObjectLightInvocation[] =>
+  return castOptions.flatMap((slot): readonly ObjectLightInvocation[] =>
     Number(slot.spellLevel) < spell.mechanics.level
       ? []
       : [
           {
             access: { tag: "prepared" },
-            resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+            resource: spellInvocationResourceForCastOption(slot),
             procedure: "objectLight",
             spell,
             actionCost: "magicAction",
@@ -309,11 +310,8 @@ function admitObjectLight(
   ctx: SpellAdmissionContext,
 ): readonly ObjectLightInvocation[] {
   return [
-    ...admitCantripObjectLight(spell),
-    ...admitPreparedObjectLight(
-      spell,
-      ctx.actor.origin.spellcasting.spellSlots,
-    ),
+    ...admitCantripObjectLight(spell, ctx),
+    ...admitPreparedObjectLight(spell, ctx.spellCastOptions),
   ];
 }
 
@@ -496,7 +494,7 @@ function resolveObjectLight(
 const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union(
     Schema.Struct({
-      access: ClassCantripSpellAccessSchema,
+      access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
       procedure: Schema.Literal("objectLight"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
@@ -517,7 +515,7 @@ const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
     }),
     Schema.Struct({
       access: PreparedSpellAccessSchema,
-      resource: SpellSlotInvocationResourceSchema,
+      resource: LeveledSpellInvocationResourceSchema,
       procedure: Schema.Literal("objectLight"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
@@ -556,3 +554,4 @@ const OBJECT_LIGHT_TARGET_FACT_KINDS = [
 const objectLightTargetFactKinds: ReadonlySet<string> = new Set(
   OBJECT_LIGHT_TARGET_FACT_KINDS,
 );
+import { spellInvocationResourceForCastOption } from "./profile.ts";
