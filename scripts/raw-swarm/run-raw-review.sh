@@ -17,8 +17,8 @@ pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/review-schema.ts" "$RAW_REVIEW
 codex exec \
   -C "$RAW_REVIEW_ROOT" \
   --sandbox danger-full-access \
-  -m gpt-5.6-sol \
-  -c 'model_reasoning_effort="high"' \
+  -m gpt-5.6-luna \
+  -c 'model_reasoning_effort="max"' \
   --output-schema "$RAW_REVIEW_SCHEMA" \
   --output-last-message "$RAW_REVIEW_OUTPUT" \
   "${RAW_REVIEW_INSTRUCTIONS//\{\{TRANSCRIPT_PATH\}\}/$RAW_REVIEW_TRANSCRIPT}" \
