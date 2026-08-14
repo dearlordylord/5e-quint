@@ -1,0 +1,20 @@
+{
+  "scenarioId": "generated-battle-003",
+  "scenarioSha256": "81b3ca56ba4e8bbf24b7f4ecd043794eecb224eda2fad71c8f54c50407b00c72",
+  "gitSha": "ff7edc2c4c12d9cb7781a365e763aa3ba8a5f3df",
+  "admitReviewedUnsupported": true,
+  "rawReview": {
+    "classification": "unsupported",
+    "evidence": "The creature statistics and ordinary combat substrate are supported by `.references/srd-5.2.1/Monsters/Monsters-E-G.md`, “Goblin Warrior”; `.references/srd-5.2.1/Monsters/Monsters-H-L.md`, “Imp”; `.references/srd-5.2.1/Animals.md`, “Riding Horse” and “Wolf”; `.references/srd-5.2.1/Playing-the-Game.md`, “Initiative,” “Movement and Position,” “Cover,” and “Mounted Combat”; and `.references/srd-5.2.1/Rules-Glossary.md`, “Difficult Terrain,” “Invisible [Condition],” and “Carrying Capacity.” Extra monster gear is permitted by `.references/srd-5.2.1/Monsters/Overview.md`, “Equipping a Monster with Other Items.” However, `.references/srd-5.2.1/Playing-the-Game.md`, “Time-Limited Object Interactions,” supplies only the general one-free-interaction rule, while `.references/srd-5.2.1/Rules-Glossary.md`, “Breaking Objects,” normally permits objects to be harmed. No entry in `ASSUMPTIONS.md` supplies the cylinder’s special transfer, retention, removal, indestructibility, or scoring procedures.",
+    "critique": "The visibly synthetic cylinder may remain as an unsupported probe, but its encounter-specific rules are not RAW or recorded assumptions. Executability also requires explicit Table Decisions for the rider’s spatial projection while mounted—governing the east-of-gate trigger, reach, cover, and dropped-object square—because “Mounted Combat” does not locate a rider within a Large mount’s space; removal and interaction cost when the strapped carrier is unconscious or dead; how Moss-Bite carries the unsecured cylinder and whether doing so permits Bite or other manipulation; and how an Invisible Cinder’s location is initially known or discovered. Separate setup facts must establish whether the gate is open and wide enough for the horse, whether anyone is surprised, and which identical Goblin Warriors share an Initiative roll. Moss-Bite’s first-turn instruction also needs a legal fallback when the selected pursuer cannot be reached for an attack. These are omissions, not internal contradictions, so the scenario is unsupported rather than contradictory."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The artifact uses canonical SRD creature identities (Goblin Warrior, Riding Horse, Imp, and Wolf) alongside visibly synthetic encounter names and an independently expressed brass-cylinder objective. It contains no identifiable PHB+ source ids, names, slugs, prose, examples, headings, page references, provenance claims, or source-to-Mushroom crosswalks."
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "Every selected canonical stat block is supplied by the availability profile: Goblin Warrior (Flint-Knot, Hook, and Spur), Riding Horse, Imp (Cinder), and Wolf (Moss-Bite)."
+  }
+}
