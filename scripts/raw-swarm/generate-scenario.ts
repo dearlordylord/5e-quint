@@ -1,9 +1,11 @@
 import { spawnSync } from "node:child_process";
 import { createHash, randomInt } from "node:crypto";
 import {
+  closeSync,
   existsSync,
   mkdtempSync,
   mkdirSync,
+  openSync,
   readFileSync,
   renameSync,
   rmSync,
@@ -35,6 +37,8 @@ import {
 import { scenarioSetupStatBlocks } from "./sdk-player/scenario-setup-runtime.ts";
 import { currentGitRevision, GitShaSchema, repoRoot } from "./transcript.ts";
 
+const FAILURE_LOG_TAIL_CHARACTERS = 64 * 1024;
+
 function fail(message: string): never {
   throw new Error(message);
 }
@@ -51,38 +55,52 @@ function runCodexJson<A, I>(
   const temporary = mkdtempSync(resolve(tmpdir(), "dnd-scenario-campaign-"));
   const schemaPath = resolve(temporary, "schema.json");
   const outputPath = resolve(temporary, "output.json");
+  const agentLogPath = resolve(temporary, "agent.log");
   try {
     writeFileSync(
       schemaPath,
       `${JSON.stringify(codexOutputJsonSchema(schema), null, 2)}\n`,
     );
-    const result = spawnSync(
-      "codex",
-      [
-        "exec",
-        "-C",
-        repoRoot,
-        "--sandbox",
-        "danger-full-access",
-        "--ephemeral",
-        "--disable",
-        "tool_call_mcp_elicitation",
-        "-m",
-        execution.model,
-        "-c",
-        `model_reasoning_effort=${JSON.stringify(execution.reasoningEffort)}`,
-        "--output-schema",
-        schemaPath,
-        "--output-last-message",
-        outputPath,
-        prompt,
-      ],
-      { cwd: repoRoot, encoding: "utf8" },
-    );
+    const agentLog = openSync(agentLogPath, "w");
+    const result = (() => {
+      try {
+        return spawnSync(
+          "codex",
+          [
+            "exec",
+            "-C",
+            repoRoot,
+            "--sandbox",
+            "danger-full-access",
+            "--ephemeral",
+            "--disable",
+            "tool_call_mcp_elicitation",
+            "-m",
+            execution.model,
+            "-c",
+            `model_reasoning_effort=${JSON.stringify(execution.reasoningEffort)}`,
+            "--output-schema",
+            schemaPath,
+            "--output-last-message",
+            outputPath,
+            prompt,
+          ],
+          { cwd: repoRoot, stdio: ["ignore", agentLog, agentLog] },
+        );
+      } finally {
+        closeSync(agentLog);
+      }
+    })();
     if (result.error !== undefined) throw result.error;
     if (result.signal !== null)
       fail(`Scenario agent stopped by ${result.signal}.`);
-    if (result.status !== 0) fail(result.stderr || "Scenario agent failed.");
+    if (result.status !== 0) {
+      const failureLog = readFileSync(agentLogPath, "utf8");
+      fail(
+        failureLog.slice(-FAILURE_LOG_TAIL_CHARACTERS) ||
+          "Scenario agent failed.",
+      );
+    }
     const decoded = Schema.decodeUnknownEither(outputSchema, {
       onExcessProperty: "error",
     })(JSON.parse(readFileSync(outputPath, "utf8")));
