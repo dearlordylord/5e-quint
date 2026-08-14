@@ -161,10 +161,31 @@ not Battle Runtime state.
 Both outcomes must return the latest session produced by the calls.
 
 A `needsHoles` result means the selected subject is still in progress. A fresh
-act discovery may then be empty by design; that is not an obstruction. Preserve
-the result's `subject` and `holes` in your JSON observation, and in the next
-continuation call `resolveBattleRuntimeSubject` with that same subject plus the
-requested fills. Continue until it resolves or returns another hole.
+act discovery may then be empty by design; that is not an obstruction. Always
+carry `result.session` forward, but do not treat it as saved fill history: a
+`needsHoles` session does not persist the answer prefix for the next replay.
+Keep every accepted fill in canonical order in your continuation. On the next
+call, use the result's `subject` and submit the complete accumulated prefix
+plus the newly requested fill(s), not only the latest fill(s):
+
+```ts
+const acceptedFills = [targetFill];
+const first = context.sdk.resolveBattleRuntimeSubject({
+  session: context.session,
+  subject,
+  fills: acceptedFills,
+});
+if (first.tag === "needsHoles") {
+  const nextFill = fillForHole(first.holes[0]);
+  const next = context.sdk.resolveBattleRuntimeSubject({
+    session: first.session,
+    subject: first.subject,
+    fills: [...acceptedFills, nextFill],
+  });
+}
+```
+
+Continue until it resolves or returns another hole.
 
 Run `node player-client.mjs attempt.ts` after editing. A compilation or
 runtime failure before the first SDK call remains editable. Once any SDK call

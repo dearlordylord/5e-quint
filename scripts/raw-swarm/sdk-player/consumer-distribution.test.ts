@@ -267,6 +267,15 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
     expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
       "those results belong only to allocation",
     );
+    expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
+      "does not persist the answer prefix",
+    );
+    expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
+      "session: first.session",
+    );
+    expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
+      "fills: [...acceptedFills, nextFill]",
+    );
     expect(
       filesBelow(destination).some((path) => path.endsWith("supervisor.mjs")),
     ).toBe(false);
