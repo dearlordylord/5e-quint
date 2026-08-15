@@ -2106,6 +2106,89 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(released.state.readiedResponses.has(fighterId)).toBe(false);
   });
 
+  test("Ready restores the interrupted turn while a released Help action requests its fills", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-ready-help-release-frontier"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: combatantId("ready-help-ally"),
+          initiative: 5,
+        }),
+      ],
+    });
+    const readySubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "ready" as const,
+    };
+    const declarationHole = findAct(state, readySubject).initialHoles[0];
+    if (declarationHole?.kind !== "readyDeclaration") {
+      throw new Error("Expected Ready declaration hole.");
+    }
+    const helpResponse = declarationHole.responseChoices.find(
+      (response) =>
+        response.kind === "action" && response.subject.action === "helpAttack",
+    );
+    if (helpResponse?.kind !== "action") {
+      throw new Error("Expected an offered Help response.");
+    }
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: readySubject,
+        fills: [
+          readyDeclarationFillForTest(
+            declarationHole,
+            "the goblin raises its weapon",
+            helpResponse,
+          ),
+        ],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: fighterId }),
+    );
+    const reported = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "reportReadyTrigger",
+        readiedActorId: fighterId,
+      },
+      fills: [],
+    });
+    if (reported.tag !== "needsHoles") {
+      throw new Error("Expected a reported Ready trigger interrupt.");
+    }
+    const released = resolveBattleInterrupt({
+      state: reported.state,
+      fill: interruptDecisionFill(requireHole(reported, "interruptDecision"), {
+        kind: "resolve",
+        responderId: fighterId,
+        choice: {
+          kind: "releaseReadiedAction",
+          reactorId: fighterId,
+          fills: [],
+        },
+      }),
+    });
+    expect(released).toMatchObject({
+      tag: "needsHoles",
+      subject: { command: "releaseReadiedAction", reactorId: fighterId },
+      holes: [{ kind: "helpAttackAllyDecision" }],
+    });
+    if (released.tag !== "needsHoles") {
+      throw new Error("Expected the released Help action to request an ally.");
+    }
+    expect(released.state.readiedResponses.has(fighterId)).toBe(true);
+    expect(released.state.currentTurnResources).toEqual(
+      reported.state.currentTurnResources,
+    );
+  });
+
   test("a multi-step Ready response restores the subject that was already awaiting fills", () => {
     const state = fighterVsGoblinBattle();
     const readySubject = {
