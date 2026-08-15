@@ -310,7 +310,7 @@ export const continueBattle: PlayerContinuation = (context) => {
   return {
     kind: "continue",
     session: context.session,
-    observation: { availableActCount: acts.length },
+    tacticalNote: "Observed " + acts.length + " acts.",
   };
 };
 `,
@@ -368,7 +368,7 @@ export const continueBattle: PlayerContinuation = (context) => {
   return {
     kind: "continue",
     session: context.session,
-    observation: { availableActCount: acts.length },
+    tacticalNote: "Observed " + acts.length + " acts.",
   };`),
     );
     const requestsDirectory = join(destination, ".requests");
@@ -464,11 +464,7 @@ export const continueBattle: PlayerContinuation = (context) => {
   return {
     kind: "continue",
     session: moved.session,
-    observation: {
-      invalidInterruptResult: invalid.tag,
-      prematureContinuationResult: prematureContinuation.tag,
-      movementResult: moved.tag,
-    },
+    tacticalNote: "Invalid interrupt: " + invalid.tag + "; premature continuation: " + prematureContinuation.tag + "; movement: " + moved.tag + ".",
   };`),
     );
     execFileSync(

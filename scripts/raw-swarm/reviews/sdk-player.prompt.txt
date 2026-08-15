@@ -1,12 +1,28 @@
-Adversarially review the direct-SDK player evidence whose transcript is
-{{TRANSCRIPT_PATH}}.
+Adversarially review the direct-SDK player evidence whose immutable transcript
+is {{TRANSCRIPT_PATH}} ({{TRANSCRIPT_BYTES}} bytes, SHA-256
+{{TRANSCRIPT_SHA256}}). Use the versioned derived audit at {{AUDIT_PATH}} as
+the default all-call evidence. A deterministic bounded review packet at
+{{PACKET_PATH}} ({{PACKET_BYTES}} bytes, SHA-256 {{PACKET_SHA256}}) is included
+verbatim after these instructions. It contains that audit, retained header
+evidence without the initial session, bounded current-turn projections, the
+reviewable run artifacts, the domain authorities, and the scenario-relevant
+local SRD rules plus scenario-selected catalog passages with stable source line
+numbers and per-passage hashes. Catalog passages are selected only when their
+authored heading is present in the retained scenario artifacts.
 
-Derive the retained run directory from that transcript path. Read SCENARIO.md,
-SCENARIO_REVIEW.json, evidence/characters.ts, and the transcript header. If
+Review the supplied packet directly and return the required JSON in this one
+model turn without commands or tools. Do not reread packet sources from the
+repository. If a material claim cannot be decided from the packet, do not
+guess: state only the narrower claim the supplied evidence proves. Any command
+or tool call invalidates the controlled measurement.
+
+Use the packet copies of SCENARIO.md, SCENARIO_REVIEW.json,
+evidence/characters.ts, and retained header evidence. If
 character composition is ready, also read evidence/setup.ts and check that the
 controller-owned fresh Character Sheets satisfy the prose without leaking
-Initiative, placement, or tactics into composition. If setup is ready, also read
-the retained program, observations, final outcome, and agent summary. If
+Initiative, placement, or tactics into composition. If setup is ready, also use
+the packet copies of the retained program, final outcome, and agent summary. Do
+not read the full transcript or historical arbitrary observations by default. If
 character composition or setup is obstructed, later player artifacts
 intentionally do not exist: review whether the responsible boundary faithfully
 identified a real scenario/SDK obstruction without inventing or dropping
@@ -27,6 +43,19 @@ external D&D sources.
 Distinguish an SDK/runtime bug from a direct-SDK adapter defect, invalid player
 continuation, invalid scenario, unsupported capability, corpus ambiguity,
 assumption divergence, or reviewer error.
+
+The hash-checking exact-sequence extractor remains available to an operator for
+a separately retained drill-down after this review. It is not a command for
+this bounded invocation. A later review that consumes extracted records is a
+separate measured invocation. The extractor command is:
+
+{{EXTRACT_COMMAND}}
+
+The operator chooses fresh output and provenance paths for each extraction. The extractor
+revalidates transcript path, byte size, SHA-256, schema, sequence, lineage, and
+call correspondence without reexecuting the SDK. Cite every extracted
+sequence and preserves its provenance file. Do not claim that the derived
+audit can reconstruct omitted results.
 
 A scenario that selects a canonical record absent from the supplied setup
 catalog is scenario-invalid unless its prose explicitly identifies content

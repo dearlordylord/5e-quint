@@ -48,21 +48,23 @@ describe("scenario generation campaign", () => {
         .fn()
         .mockResolvedValueOnce({ decision: "ready" })
         .mockResolvedValueOnce({ decision: "ready" }),
-      reviewRaw: vi.fn(async () => ({
-        classification: "supported",
-        evidence: "Synthetic RAW evidence.",
-      })),
-      reviewContent: vi.fn(async () => ({
-        classification: "supplied",
-        evidence: "Synthetic content evidence.",
-      })),
-      reviewSdkCapability: vi.fn(async () => ({
-        classification: "supported",
-        evidence: "Synthetic SDK evidence.",
-      })),
-      reviewPolicy: vi.fn(async () => ({
-        classification: "safe",
-        evidence: "Synthetic policy evidence.",
+      reviewScenario: vi.fn(async () => ({
+        raw: {
+          classification: "supported",
+          evidence: "Synthetic RAW evidence.",
+        },
+        contentAvailability: {
+          classification: "supplied",
+          evidence: "Synthetic content evidence.",
+        },
+        sdkCapability: {
+          classification: "supported",
+          evidence: "Synthetic SDK evidence.",
+        },
+        artifactPolicy: {
+          classification: "safe",
+          evidence: "Synthetic policy evidence.",
+        },
       })),
     };
 
@@ -86,7 +88,7 @@ describe("scenario generation campaign", () => {
       contentAvailabilityIntent: "availableOnly",
       sdkCapabilityIntent: "supportedOnly",
     });
-    expect(agents.reviewRaw).toHaveBeenCalledTimes(2);
+    expect(agents.reviewScenario).toHaveBeenCalledTimes(2);
   });
 
   test("carries critiques forward, stops at maximum, and can admit unsupported prose", async () => {
@@ -107,8 +109,8 @@ describe("scenario generation campaign", () => {
           decision: "continue",
           critique: "Add another meaningful tactical constraint.",
         }),
-        reviewRaw: async (_scenario, final) =>
-          final
+        reviewScenario: async ({ finalReview }) => ({
+          raw: finalReview
             ? {
                 classification: "unsupported",
                 evidence: "Synthetic review evidence.",
@@ -119,17 +121,18 @@ describe("scenario generation campaign", () => {
                 evidence: "Synthetic milestone evidence.",
                 critique: "Clarify the unsupported request without erasing it.",
               },
-        reviewContent: async () => ({
-          classification: "supplied",
-          evidence: "Synthetic content evidence.",
-        }),
-        reviewSdkCapability: async () => ({
-          classification: "supported",
-          evidence: "Synthetic SDK evidence.",
-        }),
-        reviewPolicy: async () => ({
-          classification: "safe",
-          evidence: "Synthetic policy evidence.",
+          contentAvailability: {
+            classification: "supplied",
+            evidence: "Synthetic content evidence.",
+          },
+          sdkCapability: {
+            classification: "supported",
+            evidence: "Synthetic SDK evidence.",
+          },
+          artifactPolicy: {
+            classification: "safe",
+            evidence: "Synthetic policy evidence.",
+          },
         }),
       },
       { select: (count) => count - 1 },
@@ -154,10 +157,24 @@ describe("scenario generation campaign", () => {
   });
 
   test("rejects invalid bounds and batches while preserving rejected final reviews", async () => {
-    const reviewRaw = vi.fn(async () => ({
-      classification: "contradictory" as const,
-      evidence: "Synthetic contradiction.",
-      critique: "Preserve the contradiction for operator disposition.",
+    const reviewScenario = vi.fn(async () => ({
+      raw: {
+        classification: "contradictory" as const,
+        evidence: "Synthetic contradiction.",
+        critique: "Preserve the contradiction for operator disposition.",
+      },
+      contentAvailability: {
+        classification: "supplied" as const,
+        evidence: "Synthetic content evidence.",
+      },
+      sdkCapability: {
+        classification: "supported" as const,
+        evidence: "Synthetic SDK evidence.",
+      },
+      artifactPolicy: {
+        classification: "safe" as const,
+        evidence: "Synthetic policy evidence.",
+      },
     }));
     const agents: ScenarioCampaignAgents = {
       generate: async (input) => ({
@@ -167,19 +184,7 @@ describe("scenario generation campaign", () => {
         ),
       }),
       reviewReadiness: async () => ({ decision: "ready" }),
-      reviewRaw,
-      reviewContent: async () => ({
-        classification: "supplied",
-        evidence: "Synthetic content evidence.",
-      }),
-      reviewSdkCapability: async () => ({
-        classification: "supported",
-        evidence: "Synthetic SDK evidence.",
-      }),
-      reviewPolicy: async () => ({
-        classification: "safe",
-        evidence: "Synthetic policy evidence.",
-      }),
+      reviewScenario,
     };
 
     expect(
@@ -204,7 +209,7 @@ describe("scenario generation campaign", () => {
       expect(finalScenarioDisposition(result.right)).toBe("rejected");
       expect(result.right.rawReview.classification).toBe("contradictory");
     }
-    expect(reviewRaw).toHaveBeenCalled();
+    expect(reviewScenario).toHaveBeenCalled();
 
     const contradictoryWithUnsupportedAdmission = await runScenarioCampaign(
       { ...config, admitReviewedUnsupported: true },
@@ -222,14 +227,25 @@ describe("scenario generation campaign", () => {
       { ...config, admitReviewedUnsupported: true },
       {
         ...agents,
-        reviewRaw: async () => ({
-          classification: "supported",
-          evidence: "The selected identity is RAW.",
-        }),
-        reviewContent: async () => ({
-          classification: "invalidUnavailableSelection",
-          evidence: "The author selected content outside the supplied profile.",
-          critique: "Select an available record.",
+        reviewScenario: async () => ({
+          raw: {
+            classification: "supported",
+            evidence: "The selected identity is RAW.",
+          },
+          contentAvailability: {
+            classification: "invalidUnavailableSelection",
+            evidence:
+              "The author selected content outside the supplied profile.",
+            critique: "Select an available record.",
+          },
+          sdkCapability: {
+            classification: "supported",
+            evidence: "Synthetic SDK evidence.",
+          },
+          artifactPolicy: {
+            classification: "safe",
+            evidence: "Synthetic policy evidence.",
+          },
         }),
       },
       { select: () => 0 },
@@ -250,10 +266,24 @@ describe("scenario generation campaign", () => {
           config,
           {
             ...agents,
-            reviewContent: async () => ({
-              classification: "explicitUnavailableProbe",
-              evidence:
-                "This result cannot belong to an available-only campaign.",
+            reviewScenario: async () => ({
+              raw: {
+                classification: "supported",
+                evidence: "Synthetic RAW evidence.",
+              },
+              contentAvailability: {
+                classification: "explicitUnavailableProbe",
+                evidence:
+                  "This result cannot belong to an available-only campaign.",
+              },
+              sdkCapability: {
+                classification: "supported",
+                evidence: "Synthetic SDK evidence.",
+              },
+              artifactPolicy: {
+                classification: "safe",
+                evidence: "Synthetic policy evidence.",
+              },
             }),
           },
           { select: () => 0 },
@@ -277,14 +307,24 @@ describe("scenario generation campaign", () => {
       },
       {
         ...agents,
-        reviewRaw: async () => ({
-          classification: "supported",
-          evidence: "The selected identity is RAW.",
-        }),
-        reviewContent: async () => ({
-          classification: "explicitUnavailableProbe",
-          evidence:
-            "The unavailable identity is explicitly the campaign's probe.",
+        reviewScenario: async () => ({
+          raw: {
+            classification: "supported",
+            evidence: "The selected identity is RAW.",
+          },
+          contentAvailability: {
+            classification: "explicitUnavailableProbe",
+            evidence:
+              "The unavailable identity is explicitly the campaign's probe.",
+          },
+          sdkCapability: {
+            classification: "supported",
+            evidence: "Synthetic SDK evidence.",
+          },
+          artifactPolicy: {
+            classification: "safe",
+            evidence: "Synthetic policy evidence.",
+          },
         }),
       },
       { select: () => 0 },
@@ -307,6 +347,17 @@ describe("scenario generation campaign", () => {
 
   test("carries an invalid unavailable-selection critique in probe campaigns", async () => {
     const generationInputs: unknown[] = [];
+    const reviewContent = vi
+      .fn()
+      .mockResolvedValueOnce({
+        classification: "invalidUnavailableSelection",
+        evidence: "Unavailable selection was accidental.",
+        critique: "State the availability probe explicitly.",
+      })
+      .mockResolvedValue({
+        classification: "explicitUnavailableProbe",
+        evidence: "The revised prose states the probe.",
+      });
     const agents: ScenarioCampaignAgents = {
       generate: async (input) => {
         generationInputs.push(input);
@@ -318,28 +369,20 @@ describe("scenario generation campaign", () => {
         };
       },
       reviewReadiness: async () => ({ decision: "ready" }),
-      reviewRaw: async () => ({
-        classification: "supported",
-        evidence: "Synthetic RAW evidence.",
-      }),
-      reviewContent: vi
-        .fn()
-        .mockResolvedValueOnce({
-          classification: "invalidUnavailableSelection",
-          evidence: "Unavailable selection was accidental.",
-          critique: "State the availability probe explicitly.",
-        })
-        .mockResolvedValue({
-          classification: "explicitUnavailableProbe",
-          evidence: "The revised prose states the probe.",
-        }),
-      reviewSdkCapability: async () => ({
-        classification: "supported",
-        evidence: "Synthetic SDK evidence.",
-      }),
-      reviewPolicy: async () => ({
-        classification: "safe",
-        evidence: "Synthetic policy evidence.",
+      reviewScenario: async () => ({
+        raw: {
+          classification: "supported",
+          evidence: "Synthetic RAW evidence.",
+        },
+        contentAvailability: await reviewContent(),
+        sdkCapability: {
+          classification: "supported",
+          evidence: "Synthetic SDK evidence.",
+        },
+        artifactPolicy: {
+          classification: "safe",
+          evidence: "Synthetic policy evidence.",
+        },
       }),
     };
 
@@ -364,6 +407,17 @@ describe("scenario generation campaign", () => {
 
   test("carries a missing availability-probe critique into the next revision", async () => {
     const generationInputs: unknown[] = [];
+    const reviewContent = vi
+      .fn()
+      .mockResolvedValueOnce({
+        classification: "missingUnavailableProbe",
+        evidence: "Every selected record is supplied.",
+        critique: "Add and explicitly name the intended availability probe.",
+      })
+      .mockResolvedValue({
+        classification: "explicitUnavailableProbe",
+        evidence: "The revised prose states the probe.",
+      });
     const agents: ScenarioCampaignAgents = {
       generate: async (input) => {
         generationInputs.push(input);
@@ -375,28 +429,20 @@ describe("scenario generation campaign", () => {
         };
       },
       reviewReadiness: async () => ({ decision: "ready" }),
-      reviewRaw: async () => ({
-        classification: "supported",
-        evidence: "Synthetic RAW evidence.",
-      }),
-      reviewContent: vi
-        .fn()
-        .mockResolvedValueOnce({
-          classification: "missingUnavailableProbe",
-          evidence: "Every selected record is supplied.",
-          critique: "Add and explicitly name the intended availability probe.",
-        })
-        .mockResolvedValue({
-          classification: "explicitUnavailableProbe",
-          evidence: "The revised prose states the probe.",
-        }),
-      reviewSdkCapability: async () => ({
-        classification: "supported",
-        evidence: "Synthetic SDK evidence.",
-      }),
-      reviewPolicy: async () => ({
-        classification: "safe",
-        evidence: "Synthetic policy evidence.",
+      reviewScenario: async () => ({
+        raw: {
+          classification: "supported",
+          evidence: "Synthetic RAW evidence.",
+        },
+        contentAvailability: await reviewContent(),
+        sdkCapability: {
+          classification: "supported",
+          evidence: "Synthetic SDK evidence.",
+        },
+        artifactPolicy: {
+          classification: "safe",
+          evidence: "Synthetic policy evidence.",
+        },
       }),
     };
 
@@ -577,18 +623,20 @@ describe("scenario generation campaign", () => {
           };
         },
         reviewReadiness: async () => ({ decision: "ready" }),
-        reviewRaw: async () => ({
-          classification: "supported",
-          evidence: "Synthetic RAW evidence.",
-        }),
-        reviewContent: async () => ({
-          classification: "supplied",
-          evidence: "Synthetic content evidence.",
-        }),
-        reviewSdkCapability,
-        reviewPolicy: async () => ({
-          classification: "safe",
-          evidence: "Synthetic policy evidence.",
+        reviewScenario: async () => ({
+          raw: {
+            classification: "supported",
+            evidence: "Synthetic RAW evidence.",
+          },
+          contentAvailability: {
+            classification: "supplied",
+            evidence: "Synthetic content evidence.",
+          },
+          sdkCapability: await reviewSdkCapability(),
+          artifactPolicy: {
+            classification: "safe",
+            evidence: "Synthetic policy evidence.",
+          },
         }),
       },
       { select: () => 0 },
@@ -612,21 +660,23 @@ describe("scenario generation campaign", () => {
         ),
       }),
       reviewReadiness: async () => ({ decision: "ready" }),
-      reviewRaw: async () => ({
-        classification: "supported",
-        evidence: "Synthetic RAW evidence.",
-      }),
-      reviewContent: async () => ({
-        classification: "supplied",
-        evidence: "Synthetic content evidence.",
-      }),
-      reviewSdkCapability: async () => ({
-        classification: "explicitUnsupportedProbe",
-        evidence: "The scenario explicitly probes unsupported elevation.",
-      }),
-      reviewPolicy: async () => ({
-        classification: "safe",
-        evidence: "Synthetic policy evidence.",
+      reviewScenario: async () => ({
+        raw: {
+          classification: "supported",
+          evidence: "Synthetic RAW evidence.",
+        },
+        contentAvailability: {
+          classification: "supplied",
+          evidence: "Synthetic content evidence.",
+        },
+        sdkCapability: {
+          classification: "explicitUnsupportedProbe",
+          evidence: "The scenario explicitly probes unsupported elevation.",
+        },
+        artifactPolicy: {
+          classification: "safe",
+          evidence: "Synthetic policy evidence.",
+        },
       }),
     };
     const probeConfig = {
@@ -645,10 +695,24 @@ describe("scenario generation campaign", () => {
       probeConfig,
       {
         ...baseAgents,
-        reviewSdkCapability: async () => ({
-          classification: "missingUnsupportedProbe",
-          evidence: "The current SDK now supports every requested mechanic.",
-          critique: "Choose a capability that remains unsupported.",
+        reviewScenario: async () => ({
+          raw: {
+            classification: "supported",
+            evidence: "Synthetic RAW evidence.",
+          },
+          contentAvailability: {
+            classification: "supplied",
+            evidence: "Synthetic content evidence.",
+          },
+          sdkCapability: {
+            classification: "missingUnsupportedProbe",
+            evidence: "The current SDK now supports every requested mechanic.",
+            critique: "Choose a capability that remains unsupported.",
+          },
+          artifactPolicy: {
+            classification: "safe",
+            evidence: "Synthetic policy evidence.",
+          },
         }),
       },
       { select: () => 0 },

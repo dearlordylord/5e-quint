@@ -11,6 +11,7 @@ import type { ScenarioSession } from "./scenario-session.ts";
 import type { ScenarioSessionUpdateIssue } from "./scenario-session.ts";
 import type { ScenarioRelationResult } from "./scenario-session.ts";
 import type { CoordinateInput } from "../../../packages/tactical-space/src/index.ts";
+import type { PlayerCurrentTurnProjection } from "./player-turn-projection.ts";
 
 export type ScenarioBattleResolutionResult =
   | (BattleRuntimeResolutionResult extends infer Result
@@ -94,14 +95,22 @@ export type PlayerContinuationOutcome =
   | {
       readonly kind: "continue";
       readonly session: ScenarioSession;
-      readonly observation: JsonValue;
+      readonly tacticalNote: string;
     }
   | {
       readonly kind: "playerConcluded";
       readonly session: ScenarioSession;
-      readonly observation: JsonValue;
+      readonly tacticalNote: string;
       readonly conclusion: string;
     };
+
+export type PlayerObservation = {
+  readonly continuation: number;
+  readonly kind: "continue" | "playerConcluded";
+  readonly projection: PlayerCurrentTurnProjection;
+  readonly tacticalNote: string;
+  readonly conclusion?: string;
+};
 
 export type PlayerContinuation = (
   context: PlayerContinuationContext,

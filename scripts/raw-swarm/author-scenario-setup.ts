@@ -1,9 +1,11 @@
 import { spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import {
   constants,
   copyFileSync,
   existsSync,
   mkdtempSync,
+  mkdirSync,
   rmSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -11,6 +13,7 @@ import { resolve } from "node:path";
 import { Either } from "effect";
 
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
+import { runCodexInvocation } from "./model-telemetry.ts";
 import {
   consumerPermissionProfileAvailable,
   createConsumerCodexHome,
@@ -39,12 +42,14 @@ function runSetupAuthor(input: {
   readonly scratch: string;
   readonly codexHome: string;
   readonly permissionArgs: readonly string[];
+  readonly scenarioId: string;
+  readonly evidenceDirectory: string;
   readonly role: ScenarioSetupAuthorRole;
   readonly instruction: string;
 }): void {
-  const result = spawnSync(
-    "codex",
-    [
+  const invocationStem = `${input.scenarioId}-setup-${input.role}-authoring-${randomUUID()}`;
+  const result = runCodexInvocation({
+    args: [
       "exec",
       "-C",
       input.scratch,
@@ -59,12 +64,22 @@ function runSetupAuthor(input: {
       'model_reasoning_effort="medium"',
       input.instruction,
     ],
-    {
-      cwd: input.scratch,
-      env: { ...process.env, CODEX_HOME: input.codexHome },
-      stdio: "inherit",
-    },
-  );
+    cwd: input.scratch,
+    env: { ...process.env, CODEX_HOME: input.codexHome },
+    eventPath: resolve(
+      input.evidenceDirectory,
+      `${invocationStem}-events.jsonl`,
+    ),
+    logPath: resolve(input.evidenceDirectory, `${invocationStem}-agent.log`),
+    ledgerPath: resolve(
+      input.evidenceDirectory,
+      `${input.scenarioId}-authoring-invocations.jsonl`,
+    ),
+    phase: "scenarioSetupAuthoring",
+    fallbackInvocationId: `${input.scenarioId}-setup-${input.role}-authoring`,
+    model: "gpt-5.6-sol",
+    reasoningEffort: "medium",
+  });
   if (result.error !== undefined) throw result.error;
   if (result.signal !== null) {
     fail(`Scenario setup ${input.role} agent stopped by ${result.signal}.`);
@@ -134,6 +149,8 @@ async function main(args: readonly string[]): Promise<void> {
 
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-scenario-setup-"));
   const codexHome = createConsumerCodexHome();
+  const evidenceDirectory = resolve(repoRoot, "scripts/raw-swarm/out");
+  mkdirSync(evidenceDirectory, { recursive: true });
   try {
     const characters = await evaluateScenarioCharacters(charactersPath);
     if (characters.tag === "invalid") fail(characters.message);
@@ -164,6 +181,8 @@ async function main(args: readonly string[]): Promise<void> {
           scratch,
           codexHome,
           permissionArgs,
+          scenarioId: scenarioId.right,
+          evidenceDirectory,
           role,
           instruction:
             role === "neutral"

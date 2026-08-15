@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   closeSync,
   copyFileSync,
@@ -26,6 +26,12 @@ import {
   repoRoot,
 } from "./transcript.ts";
 import { Either } from "effect";
+import {
+  appendInvocationLedger,
+  invocationIdFromCodexEvents,
+  modelUsageFromCodexEvents,
+  readCodexEvents,
+} from "./model-telemetry.ts";
 
 function fail(message: string): never {
   throw new Error(message);
@@ -68,22 +74,39 @@ async function main(args: readonly string[]): Promise<void> {
   const [scenarioId, ...options] = args;
   const decodedScenarioId = decodeScenarioId(scenarioId);
   const instructionalFallback = options.includes("--instructional-isolation");
+  const evidenceIdFlagIndex = options.indexOf("--evidence-id");
+  const evidenceIdInput =
+    evidenceIdFlagIndex === -1 ? scenarioId : options[evidenceIdFlagIndex + 1];
+  const decodedEvidenceId = decodeScenarioId(evidenceIdInput);
+  const evidenceIdOptionIndexes =
+    evidenceIdFlagIndex === -1
+      ? new Set<number>()
+      : new Set([evidenceIdFlagIndex, evidenceIdFlagIndex + 1]);
+  const acceptedOptions = options.filter(
+    (_option, index) => !evidenceIdOptionIndexes.has(index),
+  );
   if (
     Either.isLeft(decodedScenarioId) ||
-    options.some((option) => option !== "--instructional-isolation") ||
+    Either.isLeft(decodedEvidenceId) ||
+    acceptedOptions.some((option) => option !== "--instructional-isolation") ||
     options.filter((option) => option === "--instructional-isolation").length >
-      1
+      1 ||
+    options.filter((option) => option === "--evidence-id").length > 1 ||
+    (evidenceIdFlagIndex !== -1 && evidenceIdFlagIndex + 1 >= options.length)
   ) {
-    fail("Usage: run-sdk-player.ts <scenario-id> [--instructional-isolation]");
+    fail(
+      "Usage: run-sdk-player.ts <scenario-id> [--evidence-id <evidence-id>] [--instructional-isolation]",
+    );
   }
   const acceptedScenarioId = decodedScenarioId.right;
+  const acceptedEvidenceId = decodedEvidenceId.right;
   const revision = currentGitRevision();
   if (revision.tag === "dirty") {
     fail("SDK player recording requires a clean Git worktree.");
   }
   const output = resolve(
     repoRoot,
-    `scripts/raw-swarm/out/${acceptedScenarioId}-sdk-player`,
+    `scripts/raw-swarm/out/${acceptedEvidenceId}-sdk-player`,
   );
   if (existsSync(output)) {
     fail(`Refusing to overwrite SDK player evidence: ${output}`);
@@ -187,10 +210,15 @@ async function main(args: readonly string[]): Promise<void> {
     );
 
     const agentLogPath = resolve(trusted, "agent.log");
+    const agentEventsPath = resolve(trusted, "evidence/player-events.jsonl");
     const agentLog = openSync(agentLogPath, "w");
+    const agentEvents = openSync(agentEventsPath, "w");
     const permissionArgs = profileAvailable
       ? ([] as const)
       : (["--dangerously-bypass-approvals-and-sandbox"] as const);
+    const startedAt = new Date().toISOString();
+    const started = performance.now();
+    const fallbackInvocationId = randomUUID();
     const result = spawnSync(
       "codex",
       [
@@ -200,6 +228,7 @@ async function main(args: readonly string[]): Promise<void> {
         ...permissionArgs,
         "--skip-git-repo-check",
         "--ephemeral",
+        "--json",
         "--disable",
         "tool_call_mcp_elicitation",
         "-m",
@@ -219,10 +248,30 @@ async function main(args: readonly string[]): Promise<void> {
       {
         cwd: scratch,
         env: { ...process.env, CODEX_HOME: codexHome },
-        stdio: ["ignore", agentLog, agentLog],
+        stdio: ["ignore", agentEvents, agentLog],
       },
     );
     closeSync(agentLog);
+    closeSync(agentEvents);
+    const parsedEvents = readCodexEvents(agentEventsPath);
+    const events = parsedEvents.tag === "valid" ? parsedEvents.events : [];
+    appendInvocationLedger(resolve(trusted, "evidence/invocations.jsonl"), {
+      schemaVersion: 1,
+      phase: "player",
+      invocationId: invocationIdFromCodexEvents(events, fallbackInvocationId),
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt,
+      elapsedMilliseconds: Math.round(performance.now() - started),
+      exit:
+        result.signal === null
+          ? { tag: "exited", status: result.status ?? -1 }
+          : { tag: "signaled", signal: result.signal },
+      usage:
+        parsedEvents.tag === "valid"
+          ? modelUsageFromCodexEvents(events)
+          : { tag: "unavailable", reason: parsedEvents.message },
+    });
     if (result.error !== undefined) throw result.error;
     if (result.signal !== null)
       fail(`Player agent stopped by ${result.signal}.`);

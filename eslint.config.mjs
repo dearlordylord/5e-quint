@@ -38,6 +38,7 @@ export default [
       ".output/**",
       ".quint-cache/**",
       ".references/**",
+      "scripts/raw-swarm/out/**",
       ".turbo/**",
       ".worktrees/**",
       "_apalache-out/**",

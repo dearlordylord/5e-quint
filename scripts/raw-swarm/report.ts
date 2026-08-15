@@ -1,23 +1,27 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { Either, Match, Option, Schema } from "effect";
 
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
-import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
-
 import {
-  isJsonRecord,
-  parsePlayerTranscript,
-  repoRoot,
-  sha256Canonical,
-} from "./transcript.ts";
+  exportArtifactIndex,
+  ingestArtifactRun,
+  inventoryLegacyDatabase,
+  openArtifactIndex,
+  registerIndexArtifact,
+  rebuildLegacyArtifactIndex,
+} from "./artifact-index.ts";
+import {
+  extractSdkTranscriptSequences,
+  readSdkAudit,
+} from "./sdk-player/sdk-audit.ts";
 
-const githubIssueNumberSqlCheck =
-  "githubIssueNumber IS NULL OR (typeof(githubIssueNumber) = 'integer' AND githubIssueNumber > 0)";
+import { isJsonRecord, repoRoot, sha256Canonical } from "./transcript.ts";
+
 const RAW_SWARM_GITHUB_LABEL = "raw-swarm";
 const RAW_SWARM_LINK_LOCKED_ENV = "DND_RAW_SWARM_GITHUB_LINK_LOCKED";
 const ISSUE_LINK_FILTERS = [
@@ -80,116 +84,7 @@ function fail(message: string): never {
 }
 
 function openDb(dbPath: string): DatabaseSync {
-  const resolved = resolve(repoRoot, dbPath);
-  mkdirSync(dirname(resolved), { recursive: true });
-  const db = new DatabaseSync(resolved);
-  db.exec("PRAGMA foreign_keys = ON");
-  db.exec("PRAGMA journal_mode = WAL");
-  db.exec("PRAGMA busy_timeout = 5000");
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS runs(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      scenarioId TEXT,
-      gitSha TEXT,
-      startedAt TEXT,
-      transcriptPath TEXT,
-      transcriptSha256 TEXT,
-      consumerIsolation TEXT
-        CHECK(consumerIsolation IS NULL OR consumerIsolation IN ('permissionProfile', 'instructionalFallback'))
-    );
-    CREATE TABLE IF NOT EXISTS steps(
-      runId INT,
-      seq INT,
-      tool TEXT,
-      args TEXT,
-      response TEXT,
-      responseSha256 TEXT,
-      FOREIGN KEY(runId) REFERENCES runs(id)
-    );
-    CREATE TABLE IF NOT EXISTS reviewRounds(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      runId INT,
-      reviewer TEXT,
-      artifactPath TEXT,
-      createdAt TEXT,
-      FOREIGN KEY(runId) REFERENCES runs(id)
-    );
-    CREATE TABLE IF NOT EXISTS issues(
-      fingerprint TEXT PRIMARY KEY,
-      class TEXT,
-      claim TEXT,
-      firstSeenAt TEXT,
-      lastSeenAt TEXT,
-      githubIssueNumber INTEGER CHECK(${githubIssueNumberSqlCheck})
-    );
-    CREATE TABLE IF NOT EXISTS verdicts(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      runId INT,
-      class TEXT,
-      claim TEXT,
-      evidence TEXT,
-      reviewer TEXT,
-      createdAt TEXT,
-      reviewRoundId INT,
-      issueFingerprint TEXT,
-      FOREIGN KEY(runId) REFERENCES runs(id),
-      FOREIGN KEY(reviewRoundId) REFERENCES reviewRounds(id),
-      FOREIGN KEY(issueFingerprint) REFERENCES issues(fingerprint)
-    );
-  `);
-  const runColumns = db.prepare("PRAGMA table_info(runs)").all();
-  if (
-    !runColumns.some(
-      (column) => isJsonRecord(column) && column.name === "consumerIsolation",
-    )
-  ) {
-    db.exec(`
-      ALTER TABLE runs ADD COLUMN consumerIsolation TEXT
-        CHECK(consumerIsolation IS NULL OR consumerIsolation IN ('permissionProfile', 'instructionalFallback'))
-    `);
-  }
-  if (
-    !runColumns.some(
-      (column) => isJsonRecord(column) && column.name === "transcriptSha256",
-    )
-  ) {
-    db.exec("ALTER TABLE runs ADD COLUMN transcriptSha256 TEXT");
-  }
-  const stepColumns = db.prepare("PRAGMA table_info(steps)").all();
-  if (
-    !stepColumns.some(
-      (column) => isJsonRecord(column) && column.name === "response",
-    )
-  ) {
-    db.exec("ALTER TABLE steps ADD COLUMN response TEXT");
-  }
-  const verdictColumns = db.prepare("PRAGMA table_info(verdicts)").all();
-  if (
-    !verdictColumns.some(
-      (column) => isJsonRecord(column) && column.name === "reviewRoundId",
-    )
-  ) {
-    db.exec("ALTER TABLE verdicts ADD COLUMN reviewRoundId INT");
-  }
-  if (
-    !verdictColumns.some(
-      (column) => isJsonRecord(column) && column.name === "issueFingerprint",
-    )
-  ) {
-    db.exec("ALTER TABLE verdicts ADD COLUMN issueFingerprint TEXT");
-  }
-  const issueColumns = db.prepare("PRAGMA table_info(issues)").all();
-  if (
-    !issueColumns.some(
-      (column) => isJsonRecord(column) && column.name === "githubIssueNumber",
-    )
-  ) {
-    db.exec(`
-      ALTER TABLE issues ADD COLUMN githubIssueNumber INTEGER
-        CHECK(${githubIssueNumberSqlCheck})
-    `);
-  }
-  return db;
+  return openArtifactIndex(dbPath);
 }
 
 function recordBugIssue(
@@ -358,181 +253,289 @@ function runExists(db: DatabaseSync, runId: number): boolean {
   return isJsonRecord(run) && run.id === runId;
 }
 
-function hasRemovedScenarioRegistry(dbPath: string): boolean {
-  const resolved = resolve(repoRoot, dbPath);
-  if (!existsSync(resolved)) return false;
-  const db = new DatabaseSync(resolved, { readOnly: true });
-  const row = db
-    .prepare(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'scenarios'",
-    )
-    .get();
-  db.close();
-  return isJsonRecord(row) && row.name === "scenarios";
-}
-
 export function ingest(args: readonly string[]): void {
   const [transcriptArg, ...rest] = args;
   const transcriptPath = required(transcriptArg, "<transcript.jsonl>");
   const dbPath = required(flagValue(rest, "--db"), "--db");
+  const runId = ingestArtifactRun({ transcriptPath, dbPath });
+  console.log(`Indexed run ${runId} from ${transcriptPath} into ${dbPath}`);
+}
 
-  const transcriptBytes = readFileSync(resolve(repoRoot, transcriptPath));
+function legacyInventory(args: readonly string[]): void {
+  const legacyDbPath = required(flagValue(args, "--legacy-db"), "--legacy-db");
+  for (const row of inventoryLegacyDatabase({ legacyDbPath })) {
+    console.log(JSON.stringify(row));
+  }
+}
+
+function rebuildIndex(args: readonly string[]): void {
+  const legacyDbPath = required(flagValue(args, "--legacy-db"), "--legacy-db");
+  const dbPath = required(flagValue(args, "--db"), "--db");
+  const artifactDirectory = required(
+    flagValue(args, "--artifacts"),
+    "--artifacts",
+  );
+  const result = rebuildLegacyArtifactIndex({
+    legacyDbPath,
+    dbPath,
+    artifactDirectory,
+  });
+  console.log(`Rebuilt ${result.inventory.length} legacy artifact references.`);
+}
+
+function portableExport(args: readonly string[]): void {
+  const dbPath = required(flagValue(args, "--db"), "--db");
+  const destination = required(
+    flagValue(args, "--destination"),
+    "--destination",
+  );
+  const manifest = exportArtifactIndex({ dbPath, destination });
+  console.log(JSON.stringify(manifest));
+}
+
+function controlledReporting(args: readonly string[]): void {
+  const [transcriptArg, reviewArg, ...rest] = args;
+  const transcriptPath = required(transcriptArg, "<transcript.jsonl>");
+  const reviewPath = required(reviewArg, "<review.json>");
+  const dbPath = required(flagValue(rest, "--db"), "--db");
+  const destination = required(
+    flagValue(rest, "--destination"),
+    "--destination",
+  );
+  const timingPath = required(flagValue(rest, "--timing"), "--timing");
+  const absoluteDestination = resolve(repoRoot, destination);
+  const absoluteTimingPath = resolve(repoRoot, timingPath);
+  const portableTimingPath = relative(absoluteDestination, absoluteTimingPath);
+  if (
+    portableTimingPath === ".." ||
+    portableTimingPath.startsWith(`..${sep}`)
+  ) {
+    fail("Controlled reporting timing must be inside the portable export.");
+  }
+  if (existsSync(absoluteTimingPath)) {
+    fail("Refusing to overwrite controlled reporting timing evidence.");
+  }
+  const started = performance.now();
+  const runId = ingestArtifactRun({ transcriptPath, dbPath });
+  review([reviewPath, "--db", dbPath, "--run", String(runId)]);
+  const manifest = exportArtifactIndex({ dbPath, destination });
   const transcriptSha256 = createHash("sha256")
-    .update(transcriptBytes)
+    .update(readFileSync(resolve(repoRoot, transcriptPath)))
     .digest("hex");
-  const lines = transcriptBytes
+  const reviewSha256 = createHash("sha256")
+    .update(readFileSync(resolve(repoRoot, reviewPath)))
+    .digest("hex");
+  writeFileSync(
+    absoluteTimingPath,
+    `${JSON.stringify(
+      {
+        schemaVersion: 1,
+        operations: ["ingest", "review", "portableExport"],
+        runId,
+        transcriptSha256,
+        reviewSha256,
+        indexSha256: manifest.index.sha256,
+        elapsedMilliseconds: Math.round(performance.now() - started),
+      },
+      null,
+      2,
+    )}\n`,
+    { flag: "wx" },
+  );
+  const timingBytes = readFileSync(absoluteTimingPath);
+  const timingArtifact = {
+    path: portableTimingPath,
+    sha256: createHash("sha256").update(timingBytes).digest("hex"),
+    byteLength: timingBytes.byteLength,
+  };
+  writeFileSync(
+    resolve(absoluteDestination, "manifest.json"),
+    `${JSON.stringify(
+      {
+        ...manifest,
+        artifacts: [...manifest.artifacts, timingArtifact].sort((left, right) =>
+          left.sha256.localeCompare(right.sha256),
+        ),
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  console.log(`Controlled reporting evidence: ${timingPath}`);
+}
+
+function recordDrilldown(args: readonly string[]): void {
+  const [recordsPath, provenancePath] = args;
+  const dbPath = required(flagValue(args, "--db"), "--db");
+  const reviewId = positiveInteger(
+    required(flagValue(args, "--review"), "--review"),
+    "--review",
+  );
+  const extractedPath = required(recordsPath, "<records.jsonl>");
+  const path = required(provenancePath, "<provenance.json>");
+  const value: unknown = JSON.parse(
+    readFileSync(resolve(repoRoot, path), "utf8"),
+  );
+  if (
+    !isJsonRecord(value) ||
+    value.schemaVersion !== 1 ||
+    typeof value.transcriptPath !== "string" ||
+    typeof value.transcriptByteLength !== "number" ||
+    typeof value.transcriptSha256 !== "string" ||
+    typeof value.extractedRecordsByteLength !== "number" ||
+    typeof value.extractedRecordsSha256 !== "string" ||
+    !Array.isArray(value.records)
+  ) {
+    fail("SDK extraction provenance is invalid.");
+  }
+  const extractedBytes = readFileSync(resolve(repoRoot, extractedPath));
+  if (
+    extractedBytes.byteLength !== value.extractedRecordsByteLength ||
+    createHash("sha256").update(extractedBytes).digest("hex") !==
+      value.extractedRecordsSha256
+  ) {
+    fail("SDK extraction artifact does not match its provenance.");
+  }
+  const extractedLines = extractedBytes
     .toString("utf8")
     .split("\n")
-    .filter((line) => line.trim().length > 0)
-    .map((line): unknown => JSON.parse(line));
-
-  const parsed = parseEvidenceTranscript(lines);
-  if (parsed.tag === "invalid") fail(parsed.message);
-  const { header, steps } = parsed.value;
-
-  if (hasRemovedScenarioRegistry(dbPath)) {
-    fail(
-      "This database uses the removed scenario-interpreter registry; preserve it as historical evidence and ingest player runs into a new database",
-    );
+    .filter((line) => line.trim().length > 0);
+  if (extractedLines.length !== value.records.length) {
+    fail("SDK extraction artifact record count does not match its provenance.");
   }
   const db = openDb(dbPath);
-  const insertRun = db.prepare(
-    "INSERT INTO runs(scenarioId, gitSha, startedAt, transcriptPath, transcriptSha256, consumerIsolation) VALUES (?, ?, ?, ?, ?, ?)",
-  );
-  const insertStep = db.prepare(
-    "INSERT INTO steps(runId, seq, tool, args, response, responseSha256) VALUES (?, ?, ?, ?, ?, ?)",
-  );
-
-  db.exec("BEGIN");
-  const runId = (() => {
-    try {
-      const info = insertRun.run(
-        header.scenarioId,
-        header.gitSha,
-        header.startedAt,
-        transcriptPath,
-        transcriptSha256,
-        header.kind === "sdkPlayer" ? header.consumerIsolation : null,
+  try {
+    const review = db
+      .prepare(
+        `SELECT reviews.id, transcript.sha256, transcript.byteLength, transcript.path,
+                audit.path AS auditPath, replay.path AS replayPath
+         FROM reviews
+         JOIN runs ON runs.id = reviews.runId
+         JOIN artifacts transcript ON transcript.sha256 = runs.transcriptSha256
+         LEFT JOIN artifacts audit ON audit.sha256 = reviews.auditSha256
+         LEFT JOIN runArtifacts replayRole
+           ON replayRole.runId = runs.id AND replayRole.role = 'replaySupervisor'
+         LEFT JOIN artifacts replay ON replay.sha256 = replayRole.artifactSha256
+         WHERE reviews.id = ?`,
+      )
+      .get(reviewId);
+    if (!isJsonRecord(review)) {
+      fail(`Unknown review ${reviewId}`);
+    }
+    if (
+      review.sha256 !== value.transcriptSha256 ||
+      review.byteLength !== value.transcriptByteLength
+    ) {
+      fail(
+        "SDK extraction provenance does not identify the reviewed transcript.",
       );
-      const insertedRunId = Number(info.lastInsertRowid);
-      for (const step of steps) {
-        insertStep.run(
-          insertedRunId,
-          step.seq,
-          step.tool,
-          JSON.stringify(step.args),
-          JSON.stringify(step.response),
-          step.responseSha256,
+    }
+    if (
+      typeof review.path !== "string" ||
+      typeof review.auditPath !== "string" ||
+      typeof review.replayPath !== "string"
+    ) {
+      fail("Reviewed drill-down has no derived audit authority.");
+    }
+    const audit = readSdkAudit(resolve(repoRoot, review.auditPath), {
+      transcriptPath: review.path,
+      replaySupervisorPath: review.replayPath,
+    });
+    if (audit.tag === "invalid") fail(audit.message);
+    const requestedSequences = value.records.map((row) => {
+      if (!isJsonRecord(row) || typeof row.seq !== "number") {
+        return fail("SDK extraction provenance record is invalid.");
+      }
+      return row.seq;
+    });
+    const authoritativeExtraction = extractSdkTranscriptSequences({
+      audit: audit.audit,
+      sequences: requestedSequences,
+      transcriptArtifactPath: review.path,
+      replaySupervisorArtifactPath: review.replayPath,
+    });
+    if (authoritativeExtraction.tag === "invalid") {
+      fail(authoritativeExtraction.message);
+    }
+    if (
+      authoritativeExtraction.encodedRecords !==
+        extractedBytes.toString("utf8") ||
+      sha256Canonical(authoritativeExtraction.provenance) !==
+        sha256Canonical(value)
+    ) {
+      fail("SDK extraction does not match the reviewed derived audit.");
+    }
+    const artifact = registerIndexArtifact({
+      db,
+      path,
+      mediaType: "application/json",
+    });
+    const extractionArtifact = registerIndexArtifact({
+      db,
+      path: extractedPath,
+      mediaType: "application/x-ndjson",
+    });
+    db.exec("BEGIN");
+    try {
+      const insert = db.prepare(
+        `INSERT INTO reviewDrilldowns(reviewId, seq, extractedSha256, extractedByteLength, extractionArtifactSha256, provenanceSha256)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      );
+      for (const [index, row] of value.records.entries()) {
+        if (
+          !isJsonRecord(row) ||
+          typeof row.seq !== "number" ||
+          typeof row.operation !== "string" ||
+          (row.outcome !== "returned" && row.outcome !== "threw") ||
+          typeof row.extractedSha256 !== "string" ||
+          typeof row.extractedByteLength !== "number"
+        ) {
+          fail("SDK extraction provenance record is invalid.");
+        }
+        const extractedLine = extractedLines[index];
+        if (
+          extractedLine === undefined ||
+          Buffer.byteLength(extractedLine) !== row.extractedByteLength ||
+          createHash("sha256").update(extractedLine).digest("hex") !==
+            row.extractedSha256
+        ) {
+          fail(
+            `SDK extraction record ${row.seq} does not match its provenance.`,
+          );
+        }
+        let extractedRecord: unknown;
+        try {
+          extractedRecord = JSON.parse(extractedLine);
+        } catch {
+          fail(`SDK extraction record ${row.seq} is malformed JSON.`);
+        }
+        if (
+          !isJsonRecord(extractedRecord) ||
+          extractedRecord.seq !== row.seq ||
+          extractedRecord.operation !== row.operation ||
+          extractedRecord.outcome !== row.outcome
+        ) {
+          fail(
+            `SDK extraction record ${row.seq} identity does not match its provenance.`,
+          );
+        }
+        insert.run(
+          reviewId,
+          row.seq,
+          row.extractedSha256,
+          row.extractedByteLength,
+          extractionArtifact.sha256,
+          artifact.sha256,
         );
       }
       db.exec("COMMIT");
-      return insertedRunId;
     } catch (error) {
       db.exec("ROLLBACK");
       throw error;
     }
-  })();
-
-  console.log(
-    `Ingested run ${runId} (${steps.length} steps) for scenario ${header.scenarioId} into ${dbPath}`,
-  );
-  db.close();
-}
-
-type EvidenceStep = {
-  readonly seq: number;
-  readonly tool: string;
-  readonly args: unknown;
-  readonly response: unknown;
-  readonly responseSha256: string;
-};
-
-function parseEvidenceTranscript(lines: readonly unknown[]):
-  | {
-      readonly tag: "valid";
-      readonly value: {
-        readonly header: {
-          readonly scenarioId: string;
-          readonly gitSha: string;
-          readonly startedAt: string;
-        } & (
-          | { readonly kind: "mcpPlayer" }
-          | {
-              readonly kind: "sdkPlayer";
-              readonly consumerIsolation:
-                | "permissionProfile"
-                | "instructionalFallback";
-            }
-        );
-        readonly steps: readonly EvidenceStep[];
-      };
-    }
-  | { readonly tag: "invalid"; readonly message: string } {
-  const header = lines[0];
-  if (!isJsonRecord(header) || typeof header.type !== "string") {
-    return { tag: "invalid", message: "Evidence transcript has no header." };
+  } finally {
+    db.close();
   }
-  return Match.value(header.type).pipe(
-    Match.when("header", () => {
-      const parsed = parsePlayerTranscript(lines);
-      return parsed.tag === "invalid"
-        ? parsed
-        : {
-            tag: "valid" as const,
-            value: {
-              header: {
-                ...parsed.value.header,
-                kind: "mcpPlayer" as const,
-              },
-              steps: parsed.value.exchanges,
-            },
-          };
-    }),
-    Match.when("sdk-player-header", () => {
-      const parsed = parseSdkTranscript(lines);
-      return parsed.tag === "invalid"
-        ? parsed
-        : {
-            tag: "valid" as const,
-            value: {
-              header: {
-                ...parsed.value.header,
-                kind: "sdkPlayer" as const,
-              },
-              steps: parsed.value.calls.map((call) => {
-                const response =
-                  call.outcome === "returned"
-                    ? {
-                        outcome: call.outcome,
-                        outputSession: call.outputSession,
-                        outputSessionSha256: call.outputSessionSha256,
-                        result: call.result,
-                      }
-                    : {
-                        outcome: call.outcome,
-                        rejection: call.rejection,
-                        error: call.error,
-                      };
-                return {
-                  seq: call.seq,
-                  tool: call.operation,
-                  args: {
-                    inputSession: call.inputSession,
-                    inputSessionSha256: call.inputSessionSha256,
-                    input: call.input,
-                  },
-                  response,
-                  responseSha256: sha256Canonical(response),
-                };
-              }),
-            },
-          };
-    }),
-    Match.orElse(() => ({
-      tag: "invalid" as const,
-      message: `Unsupported evidence transcript header ${header.type}.`,
-    })),
-  );
 }
 
 function verdict(args: readonly string[]): void {
@@ -599,7 +602,9 @@ export function review(args: readonly string[]): void {
   const db = openDb(dbPath);
   const run = db
     .prepare(
-      "SELECT scenarioId, gitSha, transcriptPath, transcriptSha256 FROM runs WHERE id = ?",
+      `SELECT r.scenarioId, r.gitSha, r.transcriptSha256, a.path AS transcriptPath
+       FROM runs r JOIN artifacts a ON a.sha256 = r.transcriptSha256
+       WHERE r.id = ?`,
     )
     .get(runId);
   if (!isJsonRecord(run)) {
@@ -624,18 +629,53 @@ export function review(args: readonly string[]): void {
     fail("Review identity does not match the selected run");
   }
   const createdAt = new Date().toISOString();
+  const absoluteReviewPath = resolve(repoRoot, reviewPath);
+  const reviewStem = absoluteReviewPath.endsWith(".json")
+    ? absoluteReviewPath.slice(0, -".json".length)
+    : absoluteReviewPath;
+  const reviewArtifact = registerIndexArtifact({
+    db,
+    path: reviewPath,
+    mediaType: "application/json",
+  });
+  const auditPath = `${reviewStem}.audit.jsonl`;
+  const auditArtifact = (() => {
+    if (!existsSync(auditPath)) return null;
+    const audit = readSdkAudit(auditPath);
+    if (
+      audit.tag === "invalid" ||
+      audit.audit.header.transcriptSha256 !== run.transcriptSha256
+    ) {
+      fail("Review audit does not match the selected run.");
+    }
+    return registerIndexArtifact({
+      db,
+      path: auditPath,
+      mediaType: "application/x-ndjson",
+    });
+  })();
+  const ledgerPath = `${reviewStem}.invocations.jsonl`;
+  const ledgerArtifact = existsSync(ledgerPath)
+    ? registerIndexArtifact({
+        db,
+        path: ledgerPath,
+        mediaType: "application/x-ndjson",
+      })
+    : null;
   const insertReviewRound = db.prepare(
-    "INSERT INTO reviewRounds(runId, reviewer, artifactPath, createdAt) VALUES (?, ?, ?, ?)",
+    "INSERT INTO reviews(runId, reviewer, artifactSha256, auditSha256, invocationLedgerSha256, createdAt) VALUES (?, ?, ?, ?, ?, ?)",
   );
   const insert = db.prepare(
-    "INSERT INTO verdicts(runId, class, claim, evidence, reviewer, createdAt, reviewRoundId, issueFingerprint) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO verdicts(runId, class, claim, evidence, reviewer, createdAt, reviewId, issueFingerprint) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
   );
   db.exec("BEGIN");
   try {
     const reviewRound = insertReviewRound.run(
       runId,
       decoded.right.reviewer,
-      reviewPath,
+      reviewArtifact.sha256,
+      auditArtifact?.sha256 ?? null,
+      ledgerArtifact?.sha256 ?? null,
       createdAt,
     );
     const reviewRoundId = Number(reviewRound.lastInsertRowid);
@@ -978,9 +1018,14 @@ function main(): void {
     Match.when("summary", () => summary(rest)),
     Match.when("issues", () => issues(rest)),
     Match.when("link-github-issue", () => linkGithubIssueCommand(rest)),
+    Match.when("legacy-inventory", () => legacyInventory(rest)),
+    Match.when("rebuild-index", () => rebuildIndex(rest)),
+    Match.when("export", () => portableExport(rest)),
+    Match.when("controlled-reporting", () => controlledReporting(rest)),
+    Match.when("drilldown", () => recordDrilldown(rest)),
     Match.orElse(() =>
       fail(
-        "Usage: report.ts <ingest|verdict|review|summary|issues|link-github-issue> ... (see scripts/raw-swarm/README.md)",
+        "Usage: report.ts <ingest|verdict|review|summary|issues|link-github-issue|legacy-inventory|rebuild-index|export|controlled-reporting|drilldown> ... (see scripts/raw-swarm/README.md)",
       ),
     ),
   );

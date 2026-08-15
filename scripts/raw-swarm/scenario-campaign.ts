@@ -166,6 +166,16 @@ export const ScenarioPolicyReviewSchema = Schema.Union(
   ViolatingScenarioPolicyReviewSchema,
 );
 
+export const ScenarioCompositeReviewSchema = Schema.Struct({
+  raw: ScenarioRawReviewSchema,
+  contentAvailability: ScenarioContentReviewSchema,
+  sdkCapability: ScenarioSdkCapabilityReviewSchema,
+  artifactPolicy: ScenarioPolicyReviewSchema,
+});
+export type ScenarioCompositeReview = Schema.Schema.Type<
+  typeof ScenarioCompositeReviewSchema
+>;
+
 const ScenarioSha256Schema = Schema.String.pipe(
   Schema.pattern(/^[0-9a-f]{64}$/),
   Schema.brand("RawSwarmScenarioSha256"),
@@ -487,19 +497,12 @@ export interface ScenarioCampaignAgents {
     readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
     readonly sdkCapabilityIntent: ScenarioCampaignConfig["sdkCapabilityIntent"];
   }) => Promise<ScenarioReadiness>;
-  readonly reviewRaw: (
-    scenario: string,
-    finalReview: boolean,
-  ) => Promise<ScenarioRawReview>;
-  readonly reviewContent: (input: {
+  readonly reviewScenario: (input: {
     readonly scenario: string;
+    readonly finalReview: boolean;
     readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
-  }) => Promise<ScenarioContentReview>;
-  readonly reviewSdkCapability: (input: {
-    readonly scenario: string;
     readonly sdkCapabilityIntent: ScenarioCampaignConfig["sdkCapabilityIntent"];
-  }) => Promise<ScenarioSdkCapabilityReview>;
-  readonly reviewPolicy: (scenario: string) => Promise<ScenarioPolicyReview>;
+  }) => Promise<ScenarioCompositeReview>;
 }
 
 export interface ScenarioCandidateSelector {
@@ -594,17 +597,18 @@ export async function runScenarioCampaign(
     const critiques: string[] = [];
 
     if (config.reviewMilestones.includes(iteration)) {
-      const review = await agents.reviewRaw(prose, false);
-      if (review.classification !== "supported") {
-        critiques.push(review.critique);
-      }
-      const contentReview = await agents.reviewContent({
+      const review = await agents.reviewScenario({
         scenario: prose,
+        finalReview: false,
         contentAvailabilityIntent: config.contentAvailabilityIntent,
+        sdkCapabilityIntent: config.sdkCapabilityIntent,
       });
+      if (review.raw.classification !== "supported") {
+        critiques.push(review.raw.critique);
+      }
       const contentAdmission = decodeScenarioContentAdmission({
         contentAvailabilityIntent: config.contentAvailabilityIntent,
-        contentReview,
+        contentReview: review.contentAvailability,
       });
       if (Either.isLeft(contentAdmission)) {
         return Either.left(contentAdmission.left);
@@ -625,13 +629,9 @@ export async function runScenarioCampaign(
         ),
         Match.exhaustive,
       );
-      const sdkCapabilityReview = await agents.reviewSdkCapability({
-        scenario: prose,
-        sdkCapabilityIntent: config.sdkCapabilityIntent,
-      });
       const sdkCapabilityAdmission = decodeScenarioSdkCapabilityAdmission({
         sdkCapabilityIntent: config.sdkCapabilityIntent,
-        sdkCapabilityReview,
+        sdkCapabilityReview: review.sdkCapability,
       });
       if (Either.isLeft(sdkCapabilityAdmission)) {
         return Either.left(sdkCapabilityAdmission.left);
@@ -680,30 +680,26 @@ export async function runScenarioCampaign(
   if (draft.tag === "unstarted") {
     return Either.left("Scenario campaign produced no scenario.");
   }
-  const finalRawReview = await agents.reviewRaw(draft.prose, true);
-  const finalContentReview = await agents.reviewContent({
+  const finalReview = await agents.reviewScenario({
     scenario: draft.prose,
+    finalReview: true,
     contentAvailabilityIntent: config.contentAvailabilityIntent,
+    sdkCapabilityIntent: config.sdkCapabilityIntent,
   });
   const finalContentAdmission = decodeScenarioContentAdmission({
     contentAvailabilityIntent: config.contentAvailabilityIntent,
-    contentReview: finalContentReview,
+    contentReview: finalReview.contentAvailability,
   });
   if (Either.isLeft(finalContentAdmission)) {
     return Either.left(finalContentAdmission.left);
   }
-  const finalSdkCapabilityReview = await agents.reviewSdkCapability({
-    scenario: draft.prose,
-    sdkCapabilityIntent: config.sdkCapabilityIntent,
-  });
   const finalSdkCapabilityAdmission = decodeScenarioSdkCapabilityAdmission({
     sdkCapabilityIntent: config.sdkCapabilityIntent,
-    sdkCapabilityReview: finalSdkCapabilityReview,
+    sdkCapabilityReview: finalReview.sdkCapability,
   });
   if (Either.isLeft(finalSdkCapabilityAdmission)) {
     return Either.left(finalSdkCapabilityAdmission.left);
   }
-  const finalPolicyReview = await agents.reviewPolicy(draft.prose);
   const resultBase = {
     scenarioId: config.scenarioId,
     scenario: draft.prose,
@@ -711,8 +707,8 @@ export async function runScenarioCampaign(
     stopReason:
       draft.iteration === config.maximumIterations ? "maximum" : "ready",
     admitReviewedUnsupported: config.admitReviewedUnsupported,
-    rawReview: finalRawReview,
-    policyReview: finalPolicyReview,
+    rawReview: finalReview.raw,
+    policyReview: finalReview.artifactPolicy,
     reviewScope: "rawContentSdkCapabilityPolicy",
     ...finalContentAdmission.right,
     ...finalSdkCapabilityAdmission.right,

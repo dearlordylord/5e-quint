@@ -45,6 +45,12 @@ describe("RAW swarm runner boundaries", () => {
 
     expect(script).toContain("--sandbox danger-full-access");
     expect(script).not.toContain("RAW_REVIEW_SANDBOX");
+    expect(script).not.toContain("--iso-8601=milliseconds");
+    expect(script).toContain("new Date().toISOString()");
+    expect(script).toContain("sdk-review-packet-cli.ts");
+    expect(script).toContain("review-output-validation.ts");
+    expect(script).toContain("review-invocation-policy.ts");
+    expect(script).toContain("| codex exec");
   });
 
   test.each([
@@ -60,6 +66,28 @@ describe("RAW swarm runner boundaries", () => {
     [
       "unknown option",
       ["tracer-001-goblin-warrior-vs-skeleton", "--no-isolation"],
+    ],
+    [
+      "lone unknown option",
+      ["tracer-001-goblin-warrior-vs-skeleton", "--bogus"],
+    ],
+    [
+      "missing evidence id",
+      ["tracer-001-goblin-warrior-vs-skeleton", "--evidence-id"],
+    ],
+    [
+      "invalid evidence id",
+      ["tracer-001-goblin-warrior-vs-skeleton", "--evidence-id", "../outside"],
+    ],
+    [
+      "duplicate evidence id",
+      [
+        "tracer-001-goblin-warrior-vs-skeleton",
+        "--evidence-id",
+        "first",
+        "--evidence-id",
+        "second",
+      ],
     ],
   ])(
     "rejects direct-SDK launcher %s",

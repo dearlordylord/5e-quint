@@ -1,0 +1,786 @@
+import { createHash } from "node:crypto";
+import {
+  existsSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, relative, resolve } from "node:path";
+
+import { Match } from "effect";
+
+import { canonicalJson, repoRoot } from "../transcript.ts";
+import { parseSdkTranscript, type SdkCallRecord } from "./sdk-transcript.ts";
+import type { JsonValue } from "./continuation-contract.ts";
+import { isJsonValue } from "./json-value.ts";
+
+export const SDK_AUDIT_SCHEMA_VERSION = 1;
+export const SDK_AUDIT_REVIEW_FACTS_MAX_BYTES = 16 * 1024;
+
+const REVIEW_DIRECTIONS = [
+  "same-horizontal-position",
+  "north",
+  "north-east",
+  "east",
+  "south-east",
+  "south",
+  "south-west",
+  "west",
+  "north-west",
+] as const;
+type ReviewDirection = (typeof REVIEW_DIRECTIONS)[number];
+const REVIEW_COVER = ["none", "half", "threeQuarters", "total"] as const;
+type ReviewCover = (typeof REVIEW_COVER)[number];
+const REVIEW_TRAVERSAL = ["open", "blocked"] as const;
+type ReviewTraversal = (typeof REVIEW_TRAVERSAL)[number];
+
+type SdkReviewHole = {
+  readonly kind: string;
+  readonly label?: string;
+  readonly occurrence?: number;
+  readonly choiceCount?: number;
+};
+
+type SdkReviewActKind = {
+  readonly subject: {
+    readonly tag: string;
+    readonly action?: string;
+    readonly command?: string;
+    readonly mode?: string;
+  };
+  readonly count: number;
+};
+
+type SdkReviewRelation =
+  | {
+      readonly tag: "relation";
+      readonly source: string;
+      readonly target: string;
+      readonly direction: ReviewDirection;
+      readonly distanceFeet: number;
+      readonly attackerCanSeeTarget: boolean;
+      readonly cover: ReviewCover;
+      readonly traversal: ReviewTraversal;
+    }
+  | {
+      readonly tag: "unknown-token";
+      readonly tokenId: string;
+    };
+
+const SDK_REVIEW_RESOLUTION_TAGS = [
+  "resolved",
+  "needsHoles",
+  "invalid",
+  "scenarioSessionConflict",
+  "scenarioMovementRejected",
+] as const;
+type SdkReviewResolutionTag = (typeof SDK_REVIEW_RESOLUTION_TAGS)[number];
+
+export type SdkCallReviewFacts =
+  | {
+      readonly kind: "relation";
+      readonly relation: SdkReviewRelation;
+    }
+  | {
+      readonly kind: "actFrontier";
+      readonly count: number;
+      readonly actorCount: number;
+      readonly actKinds: readonly SdkReviewActKind[];
+      readonly holeKinds: readonly {
+        readonly kind: string;
+        readonly count: number;
+      }[];
+    }
+  | {
+      readonly kind: "resolution";
+      readonly tag: SdkReviewResolutionTag;
+      readonly reason?: string;
+      readonly message?: string;
+      readonly issueTag?: string;
+      readonly holes: readonly SdkReviewHole[];
+      readonly objectDamageCount: number;
+      readonly movementCount: number;
+    }
+  | {
+      readonly kind: "error";
+      readonly rejection: "sessionConflict" | "operationFailure";
+      readonly name: string;
+      readonly messagePreview: string;
+      readonly messageByteLength: number;
+      readonly messageSha256: string;
+    };
+
+export type SdkAuditHeader = {
+  readonly type: "sdk-audit-header";
+  readonly schemaVersion: typeof SDK_AUDIT_SCHEMA_VERSION;
+  readonly scenarioId: string;
+  readonly scenarioSha256: string;
+  readonly scenarioReviewSha256: string;
+  readonly charactersSha256: string;
+  readonly setupSha256?: string;
+  readonly gitSha: string;
+  readonly startedAt: string;
+  readonly transcriptPath: string;
+  readonly transcriptByteLength: number;
+  readonly transcriptSha256: string;
+  readonly replaySupervisorSha256: string;
+  readonly initialSessionSha256?: string;
+};
+
+export type SdkAuditCall = {
+  readonly type: "sdk-audit-call";
+  readonly seq: number;
+  readonly continuation: number;
+  readonly operation: string;
+  readonly inputSessionSha256: string;
+  readonly input: JsonValue;
+  readonly outcome: "returned" | "threw";
+  readonly outputSessionSha256?: string;
+  readonly resultSha256?: string;
+  readonly rejection?: "sessionConflict" | "operationFailure";
+  readonly reviewFacts: SdkCallReviewFacts;
+};
+
+export type SdkAuditRecord = SdkAuditHeader | SdkAuditCall;
+
+export type SdkAudit = {
+  readonly header: SdkAuditHeader;
+  readonly calls: readonly SdkAuditCall[];
+};
+
+export type SdkAuditFailure = {
+  readonly tag: "invalid";
+  readonly message: string;
+};
+
+export type SdkAuditSuccess = {
+  readonly tag: "valid";
+  readonly audit: SdkAudit;
+};
+
+type JsonObject = { readonly [key: string]: JsonValue };
+
+function isJsonObject(value: unknown): value is JsonObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function optionalString(value: JsonValue | undefined): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function optionalNumber(value: JsonValue | undefined): number | undefined {
+  return typeof value === "number" && Number.isInteger(value)
+    ? value
+    : undefined;
+}
+
+function holes(
+  value: JsonValue | undefined,
+): readonly SdkReviewHole[] | undefined {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) return undefined;
+  const projected = value.map((entry): SdkReviewHole | undefined => {
+    if (!isJsonObject(entry) || typeof entry.kind !== "string")
+      return undefined;
+    if (
+      (entry.choices !== undefined && !Array.isArray(entry.choices)) ||
+      (entry.label !== undefined && typeof entry.label !== "string") ||
+      (entry.occurrence !== undefined &&
+        optionalNumber(entry.occurrence) === undefined)
+    )
+      return undefined;
+    const choiceCount = Array.isArray(entry.choices)
+      ? entry.choices.length
+      : undefined;
+    const label = optionalString(entry.label);
+    const occurrence = optionalNumber(entry.occurrence);
+    return {
+      kind: entry.kind,
+      ...(label === undefined ? {} : { label }),
+      ...(occurrence === undefined ? {} : { occurrence }),
+      ...(choiceCount === undefined ? {} : { choiceCount }),
+    };
+  });
+  return projected.some((entry) => entry === undefined)
+    ? undefined
+    : (projected as readonly SdkReviewHole[]);
+}
+
+function actFrontier(result: JsonValue): SdkCallReviewFacts | undefined {
+  if (!Array.isArray(result)) return undefined;
+  const acts = result.map((entry) => {
+    if (!isJsonObject(entry) || entry.subject === undefined) return undefined;
+    const subject = entry.subject;
+    if (
+      !isJsonObject(subject) ||
+      typeof subject.tag !== "string" ||
+      typeof subject.actorId !== "string"
+    )
+      return undefined;
+    const mode =
+      isJsonObject(subject.mode) && typeof subject.mode.tag === "string"
+        ? subject.mode.tag
+        : undefined;
+    const projectedHoles = holes(entry.initialHoles);
+    return projectedHoles === undefined
+      ? undefined
+      : {
+          subject: {
+            tag: subject.tag,
+            ...(typeof subject.action === "string"
+              ? { action: subject.action }
+              : {}),
+            ...(typeof subject.command === "string"
+              ? { command: subject.command }
+              : {}),
+            ...(mode === undefined ? {} : { mode }),
+          },
+          actorId: subject.actorId,
+          holes: projectedHoles,
+        };
+  });
+  if (acts.some((entry) => entry === undefined)) return undefined;
+  const validActs = acts as readonly {
+    readonly subject: SdkReviewActKind["subject"];
+    readonly actorId: string;
+    readonly holes: readonly SdkReviewHole[];
+  }[];
+  const countByCanonical = <A>(values: readonly A[]) =>
+    [
+      ...values
+        .reduce((counts, value) => {
+          const key = JSON.stringify(value);
+          const prior = counts.get(key);
+          counts.set(key, { value, count: (prior?.count ?? 0) + 1 });
+          return counts;
+        }, new Map<string, { readonly value: A; readonly count: number }>())
+        .values(),
+    ].sort((left, right) =>
+      JSON.stringify(left.value).localeCompare(JSON.stringify(right.value)),
+    );
+  return {
+    kind: "actFrontier",
+    count: result.length,
+    actorCount: new Set(validActs.map(({ actorId }) => actorId)).size,
+    actKinds: countByCanonical(validActs.map(({ subject }) => subject)).map(
+      ({ value, count }) => ({ subject: value, count }),
+    ),
+    holeKinds: countByCanonical(
+      validActs.flatMap(({ holes: projectedHoles }) =>
+        projectedHoles.map(({ kind }) => kind),
+      ),
+    ).map(({ value, count }) => ({ kind: value, count })),
+  };
+}
+
+function isOneOf<const Values extends readonly string[]>(
+  values: Values,
+  value: unknown,
+): value is Values[number] {
+  return typeof value === "string" && values.includes(value);
+}
+
+function relation(result: JsonValue): SdkReviewRelation | undefined {
+  if (
+    isJsonObject(result) &&
+    result.tag === "unknown-token" &&
+    typeof result.tokenId === "string"
+  ) {
+    return { tag: "unknown-token", tokenId: result.tokenId };
+  }
+  const value =
+    isJsonObject(result) && result.tag === "relation"
+      ? result.relation
+      : undefined;
+  if (
+    !isJsonObject(value) ||
+    typeof value.source !== "string" ||
+    typeof value.target !== "string" ||
+    !isOneOf(REVIEW_DIRECTIONS, value.direction) ||
+    typeof value.distanceFeet !== "number" ||
+    !Number.isFinite(value.distanceFeet) ||
+    typeof value.attackerCanSeeTarget !== "boolean" ||
+    !isOneOf(REVIEW_COVER, value.cover) ||
+    !isOneOf(REVIEW_TRAVERSAL, value.traversal)
+  ) {
+    return undefined;
+  }
+  return {
+    tag: "relation",
+    source: value.source,
+    target: value.target,
+    direction: value.direction,
+    distanceFeet: value.distanceFeet,
+    attackerCanSeeTarget: value.attackerCanSeeTarget,
+    cover: value.cover,
+    traversal: value.traversal,
+  };
+}
+
+function resolution(result: JsonValue): SdkCallReviewFacts | undefined {
+  if (!isJsonObject(result)) return undefined;
+  const tag = result.tag;
+  if (typeof tag !== "string" || !isOneOf(SDK_REVIEW_RESOLUTION_TAGS, tag)) {
+    return undefined;
+  }
+  if (
+    (tag === "needsHoles" && !Array.isArray(result.holes)) ||
+    (tag !== "needsHoles" && result.holes !== undefined) ||
+    (result.objectDamages !== undefined &&
+      !Array.isArray(result.objectDamages)) ||
+    (result.movements !== undefined && !Array.isArray(result.movements)) ||
+    (result.reason !== undefined && typeof result.reason !== "string") ||
+    (result.message !== undefined && typeof result.message !== "string") ||
+    (tag === "invalid" &&
+      (typeof result.reason !== "string" ||
+        typeof result.message !== "string")) ||
+    (tag === "scenarioMovementRejected" && typeof result.message !== "string")
+  )
+    return undefined;
+  const projectedHoles = holes(result.holes);
+  if (projectedHoles === undefined) return undefined;
+  const reason = optionalString(result.reason);
+  const message = optionalString(result.message);
+  const issueTag =
+    isJsonObject(result.issue) && typeof result.issue.tag === "string"
+      ? result.issue.tag
+      : undefined;
+  if (
+    (tag === "scenarioSessionConflict" && issueTag === undefined) ||
+    (tag !== "scenarioSessionConflict" && result.issue !== undefined)
+  )
+    return undefined;
+  return {
+    kind: "resolution",
+    tag,
+    ...(reason === undefined ? {} : { reason }),
+    ...(message === undefined ? {} : { message }),
+    ...(issueTag === undefined ? {} : { issueTag }),
+    holes: projectedHoles,
+    objectDamageCount: Array.isArray(result.objectDamages)
+      ? result.objectDamages.length
+      : 0,
+    movementCount: Array.isArray(result.movements)
+      ? result.movements.length
+      : 0,
+  };
+}
+
+function reviewFacts(
+  call: SdkCallRecord,
+  result: JsonValue,
+): SdkCallReviewFacts | undefined {
+  if (call.outcome === "threw") {
+    const messageBytes = Buffer.from(call.error.message, "utf8");
+    return {
+      kind: "error",
+      rejection: call.rejection,
+      name: call.error.name,
+      messagePreview: call.error.message.slice(0, 512),
+      messageByteLength: messageBytes.byteLength,
+      messageSha256: sha256Bytes(messageBytes),
+    };
+  }
+  return Match.value(call.operation).pipe(
+    Match.when("scenarioRelation", () => {
+      const projected = relation(result);
+      return projected === undefined
+        ? undefined
+        : { kind: "relation" as const, relation: projected };
+    }),
+    Match.when("discoverBattleActs", () => actFrontier(result)),
+    Match.when("resolveBattleRuntimeSubject", () => resolution(result)),
+    Match.when("resolveScenarioMovement", () => resolution(result)),
+    Match.when("resolveBattleRuntimeInterrupt", () => resolution(result)),
+    Match.when("endBattleRuntimeTurn", () => resolution(result)),
+    Match.exhaustive,
+  );
+}
+
+function sha256Bytes(bytes: Uint8Array): string {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function jsonLines(bytes: Buffer):
+  | {
+      readonly tag: "valid";
+      readonly lines: readonly string[];
+      readonly records: readonly unknown[];
+    }
+  | SdkAuditFailure {
+  const lines = bytes
+    .toString("utf8")
+    .split("\n")
+    .filter((line) => line.trim().length > 0);
+  try {
+    return {
+      tag: "valid",
+      lines,
+      records: lines.map((line): unknown => JSON.parse(line)),
+    };
+  } catch {
+    return {
+      tag: "invalid",
+      message: "SDK evidence contains malformed JSONL.",
+    };
+  }
+}
+
+function replaySupervisorPath(transcriptPath: string): string {
+  return resolve(dirname(dirname(transcriptPath)), "replay-supervisor.mjs");
+}
+
+export function sdkAuditTranscript(input: {
+  readonly records: readonly unknown[];
+  readonly transcriptPath: string;
+  readonly transcriptByteLength: number;
+  readonly transcriptSha256: string;
+  readonly replaySupervisorSha256: string;
+  readonly recordedTranscriptPath?: string;
+}): SdkAuditSuccess | SdkAuditFailure {
+  const parsed = parseSdkTranscript(input.records);
+  if (parsed.tag === "invalid") return parsed;
+  const { header, calls } = parsed.value;
+  const recordedReplaySha = header.replaySupervisorSha256;
+  if (input.replaySupervisorSha256 !== recordedReplaySha) {
+    return {
+      tag: "invalid",
+      message:
+        "SDK transcript replay supervisor hash does not match its artifact.",
+    };
+  }
+  const auditHeader: SdkAuditHeader = {
+    type: "sdk-audit-header",
+    schemaVersion: SDK_AUDIT_SCHEMA_VERSION,
+    scenarioId: header.scenarioId,
+    scenarioSha256: header.scenarioSha256,
+    scenarioReviewSha256: header.scenarioReviewSha256,
+    charactersSha256: header.charactersSha256,
+    ...(header.characterOutcome === "ready" && header.setupOutcome === "ready"
+      ? { setupSha256: header.setupSha256 }
+      : {}),
+    gitSha: header.gitSha,
+    startedAt: header.startedAt,
+    transcriptPath: input.recordedTranscriptPath ?? input.transcriptPath,
+    transcriptByteLength: input.transcriptByteLength,
+    transcriptSha256: input.transcriptSha256,
+    replaySupervisorSha256: recordedReplaySha,
+    ...(header.characterOutcome === "ready" && header.setupOutcome === "ready"
+      ? { initialSessionSha256: header.initialSessionSha256 }
+      : {}),
+  };
+  const auditCalls: SdkAuditCall[] = [];
+  for (const call of calls) {
+    if (!isJsonValue(call.input)) {
+      return {
+        tag: "invalid",
+        message: `SDK call seq ${call.seq} has non-JSON audit evidence.`,
+      };
+    }
+    let result: JsonValue = null;
+    if (call.outcome === "returned") {
+      if (!isJsonValue(call.result)) {
+        return {
+          tag: "invalid",
+          message: `SDK call seq ${call.seq} has non-JSON audit evidence.`,
+        };
+      }
+      result = call.result;
+    }
+    const projectedReviewFacts = reviewFacts(call, result);
+    if (projectedReviewFacts === undefined) {
+      return {
+        tag: "invalid",
+        message: `SDK call seq ${call.seq} cannot be projected into typed audit facts.`,
+      };
+    }
+    const reviewFactsBytes = Buffer.byteLength(
+      JSON.stringify(projectedReviewFacts),
+      "utf8",
+    );
+    if (reviewFactsBytes > SDK_AUDIT_REVIEW_FACTS_MAX_BYTES) {
+      return {
+        tag: "invalid",
+        message: `SDK call seq ${call.seq} review facts exceed ${SDK_AUDIT_REVIEW_FACTS_MAX_BYTES} bytes.`,
+      };
+    }
+    auditCalls.push({
+      type: "sdk-audit-call",
+      seq: call.seq,
+      continuation: call.continuation,
+      operation: call.operation,
+      inputSessionSha256: call.inputSessionSha256,
+      input: call.input,
+      outcome: call.outcome,
+      ...(call.outcome === "returned"
+        ? {
+            outputSessionSha256: call.outputSessionSha256,
+            resultSha256: call.resultSha256,
+          }
+        : { rejection: call.rejection }),
+      reviewFacts: projectedReviewFacts,
+    });
+  }
+  return { tag: "valid", audit: { header: auditHeader, calls: auditCalls } };
+}
+
+export function preflightSdkTranscript(input: {
+  readonly transcriptPath: string;
+  readonly expectedByteLength?: number;
+  readonly expectedSha256?: string;
+  readonly recordedTranscriptPath?: string;
+  readonly replaySupervisorArtifactPath?: string;
+}): SdkAuditSuccess | SdkAuditFailure {
+  let absolutePath: string;
+  let bytes: Buffer;
+  try {
+    absolutePath = realpathSync(resolve(repoRoot, input.transcriptPath));
+    bytes = readFileSync(absolutePath);
+  } catch {
+    return {
+      tag: "invalid",
+      message: "SDK transcript artifact is unreadable.",
+    };
+  }
+  const byteLength = bytes.byteLength;
+  const transcriptSha256 = sha256Bytes(bytes);
+  if (
+    input.expectedByteLength !== undefined &&
+    input.expectedByteLength !== byteLength
+  ) {
+    return { tag: "invalid", message: "SDK transcript byte length changed." };
+  }
+  if (
+    input.expectedSha256 !== undefined &&
+    input.expectedSha256 !== transcriptSha256
+  ) {
+    return { tag: "invalid", message: "SDK transcript SHA-256 changed." };
+  }
+  const supervisorPath =
+    input.replaySupervisorArtifactPath === undefined
+      ? replaySupervisorPath(absolutePath)
+      : resolve(input.replaySupervisorArtifactPath);
+  if (!existsSync(supervisorPath)) {
+    return {
+      tag: "invalid",
+      message: "SDK replay supervisor artifact is unreadable.",
+    };
+  }
+  const replaySupervisorSha256 = sha256Bytes(readFileSync(supervisorPath));
+  const parsedLines = jsonLines(bytes);
+  if (parsedLines.tag === "invalid") return parsedLines;
+  return sdkAuditTranscript({
+    records: parsedLines.records,
+    transcriptPath: relative(repoRoot, absolutePath),
+    transcriptByteLength: byteLength,
+    transcriptSha256,
+    replaySupervisorSha256,
+    ...(input.recordedTranscriptPath === undefined
+      ? {}
+      : { recordedTranscriptPath: input.recordedTranscriptPath }),
+  });
+}
+
+export function writeSdkAudit(path: string, audit: SdkAudit): void {
+  const records: readonly SdkAuditRecord[] = [audit.header, ...audit.calls];
+  writeFileSync(
+    path,
+    records.map((record) => JSON.stringify(record)).join("\n") + "\n",
+    { flag: "wx" },
+  );
+}
+
+export function readSdkAudit(
+  path: string,
+  artifacts?: {
+    readonly transcriptPath: string;
+    readonly replaySupervisorPath: string;
+  },
+): SdkAuditSuccess | SdkAuditFailure {
+  let bytes: Buffer;
+  try {
+    bytes = readFileSync(path);
+  } catch {
+    return { tag: "invalid", message: "SDK audit artifact is unreadable." };
+  }
+  const parsedLines = jsonLines(bytes);
+  if (parsedLines.tag === "invalid") return parsedLines;
+  const records = parsedLines.records;
+  const header = records[0];
+  if (
+    !isJsonObject(header) ||
+    header.type !== "sdk-audit-header" ||
+    header.schemaVersion !== SDK_AUDIT_SCHEMA_VERSION ||
+    typeof header.scenarioSha256 !== "string" ||
+    typeof header.scenarioReviewSha256 !== "string" ||
+    typeof header.charactersSha256 !== "string" ||
+    (header.setupSha256 !== undefined &&
+      typeof header.setupSha256 !== "string") ||
+    typeof header.transcriptPath !== "string" ||
+    typeof header.transcriptByteLength !== "number" ||
+    typeof header.transcriptSha256 !== "string"
+  ) {
+    return { tag: "invalid", message: "SDK audit header is invalid." };
+  }
+  const verified = preflightSdkTranscript({
+    transcriptPath: artifacts?.transcriptPath ?? header.transcriptPath,
+    recordedTranscriptPath: header.transcriptPath,
+    ...(artifacts === undefined
+      ? {}
+      : { replaySupervisorArtifactPath: artifacts.replaySupervisorPath }),
+    expectedByteLength: header.transcriptByteLength,
+    expectedSha256: header.transcriptSha256,
+  });
+  if (verified.tag === "invalid") return verified;
+  const expectedRecords: readonly SdkAuditRecord[] = [
+    verified.audit.header,
+    ...verified.audit.calls,
+  ];
+  if (canonicalJson(records) !== canonicalJson(expectedRecords)) {
+    return {
+      tag: "invalid",
+      message:
+        "SDK audit is not the deterministic projection of its transcript.",
+    };
+  }
+  return verified;
+}
+
+export type SdkExtractionProvenance = {
+  readonly schemaVersion: 1;
+  readonly transcriptPath: string;
+  readonly transcriptByteLength: number;
+  readonly transcriptSha256: string;
+  readonly requestedSequences: readonly number[];
+  readonly extractedRecordsByteLength: number;
+  readonly extractedRecordsSha256: string;
+  readonly records: readonly {
+    readonly seq: number;
+    readonly operation: string;
+    readonly outcome: "returned" | "threw";
+    readonly extractedByteLength: number;
+    readonly extractedSha256: string;
+  }[];
+};
+
+export function extractSdkTranscriptSequences(input: {
+  readonly audit: SdkAudit;
+  readonly sequences: readonly number[];
+  readonly transcriptArtifactPath?: string;
+  readonly replaySupervisorArtifactPath?: string;
+}):
+  | {
+      readonly tag: "valid";
+      readonly records: readonly JsonValue[];
+      readonly encodedRecords: string;
+      readonly provenance: SdkExtractionProvenance;
+    }
+  | SdkAuditFailure {
+  const requested = [...new Set(input.sequences)].sort(
+    (left, right) => left - right,
+  );
+  if (
+    requested.length === 0 ||
+    requested.some((seq) => !Number.isInteger(seq) || seq <= 0)
+  ) {
+    return {
+      tag: "invalid",
+      message: "SDK extraction needs positive sequences.",
+    };
+  }
+  const verified = preflightSdkTranscript({
+    transcriptPath:
+      input.transcriptArtifactPath ?? input.audit.header.transcriptPath,
+    recordedTranscriptPath: input.audit.header.transcriptPath,
+    ...(input.replaySupervisorArtifactPath === undefined
+      ? {}
+      : {
+          replaySupervisorArtifactPath: input.replaySupervisorArtifactPath,
+        }),
+    expectedByteLength: input.audit.header.transcriptByteLength,
+    expectedSha256: input.audit.header.transcriptSha256,
+  });
+  if (verified.tag === "invalid") return verified;
+  const verifiedBySequence = new Map(
+    verified.audit.calls.map((call) => [call.seq, call]),
+  );
+  const auditBySequence = new Map(
+    input.audit.calls.map((call) => [call.seq, call]),
+  );
+  let bytes: Buffer;
+  try {
+    bytes = readFileSync(
+      resolve(
+        repoRoot,
+        input.transcriptArtifactPath ?? input.audit.header.transcriptPath,
+      ),
+    );
+  } catch {
+    return {
+      tag: "invalid",
+      message: "SDK transcript artifact is unreadable.",
+    };
+  }
+  const parsedLines = jsonLines(bytes);
+  if (parsedLines.tag === "invalid") return parsedLines;
+  const { lines } = parsedLines;
+  const parsed = parseSdkTranscript(parsedLines.records);
+  if (parsed.tag === "invalid") return parsed;
+  const callBySequence = new Map(
+    parsed.value.calls.map((call) => [call.seq, call]),
+  );
+  const records: JsonValue[] = [];
+  const recordLines: string[] = [];
+  const provenanceRecords: SdkExtractionProvenance["records"][number][] = [];
+  for (const seq of requested) {
+    const expected = auditBySequence.get(seq);
+    const current = verifiedBySequence.get(seq);
+    const raw = callBySequence.get(seq);
+    const rawLine = lines[seq];
+    if (
+      expected === undefined ||
+      current === undefined ||
+      raw === undefined ||
+      rawLine === undefined ||
+      canonicalJson(expected) !== canonicalJson(current) ||
+      raw.operation !== expected.operation ||
+      raw.outcome !== expected.outcome ||
+      (raw.outcome === "returned" && raw.resultSha256 !== expected.resultSha256)
+    ) {
+      return {
+        tag: "invalid",
+        message: `SDK extraction audit correspondence failed at sequence ${seq}.`,
+      };
+    }
+    const projected = raw as JsonValue;
+    records.push(projected);
+    recordLines.push(rawLine);
+    provenanceRecords.push({
+      seq,
+      operation: raw.operation,
+      outcome: raw.outcome,
+      extractedByteLength: Buffer.byteLength(rawLine),
+      extractedSha256: sha256Bytes(Buffer.from(rawLine)),
+    });
+  }
+  const encodedRecords = `${recordLines.join("\n")}\n`;
+  const transcriptArtifactPath =
+    input.transcriptArtifactPath ?? input.audit.header.transcriptPath;
+  return {
+    tag: "valid",
+    records,
+    encodedRecords,
+    provenance: {
+      schemaVersion: 1,
+      transcriptPath: transcriptArtifactPath,
+      transcriptByteLength: statSync(resolve(repoRoot, transcriptArtifactPath))
+        .size,
+      transcriptSha256: input.audit.header.transcriptSha256,
+      requestedSequences: requested,
+      extractedRecordsByteLength: Buffer.byteLength(encodedRecords),
+      extractedRecordsSha256: sha256Bytes(Buffer.from(encodedRecords)),
+      records: provenanceRecords,
+    },
+  };
+}
