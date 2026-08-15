@@ -3214,46 +3214,83 @@ function spellPostDamageRiderActiveEffect(input: {
   );
 }
 
+type PostDamageRiderExpirationInput =
+  | SpellPostDamageRiderExpiration
+  | Extract<
+      SpellFailedSavePostDamageRider,
+      { readonly kind: "nextAttackRollByTarget" }
+    >["expiresAt"]
+  | SpellFailedSaveConditionEffect["expiresAt"]
+  | undefined;
+
+type StructuredPostDamageRiderExpiration = Extract<
+  PostDamageRiderExpirationInput,
+  { readonly kind: "duration" | "concentration" }
+>;
+
+type NamedPostDamageRiderExpiration = Exclude<
+  PostDamageRiderExpirationInput,
+  StructuredPostDamageRiderExpiration | undefined
+>;
+
+function expirationForStructuredPostDamageRider(
+  expiresAt: StructuredPostDamageRiderExpiration,
+  casterId: CombatantId,
+): BattleActiveEffectExpiration {
+  return Match.value(expiresAt).pipe(
+    Match.when({ kind: "duration" }, (duration) => duration),
+    Match.when({ kind: "concentration" }, ({ durationTicks }) => ({
+      kind: "concentration" as const,
+      combatantId: casterId,
+      durationTicks,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function expirationForNamedPostDamageRider(
+  state: BattleState,
+  casterId: CombatantId,
+  targetId: CombatantId,
+  expiresAt: NamedPostDamageRiderExpiration,
+): BattleActiveEffectExpiration {
+  return Match.value(expiresAt).pipe(
+    Match.when("startOfTargetNextTurn", () => ({
+      kind: "startOfTurn" as const,
+      combatantId: targetId,
+    })),
+    Match.when("endOfCasterNextTurn", () =>
+      endOfNextTurnExpiration(state, casterId, END_OF_NEXT_TURN_DURING_TURN),
+    ),
+    Match.when("concentration", () => ({
+      kind: "concentration" as const,
+      combatantId: casterId,
+    })),
+    Match.when("endOfTargetNextTurn", () =>
+      endOfNextTurnExpiration(state, targetId, END_OF_NEXT_TURN_DURING_TURN),
+    ),
+    Match.exhaustive,
+  );
+}
+
 export function activeEffectExpirationForPostDamageRider(
   state: BattleState,
   casterId: CombatantId,
   targetId: CombatantId,
-  expiresAt:
-    | SpellPostDamageRiderExpiration
-    | Extract<
-        SpellFailedSavePostDamageRider,
-        { readonly kind: "nextAttackRollByTarget" }
-      >["expiresAt"]
-    | SpellFailedSaveConditionEffect["expiresAt"]
-    | undefined,
+  expiresAt: PostDamageRiderExpirationInput,
 ): BattleActiveEffectExpiration {
-  if (typeof expiresAt === "object" && expiresAt.kind === "duration") {
-    return expiresAt;
-  }
-  if (typeof expiresAt === "object" && expiresAt.kind === "concentration") {
-    return {
-      kind: "concentration",
-      combatantId: casterId,
-      durationTicks: expiresAt.durationTicks,
-    };
-  }
   if (expiresAt === undefined) {
     return { kind: "startOfTurn", combatantId: casterId };
   }
-  if (expiresAt === "startOfTargetNextTurn") {
-    return { kind: "startOfTurn", combatantId: targetId };
+  if (typeof expiresAt === "object") {
+    return expirationForStructuredPostDamageRider(expiresAt, casterId);
   }
-  if (expiresAt === "endOfCasterNextTurn") {
-    return endOfNextTurnExpiration(
-      state,
-      casterId,
-      END_OF_NEXT_TURN_DURING_TURN,
-    );
-  }
-  if (expiresAt === "concentration") {
-    return { kind: "concentration", combatantId: casterId };
-  }
-  return endOfNextTurnExpiration(state, targetId, END_OF_NEXT_TURN_DURING_TURN);
+  return expirationForNamedPostDamageRider(
+    state,
+    casterId,
+    targetId,
+    expiresAt,
+  );
 }
 
 export function endHeldLightSpellEffect(
