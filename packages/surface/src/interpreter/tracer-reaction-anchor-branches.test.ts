@@ -15,7 +15,7 @@ test("traces location anchors and non-waking mental signals", () => {
       kind: "location",
       description: "door_or_window",
     },
-    { kind: "self" },
+    { kind: "point", feet: 30 },
     nodes,
     idGen(),
   );
@@ -26,7 +26,7 @@ test("traces location anchors and non-waking mental signals", () => {
       id: "anc1",
       category: "attachment",
       atomKind: "location",
-      label: "location\ndoor_or_window\nrange Self",
+      label: "location\ndoor_or_window\nrange 30 ft",
     },
   ]);
   expect(
