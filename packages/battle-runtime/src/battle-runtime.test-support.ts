@@ -5826,6 +5826,35 @@ export function expendedLevelOneSlots(
   );
 }
 
+export function battleStateWithAllSpellSlotsExpended(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleState {
+  const actor = state.combatants.get(actorId);
+  if (
+    actor?.origin.kind !== "character" ||
+    actor.origin.spellcasting === undefined
+  ) {
+    throw new Error("Expected character spell caster.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...actor,
+      origin: {
+        ...actor.origin,
+        spellcasting: {
+          ...actor.origin.spellcasting,
+          spellSlots: actor.origin.spellcasting.spellSlots.map((slot) => ({
+            ...slot,
+            expended: slot.count,
+          })),
+        },
+      },
+    }),
+  };
+}
+
 export {
   abilityModifier,
   applyBattleHitPointDamage,

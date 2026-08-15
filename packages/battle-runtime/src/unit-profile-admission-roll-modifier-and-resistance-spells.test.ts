@@ -844,6 +844,17 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       tag: "needsHoles",
       holes: [expect.objectContaining({ kind: "abilityChoice" })],
     });
+    expect(
+      resolveBattleSubject({
+        state: state.state,
+        subject: act.subject,
+        fills: [targetFill, abilityChoiceFill(abilityHole, "con")],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Spell ability choice is not available for this spell.",
+    });
     const resolved = resolveBattleSubject({
       state: state.state,
       subject: act.subject,

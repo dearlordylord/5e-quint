@@ -10,6 +10,7 @@ import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts"
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleId,
+  battleStateWithAllSpellSlotsExpended,
   characterSeed,
   startBattleSessionRight,
   statBlockCreatureInit,
@@ -165,6 +166,40 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
         expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
       }),
     ]);
+  });
+  test("Grease rejects pre-resolution admission when its Spell Slot is expended", () => {
+    const spell = spellRecord(greaseUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: greaseUnitId,
+      slotLevel: 1,
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const staleState = battleStateWithAllSpellSlotsExpended(
+      session.state,
+      spellCasterId,
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: staleState,
+        subject: act.subject,
+        fills: [
+          greaseSavingThrowOutcomeFill(savingThrow, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Action-time spell act no longer has its required runtime spell resource.",
+    });
   });
   test("grease cast leaves a successful appearance save standing while creating the hazard", () => {
     const spell = spellRecord(greaseUnitId);

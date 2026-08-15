@@ -85,6 +85,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  battleStateWithAllSpellSlotsExpended,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
@@ -1474,6 +1475,40 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         areaChoices: [],
       }),
     ]);
+  });
+  test("Sleep rejects pre-resolution admission when its Spell Slot is expended", () => {
+    const spell = spellRecord(sleepUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: sleepUnitId,
+      slotLevel: 1,
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const staleState = battleStateWithAllSpellSlotsExpended(
+      session.state,
+      spellCasterId,
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: staleState,
+        subject: act.subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrow, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Action-time spell act no longer has its required runtime spell resource.",
+    });
   });
   test("a failed Sleep save opens the target's readied-spell Reaction", () => {
     const spell = spellRecord(sleepUnitId);
