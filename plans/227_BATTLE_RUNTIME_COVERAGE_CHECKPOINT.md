@@ -14,25 +14,25 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 - Only checked-in instrumentation, exclusions, and package summaries count.
 - Focused reports help attribute a milestone but do not replace the public run.
 - Direct or filtered MBT commands must follow `docs/agents/QNT-MBT.md`.
-- The checked-in battle-runtime ratchets remain 97% statements, 97% lines,
-  100% functions, and 94% branches; none has been lowered.
+- The checked-in battle-runtime ratchets remain 97.9% statements, 97.9% lines,
+  100% functions, and 95.6% branches; none has been lowered.
 
 ## Current authoritative baseline
 
-- Date: 2026-08-13
-- Measured code tree committed as: `4d15f9262`
+- Date: 2026-08-14
+- Measured battle-runtime production tree committed as: `d02f45b86`
 - Command: `pnpm coverage`
 - Result: exit 0 under the original package timeouts
-- Battle-runtime: 236/236 files passed; 2,566 passed / 128 skipped
+- Battle-runtime: 241/241 files passed; 2,619 passed / 129 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 122,928 / 125,508 |   97.94% |     2,580 |      1,325 |
-| Branches   |   31,925 / 33,384 |   95.62% |     1,459 |      1,126 |
-| Functions  |     4,876 / 4,876 |  100.00% |         0 |          0 |
-| Lines      | 122,928 / 125,508 |   97.94% |     2,580 |      1,325 |
+| Statements | 126,627 / 129,328 |   97.91% |     2,701 |      1,408 |
+| Branches   |   32,534 / 34,024 |   95.62% |     1,490 |      1,150 |
+| Functions  |     5,063 / 5,063 |  100.00% |         0 |          0 |
+| Lines      | 126,627 / 129,328 |   97.91% |     2,701 |      1,408 |
 
 Recompute the 99% gaps after every production-denominator change.
 
@@ -44,7 +44,7 @@ Recompute the 99% gaps after every production-denominator change.
 - Do not forge internal battle state to reach admission-proven or
   schema-impossible guards. Narrow or remove such guards only with concrete
   proof.
-- The current public gaps are 1,325 statements/lines and 1,126 branches.
+- The current public gaps are 1,408 statements/lines and 1,150 branches.
 
 ## Verification and completion
 
