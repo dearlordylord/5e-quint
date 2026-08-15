@@ -81,11 +81,7 @@ if (rangeBand === undefined) {
   return {
     kind: "continue",
     session: context.session,
-    observation: {
-      targetId,
-      distanceFeet,
-      targetConstraint: targetHole.attack.targetConstraint,
-    },
+    tacticalNote: `Target ${targetId} is ${distanceFeet} feet away and outside the surfaced range constraint.`,
   };
 }
 const targetFill = {

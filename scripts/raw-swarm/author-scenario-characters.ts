@@ -1,9 +1,11 @@
 import { spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import {
   constants,
   copyFileSync,
   existsSync,
   mkdtempSync,
+  mkdirSync,
   rmSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -11,6 +13,7 @@ import { resolve } from "node:path";
 import { Either, Match } from "effect";
 
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
+import { runCodexInvocation } from "./model-telemetry.ts";
 import {
   consumerPermissionProfileAvailable,
   createConsumerCodexHome,
@@ -74,15 +77,27 @@ async function main(args: readonly string[]): Promise<void> {
     const permissionArgs = profileAvailable
       ? ([] as const)
       : (["--dangerously-bypass-approvals-and-sandbox"] as const);
-    const result = spawnSync(
-      "codex",
-      [
+    const evidenceDirectory = resolve(repoRoot, "scripts/raw-swarm/out");
+    mkdirSync(evidenceDirectory, { recursive: true });
+    const invocationStem = `${scenarioId.right}-character-authoring-${randomUUID()}`;
+    const eventPath = resolve(
+      evidenceDirectory,
+      `${invocationStem}-events.jsonl`,
+    );
+    const logPath = resolve(evidenceDirectory, `${invocationStem}-agent.log`);
+    const ledgerPath = resolve(
+      evidenceDirectory,
+      `${scenarioId.right}-authoring-invocations.jsonl`,
+    );
+    const result = runCodexInvocation({
+      args: [
         "exec",
         "-C",
         scratch,
         ...permissionArgs,
         "--skip-git-repo-check",
         "--ephemeral",
+        "--json",
         "--disable",
         "tool_call_mcp_elicitation",
         "-m",
@@ -96,12 +111,16 @@ async function main(args: readonly string[]): Promise<void> {
           "Do not inspect paths outside this scratch consumer.",
         ].join(" "),
       ],
-      {
-        cwd: scratch,
-        env: { ...process.env, CODEX_HOME: codexHome },
-        stdio: "inherit",
-      },
-    );
+      cwd: scratch,
+      env: { ...process.env, CODEX_HOME: codexHome },
+      eventPath,
+      logPath,
+      ledgerPath,
+      phase: "scenarioCharacterAuthoring",
+      fallbackInvocationId: `${scenarioId.right}-character-authoring`,
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+    });
     if (result.error !== undefined) throw result.error;
     if (result.signal !== null) {
       fail(`Scenario character agent stopped by ${result.signal}.`);

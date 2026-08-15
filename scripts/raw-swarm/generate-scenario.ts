@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { createHash, randomInt } from "node:crypto";
+import { createHash, randomInt, randomUUID } from "node:crypto";
 import {
   closeSync,
   existsSync,
@@ -24,11 +24,8 @@ import {
   runScenarioCampaign,
   ScenarioCandidateBatchSchema,
   ScenarioCampaignConfigSchema,
-  ScenarioContentReviewSchema,
-  ScenarioPolicyReviewSchema,
-  ScenarioRawReviewSchema,
+  ScenarioCompositeReviewSchema,
   ScenarioReadinessSchema,
-  ScenarioSdkCapabilityReviewSchema,
   verifyFinalScenarioReview,
   type ContentAvailabilityIntent,
   type ScenarioCampaignAgents,
@@ -36,6 +33,13 @@ import {
 } from "./scenario-campaign.ts";
 import { scenarioSetupStatBlocks } from "./sdk-player/scenario-setup-runtime.ts";
 import { currentGitRevision, GitShaSchema, repoRoot } from "./transcript.ts";
+import {
+  appendInvocationLedger,
+  invocationIdFromCodexEvents,
+  modelUsageFromCodexEvents,
+  readCodexEvents,
+  type ModelInvocationLedgerEntry,
+} from "./model-telemetry.ts";
 
 const FAILURE_LOG_TAIL_CHARACTERS = 64 * 1024;
 
@@ -49,6 +53,9 @@ function runCodexJson<A, I>(
   execution: {
     readonly model: "gpt-5.6-sol" | "gpt-5.6-luna";
     readonly reasoningEffort: "medium" | "max";
+    readonly phase: ModelInvocationLedgerEntry["phase"];
+    readonly ledgerPath: string;
+    readonly retainedInvocationDirectory?: string;
   },
 ): A {
   const outputSchema = Schema.Struct({ result: schema });
@@ -56,12 +63,15 @@ function runCodexJson<A, I>(
   const schemaPath = resolve(temporary, "schema.json");
   const outputPath = resolve(temporary, "output.json");
   const agentLogPath = resolve(temporary, "agent.log");
+  const eventPath = resolve(temporary, "events.jsonl");
   try {
-    writeFileSync(
-      schemaPath,
-      `${JSON.stringify(codexOutputJsonSchema(schema), null, 2)}\n`,
-    );
+    const outputJsonSchema = codexOutputJsonSchema(schema);
+    writeFileSync(schemaPath, `${JSON.stringify(outputJsonSchema, null, 2)}\n`);
     const agentLog = openSync(agentLogPath, "w");
+    const events = openSync(eventPath, "w");
+    const startedAt = new Date().toISOString();
+    const started = performance.now();
+    const fallbackInvocationId = randomUUID();
     const result = (() => {
       try {
         return spawnSync(
@@ -73,6 +83,7 @@ function runCodexJson<A, I>(
             "--sandbox",
             "danger-full-access",
             "--ephemeral",
+            "--json",
             "--disable",
             "tool_call_mcp_elicitation",
             "-m",
@@ -85,12 +96,36 @@ function runCodexJson<A, I>(
             outputPath,
             prompt,
           ],
-          { cwd: repoRoot, stdio: ["ignore", agentLog, agentLog] },
+          { cwd: repoRoot, stdio: ["ignore", events, agentLog] },
         );
       } finally {
         closeSync(agentLog);
+        closeSync(events);
       }
     })();
+    const parsedEvents = readCodexEvents(eventPath);
+    const codexEvents = parsedEvents.tag === "valid" ? parsedEvents.events : [];
+    const invocationId = invocationIdFromCodexEvents(
+      codexEvents,
+      fallbackInvocationId,
+    );
+    appendInvocationLedger(execution.ledgerPath, {
+      schemaVersion: 1,
+      phase: execution.phase,
+      invocationId,
+      model: execution.model,
+      reasoningEffort: execution.reasoningEffort,
+      startedAt,
+      elapsedMilliseconds: Math.round(performance.now() - started),
+      exit:
+        result.signal === null
+          ? { tag: "exited", status: result.status ?? -1 }
+          : { tag: "signaled", signal: result.signal },
+      usage:
+        parsedEvents.tag === "valid"
+          ? modelUsageFromCodexEvents(codexEvents)
+          : { tag: "unavailable", reason: parsedEvents.message },
+    });
     if (result.error !== undefined) throw result.error;
     if (result.signal !== null)
       fail(`Scenario agent stopped by ${result.signal}.`);
@@ -104,9 +139,36 @@ function runCodexJson<A, I>(
     const decoded = Schema.decodeUnknownEither(outputSchema, {
       onExcessProperty: "error",
     })(JSON.parse(readFileSync(outputPath, "utf8")));
-    return Either.isRight(decoded)
-      ? decoded.right.result
-      : fail(`Scenario agent returned invalid output: ${decoded.left.message}`);
+    if (Either.isLeft(decoded)) {
+      return fail(
+        `Scenario agent returned invalid output: ${decoded.left.message}`,
+      );
+    }
+    if (execution.retainedInvocationDirectory !== undefined) {
+      mkdirSync(execution.retainedInvocationDirectory, { recursive: true });
+      writeFileSync(
+        resolve(
+          execution.retainedInvocationDirectory,
+          `${execution.phase}-${fallbackInvocationId}.json`,
+        ),
+        `${JSON.stringify(
+          {
+            schemaVersion: 1,
+            phase: execution.phase,
+            invocationId,
+            model: execution.model,
+            reasoningEffort: execution.reasoningEffort,
+            prompt,
+            outputJsonSchema,
+            result: decoded.right.result,
+          },
+          null,
+          2,
+        )}\n`,
+        { flag: "wx" },
+      );
+    }
+    return decoded.right.result;
   } finally {
     rmSync(temporary, { recursive: true });
   }
@@ -136,7 +198,7 @@ Current public SDK capability documentation:
 ${sdkCapabilityDocs}`;
 }
 
-function liveAgents(): ScenarioCampaignAgents {
+function liveAgents(ledgerPath: string): ScenarioCampaignAgents {
   const statBlocks = scenarioSetupStatBlocks();
   if (statBlocks.tag === "invalid") fail(statBlocks.message);
   const sdkCapabilityDocs = [
@@ -185,10 +247,21 @@ function liveAgents(): ScenarioCampaignAgents {
   const generatorExecution = {
     model: "gpt-5.6-sol",
     reasoningEffort: "medium",
+    phase: "scenarioGeneration",
+    ledgerPath,
   } as const;
   const reviewerExecution = {
     model: "gpt-5.6-luna",
     reasoningEffort: "max",
+    phase: "scenarioCompositeReview",
+    ledgerPath,
+    retainedInvocationDirectory: `${ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
+  } as const;
+  const readinessExecution = {
+    model: "gpt-5.6-luna",
+    reasoningEffort: "max",
+    phase: "scenarioReadiness",
+    ledgerPath,
   } as const;
   return {
     generate: async (input) =>
@@ -240,56 +313,37 @@ ${distributionPreference}
 Scenario:
 ${scenario}`,
         ScenarioReadinessSchema,
-        reviewerExecution,
+        readinessExecution,
       ),
-    reviewRaw: async (scenario, finalReview) =>
+    reviewScenario: async ({
+      scenario,
+      finalReview,
+      contentAvailabilityIntent,
+      sdkCapabilityIntent,
+    }) =>
       runCodexJson(
-        `Review this ${finalReview ? "final" : "milestone"} battle scenario using only .references/srd-5.2.1/ and ASSUMPTIONS.md. Check RAW legality, internal coherence, executability, and whether omitted facts must become explicit Table Decisions. Do not choose tactics, predict a winner, rewrite the scenario, or make a publication-policy decision. A deliberately unsupported but visibly synthetic probe may be classified unsupported rather than erased. A supported result has evidence and no critique; unsupported or contradictory results require a critique. Cite local files/headings in evidence. Return only the required JSON.
+        `Perform one ${finalReview ? "final pre-play" : "milestone"} review invocation with four mandatory, independently scoped assessments. Do not produce an aggregate verdict and do not merge their evidence or responsibilities.
 
-Scenario:
-${scenario}`,
-        ScenarioRawReviewSchema,
-        reviewerExecution,
-      ),
-    reviewContent: async ({ scenario, contentAvailabilityIntent }) =>
-      runCodexJson(
-        `Independently review scenario content identity against the supplied canonical stat-block availability profile. Do not judge RAW legality, tactics, balance, or public-artifact policy.
+RAW: use only .references/srd-5.2.1/ and ASSUMPTIONS.md. Check legality, coherence, executability, and missing Table Decisions. Do not choose tactics, predict an outcome, rewrite prose, or decide artifact policy.
+
+Content availability: compare selected canonical identities with the supplied availability list and the exact campaign intent. Do not infer a product obligation from an accidental unavailable selection.
+
+SDK capability: compare required setup/play facts with the current public SDK documentation below, not historical run verdicts. Do not inspect implementation files.
+
+Artifact policy: apply docs/mushroom-playbook/AUTHORING.md only to public identity/expression safety. Do not judge mechanics or tactics.
 
 Content-availability intent: ${contentAvailabilityIntent}
+SDK-capability intent: ${sdkCapabilityIntent}
 
 Available canonical stat-block identities:
 ${statBlocks.statBlocks.map(({ name }) => name).join(", ")}
-
-For availableOnly intent, return supplied when every selected canonical stat block is supplied; otherwise return invalidUnavailableSelection with evidence and a correction critique. For probeUnavailableContent intent, return explicitUnavailableProbe only when the prose explicitly names unavailable content as its intended probe; return missingUnavailableProbe with a correction critique when it uses only supplied content, and invalidUnavailableSelection when it selects unavailable content without explicitly identifying the probe. Do not infer a product obligation from an accidental unavailable selection.
-
-Scenario:
-${scenario}`,
-        ScenarioContentReviewSchema,
-        reviewerExecution,
-      ),
-    reviewSdkCapability: async ({ scenario, sdkCapabilityIntent }) =>
-      runCodexJson(
-        `Independently review whether every scenario fact and interaction required to set up and play this scenario is representable through the current public SDK documented below. Treat these current documents—not historical run verdicts or a permanent blacklist—as the capability authority. Do not inspect implementation files, judge RAW legality, choose tactics, predict results, or rewrite the scenario.
-
-SDK-capability intent: ${sdkCapabilityIntent}
-
-For supportedOnly intent, return supported only when the full scenario is representable; otherwise return unsupported with precise evidence and one correction critique. For probeUnsupportedCapability intent, return explicitUnsupportedProbe only when the prose explicitly names a capability that these documents do not support; if the requested capability is now supported or no unsupported capability is explicit, return missingUnsupportedProbe with a correction critique. This allows a capability to stop being excluded automatically when the public SDK documentation gains support.
 
 Current public SDK capability documentation:
 ${sdkCapabilityDocs}
 
 Scenario:
 ${scenario}`,
-        ScenarioSdkCapabilityReviewSchema,
-        reviewerExecution,
-      ),
-    reviewPolicy: async (scenario) =>
-      runCodexJson(
-        `Independently review this public scenario artifact against docs/mushroom-playbook/AUTHORING.md. Decide only whether its identities and expression are safe to retain publicly. Do not judge RAW mechanics, tactics, balance, or likely winner. A safe result has evidence and no critique; a violation requires a precise critique. Return only the required JSON.
-
-Scenario:
-${scenario}`,
-        ScenarioPolicyReviewSchema,
+        ScenarioCompositeReviewSchema,
         reviewerExecution,
       ),
   };
@@ -365,9 +419,20 @@ async function main(args: readonly string[]): Promise<void> {
   ) {
     fail("Refusing to overwrite a retained scenario or final scenario review.");
   }
-  const result = await runScenarioCampaign(decodedConfig.right, liveAgents(), {
-    select: randomInt,
-  });
+  const ledgerPath = resolve(
+    repoRoot,
+    `scripts/raw-swarm/out/${decodedConfig.right.scenarioId}-generation-invocations.jsonl`,
+  );
+  if (existsSync(ledgerPath)) {
+    fail(`Refusing to overwrite scenario invocation ledger: ${ledgerPath}`);
+  }
+  const result = await runScenarioCampaign(
+    decodedConfig.right,
+    liveAgents(ledgerPath),
+    {
+      select: randomInt,
+    },
+  );
   if (Either.isLeft(result)) fail(result.left);
   if (!retentionRevisionMatches(gitSha.right, currentGitRevision())) {
     fail(

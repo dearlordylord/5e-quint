@@ -5,6 +5,11 @@ packages/surface/publication/*.json
 # Local coverage-report scratch directories contain generated reporter assets.
 **/coverage_tmp*/**
 
+# Raw Swarm output contains immutable generated evidence, bundled supervisors,
+# and recorded external-consumer programs. Its own schema/hash gates are the
+# authority; source formatters and linters must not rewrite archived bytes.
+scripts/raw-swarm/out/**
+
 # Generated Unit coverage bytes are owned by unit-profile-coverage-check.cjs.
 plans/unit-profile-coverage/unit-matrix.json
 plans/unit-profile-coverage/UNIT_REPORT.md

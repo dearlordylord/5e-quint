@@ -49,8 +49,8 @@ import {
   scenarioTokenId,
   type ScenarioSession,
 } from "./scenario-session.ts";
-import { isJsonValue } from "./json-value.ts";
 import { decodeSdkCallInput, type SdkCallInput } from "./sdk-replay-input.ts";
+import { playerCurrentTurnProjection } from "./player-turn-projection.ts";
 import {
   parseSdkTranscript,
   SDK_SESSION_CONFLICT_MESSAGE,
@@ -59,12 +59,24 @@ import {
 } from "./sdk-transcript.ts";
 import { canonicalJson, sha256Canonical, sha256Text } from "../transcript.ts";
 
+type SupervisorTimingRecord = {
+  readonly schemaVersion: 1;
+  readonly continuation: number;
+  readonly phases: {
+    readonly continuationTypecheckMilliseconds: number;
+    readonly priorCallVerificationReplayMilliseconds: number;
+    readonly newSdkExecutionMilliseconds: number;
+    readonly evidenceWritingMilliseconds: number;
+  };
+};
+
 const transcriptPath = resolve("evidence/sdk-calls.jsonl");
 const programPath = resolve("evidence/program.ts");
 const prefixPath = resolve("evidence/frozen-prefix.json");
 const observationsPath = resolve("evidence/observations.jsonl");
 const latestObservationPath = resolve("OBSERVATION.json");
 const finalPath = resolve("evidence/final.json");
+const supervisorTimingsPath = resolve("evidence/supervisor-timings.jsonl");
 const playerRoot = resolve(process.env.RAW_SWARM_PLAYER_ROOT ?? process.cwd());
 const submissionsPath = resolve("submissions");
 const charactersPath = resolve("evidence/characters.ts");
@@ -710,14 +722,14 @@ function validateOutcome(
   if (candidate.session !== currentSession) {
     fail("Continuation must return the supervisor's current SDK session.");
   }
-  if (!isJsonValue(candidate.observation)) {
-    fail("Continuation observation must be JSON data.");
+  if (typeof candidate.tacticalNote !== "string") {
+    fail("Continuation tacticalNote must be a string.");
   }
   if (candidate.kind === "continue") {
     return {
       kind: "continue",
       session: currentSession,
-      observation: candidate.observation,
+      tacticalNote: candidate.tacticalNote,
     };
   }
   if (
@@ -728,7 +740,7 @@ function validateOutcome(
     return {
       kind: "playerConcluded",
       session: currentSession,
-      observation: candidate.observation,
+      tacticalNote: candidate.tacticalNote,
       conclusion: candidate.conclusion,
     };
   }
@@ -755,17 +767,41 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     `${JSON.stringify({ ...submissionConfig, include: ["attempt.ts"] }, null, 2)}\n`,
   );
   writeFileSync(submissionPath, source, { flag: "wx" });
+  const typecheckStarted = performance.now();
   try {
     typecheckSubmission(submissionPath, submissionConfigPath);
   } catch (error) {
     renameSync(submissionDirectory, `${submissionDirectory}.rejected`);
     throw error;
   }
+  const typecheckMilliseconds = performance.now() - typecheckStarted;
+  const replayStarted = performance.now();
   const replayed = await replay();
+  const replayMilliseconds = performance.now() - replayStarted;
   if (replayed.tag === "obstructed") fail(replayed.obstruction);
   let currentSession = replayed.session;
+  const continuationInputSession = jsonValue(currentSession);
   let frozenContinuation: number | undefined;
   let nextSeq = replayed.calls.length + 1;
+  const continuationCalls: SdkCallRecord[] = [];
+  let sdkExecutionMilliseconds = 0;
+  let evidenceWritingMilliseconds = 0;
+  const appendSupervisorTiming = (continuation: number): void => {
+    appendFileSync(
+      supervisorTimingsPath,
+      `${JSON.stringify({
+        schemaVersion: 1,
+        continuation,
+        phases: {
+          continuationTypecheckMilliseconds: Math.round(typecheckMilliseconds),
+          priorCallVerificationReplayMilliseconds:
+            Math.round(replayMilliseconds),
+          newSdkExecutionMilliseconds: Math.round(sdkExecutionMilliseconds),
+          evidenceWritingMilliseconds: Math.round(evidenceWritingMilliseconds),
+        },
+      } satisfies SupervisorTimingRecord)}\n`,
+    );
+  };
 
   const recordedCall = <A>(
     operation: SdkPlayerOperation,
@@ -778,13 +814,19 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     const inputSession = jsonValue(suppliedSession);
     const inputSessionSha256 = sha256Canonical(inputSession);
     const appendRecord = (record: SdkCallRecord): void => {
+      const evidenceStarted = performance.now();
       appendFileSync(transcriptPath, `${JSON.stringify(record)}\n`);
+      evidenceWritingMilliseconds += performance.now() - evidenceStarted;
+      continuationCalls.push(record);
       nextSeq += 1;
     };
     let invoked: ReturnType<typeof invoke>;
+    const executionStarted = performance.now();
     try {
       invoked = invoke();
+      sdkExecutionMilliseconds += performance.now() - executionStarted;
     } catch (error) {
+      sdkExecutionMilliseconds += performance.now() - executionStarted;
       const caught = error instanceof Error ? error : new Error(String(error));
       appendRecord({
         type: "sdk-call",
@@ -872,14 +914,24 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     if (frozenContinuation === undefined) {
       fail("Continuation made no observable SDK call and remains editable.");
     }
+    const projected = playerCurrentTurnProjection({
+      continuation: frozenContinuation,
+      calls: continuationCalls,
+      beforeSession: continuationInputSession,
+      afterSession: jsonValue(currentSession),
+      tacticalNote: outcome.tacticalNote,
+    });
+    if (projected.tag === "invalid") fail(projected.message);
     const observation = {
       continuation: frozenContinuation,
       kind: outcome.kind,
-      observation: outcome.observation,
+      projection: projected.projection,
+      tacticalNote: outcome.tacticalNote,
       ...(outcome.kind === "playerConcluded"
         ? { conclusion: outcome.conclusion }
         : {}),
     };
+    const observationWritingStarted = performance.now();
     appendFileSync(observationsPath, `${JSON.stringify(observation)}\n`);
     atomicJson(latestObservationPath, observation);
     if (outcome.kind === "playerConcluded") {
@@ -890,6 +942,9 @@ async function runSubmittedSource(source: string): Promise<unknown> {
       } satisfies FrozenPrefix);
       atomicJson(finalPath, observation);
     }
+    evidenceWritingMilliseconds +=
+      performance.now() - observationWritingStarted;
+    appendSupervisorTiming(frozenContinuation);
     console.log(JSON.stringify(observation, null, 2));
     return observation;
   } catch (error) {
@@ -899,8 +954,12 @@ async function runSubmittedSource(source: string): Promise<unknown> {
         kind: "executionError",
         message: error instanceof Error ? error.message : String(error),
       };
+      const observationWritingStarted = performance.now();
       appendFileSync(observationsPath, `${JSON.stringify(observation)}\n`);
       atomicJson(latestObservationPath, observation);
+      evidenceWritingMilliseconds +=
+        performance.now() - observationWritingStarted;
+      appendSupervisorTiming(frozenContinuation);
     }
     throw error;
   }
