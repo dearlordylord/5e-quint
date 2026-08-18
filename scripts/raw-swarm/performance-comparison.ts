@@ -754,8 +754,7 @@ function comparablePhaseIdentityMatches(
       JSON.stringify(baseline.phases[phase].reasoningEfforts) ===
         JSON.stringify(fresh.phases[phase].reasoningEfforts) &&
       baseline.phases[phase].invocationCount > 0 &&
-      baseline.phases[phase].invocationCount ===
-        fresh.phases[phase].invocationCount,
+      fresh.phases[phase].invocationCount > 0,
   );
 }
 
@@ -906,8 +905,7 @@ export function compareControlledRuns(
       JSON.stringify(fresh.phases.postPlayReview.reasoningEfforts);
   const playerIdentityMatches =
     baseline.phases.player.invocationCount > 0 &&
-    baseline.phases.player.invocationCount ===
-      fresh.phases.player.invocationCount &&
+    fresh.phases.player.invocationCount > 0 &&
     JSON.stringify(baseline.phases.player.models) ===
       JSON.stringify(fresh.phases.player.models) &&
     JSON.stringify(baseline.phases.player.reasoningEfforts) ===

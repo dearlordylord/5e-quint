@@ -228,6 +228,11 @@ describe("whole-path performance evidence", () => {
       ...freshControlled,
       phases: {
         ...freshControlled.phases,
+        scenarioCompositeReview: {
+          ...availableLunaPhase,
+          invocationCount: 4,
+          elapsedMilliseconds: 400,
+        },
         player: withUsage(summary.phases.player, 2_000),
         postPlayReview: {
           ...withUsage(summary.phases.postPlayReview, 1_500),
@@ -269,9 +274,9 @@ describe("whole-path performance evidence", () => {
         freshControlled,
       ),
     ).toMatchObject({
-      comparablePathTokens: { tag: "incomparable" },
-      comparablePathWall: { tag: "incomparable" },
-      playerNormalizedTokens: { tag: "incomparable" },
+      comparablePathTokens: { tag: "comparable" },
+      comparablePathWall: { tag: "comparable" },
+      playerNormalizedTokens: { tag: "comparable" },
     });
     expect(
       compareControlledRuns(
