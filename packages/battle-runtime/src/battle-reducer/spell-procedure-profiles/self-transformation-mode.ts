@@ -21,6 +21,7 @@ import {
 import {
   attackBonus,
   AbilityModifier,
+  type ReadonlyNonEmptyArray,
   type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
 import type { DamageType, EffectAtom } from "@dnd/surface/surface/types";
@@ -273,22 +274,18 @@ function selfTransformationNaturalWeaponProjection(
   if (effect === null) {
     return null;
   }
-  const damageTypeChoices = uniqueDamageTypeChoices(
-    effect.damageType.options.map((option) => option.damageType),
-  );
-  return damageTypeChoices === null
-    ? null
-    : {
-        damage: {
-          dice: 1,
-          dieSize: effect.damageDie,
-          damageTypeChoices,
-        },
-        spellcastingAbilityModifier,
-        attackBonus: attackBonus(
-          Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
-        ),
-      };
+  const damageTypeChoices = uniqueDamageTypeChoices(effect.damageType.options);
+  return {
+    damage: {
+      dice: 1,
+      dieSize: effect.damageDie,
+      damageTypeChoices,
+    },
+    spellcastingAbilityModifier,
+    attackBonus: attackBonus(
+      Number(spellcastingAbilityModifier) + Number(proficiencyBonus),
+    ),
+  };
 }
 
 function selfTransformationNaturalWeaponsEffect(
@@ -312,16 +309,19 @@ function selfTransformationNaturalWeaponsEffect(
 }
 
 function uniqueDamageTypeChoices(
-  damageTypes: readonly DamageType[],
-): readonly [DamageType, ...DamageType[]] | null {
-  const unique: DamageType[] = [];
-  for (const damageType of damageTypes) {
+  damageTypeOptions: ReadonlyNonEmptyArray<{
+    readonly damageType: DamageType;
+  }>,
+): ReadonlyNonEmptyArray<DamageType> {
+  const [firstOption, ...restOptions] = damageTypeOptions;
+  const first = firstOption.damageType;
+  const unique: DamageType[] = [first];
+  for (const { damageType } of restOptions) {
     if (!unique.includes(damageType)) {
       unique.push(damageType);
     }
   }
-  const [first, ...rest] = unique;
-  return first === undefined ? null : [first, ...rest];
+  return [first, ...unique.slice(1)];
 }
 
 function discoverSelfTransformationModeCastAct(
