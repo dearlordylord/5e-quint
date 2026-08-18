@@ -37,6 +37,12 @@ export type ScenarioCharacterDistributionInput = {
 };
 
 const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
+const PLAYER_RUN_START_OBSERVATION = {
+  kind: "awaitingFirstContinuation",
+  tacticalNote: "",
+  guidance:
+    "No SDK call has been recorded. Replace the attempt.ts starter body with the first tactical continuation.",
+} as const satisfies JsonValue;
 
 function emitPublicDeclarations(destination: string): void {
   const declarationsDirectory = resolve(destination, "declarations");
@@ -224,6 +230,10 @@ export function buildConsumerDistribution(
     tacticalNote: "Observed " + acts.length + " available acts; replace this starter body with one coherent tactical continuation.",
   };`,
     ),
+  );
+  writeFileSync(
+    resolve(input.destination, "OBSERVATION.json"),
+    `${JSON.stringify(PLAYER_RUN_START_OBSERVATION, null, 2)}\n`,
   );
   cpSync(
     resolve(repoRoot, "node_modules/typescript"),

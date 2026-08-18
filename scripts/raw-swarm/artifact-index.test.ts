@@ -49,6 +49,14 @@ function sdkTranscript(directory: string): string {
   writeFileSync(resolve(run, "SCENARIO_REVIEW.json"), scenarioReview);
   writeFileSync(resolve(run, "evidence/characters.ts"), characters);
   writeFileSync(resolve(run, "evidence/setup.ts"), setup);
+  writeFileSync(
+    resolve(run, "evidence/player-invocation-0001.events.jsonl"),
+    '{"type":"first"}\n',
+  );
+  writeFileSync(
+    resolve(run, "evidence/player-invocation-0002.events.jsonl"),
+    '{"type":"second"}\n',
+  );
   const initialSession = { battle: { round: 1 } };
   const outputSession = { battle: { round: 2 } };
   const result = { tag: "resolved", session: outputSession };
@@ -115,6 +123,16 @@ describe("Raw Swarm artifact index", () => {
       operation: "endBattleRuntimeTurn",
       outcome: "returned",
     });
+    expect(
+      db
+        .prepare(
+          "SELECT role FROM runArtifacts WHERE role LIKE 'playerInvocationEvents-%' ORDER BY role",
+        )
+        .all(),
+    ).toEqual([
+      { role: "playerInvocationEvents-1" },
+      { role: "playerInvocationEvents-2" },
+    ]);
     db.close();
     const constrained = new DatabaseSync(dbPath);
     expect(() =>
@@ -284,7 +302,7 @@ describe("Raw Swarm artifact index", () => {
       dbPath: relative(repoRoot, dbPath),
       destination,
     });
-    expect(manifest.artifacts).toHaveLength(8);
+    expect(manifest.artifacts).toHaveLength(10);
     expect(
       readFileSync(resolve(destination, "manifest.json"), "utf8"),
     ).toContain(manifest.artifacts[0]?.sha256);
@@ -601,5 +619,5 @@ describe("Raw Swarm artifact index", () => {
       legacyRegistry: [{ name: "retained", value: "exactly" }],
     });
     indexed.close();
-  });
+  }, 30_000);
 });

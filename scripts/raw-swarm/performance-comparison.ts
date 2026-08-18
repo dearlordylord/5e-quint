@@ -16,8 +16,14 @@ import {
   type ModelInvocationPhase,
 } from "./model-telemetry.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
+import { playerContinuationEvidence } from "./player-invocation-loop.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
-import { isJsonRecord, repoRoot, ScenarioIdSchema } from "./transcript.ts";
+import {
+  isJsonRecord,
+  repoRoot,
+  ScenarioIdSchema,
+  sha256Canonical,
+} from "./transcript.ts";
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 const NonNegativeIntegerSchema = Schema.Number.pipe(
@@ -28,6 +34,7 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
 const RunDescriptorSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   reviewInvocationEvidencePath: Schema.NonEmptyTrimmedString,
+  continuationObservationPath: Schema.NonEmptyTrimmedString,
   supervisorTimingPath: Schema.NonEmptyTrimmedString,
   reportingTimingPath: Schema.NonEmptyTrimmedString,
   reportingManifestPath: Schema.NonEmptyTrimmedString,
@@ -119,6 +126,7 @@ const PhaseRecordSchema = Schema.Record({
 });
 const SupervisorTimingSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
+  transcriptHeaderSha256: HashSchema,
   continuation: Schema.Number.pipe(Schema.int()),
   phases: Schema.Struct({
     continuationTypecheckMilliseconds: NonNegativeIntegerSchema,
@@ -181,6 +189,7 @@ const ControlledRunPerformanceSchema = Schema.Struct({
     review: ArtifactAuthoritySchema,
     invocationLedgers: Schema.Tuple(ArtifactAuthoritySchema),
     invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+    continuationObservations: ArtifactAuthoritySchema,
     supervisorTimings: ArtifactAuthoritySchema,
     reportingTiming: ArtifactAuthoritySchema,
     reportingManifest: ArtifactAuthoritySchema,
@@ -306,9 +315,20 @@ export function summarizeControlledRun(
   const charactersSha256 = header.charactersSha256;
   const setupSha256 = header.setupSha256;
   const calls = transcript.value.calls.length;
-  const continuations = [
-    ...new Set(transcript.value.calls.map(({ continuation }) => continuation)),
-  ].sort((left, right) => left - right);
+  const continuationEvidence = playerContinuationEvidence({
+    transcriptHeaderSha256: sha256Canonical(transcript.value.header),
+    observations: readJsonLines(input.continuationObservationPath),
+    callContinuations: transcript.value.calls.map(
+      ({ continuation }) => continuation,
+    ),
+  });
+  if (continuationEvidence.tag === "invalid") {
+    fail(continuationEvidence.message);
+  }
+  const continuations = Array.from(
+    { length: continuationEvidence.recordedContinuations },
+    (_value, index) => index + 1,
+  );
   const entries = readJsonLines(invocationLedgerPath).map(ledgerEntry);
   const reportingTiming = decode(
     ReportingTimingSchema,
@@ -358,11 +378,15 @@ export function summarizeControlledRun(
     .map(({ continuation }) => continuation)
     .sort((left, right) => left - right);
   if (
+    timing.some(
+      ({ transcriptHeaderSha256 }) =>
+        transcriptHeaderSha256 !== sha256Canonical(transcript.value.header),
+    ) ||
     new Set(timedContinuations).size !== timedContinuations.length ||
     JSON.stringify(timedContinuations) !== JSON.stringify(continuations)
   )
     fail(
-      "Supervisor timings must cover every authoritative transcript continuation exactly once.",
+      "Supervisor timings must cover every authoritative continuation observation exactly once.",
     );
   const sums: SupervisorTiming["phases"] = timing.reduce(
     (total, row) => ({
@@ -399,6 +423,11 @@ export function summarizeControlledRun(
   const phases = Either.isRight(phaseRecord)
     ? phaseRecord.right
     : fail(`Unable to construct model invocation phases: ${phaseRecord.left}`);
+  if (phases.player.invocationCount !== continuations.length) {
+    fail(
+      "Player invocation evidence must map one-to-one to continuation observations.",
+    );
+  }
   const modelElapsed = MODEL_INVOCATION_PHASES.reduce(
     (total, phase) => total + phases[phase].elapsedMilliseconds,
     0,
@@ -480,6 +509,9 @@ export function summarizeControlledRun(
       review: reviewAuthority,
       invocationLedgers: [artifactAuthority(invocationLedgerPath)],
       invocationEvents: reviewInvocationEvidence.invocationEvents,
+      continuationObservations: artifactAuthority(
+        input.continuationObservationPath,
+      ),
       supervisorTimings: artifactAuthority(input.supervisorTimingPath),
       reportingTiming: reportingTimingAuthority,
       reportingManifest: reportingManifestAuthority,
@@ -923,6 +955,11 @@ export function readControlledPerformance(
   )
     fail(`Controlled performance evidence ${path} has incomplete phases.`);
   const run = decoded;
+  if (run.phases.player.invocationCount !== run.continuations) {
+    fail(
+      "Player invocation evidence must map one-to-one to continuation observations.",
+    );
+  }
   const sourceMatches = (source: ArtifactAuthority): boolean => {
     try {
       return (
@@ -973,6 +1010,7 @@ export function readControlledPerformance(
     run.sources.invocationLedgers.some((source) => !sourceMatches(source)) ||
     run.sources.invocationEvents.length === 0 ||
     run.sources.invocationEvents.some((source) => !sourceMatches(source)) ||
+    !sourceMatches(run.sources.continuationObservations) ||
     !sourceMatches(run.sources.supervisorTimings) ||
     !sourceMatches(run.sources.reportingTiming) ||
     !sourceMatches(run.sources.reportingManifest) ||
@@ -1034,6 +1072,7 @@ export function readControlledPerformance(
   const recomputed = summarizeControlledRun({
     schemaVersion: 1,
     reviewInvocationEvidencePath: run.sources.reviewInvocationEvidence.path,
+    continuationObservationPath: run.sources.continuationObservations.path,
     supervisorTimingPath: run.sources.supervisorTimings.path,
     reportingTimingPath: run.sources.reportingTiming.path,
     reportingManifestPath: run.sources.reportingManifest.path,

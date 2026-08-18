@@ -292,13 +292,12 @@ export function parseSdkTranscript(
     const previousContinuation = decodedCalls[index - 1]?.continuation;
     const continuationIsValid =
       previousContinuation === undefined
-        ? call.continuation === 1
-        : call.continuation === previousContinuation ||
-          call.continuation === previousContinuation + 1;
+        ? true
+        : call.continuation >= previousContinuation;
     if (!continuationIsValid) {
       return {
         tag: "invalid",
-        message: `SDK call seq ${call.seq} has a noncontiguous continuation id.`,
+        message: `SDK call seq ${call.seq} has an out-of-order continuation id.`,
       };
     }
   }

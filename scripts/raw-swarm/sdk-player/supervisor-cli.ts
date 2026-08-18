@@ -60,6 +60,7 @@ import { canonicalJson, sha256Canonical, sha256Text } from "../transcript.ts";
 
 type SupervisorTimingRecord = {
   readonly schemaVersion: 1;
+  readonly transcriptHeaderSha256: string;
   readonly continuation: number;
   readonly phases: {
     readonly continuationTypecheckMilliseconds: number;
@@ -74,6 +75,7 @@ const programPath = resolve("evidence/program.ts");
 const prefixPath = resolve("evidence/frozen-prefix.json");
 const observationsPath = resolve("evidence/observations.jsonl");
 const latestObservationPath = resolve("OBSERVATION.json");
+const playerResponsePath = resolve("player-response.json");
 const finalPath = resolve("evidence/final.json");
 const supervisorTimingsPath = resolve("evidence/supervisor-timings.jsonl");
 const playerRoot = resolve(process.env.RAW_SWARM_PLAYER_ROOT ?? process.cwd());
@@ -537,6 +539,7 @@ function isAppliedCallForOperation<Operation extends SdkPlayerOperation>(
 type ReplayResult =
   | {
       readonly tag: "ready";
+      readonly transcriptHeaderSha256: string;
       readonly session: ScenarioSession;
       readonly calls: readonly SdkCallRecord[];
     }
@@ -691,7 +694,12 @@ async function replay(): Promise<ReplayResult> {
       }
     }
   }
-  return { tag: "ready", session, calls: parsed.value.calls };
+  return {
+    tag: "ready",
+    transcriptHeaderSha256: sha256Canonical(parsed.value.header),
+    session,
+    calls: parsed.value.calls,
+  };
 }
 
 function appendFrozenContinuation(prefix: FrozenPrefix, body: string): number {
@@ -780,6 +788,21 @@ function validateOutcome(
   return fail("Continuation outcome kind or conclusion is invalid.");
 }
 
+function retainedPlayerObservation(): unknown | undefined {
+  return existsSync(latestObservationPath)
+    ? JSON.parse(readFileSync(latestObservationPath, "utf8"))
+    : undefined;
+}
+
+function tacticalNoteBeforeContinuation(): string {
+  const observation = retainedPlayerObservation();
+  if (observation === undefined) return "";
+  if (!isRecord(observation) || typeof observation.tacticalNote !== "string") {
+    fail("Retained player observation has no tactical note.");
+  }
+  return observation.tacticalNote;
+}
+
 async function runSubmittedSource(source: string): Promise<unknown> {
   const prefix = verifyFrozenPrefix();
   const authored = authoredAttemptBody(source);
@@ -825,6 +848,7 @@ async function runSubmittedSource(source: string): Promise<unknown> {
       supervisorTimingsPath,
       `${JSON.stringify({
         schemaVersion: 1,
+        transcriptHeaderSha256: replayed.transcriptHeaderSha256,
         continuation,
         phases: {
           continuationTypecheckMilliseconds: Math.round(typecheckMilliseconds),
@@ -993,6 +1017,7 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     });
     if (projected.tag === "invalid") fail(projected.message);
     const observation = {
+      transcriptHeaderSha256: replayed.transcriptHeaderSha256,
       continuation: frozenContinuation,
       kind: outcome.kind,
       projection: projected.projection,
@@ -1019,11 +1044,34 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     return observation;
   } catch (error) {
     if (frozenContinuation !== undefined) {
-      const observation = {
+      const tacticalNote = tacticalNoteBeforeContinuation();
+      const projected = playerCurrentTurnProjection({
         continuation: frozenContinuation,
-        kind: "executionError",
-        message: error instanceof Error ? error.message : String(error),
-      };
+        calls: continuationCalls,
+        beforeSession: continuationInputSession,
+        afterSession: jsonValue(currentSession),
+        tacticalNote,
+      });
+      const message = error instanceof Error ? error.message : String(error);
+      const observation = Match.value(projected).pipe(
+        Match.when({ tag: "valid" }, ({ projection }) => ({
+          transcriptHeaderSha256: replayed.transcriptHeaderSha256,
+          continuation: frozenContinuation,
+          kind: "executionError" as const,
+          message,
+          projection,
+          tacticalNote,
+        })),
+        Match.when({ tag: "invalid" }, (projectionIssue) => ({
+          transcriptHeaderSha256: replayed.transcriptHeaderSha256,
+          continuation: frozenContinuation,
+          kind: "executionError" as const,
+          message,
+          projectionIssue,
+          tacticalNote,
+        })),
+        Match.exhaustive,
+      );
       const observationWritingStarted = performance.now();
       appendFileSync(observationsPath, `${JSON.stringify(observation)}\n`);
       atomicJson(latestObservationPath, observation);
@@ -1071,12 +1119,15 @@ async function serveRequests(
             observation: await runSubmittedSource(request.source),
           };
         } catch (error) {
+          const observation = retainedPlayerObservation();
           return {
             tag: "error",
             message: error instanceof Error ? error.message : String(error),
+            ...(observation === undefined ? {} : { observation }),
           };
         }
       })();
+      atomicJson(playerResponsePath, response);
       exclusiveJson(responsePath, response);
       renameSync(requestPath, `${requestPath}.processed`);
     }

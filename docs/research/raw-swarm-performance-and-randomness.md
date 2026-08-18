@@ -368,6 +368,18 @@ fixed-protocol baseline exists.
 Wall time remains comparable only when the same scenario identity and complete
 path duration are retained.
 
+The first controlled player measurement used one model conversation for all 30
+tactical continuations. Its 6,742,713 input tokens included 6,517,248 cached
+input tokens, showing that the conversation repeatedly carried accumulated tool
+history despite the bounded observation. The player runner therefore starts an
+independent invocation for each frozen continuation. Strategy continuity passes
+only through the bounded tactical note, latest observation, and retained
+ordinary TypeScript source. Each invocation may correct failures before its
+first SDK call, then must stop after recording one observable continuation.
+This changes model-context transport, not SDK execution authority: the
+append-only canonical call transcript and frozen program prefix remain the same
+evidence owners.
+
 The fixed 88-prefix benchmark measured 430,212 ms of cumulative replay, so the
 60-second cache gate is met. Cache admission remains deferred until the fresh
 controlled run proves replay is also at least 10% of non-model supervisor time;

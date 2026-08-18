@@ -13,11 +13,19 @@ import { DatabaseSync } from "node:sqlite";
 import { Either, Schema } from "effect";
 
 import { ReviewOutputSchema } from "./review-contract.ts";
+import { playerInvocationNumberFromEventsArtifact } from "./player-invocation-loop.ts";
 import { preflightSdkTranscript } from "./sdk-player/sdk-audit.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { isJsonRecord, parsePlayerTranscript, repoRoot } from "./transcript.ts";
 
 const INDEX_SCHEMA_VERSION = 1;
+
+type RunArtifactCandidate = readonly [
+  role: string,
+  path: string,
+  mediaType: string,
+  expectedSha256: string | undefined,
+];
 
 export type LegacyArtifactDisposition =
   | "artifactBacked"
@@ -293,6 +301,50 @@ export function registerIndexArtifact(input: {
   return registerArtifact(input.db, input.path, input.mediaType);
 }
 
+function playerInvocationEventCandidates(
+  runDirectory: string,
+): readonly RunArtifactCandidate[] {
+  const evidenceDirectory = resolve(runDirectory, "evidence");
+  const invocationEvents = readdirSync(evidenceDirectory)
+    .flatMap((name) => {
+      const invocation = playerInvocationNumberFromEventsArtifact(name);
+      return invocation === undefined ? [] : [{ invocation, name }];
+    })
+    .sort((left, right) => left.invocation - right.invocation);
+  if (
+    invocationEvents.some(({ invocation }, index) => invocation !== index + 1)
+  ) {
+    fail("Player invocation event artifacts must form a contiguous sequence.");
+  }
+  const conversationEventsPath = resolve(
+    evidenceDirectory,
+    "player-events.jsonl",
+  );
+  if (invocationEvents.length > 0 && existsSync(conversationEventsPath)) {
+    fail("A run cannot contain both conversation and per-invocation events.");
+  }
+  if (invocationEvents.length === 0) {
+    return existsSync(conversationEventsPath)
+      ? [
+          [
+            "playerInvocationEvents-1",
+            conversationEventsPath,
+            "application/x-ndjson",
+            undefined,
+          ],
+        ]
+      : [];
+  }
+  return invocationEvents.map(
+    ({ invocation, name }): RunArtifactCandidate => [
+      `playerInvocationEvents-${String(invocation)}`,
+      resolve(evidenceDirectory, name),
+      "application/x-ndjson",
+      undefined,
+    ],
+  );
+}
+
 export function ingestArtifactRun(input: {
   readonly transcriptPath: string;
   readonly dbPath: string;
@@ -353,7 +405,7 @@ export function ingestArtifactRun(input: {
       if (sdk.tag === "valid") {
         const header = sdk.value.header;
         const runDirectory = dirname(dirname(absoluteTranscript));
-        const candidates = [
+        const candidates: readonly RunArtifactCandidate[] = [
           [
             "scenario",
             resolve(runDirectory, "SCENARIO.md"),
@@ -410,9 +462,10 @@ export function ingestArtifactRun(input: {
             "application/x-ndjson",
             undefined,
           ],
+          ...playerInvocationEventCandidates(runDirectory),
           [
-            "modelEvents",
-            resolve(runDirectory, "evidence/player-events.jsonl"),
+            "continuationObservations",
+            resolve(runDirectory, "evidence/observations.jsonl"),
             "application/x-ndjson",
             undefined,
           ],
@@ -422,7 +475,7 @@ export function ingestArtifactRun(input: {
             "application/x-ndjson",
             undefined,
           ],
-        ] as const;
+        ];
         const insertArtifact = db.prepare(
           "INSERT INTO runArtifacts(runId, role, artifactSha256) VALUES (?, ?, ?)",
         );

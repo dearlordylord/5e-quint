@@ -10,7 +10,7 @@ import {
 } from "./performance-comparison.ts";
 import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
-import { sha256Text } from "./transcript.ts";
+import { sha256Canonical, sha256Text } from "./transcript.ts";
 
 const temporaryDirectories: string[] = [];
 
@@ -23,11 +23,15 @@ describe("whole-path performance evidence", () => {
   test("aggregates invocation usage and refuses incomparable legacy token claims", () => {
     const directory = rawSwarmTestOutputDirectory("performance-test-");
     temporaryDirectories.push(directory);
-    const entry = (phase: "player" | "postPlayReview", input: number) =>
+    const entry = (
+      phase: "player" | "postPlayReview",
+      input: number,
+      invocationId: string,
+    ) =>
       ({
         schemaVersion: 1,
         phase,
-        invocationId: phase,
+        invocationId,
         model: phase === "player" ? "gpt-5.6-sol" : "gpt-5.6-luna",
         reasoningEffort: phase === "player" ? "medium" : "max",
         startedAt: "2026-08-14T00:00:00.000Z",
@@ -45,28 +49,50 @@ describe("whole-path performance evidence", () => {
     const fixture = controlledReviewEvidenceFixture({
       directory,
       callCount: 2,
-      ledgerEntries: [entry("player", 900), entry("postPlayReview", 400)],
+      ledgerEntries: [
+        entry("player", 400, "player-1"),
+        entry("player", 400, "player-2"),
+        entry("postPlayReview", 400, "post-play-review"),
+      ],
     });
     const transcript = fixture.transcriptPath;
     const review = fixture.reviewPath;
-    const timings = resolve(directory, "timings.jsonl");
+    const transcriptHeaderSha256 = sha256Canonical(fixture.header);
+    const observations = resolve(directory, "observations.jsonl");
     writeFileSync(
-      timings,
+      observations,
       [1, 2]
         .map((continuation) =>
           JSON.stringify({
-            schemaVersion: 1,
+            transcriptHeaderSha256,
             continuation,
-            phases: {
-              continuationTypecheckMilliseconds: 5,
-              priorCallVerificationReplayMilliseconds: 10,
-              newSdkExecutionMilliseconds: 15,
-              evidenceWritingMilliseconds: 20,
-            },
+            kind: "continue",
           }),
         )
         .join("\n") + "\n",
     );
+    const timings = resolve(directory, "timings.jsonl");
+    const writeSupervisorTimings = (headerSha256: string): void => {
+      writeFileSync(
+        timings,
+        [1, 2]
+          .map((continuation) =>
+            JSON.stringify({
+              schemaVersion: 1,
+              transcriptHeaderSha256: headerSha256,
+              continuation,
+              phases: {
+                continuationTypecheckMilliseconds: 5,
+                priorCallVerificationReplayMilliseconds: 10,
+                newSdkExecutionMilliseconds: 15,
+                evidenceWritingMilliseconds: 20,
+              },
+            }),
+          )
+          .join("\n") + "\n",
+      );
+    };
+    writeSupervisorTimings(transcriptHeaderSha256);
     const reportingTiming = resolve(directory, "reporting-timing.json");
     const reportingManifest = resolve(directory, "manifest.json");
     const indexSha256 = "1".repeat(64);
@@ -85,6 +111,7 @@ describe("whole-path performance evidence", () => {
     const summary = summarizeControlledRun({
       schemaVersion: 1,
       reviewInvocationEvidencePath: fixture.manifestPath,
+      continuationObservationPath: observations,
       supervisorTimingPath: timings,
       reportingTimingPath: reportingTiming,
       reportingManifestPath: reportingManifest,
@@ -112,6 +139,18 @@ describe("whole-path performance evidence", () => {
       perCallMilliseconds: 50,
       replayCacheDecision: { admitted: false },
     });
+    writeSupervisorTimings("f".repeat(64));
+    expect(() =>
+      summarizeControlledRun({
+        schemaVersion: 1,
+        reviewInvocationEvidencePath: fixture.manifestPath,
+        continuationObservationPath: observations,
+        supervisorTimingPath: timings,
+        reportingTimingPath: reportingTiming,
+        reportingManifestPath: reportingManifest,
+      }),
+    ).toThrow(/every authoritative continuation observation exactly once/);
+    writeSupervisorTimings(transcriptHeaderSha256);
     expect(
       compareControlledRuns(
         {
@@ -267,6 +306,17 @@ describe("whole-path performance evidence", () => {
     const summaryPath = resolve(directory, "summary.json");
     writeFileSync(summaryPath, `${JSON.stringify(summary)}\n`);
     expect(readControlledPerformance(summaryPath)).toEqual(summary);
+    writeFileSync(
+      summaryPath,
+      `${JSON.stringify({
+        ...summary,
+        phases: {
+          ...summary.phases,
+          player: { ...summary.phases.player, invocationCount: 1 },
+        },
+      })}\n`,
+    );
+    expect(() => readControlledPerformance(summaryPath)).toThrow(/one-to-one/);
     const contradictorySummary = {
       ...summary,
       phases: {
@@ -307,6 +357,7 @@ describe("whole-path performance evidence", () => {
       timings,
       `${JSON.stringify({
         schemaVersion: 1,
+        transcriptHeaderSha256,
         continuation: 1,
         phases: {
           continuationTypecheckMilliseconds: 1.5,
@@ -320,6 +371,7 @@ describe("whole-path performance evidence", () => {
       summarizeControlledRun({
         schemaVersion: 1,
         reviewInvocationEvidencePath: fixture.manifestPath,
+        continuationObservationPath: observations,
         supervisorTimingPath: timings,
         reportingTimingPath: reportingTiming,
         reportingManifestPath: reportingManifest,
@@ -329,6 +381,7 @@ describe("whole-path performance evidence", () => {
       timings,
       `${JSON.stringify({
         schemaVersion: 1,
+        transcriptHeaderSha256,
         continuation: 1,
         phases: {
           continuationTypecheckMilliseconds: 10,
@@ -342,10 +395,11 @@ describe("whole-path performance evidence", () => {
       summarizeControlledRun({
         schemaVersion: 1,
         reviewInvocationEvidencePath: fixture.manifestPath,
+        continuationObservationPath: observations,
         supervisorTimingPath: timings,
         reportingTimingPath: reportingTiming,
         reportingManifestPath: reportingManifest,
       }),
-    ).toThrow(/every authoritative transcript continuation exactly once/);
+    ).toThrow(/every authoritative continuation observation exactly once/);
   });
 });

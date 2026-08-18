@@ -126,9 +126,9 @@ describe("SDK player transcript boundary", () => {
     );
   });
 
-  test("rejects false continuation provenance", () => {
+  test("accepts gaps reserved for callless frozen continuations and rejects reversal", () => {
     const result = { available: true };
-    const session = { step: 1 };
+    const session = { step: 0 };
     const call = (seq: number, continuation: number) => ({
       type: "sdk-call",
       seq,
@@ -144,9 +144,9 @@ describe("SDK player transcript boundary", () => {
       resultSha256: sha256Canonical(result),
     });
 
-    expect(parseSdkTranscript([header, call(1, 2)]).tag).toBe("invalid");
+    expect(parseSdkTranscript([header, call(1, 2)]).tag).toBe("valid");
     expect(parseSdkTranscript([header, call(1, 1), call(2, 3)]).tag).toBe(
-      "invalid",
+      "valid",
     );
     expect(
       parseSdkTranscript([header, call(1, 1), call(2, 2), call(3, 1)]).tag,
