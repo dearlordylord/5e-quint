@@ -77,21 +77,34 @@ function packetRunSourcesMatchAudit(packet: {
   readonly runArtifacts: readonly {
     readonly path: string;
     readonly sha256: string;
+    readonly firstLine: number;
   }[];
-  readonly domainAuthorities: readonly { readonly path: string }[];
-  readonly rawAuthorities: readonly { readonly path: string }[];
+  readonly domainAuthorities: readonly {
+    readonly path: string;
+    readonly firstLine: number;
+  }[];
+  readonly rawAuthorities: readonly {
+    readonly path: string;
+    readonly firstLine: number;
+  }[];
 }): string | undefined {
   const runDirectory = resolve(
     repoRoot,
     dirname(dirname(packet.audit.header.transcriptPath)),
   );
-  const sourcePaths = [
-    ...packet.runArtifacts.map(({ path }) => path),
-    ...packet.domainAuthorities.map(({ path }) => path),
-    ...packet.rawAuthorities.map(({ path }) => path),
+  const sourceCoordinates = [
+    ...packet.runArtifacts.map(({ path, firstLine }) =>
+      JSON.stringify(["run", path, firstLine]),
+    ),
+    ...packet.domainAuthorities.map(({ path, firstLine }) =>
+      JSON.stringify(["domain", path, firstLine]),
+    ),
+    ...packet.rawAuthorities.map(({ path, firstLine }) =>
+      JSON.stringify(["raw", path, firstLine]),
+    ),
   ];
-  if (new Set(sourcePaths).size !== sourcePaths.length) {
-    return "Review evidence packet contains duplicate source roles.";
+  if (new Set(sourceCoordinates).size !== sourceCoordinates.length) {
+    return "Review evidence packet contains duplicate source coordinates.";
   }
   const runRoles = packet.runArtifacts.map(({ path }) =>
     packetSourceRole(runDirectory, path),
@@ -154,10 +167,16 @@ export function reviewEvidenceCatalogForPacket(packet: {
   readonly retainedHeaderEvidence: JsonValue;
   readonly runArtifacts: readonly Pick<
     SdkReviewPacketSource,
-    "path" | "numberedContent" | "sha256"
+    "path" | "numberedContent" | "sha256" | "firstLine"
   >[];
-  readonly domainAuthorities?: readonly Pick<SdkReviewPacketSource, "path">[];
-  readonly rawAuthorities?: readonly Pick<SdkReviewPacketSource, "path">[];
+  readonly domainAuthorities?: readonly Pick<
+    SdkReviewPacketSource,
+    "path" | "firstLine"
+  >[];
+  readonly rawAuthorities?: readonly Pick<
+    SdkReviewPacketSource,
+    "path" | "firstLine"
+  >[];
 }): ReviewEvidenceSourceValidation {
   const sourceBindingFailure = packetRunSourcesMatchAudit({
     audit: packet.audit,

@@ -202,11 +202,40 @@ describe("review output validation", () => {
       reviewEvidenceCatalogForPacket({
         ...packet,
         runArtifacts: [],
-        rawAuthorities: [{ path: "docs/not-raw.md" }],
+        rawAuthorities: [{ path: "docs/not-raw.md", firstLine: 1 }],
       }),
     ).toMatchObject({
       tag: "invalid",
       message: expect.stringContaining("outside the SRD root"),
+    });
+    const repeatedRawFileExcerpts = {
+      ...packet,
+      runArtifacts: [],
+      rawAuthorities: [
+        {
+          path: ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+          firstLine: 10,
+        },
+        {
+          path: ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
+          firstLine: 40,
+        },
+      ],
+    };
+    expect(
+      reviewEvidenceCatalogForPacket(repeatedRawFileExcerpts),
+    ).toMatchObject({ tag: "valid" });
+    expect(
+      reviewEvidenceCatalogForPacket({
+        ...repeatedRawFileExcerpts,
+        rawAuthorities: [
+          repeatedRawFileExcerpts.rawAuthorities[0]!,
+          repeatedRawFileExcerpts.rawAuthorities[0]!,
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("duplicate source coordinates"),
     });
   });
 });
