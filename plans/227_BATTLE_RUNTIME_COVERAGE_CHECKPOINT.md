@@ -20,32 +20,32 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-17
-- Measured battle-runtime production tree committed as: `e9f2e9ea3`
+- Measured battle-runtime production tree committed as: `f630a3669`
 - Command: `pnpm coverage`
 - Result: exit 0 under the original package timeouts
-- Battle-runtime: 247/247 files passed; 2,661 passed / 129 skipped
+- Battle-runtime: 247/247 files passed; 2,665 passed / 129 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 126,802 / 129,395 |   97.99% |     2,593 |      1,300 |
-| Branches   |   32,600 / 34,061 |   95.71% |     1,461 |      1,121 |
-| Functions  |     5,085 / 5,085 |  100.00% |         0 |          0 |
-| Lines      | 126,802 / 129,395 |   97.99% |     2,593 |      1,300 |
+| Statements | 126,807 / 129,352 |   98.03% |     2,545 |      1,252 |
+| Branches   |   32,621 / 34,076 |   95.73% |     1,455 |      1,115 |
+| Functions  |     5,087 / 5,087 |  100.00% |         0 |          0 |
+| Lines      | 126,807 / 129,352 |   98.03% |     2,545 |      1,252 |
 
 Recompute the 99% gaps after every production-denominator change.
 
 ## Current campaign
 
-- Coverage work is active after the save-gate validation milestone at
-  `e9f2e9ea3`; finish it before resuming issue #254 complexity work.
+- Coverage work is active after the stored Ice Knife release milestone at
+  `f630a3669`; finish it before resuming issue #254 complexity work.
 - Select cohesive 150–300-counter domain slices from the public-policy
   production report; use at most two implementation lanes at once.
 - Do not forge internal battle state to reach admission-proven or
   schema-impossible guards. Narrow or remove such guards only with concrete
   proof.
-- The current public gaps are 1,300 statements/lines and 1,121 branches.
+- The current public gaps are 1,252 statements/lines and 1,115 branches.
 
 ## Verification and completion
 
