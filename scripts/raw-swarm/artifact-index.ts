@@ -470,6 +470,12 @@ export function ingestArtifactRun(input: {
             undefined,
           ],
           [
+            "initialObservation",
+            resolve(runDirectory, "evidence/initial-observation.json"),
+            "application/json",
+            undefined,
+          ],
+          [
             "supervisorTimings",
             resolve(runDirectory, "evidence/supervisor-timings.jsonl"),
             "application/x-ndjson",

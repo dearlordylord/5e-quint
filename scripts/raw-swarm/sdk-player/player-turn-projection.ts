@@ -1054,6 +1054,48 @@ function turn(
   };
 }
 
+function boundedProjection(
+  projection: PlayerCurrentTurnProjection,
+): PlayerProjectionResult {
+  const encodedByteLength = Buffer.byteLength(
+    JSON.stringify(projection),
+    "utf8",
+  );
+  return encodedByteLength <= PLAYER_TURN_PROJECTION_MAX_BYTES
+    ? { tag: "valid", projection, encodedByteLength }
+    : {
+        tag: "invalid",
+        reason: "projectionTooLarge",
+        byteLength: encodedByteLength,
+        maximumByteLength: PLAYER_TURN_PROJECTION_MAX_BYTES,
+        message: `Current-turn projection is ${encodedByteLength} bytes; maximum is ${PLAYER_TURN_PROJECTION_MAX_BYTES}.`,
+      };
+}
+
+export function playerInitialTurnProjection(input: {
+  readonly session: JsonValue;
+  readonly acts: unknown;
+}): PlayerProjectionResult {
+  const projectedTurn = turn(input.session);
+  const projectedActs = projectPlayerActs(input.acts);
+  if (projectedTurn === undefined || projectedActs === undefined) {
+    return {
+      tag: "invalid",
+      reason: "malformedProjectionSource",
+      message:
+        "The initial session/act frontier cannot be projected into the typed player turn contract.",
+    };
+  }
+  return boundedProjection({
+    schemaVersion: 1,
+    continuation: 0,
+    callSequences: [],
+    turn: projectedTurn,
+    frontier: { kind: "acts", acts: projectedActs },
+    changes: [],
+  });
+}
+
 export function playerCurrentTurnProjection(input: {
   readonly continuation: number;
   readonly calls: readonly SdkCallRecord[];
@@ -1128,17 +1170,5 @@ export function playerCurrentTurnProjection(input: {
       })),
     ],
   };
-  const encodedByteLength = Buffer.byteLength(
-    JSON.stringify(projection),
-    "utf8",
-  );
-  return encodedByteLength <= PLAYER_TURN_PROJECTION_MAX_BYTES
-    ? { tag: "valid", projection, encodedByteLength }
-    : {
-        tag: "invalid",
-        reason: "projectionTooLarge",
-        byteLength: encodedByteLength,
-        maximumByteLength: PLAYER_TURN_PROJECTION_MAX_BYTES,
-        message: `Current-turn projection is ${encodedByteLength} bytes; maximum is ${PLAYER_TURN_PROJECTION_MAX_BYTES}.`,
-      };
+  return boundedProjection(projection);
 }

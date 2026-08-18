@@ -10,6 +10,7 @@ import {
   openSync,
   readFileSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -19,6 +20,8 @@ import {
   createConsumerCodexHome,
 } from "./sdk-player/consumer-codex-profile.ts";
 import { buildConsumerDistribution } from "./sdk-player/consumer-distribution.ts";
+import { frontierFillTypeHelp } from "./sdk-player/frontier-fill-type-help.ts";
+import { publicSdkDeclarationGraphSha256 } from "./sdk-player/public-sdk-type-help.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import { readJsonLines } from "./artifact-authority.ts";
@@ -51,8 +54,9 @@ function runCommand(
   command: string,
   args: readonly string[],
   cwd: string,
+  env: NodeJS.ProcessEnv = process.env,
 ): void {
-  const result = spawnSync(command, args, { cwd, stdio: "inherit" });
+  const result = spawnSync(command, args, { cwd, env, stdio: "inherit" });
   if (result.error !== undefined) throw result.error;
   if (result.signal !== null) fail(`${command} stopped by ${result.signal}.`);
   if (result.status !== 0) {
@@ -116,6 +120,34 @@ function playerEvidenceState(
       );
     }
     copyFileSync(responsePath, resolve(player, "OBSERVATION.json"));
+  } else if (
+    transcript.value.header.characterOutcome === "ready" &&
+    transcript.value.header.setupOutcome === "ready"
+  ) {
+    const initialObservation: unknown = JSON.parse(
+      readFileSync(
+        resolve(trusted, "evidence/initial-observation.json"),
+        "utf8",
+      ),
+    );
+    if (
+      !isJsonRecord(initialObservation) ||
+      !isJsonRecord(initialObservation.projection) ||
+      initialObservation.transcriptHeaderSha256 !==
+        sha256Canonical(transcript.value.header) ||
+      initialObservation.continuation !== 0 ||
+      initialObservation.kind !== "awaitingFirstContinuation" ||
+      sha256Canonical(initialObservation.projection) !==
+        transcript.value.header.initialTurnProjectionSha256 ||
+      sha256Canonical(initialObservation.projection) !==
+        sha256Canonical(transcript.value.header.initialTurnProjection)
+    ) {
+      fail("Initial player observation does not match the exact transcript.");
+    }
+    copyFileSync(
+      resolve(trusted, "evidence/initial-observation.json"),
+      resolve(player, "OBSERVATION.json"),
+    );
   }
   return {
     tag: existsSync(resolve(trusted, "evidence/final.json"))
@@ -221,6 +253,15 @@ async function main(args: readonly string[]): Promise<void> {
       trustedDestination: trusted,
       scenarioPath,
     });
+    const typeHelpArtifact: unknown = JSON.parse(
+      readFileSync(resolve(scratch, "FILL_TYPES.json"), "utf8"),
+    );
+    const declarationGraphSha256 = publicSdkDeclarationGraphSha256(
+      resolve(scratch, "declarations"),
+    );
+    if (declarationGraphSha256 === undefined) {
+      fail("Public SDK declaration graph is empty.");
+    }
     copyFileSync(scenarioReviewPath, resolve(scratch, "SCENARIO_REVIEW.json"));
     mkdirSync(resolve(trusted, "evidence"));
     copyFileSync(charactersPath, resolve(trusted, "evidence/characters.ts"));
@@ -256,6 +297,7 @@ async function main(args: readonly string[]): Promise<void> {
         admission.right.scenarioReviewSha256,
       ],
       trusted,
+      { ...process.env, RAW_SWARM_PLAYER_ROOT: scratch },
     );
     if (!existsSync(resolve(trusted, "evidence/frozen-prefix.json"))) {
       console.log(
@@ -286,6 +328,19 @@ async function main(args: readonly string[]): Promise<void> {
     const loop = runPlayerInvocationLoop({
       evidenceState: () => playerEvidenceState(trusted, scratch),
       invoke: (invocation) => {
+        const observation: unknown = JSON.parse(
+          readFileSync(resolve(scratch, "OBSERVATION.json"), "utf8"),
+        );
+        const fillTypeHelp = frontierFillTypeHelp({
+          observation,
+          artifact: typeHelpArtifact,
+          declarationGraphSha256,
+        });
+        if (fillTypeHelp.tag === "invalid") fail(fillTypeHelp.message);
+        writeFileSync(
+          resolve(scratch, "FRONTIER_FILL_TYPES.md"),
+          fillTypeHelp.markdown,
+        );
         const names = playerInvocationArtifactNames(invocation);
         const agentLogPath = resolve(trusted, "evidence", names.log);
         const agentEventsPath = resolve(trusted, "evidence", names.events);
@@ -308,7 +363,7 @@ async function main(args: readonly string[]): Promise<void> {
             "--output-last-message",
             agentFinalPath,
             [
-              "Read PLAYER.md, SCENARIO.md, PUBLIC_SDK.md, OBSERVATION.json, and attempt.ts.",
+              "Read PLAYER.md, SCENARIO.md, OBSERVATION.json, FRONTIER_FILL_TYPES.md, and attempt.ts.",
               "Act as the player described there and author exactly one tactical continuation.",
               "Edit only attempt.ts and run `node player-client.mjs attempt.ts`.",
               "Use `node public-sdk-type-help.mjs <fill-kind>` once for a fill kind requested by the active hole; do not search declarations or repeat successful type-help queries.",

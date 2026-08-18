@@ -207,6 +207,7 @@ export function sdkReviewPacketHeaderEvidence(
         characterSheets: header.characterSheets,
         setupOutcome: "ready",
         setupObservation: header.setupObservation,
+        initialTurnProjection: header.initialTurnProjection,
       };
 }
 

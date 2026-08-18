@@ -46,6 +46,8 @@ function fixture() {
     setupOutcome: "ready",
     initialSession,
     initialSessionSha256: sha256Canonical(initialSession),
+    initialTurnProjection: {},
+    initialTurnProjectionSha256: sha256Canonical({}),
   } as const;
   const call = {
     type: "sdk-call",
@@ -103,6 +105,8 @@ describe("SDK player derived audit evidence", () => {
     const {
       initialSession: _initialSession,
       initialSessionSha256: _initialSessionSha256,
+      initialTurnProjection: _initialTurnProjection,
+      initialTurnProjectionSha256: _initialTurnProjectionSha256,
       ...withoutInitialSession
     } = header;
     const setupObstructed = sdkAuditTranscript({

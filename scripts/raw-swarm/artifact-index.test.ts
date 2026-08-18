@@ -79,6 +79,8 @@ function sdkTranscript(directory: string): string {
     setupOutcome: "ready",
     initialSession,
     initialSessionSha256: sha256Canonical(initialSession),
+    initialTurnProjection: {},
+    initialTurnProjectionSha256: sha256Canonical({}),
   };
   const call = {
     type: "sdk-call",

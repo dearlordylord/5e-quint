@@ -57,6 +57,8 @@ const HeaderSchema = Schema.Union(
     setupOutcome: Schema.Literal("ready"),
     initialSession: Schema.Unknown,
     initialSessionSha256: HashSchema,
+    initialTurnProjection: Schema.Unknown,
+    initialTurnProjectionSha256: HashSchema,
   }),
   Schema.Struct({
     ...ReadyCharacterFields,
@@ -106,11 +108,13 @@ type ReadySdkTranscriptHeader = Omit<
   | "characterObservation"
   | "characterSheets"
   | "initialSession"
+  | "initialTurnProjection"
   | "setupObservation"
 > & {
   readonly characterObservation: JsonValue;
   readonly characterSheets: JsonValue;
   readonly initialSession: JsonValue;
+  readonly initialTurnProjection: JsonValue;
   readonly setupObservation: JsonValue;
 };
 
@@ -182,11 +186,15 @@ export function parseSdkTranscript(
     header.right.setupOutcome === "ready" &&
     (!isJsonValue(header.right.initialSession) ||
       sha256Canonical(header.right.initialSession) !==
-        header.right.initialSessionSha256)
+        header.right.initialSessionSha256 ||
+      !isJsonValue(header.right.initialTurnProjection) ||
+      sha256Canonical(header.right.initialTurnProjection) !==
+        header.right.initialTurnProjectionSha256)
   ) {
     return {
       tag: "invalid",
-      message: "SDK transcript header has a mismatched initial session hash.",
+      message:
+        "SDK transcript header has mismatched initial session or turn projection evidence.",
     };
   }
   const setupObservation = header.right.setupObservation;
@@ -222,7 +230,8 @@ export function parseSdkTranscript(
     };
   }
   const initialSession = header.right.initialSession;
-  if (!isJsonValue(initialSession)) {
+  const initialTurnProjection = header.right.initialTurnProjection;
+  if (!isJsonValue(initialSession) || !isJsonValue(initialTurnProjection)) {
     return {
       tag: "invalid",
       message: "SDK transcript header has a non-JSON initial session.",
@@ -309,6 +318,7 @@ export function parseSdkTranscript(
         characterObservation,
         characterSheets,
         initialSession,
+        initialTurnProjection,
         setupObservation,
       },
       calls: decodedCalls,

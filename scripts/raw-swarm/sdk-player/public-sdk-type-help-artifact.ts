@@ -181,13 +181,8 @@ function fillDeclaration(
       const propertyDeclaration =
         property.valueDeclaration ?? property.declarations?.[0];
       const propertyLocation = propertyDeclaration ?? location;
-      if (
-        propertyDeclaration !== undefined &&
-        "type" in propertyDeclaration &&
-        propertyDeclaration.type !== undefined
-      ) {
-        inspectTypeNode(propertyDeclaration.type);
-      }
+      if (propertyDeclaration !== undefined)
+        inspectTypeNode(propertyDeclaration);
       inspect(checker.getTypeOfSymbolAtLocation(property, propertyLocation));
     }
   };

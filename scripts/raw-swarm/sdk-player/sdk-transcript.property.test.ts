@@ -38,10 +38,20 @@ const header = {
   setupOutcome: "ready",
   initialSession: { step: 0 },
   initialSessionSha256: sha256Canonical({ step: 0 }),
+  initialTurnProjection: {},
+  initialTurnProjectionSha256: sha256Canonical({}),
   setupObservation: { setup: "property" },
 } as const;
 
 describe("SDK player transcript boundary", () => {
+  test("rejects tampered initial turn projection evidence", () => {
+    expect(
+      parseSdkTranscript([
+        { ...header, initialTurnProjection: { altered: true } },
+      ]).tag,
+    ).toBe("invalid");
+  });
+
   test("accepts a terminal character-composition obstruction", () => {
     const characterObstruction = {
       type: "sdk-player-header",

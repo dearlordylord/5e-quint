@@ -5,6 +5,7 @@ import {
   PLAYER_TURN_PROJECTION_MAX_BYTES,
   PLAYER_TACTICAL_NOTE_MAX_BYTES,
   playerCurrentTurnProjection,
+  playerInitialTurnProjection,
   projectPlayerSubject,
 } from "./player-turn-projection.ts";
 
@@ -91,6 +92,50 @@ const attackProcedureRef = JSON.stringify({
 });
 
 describe("player current-turn projection", () => {
+  test("projects the initial actionable act frontier before a recorded call", () => {
+    const projected = playerInitialTurnProjection({
+      session: beforeSession,
+      acts: [
+        {
+          subject: {
+            tag: "action",
+            actorId: "fighter",
+            action: "attack",
+            procedureRef: attackProcedureRef,
+          },
+          label: "Attack",
+          initialHoles: [
+            {
+              kind: "targetChoice",
+              holeId: "battle:attack:target",
+              holeInstanceKey: "battle:attack:target",
+              label: "Attack target",
+              choices: ["wolf"],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(projected).toMatchObject({
+      tag: "valid",
+      projection: {
+        continuation: 0,
+        callSequences: [],
+        frontier: {
+          kind: "acts",
+          acts: [
+            {
+              label: "Attack",
+              holes: [{ hole: { kind: "targetChoice", choices: ["wolf"] } }],
+            },
+          ],
+        },
+        changes: [],
+      },
+    });
+  });
+
   test("keeps projected subjects discriminated by required protocol fields", () => {
     expect(projectPlayerSubject({ tag: "action", actorId: "fighter" })).toBe(
       undefined,

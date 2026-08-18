@@ -406,6 +406,24 @@ export const continueBattle: PlayerContinuation = (context) => {
         ],
         supervisorOptions,
       );
+      const initialObservation: unknown = JSON.parse(
+        readFileSync(
+          join(trustedDestination, "evidence/initial-observation.json"),
+          "utf8",
+        ),
+      );
+      expect(
+        JSON.parse(readFileSync(join(destination, "OBSERVATION.json"), "utf8")),
+      ).toEqual(initialObservation);
+      expect(initialObservation).toMatchObject({
+        kind: "awaitingFirstContinuation",
+        continuation: 0,
+        projection: {
+          continuation: 0,
+          callSequences: [],
+          frontier: { kind: "acts" },
+        },
+      });
 
       writeFileSync(
         join(destination, "attempt.ts"),
@@ -601,6 +619,9 @@ export const continueBattle: PlayerContinuation = (context) => {
           space: { revision: 2 },
         },
       });
+      expect(header?.initialTurnProjection).toEqual(
+        (initialObservation as { readonly projection: unknown }).projection,
+      );
       for (const call of calls) {
         if (call.outcome === "returned") {
           expect(call.outputSession).toMatchObject({

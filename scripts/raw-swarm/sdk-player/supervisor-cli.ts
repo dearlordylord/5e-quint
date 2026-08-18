@@ -49,7 +49,10 @@ import {
   type ScenarioSession,
 } from "./scenario-session.ts";
 import { decodeSdkCallInput, type SdkCallInput } from "./sdk-replay-input.ts";
-import { playerCurrentTurnProjection } from "./player-turn-projection.ts";
+import {
+  playerCurrentTurnProjection,
+  playerInitialTurnProjection,
+} from "./player-turn-projection.ts";
 import {
   parseSdkTranscript,
   SDK_SESSION_CONFLICT_MESSAGE,
@@ -74,6 +77,7 @@ const transcriptPath = resolve("evidence/sdk-calls.jsonl");
 const programPath = resolve("evidence/program.ts");
 const prefixPath = resolve("evidence/frozen-prefix.json");
 const observationsPath = resolve("evidence/observations.jsonl");
+const initialObservationPath = resolve("evidence/initial-observation.json");
 const latestObservationPath = resolve("OBSERVATION.json");
 const playerResponsePath = resolve("player-response.json");
 const finalPath = resolve("evidence/final.json");
@@ -284,6 +288,13 @@ async function initialize(
     }),
     Match.when({ tag: "ready" }, ({ session }) => {
       const initialSession = jsonValue(session);
+      const initialProjection = playerInitialTurnProjection({
+        session: initialSession,
+        acts: scenarioBattleActs(session),
+      });
+      if (initialProjection.tag === "invalid") {
+        fail(initialProjection.message);
+      }
       const program = PROGRAM_PREFIX;
       writeFileSync(programPath, program, "utf8");
       atomicJson(prefixPath, {
@@ -292,15 +303,27 @@ async function initialize(
         continuationCount: 0,
         run: { kind: "active" },
       } satisfies FrozenPrefix);
-      appendFileSync(
-        transcriptPath,
-        `${JSON.stringify({
-          ...headerCommon,
-          setupOutcome: "ready",
-          initialSession,
-          initialSessionSha256: sha256Canonical(initialSession),
-        })}\n`,
-      );
+      const header = {
+        ...headerCommon,
+        setupOutcome: "ready" as const,
+        initialSession,
+        initialSessionSha256: sha256Canonical(initialSession),
+        initialTurnProjection: initialProjection.projection,
+        initialTurnProjectionSha256: sha256Canonical(
+          initialProjection.projection,
+        ),
+      };
+      appendFileSync(transcriptPath, `${JSON.stringify(header)}\n`);
+      const observation = {
+        transcriptHeaderSha256: sha256Canonical(header),
+        continuation: 0,
+        kind: "awaitingFirstContinuation" as const,
+        projection: initialProjection.projection,
+        tacticalNote: "",
+      };
+      atomicJson(latestObservationPath, observation);
+      atomicJson(initialObservationPath, observation);
+      atomicJson(resolve(playerRoot, "OBSERVATION.json"), observation);
     }),
     Match.exhaustive,
   );
@@ -631,6 +654,17 @@ async function replay(): Promise<ReplayResult> {
       canonicalJson(parsed.value.header.setupObservation)
   ) {
     fail("Scenario setup result diverged during replay.");
+  }
+  const replayedInitialProjection = playerInitialTurnProjection({
+    session: initialSession,
+    acts: scenarioBattleActs(initial.session),
+  });
+  if (
+    replayedInitialProjection.tag === "invalid" ||
+    canonicalJson(replayedInitialProjection.projection) !==
+      canonicalJson(parsed.value.header.initialTurnProjection)
+  ) {
+    fail("Initial player turn projection diverged during replay.");
   }
   let session = initial.session;
   for (const call of parsed.value.calls) {

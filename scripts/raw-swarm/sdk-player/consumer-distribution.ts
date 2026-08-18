@@ -205,10 +205,6 @@ export function buildConsumerDistribution(
   );
   copyFileSync(input.scenarioPath, resolve(input.destination, "SCENARIO.md"));
   copyFileSync(
-    resolve(repoRoot, "packages/battle-runtime/README.md"),
-    resolve(input.destination, "PUBLIC_SDK.md"),
-  );
-  copyFileSync(
     resolve(repoRoot, "scripts/raw-swarm/sdk-player/PLAYER.md"),
     resolve(input.destination, "PLAYER.md"),
   );
@@ -238,6 +234,10 @@ export function buildConsumerDistribution(
   writeFileSync(
     resolve(input.destination, "OBSERVATION.json"),
     `${JSON.stringify(PLAYER_RUN_START_OBSERVATION, null, 2)}\n`,
+  );
+  writeFileSync(
+    resolve(input.destination, "FRONTIER_FILL_TYPES.md"),
+    "# Frontier fill types\n\nThe supervisor has not projected the initial frontier yet.\n",
   );
   cpSync(
     resolve(repoRoot, "node_modules/typescript"),

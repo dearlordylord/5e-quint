@@ -400,6 +400,23 @@ sufficient, so a later invocation does not reconstruct an accepted fill
 prefix. A short independent-invocation measurement must pass before paying for
 the complete controlled run.
 
+The next three-invocation gate at `5fdc7ad0f` used 257,425, 180,567, and
+114,240 input tokens (184,077 mean) and 83.1, 70.9, and 50.5 seconds. That is
+only an 18.1% mean reduction from the comparable 224,757-token continuation
+baseline, so the runner was stopped before invocation four. Its evidence is
+retained at
+`scripts/raw-swarm/out/failed-independent-282-type-help-trial-2`.
+
+The event stream showed that each fresh invocation reread about 29 KiB of
+static player, scenario, package-architecture, observation, and program text.
+The first invocation also had to call discovery before it could observe an
+actionable act. The next correction therefore supplies the initial act frontier
+from the supervisor before call 1, writes the observed frontier's exact fill
+declarations before each model invocation, and removes the package architecture
+README from the player input. These are context-boundary changes; the authored
+continuation still calls the real public SDK and the transcript remains the
+execution authority.
+
 The fixed 88-prefix benchmark measured 430,212 ms of cumulative replay, so the
 60-second cache gate is met. Cache admission remains deferred until the fresh
 controlled run proves replay is also at least 10% of non-model supervisor time;

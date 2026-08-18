@@ -1,7 +1,8 @@
 # SDK battle player
 
-Read `SCENARIO.md` and `PUBLIC_SDK.md`. You are an external SDK consumer. The
-only code you author is the body of the typed continuation in `attempt.ts`.
+Read `SCENARIO.md`, `OBSERVATION.json`, and `FRONTIER_FILL_TYPES.md`. You are an
+external SDK consumer. The only code you author is the body of the typed
+continuation in `attempt.ts`.
 
 Use the `context.sdk` operations exactly as typed. They are the canonical
 `@dnd/battle-runtime` operations with call/result recording around them. Do not
@@ -17,6 +18,10 @@ Saving Throw outcome authoring shape. The generated type-help artifact is
 derived from those declarations; it is not a second command vocabulary. Query
 only a fill kind requested by the active hole, and do not repeat a successful
 query.
+
+`FRONTIER_FILL_TYPES.md` already contains exact declarations for every fill
+kind on the observed frontier. Use the command only for a new downstream hole
+surfaced by an SDK call inside this continuation.
 
 When `context.session.battle.state.subjectResolutionPhase.kind` is
 `subjectSelection`, call `context.sdk.discoverBattleActs` inside the

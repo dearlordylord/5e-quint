@@ -201,6 +201,8 @@ export function controlledReviewEvidenceFixture(input: {
     setupOutcome: "ready",
     initialSession: session,
     initialSessionSha256: sha256Canonical(session),
+    initialTurnProjection: {},
+    initialTurnProjectionSha256: sha256Canonical({}),
     setupObservation: {},
   } as const;
   const calls = Array.from({ length: callCount }, (_, index) => {

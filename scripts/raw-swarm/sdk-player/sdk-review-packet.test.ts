@@ -118,6 +118,8 @@ function validatedPacketFixture() {
     setupOutcome: "ready",
     initialSession: session,
     initialSessionSha256: sha256Canonical(session),
+    initialTurnProjection: {},
+    initialTurnProjectionSha256: sha256Canonical({}),
     setupObservation: { outcome: "ready" },
   } as const;
   const result = [] as const;
