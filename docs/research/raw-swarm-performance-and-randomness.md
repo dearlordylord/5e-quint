@@ -210,8 +210,8 @@ payload improvements rather than merely deleting optimization code.
 The player-optimization phase was nevertheless overbuilt relative to the
 evidence: 3 hours 24 minutes and 2,586 added lines before only a short gate
 passed, and the stringency review found the two projection defects above. The
-current code is therefore not yet a proven golden middle. The proportionate
-next decision is:
+current code is therefore only a proportionate-implementation candidate. The
+next proportionate decision is:
 
 1. freeze further optimization and do not add a replay cache, compaction layer,
    or another context protocol;
