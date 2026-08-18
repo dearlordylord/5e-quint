@@ -75,11 +75,11 @@ export const ScenarioContentReviewSchema = Schema.Union(
   InvalidUnavailableSelectionReviewSchema,
 );
 
-const CONTENT_AVAILABILITY_INTENTS = [
+export const CONTENT_AVAILABILITY_INTENTS = [
   "availableOnly",
   "probeUnavailableContent",
 ] as const;
-const ContentAvailabilityIntentSchema = Schema.Literal(
+export const ContentAvailabilityIntentSchema = Schema.Literal(
   ...CONTENT_AVAILABILITY_INTENTS,
 );
 export type ContentAvailabilityIntent =
@@ -103,11 +103,13 @@ const ScenarioContentAdmissionSchema = Schema.Union(
   }),
 );
 
-const SDK_CAPABILITY_INTENTS = [
+export const SDK_CAPABILITY_INTENTS = [
   "supportedOnly",
   "probeUnsupportedCapability",
 ] as const;
-const SdkCapabilityIntentSchema = Schema.Literal(...SDK_CAPABILITY_INTENTS);
+export const SdkCapabilityIntentSchema = Schema.Literal(
+  ...SDK_CAPABILITY_INTENTS,
+);
 export type SdkCapabilityIntent = (typeof SDK_CAPABILITY_INTENTS)[number];
 
 const SupportedScenarioSdkCapabilityReviewSchema = Schema.Struct({

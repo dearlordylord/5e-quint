@@ -14,6 +14,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Either, Schema } from "effect";
 
 import {
@@ -198,7 +199,9 @@ Current public SDK capability documentation:
 ${sdkCapabilityDocs}`;
 }
 
-function liveAgents(ledgerPath: string): ScenarioCampaignAgents {
+export function scenarioCampaignAgents(
+  ledgerPath: string,
+): ScenarioCampaignAgents {
   const statBlocks = scenarioSetupStatBlocks();
   if (statBlocks.tag === "invalid") fail(statBlocks.message);
   const sdkCapabilityDocs = [
@@ -428,7 +431,7 @@ async function main(args: readonly string[]): Promise<void> {
   }
   const result = await runScenarioCampaign(
     decodedConfig.right,
-    liveAgents(ledgerPath),
+    scenarioCampaignAgents(ledgerPath),
     {
       select: randomInt,
     },
@@ -493,7 +496,12 @@ async function main(args: readonly string[]): Promise<void> {
   );
 }
 
-main(process.argv.slice(2)).catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (
+  process.argv[1] !== undefined &&
+  fileURLToPath(import.meta.url) === resolve(process.argv[1])
+) {
+  main(process.argv.slice(2)).catch((error: unknown) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}

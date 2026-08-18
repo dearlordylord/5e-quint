@@ -107,18 +107,20 @@ export function verifyReviewComparison(input: {
     ({ baselineVerdict }) => baselineVerdict,
   );
   if (
+    baselineOrdinals.length !== baseline.verdicts.length ||
     new Set(baselineOrdinals).size !== baseline.verdicts.length ||
     baselineOrdinals.some((ordinal) => ordinal > baseline.verdicts.length)
   ) {
     fail("Every baseline verdict must be mapped exactly once.");
   }
-  const coveredCandidate = new Set([
-    ...comparison.mappings.flatMap(
-      ({ candidateVerdicts }) => candidateVerdicts,
-    ),
-    ...comparison.newCandidateVerdicts,
-  ]);
+  const mappedCandidate = new Set(
+    comparison.mappings.flatMap(({ candidateVerdicts }) => candidateVerdicts),
+  );
+  const newCandidate = new Set(comparison.newCandidateVerdicts);
+  const coveredCandidate = new Set([...mappedCandidate, ...newCandidate]);
   if (
+    newCandidate.size !== comparison.newCandidateVerdicts.length ||
+    [...newCandidate].some((ordinal) => mappedCandidate.has(ordinal)) ||
     coveredCandidate.size !== candidate.verdicts.length ||
     [...coveredCandidate].some((ordinal) => ordinal > candidate.verdicts.length)
   ) {

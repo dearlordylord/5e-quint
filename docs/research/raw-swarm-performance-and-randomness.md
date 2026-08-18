@@ -279,6 +279,15 @@ which one Luna turn issued 142 repository commands, returned 2.79 MB of command
 output, and accumulated 10.76 million input tokens despite starting from the
 derived audit.
 
+A subsequent packet experiment showed why extraction cannot remain an
+invisible second turn. The reviewer emitted an interim claim, invoked one
+extractor command, then lost its event stream to an idle timeout after 793,950
+milliseconds. `codex exec` reported status 0 but produced no final review file.
+The measured packet review therefore rejects every command or tool event and
+validates the decoded output plus scenario, Git, and transcript identity before
+success. An operator can retain extracted records and start another explicitly
+measured review when drill-down is warranted.
+
 ## Seeded randomness: future design
 
 The installed dependency is Effect 3.21.5. Its local first-party source says

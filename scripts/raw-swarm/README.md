@@ -194,6 +194,24 @@ actually ran. Retained pre-capability-review artifacts remain
 campaigns retain `rawContentSdkCapabilityPolicy` and require the SDK-capability
 intent and verdict.
 
+For a controlled performance comparison, replay an admitted scenario through
+the same production review invocation without regenerating prose. Use a unique
+output path for each milestone or final invocation and one shared ledger path;
+the command also retains the exact prompt, schema, and typed result beside the
+ledger:
+
+```sh
+mise exec -- pnpm exec tsx scripts/raw-swarm/review-scenario.ts \
+  scripts/raw-swarm/sdk-player/scenarios/generated-battle-004.md \
+  milestone availableOnly supportedOnly \
+  scripts/raw-swarm/out/generated-battle-004-milestone-review.json \
+  scripts/raw-swarm/out/generated-battle-004-scenario-review-invocations.jsonl
+```
+
+Run the same command with `final` and another output path for the final
+pre-play review. This command measures the current production review path; it
+does not manufacture historical generation provenance for an older scenario.
+
 An admitted prose artifact is not parsed. A controller agent first authors an
 adjacent `<scenario-id>.characters.ts` against the canonical character-creation
 and Character Sheet APIs. It owns the builds delegated by the prose and returns

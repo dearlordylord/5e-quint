@@ -5,6 +5,7 @@
     "../replay-sdk-player.ts",
     "../report.ts",
     "../review-preflight.ts",
+    "../review-scenario.ts",
     "../generate-scenario.ts",
     "../author-scenario-setup.ts",
     "../author-scenario-characters.ts",
