@@ -417,6 +417,16 @@ README from the player input. These are context-boundary changes; the authored
 continuation still calls the real public SDK and the transcript remains the
 execution authority.
 
+At `b8ad06edb`, the next controlled gate used 273,200, 69,502, and 69,503
+input tokens for its first three invocations: a 137,402 mean and a 38.87%
+reduction from the comparable 224,757-token continuation baseline. The first
+invocation remained the outlier; later invocations held near 69.5k. The user
+accepted this measured reduction on 2026-08-18 rather than requiring the
+original 40% short-gate threshold. The interrupted gate evidence, including a
+fourth completed invocation, is retained at
+`scripts/raw-swarm/out/failed-independent-282-frontier-trial-3`; it is not a
+complete-path result.
+
 The fixed 88-prefix benchmark measured 430,212 ms of cumulative replay, so the
 60-second cache gate is met. Cache admission remains deferred until the fresh
 controlled run proves replay is also at least 10% of non-model supervisor time;
