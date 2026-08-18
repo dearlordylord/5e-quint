@@ -7,6 +7,7 @@ import { isJsonValue } from "./json-value.ts";
 import { reprojectSdkTranscriptTurns } from "./player-turn-projection.ts";
 import {
   encodeSdkReviewPacket,
+  sdkReviewPacketHeaderEvidence,
   sdkReviewPacketSource,
 } from "./sdk-review-packet.ts";
 import { parseSdkTranscript } from "./sdk-transcript.ts";
@@ -119,16 +120,7 @@ function main(args: readonly string[]): void {
   const header = transcript.value.header;
   const projections = reprojectSdkTranscriptTurns(transcript.value.calls);
   if (projections.tag === "invalid") fail(projections.message);
-  const retainedHeaderEvidence = {
-    characterOutcome: header.characterOutcome,
-    characterObservation: header.characterObservation,
-    characterSheets: header.characterSheets,
-    setupOutcome: header.setupOutcome,
-    setupObservation: header.setupObservation,
-    ...(header.setupOutcome === "obstructed"
-      ? { obstruction: header.obstruction }
-      : {}),
-  };
+  const retainedHeaderEvidence = sdkReviewPacketHeaderEvidence(header);
   if (!isJsonValue(retainedHeaderEvidence)) {
     fail("SDK review packet header evidence is not JSON.");
   }

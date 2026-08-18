@@ -23,16 +23,11 @@ import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import {
   currentGitRevision,
   decodeScenarioId,
+  GitShaSchema,
   repoRoot,
 } from "./transcript.ts";
-import { Either } from "effect";
-import {
-  appendInvocationLedger,
-  invocationEventsSha256,
-  invocationIdFromCodexEvents,
-  modelUsageFromCodexEvents,
-  readCodexEvents,
-} from "./model-telemetry.ts";
+import { Either, Schema } from "effect";
+import { runCodexInvocation } from "./model-telemetry.ts";
 
 function fail(message: string): never {
   throw new Error(message);
@@ -105,6 +100,8 @@ async function main(args: readonly string[]): Promise<void> {
   if (revision.tag === "dirty") {
     fail("SDK player recording requires a clean Git worktree.");
   }
+  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
+  if (Either.isLeft(gitSha)) fail(gitSha.left.message);
   const output = resolve(
     repoRoot,
     `scripts/raw-swarm/out/${acceptedEvidenceId}-sdk-player`,
@@ -212,17 +209,12 @@ async function main(args: readonly string[]): Promise<void> {
 
     const agentLogPath = resolve(trusted, "agent.log");
     const agentEventsPath = resolve(trusted, "evidence/player-events.jsonl");
-    const agentLog = openSync(agentLogPath, "w");
-    const agentEvents = openSync(agentEventsPath, "w");
     const permissionArgs = profileAvailable
       ? ([] as const)
       : (["--dangerously-bypass-approvals-and-sandbox"] as const);
-    const startedAt = new Date().toISOString();
-    const started = performance.now();
     const fallbackInvocationId = randomUUID();
-    const result = spawnSync(
-      "codex",
-      [
+    const result = runCodexInvocation({
+      args: [
         "exec",
         "-C",
         scratch,
@@ -246,35 +238,17 @@ async function main(args: readonly string[]): Promise<void> {
           "Do not edit evidence files. If the SDK blocks the scenario, preserve and report that obstruction instead of fabricating support.",
         ].join(" "),
       ],
-      {
-        cwd: scratch,
-        env: { ...process.env, CODEX_HOME: codexHome },
-        stdio: ["ignore", agentEvents, agentLog],
-      },
-    );
-    closeSync(agentLog);
-    closeSync(agentEvents);
-    const parsedEvents = readCodexEvents(agentEventsPath);
-    const events = parsedEvents.tag === "valid" ? parsedEvents.events : [];
-    appendInvocationLedger(resolve(trusted, "evidence/invocations.jsonl"), {
-      schemaVersion: 1,
-      scenarioId: acceptedScenarioId,
-      gitSha: revision.sha,
-      eventsSha256: invocationEventsSha256(agentEventsPath),
+      cwd: scratch,
+      env: { ...process.env, CODEX_HOME: codexHome },
+      eventPath: agentEventsPath,
+      logPath: agentLogPath,
+      ledgerPath: resolve(trusted, "evidence/invocations.jsonl"),
       phase: "player",
-      invocationId: invocationIdFromCodexEvents(events, fallbackInvocationId),
+      scenarioId: acceptedScenarioId,
+      gitSha: gitSha.right,
+      fallbackInvocationId,
       model: "gpt-5.6-sol",
       reasoningEffort: "medium",
-      startedAt,
-      elapsedMilliseconds: Math.round(performance.now() - started),
-      exit:
-        result.signal === null
-          ? { tag: "exited", status: result.status ?? -1 }
-          : { tag: "signaled", signal: result.signal },
-      usage:
-        parsedEvents.tag === "valid"
-          ? modelUsageFromCodexEvents(events)
-          : { tag: "unavailable", reason: parsedEvents.message },
     });
     if (result.error !== undefined) throw result.error;
     if (result.signal !== null)

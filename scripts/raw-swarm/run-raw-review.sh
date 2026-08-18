@@ -14,13 +14,18 @@ RAW_REVIEW_EVENTS="${RAW_REVIEW_LOG}.events.jsonl"
 RAW_REVIEW_LEDGER="${RAW_REVIEW_OUTPUT%.json}.invocations.jsonl"
 trap 'rm -f "$RAW_REVIEW_SCHEMA"' EXIT
 
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  printf '%s\n' 'Post-play review recording requires a clean Git worktree.' >&2
+  exit 1
+fi
+RAW_REVIEW_INVOCATION_GIT_SHA=$(git rev-parse HEAD)
+
 mkdir -p "$(dirname "$RAW_REVIEW_OUTPUT")" "$(dirname "$RAW_REVIEW_LOG")"
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/sdk-player/sdk-audit-cli.ts" \
   build "$RAW_REVIEW_TRANSCRIPT" "$RAW_REVIEW_AUDIT"
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/sdk-player/sdk-review-packet-cli.ts" \
   "$RAW_REVIEW_AUDIT" "$RAW_REVIEW_TRANSCRIPT" "$RAW_REVIEW_PACKET"
 RAW_REVIEW_SCENARIO_ID=$(head -n 1 "$RAW_REVIEW_AUDIT" | jq -er '.scenarioId')
-RAW_REVIEW_GIT_SHA=$(head -n 1 "$RAW_REVIEW_AUDIT" | jq -er '.gitSha')
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/review-schema.ts" "$RAW_REVIEW_SCHEMA"
 RAW_REVIEW_TRANSCRIPT_BYTES=$(wc -c <"$RAW_REVIEW_TRANSCRIPT" | tr -d ' ')
 RAW_REVIEW_TRANSCRIPT_SHA256=$(sha256sum "$RAW_REVIEW_TRANSCRIPT" | cut -d' ' -f1)
@@ -60,7 +65,7 @@ RAW_REVIEW_ELAPSED_MS=$(($(date +%s%3N) - RAW_REVIEW_STARTED_MS))
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/model-telemetry-cli.ts" \
   --phase postPlayReview \
   --scenario-id "$RAW_REVIEW_SCENARIO_ID" \
-  --git-sha "$RAW_REVIEW_GIT_SHA" \
+  --git-sha "$RAW_REVIEW_INVOCATION_GIT_SHA" \
   --events "$RAW_REVIEW_EVENTS" \
   --ledger "$RAW_REVIEW_LEDGER" \
   --model gpt-5.6-luna \
@@ -72,7 +77,7 @@ RAW_REVIEW_TELEMETRY_STATUS=$?
 RAW_REVIEW_OUTPUT_STATUS=0
 if [[ "$RAW_REVIEW_STATUS" -eq 0 ]]; then
   pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/review-output-validation.ts" \
-    "$RAW_REVIEW_OUTPUT" "$RAW_REVIEW_AUDIT" || RAW_REVIEW_OUTPUT_STATUS=$?
+    "$RAW_REVIEW_OUTPUT" "$RAW_REVIEW_AUDIT" "$RAW_REVIEW_PACKET" || RAW_REVIEW_OUTPUT_STATUS=$?
 fi
 RAW_REVIEW_POLICY_STATUS=0
 if [[ "$RAW_REVIEW_STATUS" -eq 0 && "$RAW_REVIEW_OUTPUT_STATUS" -eq 0 ]]; then

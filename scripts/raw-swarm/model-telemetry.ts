@@ -1,10 +1,22 @@
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 import { createHash } from "node:crypto";
-import { appendFileSync, closeSync, openSync, readFileSync } from "node:fs";
+import {
+  appendFileSync,
+  closeSync,
+  openSync,
+  readFileSync,
+  writeSync,
+} from "node:fs";
 
 import { Either, ParseResult, Schema } from "effect";
 
-import { GitShaSchema, isJsonRecord, ScenarioIdSchema } from "./transcript.ts";
+import {
+  GitShaSchema,
+  isJsonRecord,
+  ScenarioIdSchema,
+  type GitSha,
+  type ScenarioId,
+} from "./transcript.ts";
 
 export const MODEL_INVOCATION_PHASES = [
   "scenarioGeneration",
@@ -75,6 +87,39 @@ export type ModelInvocationLedgerEntry = Schema.Schema.Type<
 type ModelInvocationLedgerEntryEncoded = Schema.Schema.Encoded<
   typeof ModelInvocationLedgerEntrySchema
 >;
+
+export const ModelInvocationStartedEventSchema = Schema.Struct({
+  type: Schema.Literal("raw-swarm.invocation.started"),
+  schemaVersion: Schema.Literal(1),
+  scenarioId: ScenarioIdSchema,
+  gitSha: GitShaSchema,
+  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
+  fallbackInvocationId: Schema.NonEmptyString,
+  model: Schema.NonEmptyString,
+  reasoningEffort: Schema.NonEmptyString,
+  startedAt: Schema.NonEmptyString,
+});
+
+export const ModelInvocationCompletedEventSchema = Schema.Struct({
+  type: Schema.Literal("raw-swarm.invocation.completed"),
+  schemaVersion: Schema.Literal(1),
+  elapsedMilliseconds: NonNegativeIntegerSchema,
+  exit: ModelInvocationLedgerEntrySchema.fields.exit,
+});
+
+type ModelInvocationStartedEvent = Schema.Schema.Type<
+  typeof ModelInvocationStartedEventSchema
+>;
+type ModelInvocationCompletedEvent = Schema.Schema.Type<
+  typeof ModelInvocationCompletedEventSchema
+>;
+
+export type ModelInvocationEventEvidence =
+  | {
+      readonly tag: "valid";
+      readonly entry: Omit<ModelInvocationLedgerEntry, "eventsSha256">;
+    }
+  | { readonly tag: "invalid"; readonly message: string };
 
 export function parseModelInvocationLedgerEntry(
   value: unknown,
@@ -193,6 +238,111 @@ export function readCodexEvents(path: string): CodexEventReadResult {
   return { tag: "valid", events };
 }
 
+function decodedEvents<A, I>(
+  schema: Schema.Schema<A, I>,
+  events: readonly unknown[],
+): readonly { readonly index: number; readonly value: A }[] {
+  return events.flatMap((event, index) => {
+    const decoded = Schema.decodeUnknownEither(schema, {
+      onExcessProperty: "error",
+    })(event);
+    return Either.isRight(decoded) ? [{ index, value: decoded.right }] : [];
+  });
+}
+
+export function modelInvocationEvidenceFromEvents(
+  events: readonly unknown[],
+): ModelInvocationEventEvidence {
+  const started = decodedEvents(ModelInvocationStartedEventSchema, events);
+  const completed = decodedEvents(ModelInvocationCompletedEventSchema, events);
+  if (
+    started.length !== 1 ||
+    completed.length !== 1 ||
+    started[0]!.index >= completed[0]!.index
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Model invocation events require one ordered runner start and completion record.",
+    };
+  }
+  const start: ModelInvocationStartedEvent = started[0]!.value;
+  const completion: ModelInvocationCompletedEvent = completed[0]!.value;
+  if (!Number.isFinite(Date.parse(start.startedAt))) {
+    return {
+      tag: "invalid",
+      message: "Model invocation start time is not an ISO timestamp.",
+    };
+  }
+  return {
+    tag: "valid",
+    entry: {
+      schemaVersion: 1,
+      scenarioId: start.scenarioId,
+      gitSha: start.gitSha,
+      phase: start.phase,
+      invocationId: invocationIdFromCodexEvents(
+        events,
+        start.fallbackInvocationId,
+      ),
+      model: start.model,
+      reasoningEffort: start.reasoningEffort,
+      startedAt: start.startedAt,
+      elapsedMilliseconds: completion.elapsedMilliseconds,
+      exit: completion.exit,
+      usage: modelUsageFromCodexEvents(events),
+    },
+  };
+}
+
+export function modelInvocationStartedEvent(input: {
+  readonly scenarioId: ScenarioId;
+  readonly gitSha: GitSha;
+  readonly phase: ModelInvocationPhase;
+  readonly fallbackInvocationId: string;
+  readonly model: string;
+  readonly reasoningEffort: string;
+  readonly startedAt: string;
+}): ModelInvocationStartedEvent {
+  return Schema.decodeUnknownSync(ModelInvocationStartedEventSchema, {
+    onExcessProperty: "error",
+  })({
+    type: "raw-swarm.invocation.started",
+    schemaVersion: 1,
+    ...input,
+  });
+}
+
+export function modelInvocationCompletedEvent(input: {
+  readonly elapsedMilliseconds: number;
+  readonly exit: ModelInvocationLedgerEntry["exit"];
+}): ModelInvocationCompletedEvent {
+  return Schema.decodeUnknownSync(ModelInvocationCompletedEventSchema, {
+    onExcessProperty: "error",
+  })({
+    type: "raw-swarm.invocation.completed",
+    schemaVersion: 1,
+    ...input,
+  });
+}
+
+export function appendInvocationEvidenceEvents(input: {
+  readonly path: string;
+  readonly start: ModelInvocationStartedEvent;
+  readonly completion: ModelInvocationCompletedEvent;
+}): void {
+  const rawEvents = readFileSync(input.path, "utf8");
+  const separated =
+    rawEvents.length === 0 || rawEvents.endsWith("\n") ? "" : "\n";
+  const encoded = `${JSON.stringify(input.start)}\n${rawEvents}${separated}${JSON.stringify(input.completion)}\n`;
+  const descriptor = openSync(input.path, "w");
+  try {
+    writeSync(descriptor, encoded);
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
 export function appendInvocationLedger(
   path: string,
   entry: ModelInvocationLedgerEntryEncoded,
@@ -212,8 +362,8 @@ export function runCodexInvocation(input: {
   readonly logPath: string;
   readonly ledgerPath: string;
   readonly phase: ModelInvocationPhase;
-  readonly scenarioId: string;
-  readonly gitSha: string;
+  readonly scenarioId: ScenarioId;
+  readonly gitSha: GitSha;
   readonly fallbackInvocationId: string;
   readonly model: string;
   readonly reasoningEffort: string;
@@ -221,15 +371,39 @@ export function runCodexInvocation(input: {
   const eventFd = openSync(input.eventPath, "wx");
   const startedAt = new Date().toISOString();
   const startedMilliseconds = Date.now();
+  const startedEvent = modelInvocationStartedEvent({
+    scenarioId: input.scenarioId,
+    gitSha: input.gitSha,
+    phase: input.phase,
+    fallbackInvocationId: input.fallbackInvocationId,
+    model: input.model,
+    reasoningEffort: input.reasoningEffort,
+    startedAt,
+  });
   const result = (() => {
     try {
+      writeSync(eventFd, `${JSON.stringify(startedEvent)}\n`);
       const logFd = openSync(input.logPath, "wx");
       try {
-        return spawnSync("codex", input.args, {
+        const spawned = spawnSync("codex", input.args, {
           cwd: input.cwd,
           env: input.env,
           stdio: ["ignore", eventFd, logFd],
         });
+        const exit: ModelInvocationLedgerEntry["exit"] =
+          spawned.signal === null
+            ? { tag: "exited", status: spawned.status ?? 1 }
+            : { tag: "signaled", signal: spawned.signal };
+        writeSync(
+          eventFd,
+          `${JSON.stringify(
+            modelInvocationCompletedEvent({
+              elapsedMilliseconds: Date.now() - startedMilliseconds,
+              exit,
+            }),
+          )}\n`,
+        );
+        return spawned;
       } finally {
         closeSync(logFd);
       }
@@ -238,29 +412,12 @@ export function runCodexInvocation(input: {
     }
   })();
   const parsedEvents = readCodexEvents(input.eventPath);
-  const events = parsedEvents.tag === "valid" ? parsedEvents.events : [];
+  if (parsedEvents.tag === "invalid") throw new Error(parsedEvents.message);
+  const evidence = modelInvocationEvidenceFromEvents(parsedEvents.events);
+  if (evidence.tag === "invalid") throw new Error(evidence.message);
   appendInvocationLedger(input.ledgerPath, {
-    schemaVersion: 1,
-    scenarioId: input.scenarioId,
-    gitSha: input.gitSha,
+    ...evidence.entry,
     eventsSha256: invocationEventsSha256(input.eventPath),
-    phase: input.phase,
-    invocationId: invocationIdFromCodexEvents(
-      events,
-      input.fallbackInvocationId,
-    ),
-    model: input.model,
-    reasoningEffort: input.reasoningEffort,
-    startedAt,
-    elapsedMilliseconds: Date.now() - startedMilliseconds,
-    exit:
-      result.signal === null
-        ? { tag: "exited", status: result.status ?? 1 }
-        : { tag: "signaled", signal: result.signal },
-    usage:
-      parsedEvents.tag === "valid"
-        ? modelUsageFromCodexEvents(events)
-        : { tag: "unavailable", reason: parsedEvents.message },
   });
   return result;
 }

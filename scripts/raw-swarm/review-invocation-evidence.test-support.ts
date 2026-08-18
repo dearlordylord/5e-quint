@@ -1,15 +1,29 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 
+import {
+  codexOutputJsonSchema,
+  ScenarioCompositeReviewSchema,
+} from "./scenario-campaign.ts";
 import type { ModelInvocationLedgerEntry } from "./model-telemetry.ts";
-import { invocationEventsSha256 } from "./model-telemetry.ts";
+import {
+  invocationEventsSha256,
+  modelInvocationCompletedEvent,
+  modelInvocationStartedEvent,
+} from "./model-telemetry.ts";
 import { writeReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
 import {
   preflightSdkTranscript,
   writeSdkAudit,
 } from "./sdk-player/sdk-audit.ts";
-import { encodeSdkReviewPacket } from "./sdk-player/sdk-review-packet.ts";
-import { sha256Canonical, sha256Text } from "./transcript.ts";
+import {
+  encodeSdkReviewPacket,
+  sdkReviewPacketHeaderEvidence,
+  sdkReviewPacketSource,
+} from "./sdk-player/sdk-review-packet.ts";
+import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
+import { reprojectSdkTranscriptTurns } from "./sdk-player/player-turn-projection.ts";
+import { repoRoot, sha256Canonical, sha256Text } from "./transcript.ts";
 
 export function controlledReviewEvidenceFixture(input: {
   readonly directory: string;
@@ -20,7 +34,17 @@ export function controlledReviewEvidenceFixture(input: {
   readonly callCount?: number;
   readonly ledgerScenarioId?: string;
   readonly postPlayUsesTool?: boolean;
+  readonly eventEntries?: readonly Omit<
+    ModelInvocationLedgerEntry,
+    "scenarioId" | "gitSha" | "eventsSha256"
+  >[];
 }) {
+  if (
+    input.eventEntries !== undefined &&
+    input.eventEntries.length !== input.ledgerEntries.length
+  ) {
+    throw new Error("Event and ledger fixture entries must have equal length.");
+  }
   const runDirectory = resolve(input.directory, "run");
   const evidenceDirectory = resolve(runDirectory, "evidence");
   mkdirSync(evidenceDirectory, { recursive: true });
@@ -34,26 +58,120 @@ export function controlledReviewEvidenceFixture(input: {
   const auditPath = resolve(input.directory, "review.audit.jsonl");
   const packetPath = resolve(input.directory, "review.packet.json");
   const ledgerPath = resolve(input.directory, "review.invocations.jsonl");
-  const eventPaths = input.ledgerEntries.map((_, index) =>
-    resolve(input.directory, `invocation-${index + 1}.events.jsonl`),
-  );
   const manifestPath = resolve(input.directory, "review.evidence.json");
+  const sourcePrePlayReviewInputPaths = [
+    resolve(input.directory, "milestone-source-input.json"),
+    resolve(input.directory, "final-source-input.json"),
+  ] as const;
+  const replayPrePlayReviewInputPaths = [
+    resolve(input.directory, "milestone-replay-input.json"),
+    resolve(input.directory, "final-replay-input.json"),
+  ] as const;
   const characters = "export const characters = [];\n";
   const setup = "export const setup = {};\n";
   const scenario = "# Controlled evidence fixture\n";
-  const scenarioReview = '{"classification":"supported"}\n';
+  const scenarioSourceGitSha = "a".repeat(40);
+  const transcriptGitSha = "b".repeat(40);
+  const invocationGitSha = "c".repeat(40);
+  const scenarioCompositeResults = [0, 1].map(() => ({
+    raw: { classification: "supported" as const, evidence: "supported" },
+    contentAvailability: {
+      classification: "supplied" as const,
+      evidence: "supplied",
+    },
+    sdkCapability: {
+      classification: "supported" as const,
+      evidence: "supported",
+    },
+    artifactPolicy: { classification: "safe" as const, evidence: "safe" },
+  }));
+  const scenarioReview = `${JSON.stringify({
+    scenarioId: "same",
+    scenarioSha256: sha256Text(scenario),
+    gitSha: scenarioSourceGitSha,
+    admitReviewedUnsupported: false,
+    reviewScope: "rawContentSdkCapabilityPolicy",
+    contentAvailabilityIntent: "availableOnly",
+    sdkCapabilityIntent: "supportedOnly",
+    rawReview: scenarioCompositeResults[1]!.raw,
+    contentReview: scenarioCompositeResults[1]!.contentAvailability,
+    sdkCapabilityReview: scenarioCompositeResults[1]!.sdkCapability,
+    policyReview: scenarioCompositeResults[1]!.artifactPolicy,
+  })}\n`;
   const replaySupervisor = "export const replay = true;\n";
   writeFileSync(charactersPath, characters);
   writeFileSync(setupPath, setup);
   writeFileSync(scenarioPath, scenario);
   writeFileSync(scenarioReviewPath, scenarioReview);
   writeFileSync(replaySupervisorPath, replaySupervisor);
-  const session = { round: 1 };
+  const reviewInput = (
+    index: number,
+    sourceGitSha: string,
+    invocationId: string,
+  ) => ({
+    schemaVersion: 2,
+    phase: "scenarioCompositeReview",
+    reviewStage: index === 0 ? "milestone" : "final",
+    scenarioId: "same",
+    sourceGitSha,
+    invocationId,
+    model: "gpt-5.6-luna",
+    reasoningEffort: "max",
+    prompt: `review input ${index + 1}`,
+    outputJsonSchema: codexOutputJsonSchema(ScenarioCompositeReviewSchema),
+    result: scenarioCompositeResults[index],
+  });
+  sourcePrePlayReviewInputPaths.forEach((path, index) => {
+    writeFileSync(
+      path,
+      `${JSON.stringify(reviewInput(index, scenarioSourceGitSha, `source-${index + 1}`))}\n`,
+    );
+    writeFileSync(
+      replayPrePlayReviewInputPaths[index]!,
+      `${JSON.stringify(reviewInput(index, invocationGitSha, `pre-play-${index + 1}`))}\n`,
+    );
+  });
+  const session = {
+    battle: {
+      state: {
+        initiative: { round: 1, stillToAct: [{ creature: "actor" }] },
+        subjectResolutionPhase: { kind: "subjectSelection" },
+        combatants: {
+          $map: [
+            [
+              "actor",
+              {
+                hp: 10,
+                maxHp: 10,
+                tempHp: 0,
+                conditions: {},
+                reactionAvailable: true,
+                movementSpentFeet: 0,
+                ammunitionStocks: [],
+                origin: {
+                  kind: "character",
+                  resources: [],
+                  spellcasting: { spellSlots: [] },
+                },
+              },
+            ],
+          ],
+        },
+        groundObjects: { $map: [] },
+      },
+    },
+    battlefield: {
+      space: {
+        placements: [{ token: "actor", coordinate: { x: 0, y: 0 } }],
+      },
+      objects: [],
+    },
+  } as const;
   const callCount = input.callCount ?? 1;
   const header = {
     type: "sdk-player-header",
     scenarioId: "same",
-    gitSha: "b".repeat(40),
+    gitSha: transcriptGitSha,
     startedAt: "2026-08-14T00:00:00.000Z",
     consumerIsolation: "instructionalFallback",
     replaySupervisorSha256: sha256Text(replaySupervisor),
@@ -94,11 +212,23 @@ export function controlledReviewEvidenceFixture(input: {
   const audit = preflightSdkTranscript({ transcriptPath });
   if (audit.tag === "invalid") throw new Error(audit.message);
   writeSdkAudit(auditPath, audit.audit);
+  const parsedTranscript = parseSdkTranscript([header, ...calls]);
+  if (parsedTranscript.tag === "invalid")
+    throw new Error(parsedTranscript.message);
+  const projections = reprojectSdkTranscriptTurns(parsedTranscript.value.calls);
+  if (projections.tag === "invalid") throw new Error(projections.message);
   const packet = encodeSdkReviewPacket({
     audit: audit.audit,
-    retainedHeaderEvidence: {},
-    currentTurnProjections: [],
-    runArtifacts: [],
+    retainedHeaderEvidence: sdkReviewPacketHeaderEvidence(
+      parsedTranscript.value.header,
+    ),
+    currentTurnProjections: projections.projections,
+    runArtifacts: [
+      sdkReviewPacketSource({
+        path: relative(repoRoot, scenarioReviewPath),
+        content: scenarioReview,
+      }),
+    ],
     domainAuthorities: [],
     rawAuthorities: [],
   });
@@ -121,10 +251,51 @@ export function controlledReviewEvidenceFixture(input: {
     })}\n`,
   );
   const reviewOutput = JSON.parse(readFileSync(reviewPath, "utf8")) as unknown;
-  input.ledgerEntries.forEach((entry, index) => {
+  const prePlayEntries = [0, 1].map(
+    (
+      index,
+    ): Omit<
+      ModelInvocationLedgerEntry,
+      "scenarioId" | "gitSha" | "eventsSha256"
+    > => ({
+      schemaVersion: 1,
+      phase: "scenarioCompositeReview",
+      invocationId: `pre-play-${index + 1}`,
+      model: "gpt-5.6-luna",
+      reasoningEffort: "max",
+      startedAt: `2026-08-14T00:00:0${index}.000Z`,
+      elapsedMilliseconds: 1,
+      exit: { tag: "exited", status: 0 },
+      usage: {
+        tag: "unavailable",
+        reason:
+          "The first-party event stream exposed no turn.completed usage object.",
+      },
+    }),
+  );
+  const ledgerEntryInputs = [...prePlayEntries, ...input.ledgerEntries];
+  const eventEntryInputs = [
+    ...prePlayEntries,
+    ...(input.eventEntries ?? input.ledgerEntries),
+  ];
+  const eventPaths = ledgerEntryInputs.map((_, index) =>
+    resolve(input.directory, `invocation-${index + 1}.events.jsonl`),
+  );
+  ledgerEntryInputs.forEach((entry, index) => {
+    const eventEntry = eventEntryInputs[index]!;
     const events = [
-      { type: "thread.started", thread_id: entry.invocationId },
-      ...(entry.phase === "postPlayReview" && input.postPlayUsesTool === true
+      modelInvocationStartedEvent({
+        scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+        gitSha: invocationGitSha,
+        phase: eventEntry.phase,
+        fallbackInvocationId: eventEntry.invocationId,
+        model: eventEntry.model,
+        reasoningEffort: eventEntry.reasoningEffort,
+        startedAt: eventEntry.startedAt,
+      }),
+      { type: "thread.started", thread_id: eventEntry.invocationId },
+      ...(eventEntry.phase === "postPlayReview" &&
+      input.postPlayUsesTool === true
         ? [
             {
               type: "item.completed",
@@ -137,51 +308,62 @@ export function controlledReviewEvidenceFixture(input: {
         item: {
           type: "agent_message",
           text: JSON.stringify(
-            entry.phase === "postPlayReview"
+            eventEntry.phase === "postPlayReview"
               ? reviewOutput
-              : { tag: "complete" },
+              : eventEntry.phase === "scenarioCompositeReview"
+                ? {
+                    result:
+                      scenarioCompositeResults[
+                        Number(eventEntry.invocationId.endsWith("2"))
+                      ],
+                  }
+                : { tag: "complete" },
           ),
         },
       },
-      ...(entry.usage.tag === "available"
+      ...(eventEntry.usage.tag === "available"
         ? [
             {
               type: "turn.completed",
               usage: {
                 input_tokens:
-                  entry.usage.input.tag === "available"
-                    ? entry.usage.input.count
+                  eventEntry.usage.input.tag === "available"
+                    ? eventEntry.usage.input.count
                     : undefined,
                 cached_input_tokens:
-                  entry.usage.cachedInput.tag === "available"
-                    ? entry.usage.cachedInput.count
+                  eventEntry.usage.cachedInput.tag === "available"
+                    ? eventEntry.usage.cachedInput.count
                     : undefined,
                 cache_write_input_tokens:
-                  entry.usage.cacheWriteInput.tag === "available"
-                    ? entry.usage.cacheWriteInput.count
+                  eventEntry.usage.cacheWriteInput.tag === "available"
+                    ? eventEntry.usage.cacheWriteInput.count
                     : undefined,
                 output_tokens:
-                  entry.usage.output.tag === "available"
-                    ? entry.usage.output.count
+                  eventEntry.usage.output.tag === "available"
+                    ? eventEntry.usage.output.count
                     : undefined,
                 reasoning_output_tokens:
-                  entry.usage.reasoningOutput.tag === "available"
-                    ? entry.usage.reasoningOutput.count
+                  eventEntry.usage.reasoningOutput.tag === "available"
+                    ? eventEntry.usage.reasoningOutput.count
                     : undefined,
               },
             },
           ]
         : []),
+      modelInvocationCompletedEvent({
+        elapsedMilliseconds: eventEntry.elapsedMilliseconds,
+        exit: eventEntry.exit,
+      }),
     ];
     writeFileSync(
       eventPaths[index]!,
       `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
     );
   });
-  const ledgerEntries = input.ledgerEntries.map((entry, index) => ({
+  const ledgerEntries = ledgerEntryInputs.map((entry, index) => ({
     ...entry,
     scenarioId: input.ledgerScenarioId ?? header.scenarioId,
-    gitSha: header.gitSha,
+    gitSha: invocationGitSha,
     eventsSha256: invocationEventsSha256(eventPaths[index]!),
   }));
   writeFileSync(
@@ -193,6 +375,16 @@ export function controlledReviewEvidenceFixture(input: {
     reviewPath,
     auditPath,
     packetPath,
+    prePlayReviewPaths: [
+      {
+        sourceInputPath: sourcePrePlayReviewInputPaths[0],
+        replayInputPath: replayPrePlayReviewInputPaths[0],
+      },
+      {
+        sourceInputPath: sourcePrePlayReviewInputPaths[1],
+        replayInputPath: replayPrePlayReviewInputPaths[1],
+      },
+    ],
     invocationLedgerPaths: [ledgerPath],
     invocationEventPaths: eventPaths,
     outputPath: manifestPath,
@@ -205,6 +397,8 @@ export function controlledReviewEvidenceFixture(input: {
     ledgerPath,
     eventPaths,
     manifestPath,
+    sourcePrePlayReviewInputPaths,
+    replayPrePlayReviewInputPaths,
     header,
     calls,
   };

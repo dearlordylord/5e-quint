@@ -41,6 +41,33 @@ const CHOICE_HOLE_KINDS = {
   unitFeatureDecision: true,
 } as const satisfies Record<ChoiceHoleKind, true>;
 
+const PLAYER_SUBJECT_TAGS = [
+  "action",
+  "pactOfTheChainFamiliarAttack",
+  "bonusAction",
+  "bonusActionStandardAction",
+  "monkFocusOption",
+  "monkFocusFlurryOfBlowsStrike",
+  "actionSpell",
+  "bonusActionSpell",
+  "bonusActionDashSpell",
+  "unitFeature",
+  "unitFeatureHeldWeaponActivation",
+  "druidWildShape",
+  "companionLifecycle",
+  "findFamiliarSharedSenses",
+  "findFamiliarTouchSpell",
+  "runtimeCommand",
+] as const;
+type PlayerSubjectTag = (typeof PLAYER_SUBJECT_TAGS)[number];
+const PLAYER_SUBJECT_TAG_SET: ReadonlySet<string> = new Set(
+  PLAYER_SUBJECT_TAGS,
+);
+
+function isPlayerSubjectTag(value: unknown): value is PlayerSubjectTag {
+  return typeof value === "string" && PLAYER_SUBJECT_TAG_SET.has(value);
+}
+
 export type PlayerHoleOccurrence = {
   readonly ref: `hole:${string}`;
   readonly hole: PlayerHoleProjection;
@@ -77,19 +104,55 @@ export type PlayerActProjection = {
   readonly holes: readonly PlayerHoleOccurrence[];
 };
 
-export type PlayerSubjectProjection = {
+type PlayerSubjectProjectionMode = {
   readonly tag: string;
+  readonly trigger?: string;
+};
+
+type PlayerSubjectProjectionCommon = {
   readonly actorId: string;
-  readonly action?: string;
-  readonly command?: string;
   readonly procedureRef?: string;
   readonly attackAbility?: string;
   readonly attackDamageType?: string;
   readonly statBlockDamageNotation?: string;
   readonly speedKind?: string;
   readonly standardAction?: string;
-  readonly mode?: { readonly tag: string; readonly trigger?: string };
 };
+
+export type PlayerSubjectProjection =
+  | (PlayerSubjectProjectionCommon & {
+      readonly tag:
+        | "action"
+        | "bonusAction"
+        | "bonusActionStandardAction"
+        | "druidWildShape"
+        | "companionLifecycle";
+      readonly action: string;
+    })
+  | (PlayerSubjectProjectionCommon & {
+      readonly tag: "runtimeCommand";
+      readonly command: string;
+    })
+  | (PlayerSubjectProjectionCommon & {
+      readonly tag:
+        | "actionSpell"
+        | "bonusActionSpell"
+        | "bonusActionDashSpell"
+        | "findFamiliarTouchSpell";
+      readonly mode: PlayerSubjectProjectionMode;
+    })
+  | (PlayerSubjectProjectionCommon & {
+      readonly tag: "monkFocusOption";
+      readonly mode?: PlayerSubjectProjectionMode;
+    })
+  | (PlayerSubjectProjectionCommon & {
+      readonly tag:
+        | "pactOfTheChainFamiliarAttack"
+        | "monkFocusFlurryOfBlowsStrike"
+        | "unitFeature"
+        | "unitFeatureHeldWeaponActivation"
+        | "findFamiliarSharedSenses";
+    });
 
 export type PlayerCombatantProjection = {
   readonly hitPoints: {
@@ -159,7 +222,7 @@ export type PlayerCurrentTurnProjection = {
   readonly callSequences: readonly number[];
   readonly turn: {
     readonly round: number;
-    readonly actorId?: string;
+    readonly actorId: string;
     readonly phase: string;
   };
   readonly frontier:
@@ -182,12 +245,14 @@ export type PlayerProjectionResult =
     }
   | {
       readonly tag: "invalid";
-      readonly reason:
-        | "projectionTooLarge"
-        | "tacticalNoteTooLarge"
-        | "malformedProjectionSource";
+      readonly reason: "projectionTooLarge" | "tacticalNoteTooLarge";
       readonly byteLength: number;
       readonly maximumByteLength: number;
+      readonly message: string;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly reason: "malformedProjectionSource";
       readonly message: string;
     };
 
@@ -552,7 +617,7 @@ export function projectPlayerSubject(
 ): PlayerSubjectProjection | undefined {
   if (
     !isJsonObject(value) ||
-    typeof value.tag !== "string" ||
+    !isPlayerSubjectTag(value.tag) ||
     typeof value.actorId !== "string"
   )
     return undefined;
@@ -587,11 +652,8 @@ export function projectPlayerSubject(
           }
         : undefined;
   if (value.mode !== undefined && mode === undefined) return undefined;
-  return {
-    tag: value.tag,
+  const common: PlayerSubjectProjectionCommon = {
     actorId: value.actorId,
-    ...(typeof value.action === "string" ? { action: value.action } : {}),
-    ...(typeof value.command === "string" ? { command: value.command } : {}),
     ...(typeof value.procedureRef === "string"
       ? { procedureRef: value.procedureRef }
       : {}),
@@ -610,8 +672,42 @@ export function projectPlayerSubject(
     ...(typeof value.standardAction === "string"
       ? { standardAction: value.standardAction }
       : {}),
-    ...(mode === undefined ? {} : { mode }),
   };
+  const action = typeof value.action === "string" ? value.action : undefined;
+  const command = typeof value.command === "string" ? value.command : undefined;
+  switch (value.tag) {
+    case "action":
+    case "bonusAction":
+    case "bonusActionStandardAction":
+    case "druidWildShape":
+    case "companionLifecycle":
+      return action === undefined
+        ? undefined
+        : { ...common, tag: value.tag, action };
+    case "runtimeCommand":
+      return command === undefined
+        ? undefined
+        : { ...common, tag: value.tag, command };
+    case "actionSpell":
+    case "bonusActionSpell":
+    case "bonusActionDashSpell":
+    case "findFamiliarTouchSpell":
+      return mode === undefined
+        ? undefined
+        : { ...common, tag: value.tag, mode };
+    case "monkFocusOption":
+      return {
+        ...common,
+        tag: value.tag,
+        ...(mode === undefined ? {} : { mode }),
+      };
+    case "pactOfTheChainFamiliarAttack":
+    case "monkFocusFlurryOfBlowsStrike":
+    case "unitFeature":
+    case "unitFeatureHeldWeaponActivation":
+    case "findFamiliarSharedSenses":
+      return { ...common, tag: value.tag };
+  }
 }
 
 function decodeHole(value: unknown): PlayerHoleProjection | undefined {
@@ -726,25 +822,32 @@ function holeOccurrences(
   }));
 }
 
-function acts(call: SdkCallRecord): readonly PlayerActProjection[] | undefined {
-  if (call.outcome !== "returned" || !Array.isArray(call.result))
-    return undefined;
+export function projectPlayerActs(
+  value: unknown,
+): readonly PlayerActProjection[] | undefined {
+  if (!Array.isArray(value)) return undefined;
   const projected: PlayerActProjection[] = [];
-  for (const value of call.result) {
-    if (!isJsonObject(value) || value.subject === undefined) return undefined;
-    const subject = projectPlayerSubject(value.subject);
+  for (const entry of value) {
+    if (!isJsonObject(entry) || entry.subject === undefined) return undefined;
+    const subject = projectPlayerSubject(entry.subject);
     if (subject === undefined) return undefined;
-    const projectedHoles = holeOccurrences(subject, value.initialHoles);
+    const projectedHoles = holeOccurrences(subject, entry.initialHoles);
     if (projectedHoles === undefined) return undefined;
     projected.push({
       ref: stableRef("subject", subject),
       subject,
-      ...(typeof value.label === "string" ? { label: value.label } : {}),
-      ...(typeof value.summary === "string" ? { summary: value.summary } : {}),
+      ...(typeof entry.label === "string" ? { label: entry.label } : {}),
+      ...(typeof entry.summary === "string" ? { summary: entry.summary } : {}),
       holes: projectedHoles,
     });
   }
   return projected;
+}
+
+function acts(call: SdkCallRecord): readonly PlayerActProjection[] | undefined {
+  return call.outcome === "returned"
+    ? projectPlayerActs(call.result)
+    : undefined;
 }
 
 function frontier(
@@ -838,9 +941,7 @@ export function reprojectSdkTranscriptTurns(calls: readonly SdkCallRecord[]):
     if (first === undefined || !isJsonValue(first.inputSession)) {
       return {
         tag: "invalid",
-        reason: "projectionTooLarge",
-        byteLength: 0,
-        maximumByteLength: PLAYER_TURN_PROJECTION_MAX_BYTES,
+        reason: "malformedProjectionSource",
         message: `Continuation ${continuation} has no JSON input session.`,
       };
     }
@@ -951,8 +1052,6 @@ export function playerCurrentTurnProjection(input: {
     return {
       tag: "invalid",
       reason: "malformedProjectionSource",
-      byteLength: 0,
-      maximumByteLength: PLAYER_TURN_PROJECTION_MAX_BYTES,
       message:
         "The canonical session/result cannot be projected into the typed player turn contract.",
     };

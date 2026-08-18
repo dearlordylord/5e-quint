@@ -8,8 +8,10 @@ import {
   reviewEvidenceIsExact,
   type ReviewEvidenceCatalog,
 } from "./review-evidence.ts";
+import { reviewEvidenceCatalogForPacket } from "./review-output-validation.ts";
 import { readSdkAudit } from "./sdk-player/sdk-audit.ts";
-import { repoRoot, sha256Text } from "./transcript.ts";
+import { validateSdkReviewPacket } from "./sdk-player/sdk-review-packet.ts";
+import { repoRoot } from "./transcript.ts";
 
 const ReviewComparisonSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
@@ -118,8 +120,7 @@ function main(args: readonly string[]): void {
     comparisonPath,
     verifiedPath,
     auditPath,
-    setupPath,
-    charactersPath,
+    packetPath,
     ...unexpected
   ] = args;
   if (
@@ -128,18 +129,17 @@ function main(args: readonly string[]): void {
     comparisonPath === undefined ||
     verifiedPath === undefined ||
     auditPath === undefined ||
-    setupPath === undefined ||
-    charactersPath === undefined ||
+    packetPath === undefined ||
     unexpected.length > 0
   ) {
     fail(
-      "Usage: review-comparison.ts <baseline-review.json> <candidate-review.json> <comparison.json> <verified.json> <audit.jsonl> <setup.ts> <characters.ts>",
+      "Usage: review-comparison.ts <baseline-review.json> <candidate-review.json> <comparison.json> <verified.json> <audit.jsonl> <packet.json>",
     );
   }
   const comparison: unknown = JSON.parse(
     readFileSync(resolve(repoRoot, comparisonPath), "utf8"),
   );
-  const audit = readSdkAudit(auditPath);
+  const audit = readSdkAudit(resolve(repoRoot, auditPath));
   if (audit.tag === "invalid") fail(audit.message);
   const comparisonIdentity = Schema.decodeUnknownEither(
     ReviewComparisonSchema,
@@ -153,26 +153,18 @@ function main(args: readonly string[]): void {
       audit.audit.header.transcriptSha256
   )
     fail("Review comparison audit identity does not match.");
-  const setupText = readFileSync(resolve(repoRoot, setupPath), "utf8");
-  const charactersText = readFileSync(
-    resolve(repoRoot, charactersPath),
-    "utf8",
+  const packetInput: unknown = JSON.parse(
+    readFileSync(resolve(repoRoot, packetPath), "utf8"),
   );
-  if (
-    audit.audit.header.setupSha256 !== sha256Text(setupText) ||
-    audit.audit.header.charactersSha256 !== sha256Text(charactersText)
-  )
-    fail("Review evidence files do not match the audited transcript header.");
+  const packet = validateSdkReviewPacket(packetInput, audit.audit);
+  if (packet.tag === "invalid") fail(packet.message);
+  const evidence = reviewEvidenceCatalogForPacket(packet.packet);
+  if (evidence.tag === "invalid") fail(evidence.message);
   const verified = verifyReviewComparison({
     baselineReviewPath: baselinePath,
     candidateReviewPath: candidatePath,
     comparison,
-    evidenceCatalog: {
-      sequences: new Set(audit.audit.calls.map(({ seq }) => seq)),
-      setupLineCount: setupText.split("\n").length,
-      charactersLineCount: charactersText.split("\n").length,
-      hasTranscriptHeader: true,
-    },
+    evidenceCatalog: evidence.catalog,
   });
   writeFileSync(
     resolve(repoRoot, verifiedPath),

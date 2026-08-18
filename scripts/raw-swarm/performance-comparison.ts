@@ -17,7 +17,7 @@ import {
   type ArtifactAuthority,
 } from "./review-invocation-evidence.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
-import { isJsonRecord, repoRoot } from "./transcript.ts";
+import { isJsonRecord, repoRoot, ScenarioIdSchema } from "./transcript.ts";
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 const NonNegativeIntegerSchema = Schema.Number.pipe(
@@ -49,7 +49,7 @@ const ReportingTimingSchema = Schema.Struct({
 
 const LegacyRunEvidenceSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
-  scenarioId: Schema.NonEmptyTrimmedString,
+  scenarioId: ScenarioIdSchema,
   scenarioSha256: HashSchema,
   scenarioReviewSha256: HashSchema,
   charactersSha256: HashSchema,
@@ -132,7 +132,7 @@ type SupervisorTiming = Schema.Schema.Type<typeof SupervisorTimingSchema>;
 const ControlledRunPerformanceSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   telemetryAuthority: Schema.Literal("codex-json-events"),
-  scenarioId: Schema.NonEmptyTrimmedString,
+  scenarioId: ScenarioIdSchema,
   scenarioSha256: HashSchema,
   scenarioReviewSha256: HashSchema,
   charactersSha256: HashSchema,
@@ -164,11 +164,23 @@ const ControlledRunPerformanceSchema = Schema.Struct({
     postPlayReview: NormalizedTokensSchema,
   }),
   sources: Schema.Struct({
+    prePlayReviews: Schema.Tuple(
+      Schema.Struct({
+        reviewStage: Schema.Literal("milestone"),
+        sourceInput: ArtifactAuthoritySchema,
+        replayInput: ArtifactAuthoritySchema,
+      }),
+      Schema.Struct({
+        reviewStage: Schema.Literal("final"),
+        sourceInput: ArtifactAuthoritySchema,
+        replayInput: ArtifactAuthoritySchema,
+      }),
+    ),
     reviewInvocationEvidence: ArtifactAuthoritySchema,
     transcript: ArtifactAuthoritySchema,
     review: ArtifactAuthoritySchema,
-    invocationLedgers: Schema.Array(ArtifactAuthoritySchema),
-    invocationEvents: Schema.Array(ArtifactAuthoritySchema),
+    invocationLedgers: Schema.Tuple(ArtifactAuthoritySchema),
+    invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
     supervisorTimings: ArtifactAuthoritySchema,
     reportingTiming: ArtifactAuthoritySchema,
     reportingManifest: ArtifactAuthoritySchema,
@@ -301,9 +313,8 @@ export function summarizeControlledRun(
   );
   const transcriptPath = reviewInvocationEvidence.transcript.path;
   const reviewPath = reviewInvocationEvidence.review.path;
-  const invocationLedgerPaths = reviewInvocationEvidence.invocationLedgers.map(
-    ({ path }) => path,
-  );
+  const invocationLedgerPath =
+    reviewInvocationEvidence.invocationLedgers[0].path;
   const transcript = parseSdkTranscript(jsonLines(transcriptPath));
   if (transcript.tag === "invalid") fail(transcript.message);
   if (transcript.value.calls.length === 0)
@@ -321,9 +332,7 @@ export function summarizeControlledRun(
   const continuations = [
     ...new Set(transcript.value.calls.map(({ continuation }) => continuation)),
   ].sort((left, right) => left - right);
-  const entries = invocationLedgerPaths.flatMap((path) =>
-    jsonLines(path).map(ledgerEntry),
-  );
+  const entries = jsonLines(invocationLedgerPath).map(ledgerEntry);
   const reportingTiming = decode(
     ReportingTimingSchema,
     input.reportingTimingPath,
@@ -488,10 +497,11 @@ export function summarizeControlledRun(
       postPlayReview: normalized(phases.postPlayReview),
     },
     sources: {
+      prePlayReviews: reviewInvocationEvidence.prePlayReviews,
       reviewInvocationEvidence: reviewInvocationEvidenceAuthority,
       transcript: transcriptAuthority,
       review: reviewAuthority,
-      invocationLedgers: invocationLedgerPaths.map(artifactAuthority),
+      invocationLedgers: [artifactAuthority(invocationLedgerPath)],
       invocationEvents: reviewInvocationEvidence.invocationEvents,
       supervisorTimings: artifactAuthority(input.supervisorTimingPath),
       reportingTiming: reportingTimingAuthority,
@@ -578,11 +588,10 @@ export type PerformanceComparison = {
     | { readonly tag: "incomparable"; readonly reason: string };
 };
 
-type NormalizedTokenValues = {
-  readonly perInvocation: number;
-  readonly perContinuation: number;
-  readonly perCall: number;
-};
+type NormalizedTokenValues = Omit<
+  Extract<NormalizedTokens, { readonly tag: "available" }>,
+  "tag"
+>;
 
 function reduction(baseline: number, fresh: number): number {
   return baseline === 0 ? 0 : (baseline - fresh) / baseline;
@@ -920,7 +929,7 @@ export function compareControlledRuns(
   };
 }
 
-function decode<A>(schema: Schema.Schema<A>, path: string): A {
+function decode<A, I>(schema: Schema.Schema<A, I>, path: string): A {
   const decoded = Schema.decodeUnknownEither(schema, {
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(resolve(repoRoot, path), "utf8")));
@@ -977,10 +986,13 @@ export function readControlledPerformance(
         ) &&
         equal(value.perCall, phase.usage.totals.inputPlusOutput / run.calls);
   if (
+    run.sources.prePlayReviews.some(
+      ({ sourceInput, replayInput }) =>
+        !sourceMatches(sourceInput) || !sourceMatches(replayInput),
+    ) ||
     !sourceMatches(run.sources.reviewInvocationEvidence) ||
     !sourceMatches(run.sources.transcript) ||
     !sourceMatches(run.sources.review) ||
-    run.sources.invocationLedgers.length === 0 ||
     run.sources.invocationLedgers.some((source) => !sourceMatches(source)) ||
     run.sources.invocationEvents.length === 0 ||
     run.sources.invocationEvents.some((source) => !sourceMatches(source)) ||

@@ -1,11 +1,8 @@
-import { spawnSync } from "node:child_process";
 import { createHash, randomInt, randomUUID } from "node:crypto";
 import {
-  closeSync,
   existsSync,
   mkdtempSync,
   mkdirSync,
-  openSync,
   readFileSync,
   renameSync,
   rmSync,
@@ -32,14 +29,20 @@ import {
   type ScenarioCampaignAgents,
   type SdkCapabilityIntent,
 } from "./scenario-campaign.ts";
+import type { RetainedScenarioReviewInput } from "./scenario-review-input.ts";
 import { scenarioSetupStatBlocks } from "./sdk-player/scenario-setup-runtime.ts";
-import { currentGitRevision, GitShaSchema, repoRoot } from "./transcript.ts";
 import {
-  appendInvocationLedger,
+  canonicalJson,
+  currentGitRevision,
+  GitShaSchema,
+  repoRoot,
+  type GitSha,
+  type ScenarioId,
+} from "./transcript.ts";
+import {
   invocationIdFromCodexEvents,
-  invocationEventsSha256,
-  modelUsageFromCodexEvents,
   readCodexEvents,
+  runCodexInvocation,
   type ModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
 
@@ -57,10 +60,17 @@ function runCodexJson<A, I>(
     readonly reasoningEffort: "medium" | "max";
     readonly phase: ModelInvocationLedgerEntry["phase"];
     readonly ledgerPath: string;
-    readonly scenarioId: string;
-    readonly gitSha: string;
-    readonly retainedInvocationDirectory?: string;
-  },
+    readonly scenarioId: ScenarioId;
+    readonly gitSha: GitSha;
+  } & (
+    | { readonly retention?: undefined }
+    | {
+        readonly retention: {
+          readonly directory: string;
+          readonly reviewStage: "milestone" | "final";
+        };
+      }
+  ),
 ): A {
   const outputSchema = Schema.Struct({ result: schema });
   const temporary = mkdtempSync(resolve(tmpdir(), "dnd-scenario-campaign-"));
@@ -71,68 +81,46 @@ function runCodexJson<A, I>(
   try {
     const outputJsonSchema = codexOutputJsonSchema(schema);
     writeFileSync(schemaPath, `${JSON.stringify(outputJsonSchema, null, 2)}\n`);
-    const agentLog = openSync(agentLogPath, "w");
-    const events = openSync(eventPath, "w");
-    const startedAt = new Date().toISOString();
-    const started = performance.now();
     const fallbackInvocationId = randomUUID();
-    const result = (() => {
-      try {
-        return spawnSync(
-          "codex",
-          [
-            "exec",
-            "-C",
-            repoRoot,
-            "--sandbox",
-            "danger-full-access",
-            "--ephemeral",
-            "--json",
-            "--disable",
-            "tool_call_mcp_elicitation",
-            "-m",
-            execution.model,
-            "-c",
-            `model_reasoning_effort=${JSON.stringify(execution.reasoningEffort)}`,
-            "--output-schema",
-            schemaPath,
-            "--output-last-message",
-            outputPath,
-            prompt,
-          ],
-          { cwd: repoRoot, stdio: ["ignore", events, agentLog] },
-        );
-      } finally {
-        closeSync(agentLog);
-        closeSync(events);
-      }
-    })();
+    const result = runCodexInvocation({
+      args: [
+        "exec",
+        "-C",
+        repoRoot,
+        "--sandbox",
+        "danger-full-access",
+        "--ephemeral",
+        "--json",
+        "--disable",
+        "tool_call_mcp_elicitation",
+        "-m",
+        execution.model,
+        "-c",
+        `model_reasoning_effort=${JSON.stringify(execution.reasoningEffort)}`,
+        "--output-schema",
+        schemaPath,
+        "--output-last-message",
+        outputPath,
+        prompt,
+      ],
+      cwd: repoRoot,
+      env: process.env,
+      eventPath,
+      logPath: agentLogPath,
+      ledgerPath: execution.ledgerPath,
+      phase: execution.phase,
+      scenarioId: execution.scenarioId,
+      gitSha: execution.gitSha,
+      fallbackInvocationId,
+      model: execution.model,
+      reasoningEffort: execution.reasoningEffort,
+    });
     const parsedEvents = readCodexEvents(eventPath);
     const codexEvents = parsedEvents.tag === "valid" ? parsedEvents.events : [];
     const invocationId = invocationIdFromCodexEvents(
       codexEvents,
       fallbackInvocationId,
     );
-    appendInvocationLedger(execution.ledgerPath, {
-      schemaVersion: 1,
-      scenarioId: execution.scenarioId,
-      gitSha: execution.gitSha,
-      eventsSha256: invocationEventsSha256(eventPath),
-      phase: execution.phase,
-      invocationId,
-      model: execution.model,
-      reasoningEffort: execution.reasoningEffort,
-      startedAt,
-      elapsedMilliseconds: Math.round(performance.now() - started),
-      exit:
-        result.signal === null
-          ? { tag: "exited", status: result.status ?? -1 }
-          : { tag: "signaled", signal: result.signal },
-      usage:
-        parsedEvents.tag === "valid"
-          ? modelUsageFromCodexEvents(codexEvents)
-          : { tag: "unavailable", reason: parsedEvents.message },
-    });
     if (result.error !== undefined) throw result.error;
     if (result.signal !== null)
       fail(`Scenario agent stopped by ${result.signal}.`);
@@ -151,23 +139,23 @@ function runCodexJson<A, I>(
         `Scenario agent returned invalid output: ${decoded.left.message}`,
       );
     }
-    if (execution.retainedInvocationDirectory !== undefined) {
-      mkdirSync(execution.retainedInvocationDirectory, { recursive: true });
+    if (execution.retention !== undefined) {
+      mkdirSync(execution.retention.directory, { recursive: true });
       const retainedStem = `${execution.phase}-${fallbackInvocationId}`;
       writeFileSync(
-        resolve(
-          execution.retainedInvocationDirectory,
-          `${retainedStem}.events.jsonl`,
-        ),
+        resolve(execution.retention.directory, `${retainedStem}.events.jsonl`),
         readFileSync(eventPath),
         { flag: "wx" },
       );
       writeFileSync(
-        resolve(execution.retainedInvocationDirectory, `${retainedStem}.json`),
+        resolve(execution.retention.directory, `${retainedStem}.json`),
         `${JSON.stringify(
           {
-            schemaVersion: 1,
+            schemaVersion: 2,
             phase: execution.phase,
+            reviewStage: execution.retention.reviewStage,
+            scenarioId: execution.scenarioId,
+            sourceGitSha: execution.gitSha,
             invocationId,
             model: execution.model,
             reasoningEffort: execution.reasoningEffort,
@@ -213,8 +201,8 @@ ${sdkCapabilityDocs}`;
 
 export function scenarioCampaignAgents(input: {
   readonly ledgerPath: string;
-  readonly scenarioId: string;
-  readonly gitSha: string;
+  readonly scenarioId: ScenarioId;
+  readonly gitSha: GitSha;
 }): ScenarioCampaignAgents {
   const statBlocks = scenarioSetupStatBlocks();
   if (statBlocks.tag === "invalid") fail(statBlocks.message);
@@ -272,7 +260,6 @@ export function scenarioCampaignAgents(input: {
     reasoningEffort: "max",
     phase: "scenarioCompositeReview",
     ...input,
-    retainedInvocationDirectory: `${input.ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
   } as const;
   const readinessExecution = {
     model: "gpt-5.6-luna",
@@ -361,9 +348,49 @@ ${sdkCapabilityDocs}
 Scenario:
 ${scenario}`,
         ScenarioCompositeReviewSchema,
-        reviewerExecution,
+        {
+          ...reviewerExecution,
+          retention: {
+            directory: `${input.ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
+            reviewStage: finalReview ? "final" : "milestone",
+          },
+        },
       ),
   };
+}
+
+export function replayRetainedScenarioReview(input: {
+  readonly retainedInput: RetainedScenarioReviewInput;
+  readonly ledgerPath: string;
+  readonly gitSha: GitSha;
+}): Schema.Schema.Type<typeof ScenarioCompositeReviewSchema> {
+  const expectedOutputSchema = codexOutputJsonSchema(
+    ScenarioCompositeReviewSchema,
+  );
+  if (
+    canonicalJson(input.retainedInput.outputJsonSchema) !==
+    canonicalJson(expectedOutputSchema)
+  ) {
+    fail(
+      "Retained scenario review input does not use the production composite-review schema.",
+    );
+  }
+  return runCodexJson(
+    input.retainedInput.prompt,
+    ScenarioCompositeReviewSchema,
+    {
+      model: input.retainedInput.model,
+      reasoningEffort: input.retainedInput.reasoningEffort,
+      phase: input.retainedInput.phase,
+      ledgerPath: input.ledgerPath,
+      scenarioId: input.retainedInput.scenarioId,
+      gitSha: input.gitSha,
+      retention: {
+        directory: `${input.ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
+        reviewStage: input.retainedInput.reviewStage,
+      },
+    },
+  );
 }
 
 function verifyRetainedScenario(

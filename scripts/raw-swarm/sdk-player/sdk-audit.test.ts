@@ -198,6 +198,43 @@ describe("SDK player derived audit evidence", () => {
       },
     });
 
+    const invalidFillResult = {
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "The supplied roll mode is invalid.",
+      session: call.outputSession,
+    };
+    expect(
+      sdkAuditTranscript({
+        records: [
+          header,
+          {
+            ...call,
+            result: invalidFillResult,
+            resultSha256: sha256Canonical(invalidFillResult),
+          },
+        ],
+        transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+        transcriptByteLength: 123,
+        transcriptSha256: "3".repeat(64),
+        replaySupervisorSha256: "b".repeat(64),
+      }),
+    ).toMatchObject({
+      tag: "valid",
+      audit: {
+        calls: [
+          {
+            reviewFacts: {
+              kind: "resolution",
+              tag: "invalid",
+              reason: "invalidFill",
+              message: "The supplied roll mode is invalid.",
+            },
+          },
+        ],
+      },
+    });
+
     const malformedResult = { ...call.result, holes: [{}] };
     expect(
       sdkAuditTranscript({
@@ -260,6 +297,47 @@ describe("SDK player derived audit evidence", () => {
         }).tag,
       ).toBe("invalid");
     }
+  });
+
+  test("rejects an AvailableBattleAct with missing initial holes", () => {
+    const { header, call } = fixture();
+    const discoveryCall = {
+      ...call,
+      operation: "discoverBattleActs" as const,
+      input: {},
+      result: [
+        {
+          subject: { tag: "runtimeCommand", actorId: "a", command: "move" },
+          label: "Move",
+          summary: "Use Move.",
+          presentation: { kind: "intrinsic" },
+        },
+      ],
+      resultSha256: sha256Canonical([
+        {
+          subject: {
+            tag: "runtimeCommand",
+            actorId: "a",
+            command: "move",
+          },
+          label: "Move",
+          summary: "Use Move.",
+          presentation: { kind: "intrinsic" },
+        },
+      ]),
+    };
+    expect(
+      sdkAuditTranscript({
+        records: [header, discoveryCall],
+        transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+        transcriptByteLength: 123,
+        transcriptSha256: "3".repeat(64),
+        replaySupervisorSha256: "b".repeat(64),
+      }),
+    ).toEqual({
+      tag: "invalid",
+      message: "SDK call seq 1 cannot be projected into typed audit facts.",
+    });
   });
 
   test("preflights immutable bytes and extracts exact sequences with provenance", () => {

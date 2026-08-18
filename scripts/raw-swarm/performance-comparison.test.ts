@@ -94,6 +94,18 @@ describe("whole-path performance evidence", () => {
       tag: "available",
       totals: { inputPlusOutput: 1_000 },
     });
+    expect(summary.sources.prePlayReviews).toMatchObject([
+      {
+        reviewStage: "milestone",
+        sourceInput: { byteLength: expect.any(Number) },
+        replayInput: { byteLength: expect.any(Number) },
+      },
+      {
+        reviewStage: "final",
+        sourceInput: { byteLength: expect.any(Number) },
+        replayInput: { byteLength: expect.any(Number) },
+      },
+    ]);
     expect(summary.supervisor).toMatchObject({
       replayMilliseconds: 20,
       nonModelMilliseconds: 100,

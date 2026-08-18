@@ -10,7 +10,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import { runCodexInvocation } from "./model-telemetry.ts";
@@ -31,7 +31,10 @@ import {
 import {
   currentGitRevision,
   decodeScenarioId,
+  GitShaSchema,
   repoRoot,
+  type GitSha,
+  type ScenarioId,
 } from "./transcript.ts";
 
 function fail(message: string): never {
@@ -42,8 +45,8 @@ function runSetupAuthor(input: {
   readonly scratch: string;
   readonly codexHome: string;
   readonly permissionArgs: readonly string[];
-  readonly scenarioId: string;
-  readonly gitSha: string;
+  readonly scenarioId: ScenarioId;
+  readonly gitSha: GitSha;
   readonly evidenceDirectory: string;
   readonly role: ScenarioSetupAuthorRole;
   readonly instruction: string;
@@ -118,6 +121,8 @@ async function main(args: readonly string[]): Promise<void> {
   if (revision.tag === "dirty") {
     fail("Scenario setup authoring requires a clean Git worktree.");
   }
+  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
+  if (Either.isLeft(gitSha)) fail(gitSha.left.message);
   const scenarioPath = resolve(
     repoRoot,
     `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.right}.md`,
@@ -185,7 +190,7 @@ async function main(args: readonly string[]): Promise<void> {
           codexHome,
           permissionArgs,
           scenarioId: scenarioId.right,
-          gitSha: revision.sha,
+          gitSha: gitSha.right,
           evidenceDirectory,
           role,
           instruction:

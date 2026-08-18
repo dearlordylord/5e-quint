@@ -6,15 +6,20 @@ import { Either, Schema } from "effect";
 
 import { repositoryArtifactPath } from "./artifact-index.ts";
 import {
-  invocationIdFromCodexEvents,
-  modelUsageFromCodexEvents,
+  modelInvocationEvidenceFromEvents,
   parseModelInvocationLedgerEntry,
   readCodexEvents,
   type ModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
 import { reviewInvocationPolicy } from "./review-invocation-policy.ts";
 import {
-  reviewEvidenceCatalogForAudit,
+  codexOutputJsonSchema,
+  FinalScenarioReviewSchema,
+  ScenarioCompositeReviewSchema,
+} from "./scenario-campaign.ts";
+import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
+import {
+  reviewEvidenceCatalogForPacket,
   validateReviewOutput,
 } from "./review-output-validation.ts";
 import { readSdkAudit } from "./sdk-player/sdk-audit.ts";
@@ -27,6 +32,8 @@ import {
   GitShaSchema,
   repoRoot,
   ScenarioIdSchema,
+  type GitSha,
+  type ScenarioId,
 } from "./transcript.ts";
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
@@ -43,17 +50,26 @@ export const ReviewInvocationEvidenceManifestSchema = Schema.Struct({
   type: Schema.Literal("review-invocation-evidence"),
   schemaVersion: Schema.Literal(1),
   scenarioId: ScenarioIdSchema,
-  gitSha: GitShaSchema,
+  transcriptGitSha: GitShaSchema,
+  invocationGitSha: GitShaSchema,
   transcript: ArtifactAuthoritySchema,
   review: ArtifactAuthoritySchema,
   audit: ArtifactAuthoritySchema,
   packet: ArtifactAuthoritySchema,
-  invocationLedgers: Schema.Array(ArtifactAuthoritySchema).pipe(
-    Schema.minItems(1),
+  prePlayReviews: Schema.Tuple(
+    Schema.Struct({
+      reviewStage: Schema.Literal("milestone"),
+      sourceInput: ArtifactAuthoritySchema,
+      replayInput: ArtifactAuthoritySchema,
+    }),
+    Schema.Struct({
+      reviewStage: Schema.Literal("final"),
+      sourceInput: ArtifactAuthoritySchema,
+      replayInput: ArtifactAuthoritySchema,
+    }),
   ),
-  invocationEvents: Schema.Array(ArtifactAuthoritySchema).pipe(
-    Schema.minItems(1),
-  ),
+  invocationLedgers: Schema.Tuple(ArtifactAuthoritySchema),
+  invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
 });
 
 export type ReviewInvocationEvidenceManifest = Schema.Schema.Type<
@@ -80,6 +96,44 @@ function json(path: string): unknown {
   } catch {
     return fail(`Review invocation evidence ${path} is malformed JSON.`);
   }
+}
+
+function retainedReviewInput<const Stage extends "milestone" | "final">(
+  path: string,
+  expectedStage: Stage,
+): Schema.Schema.Type<typeof RetainedScenarioReviewInputSchema> {
+  const decoded = Schema.decodeUnknownEither(
+    RetainedScenarioReviewInputSchema,
+    { onExcessProperty: "error" },
+  )(json(path));
+  if (Either.isLeft(decoded)) {
+    fail(
+      `Retained ${expectedStage} review input is invalid: ${decoded.left.message}`,
+    );
+  }
+  if (decoded.right.reviewStage !== expectedStage)
+    fail(`Retained ${expectedStage} review input has the wrong stage.`);
+  return decoded.right;
+}
+
+function scenarioReviewIdentity(packet: {
+  readonly runArtifacts: readonly { readonly path: string }[];
+}): { readonly scenarioId: ScenarioId; readonly gitSha: GitSha } {
+  const sources = packet.runArtifacts.filter(({ path }) =>
+    path.endsWith("/SCENARIO_REVIEW.json"),
+  );
+  const source = sources[0];
+  if (sources.length !== 1 || source === undefined)
+    fail("Review evidence packet requires one scenario review authority.");
+  const decoded = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
+    onExcessProperty: "error",
+  })(json(source.path));
+  if (Either.isLeft(decoded))
+    fail(`Scenario review authority is invalid: ${decoded.left.message}`);
+  return {
+    scenarioId: decoded.right.scenarioId,
+    gitSha: decoded.right.gitSha,
+  };
 }
 
 function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
@@ -132,6 +186,10 @@ function deriveManifest(input: {
   readonly reviewPath: string;
   readonly auditPath: string;
   readonly packetPath: string;
+  readonly prePlayReviewPaths: readonly [
+    { readonly sourceInputPath: string; readonly replayInputPath: string },
+    { readonly sourceInputPath: string; readonly replayInputPath: string },
+  ];
   readonly invocationLedgerPaths: readonly string[];
   readonly invocationEventPaths: readonly string[];
 }): ReviewInvocationEvidenceManifest {
@@ -153,7 +211,10 @@ function deriveManifest(input: {
     audit.audit,
   );
   if (packetValidation.tag === "invalid") fail(packetValidation.message);
-  const evidence = reviewEvidenceCatalogForAudit(audit.audit);
+  const scenarioReview = scenarioReviewIdentity(packetValidation.packet);
+  if (scenarioReview.scenarioId !== audit.audit.header.scenarioId)
+    fail("Scenario review authority does not match the audited run.");
+  const evidence = reviewEvidenceCatalogForPacket(packetValidation.packet);
   if (evidence.tag === "invalid") fail(evidence.message);
   const review = json(input.reviewPath);
   const reviewValidation = validateReviewOutput(
@@ -180,11 +241,7 @@ function deriveManifest(input: {
   }
   const entries = input.invocationLedgerPaths.flatMap(ledgerEntries);
   if (
-    entries.some(
-      (entry) =>
-        entry.scenarioId !== audit.audit.header.scenarioId ||
-        entry.gitSha !== audit.audit.header.gitSha,
-    )
+    entries.some((entry) => entry.scenarioId !== audit.audit.header.scenarioId)
   )
     fail("Review invocation ledger identity does not match the audited run.");
   const eventEvidence = input.invocationEventPaths.map((path) => {
@@ -192,22 +249,103 @@ function deriveManifest(input: {
     if (parsed.tag === "invalid") fail(parsed.message);
     return { authority: artifactAuthority(path), events: parsed.events };
   });
+  const eventHashes = eventEvidence.map(({ authority }) => authority.sha256);
+  const evidenceByHash = new Map(
+    eventEvidence.map((evidence) => [evidence.authority.sha256, evidence]),
+  );
   if (
+    new Set(eventHashes).size !== eventHashes.length ||
     entries.length !== eventEvidence.length ||
     entries.some((entry) => {
-      const evidence = eventEvidence.find(
-        ({ authority }) => authority.sha256 === entry.eventsSha256,
-      );
+      const evidence = evidenceByHash.get(entry.eventsSha256);
+      if (evidence === undefined) return true;
+      const derived = modelInvocationEvidenceFromEvents(evidence.events);
       return (
-        evidence === undefined ||
-        invocationIdFromCodexEvents(evidence.events, "") !==
-          entry.invocationId ||
-        canonicalJson(modelUsageFromCodexEvents(evidence.events)) !==
-          canonicalJson(entry.usage)
+        derived.tag === "invalid" ||
+        canonicalJson(derived.entry) !==
+          canonicalJson(
+            Object.fromEntries(
+              Object.entries(entry).filter(([key]) => key !== "eventsSha256"),
+            ),
+          )
       );
     })
   )
     fail("Review invocation ledgers do not match their Codex event streams.");
+  const invocationGitShas = new Set(entries.map(({ gitSha }) => gitSha));
+  const invocationGitSha = entries[0]?.gitSha;
+  if (invocationGitShas.size !== 1 || invocationGitSha === undefined)
+    fail("Controlled review invocations require one implementation revision.");
+  const expectedOutputSchema = codexOutputJsonSchema(
+    ScenarioCompositeReviewSchema,
+  );
+  const prePlayReview = <Stage extends "milestone" | "final">(
+    reviewStage: Stage,
+    paths: {
+      readonly sourceInputPath: string;
+      readonly replayInputPath: string;
+    },
+  ) => {
+    const { sourceInputPath, replayInputPath } = paths;
+    const sourceInput = retainedReviewInput(sourceInputPath, reviewStage);
+    const replayInput = retainedReviewInput(replayInputPath, reviewStage);
+    if (
+      sourceInput.scenarioId !== audit.audit.header.scenarioId ||
+      sourceInput.sourceGitSha !== scenarioReview.gitSha ||
+      replayInput.scenarioId !== audit.audit.header.scenarioId ||
+      replayInput.sourceGitSha !== invocationGitSha ||
+      canonicalJson(sourceInput.prompt) !== canonicalJson(replayInput.prompt) ||
+      canonicalJson(sourceInput.outputJsonSchema) !==
+        canonicalJson(expectedOutputSchema) ||
+      canonicalJson(replayInput.outputJsonSchema) !==
+        canonicalJson(expectedOutputSchema)
+    ) {
+      fail(
+        `Retained ${reviewStage} source and replay inputs do not describe the measured review.`,
+      );
+    }
+    const entry = entries.find(
+      ({ phase, invocationId }) =>
+        phase === "scenarioCompositeReview" &&
+        invocationId === replayInput.invocationId,
+    );
+    const events = eventEvidence.find(
+      ({ authority }) => authority.sha256 === entry?.eventsSha256,
+    );
+    const output =
+      events === undefined ? undefined : finalAgentMessage(events.events);
+    const decodedOutput = Schema.decodeUnknownEither(
+      Schema.Struct({ result: ScenarioCompositeReviewSchema }),
+      { onExcessProperty: "error" },
+    )(output);
+    if (
+      entry === undefined ||
+      events === undefined ||
+      entry.model !== replayInput.model ||
+      entry.reasoningEffort !== replayInput.reasoningEffort ||
+      Either.isLeft(decodedOutput) ||
+      canonicalJson(decodedOutput.right.result) !==
+        canonicalJson(replayInput.result)
+    ) {
+      fail(
+        `Retained ${reviewStage} replay input does not match its invocation evidence.`,
+      );
+    }
+    return {
+      reviewStage,
+      sourceInput: artifactAuthority(sourceInputPath),
+      replayInput: artifactAuthority(replayInputPath),
+    };
+  };
+  const prePlayReviews = [
+    prePlayReview("milestone", input.prePlayReviewPaths[0]),
+    prePlayReview("final", input.prePlayReviewPaths[1]),
+  ] as const;
+  const scenarioReviewEntries = entries.filter(
+    ({ phase }) => phase === "scenarioCompositeReview",
+  );
+  if (scenarioReviewEntries.length !== 2)
+    fail("Review invocation evidence requires two pre-play reviews.");
   const postPlayEntries = entries.filter(
     ({ phase }) => phase === "postPlayReview",
   );
@@ -229,13 +367,18 @@ function deriveManifest(input: {
     type: "review-invocation-evidence",
     schemaVersion: 1,
     scenarioId: audit.audit.header.scenarioId,
-    gitSha: audit.audit.header.gitSha,
+    transcriptGitSha: audit.audit.header.gitSha,
+    invocationGitSha,
     transcript,
     review: artifactAuthority(input.reviewPath),
     audit: artifactAuthority(input.auditPath),
     packet: packetAuthority,
-    invocationLedgers: input.invocationLedgerPaths.map(artifactAuthority),
-    invocationEvents: eventEvidence.map(({ authority }) => authority),
+    prePlayReviews: [prePlayReviews[0]!, prePlayReviews[1]!],
+    invocationLedgers: [artifactAuthority(input.invocationLedgerPaths[0]!)],
+    invocationEvents: [
+      eventEvidence[0]!.authority,
+      ...eventEvidence.slice(1).map(({ authority }) => authority),
+    ],
   };
 }
 
@@ -244,6 +387,10 @@ export function writeReviewInvocationEvidenceManifest(input: {
   readonly reviewPath: string;
   readonly auditPath: string;
   readonly packetPath: string;
+  readonly prePlayReviewPaths: readonly [
+    { readonly sourceInputPath: string; readonly replayInputPath: string },
+    { readonly sourceInputPath: string; readonly replayInputPath: string },
+  ];
   readonly invocationLedgerPaths: readonly string[];
   readonly invocationEventPaths: readonly string[];
   readonly outputPath: string;
@@ -271,6 +418,16 @@ export function readReviewInvocationEvidenceManifest(
     reviewPath: manifest.review.path,
     auditPath: manifest.audit.path,
     packetPath: manifest.packet.path,
+    prePlayReviewPaths: [
+      {
+        sourceInputPath: manifest.prePlayReviews[0].sourceInput.path,
+        replayInputPath: manifest.prePlayReviews[0].replayInput.path,
+      },
+      {
+        sourceInputPath: manifest.prePlayReviews[1].sourceInput.path,
+        replayInputPath: manifest.prePlayReviews[1].replayInput.path,
+      },
+    ],
     invocationLedgerPaths: manifest.invocationLedgers.map(({ path }) => path),
     invocationEventPaths: manifest.invocationEvents.map(({ path }) => path),
   });
@@ -288,6 +445,10 @@ function main(args: readonly string[]): void {
     auditPath,
     packetPath,
     outputPath,
+    milestoneSourceInputPath,
+    milestoneReplayInputPath,
+    finalSourceInputPath,
+    finalReplayInputPath,
     ledgerPath,
     ...eventPaths
   ] = args;
@@ -298,11 +459,15 @@ function main(args: readonly string[]): void {
     auditPath === undefined ||
     packetPath === undefined ||
     outputPath === undefined ||
+    milestoneSourceInputPath === undefined ||
+    milestoneReplayInputPath === undefined ||
+    finalSourceInputPath === undefined ||
+    finalReplayInputPath === undefined ||
     ledgerPath === undefined ||
     eventPaths.length === 0
   ) {
     fail(
-      "Usage: review-invocation-evidence.ts create <transcript.jsonl> <review.json> <audit.jsonl> <packet.json> <manifest.json> <invocation-ledger.jsonl> <invocation-events.jsonl> [...events]",
+      "Usage: review-invocation-evidence.ts create <transcript.jsonl> <review.json> <audit.jsonl> <packet.json> <manifest.json> <milestone-source-input.json> <milestone-replay-input.json> <final-source-input.json> <final-replay-input.json> <invocation-ledger.jsonl> <invocation-events.jsonl> [...events]",
     );
   }
   writeReviewInvocationEvidenceManifest({
@@ -310,6 +475,16 @@ function main(args: readonly string[]): void {
     reviewPath,
     auditPath,
     packetPath,
+    prePlayReviewPaths: [
+      {
+        sourceInputPath: milestoneSourceInputPath,
+        replayInputPath: milestoneReplayInputPath,
+      },
+      {
+        sourceInputPath: finalSourceInputPath,
+        replayInputPath: finalReplayInputPath,
+      },
+    ],
     invocationLedgerPaths: [ledgerPath],
     invocationEventPaths: eventPaths,
     outputPath,

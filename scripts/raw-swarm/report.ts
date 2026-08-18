@@ -348,6 +348,20 @@ function controlledReporting(args: readonly string[]): void {
       path: reviewInvocationEvidence.packet.path,
       mediaType: "application/json",
     },
+    ...reviewInvocationEvidence.prePlayReviews.flatMap(
+      ({ reviewStage, sourceInput, replayInput }) => [
+        {
+          role: `prePlayReviewSourceInput-${reviewStage}`,
+          path: sourceInput.path,
+          mediaType: "application/json",
+        },
+        {
+          role: `prePlayReviewReplayInput-${reviewStage}`,
+          path: replayInput.path,
+          mediaType: "application/json",
+        },
+      ],
+    ),
     ...reviewInvocationEvidence.invocationLedgers.map(({ path }, index) => ({
       role: `modelInvocationLedger-${index + 1}`,
       path,

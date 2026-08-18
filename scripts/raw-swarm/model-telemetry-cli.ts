@@ -2,10 +2,12 @@ import { randomUUID } from "node:crypto";
 import { Either, Schema } from "effect";
 
 import {
+  appendInvocationEvidenceEvents,
   appendInvocationLedger,
   invocationEventsSha256,
-  invocationIdFromCodexEvents,
-  modelUsageFromCodexEvents,
+  modelInvocationCompletedEvent,
+  modelInvocationEvidenceFromEvents,
+  modelInvocationStartedEvent,
   readCodexEvents,
   MODEL_INVOCATION_PHASES,
   type ModelInvocationPhase,
@@ -52,23 +54,27 @@ if (
 ) {
   fail("Model, reasoning effort, and ISO start time are required.");
 }
-const parsedEvents = readCodexEvents(eventsPath);
-const events = parsedEvents.tag === "valid" ? parsedEvents.events : [];
-appendInvocationLedger(ledgerPath, {
-  schemaVersion: 1,
-  scenarioId: scenarioId.right,
-  gitSha: gitSha.right,
-  eventsSha256: invocationEventsSha256(eventsPath),
-  phase,
-  invocationId: invocationIdFromCodexEvents(events, randomUUID()),
-  model,
-  reasoningEffort,
-  startedAt,
-  elapsedMilliseconds,
-  exit: { tag: "exited", status: exitStatus },
-  usage:
-    parsedEvents.tag === "valid"
-      ? modelUsageFromCodexEvents(events)
-      : { tag: "unavailable", reason: parsedEvents.message },
+appendInvocationEvidenceEvents({
+  path: eventsPath,
+  start: modelInvocationStartedEvent({
+    scenarioId: scenarioId.right,
+    gitSha: gitSha.right,
+    phase,
+    fallbackInvocationId: randomUUID(),
+    model,
+    reasoningEffort,
+    startedAt,
+  }),
+  completion: modelInvocationCompletedEvent({
+    elapsedMilliseconds,
+    exit: { tag: "exited", status: exitStatus },
+  }),
 });
+const parsedEvents = readCodexEvents(eventsPath);
 if (parsedEvents.tag === "invalid") fail(parsedEvents.message);
+const evidence = modelInvocationEvidenceFromEvents(parsedEvents.events);
+if (evidence.tag === "invalid") fail(evidence.message);
+appendInvocationLedger(ledgerPath, {
+  ...evidence.entry,
+  eventsSha256: invocationEventsSha256(eventsPath),
+});

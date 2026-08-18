@@ -19,9 +19,10 @@ one canonical source rather than storing them beside it.
 Make invalid states unrepresentable. Redesign shapes that permit contradictory
 provenance, ownership, derived facts, or unsupported status combinations.
 Optional fields and empty collections must name distinct domain states; do not
-use `undefined` as a second spelling for an empty collection. Avoid migration
-contrast names such as `normalized`, `legacy`, `current`, or `new` unless both
-concepts genuinely exist at that domain boundary.
+use `undefined` as a second spelling for an empty collection. Name every entity
+for its domain role or contract, not a relative property. Contrast names such
+as `compact`, `full`, `normalized`, `legacy`, `current`, `new`, or `optimized`
+are valid only when both concepts genuinely exist at that domain boundary.
 
 ## Authored identity and PHB+ content
 

@@ -5,6 +5,7 @@ import {
   PLAYER_TURN_PROJECTION_MAX_BYTES,
   PLAYER_TACTICAL_NOTE_MAX_BYTES,
   playerCurrentTurnProjection,
+  projectPlayerSubject,
 } from "./player-turn-projection.ts";
 
 type Mutable<T> = T extends object
@@ -75,6 +76,24 @@ const attackProcedureRef = JSON.stringify({
 });
 
 describe("player current-turn projection", () => {
+  test("keeps projected subjects discriminated by required protocol fields", () => {
+    expect(projectPlayerSubject({ tag: "action", actorId: "fighter" })).toBe(
+      undefined,
+    );
+    expect(
+      projectPlayerSubject({ tag: "runtimeCommand", actorId: "fighter" }),
+    ).toBeUndefined();
+    expect(
+      projectPlayerSubject({ tag: "actionSpell", actorId: "fighter" }),
+    ).toBeUndefined();
+    expect(
+      projectPlayerSubject({
+        tag: "unsupportedSubject",
+        actorId: "fighter",
+      }),
+    ).toBeUndefined();
+  });
+
   test("projects actionable holes with stable occurrences and material changes", () => {
     const afterSession = structuredClone(beforeSession) as Mutable<
       typeof beforeSession
@@ -238,15 +257,19 @@ describe("player current-turn projection", () => {
       result,
       resultSha256: sha256Canonical(result),
     } as const;
-    expect(
-      playerCurrentTurnProjection({
-        continuation: 1,
-        calls: [call],
-        beforeSession,
-        afterSession: beforeSession,
-        tacticalNote: "",
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
+    const malformedHoleProjection = playerCurrentTurnProjection({
+      continuation: 1,
+      calls: [call],
+      beforeSession,
+      afterSession: beforeSession,
+      tacticalNote: "",
+    });
+    expect(malformedHoleProjection).toEqual({
+      tag: "invalid",
+      reason: "malformedProjectionSource",
+      message:
+        "The canonical session/result cannot be projected into the typed player turn contract.",
+    });
     const missingChoices = {
       ...result,
       holes: [
@@ -397,5 +420,30 @@ describe("player current-turn projection", () => {
         tacticalNote: "",
       }),
     ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
+  });
+
+  test("does not attach size metadata to malformed source failures", () => {
+    const malformed = structuredClone(beforeSession) as Mutable<
+      typeof beforeSession
+    >;
+    delete (malformed.battle.state.subjectResolutionPhase as { kind?: unknown })
+      .kind;
+    const result = playerCurrentTurnProjection({
+      continuation: 1,
+      calls: [],
+      beforeSession: malformed,
+      afterSession: malformed,
+      tacticalNote: "",
+    });
+    expect(result).toEqual({
+      tag: "invalid",
+      reason: "malformedProjectionSource",
+      message:
+        "The canonical session/result cannot be projected into the typed player turn contract.",
+    });
+    if (result.tag === "invalid") {
+      expect("byteLength" in result).toBe(false);
+      expect("maximumByteLength" in result).toBe(false);
+    }
   });
 });

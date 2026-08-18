@@ -50,6 +50,8 @@ describe("RAW swarm runner boundaries", () => {
     expect(script).toContain("sdk-review-packet-cli.ts");
     expect(script).toContain("review-output-validation.ts");
     expect(script).toContain("review-invocation-policy.ts");
+    expect(script).toContain("git diff --quiet");
+    expect(script).toContain("RAW_REVIEW_INVOCATION_GIT_SHA");
     expect(script).toContain("| codex exec");
   });
 

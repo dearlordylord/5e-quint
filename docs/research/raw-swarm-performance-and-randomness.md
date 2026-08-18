@@ -15,8 +15,8 @@ alone. Issue #282 implements a three-tier evidence boundary:
 1. Keep the complete, append-only SDK JSONL as the authoritative replay
    artifact.
 2. Derive a hash-linked audit (call sequence, operation, input,
-   session hashes and deltas, result hash, and review-relevant projection).
-3. Give the player and reviewer small, role-specific digests. Keep the raw
+   session hashes, result hash, and review-relevant typed facts).
+3. Give the player and reviewer bounded, role-specific projections. Keep the raw
    record addressable by sequence for drill-down, but do not put the whole
    transcript or an entire `discoverBattleActs` result in every model context.
 
@@ -65,7 +65,7 @@ That is good evidence discipline, but it creates a clear opportunity to make
 the first context projection bounded and to retain command scrollback only for
 diagnostics.
 
-The implemented operation-specific audit is 146,677 bytes for the same
+The implemented operation-specific audit is 146,727 bytes for the same
 141 records, or 0.38% of the 38,232,957-byte authoritative transcript. It keeps
 canonical inputs, hashes, existing error discriminants, and bounded relation,
 act-frontier, hole, damage, and movement facts; it embeds no full session,
@@ -363,8 +363,9 @@ operation, and outcome.
 Controlled runs retain first-party invocation ledgers and supervisor phase
 timings. Whole-path comparison checks scenario/model identity and reports tokens
 per invocation, continuation, and call. Legacy footer totals are explicitly
-incomparable to JSON event counters; the harness does not claim the 50% player
-or 60% reviewer token gates until a comparable fixed-protocol baseline exists.
+incomparable to JSON event counters; the harness does not claim the 50%
+post-play-review or 60%-of-baseline complete-path token gates until a comparable
+fixed-protocol baseline exists.
 Wall time remains comparable only when the same scenario identity and complete
 path duration are retained.
 

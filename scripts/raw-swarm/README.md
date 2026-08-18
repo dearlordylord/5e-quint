@@ -194,23 +194,25 @@ actually ran. Retained pre-capability-review artifacts remain
 campaigns retain `rawContentSdkCapabilityPolicy` and require the SDK-capability
 intent and verdict.
 
-For a controlled performance comparison, replay an admitted scenario through
-the same production review invocation without regenerating prose. Use a unique
-output path for each milestone or final invocation and one shared ledger path;
-the command also retains the exact prompt, schema, and typed result beside the
-ledger:
+For a controlled performance comparison, replay each retained milestone or
+final review-input envelope through the same production composite-review
+invocation. The envelope supplies the exact original prompt and output schema;
+the current clean Git revision identifies the reviewer implementation. Use a
+unique output path for each invocation and one shared ledger path. The command
+also retains the replayed prompt, schema, and typed result beside that ledger:
 
 ```sh
 mise exec -- pnpm exec tsx scripts/raw-swarm/review-scenario.ts \
-  scripts/raw-swarm/sdk-player/scenarios/generated-battle-004.md \
-  milestone availableOnly supportedOnly \
+  scripts/raw-swarm/out/generated-battle-004-generation-invocations-review-inputs/scenarioCompositeReview-MILESTONE.json \
   scripts/raw-swarm/out/generated-battle-004-milestone-review.json \
   scripts/raw-swarm/out/generated-battle-004-scenario-review-invocations.jsonl
 ```
 
-Run the same command with `final` and another output path for the final
-pre-play review. This command measures the current production review path; it
-does not manufacture historical generation provenance for an older scenario.
+Run the same command with the retained `reviewStage: "final"` envelope and
+another output path for the final pre-play review. A scenario prose path is not
+accepted because it cannot prove which milestone input was reviewed. This
+command measures the current production review path; it does not manufacture
+historical generation provenance for an older scenario.
 
 An admitted prose artifact is not parsed. A controller agent first authors an
 adjacent `<scenario-id>.characters.ts` against the canonical character-creation
@@ -414,8 +416,10 @@ records first-party model usage when available, while
 `evidence/supervisor-timings.jsonl` separates continuation typechecking,
 prior-call verification/replay, new SDK execution, and evidence writes.
 `performance-comparison.ts summarize` combines those records with typed model
-invocation ledgers. Its descriptor names the authoritative transcript, ledger
-paths, supervisor timing path, and a versioned reporting-timing artifact;
+invocation ledgers. The review invocation evidence binds each retained
+milestone/final source input to the corresponding replay input and measured
+invocation. The descriptor names that evidence, the supervisor timing path,
+and a versioned reporting-timing artifact;
 scenario identity and call and
 continuation counts are derived from that transcript. The summary reports
 the scenario-review, character, and setup hashes as part of the comparison
@@ -485,10 +489,11 @@ the review result. Exact-sequence extraction is a separate retained
 operator drill-down. A review consuming extracted records is another measured
 invocation rather than an invisible extension of the scenario review.
 
-Raw Swarm entities are named for their role or contract: scenario reviewer,
-review evidence packet, review result, and one-turn review invocation. Size,
-age, or comparison adjectives describe measured properties or historical
-evidence; they are not alternate entity names unless both domain states exist.
+Following the repository-wide entity-naming rule in
+[`AGENTS.md`](../../AGENTS.md), this workflow uses the role or contract names
+scenario reviewer, review evidence packet, review result, and one-turn review
+invocation. Size, age, and comparison adjectives describe measurements or
+historical evidence; they do not create alternate workflow entities.
 
 To inspect an omitted exact result, extract only named sequences and then
 attach both the exact records and their provenance to the imported review:
@@ -716,8 +721,8 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts export \
   cat scripts/raw-swarm/out/$SCENARIO-sdk-review.invocations.jsonl
 } > scripts/raw-swarm/out/$SCENARIO-controlled-invocations.jsonl
 
-# Bind the transcript, review, audit, packet, ledger, and each event stream
-# before reporting or performance comparison.
+# Bind the transcript, review, audit, packet, exact source/replay inputs,
+# ledger, and each event stream before reporting or performance comparison.
 mise exec -- pnpm exec tsx scripts/raw-swarm/review-invocation-evidence.ts \
   create \
   scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl \
@@ -725,6 +730,10 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/review-invocation-evidence.ts \
   scripts/raw-swarm/out/$SCENARIO-sdk-review.audit.jsonl \
   scripts/raw-swarm/out/$SCENARIO-sdk-review.packet.json \
   scripts/raw-swarm/out/$SCENARIO-review-invocation-evidence.json \
+  "$MILESTONE_SOURCE_INPUT" \
+  "$MILESTONE_REPLAY_INPUT" \
+  "$FINAL_SOURCE_INPUT" \
+  "$FINAL_REPLAY_INPUT" \
   scripts/raw-swarm/out/$SCENARIO-controlled-invocations.jsonl \
   scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/*.events.jsonl \
   scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/player-events.jsonl \

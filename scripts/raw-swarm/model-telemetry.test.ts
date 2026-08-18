@@ -1,11 +1,15 @@
 import { describe, expect, test } from "vitest";
 
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 
 import {
+  modelInvocationCompletedEvent,
+  modelInvocationEvidenceFromEvents,
+  modelInvocationStartedEvent,
   modelUsageFromCodexEvents,
   parseModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
+import { GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
 
 describe("Raw Swarm model invocation telemetry", () => {
   test("retains first-party token dimensions independently", () => {
@@ -73,5 +77,49 @@ describe("Raw Swarm model invocation telemetry", () => {
         parseModelInvocationLedgerEntry({ ...entry, unexpected: true }),
       ),
     ).toBe(true);
+  });
+
+  test("rederives invocation identity and runner-owned timing from events", () => {
+    const events = [
+      modelInvocationStartedEvent({
+        scenarioId: Schema.decodeUnknownSync(ScenarioIdSchema)("scenario"),
+        gitSha: Schema.decodeUnknownSync(GitShaSchema)("a".repeat(40)),
+        phase: "postPlayReview",
+        fallbackInvocationId: "fallback",
+        model: "gpt-5.6-luna",
+        reasoningEffort: "max",
+        startedAt: "2026-08-14T00:00:00.000Z",
+      }),
+      { type: "thread.started", thread_id: "thread" },
+      {
+        type: "turn.completed",
+        usage: {
+          input_tokens: 10,
+          cached_input_tokens: 2,
+          cache_write_input_tokens: 0,
+          output_tokens: 3,
+          reasoning_output_tokens: 1,
+        },
+      },
+      modelInvocationCompletedEvent({
+        elapsedMilliseconds: 123,
+        exit: { tag: "exited", status: 0 },
+      }),
+    ];
+    expect(modelInvocationEvidenceFromEvents(events)).toMatchObject({
+      tag: "valid",
+      entry: {
+        phase: "postPlayReview",
+        invocationId: "thread",
+        model: "gpt-5.6-luna",
+        reasoningEffort: "max",
+        elapsedMilliseconds: 123,
+        exit: { tag: "exited", status: 0 },
+        usage: { tag: "available", input: { count: 10 } },
+      },
+    });
+    expect(modelInvocationEvidenceFromEvents(events.slice(1))).toMatchObject({
+      tag: "invalid",
+    });
   });
 });

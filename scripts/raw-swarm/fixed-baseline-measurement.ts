@@ -6,8 +6,11 @@ import ts from "typescript";
 
 import { canonicalJson, isJsonRecord, repoRoot } from "./transcript.ts";
 import {
+  projectPlayerActs,
   projectPlayerSubject,
   reprojectSdkTranscriptTurns,
+  type PlayerActProjection,
+  type PlayerHoleProjection,
   type PlayerCurrentTurnProjection,
 } from "./sdk-player/player-turn-projection.ts";
 import { readSdkAudit } from "./sdk-player/sdk-audit.ts";
@@ -21,7 +24,6 @@ const FIXED_TRANSCRIPT_SHA256 =
   "69f30fb4f34155aa95845c141f303e65c78743a4814a5623700950cc2d1a9bad";
 const FIXED_OBSERVATION_BYTES = 3_137_666;
 const FIXED_STEP_PAYLOAD_BYTES = 38_107_978;
-const FIXED_DIRECT_FRONTIER_CHECKS = 20;
 
 function fail(message: string): never {
   throw new Error(message);
@@ -130,87 +132,257 @@ function callsByContinuation(
   }, new Map<number, readonly SdkCallRecord[]>());
 }
 
+type ProjectedHoleKey = `${string}\u0000${string}`;
+
+function holeKey(
+  hole: Pick<PlayerHoleProjection, "kind" | "holeId">,
+): ProjectedHoleKey {
+  return `${hole.kind}\u0000${hole.holeId}`;
+}
+
+function occurrenceCounts(
+  values: readonly ProjectedHoleKey[],
+): ReadonlyMap<ProjectedHoleKey, number> {
+  return values.reduce((counts, value) => {
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+    return counts;
+  }, new Map<ProjectedHoleKey, number>());
+}
+
+function fillKeys(input: Readonly<Record<string, unknown>>): ProjectedHoleKey {
+  if (typeof input.kind !== "string" || typeof input.holeId !== "string") {
+    fail("A retained continuation supplied a malformed hole fill.");
+  }
+  return `${input.kind}\u0000${input.holeId}`;
+}
+
+function projectedChoiceKeys(value: unknown): readonly string[] {
+  if (typeof value === "string") return [value];
+  if (!isJsonRecord(value)) return [];
+  const keys: string[] = [];
+  if (typeof value.kind === "string") keys.push(`kind:${value.kind}`);
+  if (typeof value.targetId === "string") keys.push(value.targetId);
+  if (Array.isArray(value.targetIds)) {
+    for (const targetId of value.targetIds)
+      if (typeof targetId === "string") keys.push(targetId);
+  }
+  if (Array.isArray(value.allocations)) {
+    for (const allocation of value.allocations) {
+      if (isJsonRecord(allocation) && typeof allocation.targetId === "string")
+        keys.push(allocation.targetId);
+    }
+  }
+  return keys;
+}
+
+function validateFillChoices(
+  fills: readonly Readonly<Record<string, unknown>>[],
+  holes: readonly PlayerHoleProjection[],
+  continuation: number,
+): void {
+  for (const fill of fills) {
+    const matchingHole = holes.find((hole) => holeKey(hole) === fillKeys(fill));
+    if (matchingHole === undefined || matchingHole.choices.length === 0)
+      continue;
+    const suppliedChoices = projectedChoiceKeys(fill.value);
+    if (
+      suppliedChoices.length === 0 ||
+      suppliedChoices.some((choice) => !matchingHole.choices.includes(choice))
+    ) {
+      fail(
+        `Continuation ${continuation} supplied a value outside the projected choices for ${matchingHole.kind}/${matchingHole.holeId}.`,
+      );
+    }
+  }
+}
+
+function validateRequiredHoleFills(
+  fills: readonly Readonly<Record<string, unknown>>[],
+  holes: readonly PlayerHoleProjection[],
+  continuation: number,
+): void {
+  const projectedKeys = holes.map(holeKey);
+  const suppliedKeys = fills.map(fillKeys);
+  const projectedOccurrences = occurrenceCounts(projectedKeys);
+  const suppliedOccurrences = occurrenceCounts(suppliedKeys);
+  if (
+    new Set(holes.map(({ holeInstanceKey }) => holeInstanceKey)).size !==
+    holes.length
+  ) {
+    fail(
+      `Continuation ${continuation} contains duplicate projected hole occurrences.`,
+    );
+  }
+  if (
+    [...projectedOccurrences].some(
+      ([key, count]) => (suppliedOccurrences.get(key) ?? 0) < count,
+    )
+  ) {
+    fail(
+      `Continuation ${continuation} omitted a required hole family used by the next continuation.`,
+    );
+  }
+  validateFillChoices(fills, holes, continuation);
+}
+
+function inputRecord(
+  call: SdkCallRecord,
+): Readonly<Record<string, unknown>> | undefined {
+  return isJsonRecord(call.input) ? call.input : undefined;
+}
+
+function subjectCalls(calls: readonly SdkCallRecord[]): readonly {
+  readonly call: SdkCallRecord;
+  readonly input: Readonly<Record<string, unknown>>;
+}[] {
+  return calls.flatMap((call) => {
+    const input = inputRecord(call);
+    return input?.subject === undefined ? [] : [{ call, input }];
+  });
+}
+
+function discoveryActs(
+  calls: readonly SdkCallRecord[],
+): readonly PlayerActProjection[] | undefined {
+  const discoveries = calls.flatMap(
+    (
+      call,
+    ): readonly Extract<SdkCallRecord, { readonly outcome: "returned" }>[] =>
+      call.operation === "discoverBattleActs" && call.outcome === "returned"
+        ? [call]
+        : [],
+  );
+  if (discoveries.length === 0) return undefined;
+  const last = discoveries[discoveries.length - 1];
+  if (last === undefined) return undefined;
+  const projected = projectPlayerActs(last.result);
+  if (projected === undefined)
+    fail(`Continuation ${last.continuation} has malformed discovered acts.`);
+  return projected;
+}
+
+function matchingAct(
+  acts: readonly PlayerActProjection[],
+  subject: ReturnType<typeof projectPlayerSubject>,
+  continuation: number,
+): PlayerActProjection {
+  if (subject === undefined)
+    fail(`Continuation ${continuation} has malformed subject input.`);
+  const matches = acts.filter(
+    ({ subject: candidate }) =>
+      canonicalJson(candidate) === canonicalJson(subject),
+  );
+  const match = matches[0];
+  if (match === undefined)
+    fail(
+      `Continuation ${continuation} omitted the act used by the retained program.`,
+    );
+  return match;
+}
+
+function validateSubjectCall(
+  source: PlayerCurrentTurnProjection,
+  next: {
+    readonly call: SdkCallRecord;
+    readonly input: Readonly<Record<string, unknown>>;
+  },
+  acts: readonly PlayerActProjection[] | undefined,
+): void {
+  const projectedSubject = projectPlayerSubject(next.input.subject);
+  if (projectedSubject === undefined)
+    fail(`Continuation ${next.call.continuation} has malformed subject input.`);
+  const act =
+    source.frontier.kind === "acts"
+      ? matchingAct(
+          source.frontier.acts,
+          projectedSubject,
+          next.call.continuation,
+        )
+      : acts === undefined
+        ? undefined
+        : matchingAct(acts, projectedSubject, next.call.continuation);
+  if (source.frontier.kind === "holes") {
+    if (
+      canonicalJson(source.frontier.subject) !== canonicalJson(projectedSubject)
+    )
+      fail(
+        `Continuation ${source.continuation} omitted the subject used by the next continuation.`,
+      );
+    if (next.call.operation !== "resolveBattleRuntimeSubject") return;
+    if (!Array.isArray(next.input.fills))
+      fail(
+        `Continuation ${next.call.continuation} has malformed subject fills.`,
+      );
+    const fills = next.input.fills.flatMap((fill) =>
+      isJsonRecord(fill) ? [fill] : [],
+    );
+    if (fills.length !== next.input.fills.length)
+      fail(
+        `Continuation ${next.call.continuation} has malformed subject fills.`,
+      );
+    validateRequiredHoleFills(
+      fills,
+      source.frontier.holes.map(({ hole }) => hole),
+      source.continuation,
+    );
+    return;
+  }
+  if (next.call.operation !== "resolveBattleRuntimeSubject") return;
+  if (act === undefined) return;
+  if (!Array.isArray(next.input.fills))
+    fail(`Continuation ${next.call.continuation} has malformed subject fills.`);
+  const fills = next.input.fills.flatMap((fill) =>
+    isJsonRecord(fill) ? [fill] : [],
+  );
+  if (fills.length !== next.input.fills.length)
+    fail(`Continuation ${next.call.continuation} has malformed subject fills.`);
+  validateRequiredHoleFills(
+    fills,
+    act.holes.map(({ hole }) => hole),
+    next.call.continuation,
+  );
+}
+
 export function directFrontierUseChecks(input: {
   readonly calls: readonly SdkCallRecord[];
   readonly projections: readonly PlayerCurrentTurnProjection[];
 }): number {
   const groups = callsByContinuation(input.calls);
+  const maxContinuation = Math.max(
+    ...input.projections.map(({ continuation }) => continuation),
+  );
   let checked = 0;
   for (const projection of input.projections) {
     const nextCalls = groups.get(projection.continuation + 1);
-    const next = nextCalls?.find(
-      (call) => isJsonRecord(call.input) && call.input.subject !== undefined,
-    );
-    if (next === undefined) continue;
-    const nextInput = isJsonRecord(next.input) ? next.input : undefined;
-    if (nextInput?.subject === undefined) continue;
-    const projectedNextSubject = projectPlayerSubject(nextInput.subject);
-    if (projectedNextSubject === undefined)
-      fail(
-        `Continuation ${projection.continuation + 1} has malformed subject input.`,
-      );
-    if (projection.frontier.kind === "holes") {
-      if (
-        canonicalJson(projection.frontier.subject) !==
-        canonicalJson(projectedNextSubject)
-      ) {
+    if (nextCalls === undefined) {
+      if (projection.continuation !== maxContinuation)
         fail(
-          `Continuation ${projection.continuation} omitted the subject used by the next continuation.`,
+          `Retained continuation ${projection.continuation + 1} is absent from the fixed baseline.`,
         );
-      }
-      const fills = Array.isArray(nextInput.fills) ? nextInput.fills : [];
-      const occurrences = (values: readonly string[]) =>
-        values.reduce((counts, kind) => {
-          counts.set(kind, (counts.get(kind) ?? 0) + 1);
-          return counts;
-        }, new Map<string, number>());
-      const projectedKinds = occurrences(
-        projection.frontier.holes.map(
-          ({ hole }) => `${hole.kind}\u0000${hole.holeId}`,
-        ),
-      );
-      const suppliedKinds = occurrences(
-        fills.flatMap((fill) => {
-          const candidate = isJsonRecord(fill) ? fill : undefined;
-          return typeof candidate?.kind === "string" &&
-            typeof candidate.holeId === "string"
-            ? [`${candidate.kind}\u0000${candidate.holeId}`]
-            : [];
-        }),
-      );
-      if (
-        new Set(
-          projection.frontier.holes.map(({ hole }) => hole.holeInstanceKey),
-        ).size !== projection.frontier.holes.length
-      )
-        fail(
-          `Continuation ${projection.continuation} contains duplicate projected hole occurrences.`,
-        );
-      if (
-        [...projectedKinds].some(
-          ([kind, count]) => suppliedKinds.get(kind) !== count,
-        )
-      ) {
-        fail(
-          `Continuation ${projection.continuation} omitted a required hole family used by the next continuation.`,
-        );
-      }
-      checked += 1;
       continue;
     }
-    if (projection.frontier.kind === "acts") {
-      if (
-        !projection.frontier.acts.some(
-          ({ subject }) =>
-            canonicalJson(subject) === canonicalJson(projectedNextSubject),
-        )
-      ) {
+    const nextSubjects = subjectCalls(nextCalls);
+    const nextActs = discoveryActs(nextCalls);
+    if (projection.frontier.kind === "acts" && nextActs !== undefined) {
+      if (canonicalJson(projection.frontier.acts) !== canonicalJson(nextActs))
         fail(
-          `Continuation ${projection.continuation} omitted the act used by the next continuation.`,
+          `Continuation ${projection.continuation} omitted an act or hole surfaced to the next continuation.`,
         );
-      }
-      checked += 1;
     }
+    if (nextSubjects.length === 0) continue;
+    const availableActs =
+      projection.frontier.kind === "acts"
+        ? projection.frontier.acts
+        : projection.frontier.kind === "none"
+          ? nextActs
+          : undefined;
+    if (projection.frontier.kind === "none" && availableActs === undefined)
+      fail(
+        `Continuation ${projection.continuation} cannot prove a subject used before a retained act discovery.`,
+      );
+    for (const next of nextSubjects)
+      validateSubjectCall(projection, next, availableActs);
+    if (projection.frontier.kind !== "none") checked += 1;
   }
   if (checked === 0)
     fail("Fixed baseline projection did not prove any direct frontier reuse.");
@@ -389,10 +561,6 @@ export function measureFixedBaseline(input: {
     calls: parsed.value.calls,
     projections: projected.projections,
   });
-  if (directlyReusedFrontiersChecked !== FIXED_DIRECT_FRONTIER_CHECKS)
-    fail(
-      `Fixed baseline direct frontier coverage changed from ${FIXED_DIRECT_FRONTIER_CHECKS} to ${directlyReusedFrontiersChecked}.`,
-    );
   return {
     schemaVersion: 1,
     transcript: {

@@ -220,6 +220,16 @@ describe("RAW swarm artifact report index", () => {
             .update(readFileSync(controlledEvidence.packetPath))
             .digest("hex"),
         }),
+        ...[
+          ...controlledEvidence.sourcePrePlayReviewInputPaths,
+          ...controlledEvidence.replayPrePlayReviewInputPaths,
+        ].map((path) =>
+          expect.objectContaining({
+            sha256: createHash("sha256")
+              .update(readFileSync(path))
+              .digest("hex"),
+          }),
+        ),
       ]),
     );
     expect(

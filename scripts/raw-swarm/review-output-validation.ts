@@ -3,13 +3,19 @@ import { dirname, resolve } from "node:path";
 
 import { Either, Schema } from "effect";
 
+import type { JsonValue } from "./sdk-player/continuation-contract.ts";
 import { ReviewOutputSchema } from "./review-contract.ts";
 import {
   reviewEvidenceIsExact,
   type ReviewEvidenceCatalog,
 } from "./review-evidence.ts";
 import { readSdkAudit, type SdkAudit } from "./sdk-player/sdk-audit.ts";
-import { repoRoot, sha256Text } from "./transcript.ts";
+import type { SdkReviewPacketSource } from "./sdk-player/sdk-review-packet.ts";
+import {
+  SDK_REVIEW_PACKET_MAX_BYTES,
+  validateSdkReviewPacket,
+} from "./sdk-player/sdk-review-packet.ts";
+import { repoRoot } from "./transcript.ts";
 
 export type ReviewIdentity = Pick<
   SdkAudit["header"],
@@ -34,47 +40,35 @@ export type ReviewEvidenceSourceValidation =
   | { readonly tag: "valid"; readonly catalog: ReviewEvidenceCatalog }
   | { readonly tag: "invalid"; readonly message: string };
 
-export function reviewEvidenceCatalogForAudit(
-  audit: SdkAudit,
-): ReviewEvidenceSourceValidation {
-  const runDirectory = dirname(dirname(audit.header.transcriptPath));
-  const setupPath = resolve(repoRoot, runDirectory, "evidence/setup.ts");
-  const charactersPath = resolve(
-    repoRoot,
-    runDirectory,
-    "evidence/characters.ts",
-  );
-  try {
-    const setupText =
-      audit.header.setupSha256 === undefined
-        ? undefined
-        : readFileSync(setupPath, "utf8");
-    const charactersText = readFileSync(charactersPath, "utf8");
-    if (
-      (setupText !== undefined &&
-        sha256Text(setupText) !== audit.header.setupSha256) ||
-      sha256Text(charactersText) !== audit.header.charactersSha256
-    ) {
-      return {
-        tag: "invalid",
-        message: "Reviewer citation sources do not match the verified audit.",
-      };
-    }
-    return {
-      tag: "valid",
-      catalog: {
-        sequences: new Set(audit.calls.map(({ seq }) => seq)),
-        setupLineCount: setupText?.split("\n").length ?? 0,
-        charactersLineCount: charactersText.split("\n").length,
-        hasTranscriptHeader: true,
-      },
-    };
-  } catch {
-    return {
-      tag: "invalid",
-      message: "Reviewer citation sources are unreadable.",
-    };
-  }
+export function reviewEvidenceCatalogForPacket(packet: {
+  readonly audit: {
+    readonly header: Pick<SdkAudit["header"], "transcriptPath">;
+    readonly calls: readonly Pick<SdkAudit["calls"][number], "seq">[];
+  };
+  readonly retainedHeaderEvidence: JsonValue;
+  readonly runArtifacts: readonly Pick<
+    SdkReviewPacketSource,
+    "path" | "numberedContent"
+  >[];
+}): ReviewEvidenceSourceValidation {
+  const runDirectory = dirname(dirname(packet.audit.header.transcriptPath));
+  const expectedPath = (name: "setup.ts" | "characters.ts") =>
+    resolve(repoRoot, runDirectory, "evidence", name);
+  const sourceFor = (name: "setup.ts" | "characters.ts") =>
+    packet.runArtifacts.find(
+      (source) => resolve(repoRoot, source.path) === expectedPath(name),
+    );
+  const setup = sourceFor("setup.ts");
+  const characters = sourceFor("characters.ts");
+  return {
+    tag: "valid",
+    catalog: {
+      sequences: new Set(packet.audit.calls.map(({ seq }) => seq)),
+      setupLineCount: setup?.numberedContent.split("\n").length ?? 0,
+      charactersLineCount: characters?.numberedContent.split("\n").length ?? 0,
+      hasTranscriptHeader: packet.retainedHeaderEvidence !== undefined,
+    },
+  };
 }
 
 export function validateReviewOutput(
@@ -124,16 +118,32 @@ function fail(message: string): never {
 }
 
 function main(args: readonly string[]): void {
-  const [reviewInput, auditInput, ...unexpected] = args;
+  const [reviewInput, auditInput, packetInput, ...unexpected] = args;
   if (
     reviewInput === undefined ||
     auditInput === undefined ||
+    packetInput === undefined ||
     unexpected.length > 0
   ) {
-    fail("Usage: review-output-validation.ts <review.json> <audit.jsonl>");
+    fail(
+      "Usage: review-output-validation.ts <review.json> <audit.jsonl> <packet.json>",
+    );
   }
   const audit = readSdkAudit(resolve(repoRoot, auditInput));
   if (audit.tag === "invalid") fail(audit.message);
+  const packetPath = resolve(repoRoot, packetInput);
+  const packetBytes = readFileSync(packetPath);
+  if (packetBytes.byteLength > SDK_REVIEW_PACKET_MAX_BYTES) {
+    fail("Review evidence packet exceeds its public byte limit.");
+  }
+  let packetInputValue: unknown;
+  try {
+    packetInputValue = JSON.parse(packetBytes.toString("utf8"));
+  } catch {
+    fail(`Review evidence packet is unreadable or malformed: ${packetInput}`);
+  }
+  const packet = validateSdkReviewPacket(packetInputValue, audit.audit);
+  if (packet.tag === "invalid") fail(packet.message);
   const review = (() => {
     try {
       return JSON.parse(
@@ -143,7 +153,7 @@ function main(args: readonly string[]): void {
       return fail(`Reviewer output is unreadable or malformed: ${reviewInput}`);
     }
   })();
-  const evidence = reviewEvidenceCatalogForAudit(audit.audit);
+  const evidence = reviewEvidenceCatalogForPacket(packet.packet);
   if (evidence.tag === "invalid") fail(evidence.message);
   const result = validateReviewOutput(
     review,

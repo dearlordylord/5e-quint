@@ -10,7 +10,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { Either, Match } from "effect";
+import { Either, Match, Schema } from "effect";
 
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import { runCodexInvocation } from "./model-telemetry.ts";
@@ -23,6 +23,7 @@ import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runt
 import {
   currentGitRevision,
   decodeScenarioId,
+  GitShaSchema,
   repoRoot,
 } from "./transcript.ts";
 
@@ -40,6 +41,8 @@ async function main(args: readonly string[]): Promise<void> {
   if (revision.tag === "dirty") {
     fail("Scenario character authoring requires a clean Git worktree.");
   }
+  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
+  if (Either.isLeft(gitSha)) fail(gitSha.left.message);
   const scenarioPath = resolve(
     repoRoot,
     `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.right}.md`,
@@ -118,7 +121,7 @@ async function main(args: readonly string[]): Promise<void> {
       ledgerPath,
       phase: "scenarioCharacterAuthoring",
       scenarioId: scenarioId.right,
-      gitSha: revision.sha,
+      gitSha: gitSha.right,
       fallbackInvocationId: `${scenarioId.right}-character-authoring`,
       model: "gpt-5.6-sol",
       reasoningEffort: "medium",

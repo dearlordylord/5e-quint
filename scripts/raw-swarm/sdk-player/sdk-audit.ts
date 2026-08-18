@@ -269,8 +269,9 @@ function optionalNumber(value: JsonValue | undefined): number | undefined {
 
 function holes(
   value: JsonValue | undefined,
+  presence: "required" | "optional",
 ): readonly SdkReviewHole[] | undefined {
-  if (value === undefined) return [];
+  if (value === undefined) return presence === "optional" ? [] : undefined;
   if (!Array.isArray(value)) return undefined;
   const projected = value.map((entry): SdkReviewHole | undefined => {
     if (!isJsonObject(entry) || typeof entry.kind !== "string")
@@ -313,7 +314,7 @@ function actFrontier(result: JsonValue): SdkCallReviewFacts | undefined {
       isJsonObject(subject.mode) && typeof subject.mode.tag === "string"
         ? subject.mode.tag
         : undefined;
-    const projectedHoles = holes(entry.initialHoles);
+    const projectedHoles = holes(entry.initialHoles, "required");
     return projectedHoles === undefined
       ? undefined
       : {
@@ -425,10 +426,12 @@ function resolution(result: JsonValue): SdkCallReviewFacts | undefined {
     (tag === "scenarioMovementRejected" &&
       typeof result.message !== "string") ||
     (tag !== "invalid" && result.reason !== undefined) ||
-    (tag !== "scenarioMovementRejected" && result.message !== undefined)
+    (tag !== "invalid" &&
+      tag !== "scenarioMovementRejected" &&
+      result.message !== undefined)
   )
     return undefined;
-  const projectedHoles = holes(result.holes);
+  const projectedHoles = holes(result.holes, "optional");
   if (projectedHoles === undefined) return undefined;
   const reason = optionalString(result.reason);
   const message = optionalString(result.message);

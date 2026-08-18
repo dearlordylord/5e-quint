@@ -45,6 +45,7 @@ describe("review invocation evidence", () => {
     ).toMatchObject({
       type: "review-invocation-evidence",
       scenarioId: "same",
+      prePlayReviews: [{ reviewStage: "milestone" }, { reviewStage: "final" }],
     });
     writeFileSync(
       fixture.reviewPath,
@@ -56,6 +57,43 @@ describe("review invocation evidence", () => {
     expect(() =>
       readReviewInvocationEvidenceManifest(fixture.manifestPath),
     ).toThrow(/exact audited sequence/);
+  });
+
+  test("binds both retained pre-play review inputs", () => {
+    const directory = mkdtempSync(
+      resolve(repoRoot, "scripts/raw-swarm/out/review-preplay-evidence-test-"),
+    );
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      ledgerEntries: [
+        {
+          schemaVersion: 1,
+          phase: "postPlayReview",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    writeFileSync(
+      fixture.sourcePrePlayReviewInputPaths[0],
+      readFileSync(fixture.sourcePrePlayReviewInputPaths[0], "utf8").replace(
+        `"sourceGitSha":"${"a".repeat(40)}"`,
+        `"sourceGitSha":"${"d".repeat(40)}"`,
+      ),
+    );
+    expect(() =>
+      readReviewInvocationEvidenceManifest(fixture.manifestPath),
+    ).toThrow(/Retained milestone source and replay inputs/);
   });
 
   test("rejects an unrelated ledger and a tool-using reviewer", () => {
@@ -92,5 +130,27 @@ describe("review invocation evidence", () => {
         postPlayUsesTool: true,
       }),
     ).toThrow(/used a tool/);
+    expect(() =>
+      controlledReviewEvidenceFixture({
+        directory: resolve(ledgerDirectory, "duplicate-events"),
+        ledgerEntries: [entry, entry],
+      }),
+    ).toThrow(/event streams/);
+    expect(() =>
+      controlledReviewEvidenceFixture({
+        directory: resolve(ledgerDirectory, "relabeled-events"),
+        ledgerEntries: [entry],
+        eventEntries: [
+          {
+            ...entry,
+            phase: "player",
+            model: "gpt-5.6-sol",
+            reasoningEffort: "medium",
+            elapsedMilliseconds: 999,
+            exit: { tag: "exited", status: 2 },
+          },
+        ],
+      }),
+    ).toThrow(/do not match/);
   });
 });

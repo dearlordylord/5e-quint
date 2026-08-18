@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 
-import { validateReviewOutput } from "./review-output-validation.ts";
+import {
+  reviewEvidenceCatalogForPacket,
+  validateReviewOutput,
+} from "./review-output-validation.ts";
 
 const identity = {
   scenarioId: "review-example",
@@ -98,5 +101,70 @@ describe("review output validation", () => {
         evidenceCatalog,
       ),
     ).toMatchObject({ tag: "invalid", reason: "evidenceMismatch" });
+  });
+
+  test("bounds setup and character citations to packet sources", () => {
+    const packet = {
+      audit: {
+        header: {
+          transcriptPath:
+            "scripts/raw-swarm/out/review-example/evidence/sdk-calls.jsonl",
+        },
+        calls: [{ seq: 1 }],
+      },
+      retainedHeaderEvidence: {},
+      runArtifacts: [],
+    };
+    const emptyPacketCatalog = reviewEvidenceCatalogForPacket(packet);
+    expect(emptyPacketCatalog).toMatchObject({
+      tag: "valid",
+      catalog: {
+        sequences: new Set([1]),
+        setupLineCount: 0,
+        charactersLineCount: 0,
+        hasTranscriptHeader: true,
+      },
+    });
+    if (emptyPacketCatalog.tag === "invalid") return;
+    expect(
+      validateReviewOutput(
+        {
+          ...review,
+          verdicts: [
+            {
+              ...review.verdicts[0],
+              evidence: "setup.ts:1 claims it.",
+            },
+          ],
+        },
+        identity,
+        emptyPacketCatalog.catalog,
+      ),
+    ).toMatchObject({ tag: "invalid", reason: "evidenceMismatch" });
+
+    const packetWithSources = {
+      ...packet,
+      runArtifacts: [
+        {
+          path: "scripts/raw-swarm/out/review-example/evidence/setup.ts",
+          byteLength: 7,
+          sha256: "0".repeat(64),
+          firstLine: 1,
+          numberedContent: "1|setup\n2|",
+        },
+        {
+          path: "scripts/raw-swarm/out/review-example/evidence/characters.ts",
+          byteLength: 5,
+          sha256: "1".repeat(64),
+          firstLine: 1,
+          numberedContent: "1|chars",
+        },
+      ],
+    };
+    const packetCatalog = reviewEvidenceCatalogForPacket(packetWithSources);
+    expect(packetCatalog).toMatchObject({
+      tag: "valid",
+      catalog: { setupLineCount: 2, charactersLineCount: 1 },
+    });
   });
 });
