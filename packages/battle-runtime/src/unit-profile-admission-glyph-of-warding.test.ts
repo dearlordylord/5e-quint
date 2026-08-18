@@ -115,6 +115,7 @@ import {
   heroismUnitId,
   hypnoticPatternDurationTicks,
   hypnoticPatternUnitId,
+  iceKnifeUnitId,
   invisibilityUnitId,
   levitateUnitId,
   mindSpikeUnitId,
@@ -1087,6 +1088,105 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(
       caster.origin.spellcasting?.spellSlots.find(
         (slot) => slot.spellLevel === 1,
+      )?.expended,
+    ).toBe(0);
+  });
+
+  test("stored Ice Knife keeps its attack roll before the trigger-creature burst", () => {
+    const storedInvocation = storedSpellInvocation(
+      iceKnifeUnitId,
+      2,
+      "attackBurstSaveDamage",
+    );
+    const state = stateWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        release: { kind: "spellGlyph", storedInvocation },
+      }),
+      glyphBattle({
+        preparedSpells: [spellRecord(iceKnifeUnitId)],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+        targetHp: 20,
+        targetMaxHp: 20,
+      }),
+    );
+    const initialWitness = storedSingleCreatureReleaseWitness(
+      [],
+      spellTargetId,
+      [],
+    );
+    const needsAttack = releaseGlyphStoredSpell({
+      executionRegistry,
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: initialWitness,
+    });
+    const attack = requireReleaseHole(
+      expectNeedsReleaseHoles(needsAttack),
+      "attackRoll",
+    );
+    const attackFill = attackRollFill(attack, {
+      total: 6,
+      naturalD20: 1,
+    });
+    const needsSave = releaseGlyphStoredSpell({
+      executionRegistry,
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: { ...initialWitness, fills: [attackFill] },
+    });
+    const save = requireReleaseHole(
+      expectNeedsReleaseHoles(needsSave),
+      "savingThrowOutcome",
+    );
+    const saveFill = {
+      kind: "savingThrowOutcome" as const,
+      holeId: save.holeId,
+      value: {
+        area: {
+          originAnchorId: spellTargetId,
+          affectedTargetIds: [spellTargetId],
+        },
+        outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      },
+    } satisfies Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>;
+    const needsBurstDamage = releaseGlyphStoredSpell({
+      executionRegistry,
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: { ...initialWitness, fills: [attackFill, saveFill] },
+    });
+    const burstDamage = requireReleaseHole(
+      expectNeedsReleaseHoles(needsBurstDamage),
+      "rolledDice",
+    );
+    expect(burstDamage).toMatchObject({
+      label: "Spell burst damage (3d6-cold)",
+    });
+    const released = releaseGlyphStoredSpell({
+      executionRegistry,
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: {
+        ...initialWitness,
+        fills: [
+          attackFill,
+          saveFill,
+          glyphDamageRollFill(burstDamage, [[2, 2, 2]]),
+        ],
+      },
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    expect(glyphEffects(released.state)).toEqual([]);
+    expect(Number(released.state.combatants.get(spellTargetId)?.hp)).toBe(14);
+    const caster = requireCombatant(released.state, spellCasterId);
+    expect(caster.origin.kind).toBe("character");
+    if (caster.origin.kind !== "character") return;
+    expect(
+      caster.origin.spellcasting?.spellSlots.find(
+        (slot) => slot.spellLevel === 2,
       )?.expended,
     ).toBe(0);
   });
