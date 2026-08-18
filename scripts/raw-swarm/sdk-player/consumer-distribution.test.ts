@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
-import { execFileSync, spawn } from "node:child_process";
+import { execFile, execFileSync, spawn } from "node:child_process";
 import {
   appendFileSync,
   copyFileSync,
@@ -13,16 +13,17 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { promisify } from "node:util";
 import { describe, expect, test } from "vitest";
 import { buildSync } from "esbuild";
 
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
-import { buildConsumerDistribution } from "./consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 
 const CONSUMER_SCENARIO_ID = "ready-mixed-consumer";
+const execFileAsync = promisify(execFile);
 
 function filesBelow(directory: string): readonly string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -52,11 +53,18 @@ describe("SDK player consumer distribution", () => {
       "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
     );
 
-    buildConsumerDistribution({
-      destination,
-      trustedDestination,
-      scenarioPath,
-    });
+    await execFileAsync(
+      "pnpm",
+      [
+        "exec",
+        "tsx",
+        "scripts/raw-swarm/sdk-player/consumer-distribution-cli.ts",
+        destination,
+        trustedDestination,
+        scenarioPath,
+      ],
+      { cwd: repoRoot, timeout: 10 * 60 * 1_000 },
+    );
     const characterBoundaryPath = join(destination, "character-boundary.ts");
     copyFileSync(
       resolve(
