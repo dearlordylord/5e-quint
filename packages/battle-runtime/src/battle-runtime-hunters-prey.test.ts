@@ -37,6 +37,7 @@ import {
   resolveBattleSubject,
   resolveBattleInterrupt,
   skeletonId,
+  savingThrowOutcomeFill,
   sneakAttackFeature,
   sneakAttackUnitRefs,
   spellRecord,
@@ -58,6 +59,10 @@ import {
 import { huntersPreyUnsupportedDamageDieUnit } from "./unit-profile-admission-catalog.test-support.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
 import { resolveHuntersPreyHordeBreakerContinuation } from "./battle-reducer/attack-main.ts";
+import {
+  spellAct,
+  spellTargetListFill,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import type {
   BattleRuntimeSession,
   BattleState,
@@ -1413,6 +1418,217 @@ describe("battle runtime: Hunter's Prey", () => {
         }),
       ],
     });
+  });
+
+  test("Horde Breaker requests the source damage penalty on a Ray of Enfeeblement follow-up", () => {
+    const rayOfEnfeeblement = spellRecord("ray_of_enfeeblement");
+    const session = startBattleSessionRight({
+      battleId: battleId(
+        "battle-hunters-prey-horde-breaker-ray-of-enfeeblement",
+      ),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Ray of Enfeeblement caster",
+          initiative: 30,
+          classLevels: [{ className: "wizard", level: classLevel(3) }],
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [rayOfEnfeeblement],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "ranger", level: classLevel(3) }],
+          characterUnitRefs: [huntersPreyUnitRef("hordeBreaker")],
+          attack: testLongswordAttack(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          displayName: "Horde Breaker second target",
+          initiative: 9,
+        }),
+      ],
+    });
+    const ray = spellAct({ session, spellId: "ray_of_enfeeblement" });
+    const rayTarget = findHole(ray.initialHoles, "spellTargetList");
+    const rayTargetFill = spellTargetListFill(
+      rayTarget,
+      wizardId,
+      "ray_of_enfeeblement",
+      [fighterId],
+    );
+    const raySave = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: ray.subject,
+        fills: [rayTargetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const enfeebled = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: ray.subject,
+        fills: [
+          rayTargetFill,
+          savingThrowOutcomeFill(raySave, [
+            { targetId: fighterId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).state;
+    const fighterTurn = requireResolved(
+      endTurn({ state: enfeebled, actorId: wizardId }),
+    ).state;
+
+    const subject = fighterAttackSubject(fighterTurn, "Longsword");
+    const primaryTarget = attackInitialTargetHole(fighterTurn, subject);
+    const primaryRoll = attackRollHoleAfterTarget(
+      fighterTurn,
+      primaryTarget,
+      subject,
+      goblinId,
+    );
+    const targetChoice = attackTargetFill(
+      primaryTarget,
+      fighterId,
+      goblinId,
+      attackExecutionSelectionForSubjectForTest(subject),
+    );
+    const attackRoll = attackRollFill(primaryRoll, {
+      total: 19,
+      naturalD20: 14,
+      rollMode: "disadvantage",
+    });
+    const primaryDamage = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [targetChoice, attackRoll],
+      }),
+      "rolledDice",
+    );
+    const primaryDamageFill = damageRollFillWithGroups(primaryDamage, [[1]]);
+    const primaryPenalty = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [targetChoice, attackRoll, primaryDamageFill],
+      }),
+      "rolledDice",
+    );
+    expect(primaryPenalty).toMatchObject({
+      sourceDamageRollPenalty: {
+        affectedCombatantId: fighterId,
+        damageRollHoleId: primaryDamage.holeId,
+      },
+    });
+    const primaryFills = [
+      targetChoice,
+      attackRoll,
+      primaryDamageFill,
+      damageRollFillWithGroups(primaryPenalty, [[2]]),
+    ];
+    const decision = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: primaryFills,
+      }),
+      "unitFeatureDecision",
+    );
+    const secondTarget = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [...primaryFills, unitFeatureDecisionFill(decision, "use")],
+      }),
+      "targetChoice",
+    );
+    const secondTargetFill = targetFill(secondTarget, skeletonId, [
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      {
+        kind: "hordeBreakerSecondTargetEligible",
+        attackerId: fighterId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(secondTarget),
+        originalTargetId: goblinId,
+        secondTargetId: skeletonId,
+      },
+    ]);
+    const hordeRoll = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          secondTargetFill,
+        ],
+      }),
+      "attackRoll",
+    );
+    const hordeRollFill = attackRollFill(hordeRoll, {
+      total: 15,
+      naturalD20: 10,
+      rollMode: "disadvantage",
+    });
+    const hordeDamage = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          secondTargetFill,
+          hordeRollFill,
+        ],
+      }),
+      "rolledDice",
+    );
+    const hordeDamageFill = damageRollFillWithGroups(hordeDamage, [[1]]);
+    const sourcePenaltyRequest = resolveBattleSubject({
+      state: fighterTurn,
+      subject,
+      fills: [
+        ...primaryFills,
+        unitFeatureDecisionFill(decision, "use"),
+        secondTargetFill,
+        hordeRollFill,
+        hordeDamageFill,
+      ],
+    });
+    const sourcePenalty = requireHole(sourcePenaltyRequest, "rolledDice");
+    expect(sourcePenalty).toMatchObject({
+      sourceDamageRollPenalty: {
+        affectedCombatantId: fighterId,
+        damageRollHoleId: hordeDamage.holeId,
+      },
+    });
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          secondTargetFill,
+          hordeRollFill,
+          hordeDamageFill,
+          damageRollFillWithGroups(sourcePenalty, [[2]]),
+        ],
+      }),
+    );
+    expect(resolved.state.combatants.get(goblinId)?.hp).toBe(Hp(8));
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(8));
   });
 
   test("Horde Breaker can be declined after the original weapon attack misses", () => {
