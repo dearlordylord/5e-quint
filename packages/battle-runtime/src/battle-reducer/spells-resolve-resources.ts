@@ -149,8 +149,11 @@ export function spendSpellCastResources(input: {
       input.errorState,
     );
     if (freeCast.tag === "invalid") return freeCast;
+    const afterPriorConcentration = spellRequiresConcentration(input.invocation)
+      ? breakBattleConcentration(freeCast.state, input.actorId)
+      : freeCast.state;
     const resourced = {
-      ...freeCast.state,
+      ...afterPriorConcentration,
       currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
         markInvocationLevelOnePlusSpellCastThisTurn(
           spent.right,

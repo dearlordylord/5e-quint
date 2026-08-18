@@ -1738,21 +1738,14 @@ export function applySleepPendingRepeatSaveEffects(
     { readonly procedure: "sleepTargetAdmission" }
   >,
 ): BattleState {
-  const sourceProcedureRef = invocation.sourceProcedureRef;
-  const sourceCombatantId = actorId;
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
     if (target === undefined) {
       continue;
     }
-    const replacing = target.activeEffects.filter(
-      (effect) =>
-        effect.kind === "sleepPendingRepeatSave" &&
-        sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId),
-    );
     const activeEffects = [
-      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
+      ...target.activeEffects,
       {
         kind: "sleepPendingRepeatSave" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
@@ -1798,21 +1791,14 @@ export function applyHideousLaughterEffects(
   >,
   heightenedSpellTargetId: CombatantId | undefined = undefined,
 ): BattleState {
-  const sourceProcedureRef = invocation.sourceProcedureRef;
-  const sourceCombatantId = actorId;
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
     if (target === undefined) {
       continue;
     }
-    const replacing = target.activeEffects.filter(
-      (effect) =>
-        effect.kind === "hideousLaughter" &&
-        sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId),
-    );
     const activeEffects = [
-      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
+      ...target.activeEffects,
       {
         kind: "hideousLaughter" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
@@ -2967,8 +2953,6 @@ export function applySaveGatedConditionImmunityEffects(
     { readonly procedure: "saveGatedConditionImmunity" }
   >,
 ): BattleState {
-  const sourceProcedureRef = invocation.sourceProcedureRef;
-  const sourceCombatantId = actorId;
   return targetIds.reduce((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
     /* v8 ignore start -- Defensive internal guard: protection-spell failed-save target ids are validated against the current combatant map before immunities are applied. */
@@ -2985,22 +2969,7 @@ export function applySaveGatedConditionImmunityEffects(
         effect.condition,
       ),
     }));
-    const activeEffects = [
-      ...target.activeEffects.filter((effect) => {
-        const sameSourceReplay =
-          effect.kind === "conditionImmunity" &&
-          sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId) &&
-          invocation.activeEffects.some(
-            (candidate) => candidate.condition === effect.condition,
-          );
-        if (sameSourceReplay) {
-          /* v8 ignore next -- Pure replay/idempotency guard: save-gated spell resolution spends the slot and breaks prior Concentration before this application, so a legal Calm Emotions subject cannot retain a matching source immunity. */
-          return false;
-        }
-        return true;
-      }),
-      ...nextEffects,
-    ];
+    const activeEffects = [...target.activeEffects, ...nextEffects];
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(

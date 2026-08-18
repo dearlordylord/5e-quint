@@ -235,7 +235,7 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
     ).toBe(true);
   });
 
-  test("a repeated synthetic-feature free cast replaces its retained immunities", () => {
+  test("a repeated synthetic-feature free cast ends its prior effects and preserves another caster's immunities", () => {
     const spell = spellRecord(calmEmotionsUnitId);
     const source = {
       acquiredAtLevel: 3,
@@ -352,7 +352,12 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
     if (targetCast.tag !== "resolved") {
       throw new Error("Expected the target's Calm Emotions to resolve.");
     }
-    expect(conditionImmunities(targetCast.state)).toHaveLength(4);
+    const overlappingEffects = conditionImmunities(targetCast.state);
+    expect(overlappingEffects).toHaveLength(4);
+    const bardEffects = overlappingEffects.filter(
+      (effect) => !firstEffects.includes(effect),
+    );
+    expect(bardEffects).toHaveLength(2);
     const nextCasterTurn = endTurn({
       state: targetCast.state,
       actorId: spellTargetId,
@@ -380,6 +385,12 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
     const targetEffects = conditionImmunities(secondCast);
 
     expect(targetEffects).toHaveLength(4);
+    for (const firstEffect of firstEffects) {
+      expect(targetEffects).not.toContain(firstEffect);
+    }
+    expect(
+      targetEffects.filter((effect) => bardEffects.includes(effect)),
+    ).toEqual(bardEffects);
     const firstSourceEffects = targetEffects.filter((effect) =>
       firstEffects.some(
         (firstEffect) =>
