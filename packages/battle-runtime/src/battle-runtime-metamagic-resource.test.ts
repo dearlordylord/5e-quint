@@ -7,6 +7,9 @@ import {
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
+import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
+import { resolveBonusActionSpellAct } from "./battle-reducer/spells-resolve.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.metamagic-battle-resource-bridge unit-feature.metamagic-cast-governor-quickened unit-feature.metamagic-careful-save-protection unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-damage-type-substitution unit-feature.metamagic-effective-level-extra-target unit-feature.metamagic-cast-component-suppression unit-feature.metamagic-missed-spell-attack-reroll unit-feature.metamagic-damage-dice-reroll
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE sorcerer_metamagic
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.FEATURE.METAMAGIC_TWINNED_EFFECTIVE_LEVEL_EXTRA_TARGET BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
@@ -3413,6 +3416,43 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         "Bonus Action spell is no longer available for the current actor.",
     });
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("rejects an admitted Quickened spell after its Bonus Action is spent", () => {
+    const session = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+    });
+    const subject = quickenedBurningHandsSubject(session);
+    const admission = admitBattleResolutionInput({
+      state: session.state,
+      subject,
+      fills: [],
+    });
+    if (admission.tag !== "admitted") {
+      throw new Error("Expected an admitted Quickened spell resolution input.");
+    }
+
+    const staleState = bonusActionSpent(admission.input.state);
+    const staleSnapshot = snapshotBattle(staleState);
+    const result = resolveBonusActionSpellAct(
+      {
+        ...admission.input,
+        state: staleState,
+      },
+      spellProcedureExecutionRegistry(),
+    );
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Bonus Action spell is no longer available for the current actor.",
+    });
+    if (result.tag !== "invalid") {
+      throw new Error("Expected stale Quickened spell resolution rejection.");
+    }
+    expect(result.snapshot.combatants).toEqual(staleSnapshot.combatants);
+    expect(result.snapshot.turn).toEqual(staleSnapshot.turn);
   });
 
   test("rejects Quickened spell attacks after the Bonus Action is spent", () => {
