@@ -357,6 +357,30 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
       },
     });
 
+    const missingRelationship = attackRollFill(retaliation.attackRoll, {
+      total: 20,
+      naturalD20: 15,
+    });
+    if (missingRelationship.kind !== "attackRoll") {
+      throw new Error("Expected attack roll fill.");
+    }
+    const {
+      relationshipFacts: _relationshipFacts,
+      ...withoutRelationshipFacts
+    } = missingRelationship;
+    expect(
+      resolveBattleSubject({
+        state: retaliation.state,
+        subject: retaliation.subject,
+        fills: [withoutRelationshipFacts],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Retaliation relationship facts must answer the attack-roll hole request.",
+    });
+
     const naturalOne = attackRollFill(retaliation.attackRoll, {
       total: 2,
       naturalD20: 1,
