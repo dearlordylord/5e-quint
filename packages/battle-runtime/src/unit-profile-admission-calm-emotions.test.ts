@@ -4,7 +4,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-save-gated-condition-immunity
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
   calmEmotionsUnitId,
@@ -33,10 +33,13 @@ import {
 } from "./unit-profile-admission-spell-record.test-support.ts";
 import { supportedPreparedSaveGateConditionImmunityProfile } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
 import {
+  abilityModifier,
   applyCondition,
   breakBattleConcentration,
   combatantId,
+  endTurn,
   hasCondition,
+  proficiencyBonus,
   resolveBattleSubject,
   spellSlotInvocationRef,
   spellSlotLevel,
@@ -230,6 +233,178 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
         ? false
         : hasCondition(restoredTarget.conditions, "frightened"),
     ).toBe(true);
+  });
+
+  test("a repeated synthetic-feature free cast replaces its retained immunities", () => {
+    const spell = spellRecord(calmEmotionsUnitId);
+    const source = {
+      acquiredAtLevel: 3,
+      className: "wizard",
+      id: parseSharedUnitId("wizard_synthetic_calming_reserve"),
+      kind: "class_feature",
+      name: "Synthetic Calming Reserve",
+      provenance: { kind: "synthetic-test", section: "casting boundary" },
+      mechanics: {
+        family: "passive",
+        grants: [
+          {
+            kind: "grant_spell_access",
+            mode: "prepared",
+            spellId: spell.id,
+          },
+          {
+            kind: "grant_spell_free_casts",
+            spellId: spell.id,
+            count: 2,
+            resetCadence: "long_rest",
+          },
+        ],
+      },
+    } as const satisfies UnitRecord;
+    const session = spellBattle({
+      casterClassLevels: [{ className: "wizard", level: 3 }],
+      spellSlots: [],
+      casterResources: [
+        {
+          unit: source,
+          spellAccessFreeCast: { spellId: spell.id, count: 2 },
+          usesRemaining: 2,
+        },
+      ],
+      casterUnitRefs: [{ unit: source, supportProfiles: [] }],
+      casterFeaturePreparedSpells: [{ sourceUnitId: source.id, spell }],
+      targetClassLevels: [{ className: "bard", level: 3 }],
+      targetSpellcasting: {
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "bard",
+          abilityModifier: abilityModifier(3),
+        },
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [spell],
+        featurePreparedSpells: [],
+        spellAccesses: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      },
+    });
+
+    const cast = (castSession: typeof session) => {
+      const act = spellAct({
+        session: castSession,
+        spellId: calmEmotionsUnitId,
+      });
+      expect(battleActSpellPresentation(act)?.invocation.tag).toBe(
+        "spellAccessFreeCast",
+      );
+      const resolved = resolveBattleSubject({
+        state: castSession.state,
+        subject: act.subject,
+        fills: [
+          savingThrowOutcomeFill(
+            requireHole(act.initialHoles, "savingThrowOutcome"),
+            [{ targetId: spellTargetId, succeeded: false }],
+          ),
+        ],
+      });
+      if (resolved.tag !== "resolved") {
+        throw new Error("Expected source-scoped Calm Emotions to resolve.");
+      }
+      return resolved.state;
+    };
+
+    const conditionImmunities = (state: typeof session.state) =>
+      requireCombatant(state, spellTargetId).activeEffects.filter(
+        (effect) => effect.kind === "conditionImmunity",
+      );
+    const firstCast = cast(session);
+    const firstEffects = conditionImmunities(firstCast);
+    expect(firstEffects).toHaveLength(2);
+    expect(
+      requireCombatant(firstCast, spellCasterId).concentration,
+    ).not.toBeNull();
+    const targetTurn = endTurn({ state: firstCast, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn to begin.");
+    }
+    const targetSession = battleRuntimeSessionForTest({
+      state: targetTurn.state,
+      context: session.context,
+    });
+    const targetAct = spellAct({
+      session: targetSession,
+      spellId: calmEmotionsUnitId,
+      slotLevel: 2,
+    });
+    const targetCast = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: targetAct.subject,
+      fills: [
+        savingThrowOutcomeFill(
+          requireHole(targetAct.initialHoles, "savingThrowOutcome"),
+          [{ targetId: spellTargetId, succeeded: false }],
+        ),
+      ],
+    });
+    if (targetCast.tag !== "resolved") {
+      throw new Error("Expected the target's Calm Emotions to resolve.");
+    }
+    expect(conditionImmunities(targetCast.state)).toHaveLength(4);
+    const nextCasterTurn = endTurn({
+      state: targetCast.state,
+      actorId: spellTargetId,
+    });
+    if (nextCasterTurn.tag !== "resolved") {
+      throw new Error("Expected the next caster turn to begin.");
+    }
+    expect(
+      conditionImmunities(nextCasterTurn.state).filter((effect) =>
+        firstEffects.some(
+          (firstEffect) =>
+            firstEffect.sourceProcedureRef === effect.sourceProcedureRef,
+        ),
+      ),
+    ).toEqual(firstEffects);
+    expect(
+      requireCombatant(nextCasterTurn.state, spellCasterId).concentration,
+    ).not.toBeNull();
+    const secondCast = cast(
+      battleRuntimeSessionForTest({
+        state: nextCasterTurn.state,
+        context: session.context,
+      }),
+    );
+    const targetEffects = conditionImmunities(secondCast);
+
+    expect(targetEffects).toHaveLength(4);
+    const firstSourceEffects = targetEffects.filter((effect) =>
+      firstEffects.some(
+        (firstEffect) =>
+          firstEffect.sourceProcedureRef === effect.sourceProcedureRef,
+      ),
+    );
+    expect(firstSourceEffects.map((effect) => effect.condition).sort()).toEqual(
+      ["charmed", "frightened"],
+    );
+    expect(
+      firstSourceEffects.map((effect) => effect.sourceProcedureRef),
+    ).toEqual(firstEffects.map((effect) => effect.sourceProcedureRef));
+    const freeCastResourcePoolRef = session.context.characters
+      .get(spellCasterId)
+      ?.resourceOwnership.find(
+        (owner) => owner.unit.id === source.id,
+      )?.resourcePoolRef;
+    const caster = requireCombatant(secondCast, spellCasterId);
+    expect(
+      caster.origin.kind === "character"
+        ? caster.origin.resources.find(
+            (resource) => resource.resourcePoolRef === freeCastResourcePoolRef,
+          )
+        : undefined,
+    ).toMatchObject({ usesRemaining: 0 });
   });
 
   test("a failed Calm Emotions save opens the target's readied-spell Reaction", () => {
