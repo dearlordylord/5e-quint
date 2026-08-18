@@ -3,7 +3,6 @@ import { createHash } from "node:crypto";
 import {
   chmodSync,
   existsSync,
-  mkdtempSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -16,6 +15,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { openArtifactIndex } from "./artifact-index.ts";
 import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
+import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 import {
   GitHubIssueNumberSchema,
   makeGitHubIssueLinker,
@@ -28,9 +28,7 @@ const reportScript = resolve(repoRoot, "scripts/raw-swarm/report.ts");
 const temporaryDirectories: string[] = [];
 
 function temporaryDirectory(): string {
-  const directory = mkdtempSync(
-    resolve(repoRoot, "scripts/raw-swarm/out/report-test-"),
-  );
+  const directory = rawSwarmTestOutputDirectory("report-test-");
   temporaryDirectories.push(directory);
   return directory;
 }

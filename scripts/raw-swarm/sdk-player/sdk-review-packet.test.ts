@@ -1,10 +1,4 @@
-import {
-  mkdtempSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { afterEach } from "vitest";
@@ -21,6 +15,7 @@ import {
 import { parseSdkTranscript } from "./sdk-transcript.ts";
 import { reprojectSdkTranscriptTurns } from "./player-turn-projection.ts";
 import { repoRoot, sha256Canonical, sha256Text } from "../transcript.ts";
+import { rawSwarmTestOutputDirectory } from "../test-output.ts";
 
 const temporaryDirectories: string[] = [];
 
@@ -53,9 +48,7 @@ const audit: SdkAudit = {
 };
 
 function validatedPacketFixture() {
-  const directory = mkdtempSync(
-    resolve(repoRoot, "scripts/raw-swarm/out/sdk-review-packet-test-"),
-  );
+  const directory = rawSwarmTestOutputDirectory("sdk-review-packet-test-");
   temporaryDirectories.push(directory);
   const evidenceDirectory = resolve(directory, "evidence");
   const transcriptPath = resolve(evidenceDirectory, "sdk-calls.jsonl");

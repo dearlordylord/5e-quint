@@ -1,11 +1,11 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { afterEach, describe, expect, test } from "vitest";
 
 import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
-import { repoRoot } from "./transcript.ts";
+import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 
 const directories: string[] = [];
 
@@ -16,9 +16,7 @@ afterEach(() => {
 
 describe("review invocation evidence", () => {
   test("binds exact review artifacts and rejects later substitution", () => {
-    const directory = mkdtempSync(
-      resolve(repoRoot, "scripts/raw-swarm/out/review-evidence-test-"),
-    );
+    const directory = rawSwarmTestOutputDirectory("review-evidence-test-");
     directories.push(directory);
     const fixture = controlledReviewEvidenceFixture({
       directory,
@@ -60,8 +58,8 @@ describe("review invocation evidence", () => {
   });
 
   test("binds both retained pre-play review inputs", () => {
-    const directory = mkdtempSync(
-      resolve(repoRoot, "scripts/raw-swarm/out/review-preplay-evidence-test-"),
+    const directory = rawSwarmTestOutputDirectory(
+      "review-preplay-evidence-test-",
     );
     directories.push(directory);
     const fixture = controlledReviewEvidenceFixture({
@@ -97,8 +95,8 @@ describe("review invocation evidence", () => {
   });
 
   test("rejects an unrelated ledger and a tool-using reviewer", () => {
-    const ledgerDirectory = mkdtempSync(
-      resolve(repoRoot, "scripts/raw-swarm/out/review-ledger-identity-test-"),
+    const ledgerDirectory = rawSwarmTestOutputDirectory(
+      "review-ledger-identity-test-",
     );
     directories.push(ledgerDirectory);
     const entry = {

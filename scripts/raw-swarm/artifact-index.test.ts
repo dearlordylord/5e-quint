@@ -1,11 +1,5 @@
 import { execFileSync } from "node:child_process";
-import {
-  mkdtempSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
@@ -18,6 +12,7 @@ import {
   rebuildLegacyArtifactIndex,
   registerIndexArtifact,
 } from "./artifact-index.ts";
+import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 import {
   extractSdkTranscriptSequences,
   preflightSdkTranscript,
@@ -29,9 +24,7 @@ import { repoRoot, sha256Canonical, sha256Text } from "./transcript.ts";
 const temporaryDirectories: string[] = [];
 
 function temporaryDirectory(): string {
-  const directory = mkdtempSync(
-    resolve(repoRoot, "scripts/raw-swarm/out/index-test-"),
-  );
+  const directory = rawSwarmTestOutputDirectory("index-test-");
   temporaryDirectories.push(directory);
   return directory;
 }

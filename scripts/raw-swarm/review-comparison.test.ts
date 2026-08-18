@@ -1,10 +1,10 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { afterEach, describe, expect, test } from "vitest";
 
 import { verifyReviewComparison } from "./review-comparison.ts";
-import { repoRoot } from "./transcript.ts";
+import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 
 const temporaryDirectories: string[] = [];
 
@@ -35,9 +35,7 @@ function review(
 
 describe("review comparison", () => {
   test("requires every baseline and candidate verdict to be classified with exact evidence", () => {
-    const directory = mkdtempSync(
-      resolve(repoRoot, "scripts/raw-swarm/out/review-comparison-test-"),
-    );
+    const directory = rawSwarmTestOutputDirectory("review-comparison-test-");
     temporaryDirectories.push(directory);
     const baseline = review(directory, "baseline.json", [
       { class: "bug", claim: "old bug", evidence: "seq 3" },

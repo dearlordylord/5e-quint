@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { afterEach, describe, expect, test } from "vitest";
@@ -9,7 +9,8 @@ import {
   summarizeControlledRun,
 } from "./performance-comparison.ts";
 import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
-import { repoRoot, sha256Text } from "./transcript.ts";
+import { rawSwarmTestOutputDirectory } from "./test-output.ts";
+import { sha256Text } from "./transcript.ts";
 
 const temporaryDirectories: string[] = [];
 
@@ -20,9 +21,7 @@ afterEach(() => {
 
 describe("whole-path performance evidence", () => {
   test("aggregates invocation usage and refuses incomparable legacy token claims", () => {
-    const directory = mkdtempSync(
-      resolve(repoRoot, "scripts/raw-swarm/out/performance-test-"),
-    );
+    const directory = rawSwarmTestOutputDirectory("performance-test-");
     temporaryDirectories.push(directory);
     const entry = (phase: "player" | "postPlayReview", input: number) =>
       ({
