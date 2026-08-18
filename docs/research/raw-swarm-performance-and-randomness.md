@@ -34,6 +34,158 @@ SDK execution, and evidence-write time. The retained baseline predates those
 ledgers, so its aggregate `tokens used` footer is reported but is not silently
 treated as directly comparable.
 
+## Engineering-cost and outcome report
+
+This section records the approximately twelve-hour implementation period
+reported by the user on 2026-08-18. Repository evidence directly timestamps an
+8-hour-51-minute interval from the first retained failed packet run at 17:53 to
+the accepted player gate at 02:44 local time. The first issue implementation
+commit was recorded at 18:58. The remaining observed time included design,
+discussion, review, and work before the first retained artifact, but those
+activities did not have a phase ledger. They cannot be allocated more exactly
+without inventing precision. That missing engineering-time ledger is itself a
+process defect.
+
+| Evidence window                                                   | Wall interval | What it contains                                                                              |
+| ----------------------------------------------------------------- | ------------: | --------------------------------------------------------------------------------------------- |
+| First retained packet experiment to first implementation commit   |          1h05 | Packet/reviewer experiments and integration before the first commit                           |
+| First implementation commit to final evidence-pipeline checkpoint |          4h23 | Audit, telemetry, reviewer, comparison, SQLite/export, and verification work                  |
+| Player optimization checkpoint series                             |          3h24 | Independent invocation, fill declarations, actionable frontier, three token gates, and review |
+| User-observed remainder without a phase ledger                    |    about 3h09 | Earlier design/discussion/review and other work that cannot be allocated exactly              |
+
+The rows are wall-clock intervals and may include waiting or concurrent work;
+they are not summed CPU time.
+
+### Code and elapsed optimization cost
+
+Across the issue implementation from `4e7a80a2` through `f41796bb`, the final
+tree changed 66 files: 9,192 added and 2,032 deleted lines. Of those, 5,634
+added/1,416 deleted lines are production or tooling code, 3,301/551 are tests,
+and 257/65 are documentation. These are net range statistics, not a sum that
+double-counts later rewrites.
+
+The player-token optimization phase alone spans `a3fff39c` at 23:20 through
+`f41796bb` at 02:44: a 3-hour-24-minute commit window. Its final range changes
+28 files with 2,586 additions and 543 deletions: 1,297/102 production lines,
+1,165/420 test lines, and 124/21 documentation lines. That is substantial
+harness complexity, not a small implementation cost.
+
+| Iteration                                                       | Commit change | Checkpoint interval |                  Code churn |                                          Three-invocation result |
+| --------------------------------------------------------------- | ------------- | ------------------: | --------------------------: | ---------------------------------------------------------------: |
+| Fresh invocation per continuation                               | `e4b638c3`    |                1h33 | +1,307/-499 across 14 files | 234,293 mean input tokens; 4.24% worse than the 224,757 baseline |
+| Hash-linked fill declaration help                               | `5fdc7ad0`    |                1h08 |    +816/-14 across 10 files |                                    184,077 mean; 18.1% reduction |
+| Pre-call actionable frontier and frontier-specific declarations | `b8ad06ed`    |                0h35 |    +464/-41 across 19 files |                                   137,402 mean; 38.87% reduction |
+| Measurement record                                              | `f41796bb`    |                0h07 |     +10 documentation lines |                             Records the user-accepted short gate |
+
+Checkpoint intervals run from the previous listed commit to the named commit;
+they include implementation, tests, review, and waiting and are not claims of
+exclusive typing time.
+
+The three short player experiments used 555,028 ms (9.25 minutes) of measured
+model time. The broader retained model ledger contains at least 19,956,411
+known input tokens and 1.95 hours of model runtime during the implementation
+window; two review invocations have unavailable usage and are excluded.
+Most elapsed engineering time was therefore implementation, diagnosis,
+verification, evidence handling, and review rather than the short player model
+measurements themselves.
+
+### Realized benefits
+
+- The operation-specific reviewer audit is 146,677 bytes, 0.384% of the
+  38,232,957-byte transcript, while retaining exact call-sequence provenance.
+- The fixed transcript reprojects to 148,566 bytes of player turns, 21.12 times
+  smaller than the 3,137,666-byte retained observations; the largest turn is
+  15,262 bytes under the 32-KiB cap.
+- Searchable fixed-run SQLite call facts are 81,779 bytes, 0.215% of the former
+  38,107,978-byte duplicated step payload. The rebuilt searchable index is
+  503,808 bytes rather than the 229,924,864-byte legacy database.
+- Typed invocation ledgers distinguish unavailable usage from zero and retain
+  input, cached input, cache-write, output, reasoning, elapsed-time, model, and
+  exit facts. Supervisor timing separates typecheck, prior-call replay, new SDK
+  work, and evidence writing.
+- One bounded reviewer packet plus exact-sequence extraction reproduced,
+  rejected, or superseded all fourteen baseline verdicts instead of silently
+  losing claims. The fixed packet reviewer used 254,130 input tokens; the first
+  command-heavy attempt had used 10,758,512.
+- The player still authors and executes an ordinary typed continuation against
+  the real public SDK. Initial and later projections are transcript-bound and
+  replay-verified rather than becoming another execution authority.
+- Legacy inventory, immutable artifact recovery, portable export, and hash
+  verification are implemented. No replay cache was added before its two-part
+  admission evidence was available.
+
+### Drawbacks and ongoing problems
+
+- Issue #282 is not complete. There is no complete controlled run of the latest
+  player path and therefore no whole-path token/wall-time result.
+- The accepted short gate is 38.87%, below the issue's original 40% normalized
+  target. The user explicitly accepted that short-gate result, but it must not
+  be described as satisfying the unchanged complete-path criterion.
+- The first invocation remains a 273,200-token outlier. Later invocations were
+  approximately 69,500 tokens. Its extra exploration included rereading the
+  frontier, a failed `jq` command, an unnecessary fill-help query already
+  represented in the frontier file, a failed `npx tsc`, and a 17.9-KiB compiler
+  error. The harness reduction does not prevent this behavioral variance.
+- The measured player trials used the explicitly recorded
+  `instructionalFallback` isolation because the consumer permission profile was
+  unavailable. The player received only the scratch distribution by contract,
+  but filesystem isolation was not technically enforced. This weakens the
+  cleanroom boundary even though it does not change the recorded SDK calls.
+- The first controlled player used 6,742,713 input tokens over 30
+  continuations and stopped on an unsupported object-target frontier. It is not
+  a complete comparison and cannot validate the newer independent-invocation
+  behavior.
+- Historical milestone and final-pre-play composite-review inputs were not
+  retained. Exact replay of those baseline phases is impossible without
+  fabricating provenance; newly authored control envelopes must be labeled as
+  such.
+- The retained baseline footer and first-party event usage are different
+  protocols. The 50% reviewer and 60% whole-path token claims remain unproven
+  until a comparable baseline is captured.
+- Replay measured 430,212 cumulative milliseconds across 88 prefixes, but the
+  baseline lacks the non-model supervisor share needed by the cache admission
+  rule. Replay remains a measured cost without an admitted cache.
+- Moving full payloads out of SQLite improves the searchable index, but does
+  not erase artifact storage. The current portable export is about 472 MB, the
+  controlled player is about 23 MB, and retained failed experiments add about
+  210 MB. The 230-MB legacy database is deliberately still retained.
+- The optimization introduced 1,297 added/102 deleted production/tooling lines
+  and 1,165 added/420 deleted test lines before a complete run proved the
+  economic outcome. That ordering was too expensive: a smaller executable
+  spike and three-invocation gate should
+  have preceded the generalized artifact/type-help implementation.
+- Earlier issue comments contain slightly stale derived-byte figures. The
+  checked `generated-battle-004-fixed-measurement.json` values above supersede
+  them.
+
+### Effect of unrelated local modifications
+
+Unrelated local changes were materially troublesome but did not contaminate
+the commits or measurements. The uncommitted `attack-main.ts` work removed 145
+lines and added 9, leaving the normal SDK typecheck with unresolved production
+errors. This forced repeated synchronization into clean linked worktrees for
+honest typecheck, integration, and token trials. It added setup and diagnostic
+work and created drift risk; six issue-282 linked worktrees remain as evidence
+or verification environments. There is no trustworthy timer for that overhead.
+
+The two unrelated research-document edits and `apply-test.txt` did not affect
+execution or measurements. They required explicit staging exclusions and thus
+added a smaller accidental-commit risk. All #282 commits staged explicit file
+lists, and the controlled trials ran from clean detached commits, so none of
+those unrelated modifications entered the measured artifacts.
+
+### Economic assessment
+
+Twelve hours would be unreasonable if the result were only a 38.87% player
+token reduction. The work also delivered order-of-magnitude audit,
+observation, and index-payload reductions plus integrity, telemetry, export,
+and verdict-mapping capabilities required by the issue. Even with those
+benefits, the player-optimization phase was overbuilt relative to the evidence:
+3 hours 24 minutes and 2,586 added lines before only a short gate passed. The
+investment is not fully justified until the complete controlled run proves the
+whole-path outcome. If it does not, the added player-context machinery should
+be simplified or removed rather than defended as sunk cost.
+
 ## What was measured
 
 ### Latest direct-SDK run
@@ -65,12 +217,12 @@ That is good evidence discipline, but it creates a clear opportunity to make
 the first context projection bounded and to retain command scrollback only for
 diagnostics.
 
-The implemented operation-specific audit is 146,727 bytes for the same
+The implemented operation-specific audit is 146,677 bytes for the same
 141 records, or 0.38% of the 38,232,957-byte authoritative transcript. It keeps
 canonical inputs, hashes, existing error discriminants, and bounded relation,
 act-frontier, hole, damage, and movement facts; it embeds no full session,
 snapshot, or result. Reprojecting the 140 calls into 88 semantic player turns
-produces 149,269 bytes, 21.02 times smaller than the retained 3,137,666-byte
+produces 148,566 bytes, 21.12 times smaller than the retained 3,137,666-byte
 observation stream. The largest turn is 15,262 bytes, below the 32-KiB cap.
 The fixed-program audit checks 20 direct cross-continuation frontier reuses and
 all 15 subject-continuation phase references; its two full-session references
@@ -79,9 +231,9 @@ inputs.
 
 ### SQLite report store
 
-The current database is
-[`player-swarm.db`](../../scripts/raw-swarm/out/player-swarm.db). Read-only
-inspection found:
+The retained pre-rebuild database is
+[`player-swarm-legacy.db`](../../scripts/raw-swarm/out/player-swarm-legacy.db).
+Read-only inspection found:
 
 | Fact                                             |                                          Value |
 | ------------------------------------------------ | ---------------------------------------------: |
@@ -102,16 +254,19 @@ explicit `steps(runId, seq)` or foreign-key indexes; the only non-rowid index
 is the automatic primary-key index for `issues.fingerprint`. This is a
 storage-layout problem before it is a WAL tuning problem.
 
-The rebuilt artifact index is 2.1 MB. It preserves all 5 runs, 382 calls, 5
-reviews, 47 verdicts, 1 issue, and the existing GitHub link. The two overwritten
-shared run paths and two overwritten review paths were recovered from their
-exact run-specific artifacts; none of the ten legacy run/review references is
+The rebuilt working index is 503,808 bytes. It currently contains 6 runs, 436
+calls, 6 reviews, 62 verdicts, 5 issues, and 48 run-artifact references after
+the controlled issue-282 evidence was ingested. Its legacy rebuild checkpoint
+matched all 5 runs, 382 calls, 5 reviews, 47 verdicts, and 1 issue from the
+original database before the new evidence was added. The two overwritten shared
+run paths and two overwritten review paths were recovered from their exact
+run-specific artifacts; none of the ten legacy run/review references is
 database-only. Fixed-run searchable call metadata and typed review facts total
 81,779 bytes, or 0.215% of the former 38,107,978-byte step payload. A verified
 portable export contains the consistent index snapshot and every referenced
 hash-linked transcript, review, replay supervisor, scenario, authored program,
-character/setup, prefix, and final artifact. The 230-MB legacy database remains
-untouched until final replacement verification.
+character/setup, prefix, and final artifact. The 229,924,864-byte legacy
+database remains untouched until final replacement verification.
 
 ## Where the repeated work comes from
 
