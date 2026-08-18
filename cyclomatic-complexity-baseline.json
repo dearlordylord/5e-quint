@@ -768,7 +768,7 @@
       "module/binding:saveMetamagicSelectionState": 31,
       "module/binding:validateGreaseGroundHazardSavingThrowOutcomes": 11,
       "module/binding:validatePostSaveAreaEffect": 9,
-      "module/binding:validateSavingThrowOutcomes": 88,
+      "module/binding:validateSavingThrowOutcomes": 63,
       "module/binding:validateSleepTargetAdmissionSavingThrowOutcomes": 18,
       "module/binding:validateThunderwaveAreaEffect": 13
     },
