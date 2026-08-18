@@ -188,6 +188,7 @@ describe("review output validation", () => {
         {
           path: "scripts/raw-swarm/out/review-example/SCENARIO.md",
           sha256: "f".repeat(64),
+          firstLine: 1,
           numberedContent: "1|scenario",
         },
       ],
