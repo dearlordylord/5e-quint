@@ -1,5 +1,6 @@
 import { canonicalJson } from "../transcript.ts";
 import { createHash } from "node:crypto";
+import { Match } from "effect";
 import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue } from "./json-value.ts";
 import type { SdkCallRecord } from "./sdk-transcript.ts";
@@ -590,20 +591,15 @@ function decodeHole(value: unknown): PlayerHoleProjection | undefined {
     typeof value.label !== "string"
   )
     return undefined;
-  const choices =
-    value.choices === undefined
-      ? []
-      : Array.isArray(value.choices)
-        ? value.choices.map((choice) =>
-            typeof choice === "string"
-              ? choice
-              : isJsonObject(choice) && typeof choice.kind === "string"
-                ? `kind:${choice.kind}`
-                : undefined,
-          )
-        : undefined;
-  if (choices === undefined || choices.some((choice) => choice === undefined))
-    return undefined;
+  if (!Array.isArray(value.choices)) return undefined;
+  const choices = value.choices.map((choice) =>
+    typeof choice === "string"
+      ? choice
+      : isJsonObject(choice) && typeof choice.kind === "string"
+        ? `kind:${choice.kind}`
+        : undefined,
+  );
+  if (choices.some((choice) => choice === undefined)) return undefined;
   const dcValue = isJsonObject(value.dc) ? value.dc : undefined;
   const dc =
     dcValue === undefined
@@ -719,38 +715,67 @@ function acts(call: SdkCallRecord): readonly PlayerActProjection[] | undefined {
 function frontier(
   calls: readonly SdkCallRecord[],
 ): PlayerCurrentTurnProjection["frontier"] | undefined {
-  for (const call of [...calls].reverse()) {
-    if (call.outcome !== "returned") continue;
-    if (call.operation === "discoverBattleActs") {
-      const projectedActs = acts(call);
-      return projectedActs === undefined
-        ? undefined
-        : { kind: "acts", acts: projectedActs };
-    }
-    if (
-      isJsonObject(call.result) &&
-      call.result.tag === "needsHoles" &&
-      call.result.subject !== undefined
-    ) {
+  type FrontierDecision =
+    | {
+        readonly tag: "frontier";
+        readonly frontier: PlayerCurrentTurnProjection["frontier"];
+      }
+    | { readonly tag: "ignore" }
+    | { readonly tag: "invalid" };
+  const resolutionFrontier = (
+    call: Extract<SdkCallRecord, { readonly outcome: "returned" }>,
+  ): FrontierDecision => {
+    if (isJsonObject(call.result) && call.result.tag === "needsHoles") {
+      if (call.result.subject === undefined) return { tag: "invalid" };
       const subject = projectPlayerSubject(call.result.subject);
-      if (subject === undefined) return undefined;
+      if (subject === undefined) return { tag: "invalid" };
       const projectedHoles = holeOccurrences(subject, call.result.holes);
-      if (projectedHoles === undefined) return undefined;
+      if (projectedHoles === undefined) return { tag: "invalid" };
       return {
-        kind: "holes",
-        subjectRef: stableRef("subject", subject) as `subject:${string}`,
-        subject,
-        holes: projectedHoles,
+        tag: "frontier",
+        frontier: {
+          kind: "holes",
+          subjectRef: stableRef("subject", subject) as `subject:${string}`,
+          subject,
+          holes: projectedHoles,
+        },
       };
     }
-    if (
-      call.operation === "resolveBattleRuntimeSubject" ||
-      call.operation === "resolveScenarioMovement" ||
-      call.operation === "resolveBattleRuntimeInterrupt" ||
-      call.operation === "endBattleRuntimeTurn"
-    ) {
-      return { kind: "none" };
-    }
+    return { tag: "frontier", frontier: { kind: "none" } };
+  };
+  for (const call of [...calls].reverse()) {
+    if (call.outcome !== "returned") continue;
+    const returnedCall: Extract<
+      SdkCallRecord,
+      { readonly outcome: "returned" }
+    > = call;
+    const decision = Match.value(returnedCall.operation).pipe(
+      Match.when("scenarioRelation", () => ({ tag: "ignore" as const })),
+      Match.when("discoverBattleActs", () => {
+        const projectedActs = acts(returnedCall);
+        return projectedActs === undefined
+          ? ({ tag: "invalid" } as const)
+          : ({
+              tag: "frontier",
+              frontier: { kind: "acts", acts: projectedActs },
+            } as const);
+      }),
+      Match.when("resolveScenarioMovement", () =>
+        resolutionFrontier(returnedCall),
+      ),
+      Match.when("resolveBattleRuntimeSubject", () =>
+        resolutionFrontier(returnedCall),
+      ),
+      Match.when("resolveBattleRuntimeInterrupt", () =>
+        resolutionFrontier(returnedCall),
+      ),
+      Match.when("endBattleRuntimeTurn", () =>
+        resolutionFrontier(returnedCall),
+      ),
+      Match.exhaustive,
+    );
+    if (decision.tag === "invalid") return undefined;
+    if (decision.tag === "frontier") return decision.frontier;
   }
   return { kind: "none" };
 }
@@ -817,9 +842,15 @@ function turn(
   const initiative = isJsonObject(state?.initiative)
     ? state.initiative
     : undefined;
-  const stillToAct = Array.isArray(initiative?.stillToAct)
-    ? initiative.stillToAct
-    : [];
+  const stillToAct = initiative?.stillToAct;
+  if (
+    !Array.isArray(stillToAct) ||
+    !stillToAct.every(
+      (entry): entry is JsonObject & { readonly creature: string } =>
+        isJsonObject(entry) && typeof entry.creature === "string",
+    )
+  )
+    return undefined;
   const next = stillToAct[0];
   const phase = state?.subjectResolutionPhase;
   if (
@@ -830,9 +861,7 @@ function turn(
     return undefined;
   return {
     round: initiative.round,
-    ...(isJsonObject(next) && typeof next.creature === "string"
-      ? { actorId: next.creature }
-      : {}),
+    ...(next === undefined ? {} : { actorId: next.creature }),
     phase: phase.kind,
   };
 }

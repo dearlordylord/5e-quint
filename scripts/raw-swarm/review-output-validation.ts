@@ -8,7 +8,7 @@ import {
   reviewEvidenceIsExact,
   type ReviewEvidenceCatalog,
 } from "./review-evidence.ts";
-import { readSdkAudit } from "./sdk-player/sdk-audit.ts";
+import { readSdkAudit, type SdkAudit } from "./sdk-player/sdk-audit.ts";
 import { repoRoot, sha256Text } from "./transcript.ts";
 
 export type ReviewIdentity = {
@@ -30,6 +30,53 @@ export type ReviewOutputValidation =
         | "evidenceMismatch";
       readonly message: string;
     };
+
+export type ReviewEvidenceSourceValidation =
+  | { readonly tag: "valid"; readonly catalog: ReviewEvidenceCatalog }
+  | { readonly tag: "invalid"; readonly message: string };
+
+export function reviewEvidenceCatalogForAudit(
+  audit: SdkAudit,
+): ReviewEvidenceSourceValidation {
+  const runDirectory = dirname(dirname(audit.header.transcriptPath));
+  const setupPath = resolve(repoRoot, runDirectory, "evidence/setup.ts");
+  const charactersPath = resolve(
+    repoRoot,
+    runDirectory,
+    "evidence/characters.ts",
+  );
+  try {
+    const setupText =
+      audit.header.setupSha256 === undefined
+        ? undefined
+        : readFileSync(setupPath, "utf8");
+    const charactersText = readFileSync(charactersPath, "utf8");
+    if (
+      (setupText !== undefined &&
+        sha256Text(setupText) !== audit.header.setupSha256) ||
+      sha256Text(charactersText) !== audit.header.charactersSha256
+    ) {
+      return {
+        tag: "invalid",
+        message: "Reviewer citation sources do not match the verified audit.",
+      };
+    }
+    return {
+      tag: "valid",
+      catalog: {
+        sequences: new Set(audit.calls.map(({ seq }) => seq)),
+        setupLineCount: setupText?.split("\n").length ?? 0,
+        charactersLineCount: charactersText.split("\n").length,
+        hasTranscriptHeader: true,
+      },
+    };
+  } catch {
+    return {
+      tag: "invalid",
+      message: "Reviewer citation sources are unreadable.",
+    };
+  }
+}
 
 export function validateReviewOutput(
   value: unknown,
@@ -94,23 +141,8 @@ function main(args: readonly string[]): void {
   } catch {
     fail(`Reviewer output is unreadable or malformed: ${reviewInput}`);
   }
-  const runDirectory = dirname(dirname(audit.audit.header.transcriptPath));
-  const setupPath = resolve(repoRoot, runDirectory, "evidence/setup.ts");
-  const setupText =
-    audit.audit.header.setupSha256 === undefined
-      ? undefined
-      : readFileSync(setupPath, "utf8");
-  const charactersText = readFileSync(
-    resolve(repoRoot, runDirectory, "evidence/characters.ts"),
-    "utf8",
-  );
-  if (
-    (setupText !== undefined &&
-      sha256Text(setupText) !== audit.audit.header.setupSha256) ||
-    sha256Text(charactersText) !== audit.audit.header.charactersSha256
-  ) {
-    fail("Reviewer citation sources do not match the verified audit.");
-  }
+  const evidence = reviewEvidenceCatalogForAudit(audit.audit);
+  if (evidence.tag === "invalid") fail(evidence.message);
   const result = validateReviewOutput(
     review,
     {
@@ -118,12 +150,7 @@ function main(args: readonly string[]): void {
       gitSha: audit.audit.header.gitSha,
       transcriptSha256: audit.audit.header.transcriptSha256,
     },
-    {
-      sequences: new Set(audit.audit.calls.map(({ seq }) => seq)),
-      setupLineCount: setupText?.split("\n").length ?? 0,
-      charactersLineCount: charactersText.split("\n").length,
-      hasTranscriptHeader: true,
-    },
+    evidence.catalog,
   );
   if (result.tag === "invalid") fail(result.message);
   console.log(JSON.stringify(result));

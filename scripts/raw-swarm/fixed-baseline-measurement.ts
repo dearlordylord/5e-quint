@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import ts from "typescript";
 
-import { canonicalJson, repoRoot } from "./transcript.ts";
+import { canonicalJson, isJsonRecord, repoRoot } from "./transcript.ts";
 import {
   projectPlayerSubject,
   reprojectSdkTranscriptTurns,
@@ -23,22 +23,21 @@ const FIXED_OBSERVATION_BYTES = 3_137_666;
 const FIXED_STEP_PAYLOAD_BYTES = 38_107_978;
 const FIXED_DIRECT_FRONTIER_CHECKS = 20;
 
-type JsonObject = Readonly<Record<string, unknown>>;
-
 function fail(message: string): never {
   throw new Error(message);
-}
-
-function object(value: unknown): JsonObject | undefined {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? value
-    : undefined;
 }
 
 type RetainedProgramSessionAudit = {
   readonly subjectResolutionPhaseReferences: number;
   readonly discardedFullObservationCopies: number;
   readonly unsupportedSessionReferences: readonly string[];
+};
+
+type FixedBaselineRetainedProgram = {
+  readonly sha256: string;
+  readonly subjectResolutionPhaseReferences: number;
+  readonly discardedFullObservationCopies: 2;
+  readonly unsupportedSessionReferences: readonly [];
 };
 
 export function retainedProgramSessionAudit(
@@ -83,8 +82,6 @@ export function retainedProgramSessionAudit(
         node.parent.expression === node
       )
     ) {
-      let root: ts.Expression = node;
-      while (ts.isPropertyAccessExpression(root)) root = root.expression;
       const text = node.getText(source);
       const containsContextSession = (() => {
         let cursor: ts.Expression = node;
@@ -94,7 +91,6 @@ export function retainedProgramSessionAudit(
         }
         return false;
       })();
-      void root;
       if (containsContextSession) {
         if (text === "context.session") {
           // The continuation protocol supplies the canonical session to SDK calls;
@@ -143,10 +139,10 @@ export function directFrontierUseChecks(input: {
   for (const projection of input.projections) {
     const nextCalls = groups.get(projection.continuation + 1);
     const next = nextCalls?.find(
-      (call) => object(call.input)?.subject !== undefined,
+      (call) => isJsonRecord(call.input) && call.input.subject !== undefined,
     );
     if (next === undefined) continue;
-    const nextInput = object(next.input);
+    const nextInput = isJsonRecord(next.input) ? next.input : undefined;
     if (nextInput?.subject === undefined) continue;
     const projectedNextSubject = projectPlayerSubject(nextInput.subject);
     if (projectedNextSubject === undefined)
@@ -175,7 +171,7 @@ export function directFrontierUseChecks(input: {
       );
       const suppliedKinds = occurrences(
         fills.flatMap((fill) => {
-          const candidate = object(fill);
+          const candidate = isJsonRecord(fill) ? fill : undefined;
           return typeof candidate?.kind === "string" &&
             typeof candidate.holeId === "string"
             ? [`${candidate.kind}\u0000${candidate.holeId}`]
@@ -241,12 +237,7 @@ export type FixedBaselineMeasurement = {
     readonly requiredReductionFactor: 5;
     readonly largestTurnBytes: number;
     readonly directlyReusedFrontiersChecked: number;
-    readonly retainedProgram: {
-      readonly sha256: string;
-      readonly subjectResolutionPhaseReferences: number;
-      readonly discardedFullObservationCopies: 2;
-      readonly unsupportedSessionReferences: readonly [];
-    };
+    readonly retainedProgram: FixedBaselineRetainedProgram;
   };
   readonly sqlite: {
     readonly baselineStepPayloadBytes: number;
@@ -266,6 +257,46 @@ export type FixedBaselineMeasurement = {
     readonly decision: "awaiting-controlled-supervisor-share";
   };
 };
+
+function fixedBaselineRetainedProgramAudit(
+  audit: RetainedProgramSessionAudit,
+): Omit<FixedBaselineRetainedProgram, "sha256"> {
+  if (
+    audit.subjectResolutionPhaseReferences === 0 ||
+    audit.discardedFullObservationCopies !== 2 ||
+    audit.unsupportedSessionReferences.length > 0
+  ) {
+    fail(
+      "Fixed baseline program cites a session fact outside the bounded projection audit.",
+    );
+  }
+  return {
+    subjectResolutionPhaseReferences: audit.subjectResolutionPhaseReferences,
+    discardedFullObservationCopies: 2,
+    unsupportedSessionReferences: [],
+  };
+}
+
+type FixedReplayCacheEvidence = {
+  readonly schemaVersion: 1;
+  readonly transcriptSha256: string;
+  readonly prefixCount: 88;
+  readonly cumulativeReplayMilliseconds: number;
+  readonly reachesCumulativeThreshold: boolean;
+};
+
+function isFixedReplayCacheEvidence(
+  value: unknown,
+): value is FixedReplayCacheEvidence {
+  return (
+    isJsonRecord(value) &&
+    value.schemaVersion === 1 &&
+    value.transcriptSha256 === FIXED_TRANSCRIPT_SHA256 &&
+    value.prefixCount === 88 &&
+    typeof value.cumulativeReplayMilliseconds === "number" &&
+    typeof value.reachesCumulativeThreshold === "boolean"
+  );
+}
 
 export function measureFixedBaseline(input: {
   readonly transcriptPath: string;
@@ -315,12 +346,9 @@ export function measureFixedBaseline(input: {
   const replayCacheEvidence: unknown = JSON.parse(
     readFileSync(resolve(repoRoot, input.replayCacheMeasurementPath), "utf8"),
   );
+  if (!isFixedReplayCacheEvidence(replayCacheEvidence))
+    fail("Fixed baseline replay-cache measurement is invalid.");
   if (
-    !object(replayCacheEvidence) ||
-    replayCacheEvidence.schemaVersion !== 1 ||
-    replayCacheEvidence.transcriptSha256 !== FIXED_TRANSCRIPT_SHA256 ||
-    replayCacheEvidence.prefixCount !== 88 ||
-    typeof replayCacheEvidence.cumulativeReplayMilliseconds !== "number" ||
     replayCacheEvidence.cumulativeReplayMilliseconds < 0 ||
     replayCacheEvidence.reachesCumulativeThreshold !==
       replayCacheEvidence.cumulativeReplayMilliseconds >= 60_000
@@ -328,15 +356,7 @@ export function measureFixedBaseline(input: {
     fail("Fixed baseline replay-cache measurement is invalid.");
   const program = readFileSync(programPath, "utf8");
   const programAudit = retainedProgramSessionAudit(program);
-  if (
-    programAudit.subjectResolutionPhaseReferences === 0 ||
-    programAudit.discardedFullObservationCopies !== 2 ||
-    programAudit.unsupportedSessionReferences.length > 0
-  ) {
-    fail(
-      "Fixed baseline program cites a session fact outside the bounded projection audit.",
-    );
-  }
+  const retainedProgramAudit = fixedBaselineRetainedProgramAudit(programAudit);
   const parsed = parseSdkTranscript(
     readFileSync(transcriptPath, "utf8")
       .split("\n")
@@ -401,12 +421,7 @@ export function measureFixedBaseline(input: {
       directlyReusedFrontiersChecked,
       retainedProgram: {
         sha256: createHash("sha256").update(program).digest("hex"),
-        subjectResolutionPhaseReferences:
-          programAudit.subjectResolutionPhaseReferences,
-        discardedFullObservationCopies:
-          programAudit.discardedFullObservationCopies as 2,
-        unsupportedSessionReferences:
-          programAudit.unsupportedSessionReferences as readonly [],
+        ...retainedProgramAudit,
       },
     },
     sqlite: {

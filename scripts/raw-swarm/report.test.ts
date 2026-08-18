@@ -15,6 +15,7 @@ import { Either, Schema } from "effect";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { openArtifactIndex } from "./artifact-index.ts";
+import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
 import {
   GitHubIssueNumberSchema,
   makeGitHubIssueLinker,
@@ -94,7 +95,7 @@ describe("RAW swarm artifact report index", () => {
           message: { id: 7, result: response },
         },
       ]
-        .map(JSON.stringify)
+        .map((record) => JSON.stringify(record))
         .join("\n")}\n`,
     );
     report([
@@ -155,16 +156,34 @@ describe("RAW swarm artifact report index", () => {
       controlledExportPath,
       "reporting-timing.json",
     );
+    const controlledEvidence = controlledReviewEvidenceFixture({
+      directory: resolve(directory, "controlled-evidence"),
+      ledgerEntries: [
+        {
+          schemaVersion: 1,
+          phase: "postPlayReview",
+          invocationId: "controlled-review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          usage: { tag: "unavailable", reason: "test fixture" },
+        },
+      ],
+    });
     report([
       "controlled-reporting",
-      relative(repoRoot, transcriptPath),
-      relative(repoRoot, reviewPath),
+      relative(repoRoot, controlledEvidence.transcriptPath),
+      relative(repoRoot, controlledEvidence.reviewPath),
       "--db",
       relative(repoRoot, controlledDbPath),
       "--destination",
       relative(repoRoot, controlledExportPath),
       "--timing",
       relative(repoRoot, controlledTimingPath),
+      "--review-invocation-evidence",
+      relative(repoRoot, controlledEvidence.manifestPath),
     ]);
     expect(
       JSON.parse(readFileSync(controlledTimingPath, "utf8")),
@@ -187,9 +206,19 @@ describe("RAW swarm artifact report index", () => {
             .update(readFileSync(controlledTimingPath))
             .digest("hex"),
         }),
+        expect.objectContaining({
+          sha256: createHash("sha256")
+            .update(readFileSync(controlledEvidence.manifestPath))
+            .digest("hex"),
+        }),
+        expect.objectContaining({
+          sha256: createHash("sha256")
+            .update(readFileSync(controlledEvidence.packetPath))
+            .digest("hex"),
+        }),
       ]),
     );
-  });
+  }, 30_000);
 
   test("establishes and verifies the GitHub backlink and label idempotently", () => {
     let body = "Existing issue body";
@@ -202,7 +231,7 @@ describe("RAW swarm artifact report index", () => {
       run: vi.fn((args, input) => {
         if (args[1] === "view") {
           return {
-            tag: "success",
+            tag: "success" as const,
             stdout: JSON.stringify({
               body,
               labels: labels.map((name) => ({ name })),
@@ -212,9 +241,12 @@ describe("RAW swarm artifact report index", () => {
         if (args[1] === "edit" && input !== undefined) {
           body = input;
           if (!labels.includes("raw-swarm")) labels.push("raw-swarm");
-          return { tag: "success", stdout: "" };
+          return { tag: "success" as const, stdout: "" };
         }
-        return { tag: "failure", message: "Unexpected gh command" };
+        return {
+          tag: "failure" as const,
+          message: "Unexpected gh command",
+        };
       }),
     };
     const linker = makeGitHubIssueLinker(runner);
@@ -321,5 +353,5 @@ try {
     expect(query(dbPath, "SELECT githubIssueNumber FROM issues")).toEqual({
       githubIssueNumber: 42,
     });
-  });
+  }, 30_000);
 });

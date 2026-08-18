@@ -820,28 +820,31 @@ async function runSubmittedSource(source: string): Promise<unknown> {
       continuationCalls.push(record);
       nextSeq += 1;
     };
-    let invoked: ReturnType<typeof invoke>;
-    const executionStarted = performance.now();
-    try {
-      invoked = invoke();
-      sdkExecutionMilliseconds += performance.now() - executionStarted;
-    } catch (error) {
-      sdkExecutionMilliseconds += performance.now() - executionStarted;
-      const caught = error instanceof Error ? error : new Error(String(error));
-      appendRecord({
-        type: "sdk-call",
-        seq: nextSeq,
-        continuation: frozenContinuation,
-        operation,
-        inputSession,
-        inputSessionSha256,
-        input: jsonValue(input),
-        outcome: "threw",
-        rejection: sessionIsCurrent ? "operationFailure" : "sessionConflict",
-        error: { name: caught.name || "Error", message: caught.message },
-      });
-      throw error;
-    }
+    const invoked = (() => {
+      const executionStarted = performance.now();
+      try {
+        const result = invoke();
+        sdkExecutionMilliseconds += performance.now() - executionStarted;
+        return result;
+      } catch (error) {
+        sdkExecutionMilliseconds += performance.now() - executionStarted;
+        const caught =
+          error instanceof Error ? error : new Error(String(error));
+        appendRecord({
+          type: "sdk-call",
+          seq: nextSeq,
+          continuation: frozenContinuation,
+          operation,
+          inputSession,
+          inputSessionSha256,
+          input: jsonValue(input),
+          outcome: "threw",
+          rejection: sessionIsCurrent ? "operationFailure" : "sessionConflict",
+          error: { name: caught.name || "Error", message: caught.message },
+        });
+        throw error;
+      }
+    })();
     currentSession = invoked.applied.session;
     const outputSession = jsonValue(currentSession);
     const result = jsonValue(invoked.applied.result);

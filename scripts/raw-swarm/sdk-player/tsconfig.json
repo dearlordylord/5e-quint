@@ -8,7 +8,7 @@
     "scenarios/*.setup.ts",
     "../transcript.ts"
   ],
-  "exclude": ["**/*.test.ts"],
+  "exclude": ["**/*.test.ts", "../*.test.ts", "../*.test-support.ts"],
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",

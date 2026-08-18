@@ -1,10 +1,10 @@
 Adversarially review the direct-SDK player evidence whose immutable transcript
 is {{TRANSCRIPT_PATH}} ({{TRANSCRIPT_BYTES}} bytes, SHA-256
 {{TRANSCRIPT_SHA256}}). Use the versioned derived audit at {{AUDIT_PATH}} as
-the default all-call evidence. A deterministic bounded review packet at
+the default all-call evidence. A deterministic review evidence packet at
 {{PACKET_PATH}} ({{PACKET_BYTES}} bytes, SHA-256 {{PACKET_SHA256}}) is included
 verbatim after these instructions. It contains that audit, retained header
-evidence without the initial session, bounded current-turn projections, the
+evidence without the initial session, current-turn projections, the
 reviewable run artifacts, the domain authorities, and the scenario-relevant
 local SRD rules plus scenario-selected catalog passages with stable source line
 numbers and per-passage hashes. Catalog passages are selected only when their
@@ -46,7 +46,7 @@ assumption divergence, or reviewer error.
 
 The hash-checking exact-sequence extractor remains available to an operator for
 a separately retained drill-down after this review. It is not a command for
-this bounded invocation. A later review that consumes extracted records is a
+this one-turn review invocation. A later review that consumes extracted records is a
 separate measured invocation. The extractor command is:
 
 {{EXTRACT_COMMAND}}
@@ -54,7 +54,7 @@ separate measured invocation. The extractor command is:
 The operator chooses fresh output and provenance paths for each extraction. The extractor
 revalidates transcript path, byte size, SHA-256, schema, sequence, lineage, and
 call correspondence without reexecuting the SDK. Cite every extracted
-sequence and preserves its provenance file. Do not claim that the derived
+sequence and preserve its provenance file. Do not claim that the derived
 audit can reconstruct omitted results.
 
 A scenario that selects a canonical record absent from the supplied setup

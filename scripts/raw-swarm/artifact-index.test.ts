@@ -456,8 +456,11 @@ describe("Raw Swarm artifact index", () => {
           kind: "run",
           legacyId: 1,
           disposition: "inconsistent",
-          expectedSha256: originalHash,
-          recoveredPath: relative(repoRoot, recoveredPath),
+          evidence: expect.objectContaining({
+            tag: "recovered",
+            expectedSha256: originalHash,
+            recoveredPath: relative(repoRoot, recoveredPath),
+          }),
         }),
         expect.objectContaining({
           kind: "review",

@@ -7,6 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 import { Either, Match, Option, Schema } from "effect";
 
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
+import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
 import {
   exportArtifactIndex,
   ingestArtifactRun,
@@ -81,10 +82,6 @@ export interface GitHubCommandRunner {
 
 function fail(message: string): never {
   throw new Error(message);
-}
-
-function openDb(dbPath: string): DatabaseSync {
-  return openArtifactIndex(dbPath);
 }
 
 function recordBugIssue(
@@ -303,6 +300,23 @@ function controlledReporting(args: readonly string[]): void {
     "--destination",
   );
   const timingPath = required(flagValue(rest, "--timing"), "--timing");
+  const reviewInvocationEvidencePath = required(
+    flagValue(rest, "--review-invocation-evidence"),
+    "--review-invocation-evidence",
+  );
+  const reviewInvocationEvidence = readReviewInvocationEvidenceManifest(
+    reviewInvocationEvidencePath,
+  );
+  if (
+    resolve(repoRoot, transcriptPath) !==
+      resolve(repoRoot, reviewInvocationEvidence.transcript.path) ||
+    resolve(repoRoot, reviewPath) !==
+      resolve(repoRoot, reviewInvocationEvidence.review.path)
+  ) {
+    fail(
+      "Controlled reporting inputs do not match the review invocation evidence.",
+    );
+  }
   const absoluteDestination = resolve(repoRoot, destination);
   const absoluteTimingPath = resolve(repoRoot, timingPath);
   const portableTimingPath = relative(absoluteDestination, absoluteTimingPath);
@@ -317,6 +331,37 @@ function controlledReporting(args: readonly string[]): void {
   }
   const started = performance.now();
   const runId = ingestArtifactRun({ transcriptPath, dbPath });
+  const evidenceDb = openArtifactIndex(dbPath);
+  const evidenceSources = [
+    {
+      role: "reviewInvocationEvidence",
+      path: reviewInvocationEvidencePath,
+      mediaType: "application/json",
+    },
+    {
+      role: "postPlayReviewAudit",
+      path: reviewInvocationEvidence.audit.path,
+      mediaType: "application/x-ndjson",
+    },
+    {
+      role: "postPlayReviewPacket",
+      path: reviewInvocationEvidence.packet.path,
+      mediaType: "application/json",
+    },
+    ...reviewInvocationEvidence.invocationLedgers.map(({ path }, index) => ({
+      role: `modelInvocationLedger-${index + 1}`,
+      path,
+      mediaType: "application/x-ndjson",
+    })),
+  ];
+  const insertRunArtifact = evidenceDb.prepare(
+    "INSERT INTO runArtifacts(runId, role, artifactSha256) VALUES (?, ?, ?)",
+  );
+  for (const { role, path, mediaType } of evidenceSources) {
+    const artifact = registerIndexArtifact({ db: evidenceDb, path, mediaType });
+    insertRunArtifact.run(runId, role, artifact.sha256);
+  }
+  evidenceDb.close();
   review([reviewPath, "--db", dbPath, "--run", String(runId)]);
   const manifest = exportArtifactIndex({ dbPath, destination });
   const transcriptSha256 = createHash("sha256")
@@ -403,7 +448,7 @@ function recordDrilldown(args: readonly string[]): void {
   if (extractedLines.length !== value.records.length) {
     fail("SDK extraction artifact record count does not match its provenance.");
   }
-  const db = openDb(dbPath);
+  const db = openArtifactIndex(dbPath);
   try {
     const review = db
       .prepare(
@@ -503,12 +548,13 @@ function recordDrilldown(args: readonly string[]): void {
             `SDK extraction record ${row.seq} does not match its provenance.`,
           );
         }
-        let extractedRecord: unknown;
-        try {
-          extractedRecord = JSON.parse(extractedLine);
-        } catch {
-          fail(`SDK extraction record ${row.seq} is malformed JSON.`);
-        }
+        const extractedRecord: unknown = (() => {
+          try {
+            return JSON.parse(extractedLine);
+          } catch {
+            return fail(`SDK extraction record ${row.seq} is malformed JSON.`);
+          }
+        })();
         if (
           !isJsonRecord(extractedRecord) ||
           extractedRecord.seq !== row.seq ||
@@ -548,7 +594,7 @@ function verdict(args: readonly string[]): void {
   const evidence = required(flagValue(args, "--evidence"), "--evidence");
   const reviewer = required(flagValue(args, "--reviewer"), "--reviewer");
 
-  const db = openDb(dbPath);
+  const db = openArtifactIndex(dbPath);
   if (!runExists(db, runId)) {
     db.close();
     fail(`Unknown run ${runId}`);
@@ -599,7 +645,7 @@ export function review(args: readonly string[]): void {
   if (Either.isLeft(decoded))
     fail(`Invalid review output: ${decoded.left.message}`);
 
-  const db = openDb(dbPath);
+  const db = openArtifactIndex(dbPath);
   const run = db
     .prepare(
       `SELECT r.scenarioId, r.gitSha, r.transcriptSha256, a.path AS transcriptPath
@@ -710,7 +756,7 @@ export function review(args: readonly string[]): void {
 
 function summary(args: readonly string[]): void {
   const dbPath = required(flagValue(args, "--db"), "--db");
-  const db = openDb(dbPath);
+  const db = openArtifactIndex(dbPath);
   const rows = db
     .prepare(
       "SELECT class, COUNT(*) AS count FROM verdicts GROUP BY class ORDER BY class",
@@ -741,7 +787,7 @@ function summary(args: readonly string[]): void {
 
 function issues(args: readonly string[]): void {
   const { dbPath, linkFilter } = parseIssuesArgs(args);
-  const db = openDb(dbPath);
+  const db = openArtifactIndex(dbPath);
   const rows = db
     .prepare(
       `SELECT fingerprint, class, claim, firstSeenAt, lastSeenAt, githubIssueNumber
@@ -899,7 +945,7 @@ function readCurrentGithubIssueNumber(
   dbPath: string,
   fingerprint: SwarmFingerprint,
 ): Either.Either<IssueGithubLink, string> {
-  const db = openDb(dbPath);
+  const db = openArtifactIndex(dbPath);
   try {
     return currentGithubIssueNumber(db, fingerprint);
   } finally {
@@ -943,7 +989,7 @@ function linkGithubIssueParsed(
   );
   if (Either.isLeft(githubResult)) fail(githubResult.left);
 
-  const db = openDb(args.dbPath);
+  const db = openArtifactIndex(args.dbPath);
   try {
     db.exec("BEGIN IMMEDIATE");
     try {

@@ -15,6 +15,8 @@ const audit: SdkAudit = {
     scenarioSha256: "1".repeat(64),
     scenarioReviewSha256: "2".repeat(64),
     charactersSha256: "3".repeat(64),
+    characterOutcome: "ready",
+    setupOutcome: "ready",
     setupSha256: "4".repeat(64),
     gitSha: "a".repeat(40),
     startedAt: "2026-08-17T00:00:00.000Z",
@@ -27,7 +29,7 @@ const audit: SdkAudit = {
   calls: [],
 };
 
-describe("bounded SDK review packet", () => {
+describe("SDK review packet", () => {
   test("retains numbered hash-linked authorities deterministically", () => {
     const raw = sdkReviewPacketSource({
       path: ".references/srd-5.2.1/Example.md",

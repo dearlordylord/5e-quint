@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 
-import { modelUsageFromCodexEvents } from "./model-telemetry.ts";
+import { Either } from "effect";
+
+import {
+  modelUsageFromCodexEvents,
+  parseModelInvocationLedgerEntry,
+} from "./model-telemetry.ts";
 
 describe("Raw Swarm model invocation telemetry", () => {
   test("retains first-party token dimensions independently", () => {
@@ -41,5 +46,29 @@ describe("Raw Swarm model invocation telemetry", () => {
       reason:
         "The first-party event stream exposed no turn.completed usage object.",
     });
+  });
+
+  test("parses strict invocation ledger entries for downstream evidence", () => {
+    const entry = {
+      schemaVersion: 1,
+      phase: "player",
+      invocationId: "invocation-1",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt: "2026-08-14T00:00:00.000Z",
+      elapsedMilliseconds: 1_000,
+      exit: { tag: "exited", status: 0 },
+      usage: { tag: "unavailable", reason: "event stream omitted usage" },
+    };
+    const parsed = parseModelInvocationLedgerEntry(entry);
+    expect(Either.isRight(parsed)).toBe(true);
+    if (Either.isLeft(parsed)) return;
+    expect(parsed.right.invocationId).toBe("invocation-1");
+
+    expect(
+      Either.isLeft(
+        parseModelInvocationLedgerEntry({ ...entry, unexpected: true }),
+      ),
+    ).toBe(true);
   });
 });

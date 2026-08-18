@@ -8,7 +8,8 @@ import {
   readControlledPerformance,
   summarizeControlledRun,
 } from "./performance-comparison.ts";
-import { repoRoot, sha256Canonical, sha256Text } from "./transcript.ts";
+import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
+import { repoRoot, sha256Text } from "./transcript.ts";
 
 const temporaryDirectories: string[] = [];
 
@@ -23,70 +24,32 @@ describe("whole-path performance evidence", () => {
       resolve(repoRoot, "scripts/raw-swarm/out/performance-test-"),
     );
     temporaryDirectories.push(directory);
-    const transcript = resolve(directory, "sdk-calls.jsonl");
-    const session = { round: 1 };
-    const header = {
-      type: "sdk-player-header",
-      scenarioId: "same",
-      gitSha: "b".repeat(40),
-      startedAt: "2026-08-14T00:00:00.000Z",
-      consumerIsolation: "instructionalFallback",
-      replaySupervisorSha256: "c".repeat(64),
-      scenarioSha256: "a".repeat(64),
-      scenarioReviewSha256: "d".repeat(64),
-      charactersSha256: "e".repeat(64),
-      characterOutcome: "ready",
-      characterSheets: [],
-      characterSheetsSha256: sha256Canonical([]),
-      characterObservation: {},
-      setupSha256: "f".repeat(64),
-      setupOutcome: "ready",
-      initialSession: session,
-      initialSessionSha256: sha256Canonical(session),
-      setupObservation: {},
-    } as const;
-    const calls = [1, 2].map((seq) => ({
-      type: "sdk-call",
-      seq,
-      continuation: seq,
-      operation: "discoverBattleActs",
-      inputSession: session,
-      inputSessionSha256: sha256Canonical(session),
-      input: {},
-      outcome: "returned",
-      outputSession: session,
-      outputSessionSha256: sha256Canonical(session),
-      result: [],
-      resultSha256: sha256Canonical([]),
-    }));
-    writeFileSync(
-      transcript,
-      [header, ...calls].map((record) => JSON.stringify(record)).join("\n") +
-        "\n",
-    );
-    const ledger = resolve(directory, "ledger.jsonl");
-    const entry = (phase: "player" | "postPlayReview", input: number) => ({
-      schemaVersion: 1,
-      phase,
-      invocationId: phase,
-      model: phase === "player" ? "gpt-5.6-sol" : "gpt-5.6-luna",
-      reasoningEffort: phase === "player" ? "medium" : "max",
-      startedAt: "2026-08-14T00:00:00.000Z",
-      elapsedMilliseconds: 1_000,
-      exit: { tag: "exited", status: 0 },
-      usage: {
-        tag: "available",
-        input: { tag: "available", count: input },
-        cachedInput: { tag: "available", count: 10 },
-        cacheWriteInput: { tag: "available", count: 0 },
-        output: { tag: "available", count: 100 },
-        reasoningOutput: { tag: "available", count: 50 },
-      },
+    const entry = (phase: "player" | "postPlayReview", input: number) =>
+      ({
+        schemaVersion: 1,
+        phase,
+        invocationId: phase,
+        model: phase === "player" ? "gpt-5.6-sol" : "gpt-5.6-luna",
+        reasoningEffort: phase === "player" ? "medium" : "max",
+        startedAt: "2026-08-14T00:00:00.000Z",
+        elapsedMilliseconds: 1_000,
+        exit: { tag: "exited", status: 0 },
+        usage: {
+          tag: "available",
+          input: { tag: "available", count: input },
+          cachedInput: { tag: "available", count: 10 },
+          cacheWriteInput: { tag: "available", count: 0 },
+          output: { tag: "available", count: 100 },
+          reasoningOutput: { tag: "available", count: 50 },
+        },
+      }) as const;
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      callCount: 2,
+      ledgerEntries: [entry("player", 900), entry("postPlayReview", 400)],
     });
-    writeFileSync(
-      ledger,
-      `${JSON.stringify(entry("player", 900))}\n${JSON.stringify(entry("postPlayReview", 400))}\n`,
-    );
+    const transcript = fixture.transcriptPath;
+    const review = fixture.reviewPath;
     const timings = resolve(directory, "timings.jsonl");
     writeFileSync(
       timings,
@@ -106,9 +69,7 @@ describe("whole-path performance evidence", () => {
         .join("\n") + "\n",
     );
     const reportingTiming = resolve(directory, "reporting-timing.json");
-    const review = resolve(directory, "review.json");
     const reportingManifest = resolve(directory, "manifest.json");
-    writeFileSync(review, '{"review":true}\n');
     const indexSha256 = "1".repeat(64);
     const writeReportingTiming = (elapsedMilliseconds: number): void => {
       writeFileSync(
@@ -124,9 +85,7 @@ describe("whole-path performance evidence", () => {
     writeReportingTiming(50);
     const summary = summarizeControlledRun({
       schemaVersion: 1,
-      transcriptPath: transcript,
-      reviewPath: review,
-      invocationLedgerPaths: [ledger],
+      reviewInvocationEvidencePath: fixture.manifestPath,
       supervisorTimingPath: timings,
       reportingTimingPath: reportingTiming,
       reportingManifestPath: reportingManifest,
@@ -147,10 +106,10 @@ describe("whole-path performance evidence", () => {
         {
           schemaVersion: 1,
           scenarioId: "same",
-          scenarioSha256: "a".repeat(64),
-          scenarioReviewSha256: "d".repeat(64),
-          charactersSha256: "e".repeat(64),
-          setupSha256: "f".repeat(64),
+          scenarioSha256: fixture.header.scenarioSha256,
+          scenarioReviewSha256: fixture.header.scenarioReviewSha256,
+          charactersSha256: fixture.header.charactersSha256,
+          setupSha256: fixture.header.setupSha256,
           calls: 2,
           continuations: 2,
           player: {
@@ -349,9 +308,7 @@ describe("whole-path performance evidence", () => {
     expect(() =>
       summarizeControlledRun({
         schemaVersion: 1,
-        transcriptPath: transcript,
-        reviewPath: review,
-        invocationLedgerPaths: [ledger],
+        reviewInvocationEvidencePath: fixture.manifestPath,
         supervisorTimingPath: timings,
         reportingTimingPath: reportingTiming,
         reportingManifestPath: reportingManifest,
@@ -373,9 +330,7 @@ describe("whole-path performance evidence", () => {
     expect(() =>
       summarizeControlledRun({
         schemaVersion: 1,
-        transcriptPath: transcript,
-        reviewPath: review,
-        invocationLedgerPaths: [ledger],
+        reviewInvocationEvidencePath: fixture.manifestPath,
         supervisorTimingPath: timings,
         reportingTimingPath: reportingTiming,
         reportingManifestPath: reportingManifest,

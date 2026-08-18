@@ -6,9 +6,15 @@ import { Either, Schema } from "effect";
 
 import {
   MODEL_INVOCATION_PHASES,
+  parseModelInvocationLedgerEntry,
   type ModelInvocationLedgerEntry,
   type ModelInvocationPhase,
 } from "./model-telemetry.ts";
+import {
+  ArtifactAuthoritySchema,
+  readReviewInvocationEvidenceManifest,
+  type ArtifactAuthority,
+} from "./review-invocation-evidence.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { isJsonRecord, repoRoot } from "./transcript.ts";
 
@@ -20,9 +26,7 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
 
 const RunDescriptorSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
-  transcriptPath: Schema.NonEmptyTrimmedString,
-  reviewPath: Schema.NonEmptyTrimmedString,
-  invocationLedgerPaths: Schema.Array(Schema.NonEmptyTrimmedString),
+  reviewInvocationEvidencePath: Schema.NonEmptyTrimmedString,
   supervisorTimingPath: Schema.NonEmptyTrimmedString,
   reportingTimingPath: Schema.NonEmptyTrimmedString,
   reportingManifestPath: Schema.NonEmptyTrimmedString,
@@ -69,25 +73,6 @@ const LegacyRunEvidenceSchema = Schema.Struct({
 type RunDescriptor = Schema.Schema.Type<typeof RunDescriptorSchema>;
 type LegacyRunEvidence = Schema.Schema.Type<typeof LegacyRunEvidenceSchema>;
 
-type UsageTotals = {
-  readonly input: number;
-  readonly cachedInput: number;
-  readonly cacheWriteInput: number;
-  readonly output: number;
-  readonly reasoningOutput: number;
-  readonly inputPlusOutput: number;
-};
-
-type PhaseSummary = {
-  readonly invocationCount: number;
-  readonly elapsedMilliseconds: number;
-  readonly models: readonly string[];
-  readonly reasoningEfforts: readonly string[];
-  readonly usage:
-    | { readonly tag: "available"; readonly totals: UsageTotals }
-    | { readonly tag: "unavailable"; readonly reasons: readonly string[] };
-};
-
 const UsageTotalsSchema = Schema.Struct({
   input: NonNegativeIntegerSchema,
   cachedInput: NonNegativeIntegerSchema,
@@ -96,6 +81,8 @@ const UsageTotalsSchema = Schema.Struct({
   reasoningOutput: NonNegativeIntegerSchema,
   inputPlusOutput: NonNegativeIntegerSchema,
 });
+type UsageTotals = Schema.Schema.Type<typeof UsageTotalsSchema>;
+
 const PhaseSummarySchema = Schema.Struct({
   invocationCount: NonNegativeIntegerSchema,
   elapsedMilliseconds: NonNegativeIntegerSchema,
@@ -112,6 +99,8 @@ const PhaseSummarySchema = Schema.Struct({
     }),
   ),
 });
+type PhaseSummary = Schema.Schema.Type<typeof PhaseSummarySchema>;
+
 const NormalizedTokensSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("available"),
@@ -121,11 +110,24 @@ const NormalizedTokensSchema = Schema.Union(
   }),
   Schema.Struct({ tag: Schema.Literal("unavailable") }),
 );
-const ArtifactAuthoritySchema = Schema.Struct({
-  path: Schema.NonEmptyTrimmedString,
-  byteLength: NonNegativeIntegerSchema,
-  sha256: HashSchema,
+type NormalizedTokens = Schema.Schema.Type<typeof NormalizedTokensSchema>;
+
+const PhaseRecordSchema = Schema.Record({
+  key: Schema.Literal(...MODEL_INVOCATION_PHASES),
+  value: PhaseSummarySchema,
 });
+const SupervisorTimingSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  continuation: Schema.Number.pipe(Schema.int()),
+  phases: Schema.Struct({
+    continuationTypecheckMilliseconds: NonNegativeIntegerSchema,
+    priorCallVerificationReplayMilliseconds: NonNegativeIntegerSchema,
+    newSdkExecutionMilliseconds: NonNegativeIntegerSchema,
+    evidenceWritingMilliseconds: NonNegativeIntegerSchema,
+  }),
+});
+type SupervisorTiming = Schema.Schema.Type<typeof SupervisorTimingSchema>;
+
 const ControlledRunPerformanceSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   telemetryAuthority: Schema.Literal("codex-json-events"),
@@ -136,10 +138,7 @@ const ControlledRunPerformanceSchema = Schema.Struct({
   setupSha256: HashSchema,
   calls: Schema.Number.pipe(Schema.int(), Schema.positive()),
   continuations: Schema.Number.pipe(Schema.int(), Schema.positive()),
-  phases: Schema.Record({
-    key: Schema.Literal(...MODEL_INVOCATION_PHASES),
-    value: PhaseSummarySchema,
-  }),
+  phases: PhaseRecordSchema,
   supervisor: Schema.Struct({
     continuationCount: Schema.Number.pipe(Schema.int(), Schema.positive()),
     typecheckMilliseconds: NonNegativeIntegerSchema,
@@ -164,6 +163,7 @@ const ControlledRunPerformanceSchema = Schema.Struct({
     postPlayReview: NormalizedTokensSchema,
   }),
   sources: Schema.Struct({
+    reviewInvocationEvidence: ArtifactAuthoritySchema,
     transcript: ArtifactAuthoritySchema,
     review: ArtifactAuthoritySchema,
     invocationLedgers: Schema.Array(ArtifactAuthoritySchema),
@@ -173,69 +173,9 @@ const ControlledRunPerformanceSchema = Schema.Struct({
   }),
 });
 
-export type ControlledRunPerformance = {
-  readonly schemaVersion: 1;
-  readonly telemetryAuthority: "codex-json-events";
-  readonly scenarioId: string;
-  readonly scenarioSha256: string;
-  readonly scenarioReviewSha256: string;
-  readonly charactersSha256: string;
-  readonly setupSha256: string;
-  readonly calls: number;
-  readonly continuations: number;
-  readonly phases: Readonly<Record<ModelInvocationPhase, PhaseSummary>>;
-  readonly supervisor: {
-    readonly continuationCount: number;
-    readonly typecheckMilliseconds: number;
-    readonly replayMilliseconds: number;
-    readonly sdkExecutionMilliseconds: number;
-    readonly evidenceWritingMilliseconds: number;
-    readonly nonModelMilliseconds: number;
-    readonly perContinuationMilliseconds: number;
-    readonly perCallMilliseconds: number;
-    readonly replayCacheDecision: {
-      readonly cumulativeReplayMilliseconds: number;
-      readonly shareOfNonModelSupervisor: number;
-      readonly admitted: boolean;
-    };
-  };
-  readonly reportingElapsedMilliseconds: number;
-  readonly wholePathElapsedMilliseconds: number;
-  readonly comparablePathElapsedMilliseconds: number;
-  readonly unchangedControlElapsedMilliseconds: number;
-  readonly normalizedTokens: {
-    readonly player:
-      | {
-          readonly tag: "available";
-          readonly perInvocation: number;
-          readonly perContinuation: number;
-          readonly perCall: number;
-        }
-      | { readonly tag: "unavailable" };
-    readonly postPlayReview:
-      | {
-          readonly tag: "available";
-          readonly perInvocation: number;
-          readonly perContinuation: number;
-          readonly perCall: number;
-        }
-      | { readonly tag: "unavailable" };
-  };
-  readonly sources: {
-    readonly transcript: ArtifactAuthority;
-    readonly review: ArtifactAuthority;
-    readonly invocationLedgers: readonly ArtifactAuthority[];
-    readonly supervisorTimings: ArtifactAuthority;
-    readonly reportingTiming: ArtifactAuthority;
-    readonly reportingManifest: ArtifactAuthority;
-  };
-};
-
-type ArtifactAuthority = {
-  readonly path: string;
-  readonly byteLength: number;
-  readonly sha256: string;
-};
+export type ControlledRunPerformance = Schema.Schema.Type<
+  typeof ControlledRunPerformanceSchema
+>;
 
 function fail(message: string): never {
   throw new Error(message);
@@ -247,7 +187,7 @@ function jsonLines(path: string): readonly unknown[] {
     .filter((line) => line.trim().length > 0)
     .map((line, index) => {
       try {
-        return JSON.parse(line) as unknown;
+        return JSON.parse(line);
       } catch {
         return fail(`${path}:${index + 1} is malformed JSONL.`);
       }
@@ -263,93 +203,11 @@ function artifactAuthority(path: string): ArtifactAuthority {
   };
 }
 
-function availableCount(value: unknown): number | undefined {
-  return isJsonRecord(value) &&
-    value.tag === "available" &&
-    typeof value.count === "number" &&
-    Number.isInteger(value.count) &&
-    value.count >= 0
-    ? value.count
-    : undefined;
-}
-
-function hasExactKeys(
-  value: Readonly<Record<string, unknown>>,
-  keys: readonly string[],
-): boolean {
-  return Object.keys(value).sort().join("\0") === [...keys].sort().join("\0");
-}
-
 function ledgerEntry(value: unknown): ModelInvocationLedgerEntry {
-  if (
-    !isJsonRecord(value) ||
-    !hasExactKeys(value, [
-      "schemaVersion",
-      "phase",
-      "invocationId",
-      "model",
-      "reasoningEffort",
-      "startedAt",
-      "elapsedMilliseconds",
-      "exit",
-      "usage",
-    ]) ||
-    value.schemaVersion !== 1 ||
-    !MODEL_INVOCATION_PHASES.includes(value.phase as ModelInvocationPhase) ||
-    typeof value.invocationId !== "string" ||
-    value.invocationId.length === 0 ||
-    typeof value.model !== "string" ||
-    value.model.length === 0 ||
-    typeof value.reasoningEffort !== "string" ||
-    value.reasoningEffort.length === 0 ||
-    typeof value.startedAt !== "string" ||
-    value.startedAt.length === 0 ||
-    typeof value.elapsedMilliseconds !== "number" ||
-    !Number.isInteger(value.elapsedMilliseconds) ||
-    value.elapsedMilliseconds < 0 ||
-    !isJsonRecord(value.exit) ||
-    !isJsonRecord(value.usage)
-  )
-    fail("Invocation ledger entry is invalid.");
-  const exitValid =
-    (value.exit.tag === "exited" &&
-      hasExactKeys(value.exit, ["tag", "status"]) &&
-      typeof value.exit.status === "number" &&
-      Number.isInteger(value.exit.status)) ||
-    (value.exit.tag === "signaled" &&
-      hasExactKeys(value.exit, ["tag", "signal"]) &&
-      typeof value.exit.signal === "string" &&
-      value.exit.signal.length > 0);
-  const usageValid =
-    (value.usage.tag === "unavailable" &&
-      hasExactKeys(value.usage, ["tag", "reason"]) &&
-      typeof value.usage.reason === "string" &&
-      value.usage.reason.length > 0) ||
-    (value.usage.tag === "available" &&
-      hasExactKeys(value.usage, [
-        "tag",
-        "input",
-        "cachedInput",
-        "cacheWriteInput",
-        "output",
-        "reasoningOutput",
-      ]) &&
-      [
-        value.usage.input,
-        value.usage.cachedInput,
-        value.usage.cacheWriteInput,
-        value.usage.output,
-        value.usage.reasoningOutput,
-      ].every(
-        (counter) =>
-          isJsonRecord(counter) &&
-          ((counter.tag === "unavailable" && hasExactKeys(counter, ["tag"])) ||
-            (counter.tag === "available" &&
-              hasExactKeys(counter, ["tag", "count"]) &&
-              availableCount(counter) !== undefined)),
-      ));
-  if (!exitValid || !usageValid) fail("Invocation ledger entry is invalid.");
-  return value as ModelInvocationLedgerEntry;
+  const parsed = parseModelInvocationLedgerEntry(value);
+  return Either.isRight(parsed)
+    ? parsed.right
+    : fail("Invocation ledger entry is invalid.");
 }
 
 function phaseSummary(
@@ -362,25 +220,30 @@ function phaseSummary(
   );
   const counters = selected.flatMap(({ usage }) => {
     if (usage.tag === "unavailable") return [];
-    const input = availableCount(usage.input);
-    const cachedInput = availableCount(usage.cachedInput);
-    const cacheWriteInput = availableCount(usage.cacheWriteInput);
-    const output = availableCount(usage.output);
-    const reasoningOutput = availableCount(usage.reasoningOutput);
-    return input === undefined ||
-      cachedInput === undefined ||
-      cacheWriteInput === undefined ||
-      output === undefined ||
-      reasoningOutput === undefined
-      ? []
-      : [{ input, cachedInput, cacheWriteInput, output, reasoningOutput }];
+    if (
+      usage.input.tag === "unavailable" ||
+      usage.cachedInput.tag === "unavailable" ||
+      usage.cacheWriteInput.tag === "unavailable" ||
+      usage.output.tag === "unavailable" ||
+      usage.reasoningOutput.tag === "unavailable"
+    )
+      return [];
+    return [
+      {
+        input: usage.input.count,
+        cachedInput: usage.cachedInput.count,
+        cacheWriteInput: usage.cacheWriteInput.count,
+        output: usage.output.count,
+        reasoningOutput: usage.reasoningOutput.count,
+      },
+    ];
   });
-  const usage =
+  const usage: PhaseSummary["usage"] =
     selected.length > 0 &&
     counters.length === selected.length &&
     reasons.length === 0
       ? {
-          tag: "available" as const,
+          tag: "available",
           totals: counters.reduce<UsageTotals>(
             (total, value) => ({
               input: total.input + value.input,
@@ -402,7 +265,7 @@ function phaseSummary(
           ),
         }
       : {
-          tag: "unavailable" as const,
+          tag: "unavailable",
           reasons: [
             ...reasons,
             ...(selected.length === 0
@@ -430,30 +293,43 @@ function phaseSummary(
 export function summarizeControlledRun(
   input: RunDescriptor,
 ): ControlledRunPerformance {
-  const transcript = parseSdkTranscript(jsonLines(input.transcriptPath));
+  const reviewInvocationEvidence = readReviewInvocationEvidenceManifest(
+    input.reviewInvocationEvidencePath,
+  );
+  const transcriptPath = reviewInvocationEvidence.transcript.path;
+  const reviewPath = reviewInvocationEvidence.review.path;
+  const invocationLedgerPaths = reviewInvocationEvidence.invocationLedgers.map(
+    ({ path }) => path,
+  );
+  const transcript = parseSdkTranscript(jsonLines(transcriptPath));
   if (transcript.tag === "invalid") fail(transcript.message);
   if (transcript.value.calls.length === 0)
     fail("Controlled performance requires a runnable SDK transcript.");
-  const scenarioId = transcript.value.header.scenarioId;
-  const scenarioSha256 = transcript.value.header.scenarioSha256;
-  const scenarioReviewSha256 = transcript.value.header.scenarioReviewSha256;
-  const charactersSha256 = transcript.value.header.charactersSha256;
-  const setupSha256 =
-    transcript.value.header.setupSha256 ??
+  const header = transcript.value.header;
+  if (header.characterOutcome !== "ready" || header.setupOutcome !== "ready") {
     fail("Controlled performance requires a ready scenario setup artifact.");
+  }
+  const scenarioId = header.scenarioId;
+  const scenarioSha256 = header.scenarioSha256;
+  const scenarioReviewSha256 = header.scenarioReviewSha256;
+  const charactersSha256 = header.charactersSha256;
+  const setupSha256 = header.setupSha256;
   const calls = transcript.value.calls.length;
   const continuations = [
     ...new Set(transcript.value.calls.map(({ continuation }) => continuation)),
   ].sort((left, right) => left - right);
-  const entries = input.invocationLedgerPaths.flatMap((path) =>
+  const entries = invocationLedgerPaths.flatMap((path) =>
     jsonLines(path).map(ledgerEntry),
   );
   const reportingTiming = decode(
     ReportingTimingSchema,
     input.reportingTimingPath,
   );
-  const transcriptAuthority = artifactAuthority(input.transcriptPath);
-  const reviewAuthority = artifactAuthority(input.reviewPath);
+  const transcriptAuthority = artifactAuthority(transcriptPath);
+  const reviewAuthority = artifactAuthority(reviewPath);
+  const reviewInvocationEvidenceAuthority = artifactAuthority(
+    input.reviewInvocationEvidencePath,
+  );
   const reportingTimingAuthority = artifactAuthority(input.reportingTimingPath);
   const reportingManifestAuthority = artifactAuthority(
     input.reportingManifestPath,
@@ -479,32 +355,15 @@ export function summarizeControlledRun(
   }
   const timingRows = jsonLines(input.supervisorTimingPath);
   const timing = timingRows.map((value) => {
-    if (
-      !isJsonRecord(value) ||
-      value.schemaVersion !== 1 ||
-      typeof value.continuation !== "number" ||
-      !Number.isInteger(value.continuation) ||
-      !isJsonRecord(value.phases)
-    )
-      return fail("Supervisor timing row is invalid.");
-    const phase = value.phases;
-    const numbers = [
-      phase.continuationTypecheckMilliseconds,
-      phase.priorCallVerificationReplayMilliseconds,
-      phase.newSdkExecutionMilliseconds,
-      phase.evidenceWritingMilliseconds,
-    ];
-    if (
-      numbers.some(
-        (entry) =>
-          typeof entry !== "number" || !Number.isInteger(entry) || entry < 0,
-      )
-    )
-      return fail("Supervisor timing row has invalid phase durations.");
-    return {
-      continuation: value.continuation,
-      phases: numbers as readonly [number, number, number, number],
-    };
+    const decoded = Schema.decodeUnknownEither(SupervisorTimingSchema, {
+      onExcessProperty: "error",
+    })(value);
+    if (Either.isRight(decoded)) return decoded.right;
+    return fail(
+      isJsonRecord(value) && isJsonRecord(value.phases)
+        ? "Supervisor timing row has invalid phase durations."
+        : "Supervisor timing row is invalid.",
+    );
   });
   const timedContinuations = timing
     .map(({ continuation }) => continuation)
@@ -516,56 +375,68 @@ export function summarizeControlledRun(
     fail(
       "Supervisor timings must cover every authoritative transcript continuation exactly once.",
     );
-  const sums = timing.reduce(
-    (total, row) =>
-      total.map((value, index) => value + row.phases[index]!) as [
-        number,
-        number,
-        number,
-        number,
-      ],
-    [0, 0, 0, 0] as [number, number, number, number],
+  const sums: SupervisorTiming["phases"] = timing.reduce(
+    (total, row) => ({
+      continuationTypecheckMilliseconds:
+        total.continuationTypecheckMilliseconds +
+        row.phases.continuationTypecheckMilliseconds,
+      priorCallVerificationReplayMilliseconds:
+        total.priorCallVerificationReplayMilliseconds +
+        row.phases.priorCallVerificationReplayMilliseconds,
+      newSdkExecutionMilliseconds:
+        total.newSdkExecutionMilliseconds +
+        row.phases.newSdkExecutionMilliseconds,
+      evidenceWritingMilliseconds:
+        total.evidenceWritingMilliseconds +
+        row.phases.evidenceWritingMilliseconds,
+    }),
+    {
+      continuationTypecheckMilliseconds: 0,
+      priorCallVerificationReplayMilliseconds: 0,
+      newSdkExecutionMilliseconds: 0,
+      evidenceWritingMilliseconds: 0,
+    },
   );
-  const phases = Object.fromEntries(
-    MODEL_INVOCATION_PHASES.map((phase) => [
-      phase,
-      phaseSummary(entries, phase),
-    ]),
-  ) as Readonly<Record<ModelInvocationPhase, PhaseSummary>>;
+  const phaseRecord = Schema.decodeUnknownEither(PhaseRecordSchema, {
+    onExcessProperty: "error",
+  })(
+    Object.fromEntries(
+      MODEL_INVOCATION_PHASES.map((phase) => [
+        phase,
+        phaseSummary(entries, phase),
+      ]),
+    ),
+  );
+  const phases = Either.isRight(phaseRecord)
+    ? phaseRecord.right
+    : fail(`Unable to construct model invocation phases: ${phaseRecord.left}`);
   const modelElapsed = MODEL_INVOCATION_PHASES.reduce(
     (total, phase) => total + phases[phase].elapsedMilliseconds,
     0,
   );
-  const unchangedControlElapsedMilliseconds = [
-    "scenarioGeneration",
-    "scenarioCharacterAuthoring",
-    "scenarioSetupAuthoring",
-  ].reduce(
-    (total, phase) =>
-      total + phases[phase as ModelInvocationPhase].elapsedMilliseconds,
+  const unchangedControlElapsedMilliseconds = UNCHANGED_CONTROL_PHASES.reduce(
+    (total, phase) => total + phases[phase].elapsedMilliseconds,
     0,
   );
-  const comparableModelElapsedMilliseconds = [
-    "scenarioCompositeReview",
-    "player",
-    "postPlayReview",
-  ].reduce(
-    (total, phase) =>
-      total + phases[phase as ModelInvocationPhase].elapsedMilliseconds,
+  const comparableModelElapsedMilliseconds = COMPARABLE_PHASES.reduce(
+    (total, phase) => total + phases[phase].elapsedMilliseconds,
     0,
   );
-  const nonModelMilliseconds = sums.reduce((total, value) => total + value, 0);
-  const normalized = (phase: PhaseSummary) =>
+  const nonModelMilliseconds = Object.values(sums).reduce(
+    (total, value) => total + value,
+    0,
+  );
+  const normalized = (phase: PhaseSummary): NormalizedTokens =>
     phase.usage.tag === "available" && phase.invocationCount > 0
       ? {
-          tag: "available" as const,
+          tag: "available",
           perInvocation:
             phase.usage.totals.inputPlusOutput / phase.invocationCount,
           perContinuation:
             phase.usage.totals.inputPlusOutput / continuations.length,
           perCall: phase.usage.totals.inputPlusOutput / calls,
         }
-      : { tag: "unavailable" as const };
+      : { tag: "unavailable" };
   return {
     schemaVersion: 1,
     telemetryAuthority: "codex-json-events",
@@ -579,21 +450,26 @@ export function summarizeControlledRun(
     phases,
     supervisor: {
       continuationCount: timing.length,
-      typecheckMilliseconds: sums[0],
-      replayMilliseconds: sums[1],
-      sdkExecutionMilliseconds: sums[2],
-      evidenceWritingMilliseconds: sums[3],
+      typecheckMilliseconds: sums.continuationTypecheckMilliseconds,
+      replayMilliseconds: sums.priorCallVerificationReplayMilliseconds,
+      sdkExecutionMilliseconds: sums.newSdkExecutionMilliseconds,
+      evidenceWritingMilliseconds: sums.evidenceWritingMilliseconds,
       nonModelMilliseconds,
       perContinuationMilliseconds: nonModelMilliseconds / continuations.length,
       perCallMilliseconds: nonModelMilliseconds / calls,
       replayCacheDecision: {
-        cumulativeReplayMilliseconds: sums[1],
+        cumulativeReplayMilliseconds:
+          sums.priorCallVerificationReplayMilliseconds,
         shareOfNonModelSupervisor:
-          nonModelMilliseconds === 0 ? 0 : sums[1] / nonModelMilliseconds,
+          nonModelMilliseconds === 0
+            ? 0
+            : sums.priorCallVerificationReplayMilliseconds /
+              nonModelMilliseconds,
         admitted:
-          sums[1] >= 60_000 &&
+          sums.priorCallVerificationReplayMilliseconds >= 60_000 &&
           nonModelMilliseconds > 0 &&
-          sums[1] / nonModelMilliseconds >= 0.1,
+          sums.priorCallVerificationReplayMilliseconds / nonModelMilliseconds >=
+            0.1,
       },
     },
     reportingElapsedMilliseconds: reportingTiming.elapsedMilliseconds,
@@ -609,9 +485,10 @@ export function summarizeControlledRun(
       postPlayReview: normalized(phases.postPlayReview),
     },
     sources: {
+      reviewInvocationEvidence: reviewInvocationEvidenceAuthority,
       transcript: transcriptAuthority,
       review: reviewAuthority,
-      invocationLedgers: input.invocationLedgerPaths.map(artifactAuthority),
+      invocationLedgers: invocationLedgerPaths.map(artifactAuthority),
       supervisorTimings: artifactAuthority(input.supervisorTimingPath),
       reportingTiming: reportingTimingAuthority,
       reportingManifest: reportingManifestAuthority,
@@ -737,6 +614,12 @@ function matchingPhase(
   };
 }
 
+const UNCHANGED_CONTROL_PHASES = [
+  "scenarioGeneration",
+  "scenarioCharacterAuthoring",
+  "scenarioSetupAuthoring",
+] as const satisfies readonly ModelInvocationPhase[];
+
 const COMPARABLE_PHASES = [
   "scenarioCompositeReview",
   "player",
@@ -801,11 +684,11 @@ export function compareControlledRuns(
     fresh: { calls: fresh.calls, continuations: fresh.continuations },
   };
   const freshTokenTotals = {
-    authority: "codex-json-events" as const,
+    authority: "codex-json-events",
     player: phaseTokens(fresh.phases.player),
     postPlayReview: phaseTokens(fresh.phases.postPlayReview),
     comparablePath: controlledComparableTokens(fresh),
-  };
+  } satisfies PerformanceComparison["reportedTokenTotals"]["fresh"];
   if (!("telemetryAuthority" in baseline)) {
     const postPlayIdentityMatches =
       baseline.postPlayReview.model === fresh.phases.postPlayReview.models[0] &&
@@ -1049,7 +932,7 @@ export function readControlledPerformance(
     MODEL_INVOCATION_PHASES.some((phase) => decoded.phases[phase] === undefined)
   )
     fail(`Controlled performance evidence ${path} has incomplete phases.`);
-  const run = decoded as ControlledRunPerformance;
+  const run = decoded;
   const sourceMatches = (source: ArtifactAuthority): boolean => {
     try {
       return (
@@ -1069,13 +952,8 @@ export function readControlledPerformance(
     (total, phase) => total + run.phases[phase].elapsedMilliseconds,
     run.supervisor.nonModelMilliseconds + run.reportingElapsedMilliseconds,
   );
-  const controlElapsed = [
-    "scenarioGeneration",
-    "scenarioCharacterAuthoring",
-    "scenarioSetupAuthoring",
-  ].reduce(
-    (total, phase) =>
-      total + run.phases[phase as ModelInvocationPhase].elapsedMilliseconds,
+  const controlElapsed = UNCHANGED_CONTROL_PHASES.reduce(
+    (total, phase) => total + run.phases[phase].elapsedMilliseconds,
     0,
   );
   const normalizedMatches = (
@@ -1095,6 +973,7 @@ export function readControlledPerformance(
         ) &&
         equal(value.perCall, phase.usage.totals.inputPlusOutput / run.calls);
   if (
+    !sourceMatches(run.sources.reviewInvocationEvidence) ||
     !sourceMatches(run.sources.transcript) ||
     !sourceMatches(run.sources.review) ||
     run.sources.invocationLedgers.length === 0 ||
@@ -1159,11 +1038,7 @@ export function readControlledPerformance(
     );
   const recomputed = summarizeControlledRun({
     schemaVersion: 1,
-    transcriptPath: run.sources.transcript.path,
-    reviewPath: run.sources.review.path,
-    invocationLedgerPaths: run.sources.invocationLedgers.map(
-      (source) => source.path,
-    ),
+    reviewInvocationEvidencePath: run.sources.reviewInvocationEvidence.path,
     supervisorTimingPath: run.sources.supervisorTimings.path,
     reportingTimingPath: run.sources.reportingTiming.path,
     reportingManifestPath: run.sources.reportingManifest.path,

@@ -391,7 +391,7 @@ RAW review decides whether the concrete terminal facts support the Table's
 decision to end combat; it does not derive an encounter-wide outcome.
 
 The complete canonical SDK transcript is the immutable execution authority,
-not the default reviewer context. Reviewers should receive a bounded derived
+not the default reviewer context. Reviewers should receive the size-capped
 audit projection first, together with the transcript path, exact byte size, and
 an exact-sequence extraction operation. They inspect raw transcript records
 only when a concrete audit fact requires them; they must not load a large
@@ -474,16 +474,21 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts review \
   --run <run-id> --db scripts/raw-swarm/out/player-swarm.db
 ```
 
-The review launcher first derives `<review-name>.audit.jsonl` and a bounded
-`<review-name>.packet.json`. The packet combines the audit, retained header
+The review launcher first derives `<review-name>.audit.jsonl` and a review
+evidence packet at `<review-name>.packet.json`. The packet combines the audit, retained header
 evidence without the initial session, current-turn projections, line-numbered
 run artifacts, domain authorities, and scenario-selected local SRD passages.
 It is capped at 900 KiB and is supplied directly as one review turn; exceeding
 the cap is a precise failure, never truncation. Commands and tools invalidate
 that measured invocation, preventing a second accumulating turn from replacing
-the bounded review product. Exact-sequence extraction is a separate retained
+the review result. Exact-sequence extraction is a separate retained
 operator drill-down. A review consuming extracted records is another measured
-invocation rather than an invisible extension of the packet review.
+invocation rather than an invisible extension of the scenario review.
+
+Raw Swarm entities are named for their role or contract: scenario reviewer,
+review evidence packet, review result, and one-turn review invocation. Size,
+age, or comparison adjectives describe measured properties or historical
+evidence; they are not alternate entity names unless both domain states exist.
 
 To inspect an omitted exact result, extract only named sequences and then
 attach both the exact records and their provenance to the imported review:
@@ -699,14 +704,29 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts export \
   --db scripts/raw-swarm/out/player-swarm.db \
   --destination scripts/raw-swarm/out/player-swarm-portable
 
+# Bind the exact transcript, validated review, audit, packet, and model
+# invocation ledgers before reporting or performance comparison.
+mise exec -- pnpm exec tsx scripts/raw-swarm/review-invocation-evidence.ts \
+  create \
+  scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl \
+  scripts/raw-swarm/out/$SCENARIO-sdk-review.json \
+  scripts/raw-swarm/out/$SCENARIO-sdk-review.audit.jsonl \
+  scripts/raw-swarm/out/$SCENARIO-sdk-review.packet.json \
+  scripts/raw-swarm/out/$SCENARIO-review-invocation-evidence.json \
+  scripts/raw-swarm/out/$SCENARIO-player.invocations.jsonl \
+  scripts/raw-swarm/out/$SCENARIO-sdk-review.invocations.jsonl
+
 # For controlled evidence, time the actual reporting work. This operation owns
-# the timing artifact; callers do not supply an elapsed duration.
+# the timing artifact; callers do not supply an elapsed duration. It refuses a
+# transcript or review outside the hash-linked invocation evidence.
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts controlled-reporting \
   scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl \
   scripts/raw-swarm/out/$SCENARIO-sdk-review.json \
   --db scripts/raw-swarm/out/$SCENARIO-controlled-index.db \
   --destination scripts/raw-swarm/out/$SCENARIO-controlled-portable \
-  --timing scripts/raw-swarm/out/$SCENARIO-controlled-portable/reporting-timing.json
+  --timing scripts/raw-swarm/out/$SCENARIO-controlled-portable/reporting-timing.json \
+  --review-invocation-evidence \
+  scripts/raw-swarm/out/$SCENARIO-review-invocation-evidence.json
 
 # Summarize controlled telemetry and compare it with retained legacy evidence.
 mise exec -- pnpm exec tsx scripts/raw-swarm/performance-comparison.ts \

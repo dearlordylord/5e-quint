@@ -65,6 +65,72 @@ function fixture() {
 }
 
 describe("SDK player derived audit evidence", () => {
+  test("retains readiness outcomes as discriminated audit header state", () => {
+    const { header } = fixture();
+    const common = {
+      type: header.type,
+      scenarioId: header.scenarioId,
+      gitSha: header.gitSha,
+      startedAt: header.startedAt,
+      consumerIsolation: header.consumerIsolation,
+      replaySupervisorSha256: header.replaySupervisorSha256,
+      scenarioSha256: header.scenarioSha256,
+      scenarioReviewSha256: header.scenarioReviewSha256,
+      charactersSha256: header.charactersSha256,
+    } as const;
+    const characterObstructed = sdkAuditTranscript({
+      records: [
+        {
+          ...common,
+          characterObservation: {},
+          characterOutcome: "obstructed" as const,
+          obstruction: "characters unavailable",
+        },
+      ],
+      transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+      transcriptByteLength: 123,
+      transcriptSha256: "3".repeat(64),
+      replaySupervisorSha256: "b".repeat(64),
+    });
+    expect(characterObstructed).toMatchObject({
+      tag: "valid",
+      audit: {
+        header: { characterOutcome: "obstructed" },
+        calls: [],
+      },
+    });
+
+    const {
+      initialSession: _initialSession,
+      initialSessionSha256: _initialSessionSha256,
+      ...withoutInitialSession
+    } = header;
+    const setupObstructed = sdkAuditTranscript({
+      records: [
+        {
+          ...withoutInitialSession,
+          setupOutcome: "obstructed" as const,
+          obstruction: "setup unavailable",
+        },
+      ],
+      transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+      transcriptByteLength: 123,
+      transcriptSha256: "3".repeat(64),
+      replaySupervisorSha256: "b".repeat(64),
+    });
+    expect(setupObstructed).toMatchObject({
+      tag: "valid",
+      audit: {
+        header: {
+          characterOutcome: "ready",
+          setupOutcome: "obstructed",
+          setupSha256: header.setupSha256,
+        },
+        calls: [],
+      },
+    });
+  });
+
   test("retains canonical inputs and typed review facts without sessions or full results", () => {
     const { header, call } = fixture();
     const audit = sdkAuditTranscript({
@@ -77,9 +143,18 @@ describe("SDK player derived audit evidence", () => {
 
     expect(audit.tag).toBe("valid");
     if (audit.tag !== "valid") return;
+    expect(audit.audit.header).toMatchObject({
+      characterOutcome: "ready",
+      setupOutcome: "ready",
+      setupSha256: header.setupSha256,
+      initialSessionSha256: header.initialSessionSha256,
+    });
     expect(audit.audit.calls[0]).toMatchObject({
       seq: 1,
       input: { subject: { tag: "action", actorId: "a" }, fills: [] },
+      outcome: "returned",
+      outputSessionSha256: call.outputSessionSha256,
+      resultSha256: call.resultSha256,
       reviewFacts: {
         kind: "resolution",
         tag: "needsHoles",
@@ -90,6 +165,38 @@ describe("SDK player derived audit evidence", () => {
     expect(encoded).not.toContain('inputSession"');
     expect(encoded).not.toContain('outputSession"');
     expect(encoded).not.toContain('large":"omitted');
+
+    const thrownCall = {
+      type: call.type,
+      seq: call.seq,
+      continuation: call.continuation,
+      operation: call.operation,
+      inputSession: call.inputSession,
+      inputSessionSha256: call.inputSessionSha256,
+      input: call.input,
+      outcome: "threw" as const,
+      rejection: "operationFailure" as const,
+      error: { name: "Error", message: "operation failed" },
+    };
+    const thrownAudit = sdkAuditTranscript({
+      records: [header, thrownCall],
+      transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+      transcriptByteLength: 123,
+      transcriptSha256: "3".repeat(64),
+      replaySupervisorSha256: "b".repeat(64),
+    });
+    expect(thrownAudit).toMatchObject({
+      tag: "valid",
+      audit: {
+        calls: [
+          {
+            outcome: "threw",
+            rejection: "operationFailure",
+            reviewFacts: { kind: "error", rejection: "operationFailure" },
+          },
+        ],
+      },
+    });
 
     const malformedResult = { ...call.result, holes: [{}] };
     expect(

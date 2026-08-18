@@ -38,6 +38,9 @@ importers:
       '@informalsystems/quint':
         specifier: 0.31.0
         version: 0.31.0
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.29.0
+        version: 1.29.0(zod@4.3.6)
       '@types/node':
         specifier: ^22.19.15
         version: 22.19.15

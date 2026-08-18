@@ -1,22 +1,9 @@
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 import { appendFileSync, closeSync, openSync, readFileSync } from "node:fs";
 
+import { Either, ParseResult, Schema } from "effect";
+
 import { isJsonRecord } from "./transcript.ts";
-
-export type TokenCount =
-  | { readonly tag: "available"; readonly count: number }
-  | { readonly tag: "unavailable" };
-
-export type ModelUsage =
-  | {
-      readonly tag: "available";
-      readonly input: TokenCount;
-      readonly cachedInput: TokenCount;
-      readonly cacheWriteInput: TokenCount;
-      readonly output: TokenCount;
-      readonly reasoningOutput: TokenCount;
-    }
-  | { readonly tag: "unavailable"; readonly reason: string };
 
 export const MODEL_INVOCATION_PHASES = [
   "scenarioGeneration",
@@ -29,19 +16,66 @@ export const MODEL_INVOCATION_PHASES = [
 ] as const;
 export type ModelInvocationPhase = (typeof MODEL_INVOCATION_PHASES)[number];
 
-export type ModelInvocationLedgerEntry = {
-  readonly schemaVersion: 1;
-  readonly phase: ModelInvocationPhase;
-  readonly invocationId: string;
-  readonly model: string;
-  readonly reasoningEffort: string;
-  readonly startedAt: string;
-  readonly elapsedMilliseconds: number;
-  readonly exit:
-    | { readonly tag: "exited"; readonly status: number }
-    | { readonly tag: "signaled"; readonly signal: string };
-  readonly usage: ModelUsage;
-};
+const NonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+);
+const TokenCountSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("available"),
+    count: NonNegativeIntegerSchema,
+  }),
+  Schema.Struct({ tag: Schema.Literal("unavailable") }),
+);
+const ModelUsageSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("available"),
+    input: TokenCountSchema,
+    cachedInput: TokenCountSchema,
+    cacheWriteInput: TokenCountSchema,
+    output: TokenCountSchema,
+    reasoningOutput: TokenCountSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unavailable"),
+    reason: Schema.NonEmptyString,
+  }),
+);
+
+export const ModelInvocationLedgerEntrySchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
+  invocationId: Schema.NonEmptyString,
+  model: Schema.NonEmptyString,
+  reasoningEffort: Schema.NonEmptyString,
+  startedAt: Schema.NonEmptyString,
+  elapsedMilliseconds: NonNegativeIntegerSchema,
+  exit: Schema.Union(
+    Schema.Struct({
+      tag: Schema.Literal("exited"),
+      status: Schema.Number.pipe(Schema.int()),
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("signaled"),
+      signal: Schema.NonEmptyString,
+    }),
+  ),
+  usage: ModelUsageSchema,
+});
+
+export type TokenCount = Schema.Schema.Type<typeof TokenCountSchema>;
+export type ModelUsage = Schema.Schema.Type<typeof ModelUsageSchema>;
+export type ModelInvocationLedgerEntry = Schema.Schema.Type<
+  typeof ModelInvocationLedgerEntrySchema
+>;
+
+export function parseModelInvocationLedgerEntry(
+  value: unknown,
+): Either.Either<ModelInvocationLedgerEntry, ParseResult.ParseError> {
+  return Schema.decodeUnknownEither(ModelInvocationLedgerEntrySchema, {
+    onExcessProperty: "error",
+  })(value);
+}
 
 function nonNegativeInteger(value: unknown): number | undefined {
   return typeof value === "number" && Number.isInteger(value) && value >= 0
@@ -57,15 +91,13 @@ function summedCounter(
   const counts = usage.map((entry) =>
     nonNegativeInteger(entry[snake] ?? entry[camel]),
   );
-  return counts.some((count) => count === undefined)
-    ? { tag: "unavailable" }
-    : {
-        tag: "available",
-        count: (counts as readonly number[]).reduce(
-          (total, count) => total + count,
-          0,
-        ),
-      };
+  if (!counts.every((count): count is number => count !== undefined)) {
+    return { tag: "unavailable" };
+  }
+  return {
+    tag: "available",
+    count: counts.reduce((total, count) => total + count, 0),
+  };
 }
 
 function usageObject(
@@ -142,7 +174,7 @@ export function readCodexEvents(path: string): CodexEventReadResult {
   for (const [index, line] of lines.entries()) {
     if (line.trim().length === 0) continue;
     try {
-      events.push(JSON.parse(line) as unknown);
+      events.push(JSON.parse(line));
     } catch {
       return {
         tag: "invalid",
@@ -174,21 +206,24 @@ export function runCodexInvocation(input: {
   readonly reasoningEffort: string;
 }): SpawnSyncReturns<Buffer> {
   const eventFd = openSync(input.eventPath, "wx");
-  let logFd: number | undefined;
-  let result: SpawnSyncReturns<Buffer>;
   const startedAt = new Date().toISOString();
   const startedMilliseconds = Date.now();
-  try {
-    logFd = openSync(input.logPath, "wx");
-    result = spawnSync("codex", input.args, {
-      cwd: input.cwd,
-      env: input.env,
-      stdio: ["ignore", eventFd, logFd],
-    });
-  } finally {
-    closeSync(eventFd);
-    if (logFd !== undefined) closeSync(logFd);
-  }
+  const result = (() => {
+    try {
+      const logFd = openSync(input.logPath, "wx");
+      try {
+        return spawnSync("codex", input.args, {
+          cwd: input.cwd,
+          env: input.env,
+          stdio: ["ignore", eventFd, logFd],
+        });
+      } finally {
+        closeSync(logFd);
+      }
+    } finally {
+      closeSync(eventFd);
+    }
+  })();
   const parsedEvents = readCodexEvents(input.eventPath);
   const events = parsedEvents.tag === "valid" ? parsedEvents.events : [];
   appendInvocationLedger(input.ledgerPath, {

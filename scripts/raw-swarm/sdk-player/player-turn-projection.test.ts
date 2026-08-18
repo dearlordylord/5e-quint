@@ -247,6 +247,32 @@ describe("player current-turn projection", () => {
         tacticalNote: "",
       }),
     ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
+    const missingChoices = {
+      ...result,
+      holes: [
+        {
+          kind: "targetChoice",
+          holeId: "battle:target",
+          holeInstanceKey: "battle:target",
+          label: "Target",
+        },
+      ],
+    };
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [
+          {
+            ...call,
+            result: missingChoices,
+            resultSha256: sha256Canonical(missingChoices),
+          },
+        ],
+        beforeSession,
+        afterSession: beforeSession,
+        tacticalNote: "",
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
     for (const malformedResult of [
       { ...result, holes: { kind: "rolledDice" } },
       { ...result, holes: undefined },
@@ -338,5 +364,25 @@ describe("player current-turn projection", () => {
       reason: "projectionTooLarge",
       maximumByteLength: PLAYER_TURN_PROJECTION_MAX_BYTES,
     });
+  });
+
+  test("rejects a session with no initiative still-to-act list", () => {
+    const missingStillToAct = structuredClone(beforeSession) as Mutable<
+      typeof beforeSession
+    >;
+    delete (
+      missingStillToAct.battle.state.initiative as {
+        stillToAct?: unknown;
+      }
+    ).stillToAct;
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [],
+        beforeSession: missingStillToAct,
+        afterSession: missingStillToAct,
+        tacticalNote: "",
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
   });
 });
