@@ -1,0 +1,25 @@
+{
+  "scenarioId": "generated-battle-009",
+  "scenarioSha256": "0a0e06e2179ed3c79d5eedb9cfa4dcce04b3ecff32687da3434faa5b45095723",
+  "gitSha": "b0da9d15dc08b54017a265e5a08f5ca5e3e34da3",
+  "admitReviewedUnsupported": true,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "The SRD supports the 5-foot grid, 15-foot separation, movement, Medium creature spaces, melee reach, and Opportunity Attacks (Playing-the-Game.md:519-640). Wolf supplies 11 HP, 40-foot Speed, and Bite; Skeleton supplies 13 HP, 30-foot Speed, and Shortsword (Animals.md:2587-2611; Monsters/Monsters-P-S.md:1152-1175). Rolled damage and critical-hit dice are RAW (Playing-the-Game.md:694-702), and zero arrows makes the Shortbow unavailable (Equipment.md:42-44, 139). The scenario supplies the remaining terrain, initiative, surprise, ammunition, relationship, and objective decisions; ASSUMPTIONS.md adds no applicable unresolved gap."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "Under docs/mushroom-playbook/AUTHORING.md, Wolf and Skeleton are public SRD identities, and Bite, Shortsword, Critical Hit, and related terms are ordinary rules vocabulary. The scenario contains no PHB+ identity, private correspondence, provenance claim, protected source expression, or public source-to-Mushroom crosswalk."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicy",
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "The selected canonical stat-block identities are Wolf and Skeleton, and both appear verbatim in the supplied availability list. The availableOnly intent is therefore satisfied; no unavailable selection or product obligation is inferred."
+  },
+  "sdkCapabilityIntent": "supportedOnly",
+  "sdkCapabilityReview": {
+    "classification": "supported",
+    "evidence": "The supplied public documentation supports stat-block initialization, caller Initiative, rolled stat-block damage, ammunition stocks, bright-light five-foot grid placement, empty objects and relationship collections, directed Opportunity-Attack relationships, surfaced creature acts, relation-derived spatial facts, route movement, and interrupt/replay resolution. The required tactics remain player-owned choices."
+  }
+}
