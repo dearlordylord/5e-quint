@@ -366,7 +366,7 @@ describe("player current-turn projection", () => {
     });
   });
 
-  test("rejects a session with no initiative still-to-act list", () => {
+  test("rejects a missing or empty initiative still-to-act list", () => {
     const missingStillToAct = structuredClone(beforeSession) as Mutable<
       typeof beforeSession
     >;
@@ -381,6 +381,19 @@ describe("player current-turn projection", () => {
         calls: [],
         beforeSession: missingStillToAct,
         afterSession: missingStillToAct,
+        tacticalNote: "",
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
+    const emptyStillToAct = structuredClone(beforeSession) as Mutable<
+      typeof beforeSession
+    >;
+    emptyStillToAct.battle.state.initiative.stillToAct = [];
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [],
+        beforeSession: emptyStillToAct,
+        afterSession: emptyStillToAct,
         tacticalNote: "",
       }),
     ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });

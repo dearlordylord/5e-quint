@@ -32,7 +32,11 @@ describe("review invocation evidence", () => {
           startedAt: "2026-08-17T00:00:00.000Z",
           elapsedMilliseconds: 1,
           exit: { tag: "exited", status: 0 },
-          usage: { tag: "unavailable", reason: "test fixture" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
         },
       ],
     });
@@ -52,5 +56,41 @@ describe("review invocation evidence", () => {
     expect(() =>
       readReviewInvocationEvidenceManifest(fixture.manifestPath),
     ).toThrow(/exact audited sequence/);
+  });
+
+  test("rejects an unrelated ledger and a tool-using reviewer", () => {
+    const ledgerDirectory = mkdtempSync(
+      resolve(repoRoot, "scripts/raw-swarm/out/review-ledger-identity-test-"),
+    );
+    directories.push(ledgerDirectory);
+    const entry = {
+      schemaVersion: 1 as const,
+      phase: "postPlayReview" as const,
+      invocationId: "review",
+      model: "gpt-5.6-luna",
+      reasoningEffort: "max",
+      startedAt: "2026-08-17T00:00:00.000Z",
+      elapsedMilliseconds: 1,
+      exit: { tag: "exited" as const, status: 0 },
+      usage: {
+        tag: "unavailable" as const,
+        reason:
+          "The first-party event stream exposed no turn.completed usage object.",
+      },
+    };
+    expect(() =>
+      controlledReviewEvidenceFixture({
+        directory: resolve(ledgerDirectory, "unrelated"),
+        ledgerEntries: [entry],
+        ledgerScenarioId: "another-scenario",
+      }),
+    ).toThrow(/identity does not match/);
+    expect(() =>
+      controlledReviewEvidenceFixture({
+        directory: resolve(ledgerDirectory, "tool-use"),
+        ledgerEntries: [entry],
+        postPlayUsesTool: true,
+      }),
+    ).toThrow(/used a tool/);
   });
 });

@@ -11,11 +11,10 @@ import {
 import { readSdkAudit, type SdkAudit } from "./sdk-player/sdk-audit.ts";
 import { repoRoot, sha256Text } from "./transcript.ts";
 
-export type ReviewIdentity = {
-  readonly scenarioId: string;
-  readonly gitSha: string;
-  readonly transcriptSha256: string;
-};
+export type ReviewIdentity = Pick<
+  SdkAudit["header"],
+  "scenarioId" | "gitSha" | "transcriptSha256"
+>;
 
 export type ReviewOutputValidation =
   | {
@@ -135,12 +134,15 @@ function main(args: readonly string[]): void {
   }
   const audit = readSdkAudit(resolve(repoRoot, auditInput));
   if (audit.tag === "invalid") fail(audit.message);
-  let review: unknown;
-  try {
-    review = JSON.parse(readFileSync(resolve(repoRoot, reviewInput), "utf8"));
-  } catch {
-    fail(`Reviewer output is unreadable or malformed: ${reviewInput}`);
-  }
+  const review = (() => {
+    try {
+      return JSON.parse(
+        readFileSync(resolve(repoRoot, reviewInput), "utf8"),
+      ) as unknown;
+    } catch {
+      return fail(`Reviewer output is unreadable or malformed: ${reviewInput}`);
+    }
+  })();
   const evidence = reviewEvidenceCatalogForAudit(audit.audit);
   if (evidence.tag === "invalid") fail(evidence.message);
   const result = validateReviewOutput(

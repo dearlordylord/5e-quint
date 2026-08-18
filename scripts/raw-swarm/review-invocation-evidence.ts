@@ -4,7 +4,15 @@ import { resolve } from "node:path";
 
 import { Either, Schema } from "effect";
 
-import { parseModelInvocationLedgerEntry } from "./model-telemetry.ts";
+import { repositoryArtifactPath } from "./artifact-index.ts";
+import {
+  invocationIdFromCodexEvents,
+  modelUsageFromCodexEvents,
+  parseModelInvocationLedgerEntry,
+  readCodexEvents,
+  type ModelInvocationLedgerEntry,
+} from "./model-telemetry.ts";
+import { reviewInvocationPolicy } from "./review-invocation-policy.ts";
 import {
   reviewEvidenceCatalogForAudit,
   validateReviewOutput,
@@ -14,7 +22,12 @@ import {
   SDK_REVIEW_PACKET_MAX_BYTES,
   validateSdkReviewPacket,
 } from "./sdk-player/sdk-review-packet.ts";
-import { repoRoot } from "./transcript.ts";
+import {
+  canonicalJson,
+  GitShaSchema,
+  repoRoot,
+  ScenarioIdSchema,
+} from "./transcript.ts";
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 export const ArtifactAuthoritySchema = Schema.Struct({
@@ -29,13 +42,16 @@ export type ArtifactAuthority = Schema.Schema.Type<
 export const ReviewInvocationEvidenceManifestSchema = Schema.Struct({
   type: Schema.Literal("review-invocation-evidence"),
   schemaVersion: Schema.Literal(1),
-  scenarioId: Schema.NonEmptyTrimmedString,
-  gitSha: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{40}$/)),
+  scenarioId: ScenarioIdSchema,
+  gitSha: GitShaSchema,
   transcript: ArtifactAuthoritySchema,
   review: ArtifactAuthoritySchema,
   audit: ArtifactAuthoritySchema,
   packet: ArtifactAuthoritySchema,
   invocationLedgers: Schema.Array(ArtifactAuthoritySchema).pipe(
+    Schema.minItems(1),
+  ),
+  invocationEvents: Schema.Array(ArtifactAuthoritySchema).pipe(
     Schema.minItems(1),
   ),
 });
@@ -49,9 +65,10 @@ function fail(message: string): never {
 }
 
 function artifactAuthority(path: string) {
-  const bytes = readFileSync(resolve(repoRoot, path));
+  const repositoryPath = repositoryArtifactPath(path);
+  const bytes = readFileSync(resolve(repoRoot, repositoryPath));
   return {
-    path,
+    path: repositoryPath,
     byteLength: bytes.byteLength,
     sha256: createHash("sha256").update(bytes).digest("hex"),
   };
@@ -65,21 +82,49 @@ function json(path: string): unknown {
   }
 }
 
-function ledgerIsValid(path: string): boolean {
+function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
   const lines = readFileSync(resolve(repoRoot, path), "utf8")
     .split("\n")
     .filter((line) => line.trim().length > 0);
-  return (
-    lines.length > 0 &&
-    lines.every((line) => {
-      try {
-        const value: unknown = JSON.parse(line);
-        return Either.isRight(parseModelInvocationLedgerEntry(value));
-      } catch {
-        return false;
-      }
-    })
-  );
+  if (lines.length === 0) fail("Review invocation ledgers must be nonempty.");
+  return lines.map((line) => {
+    try {
+      const value: unknown = JSON.parse(line);
+      const decoded = parseModelInvocationLedgerEntry(value);
+      if (Either.isLeft(decoded)) fail(decoded.left.message);
+      return decoded.right;
+    } catch {
+      return fail("Review invocation ledger contains malformed evidence.");
+    }
+  });
+}
+
+function finalAgentMessage(events: readonly unknown[]): unknown {
+  const messages = events.flatMap((event): readonly string[] => {
+    if (
+      typeof event !== "object" ||
+      event === null ||
+      !("type" in event) ||
+      event.type !== "item.completed" ||
+      !("item" in event) ||
+      typeof event.item !== "object" ||
+      event.item === null ||
+      !("type" in event.item) ||
+      event.item.type !== "agent_message" ||
+      !("text" in event.item) ||
+      typeof event.item.text !== "string"
+    )
+      return [];
+    return [event.item.text];
+  });
+  const message = messages.at(-1);
+  if (message === undefined)
+    fail("Review invocation has no final agent message.");
+  try {
+    return JSON.parse(message) as unknown;
+  } catch {
+    return fail("Review invocation final agent message is not JSON.");
+  }
 }
 
 function deriveManifest(input: {
@@ -88,6 +133,7 @@ function deriveManifest(input: {
   readonly auditPath: string;
   readonly packetPath: string;
   readonly invocationLedgerPaths: readonly string[];
+  readonly invocationEventPaths: readonly string[];
 }): ReviewInvocationEvidenceManifest {
   const audit = readSdkAudit(resolve(repoRoot, input.auditPath));
   if (audit.tag === "invalid") fail(audit.message);
@@ -123,11 +169,62 @@ function deriveManifest(input: {
   if (
     new Set(input.invocationLedgerPaths).size !==
       input.invocationLedgerPaths.length ||
-    input.invocationLedgerPaths.length === 0 ||
-    input.invocationLedgerPaths.some((path) => !ledgerIsValid(path))
+    input.invocationLedgerPaths.length !== 1 ||
+    new Set(input.invocationEventPaths).size !==
+      input.invocationEventPaths.length ||
+    input.invocationEventPaths.length === 0
   ) {
-    fail("Review invocation ledgers must be nonempty, unique, and valid.");
+    fail(
+      "Review invocation evidence requires one ledger and unique event streams.",
+    );
   }
+  const entries = input.invocationLedgerPaths.flatMap(ledgerEntries);
+  if (
+    entries.some(
+      (entry) =>
+        entry.scenarioId !== audit.audit.header.scenarioId ||
+        entry.gitSha !== audit.audit.header.gitSha,
+    )
+  )
+    fail("Review invocation ledger identity does not match the audited run.");
+  const eventEvidence = input.invocationEventPaths.map((path) => {
+    const parsed = readCodexEvents(resolve(repoRoot, path));
+    if (parsed.tag === "invalid") fail(parsed.message);
+    return { authority: artifactAuthority(path), events: parsed.events };
+  });
+  if (
+    entries.length !== eventEvidence.length ||
+    entries.some((entry) => {
+      const evidence = eventEvidence.find(
+        ({ authority }) => authority.sha256 === entry.eventsSha256,
+      );
+      return (
+        evidence === undefined ||
+        invocationIdFromCodexEvents(evidence.events, "") !==
+          entry.invocationId ||
+        canonicalJson(modelUsageFromCodexEvents(evidence.events)) !==
+          canonicalJson(entry.usage)
+      );
+    })
+  )
+    fail("Review invocation ledgers do not match their Codex event streams.");
+  const postPlayEntries = entries.filter(
+    ({ phase }) => phase === "postPlayReview",
+  );
+  if (postPlayEntries.length !== 1)
+    fail("Review invocation evidence requires exactly one post-play review.");
+  const postPlayEvents = eventEvidence.find(
+    ({ authority }) => authority.sha256 === postPlayEntries[0]?.eventsSha256,
+  );
+  if (postPlayEvents === undefined)
+    fail("Post-play review events are missing.");
+  const policy = reviewInvocationPolicy(postPlayEvents.events);
+  if (policy.tag === "invalid") fail(policy.message);
+  if (
+    canonicalJson(finalAgentMessage(postPlayEvents.events)) !==
+    canonicalJson(review)
+  )
+    fail("Post-play review events do not produce the retained review output.");
   return {
     type: "review-invocation-evidence",
     schemaVersion: 1,
@@ -138,6 +235,7 @@ function deriveManifest(input: {
     audit: artifactAuthority(input.auditPath),
     packet: packetAuthority,
     invocationLedgers: input.invocationLedgerPaths.map(artifactAuthority),
+    invocationEvents: eventEvidence.map(({ authority }) => authority),
   };
 }
 
@@ -147,6 +245,7 @@ export function writeReviewInvocationEvidenceManifest(input: {
   readonly auditPath: string;
   readonly packetPath: string;
   readonly invocationLedgerPaths: readonly string[];
+  readonly invocationEventPaths: readonly string[];
   readonly outputPath: string;
 }): ReviewInvocationEvidenceManifest {
   const manifest = deriveManifest(input);
@@ -173,6 +272,7 @@ export function readReviewInvocationEvidenceManifest(
     auditPath: manifest.audit.path,
     packetPath: manifest.packet.path,
     invocationLedgerPaths: manifest.invocationLedgers.map(({ path }) => path),
+    invocationEventPaths: manifest.invocationEvents.map(({ path }) => path),
   });
   if (JSON.stringify(derived) !== JSON.stringify(manifest)) {
     fail("Review invocation evidence changed from its hash-linked artifacts.");
@@ -188,7 +288,8 @@ function main(args: readonly string[]): void {
     auditPath,
     packetPath,
     outputPath,
-    ...ledgers
+    ledgerPath,
+    ...eventPaths
   ] = args;
   if (
     command !== "create" ||
@@ -197,10 +298,11 @@ function main(args: readonly string[]): void {
     auditPath === undefined ||
     packetPath === undefined ||
     outputPath === undefined ||
-    ledgers.length === 0
+    ledgerPath === undefined ||
+    eventPaths.length === 0
   ) {
     fail(
-      "Usage: review-invocation-evidence.ts create <transcript.jsonl> <review.json> <audit.jsonl> <packet.json> <manifest.json> <invocation-ledger.jsonl> [...ledgers]",
+      "Usage: review-invocation-evidence.ts create <transcript.jsonl> <review.json> <audit.jsonl> <packet.json> <manifest.json> <invocation-ledger.jsonl> <invocation-events.jsonl> [...events]",
     );
   }
   writeReviewInvocationEvidenceManifest({
@@ -208,7 +310,8 @@ function main(args: readonly string[]): void {
     reviewPath,
     auditPath,
     packetPath,
-    invocationLedgerPaths: ledgers,
+    invocationLedgerPaths: [ledgerPath],
+    invocationEventPaths: eventPaths,
     outputPath,
   });
 }

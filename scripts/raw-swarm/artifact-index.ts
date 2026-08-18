@@ -85,7 +85,7 @@ function sha256(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
-function relativeArtifactPath(path: string): string {
+export function repositoryArtifactPath(path: string): string {
   const absolute = (() => {
     try {
       return realpathSync(resolve(repoRoot, path));
@@ -246,7 +246,7 @@ function registerArtifact(
   readonly byteLength: number;
   readonly path: string;
 } {
-  const relativePath = relativeArtifactPath(path);
+  const relativePath = repositoryArtifactPath(path);
   const bytes = readFileSync(resolve(repoRoot, relativePath));
   const digest = sha256(bytes);
   const byDigest = db
@@ -1175,7 +1175,7 @@ export function exportArtifactIndex(input: {
     ) {
       fail("Artifact index contains an invalid reference.");
     }
-    const containedPath = relativeArtifactPath(row.path);
+    const containedPath = repositoryArtifactPath(row.path);
     const sourcePath = realpathSync(resolve(repoRoot, containedPath));
     const bytes = readFileSync(sourcePath);
     if (bytes.byteLength !== row.byteLength || sha256(bytes) !== row.sha256) {

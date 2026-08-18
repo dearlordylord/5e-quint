@@ -168,7 +168,11 @@ describe("RAW swarm artifact report index", () => {
           startedAt: "2026-08-17T00:00:00.000Z",
           elapsedMilliseconds: 1,
           exit: { tag: "exited", status: 0 },
-          usage: { tag: "unavailable", reason: "test fixture" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
         },
       ],
     });
@@ -218,6 +222,19 @@ describe("RAW swarm artifact report index", () => {
         }),
       ]),
     );
+    expect(
+      query(
+        controlledDbPath,
+        "SELECT auditSha256, invocationLedgerSha256 FROM reviews",
+      ),
+    ).toEqual({
+      auditSha256: createHash("sha256")
+        .update(readFileSync(controlledEvidence.auditPath))
+        .digest("hex"),
+      invocationLedgerSha256: createHash("sha256")
+        .update(readFileSync(controlledEvidence.ledgerPath))
+        .digest("hex"),
+    });
   }, 30_000);
 
   test("establishes and verifies the GitHub backlink and label idempotently", () => {

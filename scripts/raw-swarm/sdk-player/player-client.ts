@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+const SDK_SUPERVISOR_RESPONSE_TIMEOUT_MILLISECONDS = 10 * 60 * 1_000;
+
 function fail(message: string): never {
   throw new Error(message);
 }
@@ -22,7 +24,7 @@ writeFileSync(
   })}\n`,
 );
 
-const deadline = Date.now() + 120_000;
+const deadline = Date.now() + SDK_SUPERVISOR_RESPONSE_TIMEOUT_MILLISECONDS;
 while (!existsSync(responsePath)) {
   if (Date.now() >= deadline) fail("Timed out waiting for the SDK supervisor.");
   await new Promise((resolvePromise) => setTimeout(resolvePromise, 50));

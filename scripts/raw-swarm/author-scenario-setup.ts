@@ -43,6 +43,7 @@ function runSetupAuthor(input: {
   readonly codexHome: string;
   readonly permissionArgs: readonly string[];
   readonly scenarioId: string;
+  readonly gitSha: string;
   readonly evidenceDirectory: string;
   readonly role: ScenarioSetupAuthorRole;
   readonly instruction: string;
@@ -76,6 +77,8 @@ function runSetupAuthor(input: {
       `${input.scenarioId}-authoring-invocations.jsonl`,
     ),
     phase: "scenarioSetupAuthoring",
+    scenarioId: input.scenarioId,
+    gitSha: input.gitSha,
     fallbackInvocationId: `${input.scenarioId}-setup-${input.role}-authoring`,
     model: "gpt-5.6-sol",
     reasoningEffort: "medium",
@@ -182,6 +185,7 @@ async function main(args: readonly string[]): Promise<void> {
           codexHome,
           permissionArgs,
           scenarioId: scenarioId.right,
+          gitSha: revision.sha,
           evidenceDirectory,
           role,
           instruction:

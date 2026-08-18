@@ -353,6 +353,11 @@ function controlledReporting(args: readonly string[]): void {
       path,
       mediaType: "application/x-ndjson",
     })),
+    ...reviewInvocationEvidence.invocationEvents.map(({ path }, index) => ({
+      role: `modelInvocationEvents-${index + 1}`,
+      path,
+      mediaType: "application/x-ndjson",
+    })),
   ];
   const insertRunArtifact = evidenceDb.prepare(
     "INSERT INTO runArtifacts(runId, role, artifactSha256) VALUES (?, ?, ?)",
@@ -362,7 +367,15 @@ function controlledReporting(args: readonly string[]): void {
     insertRunArtifact.run(runId, role, artifact.sha256);
   }
   evidenceDb.close();
-  review([reviewPath, "--db", dbPath, "--run", String(runId)]);
+  review([
+    reviewPath,
+    "--db",
+    dbPath,
+    "--run",
+    String(runId),
+    "--review-invocation-evidence",
+    reviewInvocationEvidencePath,
+  ]);
   const manifest = exportArtifactIndex({ dbPath, destination });
   const transcriptSha256 = createHash("sha256")
     .update(readFileSync(resolve(repoRoot, transcriptPath)))
@@ -639,6 +652,20 @@ export function review(args: readonly string[]): void {
   const reviewPath = required(reviewArg, "<review.json>");
   const dbPath = required(flagValue(rest, "--db"), "--db");
   const runId = positiveRunId(required(flagValue(rest, "--run"), "--run"));
+  const invocationEvidencePath = flagValue(
+    rest,
+    "--review-invocation-evidence",
+  );
+  const invocationEvidence =
+    invocationEvidencePath === undefined
+      ? undefined
+      : readReviewInvocationEvidenceManifest(invocationEvidencePath);
+  if (
+    invocationEvidence !== undefined &&
+    resolve(repoRoot, invocationEvidence.review.path) !==
+      resolve(repoRoot, reviewPath)
+  )
+    fail("Review does not match its invocation evidence.");
   const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(resolve(repoRoot, reviewPath), "utf8")));
@@ -684,7 +711,8 @@ export function review(args: readonly string[]): void {
     path: reviewPath,
     mediaType: "application/json",
   });
-  const auditPath = `${reviewStem}.audit.jsonl`;
+  const auditPath =
+    invocationEvidence?.audit.path ?? `${reviewStem}.audit.jsonl`;
   const auditArtifact = (() => {
     if (!existsSync(auditPath)) return null;
     const audit = readSdkAudit(auditPath);
@@ -700,7 +728,9 @@ export function review(args: readonly string[]): void {
       mediaType: "application/x-ndjson",
     });
   })();
-  const ledgerPath = `${reviewStem}.invocations.jsonl`;
+  const ledgerPath =
+    invocationEvidence?.invocationLedgers[0]?.path ??
+    `${reviewStem}.invocations.jsonl`;
   const ledgerArtifact = existsSync(ledgerPath)
     ? registerIndexArtifact({
         db,

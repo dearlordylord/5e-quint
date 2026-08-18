@@ -1,6 +1,7 @@
 import { canonicalJson } from "../transcript.ts";
 import { createHash } from "node:crypto";
 import { Match } from "effect";
+import type { BattleHole } from "@dnd/battle-runtime";
 import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue } from "./json-value.ts";
 import type { SdkCallRecord } from "./sdk-transcript.ts";
@@ -9,6 +10,36 @@ export const PLAYER_TURN_PROJECTION_MAX_BYTES = 32 * 1024;
 export const PLAYER_TACTICAL_NOTE_MAX_BYTES = 4 * 1024;
 
 type JsonObject = { readonly [key: string]: JsonValue };
+
+type ChoiceHoleKind = BattleHole extends infer Hole
+  ? Hole extends {
+      readonly kind: infer Kind extends string;
+      readonly choices: readonly unknown[];
+    }
+    ? Kind
+    : never
+  : never;
+
+const CHOICE_HOLE_KINDS = {
+  targetChoice: true,
+  helpAttackAllyDecision: true,
+  helpAttackEnemyDecision: true,
+  objectContactTargets: true,
+  damageTypeChoice: true,
+  skillChoice: true,
+  abilityChoice: true,
+  targetAbilityChoices: true,
+  conditionChoice: true,
+  commandOptionChoice: true,
+  selfTransformationModeChoice: true,
+  sanctuaryInterdictionOutcome: true,
+  attackDamageDisposition: true,
+  ongoingSpellTargetChoice: true,
+  hitPointHealingDistribution: true,
+  spellTargetAllocation: true,
+  spellTargetList: true,
+  unitFeatureDecision: true,
+} as const satisfies Record<ChoiceHoleKind, true>;
 
 export type PlayerHoleOccurrence = {
   readonly ref: `hole:${string}`;
@@ -180,16 +211,17 @@ function mapEntries(
   value: JsonValue | undefined,
 ): readonly [string, JsonValue][] | undefined {
   if (!isJsonObject(value) || !Array.isArray(value.$map)) return undefined;
-  const entries = value.$map.map((entry): [string, JsonValue] | undefined =>
-    Array.isArray(entry) &&
-    typeof entry[0] === "string" &&
-    entry[1] !== undefined
-      ? [entry[0], entry[1]]
-      : undefined,
-  );
-  return entries.some((entry) => entry === undefined)
-    ? undefined
-    : (entries as readonly [string, JsonValue][]);
+  const entries: [string, JsonValue][] = [];
+  for (const entry of value.$map) {
+    if (
+      !Array.isArray(entry) ||
+      typeof entry[0] !== "string" ||
+      entry[1] === undefined
+    )
+      return undefined;
+    entries.push([entry[0], entry[1]]);
+  }
+  return entries;
 }
 
 function requiredNumber(value: JsonValue | undefined): number | undefined {
@@ -206,7 +238,8 @@ function resourceProjection(
   value: JsonValue | undefined,
 ): PlayerCombatantProjection["resources"] | undefined {
   if (!Array.isArray(value)) return undefined;
-  const projected = value.map((entry) => {
+  const projected: PlayerCombatantProjection["resources"][number][] = [];
+  for (const entry of value) {
     if (!isJsonObject(entry)) return undefined;
     const ref =
       typeof entry.resourcePoolRef === "string"
@@ -214,48 +247,45 @@ function resourceProjection(
         : undefined;
     const usesRemaining = requiredNumber(entry.usesRemaining);
     const usedThisTurn = requiredBoolean(entry.usedThisTurn);
-    return ref === undefined ||
+    if (
+      ref === undefined ||
       usesRemaining === undefined ||
       usedThisTurn === undefined
-      ? undefined
-      : { ref, usesRemaining, usedThisTurn };
-  });
-  return projected.some((entry) => entry === undefined)
-    ? undefined
-    : (projected as PlayerCombatantProjection["resources"]);
+    )
+      return undefined;
+    projected.push({ ref, usesRemaining, usedThisTurn });
+  }
+  return projected;
 }
 
 function ammunitionProjection(
   value: JsonValue | undefined,
 ): PlayerCombatantProjection["ammunition"] | undefined {
   if (!Array.isArray(value)) return undefined;
-  const projected = value.map((entry) =>
-    isJsonObject(entry) &&
-    typeof entry.ammunition === "string" &&
-    requiredNumber(entry.remaining) !== undefined
-      ? { kind: entry.ammunition, remaining: entry.remaining as number }
-      : undefined,
-  );
-  return projected.some((entry) => entry === undefined)
-    ? undefined
-    : (projected as PlayerCombatantProjection["ammunition"]);
+  const projected: PlayerCombatantProjection["ammunition"][number][] = [];
+  for (const entry of value) {
+    if (!isJsonObject(entry) || typeof entry.ammunition !== "string")
+      return undefined;
+    const remaining = requiredNumber(entry.remaining);
+    if (remaining === undefined) return undefined;
+    projected.push({ kind: entry.ammunition, remaining });
+  }
+  return projected;
 }
 
 function slotProjection(
   value: JsonValue | undefined,
 ): PlayerCombatantProjection["spellSlots"] | undefined {
   if (!Array.isArray(value)) return undefined;
-  const projected = value.map((entry) => {
+  const projected: PlayerCombatantProjection["spellSlots"][number][] = [];
+  for (const entry of value) {
     if (!isJsonObject(entry)) return undefined;
     const level = requiredNumber(entry.level ?? entry.slotLevel);
     const remaining = requiredNumber(entry.remaining ?? entry.slotsRemaining);
-    return level === undefined || remaining === undefined
-      ? undefined
-      : { level, remaining };
-  });
-  return projected.some((entry) => entry === undefined)
-    ? undefined
-    : (projected as PlayerCombatantProjection["spellSlots"]);
+    if (level === undefined || remaining === undefined) return undefined;
+    projected.push({ level, remaining });
+  }
+  return projected;
 }
 
 function combatantProjection(
@@ -335,14 +365,13 @@ function combatants(
   if (state === undefined) return undefined;
   const stateCombatants = mapEntries(state.combatants);
   if (stateCombatants === undefined) return undefined;
-  const entries = stateCombatants.map(
-    ([id, value]) => [id, combatantProjection(value)] as const,
-  );
-  return entries.some(([, value]) => value === undefined)
-    ? undefined
-    : new Map(
-        entries as readonly (readonly [string, PlayerCombatantProjection])[],
-      );
+  const entries: [string, PlayerCombatantProjection][] = [];
+  for (const [id, value] of stateCombatants) {
+    const projection = combatantProjection(value);
+    if (projection === undefined) return undefined;
+    entries.push([id, projection]);
+  }
+  return new Map(entries);
 }
 
 function objects(
@@ -353,18 +382,13 @@ function objects(
   const groundObjects = mapEntries(state?.groundObjects);
   if (groundObjects === undefined || !Array.isArray(battlefield?.objects))
     return undefined;
-  const scenarioObjects = battlefield.objects.map(
-    (value): [string, JsonValue] | undefined =>
-      isJsonObject(value) && typeof value.objectId === "string"
-        ? [value.objectId, value]
-        : undefined,
-  );
-  return scenarioObjects.some((entry) => entry === undefined)
-    ? undefined
-    : new Map([
-        ...groundObjects,
-        ...(scenarioObjects as readonly [string, JsonValue][]),
-      ]);
+  const scenarioObjects: [string, JsonValue][] = [];
+  for (const value of battlefield.objects) {
+    if (!isJsonObject(value) || typeof value.objectId !== "string")
+      return undefined;
+    scenarioObjects.push([value.objectId, value]);
+  }
+  return new Map([...groundObjects, ...scenarioObjects]);
 }
 
 function scalarString(value: JsonValue | undefined): string | null | undefined {
@@ -416,25 +440,34 @@ function objectProjection(
   const sight = scalarString(value.sight ?? null);
   const interveningCover = scalarString(value.interveningCover ?? null);
   if (
-    [
-      kind,
-      armorClass,
-      damageDisposition,
-      traversal,
-      sight,
-      interveningCover,
-    ].some((entry) => entry === undefined)
+    kind === undefined ||
+    armorClass === undefined ||
+    damageDisposition === undefined ||
+    traversal === undefined ||
+    sight === undefined ||
+    interveningCover === undefined
   )
     return undefined;
   return {
-    kind: kind as string | null,
-    armorClass: armorClass as number | null,
-    damageDisposition:
-      damageDisposition as PlayerObjectProjection["damageDisposition"],
-    traversal: traversal as string | null,
-    sight: sight as string | null,
-    interveningCover: interveningCover as string | null,
+    kind,
+    armorClass,
+    damageDisposition,
+    traversal,
+    sight,
+    interveningCover,
   };
+}
+
+function projectedObjects(
+  values: ReadonlyMap<string, JsonValue>,
+): ReadonlyMap<string, PlayerObjectProjection> | undefined {
+  const projected: [string, PlayerObjectProjection][] = [];
+  for (const [id, value] of values) {
+    const projection = objectProjection(value);
+    if (projection === undefined) return undefined;
+    projected.push([id, projection]);
+  }
+  return new Map(projected);
 }
 
 function positions(
@@ -444,7 +477,8 @@ function positions(
   if (space === undefined) return undefined;
   if (!Array.isArray(space.placements)) return undefined;
   const placements = space.placements;
-  const entries = placements.map((value) => {
+  const entries: [string, PlayerPositionProjection][] = [];
+  for (const value of placements) {
     if (
       !isJsonObject(value) ||
       typeof value.token !== "string" ||
@@ -457,21 +491,19 @@ function positions(
       value.coordinate.elevationFeet === undefined
         ? undefined
         : requiredNumber(value.coordinate.elevationFeet);
-    return x === undefined ||
+    if (
+      x === undefined ||
       y === undefined ||
       (value.coordinate.elevationFeet !== undefined &&
         elevationFeet === undefined)
-      ? undefined
-      : ([
-          value.token,
-          { x, y, ...(elevationFeet === undefined ? {} : { elevationFeet }) },
-        ] as const);
-  });
-  return entries.some((entry) => entry === undefined)
-    ? undefined
-    : new Map(
-        entries as readonly (readonly [string, PlayerPositionProjection])[],
-      );
+    )
+      return undefined;
+    entries.push([
+      value.token,
+      { x, y, ...(elevationFeet === undefined ? {} : { elevationFeet }) },
+    ]);
+  }
+  return new Map(entries);
 }
 
 function changesFor<A>(
@@ -508,10 +540,10 @@ function changesFor<A>(
     });
 }
 
-function stableRef(
-  prefix: "hole" | "subject",
+function stableRef<const Prefix extends "hole" | "subject">(
+  prefix: Prefix,
   value: unknown,
-): `hole:${string}` | `subject:${string}` {
+): `${Prefix}:${string}` {
   return `${prefix}:${createHash("sha256").update(canonicalJson(value)).digest("hex")}`;
 }
 
@@ -591,16 +623,23 @@ function decodeHole(value: unknown): PlayerHoleProjection | undefined {
     typeof value.label !== "string"
   )
     return undefined;
-  if (!Array.isArray(value.choices)) return undefined;
-  const choices = value.choices.map((choice) =>
-    typeof choice === "string"
-      ? choice
-      : isJsonObject(choice) && typeof choice.kind === "string"
-        ? `kind:${choice.kind}`
-        : undefined,
-  );
-  if (choices.some((choice) => choice === undefined)) return undefined;
+  if (
+    (value.choices === undefined && value.kind in CHOICE_HOLE_KINDS) ||
+    (value.choices !== undefined && !Array.isArray(value.choices))
+  )
+    return undefined;
+  const choices: string[] = [];
+  for (const choice of value.choices ?? []) {
+    if (typeof choice === "string") choices.push(choice);
+    else if (isJsonObject(choice) && typeof choice.kind === "string")
+      choices.push(`kind:${choice.kind}`);
+    else return undefined;
+  }
   const dcValue = isJsonObject(value.dc) ? value.dc : undefined;
+  const dcNumber =
+    dcValue === undefined
+      ? undefined
+      : requiredNumber(dcValue.value ?? dcValue.dc);
   const dc =
     dcValue === undefined
       ? undefined
@@ -610,9 +649,7 @@ function decodeHole(value: unknown): PlayerHoleProjection | undefined {
           (dcValue.ability === undefined || typeof dcValue.ability === "string")
         ? {
             kind: dcValue.kind,
-            ...(typeof (dcValue.value ?? dcValue.dc) === "number"
-              ? { value: (dcValue.value ?? dcValue.dc) as number }
-              : {}),
+            ...(dcNumber === undefined ? {} : { value: dcNumber }),
             ...(typeof dcValue.ability === "string"
               ? { ability: dcValue.ability }
               : {}),
@@ -651,7 +688,7 @@ function decodeHole(value: unknown): PlayerHoleProjection | undefined {
     holeId: value.holeId,
     holeInstanceKey: value.holeInstanceKey,
     label: value.label,
-    choices: choices as readonly string[],
+    choices,
     ...(typeof value.requiresTableSpatialFact === "boolean"
       ? { requiresTableSpatialFact: value.requiresTableSpatialFact }
       : {}),
@@ -672,44 +709,42 @@ function holeOccurrences(
   value: JsonValue | undefined,
 ): readonly PlayerHoleOccurrence[] | undefined {
   if (!Array.isArray(value)) return undefined;
-  const decoded = value.map(decodeHole);
-  return decoded.some((hole) => hole === undefined)
-    ? undefined
-    : (decoded as readonly PlayerHoleProjection[]).map((hole) => ({
-        ref: stableRef("hole", {
-          subject,
-          kind: hole.kind,
-          holeId: hole.holeId,
-          holeInstanceKey: hole.holeInstanceKey,
-        }) as `hole:${string}`,
-        hole,
-      }));
+  const decoded: PlayerHoleProjection[] = [];
+  for (const hole of value) {
+    const projection = decodeHole(hole);
+    if (projection === undefined) return undefined;
+    decoded.push(projection);
+  }
+  return decoded.map((hole) => ({
+    ref: stableRef("hole", {
+      subject,
+      kind: hole.kind,
+      holeId: hole.holeId,
+      holeInstanceKey: hole.holeInstanceKey,
+    }),
+    hole,
+  }));
 }
 
 function acts(call: SdkCallRecord): readonly PlayerActProjection[] | undefined {
   if (call.outcome !== "returned" || !Array.isArray(call.result))
     return undefined;
-  const projected = call.result.map(
-    (value): PlayerActProjection | undefined => {
-      if (!isJsonObject(value) || value.subject === undefined) return undefined;
-      const subject = projectPlayerSubject(value.subject);
-      if (subject === undefined) return undefined;
-      const projectedHoles = holeOccurrences(subject, value.initialHoles);
-      if (projectedHoles === undefined) return undefined;
-      return {
-        ref: stableRef("subject", subject) as `subject:${string}`,
-        subject,
-        ...(typeof value.label === "string" ? { label: value.label } : {}),
-        ...(typeof value.summary === "string"
-          ? { summary: value.summary }
-          : {}),
-        holes: projectedHoles,
-      };
-    },
-  );
-  return projected.some((value) => value === undefined)
-    ? undefined
-    : (projected as readonly PlayerActProjection[]);
+  const projected: PlayerActProjection[] = [];
+  for (const value of call.result) {
+    if (!isJsonObject(value) || value.subject === undefined) return undefined;
+    const subject = projectPlayerSubject(value.subject);
+    if (subject === undefined) return undefined;
+    const projectedHoles = holeOccurrences(subject, value.initialHoles);
+    if (projectedHoles === undefined) return undefined;
+    projected.push({
+      ref: stableRef("subject", subject),
+      subject,
+      ...(typeof value.label === "string" ? { label: value.label } : {}),
+      ...(typeof value.summary === "string" ? { summary: value.summary } : {}),
+      holes: projectedHoles,
+    });
+  }
+  return projected;
 }
 
 function frontier(
@@ -735,7 +770,7 @@ function frontier(
         tag: "frontier",
         frontier: {
           kind: "holes",
-          subjectRef: stableRef("subject", subject) as `subject:${string}`,
+          subjectRef: stableRef("subject", subject),
           subject,
           holes: projectedHoles,
         },
@@ -750,15 +785,18 @@ function frontier(
       { readonly outcome: "returned" }
     > = call;
     const decision = Match.value(returnedCall.operation).pipe(
-      Match.when("scenarioRelation", () => ({ tag: "ignore" as const })),
-      Match.when("discoverBattleActs", () => {
+      Match.when(
+        "scenarioRelation",
+        (): FrontierDecision => ({ tag: "ignore" }),
+      ),
+      Match.when("discoverBattleActs", (): FrontierDecision => {
         const projectedActs = acts(returnedCall);
         return projectedActs === undefined
-          ? ({ tag: "invalid" } as const)
-          : ({
+          ? { tag: "invalid" }
+          : {
               tag: "frontier",
               frontier: { kind: "acts", acts: projectedActs },
-            } as const);
+            };
       }),
       Match.when("resolveScenarioMovement", () =>
         resolutionFrontier(returnedCall),
@@ -845,6 +883,7 @@ function turn(
   const stillToAct = initiative?.stillToAct;
   if (
     !Array.isArray(stillToAct) ||
+    stillToAct.length === 0 ||
     !stillToAct.every(
       (entry): entry is JsonObject & { readonly creature: string } =>
         isJsonObject(entry) && typeof entry.creature === "string",
@@ -861,7 +900,7 @@ function turn(
     return undefined;
   return {
     round: initiative.round,
-    ...(next === undefined ? {} : { actorId: next.creature }),
+    actorId: next.creature,
     phase: phase.kind,
   };
 }
@@ -891,12 +930,14 @@ export function playerCurrentTurnProjection(input: {
   const afterPositions = positions(input.afterSession);
   const beforeObjectValues = objects(input.beforeSession);
   const afterObjectValues = objects(input.afterSession);
-  const beforeObjects = [...(beforeObjectValues ?? [])].map(
-    ([id, value]) => [id, objectProjection(value)] as const,
-  );
-  const afterObjects = [...(afterObjectValues ?? [])].map(
-    ([id, value]) => [id, objectProjection(value)] as const,
-  );
+  const beforeObjects =
+    beforeObjectValues === undefined
+      ? undefined
+      : projectedObjects(beforeObjectValues);
+  const afterObjects =
+    afterObjectValues === undefined
+      ? undefined
+      : projectedObjects(afterObjectValues);
   if (
     projectedTurn === undefined ||
     projectedFrontier === undefined ||
@@ -904,10 +945,8 @@ export function playerCurrentTurnProjection(input: {
     afterCombatants === undefined ||
     beforePositions === undefined ||
     afterPositions === undefined ||
-    beforeObjectValues === undefined ||
-    afterObjectValues === undefined ||
-    beforeObjects.some(([, value]) => value === undefined) ||
-    afterObjects.some(([, value]) => value === undefined)
+    beforeObjects === undefined ||
+    afterObjects === undefined
   ) {
     return {
       tag: "invalid",
@@ -930,25 +969,11 @@ export function playerCurrentTurnProjection(input: {
         id: change.id,
         ...change.transition,
       })),
-      ...changesFor(
-        new Map(
-          beforeObjects as readonly (readonly [
-            string,
-            PlayerObjectProjection,
-          ])[],
-        ),
-        new Map(
-          afterObjects as readonly (readonly [
-            string,
-            PlayerObjectProjection,
-          ])[],
-        ),
-        (change) => ({
-          kind: "object",
-          id: change.id,
-          ...change.transition,
-        }),
-      ),
+      ...changesFor(beforeObjects, afterObjects, (change) => ({
+        kind: "object",
+        id: change.id,
+        ...change.transition,
+      })),
       ...changesFor(beforePositions, afterPositions, (change) => ({
         kind: "position",
         id: change.id,

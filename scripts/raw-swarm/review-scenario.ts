@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 
 import { Either, Schema } from "effect";
 
@@ -8,7 +8,11 @@ import {
   ContentAvailabilityIntentSchema,
   SdkCapabilityIntentSchema,
 } from "./scenario-campaign.ts";
-import { repoRoot } from "./transcript.ts";
+import {
+  currentGitRevision,
+  decodeScenarioId,
+  repoRoot,
+} from "./transcript.ts";
 
 const ScenarioReviewPhaseSchema = Schema.Literal("milestone", "final");
 
@@ -49,6 +53,12 @@ async function main(args: readonly string[]): Promise<void> {
   const scenarioPath = resolve(repoRoot, scenarioInput);
   const outputPath = resolve(repoRoot, outputInput);
   const ledgerPath = resolve(repoRoot, ledgerInput);
+  const scenarioId = decodeScenarioId(basename(scenarioPath, ".md"));
+  if (Either.isLeft(scenarioId)) fail(scenarioId.left);
+  const revision = currentGitRevision();
+  if (revision.tag === "dirty") {
+    fail("Scenario review requires a clean Git worktree.");
+  }
   if (existsSync(outputPath)) {
     fail(`Refusing to overwrite scenario review output: ${outputPath}`);
   }
@@ -61,7 +71,11 @@ async function main(args: readonly string[]): Promise<void> {
     SdkCapabilityIntentSchema,
     sdkCapabilityIntentInput,
   );
-  const result = await scenarioCampaignAgents(ledgerPath).reviewScenario({
+  const result = await scenarioCampaignAgents({
+    ledgerPath,
+    scenarioId: scenarioId.right,
+    gitSha: revision.sha,
+  }).reviewScenario({
     scenario: readFileSync(scenarioPath, "utf8"),
     finalReview: phase === "final",
     contentAvailabilityIntent,

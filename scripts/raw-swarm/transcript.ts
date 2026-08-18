@@ -71,6 +71,7 @@ export const GitShaSchema = Schema.String.pipe(
   Schema.pattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/),
   Schema.brand("RawSwarmGitSha"),
 );
+export type GitSha = Schema.Schema.Type<typeof GitShaSchema>;
 export const StartedAtSchema = Schema.String.pipe(
   Schema.filter(
     (value) => {

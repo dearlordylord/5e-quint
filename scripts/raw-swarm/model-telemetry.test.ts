@@ -51,6 +51,9 @@ describe("Raw Swarm model invocation telemetry", () => {
   test("parses strict invocation ledger entries for downstream evidence", () => {
     const entry = {
       schemaVersion: 1,
+      scenarioId: "generated-battle-test",
+      gitSha: "a".repeat(40),
+      eventsSha256: "b".repeat(64),
       phase: "player",
       invocationId: "invocation-1",
       model: "gpt-5.6-sol",

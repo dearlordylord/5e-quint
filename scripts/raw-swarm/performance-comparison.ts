@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 
 import { Either, Schema } from "effect";
 
+import { repositoryArtifactPath } from "./artifact-index.ts";
 import {
   MODEL_INVOCATION_PHASES,
   parseModelInvocationLedgerEntry,
@@ -167,6 +168,7 @@ const ControlledRunPerformanceSchema = Schema.Struct({
     transcript: ArtifactAuthoritySchema,
     review: ArtifactAuthoritySchema,
     invocationLedgers: Schema.Array(ArtifactAuthoritySchema),
+    invocationEvents: Schema.Array(ArtifactAuthoritySchema),
     supervisorTimings: ArtifactAuthoritySchema,
     reportingTiming: ArtifactAuthoritySchema,
     reportingManifest: ArtifactAuthoritySchema,
@@ -195,9 +197,10 @@ function jsonLines(path: string): readonly unknown[] {
 }
 
 function artifactAuthority(path: string): ArtifactAuthority {
-  const bytes = readFileSync(resolve(repoRoot, path));
+  const repositoryPath = repositoryArtifactPath(path);
+  const bytes = readFileSync(resolve(repoRoot, repositoryPath));
   return {
-    path,
+    path: repositoryPath,
     byteLength: bytes.byteLength,
     sha256: createHash("sha256").update(bytes).digest("hex"),
   };
@@ -489,6 +492,7 @@ export function summarizeControlledRun(
       transcript: transcriptAuthority,
       review: reviewAuthority,
       invocationLedgers: invocationLedgerPaths.map(artifactAuthority),
+      invocationEvents: reviewInvocationEvidence.invocationEvents,
       supervisorTimings: artifactAuthority(input.supervisorTimingPath),
       reportingTiming: reportingTimingAuthority,
       reportingManifest: reportingManifestAuthority,
@@ -978,6 +982,8 @@ export function readControlledPerformance(
     !sourceMatches(run.sources.review) ||
     run.sources.invocationLedgers.length === 0 ||
     run.sources.invocationLedgers.some((source) => !sourceMatches(source)) ||
+    run.sources.invocationEvents.length === 0 ||
+    run.sources.invocationEvents.some((source) => !sourceMatches(source)) ||
     !sourceMatches(run.sources.supervisorTimings) ||
     !sourceMatches(run.sources.reportingTiming) ||
     !sourceMatches(run.sources.reportingManifest) ||

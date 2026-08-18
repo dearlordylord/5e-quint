@@ -117,6 +117,8 @@ async function main(args: readonly string[]): Promise<void> {
       logPath,
       ledgerPath,
       phase: "scenarioCharacterAuthoring",
+      scenarioId: scenarioId.right,
+      gitSha: revision.sha,
       fallbackInvocationId: `${scenarioId.right}-character-authoring`,
       model: "gpt-5.6-sol",
       reasoningEffort: "medium",

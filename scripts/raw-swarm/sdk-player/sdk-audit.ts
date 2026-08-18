@@ -10,7 +10,12 @@ import { dirname, relative, resolve } from "node:path";
 
 import { Match } from "effect";
 
-import { canonicalJson, repoRoot } from "../transcript.ts";
+import {
+  canonicalJson,
+  repoRoot,
+  type GitSha,
+  type ScenarioId,
+} from "../transcript.ts";
 import {
   parseSdkTranscript,
   type SdkCallRecord,
@@ -156,11 +161,11 @@ type SdkThrownCallReviewFacts = Extract<
 type SdkAuditHeaderCommon = {
   readonly type: "sdk-audit-header";
   readonly schemaVersion: typeof SDK_AUDIT_SCHEMA_VERSION;
-  readonly scenarioId: string;
+  readonly scenarioId: ScenarioId;
   readonly scenarioSha256: string;
   readonly scenarioReviewSha256: string;
   readonly charactersSha256: string;
-  readonly gitSha: string;
+  readonly gitSha: GitSha;
   readonly startedAt: string;
   readonly transcriptPath: string;
   readonly transcriptByteLength: number;

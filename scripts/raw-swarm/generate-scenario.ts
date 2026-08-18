@@ -37,6 +37,7 @@ import { currentGitRevision, GitShaSchema, repoRoot } from "./transcript.ts";
 import {
   appendInvocationLedger,
   invocationIdFromCodexEvents,
+  invocationEventsSha256,
   modelUsageFromCodexEvents,
   readCodexEvents,
   type ModelInvocationLedgerEntry,
@@ -56,6 +57,8 @@ function runCodexJson<A, I>(
     readonly reasoningEffort: "medium" | "max";
     readonly phase: ModelInvocationLedgerEntry["phase"];
     readonly ledgerPath: string;
+    readonly scenarioId: string;
+    readonly gitSha: string;
     readonly retainedInvocationDirectory?: string;
   },
 ): A {
@@ -112,6 +115,9 @@ function runCodexJson<A, I>(
     );
     appendInvocationLedger(execution.ledgerPath, {
       schemaVersion: 1,
+      scenarioId: execution.scenarioId,
+      gitSha: execution.gitSha,
+      eventsSha256: invocationEventsSha256(eventPath),
       phase: execution.phase,
       invocationId,
       model: execution.model,
@@ -147,11 +153,17 @@ function runCodexJson<A, I>(
     }
     if (execution.retainedInvocationDirectory !== undefined) {
       mkdirSync(execution.retainedInvocationDirectory, { recursive: true });
+      const retainedStem = `${execution.phase}-${fallbackInvocationId}`;
       writeFileSync(
         resolve(
           execution.retainedInvocationDirectory,
-          `${execution.phase}-${fallbackInvocationId}.json`,
+          `${retainedStem}.events.jsonl`,
         ),
+        readFileSync(eventPath),
+        { flag: "wx" },
+      );
+      writeFileSync(
+        resolve(execution.retainedInvocationDirectory, `${retainedStem}.json`),
         `${JSON.stringify(
           {
             schemaVersion: 1,
@@ -199,9 +211,11 @@ Current public SDK capability documentation:
 ${sdkCapabilityDocs}`;
 }
 
-export function scenarioCampaignAgents(
-  ledgerPath: string,
-): ScenarioCampaignAgents {
+export function scenarioCampaignAgents(input: {
+  readonly ledgerPath: string;
+  readonly scenarioId: string;
+  readonly gitSha: string;
+}): ScenarioCampaignAgents {
   const statBlocks = scenarioSetupStatBlocks();
   if (statBlocks.tag === "invalid") fail(statBlocks.message);
   const sdkCapabilityDocs = [
@@ -251,20 +265,20 @@ export function scenarioCampaignAgents(
     model: "gpt-5.6-sol",
     reasoningEffort: "medium",
     phase: "scenarioGeneration",
-    ledgerPath,
+    ...input,
   } as const;
   const reviewerExecution = {
     model: "gpt-5.6-luna",
     reasoningEffort: "max",
     phase: "scenarioCompositeReview",
-    ledgerPath,
-    retainedInvocationDirectory: `${ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
+    ...input,
+    retainedInvocationDirectory: `${input.ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
   } as const;
   const readinessExecution = {
     model: "gpt-5.6-luna",
     reasoningEffort: "max",
     phase: "scenarioReadiness",
-    ledgerPath,
+    ...input,
   } as const;
   return {
     generate: async (input) =>
@@ -431,7 +445,11 @@ async function main(args: readonly string[]): Promise<void> {
   }
   const result = await runScenarioCampaign(
     decodedConfig.right,
-    scenarioCampaignAgents(ledgerPath),
+    scenarioCampaignAgents({
+      ledgerPath,
+      scenarioId: decodedConfig.right.scenarioId,
+      gitSha: gitSha.right,
+    }),
     {
       select: randomInt,
     },

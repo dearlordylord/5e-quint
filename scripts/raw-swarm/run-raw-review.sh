@@ -19,6 +19,8 @@ pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/sdk-player/sdk-audit-cli.ts" \
   build "$RAW_REVIEW_TRANSCRIPT" "$RAW_REVIEW_AUDIT"
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/sdk-player/sdk-review-packet-cli.ts" \
   "$RAW_REVIEW_AUDIT" "$RAW_REVIEW_TRANSCRIPT" "$RAW_REVIEW_PACKET"
+RAW_REVIEW_SCENARIO_ID=$(head -n 1 "$RAW_REVIEW_AUDIT" | jq -er '.scenarioId')
+RAW_REVIEW_GIT_SHA=$(head -n 1 "$RAW_REVIEW_AUDIT" | jq -er '.gitSha')
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/review-schema.ts" "$RAW_REVIEW_SCHEMA"
 RAW_REVIEW_TRANSCRIPT_BYTES=$(wc -c <"$RAW_REVIEW_TRANSCRIPT" | tr -d ' ')
 RAW_REVIEW_TRANSCRIPT_SHA256=$(sha256sum "$RAW_REVIEW_TRANSCRIPT" | cut -d' ' -f1)
@@ -57,6 +59,8 @@ RAW_REVIEW_STATUS=$?
 RAW_REVIEW_ELAPSED_MS=$(($(date +%s%3N) - RAW_REVIEW_STARTED_MS))
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/model-telemetry-cli.ts" \
   --phase postPlayReview \
+  --scenario-id "$RAW_REVIEW_SCENARIO_ID" \
+  --git-sha "$RAW_REVIEW_GIT_SHA" \
   --events "$RAW_REVIEW_EVENTS" \
   --ledger "$RAW_REVIEW_LEDGER" \
   --model gpt-5.6-luna \

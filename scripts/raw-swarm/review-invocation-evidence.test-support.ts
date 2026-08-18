@@ -1,7 +1,8 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import type { ModelInvocationLedgerEntry } from "./model-telemetry.ts";
+import { invocationEventsSha256 } from "./model-telemetry.ts";
 import { writeReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
 import {
   preflightSdkTranscript,
@@ -12,8 +13,13 @@ import { sha256Canonical, sha256Text } from "./transcript.ts";
 
 export function controlledReviewEvidenceFixture(input: {
   readonly directory: string;
-  readonly ledgerEntries: readonly ModelInvocationLedgerEntry[];
+  readonly ledgerEntries: readonly Omit<
+    ModelInvocationLedgerEntry,
+    "scenarioId" | "gitSha" | "eventsSha256"
+  >[];
   readonly callCount?: number;
+  readonly ledgerScenarioId?: string;
+  readonly postPlayUsesTool?: boolean;
 }) {
   const runDirectory = resolve(input.directory, "run");
   const evidenceDirectory = resolve(runDirectory, "evidence");
@@ -28,6 +34,9 @@ export function controlledReviewEvidenceFixture(input: {
   const auditPath = resolve(input.directory, "review.audit.jsonl");
   const packetPath = resolve(input.directory, "review.packet.json");
   const ledgerPath = resolve(input.directory, "review.invocations.jsonl");
+  const eventPaths = input.ledgerEntries.map((_, index) =>
+    resolve(input.directory, `invocation-${index + 1}.events.jsonl`),
+  );
   const manifestPath = resolve(input.directory, "review.evidence.json");
   const characters = "export const characters = [];\n";
   const setup = "export const setup = {};\n";
@@ -111,9 +120,73 @@ export function controlledReviewEvidenceFixture(input: {
       ],
     })}\n`,
   );
+  const reviewOutput = JSON.parse(readFileSync(reviewPath, "utf8")) as unknown;
+  input.ledgerEntries.forEach((entry, index) => {
+    const events = [
+      { type: "thread.started", thread_id: entry.invocationId },
+      ...(entry.phase === "postPlayReview" && input.postPlayUsesTool === true
+        ? [
+            {
+              type: "item.completed",
+              item: { type: "command_execution", command: "cat packet.json" },
+            },
+          ]
+        : []),
+      {
+        type: "item.completed",
+        item: {
+          type: "agent_message",
+          text: JSON.stringify(
+            entry.phase === "postPlayReview"
+              ? reviewOutput
+              : { tag: "complete" },
+          ),
+        },
+      },
+      ...(entry.usage.tag === "available"
+        ? [
+            {
+              type: "turn.completed",
+              usage: {
+                input_tokens:
+                  entry.usage.input.tag === "available"
+                    ? entry.usage.input.count
+                    : undefined,
+                cached_input_tokens:
+                  entry.usage.cachedInput.tag === "available"
+                    ? entry.usage.cachedInput.count
+                    : undefined,
+                cache_write_input_tokens:
+                  entry.usage.cacheWriteInput.tag === "available"
+                    ? entry.usage.cacheWriteInput.count
+                    : undefined,
+                output_tokens:
+                  entry.usage.output.tag === "available"
+                    ? entry.usage.output.count
+                    : undefined,
+                reasoning_output_tokens:
+                  entry.usage.reasoningOutput.tag === "available"
+                    ? entry.usage.reasoningOutput.count
+                    : undefined,
+              },
+            },
+          ]
+        : []),
+    ];
+    writeFileSync(
+      eventPaths[index]!,
+      `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
+    );
+  });
+  const ledgerEntries = input.ledgerEntries.map((entry, index) => ({
+    ...entry,
+    scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+    gitSha: header.gitSha,
+    eventsSha256: invocationEventsSha256(eventPaths[index]!),
+  }));
   writeFileSync(
     ledgerPath,
-    `${input.ledgerEntries.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
+    `${ledgerEntries.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
   );
   writeReviewInvocationEvidenceManifest({
     transcriptPath,
@@ -121,6 +194,7 @@ export function controlledReviewEvidenceFixture(input: {
     auditPath,
     packetPath,
     invocationLedgerPaths: [ledgerPath],
+    invocationEventPaths: eventPaths,
     outputPath: manifestPath,
   });
   return {
@@ -129,6 +203,7 @@ export function controlledReviewEvidenceFixture(input: {
     auditPath,
     packetPath,
     ledgerPath,
+    eventPaths,
     manifestPath,
     header,
     calls,

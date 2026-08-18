@@ -1,9 +1,10 @@
 import { spawnSync, type SpawnSyncReturns } from "node:child_process";
+import { createHash } from "node:crypto";
 import { appendFileSync, closeSync, openSync, readFileSync } from "node:fs";
 
 import { Either, ParseResult, Schema } from "effect";
 
-import { isJsonRecord } from "./transcript.ts";
+import { GitShaSchema, isJsonRecord, ScenarioIdSchema } from "./transcript.ts";
 
 export const MODEL_INVOCATION_PHASES = [
   "scenarioGeneration",
@@ -44,6 +45,9 @@ const ModelUsageSchema = Schema.Union(
 
 export const ModelInvocationLedgerEntrySchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
+  scenarioId: ScenarioIdSchema,
+  gitSha: GitShaSchema,
+  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
   phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
   invocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
@@ -66,6 +70,9 @@ export const ModelInvocationLedgerEntrySchema = Schema.Struct({
 export type TokenCount = Schema.Schema.Type<typeof TokenCountSchema>;
 export type ModelUsage = Schema.Schema.Type<typeof ModelUsageSchema>;
 export type ModelInvocationLedgerEntry = Schema.Schema.Type<
+  typeof ModelInvocationLedgerEntrySchema
+>;
+type ModelInvocationLedgerEntryEncoded = Schema.Schema.Encoded<
   typeof ModelInvocationLedgerEntrySchema
 >;
 
@@ -188,9 +195,13 @@ export function readCodexEvents(path: string): CodexEventReadResult {
 
 export function appendInvocationLedger(
   path: string,
-  entry: ModelInvocationLedgerEntry,
+  entry: ModelInvocationLedgerEntryEncoded,
 ): void {
   appendFileSync(path, `${JSON.stringify(entry)}\n`);
+}
+
+export function invocationEventsSha256(path: string): string {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
 
 export function runCodexInvocation(input: {
@@ -201,6 +212,8 @@ export function runCodexInvocation(input: {
   readonly logPath: string;
   readonly ledgerPath: string;
   readonly phase: ModelInvocationPhase;
+  readonly scenarioId: string;
+  readonly gitSha: string;
   readonly fallbackInvocationId: string;
   readonly model: string;
   readonly reasoningEffort: string;
@@ -228,6 +241,9 @@ export function runCodexInvocation(input: {
   const events = parsedEvents.tag === "valid" ? parsedEvents.events : [];
   appendInvocationLedger(input.ledgerPath, {
     schemaVersion: 1,
+    scenarioId: input.scenarioId,
+    gitSha: input.gitSha,
+    eventsSha256: invocationEventsSha256(input.eventPath),
     phase: input.phase,
     invocationId: invocationIdFromCodexEvents(
       events,

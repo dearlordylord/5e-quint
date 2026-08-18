@@ -704,8 +704,20 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts export \
   --db scripts/raw-swarm/out/player-swarm.db \
   --destination scripts/raw-swarm/out/player-swarm-portable
 
-# Bind the exact transcript, validated review, audit, packet, and model
-# invocation ledgers before reporting or performance comparison.
+# First concatenate the comparable phase ledgers in execution order. Each entry
+# carries the scenario/Git identity and the SHA-256 of its retained Codex event
+# stream; the evidence command rejects missing, substituted, or unrelated
+# streams. The post-play stream must also prove the no-tools policy and produce
+# the exact retained review JSON.
+{
+  jq -c 'select(.phase == "scenarioCompositeReview")' \
+    scripts/raw-swarm/out/$SCENARIO-generation-invocations.jsonl
+  cat scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/invocations.jsonl
+  cat scripts/raw-swarm/out/$SCENARIO-sdk-review.invocations.jsonl
+} > scripts/raw-swarm/out/$SCENARIO-controlled-invocations.jsonl
+
+# Bind the transcript, review, audit, packet, ledger, and each event stream
+# before reporting or performance comparison.
 mise exec -- pnpm exec tsx scripts/raw-swarm/review-invocation-evidence.ts \
   create \
   scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl \
@@ -713,8 +725,10 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/review-invocation-evidence.ts \
   scripts/raw-swarm/out/$SCENARIO-sdk-review.audit.jsonl \
   scripts/raw-swarm/out/$SCENARIO-sdk-review.packet.json \
   scripts/raw-swarm/out/$SCENARIO-review-invocation-evidence.json \
-  scripts/raw-swarm/out/$SCENARIO-player.invocations.jsonl \
-  scripts/raw-swarm/out/$SCENARIO-sdk-review.invocations.jsonl
+  scripts/raw-swarm/out/$SCENARIO-controlled-invocations.jsonl \
+  scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/*.events.jsonl \
+  scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/player-events.jsonl \
+  scripts/raw-swarm/out/$SCENARIO-sdk-review-agent.log.events.jsonl
 
 # For controlled evidence, time the actual reporting work. This operation owns
 # the timing artifact; callers do not supply an elapsed duration. It refuses a

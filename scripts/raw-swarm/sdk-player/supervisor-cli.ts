@@ -27,7 +27,6 @@ import { Either, Match, Schema } from "effect";
 
 import type {
   JsonValue,
-  PlayerContinuation,
   PlayerContinuationOutcome,
   PlayerSdk,
   ScenarioBattleResolutionResult,
@@ -202,9 +201,10 @@ async function initialize(
   if (!existsSync(charactersPath))
     fail("Scenario character source is missing.");
   const setupConfigPath = resolve("evidence/setup-tsconfig.json");
-  const setupConfig = JSON.parse(
+  const setupConfig: unknown = JSON.parse(
     readFileSync(resolve("tsconfig.json"), "utf8"),
-  ) as Readonly<Record<string, unknown>>;
+  );
+  if (!isRecord(setupConfig)) fail("Player tsconfig must be an object.");
   writeFileSync(
     setupConfigPath,
     `${JSON.stringify(
@@ -759,9 +759,10 @@ async function runSubmittedSource(source: string): Promise<unknown> {
   mkdirSync(submissionDirectory);
   const submissionPath = resolve(submissionDirectory, "attempt.ts");
   const submissionConfigPath = resolve(submissionDirectory, "tsconfig.json");
-  const submissionConfig = JSON.parse(
+  const submissionConfig: unknown = JSON.parse(
     readFileSync(resolve("tsconfig.json"), "utf8"),
-  ) as Readonly<Record<string, unknown>>;
+  );
+  if (!isRecord(submissionConfig)) fail("Player tsconfig must be an object.");
   writeFileSync(
     submissionConfigPath,
     `${JSON.stringify({ ...submissionConfig, include: ["attempt.ts"] }, null, 2)}\n`,
@@ -887,6 +888,10 @@ async function runSubmittedSource(source: string): Promise<unknown> {
           const decoded = decodeSdkCallInput({ operation, input });
           if (decoded.tag === "invalid") fail(decoded.message);
           const applied = applyCall(currentSession, decoded.value);
+          // Each call site below fixes A through the matching PlayerSdk method
+          // and passes the same literal operation decoded by applyCall's
+          // exhaustive dispatcher. TypeScript cannot retain that correlation
+          // through the generic recording wrapper.
           return { value: applied.value as A, applied };
         },
       );
@@ -904,10 +909,13 @@ async function runSubmittedSource(source: string): Promise<unknown> {
       endBattleRuntimeTurn: ({ session, ...input }) =>
         call("endBattleRuntimeTurn", session, input),
     };
-    const submitted = (await import(
+    const submitted: unknown = await import(
       `${pathToFileURL(submissionPath).href}?${randomUUID()}`
-    )) as Readonly<{ continueBattle?: PlayerContinuation }>;
-    if (typeof submitted.continueBattle !== "function") {
+    );
+    if (
+      !isRecord(submitted) ||
+      typeof submitted.continueBattle !== "function"
+    ) {
       fail("Continuation must export continueBattle.");
     }
     const outcome = validateOutcome(
@@ -985,7 +993,7 @@ async function serveRequests(
         ".response.json",
       );
       const responsePath = resolve(responsesDirectory, responseName);
-      const request = JSON.parse(readFileSync(requestPath, "utf8")) as unknown;
+      const request: unknown = JSON.parse(readFileSync(requestPath, "utf8"));
       const response = await (async (): Promise<unknown> => {
         if (
           !isRecord(request) ||

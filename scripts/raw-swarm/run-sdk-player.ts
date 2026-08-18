@@ -28,6 +28,7 @@ import {
 import { Either } from "effect";
 import {
   appendInvocationLedger,
+  invocationEventsSha256,
   invocationIdFromCodexEvents,
   modelUsageFromCodexEvents,
   readCodexEvents,
@@ -257,6 +258,9 @@ async function main(args: readonly string[]): Promise<void> {
     const events = parsedEvents.tag === "valid" ? parsedEvents.events : [];
     appendInvocationLedger(resolve(trusted, "evidence/invocations.jsonl"), {
       schemaVersion: 1,
+      scenarioId: acceptedScenarioId,
+      gitSha: revision.sha,
+      eventsSha256: invocationEventsSha256(agentEventsPath),
       phase: "player",
       invocationId: invocationIdFromCodexEvents(events, fallbackInvocationId),
       model: "gpt-5.6-sol",
