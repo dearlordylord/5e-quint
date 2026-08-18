@@ -2,9 +2,14 @@ import { describe, expect, test } from "vitest";
 
 import {
   directFrontierUseChecks,
+  fixedBaselineEntityResourceFactAudit,
+  fixedBaselineRunEvidencePaths,
   retainedProgramSessionAudit,
 } from "./fixed-baseline-measurement.ts";
-import type { PlayerCurrentTurnProjection } from "./sdk-player/player-turn-projection.ts";
+import type {
+  PlayerCombatantProjection,
+  PlayerCurrentTurnProjection,
+} from "./sdk-player/player-turn-projection.ts";
 
 const subject = {
   tag: "runtimeCommand",
@@ -47,7 +52,126 @@ function returnedCall(
   };
 }
 
+function resourceRef(combatantId: string, ordinal: number): string {
+  return JSON.stringify({
+    scopeRef: JSON.stringify({ combatantId }),
+    ordinal,
+  });
+}
+
+function combatant(
+  current: number,
+  zeroHitPointLifecycle: PlayerCombatantProjection["zeroHitPointLifecycle"],
+  resources: readonly [string, number][] = [],
+): PlayerCombatantProjection {
+  return {
+    hitPoints: { current, maximum: 10, temporary: 0 },
+    activeConditions: [],
+    reactionAvailable: true,
+    movementSpentFeet: 0,
+    ammunition: [],
+    resources: resources.map(([combatantId, ordinal]) => ({
+      ref: resourceRef(combatantId, ordinal),
+      usesRemaining: 0,
+      usedThisTurn: false,
+    })),
+    spellSlots: [],
+    zeroHitPointLifecycle,
+  };
+}
+
+function fixedFactProjection(): PlayerCurrentTurnProjection {
+  const living = {
+    policy: "usesDeathSavingThrows",
+    successes: 0,
+    failures: 0,
+    stable: false,
+    dead: false,
+    hitPointsRegained: false,
+  } as const;
+  return {
+    ...projection(1, { kind: "none" }),
+    changes: [
+      ...["wolf-a", "wolf-b", "goblin-warrior-a"].map((id) => ({
+        kind: "combatant" as const,
+        id,
+        change: "added" as const,
+        after: combatant(0, { policy: "diesAtZeroHp" }),
+      })),
+      {
+        kind: "combatant",
+        id: "close-interception-fighter",
+        change: "added",
+        after: combatant(6, living, [
+          ["close-interception-fighter", 0],
+          ["close-interception-fighter", 3],
+        ]),
+      },
+      {
+        kind: "combatant",
+        id: "close-interception-rogue",
+        change: "added",
+        after: combatant(1, living, [
+          ["close-interception-rogue", 0],
+          ["close-interception-rogue", 2],
+        ]),
+      },
+    ],
+  };
+}
+
 describe("fixed baseline omission audit", () => {
+  test("derives the immutable program artifacts from the exact retained transcript", () => {
+    expect(
+      fixedBaselineRunEvidencePaths(
+        "scripts/raw-swarm/out/generated-battle-004-sdk-player/evidence/sdk-calls.jsonl",
+      ),
+    ).toMatchObject({
+      programPath: expect.stringMatching(
+        /generated-battle-004-sdk-player\/evidence\/program\.ts$/,
+      ),
+      frozenPrefixPath: expect.stringMatching(/evidence\/frozen-prefix\.json$/),
+      finalResultPath: expect.stringMatching(/evidence\/final\.json$/),
+    });
+    expect(() =>
+      fixedBaselineRunEvidencePaths(
+        "scripts/raw-swarm/out/substituted/evidence/sdk-calls.jsonl",
+      ),
+    ).toThrow("requires the retained run-4 transcript");
+  });
+
+  test("proves every retained final entity and resource fact", () => {
+    const initialSession = {
+      battlefield: {
+        objects: [
+          {
+            objectId: "calibration-prism",
+            damageDisposition: { kind: "hitPoints", hitPoints: 16 },
+          },
+        ],
+      },
+    };
+    const projectionWithFacts = fixedFactProjection();
+    expect(
+      fixedBaselineEntityResourceFactAudit({
+        initialSession,
+        projections: [projectionWithFacts],
+      }),
+    ).toEqual({ total: 10, projectedChanges: 9, retainedInitialFacts: 1 });
+    const withoutTerminalWolf = {
+      ...projectionWithFacts,
+      changes: projectionWithFacts.changes.filter(
+        (change) => change.kind !== "combatant" || change.id !== "wolf-a",
+      ),
+    };
+    expect(() =>
+      fixedBaselineEntityResourceFactAudit({
+        initialSession,
+        projections: [withoutTerminalWolf],
+      }),
+    ).toThrow("omits the final wolf-a life-state fact");
+  });
+
   test("distinguishes projected tactical reads from discarded observation copies", () => {
     expect(
       retainedProgramSessionAudit(`

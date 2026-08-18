@@ -72,7 +72,7 @@ pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/model-telemetry-cli.ts" \
   --reasoning-effort max \
   --started-at "$RAW_REVIEW_STARTED_AT" \
   --elapsed-ms "$RAW_REVIEW_ELAPSED_MS" \
-  --exit-status "$RAW_REVIEW_STATUS"
+  --shell-status "$RAW_REVIEW_STATUS"
 RAW_REVIEW_TELEMETRY_STATUS=$?
 RAW_REVIEW_OUTPUT_STATUS=0
 if [[ "$RAW_REVIEW_STATUS" -eq 0 ]]; then

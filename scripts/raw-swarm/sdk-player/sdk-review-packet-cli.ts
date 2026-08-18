@@ -7,6 +7,8 @@ import { isJsonValue } from "./json-value.ts";
 import { reprojectSdkTranscriptTurns } from "./player-turn-projection.ts";
 import {
   encodeSdkReviewPacket,
+  SDK_REVIEW_PACKET_READY_SETUP_ARTIFACT_ROLES,
+  SDK_REVIEW_PACKET_SCENARIO_ARTIFACT_ROLES,
   sdkReviewPacketHeaderEvidence,
   sdkReviewPacketSource,
 } from "./sdk-review-packet.ts";
@@ -34,11 +36,12 @@ function source(
   excerpt?: { readonly content: string; readonly firstLine: number },
 ) {
   const absolutePath = resolve(repoRoot, path);
-  return sdkReviewPacketSource({
+  const result = sdkReviewPacketSource({
     path: relative(repoRoot, absolutePath),
     content: excerpt?.content ?? readFileSync(absolutePath, "utf8"),
     ...(excerpt === undefined ? {} : { firstLine: excerpt.firstLine }),
   });
+  return result.tag === "valid" ? result.source : fail(result.message);
 }
 
 function catalogPath(path: string): boolean {
@@ -125,20 +128,12 @@ function main(args: readonly string[]): void {
     fail("SDK review packet header evidence is not JSON.");
   }
   const runDirectory = resolve(transcriptPath, "../..");
-  const readyArtifacts =
+  const readyArtifacts: readonly string[] =
     header.setupOutcome === "ready"
-      ? [
-          "evidence/setup.ts",
-          "evidence/program.ts",
-          "evidence/final.json",
-          "OBSERVATION.json",
-          "agent-final.txt",
-        ]
+      ? SDK_REVIEW_PACKET_READY_SETUP_ARTIFACT_ROLES
       : [];
   const runArtifacts = [
-    "SCENARIO.md",
-    "SCENARIO_REVIEW.json",
-    "evidence/characters.ts",
+    ...SDK_REVIEW_PACKET_SCENARIO_ARTIFACT_ROLES,
     ...readyArtifacts,
   ].map((path) => source(relative(repoRoot, resolve(runDirectory, path))));
   const rawRoot = resolve(repoRoot, ".references/srd-5.2.1");

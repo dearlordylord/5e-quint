@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
+import { Either } from "effect";
 
 import {
   codexOutputJsonSchema,
@@ -24,6 +25,11 @@ import {
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { reprojectSdkTranscriptTurns } from "./sdk-player/player-turn-projection.ts";
 import { repoRoot, sha256Canonical, sha256Text } from "./transcript.ts";
+
+function eventValue<A, E>(result: Either.Either<A, E>): A {
+  if (Either.isLeft(result)) throw new Error(String(result.left));
+  return result.right;
+}
 
 export function controlledReviewEvidenceFixture(input: {
   readonly directory: string;
@@ -147,6 +153,15 @@ export function controlledReviewEvidenceFixture(input: {
                 conditions: {},
                 reactionAvailable: true,
                 movementSpentFeet: 0,
+                zeroHpLifecycle: {
+                  policy: "usesDeathSavingThrows",
+                  deathSaves: {
+                    deathSaves: { successes: 0, failures: 0 },
+                    stable: false,
+                    dead: false,
+                    hpRegained: false,
+                  },
+                },
                 ammunitionStocks: [],
                 origin: {
                   kind: "character",
@@ -217,18 +232,20 @@ export function controlledReviewEvidenceFixture(input: {
     throw new Error(parsedTranscript.message);
   const projections = reprojectSdkTranscriptTurns(parsedTranscript.value.calls);
   if (projections.tag === "invalid") throw new Error(projections.message);
+  const scenarioReviewSource = sdkReviewPacketSource({
+    path: relative(repoRoot, scenarioReviewPath),
+    content: scenarioReview,
+  });
+  if (scenarioReviewSource.tag === "invalid") {
+    throw new Error(scenarioReviewSource.message);
+  }
   const packet = encodeSdkReviewPacket({
     audit: audit.audit,
     retainedHeaderEvidence: sdkReviewPacketHeaderEvidence(
       parsedTranscript.value.header,
     ),
     currentTurnProjections: projections.projections,
-    runArtifacts: [
-      sdkReviewPacketSource({
-        path: relative(repoRoot, scenarioReviewPath),
-        content: scenarioReview,
-      }),
-    ],
+    runArtifacts: [scenarioReviewSource.source],
     domainAuthorities: [],
     rawAuthorities: [],
   });
@@ -250,7 +267,7 @@ export function controlledReviewEvidenceFixture(input: {
       ],
     })}\n`,
   );
-  const reviewOutput = JSON.parse(readFileSync(reviewPath, "utf8")) as unknown;
+  const reviewOutput: unknown = JSON.parse(readFileSync(reviewPath, "utf8"));
   const prePlayEntries = [0, 1].map(
     (
       index,
@@ -284,15 +301,17 @@ export function controlledReviewEvidenceFixture(input: {
   ledgerEntryInputs.forEach((entry, index) => {
     const eventEntry = eventEntryInputs[index]!;
     const events = [
-      modelInvocationStartedEvent({
-        scenarioId: input.ledgerScenarioId ?? header.scenarioId,
-        gitSha: invocationGitSha,
-        phase: eventEntry.phase,
-        fallbackInvocationId: eventEntry.invocationId,
-        model: eventEntry.model,
-        reasoningEffort: eventEntry.reasoningEffort,
-        startedAt: eventEntry.startedAt,
-      }),
+      eventValue(
+        modelInvocationStartedEvent({
+          scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+          gitSha: invocationGitSha,
+          phase: eventEntry.phase,
+          fallbackInvocationId: eventEntry.invocationId,
+          model: eventEntry.model,
+          reasoningEffort: eventEntry.reasoningEffort,
+          startedAt: eventEntry.startedAt,
+        }),
+      ),
       { type: "thread.started", thread_id: eventEntry.invocationId },
       ...(eventEntry.phase === "postPlayReview" &&
       input.postPlayUsesTool === true
@@ -350,10 +369,12 @@ export function controlledReviewEvidenceFixture(input: {
             },
           ]
         : []),
-      modelInvocationCompletedEvent({
-        elapsedMilliseconds: eventEntry.elapsedMilliseconds,
-        exit: eventEntry.exit,
-      }),
+      eventValue(
+        modelInvocationCompletedEvent({
+          elapsedMilliseconds: eventEntry.elapsedMilliseconds,
+          exit: eventEntry.exit,
+        }),
+      ),
     ];
     writeFileSync(
       eventPaths[index]!,

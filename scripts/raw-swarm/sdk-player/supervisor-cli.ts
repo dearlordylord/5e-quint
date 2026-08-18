@@ -311,7 +311,9 @@ function transcriptRecords(): readonly unknown[] {
     .map((line): unknown => JSON.parse(line));
 }
 
-function resolutionProjection(result: ScenarioBattleResolutionResult): unknown {
+function resolutionProjection(
+  result: ScenarioBattleResolutionResult,
+): JsonValue {
   if (
     result.tag === "scenarioSessionConflict" ||
     result.tag === "scenarioMovementRejected"
@@ -324,11 +326,15 @@ function resolutionProjection(result: ScenarioBattleResolutionResult): unknown {
   });
 }
 
-type AppliedCall = {
-  readonly session: ScenarioSession;
-  readonly result: unknown;
-  readonly value: unknown;
-};
+type AppliedCall<Operation extends SdkPlayerOperation = SdkPlayerOperation> =
+  Operation extends SdkPlayerOperation
+    ? {
+        readonly operation: Operation;
+        readonly session: ScenarioSession;
+        readonly result: JsonValue;
+        readonly value: ReturnType<PlayerSdk[Operation]>;
+      }
+    : never;
 
 const byOperation = Match.discriminator("operation");
 const byResolutionTag = Match.discriminator("tag");
@@ -399,11 +405,21 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
               message: `Scenario token ${missingTokenId} has no current placement.`,
             }
           : scenarioRelation({ session, sourceId, targetId });
-      return { session, result: jsonValue(result), value: result };
+      return {
+        operation: "scenarioRelation" as const,
+        session,
+        result: jsonValue(result),
+        value: result,
+      };
     }),
     byOperation("discoverBattleActs", () => {
       const acts = scenarioBattleActs(session);
-      return { session, result: jsonValue(acts), value: acts };
+      return {
+        operation: "discoverBattleActs" as const,
+        session,
+        result: jsonValue(acts),
+        value: acts,
+      };
     }),
     byOperation("resolveBattleRuntimeSubject", ({ input }) => {
       const subject = scenarioBattleSubject(session, input.subject);
@@ -422,6 +438,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
           snapshot: snapshotBattle(session.battle.state),
         };
         return {
+          operation: "resolveBattleRuntimeSubject" as const,
           session,
           result: resolutionProjection(result),
           value: result,
@@ -439,6 +456,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
       });
       const result = retainScenarioBattlefield(session, battleResult);
       return {
+        operation: "resolveBattleRuntimeSubject" as const,
         session: result.session,
         result: resolutionProjection(result),
         value: result,
@@ -455,7 +473,12 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
           session,
           message: planned.left.message,
         };
-        return { session, result: resolutionProjection(result), value: result };
+        return {
+          operation: "resolveScenarioMovement" as const,
+          session,
+          result: resolutionProjection(result),
+          value: result,
+        };
       }
       const battleResult = resolveBattleRuntimeSubject({
         session: planned.right.session.battle,
@@ -468,6 +491,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
         input.kind === "route",
       );
       return {
+        operation: "resolveScenarioMovement" as const,
         session: result.session,
         result: resolutionProjection(result),
         value: result,
@@ -480,6 +504,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
       });
       const result = retainScenarioBattlefield(session, battleResult);
       return {
+        operation: "resolveBattleRuntimeInterrupt" as const,
         session: result.session,
         result: resolutionProjection(result),
         value: result,
@@ -492,6 +517,7 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
       });
       const result = retainScenarioBattlefield(session, battleResult);
       return {
+        operation: "endBattleRuntimeTurn" as const,
         session: result.session,
         result: resolutionProjection(result),
         value: result,
@@ -499,6 +525,13 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
     }),
     Match.exhaustive,
   );
+}
+
+function isAppliedCallForOperation<Operation extends SdkPlayerOperation>(
+  operation: Operation,
+  applied: AppliedCall,
+): applied is Extract<AppliedCall, { readonly operation: Operation }> {
+  return applied.operation === operation;
 }
 
 type ReplayResult =
@@ -804,13 +837,13 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     );
   };
 
-  const recordedCall = <A>(
+  const recordedCall = (
     operation: SdkPlayerOperation,
     suppliedSession: ScenarioSession,
     sessionIsCurrent: boolean,
     input: unknown,
-    invoke: () => { readonly value: A; readonly applied: AppliedCall },
-  ): A => {
+    invoke: () => AppliedCall,
+  ): AppliedCall => {
     frozenContinuation ??= appendFrozenContinuation(prefix, authored.body);
     const inputSession = jsonValue(suppliedSession);
     const inputSessionSha256 = sha256Canonical(inputSession);
@@ -846,9 +879,9 @@ async function runSubmittedSource(source: string): Promise<unknown> {
         throw error;
       }
     })();
-    currentSession = invoked.applied.session;
+    currentSession = invoked.session;
     const outputSession = jsonValue(currentSession);
-    const result = jsonValue(invoked.applied.result);
+    const result = invoked.result;
     const record: SdkCallRecord = {
       type: "sdk-call",
       seq: nextSeq,
@@ -864,15 +897,15 @@ async function runSubmittedSource(source: string): Promise<unknown> {
       resultSha256: sha256Canonical(result),
     };
     appendRecord(record);
-    return invoked.value;
+    return invoked;
   };
 
   try {
-    const call = <A>(
+    const call = (
       operation: SdkPlayerOperation,
       suppliedSession: ScenarioSession,
       input: unknown,
-    ): A => {
+    ): AppliedCall => {
       const sessionIsCurrent =
         sha256Canonical(jsonValue(suppliedSession)) ===
         sha256Canonical(jsonValue(currentSession));
@@ -888,26 +921,52 @@ async function runSubmittedSource(source: string): Promise<unknown> {
           const decoded = decodeSdkCallInput({ operation, input });
           if (decoded.tag === "invalid") fail(decoded.message);
           const applied = applyCall(currentSession, decoded.value);
-          // Each call site below fixes A through the matching PlayerSdk method
-          // and passes the same literal operation decoded by applyCall's
-          // exhaustive dispatcher. TypeScript cannot retain that correlation
-          // through the generic recording wrapper.
-          return { value: applied.value as A, applied };
+          if (!isAppliedCallForOperation(operation, applied)) {
+            fail(`SDK operation ${operation} produced a mismatched result.`);
+          }
+          return applied;
         },
       );
     };
     const sdk: PlayerSdk = {
-      scenarioRelation: ({ session, ...input }) =>
-        call("scenarioRelation", session, input),
-      discoverBattleActs: (session) => call("discoverBattleActs", session, {}),
-      resolveBattleRuntimeSubject: ({ session, ...input }) =>
-        call("resolveBattleRuntimeSubject", session, input),
-      resolveScenarioMovement: ({ session, ...input }) =>
-        call("resolveScenarioMovement", session, input),
-      resolveBattleRuntimeInterrupt: ({ session, ...input }) =>
-        call("resolveBattleRuntimeInterrupt", session, input),
-      endBattleRuntimeTurn: ({ session, ...input }) =>
-        call("endBattleRuntimeTurn", session, input),
+      scenarioRelation: ({ session, ...input }) => {
+        const applied = call("scenarioRelation", session, input);
+        return applied.operation === "scenarioRelation"
+          ? applied.value
+          : fail("Scenario relation returned a mismatched SDK result.");
+      },
+      discoverBattleActs: (session) => {
+        const applied = call("discoverBattleActs", session, {});
+        return applied.operation === "discoverBattleActs"
+          ? applied.value
+          : fail("Battle discovery returned a mismatched SDK result.");
+      },
+      resolveBattleRuntimeSubject: ({ session, ...input }) => {
+        const applied = call("resolveBattleRuntimeSubject", session, input);
+        return applied.operation === "resolveBattleRuntimeSubject"
+          ? applied.value
+          : fail("Battle subject resolution returned a mismatched SDK result.");
+      },
+      resolveScenarioMovement: ({ session, ...input }) => {
+        const applied = call("resolveScenarioMovement", session, input);
+        return applied.operation === "resolveScenarioMovement"
+          ? applied.value
+          : fail("Scenario movement returned a mismatched SDK result.");
+      },
+      resolveBattleRuntimeInterrupt: ({ session, ...input }) => {
+        const applied = call("resolveBattleRuntimeInterrupt", session, input);
+        return applied.operation === "resolveBattleRuntimeInterrupt"
+          ? applied.value
+          : fail(
+              "Battle interrupt resolution returned a mismatched SDK result.",
+            );
+      },
+      endBattleRuntimeTurn: ({ session, ...input }) => {
+        const applied = call("endBattleRuntimeTurn", session, input);
+        return applied.operation === "endBattleRuntimeTurn"
+          ? applied.value
+          : fail("Battle turn completion returned a mismatched SDK result.");
+      },
     };
     const submitted: unknown = await import(
       `${pathToFileURL(submissionPath).href}?${randomUUID()}`

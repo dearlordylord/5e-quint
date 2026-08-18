@@ -130,10 +130,10 @@ describe("review invocation evidence", () => {
     ).toThrow(/used a tool/);
     expect(() =>
       controlledReviewEvidenceFixture({
-        directory: resolve(ledgerDirectory, "duplicate-events"),
+        directory: resolve(ledgerDirectory, "duplicate-invocations"),
         ledgerEntries: [entry, entry],
       }),
-    ).toThrow(/event streams/);
+    ).toThrow(/invocation ids must be distinct/);
     expect(() =>
       controlledReviewEvidenceFixture({
         directory: resolve(ledgerDirectory, "relabeled-events"),

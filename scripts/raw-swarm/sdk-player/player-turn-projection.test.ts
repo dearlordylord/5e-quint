@@ -12,6 +12,12 @@ type Mutable<T> = T extends object
   ? { -readonly [Key in keyof T]: Mutable<T[Key]> }
   : T;
 
+function mutableClone<T>(value: T): Mutable<T> {
+  // structuredClone preserves this JSON fixture's shape; the cast removes only
+  // compile-time readonly markers so tests can construct before/after states.
+  return structuredClone(value) as Mutable<T>;
+}
+
 const beforeSession = {
   battle: {
     state: {
@@ -28,6 +34,15 @@ const beforeSession = {
               conditions: { prone: false },
               reactionAvailable: true,
               movementSpentFeet: 0,
+              zeroHpLifecycle: {
+                policy: "usesDeathSavingThrows",
+                deathSaves: {
+                  deathSaves: { successes: 0, failures: 0 },
+                  stable: false,
+                  dead: false,
+                  hpRegained: false,
+                },
+              },
               ammunitionStocks: [{ ammunition: "arrow", remaining: 2 }],
               origin: {
                 kind: "character",
@@ -95,9 +110,7 @@ describe("player current-turn projection", () => {
   });
 
   test("projects actionable holes with stable occurrences and material changes", () => {
-    const afterSession = structuredClone(beforeSession) as Mutable<
-      typeof beforeSession
-    >;
+    const afterSession = mutableClone(beforeSession);
     const fighter = afterSession.battle.state.combatants.$map[0][1];
     fighter.hp = 6;
     fighter.conditions.prone = true;
@@ -390,14 +403,11 @@ describe("player current-turn projection", () => {
   });
 
   test("rejects a missing or empty initiative still-to-act list", () => {
-    const missingStillToAct = structuredClone(beforeSession) as Mutable<
-      typeof beforeSession
-    >;
-    delete (
-      missingStillToAct.battle.state.initiative as {
-        stillToAct?: unknown;
-      }
-    ).stillToAct;
+    const missingStillToAct = mutableClone(beforeSession);
+    Reflect.deleteProperty(
+      missingStillToAct.battle.state.initiative,
+      "stillToAct",
+    );
     expect(
       playerCurrentTurnProjection({
         continuation: 1,
@@ -407,9 +417,7 @@ describe("player current-turn projection", () => {
         tacticalNote: "",
       }),
     ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
-    const emptyStillToAct = structuredClone(beforeSession) as Mutable<
-      typeof beforeSession
-    >;
+    const emptyStillToAct = mutableClone(beforeSession);
     emptyStillToAct.battle.state.initiative.stillToAct = [];
     expect(
       playerCurrentTurnProjection({
@@ -423,11 +431,11 @@ describe("player current-turn projection", () => {
   });
 
   test("does not attach size metadata to malformed source failures", () => {
-    const malformed = structuredClone(beforeSession) as Mutable<
-      typeof beforeSession
-    >;
-    delete (malformed.battle.state.subjectResolutionPhase as { kind?: unknown })
-      .kind;
+    const malformed = mutableClone(beforeSession);
+    Reflect.deleteProperty(
+      malformed.battle.state.subjectResolutionPhase,
+      "kind",
+    );
     const result = playerCurrentTurnProjection({
       continuation: 1,
       calls: [],

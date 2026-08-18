@@ -12,6 +12,22 @@ import { canonicalJson, isJsonRecord, repoRoot } from "../transcript.ts";
 
 export const SDK_REVIEW_PACKET_SCHEMA_VERSION = 1;
 export const SDK_REVIEW_PACKET_MAX_BYTES = 921_600;
+export const SDK_REVIEW_PACKET_SCENARIO_ARTIFACT_ROLES = [
+  "SCENARIO.md",
+  "SCENARIO_REVIEW.json",
+  "evidence/characters.ts",
+] as const;
+export const SDK_REVIEW_PACKET_READY_SETUP_ARTIFACT_ROLES = [
+  "evidence/setup.ts",
+  "evidence/program.ts",
+  "evidence/final.json",
+  "OBSERVATION.json",
+  "agent-final.txt",
+] as const;
+export const SDK_REVIEW_PACKET_RUN_ARTIFACT_ROLES = [
+  ...SDK_REVIEW_PACKET_SCENARIO_ARTIFACT_ROLES,
+  ...SDK_REVIEW_PACKET_READY_SETUP_ARTIFACT_ROLES,
+] as const;
 
 export type SdkReviewPacketSource = {
   readonly path: string;
@@ -39,6 +55,11 @@ export type SdkReviewPacketResult =
       readonly encoded: string;
       readonly byteLength: number;
       readonly sha256: string;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly reason: "invalidSource";
+      readonly message: string;
     }
   | {
       readonly tag: "invalid";
@@ -338,15 +359,24 @@ export function sdkReviewPacketSource(input: {
   readonly path: string;
   readonly content: string;
   readonly firstLine?: number;
-}): SdkReviewPacketSource {
+}):
+  | { readonly tag: "valid"; readonly source: SdkReviewPacketSource }
+  | { readonly tag: "invalid"; readonly message: string } {
   const firstLine = input.firstLine ?? 1;
-  return {
+  const source = {
     path: input.path,
     byteLength: Buffer.byteLength(input.content, "utf8"),
     sha256: sha256(input.content),
     firstLine,
     numberedContent: numbered(input.content, firstLine),
   };
+  return packetSourceIsValid(source)
+    ? { tag: "valid", source }
+    : {
+        tag: "invalid",
+        message:
+          "Review evidence source requires a nonempty path and a positive integer first line.",
+      };
 }
 
 export function encodeSdkReviewPacket(input: {
@@ -358,6 +388,18 @@ export function encodeSdkReviewPacket(input: {
   readonly rawAuthorities: readonly SdkReviewPacketSource[];
   readonly maximumByteLength?: number;
 }): SdkReviewPacketResult {
+  const sourceLists: readonly (readonly SdkReviewPacketSource[])[] = [
+    input.runArtifacts,
+    input.domainAuthorities,
+    input.rawAuthorities,
+  ];
+  if (sourceLists.some((sources) => !sources.every(packetSourceIsValid))) {
+    return {
+      tag: "invalid",
+      reason: "invalidSource",
+      message: "Review evidence packet contains an invalid source.",
+    };
+  }
   const packet: SdkReviewPacket = {
     type: "sdk-review-packet",
     schemaVersion: SDK_REVIEW_PACKET_SCHEMA_VERSION,

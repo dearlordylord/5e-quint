@@ -71,6 +71,15 @@ function validatedPacketFixture() {
                 conditions: {},
                 reactionAvailable: true,
                 movementSpentFeet: 0,
+                zeroHpLifecycle: {
+                  policy: "usesDeathSavingThrows",
+                  deathSaves: {
+                    deathSaves: { successes: 0, failures: 0 },
+                    stable: false,
+                    dead: false,
+                    hpRegained: false,
+                  },
+                },
                 ammunitionStocks: [],
                 origin: {
                   kind: "character",
@@ -138,10 +147,12 @@ function validatedPacketFixture() {
     resolve(repoRoot, "ASSUMPTIONS.md"),
     "utf8",
   );
-  const source = sdkReviewPacketSource({
+  const sourceResult = sdkReviewPacketSource({
     path: "ASSUMPTIONS.md",
     content: sourceContent,
   });
+  if (sourceResult.tag === "invalid") throw new Error(sourceResult.message);
+  const source = sourceResult.source;
   const packet = encodeSdkReviewPacket({
     audit: verified.audit,
     retainedHeaderEvidence: sdkReviewPacketHeaderEvidence(parsed.value.header),
@@ -156,10 +167,12 @@ function validatedPacketFixture() {
 
 describe("SDK review packet", () => {
   test("retains numbered hash-linked authorities deterministically", () => {
-    const raw = sdkReviewPacketSource({
+    const rawResult = sdkReviewPacketSource({
       path: ".references/srd-5.2.1/Example.md",
       content: "first\nsecond\n",
     });
+    if (rawResult.tag === "invalid") throw new Error(rawResult.message);
+    const raw = rawResult.source;
     expect(raw).toMatchObject({
       path: ".references/srd-5.2.1/Example.md",
       byteLength: 13,
@@ -188,15 +201,18 @@ describe("SDK review packet", () => {
   });
 
   test("rejects rather than truncating an oversized packet", () => {
+    const large = sdkReviewPacketSource({
+      path: "large.md",
+      content: "x".repeat(100),
+    });
+    if (large.tag === "invalid") throw new Error(large.message);
     const result = encodeSdkReviewPacket({
       audit,
       retainedHeaderEvidence: {},
       currentTurnProjections: [],
       runArtifacts: [],
       domainAuthorities: [],
-      rawAuthorities: [
-        sdkReviewPacketSource({ path: "large.md", content: "x".repeat(100) }),
-      ],
+      rawAuthorities: [large.source],
       maximumByteLength: 10,
     });
     expect(result).toMatchObject({
@@ -204,6 +220,37 @@ describe("SDK review packet", () => {
       reason: "packetTooLarge",
       maximumByteLength: 10,
     });
+  });
+
+  test("rejects invalid source coordinates at construction and encoding", () => {
+    expect(
+      sdkReviewPacketSource({ path: "", content: "source" }),
+    ).toMatchObject({ tag: "invalid" });
+    expect(
+      sdkReviewPacketSource({
+        path: "source.md",
+        content: "source",
+        firstLine: 0,
+      }),
+    ).toMatchObject({ tag: "invalid" });
+    expect(
+      encodeSdkReviewPacket({
+        audit,
+        retainedHeaderEvidence: {},
+        currentTurnProjections: [],
+        runArtifacts: [
+          {
+            path: "",
+            byteLength: 0,
+            sha256: "0".repeat(64),
+            firstLine: 1,
+            numberedContent: "1|",
+          },
+        ],
+        domainAuthorities: [],
+        rawAuthorities: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidSource" });
   });
 
   test("rejects an empty projection when the exact transcript has a turn", () => {

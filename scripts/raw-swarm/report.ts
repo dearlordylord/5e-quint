@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { Either, Match, Option, Schema } from "effect";
 
+import { artifactAuthorityForBytes } from "./artifact-authority.ts";
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
 import {
@@ -414,12 +415,10 @@ function controlledReporting(args: readonly string[]): void {
     )}\n`,
     { flag: "wx" },
   );
-  const timingBytes = readFileSync(absoluteTimingPath);
-  const timingArtifact = {
-    path: portableTimingPath,
-    sha256: createHash("sha256").update(timingBytes).digest("hex"),
-    byteLength: timingBytes.byteLength,
-  };
+  const timingArtifact = artifactAuthorityForBytes(
+    portableTimingPath,
+    readFileSync(absoluteTimingPath),
+  );
   writeFileSync(
     resolve(absoluteDestination, "manifest.json"),
     `${JSON.stringify(

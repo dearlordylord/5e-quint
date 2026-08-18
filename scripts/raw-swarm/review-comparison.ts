@@ -83,12 +83,14 @@ export function verifyReviewComparison(input: {
   ) {
     fail("Every baseline verdict must be mapped exactly once.");
   }
-  const mappedCandidate = new Set(
-    comparison.mappings.flatMap(({ candidateVerdicts }) => candidateVerdicts),
+  const mappedCandidateOrdinals = comparison.mappings.flatMap(
+    ({ candidateVerdicts }) => candidateVerdicts,
   );
+  const mappedCandidate = new Set(mappedCandidateOrdinals);
   const newCandidate = new Set(comparison.newCandidateVerdicts);
   const coveredCandidate = new Set([...mappedCandidate, ...newCandidate]);
   if (
+    mappedCandidate.size !== mappedCandidateOrdinals.length ||
     newCandidate.size !== comparison.newCandidateVerdicts.length ||
     [...newCandidate].some((ordinal) => mappedCandidate.has(ordinal)) ||
     coveredCandidate.size !== candidate.verdicts.length ||

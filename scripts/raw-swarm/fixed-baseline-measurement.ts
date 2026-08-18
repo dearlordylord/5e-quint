@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
 import { readFileSync, statSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import ts from "typescript";
 
 import { canonicalJson, isJsonRecord, repoRoot } from "./transcript.ts";
+import type { JsonValue } from "./sdk-player/continuation-contract.ts";
 import {
   projectPlayerActs,
   projectPlayerSubject,
@@ -24,6 +25,19 @@ const FIXED_TRANSCRIPT_SHA256 =
   "69f30fb4f34155aa95845c141f303e65c78743a4814a5623700950cc2d1a9bad";
 const FIXED_OBSERVATION_BYTES = 3_137_666;
 const FIXED_STEP_PAYLOAD_BYTES = 38_107_978;
+const FIXED_TRANSCRIPT_PATH =
+  "scripts/raw-swarm/out/generated-battle-004-sdk-player/evidence/sdk-calls.jsonl";
+const FIXED_PROGRAM_BYTES = 80_592;
+const FIXED_PROGRAM_SHA256 =
+  "3934484bbb613d0ab56facb3dbd2dd726ec8667f8f4ae314c5b589862bc8e822";
+const FIXED_FROZEN_PREFIX_BYTES = 553;
+const FIXED_FROZEN_PREFIX_SHA256 =
+  "0ed2cb3266f074509b1424a5e3f7f6da0ae0fa5b62e2f11797715a0a2e0a97d7";
+const FIXED_FINAL_RESULT_BYTES = 1_504;
+const FIXED_FINAL_RESULT_SHA256 =
+  "e9a33376ca5207006a81d758329ae70613eff945f67a5054121b5e288ba56548";
+const FIXED_CONCLUSION =
+  "Wolf A, Wolf B, and Goblin Warrior A are each terminally dead at 0 Hit Points, while the synthetic glass calibration prism remains undamaged at 16 Hit Points. The Fighter remains alive at 6 Hit Points and the Rogue remains alive at 1 Hit Point. These concrete combatant and object facts satisfy the Table's stated play-conclusion condition.";
 
 function fail(message: string): never {
   throw new Error(message);
@@ -37,10 +51,207 @@ type RetainedProgramSessionAudit = {
 
 type FixedBaselineRetainedProgram = {
   readonly sha256: string;
+  readonly bytes: number;
+  readonly frozenPrefixSha256: string;
+  readonly finalResultSha256: string;
   readonly subjectResolutionPhaseReferences: number;
   readonly discardedFullObservationCopies: 2;
   readonly unsupportedSessionReferences: readonly [];
+  readonly entityResourceFacts: {
+    readonly total: 10;
+    readonly projectedChanges: 9;
+    readonly retainedInitialFacts: 1;
+  };
 };
+
+type FixedBaselineRunEvidencePaths = {
+  readonly transcriptPath: string;
+  readonly programPath: string;
+  readonly frozenPrefixPath: string;
+  readonly finalResultPath: string;
+};
+
+export function fixedBaselineRunEvidencePaths(
+  transcriptInput: string,
+): FixedBaselineRunEvidencePaths {
+  const transcriptPath = resolve(repoRoot, transcriptInput);
+  if (relative(repoRoot, transcriptPath) !== FIXED_TRANSCRIPT_PATH) {
+    fail("Fixed baseline measurement requires the retained run-4 transcript.");
+  }
+  const evidenceDirectory = dirname(transcriptPath);
+  return {
+    transcriptPath,
+    programPath: resolve(evidenceDirectory, "program.ts"),
+    frozenPrefixPath: resolve(evidenceDirectory, "frozen-prefix.json"),
+    finalResultPath: resolve(evidenceDirectory, "final.json"),
+  };
+}
+
+function exactArtifact(
+  path: string,
+  expectedBytes: number,
+  expectedSha256: string,
+  role: string,
+): Buffer {
+  const bytes = readFileSync(path);
+  const sha256 = createHash("sha256").update(bytes).digest("hex");
+  if (bytes.byteLength !== expectedBytes || sha256 !== expectedSha256) {
+    fail(`Fixed baseline ${role} identity changed.`);
+  }
+  return bytes;
+}
+
+function validateFixedProgramArtifacts(paths: FixedBaselineRunEvidencePaths): {
+  readonly program: string;
+  readonly frozenPrefixSha256: string;
+  readonly finalResultSha256: string;
+} {
+  const programBytes = exactArtifact(
+    paths.programPath,
+    FIXED_PROGRAM_BYTES,
+    FIXED_PROGRAM_SHA256,
+    "program",
+  );
+  const frozenPrefixBytes = exactArtifact(
+    paths.frozenPrefixPath,
+    FIXED_FROZEN_PREFIX_BYTES,
+    FIXED_FROZEN_PREFIX_SHA256,
+    "frozen continuation",
+  );
+  const finalResultBytes = exactArtifact(
+    paths.finalResultPath,
+    FIXED_FINAL_RESULT_BYTES,
+    FIXED_FINAL_RESULT_SHA256,
+    "final result",
+  );
+  const frozenPrefix: unknown = JSON.parse(frozenPrefixBytes.toString("utf8"));
+  const finalResult: unknown = JSON.parse(finalResultBytes.toString("utf8"));
+  if (
+    !isJsonRecord(frozenPrefix) ||
+    frozenPrefix.frozenByteLength !== FIXED_PROGRAM_BYTES ||
+    frozenPrefix.frozenSha256 !== FIXED_PROGRAM_SHA256 ||
+    frozenPrefix.continuationCount !== 88 ||
+    !isJsonRecord(frozenPrefix.run) ||
+    frozenPrefix.run.kind !== "playerConcluded" ||
+    frozenPrefix.run.conclusion !== FIXED_CONCLUSION ||
+    !isJsonRecord(finalResult) ||
+    finalResult.continuation !== 88 ||
+    finalResult.kind !== "playerConcluded" ||
+    finalResult.conclusion !== FIXED_CONCLUSION
+  ) {
+    fail("Fixed baseline retained program artifacts disagree.");
+  }
+  return {
+    program: programBytes.toString("utf8"),
+    frozenPrefixSha256: FIXED_FROZEN_PREFIX_SHA256,
+    finalResultSha256: FIXED_FINAL_RESULT_SHA256,
+  };
+}
+
+function finalCombatantProjection(
+  projections: readonly PlayerCurrentTurnProjection[],
+  combatantId: string,
+) {
+  return projections
+    .flatMap(({ changes }) =>
+      changes.flatMap((change) =>
+        change.kind === "combatant" &&
+        change.id === combatantId &&
+        change.change !== "removed"
+          ? [change.after]
+          : [],
+      ),
+    )
+    .at(-1);
+}
+
+function resourceIdentity(
+  ref: string,
+): { readonly combatantId: string; readonly ordinal: number } | undefined {
+  try {
+    const resource: unknown = JSON.parse(ref);
+    if (
+      !isJsonRecord(resource) ||
+      typeof resource.scopeRef !== "string" ||
+      typeof resource.ordinal !== "number"
+    )
+      return undefined;
+    const scope: unknown = JSON.parse(resource.scopeRef);
+    return isJsonRecord(scope) && typeof scope.combatantId === "string"
+      ? { combatantId: scope.combatantId, ordinal: resource.ordinal }
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function retainedInitialPrismHitPoints(session: JsonValue): number | undefined {
+  if (!isJsonRecord(session)) return undefined;
+  const battlefield = session.battlefield;
+  if (!isJsonRecord(battlefield) || !Array.isArray(battlefield.objects))
+    return undefined;
+  const prism = battlefield.objects.find(
+    (candidate) =>
+      isJsonRecord(candidate) && candidate.objectId === "calibration-prism",
+  );
+  if (!isJsonRecord(prism) || !isJsonRecord(prism.damageDisposition))
+    return undefined;
+  return typeof prism.damageDisposition.hitPoints === "number"
+    ? prism.damageDisposition.hitPoints
+    : undefined;
+}
+
+export function fixedBaselineEntityResourceFactAudit(input: {
+  readonly initialSession: JsonValue;
+  readonly projections: readonly PlayerCurrentTurnProjection[];
+}): FixedBaselineRetainedProgram["entityResourceFacts"] {
+  const expectedHitPoints = [
+    ["wolf-a", 0, true],
+    ["wolf-b", 0, true],
+    ["goblin-warrior-a", 0, true],
+    ["close-interception-fighter", 6, false],
+    ["close-interception-rogue", 1, false],
+  ] as const;
+  for (const [combatantId, hitPoints, terminal] of expectedHitPoints) {
+    const combatant = finalCombatantProjection(input.projections, combatantId);
+    const projectedTerminal =
+      combatant?.zeroHitPointLifecycle.policy === "diesAtZeroHp"
+        ? combatant.hitPoints.current === 0
+        : combatant?.zeroHitPointLifecycle.dead;
+    if (
+      combatant?.hitPoints.current !== hitPoints ||
+      projectedTerminal !== terminal
+    ) {
+      fail(
+        `Fixed baseline projection omits the final ${combatantId} life-state fact.`,
+      );
+    }
+  }
+  const expectedResources = [
+    ["close-interception-fighter", 0],
+    ["close-interception-fighter", 3],
+    ["close-interception-rogue", 0],
+    ["close-interception-rogue", 2],
+  ] as const;
+  for (const [combatantId, ordinal] of expectedResources) {
+    const combatant = finalCombatantProjection(input.projections, combatantId);
+    const resource = combatant?.resources.find(({ ref }) => {
+      const identity = resourceIdentity(ref);
+      return (
+        identity?.combatantId === combatantId && identity.ordinal === ordinal
+      );
+    });
+    if (resource?.usesRemaining !== 0) {
+      fail(
+        `Fixed baseline projection omits the expended ${combatantId} resource ${ordinal}.`,
+      );
+    }
+  }
+  if (retainedInitialPrismHitPoints(input.initialSession) !== 16) {
+    fail("Fixed baseline initial evidence omits the calibration prism state.");
+  }
+  return { total: 10, projectedChanges: 9, retainedInitialFacts: 1 };
+}
 
 export function retainedProgramSessionAudit(
   program: string,
@@ -432,7 +643,12 @@ export type FixedBaselineMeasurement = {
 
 function fixedBaselineRetainedProgramAudit(
   audit: RetainedProgramSessionAudit,
-): Omit<FixedBaselineRetainedProgram, "sha256"> {
+): Pick<
+  FixedBaselineRetainedProgram,
+  | "subjectResolutionPhaseReferences"
+  | "discardedFullObservationCopies"
+  | "unsupportedSessionReferences"
+> {
   if (
     audit.subjectResolutionPhaseReferences === 0 ||
     audit.discardedFullObservationCopies !== 2 ||
@@ -473,13 +689,12 @@ function isFixedReplayCacheEvidence(
 export function measureFixedBaseline(input: {
   readonly transcriptPath: string;
   readonly auditPath: string;
-  readonly programPath: string;
   readonly indexPath: string;
   readonly replayCacheMeasurementPath: string;
 }): FixedBaselineMeasurement {
-  const transcriptPath = resolve(repoRoot, input.transcriptPath);
+  const runEvidencePaths = fixedBaselineRunEvidencePaths(input.transcriptPath);
+  const transcriptPath = runEvidencePaths.transcriptPath;
   const auditPath = resolve(repoRoot, input.auditPath);
-  const programPath = resolve(repoRoot, input.programPath);
   const index = new DatabaseSync(resolve(repoRoot, input.indexPath), {
     readOnly: true,
   });
@@ -526,7 +741,8 @@ export function measureFixedBaseline(input: {
       replayCacheEvidence.cumulativeReplayMilliseconds >= 60_000
   )
     fail("Fixed baseline replay-cache measurement is invalid.");
-  const program = readFileSync(programPath, "utf8");
+  const programArtifacts = validateFixedProgramArtifacts(runEvidencePaths);
+  const program = programArtifacts.program;
   const programAudit = retainedProgramSessionAudit(program);
   const retainedProgramAudit = fixedBaselineRetainedProgramAudit(programAudit);
   const parsed = parseSdkTranscript(
@@ -536,6 +752,12 @@ export function measureFixedBaseline(input: {
       .map((line): unknown => JSON.parse(line)),
   );
   if (parsed.tag === "invalid") fail(parsed.message);
+  if (
+    parsed.value.header.characterOutcome !== "ready" ||
+    parsed.value.header.setupOutcome !== "ready"
+  ) {
+    fail("Fixed baseline transcript does not contain a ready scenario run.");
+  }
   if (
     parsed.value.header.gitSha !== "7dd52785b947159092ed2cdd7895e5b428000ee4" ||
     statSync(transcriptPath).size !== FIXED_TRANSCRIPT_BYTES ||
@@ -559,6 +781,10 @@ export function measureFixedBaseline(input: {
     fail("Fixed baseline player projection is less than 5x smaller.");
   const directlyReusedFrontiersChecked = directFrontierUseChecks({
     calls: parsed.value.calls,
+    projections: projected.projections,
+  });
+  const entityResourceFacts = fixedBaselineEntityResourceFactAudit({
+    initialSession: parsed.value.header.initialSession,
     projections: projected.projections,
   });
   return {
@@ -588,7 +814,11 @@ export function measureFixedBaseline(input: {
       ),
       directlyReusedFrontiersChecked,
       retainedProgram: {
-        sha256: createHash("sha256").update(program).digest("hex"),
+        sha256: FIXED_PROGRAM_SHA256,
+        bytes: FIXED_PROGRAM_BYTES,
+        frozenPrefixSha256: programArtifacts.frozenPrefixSha256,
+        finalResultSha256: programArtifacts.finalResultSha256,
+        entityResourceFacts,
         ...retainedProgramAudit,
       },
     },
@@ -619,7 +849,6 @@ function main(args: readonly string[]): void {
   const [
     transcriptPath,
     auditPath,
-    programPath,
     indexPath,
     replayCacheMeasurementPath,
     outputPath,
@@ -628,20 +857,18 @@ function main(args: readonly string[]): void {
   if (
     transcriptPath === undefined ||
     auditPath === undefined ||
-    programPath === undefined ||
     indexPath === undefined ||
     replayCacheMeasurementPath === undefined ||
     outputPath === undefined ||
     unexpected.length > 0
   ) {
     fail(
-      "Usage: fixed-baseline-measurement.ts <transcript.jsonl> <audit.jsonl> <program.ts> <index.sqlite> <replay-cache-measurement.json> <measurement.json>",
+      "Usage: fixed-baseline-measurement.ts <transcript.jsonl> <audit.jsonl> <index.sqlite> <replay-cache-measurement.json> <measurement.json>",
     );
   }
   const measurement = measureFixedBaseline({
     transcriptPath,
     auditPath,
-    programPath,
     indexPath,
     replayCacheMeasurementPath,
   });

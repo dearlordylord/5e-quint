@@ -1,10 +1,17 @@
-import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { Either, Schema } from "effect";
 
-import { repositoryArtifactPath } from "./artifact-index.ts";
+import {
+  artifactAuthority,
+  ArtifactAuthoritySchema,
+  readJsonLines,
+} from "./artifact-authority.ts";
+export {
+  ArtifactAuthoritySchema,
+  type ArtifactAuthority,
+} from "./artifact-authority.ts";
 import {
   modelInvocationEvidenceFromEvents,
   parseModelInvocationLedgerEntry,
@@ -35,16 +42,6 @@ import {
   type GitSha,
   type ScenarioId,
 } from "./transcript.ts";
-
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
-export const ArtifactAuthoritySchema = Schema.Struct({
-  path: Schema.NonEmptyTrimmedString,
-  byteLength: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
-  sha256: HashSchema,
-});
-export type ArtifactAuthority = Schema.Schema.Type<
-  typeof ArtifactAuthoritySchema
->;
 
 export const ReviewInvocationEvidenceManifestSchema = Schema.Struct({
   type: Schema.Literal("review-invocation-evidence"),
@@ -80,19 +77,9 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
-function artifactAuthority(path: string) {
-  const repositoryPath = repositoryArtifactPath(path);
-  const bytes = readFileSync(resolve(repoRoot, repositoryPath));
-  return {
-    path: repositoryPath,
-    byteLength: bytes.byteLength,
-    sha256: createHash("sha256").update(bytes).digest("hex"),
-  };
-}
-
 function json(path: string): unknown {
   try {
-    return JSON.parse(readFileSync(resolve(repoRoot, path), "utf8")) as unknown;
+    return JSON.parse(readFileSync(resolve(repoRoot, path), "utf8"));
   } catch {
     return fail(`Review invocation evidence ${path} is malformed JSON.`);
   }
@@ -137,19 +124,12 @@ function scenarioReviewIdentity(packet: {
 }
 
 function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
-  const lines = readFileSync(resolve(repoRoot, path), "utf8")
-    .split("\n")
-    .filter((line) => line.trim().length > 0);
+  const lines = readJsonLines(path);
   if (lines.length === 0) fail("Review invocation ledgers must be nonempty.");
-  return lines.map((line) => {
-    try {
-      const value: unknown = JSON.parse(line);
-      const decoded = parseModelInvocationLedgerEntry(value);
-      if (Either.isLeft(decoded)) fail(decoded.left.message);
-      return decoded.right;
-    } catch {
-      return fail("Review invocation ledger contains malformed evidence.");
-    }
+  return lines.map((value) => {
+    const decoded = parseModelInvocationLedgerEntry(value);
+    if (Either.isLeft(decoded)) fail(decoded.left.message);
+    return decoded.right;
   });
 }
 
@@ -175,7 +155,7 @@ function finalAgentMessage(events: readonly unknown[]): unknown {
   if (message === undefined)
     fail("Review invocation has no final agent message.");
   try {
-    return JSON.parse(message) as unknown;
+    return JSON.parse(message);
   } catch {
     return fail("Review invocation final agent message is not JSON.");
   }
@@ -244,6 +224,12 @@ function deriveManifest(input: {
     entries.some((entry) => entry.scenarioId !== audit.audit.header.scenarioId)
   )
     fail("Review invocation ledger identity does not match the audited run.");
+  if (
+    new Set(entries.map(({ invocationId }) => invocationId)).size !==
+    entries.length
+  ) {
+    fail("Review invocation ledger invocation ids must be distinct.");
+  }
   const eventEvidence = input.invocationEventPaths.map((path) => {
     const parsed = readCodexEvents(resolve(repoRoot, path));
     if (parsed.tag === "invalid") fail(parsed.message);
@@ -279,6 +265,48 @@ function deriveManifest(input: {
   const expectedOutputSchema = codexOutputJsonSchema(
     ScenarioCompositeReviewSchema,
   );
+  const scenarioReviewEntries = entries.filter(
+    ({ phase }) => phase === "scenarioCompositeReview",
+  );
+  if (scenarioReviewEntries.length !== 2) {
+    fail("Review invocation evidence requires two pre-play reviews.");
+  }
+  const prePlayReplayInputs = input.prePlayReviewPaths.map(
+    ({ replayInputPath }, index) =>
+      retainedReviewInput(replayInputPath, index === 0 ? "milestone" : "final"),
+  );
+  const prePlayReplayInputIds = prePlayReplayInputs.map(
+    ({ invocationId }) => invocationId,
+  );
+  const scenarioReviewEntryIds = new Set(
+    scenarioReviewEntries.map(({ invocationId }) => invocationId),
+  );
+  if (
+    new Set(prePlayReplayInputIds).size !== prePlayReplayInputIds.length ||
+    prePlayReplayInputIds.some(
+      (invocationId) => !scenarioReviewEntryIds.has(invocationId),
+    ) ||
+    scenarioReviewEntryIds.size !== prePlayReplayInputIds.length
+  ) {
+    fail(
+      "Pre-play review inputs must map one-to-one to distinct scenario-review invocations.",
+    );
+  }
+  const sourceReplayInvocationIds = input.prePlayReviewPaths.flatMap(
+    ({ sourceInputPath, replayInputPath }, index) => {
+      const expectedStage = index === 0 ? "milestone" : "final";
+      const sourceInput = retainedReviewInput(sourceInputPath, expectedStage);
+      const replayInput = retainedReviewInput(replayInputPath, expectedStage);
+      return [sourceInput.invocationId, replayInput.invocationId];
+    },
+  );
+  if (
+    new Set(sourceReplayInvocationIds).size !== sourceReplayInvocationIds.length
+  ) {
+    fail(
+      "Pre-play source and replay invocation identities must be distinct by stage.",
+    );
+  }
   const prePlayReview = <Stage extends "milestone" | "final">(
     reviewStage: Stage,
     paths: {
@@ -304,11 +332,10 @@ function deriveManifest(input: {
         `Retained ${reviewStage} source and replay inputs do not describe the measured review.`,
       );
     }
-    const entry = entries.find(
-      ({ phase, invocationId }) =>
-        phase === "scenarioCompositeReview" &&
-        invocationId === replayInput.invocationId,
+    const matchingEntries = scenarioReviewEntries.filter(
+      ({ invocationId }) => invocationId === replayInput.invocationId,
     );
+    const entry = matchingEntries[0];
     const events = eventEvidence.find(
       ({ authority }) => authority.sha256 === entry?.eventsSha256,
     );
@@ -341,11 +368,6 @@ function deriveManifest(input: {
     prePlayReview("milestone", input.prePlayReviewPaths[0]),
     prePlayReview("final", input.prePlayReviewPaths[1]),
   ] as const;
-  const scenarioReviewEntries = entries.filter(
-    ({ phase }) => phase === "scenarioCompositeReview",
-  );
-  if (scenarioReviewEntries.length !== 2)
-    fail("Review invocation evidence requires two pre-play reviews.");
   const postPlayEntries = entries.filter(
     ({ phase }) => phase === "postPlayReview",
   );

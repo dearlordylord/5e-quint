@@ -42,11 +42,11 @@ const model = flag(args, "--model");
 const reasoningEffort = flag(args, "--reasoning-effort");
 const startedAt = flag(args, "--started-at");
 const elapsedMilliseconds = Number(flag(args, "--elapsed-ms"));
-const exitStatus = Number(flag(args, "--exit-status"));
+const shellStatus = Number(flag(args, "--shell-status"));
 if (!Number.isInteger(elapsedMilliseconds) || elapsedMilliseconds < 0) {
   fail("--elapsed-ms must be a nonnegative integer.");
 }
-if (!Number.isInteger(exitStatus)) fail("--exit-status must be an integer.");
+if (!Number.isInteger(shellStatus)) fail("--shell-status must be an integer.");
 if (
   model.trim().length === 0 ||
   reasoningEffort.trim().length === 0 ||
@@ -54,21 +54,25 @@ if (
 ) {
   fail("Model, reasoning effort, and ISO start time are required.");
 }
+const start = modelInvocationStartedEvent({
+  scenarioId: scenarioId.right,
+  gitSha: gitSha.right,
+  phase,
+  fallbackInvocationId: randomUUID(),
+  model,
+  reasoningEffort,
+  startedAt,
+});
+if (Either.isLeft(start)) fail(start.left.message);
+const completion = modelInvocationCompletedEvent({
+  elapsedMilliseconds,
+  exit: { tag: "shellStatus", status: shellStatus },
+});
+if (Either.isLeft(completion)) fail(completion.left.message);
 appendInvocationEvidenceEvents({
   path: eventsPath,
-  start: modelInvocationStartedEvent({
-    scenarioId: scenarioId.right,
-    gitSha: gitSha.right,
-    phase,
-    fallbackInvocationId: randomUUID(),
-    model,
-    reasoningEffort,
-    startedAt,
-  }),
-  completion: modelInvocationCompletedEvent({
-    elapsedMilliseconds,
-    exit: { tag: "exited", status: exitStatus },
-  }),
+  start: start.right,
+  completion: completion.right,
 });
 const parsedEvents = readCodexEvents(eventsPath);
 if (parsedEvents.tag === "invalid") fail(parsedEvents.message);

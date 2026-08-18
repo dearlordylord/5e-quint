@@ -167,4 +167,46 @@ describe("review output validation", () => {
       catalog: { setupLineCount: 2, charactersLineCount: 1 },
     });
   });
+
+  test("binds packet source roles to the audited run and authority roots", () => {
+    const packet = {
+      audit: {
+        header: {
+          transcriptPath:
+            "scripts/raw-swarm/out/review-example/evidence/sdk-calls.jsonl",
+          scenarioSha256: "a".repeat(64),
+          scenarioReviewSha256: "b".repeat(64),
+          charactersSha256: "c".repeat(64),
+          setupSha256: "d".repeat(64),
+          characterOutcome: "ready" as const,
+          setupOutcome: "ready" as const,
+        },
+        calls: [{ seq: 1 }],
+      },
+      retainedHeaderEvidence: {},
+      runArtifacts: [
+        {
+          path: "scripts/raw-swarm/out/review-example/SCENARIO.md",
+          sha256: "f".repeat(64),
+          numberedContent: "1|scenario",
+        },
+      ],
+      domainAuthorities: [],
+      rawAuthorities: [],
+    };
+    expect(reviewEvidenceCatalogForPacket(packet)).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("does not match the audit header hash"),
+    });
+    expect(
+      reviewEvidenceCatalogForPacket({
+        ...packet,
+        runArtifacts: [],
+        rawAuthorities: [{ path: "docs/not-raw.md" }],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("outside the SRD root"),
+    });
+  });
 });

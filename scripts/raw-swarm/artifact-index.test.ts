@@ -203,6 +203,8 @@ describe("Raw Swarm artifact index", () => {
       )
       .run(reviewArtifact.sha256, auditArtifact.sha256);
     writable.close();
+    // The extractor produced this schema-validated JSON record immediately above;
+    // the cast exposes it only so this negative test can alter one field.
     const tamperedRecord = {
       ...(JSON.parse(extraction.encodedRecords.trim()) as Record<
         string,
@@ -297,12 +299,15 @@ describe("Raw Swarm artifact index", () => {
           path: expect.stringMatching(/^artifacts\//),
         }),
       );
-      const portablePath = (row as { path: string }).path;
-      const portableSha = (row as { sha256: string }).sha256;
+      // The SELECT list fixes both non-null SQLite column names and types.
+      const portablePath = (row as { path: string; sha256: string }).path;
+      const portableSha = (row as { path: string; sha256: string }).sha256;
       expect(
         sha256Text(readFileSync(resolve(destination, portablePath), "utf8")),
       ).toBe(portableSha);
     }
+    // The joins require all three artifact paths; `.get()` must return this row
+    // because the fixture inserted the linked run and review immediately above.
     const portableAudit = portable
       .prepare(
         `SELECT audit.path AS auditPath, transcript.path AS transcriptPath, replay.path AS replayPath
@@ -569,11 +574,14 @@ describe("Raw Swarm artifact index", () => {
     expect(
       indexed.prepare("SELECT COUNT(*) AS count FROM legacyInventory").get(),
     ).toEqual({ count: 5 });
+    // The fixture inventory contains exactly one database evidence artifact.
     const exact = indexed
       .prepare(
         "SELECT artifacts.path FROM legacyInventory JOIN artifacts ON artifacts.sha256 = legacyInventory.evidenceSha256 WHERE legacyInventory.kind = 'database'",
       )
       .get() as { path: string };
+    // `rebuildLegacyArtifactIndex` authored this retained evidence object with
+    // all five arrays; the cast narrows that production-generated fixture.
     const exactRows = JSON.parse(
       readFileSync(resolve(repoRoot, exact.path), "utf8"),
     ) as {

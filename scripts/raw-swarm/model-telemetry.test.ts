@@ -3,6 +3,8 @@ import { describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
 
 import {
+  codexInvocationMetadataMatchesArgs,
+  codexJsonArgs,
   modelInvocationCompletedEvent,
   modelInvocationEvidenceFromEvents,
   modelInvocationStartedEvent,
@@ -12,6 +14,56 @@ import {
 import { GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
 
 describe("Raw Swarm model invocation telemetry", () => {
+  test("enforces JSON events for every Codex invocation", () => {
+    expect(codexJsonArgs(["exec", "--model", "gpt-5.6-luna"])).toEqual([
+      "exec",
+      "--json",
+      "--model",
+      "gpt-5.6-luna",
+    ]);
+    expect(
+      codexJsonArgs(["exec", "--json", "--model", "gpt-5.6-luna"]),
+    ).toEqual(["exec", "--json", "--model", "gpt-5.6-luna"]);
+  });
+
+  test("binds ledger model metadata to the Codex command", () => {
+    const args = [
+      "exec",
+      "-m",
+      "gpt-5.6-luna",
+      "-c",
+      'model_reasoning_effort="max"',
+    ];
+    expect(
+      codexInvocationMetadataMatchesArgs({
+        args,
+        model: "gpt-5.6-luna",
+        reasoningEffort: "max",
+      }),
+    ).toBe(true);
+    expect(
+      codexInvocationMetadataMatchesArgs({
+        args,
+        model: "gpt-5.6-sol",
+        reasoningEffort: "max",
+      }),
+    ).toBe(false);
+    expect(
+      codexInvocationMetadataMatchesArgs({
+        args,
+        model: "gpt-5.6-luna",
+        reasoningEffort: "medium",
+      }),
+    ).toBe(false);
+    expect(
+      codexInvocationMetadataMatchesArgs({
+        args: [...args, "-c", 'model_reasoning_effort="medium"'],
+        model: "gpt-5.6-luna",
+        reasoningEffort: "max",
+      }),
+    ).toBe(false);
+  });
+
   test("retains first-party token dimensions independently", () => {
     expect(
       modelUsageFromCodexEvents([
@@ -80,16 +132,24 @@ describe("Raw Swarm model invocation telemetry", () => {
   });
 
   test("rederives invocation identity and runner-owned timing from events", () => {
+    const started = modelInvocationStartedEvent({
+      scenarioId: Schema.decodeUnknownSync(ScenarioIdSchema)("scenario"),
+      gitSha: Schema.decodeUnknownSync(GitShaSchema)("a".repeat(40)),
+      phase: "postPlayReview",
+      fallbackInvocationId: "fallback",
+      model: "gpt-5.6-luna",
+      reasoningEffort: "max",
+      startedAt: "2026-08-14T00:00:00.000Z",
+    });
+    const completed = modelInvocationCompletedEvent({
+      elapsedMilliseconds: 123,
+      exit: { tag: "exited", status: 0 },
+    });
+    expect(Either.isRight(started)).toBe(true);
+    expect(Either.isRight(completed)).toBe(true);
+    if (Either.isLeft(started) || Either.isLeft(completed)) return;
     const events = [
-      modelInvocationStartedEvent({
-        scenarioId: Schema.decodeUnknownSync(ScenarioIdSchema)("scenario"),
-        gitSha: Schema.decodeUnknownSync(GitShaSchema)("a".repeat(40)),
-        phase: "postPlayReview",
-        fallbackInvocationId: "fallback",
-        model: "gpt-5.6-luna",
-        reasoningEffort: "max",
-        startedAt: "2026-08-14T00:00:00.000Z",
-      }),
+      started.right,
       { type: "thread.started", thread_id: "thread" },
       {
         type: "turn.completed",
@@ -101,10 +161,7 @@ describe("Raw Swarm model invocation telemetry", () => {
           reasoning_output_tokens: 1,
         },
       },
-      modelInvocationCompletedEvent({
-        elapsedMilliseconds: 123,
-        exit: { tag: "exited", status: 0 },
-      }),
+      completed.right,
     ];
     expect(modelInvocationEvidenceFromEvents(events)).toMatchObject({
       tag: "valid",
@@ -121,5 +178,25 @@ describe("Raw Swarm model invocation telemetry", () => {
     expect(modelInvocationEvidenceFromEvents(events.slice(1))).toMatchObject({
       tag: "invalid",
     });
+  });
+
+  test("returns parse failures instead of throwing for invalid event primitives", () => {
+    expect(
+      modelInvocationStartedEvent({
+        scenarioId: "",
+        gitSha: "not-a-sha",
+        phase: "not-a-phase",
+        fallbackInvocationId: "",
+        model: "",
+        reasoningEffort: "",
+        startedAt: "not-a-date",
+      }),
+    ).toMatchObject({ _tag: "Left" });
+    expect(
+      modelInvocationCompletedEvent({
+        elapsedMilliseconds: -1,
+        exit: { tag: "exited", status: "not-a-number" },
+      }),
+    ).toMatchObject({ _tag: "Left" });
   });
 });

@@ -75,6 +75,14 @@ export const ModelInvocationLedgerEntrySchema = Schema.Struct({
       tag: Schema.Literal("signaled"),
       signal: Schema.NonEmptyString,
     }),
+    Schema.Struct({
+      tag: Schema.Literal("failedToStart"),
+      message: Schema.NonEmptyString,
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("shellStatus"),
+      status: Schema.Number.pipe(Schema.int()),
+    }),
   ),
   usage: ModelUsageSchema,
 });
@@ -113,6 +121,16 @@ type ModelInvocationStartedEvent = Schema.Schema.Type<
 type ModelInvocationCompletedEvent = Schema.Schema.Type<
   typeof ModelInvocationCompletedEventSchema
 >;
+
+type ModelInvocationEventInput = {
+  readonly scenarioId: unknown;
+  readonly gitSha: unknown;
+  readonly phase: unknown;
+  readonly fallbackInvocationId: unknown;
+  readonly model: unknown;
+  readonly reasoningEffort: unknown;
+  readonly startedAt: unknown;
+};
 
 export type ModelInvocationEventEvidence =
   | {
@@ -295,16 +313,10 @@ export function modelInvocationEvidenceFromEvents(
   };
 }
 
-export function modelInvocationStartedEvent(input: {
-  readonly scenarioId: ScenarioId;
-  readonly gitSha: GitSha;
-  readonly phase: ModelInvocationPhase;
-  readonly fallbackInvocationId: string;
-  readonly model: string;
-  readonly reasoningEffort: string;
-  readonly startedAt: string;
-}): ModelInvocationStartedEvent {
-  return Schema.decodeUnknownSync(ModelInvocationStartedEventSchema, {
+export function modelInvocationStartedEvent(
+  input: ModelInvocationEventInput,
+): Either.Either<ModelInvocationStartedEvent, ParseResult.ParseError> {
+  return Schema.decodeUnknownEither(ModelInvocationStartedEventSchema, {
     onExcessProperty: "error",
   })({
     type: "raw-swarm.invocation.started",
@@ -314,16 +326,58 @@ export function modelInvocationStartedEvent(input: {
 }
 
 export function modelInvocationCompletedEvent(input: {
-  readonly elapsedMilliseconds: number;
-  readonly exit: ModelInvocationLedgerEntry["exit"];
-}): ModelInvocationCompletedEvent {
-  return Schema.decodeUnknownSync(ModelInvocationCompletedEventSchema, {
+  readonly elapsedMilliseconds: unknown;
+  readonly exit: unknown;
+}): Either.Either<ModelInvocationCompletedEvent, ParseResult.ParseError> {
+  return Schema.decodeUnknownEither(ModelInvocationCompletedEventSchema, {
     onExcessProperty: "error",
   })({
     type: "raw-swarm.invocation.completed",
     schemaVersion: 1,
     ...input,
   });
+}
+
+export function codexJsonArgs(
+  args: readonly [string, ...string[]],
+): readonly string[] {
+  return args.includes("--json") ? args : [args[0], "--json", ...args.slice(1)];
+}
+
+function flagValues(args: readonly string[], flag: string): readonly string[] {
+  return args.flatMap((argument, index) =>
+    argument === flag && args[index + 1] !== undefined
+      ? [args[index + 1]!]
+      : [],
+  );
+}
+
+function codexReasoningEffort(args: readonly string[]): string | undefined {
+  const settings = flagValues(args, "-c").filter((argument) =>
+    argument.startsWith("model_reasoning_effort="),
+  );
+  if (settings.length !== 1) return undefined;
+  const setting = settings[0]!;
+  const encoded = setting.slice("model_reasoning_effort=".length);
+  try {
+    const decoded: unknown = JSON.parse(encoded);
+    return typeof decoded === "string" ? decoded : undefined;
+  } catch {
+    return encoded.length > 0 ? encoded : undefined;
+  }
+}
+
+export function codexInvocationMetadataMatchesArgs(input: {
+  readonly args: readonly string[];
+  readonly model: string;
+  readonly reasoningEffort: string;
+}): boolean {
+  const models = flagValues(input.args, "-m");
+  return (
+    models.length === 1 &&
+    models[0] === input.model &&
+    codexReasoningEffort(input.args) === input.reasoningEffort
+  );
 }
 
 export function appendInvocationEvidenceEvents(input: {
@@ -355,7 +409,7 @@ export function invocationEventsSha256(path: string): string {
 }
 
 export function runCodexInvocation(input: {
-  readonly args: readonly string[];
+  readonly args: readonly [string, ...string[]];
   readonly cwd: string;
   readonly env: NodeJS.ProcessEnv;
   readonly eventPath: string;
@@ -368,7 +422,6 @@ export function runCodexInvocation(input: {
   readonly model: string;
   readonly reasoningEffort: string;
 }): SpawnSyncReturns<Buffer> {
-  const eventFd = openSync(input.eventPath, "wx");
   const startedAt = new Date().toISOString();
   const startedMilliseconds = Date.now();
   const startedEvent = modelInvocationStartedEvent({
@@ -380,29 +433,55 @@ export function runCodexInvocation(input: {
     reasoningEffort: input.reasoningEffort,
     startedAt,
   });
+  if (Either.isLeft(startedEvent)) {
+    throw new Error(
+      `Cannot create invocation start event: ${startedEvent.left.message}`,
+    );
+  }
+  const codexArgs = codexJsonArgs(input.args);
+  if (
+    !codexInvocationMetadataMatchesArgs({
+      args: codexArgs,
+      model: input.model,
+      reasoningEffort: input.reasoningEffort,
+    })
+  ) {
+    throw new Error(
+      "Invocation ledger model and reasoning effort must match the Codex arguments.",
+    );
+  }
+  const eventFd = openSync(input.eventPath, "wx");
   const result = (() => {
     try {
-      writeSync(eventFd, `${JSON.stringify(startedEvent)}\n`);
+      writeSync(eventFd, `${JSON.stringify(startedEvent.right)}\n`);
       const logFd = openSync(input.logPath, "wx");
       try {
-        const spawned = spawnSync("codex", input.args, {
+        const spawned = spawnSync("codex", codexArgs, {
           cwd: input.cwd,
           env: input.env,
           stdio: ["ignore", eventFd, logFd],
         });
         const exit: ModelInvocationLedgerEntry["exit"] =
-          spawned.signal === null
-            ? { tag: "exited", status: spawned.status ?? 1 }
-            : { tag: "signaled", signal: spawned.signal };
-        writeSync(
-          eventFd,
-          `${JSON.stringify(
-            modelInvocationCompletedEvent({
-              elapsedMilliseconds: Date.now() - startedMilliseconds,
-              exit,
-            }),
-          )}\n`,
-        );
+          spawned.error !== undefined
+            ? { tag: "failedToStart", message: spawned.error.message }
+            : spawned.signal !== null
+              ? { tag: "signaled", signal: spawned.signal }
+              : spawned.status !== null
+                ? { tag: "exited", status: spawned.status }
+                : {
+                    tag: "failedToStart",
+                    message: "Codex returned no process status.",
+                  };
+        const completedEvent = modelInvocationCompletedEvent({
+          elapsedMilliseconds: Date.now() - startedMilliseconds,
+          exit,
+        });
+        if (Either.isLeft(completedEvent)) {
+          throw new Error(
+            `Cannot create invocation completion event: ${completedEvent.left.message}`,
+          );
+        }
+        writeSync(eventFd, `${JSON.stringify(completedEvent.right)}\n`);
         return spawned;
       } finally {
         closeSync(logFd);

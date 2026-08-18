@@ -198,6 +198,8 @@ describe("RAW swarm artifact report index", () => {
     expect(existsSync(resolve(controlledExportPath, "manifest.json"))).toBe(
       true,
     );
+    // The production export wrote a schema-owned manifest at this exact path;
+    // the test narrows only the artifacts field it asserts below.
     const controlledManifest = JSON.parse(
       readFileSync(resolve(controlledExportPath, "manifest.json"), "utf8"),
     ) as { readonly artifacts: readonly { readonly sha256: string }[] };

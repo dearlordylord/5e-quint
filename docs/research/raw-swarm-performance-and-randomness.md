@@ -202,17 +202,16 @@ generator and each logically independent reviewer
 The official [Codex CLI reference](https://developers.openai.com/codex/cli/reference/)
 says that `codex exec` is non-interactive, `--json` emits newline-delimited
 events, `--output-last-message` writes the final response, and `--ephemeral`
-does not persist session rollout files. The current launchers do not request
-`--json`, so their retained logs are formatted scrollback rather than a stable
-usage ledger.
-
-The next run should add `--json` (while retaining
-`--output-last-message`) and retain only a bounded per-turn event projection:
+does not persist session rollout files. At the time of this measurement, the
+launchers did not request `--json`, so their retained logs were formatted
+scrollback rather than a stable usage ledger. The implemented launchers now
+require `--json` while retaining `--output-last-message`, and retain a bounded
+invocation ledger containing:
 thread/session id, model, reasoning effort, elapsed time, exit status, and
 usage. Codex's first-party [`exec_events.rs`](https://github.com/openai/codex/blob/main/codex-rs/exec/src/exec_events.rs)
 defines `turn.completed` usage fields for input tokens, cached input tokens,
 cache-write input tokens, output tokens, and reasoning output tokens. That
-will distinguish context growth from model reasoning and output. It also
+distinguishes context growth from model reasoning and output. It also
 allows a measured comparison of packet-based versus direct-transcript reviewer contexts; no
 dollar estimate should be made from the current footer alone.
 

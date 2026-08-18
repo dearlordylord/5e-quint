@@ -120,6 +120,24 @@ describe("review comparison", () => {
         comparison: {
           ...comparison,
           mappings: comparison.mappings.map((mapping, index) =>
+            index === 0 ? { ...mapping, candidateVerdicts: [1, 1] } : mapping,
+          ),
+        },
+        evidenceCatalog: {
+          sequences: new Set([3, 4]),
+          setupLineCount: 10,
+          charactersLineCount: 12,
+          hasTranscriptHeader: true,
+        },
+      }),
+    ).toThrow("Every candidate verdict");
+    expect(() =>
+      verifyReviewComparison({
+        baselineReviewPath: baseline,
+        candidateReviewPath: candidate,
+        comparison: {
+          ...comparison,
+          mappings: comparison.mappings.map((mapping, index) =>
             index === 0 ? { ...mapping, evidence: "seq 999" } : mapping,
           ),
         },

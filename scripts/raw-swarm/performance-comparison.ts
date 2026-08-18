@@ -1,21 +1,21 @@
-import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { Either, Schema } from "effect";
 
-import { repositoryArtifactPath } from "./artifact-index.ts";
+import {
+  artifactAuthority,
+  ArtifactAuthoritySchema,
+  readJsonLines,
+  type ArtifactAuthority,
+} from "./artifact-authority.ts";
 import {
   MODEL_INVOCATION_PHASES,
   parseModelInvocationLedgerEntry,
   type ModelInvocationLedgerEntry,
   type ModelInvocationPhase,
 } from "./model-telemetry.ts";
-import {
-  ArtifactAuthoritySchema,
-  readReviewInvocationEvidenceManifest,
-  type ArtifactAuthority,
-} from "./review-invocation-evidence.ts";
+import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { isJsonRecord, repoRoot, ScenarioIdSchema } from "./transcript.ts";
 
@@ -195,29 +195,6 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
-function jsonLines(path: string): readonly unknown[] {
-  return readFileSync(resolve(repoRoot, path), "utf8")
-    .split("\n")
-    .filter((line) => line.trim().length > 0)
-    .map((line, index) => {
-      try {
-        return JSON.parse(line);
-      } catch {
-        return fail(`${path}:${index + 1} is malformed JSONL.`);
-      }
-    });
-}
-
-function artifactAuthority(path: string): ArtifactAuthority {
-  const repositoryPath = repositoryArtifactPath(path);
-  const bytes = readFileSync(resolve(repoRoot, repositoryPath));
-  return {
-    path: repositoryPath,
-    byteLength: bytes.byteLength,
-    sha256: createHash("sha256").update(bytes).digest("hex"),
-  };
-}
-
 function ledgerEntry(value: unknown): ModelInvocationLedgerEntry {
   const parsed = parseModelInvocationLedgerEntry(value);
   return Either.isRight(parsed)
@@ -315,7 +292,7 @@ export function summarizeControlledRun(
   const reviewPath = reviewInvocationEvidence.review.path;
   const invocationLedgerPath =
     reviewInvocationEvidence.invocationLedgers[0].path;
-  const transcript = parseSdkTranscript(jsonLines(transcriptPath));
+  const transcript = parseSdkTranscript(readJsonLines(transcriptPath));
   if (transcript.tag === "invalid") fail(transcript.message);
   if (transcript.value.calls.length === 0)
     fail("Controlled performance requires a runnable SDK transcript.");
@@ -332,7 +309,7 @@ export function summarizeControlledRun(
   const continuations = [
     ...new Set(transcript.value.calls.map(({ continuation }) => continuation)),
   ].sort((left, right) => left - right);
-  const entries = jsonLines(invocationLedgerPath).map(ledgerEntry);
+  const entries = readJsonLines(invocationLedgerPath).map(ledgerEntry);
   const reportingTiming = decode(
     ReportingTimingSchema,
     input.reportingTimingPath,
@@ -365,7 +342,7 @@ export function summarizeControlledRun(
   ) {
     fail("Controlled reporting timing does not match its run artifacts.");
   }
-  const timingRows = jsonLines(input.supervisorTimingPath);
+  const timingRows = readJsonLines(input.supervisorTimingPath);
   const timing = timingRows.map((value) => {
     const decoded = Schema.decodeUnknownEither(SupervisorTimingSchema, {
       onExcessProperty: "error",

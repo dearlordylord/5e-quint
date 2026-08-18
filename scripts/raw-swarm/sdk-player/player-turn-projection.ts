@@ -176,6 +176,16 @@ export type PlayerCombatantProjection = {
     readonly level: number;
     readonly remaining: number;
   }[];
+  readonly zeroHitPointLifecycle:
+    | { readonly policy: "diesAtZeroHp" }
+    | {
+        readonly policy: "usesDeathSavingThrows";
+        readonly successes: number;
+        readonly failures: number;
+        readonly stable: boolean;
+        readonly dead: boolean;
+        readonly hitPointsRegained: boolean;
+      };
 };
 
 export type PlayerObjectProjection = {
@@ -353,6 +363,39 @@ function slotProjection(
   return projected;
 }
 
+function zeroHitPointLifecycleProjection(
+  value: JsonValue | undefined,
+): PlayerCombatantProjection["zeroHitPointLifecycle"] | undefined {
+  if (!isJsonObject(value)) return undefined;
+  if (value.policy === "diesAtZeroHp") return { policy: "diesAtZeroHp" };
+  if (value.policy !== "usesDeathSavingThrows") return undefined;
+  const deathSaves = isJsonObject(value.deathSaves)
+    ? value.deathSaves
+    : undefined;
+  const saves = isJsonObject(deathSaves?.deathSaves)
+    ? deathSaves.deathSaves
+    : undefined;
+  const successes = requiredNumber(saves?.successes);
+  const failures = requiredNumber(saves?.failures);
+  const stable = requiredBoolean(deathSaves?.stable);
+  const dead = requiredBoolean(deathSaves?.dead);
+  const hitPointsRegained = requiredBoolean(deathSaves?.hpRegained);
+  return successes === undefined ||
+    failures === undefined ||
+    stable === undefined ||
+    dead === undefined ||
+    hitPointsRegained === undefined
+    ? undefined
+    : {
+        policy: "usesDeathSavingThrows",
+        successes,
+        failures,
+        stable,
+        dead,
+        hitPointsRegained,
+      };
+}
+
 function combatantProjection(
   value: JsonValue,
 ): PlayerCombatantProjection | undefined {
@@ -381,6 +424,9 @@ function combatantProjection(
   const temporary = requiredNumber(value.tempHp);
   const reactionAvailable = requiredBoolean(value.reactionAvailable);
   const movementSpentFeet = requiredNumber(value.movementSpentFeet);
+  const zeroHitPointLifecycle = zeroHitPointLifecycleProjection(
+    value.zeroHpLifecycle,
+  );
   const ammunition = ammunitionProjection(value.ammunitionStocks);
   const originKind = typeof origin?.kind === "string" ? origin.kind : undefined;
   const resources = resourceProjection(
@@ -405,6 +451,7 @@ function combatantProjection(
     !Array.isArray(conditions) ||
     reactionAvailable === undefined ||
     movementSpentFeet === undefined ||
+    zeroHitPointLifecycle === undefined ||
     ammunition === undefined ||
     malformedSpellcasting ||
     resources === undefined ||
@@ -420,6 +467,7 @@ function combatantProjection(
     ammunition,
     resources,
     spellSlots,
+    zeroHitPointLifecycle,
   };
 }
 
