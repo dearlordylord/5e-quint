@@ -6,7 +6,12 @@ documentation, and the declarations available through
 
 Edit only `characters.ts`. Export one `ScenarioCharacters` named
 `composeScenarioCharacters`. This module represents the player/controller that
-owns the scenario's delegated Character Sheet choices. Use the supplied
+owns the scenario's delegated Character Sheet choices. When `SCENARIO.md`
+contains only canonical stat-block creatures (or otherwise delegates no
+class-based player character), return `kind: "ready"` with
+`characterSheets: []` and a JSON observation explaining that no Character
+Sheets are delegated. Do not invent a class, species, background, ability
+scores, equipment, or Character Sheet to fill that absence. Use the supplied
 canonical `UnitCatalog` and character-creation operations directly: create a
 draft, discover its current holes, fill those holes, finalize its
 `CharacterBuild`, and create a `FreshCharacterSheet`.
