@@ -179,7 +179,12 @@ Optional fields and empty collections must represent distinct domain states. Do 
 
 ## Domain Naming
 
-Avoid contrast names such as `normalized`, `legacy`, `current`, `new`, or `promoted` unless the repo owns the opposite concept at the same boundary and the term is domain-backed.
+Name every entity for its domain role or contract. Avoid contrast names such as
+`compact`, `full`, `normalized`, `legacy`, `current`, `new`, `optimized`, or
+`promoted` unless the repo owns the opposite concept at the same boundary and
+the term is domain-backed. This applies to agents, reviewers, services,
+artifacts, packets, protocols, results, types, functions, and fields—not only
+runtime domain records.
 
 Prefer names for the rule, source shape, or domain object being modeled, not names that describe migration mechanics or implementation history.
 

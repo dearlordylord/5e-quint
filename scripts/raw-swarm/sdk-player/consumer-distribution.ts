@@ -12,6 +12,7 @@ import { buildSync } from "esbuild";
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import type { JsonValue } from "./continuation-contract.ts";
+import { writePublicSdkTypeHelpArtifact } from "./public-sdk-type-help-artifact.ts";
 
 export type ConsumerDistributionInput = {
   readonly destination: string;
@@ -215,6 +216,11 @@ export function buildConsumerDistribution(
     resolve(input.destination, "tsconfig.json"),
     consumerTsconfig(input.destination, ["attempt.ts"]),
   );
+  writePublicSdkTypeHelpArtifact({
+    destination: resolve(input.destination, "FILL_TYPES.json"),
+    declarationsDirectory: resolve(input.destination, "declarations"),
+    configPath: resolve(input.destination, "tsconfig.json"),
+  });
   writeFileSync(
     resolve(input.trustedDestination, "tsconfig.json"),
     consumerTsconfig(input.trustedDestination, ["submissions/*.ts"]),
@@ -222,12 +228,10 @@ export function buildConsumerDistribution(
   writeFileSync(
     resolve(input.destination, "attempt.ts"),
     attemptSource(
-      `  const acts = context.sdk.discoverBattleActs(context.session);
-
-  return {
+      `  return {
     kind: "continue",
     session: context.session,
-    tacticalNote: "Observed " + acts.length + " available acts; replace this starter body with one coherent tactical continuation.",
+    tacticalNote: "Replace this starter body with one coherent tactical continuation that makes at least one SDK call.",
   };`,
     ),
   );
@@ -250,6 +254,21 @@ export function buildConsumerDistribution(
       resolve(repoRoot, "scripts/raw-swarm/sdk-player/supervisor-cli.ts"),
     ],
     outfile: resolve(input.trustedDestination, "supervisor.mjs"),
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    target: "node24",
+    sourcemap: false,
+    logLevel: "silent",
+  });
+  buildSync({
+    entryPoints: [
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/public-sdk-type-help-cli.ts",
+      ),
+    ],
+    outfile: resolve(input.destination, "public-sdk-type-help.mjs"),
     bundle: true,
     platform: "node",
     format: "esm",

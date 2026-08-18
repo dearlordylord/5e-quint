@@ -21,6 +21,10 @@ import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
+import {
+  publicSdkDeclarationGraphSha256,
+  publicSdkTypeHelp,
+} from "./public-sdk-type-help.ts";
 
 const CONSUMER_SCENARIO_ID = "ready-mixed-consumer";
 const CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS = 10 * 60 * 1_000;
@@ -312,6 +316,39 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
           path.endsWith("player-client.mjs"),
         ),
       ).toBe(true);
+      expect(
+        filesBelow(destination).some((path) =>
+          path.endsWith("public-sdk-type-help.mjs"),
+        ),
+      ).toBe(true);
+      const fillTypes: unknown = JSON.parse(
+        readFileSync(join(destination, "FILL_TYPES.json"), "utf8"),
+      );
+      const declarationGraphSha256 = publicSdkDeclarationGraphSha256(
+        join(destination, "declarations"),
+      );
+      expect(declarationGraphSha256).toBeDefined();
+      if (declarationGraphSha256 === undefined) {
+        throw new Error("Consumer declaration graph is empty.");
+      }
+      expect(
+        publicSdkTypeHelp(
+          fillTypes,
+          "savingThrowOutcome",
+          declarationGraphSha256,
+        ),
+      ).toMatchObject({ tag: "found" });
+      const savingThrowTypeHelp = execFileSync(
+        process.execPath,
+        [join(destination, "public-sdk-type-help.mjs"), "savingThrowOutcome"],
+        { cwd: destination, encoding: "utf8" },
+      );
+      expect(savingThrowTypeHelp).toContain(
+        'readonly kind: "savingThrowOutcome"',
+      );
+      expect(savingThrowTypeHelp).toContain(
+        "type BattleSavingThrowOutcomeValue =",
+      );
 
       writeFileSync(
         join(destination, "attempt.ts"),

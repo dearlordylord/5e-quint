@@ -380,6 +380,26 @@ This changes model-context transport, not SDK execution authority: the
 append-only canonical call transcript and frozen program prefix remain the same
 evidence owners.
 
+The first three independent invocations used 56,481, 381,737, and 264,660
+input tokens. The second and third invocations repeatedly searched the 5.7-MB
+public declaration graph to reconstruct individual `BattleFill` branches, so
+their 234,293-token mean did not improve on the comparable persistent-player
+mean. That run was stopped before a fourth completed invocation and retained at
+`scripts/raw-swarm/out/failed-independent-282-run-1` rather than being reported
+as a successful comparison.
+
+The correction keeps the declaration graph as the type authority but generates
+one hash-linked declaration record for each `BattleFill` discriminant, capped
+at 80 KiB per record and 160 KiB across the artifact. The current graph produces
+53 records totaling 144,070 bytes. The player queries the active hole's record
+through the local read-only `public-sdk-type-help.mjs` utility. The utility reads
+neither the transcript nor the supervisor, performs no SDK operation, and
+exposes no alternative command vocabulary. Player instructions also require one coherent selected subject to
+resolve its downstream holes in the same continuation when returned facts are
+sufficient, so a later invocation does not reconstruct an accepted fill
+prefix. A short independent-invocation measurement must pass before paying for
+the complete controlled run.
+
 The fixed 88-prefix benchmark measured 430,212 ms of cumulative replay, so the
 60-second cache gate is met. Cache admission remains deferred until the fresh
 controlled run proves replay is also at least 10% of non-model supervisor time;
@@ -396,6 +416,11 @@ hole facts plus materially changed entities; it does not contain generic JSON
 patches or complete SDK results. A byte-capped tactical note can preserve player
 reasoning but is not evidence. Exact raw transcript records remain available to
 reviewers through a hash-checking sequence extractor.
+
+Public fill authoring uses a separate generated type-help artifact derived from
+the exact distributed declaration graph. It is accepted instead of adding type
+presentation metadata to every semantic player projection or serving a live
+supervisor inspection request.
 
 The following alternatives are deliberately preserved for later evaluation:
 

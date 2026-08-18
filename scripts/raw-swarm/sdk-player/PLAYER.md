@@ -8,11 +8,22 @@ Use the `context.sdk` operations exactly as typed. They are the canonical
 invent a second command vocabulary, inspect repository implementation or tests,
 or import unrecorded runtime operations.
 
-The declaration graph under `declarations/` is part of the supplied public SDK
-surface. Inspect or search those `.d.ts` files whenever a surfaced hole requests
-a fact whose exact `BattleFill` shape is unclear. Do not guess repeated fill
-shapes from compiler acceptance alone: the runtime boundary rejects fields that
-belong to another discriminated branch, and its error identifies the mismatch.
+The declaration graph under `declarations/` is the source of the supplied
+public SDK types. Do not search that graph. Run
+`node public-sdk-type-help.mjs <fill-kind>` for the bounded declaration of one
+`BattleFill` branch and the required public types reachable from it. For
+example, `node public-sdk-type-help.mjs savingThrowOutcome` prints the exact
+Saving Throw outcome authoring shape. The generated type-help artifact is
+derived from those declarations; it is not a second command vocabulary. Query
+only a fill kind requested by the active hole, and do not repeat a successful
+query.
+
+When `context.session.battle.state.subjectResolutionPhase.kind` is
+`subjectSelection`, call `context.sdk.discoverBattleActs` inside the
+continuation. Select and attempt a surfaced act before returning; if none is
+surfaced, report that exact state rather than inventing an action. When the
+phase is `subjectContinuation`, continue its retained subject and fill prefix;
+do not call fresh act discovery.
 
 For a repeated-damage allocation, the later `rolledDice` fill has one group for
 each entry in the earlier `spellTargetAllocation.value.allocations` array, in
@@ -163,9 +174,12 @@ A `needsHoles` result means the selected subject is still in progress. A fresh
 act discovery may then be empty by design; that is not an obstruction. Always
 carry `result.session` forward, but do not treat it as saved fill history: a
 `needsHoles` session does not persist the answer prefix for the next replay.
-Keep every accepted fill in canonical order in your continuation. On the next
-call, use the result's `subject` and submit the complete accumulated prefix
-plus the newly requested fill(s), not only the latest fill(s):
+Resolve the selected subject's downstream holes inside the same authored
+tactical continuation whenever its returned facts determine the next answer.
+Do not end a continuation merely to report `needsHoles`. Keep every accepted
+fill in canonical order. On the next call, use the result's subject and submit
+the complete accumulated prefix plus the newly requested fill(s), not only the
+latest fill(s):
 
 ```ts
 const acceptedFills = [targetFill];
