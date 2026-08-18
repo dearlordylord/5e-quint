@@ -52,6 +52,35 @@ describe("SDK player transcript boundary", () => {
     ).toBe("invalid");
   });
 
+  test("distinguishes an unrecorded initial projection from malformed partial evidence", () => {
+    const {
+      initialTurnProjection: _initialTurnProjection,
+      initialTurnProjectionSha256: _initialTurnProjectionSha256,
+      ...headerWithoutInitialTurnProjection
+    } = header;
+    const parsed = parseSdkTranscript([headerWithoutInitialTurnProjection]);
+    expect(parsed).toMatchObject({
+      tag: "valid",
+      value: { calls: [] },
+    });
+    if (
+      parsed.tag === "valid" &&
+      parsed.value.header.characterOutcome === "ready" &&
+      parsed.value.header.setupOutcome === "ready"
+    ) {
+      expect("initialTurnProjection" in parsed.value.header).toBe(false);
+      expect("initialTurnProjectionSha256" in parsed.value.header).toBe(false);
+    }
+    expect(
+      parseSdkTranscript([
+        {
+          ...headerWithoutInitialTurnProjection,
+          initialTurnProjection: {},
+        },
+      ]).tag,
+    ).toBe("invalid");
+  });
+
   test("accepts a terminal character-composition obstruction", () => {
     const characterObstruction = {
       type: "sdk-player-header",

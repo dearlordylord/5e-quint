@@ -103,11 +103,14 @@ the harness. Both are required to describe the work's token cost honestly.
 
 ### Realized benefits
 
-- The operation-specific reviewer audit is 146,677 bytes, 0.384% of the
+- The operation-specific reviewer audit is 146,727 bytes, 0.384% of the
   38,232,957-byte transcript, while retaining exact call-sequence provenance.
-- The fixed transcript reprojects to 148,566 bytes of player turns, 21.12 times
+- The fixed transcript reprojects to 185,273 bytes of player turns, 16.94 times
   smaller than the 3,137,666-byte retained observations; the largest turn is
-  15,262 bytes under the 32-KiB cap.
+  19,373 bytes under the 32-KiB cap. The increase from the earlier measurement
+  is the cost of retaining canonical hole payloads and every actionable
+  character/stat-block resource variant rather than projecting an incomplete
+  parallel shape.
 - Searchable fixed-run SQLite call facts are 81,779 bytes, 0.215% of the former
   38,107,978-byte duplicated step payload. The rebuilt searchable index is
   503,808 bytes rather than the 229,924,864-byte legacy database.
@@ -166,18 +169,14 @@ the harness. Both are required to describe the work's token cost honestly.
   economic outcome. That ordering was too expensive: a smaller executable
   spike and three-invocation gate should
   have preceded the generalized artifact/type-help implementation.
-- The current player projection treats character and stat-block resource pools
-  as one record shape. It requires `usesRemaining` and `usedThisTurn`, while
-  canonical stat-block recharge pools carry `available` and daily/legendary
-  pools have no `usedThisTurn`. A nonempty ordinary stat-block resource pool can
-  therefore make a continuation projection fail. This is a reliability defect,
-  not an accepted cost of token reduction.
-- The player hole projection accepts an arbitrary string kind and retains only
-  a common subset plus a fixed choice-hole list. In particular, a
-  `statBlockRechargeRoll` hole loses its required `rechargeTargets`, leaving the
-  player with a fill type but without the target resource refs needed to author
-  that fill. The allowlist must either preserve each supported hole's actionable
-  payload or reject the unsupported kind precisely.
+- The first reliability review found that the candidate conflated character and
+  stat-block resource pools and dropped kind-specific hole payloads such as
+  `statBlockRechargeRoll.rechargeTargets`. The repaired projection now decodes
+  each canonical resource variant, retains the complete canonical `BattleHole`,
+  and fails closed on malformed or unadmitted shapes. This repair increased the
+  fixed player projection by 36,707 bytes while preserving a 16.94-times
+  reduction and the 32-KiB per-turn cap. The complete controlled run remains the
+  required evidence that this reliability/performance tradeoff is proportionate.
 - Earlier issue comments contain slightly stale derived-byte figures. The
   checked `generated-battle-004-fixed-measurement.json` values above supersede
   them.
@@ -215,7 +214,8 @@ next proportionate decision is:
 
 1. freeze further optimization and do not add a replay cache, compaction layer,
    or another context protocol;
-2. repair the stat-block resource and actionable-hole projection gaps;
+2. converge independent review of the repaired stat-block resource and
+   actionable-hole projections;
 3. run one complete controlled comparison with the retained normalized
    denominators;
 4. keep the three-tier evidence boundary and frontier projection if that run

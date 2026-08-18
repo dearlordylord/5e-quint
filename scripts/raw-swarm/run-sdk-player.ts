@@ -22,7 +22,10 @@ import {
 import { buildConsumerDistribution } from "./sdk-player/consumer-distribution.ts";
 import { frontierFillTypeHelp } from "./sdk-player/frontier-fill-type-help.ts";
 import { publicSdkDeclarationGraphSha256 } from "./sdk-player/public-sdk-type-help.ts";
-import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
+import {
+  parseSdkTranscript,
+  sdkInitialTurnProjectionEvidence,
+} from "./sdk-player/sdk-transcript.ts";
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import { readJsonLines } from "./artifact-authority.ts";
 import {
@@ -124,6 +127,14 @@ function playerEvidenceState(
     transcript.value.header.characterOutcome === "ready" &&
     transcript.value.header.setupOutcome === "ready"
   ) {
+    const projectionEvidence = sdkInitialTurnProjectionEvidence(
+      transcript.value.header,
+    );
+    if (projectionEvidence.kind === "notRecorded") {
+      fail(
+        "An active SDK player run requires recorded initial turn projection evidence.",
+      );
+    }
     const initialObservation: unknown = JSON.parse(
       readFileSync(
         resolve(trusted, "evidence/initial-observation.json"),
@@ -138,9 +149,9 @@ function playerEvidenceState(
       initialObservation.continuation !== 0 ||
       initialObservation.kind !== "awaitingFirstContinuation" ||
       sha256Canonical(initialObservation.projection) !==
-        transcript.value.header.initialTurnProjectionSha256 ||
+        projectionEvidence.sha256 ||
       sha256Canonical(initialObservation.projection) !==
-        sha256Canonical(transcript.value.header.initialTurnProjection)
+        sha256Canonical(projectionEvidence.projection)
     ) {
       fail("Initial player observation does not match the exact transcript.");
     }

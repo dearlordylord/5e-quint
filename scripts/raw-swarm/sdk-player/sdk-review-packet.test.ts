@@ -143,7 +143,10 @@ function validatedPacketFixture() {
   if (verified.tag === "invalid") throw new Error(verified.message);
   const parsed = parseSdkTranscript([header, call]);
   if (parsed.tag === "invalid") throw new Error(parsed.message);
-  const projections = reprojectSdkTranscriptTurns(parsed.value.calls);
+  const projections = reprojectSdkTranscriptTurns({
+    calls: parsed.value.calls,
+    holeEvidenceSource: { kind: "recordedCurrentRuntime" },
+  });
   if (projections.tag === "invalid") throw new Error(projections.message);
   const sourceContent = readFileSync(
     resolve(repoRoot, "ASSUMPTIONS.md"),

@@ -1,7 +1,15 @@
 import { canonicalJson } from "../transcript.ts";
 import { createHash } from "node:crypto";
-import { Match } from "effect";
-import type { BattleHole } from "@dnd/battle-runtime";
+import { Either, Match, Schema } from "effect";
+import { BattleHoleSchema } from "../../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
+import { BattleResourcePoolExecutionRef } from "../../../packages/battle-runtime/src/identity.ts";
+import type { BattleHole } from "../../../packages/battle-runtime/src/battle-state-execution.ts";
+import { ResourceCount } from "../../../packages/shared/src/types.ts";
+import {
+  CreatureRechargeMinimumRollSchema,
+  PointPoolResourceSchema,
+  UseCountResourceSchema,
+} from "../../../packages/surface/src/surface/schema.ts";
 import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue } from "./json-value.ts";
 import type { SdkCallRecord } from "./sdk-transcript.ts";
@@ -10,36 +18,6 @@ export const PLAYER_TURN_PROJECTION_MAX_BYTES = 32 * 1024;
 export const PLAYER_TACTICAL_NOTE_MAX_BYTES = 4 * 1024;
 
 type JsonObject = { readonly [key: string]: JsonValue };
-
-type ChoiceHoleKind = BattleHole extends infer Hole
-  ? Hole extends {
-      readonly kind: infer Kind extends string;
-      readonly choices: readonly unknown[];
-    }
-    ? Kind
-    : never
-  : never;
-
-const CHOICE_HOLE_KINDS = {
-  targetChoice: true,
-  helpAttackAllyDecision: true,
-  helpAttackEnemyDecision: true,
-  objectContactTargets: true,
-  damageTypeChoice: true,
-  skillChoice: true,
-  abilityChoice: true,
-  targetAbilityChoices: true,
-  conditionChoice: true,
-  commandOptionChoice: true,
-  selfTransformationModeChoice: true,
-  sanctuaryInterdictionOutcome: true,
-  attackDamageDisposition: true,
-  ongoingSpellTargetChoice: true,
-  hitPointHealingDistribution: true,
-  spellTargetAllocation: true,
-  spellTargetList: true,
-  unitFeatureDecision: true,
-} as const satisfies Record<ChoiceHoleKind, true>;
 
 const PLAYER_SUBJECT_TAGS = [
   "action",
@@ -73,28 +51,98 @@ export type PlayerHoleOccurrence = {
   readonly hole: PlayerHoleProjection;
 };
 
-export type PlayerHoleProjection = {
-  readonly kind: string;
-  readonly holeId: string;
-  readonly holeInstanceKey: string;
-  readonly label: string;
-  readonly choices: readonly string[];
-  readonly requiresTableSpatialFact?: boolean;
-  readonly ability?: string;
-  readonly critical?: boolean;
-  readonly attackBonus?: number;
-  readonly dc?: {
-    readonly kind: string;
-    readonly value?: number;
-    readonly ability?: string;
-  };
-  readonly targetConstraint?: {
-    readonly kind: string;
-    readonly reachFeet?: number;
-    readonly normalRangeFeet?: number;
-    readonly longRangeFeet?: number;
-  };
-};
+export type PlayerHoleProjection = BattleHole;
+
+const PLAYER_HOLE_ADMISSION = {
+  readyDeclaration: true,
+  helpAttackAllyDecision: true,
+  helpAttackEnemyDecision: true,
+  damageRelationshipDecisions: true,
+  targetSpatialFacts: true,
+  slowSomaticSpellFailureOutcome: true,
+  objectTargetChoice: true,
+  targetChoice: true,
+  objectContactTargets: true,
+  savingThrowOutcome: true,
+  objectDropResolution: true,
+  spellAreaChoice: true,
+  teleportDestination: true,
+  spiritualWeaponForcePosition: true,
+  heldObjectFacts: true,
+  toolPossessionFacts: true,
+  cunningStrikeEndTurnCoverFacts: true,
+  findFamiliarConnection: true,
+  companionReappearancePlacement: true,
+  companionReappearanceInitiative: true,
+  magicWeaponTargetItem: true,
+  damageTypeChoice: true,
+  spellTargetAllocation: true,
+  spellTargetList: true,
+  attackRoll: true,
+  rolledDice: true,
+  skillChoice: true,
+  abilityChoice: true,
+  targetAbilityChoices: true,
+  conditionChoice: true,
+  thaumaturgyActiveOneMinuteEffectCount: true,
+  commandOptionChoice: true,
+  selfTransformationModeChoice: true,
+  dancingLightsPlacement: true,
+  gustOfWindLineDirectionChoice: true,
+  movableZoneRamMovement: true,
+  movableZoneRepositionMovement: true,
+  unitFeatureDecision: true,
+  hitPointHealingDistribution: true,
+  deathSavingThrow: true,
+  statBlockRechargeRoll: true,
+  concentrationSavingThrow: true,
+  interruptDecision: true,
+  movement: true,
+  levitateAltitudeChange: true,
+  levitateInitialRise: true,
+  abilityCheck: true,
+  spellcastingAbilityCheck: true,
+  grappleOutcome: true,
+  shoveOutcome: true,
+  sanctuaryInterdictionOutcome: true,
+  attackDamageDisposition: true,
+  ongoingSpellTargetChoice: true,
+  wildShapeEquipmentDisposition: true,
+} as const satisfies Record<BattleHole["kind"], true>;
+
+const CharacterResourceStateSchema = Schema.Struct({
+  resourcePoolRef: BattleResourcePoolExecutionRef,
+  resource: Schema.Union(UseCountResourceSchema, PointPoolResourceSchema),
+  usesRemaining: Schema.optionalWith(ResourceCount, { exact: true }),
+  usedThisTurn: Schema.optionalWith(Schema.Boolean, { exact: true }),
+  pointsRemaining: Schema.optionalWith(ResourceCount, { exact: true }),
+});
+
+const StatBlockResourceStateSchema = Schema.Union(
+  Schema.Struct({
+    resourcePoolRef: BattleResourcePoolExecutionRef,
+    kind: Schema.Literal("daily"),
+    usesMax: ResourceCount,
+    usesRemaining: ResourceCount,
+  }),
+  Schema.Struct({
+    resourcePoolRef: BattleResourcePoolExecutionRef,
+    kind: Schema.Literal("recharge"),
+    minimumRoll: CreatureRechargeMinimumRollSchema,
+    available: Schema.Boolean,
+  }),
+  Schema.Struct({
+    resourcePoolRef: BattleResourcePoolExecutionRef,
+    kind: Schema.Literal("recharge_after_rest"),
+    available: Schema.Boolean,
+  }),
+  Schema.Struct({
+    resourcePoolRef: BattleResourcePoolExecutionRef,
+    kind: Schema.Literal("legendaryActions"),
+    usesMax: ResourceCount,
+    usesRemaining: ResourceCount,
+  }),
+);
 
 export type PlayerActProjection = {
   readonly ref: `subject:${string}`;
@@ -167,11 +215,7 @@ export type PlayerCombatantProjection = {
     readonly kind: string;
     readonly remaining: number;
   }[];
-  readonly resources: readonly {
-    readonly ref: string;
-    readonly usesRemaining: number;
-    readonly usedThisTurn: boolean;
-  }[];
+  readonly resources: readonly PlayerCombatantResourceProjection[];
   readonly spellSlots: readonly {
     readonly level: number;
     readonly remaining: number;
@@ -187,6 +231,41 @@ export type PlayerCombatantProjection = {
         readonly hitPointsRegained: boolean;
       };
 };
+
+export type PlayerCombatantResourceProjection =
+  | {
+      readonly ref: string;
+      readonly usage: "unlimited";
+      readonly usedThisTurn: boolean;
+    }
+  | {
+      readonly ref: string;
+      readonly usage: "limited";
+      readonly usesRemaining: number;
+      readonly usedThisTurn: boolean;
+    }
+  | {
+      readonly ref: string;
+      readonly usage: "pointPool";
+      readonly pointsRemaining: number;
+    }
+  | {
+      readonly ref: string;
+      readonly kind: "daily" | "legendaryActions";
+      readonly usesMax: number;
+      readonly usesRemaining: number;
+    }
+  | {
+      readonly ref: string;
+      readonly kind: "recharge";
+      readonly minimumRoll: number;
+      readonly available: boolean;
+    }
+  | {
+      readonly ref: string;
+      readonly kind: "recharge_after_rest";
+      readonly available: boolean;
+    };
 
 export type PlayerObjectProjection = {
   readonly kind: string | null;
@@ -309,28 +388,101 @@ function requiredBoolean(value: JsonValue | undefined): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
 }
 
-function resourceProjection(
+function characterResourceProjection(
   value: JsonValue | undefined,
 ): PlayerCombatantProjection["resources"] | undefined {
   if (!Array.isArray(value)) return undefined;
   const projected: PlayerCombatantProjection["resources"][number][] = [];
-  for (const entry of value) {
-    if (!isJsonObject(entry)) return undefined;
-    const ref =
-      typeof entry.resourcePoolRef === "string"
-        ? entry.resourcePoolRef
-        : undefined;
-    const usesRemaining = requiredNumber(entry.usesRemaining);
-    const usedThisTurn = requiredBoolean(entry.usedThisTurn);
-    if (
-      ref === undefined ||
-      usesRemaining === undefined ||
-      usedThisTurn === undefined
-    )
-      return undefined;
-    projected.push({ ref, usesRemaining, usedThisTurn });
+  for (const encodedEntry of value) {
+    const decodedEntry = Schema.decodeUnknownEither(
+      CharacterResourceStateSchema,
+      { onExcessProperty: "error" },
+    )(encodedEntry);
+    if (Either.isLeft(decodedEntry)) return undefined;
+    const entry = decodedEntry.right;
+    const ref = entry.resourcePoolRef;
+    const resource = entry.resource;
+    const projection = Match.value(resource.kind).pipe(
+      Match.when("use_count", () => {
+        if (entry.pointsRemaining !== undefined) return undefined;
+        const cap = resource.cap;
+        const usedThisTurn = entry.usedThisTurn;
+        if (usedThisTurn === undefined) return undefined;
+        if (cap.kind === "unlimited") {
+          if (entry.usesRemaining !== undefined) return undefined;
+          return { ref, usage: "unlimited", usedThisTurn } as const;
+        }
+        const usesRemaining = entry.usesRemaining;
+        return usesRemaining === undefined
+          ? undefined
+          : ({ ref, usage: "limited", usesRemaining, usedThisTurn } as const);
+      }),
+      Match.when("point_pool", () => {
+        if (
+          entry.usedThisTurn !== undefined ||
+          entry.usesRemaining !== undefined
+        )
+          return undefined;
+        const pointsRemaining = entry.pointsRemaining;
+        return pointsRemaining === undefined
+          ? undefined
+          : ({ ref, usage: "pointPool", pointsRemaining } as const);
+      }),
+      Match.exhaustive,
+    );
+    if (projection === undefined) return undefined;
+    projected.push(projection);
   }
-  return projected;
+  return new Set(projected.map(({ ref }) => ref)).size === projected.length
+    ? projected
+    : undefined;
+}
+
+function statBlockResourceProjection(
+  value: JsonValue | undefined,
+): PlayerCombatantProjection["resources"] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const projected: PlayerCombatantProjection["resources"][number][] = [];
+  for (const encodedEntry of value) {
+    const decodedEntry = Schema.decodeUnknownEither(
+      StatBlockResourceStateSchema,
+      { onExcessProperty: "error" },
+    )(encodedEntry);
+    if (Either.isLeft(decodedEntry)) return undefined;
+    const entry = decodedEntry.right;
+    const ref = entry.resourcePoolRef;
+    const projection = Match.value(entry).pipe(
+      Match.when({ kind: "daily" }, (entry) => {
+        const { usesMax, usesRemaining } = entry;
+        if (usesRemaining > usesMax) return undefined;
+        return { ref, kind: "daily", usesMax, usesRemaining } as const;
+      }),
+      Match.when({ kind: "legendaryActions" }, (entry) => {
+        const { usesMax, usesRemaining } = entry;
+        if (usesRemaining > usesMax) return undefined;
+        return {
+          ref,
+          kind: "legendaryActions",
+          usesMax,
+          usesRemaining,
+        } as const;
+      }),
+      Match.when({ kind: "recharge" }, (entry) => {
+        const { minimumRoll, available } = entry;
+        return { ref, kind: "recharge", minimumRoll, available } as const;
+      }),
+      Match.when({ kind: "recharge_after_rest" }, (entry) => {
+        const { available } = entry;
+        return { ref, kind: "recharge_after_rest", available } as const;
+      }),
+      Match.exhaustive,
+    );
+    if (projection === undefined) return undefined;
+    projected.push(projection);
+  }
+  return new Set(projected.map(({ ref }) => ref)).size === projected.length
+    ? projected
+    : undefined;
 }
 
 function ammunitionProjection(
@@ -429,13 +581,12 @@ function combatantProjection(
   );
   const ammunition = ammunitionProjection(value.ammunitionStocks);
   const originKind = typeof origin?.kind === "string" ? origin.kind : undefined;
-  const resources = resourceProjection(
+  const resources =
     originKind === "character"
-      ? origin?.resources
+      ? characterResourceProjection(origin?.resources)
       : originKind === "statBlock"
-        ? execution?.resourcePools
-        : undefined,
-  );
+        ? statBlockResourceProjection(execution?.resourcePools)
+        : undefined;
   const spellSlots =
     originKind === "character"
       ? spellcasting === undefined
@@ -758,108 +909,35 @@ export function projectPlayerSubject(
   }
 }
 
-function decodeHole(value: unknown): PlayerHoleProjection | undefined {
-  if (
-    !isJsonObject(value) ||
-    typeof value.kind !== "string" ||
-    typeof value.holeId !== "string" ||
-    typeof value.holeInstanceKey !== "string" ||
-    typeof value.label !== "string"
-  )
-    return undefined;
-  if (
-    (value.choices === undefined && value.kind in CHOICE_HOLE_KINDS) ||
-    (value.choices !== undefined && !Array.isArray(value.choices))
-  )
-    return undefined;
-  const choices: string[] = [];
-  for (const choice of value.choices ?? []) {
-    if (typeof choice === "string") choices.push(choice);
-    else if (isJsonObject(choice) && typeof choice.kind === "string")
-      choices.push(`kind:${choice.kind}`);
-    else return undefined;
-  }
-  const dcValue = isJsonObject(value.dc) ? value.dc : undefined;
-  const dcNumber =
-    dcValue === undefined
-      ? undefined
-      : requiredNumber(dcValue.value ?? dcValue.dc);
-  const dc =
-    dcValue === undefined
-      ? undefined
-      : typeof dcValue.kind === "string" &&
-          (dcValue.value === undefined || typeof dcValue.value === "number") &&
-          (dcValue.dc === undefined || typeof dcValue.dc === "number") &&
-          (dcValue.ability === undefined || typeof dcValue.ability === "string")
-        ? {
-            kind: dcValue.kind,
-            ...(dcNumber === undefined ? {} : { value: dcNumber }),
-            ...(typeof dcValue.ability === "string"
-              ? { ability: dcValue.ability }
-              : {}),
-          }
-        : undefined;
-  if (dcValue !== undefined && dc === undefined) return undefined;
-  const attack = isJsonObject(value.attack) ? value.attack : undefined;
-  const constraint = isJsonObject(attack?.targetConstraint)
-    ? attack.targetConstraint
-    : undefined;
-  const targetConstraint =
-    constraint === undefined
-      ? undefined
-      : typeof constraint.kind === "string" &&
-          (constraint.reachFeet === undefined ||
-            typeof constraint.reachFeet === "number")
-        ? {
-            kind: constraint.kind,
-            ...(typeof constraint.reachFeet === "number"
-              ? { reachFeet: constraint.reachFeet }
-              : {}),
-            ...(isJsonObject(constraint.rangeFeet) &&
-            typeof constraint.rangeFeet.normal === "number"
-              ? { normalRangeFeet: constraint.rangeFeet.normal }
-              : {}),
-            ...(isJsonObject(constraint.rangeFeet) &&
-            typeof constraint.rangeFeet.long === "number"
-              ? { longRangeFeet: constraint.rangeFeet.long }
-              : {}),
-          }
-        : undefined;
-  if (constraint !== undefined && targetConstraint === undefined)
-    return undefined;
-  return {
-    kind: value.kind,
-    holeId: value.holeId,
-    holeInstanceKey: value.holeInstanceKey,
-    label: value.label,
-    choices,
-    ...(typeof value.requiresTableSpatialFact === "boolean"
-      ? { requiresTableSpatialFact: value.requiresTableSpatialFact }
-      : {}),
-    ...(typeof value.ability === "string" ? { ability: value.ability } : {}),
-    ...(typeof value.critical === "boolean"
-      ? { critical: value.critical }
-      : {}),
-    ...(typeof value.attackBonus === "number"
-      ? { attackBonus: value.attackBonus }
-      : {}),
-    ...(dc === undefined ? {} : { dc }),
-    ...(targetConstraint === undefined ? {} : { targetConstraint }),
-  };
+export type PlayerHoleEvidenceSource =
+  | { readonly kind: "recordedCurrentRuntime" }
+  | { readonly kind: "archivedWithoutProjectionEvidence" };
+
+function decodeHole(
+  value: unknown,
+  source: PlayerHoleEvidenceSource,
+): PlayerHoleProjection | undefined {
+  const decoded = Schema.decodeUnknownEither(BattleHoleSchema, {
+    onExcessProperty:
+      source.kind === "recordedCurrentRuntime" ? "error" : "ignore",
+  })(value);
+  if (Either.isLeft(decoded)) return undefined;
+  return PLAYER_HOLE_ADMISSION[decoded.right.kind] ? decoded.right : undefined;
 }
 
 function holeOccurrences(
   subject: PlayerSubjectProjection,
   value: JsonValue | undefined,
+  source: PlayerHoleEvidenceSource,
 ): readonly PlayerHoleOccurrence[] | undefined {
   if (!Array.isArray(value)) return undefined;
   const decoded: PlayerHoleProjection[] = [];
   for (const hole of value) {
-    const projection = decodeHole(hole);
+    const projection = decodeHole(hole, source);
     if (projection === undefined) return undefined;
     decoded.push(projection);
   }
-  return decoded.map((hole) => ({
+  const occurrences = decoded.map((hole) => ({
     ref: stableRef("hole", {
       subject,
       kind: hole.kind,
@@ -868,10 +946,22 @@ function holeOccurrences(
     }),
     hole,
   }));
+  return new Set(occurrences.map(({ ref }) => ref)).size === occurrences.length
+    ? occurrences
+    : undefined;
 }
 
 export function projectPlayerActs(
   value: unknown,
+): readonly PlayerActProjection[] | undefined {
+  return projectPlayerActsFromEvidence(value, {
+    kind: "recordedCurrentRuntime",
+  });
+}
+
+export function projectPlayerActsFromEvidence(
+  value: unknown,
+  source: PlayerHoleEvidenceSource,
 ): readonly PlayerActProjection[] | undefined {
   if (!Array.isArray(value)) return undefined;
   const projected: PlayerActProjection[] = [];
@@ -879,7 +969,7 @@ export function projectPlayerActs(
     if (!isJsonObject(entry) || entry.subject === undefined) return undefined;
     const subject = projectPlayerSubject(entry.subject);
     if (subject === undefined) return undefined;
-    const projectedHoles = holeOccurrences(subject, entry.initialHoles);
+    const projectedHoles = holeOccurrences(subject, entry.initialHoles, source);
     if (projectedHoles === undefined) return undefined;
     projected.push({
       ref: stableRef("subject", subject),
@@ -892,14 +982,18 @@ export function projectPlayerActs(
   return projected;
 }
 
-function acts(call: SdkCallRecord): readonly PlayerActProjection[] | undefined {
+function acts(
+  call: SdkCallRecord,
+  source: PlayerHoleEvidenceSource,
+): readonly PlayerActProjection[] | undefined {
   return call.outcome === "returned"
-    ? projectPlayerActs(call.result)
+    ? projectPlayerActsFromEvidence(call.result, source)
     : undefined;
 }
 
 function frontier(
   calls: readonly SdkCallRecord[],
+  source: PlayerHoleEvidenceSource,
 ): PlayerCurrentTurnProjection["frontier"] | undefined {
   type FrontierDecision =
     | {
@@ -915,7 +1009,11 @@ function frontier(
       if (call.result.subject === undefined) return { tag: "invalid" };
       const subject = projectPlayerSubject(call.result.subject);
       if (subject === undefined) return { tag: "invalid" };
-      const projectedHoles = holeOccurrences(subject, call.result.holes);
+      const projectedHoles = holeOccurrences(
+        subject,
+        call.result.holes,
+        source,
+      );
       if (projectedHoles === undefined) return { tag: "invalid" };
       return {
         tag: "frontier",
@@ -941,7 +1039,7 @@ function frontier(
         (): FrontierDecision => ({ tag: "ignore" }),
       ),
       Match.when("discoverBattleActs", (): FrontierDecision => {
-        const projectedActs = acts(returnedCall);
+        const projectedActs = acts(returnedCall, source);
         return projectedActs === undefined
           ? { tag: "invalid" }
           : {
@@ -969,14 +1067,17 @@ function frontier(
   return { kind: "none" };
 }
 
-export function reprojectSdkTranscriptTurns(calls: readonly SdkCallRecord[]):
+export function reprojectSdkTranscriptTurns(input: {
+  readonly calls: readonly SdkCallRecord[];
+  readonly holeEvidenceSource: PlayerHoleEvidenceSource;
+}):
   | {
       readonly tag: "valid";
       readonly projections: readonly PlayerCurrentTurnProjection[];
       readonly encodedByteLength: number;
     }
   | Exclude<PlayerProjectionResult, { readonly tag: "valid" }> {
-  const byContinuation = calls.reduce((groups, call) => {
+  const byContinuation = input.calls.reduce((groups, call) => {
     const previous = groups.get(call.continuation) ?? [];
     groups.set(call.continuation, [...previous, call]);
     return groups;
@@ -1001,12 +1102,13 @@ export function reprojectSdkTranscriptTurns(calls: readonly SdkCallRecord[]):
       isJsonValue(lastReturned.outputSession)
         ? lastReturned.outputSession
         : first.inputSession;
-    const projected = playerCurrentTurnProjection({
+    const projected = playerCurrentTurnProjectionFromEvidence({
       continuation,
       calls: continuationCalls,
       beforeSession: first.inputSession,
       afterSession,
       tacticalNote: "",
+      holeEvidenceSource: input.holeEvidenceSource,
     });
     if (projected.tag === "invalid") return projected;
     projections.push(projected.projection);
@@ -1103,6 +1205,20 @@ export function playerCurrentTurnProjection(input: {
   readonly afterSession: JsonValue;
   readonly tacticalNote: string;
 }): PlayerProjectionResult {
+  return playerCurrentTurnProjectionFromEvidence({
+    ...input,
+    holeEvidenceSource: { kind: "recordedCurrentRuntime" },
+  });
+}
+
+function playerCurrentTurnProjectionFromEvidence(input: {
+  readonly continuation: number;
+  readonly calls: readonly SdkCallRecord[];
+  readonly beforeSession: JsonValue;
+  readonly afterSession: JsonValue;
+  readonly tacticalNote: string;
+  readonly holeEvidenceSource: PlayerHoleEvidenceSource;
+}): PlayerProjectionResult {
   const tacticalNoteBytes = Buffer.byteLength(input.tacticalNote, "utf8");
   if (tacticalNoteBytes > PLAYER_TACTICAL_NOTE_MAX_BYTES) {
     return {
@@ -1114,7 +1230,7 @@ export function playerCurrentTurnProjection(input: {
     };
   }
   const projectedTurn = turn(input.afterSession);
-  const projectedFrontier = frontier(input.calls);
+  const projectedFrontier = frontier(input.calls, input.holeEvidenceSource);
   const beforeCombatants = combatants(input.beforeSession);
   const afterCombatants = combatants(input.afterSession);
   const beforePositions = positions(input.beforeSession);

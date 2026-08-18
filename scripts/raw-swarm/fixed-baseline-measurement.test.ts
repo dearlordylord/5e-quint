@@ -6,9 +6,10 @@ import {
   fixedBaselineRunEvidencePaths,
   retainedProgramSessionAudit,
 } from "./fixed-baseline-measurement.ts";
-import type {
-  PlayerCombatantProjection,
-  PlayerCurrentTurnProjection,
+import {
+  projectPlayerActsFromEvidence,
+  type PlayerCombatantProjection,
+  type PlayerCurrentTurnProjection,
 } from "./sdk-player/player-turn-projection.ts";
 
 const subject = {
@@ -72,6 +73,7 @@ function combatant(
     ammunition: [],
     resources: resources.map(([combatantId, ordinal]) => ({
       ref: resourceRef(combatantId, ordinal),
+      usage: "limited" as const,
       usesRemaining: 0,
       usedThisTurn: false,
     })),
@@ -129,6 +131,9 @@ describe("fixed baseline omission audit", () => {
     ).toMatchObject({
       programPath: expect.stringMatching(
         /generated-battle-004-sdk-player\/evidence\/program\.ts$/,
+      ),
+      observationsPath: expect.stringMatching(
+        /generated-battle-004-sdk-player\/evidence\/observations\.jsonl$/,
       ),
       frozenPrefixPath: expect.stringMatching(/evidence\/frozen-prefix\.json$/),
       finalResultPath: expect.stringMatching(/evidence\/final\.json$/),
@@ -218,6 +223,7 @@ describe("fixed baseline omission audit", () => {
           projection(1, { kind: "acts", acts }),
           projection(2, { kind: "acts", acts }),
         ],
+        holeEvidenceSource: { kind: "recordedCurrentRuntime" },
       }),
     ).toBe(2);
   });
@@ -257,6 +263,7 @@ describe("fixed baseline omission audit", () => {
       directFrontierUseChecks({
         calls: [badFill],
         projections: [projection(1, { kind: "acts", acts: [act] })],
+        holeEvidenceSource: { kind: "recordedCurrentRuntime" },
       }),
     ).toThrow("outside the projected choices");
     const missingFill = returnedCall(2, 1, {
@@ -267,7 +274,178 @@ describe("fixed baseline omission audit", () => {
       directFrontierUseChecks({
         calls: [missingFill],
         projections: [projection(1, { kind: "acts", acts: [act] })],
+        holeEvidenceSource: { kind: "recordedCurrentRuntime" },
       }),
     ).toThrow("omitted a required hole family");
+  });
+
+  test("uses the archived hole policy for retained frontier discoveries", () => {
+    const attackSubject = {
+      tag: "action",
+      actorId: "fighter",
+      action: "attack",
+    } as const;
+    const discovery = {
+      ...returnedCall(2, 1, {}),
+      operation: "discoverBattleActs" as const,
+      result: [
+        {
+          subject: attackSubject,
+          initialHoles: [
+            {
+              kind: "targetChoice",
+              holeId: "battle:attack:target",
+              holeInstanceKey: "battle:attack:target",
+              label: "Attack target",
+              choices: ["wolf"],
+              archivedPayloadNoLongerInCurrentSchema: true,
+            },
+          ],
+        },
+      ],
+    };
+    const resolution = returnedCall(2, 2, {
+      subject: attackSubject,
+      fills: [
+        {
+          kind: "targetChoice",
+          holeId: "battle:attack:target",
+          value: "wolf",
+        },
+      ],
+    });
+    const acts = projectPlayerActsFromEvidence(discovery.result, {
+      kind: "archivedWithoutProjectionEvidence",
+    });
+    expect(acts).toBeDefined();
+    const input = {
+      calls: [discovery, resolution],
+      projections: [projection(1, { kind: "acts", acts: acts ?? [] })],
+    };
+
+    expect(() =>
+      directFrontierUseChecks({
+        ...input,
+        holeEvidenceSource: { kind: "recordedCurrentRuntime" },
+      }),
+    ).toThrow("malformed discovered acts");
+    expect(
+      directFrontierUseChecks({
+        ...input,
+        holeEvidenceSource: { kind: "archivedWithoutProjectionEvidence" },
+      }),
+    ).toBe(1);
+  });
+
+  test("rejects structurally incomplete non-recharge fills", () => {
+    const projected = projection(1, {
+      kind: "holes",
+      subject,
+      holes: [
+        {
+          ref: "hole:held-object-facts",
+          hole: {
+            kind: "heldObjectFacts",
+            holeId: "battle:held-objects",
+            holeInstanceKey: "battle:held-objects",
+            label: "Held objects",
+            actorId: "fighter",
+          },
+        },
+      ],
+    });
+    const call = returnedCall(2, 1, {
+      subject,
+      fills: [
+        {
+          kind: "heldObjectFacts",
+          holeId: "battle:held-objects",
+        },
+      ],
+    });
+
+    expect(() =>
+      directFrontierUseChecks({
+        calls: [call],
+        projections: [projected],
+        holeEvidenceSource: { kind: "recordedCurrentRuntime" },
+      }),
+    ).toThrow("malformed hole fill");
+  });
+
+  test("checks recharge rolls against every projected resource target", () => {
+    const scopeRef = JSON.stringify({
+      battleId: "battle",
+      combatantId: "fighter",
+      kind: "statBlockExecution",
+      ordinal: 0,
+    });
+    const firstTarget = JSON.stringify({
+      scopeRef,
+      kind: "resourcePool",
+      ordinal: 0,
+    });
+    const secondTarget = JSON.stringify({
+      scopeRef,
+      kind: "resourcePool",
+      ordinal: 1,
+    });
+    const rechargeHole = {
+      ref: "hole:recharge" as const,
+      hole: {
+        kind: "statBlockRechargeRoll" as const,
+        holeId: "battle:recharge",
+        holeInstanceKey: "battle:recharge",
+        label: "Roll recharge dice",
+        combatantId: "fighter",
+        rechargeTargets: [firstTarget, secondTarget],
+      },
+    };
+    const call = (targets: readonly string[], archivedExtra = false) =>
+      returnedCall(2, 1, {
+        subject,
+        fills: [
+          {
+            kind: "statBlockRechargeRoll",
+            holeId: "battle:recharge",
+            value: targets.map((target) => ({ target, roll: 5 })),
+            ...(archivedExtra ? { archivedExtra: true } : {}),
+          },
+        ],
+      });
+    const projected = projection(1, {
+      kind: "holes",
+      subject,
+      holes: [rechargeHole],
+    });
+
+    expect(
+      directFrontierUseChecks({
+        calls: [call([firstTarget, secondTarget])],
+        projections: [projected],
+        holeEvidenceSource: { kind: "recordedCurrentRuntime" },
+      }),
+    ).toBe(1);
+    expect(() =>
+      directFrontierUseChecks({
+        calls: [call([firstTarget, firstTarget])],
+        projections: [projected],
+        holeEvidenceSource: { kind: "recordedCurrentRuntime" },
+      }),
+    ).toThrow("outside the projected targets");
+    expect(() =>
+      directFrontierUseChecks({
+        calls: [call([firstTarget, secondTarget], true)],
+        projections: [projected],
+        holeEvidenceSource: { kind: "recordedCurrentRuntime" },
+      }),
+    ).toThrow("malformed hole fill");
+    expect(
+      directFrontierUseChecks({
+        calls: [call([firstTarget, secondTarget], true)],
+        projections: [projected],
+        holeEvidenceSource: { kind: "archivedWithoutProjectionEvidence" },
+      }),
+    ).toBe(1);
   });
 });

@@ -62,6 +62,16 @@ const HeaderSchema = Schema.Union(
   }),
   Schema.Struct({
     ...ReadyCharacterFields,
+    setupOutcome: Schema.Literal("ready"),
+    initialSession: Schema.Unknown,
+    initialSessionSha256: HashSchema,
+    initialTurnProjection: Schema.optionalWith(Schema.Never, { exact: true }),
+    initialTurnProjectionSha256: Schema.optionalWith(Schema.Never, {
+      exact: true,
+    }),
+  }),
+  Schema.Struct({
+    ...ReadyCharacterFields,
     setupOutcome: Schema.Literal("obstructed"),
     obstruction: Schema.NonEmptyTrimmedString,
   }),
@@ -103,7 +113,7 @@ const CallSchema = Schema.Union(
 type SdkTranscriptHeader = Schema.Schema.Type<typeof HeaderSchema>;
 export type SdkCallRecord = Schema.Schema.Type<typeof CallSchema>;
 
-type ReadySdkTranscriptHeader = Omit<
+export type ReadySdkTranscriptHeader = Omit<
   Extract<SdkTranscriptHeader, { readonly setupOutcome: "ready" }>,
   | "characterObservation"
   | "characterSheets"
@@ -114,9 +124,39 @@ type ReadySdkTranscriptHeader = Omit<
   readonly characterObservation: JsonValue;
   readonly characterSheets: JsonValue;
   readonly initialSession: JsonValue;
-  readonly initialTurnProjection: JsonValue;
   readonly setupObservation: JsonValue;
-};
+} & (
+    | {
+        readonly initialTurnProjection: JsonValue;
+        readonly initialTurnProjectionSha256: string;
+      }
+    | {
+        readonly initialTurnProjection?: never;
+        readonly initialTurnProjectionSha256?: never;
+      }
+  );
+
+export type SdkInitialTurnProjectionEvidence =
+  | {
+      readonly kind: "recorded";
+      readonly projection: JsonValue;
+      readonly sha256: string;
+    }
+  | { readonly kind: "notRecorded" };
+
+export function sdkInitialTurnProjectionEvidence(
+  header: ReadySdkTranscriptHeader,
+): SdkInitialTurnProjectionEvidence {
+  return "initialTurnProjection" in header &&
+    header.initialTurnProjection !== undefined &&
+    header.initialTurnProjectionSha256 !== undefined
+    ? {
+        kind: "recorded",
+        projection: header.initialTurnProjection,
+        sha256: header.initialTurnProjectionSha256,
+      }
+    : { kind: "notRecorded" };
+}
 
 type ObstructedSdkTranscriptHeader = Omit<
   Extract<SdkTranscriptHeader, { readonly setupOutcome: "obstructed" }>,
@@ -149,6 +189,79 @@ type ParsedSdkTranscript =
 type ParseResult<A> =
   | { readonly tag: "valid"; readonly value: A }
   | { readonly tag: "invalid"; readonly message: string };
+
+function parseSdkCallSequence(input: {
+  readonly records: readonly unknown[];
+  readonly initialSessionSha256: string;
+}): ParseResult<readonly SdkCallRecord[]> {
+  const calls = input.records.map((record) =>
+    Schema.decodeUnknownEither(CallSchema, { onExcessProperty: "error" })(
+      record,
+    ),
+  );
+  const invalidCall = calls.find(Either.isLeft);
+  if (invalidCall !== undefined && Either.isLeft(invalidCall)) {
+    return { tag: "invalid", message: "SDK transcript has an invalid call." };
+  }
+  const decodedCalls = calls.flatMap((call) =>
+    Either.isRight(call) ? [call.right] : [],
+  );
+  let replayCursorSha256 = input.initialSessionSha256;
+  for (const [index, call] of decodedCalls.entries()) {
+    if (call.seq !== index + 1) {
+      return {
+        tag: "invalid",
+        message: `SDK call seq ${call.seq} must equal ${index + 1}.`,
+      };
+    }
+    if (
+      call.outcome === "returned" &&
+      sha256Canonical(call.result) !== call.resultSha256
+    ) {
+      return {
+        tag: "invalid",
+        message: `SDK call seq ${call.seq} has a mismatched result hash.`,
+      };
+    }
+    if (
+      sha256Canonical(call.inputSession) !== call.inputSessionSha256 ||
+      (call.outcome === "returned" &&
+        sha256Canonical(call.outputSession) !== call.outputSessionSha256)
+    ) {
+      return {
+        tag: "invalid",
+        message: `SDK call seq ${call.seq} has a mismatched session hash.`,
+      };
+    }
+    const isRecordedSessionConflict =
+      call.outcome === "threw" &&
+      call.rejection === "sessionConflict" &&
+      call.error.message === SDK_SESSION_CONFLICT_MESSAGE;
+    if (
+      call.inputSessionSha256 !== replayCursorSha256 &&
+      !isRecordedSessionConflict
+    ) {
+      return {
+        tag: "invalid",
+        message: `SDK call seq ${call.seq} does not continue the prior session.`,
+      };
+    }
+    if (call.outcome === "returned") {
+      replayCursorSha256 = call.outputSessionSha256;
+    }
+    const previousContinuation = decodedCalls[index - 1]?.continuation;
+    if (
+      previousContinuation !== undefined &&
+      call.continuation < previousContinuation
+    ) {
+      return {
+        tag: "invalid",
+        message: `SDK call seq ${call.seq} has an out-of-order continuation id.`,
+      };
+    }
+  }
+  return { tag: "valid", value: decodedCalls };
+}
 
 export function parseSdkTranscript(
   records: readonly unknown[],
@@ -187,14 +300,15 @@ export function parseSdkTranscript(
     (!isJsonValue(header.right.initialSession) ||
       sha256Canonical(header.right.initialSession) !==
         header.right.initialSessionSha256 ||
-      !isJsonValue(header.right.initialTurnProjection) ||
-      sha256Canonical(header.right.initialTurnProjection) !==
-        header.right.initialTurnProjectionSha256)
+      ("initialTurnProjection" in header.right &&
+        (!isJsonValue(header.right.initialTurnProjection) ||
+          sha256Canonical(header.right.initialTurnProjection) !==
+            header.right.initialTurnProjectionSha256)))
   ) {
     return {
       tag: "invalid",
       message:
-        "SDK transcript header has mismatched initial session or turn projection evidence.",
+        "SDK transcript header has mismatched initial session or recorded turn projection evidence.",
     };
   }
   const setupObservation = header.right.setupObservation;
@@ -230,98 +344,57 @@ export function parseSdkTranscript(
     };
   }
   const initialSession = header.right.initialSession;
-  const initialTurnProjection = header.right.initialTurnProjection;
-  if (!isJsonValue(initialSession) || !isJsonValue(initialTurnProjection)) {
+  if (!isJsonValue(initialSession)) {
     return {
       tag: "invalid",
       message: "SDK transcript header has a non-JSON initial session.",
     };
   }
-  const calls = callInputs.map((input) =>
-    Schema.decodeUnknownEither(CallSchema, { onExcessProperty: "error" })(
-      input,
-    ),
-  );
-  const invalidCall = calls.find(Either.isLeft);
-  if (invalidCall !== undefined && Either.isLeft(invalidCall)) {
-    return { tag: "invalid", message: "SDK transcript has an invalid call." };
-  }
-  const decodedCalls = calls.flatMap((call) =>
-    Either.isRight(call) ? [call.right] : [],
-  );
-  let replayCursorSha256 =
-    header.right.setupOutcome === "ready"
-      ? header.right.initialSessionSha256
-      : undefined;
-  for (const [index, call] of decodedCalls.entries()) {
-    if (call.seq !== index + 1) {
+  const calls = parseSdkCallSequence({
+    records: callInputs,
+    initialSessionSha256: header.right.initialSessionSha256,
+  });
+  if (calls.tag === "invalid") return calls;
+  const {
+    initialTurnProjection: _initialTurnProjection,
+    initialTurnProjectionSha256: _initialTurnProjectionSha256,
+    ...rawReadyHeaderCommon
+  } = header.right;
+  const commonReadyHeader = {
+    ...rawReadyHeaderCommon,
+    characterObservation,
+    characterSheets,
+    initialSession,
+    setupObservation,
+  };
+  if (
+    "initialTurnProjection" in header.right &&
+    typeof header.right.initialTurnProjectionSha256 === "string"
+  ) {
+    const initialTurnProjection = header.right.initialTurnProjection;
+    if (!isJsonValue(initialTurnProjection)) {
       return {
         tag: "invalid",
-        message: `SDK call seq ${call.seq} must equal ${index + 1}.`,
+        message: "SDK transcript header has a non-JSON turn projection.",
       };
     }
-    if (
-      call.outcome === "returned" &&
-      sha256Canonical(call.result) !== call.resultSha256
-    ) {
-      return {
-        tag: "invalid",
-        message: `SDK call seq ${call.seq} has a mismatched result hash.`,
-      };
-    }
-    if (
-      sha256Canonical(call.inputSession) !== call.inputSessionSha256 ||
-      (call.outcome === "returned" &&
-        sha256Canonical(call.outputSession) !== call.outputSessionSha256)
-    ) {
-      return {
-        tag: "invalid",
-        message: `SDK call seq ${call.seq} has a mismatched session hash.`,
-      };
-    }
-    const isRecordedSessionConflict =
-      call.outcome === "threw" &&
-      call.rejection === "sessionConflict" &&
-      call.error.message === SDK_SESSION_CONFLICT_MESSAGE;
-    if (
-      replayCursorSha256 !== undefined &&
-      call.inputSessionSha256 !== replayCursorSha256 &&
-      !isRecordedSessionConflict
-    ) {
-      return {
-        tag: "invalid",
-        message: `SDK call seq ${call.seq} does not continue the prior session.`,
-      };
-    }
-    if (call.outcome === "returned") {
-      replayCursorSha256 = call.outputSessionSha256;
-    } else if (replayCursorSha256 === undefined && !isRecordedSessionConflict) {
-      replayCursorSha256 = call.inputSessionSha256;
-    }
-    const previousContinuation = decodedCalls[index - 1]?.continuation;
-    const continuationIsValid =
-      previousContinuation === undefined
-        ? true
-        : call.continuation >= previousContinuation;
-    if (!continuationIsValid) {
-      return {
-        tag: "invalid",
-        message: `SDK call seq ${call.seq} has an out-of-order continuation id.`,
-      };
-    }
+    return {
+      tag: "valid",
+      value: {
+        header: {
+          ...commonReadyHeader,
+          initialTurnProjection,
+          initialTurnProjectionSha256: header.right.initialTurnProjectionSha256,
+        },
+        calls: calls.value,
+      },
+    };
   }
   return {
     tag: "valid",
     value: {
-      header: {
-        ...header.right,
-        characterObservation,
-        characterSheets,
-        initialSession,
-        initialTurnProjection,
-        setupObservation,
-      },
-      calls: decodedCalls,
+      header: commonReadyHeader,
+      calls: calls.value,
     },
   };
 }

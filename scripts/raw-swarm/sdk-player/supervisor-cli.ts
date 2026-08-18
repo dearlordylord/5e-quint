@@ -55,6 +55,7 @@ import {
 } from "./player-turn-projection.ts";
 import {
   parseSdkTranscript,
+  sdkInitialTurnProjectionEvidence,
   SDK_SESSION_CONFLICT_MESSAGE,
   type SdkCallRecord,
   type SdkPlayerOperation,
@@ -659,10 +660,14 @@ async function replay(): Promise<ReplayResult> {
     session: initialSession,
     acts: scenarioBattleActs(initial.session),
   });
+  const projectionEvidence = sdkInitialTurnProjectionEvidence(
+    parsed.value.header,
+  );
   if (
+    projectionEvidence.kind === "notRecorded" ||
     replayedInitialProjection.tag === "invalid" ||
     canonicalJson(replayedInitialProjection.projection) !==
-      canonicalJson(parsed.value.header.initialTurnProjection)
+      canonicalJson(projectionEvidence.projection)
   ) {
     fail("Initial player turn projection diverged during replay.");
   }

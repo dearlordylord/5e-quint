@@ -12,7 +12,10 @@ import {
   sdkReviewPacketHeaderEvidence,
   sdkReviewPacketSource,
 } from "./sdk-review-packet.ts";
-import { parseSdkTranscript } from "./sdk-transcript.ts";
+import {
+  parseSdkTranscript,
+  sdkInitialTurnProjectionEvidence,
+} from "./sdk-transcript.ts";
 
 function fail(message: string): never {
   throw new Error(message);
@@ -121,7 +124,16 @@ function main(args: readonly string[]): void {
     fail("SDK review packet requires ready character evidence.");
   }
   const header = transcript.value.header;
-  const projections = reprojectSdkTranscriptTurns(transcript.value.calls);
+  const projections = reprojectSdkTranscriptTurns({
+    calls: transcript.value.calls,
+    holeEvidenceSource:
+      transcript.value.header.characterOutcome === "ready" &&
+      transcript.value.header.setupOutcome === "ready" &&
+      sdkInitialTurnProjectionEvidence(transcript.value.header).kind ===
+        "notRecorded"
+        ? { kind: "archivedWithoutProjectionEvidence" }
+        : { kind: "recordedCurrentRuntime" },
+  });
   if (projections.tag === "invalid") fail(projections.message);
   const retainedHeaderEvidence = sdkReviewPacketHeaderEvidence(header);
   if (!isJsonValue(retainedHeaderEvidence)) {

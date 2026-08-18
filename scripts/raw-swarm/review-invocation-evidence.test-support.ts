@@ -232,7 +232,10 @@ export function controlledReviewEvidenceFixture(input: {
   const parsedTranscript = parseSdkTranscript([header, ...calls]);
   if (parsedTranscript.tag === "invalid")
     throw new Error(parsedTranscript.message);
-  const projections = reprojectSdkTranscriptTurns(parsedTranscript.value.calls);
+  const projections = reprojectSdkTranscriptTurns({
+    calls: parsedTranscript.value.calls,
+    holeEvidenceSource: { kind: "recordedCurrentRuntime" },
+  });
   if (projections.tag === "invalid") throw new Error(projections.message);
   const scenarioReviewSource = sdkReviewPacketSource({
     path: relative(repoRoot, scenarioReviewPath),

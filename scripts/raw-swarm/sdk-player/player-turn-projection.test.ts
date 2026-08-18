@@ -1,3 +1,4 @@
+import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
 import { sha256Canonical } from "../transcript.ts";
@@ -6,6 +7,7 @@ import {
   PLAYER_TACTICAL_NOTE_MAX_BYTES,
   playerCurrentTurnProjection,
   playerInitialTurnProjection,
+  projectPlayerActs,
   projectPlayerSubject,
 } from "./player-turn-projection.ts";
 
@@ -18,6 +20,29 @@ function mutableClone<T>(value: T): Mutable<T> {
   // compile-time readonly markers so tests can construct before/after states.
   return structuredClone(value) as Mutable<T>;
 }
+
+const resourcePoolRef = (ordinal: number): string =>
+  JSON.stringify({
+    scopeRef: JSON.stringify({
+      battleId: "battle",
+      combatantId: "fighter",
+      kind: "characterExecution",
+      ordinal: 0,
+    }),
+    kind: "resourcePool",
+    ordinal,
+  });
+
+const resourcePoolRefs = {
+  initial: resourcePoolRef(0),
+  limited: resourcePoolRef(1),
+  unlimited: resourcePoolRef(2),
+  pointPool: resourcePoolRef(3),
+  daily: resourcePoolRef(4),
+  recharge: resourcePoolRef(5),
+  rest: resourcePoolRef(6),
+  legendary: resourcePoolRef(7),
+} as const;
 
 const beforeSession = {
   battle: {
@@ -49,7 +74,11 @@ const beforeSession = {
                 kind: "character",
                 resources: [
                   {
-                    resourcePoolRef: "pool-1",
+                    resourcePoolRef: resourcePoolRefs.initial,
+                    resource: {
+                      kind: "use_count",
+                      cap: { kind: "fixed", uses: 1 },
+                    },
                     usesRemaining: 1,
                     usedThisTurn: false,
                   },
@@ -92,6 +121,416 @@ const attackProcedureRef = JSON.stringify({
 });
 
 describe("player current-turn projection", () => {
+  test("projects limited, unlimited, and point-pool character resources", () => {
+    const before = mutableClone(beforeSession);
+    const after = mutableClone(beforeSession);
+    const beforeFighter = before.battle.state.combatants.$map[0][1];
+    const afterFighter = after.battle.state.combatants.$map[0][1];
+    Object.assign(beforeFighter.origin, {
+      resources: [
+        {
+          resourcePoolRef: resourcePoolRefs.limited,
+          resource: {
+            kind: "use_count",
+            cap: { kind: "fixed", uses: 2 },
+          },
+          usesRemaining: 2,
+          usedThisTurn: false,
+        },
+        {
+          resourcePoolRef: resourcePoolRefs.unlimited,
+          resource: {
+            kind: "use_count",
+            cap: { kind: "unlimited" },
+          },
+          usedThisTurn: false,
+        },
+        {
+          resourcePoolRef: resourcePoolRefs.pointPool,
+          resource: {
+            kind: "point_pool",
+            poolId: "sorcery-points",
+            cap: { kind: "fixed", uses: 3 },
+          },
+          pointsRemaining: 3,
+        },
+      ],
+    });
+    Object.assign(afterFighter.origin, {
+      resources: [
+        {
+          resourcePoolRef: resourcePoolRefs.limited,
+          resource: {
+            kind: "use_count",
+            cap: { kind: "fixed", uses: 2 },
+          },
+          usesRemaining: 1,
+          usedThisTurn: true,
+        },
+        {
+          resourcePoolRef: resourcePoolRefs.unlimited,
+          resource: {
+            kind: "use_count",
+            cap: { kind: "unlimited" },
+          },
+          usedThisTurn: true,
+        },
+        {
+          resourcePoolRef: resourcePoolRefs.pointPool,
+          resource: {
+            kind: "point_pool",
+            poolId: "sorcery-points",
+            cap: { kind: "fixed", uses: 3 },
+          },
+          pointsRemaining: 1,
+        },
+      ],
+    });
+
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [],
+        beforeSession: before,
+        afterSession: after,
+        tacticalNote: "",
+      }),
+    ).toMatchObject({
+      tag: "valid",
+      projection: {
+        changes: [
+          {
+            kind: "combatant",
+            id: "fighter",
+            after: {
+              resources: [
+                {
+                  ref: resourcePoolRefs.limited,
+                  usage: "limited",
+                  usesRemaining: 1,
+                  usedThisTurn: true,
+                },
+                {
+                  ref: resourcePoolRefs.unlimited,
+                  usage: "unlimited",
+                  usedThisTurn: true,
+                },
+                {
+                  ref: resourcePoolRefs.pointPool,
+                  usage: "pointPool",
+                  pointsRemaining: 1,
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+
+    const malformed = mutableClone(after);
+    const malformedPointPool =
+      malformed.battle.state.combatants.$map[0][1].origin.resources[2];
+    Object.assign(malformedPointPool, { usedThisTurn: false });
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [],
+        beforeSession: before,
+        afterSession: malformed,
+        tacticalNote: "",
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "The canonical session/result cannot be projected into the typed player turn contract.",
+    });
+  });
+
+  test("projects every canonical combatant resource variant without conflating their state", () => {
+    const before = mutableClone(beforeSession);
+    const after = mutableClone(beforeSession);
+    const beforeFighter = before.battle.state.combatants.$map[0][1];
+    const afterFighter = after.battle.state.combatants.$map[0][1];
+    beforeFighter.origin = {
+      kind: "statBlock",
+      execution: {
+        resourcePools: [
+          {
+            resourcePoolRef: resourcePoolRefs.daily,
+            kind: "daily",
+            usesMax: 3,
+            usesRemaining: 3,
+          },
+          {
+            resourcePoolRef: resourcePoolRefs.recharge,
+            kind: "recharge",
+            minimumRoll: 5,
+            available: false,
+          },
+          {
+            resourcePoolRef: resourcePoolRefs.rest,
+            kind: "recharge_after_rest",
+            available: false,
+          },
+          {
+            resourcePoolRef: resourcePoolRefs.legendary,
+            kind: "legendaryActions",
+            usesMax: 3,
+            usesRemaining: 3,
+          },
+        ],
+      },
+    };
+    afterFighter.origin = {
+      kind: "statBlock",
+      execution: {
+        resourcePools: [
+          {
+            resourcePoolRef: resourcePoolRefs.daily,
+            kind: "daily",
+            usesMax: 3,
+            usesRemaining: 2,
+          },
+          {
+            resourcePoolRef: resourcePoolRefs.recharge,
+            kind: "recharge",
+            minimumRoll: 5,
+            available: true,
+          },
+          {
+            resourcePoolRef: resourcePoolRefs.rest,
+            kind: "recharge_after_rest",
+            available: true,
+          },
+          {
+            resourcePoolRef: resourcePoolRefs.legendary,
+            kind: "legendaryActions",
+            usesMax: 3,
+            usesRemaining: 2,
+          },
+        ],
+      },
+    };
+
+    const projection = playerCurrentTurnProjection({
+      continuation: 1,
+      calls: [],
+      beforeSession: before,
+      afterSession: after,
+      tacticalNote: "",
+    });
+
+    expect(projection).toMatchObject({
+      tag: "valid",
+      projection: {
+        changes: [
+          {
+            kind: "combatant",
+            id: "fighter",
+            after: {
+              resources: [
+                {
+                  ref: resourcePoolRefs.daily,
+                  kind: "daily",
+                  usesMax: 3,
+                  usesRemaining: 2,
+                },
+                {
+                  ref: resourcePoolRefs.recharge,
+                  kind: "recharge",
+                  minimumRoll: 5,
+                  available: true,
+                },
+                {
+                  ref: resourcePoolRefs.rest,
+                  kind: "recharge_after_rest",
+                  available: true,
+                },
+                {
+                  ref: resourcePoolRefs.legendary,
+                  kind: "legendaryActions",
+                  usesMax: 3,
+                  usesRemaining: 2,
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+
+    for (const malformedResource of [
+      {
+        resourcePoolRef: resourcePoolRefs.daily,
+        kind: "daily",
+        usesMax: -1,
+        usesRemaining: -2,
+      },
+      {
+        resourcePoolRef: resourcePoolRefs.daily,
+        kind: "daily",
+        usesMax: 1,
+        usesRemaining: 2,
+      },
+      {
+        resourcePoolRef: resourcePoolRefs.recharge,
+        kind: "recharge",
+        minimumRoll: 7,
+        available: true,
+      },
+      {
+        resourcePoolRef: "not-a-canonical-resource-ref",
+        kind: "recharge_after_rest",
+        available: true,
+      },
+    ] as const) {
+      const malformed = mutableClone(after);
+      malformed.battle.state.combatants.$map[0][1].origin = {
+        kind: "statBlock",
+        execution: { resourcePools: [malformedResource] },
+      };
+      expect(
+        playerCurrentTurnProjection({
+          continuation: 1,
+          calls: [],
+          beforeSession: before,
+          afterSession: malformed,
+          tacticalNote: "",
+        }),
+      ).toMatchObject({ tag: "invalid" });
+    }
+
+    const duplicate = mutableClone(after);
+    duplicate.battle.state.combatants.$map[0][1].origin = {
+      kind: "statBlock",
+      execution: {
+        resourcePools: [
+          afterFighter.origin.execution.resourcePools[0],
+          afterFighter.origin.execution.resourcePools[0],
+        ],
+      },
+    };
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [],
+        beforeSession: before,
+        afterSession: duplicate,
+        tacticalNote: "",
+      }),
+    ).toMatchObject({ tag: "invalid" });
+  });
+
+  test("projects recharge-roll targets exactly and rejects unknown hole kinds", () => {
+    fc.assert(
+      fc.property(
+        fc.uniqueArray(fc.integer({ min: 0, max: 100 }), {
+          minLength: 1,
+        }),
+        (ordinals) => {
+          const scopeRef = JSON.stringify({
+            battleId: "battle",
+            combatantId: "fighter",
+            kind: "statBlockExecution",
+            ordinal: 0,
+          });
+          const rechargeTargets = ordinals.map((ordinal) =>
+            JSON.stringify({
+              scopeRef,
+              kind: "resourcePool",
+              ordinal,
+            }),
+          );
+          const acts = projectPlayerActs([
+            {
+              subject: {
+                tag: "runtimeCommand",
+                actorId: "fighter",
+                command: "startTurn",
+              },
+              initialHoles: [
+                {
+                  kind: "statBlockRechargeRoll",
+                  holeId: "battle:recharge",
+                  holeInstanceKey: "battle:recharge",
+                  label: "Roll recharge dice",
+                  combatantId: "fighter",
+                  rechargeTargets,
+                },
+              ],
+            },
+          ]);
+          expect(acts?.[0]?.holes[0]?.hole).toMatchObject({
+            kind: "statBlockRechargeRoll",
+            combatantId: "fighter",
+            rechargeTargets,
+          });
+        },
+      ),
+    );
+
+    expect(
+      projectPlayerActs([
+        {
+          subject: {
+            tag: "runtimeCommand",
+            actorId: "fighter",
+            command: "startTurn",
+          },
+          initialHoles: [
+            {
+              kind: "futureHole",
+              holeId: "battle:future",
+              holeInstanceKey: "battle:future",
+              label: "Unsupported future hole",
+            },
+          ],
+        },
+      ]),
+    ).toBeUndefined();
+    expect(
+      projectPlayerActs([
+        {
+          subject: {
+            tag: "runtimeCommand",
+            actorId: "fighter",
+            command: "startTurn",
+          },
+          initialHoles: [
+            {
+              kind: "statBlockRechargeRoll",
+              holeId: "battle:recharge",
+              holeInstanceKey: "battle:recharge",
+              label: "Roll recharge dice",
+              combatantId: "fighter",
+              rechargeTargets: [],
+              unadmittedFuturePayload: true,
+            },
+          ],
+        },
+      ]),
+    ).toBeUndefined();
+    const duplicateHole = {
+      kind: "targetChoice",
+      holeId: "battle:target",
+      holeInstanceKey: "battle:target",
+      label: "Target",
+      choices: ["wolf"],
+    } as const;
+    expect(
+      projectPlayerActs([
+        {
+          subject: {
+            tag: "runtimeCommand",
+            actorId: "fighter",
+            command: "startTurn",
+          },
+          initialHoles: [duplicateHole, duplicateHole],
+        },
+      ]),
+    ).toBeUndefined();
+  });
+
   test("projects the initial actionable act frontier before a recorded call", () => {
     const projected = playerInitialTurnProjection({
       session: beforeSession,
@@ -249,7 +688,7 @@ describe("player current-turn projection", () => {
               ammunition: [{ kind: "arrow", remaining: 1 }],
               resources: [
                 {
-                  ref: "pool-1",
+                  ref: resourcePoolRefs.initial,
                   usesRemaining: 0,
                   usedThisTurn: false,
                 },

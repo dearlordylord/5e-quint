@@ -7,7 +7,10 @@ import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue } from "./json-value.ts";
 import type { PlayerCurrentTurnProjection } from "./player-turn-projection.ts";
 import { reprojectSdkTranscriptTurns } from "./player-turn-projection.ts";
-import { parseSdkTranscript } from "./sdk-transcript.ts";
+import {
+  parseSdkTranscript,
+  sdkInitialTurnProjectionEvidence,
+} from "./sdk-transcript.ts";
 import { canonicalJson, isJsonRecord, repoRoot } from "../transcript.ts";
 
 export const SDK_REVIEW_PACKET_SCHEMA_VERSION = 1;
@@ -192,23 +195,26 @@ export function sdkReviewPacketHeaderEvidence(
       obstruction: header.obstruction,
     };
   }
-  return header.setupOutcome === "obstructed"
-    ? {
-        characterOutcome: "ready",
-        characterObservation: header.characterObservation,
-        characterSheets: header.characterSheets,
-        setupOutcome: "obstructed",
-        setupObservation: header.setupObservation,
-        obstruction: header.obstruction,
-      }
-    : {
-        characterOutcome: "ready",
-        characterObservation: header.characterObservation,
-        characterSheets: header.characterSheets,
-        setupOutcome: "ready",
-        setupObservation: header.setupObservation,
-        initialTurnProjection: header.initialTurnProjection,
-      };
+  if (header.setupOutcome === "obstructed")
+    return {
+      characterOutcome: "ready",
+      characterObservation: header.characterObservation,
+      characterSheets: header.characterSheets,
+      setupOutcome: "obstructed",
+      setupObservation: header.setupObservation,
+      obstruction: header.obstruction,
+    };
+  const projectionEvidence = sdkInitialTurnProjectionEvidence(header);
+  return {
+    characterOutcome: "ready",
+    characterObservation: header.characterObservation,
+    characterSheets: header.characterSheets,
+    setupOutcome: "ready",
+    setupObservation: header.setupObservation,
+    ...(projectionEvidence.kind === "notRecorded"
+      ? { initialTurnProjectionEvidence: { kind: "notRecorded" } }
+      : { initialTurnProjection: projectionEvidence.projection }),
+  };
 }
 
 function exactTranscript(
@@ -330,7 +336,16 @@ export function validateSdkReviewPacket(
         "Review evidence packet retained header evidence does not match the exact transcript.",
     };
   }
-  const projections = reprojectSdkTranscriptTurns(transcript.transcript.calls);
+  const projections = reprojectSdkTranscriptTurns({
+    calls: transcript.transcript.calls,
+    holeEvidenceSource:
+      transcript.transcript.header.characterOutcome === "ready" &&
+      transcript.transcript.header.setupOutcome === "ready" &&
+      sdkInitialTurnProjectionEvidence(transcript.transcript.header).kind ===
+        "notRecorded"
+        ? { kind: "archivedWithoutProjectionEvidence" }
+        : { kind: "recordedCurrentRuntime" },
+  });
   if (projections.tag === "invalid") return projections;
   if (
     canonicalJson(value.currentTurnProjections) !==

@@ -2,15 +2,21 @@ import { createHash } from "node:crypto";
 import { readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { Either, Schema } from "effect";
 import ts from "typescript";
+
+import { BattleFillSchema } from "../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
+import { statBlockRechargeRollFillMatchesHole } from "../../packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts";
+import type { BattleFill } from "../../packages/battle-runtime/src/battle-state-execution.ts";
 
 import { canonicalJson, isJsonRecord, repoRoot } from "./transcript.ts";
 import type { JsonValue } from "./sdk-player/continuation-contract.ts";
 import {
-  projectPlayerActs,
+  projectPlayerActsFromEvidence,
   projectPlayerSubject,
   reprojectSdkTranscriptTurns,
   type PlayerActProjection,
+  type PlayerHoleEvidenceSource,
   type PlayerHoleProjection,
   type PlayerCurrentTurnProjection,
 } from "./sdk-player/player-turn-projection.ts";
@@ -24,6 +30,8 @@ const FIXED_TRANSCRIPT_BYTES = 38_232_957;
 const FIXED_TRANSCRIPT_SHA256 =
   "69f30fb4f34155aa95845c141f303e65c78743a4814a5623700950cc2d1a9bad";
 const FIXED_OBSERVATION_BYTES = 3_137_666;
+const FIXED_OBSERVATION_SHA256 =
+  "26b7995f4bc93668071bb2a3588866b42f4f50a3816f1c8a3970cf7991cea6fb";
 const FIXED_STEP_PAYLOAD_BYTES = 38_107_978;
 const FIXED_TRANSCRIPT_PATH =
   "scripts/raw-swarm/out/generated-battle-004-sdk-player/evidence/sdk-calls.jsonl";
@@ -66,6 +74,7 @@ type FixedBaselineRetainedProgram = {
 
 type FixedBaselineRunEvidencePaths = {
   readonly transcriptPath: string;
+  readonly observationsPath: string;
   readonly programPath: string;
   readonly frozenPrefixPath: string;
   readonly finalResultPath: string;
@@ -81,6 +90,7 @@ export function fixedBaselineRunEvidencePaths(
   const evidenceDirectory = dirname(transcriptPath);
   return {
     transcriptPath,
+    observationsPath: resolve(evidenceDirectory, "observations.jsonl"),
     programPath: resolve(evidenceDirectory, "program.ts"),
     frozenPrefixPath: resolve(evidenceDirectory, "frozen-prefix.json"),
     finalResultPath: resolve(evidenceDirectory, "final.json"),
@@ -241,7 +251,12 @@ export function fixedBaselineEntityResourceFactAudit(input: {
         identity?.combatantId === combatantId && identity.ordinal === ordinal
       );
     });
-    if (resource?.usesRemaining !== 0) {
+    if (
+      resource === undefined ||
+      !("usage" in resource) ||
+      resource.usage !== "limited" ||
+      resource.usesRemaining !== 0
+    ) {
       fail(
         `Fixed baseline projection omits the expended ${combatantId} resource ${ordinal}.`,
       );
@@ -360,10 +375,9 @@ function occurrenceCounts(
   }, new Map<ProjectedHoleKey, number>());
 }
 
-function fillKeys(input: Readonly<Record<string, unknown>>): ProjectedHoleKey {
-  if (typeof input.kind !== "string" || typeof input.holeId !== "string") {
-    fail("A retained continuation supplied a malformed hole fill.");
-  }
+function fillKeys(
+  input: Pick<BattleFill, "kind" | "holeId">,
+): ProjectedHoleKey {
   return `${input.kind}\u0000${input.holeId}`;
 }
 
@@ -387,18 +401,24 @@ function projectedChoiceKeys(value: unknown): readonly string[] {
 }
 
 function validateFillChoices(
-  fills: readonly Readonly<Record<string, unknown>>[],
+  fills: readonly BattleFill[],
   holes: readonly PlayerHoleProjection[],
   continuation: number,
 ): void {
   for (const fill of fills) {
     const matchingHole = holes.find((hole) => holeKey(hole) === fillKeys(fill));
-    if (matchingHole === undefined || matchingHole.choices.length === 0)
+    if (
+      matchingHole === undefined ||
+      !("choices" in matchingHole) ||
+      matchingHole.choices.length === 0
+    )
       continue;
-    const suppliedChoices = projectedChoiceKeys(fill.value);
+    const allowedChoices = matchingHole.choices.flatMap(projectedChoiceKeys);
+    const suppliedChoices =
+      "value" in fill ? projectedChoiceKeys(fill.value) : [];
     if (
       suppliedChoices.length === 0 ||
-      suppliedChoices.some((choice) => !matchingHole.choices.includes(choice))
+      suppliedChoices.some((choice) => !allowedChoices.includes(choice))
     ) {
       fail(
         `Continuation ${continuation} supplied a value outside the projected choices for ${matchingHole.kind}/${matchingHole.holeId}.`,
@@ -411,9 +431,23 @@ function validateRequiredHoleFills(
   fills: readonly Readonly<Record<string, unknown>>[],
   holes: readonly PlayerHoleProjection[],
   continuation: number,
+  holeEvidenceSource: PlayerHoleEvidenceSource,
 ): void {
+  const decodedFills: BattleFill[] = [];
+  for (const fill of fills) {
+    const decoded = Schema.decodeUnknownEither(BattleFillSchema, {
+      onExcessProperty:
+        holeEvidenceSource.kind === "recordedCurrentRuntime"
+          ? "error"
+          : "ignore",
+    })(fill);
+    if (Either.isLeft(decoded)) {
+      fail(`Continuation ${continuation} supplied a malformed hole fill.`);
+    }
+    decodedFills.push(decoded.right);
+  }
   const projectedKeys = holes.map(holeKey);
-  const suppliedKeys = fills.map(fillKeys);
+  const suppliedKeys = decodedFills.map(fillKeys);
   const projectedOccurrences = occurrenceCounts(projectedKeys);
   const suppliedOccurrences = occurrenceCounts(suppliedKeys);
   if (
@@ -433,7 +467,23 @@ function validateRequiredHoleFills(
       `Continuation ${continuation} omitted a required hole family used by the next continuation.`,
     );
   }
-  validateFillChoices(fills, holes, continuation);
+  for (const hole of holes) {
+    if (hole.kind !== "statBlockRechargeRoll") continue;
+    const matchingFills = decodedFills.filter(
+      (fill) =>
+        fill.kind === "statBlockRechargeRoll" && fill.holeId === hole.holeId,
+    );
+    if (
+      matchingFills.length !== 1 ||
+      matchingFills[0]?.kind !== "statBlockRechargeRoll" ||
+      !statBlockRechargeRollFillMatchesHole(matchingFills[0].value, hole)
+    ) {
+      fail(
+        `Continuation ${continuation} supplied recharge rolls outside the projected targets.`,
+      );
+    }
+  }
+  validateFillChoices(decodedFills, holes, continuation);
 }
 
 function inputRecord(
@@ -454,6 +504,7 @@ function subjectCalls(calls: readonly SdkCallRecord[]): readonly {
 
 function discoveryActs(
   calls: readonly SdkCallRecord[],
+  holeEvidenceSource: PlayerHoleEvidenceSource,
 ): readonly PlayerActProjection[] | undefined {
   const discoveries = calls.flatMap(
     (
@@ -466,7 +517,10 @@ function discoveryActs(
   if (discoveries.length === 0) return undefined;
   const last = discoveries[discoveries.length - 1];
   if (last === undefined) return undefined;
-  const projected = projectPlayerActs(last.result);
+  const projected = projectPlayerActsFromEvidence(
+    last.result,
+    holeEvidenceSource,
+  );
   if (projected === undefined)
     fail(`Continuation ${last.continuation} has malformed discovered acts.`);
   return projected;
@@ -498,6 +552,7 @@ function validateSubjectCall(
     readonly input: Readonly<Record<string, unknown>>;
   },
   acts: readonly PlayerActProjection[] | undefined,
+  holeEvidenceSource: PlayerHoleEvidenceSource,
 ): void {
   const projectedSubject = projectPlayerSubject(next.input.subject);
   if (projectedSubject === undefined)
@@ -535,6 +590,7 @@ function validateSubjectCall(
       fills,
       source.frontier.holes.map(({ hole }) => hole),
       source.continuation,
+      holeEvidenceSource,
     );
     return;
   }
@@ -551,12 +607,14 @@ function validateSubjectCall(
     fills,
     act.holes.map(({ hole }) => hole),
     next.call.continuation,
+    holeEvidenceSource,
   );
 }
 
 export function directFrontierUseChecks(input: {
   readonly calls: readonly SdkCallRecord[];
   readonly projections: readonly PlayerCurrentTurnProjection[];
+  readonly holeEvidenceSource: PlayerHoleEvidenceSource;
 }): number {
   const groups = callsByContinuation(input.calls);
   const maxContinuation = Math.max(
@@ -573,7 +631,7 @@ export function directFrontierUseChecks(input: {
       continue;
     }
     const nextSubjects = subjectCalls(nextCalls);
-    const nextActs = discoveryActs(nextCalls);
+    const nextActs = discoveryActs(nextCalls, input.holeEvidenceSource);
     if (projection.frontier.kind === "acts" && nextActs !== undefined) {
       if (canonicalJson(projection.frontier.acts) !== canonicalJson(nextActs))
         fail(
@@ -592,7 +650,12 @@ export function directFrontierUseChecks(input: {
         `Continuation ${projection.continuation} cannot prove a subject used before a retained act discovery.`,
       );
     for (const next of nextSubjects)
-      validateSubjectCall(projection, next, availableActs);
+      validateSubjectCall(
+        projection,
+        next,
+        availableActs,
+        input.holeEvidenceSource,
+      );
     if (projection.frontier.kind !== "none") checked += 1;
   }
   if (checked === 0)
@@ -694,6 +757,12 @@ export function measureFixedBaseline(input: {
 }): FixedBaselineMeasurement {
   const runEvidencePaths = fixedBaselineRunEvidencePaths(input.transcriptPath);
   const transcriptPath = runEvidencePaths.transcriptPath;
+  exactArtifact(
+    runEvidencePaths.observationsPath,
+    FIXED_OBSERVATION_BYTES,
+    FIXED_OBSERVATION_SHA256,
+    "player observations",
+  );
   const auditPath = resolve(repoRoot, input.auditPath);
   const index = new DatabaseSync(resolve(repoRoot, input.indexPath), {
     readOnly: true,
@@ -745,8 +814,15 @@ export function measureFixedBaseline(input: {
   const program = programArtifacts.program;
   const programAudit = retainedProgramSessionAudit(program);
   const retainedProgramAudit = fixedBaselineRetainedProgramAudit(programAudit);
+  const transcriptBytes = exactArtifact(
+    transcriptPath,
+    FIXED_TRANSCRIPT_BYTES,
+    FIXED_TRANSCRIPT_SHA256,
+    "transcript",
+  );
   const parsed = parseSdkTranscript(
-    readFileSync(transcriptPath, "utf8")
+    transcriptBytes
+      .toString("utf8")
       .split("\n")
       .filter((line) => line.trim().length > 0)
       .map((line): unknown => JSON.parse(line)),
@@ -754,24 +830,20 @@ export function measureFixedBaseline(input: {
   if (parsed.tag === "invalid") fail(parsed.message);
   if (
     parsed.value.header.characterOutcome !== "ready" ||
-    parsed.value.header.setupOutcome !== "ready"
+    parsed.value.header.setupOutcome !== "ready" ||
+    parsed.value.header.gitSha !== "7dd52785b947159092ed2cdd7895e5b428000ee4"
   ) {
-    fail("Fixed baseline transcript does not contain a ready scenario run.");
-  }
-  if (
-    parsed.value.header.gitSha !== "7dd52785b947159092ed2cdd7895e5b428000ee4" ||
-    statSync(transcriptPath).size !== FIXED_TRANSCRIPT_BYTES ||
-    createHash("sha256").update(readFileSync(transcriptPath)).digest("hex") !==
-      FIXED_TRANSCRIPT_SHA256
-  ) {
-    fail("Fixed baseline transcript identity changed.");
+    fail("Fixed baseline transcript header is invalid.");
   }
   const audit = readSdkAudit(auditPath);
   if (audit.tag === "invalid") fail(audit.message);
   if (audit.audit.header.transcriptSha256 !== FIXED_TRANSCRIPT_SHA256) {
     fail("Fixed baseline transcript SHA-256 changed.");
   }
-  const projected = reprojectSdkTranscriptTurns(parsed.value.calls);
+  const projected = reprojectSdkTranscriptTurns({
+    calls: parsed.value.calls,
+    holeEvidenceSource: { kind: "archivedWithoutProjectionEvidence" },
+  });
   if (projected.tag === "invalid") fail(projected.message);
   const auditBytes = statSync(auditPath).size;
   const auditRatio = auditBytes / FIXED_TRANSCRIPT_BYTES;
@@ -782,6 +854,7 @@ export function measureFixedBaseline(input: {
   const directlyReusedFrontiersChecked = directFrontierUseChecks({
     calls: parsed.value.calls,
     projections: projected.projections,
+    holeEvidenceSource: { kind: "archivedWithoutProjectionEvidence" },
   });
   const entityResourceFacts = fixedBaselineEntityResourceFactAudit({
     initialSession: parsed.value.header.initialSession,
