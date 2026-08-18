@@ -1,16 +1,8 @@
 {
   "include": [
     "**/*.ts",
-    "../run-sdk-player.ts",
-    "../replay-sdk-player.ts",
-    "../report.ts",
-    "../review-preflight.ts",
-    "../review-scenario.ts",
-    "../generate-scenario.ts",
-    "../author-scenario-setup.ts",
-    "../author-scenario-characters.ts",
+    "../*.ts",
     "../examples/*.ts",
-    "../scenario-campaign.ts",
     "scenario-setup-contract.ts",
     "scenario-setup-runtime.ts",
     "scenarios/*.setup.ts",
