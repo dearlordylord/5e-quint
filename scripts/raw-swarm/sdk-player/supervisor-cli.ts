@@ -50,12 +50,17 @@ import {
   scenarioTokenId,
   type ScenarioSession,
 } from "./scenario-session.ts";
-import { decodeSdkCallInput, type SdkCallInput } from "./sdk-replay-input.ts";
+import {
+  canonicalSdkCallInput,
+  decodeSdkCallInput,
+  type SdkCallInput,
+} from "./sdk-replay-input.ts";
 import {
   playerCurrentTurnProjection,
   playerInitialTurnProjection,
 } from "./player-turn-projection.ts";
 import { frontierFillTypeHelp } from "./frontier-fill-type-help.ts";
+import { jsonValue } from "./json-value.ts";
 import { publicSdkDeclarationGraphSha256 } from "./public-sdk-type-help.ts";
 import {
   parseSdkTranscript,
@@ -130,43 +135,6 @@ const PROGRAM_PREFIX = `import type { PlayerContinuation } from "@dnd/player-sdk
 
 function fail(message: string): never {
   throw new Error(message);
-}
-
-function jsonValue(value: unknown): JsonValue {
-  if (
-    value === null ||
-    typeof value === "string" ||
-    typeof value === "boolean"
-  ) {
-    return value;
-  }
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (Array.isArray(value)) return value.map(jsonValue);
-  if (value instanceof Map) {
-    const entries = [...value.entries()]
-      .map(([key, entry]) => [jsonValue(key), jsonValue(entry)] as const)
-      .sort(([left], [right]) =>
-        canonicalJson(left).localeCompare(canonicalJson(right)),
-      );
-    return { $map: entries };
-  }
-  if (value instanceof Set) {
-    return {
-      $set: [...value.values()]
-        .map(jsonValue)
-        .sort((left, right) =>
-          canonicalJson(left).localeCompare(canonicalJson(right)),
-        ),
-    };
-  }
-  if (typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value)
-        .filter(([, entry]) => entry !== undefined)
-        .map(([key, entry]) => [key, jsonValue(entry)]),
-    );
-  }
-  return fail("SDK evidence contains a non-JSON execution value.");
 }
 
 function atomicJson(path: string, value: unknown): void {
@@ -1118,6 +1086,7 @@ async function runSubmittedSource(source: string): Promise<unknown> {
       suppliedSession: ScenarioSession,
       input: unknown,
     ): AppliedCall => {
+      const canonical = canonicalSdkCallInput({ operation, input });
       const sessionIsCurrent =
         sha256Canonical(jsonValue(suppliedSession)) ===
         sha256Canonical(jsonValue(currentSession));
@@ -1125,14 +1094,13 @@ async function runSubmittedSource(source: string): Promise<unknown> {
         operation,
         suppliedSession,
         sessionIsCurrent,
-        input,
+        canonical.input,
         () => {
           if (!sessionIsCurrent) {
             fail(SDK_SESSION_CONFLICT_MESSAGE);
           }
-          const decoded = decodeSdkCallInput({ operation, input });
-          if (decoded.tag === "invalid") fail(decoded.message);
-          const applied = applyCall(currentSession, decoded.value);
+          if (canonical.tag === "invalid") fail(canonical.message);
+          const applied = applyCall(currentSession, canonical.value);
           if (!isAppliedCallForOperation(operation, applied)) {
             fail(`SDK operation ${operation} produced a mismatched result.`);
           }

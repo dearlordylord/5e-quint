@@ -8,7 +8,11 @@ import {
 } from "../../../packages/battle-runtime/src/index.ts";
 import { Either, Match, Schema } from "effect";
 
-import type { EndBattleRuntimeTurnInput } from "./continuation-contract.ts";
+import type {
+  EndBattleRuntimeTurnInput,
+  JsonValue,
+} from "./continuation-contract.ts";
+import { sdkCallInputJsonValue } from "./json-value.ts";
 import type { SdkCallRecord } from "./sdk-transcript.ts";
 
 type EndBattleRuntimeTurnReplayInput = Omit<
@@ -73,6 +77,18 @@ export type SdkCallInput =
 type ParseResult<A> =
   | { readonly tag: "valid"; readonly value: A }
   | { readonly tag: "invalid"; readonly message: string };
+
+export type CanonicalSdkCallInputResult =
+  | {
+      readonly tag: "valid";
+      readonly input: JsonValue;
+      readonly value: SdkCallInput;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly input: JsonValue;
+      readonly message: string;
+    };
 
 const EmptyInputSchema = Schema.Struct({});
 const InitialRelationInputSchema = Schema.Struct({
@@ -180,6 +196,18 @@ export function decodeSdkCallInput(
     ),
     Match.exhaustive,
   );
+}
+
+export function canonicalSdkCallInput(input: {
+  readonly operation: SdkCallRecord["operation"];
+  readonly input: unknown;
+}): CanonicalSdkCallInputResult {
+  const canonicalInput = sdkCallInputJsonValue(input.input);
+  const decoded = decodeSdkCallInput({
+    operation: input.operation,
+    input: canonicalInput,
+  });
+  return { ...decoded, input: canonicalInput };
 }
 
 function decodeInput<A, I, R extends SdkCallInput>(

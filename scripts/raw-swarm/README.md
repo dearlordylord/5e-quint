@@ -387,7 +387,12 @@ whole-trace review flow.
 The agent edits ordinary TypeScript inside the continuation. The supervisor
 requires every canonical SDK operation to consume the one current session,
 advances that cursor from the returned result, and accepts only that latest
-session in the continuation outcome. It records complete JSON evidence
+session in the continuation outcome. Player-call inputs cross a canonical JSON
+boundary before validation and execution: `undefined` object properties are
+absent, while sparse arrays and non-JSON execution values are rejected. Strict
+input decoding still rejects excess properties that have JSON values. The
+frozen continuation source retains the exact authored JavaScript syntax. The
+supervisor records complete JSON evidence
 projections of the public input/output sessions (including every Map and Set
 entry),
 the public operation payload, and the canonical result projection, then
