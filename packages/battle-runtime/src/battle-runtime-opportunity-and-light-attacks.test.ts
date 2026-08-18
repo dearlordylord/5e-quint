@@ -2779,6 +2779,24 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     }
     const attackRoll = requireHole(startedReaction, "attackRoll");
     expect(attackRoll).toMatchObject({ rollMode: "advantage" });
+    expect(
+      resolveBattleSubject({
+        state: startedReaction.state,
+        subject: choice.subject,
+        fills: [
+          attackRollFill(attackRoll, {
+            total: 10,
+            naturalD20: 10,
+            rollMode: "normal",
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Opportunity Attack attack roll mode does not match the current attack-roll rule.",
+    });
 
     const missed = requireResolved(
       resolveBattleSubject({
