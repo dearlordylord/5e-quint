@@ -7,6 +7,7 @@ import type {
   BattleSavingThrowOutcome,
 } from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef } from "../identity.ts";
+import { Match } from "effect";
 import { sameMultisetBy } from "../mechanical-equality.ts";
 import { opportunityAttackThreatEqual } from "./movement-speed.ts";
 
@@ -27,112 +28,77 @@ export type BattleContinuationComparableFill = Extract<
   }
 >;
 
-type SameKindBattleContinuationFillPair = {
-  [Kind in BattleContinuationComparableFill["kind"]]: {
-    readonly kind: Kind;
-    readonly left: Extract<
-      BattleContinuationComparableFill,
-      { readonly kind: Kind }
-    >;
-    readonly right: Extract<
-      BattleContinuationComparableFill,
-      { readonly kind: Kind }
-    >;
-  };
-}[BattleContinuationComparableFill["kind"]];
-
-function sameKindBattleContinuationFillPair(
-  a: BattleContinuationComparableFill,
-  b: BattleContinuationComparableFill,
-): SameKindBattleContinuationFillPair | null {
-  if (a.kind !== b.kind) {
-    return null;
-  }
-  // The runtime comparison proves both members share one discriminant; TypeScript cannot preserve that correlation when the values arrive as separate unions.
-  return {
-    kind: a.kind,
-    left: a,
-    right: b,
-  } as SameKindBattleContinuationFillPair;
-}
-
 export function battleContinuationFillEquals(
   a: BattleContinuationComparableFill,
   b: BattleContinuationComparableFill,
 ): boolean {
-  const pair = sameKindBattleContinuationFillPair(a, b);
-  if (pair === null || a.holeId !== b.holeId) {
-    return false;
-  }
-  if (pair.kind === "targetChoice") {
-    return pair.left.value === pair.right.value;
-  }
-  if (pair.kind === "attackRoll") {
-    return attackRollResultsEqual(pair.left.value, pair.right.value);
-  }
-  if (pair.kind === "rolledDice") {
-    return (
-      rolledDiceGroupsEqual(pair.left.value, pair.right.value) &&
-      attackDamageRiderSelectionsEqual(
-        pair.left.selectedAttackDamageRiderProcedureRefs,
-        pair.right.selectedAttackDamageRiderProcedureRefs,
-      ) &&
-      cunningStrikeOptionSelectionsEqual(
-        pair.left.cunningStrikeOption,
-        pair.right.cunningStrikeOption,
-      ) &&
-      spellDamageRerollDecisionsEqual(
-        pair.left.spellDamageReroll,
-        pair.right.spellDamageReroll,
-      )
-    );
-  }
-  if (pair.kind === "attackDamageDisposition") {
-    return pair.left.value.kind === pair.right.value.kind;
-  }
-  if (pair.kind === "concentrationSavingThrow") {
-    return (
-      pair.left.value.succeeded === pair.right.value.succeeded &&
-      pair.left.value.naturalD20 === pair.right.value.naturalD20 &&
-      rolledD20sEqual(
-        pair.left.value.rolledD20s,
-        pair.right.value.rolledD20s,
-      ) &&
-      pair.left.value.withoutRoll === pair.right.value.withoutRoll &&
-      d20TestNaturalOneRerollOutcomeDecisionsEqual(
-        pair.left.value.d20TestNaturalOneReroll,
-        pair.right.value.d20TestNaturalOneReroll,
-      )
-    );
-  }
-  if (pair.kind === "savingThrowOutcome") {
-    return savingThrowOutcomeValuesEqual(pair.left.value, pair.right.value);
-  }
-  if (pair.kind === "movement") {
-    return movementFillValuesEqual(pair.left.value, pair.right.value);
-  }
-  if (pair.kind === "toolPossessionFacts") {
-    return arrayValuesEqual(
-      pair.left.value.toolIdsOnPerson,
-      pair.right.value.toolIdsOnPerson,
-    );
-  }
-  if (pair.kind === "cunningStrikeEndTurnCoverFacts") {
-    return pair.left.value.cover === pair.right.value.cover;
-  }
-  if (pair.kind === "deathSavingThrow") {
-    return (
-      pair.left.value === pair.right.value &&
-      d20TestNaturalOneRerollDieDecisionsEqual(
-        pair.left.d20TestNaturalOneReroll,
-        pair.right.d20TestNaturalOneReroll,
-      )
-    );
-  }
-  /* v8 ignore start -- BattleContinuationComparableFill is exhausted above, so this emitted tail is unreachable unless the type widens without a comparator branch, which fails compilation. */
-  const exhaustive: never = pair;
-  return exhaustive;
-  /* v8 ignore stop */
+  return Match.value(a).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      targetChoice: (left) =>
+        b.kind === "targetChoice" &&
+        left.holeId === b.holeId &&
+        left.value === b.value,
+      attackRoll: (left) =>
+        b.kind === "attackRoll" &&
+        left.holeId === b.holeId &&
+        attackRollResultsEqual(left.value, b.value),
+      rolledDice: (left) =>
+        b.kind === "rolledDice" &&
+        left.holeId === b.holeId &&
+        rolledDiceGroupsEqual(left.value, b.value) &&
+        attackDamageRiderSelectionsEqual(
+          left.selectedAttackDamageRiderProcedureRefs,
+          b.selectedAttackDamageRiderProcedureRefs,
+        ) &&
+        cunningStrikeOptionSelectionsEqual(
+          left.cunningStrikeOption,
+          b.cunningStrikeOption,
+        ) &&
+        spellDamageRerollDecisionsEqual(
+          left.spellDamageReroll,
+          b.spellDamageReroll,
+        ),
+      attackDamageDisposition: (left) =>
+        b.kind === "attackDamageDisposition" &&
+        left.holeId === b.holeId &&
+        left.value.kind === b.value.kind,
+      concentrationSavingThrow: (left) =>
+        b.kind === "concentrationSavingThrow" &&
+        left.holeId === b.holeId &&
+        left.value.succeeded === b.value.succeeded &&
+        left.value.naturalD20 === b.value.naturalD20 &&
+        rolledD20sEqual(left.value.rolledD20s, b.value.rolledD20s) &&
+        left.value.withoutRoll === b.value.withoutRoll &&
+        d20TestNaturalOneRerollOutcomeDecisionsEqual(
+          left.value.d20TestNaturalOneReroll,
+          b.value.d20TestNaturalOneReroll,
+        ),
+      savingThrowOutcome: (left) =>
+        b.kind === "savingThrowOutcome" &&
+        left.holeId === b.holeId &&
+        savingThrowOutcomeValuesEqual(left.value, b.value),
+      movement: (left) =>
+        b.kind === "movement" &&
+        left.holeId === b.holeId &&
+        movementFillValuesEqual(left.value, b.value),
+      toolPossessionFacts: (left) =>
+        b.kind === "toolPossessionFacts" &&
+        left.holeId === b.holeId &&
+        arrayValuesEqual(left.value.toolIdsOnPerson, b.value.toolIdsOnPerson),
+      cunningStrikeEndTurnCoverFacts: (left) =>
+        b.kind === "cunningStrikeEndTurnCoverFacts" &&
+        left.holeId === b.holeId &&
+        left.value.cover === b.value.cover,
+      deathSavingThrow: (left) =>
+        b.kind === "deathSavingThrow" &&
+        left.holeId === b.holeId &&
+        left.value === b.value &&
+        d20TestNaturalOneRerollDieDecisionsEqual(
+          left.d20TestNaturalOneReroll,
+          b.d20TestNaturalOneReroll,
+        ),
+    }),
+  );
 }
 
 export function battleFillPrefixAccumulated(
@@ -204,22 +170,22 @@ function d20TestNaturalOneRerollDecisionsEqual(
   if (a === undefined || b === undefined) {
     return a === b;
   }
-  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
-    return false;
-  }
-  if (a.kind === "decline" || b.kind === "decline") {
-    return a.kind === b.kind;
-  }
-  if (a.kind === "rerollRolledDie" || b.kind === "rerollRolledDie") {
-    return (
-      a.kind === "rerollRolledDie" &&
-      b.kind === "rerollRolledDie" &&
-      a.replacement.die === b.replacement.die &&
-      a.replacement.naturalD20 === b.replacement.naturalD20 &&
-      attackRollResultsEqual(a.replacement.result, b.replacement.result)
-    );
-  }
-  return attackRollResultsEqual(a.replacement, b.replacement);
+  return Match.value(a).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      decline: (left) =>
+        b.kind === "decline" && left.effectKind === b.effectKind,
+      reroll: (left) =>
+        b.kind === "reroll" &&
+        left.effectKind === b.effectKind &&
+        attackRollResultsEqual(left.replacement, b.replacement),
+      rerollRolledDie: (left) =>
+        b.kind === "rerollRolledDie" &&
+        left.effectKind === b.effectKind &&
+        left.replacement.die === b.replacement.die &&
+        left.replacement.naturalD20 === b.replacement.naturalD20 &&
+        attackRollResultsEqual(left.replacement.result, b.replacement.result),
+    }),
+  );
 }
 
 function d20TestNaturalOneRerollOutcomeDecisionsEqual(
@@ -235,25 +201,23 @@ function d20TestNaturalOneRerollOutcomeDecisionsEqual(
   if (a === undefined || b === undefined) {
     return a === b;
   }
-  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
-    return false;
-  }
-  if (a.kind === "decline" || b.kind === "decline") {
-    return a.kind === b.kind;
-  }
-  if (a.kind === "rerollRolledDie" || b.kind === "rerollRolledDie") {
-    return (
-      a.kind === "rerollRolledDie" &&
-      b.kind === "rerollRolledDie" &&
-      a.replacement.die === b.replacement.die &&
-      a.replacement.naturalD20 === b.replacement.naturalD20 &&
-      a.replacement.result.succeeded === b.replacement.result.succeeded &&
-      a.replacement.result.naturalD20 === b.replacement.result.naturalD20
-    );
-  }
-  return (
-    a.replacement.succeeded === b.replacement.succeeded &&
-    a.replacement.naturalD20 === b.replacement.naturalD20
+  return Match.value(a).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      decline: (left) =>
+        b.kind === "decline" && left.effectKind === b.effectKind,
+      reroll: (left) =>
+        b.kind === "reroll" &&
+        left.effectKind === b.effectKind &&
+        left.replacement.succeeded === b.replacement.succeeded &&
+        left.replacement.naturalD20 === b.replacement.naturalD20,
+      rerollRolledDie: (left) =>
+        b.kind === "rerollRolledDie" &&
+        left.effectKind === b.effectKind &&
+        left.replacement.die === b.replacement.die &&
+        left.replacement.naturalD20 === b.replacement.naturalD20 &&
+        left.replacement.result.succeeded === b.replacement.result.succeeded &&
+        left.replacement.result.naturalD20 === b.replacement.result.naturalD20,
+    }),
   );
 }
 

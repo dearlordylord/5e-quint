@@ -116,11 +116,6 @@
       "module/binding:discoverBattleActsWithoutRouteEvents": 69,
       "module/binding:pactOfTheChainFamiliarAttackActs": 9
     },
-    "packages/battle-runtime/src/battle-reducer/battle-fill-equality.ts": {
-      "module/binding:battleContinuationFillEquals": 21,
-      "module/binding:d20TestNaturalOneRerollDecisionsEqual": 13,
-      "module/binding:d20TestNaturalOneRerollOutcomeDecisionsEqual": 15
-    },
     "packages/battle-runtime/src/battle-reducer/battle-movement.ts": {
       "module/binding:applyBattleMovement": 11
     },
@@ -238,7 +233,7 @@
     },
     "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts": {
       "module/binding:appendObjectOutcomesToContinuation": 10,
-      "module/binding:interruptCheckpointAfterModifier": 12,
+      "module/binding:interruptCheckpointAfterModifier": 11,
       "module/binding:resolveInterruptLifecycleDecision": 14,
       "module/binding:resolveReactionRollOrDamageReduction": 19
     },
@@ -667,9 +662,6 @@
     "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/web-restraint-hazard.ts": {
       "module/binding:isWebRestraintEscapeOperation": 12,
       "module/binding:webRestraintHazardSpell": 29
-    },
-    "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts": {
-      "module/binding:activeEffectExpirationForPostDamageRider": 9
     },
     "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts": {
       "module/binding:saveDamageReplacementForInvocation": 11,

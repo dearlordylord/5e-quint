@@ -1,5 +1,5 @@
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { DieRollResult } from "@dnd/shared/types";
+import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
@@ -26,6 +26,12 @@ type ConcentrationSavingThrowFill = Extract<
   BattleFill,
   { readonly kind: "concentrationSavingThrow" }
 >;
+type RolledDiceFill = Extract<BattleFill, { readonly kind: "rolledDice" }>;
+type SavingThrowOutcomeFill = Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>;
+type MovementFill = Extract<BattleFill, { readonly kind: "movement" }>;
 
 const battleHoleIdArbitrary = fc
   .integer({ min: 0, max: 8 })
@@ -192,10 +198,67 @@ const naturalOneRerollDieDecisionArbitrary: fc.Arbitrary<
       }) as const,
   ),
 );
+const rolledDiceGroupArbitrary = fc.record({
+  results: fc.array(dieRollArbitrary, { minLength: 1, maxLength: 3 }),
+});
+const rolledDiceGroupsArbitrary: fc.Arbitrary<RolledDiceFill["value"]> = fc
+  .tuple(
+    rolledDiceGroupArbitrary,
+    fc.array(rolledDiceGroupArbitrary, { maxLength: 2 }),
+  )
+  .map(([first, remaining]): RolledDiceFill["value"] => [first, ...remaining]);
+const rolledDiceFillArbitrary: fc.Arbitrary<RolledDiceFill> = fc
+  .tuple(battleHoleIdArbitrary, rolledDiceGroupsArbitrary)
+  .map(([holeId, value]) => ({ kind: "rolledDice", holeId, value }));
+const savingThrowOutcomeFillArbitrary: fc.Arbitrary<SavingThrowOutcomeFill> = fc
+  .tuple(
+    battleHoleIdArbitrary,
+    fc.array(
+      fc.record({
+        targetId: combatantIdArbitrary,
+        succeeded: fc.boolean(),
+      }),
+      { maxLength: 3 },
+    ),
+  )
+  .map(([holeId, outcomes]) => ({
+    kind: "savingThrowOutcome",
+    holeId,
+    value: { outcomes },
+  }));
+const acrobaticMovementArbitrary: fc.Arbitrary<
+  NonNullable<MovementFill["value"]["acrobaticMovement"]>
+> = fc
+  .constantFrom("alongVerticalSurface" as const, "acrossLiquid" as const)
+  .map((path) => ({
+    kind: "acrobaticMovement",
+    paths: [path],
+    withoutFallingDuringMovement: true,
+  }));
+const movementFillArbitrary: fc.Arbitrary<MovementFill> = fc
+  .tuple(
+    battleHoleIdArbitrary,
+    fc.constantFrom("walk" as const, "fly" as const, "swim" as const),
+    fc.integer({ min: 0, max: 120 }).map(movementFeet),
+    fc.option(acrobaticMovementArbitrary, { nil: undefined }),
+  )
+  .map(([holeId, speedKind, movementCostFeet, acrobaticMovement]) => ({
+    kind: "movement",
+    holeId,
+    value: {
+      speedKind,
+      movementCostFeet,
+      provokedOpportunityAttacks: [],
+      ...(acrobaticMovement === undefined ? {} : { acrobaticMovement }),
+    },
+  }));
 
 const comparableBattleFillArbitrary: fc.Arbitrary<BattleContinuationComparableFill> =
   fc.oneof(
     attackRollArbitrary,
+    rolledDiceFillArbitrary,
+    savingThrowOutcomeFillArbitrary,
+    movementFillArbitrary,
     fc.record({
       kind: fc.constant("targetChoice" as const),
       holeId: battleHoleIdArbitrary,
@@ -369,6 +432,12 @@ describe("battle fill equality", () => {
       battleContinuationFillEquals(
         concentration(outcomeReroll),
         concentration(outcomeRolledDie),
+      ),
+    ).toBe(false);
+    expect(
+      battleContinuationFillEquals(
+        concentration(outcomeRolledDie),
+        concentration(outcomeReroll),
       ),
     ).toBe(false);
     expect(
