@@ -1,0 +1,25 @@
+{
+  "scenarioId": "generated-battle-005",
+  "scenarioSha256": "6bebf6cb0eab978f498f86ab0ea69889ece6b1f5e9524102bf0b87d6571abfb5",
+  "gitSha": "14098e0eef49edb416a10e26ae4df3e6cc7d7e9e",
+  "admitReviewedUnsupported": true,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "The 12-by-6 five-foot grid is coherent with `.references/srd-5.2.1/Playing-the-Game.md`; all cells are in bounds, level, open, and free of interior terrain or diagonal-corner questions. The SRD supports the Wolf and Goblin Warrior stat blocks, level-2 Orc Fighter creation, Acolyte, Standard Array, fixed Fighter Hit Point gain, Action Surge, movement, attacks, and Opportunity Attacks. Rolled stat-block damage and doubled damage dice on Critical Hits are supported by `Monsters/Overview.md` and `Playing-the-Game.md`. Exact Initiative scores, no surprise, shield/scimitar readiness, the non-interactive pressure plate, and all required directed relationships supply the remaining Table Decisions; `ASSUMPTIONS.md` adds no unresolved gap."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The scenario uses SRD identities and standard rules vocabulary, with synthetic names Taro, Flint, and Cinder and independently authored tunnel, pressure-plate, and objective prose. It exposes no PHB+ names, ids, slugs, prose, headings, page references, provenance claims, or source-to-Mushroom crosswalks. This is consistent with `docs/mushroom-playbook/AUTHORING.md`."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicy",
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "The selected canonical stat-block identities are Wolf for Flint and Goblin Warrior for Cinder, and both are present in the supplied availability list. Taro is a synthetic player character, not an additional canonical stat-block selection, so the `availableOnly` intent is satisfied."
+  },
+  "sdkCapabilityIntent": "supportedOnly",
+  "sdkCapabilityReview": {
+    "classification": "supported",
+    "evidence": "The supplied character documentation covers an Orc level-2 Fighter with Acolyte, Standard Array, fixed Hit Point gain, class choices, equipment, loadout, and a Fresh Character Sheet. Setup documentation covers the five-foot arena, placements, illumination, stat-block initialization, caller-supplied Initiative, rolled damage notation, and the supplied directed relationships. Player documentation covers surfaced acts, route movement, relation-derived spatial facts, melee and ranged attacks, Opportunity Attack interrupts, limited resource use, and objective conclusion assertions. No unsupported vertical, object-state, or weapon-transition fact is required."
+  }
+}
