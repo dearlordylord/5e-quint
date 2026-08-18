@@ -1,0 +1,11 @@
+{
+  "scenarioId": "generated-battle-006",
+  "distributionPreference": "Favor materially different approaches to authored objectives, changing tactics, varied SRD combatant compositions, and a mix of delegated and exact character choices. Keep the encounter compact enough to play through the public SDK. Every ammunition-using combatant must have an explicit starting ammunition stock stated in the scenario prose; otherwise prefer combatants without ammunition requirements.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "supportedOnly",
+  "minimumIterations": 2,
+  "maximumIterations": 4,
+  "candidatesPerIteration": 4,
+  "reviewMilestones": [2],
+  "admitReviewedUnsupported": true
+}
