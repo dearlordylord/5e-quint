@@ -65,6 +65,7 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 const sanctuaryUnitId = "sanctuary";
 const burningHandsUnitId = "burning_hands";
+const flameStrikeUnitId = "flame_strike";
 const chromaticOrbUnitId = "chromatic_orb";
 const eldritchBlastUnitId = "eldritch_blast";
 const fireBoltUnitId = "fire_bolt";
@@ -1446,27 +1447,29 @@ describe("Sanctuary targeting interdiction", () => {
 
   test("area-effect damaging spells do not trigger Sanctuary interdiction", () => {
     const warded = advanceRoundToCaster(
-      castSanctuary(battleWithSanctuary(), wardedId),
+      castSanctuary(
+        battleWithSanctuary({ areaSaveDamageSpell: "flameStrike" }),
+        wardedId,
+      ),
     );
     const act = discoverBattleActs(warded).find(
       (candidate) =>
         candidate.subject.tag === "actionSpell" &&
         battleActSpellPresentation(candidate)?.invocation.spellId ===
-          burningHandsUnitId,
+          flameStrikeUnitId,
     );
     if (act === undefined || act.subject.tag !== "actionSpell") {
-      throw new Error("Expected Burning Hands action spell.");
+      throw new Error("Expected Flame Strike action spell.");
     }
     const save = requireHole(act.initialHoles, "savingThrowOutcome");
 
+    const saveFill = savingThrowOutcomeFill(save, [
+      { targetId: wardedId, succeeded: false },
+    ]);
     const needsDamage = resolveBattleSubject({
       state: warded.state,
       subject: act.subject,
-      fills: [
-        savingThrowOutcomeFill(save, [
-          { targetId: wardedId, succeeded: false },
-        ]),
-      ],
+      fills: [saveFill],
     });
 
     expect(needsDamage).toMatchObject({
@@ -1482,13 +1485,31 @@ describe("Sanctuary targeting interdiction", () => {
       ]),
     });
     if (needsDamage.tag !== "needsHoles") {
-      throw new Error("Expected Burning Hands damage roll hole.");
+      throw new Error("Expected Flame Strike damage roll hole.");
     }
     expect(needsDamage.holes).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "sanctuaryInterdictionOutcome" }),
       ]),
     );
+
+    const resolved = resolveBattleSubject({
+      state: needsDamage.state,
+      subject: needsDamage.subject,
+      fills: [
+        saveFill,
+        damageRollFillWithGroups(requireHole(needsDamage.holes, "rolledDice"), [
+          [4, 4, 4, 4, 4],
+          [4, 4, 4, 4, 4],
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Flame Strike damage to resolve.");
+    }
+    expect(combatant(resolved.state, wardedId).hp).toBe(Hp(0));
   });
 
   test("ward remains while a warded caster is only requesting spell target holes", () => {
@@ -1673,8 +1694,10 @@ function battleWithSanctuary(
   input: {
     readonly casterLevel?: number;
     readonly ammunitionAttacker?: boolean;
+    readonly areaSaveDamageSpell?: "flameStrike";
   } = {},
 ): BattleRuntimeSession {
+  const legalFlameStrikeArea = input.areaSaveDamageSpell === "flameStrike";
   const result = startBattle({
     battleId: battleId("sanctuary-targeting-interdiction"),
     combatants: [
@@ -1688,28 +1711,40 @@ function battleWithSanctuary(
             className: "cleric",
             abilityModifier: abilityModifier(3),
           },
-          proficiencyBonus: proficiencyBonus(2),
+          proficiencyBonus: proficiencyBonus(legalFlameStrikeArea ? 4 : 2),
           canCastSpells: true,
-          cantrips: [
-            srdSpellRecord(eldritchBlastUnitId),
-            srdSpellRecord(fireBoltUnitId),
-            srdSpellRecord(sacredFlameUnitId),
-          ],
-          preparedSpells: [
-            srdSpellRecord(sanctuaryUnitId),
-            srdSpellRecord(burningHandsUnitId),
-            srdSpellRecord(chromaticOrbUnitId),
-            srdSpellRecord(iceKnifeUnitId),
-            srdSpellRecord(longstriderUnitId),
-            srdSpellRecord(magicMissileUnitId),
-          ],
+          cantrips: legalFlameStrikeArea
+            ? [srdSpellRecord(sacredFlameUnitId)]
+            : [
+                srdSpellRecord(eldritchBlastUnitId),
+                srdSpellRecord(fireBoltUnitId),
+                srdSpellRecord(sacredFlameUnitId),
+              ],
+          preparedSpells: legalFlameStrikeArea
+            ? [
+                srdSpellRecord(sanctuaryUnitId),
+                srdSpellRecord(flameStrikeUnitId),
+              ]
+            : [
+                srdSpellRecord(sanctuaryUnitId),
+                srdSpellRecord(burningHandsUnitId),
+                srdSpellRecord(chromaticOrbUnitId),
+                srdSpellRecord(iceKnifeUnitId),
+                srdSpellRecord(longstriderUnitId),
+                srdSpellRecord(magicMissileUnitId),
+              ],
           featurePreparedSpells: [],
           spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
-          spellSlots: [{ spellLevel: 1, count: 2 }],
+          spellSlots: legalFlameStrikeArea
+            ? [
+                { spellLevel: 1, count: 2 },
+                { spellLevel: 5, count: 1 },
+              ]
+            : [{ spellLevel: 1, count: 2 }],
         },
-        input.casterLevel,
+        input.casterLevel ?? (legalFlameStrikeArea ? 9 : undefined),
       ),
       characterCreature(wardedId, "Warded", 15),
       input.ammunitionAttacker === true
