@@ -20,7 +20,7 @@ import {
   classSpellListForSpellcastingClassRecord,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import {
   battleId,
   characterId,
@@ -233,6 +233,83 @@ describe("Counterspell Reaction spell", () => {
         }),
       ]),
     );
+  });
+
+  test("spends Counterspell itself through a source-scoped free cast", () => {
+    const session = battleWithCounterspell({
+      counterspellerSpellAccessFreeCast: true,
+    });
+    const counterspeller = session.state.combatants.get(counterspellerId);
+    if (counterspeller?.origin.kind !== "character") {
+      throw new Error("Expected character Counterspell reactor.");
+    }
+    const resourcePoolRef = counterspeller.origin.resources[0]?.resourcePoolRef;
+    if (resourcePoolRef === undefined) {
+      throw new Error("Expected Counterspell free-cast resource.");
+    }
+    const invocationRef = spellAccessFreeCastSpellInvocationRef(
+      counterspellUnitId,
+      resourcePoolRef,
+      "counterspell",
+    );
+    const awaitingReaction = startMagicMissile({
+      session,
+      state: session.state,
+      slotLevel: 1,
+      targetId: counterspellerId,
+      counterspellFacts: [
+        counterspellTriggerFact({
+          session,
+          reactorId: counterspellerId,
+          casterId,
+          invocationRef,
+        }),
+      ],
+    });
+    const choice = requireCounterspellChoice(
+      awaitingReaction,
+      counterspellerId,
+      3,
+      session,
+      { tag: "spellAccessFreeCast", resourcePoolRef },
+    );
+    const resolved = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
+        counterspellDecision(
+          counterspellerId,
+          choice,
+          counterspellSavingThrowFills(choice, casterId, false),
+        ),
+      ),
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingInterrupt: null },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected source-scoped Counterspell to resolve.");
+    }
+    expect(snapshotCombatant(resolved, counterspellerId)).toMatchObject({
+      reactionAvailable: false,
+      origin: expect.objectContaining({
+        resources: expect.arrayContaining([
+          expect.objectContaining({ usesRemaining: 0 }),
+        ]),
+        spellcasting: expect.objectContaining({ spellSlots: [] }),
+      }),
+    });
+    expect(snapshotCombatant(resolved, casterId)).toMatchObject({
+      origin: expect.objectContaining({
+        spellcasting: expect.objectContaining({
+          spellSlots: expect.arrayContaining([
+            expect.objectContaining({ spellLevel: 1, expended: 0 }),
+          ]),
+        }),
+      }),
+    });
   });
 
   test("routes an incomplete Counterspell selection to its saving throw frontier", () => {
@@ -1246,11 +1323,12 @@ function battleWithCounterspell(
       | undefined;
     readonly includeSecondCounterspeller?: boolean | undefined;
     readonly casterSpellAccessFreeCast?: boolean | undefined;
+    readonly counterspellerSpellAccessFreeCast?: boolean | undefined;
   } = {},
 ): BattleRuntimeSession {
   const counterspell = srdSpellRecord(counterspellUnitId);
   const magicMissile = srdSpellRecord(magicMissileUnitId);
-  const freeCastSource = {
+  const magicInitiateFreeCastSource = {
     id: authoredUnitId("feat_synthetic_counterspell_dabbler"),
     kind: "feat",
     category: "origin",
@@ -1258,6 +1336,30 @@ function battleWithCounterspell(
     provenance: { kind: "synthetic-test", section: "counterspell regression" },
     mechanics: { family: "magic_initiate", spellList: "wizard" },
   } as const;
+  const counterspellFreeCastSource = {
+    acquiredAtLevel: 3,
+    className: "wizard",
+    id: authoredUnitId("wizard_synthetic_counterspell_reserve"),
+    kind: "class_feature",
+    name: "Synthetic Counterspell Reserve",
+    provenance: { kind: "synthetic-test", section: "counterspell regression" },
+    mechanics: {
+      family: "passive",
+      grants: [
+        {
+          kind: "grant_spell_access",
+          mode: "prepared",
+          spellId: counterspell.id,
+        },
+        {
+          kind: "grant_spell_free_casts",
+          spellId: counterspell.id,
+          count: 1,
+          resetCadence: "long_rest",
+        },
+      ],
+    },
+  } as const satisfies UnitRecord;
   const result = startBattle({
     battleId: battleId("counterspell-reaction-spell"),
     combatants: [
@@ -1269,7 +1371,7 @@ function battleWithCounterspell(
           input.casterSpellAccessFreeCast === true
             ? [
                 {
-                  unit: freeCastSource,
+                  unit: magicInitiateFreeCastSource,
                   spellAccessFreeCast: { spellId: magicMissile.id, count: 1 },
                   usesRemaining: 1,
                 },
@@ -1282,7 +1384,9 @@ function battleWithCounterspell(
                   unit: unitLibrary.requireUnit(unitId),
                   supportProfiles: [],
                 }))
-                .concat([{ unit: freeCastSource, supportProfiles: [] }])
+                .concat([
+                  { unit: magicInitiateFreeCastSource, supportProfiles: [] },
+                ])
             : [],
         spellcasting: {
           spellcastingSource: {
@@ -1303,7 +1407,7 @@ function battleWithCounterspell(
                   {
                     source: {
                       tag: "feat",
-                      sourceUnit: freeCastSource,
+                      sourceUnit: magicInitiateFreeCastSource,
                       spellList: wizardSpellListSource(),
                     },
                     spellcastingAbilityModifier: 3,
@@ -1327,18 +1431,45 @@ function battleWithCounterspell(
         combatantId: counterspellerId,
         displayName: "Counterspell reactor",
         initiative: 10,
+        resources:
+          input.counterspellerSpellAccessFreeCast === true
+            ? [
+                {
+                  unit: counterspellFreeCastSource,
+                  spellAccessFreeCast: {
+                    spellId: counterspell.id,
+                    count: 1,
+                  },
+                  usesRemaining: 1,
+                },
+              ]
+            : [],
+        characterUnitRefs:
+          input.counterspellerSpellAccessFreeCast === true
+            ? [{ unit: counterspellFreeCastSource, supportProfiles: [] }]
+            : [],
         spellcasting:
-          input.counterspellerPreparedSpells === undefined &&
-          input.counterspellerSlots === undefined
-            ? counterspellSpellcasting(counterspell)
-            : wizardSpellcasting({
-                preparedSpells: input.counterspellerPreparedSpells ?? [
-                  counterspell,
+          input.counterspellerSpellAccessFreeCast === true
+            ? {
+                ...wizardSpellcasting({ preparedSpells: [], spellSlots: [] }),
+                featurePreparedSpells: [
+                  {
+                    sourceUnitId: counterspellFreeCastSource.id,
+                    spell: counterspell,
+                  },
                 ],
-                spellSlots: input.counterspellerSlots ?? [
-                  { spellLevel: 3, count: 1 },
-                ],
-              }),
+              }
+            : input.counterspellerPreparedSpells === undefined &&
+                input.counterspellerSlots === undefined
+              ? counterspellSpellcasting(counterspell)
+              : wizardSpellcasting({
+                  preparedSpells: input.counterspellerPreparedSpells ?? [
+                    counterspell,
+                  ],
+                  spellSlots: input.counterspellerSlots ?? [
+                    { spellLevel: 3, count: 1 },
+                  ],
+                }),
       }),
       ...(input.includeSecondCounterspeller === true
         ? [
@@ -1506,16 +1637,7 @@ function startMagicMissile(input: {
       : { handledInterruptTrigger: input.handledInterruptTrigger }),
     fills: [
       targetAllocationFill,
-      spellCastReactionFactsFill(
-        input.counterspellFacts.map((fact) => ({
-          ...fact,
-          sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-            input.session,
-            fact.reactorId,
-            spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
-          ),
-        })),
-      ),
+      spellCastReactionFactsFill(input.counterspellFacts),
     ],
   });
   expect(result).toMatchObject({
@@ -1558,6 +1680,9 @@ function counterspellTriggerFact(input: {
   readonly session: BattleRuntimeSession;
   readonly reactorId: CombatantId;
   readonly casterId: CombatantId;
+  readonly invocationRef?: Parameters<
+    typeof requireCharacterSpellProcedureRefForTest
+  >[2];
 }): CounterspellTriggerFact {
   return {
     kind: "counterspellTriggerCasterVisibleWithinRange",
@@ -1566,7 +1691,8 @@ function counterspellTriggerFact(input: {
     sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
       input.session,
       input.reactorId,
-      spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
+      input.invocationRef ??
+        spellSlotInvocationRef(counterspellUnitId, 3, "counterspell"),
     ),
     rangeFeet: movementFeet(60),
   };
@@ -1652,6 +1778,7 @@ function requireCounterspellChoice(
   reactorId: CombatantId,
   slotLevel: number,
   session: BattleRuntimeSession,
+  resource?: CounterspellFreeCastChoiceResource,
 ): Extract<
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
@@ -1663,8 +1790,16 @@ function requireCounterspellChoice(
     spellId: counterspellUnitId,
     procedure: "counterspell",
     slotLevel,
+    ...(resource === undefined ? {} : { resource }),
   });
 }
+
+type CounterspellFreeCastChoiceResource = {
+  readonly tag: "spellAccessFreeCast";
+  readonly resourcePoolRef: Parameters<
+    typeof spellAccessFreeCastSpellInvocationRef
+  >[1];
+};
 
 function requireTriggeredReactionSpellChoice(input: {
   readonly session: BattleRuntimeSession;
@@ -1676,10 +1811,12 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly spellId: string;
   readonly procedure: string;
   readonly slotLevel: number;
+  readonly resource?: CounterspellFreeCastChoiceResource;
 }): Extract<
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
+  const expectedFreeCastResource = input.resource;
   const choice = input.result.snapshot.pendingInterrupt?.choices.find(
     (
       candidate,
@@ -1702,10 +1839,14 @@ function requireTriggeredReactionSpellChoice(input: {
         candidate.subject.procedureRef,
       );
       return (
-        invocation.tag === "spellSlot" &&
         invocation.spellId === input.spellId &&
         invocation.procedure === input.procedure &&
-        Number(invocation.slotLevel) === input.slotLevel
+        (expectedFreeCastResource === undefined
+          ? invocation.tag === "spellSlot" &&
+            Number(invocation.slotLevel) === input.slotLevel
+          : invocation.tag === "spellAccessFreeCast" &&
+            invocation.resourcePoolRef ===
+              expectedFreeCastResource.resourcePoolRef)
       );
     },
   );

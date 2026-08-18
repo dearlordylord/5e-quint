@@ -470,6 +470,48 @@ describe("battle runtime complexity extraction route boundaries", () => {
     });
     expect(invalidMode).toMatchObject({ tag: "invalid" });
 
+    const dodged = requireResolved(
+      resolveBattleSubject({
+        state: nextTurn,
+        subject: { tag: "action", actorId: goblinId, action: "dodge" },
+        fills: [],
+      }),
+    ).state;
+    expect(dodged.combatants.get(goblinId)?.dodging).toBe(true);
+    const dodgedTarget = requireHole(
+      resolveBattleSubject({
+        state: dodged,
+        subject: releaseSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const dodgedRoll = requireHole(
+      resolveBattleSubject({
+        state: dodged,
+        subject: releaseSubject,
+        fills: [targetFill(dodgedTarget, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const wrongRollMode = resolveBattleSubject({
+      state: dodged,
+      subject: releaseSubject,
+      fills: [
+        targetFill(dodgedTarget, goblinId),
+        attackRollFill(dodgedRoll, {
+          total: 10,
+          naturalD20: 10,
+          rollMode: "normal",
+        }),
+      ],
+    });
+    expect(wrongRollMode).toMatchObject({
+      tag: "invalid",
+      message:
+        "Readied spell attack roll mode does not match the current attack-roll rule.",
+    });
+
     const miss = requireResolved(
       resolveBattleSubject({
         state: nextTurn,
