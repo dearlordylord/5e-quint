@@ -3371,16 +3371,7 @@ export function applyShieldReactionSpellActiveEffect(
     combatants: new Map(state.combatants).set(reactorId, {
       ...reactor,
       activeEffects: [
-        ...reactor.activeEffects.filter((effect) => {
-          const sameSourceReplay =
-            effect.kind === "spellArmorClassBonus" &&
-            activeEffectProcedureMatches(effect, invocation.sourceProcedureRef);
-          if (sameSourceReplay) {
-            /* v8 ignore next -- Pure replay/idempotency guard: the interrupt lifecycle spends the Reaction before `resolveShieldReaction`, and Shield's start-of-turn expiry runs before the next reaction window, so a legal Shield cast cannot retain this matching bonus. */
-            return false;
-          }
-          return true;
-        }),
+        ...reactor.activeEffects,
         {
           kind: "spellArmorClassBonus",
           sourceProcedureRef: invocation.sourceProcedureRef,
