@@ -3,6 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TRANSFORMATION_MODE
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { activeSelfTransformationModeEffect } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import {
   alterSelfUnitId,
@@ -179,6 +180,11 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
     }
     const caster = resolved.state.combatants.get(spellCasterId);
     expect(battleCreatureCanBreatheUnderwater(caster)).toBe(true);
+    expect(
+      activeSelfTransformationModeEffect(caster, {
+        sourceCombatantId: spellTargetId,
+      }),
+    ).toBeUndefined();
     expect(caster?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "selfTransformation",

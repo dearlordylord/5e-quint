@@ -168,6 +168,12 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     expect(
       battleLightEmitterProjection(dancingEmitter, {
         ...dancingLightFact,
+        distanceFeet: movementFeet(15),
+      }),
+    ).toBeNull();
+    expect(
+      battleLightEmitterProjection(dancingEmitter, {
+        ...dancingLightFact,
         positionId: battleTablePositionId("wrong-dancing-light-position"),
       }),
     ).toBeNull();
