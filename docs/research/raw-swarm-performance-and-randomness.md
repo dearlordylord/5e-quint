@@ -58,11 +58,16 @@ they are not summed CPU time.
 
 ### Code and elapsed optimization cost
 
-Across the issue implementation from `4e7a80a2` through `f41796bb`, the final
-tree changed 66 files: 9,192 added and 2,032 deleted lines. Of those, 5,634
-added/1,416 deleted lines are production or tooling code, 3,301/551 are tests,
-and 257/65 are documentation. These are net range statistics, not a sum that
-double-counts later rewrites.
+Two code-size views are relevant and must not be conflated. Against the
+pre-feature merge base `d02f45b86`, the maintained tree at the accepted
+`f41796bb` gate changed 71 files: 16,597 added and 1,859 deleted lines. Of
+those, 10,863 added/631 deleted lines are production or tooling code, 4,948/1,195
+are tests, and 786/33 are documentation. The smaller two-dot comparison from
+the already-implemented side-branch checkpoint `4e7a80a2` to `f41796bb`
+changed 66 files with 9,192 additions and 2,032 deletions. That second number
+measures replacement of an existing prototype; it is not the current #282
+maintenance footprint. These are net range statistics, not sums that
+double-count later rewrites.
 
 The player-token optimization phase alone spans `a3fff39c` at 23:20 through
 `f41796bb` at 02:44: a 3-hour-24-minute commit window. Its final range changes
@@ -88,6 +93,13 @@ window; two review invocations have unavailable usage and are excluded.
 Most elapsed engineering time was therefore implementation, diagnosis,
 verification, evidence handling, and review rather than the short player model
 measurements themselves.
+
+The agent-goal ledger is a separate cost population from those harness model
+invocations. At the stringency review checkpoint it records 7,171,742 agent
+tokens and 45,247 seconds (about 12 hours 34 minutes) for the #282 objective.
+Neither total should be added to the other: the goal ledger measures the
+engineering agent, while the retained invocation ledger measures models run by
+the harness. Both are required to describe the work's token cost honestly.
 
 ### Realized benefits
 
@@ -154,6 +166,18 @@ measurements themselves.
   economic outcome. That ordering was too expensive: a smaller executable
   spike and three-invocation gate should
   have preceded the generalized artifact/type-help implementation.
+- The current player projection treats character and stat-block resource pools
+  as one record shape. It requires `usesRemaining` and `usedThisTurn`, while
+  canonical stat-block recharge pools carry `available` and daily/legendary
+  pools have no `usedThisTurn`. A nonempty ordinary stat-block resource pool can
+  therefore make a continuation projection fail. This is a reliability defect,
+  not an accepted cost of token reduction.
+- The player hole projection accepts an arbitrary string kind and retains only
+  a common subset plus a fixed choice-hole list. In particular, a
+  `statBlockRechargeRoll` hole loses its required `rechargeTargets`, leaving the
+  player with a fill type but without the target resource refs needed to author
+  that fill. The allowlist must either preserve each supported hole's actionable
+  payload or reject the unsupported kind precisely.
 - Earlier issue comments contain slightly stale derived-byte figures. The
   checked `generated-battle-004-fixed-measurement.json` values above supersede
   them.
@@ -179,12 +203,30 @@ those unrelated modifications entered the measured artifacts.
 Twelve hours would be unreasonable if the result were only a 38.87% player
 token reduction. The work also delivered order-of-magnitude audit,
 observation, and index-payload reductions plus integrity, telemetry, export,
-and verdict-mapping capabilities required by the issue. Even with those
-benefits, the player-optimization phase was overbuilt relative to the evidence:
-3 hours 24 minutes and 2,586 added lines before only a short gate passed. The
-investment is not fully justified until the complete controlled run proves the
-whole-path outcome. If it does not, the added player-context machinery should
-be simplified or removed rather than defended as sunk cost.
+and verdict-mapping capabilities required by the issue. Those evidence
+boundaries should remain: removing them would trade away measured integrity and
+payload improvements rather than merely deleting optimization code.
+
+The player-optimization phase was nevertheless overbuilt relative to the
+evidence: 3 hours 24 minutes and 2,586 added lines before only a short gate
+passed, and the stringency review found the two projection defects above. The
+current code is therefore not yet a proven golden middle. The proportionate
+next decision is:
+
+1. freeze further optimization and do not add a replay cache, compaction layer,
+   or another context protocol;
+2. repair the stat-block resource and actionable-hole projection gaps;
+3. run one complete controlled comparison with the retained normalized
+   denominators;
+4. keep the three-tier evidence boundary and frontier projection if that run
+   passes; otherwise simplify the declaration/type-help layer first, and remove
+   the independent-invocation/frontier bundle as a unit if its whole-path value
+   remains unproved.
+
+That gate avoids defending sunk cost while also avoiding a premature deletion
+that would discard the only measured 18.1% to 38.87% player-context gains. The
+issue remains open until the complete controlled comparison and acceptance
+audit are available.
 
 ## What was measured
 
