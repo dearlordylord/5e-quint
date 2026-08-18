@@ -1,11 +1,15 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 
 import { Either, Schema } from "effect";
 
 import { ReviewOutputSchema } from "./review-contract.ts";
+import {
+  reviewEvidenceIsExact,
+  type ReviewEvidenceCatalog,
+} from "./review-evidence.ts";
 import { readSdkAudit } from "./sdk-player/sdk-audit.ts";
-import { repoRoot } from "./transcript.ts";
+import { repoRoot, sha256Text } from "./transcript.ts";
 
 export type ReviewIdentity = {
   readonly scenarioId: string;
@@ -20,13 +24,17 @@ export type ReviewOutputValidation =
     }
   | {
       readonly tag: "invalid";
-      readonly reason: "invalidOutput" | "identityMismatch";
+      readonly reason:
+        | "invalidOutput"
+        | "identityMismatch"
+        | "evidenceMismatch";
       readonly message: string;
     };
 
 export function validateReviewOutput(
   value: unknown,
   identity: ReviewIdentity,
+  evidenceCatalog: ReviewEvidenceCatalog,
 ): ReviewOutputValidation {
   const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
     onExcessProperty: "error",
@@ -38,16 +46,31 @@ export function validateReviewOutput(
       message: `Reviewer output is invalid: ${decoded.left.message}`,
     };
   }
-  return decoded.right.scenarioId === identity.scenarioId &&
-    decoded.right.gitSha === identity.gitSha &&
-    decoded.right.transcriptSha256 === identity.transcriptSha256
-    ? { tag: "valid", verdictCount: decoded.right.verdicts.length }
-    : {
-        tag: "invalid",
-        reason: "identityMismatch",
-        message:
-          "Reviewer output scenario, Git revision, or transcript hash does not match the verified audit.",
-      };
+  if (
+    decoded.right.scenarioId !== identity.scenarioId ||
+    decoded.right.gitSha !== identity.gitSha ||
+    decoded.right.transcriptSha256 !== identity.transcriptSha256
+  ) {
+    return {
+      tag: "invalid",
+      reason: "identityMismatch",
+      message:
+        "Reviewer output scenario, Git revision, or transcript hash does not match the verified audit.",
+    };
+  }
+  if (
+    decoded.right.verdicts.some(
+      ({ evidence }) => !reviewEvidenceIsExact(evidence, evidenceCatalog),
+    )
+  ) {
+    return {
+      tag: "invalid",
+      reason: "evidenceMismatch",
+      message:
+        "Every reviewer verdict requires an exact audited sequence, setup line, character line, or transcript-header citation.",
+    };
+  }
+  return { tag: "valid", verdictCount: decoded.right.verdicts.length };
 }
 
 function fail(message: string): never {
@@ -71,11 +94,37 @@ function main(args: readonly string[]): void {
   } catch {
     fail(`Reviewer output is unreadable or malformed: ${reviewInput}`);
   }
-  const result = validateReviewOutput(review, {
-    scenarioId: audit.audit.header.scenarioId,
-    gitSha: audit.audit.header.gitSha,
-    transcriptSha256: audit.audit.header.transcriptSha256,
-  });
+  const runDirectory = dirname(dirname(audit.audit.header.transcriptPath));
+  const setupPath = resolve(repoRoot, runDirectory, "evidence/setup.ts");
+  const setupText =
+    audit.audit.header.setupSha256 === undefined
+      ? undefined
+      : readFileSync(setupPath, "utf8");
+  const charactersText = readFileSync(
+    resolve(repoRoot, runDirectory, "evidence/characters.ts"),
+    "utf8",
+  );
+  if (
+    (setupText !== undefined &&
+      sha256Text(setupText) !== audit.audit.header.setupSha256) ||
+    sha256Text(charactersText) !== audit.audit.header.charactersSha256
+  ) {
+    fail("Reviewer citation sources do not match the verified audit.");
+  }
+  const result = validateReviewOutput(
+    review,
+    {
+      scenarioId: audit.audit.header.scenarioId,
+      gitSha: audit.audit.header.gitSha,
+      transcriptSha256: audit.audit.header.transcriptSha256,
+    },
+    {
+      sequences: new Set(audit.audit.calls.map(({ seq }) => seq)),
+      setupLineCount: setupText?.split("\n").length ?? 0,
+      charactersLineCount: charactersText.split("\n").length,
+      hasTranscriptHeader: true,
+    },
+  );
   if (result.tag === "invalid") fail(result.message);
   console.log(JSON.stringify(result));
 }

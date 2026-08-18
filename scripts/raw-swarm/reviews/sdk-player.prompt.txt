@@ -71,3 +71,9 @@ Return only the JSON object required by the provided output schema. Every
 verdict needs a concise claim and concrete evidence naming SDK call sequences
 or setup evidence, artifact facts, and local RAW citations. Include passes for
 material claims that survive review, not merely failures.
+Every verdict evidence string must contain at least one literal exact marker of
+the form `SDK sequence N`, `setup.ts:N`, `characters.ts:N`, or `transcript
+header`. Other artifact and RAW citations remain required where relevant but
+do not replace that exact execution/setup citation.
+Repeat `SDK sequence N` for each call being cited; do not abbreviate several
+citations as a bare number list.

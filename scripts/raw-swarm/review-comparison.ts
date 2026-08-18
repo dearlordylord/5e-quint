@@ -4,6 +4,10 @@ import { resolve } from "node:path";
 import { Either, Schema } from "effect";
 
 import { ReviewOutputSchema } from "./review-contract.ts";
+import {
+  reviewEvidenceIsExact,
+  type ReviewEvidenceCatalog,
+} from "./review-evidence.ts";
 import { readSdkAudit } from "./sdk-player/sdk-audit.ts";
 import { repoRoot, sha256Text } from "./transcript.ts";
 
@@ -42,42 +46,6 @@ function decodeReview(
   return Either.isRight(decoded)
     ? decoded.right
     : fail(`Invalid review ${path}: ${decoded.left.message}`);
-}
-
-export type ReviewEvidenceCatalog = {
-  readonly sequences: ReadonlySet<number>;
-  readonly setupLineCount: number;
-  readonly charactersLineCount: number;
-  readonly hasTranscriptHeader: boolean;
-};
-
-function exactEvidence(
-  evidence: string,
-  catalog: ReviewEvidenceCatalog,
-): boolean {
-  const sequenceRefs = [
-    ...evidence.matchAll(/\bseq(?:uence)?s?[\s#:]+(\d+)\b/gi),
-  ].map((match) => Number(match[1]));
-  const setupRefs = [...evidence.matchAll(/\bsetup\.ts:(\d+)\b/gi)].map(
-    (match) => Number(match[1]),
-  );
-  const characterRefs = [
-    ...evidence.matchAll(/\bcharacters\.ts:(\d+)\b/gi),
-  ].map((match) => Number(match[1]));
-  const header = /\btranscript header\b/i.test(evidence);
-  return (
-    sequenceRefs.length +
-      setupRefs.length +
-      characterRefs.length +
-      (header ? 1 : 0) >
-      0 &&
-    sequenceRefs.every((seq) => catalog.sequences.has(seq)) &&
-    setupRefs.every((line) => line > 0 && line <= catalog.setupLineCount) &&
-    characterRefs.every(
-      (line) => line > 0 && line <= catalog.charactersLineCount,
-    ) &&
-    (!header || catalog.hasTranscriptHeader)
-  );
 }
 
 export function verifyReviewComparison(input: {
@@ -129,11 +97,11 @@ export function verifyReviewComparison(input: {
   if (
     comparison.mappings.some(
       ({ evidence, disposition, candidateVerdicts }) =>
-        !exactEvidence(evidence, input.evidenceCatalog) ||
+        !reviewEvidenceIsExact(evidence, input.evidenceCatalog) ||
         (disposition !== "rejected" && candidateVerdicts.length === 0),
     ) ||
     candidate.verdicts.some(
-      ({ evidence }) => !exactEvidence(evidence, input.evidenceCatalog),
+      ({ evidence }) => !reviewEvidenceIsExact(evidence, input.evidenceCatalog),
     )
   ) {
     fail(
