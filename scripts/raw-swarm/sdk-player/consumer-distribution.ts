@@ -221,7 +221,10 @@ export function buildConsumerDistribution(
   return {
     kind: "continue",
     session: context.session,
-    tacticalNote: "Observed " + acts.length + " available acts; replace this starter body with one coherent tactical continuation.",
+    observation: {
+      availableActCount: acts.length,
+      note: "Replace this starter body with one coherent tactical continuation.",
+    },
   };`,
     ),
   );

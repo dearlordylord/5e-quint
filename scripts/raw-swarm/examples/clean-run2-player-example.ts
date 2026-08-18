@@ -32,7 +32,9 @@ export const continueBattle: PlayerContinuation = async (context) => {
     return {
       kind: "continue",
       session: context.session,
-      tacticalNote: "No surfaced 1st-level Magic Missile act is available.",
+      observation: {
+        note: "No surfaced 1st-level Magic Missile act is available.",
+      },
     };
   }
 
@@ -43,7 +45,7 @@ export const continueBattle: PlayerContinuation = async (context) => {
     return {
       kind: "continue",
       session: context.session,
-      tacticalNote: "Magic Missile did not surface target allocation.",
+      observation: { note: "Magic Missile did not surface target allocation." },
     };
   }
 
@@ -52,7 +54,9 @@ export const continueBattle: PlayerContinuation = async (context) => {
     return {
       kind: "continue",
       session: context.session,
-      tacticalNote: "The surfaced target-allocation hole has no legal target.",
+      observation: {
+        note: "The surfaced target-allocation hole has no legal target.",
+      },
     };
   }
 
@@ -75,7 +79,9 @@ export const continueBattle: PlayerContinuation = async (context) => {
     return {
       kind: "continue",
       session: targetResult.session,
-      tacticalNote: `Magic Missile for ${String(act.subject.actorId)} returned ${targetResult.tag}.`,
+      observation: {
+        note: `Magic Missile for ${String(act.subject.actorId)} returned ${targetResult.tag}.`,
+      },
     };
   }
 
@@ -86,7 +92,9 @@ export const continueBattle: PlayerContinuation = async (context) => {
     return {
       kind: "continue",
       session: targetResult.session,
-      tacticalNote: `Magic Missile returned ${targetResult.tag}; holes: ${targetResult.holes.map((hole) => hole.kind).join(", ")}.`,
+      observation: {
+        note: `Magic Missile returned ${targetResult.tag}; holes: ${targetResult.holes.map((hole) => hole.kind).join(", ")}.`,
+      },
     };
   }
 
@@ -110,6 +118,8 @@ export const continueBattle: PlayerContinuation = async (context) => {
   return {
     kind: "continue",
     session: result.session,
-    tacticalNote: `Magic Missile for ${String(act.subject.actorId)} returned ${result.tag}.`,
+    observation: {
+      note: `Magic Missile for ${String(act.subject.actorId)} returned ${result.tag}.`,
+    },
   };
 };

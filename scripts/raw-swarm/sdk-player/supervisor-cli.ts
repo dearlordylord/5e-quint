@@ -49,8 +49,8 @@ import {
   scenarioTokenId,
   type ScenarioSession,
 } from "./scenario-session.ts";
+import { isJsonValue } from "./json-value.ts";
 import { decodeSdkCallInput, type SdkCallInput } from "./sdk-replay-input.ts";
-import { playerCurrentTurnProjection } from "./player-turn-projection.ts";
 import {
   parseSdkTranscript,
   SDK_SESSION_CONFLICT_MESSAGE,
@@ -722,14 +722,14 @@ function validateOutcome(
   if (candidate.session !== currentSession) {
     fail("Continuation must return the supervisor's current SDK session.");
   }
-  if (typeof candidate.tacticalNote !== "string") {
-    fail("Continuation tacticalNote must be a string.");
+  if (!isJsonValue(candidate.observation)) {
+    fail("Continuation observation must be JSON data.");
   }
   if (candidate.kind === "continue") {
     return {
       kind: "continue",
       session: currentSession,
-      tacticalNote: candidate.tacticalNote,
+      observation: candidate.observation,
     };
   }
   if (
@@ -740,7 +740,7 @@ function validateOutcome(
     return {
       kind: "playerConcluded",
       session: currentSession,
-      tacticalNote: candidate.tacticalNote,
+      observation: candidate.observation,
       conclusion: candidate.conclusion,
     };
   }
@@ -780,10 +780,8 @@ async function runSubmittedSource(source: string): Promise<unknown> {
   const replayMilliseconds = performance.now() - replayStarted;
   if (replayed.tag === "obstructed") fail(replayed.obstruction);
   let currentSession = replayed.session;
-  const continuationInputSession = jsonValue(currentSession);
   let frozenContinuation: number | undefined;
   let nextSeq = replayed.calls.length + 1;
-  const continuationCalls: SdkCallRecord[] = [];
   let sdkExecutionMilliseconds = 0;
   let evidenceWritingMilliseconds = 0;
   const appendSupervisorTiming = (continuation: number): void => {
@@ -817,7 +815,6 @@ async function runSubmittedSource(source: string): Promise<unknown> {
       const evidenceStarted = performance.now();
       appendFileSync(transcriptPath, `${JSON.stringify(record)}\n`);
       evidenceWritingMilliseconds += performance.now() - evidenceStarted;
-      continuationCalls.push(record);
       nextSeq += 1;
     };
     let invoked: ReturnType<typeof invoke>;
@@ -914,19 +911,10 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     if (frozenContinuation === undefined) {
       fail("Continuation made no observable SDK call and remains editable.");
     }
-    const projected = playerCurrentTurnProjection({
-      continuation: frozenContinuation,
-      calls: continuationCalls,
-      beforeSession: continuationInputSession,
-      afterSession: jsonValue(currentSession),
-      tacticalNote: outcome.tacticalNote,
-    });
-    if (projected.tag === "invalid") fail(projected.message);
     const observation = {
       continuation: frozenContinuation,
       kind: outcome.kind,
-      projection: projected.projection,
-      tacticalNote: outcome.tacticalNote,
+      observation: outcome.observation,
       ...(outcome.kind === "playerConcluded"
         ? { conclusion: outcome.conclusion }
         : {}),
