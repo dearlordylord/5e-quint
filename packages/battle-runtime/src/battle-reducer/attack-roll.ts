@@ -33,11 +33,12 @@ import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
 } from "../character-execution-queries.ts";
-import type {
-  CharacterUnarmedStrikeActionOption,
-  CharacterWeaponAttackActionOption,
-  CharacterWeaponAttackAbilityChoice,
-  SupportedAttackActionOption,
+import {
+  unboundAttackActionOption,
+  type CharacterUnarmedStrikeActionOption,
+  type CharacterWeaponAttackActionOption,
+  type CharacterWeaponAttackAbilityChoice,
+  type SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import type {
@@ -195,7 +196,7 @@ export function attackRollHole(
     holeId: ATTACK_ROLL_HOLE_ID,
     holeInstanceKey: ATTACK_ROLL_HOLE_INSTANCE,
     label: `${name} attack roll`,
-    attack,
+    attack: unboundAttackActionOption(attack),
     attackBonus: attackActionBonusWithPassiveFeatureBonus(attacker, attack),
     ...optionalProperty("rollMode", rollMode),
     ...(ongoingFeatureActivations === undefined ||

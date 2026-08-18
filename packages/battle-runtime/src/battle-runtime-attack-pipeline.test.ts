@@ -2,6 +2,7 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import * as Either from "effect/Either";
+import * as Schema from "effect/Schema";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -36,12 +37,14 @@ import {
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import { combatantId } from "./identity.ts";
+import { BattleHoleSchema } from "./battle-reducer/battle-codecs.ts";
 import { spellTargetId } from "./unit-profile-admission-catalog.test-support.ts";
 import { relentlessEnduranceBattle } from "./unit-profile-admission-feature-fixture.test-support.ts";
 import { battleStateWithGroundObjects } from "./battle-reducer/battle-object-lifecycle.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import {
   attackDamageDispositionHole,
+  attackDamageHole,
   attackActionOptionsForActor,
   damageDispositionFillValidation,
   damageDispositionFillsValidation,
@@ -68,6 +71,33 @@ import {
 } from "./battle-reducer/attack-resolution.ts";
 
 describe("battle runtime: attack pipeline boundaries", () => {
+  test("attack holes project bound character attacks into the canonical unbound shape", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = state.combatants.get(fighterId);
+    if (
+      fighter?.origin.kind !== "character" ||
+      fighter.origin.attack === null
+    ) {
+      throw new Error("Expected the fighter attack fixture.");
+    }
+
+    const holes = [
+      attackRollHole(fighter, fighter.origin.attack),
+      attackDamageHole(fighter.origin.attack),
+    ];
+
+    for (const hole of holes) {
+      expect(hole.attack).not.toHaveProperty("procedureRef");
+      expect(
+        Either.isRight(
+          Schema.decodeUnknownEither(BattleHoleSchema, {
+            onExcessProperty: "error",
+          })(hole),
+        ),
+      ).toBe(true);
+    }
+  });
+
   test("damage disposition validation follows the discovered choice frontier", () => {
     const state = fighterVsGoblinBattle();
     const fighter = state.combatants.get(fighterId);

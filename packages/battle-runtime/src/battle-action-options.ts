@@ -12,6 +12,7 @@ import type {
   StatBlockValue,
   WeaponDamage,
 } from "@dnd/surface/surface/types";
+import { Match } from "effect";
 import type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-schema.ts";
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 export type { AttackDamageAbilityModifierChoice };
@@ -289,6 +290,25 @@ export type SupportedAttackActionOption =
 export type BoundSupportedAttackActionOption =
   | BoundCharacterAttackActionOption
   | StatBlockAttackActionOption;
+
+export function unboundAttackActionOption(
+  attack: SupportedAttackActionOption | BoundCharacterAttackActionOption,
+): SupportedAttackActionOption {
+  return Match.value(attack).pipe(
+    Match.when({ kind: "weapon" }, (attack) => {
+      if (!("procedureRef" in attack)) return attack;
+      const { procedureRef: _procedureRef, ...unboundAttack } = attack;
+      return unboundAttack;
+    }),
+    Match.when({ kind: "unarmedStrike" }, (attack) => {
+      if (!("procedureRef" in attack)) return attack;
+      const { procedureRef: _procedureRef, ...unboundAttack } = attack;
+      return unboundAttack;
+    }),
+    Match.when({ kind: "statBlockAttack" }, (attack) => attack),
+    Match.exhaustive,
+  );
+}
 
 export type BattleAttackExecutionAbility = Ability | "spellcasting";
 

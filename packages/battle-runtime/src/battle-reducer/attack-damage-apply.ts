@@ -31,6 +31,7 @@ import {
   attackExecutionSelectionForOption,
   boundAttackExecutionSelectionKey,
   boundAttackExecutionSelectionMatchesOption,
+  unboundAttackActionOption,
 } from "../battle-action-options.ts";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
@@ -138,7 +139,7 @@ export function attackDamageHole(
       `battle:attack:damage-result:${expression}`,
     ),
     label: `${name} damage (${expression})`,
-    attack,
+    attack: unboundAttackActionOption(attack),
     critical,
     ...nonEmptyArrayProperty("attackDamageRiders", attackDamageRiders),
     ...nonEmptyArrayProperty(
