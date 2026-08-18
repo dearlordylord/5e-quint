@@ -19,32 +19,33 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 
 ## Current authoritative baseline
 
-- Date: 2026-08-14
-- Measured battle-runtime production tree committed as: `d02f45b86`
+- Date: 2026-08-17
+- Measured battle-runtime production tree committed as: `e9f2e9ea3`
 - Command: `pnpm coverage`
 - Result: exit 0 under the original package timeouts
-- Battle-runtime: 241/241 files passed; 2,619 passed / 129 skipped
+- Battle-runtime: 247/247 files passed; 2,661 passed / 129 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 126,627 / 129,328 |   97.91% |     2,701 |      1,408 |
-| Branches   |   32,534 / 34,024 |   95.62% |     1,490 |      1,150 |
-| Functions  |     5,063 / 5,063 |  100.00% |         0 |          0 |
-| Lines      | 126,627 / 129,328 |   97.91% |     2,701 |      1,408 |
+| Statements | 126,802 / 129,395 |   97.99% |     2,593 |      1,300 |
+| Branches   |   32,600 / 34,061 |   95.71% |     1,461 |      1,121 |
+| Functions  |     5,085 / 5,085 |  100.00% |         0 |          0 |
+| Lines      | 126,802 / 129,395 |   97.99% |     2,593 |      1,300 |
 
 Recompute the 99% gaps after every production-denominator change.
 
 ## Current campaign
 
-- Coverage work is paused after M87; resume it before issue #254 complexity work.
+- Coverage work is active after the save-gate validation milestone at
+  `e9f2e9ea3`; finish it before resuming issue #254 complexity work.
 - Select cohesive 150–300-counter domain slices from the public-policy
   production report; use at most two implementation lanes at once.
 - Do not forge internal battle state to reach admission-proven or
   schema-impossible guards. Narrow or remove such guards only with concrete
   proof.
-- The current public gaps are 1,408 statements/lines and 1,150 branches.
+- The current public gaps are 1,300 statements/lines and 1,121 branches.
 
 ## Verification and completion
 
