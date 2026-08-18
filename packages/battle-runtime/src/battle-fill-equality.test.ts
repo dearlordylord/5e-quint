@@ -402,6 +402,12 @@ describe("battle fill equality", () => {
         attackRoll({ d20TestNaturalOneReroll: naturalRolledDie }),
       ),
     ).toBe(false);
+    expect(
+      battleContinuationFillEquals(
+        attackRoll({ d20TestNaturalOneReroll: naturalRolledDie }),
+        attackRoll({ d20TestNaturalOneReroll: naturalReroll }),
+      ),
+    ).toBe(false);
 
     const concentration = (
       decision: BattleD20TestNaturalOneRerollOutcomeDecision,

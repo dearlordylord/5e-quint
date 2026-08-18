@@ -415,24 +415,22 @@ describe("Sanctuary targeting interdiction", () => {
       throw new Error("Expected Sanctuary interdiction hole.");
     }
 
+    const sanctuaryFill = sanctuaryOutcomeFill(
+      requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+      {
+        saveSucceeded: false,
+        outcome: {
+          kind: "newTarget",
+          targetId: replacementId,
+          spatialFacts: [attackTargetFact(replacementId, attack.subject)],
+          replacementTargetKind: "attackRoll",
+        },
+      },
+    );
     const retargeted = resolveBattleSubject({
       state: warded.state,
       subject: attack.subject,
-      fills: [
-        targetFill,
-        sanctuaryOutcomeFill(
-          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
-          {
-            saveSucceeded: false,
-            outcome: {
-              kind: "newTarget",
-              targetId: replacementId,
-              spatialFacts: [attackTargetFact(replacementId, attack.subject)],
-              replacementTargetKind: "attackRoll",
-            },
-          },
-        ),
-      ],
+      fills: [targetFill, sanctuaryFill],
     });
 
     expect(retargeted).toMatchObject({
@@ -448,6 +446,27 @@ describe("Sanctuary targeting interdiction", () => {
         },
       ]),
     });
+
+    if (retargeted.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Sanctuary retargeting to expose the attack roll.",
+      );
+    }
+    const attackRoll = requireHole(retargeted.holes, "attackRoll");
+    const retargetedWithAttackRoll = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [targetFill, sanctuaryFill, attackRollFill(attackRoll)],
+    });
+
+    expect(retargetedWithAttackRoll).toMatchObject({ tag: "resolved" });
+    if (retargetedWithAttackRoll.tag !== "resolved") {
+      throw new Error("Expected Sanctuary retargeting attack to resolve.");
+    }
+    expect(combatant(retargetedWithAttackRoll.state, wardedId).hp).toBe(Hp(12));
+    expect(combatant(retargetedWithAttackRoll.state, replacementId).hp).toBe(
+      Hp(11),
+    );
   });
 
   test("failed save can lose a direct damaging spell against the warded creature", () => {

@@ -393,6 +393,64 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(result.snapshot.turn.actionResources).toEqual([]);
   });
 
+  test("Grappler does not offer Punch and Grab for an already Grappled target", () => {
+    const grappled = fighterGrapplesGoblin(
+      startBattleRight({
+        battleId: battleId("battle-grappler-already-grappled"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            classLevel: 4,
+            d20Statistics: testCharacterD20Statistics({
+              str: 16,
+              dex: 13,
+            }),
+            characterUnitRefs: grapplerUnitRefs(),
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+    ).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    const state = requireResolved(
+      endTurn({ state: goblinTurn, actorId: goblinId }),
+    ).state;
+    const subject = fighterAttackSubject(state, "Unarmed Strike");
+    const target = attackInitialTargetHole(state, subject);
+    const attackRoll = attackRollHoleAfterTarget(
+      state,
+      target,
+      subject,
+      goblinId,
+    );
+    if (attackRoll.kind !== "attackRoll") {
+      throw new Error("Expected Unarmed Strike attack-roll hole.");
+    }
+
+    const result = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attackRoll, {
+            naturalD20: 12,
+            total: 17,
+            rollMode: attackRoll.rollMode ?? "normal",
+          }),
+        ],
+      }),
+    );
+
+    expect(result.state.grapples).toEqual(state.grapples);
+    expect(result.state.combatants.get(goblinId)?.hp).toBe(6);
+    expect(
+      result.state.currentTurnResources.grapplerPunchAndGrabUsedThisTurn,
+    ).toEqual([]);
+  });
+
   test("Grappler Punch and Grab extends enemy-saving-throw ongoing features through the Grapple lifecycle", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-grappler-punch-and-grab-save-lifecycle"),
