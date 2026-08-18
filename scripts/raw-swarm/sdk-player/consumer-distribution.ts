@@ -212,15 +212,15 @@ export function buildConsumerDistribution(
     resolve(input.destination, "tsconfig.json"),
     consumerTsconfig(input.destination, ["attempt.ts"]),
   );
-  writePublicSdkTypeHelpArtifact({
-    destination: resolve(input.destination, "FILL_TYPES.json"),
-    declarationsDirectory: resolve(input.destination, "declarations"),
-    configPath: resolve(input.destination, "tsconfig.json"),
-  });
   writeFileSync(
     resolve(input.trustedDestination, "tsconfig.json"),
     consumerTsconfig(input.trustedDestination, ["submissions/*.ts"]),
   );
+  writePublicSdkTypeHelpArtifact({
+    destination: resolve(input.trustedDestination, "FILL_TYPES.json"),
+    declarationsDirectory: resolve(input.trustedDestination, "declarations"),
+    configPath: resolve(input.trustedDestination, "tsconfig.json"),
+  });
   writeFileSync(
     resolve(input.destination, "attempt.ts"),
     attemptSource(
@@ -254,21 +254,6 @@ export function buildConsumerDistribution(
       resolve(repoRoot, "scripts/raw-swarm/sdk-player/supervisor-cli.ts"),
     ],
     outfile: resolve(input.trustedDestination, "supervisor.mjs"),
-    bundle: true,
-    platform: "node",
-    format: "esm",
-    target: "node24",
-    sourcemap: false,
-    logLevel: "silent",
-  });
-  buildSync({
-    entryPoints: [
-      resolve(
-        repoRoot,
-        "scripts/raw-swarm/sdk-player/public-sdk-type-help-cli.ts",
-      ),
-    ],
-    outfile: resolve(input.destination, "public-sdk-type-help.mjs"),
     bundle: true,
     platform: "node",
     format: "esm",

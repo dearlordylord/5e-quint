@@ -1,9 +1,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import { execFile, execFileSync, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   appendFileSync,
   copyFileSync,
   cpSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -17,7 +19,7 @@ import { promisify } from "node:util";
 import { describe, expect, test } from "vitest";
 import { buildSync } from "esbuild";
 
-import { repoRoot } from "../transcript.ts";
+import { repoRoot, sha256Canonical } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
@@ -29,6 +31,15 @@ import {
 const CONSUMER_SCENARIO_ID = "ready-mixed-consumer";
 const CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS = 10 * 60 * 1_000;
 const execFileAsync = promisify(execFile);
+
+async function waitForPath(path: string): Promise<void> {
+  const deadline = Date.now() + CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS;
+  while (!existsSync(path)) {
+    if (Date.now() >= deadline)
+      throw new Error(`Timed out waiting for ${path}.`);
+    await new Promise((resolveWait) => setTimeout(resolveWait, 25));
+  }
+}
 
 function filesBelow(directory: string): readonly string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -323,12 +334,13 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
         filesBelow(destination).some((path) =>
           path.endsWith("public-sdk-type-help.mjs"),
         ),
-      ).toBe(true);
+      ).toBe(false);
+      expect(existsSync(join(destination, "FILL_TYPES.json"))).toBe(false);
       const fillTypes: unknown = JSON.parse(
-        readFileSync(join(destination, "FILL_TYPES.json"), "utf8"),
+        readFileSync(join(trustedDestination, "FILL_TYPES.json"), "utf8"),
       );
       const declarationGraphSha256 = publicSdkDeclarationGraphSha256(
-        join(destination, "declarations"),
+        join(trustedDestination, "declarations"),
       );
       expect(declarationGraphSha256).toBeDefined();
       if (declarationGraphSha256 === undefined) {
@@ -341,17 +353,6 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
           declarationGraphSha256,
         ),
       ).toMatchObject({ tag: "found" });
-      const savingThrowTypeHelp = execFileSync(
-        process.execPath,
-        [join(destination, "public-sdk-type-help.mjs"), "savingThrowOutcome"],
-        { cwd: destination, encoding: "utf8" },
-      );
-      expect(savingThrowTypeHelp).toContain(
-        'readonly kind: "savingThrowOutcome"',
-      );
-      expect(savingThrowTypeHelp).toContain(
-        "type BattleSavingThrowOutcomeValue =",
-      );
 
       writeFileSync(
         join(destination, "attempt.ts"),
@@ -427,6 +428,11 @@ export const continueBattle: PlayerContinuation = (context) => {
           frontier: { kind: "acts" },
         },
       });
+      const frontierPath = join(destination, "FRONTIER_FILL_TYPES.md");
+      const initialFrontier = readFileSync(frontierPath, "utf8");
+      expect(initialFrontier).toContain("# Frontier fill types");
+      expect(initialFrontier).toContain(sha256Canonical(initialObservation));
+      expect(initialFrontier).toContain(declarationGraphSha256);
 
       writeFileSync(
         join(destination, "attempt.ts"),
@@ -468,6 +474,18 @@ export const continueBattle: PlayerContinuation = (context) => {
       );
       try {
         writeFileSync(
+          join(requestsDirectory, "malformed.request.json"),
+          "{partial",
+        );
+        const malformedResponsePath = join(
+          responsesDirectory,
+          "malformed.response.json",
+        );
+        await waitForPath(malformedResponsePath);
+        expect(JSON.parse(readFileSync(malformedResponsePath, "utf8"))).toEqual(
+          { tag: "error", message: "Player request is invalid." },
+        );
+        writeFileSync(
           join(destination, "attempt.ts"),
           attemptSource(`  context.sdk.discoverBattleActs(context.session);
   throw new Error("Failure after an observed SDK call");`),
@@ -479,11 +497,10 @@ export const continueBattle: PlayerContinuation = (context) => {
             { cwd: destination, stdio: "pipe" },
           ),
         ).toThrow();
-        expect(
-          JSON.parse(
-            readFileSync(join(destination, "OBSERVATION.json"), "utf8"),
-          ),
-        ).toMatchObject({
+        const executionErrorResponse: unknown = JSON.parse(
+          readFileSync(join(destination, "OBSERVATION.json"), "utf8"),
+        );
+        expect(executionErrorResponse).toMatchObject({
           tag: "error",
           observation: {
             continuation: 1,
@@ -493,6 +510,16 @@ export const continueBattle: PlayerContinuation = (context) => {
             tacticalNote: "",
           },
         });
+        if (
+          typeof executionErrorResponse !== "object" ||
+          executionErrorResponse === null ||
+          !("observation" in executionErrorResponse)
+        ) {
+          throw new Error("Expected the frozen execution observation.");
+        }
+        expect(readFileSync(frontierPath, "utf8")).toContain(
+          sha256Canonical(executionErrorResponse.observation),
+        );
         expect(
           readFileSync(join(destination, "OBSERVATION.json"), "utf8"),
         ).toBe(
@@ -507,6 +534,190 @@ export const continueBattle: PlayerContinuation = (context) => {
           [join(destination, "player-client.mjs"), "attempt.ts"],
           { cwd: destination, stdio: "pipe" },
         );
+        const successfulResponse: unknown = JSON.parse(
+          readFileSync(join(destination, "OBSERVATION.json"), "utf8"),
+        );
+        if (
+          typeof successfulResponse !== "object" ||
+          successfulResponse === null ||
+          !("observation" in successfulResponse)
+        ) {
+          throw new Error("Expected the successful continuation observation.");
+        }
+        expect(readFileSync(frontierPath, "utf8")).toContain(
+          sha256Canonical(successfulResponse.observation),
+        );
+
+        const publishedFrontier = readFileSync(frontierPath, "utf8");
+        appendFileSync(frontierPath, "\nmodel-authored tampering\n");
+        expect(() =>
+          execFileSync(
+            process.execPath,
+            [join(destination, "player-client.mjs"), "attempt.ts"],
+            { cwd: destination, stdio: "pipe" },
+          ),
+        ).toThrow();
+        writeFileSync(frontierPath, publishedFrontier);
+
+        const queuedObservationSha256 = createHash("sha256")
+          .update(readFileSync(join(destination, "OBSERVATION.json"), "utf8"))
+          .digest("hex");
+        for (const requestId of ["a", "b"] as const) {
+          writeFileSync(
+            join(requestsDirectory, `${requestId}.request.json`),
+            `${JSON.stringify({
+              requestId,
+              source: discoveryAttempt,
+              expectedObservationSha256: queuedObservationSha256,
+              expectedFrontierFillTypesSha256: createHash("sha256")
+                .update(publishedFrontier)
+                .digest("hex"),
+            })}\n`,
+          );
+        }
+        const firstQueuedResponsePath = join(
+          responsesDirectory,
+          "a.response.json",
+        );
+        const secondQueuedResponsePath = join(
+          responsesDirectory,
+          "b.response.json",
+        );
+        await waitForPath(firstQueuedResponsePath);
+        await waitForPath(secondQueuedResponsePath);
+        const firstQueuedResponse: unknown = JSON.parse(
+          readFileSync(firstQueuedResponsePath, "utf8"),
+        );
+        const secondQueuedResponse: unknown = JSON.parse(
+          readFileSync(secondQueuedResponsePath, "utf8"),
+        );
+        expect(firstQueuedResponse).toMatchObject({ tag: "ok" });
+        expect(secondQueuedResponse).toEqual({
+          tag: "error",
+          message:
+            "Player request does not follow the latest published observation.",
+        });
+        writeFileSync(
+          join(destination, "OBSERVATION.json"),
+          readFileSync(firstQueuedResponsePath, "utf8"),
+        );
+
+        const observationsPath = join(
+          trustedDestination,
+          "evidence/observations.jsonl",
+        );
+        const latestObservationPublicationPath = join(
+          trustedDestination,
+          "OBSERVATION.json",
+        );
+        const observationsBeforeLatestPublicationFailure = readFileSync(
+          observationsPath,
+          "utf8",
+        )
+          .trim()
+          .split("\n").length;
+        rmSync(latestObservationPublicationPath);
+        mkdirSync(latestObservationPublicationPath);
+        const latestPublicationFailureRequestId =
+          "latest-observation-publication-failure";
+        writeFileSync(
+          join(
+            requestsDirectory,
+            `${latestPublicationFailureRequestId}.request.json`,
+          ),
+          `${JSON.stringify({
+            requestId: latestPublicationFailureRequestId,
+            source: discoveryAttempt,
+            expectedObservationSha256: createHash("sha256")
+              .update(
+                readFileSync(join(destination, "OBSERVATION.json"), "utf8"),
+              )
+              .digest("hex"),
+            expectedFrontierFillTypesSha256: createHash("sha256")
+              .update(readFileSync(frontierPath, "utf8"))
+              .digest("hex"),
+          })}\n`,
+        );
+        const latestPublicationFailureResponsePath = join(
+          responsesDirectory,
+          `${latestPublicationFailureRequestId}.response.json`,
+        );
+        await waitForPath(latestPublicationFailureResponsePath);
+        const latestPublicationFailureResponse: unknown = JSON.parse(
+          readFileSync(latestPublicationFailureResponsePath, "utf8"),
+        );
+        expect(latestPublicationFailureResponse).toMatchObject({
+          tag: "error",
+          observation: { kind: "continue" },
+        });
+        expect(
+          readFileSync(observationsPath, "utf8").trim().split("\n").length,
+        ).toBe(observationsBeforeLatestPublicationFailure + 1);
+        if (
+          typeof latestPublicationFailureResponse !== "object" ||
+          latestPublicationFailureResponse === null ||
+          !("observation" in latestPublicationFailureResponse)
+        ) {
+          throw new Error("Expected the committed latest observation.");
+        }
+        rmSync(latestObservationPublicationPath, { recursive: true });
+        writeFileSync(
+          latestObservationPublicationPath,
+          `${JSON.stringify(latestPublicationFailureResponse.observation, null, 2)}\n`,
+        );
+        writeFileSync(
+          join(destination, "OBSERVATION.json"),
+          readFileSync(latestPublicationFailureResponsePath, "utf8"),
+        );
+        rmSync(
+          join(trustedDestination, "observation-publication-failure.json"),
+        );
+
+        const observationsBeforePublicationFailure = readFileSync(
+          observationsPath,
+          "utf8",
+        )
+          .trim()
+          .split("\n").length;
+        const frontierBeforePublicationFailure = readFileSync(
+          frontierPath,
+          "utf8",
+        );
+        rmSync(frontierPath);
+        mkdirSync(frontierPath);
+        const publicationFailureRequestId = "frontier-publication-failure";
+        writeFileSync(
+          join(
+            requestsDirectory,
+            `${publicationFailureRequestId}.request.json`,
+          ),
+          `${JSON.stringify({
+            requestId: publicationFailureRequestId,
+            source: discoveryAttempt,
+            expectedObservationSha256: createHash("sha256")
+              .update(
+                readFileSync(join(destination, "OBSERVATION.json"), "utf8"),
+              )
+              .digest("hex"),
+            expectedFrontierFillTypesSha256: createHash("sha256")
+              .update(frontierBeforePublicationFailure)
+              .digest("hex"),
+          })}\n`,
+        );
+        const publicationFailureResponsePath = join(
+          responsesDirectory,
+          `${publicationFailureRequestId}.response.json`,
+        );
+        await waitForPath(publicationFailureResponsePath);
+        expect(
+          JSON.parse(readFileSync(publicationFailureResponsePath, "utf8")),
+        ).toMatchObject({ tag: "error" });
+        expect(
+          readFileSync(observationsPath, "utf8").trim().split("\n").length,
+        ).toBe(observationsBeforePublicationFailure + 1);
+        rmSync(frontierPath, { recursive: true });
+        writeFileSync(frontierPath, frontierBeforePublicationFailure);
+        rmSync(join(trustedDestination, "frontier-publication-failure.json"));
       } finally {
         const stopped = new Promise<void>((resolveStopped) => {
           server.once("exit", () => resolveStopped());
@@ -519,7 +730,7 @@ export const continueBattle: PlayerContinuation = (context) => {
           cwd: trustedDestination,
           encoding: "utf8",
         }),
-      ).toContain("2 call(s) matched");
+      ).toContain("5 call(s) matched");
 
       writeFileSync(
         join(destination, "attempt.ts"),
@@ -598,7 +809,106 @@ export const continueBattle: PlayerContinuation = (context) => {
           cwd: trustedDestination,
           encoding: "utf8",
         }),
-      ).toContain("10 call(s) matched");
+      ).toContain("13 call(s) matched");
+
+      const prefixPath = join(
+        trustedDestination,
+        "evidence/frozen-prefix.json",
+      );
+      const prefixBeforeLimit: Readonly<Record<string, unknown>> = JSON.parse(
+        readFileSync(prefixPath, "utf8"),
+      );
+      writeFileSync(
+        prefixPath,
+        `${JSON.stringify({
+          ...prefixBeforeLimit,
+          continuationCount: 128,
+        })}\n`,
+      );
+      writeFileSync(
+        join(destination, "OBSERVATION.json"),
+        readFileSync(
+          join(trustedDestination, "player-published-observation.json"),
+          "utf8",
+        ),
+      );
+      const limitServer = spawn(
+        process.execPath,
+        [supervisor, "serve", requestsDirectory, responsesDirectory],
+        supervisorOptions,
+      );
+      try {
+        expect(
+          execFileSync(
+            process.execPath,
+            [join(destination, "player-client.mjs"), "attempt.ts"],
+            { cwd: destination, encoding: "utf8" },
+          ),
+        ).toContain('"tag": "terminalObstruction"');
+      } finally {
+        const stopped = new Promise<void>((resolveStopped) => {
+          limitServer.once("exit", () => resolveStopped());
+        });
+        limitServer.kill("SIGTERM");
+        await stopped;
+      }
+      expect(JSON.parse(readFileSync(prefixPath, "utf8"))).toMatchObject({
+        run: {
+          kind: "playerObstructed",
+          obstruction: {
+            kind: "continuationLimit",
+            limit: 128,
+            message: "Player continuation limit 128 reached.",
+          },
+        },
+      });
+      writeFileSync(prefixPath, `${JSON.stringify(prefixBeforeLimit)}\n`);
+
+      writeFileSync(
+        join(destination, "attempt.ts"),
+        attemptSource(`  return {
+    kind: "playerConcluded",
+    session: context.session,
+    tacticalNote: "The focused consumer run is complete.",
+    conclusion: " Focused consumer run complete. ",
+  };`),
+      );
+      expect(() =>
+        execFileSync(
+          process.execPath,
+          [supervisor, "attempt", join(destination, "attempt.ts")],
+          supervisorOptions,
+        ),
+      ).toThrow(/Continuation outcome kind or conclusion is invalid/);
+
+      writeFileSync(
+        join(destination, "attempt.ts"),
+        attemptSource(`  context.sdk.discoverBattleActs(context.session);
+  return {
+    kind: "playerConcluded",
+    session: context.session,
+    tacticalNote: "The focused consumer run is complete.",
+    conclusion: "Focused consumer run complete.",
+  };`),
+      );
+      execFileSync(
+        process.execPath,
+        [supervisor, "attempt", join(destination, "attempt.ts")],
+        supervisorOptions,
+      );
+      expect(() =>
+        execFileSync(
+          process.execPath,
+          [supervisor, "attempt", join(destination, "attempt.ts")],
+          supervisorOptions,
+        ),
+      ).toThrow(/already concluded its run/);
+      expect(
+        execFileSync(process.execPath, [supervisor, "replay"], {
+          cwd: trustedDestination,
+          encoding: "utf8",
+        }),
+      ).toContain("14 call(s) matched");
       const callEvidence = readFileSync(
         join(trustedDestination, "evidence/sdk-calls.jsonl"),
         "utf8",
@@ -681,7 +991,7 @@ export const continueBattle: PlayerContinuation = (context) => {
           cwd: trustedDestination,
           encoding: "utf8",
         }),
-      ).toContain("10 call(s) matched");
+      ).toContain("14 call(s) matched");
     },
     CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
   );

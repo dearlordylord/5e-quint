@@ -568,14 +568,12 @@ path duration are retained.
 The first controlled player measurement used one model conversation for all 30
 tactical continuations. Its 6,742,713 input tokens included 6,517,248 cached
 input tokens, showing that the conversation repeatedly carried accumulated tool
-history despite the bounded observation. The player runner therefore starts an
-independent invocation for each frozen continuation. Strategy continuity passes
-only through the bounded tactical note, latest observation, and retained
-ordinary TypeScript source. Each invocation may correct failures before its
-first SDK call, then must stop after recording one observable continuation.
-This changes model-context transport, not SDK execution authority: the
-append-only canonical call transcript and frozen program prefix remain the same
-evidence owners.
+history despite the bounded observation. That result motivated an
+independent-invocation experiment. Strategy continuity passed only through the
+bounded tactical note, latest observation, and retained ordinary TypeScript
+source. This changed model-context transport, not SDK execution authority: the
+append-only canonical call transcript and frozen program prefix remained the
+same evidence owners.
 
 The first three independent invocations used 56,481, 381,737, and 264,660
 input tokens. The second and third invocations repeatedly searched the 5.7-MB
@@ -585,17 +583,16 @@ mean. That run was stopped before a fourth completed invocation and retained at
 `scripts/raw-swarm/out/failed-independent-282-run-1` rather than being reported
 as a successful comparison.
 
-The correction keeps the declaration graph as the type authority but generates
+The correction kept the declaration graph as the type authority and generated
 one hash-linked declaration record for each `BattleFill` discriminant, capped
-at 80 KiB per record and 160 KiB across the artifact. The current graph produces
-53 records totaling 144,070 bytes. The player queries the active hole's record
-through the local read-only `public-sdk-type-help.mjs` utility. The utility reads
-neither the transcript nor the supervisor, performs no SDK operation, and
-exposes no alternative command vocabulary. Player instructions also require one coherent selected subject to
-resolve its downstream holes in the same continuation when returned facts are
-sufficient, so a later invocation does not reconstruct an accepted fill
-prefix. A short independent-invocation measurement must pass before paying for
-the complete controlled run.
+at 80 KiB per record and 160 KiB across the trusted artifact. The current graph
+produces 53 records totaling 144,070 bytes. An initial player-facing query
+utility was removed after the player bypassed the intended bounded protocol and
+read the full artifact. The trusted supervisor now renders only the declarations
+required by the latest observed frontier, bound to the observation and
+declaration-graph hashes. Player instructions require one coherent selected
+subject to resolve downstream holes when facts are already available; otherwise
+the next continuation rereads the newly published observation and frontier.
 
 The next three-invocation gate at `5fdc7ad0f` used 257,425, 180,567, and
 114,240 input tokens (184,077 mean) and 83.1, 70.9, and 50.5 seconds. That is
@@ -622,7 +619,16 @@ accepted this measured reduction on 2026-08-18 rather than requiring the
 original 40% short-gate threshold. The interrupted gate evidence, including a
 fourth completed invocation, is retained at
 `scripts/raw-swarm/out/failed-independent-282-frontier-trial-3`; it is not a
-complete-path result.
+complete-path result. The user then required a complete controlled comparison
+rather than another short gate.
+Six later independent invocations consumed 1,189,210 input tokens and 457.8
+seconds before completion, already exceeding the retained complete-player
+baseline of 449,970 tokens. The independent-invocation loop was therefore
+removed rather than extended with another context protocol. The current
+candidate returns to one persistent invocation while retaining bounded trusted
+observations, atomic hash-bound frontier help, a supervisor-owned continuation
+limit, and append-only evidence. Its performance is deliberately unclaimed
+until the required fresh complete run finishes.
 
 The fixed 88-prefix benchmark measured 430,212 ms of cumulative replay, so the
 60-second cache gate is met. Cache admission remains deferred until the fresh

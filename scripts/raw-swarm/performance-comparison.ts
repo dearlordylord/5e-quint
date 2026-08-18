@@ -16,7 +16,7 @@ import {
   type ModelInvocationPhase,
 } from "./model-telemetry.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
-import { playerContinuationEvidence } from "./player-invocation-loop.ts";
+import { playerContinuationEvidence } from "./player-continuation-evidence.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import {
   isJsonRecord,
@@ -423,9 +423,9 @@ export function summarizeControlledRun(
   const phases = Either.isRight(phaseRecord)
     ? phaseRecord.right
     : fail(`Unable to construct model invocation phases: ${phaseRecord.left}`);
-  if (phases.player.invocationCount !== continuations.length) {
+  if (continuations.length > 0 && phases.player.invocationCount === 0) {
     fail(
-      "Player invocation evidence must map one-to-one to continuation observations.",
+      "Recorded player continuations require at least one player invocation.",
     );
   }
   const modelElapsed = MODEL_INVOCATION_PHASES.reduce(
@@ -955,9 +955,9 @@ export function readControlledPerformance(
   )
     fail(`Controlled performance evidence ${path} has incomplete phases.`);
   const run = decoded;
-  if (run.phases.player.invocationCount !== run.continuations) {
+  if (run.continuations > 0 && run.phases.player.invocationCount === 0) {
     fail(
-      "Player invocation evidence must map one-to-one to continuation observations.",
+      "Recorded player continuations require at least one player invocation.",
     );
   }
   const sourceMatches = (source: ArtifactAuthority): boolean => {

@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 
 import { afterEach } from "vitest";
 import { describe, expect, test } from "vitest";
@@ -9,6 +9,7 @@ import { catalogSections } from "./sdk-review-packet-cli.ts";
 import {
   encodeSdkReviewPacket,
   sdkReviewPacketHeaderEvidence,
+  sdkReviewPacketReadyArtifacts,
   sdkReviewPacketSource,
   validateSdkReviewPacket,
 } from "./sdk-review-packet.ts";
@@ -158,11 +159,44 @@ function validatedPacketFixture() {
   });
   if (sourceResult.tag === "invalid") throw new Error(sourceResult.message);
   const source = sourceResult.source;
+  const runArtifactContents = [
+    ["SCENARIO.md", "# Scenario\n"],
+    ["SCENARIO_REVIEW.json", '{"outcome":"ready"}\n'],
+    ["evidence/characters.ts", "export const characters = [];\n"],
+    ["evidence/setup.ts", "export const setup = {};\n"],
+    ["evidence/program.ts", "export const program = true;\n"],
+    [
+      "evidence/frozen-prefix.json",
+      `${JSON.stringify({
+        run: {
+          kind: "playerObstructed",
+          obstruction: {
+            kind: "continuationLimit",
+            limit: 128,
+            message: "Player continuation limit 128 reached.",
+          },
+        },
+      })}\n`,
+    ],
+    ["OBSERVATION.json", '{"tag":"terminalObstruction"}\n'],
+    ["evidence/agent-final.txt", "Player stopped at the limit.\n"],
+  ] as const;
+  const runArtifacts = runArtifactContents.map(([path, content]) => {
+    const absolutePath = resolve(directory, path);
+    mkdirSync(dirname(absolutePath), { recursive: true });
+    writeFileSync(absolutePath, content);
+    const result = sdkReviewPacketSource({
+      path: relative(repoRoot, absolutePath),
+      content,
+    });
+    if (result.tag === "invalid") throw new Error(result.message);
+    return result.source;
+  });
   const packet = encodeSdkReviewPacket({
     audit: verified.audit,
     retainedHeaderEvidence: sdkReviewPacketHeaderEvidence(parsed.value.header),
     currentTurnProjections: projections.projections,
-    runArtifacts: [],
+    runArtifacts,
     domainAuthorities: [],
     rawAuthorities: [source],
   });
@@ -171,6 +205,56 @@ function validatedPacketFixture() {
 }
 
 describe("SDK review packet", () => {
+  test("selects terminal evidence without duplicating obstruction state", () => {
+    expect(
+      sdkReviewPacketReadyArtifacts({
+        run: {
+          kind: "playerObstructed",
+          obstruction: {
+            kind: "continuationLimit",
+            limit: 128,
+            message: "Player continuation limit 128 reached.",
+          },
+        },
+        finalArtifactExists: false,
+      }),
+    ).toMatchObject({
+      tag: "valid",
+      roles: expect.arrayContaining(["evidence/frozen-prefix.json"]),
+    });
+    expect(
+      sdkReviewPacketReadyArtifacts({
+        run: { kind: "playerConcluded", conclusion: "Done." },
+        finalArtifactExists: true,
+      }),
+    ).toMatchObject({
+      tag: "valid",
+      roles: expect.arrayContaining([
+        "evidence/frozen-prefix.json",
+        "evidence/final.json",
+      ]),
+    });
+    expect(
+      sdkReviewPacketReadyArtifacts({
+        run: { kind: "active" },
+        finalArtifactExists: false,
+      }),
+    ).toMatchObject({ tag: "invalid" });
+    expect(
+      sdkReviewPacketReadyArtifacts({
+        run: {
+          kind: "playerObstructed",
+          obstruction: {
+            kind: "continuationLimit",
+            limit: 128,
+            message: "Player continuation limit 128 reached.",
+          },
+        },
+        finalArtifactExists: true,
+      }),
+    ).toMatchObject({ tag: "invalid" });
+  });
+
   test("retains numbered hash-linked authorities deterministically", () => {
     const rawResult = sdkReviewPacketSource({
       path: ".references/srd-5.2.1/Example.md",
@@ -269,6 +353,25 @@ describe("SDK review packet", () => {
       tag: "invalid",
       message:
         "Review evidence packet current-turn projections do not match the exact transcript.",
+    });
+  });
+
+  test("rejects ready evidence without canonical terminal state", () => {
+    const fixture = validatedPacketFixture();
+    expect(
+      validateSdkReviewPacket(
+        {
+          ...fixture.packet,
+          runArtifacts: fixture.packet.runArtifacts.filter(
+            ({ path }) => !path.endsWith("/evidence/frozen-prefix.json"),
+          ),
+        },
+        fixture.audit,
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Review evidence packet requires one canonical player terminal state.",
     });
   });
 

@@ -10,25 +10,19 @@ invent a second command vocabulary, inspect repository implementation or tests,
 or import unrecorded runtime operations.
 
 The declaration graph under `declarations/` is the source of the supplied
-public SDK types. Do not search that graph. Run
-`node public-sdk-type-help.mjs <fill-kind>` for the bounded declaration of one
-`BattleFill` branch and the required public types reachable from it. For
-example, `node public-sdk-type-help.mjs savingThrowOutcome` prints the exact
-Saving Throw outcome authoring shape. The generated type-help artifact is
-derived from those declarations; it is not a second command vocabulary. Query
-only a fill kind requested by the active hole, and do not repeat a successful
-query.
-
-`FRONTIER_FILL_TYPES.md` already contains exact declarations for every fill
-kind on the observed frontier. Use the command only for a new downstream hole
-surfaced by an SDK call inside this continuation.
+public SDK types. Do not search that graph. The trusted supervisor derives
+`FRONTIER_FILL_TYPES.md` from it after every recorded continuation. That file
+contains the exact declarations for every fill kind on the current observed
+frontier; it is evidence about the public SDK, not a second command vocabulary.
 
 When `context.session.battle.state.subjectResolutionPhase.kind` is
 `subjectSelection`, call `context.sdk.discoverBattleActs` inside the
 continuation. Select and attempt a surfaced act before returning; if none is
 surfaced, report that exact state rather than inventing an action. When the
 phase is `subjectContinuation`, continue its retained subject and fill prefix;
-do not call fresh act discovery.
+do not call fresh act discovery. The session retains the subject but not the
+accepted fill prefix, so carry the complete prefix forward from the previous
+attempt source.
 
 For a repeated-damage allocation, the later `rolledDice` fill has one group for
 each entry in the earlier `spellTargetAllocation.value.allocations` array, in
@@ -212,12 +206,14 @@ A `needsHoles` result means the selected subject is still in progress. A fresh
 act discovery may then be empty by design; that is not an obstruction. Always
 carry `result.session` forward, but do not treat it as saved fill history: a
 `needsHoles` session does not persist the answer prefix for the next replay.
-Resolve the selected subject's downstream holes inside the same authored
-tactical continuation whenever its returned facts determine the next answer.
-Do not end a continuation merely to report `needsHoles`. Keep every accepted
-fill in canonical order. On the next call, use the result's subject and submit
-the complete accumulated prefix plus the newly requested fill(s), not only the
-latest fill(s):
+When the current source already has the facts and declarations needed for a
+downstream answer, it may resolve that answer in the same authored
+continuation. Otherwise return `kind: "continue"` with the latest session. The
+supervisor then records the continuation and rewrites `OBSERVATION.json` and
+`FRONTIER_FILL_TYPES.md`; reread both before authoring the next continuation.
+Keep every accepted fill in canonical order. On the next resolution call, use
+the result's subject and submit the complete accumulated prefix plus the newly
+requested fill(s), not only the latest fill(s):
 
 ```ts
 const acceptedFills = [targetFill];

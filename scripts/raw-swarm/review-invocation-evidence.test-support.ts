@@ -59,6 +59,11 @@ export function controlledReviewEvidenceFixture(input: {
   const scenarioPath = resolve(runDirectory, "SCENARIO.md");
   const scenarioReviewPath = resolve(runDirectory, "SCENARIO_REVIEW.json");
   const transcriptPath = resolve(evidenceDirectory, "sdk-calls.jsonl");
+  const programPath = resolve(evidenceDirectory, "program.ts");
+  const frozenPrefixPath = resolve(evidenceDirectory, "frozen-prefix.json");
+  const finalPath = resolve(evidenceDirectory, "final.json");
+  const observationPath = resolve(runDirectory, "OBSERVATION.json");
+  const agentFinalPath = resolve(evidenceDirectory, "agent-final.txt");
   const replaySupervisorPath = resolve(runDirectory, "replay-supervisor.mjs");
   const reviewPath = resolve(input.directory, "review.json");
   const auditPath = resolve(input.directory, "review.audit.jsonl");
@@ -105,11 +110,30 @@ export function controlledReviewEvidenceFixture(input: {
     policyReview: scenarioCompositeResults[1]!.artifactPolicy,
   })}\n`;
   const replaySupervisor = "export const replay = true;\n";
+  const program = "export const program = true;\n";
+  const conclusion = "Controlled evidence fixture complete.";
+  const frozenPrefix = `${JSON.stringify({
+    run: { kind: "playerConcluded", conclusion },
+  })}\n`;
+  const final = `${JSON.stringify({
+    kind: "playerConcluded",
+    conclusion,
+  })}\n`;
+  const observation = `${JSON.stringify({
+    kind: "playerConcluded",
+    conclusion,
+  })}\n`;
+  const agentFinal = `${conclusion}\n`;
   writeFileSync(charactersPath, characters);
   writeFileSync(setupPath, setup);
   writeFileSync(scenarioPath, scenario);
   writeFileSync(scenarioReviewPath, scenarioReview);
   writeFileSync(replaySupervisorPath, replaySupervisor);
+  writeFileSync(programPath, program);
+  writeFileSync(frozenPrefixPath, frozenPrefix);
+  writeFileSync(finalPath, final);
+  writeFileSync(observationPath, observation);
+  writeFileSync(agentFinalPath, agentFinal);
   const reviewInput = (
     index: number,
     sourceGitSha: string,
@@ -237,20 +261,33 @@ export function controlledReviewEvidenceFixture(input: {
     holeEvidenceSource: { kind: "recordedCurrentRuntime" },
   });
   if (projections.tag === "invalid") throw new Error(projections.message);
-  const scenarioReviewSource = sdkReviewPacketSource({
-    path: relative(repoRoot, scenarioReviewPath),
-    content: scenarioReview,
+  const runArtifacts = (
+    [
+      [scenarioPath, scenario],
+      [scenarioReviewPath, scenarioReview],
+      [charactersPath, characters],
+      [setupPath, setup],
+      [programPath, program],
+      [frozenPrefixPath, frozenPrefix],
+      [observationPath, observation],
+      [agentFinalPath, agentFinal],
+      [finalPath, final],
+    ] as const
+  ).map(([path, content]) => {
+    const artifact = sdkReviewPacketSource({
+      path: relative(repoRoot, path),
+      content,
+    });
+    if (artifact.tag === "invalid") throw new Error(artifact.message);
+    return artifact.source;
   });
-  if (scenarioReviewSource.tag === "invalid") {
-    throw new Error(scenarioReviewSource.message);
-  }
   const packet = encodeSdkReviewPacket({
     audit: audit.audit,
     retainedHeaderEvidence: sdkReviewPacketHeaderEvidence(
       parsedTranscript.value.header,
     ),
     currentTurnProjections: projections.projections,
-    runArtifacts: [scenarioReviewSource.source],
+    runArtifacts,
     domainAuthorities: [],
     rawAuthorities: [],
   });

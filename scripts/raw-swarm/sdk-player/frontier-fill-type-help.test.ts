@@ -77,13 +77,13 @@ describe("frontier fill type help", () => {
     expect(
       frontierFillTypeHelp({
         observation,
+        observationSha256: "b".repeat(64),
         artifact,
         declarationGraphSha256: artifact.declarationGraphSha256,
       }),
     ).toEqual({
       tag: "valid",
-      markdown:
-        "# Frontier fill types\n\nThe previous resolution was rejected and requests no fills. Inspect `OBSERVATION.json` for the exact rejection before retrying.\n",
+      markdown: `<!-- raw-swarm-frontier\nobservation-sha256: ${"b".repeat(64)}\ndeclaration-graph-sha256: ${artifact.declarationGraphSha256}\n-->\n\n# Frontier fill types\n\nThe previous resolution was rejected and requests no fills. Inspect \`OBSERVATION.json\` for the exact rejection before retrying.\n`,
     });
   });
 
@@ -98,6 +98,7 @@ describe("frontier fill type help", () => {
             },
           },
         },
+        observationSha256: "b".repeat(64),
         artifact,
         declarationGraphSha256: artifact.declarationGraphSha256,
       }),

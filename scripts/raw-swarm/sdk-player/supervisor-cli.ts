@@ -5,12 +5,14 @@ import {
   appendFileSync,
   closeSync,
   existsSync,
+  linkSync,
   mkdirSync,
   openSync,
   readFileSync,
   readdirSync,
   renameSync,
   rmSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -53,6 +55,8 @@ import {
   playerCurrentTurnProjection,
   playerInitialTurnProjection,
 } from "./player-turn-projection.ts";
+import { frontierFillTypeHelp } from "./frontier-fill-type-help.ts";
+import { publicSdkDeclarationGraphSha256 } from "./public-sdk-type-help.ts";
 import {
   parseSdkTranscript,
   sdkInitialTurnProjectionEvidence,
@@ -61,6 +65,10 @@ import {
   type SdkPlayerOperation,
 } from "./sdk-transcript.ts";
 import { canonicalJson, sha256Canonical, sha256Text } from "../transcript.ts";
+import {
+  PlayerRunStateSchema,
+  playerContinuationAdmission,
+} from "../player-continuation-evidence.ts";
 
 type SupervisorTimingRecord = {
   readonly schemaVersion: 1;
@@ -81,12 +89,28 @@ const observationsPath = resolve("evidence/observations.jsonl");
 const initialObservationPath = resolve("evidence/initial-observation.json");
 const latestObservationPath = resolve("OBSERVATION.json");
 const playerResponsePath = resolve("player-response.json");
+const playerPublishedObservationPath = resolve(
+  "player-published-observation.json",
+);
+const playerPublishedFrontierPath = resolve("player-published-frontier.json");
+const frontierPublicationFailurePath = resolve(
+  "frontier-publication-failure.json",
+);
+const observationPublicationFailurePath = resolve(
+  "observation-publication-failure.json",
+);
 const finalPath = resolve("evidence/final.json");
 const supervisorTimingsPath = resolve("evidence/supervisor-timings.jsonl");
 const playerRoot = resolve(process.env.RAW_SWARM_PLAYER_ROOT ?? process.cwd());
 const submissionsPath = resolve("submissions");
 const charactersPath = resolve("evidence/characters.ts");
 const setupPath = resolve("evidence/setup.ts");
+const typeHelpArtifactPath = resolve("FILL_TYPES.json");
+const declarationsPath = resolve("declarations");
+const playerFrontierFillTypesPath = resolve(
+  playerRoot,
+  "FRONTIER_FILL_TYPES.md",
+);
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 const NonNegativeIntegerSchema = Schema.Number.pipe(
@@ -97,13 +121,7 @@ const PrefixSchema = Schema.Struct({
   frozenByteLength: NonNegativeIntegerSchema,
   frozenSha256: HashSchema,
   continuationCount: NonNegativeIntegerSchema,
-  run: Schema.Union(
-    Schema.Struct({ kind: Schema.Literal("active") }),
-    Schema.Struct({
-      kind: Schema.Literal("playerConcluded"),
-      conclusion: Schema.NonEmptyTrimmedString,
-    }),
-  ),
+  run: PlayerRunStateSchema,
 });
 type FrozenPrefix = Schema.Schema.Type<typeof PrefixSchema>;
 
@@ -157,9 +175,100 @@ function atomicJson(path: string, value: unknown): void {
   renameSync(temporaryPath, path);
 }
 
-function exclusiveJson(path: string, value: unknown): void {
+function atomicAppendJsonLine(path: string, value: unknown): void {
+  const previous = existsSync(path) ? readFileSync(path, "utf8") : "";
+  const temporaryPath = `${path}.${randomUUID()}.next`;
   const descriptor = openSync(
-    path,
+    temporaryPath,
+    constants.O_CREAT |
+      constants.O_EXCL |
+      constants.O_NOFOLLOW |
+      constants.O_WRONLY,
+    0o600,
+  );
+  try {
+    writeFileSync(descriptor, `${previous}${JSON.stringify(value)}\n`, "utf8");
+  } finally {
+    closeSync(descriptor);
+  }
+  try {
+    renameSync(temporaryPath, path);
+  } catch (error) {
+    rmSync(temporaryPath, { force: true });
+    throw error;
+  }
+}
+
+function playerFrontierFillTypeHelp(observation: unknown): string {
+  try {
+    const declarationGraphSha256 =
+      publicSdkDeclarationGraphSha256(declarationsPath);
+    if (declarationGraphSha256 === undefined) {
+      fail("Public SDK declaration graph is empty.");
+    }
+    const artifact: unknown = JSON.parse(
+      readFileSync(typeHelpArtifactPath, "utf8"),
+    );
+    const help = frontierFillTypeHelp({
+      observation,
+      observationSha256: sha256Canonical(jsonValue(observation)),
+      artifact,
+      declarationGraphSha256,
+    });
+    if (help.tag === "invalid") fail(help.message);
+    return help.markdown;
+  } catch (error) {
+    atomicJson(frontierPublicationFailurePath, {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+}
+
+function publishLatestPlayerObservation(observation: unknown): void {
+  try {
+    atomicJson(latestObservationPath, observation);
+  } catch (error) {
+    atomicJson(observationPublicationFailurePath, {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+}
+
+function publishPlayerFrontierFillTypeHelp(markdown: string): void {
+  const temporaryPath = `${playerFrontierFillTypesPath}.${randomUUID()}.next`;
+  const descriptor = openSync(
+    temporaryPath,
+    constants.O_CREAT |
+      constants.O_EXCL |
+      constants.O_NOFOLLOW |
+      constants.O_WRONLY,
+    0o600,
+  );
+  try {
+    writeFileSync(descriptor, markdown, "utf8");
+  } finally {
+    closeSync(descriptor);
+  }
+  try {
+    renameSync(temporaryPath, playerFrontierFillTypesPath);
+    atomicJson(playerPublishedFrontierPath, {
+      sha256: sha256Text(markdown),
+    });
+  } catch (error) {
+    rmSync(temporaryPath, { force: true });
+    atomicJson(frontierPublicationFailurePath, {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+}
+
+function exclusiveJson(path: string, value: unknown): void {
+  const temporaryPath = `${path}.${randomUUID()}.next`;
+  const descriptor = openSync(
+    temporaryPath,
     constants.O_CREAT |
       constants.O_EXCL |
       constants.O_NOFOLLOW |
@@ -170,6 +279,11 @@ function exclusiveJson(path: string, value: unknown): void {
     writeFileSync(descriptor, `${JSON.stringify(value, null, 2)}\n`, "utf8");
   } finally {
     closeSync(descriptor);
+  }
+  try {
+    linkSync(temporaryPath, path);
+  } finally {
+    unlinkSync(temporaryPath);
   }
 }
 
@@ -189,10 +303,16 @@ function verifyFrozenPrefix(): FrozenPrefix {
   if (byteLength !== prefix.frozenByteLength || hash !== prefix.frozenSha256) {
     fail("Previously observed SDK program source was modified.");
   }
-  if (prefix.run.kind === "playerConcluded") {
-    fail(`Player has already concluded its run: ${prefix.run.conclusion}`);
-  }
-  return prefix;
+  return Match.value(prefix.run).pipe(
+    Match.when({ kind: "active" }, () => prefix),
+    Match.when({ kind: "playerConcluded" }, ({ conclusion }) =>
+      fail(`Player has already concluded its run: ${conclusion}`),
+    ),
+    Match.when({ kind: "playerObstructed" }, ({ obstruction }) =>
+      fail(`Player run is obstructed: ${obstruction.message}`),
+    ),
+    Match.exhaustive,
+  );
 }
 
 async function initialize(
@@ -322,9 +442,12 @@ async function initialize(
         projection: initialProjection.projection,
         tacticalNote: "",
       };
+      const frontierFillTypeHelp = playerFrontierFillTypeHelp(observation);
       atomicJson(latestObservationPath, observation);
       atomicJson(initialObservationPath, observation);
       atomicJson(resolve(playerRoot, "OBSERVATION.json"), observation);
+      atomicJson(playerPublishedObservationPath, observation);
+      publishPlayerFrontierFillTypeHelp(frontierFillTypeHelp);
     }),
     Match.exhaustive,
   );
@@ -815,7 +938,8 @@ function validateOutcome(
   if (
     candidate.kind === "playerConcluded" &&
     typeof candidate.conclusion === "string" &&
-    candidate.conclusion.trim().length > 0
+    candidate.conclusion.length > 0 &&
+    candidate.conclusion === candidate.conclusion.trim()
   ) {
     return {
       kind: "playerConcluded",
@@ -828,6 +952,11 @@ function validateOutcome(
 }
 
 function retainedPlayerObservation(): unknown | undefined {
+  if (existsSync(observationsPath)) {
+    const lines = readFileSync(observationsPath, "utf8").trim().split("\n");
+    const last = lines.at(-1);
+    if (last !== undefined && last.length > 0) return JSON.parse(last);
+  }
   return existsSync(latestObservationPath)
     ? JSON.parse(readFileSync(latestObservationPath, "utf8"))
     : undefined;
@@ -843,7 +972,26 @@ function tacticalNoteBeforeContinuation(): string {
 }
 
 async function runSubmittedSource(source: string): Promise<unknown> {
+  if (
+    existsSync(frontierPublicationFailurePath) ||
+    existsSync(observationPublicationFailurePath)
+  ) {
+    fail("Player observation publication previously failed.");
+  }
   const prefix = verifyFrozenPrefix();
+  const admission = playerContinuationAdmission(prefix.continuationCount);
+  if (admission.tag === "limitReached") {
+    const obstruction = {
+      kind: "continuationLimit" as const,
+      limit: admission.limit,
+      message: `Player continuation limit ${String(admission.limit)} reached.`,
+    };
+    atomicJson(prefixPath, {
+      ...prefix,
+      run: { kind: "playerObstructed", obstruction },
+    } satisfies FrozenPrefix);
+    fail(obstruction.message);
+  }
   const authored = authoredAttemptBody(source);
   if (authored.tag === "invalid") fail(authored.message);
   mkdirSync(submissionsPath, { recursive: true });
@@ -882,6 +1030,7 @@ async function runSubmittedSource(source: string): Promise<unknown> {
   const continuationCalls: SdkCallRecord[] = [];
   let sdkExecutionMilliseconds = 0;
   let evidenceWritingMilliseconds = 0;
+  let observationCommitted = false;
   const appendSupervisorTiming = (continuation: number): void => {
     appendFileSync(
       supervisorTimingsPath,
@@ -1065,9 +1214,12 @@ async function runSubmittedSource(source: string): Promise<unknown> {
         ? { conclusion: outcome.conclusion }
         : {}),
     };
+    const frontierFillTypeHelp = playerFrontierFillTypeHelp(observation);
     const observationWritingStarted = performance.now();
-    appendFileSync(observationsPath, `${JSON.stringify(observation)}\n`);
-    atomicJson(latestObservationPath, observation);
+    atomicAppendJsonLine(observationsPath, observation);
+    observationCommitted = true;
+    publishLatestPlayerObservation(observation);
+    publishPlayerFrontierFillTypeHelp(frontierFillTypeHelp);
     if (outcome.kind === "playerConcluded") {
       const completedPrefix = readPrefix();
       atomicJson(prefixPath, {
@@ -1082,7 +1234,7 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     console.log(JSON.stringify(observation, null, 2));
     return observation;
   } catch (error) {
-    if (frozenContinuation !== undefined) {
+    if (frozenContinuation !== undefined && !observationCommitted) {
       const tacticalNote = tacticalNoteBeforeContinuation();
       const projected = playerCurrentTurnProjection({
         continuation: frozenContinuation,
@@ -1112,8 +1264,11 @@ async function runSubmittedSource(source: string): Promise<unknown> {
         Match.exhaustive,
       );
       const observationWritingStarted = performance.now();
-      appendFileSync(observationsPath, `${JSON.stringify(observation)}\n`);
-      atomicJson(latestObservationPath, observation);
+      atomicAppendJsonLine(observationsPath, observation);
+      observationCommitted = true;
+      publishLatestPlayerObservation(observation);
+      const frontierFillTypeHelp = playerFrontierFillTypeHelp(observation);
+      publishPlayerFrontierFillTypeHelp(frontierFillTypeHelp);
       evidenceWritingMilliseconds +=
         performance.now() - observationWritingStarted;
       appendSupervisorTiming(frozenContinuation);
@@ -1139,14 +1294,48 @@ async function serveRequests(
         ".response.json",
       );
       const responsePath = resolve(responsesDirectory, responseName);
-      const request: unknown = JSON.parse(readFileSync(requestPath, "utf8"));
+      const request: unknown = (() => {
+        try {
+          return JSON.parse(readFileSync(requestPath, "utf8"));
+        } catch {
+          return undefined;
+        }
+      })();
+      const continuationCountBeforeRequest = readPrefix().continuationCount;
       const response = await (async (): Promise<unknown> => {
         if (
           !isRecord(request) ||
           typeof request.requestId !== "string" ||
-          typeof request.source !== "string"
+          typeof request.source !== "string" ||
+          typeof request.expectedObservationSha256 !== "string" ||
+          !/^[0-9a-f]{64}$/.test(request.expectedObservationSha256) ||
+          typeof request.expectedFrontierFillTypesSha256 !== "string" ||
+          !/^[0-9a-f]{64}$/.test(request.expectedFrontierFillTypesSha256)
         ) {
           return { tag: "error", message: "Player request is invalid." };
+        }
+        if (
+          request.expectedObservationSha256 !==
+          sha256Text(readFileSync(playerPublishedObservationPath, "utf8"))
+        ) {
+          return {
+            tag: "error",
+            message:
+              "Player request does not follow the latest published observation.",
+          };
+        }
+        const publishedFrontier: unknown = JSON.parse(
+          readFileSync(playerPublishedFrontierPath, "utf8"),
+        );
+        if (
+          !isRecord(publishedFrontier) ||
+          publishedFrontier.sha256 !== request.expectedFrontierFillTypesSha256
+        ) {
+          return {
+            tag: "error",
+            message:
+              "Player request does not follow the latest published frontier fill types.",
+          };
         }
         const attemptPath = resolve(playerRoot, "attempt.ts");
         if (readFileSync(attemptPath, "utf8") !== request.source) {
@@ -1158,7 +1347,18 @@ async function serveRequests(
             observation: await runSubmittedSource(request.source),
           };
         } catch (error) {
-          const observation = retainedPlayerObservation();
+          const terminalState = readPrefix().run;
+          if (terminalState.kind === "playerObstructed") {
+            return {
+              tag: "terminalObstruction",
+              obstruction: terminalState.obstruction,
+            };
+          }
+          const continuationWasRecorded =
+            readPrefix().continuationCount > continuationCountBeforeRequest;
+          const observation = continuationWasRecorded
+            ? retainedPlayerObservation()
+            : undefined;
           return {
             tag: "error",
             message: error instanceof Error ? error.message : String(error),
@@ -1166,7 +1366,14 @@ async function serveRequests(
           };
         }
       })();
-      atomicJson(playerResponsePath, response);
+      if (
+        readPrefix().continuationCount > continuationCountBeforeRequest &&
+        isRecord(response) &&
+        isRecord(response.observation)
+      ) {
+        atomicJson(playerResponsePath, response);
+        atomicJson(playerPublishedObservationPath, response);
+      }
       exclusiveJson(responsePath, response);
       renameSync(requestPath, `${requestPath}.processed`);
     }

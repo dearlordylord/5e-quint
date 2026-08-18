@@ -10,7 +10,6 @@ import {
   openSync,
   readFileSync,
   rmSync,
-  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -20,8 +19,6 @@ import {
   createConsumerCodexHome,
 } from "./sdk-player/consumer-codex-profile.ts";
 import { buildConsumerDistribution } from "./sdk-player/consumer-distribution.ts";
-import { frontierFillTypeHelp } from "./sdk-player/frontier-fill-type-help.ts";
-import { publicSdkDeclarationGraphSha256 } from "./sdk-player/public-sdk-type-help.ts";
 import {
   parseSdkTranscript,
   sdkInitialTurnProjectionEvidence,
@@ -39,12 +36,10 @@ import {
 import { Either, Match, Schema } from "effect";
 import { runCodexInvocation } from "./model-telemetry.ts";
 import {
+  PlayerRunStateSchema,
   playerContinuationEvidence,
-  playerInvocationArtifactNames,
-  runPlayerInvocationLoop,
   type PlayerEvidenceState,
-  type PlayerInvocationExit,
-} from "./player-invocation-loop.ts";
+} from "./player-continuation-evidence.ts";
 
 const PLAYER_MODEL = "gpt-5.6-sol";
 const PLAYER_REASONING_EFFORT = "medium";
@@ -73,7 +68,6 @@ function retainRun(player: string, trusted: string, output: string): void {
     "SCENARIO.md",
     "SCENARIO_REVIEW.json",
     "OBSERVATION.json",
-    "agent-final.txt",
     "agent.log",
     "attempt.ts",
   ];
@@ -160,26 +154,45 @@ function playerEvidenceState(
       resolve(player, "OBSERVATION.json"),
     );
   }
-  return {
-    tag: existsSync(resolve(trusted, "evidence/final.json"))
-      ? "concluded"
-      : "active",
-    recordedContinuations: continuationEvidence.recordedContinuations,
-  };
-}
-
-function playerInvocationExit(
-  result: ReturnType<typeof runCodexInvocation>,
-): PlayerInvocationExit {
-  if (result.error !== undefined) {
-    return { tag: "failedToStart", message: result.error.message };
+  const prefix = Schema.decodeUnknownEither(
+    Schema.Struct({ run: PlayerRunStateSchema }),
+  )(
+    JSON.parse(
+      readFileSync(resolve(trusted, "evidence/frozen-prefix.json"), "utf8"),
+    ),
+  );
+  if (Either.isLeft(prefix)) fail("Player frozen-prefix evidence is invalid.");
+  const finalArtifactExists = existsSync(
+    resolve(trusted, "evidence/final.json"),
+  );
+  if ((prefix.right.run.kind === "playerConcluded") !== finalArtifactExists) {
+    fail("Player terminal state and final artifact disagree.");
   }
-  if (result.signal !== null) {
-    return { tag: "signaled", signal: result.signal };
-  }
-  return result.status === 0
-    ? { tag: "completed" }
-    : { tag: "exitedWithFailure", status: result.status ?? 1 };
+  return Match.value(prefix.right.run).pipe(
+    Match.when(
+      { kind: "active" },
+      (): PlayerEvidenceState => ({
+        tag: "active",
+        recordedContinuations: continuationEvidence.recordedContinuations,
+      }),
+    ),
+    Match.when(
+      { kind: "playerConcluded" },
+      (): PlayerEvidenceState => ({
+        tag: "concluded",
+        recordedContinuations: continuationEvidence.recordedContinuations,
+      }),
+    ),
+    Match.when(
+      { kind: "playerObstructed" },
+      ({ obstruction }): PlayerEvidenceState => ({
+        tag: "obstructed",
+        obstruction,
+        recordedContinuations: continuationEvidence.recordedContinuations,
+      }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 async function main(args: readonly string[]): Promise<void> {
@@ -264,15 +277,6 @@ async function main(args: readonly string[]): Promise<void> {
       trustedDestination: trusted,
       scenarioPath,
     });
-    const typeHelpArtifact: unknown = JSON.parse(
-      readFileSync(resolve(scratch, "FILL_TYPES.json"), "utf8"),
-    );
-    const declarationGraphSha256 = publicSdkDeclarationGraphSha256(
-      resolve(scratch, "declarations"),
-    );
-    if (declarationGraphSha256 === undefined) {
-      fail("Public SDK declaration graph is empty.");
-    }
     copyFileSync(scenarioReviewPath, resolve(scratch, "SCENARIO_REVIEW.json"));
     mkdirSync(resolve(trusted, "evidence"));
     copyFileSync(charactersPath, resolve(trusted, "evidence/characters.ts"));
@@ -336,101 +340,63 @@ async function main(args: readonly string[]): Promise<void> {
     const permissionArgs = profileAvailable
       ? ([] as const)
       : (["--dangerously-bypass-approvals-and-sandbox"] as const);
-    const loop = runPlayerInvocationLoop({
-      evidenceState: () => playerEvidenceState(trusted, scratch),
-      invoke: (invocation) => {
-        const observation: unknown = JSON.parse(
-          readFileSync(resolve(scratch, "OBSERVATION.json"), "utf8"),
-        );
-        const fillTypeHelp = frontierFillTypeHelp({
-          observation,
-          artifact: typeHelpArtifact,
-          declarationGraphSha256,
-        });
-        if (fillTypeHelp.tag === "invalid") fail(fillTypeHelp.message);
-        writeFileSync(
-          resolve(scratch, "FRONTIER_FILL_TYPES.md"),
-          fillTypeHelp.markdown,
-        );
-        const names = playerInvocationArtifactNames(invocation);
-        const agentLogPath = resolve(trusted, "evidence", names.log);
-        const agentEventsPath = resolve(trusted, "evidence", names.events);
-        const agentFinalPath = resolve(trusted, "evidence", names.finalMessage);
-        const result = runCodexInvocation({
-          args: [
-            "exec",
-            "-C",
-            scratch,
-            ...permissionArgs,
-            "--skip-git-repo-check",
-            "--ephemeral",
-            "--json",
-            "--disable",
-            "tool_call_mcp_elicitation",
-            "-m",
-            PLAYER_MODEL,
-            "-c",
-            `model_reasoning_effort="${PLAYER_REASONING_EFFORT}"`,
-            "--output-last-message",
-            agentFinalPath,
-            [
-              "Read PLAYER.md, SCENARIO.md, OBSERVATION.json, FRONTIER_FILL_TYPES.md, and attempt.ts.",
-              "Act as the player described there and author exactly one tactical continuation.",
-              "Edit only attempt.ts and run `node player-client.mjs attempt.ts`.",
-              "Use `node public-sdk-type-help.mjs <fill-kind>` once for a fill kind requested by the active hole; do not search declarations or repeat successful type-help queries.",
-              "At subjectSelection, discover acts and attempt a surfaced act in the same continuation; at subjectContinuation, resume the retained subject and do not discover fresh acts. Do not stop at needsHoles when the returned facts let this continuation finish the selected subject.",
-              "Correct compilation or runtime failures that occur before the first SDK call.",
-              "After one continuation produces an observable SDK call and OBSERVATION.json changes, stop; a later invocation will make the next decision.",
-              "If the continuation concludes play, report that conclusion and stop.",
-              "Inspect only files in this scratch consumer. Do not inspect repository source or internal tests, and do not use prior implementation knowledge.",
-              "Do not edit evidence files. If the SDK blocks the scenario, preserve and report that obstruction instead of fabricating support.",
-            ].join(" "),
-          ],
-          cwd: scratch,
-          env: { ...process.env, CODEX_HOME: codexHome },
-          eventPath: agentEventsPath,
-          logPath: agentLogPath,
-          ledgerPath: resolve(trusted, "evidence/invocations.jsonl"),
-          phase: "player",
-          scenarioId: acceptedScenarioId,
-          gitSha: gitSha.right,
-          fallbackInvocationId: randomUUID(),
-          model: PLAYER_MODEL,
-          reasoningEffort: PLAYER_REASONING_EFFORT,
-        });
-        if (existsSync(agentFinalPath)) {
-          copyFileSync(agentFinalPath, resolve(scratch, "agent-final.txt"));
-        }
-        copyFileSync(agentLogPath, resolve(trusted, "agent.log"));
-        return playerInvocationExit(result);
-      },
+    const agentLogPath = resolve(trusted, "agent.log");
+    const result = runCodexInvocation({
+      args: [
+        "exec",
+        "-C",
+        scratch,
+        ...permissionArgs,
+        "--skip-git-repo-check",
+        "--ephemeral",
+        "--json",
+        "--disable",
+        "tool_call_mcp_elicitation",
+        "-m",
+        PLAYER_MODEL,
+        "-c",
+        `model_reasoning_effort="${PLAYER_REASONING_EFFORT}"`,
+        "--output-last-message",
+        resolve(trusted, "evidence/agent-final.txt"),
+        [
+          "Read PLAYER.md, SCENARIO.md, OBSERVATION.json, FRONTIER_FILL_TYPES.md, and attempt.ts.",
+          "Act as the player described there and continue until the SDK supervisor accepts a playerConcluded outcome or returns a terminalObstruction. Stop immediately after a terminalObstruction; it is retained evidence.",
+          "For each tactical continuation, edit only attempt.ts and run `node player-client.mjs attempt.ts`. After the call, reread OBSERVATION.json and FRONTIER_FILL_TYPES.md before replacing the attempt body for the next continuation.",
+          "At subjectSelection, discover acts and attempt a surfaced act in the same continuation. At subjectContinuation, resume the retained subject and do not discover fresh acts.",
+          "Correct compilation or runtime failures that occur before the first SDK call. A returned SDK rejection is frozen evidence; use the next continuation to correct it.",
+          "Inspect only the five named scratch-consumer files. Do not enumerate other files, inspect declarations, repository source, internal tests, or prior implementation knowledge.",
+          "Do not edit evidence files. Preserve and report an SDK obstruction instead of fabricating support.",
+        ].join(" "),
+      ],
+      cwd: scratch,
+      env: { ...process.env, CODEX_HOME: codexHome },
+      eventPath: resolve(trusted, "evidence/player-events.jsonl"),
+      logPath: agentLogPath,
+      ledgerPath: resolve(trusted, "evidence/invocations.jsonl"),
+      phase: "player",
+      scenarioId: acceptedScenarioId,
+      gitSha: gitSha.right,
+      fallbackInvocationId: randomUUID(),
+      model: PLAYER_MODEL,
+      reasoningEffort: PLAYER_REASONING_EFFORT,
     });
-    Match.value(loop).pipe(
-      Match.when({ tag: "concluded" }, () => undefined),
-      Match.when({ tag: "invocationFailed" }, ({ invocation, exit }) =>
-        fail(
-          `Player invocation ${String(invocation)} failed: ${JSON.stringify(exit)}.`,
-        ),
-      ),
-      Match.when({ tag: "noProgress" }, ({ invocation }) =>
-        fail(
-          `Player invocation ${String(invocation)} exited without recording a tactical continuation.`,
-        ),
-      ),
-      Match.when(
-        { tag: "multipleContinuationsRecorded" },
-        ({ invocation, recordedContinuations }) =>
-          fail(
-            `Player invocation ${String(invocation)} recorded ${String(recordedContinuations)} tactical continuations; exactly one is required.`,
-          ),
-      ),
-      Match.when({ tag: "invocationLimitReached" }, ({ limit }) =>
-        fail(
-          `Player did not conclude within ${String(limit)} tactical continuations.`,
-        ),
-      ),
-      Match.exhaustive,
-    );
+    if (result.error !== undefined) throw result.error;
+    if (result.signal !== null)
+      fail(`Player agent stopped by ${result.signal}.`);
+    const evidenceState = playerEvidenceState(trusted, scratch);
+    if (result.status !== 0 && evidenceState.tag !== "obstructed") {
+      fail(`Player agent exited with status ${String(result.status)}.`);
+    }
+    if (evidenceState.tag === "active") {
+      fail(
+        `Player agent exited after ${String(evidenceState.recordedContinuations)} continuations without a recorded conclusion.`,
+      );
+    }
+    if (evidenceState.tag === "obstructed") {
+      console.log(
+        `Player run retained a player-protocol obstruction after ${String(evidenceState.recordedContinuations)} continuations: ${evidenceState.obstruction.message}`,
+      );
+    }
   } finally {
     if (supervisorProcess !== undefined) {
       const runningSupervisor = supervisorProcess;

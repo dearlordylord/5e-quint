@@ -1,7 +1,13 @@
 import { createHash } from "node:crypto";
 import { readFileSync, realpathSync } from "node:fs";
-import { isAbsolute, relative, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 
+import { Either, Match, Schema } from "effect";
+
+import {
+  PlayerRunStateSchema,
+  type PlayerRunState,
+} from "../player-continuation-evidence.ts";
 import type { SdkAudit } from "./sdk-audit.ts";
 import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue } from "./json-value.ts";
@@ -23,14 +29,159 @@ export const SDK_REVIEW_PACKET_SCENARIO_ARTIFACT_ROLES = [
 export const SDK_REVIEW_PACKET_READY_SETUP_ARTIFACT_ROLES = [
   "evidence/setup.ts",
   "evidence/program.ts",
-  "evidence/final.json",
+  "evidence/frozen-prefix.json",
   "OBSERVATION.json",
-  "agent-final.txt",
+  "evidence/agent-final.txt",
 ] as const;
+export const SDK_REVIEW_PACKET_CONCLUSION_ARTIFACT_ROLE =
+  "evidence/final.json" as const;
 export const SDK_REVIEW_PACKET_RUN_ARTIFACT_ROLES = [
   ...SDK_REVIEW_PACKET_SCENARIO_ARTIFACT_ROLES,
   ...SDK_REVIEW_PACKET_READY_SETUP_ARTIFACT_ROLES,
+  SDK_REVIEW_PACKET_CONCLUSION_ARTIFACT_ROLE,
 ] as const;
+
+export type SdkReviewPacketReadyArtifacts =
+  | {
+      readonly tag: "valid";
+      readonly roles: readonly (
+        | (typeof SDK_REVIEW_PACKET_READY_SETUP_ARTIFACT_ROLES)[number]
+        | typeof SDK_REVIEW_PACKET_CONCLUSION_ARTIFACT_ROLE
+      )[];
+    }
+  | { readonly tag: "invalid"; readonly message: string };
+
+export function sdkReviewPacketReadyArtifacts(input: {
+  readonly run: PlayerRunState;
+  readonly finalArtifactExists: boolean;
+}): SdkReviewPacketReadyArtifacts {
+  if ((input.run.kind === "playerConcluded") !== input.finalArtifactExists) {
+    return {
+      tag: "invalid",
+      message:
+        "SDK review packet player terminal state and final artifact disagree.",
+    };
+  }
+  return Match.value(input.run).pipe(
+    Match.when(
+      { kind: "active" },
+      (): SdkReviewPacketReadyArtifacts => ({
+        tag: "invalid",
+        message: "SDK review packet requires terminal player evidence.",
+      }),
+    ),
+    Match.when(
+      { kind: "playerConcluded" },
+      (): SdkReviewPacketReadyArtifacts => ({
+        tag: "valid",
+        roles: [
+          ...SDK_REVIEW_PACKET_READY_SETUP_ARTIFACT_ROLES,
+          SDK_REVIEW_PACKET_CONCLUSION_ARTIFACT_ROLE,
+        ],
+      }),
+    ),
+    Match.when(
+      { kind: "playerObstructed" },
+      (): SdkReviewPacketReadyArtifacts => ({
+        tag: "valid",
+        roles: SDK_REVIEW_PACKET_READY_SETUP_ARTIFACT_ROLES,
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function runArtifactRole(input: {
+  readonly runDirectory: string;
+  readonly source: SdkReviewPacketSource;
+}): string | undefined {
+  const role = relative(
+    input.runDirectory,
+    resolve(repoRoot, input.source.path),
+  );
+  return role.length === 0 || role.startsWith("..") || isAbsolute(role)
+    ? undefined
+    : role;
+}
+
+function terminalRunArtifactRoles(input: {
+  readonly audit: SdkAudit;
+  readonly runArtifacts: readonly SdkReviewPacketSource[];
+}):
+  | { readonly tag: "valid" }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const header = input.audit.header;
+  const expectedScenarioRoles: readonly string[] =
+    SDK_REVIEW_PACKET_SCENARIO_ARTIFACT_ROLES;
+  if (header.characterOutcome !== "ready" || header.setupOutcome !== "ready") {
+    const actualRoles = input.runArtifacts.map((source) =>
+      runArtifactRole({
+        runDirectory: resolve(
+          repoRoot,
+          dirname(dirname(header.transcriptPath)),
+        ),
+        source,
+      }),
+    );
+    return canonicalJson(actualRoles) === canonicalJson(expectedScenarioRoles)
+      ? { tag: "valid" }
+      : {
+          tag: "invalid",
+          message:
+            "Review evidence packet run artifacts do not match the recorded run outcome.",
+        };
+  }
+  const runDirectory = resolve(
+    repoRoot,
+    dirname(dirname(header.transcriptPath)),
+  );
+  const roles = input.runArtifacts.map((source) =>
+    runArtifactRole({ runDirectory, source }),
+  );
+  const prefixIndex = roles.indexOf("evidence/frozen-prefix.json");
+  if (
+    prefixIndex === -1 ||
+    roles.lastIndexOf("evidence/frozen-prefix.json") !== prefixIndex
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Review evidence packet requires one canonical player terminal state.",
+    };
+  }
+  const prefixContent = packetSourceContent(input.runArtifacts[prefixIndex]!);
+  let prefixValue: unknown;
+  try {
+    prefixValue =
+      prefixContent === undefined ? undefined : JSON.parse(prefixContent);
+  } catch {
+    prefixValue = undefined;
+  }
+  const prefix = Schema.decodeUnknownEither(
+    Schema.Struct({ run: PlayerRunStateSchema }),
+  )(prefixValue);
+  if (Either.isLeft(prefix)) {
+    return {
+      tag: "invalid",
+      message: "Review evidence packet player terminal evidence is invalid.",
+    };
+  }
+  const readyArtifacts = sdkReviewPacketReadyArtifacts({
+    run: prefix.right.run,
+    finalArtifactExists: roles.includes(
+      SDK_REVIEW_PACKET_CONCLUSION_ARTIFACT_ROLE,
+    ),
+  });
+  if (readyArtifacts.tag === "invalid") return readyArtifacts;
+  const expectedRoles = [...expectedScenarioRoles, ...readyArtifacts.roles];
+  return canonicalJson(roles) === canonicalJson(expectedRoles)
+    ? { tag: "valid" }
+    : {
+        tag: "invalid",
+        message:
+          "Review evidence packet run artifacts do not match the recorded run outcome.",
+      };
+}
 
 export type SdkReviewPacketSource = {
   readonly path: string;
@@ -296,6 +447,11 @@ export function validateSdkReviewPacket(
         "Review evidence packet contains a numbered source that does not match its canonical repository file.",
     };
   }
+  const runArtifacts = terminalRunArtifactRoles({
+    audit,
+    runArtifacts: value.runArtifacts,
+  });
+  if (runArtifacts.tag === "invalid") return runArtifacts;
   const transcript = exactTranscript(audit);
   if (transcript.tag === "invalid") return transcript;
   const transcriptCallIdentity = transcript.transcript.calls.map(

@@ -1,5 +1,11 @@
-import { randomUUID } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import {
+  existsSync,
+  linkSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { resolve } from "node:path";
 
 const SDK_SUPERVISOR_RESPONSE_TIMEOUT_MILLISECONDS = 10 * 60 * 1_000;
@@ -15,14 +21,29 @@ if (attemptPath === undefined || unexpected.length > 0) {
 
 const requestId = randomUUID();
 const requestPath = resolve(".requests", `${requestId}.request.json`);
+const requestTemporaryPath = resolve(".requests", `${requestId}.request.next`);
 const responsePath = resolve(".responses", `${requestId}.response.json`);
+const observation = readFileSync(resolve("OBSERVATION.json"), "utf8");
+const frontierFillTypes = readFileSync(
+  resolve("FRONTIER_FILL_TYPES.md"),
+  "utf8",
+);
 writeFileSync(
-  requestPath,
+  requestTemporaryPath,
   `${JSON.stringify({
     requestId,
     source: readFileSync(resolve(attemptPath), "utf8"),
+    expectedObservationSha256: createHash("sha256")
+      .update(observation)
+      .digest("hex"),
+    expectedFrontierFillTypesSha256: createHash("sha256")
+      .update(frontierFillTypes)
+      .digest("hex"),
   })}\n`,
+  { flag: "wx" },
 );
+linkSync(requestTemporaryPath, requestPath);
+unlinkSync(requestTemporaryPath);
 
 const deadline = Date.now() + SDK_SUPERVISOR_RESPONSE_TIMEOUT_MILLISECONDS;
 while (!existsSync(responsePath)) {
@@ -30,9 +51,15 @@ while (!existsSync(responsePath)) {
   await new Promise((resolvePromise) => setTimeout(resolvePromise, 50));
 }
 const response = readFileSync(responsePath, "utf8");
-writeFileSync(resolve("OBSERVATION.json"), response);
 process.stdout.write(response);
 const decoded: unknown = JSON.parse(response);
+if (
+  typeof decoded === "object" &&
+  decoded !== null &&
+  "observation" in decoded
+) {
+  writeFileSync(resolve("OBSERVATION.json"), response);
+}
 if (
   typeof decoded === "object" &&
   decoded !== null &&

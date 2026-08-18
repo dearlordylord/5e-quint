@@ -50,8 +50,7 @@ describe("whole-path performance evidence", () => {
       directory,
       callCount: 2,
       ledgerEntries: [
-        entry("player", 400, "player-1"),
-        entry("player", 400, "player-2"),
+        entry("player", 900, "player-conversation"),
         entry("postPlayReview", 400, "post-play-review"),
       ],
     });
@@ -120,6 +119,8 @@ describe("whole-path performance evidence", () => {
       tag: "available",
       totals: { inputPlusOutput: 1_000 },
     });
+    expect(summary.phases.player.invocationCount).toBe(1);
+    expect(summary.continuations).toBe(2);
     expect(summary.sources.prePlayReviews).toMatchObject([
       {
         reviewStage: "milestone",
@@ -312,11 +313,13 @@ describe("whole-path performance evidence", () => {
         ...summary,
         phases: {
           ...summary.phases,
-          player: { ...summary.phases.player, invocationCount: 1 },
+          player: { ...summary.phases.player, invocationCount: 0 },
         },
       })}\n`,
     );
-    expect(() => readControlledPerformance(summaryPath)).toThrow(/one-to-one/);
+    expect(() => readControlledPerformance(summaryPath)).toThrow(
+      /require at least one player invocation/,
+    );
     const contradictorySummary = {
       ...summary,
       phases: {

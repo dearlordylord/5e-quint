@@ -13,7 +13,7 @@ import { DatabaseSync } from "node:sqlite";
 import { Either, Schema } from "effect";
 
 import { ReviewOutputSchema } from "./review-contract.ts";
-import { playerInvocationNumberFromEventsArtifact } from "./player-invocation-loop.ts";
+import { playerInvocationNumberFromEventsArtifact } from "./player-continuation-evidence.ts";
 import { preflightSdkTranscript } from "./sdk-player/sdk-audit.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { isJsonRecord, parsePlayerTranscript, repoRoot } from "./transcript.ts";

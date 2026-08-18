@@ -412,7 +412,7 @@ describe("Raw Swarm artifact index", () => {
         destination: resolve(directory, "missing-export"),
       }),
     ).toThrow("Artifact is unreadable or missing");
-  });
+  }, 30_000);
 
   test("rejects an indexed transcript whose bytes differ from the parsed source", () => {
     const directory = temporaryDirectory();

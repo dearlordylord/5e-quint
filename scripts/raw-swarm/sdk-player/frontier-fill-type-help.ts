@@ -88,23 +88,23 @@ export type FrontierFillTypeHelpResult =
 
 export function frontierFillTypeHelp(input: {
   readonly observation: unknown;
+  readonly observationSha256: string;
   readonly artifact: unknown;
   readonly declarationGraphSha256: string;
 }): FrontierFillTypeHelpResult {
   const decoded = frontierFillKinds(input.observation);
   if (decoded.tag === "invalid") return decoded;
+  const binding = `<!-- raw-swarm-frontier\nobservation-sha256: ${input.observationSha256}\ndeclaration-graph-sha256: ${input.declarationGraphSha256}\n-->`;
   if (decoded.frontierKind === "rejected") {
     return {
       tag: "valid",
-      markdown:
-        "# Frontier fill types\n\nThe previous resolution was rejected and requests no fills. Inspect `OBSERVATION.json` for the exact rejection before retrying.\n",
+      markdown: `${binding}\n\n# Frontier fill types\n\nThe previous resolution was rejected and requests no fills. Inspect \`OBSERVATION.json\` for the exact rejection before retrying.\n`,
     };
   }
   if (decoded.kinds.length === 0) {
     return {
       tag: "valid",
-      markdown:
-        "# Frontier fill types\n\nThe current frontier requests no fills.\n",
+      markdown: `${binding}\n\n# Frontier fill types\n\nThe current frontier requests no fills.\n`,
     };
   }
   const sections: string[] = [];
@@ -121,6 +121,6 @@ export function frontierFillTypeHelp(input: {
   }
   return {
     tag: "valid",
-    markdown: `# Frontier fill types\n\n${sections.join("\n\n")}\n`,
+    markdown: `${binding}\n\n# Frontier fill types\n\n${sections.join("\n\n")}\n`,
   };
 }

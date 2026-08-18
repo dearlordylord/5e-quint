@@ -1,14 +1,18 @@
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, relative, resolve } from "node:path";
 
+import { Either, Schema } from "effect";
+
 import { repoRoot } from "../transcript.ts";
+import { PlayerRunStateSchema } from "../player-continuation-evidence.ts";
 import { readSdkAudit } from "./sdk-audit.ts";
 import { isJsonValue } from "./json-value.ts";
 import { reprojectSdkTranscriptTurns } from "./player-turn-projection.ts";
 import {
   encodeSdkReviewPacket,
-  SDK_REVIEW_PACKET_READY_SETUP_ARTIFACT_ROLES,
+  SDK_REVIEW_PACKET_CONCLUSION_ARTIFACT_ROLE,
   SDK_REVIEW_PACKET_SCENARIO_ARTIFACT_ROLES,
+  sdkReviewPacketReadyArtifacts,
   sdkReviewPacketHeaderEvidence,
   sdkReviewPacketSource,
 } from "./sdk-review-packet.ts";
@@ -140,10 +144,36 @@ function main(args: readonly string[]): void {
     fail("SDK review packet header evidence is not JSON.");
   }
   const runDirectory = resolve(transcriptPath, "../..");
-  const readyArtifacts: readonly string[] =
+  const runState =
     header.setupOutcome === "ready"
-      ? SDK_REVIEW_PACKET_READY_SETUP_ARTIFACT_ROLES
-      : [];
+      ? Schema.decodeUnknownEither(
+          Schema.Struct({ run: PlayerRunStateSchema }),
+        )(
+          JSON.parse(
+            readFileSync(
+              resolve(runDirectory, "evidence/frozen-prefix.json"),
+              "utf8",
+            ),
+          ),
+        )
+      : undefined;
+  if (runState !== undefined && Either.isLeft(runState)) {
+    fail("SDK review packet player terminal evidence is invalid.");
+  }
+  const finalArtifactExists = existsSync(
+    resolve(runDirectory, SDK_REVIEW_PACKET_CONCLUSION_ARTIFACT_ROLE),
+  );
+  const readyArtifactResult =
+    runState === undefined
+      ? ({ tag: "valid", roles: [] } as const)
+      : sdkReviewPacketReadyArtifacts({
+          run: runState.right.run,
+          finalArtifactExists,
+        });
+  if (readyArtifactResult.tag === "invalid") {
+    fail(readyArtifactResult.message);
+  }
+  const readyArtifacts: readonly string[] = readyArtifactResult.roles;
   const runArtifacts = [
     ...SDK_REVIEW_PACKET_SCENARIO_ARTIFACT_ROLES,
     ...readyArtifacts,

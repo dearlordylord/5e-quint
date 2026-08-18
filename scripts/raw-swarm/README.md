@@ -293,21 +293,20 @@ If a surfaced decision lacks enough ownership information to resolve its
 controller, the supervisor records the obstruction instead of letting the
 acting creature's controller decide by default.
 
-Reuse the controller assignment, but start an independent model invocation for
-each tactical continuation. The invocation reads the bounded tactical note,
-latest observation, and editable continuation source; it does not inherit a
-model conversation containing earlier tool calls. Compilation or runtime
-corrections before the first SDK call stay inside that invocation. After one
-continuation records an observable SDK call, the invocation stops and the next
-decision receives the supervisor-derived observation. Controller agents must
-not concurrently edit one shared program. The supervisor seeing all briefs is
-an accepted instructional boundary for the prototype, not a claim of secure
-hidden information.
+The current single-controller runner uses one model invocation for the complete
+play session. After each tactical continuation, the trusted supervisor publishes
+the bounded latest observation and exact fill declarations for its frontier.
+The controller must reread those two files before replacing the editable
+continuation body. An observation hash in each request rejects queued work based
+on an older frontier, and the supervisor admits at most 128 frozen
+continuations. Multiple controllers must not concurrently edit one shared
+program. The supervisor seeing all briefs is an accepted instructional boundary
+for the prototype, not a claim of secure hidden information.
 
 If a continuation records an SDK call and then fails, that continuation remains
 frozen evidence. Its error response carries the supervisor-derived projection
-and the prior bounded tactical note, so the next independent invocation can
-recover without inheriting the failed invocation's tool history.
+and the prior bounded tactical note, so the controller can recover in the next
+continuation without rewriting recorded history.
 
 The continuation stub is the one stable code handoff. Its function parameters
 provide the supervisor-owned current session value and required SDK operations
@@ -423,10 +422,12 @@ and neither replaces the transcript.
 Each player projection is at most 32 KiB of encoded JSON, and its separate
 UTF-8 tactical note is at most 4 KiB. The supervisor rejects an oversized
 projection or note precisely; it never truncates one. `evidence/invocations.jsonl`
-records one typed player entry per tactical continuation and first-party model
-usage when available. Each entry binds its own retained event stream; summing
-those entries gives player totals without carrying earlier tool-call history
-into later decisions.
+records one typed player entry and first-party model usage for the complete
+persistent player invocation. That entry binds
+`evidence/player-events.jsonl`. Continuation counts and phase timings come from
+the separately validated observation and supervisor-timing evidence; performance
+reporting normalizes the one player invocation by both continuations and
+canonical SDK calls.
 `evidence/supervisor-timings.jsonl` separates continuation typechecking,
 prior-call verification/replay, new SDK execution, and evidence writes.
 `performance-comparison.ts summarize` combines those records with typed model
@@ -751,7 +752,7 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/review-invocation-evidence.ts \
   "$FINAL_REPLAY_INPUT" \
   scripts/raw-swarm/out/$SCENARIO-controlled-invocations.jsonl \
   scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/*.events.jsonl \
-  scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/player-invocation-*.events.jsonl \
+  scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/player-events.jsonl \
   scripts/raw-swarm/out/$SCENARIO-sdk-review-agent.log.events.jsonl
 
 # For controlled evidence, time the actual reporting work. This operation owns
