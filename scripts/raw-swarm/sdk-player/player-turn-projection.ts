@@ -2,9 +2,17 @@ import { canonicalJson } from "../transcript.ts";
 import { createHash } from "node:crypto";
 import { Either, Match, Schema } from "effect";
 import { BattleHoleSchema } from "../../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
-import { BattleResourcePoolExecutionRef } from "../../../packages/battle-runtime/src/identity.ts";
-import type { BattleHole } from "../../../packages/battle-runtime/src/battle-state-execution.ts";
-import { ResourceCount } from "../../../packages/shared/src/types.ts";
+import {
+  BattleId,
+  BattleObjectId,
+  BattleResourcePoolExecutionRef,
+} from "../../../packages/battle-runtime/src/identity.ts";
+import {
+  BATTLE_INVALID_REASON_CODES,
+  type BattleHole,
+  type BattleInvalidReasonCode,
+} from "../../../packages/battle-runtime/src/battle-state-execution.ts";
+import { Hp, ResourceCount } from "../../../packages/shared/src/types.ts";
 import {
   CreatureRechargeMinimumRollSchema,
   PointPoolResourceSchema,
@@ -18,6 +26,65 @@ export const PLAYER_TURN_PROJECTION_MAX_BYTES = 32 * 1024;
 export const PLAYER_TACTICAL_NOTE_MAX_BYTES = 4 * 1024;
 
 type JsonObject = { readonly [key: string]: JsonValue };
+
+const PLAYER_SCENARIO_SESSION_CONFLICT_TAGS = [
+  "battle-lineage-conflict",
+  "unknown-object-damage",
+  "object-damage-state-conflict",
+  "unexpected-battle-movement",
+  "movement-outcome-conflict",
+  "multiple-battle-movements",
+] as const;
+type PlayerScenarioSessionConflictTag =
+  (typeof PLAYER_SCENARIO_SESSION_CONFLICT_TAGS)[number];
+
+type PlayerScenarioSessionConflictIssue =
+  | {
+      readonly tag: "battle-lineage-conflict";
+      readonly expectedBattleId: BattleId;
+      readonly receivedBattleId: BattleId;
+      readonly message: string;
+    }
+  | {
+      readonly tag: "unknown-object-damage";
+      readonly objectId: BattleObjectId;
+      readonly message: string;
+    }
+  | {
+      readonly tag: "object-damage-state-conflict";
+      readonly objectId: BattleObjectId;
+      readonly outcomePriorHitPoints: Hp;
+      readonly message: string;
+    }
+  | {
+      readonly tag:
+        | "unexpected-battle-movement"
+        | "movement-outcome-conflict"
+        | "multiple-battle-movements";
+      readonly message: string;
+    };
+
+const PLAYER_REJECTION_TAGS = [
+  "invalid",
+  "scenarioMovementRejected",
+  "scenarioSessionConflict",
+] as const;
+type PlayerRejectionTag = (typeof PLAYER_REJECTION_TAGS)[number];
+
+export type PlayerRejectionProjection =
+  | {
+      readonly tag: "invalid";
+      readonly reason: BattleInvalidReasonCode;
+      readonly message: string;
+    }
+  | {
+      readonly tag: "scenarioMovementRejected";
+      readonly message: string;
+    }
+  | {
+      readonly tag: "scenarioSessionConflict";
+      readonly issue: PlayerScenarioSessionConflictIssue;
+    };
 
 const PLAYER_SUBJECT_TAGS = [
   "action",
@@ -322,6 +389,10 @@ export type PlayerCurrentTurnProjection = {
         readonly subject: PlayerSubjectProjection;
         readonly holes: readonly PlayerHoleOccurrence[];
       }
+    | {
+        readonly kind: "rejected";
+        readonly rejection: PlayerRejectionProjection;
+      }
     | { readonly kind: "none" };
   readonly changes: readonly PlayerEntityChange[];
 };
@@ -347,6 +418,114 @@ export type PlayerProjectionResult =
 
 function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isPlayerScenarioSessionConflictTag(
+  value: string,
+): value is PlayerScenarioSessionConflictTag {
+  return PLAYER_SCENARIO_SESSION_CONFLICT_TAGS.some((tag) => tag === value);
+}
+
+function isPlayerRejectionTag(value: string): value is PlayerRejectionTag {
+  return PLAYER_REJECTION_TAGS.some((tag) => tag === value);
+}
+
+function scenarioSessionConflictIssue(
+  value: JsonValue | undefined,
+): PlayerScenarioSessionConflictIssue | undefined {
+  if (
+    !isJsonObject(value) ||
+    typeof value.tag !== "string" ||
+    !isPlayerScenarioSessionConflictTag(value.tag) ||
+    typeof value.message !== "string"
+  )
+    return undefined;
+  const message = value.message;
+  return Match.value(value.tag).pipe(
+    Match.when("battle-lineage-conflict", () =>
+      Schema.is(BattleId)(value.expectedBattleId) &&
+      Schema.is(BattleId)(value.receivedBattleId)
+        ? {
+            tag: "battle-lineage-conflict" as const,
+            expectedBattleId: value.expectedBattleId,
+            receivedBattleId: value.receivedBattleId,
+            message,
+          }
+        : undefined,
+    ),
+    Match.when("unknown-object-damage", () =>
+      Schema.is(BattleObjectId)(value.objectId)
+        ? {
+            tag: "unknown-object-damage" as const,
+            objectId: value.objectId,
+            message,
+          }
+        : undefined,
+    ),
+    Match.when("object-damage-state-conflict", () =>
+      Schema.is(BattleObjectId)(value.objectId) &&
+      typeof value.outcomePriorHitPoints === "number" &&
+      Hp.is(value.outcomePriorHitPoints)
+        ? {
+            tag: "object-damage-state-conflict" as const,
+            objectId: value.objectId,
+            outcomePriorHitPoints: value.outcomePriorHitPoints,
+            message,
+          }
+        : undefined,
+    ),
+    Match.when("unexpected-battle-movement", () => ({
+      tag: "unexpected-battle-movement" as const,
+      message,
+    })),
+    Match.when("movement-outcome-conflict", () => ({
+      tag: "movement-outcome-conflict" as const,
+      message,
+    })),
+    Match.when("multiple-battle-movements", () => ({
+      tag: "multiple-battle-movements" as const,
+      message,
+    })),
+    Match.exhaustive,
+  );
+}
+
+export function playerRejectionProjection(
+  value: unknown,
+): PlayerRejectionProjection | undefined {
+  if (
+    !isJsonObject(value) ||
+    typeof value.tag !== "string" ||
+    !isPlayerRejectionTag(value.tag)
+  ) {
+    return undefined;
+  }
+  return Match.value(value.tag).pipe(
+    Match.when("invalid", () => {
+      const reason = BATTLE_INVALID_REASON_CODES.find(
+        (candidate): candidate is BattleInvalidReasonCode =>
+          candidate === value.reason,
+      );
+      return reason === undefined || typeof value.message !== "string"
+        ? undefined
+        : { tag: "invalid" as const, reason, message: value.message };
+    }),
+    Match.when("scenarioMovementRejected", () =>
+      typeof value.message === "string"
+        ? {
+            tag: "scenarioMovementRejected" as const,
+            message: value.message,
+          }
+        : undefined,
+    ),
+    Match.when("scenarioSessionConflict", () => {
+      const issue = scenarioSessionConflictIssue(value.issue);
+      return issue === undefined
+        ? undefined
+        : { tag: "scenarioSessionConflict" as const, issue };
+    }),
+    Match.exhaustive,
+  );
 }
 
 function objectAt(
@@ -1005,15 +1184,15 @@ function frontier(
   const resolutionFrontier = (
     call: Extract<SdkCallRecord, { readonly outcome: "returned" }>,
   ): FrontierDecision => {
-    if (isJsonObject(call.result) && call.result.tag === "needsHoles") {
-      if (call.result.subject === undefined) return { tag: "invalid" };
-      const subject = projectPlayerSubject(call.result.subject);
+    const result = call.result;
+    if (!isJsonObject(result) || typeof result.tag !== "string") {
+      return { tag: "invalid" };
+    }
+    if (result.tag === "needsHoles") {
+      if (result.subject === undefined) return { tag: "invalid" };
+      const subject = projectPlayerSubject(result.subject);
       if (subject === undefined) return { tag: "invalid" };
-      const projectedHoles = holeOccurrences(
-        subject,
-        call.result.holes,
-        source,
-      );
+      const projectedHoles = holeOccurrences(subject, result.holes, source);
       if (projectedHoles === undefined) return { tag: "invalid" };
       return {
         tag: "frontier",
@@ -1025,7 +1204,16 @@ function frontier(
         },
       };
     }
-    return { tag: "frontier", frontier: { kind: "none" } };
+    const rejection = playerRejectionProjection(result);
+    if (rejection !== undefined) {
+      return {
+        tag: "frontier",
+        frontier: { kind: "rejected", rejection },
+      };
+    }
+    return result.tag === "resolved"
+      ? { tag: "frontier", frontier: { kind: "none" } }
+      : { tag: "invalid" };
   };
   for (const call of [...calls].reverse()) {
     if (call.outcome !== "returned") continue;

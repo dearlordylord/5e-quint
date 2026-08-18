@@ -1,4 +1,5 @@
 import { publicSdkTypeHelp } from "./public-sdk-type-help.ts";
+import { playerRejectionProjection } from "./player-turn-projection.ts";
 
 type JsonRecord = Readonly<Record<string, unknown>>;
 
@@ -18,7 +19,11 @@ function holeKind(value: unknown): string | undefined {
 }
 
 export type FrontierFillKindsResult =
-  | { readonly tag: "valid"; readonly kinds: readonly string[] }
+  | {
+      readonly tag: "valid";
+      readonly frontierKind: "none" | "rejected" | "holes" | "acts";
+      readonly kinds: readonly string[];
+    }
   | { readonly tag: "invalid"; readonly message: string };
 
 export function frontierFillKinds(value: unknown): FrontierFillKindsResult {
@@ -26,11 +31,24 @@ export function frontierFillKinds(value: unknown): FrontierFillKindsResult {
   const frontier = isRecord(projection?.frontier)
     ? projection.frontier
     : undefined;
-  if (frontier?.kind === "none") return { tag: "valid", kinds: [] };
+  if (frontier?.kind === "none") {
+    return { tag: "valid", frontierKind: "none", kinds: [] };
+  }
+  if (frontier?.kind === "rejected") {
+    return playerRejectionProjection(frontier.rejection) !== undefined
+      ? { tag: "valid", frontierKind: "rejected", kinds: [] }
+      : {
+          tag: "invalid",
+          message: "Player rejected frontier has no rejection evidence.",
+        };
+  }
   const occurrences: unknown[] = [];
+  let frontierKind: "holes" | "acts";
   if (frontier?.kind === "holes" && Array.isArray(frontier.holes)) {
+    frontierKind = "holes";
     occurrences.push(...frontier.holes);
   } else if (frontier?.kind === "acts" && Array.isArray(frontier.acts)) {
+    frontierKind = "acts";
     for (const act of frontier.acts) {
       if (!isRecord(act) || !Array.isArray(act.holes)) {
         return {
@@ -57,7 +75,11 @@ export function frontierFillKinds(value: unknown): FrontierFillKindsResult {
     }
     kinds.push(kind);
   }
-  return { tag: "valid", kinds: [...new Set(kinds)].sort() };
+  return {
+    tag: "valid",
+    frontierKind,
+    kinds: [...new Set(kinds)].sort(),
+  };
 }
 
 export type FrontierFillTypeHelpResult =
@@ -71,6 +93,13 @@ export function frontierFillTypeHelp(input: {
 }): FrontierFillTypeHelpResult {
   const decoded = frontierFillKinds(input.observation);
   if (decoded.tag === "invalid") return decoded;
+  if (decoded.frontierKind === "rejected") {
+    return {
+      tag: "valid",
+      markdown:
+        "# Frontier fill types\n\nThe previous resolution was rejected and requests no fills. Inspect `OBSERVATION.json` for the exact rejection before retrying.\n",
+    };
+  }
   if (decoded.kinds.length === 0) {
     return {
       tag: "valid",

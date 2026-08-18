@@ -830,6 +830,174 @@ describe("player current-turn projection", () => {
     ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
   });
 
+  test("preserves a returned battle rejection as the actionable frontier", () => {
+    const result = {
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack roll relationship facts do not match a requested attack-roll decision.",
+      session: beforeSession,
+      snapshot: {},
+    } as const;
+    const call = {
+      type: "sdk-call",
+      seq: 1,
+      continuation: 1,
+      operation: "resolveBattleRuntimeSubject",
+      inputSession: beforeSession,
+      inputSessionSha256: sha256Canonical(beforeSession),
+      input: {
+        subject: { tag: "action", actorId: "fighter", action: "attack" },
+        fills: [],
+      },
+      outcome: "returned",
+      outputSession: beforeSession,
+      outputSessionSha256: sha256Canonical(beforeSession),
+      result,
+      resultSha256: sha256Canonical(result),
+    } as const;
+
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [call],
+        beforeSession,
+        afterSession: beforeSession,
+        tacticalNote: "The attempted attack was rejected.",
+      }),
+    ).toMatchObject({
+      tag: "valid",
+      projection: {
+        frontier: {
+          kind: "rejected",
+          rejection: {
+            tag: "invalid",
+            reason: "invalidFill",
+            message:
+              "Attack roll relationship facts do not match a requested attack-roll decision.",
+          },
+        },
+      },
+    });
+  });
+
+  test("preserves canonical scenario rejections and rejects unknown conflicts", () => {
+    const project = (result: {
+      readonly tag: string;
+      readonly message?: string;
+      readonly issue?: Readonly<Record<string, string | number>>;
+    }) =>
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [
+          {
+            type: "sdk-call",
+            seq: 1,
+            continuation: 1,
+            operation: "resolveScenarioMovement",
+            inputSession: beforeSession,
+            inputSessionSha256: sha256Canonical(beforeSession),
+            input: { kind: "continue", fills: [] },
+            outcome: "returned",
+            outputSession: beforeSession,
+            outputSessionSha256: sha256Canonical(beforeSession),
+            result,
+            resultSha256: sha256Canonical(result),
+          },
+        ],
+        beforeSession,
+        afterSession: beforeSession,
+        tacticalNote: "",
+      });
+
+    expect(
+      project({
+        tag: "scenarioMovementRejected",
+        message: "The route enters an unsupported occupied square.",
+      }),
+    ).toMatchObject({
+      tag: "valid",
+      projection: {
+        frontier: {
+          kind: "rejected",
+          rejection: {
+            tag: "scenarioMovementRejected",
+            message: "The route enters an unsupported occupied square.",
+          },
+        },
+      },
+    });
+    expect(
+      project({
+        tag: "scenarioSessionConflict",
+        issue: {
+          tag: "battle-lineage-conflict",
+          expectedBattleId: "expected-battle",
+          receivedBattleId: "received-battle",
+          message: "The returned battle has a different lineage.",
+        },
+      }),
+    ).toMatchObject({
+      tag: "valid",
+      projection: {
+        frontier: {
+          kind: "rejected",
+          rejection: {
+            tag: "scenarioSessionConflict",
+            issue: {
+              tag: "battle-lineage-conflict",
+              expectedBattleId: "expected-battle",
+              receivedBattleId: "received-battle",
+              message: "The returned battle has a different lineage.",
+            },
+          },
+        },
+      },
+    });
+    expect(
+      project({
+        tag: "scenarioSessionConflict",
+        issue: { tag: "invented", message: "Unknown conflict." },
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
+    for (const issue of [
+      {
+        tag: "battle-lineage-conflict",
+        expectedBattleId: "",
+        receivedBattleId: "received-battle",
+        message: "Blank expected battle id.",
+      },
+      {
+        tag: "battle-lineage-conflict",
+        expectedBattleId: "expected-battle",
+        receivedBattleId: "   ",
+        message: "Blank received battle id.",
+      },
+      {
+        tag: "unknown-object-damage",
+        objectId: "",
+        message: "Blank object id.",
+      },
+      {
+        tag: "object-damage-state-conflict",
+        objectId: "object-1",
+        outcomePriorHitPoints: -1,
+        message: "Negative prior hit points.",
+      },
+      {
+        tag: "object-damage-state-conflict",
+        objectId: "object-1",
+        outcomePriorHitPoints: 1.5,
+        message: "Fractional prior hit points.",
+      },
+    ] as const) {
+      expect(project({ tag: "scenarioSessionConflict", issue })).toMatchObject({
+        tag: "invalid",
+        reason: "malformedProjectionSource",
+      });
+    }
+  });
+
   test("rejects an oversized tactical note instead of truncating it", () => {
     const projection = playerCurrentTurnProjection({
       continuation: 1,

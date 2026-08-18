@@ -40,7 +40,7 @@ describe("frontier fill type help", () => {
           },
         },
       }),
-    ).toEqual({ tag: "valid", kinds: ["targetChoice"] });
+    ).toEqual({ tag: "valid", frontierKind: "acts", kinds: ["targetChoice"] });
     expect(
       frontierFillKinds({
         tag: "ok",
@@ -53,7 +53,38 @@ describe("frontier fill type help", () => {
           },
         },
       }),
-    ).toEqual({ tag: "valid", kinds: ["targetChoice"] });
+    ).toEqual({ tag: "valid", frontierKind: "holes", kinds: ["targetChoice"] });
+  });
+
+  test("renders no declarations for a rejected frontier without hiding it", () => {
+    const observation = {
+      projection: {
+        frontier: {
+          kind: "rejected",
+          rejection: {
+            tag: "invalid",
+            reason: "invalidFill",
+            message: "The submitted relationship fact was not requested.",
+          },
+        },
+      },
+    };
+    expect(frontierFillKinds(observation)).toEqual({
+      tag: "valid",
+      frontierKind: "rejected",
+      kinds: [],
+    });
+    expect(
+      frontierFillTypeHelp({
+        observation,
+        artifact,
+        declarationGraphSha256: artifact.declarationGraphSha256,
+      }),
+    ).toEqual({
+      tag: "valid",
+      markdown:
+        "# Frontier fill types\n\nThe previous resolution was rejected and requests no fills. Inspect `OBSERVATION.json` for the exact rejection before retrying.\n",
+    });
   });
 
   test("renders exact declaration help for the current frontier", () => {
@@ -82,6 +113,16 @@ describe("frontier fill type help", () => {
     ).toEqual({
       tag: "invalid",
       message: "Player observation has no valid frontier.",
+    });
+    expect(
+      frontierFillKinds({
+        projection: {
+          frontier: { kind: "rejected", rejection: {} },
+        },
+      }),
+    ).toEqual({
+      tag: "invalid",
+      message: "Player rejected frontier has no rejection evidence.",
     });
   });
 });
