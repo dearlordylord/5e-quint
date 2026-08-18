@@ -620,19 +620,7 @@ export function applySpellCreatedHeldObjectEffect(input: {
     };
   }
   /* v8 ignore stop */
-  const activeEffects = [
-    ...actor.activeEffects.filter((effect) => {
-      const sameSourceReplay =
-        effect.kind === "spellCreatedHeldObject" &&
-        activeEffectSourceMatches(effect, input.activeEffect);
-      if (sameSourceReplay) {
-        /* v8 ignore next -- Pure replay/idempotency guard: `spendConfiguredSpellCastResources` breaks prior Concentration before initial held-object application; legal re-evocation uses `setSpellCreatedHeldObjectState` after release instead. */
-        return false;
-      }
-      return true;
-    }),
-    input.activeEffect,
-  ];
+  const activeEffects = [...actor.activeEffects, input.activeEffect];
   const nextActor = battleCreatureWithSpellCreatedHeldObjectHand(
     {
       ...actor,
