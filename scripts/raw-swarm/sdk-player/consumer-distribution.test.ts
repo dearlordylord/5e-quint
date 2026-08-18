@@ -308,6 +308,9 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
       expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
         "fills: [...acceptedFills, nextFill]",
       );
+      expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
+        "Route entries use the tactical cell coordinates",
+      );
       expect(
         filesBelow(destination).some((path) => path.endsWith("supervisor.mjs")),
       ).toBe(false);

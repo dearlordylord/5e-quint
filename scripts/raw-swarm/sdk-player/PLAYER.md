@@ -122,9 +122,42 @@ creature-attack hole. Its Cover vocabulary is the battle reducer's
 `none | half | threeQuarters | total` vocabulary. For an ordinary Move, call
 `resolveScenarioMovement` with `kind: "route"`, the canonical Move subject, the nonempty sequence
 of grid coordinates entered after the actor's current square, a supported Speed
-kind, and any downstream fills. The scenario session derives traversal,
-Movement cost, and ordinary Opportunity Attack threats from the canonical
-route; callers do not author those threats. Battle owns Movement resources and
+kind, and any downstream fills. Route entries use the tactical cell coordinates
+stored in `context.session.battlefield.space.placements` and
+`context.session.battlefield.arena.cells`; they are not physical-distance
+coordinates copied from scenario prose. `arena.cellSizeFeet` determines the
+distance of a cell step but does not change a cell coordinate. Read the current
+cell from the session and submit adjacent cells that occur in the arena. The
+projection's `changes` are deltas, not coordinate authority; always read route
+coordinates from the current session. After narrowing a surfaced Move act,
+bind its subject to `moveSubject`; the example assumes that proven Move subject:
+
+```ts
+const moverCoordinate = context.session.battlefield.space.placements.find(
+  ({ token }) => String(token) === moveSubject.actorId,
+)?.coordinate;
+if (moverCoordinate === undefined) {
+  return {
+    kind: "continue",
+    session: context.session,
+    tacticalNote: `No tactical placement exists for ${moveSubject.actorId}.`,
+  };
+}
+const enteredCell = {
+  x: moverCoordinate.x + 1,
+  y: moverCoordinate.y,
+};
+const enteredCellExists = context.session.battlefield.arena.cells.some(
+  ({ coordinate }) =>
+    coordinate.x === enteredCell.x && coordinate.y === enteredCell.y,
+);
+```
+
+Choose a different adjacent cell when `enteredCellExists` is false or when the
+route required by the tactical decision goes another direction. The scenario
+session derives traversal, Movement cost, and ordinary Opportunity Attack
+threats from the canonical route; callers do not author those threats. Battle
+owns Movement resources and
 the resulting decline-or-resolve interrupt. The operation currently supports
 two-dimensional Walk routes only and reports other movement modes honestly.
 The retained setup's directed movement-ally facts, current creature conditions,
