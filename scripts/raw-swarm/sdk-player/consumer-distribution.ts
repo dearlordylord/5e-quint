@@ -12,7 +12,6 @@ import { buildSync } from "esbuild";
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import type { JsonValue } from "./continuation-contract.ts";
-import { writePublicSdkTypeHelpArtifact } from "./public-sdk-type-help-artifact.ts";
 
 export type ConsumerDistributionInput = {
   readonly destination: string;
@@ -216,11 +215,6 @@ export function buildConsumerDistribution(
     resolve(input.trustedDestination, "tsconfig.json"),
     consumerTsconfig(input.trustedDestination, ["submissions/*.ts"]),
   );
-  writePublicSdkTypeHelpArtifact({
-    destination: resolve(input.trustedDestination, "FILL_TYPES.json"),
-    declarationsDirectory: resolve(input.trustedDestination, "declarations"),
-    configPath: resolve(input.trustedDestination, "tsconfig.json"),
-  });
   writeFileSync(
     resolve(input.destination, "attempt.ts"),
     attemptSource(
@@ -234,10 +228,6 @@ export function buildConsumerDistribution(
   writeFileSync(
     resolve(input.destination, "OBSERVATION.json"),
     `${JSON.stringify(PLAYER_RUN_START_OBSERVATION, null, 2)}\n`,
-  );
-  writeFileSync(
-    resolve(input.destination, "FRONTIER_FILL_TYPES.md"),
-    "# Frontier fill types\n\nThe supervisor has not projected the initial frontier yet.\n",
   );
   cpSync(
     resolve(repoRoot, "node_modules/typescript"),

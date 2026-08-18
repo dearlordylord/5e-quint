@@ -59,9 +59,7 @@ import {
   playerCurrentTurnProjection,
   playerInitialTurnProjection,
 } from "./player-turn-projection.ts";
-import { frontierFillTypeHelp } from "./frontier-fill-type-help.ts";
 import { jsonValue } from "./json-value.ts";
-import { publicSdkDeclarationGraphSha256 } from "./public-sdk-type-help.ts";
 import {
   parseSdkTranscript,
   sdkInitialTurnProjectionEvidence,
@@ -97,10 +95,6 @@ const playerResponsePath = resolve("player-response.json");
 const playerPublishedObservationPath = resolve(
   "player-published-observation.json",
 );
-const playerPublishedFrontierPath = resolve("player-published-frontier.json");
-const frontierPublicationFailurePath = resolve(
-  "frontier-publication-failure.json",
-);
 const observationPublicationFailurePath = resolve(
   "observation-publication-failure.json",
 );
@@ -110,12 +104,6 @@ const playerRoot = resolve(process.env.RAW_SWARM_PLAYER_ROOT ?? process.cwd());
 const submissionsPath = resolve("submissions");
 const charactersPath = resolve("evidence/characters.ts");
 const setupPath = resolve("evidence/setup.ts");
-const typeHelpArtifactPath = resolve("FILL_TYPES.json");
-const declarationsPath = resolve("declarations");
-const playerFrontierFillTypesPath = resolve(
-  playerRoot,
-  "FRONTIER_FILL_TYPES.md",
-);
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 const NonNegativeIntegerSchema = Schema.Number.pipe(
@@ -167,66 +155,11 @@ function atomicAppendJsonLine(path: string, value: unknown): void {
   }
 }
 
-function playerFrontierFillTypeHelp(observation: unknown): string {
-  try {
-    const declarationGraphSha256 =
-      publicSdkDeclarationGraphSha256(declarationsPath);
-    if (declarationGraphSha256 === undefined) {
-      fail("Public SDK declaration graph is empty.");
-    }
-    const artifact: unknown = JSON.parse(
-      readFileSync(typeHelpArtifactPath, "utf8"),
-    );
-    const help = frontierFillTypeHelp({
-      observation,
-      observationSha256: sha256Canonical(jsonValue(observation)),
-      artifact,
-      declarationGraphSha256,
-    });
-    if (help.tag === "invalid") fail(help.message);
-    return help.markdown;
-  } catch (error) {
-    atomicJson(frontierPublicationFailurePath, {
-      message: error instanceof Error ? error.message : String(error),
-    });
-    throw error;
-  }
-}
-
 function publishLatestPlayerObservation(observation: unknown): void {
   try {
     atomicJson(latestObservationPath, observation);
   } catch (error) {
     atomicJson(observationPublicationFailurePath, {
-      message: error instanceof Error ? error.message : String(error),
-    });
-    throw error;
-  }
-}
-
-function publishPlayerFrontierFillTypeHelp(markdown: string): void {
-  const temporaryPath = `${playerFrontierFillTypesPath}.${randomUUID()}.next`;
-  const descriptor = openSync(
-    temporaryPath,
-    constants.O_CREAT |
-      constants.O_EXCL |
-      constants.O_NOFOLLOW |
-      constants.O_WRONLY,
-    0o600,
-  );
-  try {
-    writeFileSync(descriptor, markdown, "utf8");
-  } finally {
-    closeSync(descriptor);
-  }
-  try {
-    renameSync(temporaryPath, playerFrontierFillTypesPath);
-    atomicJson(playerPublishedFrontierPath, {
-      sha256: sha256Text(markdown),
-    });
-  } catch (error) {
-    rmSync(temporaryPath, { force: true });
-    atomicJson(frontierPublicationFailurePath, {
       message: error instanceof Error ? error.message : String(error),
     });
     throw error;
@@ -410,12 +343,10 @@ async function initialize(
         projection: initialProjection.projection,
         tacticalNote: "",
       };
-      const frontierFillTypeHelp = playerFrontierFillTypeHelp(observation);
       atomicJson(latestObservationPath, observation);
       atomicJson(initialObservationPath, observation);
       atomicJson(resolve(playerRoot, "OBSERVATION.json"), observation);
       atomicJson(playerPublishedObservationPath, observation);
-      publishPlayerFrontierFillTypeHelp(frontierFillTypeHelp);
     }),
     Match.exhaustive,
   );
@@ -940,10 +871,7 @@ function tacticalNoteBeforeContinuation(): string {
 }
 
 async function runSubmittedSource(source: string): Promise<unknown> {
-  if (
-    existsSync(frontierPublicationFailurePath) ||
-    existsSync(observationPublicationFailurePath)
-  ) {
+  if (existsSync(observationPublicationFailurePath)) {
     fail("Player observation publication previously failed.");
   }
   const prefix = verifyFrozenPrefix();
@@ -1182,12 +1110,10 @@ async function runSubmittedSource(source: string): Promise<unknown> {
         ? { conclusion: outcome.conclusion }
         : {}),
     };
-    const frontierFillTypeHelp = playerFrontierFillTypeHelp(observation);
     const observationWritingStarted = performance.now();
     atomicAppendJsonLine(observationsPath, observation);
     observationCommitted = true;
     publishLatestPlayerObservation(observation);
-    publishPlayerFrontierFillTypeHelp(frontierFillTypeHelp);
     if (outcome.kind === "playerConcluded") {
       const completedPrefix = readPrefix();
       atomicJson(prefixPath, {
@@ -1235,8 +1161,6 @@ async function runSubmittedSource(source: string): Promise<unknown> {
       atomicAppendJsonLine(observationsPath, observation);
       observationCommitted = true;
       publishLatestPlayerObservation(observation);
-      const frontierFillTypeHelp = playerFrontierFillTypeHelp(observation);
-      publishPlayerFrontierFillTypeHelp(frontierFillTypeHelp);
       evidenceWritingMilliseconds +=
         performance.now() - observationWritingStarted;
       appendSupervisorTiming(frozenContinuation);
@@ -1276,9 +1200,7 @@ async function serveRequests(
           typeof request.requestId !== "string" ||
           typeof request.source !== "string" ||
           typeof request.expectedObservationSha256 !== "string" ||
-          !/^[0-9a-f]{64}$/.test(request.expectedObservationSha256) ||
-          typeof request.expectedFrontierFillTypesSha256 !== "string" ||
-          !/^[0-9a-f]{64}$/.test(request.expectedFrontierFillTypesSha256)
+          !/^[0-9a-f]{64}$/.test(request.expectedObservationSha256)
         ) {
           return { tag: "error", message: "Player request is invalid." };
         }
@@ -1290,19 +1212,6 @@ async function serveRequests(
             tag: "error",
             message:
               "Player request does not follow the latest published observation.",
-          };
-        }
-        const publishedFrontier: unknown = JSON.parse(
-          readFileSync(playerPublishedFrontierPath, "utf8"),
-        );
-        if (
-          !isRecord(publishedFrontier) ||
-          publishedFrontier.sha256 !== request.expectedFrontierFillTypesSha256
-        ) {
-          return {
-            tag: "error",
-            message:
-              "Player request does not follow the latest published frontier fill types.",
           };
         }
         const attemptPath = resolve(playerRoot, "attempt.ts");

@@ -24,10 +24,6 @@ const requestPath = resolve(".requests", `${requestId}.request.json`);
 const requestTemporaryPath = resolve(".requests", `${requestId}.request.next`);
 const responsePath = resolve(".responses", `${requestId}.response.json`);
 const observation = readFileSync(resolve("OBSERVATION.json"), "utf8");
-const frontierFillTypes = readFileSync(
-  resolve("FRONTIER_FILL_TYPES.md"),
-  "utf8",
-);
 writeFileSync(
   requestTemporaryPath,
   `${JSON.stringify({
@@ -35,9 +31,6 @@ writeFileSync(
     source: readFileSync(resolve(attemptPath), "utf8"),
     expectedObservationSha256: createHash("sha256")
       .update(observation)
-      .digest("hex"),
-    expectedFrontierFillTypesSha256: createHash("sha256")
-      .update(frontierFillTypes)
       .digest("hex"),
   })}\n`,
   { flag: "wx" },

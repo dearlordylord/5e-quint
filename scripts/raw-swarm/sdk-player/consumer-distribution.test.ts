@@ -19,14 +19,10 @@ import { promisify } from "node:util";
 import { describe, expect, test } from "vitest";
 import { buildSync } from "esbuild";
 
-import { repoRoot, sha256Canonical } from "../transcript.ts";
+import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
-import {
-  publicSdkDeclarationGraphSha256,
-  publicSdkTypeHelp,
-} from "./public-sdk-type-help.ts";
 
 const CONSUMER_SCENARIO_ID = "ready-mixed-consumer";
 const CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS = 10 * 60 * 1_000;
@@ -330,29 +326,16 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
           path.endsWith("player-client.mjs"),
         ),
       ).toBe(true);
-      expect(
-        filesBelow(destination).some((path) =>
-          path.endsWith("public-sdk-type-help.mjs"),
-        ),
-      ).toBe(false);
       expect(existsSync(join(destination, "FILL_TYPES.json"))).toBe(false);
-      const fillTypes: unknown = JSON.parse(
-        readFileSync(join(trustedDestination, "FILL_TYPES.json"), "utf8"),
+      expect(existsSync(join(trustedDestination, "FILL_TYPES.json"))).toBe(
+        false,
       );
-      const declarationGraphSha256 = publicSdkDeclarationGraphSha256(
-        join(trustedDestination, "declarations"),
+      expect(existsSync(join(destination, "FRONTIER_FILL_TYPES.md"))).toBe(
+        false,
       );
-      expect(declarationGraphSha256).toBeDefined();
-      if (declarationGraphSha256 === undefined) {
-        throw new Error("Consumer declaration graph is empty.");
-      }
       expect(
-        publicSdkTypeHelp(
-          fillTypes,
-          "savingThrowOutcome",
-          declarationGraphSha256,
-        ),
-      ).toMatchObject({ tag: "found" });
+        existsSync(join(trustedDestination, "FRONTIER_FILL_TYPES.md")),
+      ).toBe(false);
 
       writeFileSync(
         join(destination, "attempt.ts"),
@@ -428,11 +411,6 @@ export const continueBattle: PlayerContinuation = (context) => {
           frontier: { kind: "acts" },
         },
       });
-      const frontierPath = join(destination, "FRONTIER_FILL_TYPES.md");
-      const initialFrontier = readFileSync(frontierPath, "utf8");
-      expect(initialFrontier).toContain("# Frontier fill types");
-      expect(initialFrontier).toContain(sha256Canonical(initialObservation));
-      expect(initialFrontier).toContain(declarationGraphSha256);
 
       writeFileSync(
         join(destination, "attempt.ts"),
@@ -517,9 +495,6 @@ export const continueBattle: PlayerContinuation = (context) => {
         ) {
           throw new Error("Expected the frozen execution observation.");
         }
-        expect(readFileSync(frontierPath, "utf8")).toContain(
-          sha256Canonical(executionErrorResponse.observation),
-        );
         expect(
           readFileSync(join(destination, "OBSERVATION.json"), "utf8"),
         ).toBe(
@@ -544,20 +519,6 @@ export const continueBattle: PlayerContinuation = (context) => {
         ) {
           throw new Error("Expected the successful continuation observation.");
         }
-        expect(readFileSync(frontierPath, "utf8")).toContain(
-          sha256Canonical(successfulResponse.observation),
-        );
-
-        const publishedFrontier = readFileSync(frontierPath, "utf8");
-        appendFileSync(frontierPath, "\nmodel-authored tampering\n");
-        expect(() =>
-          execFileSync(
-            process.execPath,
-            [join(destination, "player-client.mjs"), "attempt.ts"],
-            { cwd: destination, stdio: "pipe" },
-          ),
-        ).toThrow();
-        writeFileSync(frontierPath, publishedFrontier);
 
         const queuedObservationSha256 = createHash("sha256")
           .update(readFileSync(join(destination, "OBSERVATION.json"), "utf8"))
@@ -569,9 +530,6 @@ export const continueBattle: PlayerContinuation = (context) => {
               requestId,
               source: discoveryAttempt,
               expectedObservationSha256: queuedObservationSha256,
-              expectedFrontierFillTypesSha256: createHash("sha256")
-                .update(publishedFrontier)
-                .digest("hex"),
             })}\n`,
           );
         }
@@ -633,9 +591,6 @@ export const continueBattle: PlayerContinuation = (context) => {
                 readFileSync(join(destination, "OBSERVATION.json"), "utf8"),
               )
               .digest("hex"),
-            expectedFrontierFillTypesSha256: createHash("sha256")
-              .update(readFileSync(frontierPath, "utf8"))
-              .digest("hex"),
           })}\n`,
         );
         const latestPublicationFailureResponsePath = join(
@@ -672,52 +627,6 @@ export const continueBattle: PlayerContinuation = (context) => {
         rmSync(
           join(trustedDestination, "observation-publication-failure.json"),
         );
-
-        const observationsBeforePublicationFailure = readFileSync(
-          observationsPath,
-          "utf8",
-        )
-          .trim()
-          .split("\n").length;
-        const frontierBeforePublicationFailure = readFileSync(
-          frontierPath,
-          "utf8",
-        );
-        rmSync(frontierPath);
-        mkdirSync(frontierPath);
-        const publicationFailureRequestId = "frontier-publication-failure";
-        writeFileSync(
-          join(
-            requestsDirectory,
-            `${publicationFailureRequestId}.request.json`,
-          ),
-          `${JSON.stringify({
-            requestId: publicationFailureRequestId,
-            source: discoveryAttempt,
-            expectedObservationSha256: createHash("sha256")
-              .update(
-                readFileSync(join(destination, "OBSERVATION.json"), "utf8"),
-              )
-              .digest("hex"),
-            expectedFrontierFillTypesSha256: createHash("sha256")
-              .update(frontierBeforePublicationFailure)
-              .digest("hex"),
-          })}\n`,
-        );
-        const publicationFailureResponsePath = join(
-          responsesDirectory,
-          `${publicationFailureRequestId}.response.json`,
-        );
-        await waitForPath(publicationFailureResponsePath);
-        expect(
-          JSON.parse(readFileSync(publicationFailureResponsePath, "utf8")),
-        ).toMatchObject({ tag: "error" });
-        expect(
-          readFileSync(observationsPath, "utf8").trim().split("\n").length,
-        ).toBe(observationsBeforePublicationFailure + 1);
-        rmSync(frontierPath, { recursive: true });
-        writeFileSync(frontierPath, frontierBeforePublicationFailure);
-        rmSync(join(trustedDestination, "frontier-publication-failure.json"));
       } finally {
         const stopped = new Promise<void>((resolveStopped) => {
           server.once("exit", () => resolveStopped());
@@ -730,7 +639,7 @@ export const continueBattle: PlayerContinuation = (context) => {
           cwd: trustedDestination,
           encoding: "utf8",
         }),
-      ).toContain("5 call(s) matched");
+      ).toContain("4 call(s) matched");
 
       writeFileSync(
         join(destination, "attempt.ts"),
@@ -809,7 +718,7 @@ export const continueBattle: PlayerContinuation = (context) => {
           cwd: trustedDestination,
           encoding: "utf8",
         }),
-      ).toContain("13 call(s) matched");
+      ).toContain("12 call(s) matched");
 
       const prefixPath = join(
         trustedDestination,
@@ -908,7 +817,7 @@ export const continueBattle: PlayerContinuation = (context) => {
           cwd: trustedDestination,
           encoding: "utf8",
         }),
-      ).toContain("14 call(s) matched");
+      ).toContain("13 call(s) matched");
       const callEvidence = readFileSync(
         join(trustedDestination, "evidence/sdk-calls.jsonl"),
         "utf8",
@@ -991,7 +900,7 @@ export const continueBattle: PlayerContinuation = (context) => {
           cwd: trustedDestination,
           encoding: "utf8",
         }),
-      ).toContain("14 call(s) matched");
+      ).toContain("13 call(s) matched");
     },
     CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
   );

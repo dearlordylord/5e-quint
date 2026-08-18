@@ -34,6 +34,15 @@ SDK execution, and evidence-write time. The retained baseline predates those
 ledgers, so its aggregate `tokens used` footer is reported but is not silently
 treated as directly comparable.
 
+The complete controlled comparison has now selected the issue's simplification
+path. Against a clean same-scenario player baseline, the frontier-specific
+declaration-help candidate used 118.98% more input-plus-output tokens and took
+123.67% more wall time. The bounded player observation remains useful and is
+retained, but the frontier-specific declaration/type-help publication and hash
+protocol did not demonstrate whole-path value and are removed. Transcript,
+audit, replay, invocation telemetry, SQLite indexing, and portable export remain
+because their integrity and payload benefits were independently demonstrated.
+
 ## Engineering-cost and outcome report
 
 This section records the approximately twelve-hour implementation period
@@ -95,11 +104,13 @@ verification, evidence handling, and review rather than the short player model
 measurements themselves.
 
 The agent-goal ledger is a separate cost population from those harness model
-invocations. At the stringency review checkpoint it records 7,171,742 agent
-tokens and 45,247 seconds (about 12 hours 34 minutes) for the #282 objective.
-Neither total should be added to the other: the goal ledger measures the
-engineering agent, while the retained invocation ledger measures models run by
-the harness. Both are required to describe the work's token cost honestly.
+invocations. At the stringency review checkpoint it recorded 7,171,742 agent
+tokens and 45,247 seconds (about 12 hours 34 minutes). At the final
+simplification checkpoint it records 10,305,698 agent tokens and 66,771 seconds
+(about 18 hours 33 minutes) for the #282 objective. Neither total should be
+added to the harness invocation total: the goal ledger measures the engineering
+agent, while the retained invocation ledger measures models run by the harness.
+Both are required to describe the work's token cost honestly.
 
 ### Realized benefits
 
@@ -129,13 +140,54 @@ the harness. Both are required to describe the work's token cost honestly.
   verification are implemented. No replay cache was added before its two-part
   admission evidence was available.
 
-### Drawbacks and ongoing problems
+### Complete controlled comparison of the declaration-help experiment
 
-- Issue #282 is not complete. There is no complete controlled run of the latest
-  player path and therefore no whole-path token/wall-time result.
-- The accepted short gate is 38.87%, below the issue's original 40% normalized
-  target. The user explicitly accepted that short-gate result, but it must not
-  be described as satisfying the unchanged complete-path criterion.
+The pre-removal declaration-help experiment and baseline used byte-identical
+generated-battle-004 scenario prose, scenario review, characters, and setup.
+Both players completed the battle and replayed deterministically. The experiment
+is pinned to Git revision `2495806ed`; these measurements justify removing its
+player-facing type-help protocol and are not measurements of the resulting
+simplified code.
+
+| Player measure            | Comparable baseline | Declaration-help experiment | Reduction |
+| ------------------------- | ------------------: | --------------------------: | --------: |
+| Input + output tokens     |           8,040,127 |                  17,606,310 |  -118.98% |
+| Wall time                 |          497,049 ms |                1,111,766 ms |  -123.67% |
+| Tokens per continuation   |        229,718 (35) |                382,746 (46) |   -66.62% |
+| Tokens per canonical call |         94,590 (85) |                217,362 (81) |  -129.79% |
+| Uncached input + output   |             208,575 |                     298,662 |   -43.19% |
+
+The baseline evidence is
+`generated-battle-004-controlled-282-legacy-baseline-1-sdk-player`; the final
+experiment is `generated-battle-004-controlled-282-final-6-sdk-player`. Its
+transcript is 21,741,533 bytes and contains 46 continuations. Its supervisor
+spent about 46.9 seconds outside the model: 17.6 seconds on
+continuation typechecking, 28.6 seconds on prior-call replay, 0.43 seconds on
+new SDK execution, and 0.26 seconds writing evidence. Replay therefore did not
+meet the issue's 60-second cache threshold, so no replay cache was admitted.
+
+The comparable fixed packet reviewer baseline used 321,326 input-plus-output
+tokens and 1,216,960 ms. The declaration-help experiment used 264,891 tokens
+and 1,103,884 ms: reductions of 17.56% and 9.29%, respectively, both below the
+required 50%.
+A direct attempt to construct a new reviewer packet from the legacy player
+transcript failed closed before model invocation because the packet would have
+been 1,027,142 bytes, above the 921,600-byte cap. The cap was not raised and no
+new compaction mechanism was added.
+
+The final run also demonstrated why the retained evidence machinery matters.
+Independent review confirmed two Battle Runtime defects and one SDK contract
+defect, now tracked as GitHub issues #284, #285, and #286. It rejected an
+incorrect review claim about spell spatial facts and separated a player-invalid
+loadout from engine defects. These results support retaining the transcript,
+bounded audit, exact-sequence extraction, replay, and searchable index; they do
+not support retaining the failed player type-help experiment.
+
+### Drawbacks and resolved decision points
+
+- The earlier 38.87% three-invocation improvement did not generalize to the
+  complete path. It was diagnostic evidence only and is superseded by the
+  controlled comparison above.
 - The first invocation remains a 273,200-token outlier. Later invocations were
   approximately 69,500 tokens. Its extra exploration included rereading the
   frontier, a failed `jq` command, an unnecessary fill-help query already
@@ -154,12 +206,9 @@ the harness. Both are required to describe the work's token cost honestly.
   retained. Exact replay of those baseline phases is impossible without
   fabricating provenance; newly authored control envelopes must be labeled as
   such.
-- The retained baseline footer and first-party event usage are different
-  protocols. The 50% reviewer and 60% whole-path token claims remain unproven
-  until a comparable baseline is captured.
-- Replay measured 430,212 cumulative milliseconds across 88 prefixes, but the
-  baseline lacks the non-model supervisor share needed by the cache admission
-  rule. Replay remains a measured cost without an admitted cache.
+- Exact historical milestone and final-pre-play review envelopes remain
+  unavailable, so no saving is claimed for those phases. The player and fixed
+  packet-review comparisons above are comparable and both fail their gates.
 - Moving full payloads out of SQLite improves the searchable index, but does
   not erase artifact storage. The current portable export is about 472 MB, the
   controlled player is about 23 MB, and retained failed experiments add about
@@ -175,8 +224,7 @@ the harness. Both are required to describe the work's token cost honestly.
   each canonical resource variant, retains the complete canonical `BattleHole`,
   and fails closed on malformed or unadmitted shapes. This repair increased the
   fixed player projection by 36,707 bytes while preserving a 16.94-times
-  reduction and the 32-KiB per-turn cap. The complete controlled run remains the
-  required evidence that this reliability/performance tradeoff is proportionate.
+  reduction and the 32-KiB per-turn cap.
 - Earlier issue comments contain slightly stale derived-byte figures. The
   checked `generated-battle-004-fixed-measurement.json` values above supersede
   them.
@@ -197,7 +245,7 @@ added a smaller accidental-commit risk. All #282 commits staged explicit file
 lists, and the controlled trials ran from clean detached commits, so none of
 those unrelated modifications entered the measured artifacts.
 
-### Economic assessment
+### Economic assessment and retained design
 
 Twelve hours would be unreasonable if the result were only a 38.87% player
 token reduction. The work also delivered order-of-magnitude audit,
@@ -206,27 +254,38 @@ and verdict-mapping capabilities required by the issue. Those evidence
 boundaries should remain: removing them would trade away measured integrity and
 payload improvements rather than merely deleting optimization code.
 
-The player-optimization phase was nevertheless overbuilt relative to the
-evidence: 3 hours 24 minutes and 2,586 added lines before only a short gate
-passed, and the stringency review found the two projection defects above. The
-current code is therefore only a proportionate-implementation candidate. The
-next proportionate decision is:
+The player-optimization phase was overbuilt relative to the evidence: 3 hours
+24 minutes and 2,586 added lines preceded a short result that reversed on the
+complete run. The appropriate middle ground is now evidence-based rather than
+aspirational:
 
-1. freeze further optimization and do not add a replay cache, compaction layer,
-   or another context protocol;
-2. converge independent review of the repaired stat-block resource and
-   actionable-hole projections;
-3. run one complete controlled comparison with the retained normalized
-   denominators;
-4. keep the three-tier evidence boundary and frontier projection if that run
-   passes; otherwise simplify the declaration/type-help layer first, and remove
-   the independent-invocation/frontier bundle as a unit if its whole-path value
-   remains unproved.
+1. retain the complete transcript as authority and the bounded, hash-linked
+   player/reviewer/index projections whose reliability or payload benefit was
+   demonstrated;
+2. retain the persistent player invocation and real public-SDK execution, but
+   let TypeScript declarations serve compilation rather than publishing a
+   second frontier-specific model-help protocol;
+3. remove frontier fill-type artifacts, publication hashes, and their protocol
+   and test surface;
+4. add no replay cache, generic compaction, or replacement context layer.
 
-That gate avoids defending sunk cost while also avoiding a premature deletion
-that would discard the only measured 18.1% to 38.87% player-context gains. The
-issue remains open until the complete controlled comparison and acceptance
-audit are available.
+This accepts the measured negative performance result instead of defending sunk
+cost. The simplification was then verified and its maintenance footprint
+measured directly.
+
+The simplification itself changes 11 files, adds 22 lines, and deletes 1,137
+lines (net -1,115). It deletes the two frontier/type-help implementations and
+their tests rather than leaving unused compatibility machinery. Because the
+unrelated #227 branch was merged into `master` during #282, a raw
+pre-feature-to-HEAD diff would incorrectly attribute that branch to this work.
+Using the union of files changed by #282 before that merge and the explicit
+#282 follow-up commits after it, while excluding the user's unrelated dirty
+research files, the final maintained upper-bound view is 72 files with 18,380
+added and 1,991 deleted lines: 10,820/752 production or tooling, 6,483/1,193
+tests, and 1,077/46 documentation. This union can still include changes made by
+#227 to the same files, so it is intentionally reported as an upper bound, not
+as exact authorship. The exact simplification delta above is unaffected by that
+history.
 
 ## What was measured
 
@@ -558,12 +617,12 @@ operation, and outcome.
 
 Controlled runs retain first-party invocation ledgers and supervisor phase
 timings. Whole-path comparison checks scenario/model identity and reports tokens
-per invocation, continuation, and call. Legacy footer totals are explicitly
-incomparable to JSON event counters; the harness does not claim the 50%
-post-play-review or 60%-of-baseline complete-path token gates until a comparable
-fixed-protocol baseline exists.
-Wall time remains comparable only when the same scenario identity and complete
-path duration are retained.
+per invocation, continuation, and call. The comparable player and fixed packet
+review baselines now show that the declaration-help experiment failed the 60%
+complete-path and 50% post-play-review gates. Historical footer totals remain
+explicitly incomparable to JSON event counters and are not used to soften that
+result. Wall time is compared only where scenario identity and complete path
+duration are retained.
 
 The first controlled player measurement used one model conversation for all 30
 tactical continuations. Its 6,742,713 input tokens included 6,517,248 cached
@@ -624,18 +683,20 @@ rather than another short gate.
 Six later independent invocations consumed 1,189,210 input tokens and 457.8
 seconds before completion, already exceeding the retained complete-player
 baseline of 449,970 tokens. The independent-invocation loop was therefore
-removed rather than extended with another context protocol. The current
-candidate returns to one persistent invocation while retaining bounded trusted
-observations, atomic hash-bound frontier help, a supervisor-owned continuation
-limit, and append-only evidence. Its performance is deliberately unclaimed
-until the required fresh complete run finishes.
+removed rather than extended with another context protocol.
 
-The fixed 88-prefix benchmark measured 430,212 ms of cumulative replay, so the
-60-second cache gate is met. Cache admission remains deferred until the fresh
-controlled run proves replay is also at least 10% of non-model supervisor time;
-the retained baseline predates phase timing evidence. App-server reuse,
-compression, and seeded model decisions remain deferred rather than being
-mixed into this change.
+The later complete controlled run used one persistent player invocation. It
+failed every normalized player-performance denominator, as recorded in the
+complete comparison above. The frontier fill-type artifact and its publication
+hash protocol were therefore removed. The retained player path now uses the
+bounded trusted observation, supervisor-owned continuation limit, emitted
+TypeScript declarations for compilation, and append-only evidence without a
+second player-facing type-help product.
+
+The complete run measured only 28,610 ms of prefix replay, below the 60-second
+cache threshold. A replay cache is therefore rejected for this implementation.
+App-server reuse, compression, and seeded model decisions remain separate work
+rather than being mixed into this change.
 
 ## Decisions retained after design review
 
@@ -647,10 +708,10 @@ patches or complete SDK results. A byte-capped tactical note can preserve player
 reasoning but is not evidence. Exact raw transcript records remain available to
 reviewers through a hash-checking sequence extractor.
 
-Public fill authoring uses a separate generated type-help artifact derived from
-the exact distributed declaration graph. It is accepted instead of adding type
-presentation metadata to every semantic player projection or serving a live
-supervisor inspection request.
+Public fill authoring is checked by the emitted declaration graph and local
+TypeScript compiler. No declaration-derived player document or query protocol
+is retained: the complete comparison did not justify that additional context
+and synchronization surface.
 
 The following alternatives are deliberately preserved for later evaluation:
 
@@ -701,4 +762,7 @@ First-party external sources:
 - SQLite [WAL](https://sqlite.org/wal.html), [pragmas](https://sqlite.org/pragma.html),
   and [backup API](https://www.sqlite.org/backup.html) documentation.
 
-No tests or broad verification commands were run for this research-only report.
+The final simplification was verified with the public Raw Swarm SDK-player gate:
+TypeScript and 22 test files / 123 tests passed, including the external-consumer
+distribution and deterministic transcript replay coverage. No additional
+agent-player scenario was launched after simplification.

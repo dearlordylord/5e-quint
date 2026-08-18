@@ -295,13 +295,15 @@ acting creature's controller decide by default.
 
 The current single-controller runner uses one model invocation for the complete
 play session. After each tactical continuation, the trusted supervisor publishes
-the bounded latest observation and exact fill declarations for its frontier.
-The controller must reread those two files before replacing the editable
-continuation body. An observation hash in each request rejects queued work based
-on an older frontier, and the supervisor admits at most 128 frozen
-continuations. Multiple controllers must not concurrently edit one shared
-program. The supervisor seeing all briefs is an accepted instructional boundary
-for the prototype, not a claim of secure hidden information.
+the bounded latest observation. The controller must reread that file before
+replacing the editable continuation body. Its TypeScript submission still
+compiles against the emitted public declaration graph, but the declarations are
+not a second player-facing context product. An observation hash in each request
+rejects queued work based on an older frontier, and the supervisor admits at
+most 128 frozen continuations. Multiple controllers must not concurrently edit
+one shared program. The supervisor seeing all briefs is an accepted
+instructional boundary for the prototype, not a claim of secure hidden
+information.
 
 If a continuation records an SDK call and then fails, that continuation remains
 frozen evidence. Its error response carries the supervisor-derived projection

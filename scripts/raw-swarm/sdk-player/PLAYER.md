@@ -1,6 +1,6 @@
 # SDK battle player
 
-Read `SCENARIO.md`, `OBSERVATION.json`, and `FRONTIER_FILL_TYPES.md`. You are an
+Read `SCENARIO.md` and `OBSERVATION.json`. You are an
 external SDK consumer. The only code you author is the body of the typed
 continuation in `attempt.ts`.
 
@@ -8,12 +8,6 @@ Use the `context.sdk` operations exactly as typed. They are the canonical
 `@dnd/battle-runtime` operations with call/result recording around them. Do not
 invent a second command vocabulary, inspect repository implementation or tests,
 or import unrecorded runtime operations.
-
-The declaration graph under `declarations/` is the source of the supplied
-public SDK types. Do not search that graph. The trusted supervisor derives
-`FRONTIER_FILL_TYPES.md` from it after every recorded continuation. That file
-contains the exact declarations for every fill kind on the current observed
-frontier; it is evidence about the public SDK, not a second command vocabulary.
 
 When `context.session.battle.state.subjectResolutionPhase.kind` is
 `subjectSelection`, call `context.sdk.discoverBattleActs` inside the
@@ -206,11 +200,11 @@ A `needsHoles` result means the selected subject is still in progress. A fresh
 act discovery may then be empty by design; that is not an obstruction. Always
 carry `result.session` forward, but do not treat it as saved fill history: a
 `needsHoles` session does not persist the answer prefix for the next replay.
-When the current source already has the facts and declarations needed for a
-downstream answer, it may resolve that answer in the same authored
-continuation. Otherwise return `kind: "continue"` with the latest session. The
-supervisor then records the continuation and rewrites `OBSERVATION.json` and
-`FRONTIER_FILL_TYPES.md`; reread both before authoring the next continuation.
+When the current source already has the facts needed for a downstream answer,
+it may resolve that answer in the same authored continuation. Otherwise return
+`kind: "continue"` with the latest session. The supervisor then records the
+continuation and rewrites `OBSERVATION.json`; reread it before authoring the
+next continuation.
 Keep every accepted fill in canonical order. On the next resolution call, use
 the result's subject and submit the complete accumulated prefix plus the newly
 requested fill(s), not only the latest fill(s):
