@@ -15,6 +15,7 @@ import {
   type BattleState,
   type CombatantId,
 } from "./index.ts";
+import type { BattleProcedureExecutionRef } from "./identity.ts";
 import {
   characterCreature,
   requireHole,
@@ -92,16 +93,17 @@ describe("Dragonborn Breath Weapon runtime", () => {
 
   test("requests an enemy relationship fact while Rage is active", () => {
     const session = breathWeaponBattle({ includeRage: true });
+    const rageProcedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      spellCasterId,
+      "barbarian_rage",
+    );
     const raging = resolveBattleSubject({
       state: session.state,
       subject: {
         tag: "unitFeature",
         actorId: spellCasterId,
-        procedureRef: requireCharacterUnitProcedureRefForTest(
-          session,
-          spellCasterId,
-          "barbarian_rage",
-        ),
+        procedureRef: rageProcedureRef,
       },
       fills: [],
     });
@@ -117,15 +119,52 @@ describe("Dragonborn Breath Weapon runtime", () => {
       kind: "savingThrowTargetIsEnemy",
       actorId: spellCasterId,
     });
+    const rageUsesBeforeBreath = unitFeatureUsesRemaining(
+      raging.state,
+      spellCasterId,
+      rageProcedureRef,
+    );
+    const pendingDamage = resolveBreathWeaponSave(raging.state, {
+      outcomes: [
+        { targetId: spellTargetId, succeeded: false },
+        { targetId: secondTargetId, succeeded: true },
+      ],
+      areaTargetIds: [spellTargetId, secondTargetId],
+    });
+    expect(pendingDamage).toMatchObject({ tag: "needsHoles" });
+    if (pendingDamage.tag !== "needsHoles") {
+      throw new Error("Expected Breath Weapon to request a damage roll.");
+    }
+    const resolved = resolveBattleSubject({
+      state: raging.state,
+      subject: breathWeaponSubject(raging.state),
+      fills: [
+        breathWeaponSavingThrowFill(
+          requireHole(
+            breathWeaponAct(raging.state).initialHoles,
+            "savingThrowOutcome",
+          ),
+          [
+            { targetId: spellTargetId, succeeded: false },
+            { targetId: secondTargetId, succeeded: true },
+          ],
+          [spellTargetId, secondTargetId],
+        ),
+        rolledDiceFill(requireHole(pendingDamage.holes, "rolledDice"), [6, 4]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    const resolvedStateValue = resolvedState(resolved);
+    expect(currentHp(resolvedStateValue, spellTargetId)).toBe(10);
+    expect(currentHp(resolvedStateValue, secondTargetId)).toBe(15);
+    expect(breathWeaponUsesRemaining(resolvedStateValue)).toBe(2);
     expect(
-      resolveBreathWeaponSave(raging.state, {
-        outcomes: [
-          { targetId: spellTargetId, succeeded: false },
-          { targetId: secondTargetId, succeeded: true },
-        ],
-        areaTargetIds: [spellTargetId, secondTargetId],
-      }),
-    ).toMatchObject({ tag: "needsHoles" });
+      unitFeatureUsesRemaining(
+        resolvedStateValue,
+        spellCasterId,
+        rageProcedureRef,
+      ),
+    ).toBe(rageUsesBeforeBreath);
   });
 
   test("resolves both save outcomes, applies ancestry damage, and spends one use", () => {
@@ -237,6 +276,24 @@ describe("Dragonborn Breath Weapon runtime", () => {
     expect(currentHp(resolved, secondTargetId)).toBe(15);
     expect(breathWeaponUsesRemaining(resolved)).toBe(2);
     expect(resolved.currentTurnResources.actionResources).toHaveLength(0);
+  });
+
+  test("uses the base ancestry damage dice before the first scaling tier", () => {
+    const state = breathWeaponBattle({ fighterLevel: 1 }).state;
+    const pendingDamage = resolveBreathWeaponSave(state, {
+      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      areaTargetIds: [spellTargetId],
+    });
+
+    expect(pendingDamage).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "rolledDice",
+          label: "Area damage replacement (1d10)",
+        }),
+      ],
+    });
   });
 
   test("opens the remaining Extra Attack slot after replacing the first attack", () => {
@@ -377,17 +434,19 @@ describe("Dragonborn Breath Weapon runtime", () => {
 function breathWeaponBattle(
   input: {
     readonly extraAttack?: boolean;
+    readonly fighterLevel?: number;
     readonly includeRage?: boolean;
     readonly usesRemaining?: number;
   } = {},
 ): BattleRuntimeSession {
+  const fighterLevel = classLevel(input.fighterLevel ?? 5);
   const classLevels: CharacterBattleClassLevelInits =
     input.includeRage === true
       ? [
-          { className: "fighter" as const, level: classLevel(5) },
+          { className: "fighter" as const, level: fighterLevel },
           { className: "barbarian" as const, level: classLevel(1) },
         ]
-      : [{ className: "fighter" as const, level: classLevel(5) }];
+      : [{ className: "fighter" as const, level: fighterLevel }];
   const result = startBattle({
     battleId: battleId("dragonborn-breath-weapon-runtime"),
     combatants: [
@@ -600,6 +659,38 @@ function breathWeaponUsesRemaining(state: BattleState): number {
   );
   if (resource === undefined || !("usesRemaining" in resource)) {
     throw new Error("Expected Breath Weapon use-count resource.");
+  }
+  return Number(resource.usesRemaining);
+}
+
+function unitFeatureUsesRemaining(
+  state: BattleState,
+  actorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): number {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected a character actor.");
+  }
+  const binding = actor.origin.execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === procedureRef,
+  );
+  if (binding === undefined) {
+    throw new Error("Expected the selected Unit feature procedure.");
+  }
+  const procedure = binding.procedure;
+  if (
+    procedure.kind !== "unitFeature" ||
+    procedure.source.kind !== "resourcePool"
+  ) {
+    throw new Error("Expected the selected Unit feature resource.");
+  }
+  const resourcePoolRef = procedure.source.resourcePoolRef;
+  const resource = actor.origin.resources.find(
+    (candidate) => candidate.resourcePoolRef === resourcePoolRef,
+  );
+  if (resource === undefined || !("usesRemaining" in resource)) {
+    throw new Error("Expected an ongoing feature use-count resource.");
   }
   return Number(resource.usesRemaining);
 }

@@ -620,19 +620,7 @@ export function applySpellCreatedHeldObjectEffect(input: {
     };
   }
   /* v8 ignore stop */
-  const activeEffects = [
-    ...actor.activeEffects.filter((effect) => {
-      const sameSourceReplay =
-        effect.kind === "spellCreatedHeldObject" &&
-        activeEffectSourceMatches(effect, input.activeEffect);
-      if (sameSourceReplay) {
-        /* v8 ignore next -- Pure replay/idempotency guard: `spendConfiguredSpellCastResources` breaks prior Concentration before initial held-object application; legal re-evocation uses `setSpellCreatedHeldObjectState` after release instead. */
-        return false;
-      }
-      return true;
-    }),
-    input.activeEffect,
-  ];
+  const activeEffects = [...actor.activeEffects, input.activeEffect];
   const nextActor = battleCreatureWithSpellCreatedHeldObjectHand(
     {
       ...actor,
@@ -1750,21 +1738,14 @@ export function applySleepPendingRepeatSaveEffects(
     { readonly procedure: "sleepTargetAdmission" }
   >,
 ): BattleState {
-  const sourceProcedureRef = invocation.sourceProcedureRef;
-  const sourceCombatantId = actorId;
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
     if (target === undefined) {
       continue;
     }
-    const replacing = target.activeEffects.filter(
-      (effect) =>
-        effect.kind === "sleepPendingRepeatSave" &&
-        sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId),
-    );
     const activeEffects = [
-      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
+      ...target.activeEffects,
       {
         kind: "sleepPendingRepeatSave" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
@@ -1810,21 +1791,14 @@ export function applyHideousLaughterEffects(
   >,
   heightenedSpellTargetId: CombatantId | undefined = undefined,
 ): BattleState {
-  const sourceProcedureRef = invocation.sourceProcedureRef;
-  const sourceCombatantId = actorId;
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
     if (target === undefined) {
       continue;
     }
-    const replacing = target.activeEffects.filter(
-      (effect) =>
-        effect.kind === "hideousLaughter" &&
-        sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId),
-    );
     const activeEffects = [
-      ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
+      ...target.activeEffects,
       {
         kind: "hideousLaughter" as const,
         sourceProcedureRef: invocation.sourceProcedureRef,
@@ -2979,8 +2953,6 @@ export function applySaveGatedConditionImmunityEffects(
     { readonly procedure: "saveGatedConditionImmunity" }
   >,
 ): BattleState {
-  const sourceProcedureRef = invocation.sourceProcedureRef;
-  const sourceCombatantId = actorId;
   return targetIds.reduce((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
     /* v8 ignore start -- Defensive internal guard: protection-spell failed-save target ids are validated against the current combatant map before immunities are applied. */
@@ -2997,22 +2969,7 @@ export function applySaveGatedConditionImmunityEffects(
         effect.condition,
       ),
     }));
-    const activeEffects = [
-      ...target.activeEffects.filter((effect) => {
-        const sameSourceReplay =
-          effect.kind === "conditionImmunity" &&
-          sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId) &&
-          invocation.activeEffects.some(
-            (candidate) => candidate.condition === effect.condition,
-          );
-        if (sameSourceReplay) {
-          /* v8 ignore next -- Pure replay/idempotency guard: save-gated spell resolution spends the slot and breaks prior Concentration before this application, so a legal Calm Emotions subject cannot retain a matching source immunity. */
-          return false;
-        }
-        return true;
-      }),
-      ...nextEffects,
-    ];
+    const activeEffects = [...target.activeEffects, ...nextEffects];
     return {
       ...nextState,
       combatants: new Map(nextState.combatants).set(
@@ -3214,46 +3171,83 @@ function spellPostDamageRiderActiveEffect(input: {
   );
 }
 
+type PostDamageRiderExpirationInput =
+  | SpellPostDamageRiderExpiration
+  | Extract<
+      SpellFailedSavePostDamageRider,
+      { readonly kind: "nextAttackRollByTarget" }
+    >["expiresAt"]
+  | SpellFailedSaveConditionEffect["expiresAt"]
+  | undefined;
+
+type StructuredPostDamageRiderExpiration = Extract<
+  PostDamageRiderExpirationInput,
+  { readonly kind: "duration" | "concentration" }
+>;
+
+type NamedPostDamageRiderExpiration = Exclude<
+  PostDamageRiderExpirationInput,
+  StructuredPostDamageRiderExpiration | undefined
+>;
+
+function expirationForStructuredPostDamageRider(
+  expiresAt: StructuredPostDamageRiderExpiration,
+  casterId: CombatantId,
+): BattleActiveEffectExpiration {
+  return Match.value(expiresAt).pipe(
+    Match.when({ kind: "duration" }, (duration) => duration),
+    Match.when({ kind: "concentration" }, ({ durationTicks }) => ({
+      kind: "concentration" as const,
+      combatantId: casterId,
+      durationTicks,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function expirationForNamedPostDamageRider(
+  state: BattleState,
+  casterId: CombatantId,
+  targetId: CombatantId,
+  expiresAt: NamedPostDamageRiderExpiration,
+): BattleActiveEffectExpiration {
+  return Match.value(expiresAt).pipe(
+    Match.when("startOfTargetNextTurn", () => ({
+      kind: "startOfTurn" as const,
+      combatantId: targetId,
+    })),
+    Match.when("endOfCasterNextTurn", () =>
+      endOfNextTurnExpiration(state, casterId, END_OF_NEXT_TURN_DURING_TURN),
+    ),
+    Match.when("concentration", () => ({
+      kind: "concentration" as const,
+      combatantId: casterId,
+    })),
+    Match.when("endOfTargetNextTurn", () =>
+      endOfNextTurnExpiration(state, targetId, END_OF_NEXT_TURN_DURING_TURN),
+    ),
+    Match.exhaustive,
+  );
+}
+
 export function activeEffectExpirationForPostDamageRider(
   state: BattleState,
   casterId: CombatantId,
   targetId: CombatantId,
-  expiresAt:
-    | SpellPostDamageRiderExpiration
-    | Extract<
-        SpellFailedSavePostDamageRider,
-        { readonly kind: "nextAttackRollByTarget" }
-      >["expiresAt"]
-    | SpellFailedSaveConditionEffect["expiresAt"]
-    | undefined,
+  expiresAt: PostDamageRiderExpirationInput,
 ): BattleActiveEffectExpiration {
-  if (typeof expiresAt === "object" && expiresAt.kind === "duration") {
-    return expiresAt;
-  }
-  if (typeof expiresAt === "object" && expiresAt.kind === "concentration") {
-    return {
-      kind: "concentration",
-      combatantId: casterId,
-      durationTicks: expiresAt.durationTicks,
-    };
-  }
   if (expiresAt === undefined) {
     return { kind: "startOfTurn", combatantId: casterId };
   }
-  if (expiresAt === "startOfTargetNextTurn") {
-    return { kind: "startOfTurn", combatantId: targetId };
+  if (typeof expiresAt === "object") {
+    return expirationForStructuredPostDamageRider(expiresAt, casterId);
   }
-  if (expiresAt === "endOfCasterNextTurn") {
-    return endOfNextTurnExpiration(
-      state,
-      casterId,
-      END_OF_NEXT_TURN_DURING_TURN,
-    );
-  }
-  if (expiresAt === "concentration") {
-    return { kind: "concentration", combatantId: casterId };
-  }
-  return endOfNextTurnExpiration(state, targetId, END_OF_NEXT_TURN_DURING_TURN);
+  return expirationForNamedPostDamageRider(
+    state,
+    casterId,
+    targetId,
+    expiresAt,
+  );
 }
 
 export function endHeldLightSpellEffect(
@@ -3346,16 +3340,7 @@ export function applyShieldReactionSpellActiveEffect(
     combatants: new Map(state.combatants).set(reactorId, {
       ...reactor,
       activeEffects: [
-        ...reactor.activeEffects.filter((effect) => {
-          const sameSourceReplay =
-            effect.kind === "spellArmorClassBonus" &&
-            activeEffectProcedureMatches(effect, invocation.sourceProcedureRef);
-          if (sameSourceReplay) {
-            /* v8 ignore next -- Pure replay/idempotency guard: the interrupt lifecycle spends the Reaction before `resolveShieldReaction`, and Shield's start-of-turn expiry runs before the next reaction window, so a legal Shield cast cannot retain this matching bonus. */
-            return false;
-          }
-          return true;
-        }),
+        ...reactor.activeEffects,
         {
           kind: "spellArmorClassBonus",
           sourceProcedureRef: invocation.sourceProcedureRef,

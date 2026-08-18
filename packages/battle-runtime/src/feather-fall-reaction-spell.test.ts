@@ -3,6 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-feather-fall-mitigation
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   abilityModifier,
@@ -14,6 +15,7 @@ import {
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
+  classSpellListForSpellcastingClassRecord,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -41,7 +43,10 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { spellSlotInvocationRef } from "./battle-subjects.ts";
+import {
+  spellAccessFreeCastSpellInvocationRef,
+  spellSlotInvocationRef,
+} from "./battle-subjects.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
@@ -67,6 +72,123 @@ const fallingEId = combatantId("feather-fall-target-e");
 const fallingFId = combatantId("feather-fall-target-f");
 
 describe("Feather Fall Reaction spell", () => {
+  test("spends a source-scoped free cast when Feather Fall resolves for a falling creature", () => {
+    const session = battleWithFeatherFall({ sourceScopedFreeCast: true });
+    const caster = session.state.combatants.get(casterId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected Feather Fall caster character.");
+    }
+    const freeCastOwnership = session.context.characters
+      .get(casterId)
+      ?.resourceOwnership.find(
+        (ownership) =>
+          ownership.purpose.tag === "spellAccessFreeCast" &&
+          ownership.purpose.spellId === featherFallUnitId,
+      );
+    if (freeCastOwnership === undefined) {
+      throw new Error("Expected Feather Fall free-cast resource ownership.");
+    }
+    const freeCastResource = caster.origin.resources.find(
+      (resource) =>
+        resource.resourcePoolRef === freeCastOwnership.resourcePoolRef,
+    );
+    if (freeCastResource === undefined) {
+      throw new Error("Expected Feather Fall free-cast resource state.");
+    }
+    const resourcePoolRef = freeCastResource.resourcePoolRef;
+    const invocationRef = spellAccessFreeCastSpellInvocationRef(
+      featherFallUnitId,
+      resourcePoolRef,
+      "featherFallMitigation",
+    );
+    const awaitingReaction = openFeatherFallWindow(
+      session,
+      fallingAId,
+      true,
+      invocationRef,
+    );
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Feather Fall falling-trigger Reaction window.");
+    }
+    const reactionChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+        (choice) => choice.kind === "castTriggeredReactionSpell",
+      );
+    if (
+      reactionChoice === undefined ||
+      reactionChoice.kind !== "castTriggeredReactionSpell"
+    ) {
+      throw new Error("Expected Feather Fall Reaction choice.");
+    }
+    expect(
+      characterSpellInvocationRefForProcedureRefForTest(
+        battleRuntimeSessionForTest({
+          state: awaitingReaction.state,
+          context: session.context,
+        }),
+        casterId,
+        reactionChoice.subject.procedureRef,
+      ),
+    ).toMatchObject({
+      tag: "spellAccessFreeCast",
+      spellId: featherFallUnitId,
+      procedure: "featherFallMitigation",
+    });
+    const targetList = requireHole(
+      reactionChoice.initialHoles,
+      "spellTargetList",
+    );
+    const resolved = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: casterId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            procedureRef: reactionChoice.subject.procedureRef,
+            fills: [
+              featherFallTargetListFill(targetList, casterId, [fallingAId]),
+            ],
+          },
+        },
+      ),
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingInterrupt: null },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        "Expected source-scoped Feather Fall free cast to resolve.",
+      );
+    }
+    const resolvedCaster = resolved.state.combatants.get(casterId);
+    if (resolvedCaster?.origin.kind !== "character") {
+      throw new Error("Expected Feather Fall caster character after cast.");
+    }
+    expect(
+      resolvedCaster.origin.resources.find(
+        (resource) => resource.resourcePoolRef === resourcePoolRef,
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        resourcePoolRef,
+        usesRemaining: 0,
+      }),
+    );
+    expect(
+      resolvedCaster?.origin.kind === "character"
+        ? resolvedCaster.origin.spellcasting?.spellSlots
+        : [],
+    ).toEqual([]);
+  });
+
   test("ignores unrelated spatial facts while discovering falling reactors", () => {
     const session = battleWithFeatherFall();
     const result = openCreatureFallsRuntimeInterruptWindow({
@@ -405,26 +527,80 @@ function srdSpellRecord(unitId: string): SpellRecord {
   return unit;
 }
 
-function battleWithFeatherFall(): BattleRuntimeSession {
+function battleWithFeatherFall(
+  options: { readonly sourceScopedFreeCast?: boolean } = {},
+): BattleRuntimeSession {
+  const freeCastSource = {
+    id: authoredUnitId("feat_synthetic_feather_fall_dabbler"),
+    kind: "feat",
+    category: "origin",
+    name: "Synthetic Feather Fall Dabbler",
+    provenance: { kind: "synthetic-test", section: "feather fall regression" },
+    mechanics: { family: "magic_initiate", spellList: "wizard" },
+  } as const;
+  const sourceScopedFreeCast = options.sourceScopedFreeCast === true;
+  const rayOfFrost = srdSpellRecord("ray_of_frost");
+  const acidSplash = srdSpellRecord("acid_splash");
   const result = startBattle({
     battleId: battleId("feather-fall-reaction-spell"),
     combatants: [
-      characterCreature(casterId, "Feather Fall caster", 20, {
-        spellcastingSource: {
-          tag: "classSpellcasting",
-          className: "wizard",
-          abilityModifier: abilityModifier(3),
+      characterCreature(
+        casterId,
+        "Feather Fall caster",
+        20,
+        {
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "wizard",
+            abilityModifier: abilityModifier(3),
+          },
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [srdSpellRecord(featherFallUnitId)],
+          featurePreparedSpells: [],
+          spellAccesses: sourceScopedFreeCast
+            ? [
+                {
+                  source: {
+                    tag: "feat",
+                    sourceUnit: freeCastSource,
+                    spellList: wizardSpellListSource(),
+                  },
+                  spellcastingAbilityModifier: 3,
+                  cantrips: [rayOfFrost, acidSplash],
+                  levelOneSpell: srdSpellRecord(featherFallUnitId),
+                },
+              ]
+            : [],
+          spellbookRitualSpellAccesses: [],
+          invocationSpellAccesses: [],
+          spellSlots: sourceScopedFreeCast ? [] : [{ spellLevel: 1, count: 1 }],
         },
-        proficiencyBonus: proficiencyBonus(2),
-        canCastSpells: true,
-        cantrips: [],
-        preparedSpells: [srdSpellRecord(featherFallUnitId)],
-        featurePreparedSpells: [],
-        spellAccesses: [],
-        spellbookRitualSpellAccesses: [],
-        invocationSpellAccesses: [],
-        spellSlots: [{ spellLevel: 1, count: 1 }],
-      }),
+        sourceScopedFreeCast
+          ? {
+              resources: [
+                {
+                  unit: freeCastSource,
+                  spellAccessFreeCast: {
+                    spellId: srdSpellRecord(featherFallUnitId).id,
+                    count: 1,
+                  },
+                  usesRemaining: 1,
+                },
+              ],
+              characterUnitRefs: [
+                { unit: rayOfFrost, supportProfiles: [] },
+                { unit: acidSplash, supportProfiles: [] },
+                {
+                  unit: srdSpellRecord(featherFallUnitId),
+                  supportProfiles: [],
+                },
+                { unit: freeCastSource, supportProfiles: [] },
+              ],
+            }
+          : undefined,
+      ),
       characterCreature(fallingAId, "Falling A", 15),
       characterCreature(fallingBId, "Falling B", 14),
       characterCreature(fallingCId, "Falling C", 13),
@@ -504,6 +680,16 @@ function characterCreature(
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"],
+  options: {
+    readonly resources?: Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["resources"];
+    readonly characterUnitRefs?: Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["characterUnitRefs"];
+  } = {},
 ): BattleCreatureInit {
   return {
     combatantId: combatantIdValue,
@@ -513,7 +699,7 @@ function characterCreature(
       kind: "character",
       ammunitionStocks: [],
       characterId: characterId(`${combatantIdValue}-character`),
-      characterUnitRefs: [],
+      characterUnitRefs: options.characterUnitRefs ?? [],
       classLevels: [{ className: "wizard", level: 3 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
@@ -538,6 +724,7 @@ function characterCreature(
         damageAbilityModifier: abilityModifier(0),
       },
       ...(spellcasting === undefined ? {} : { spellcasting }),
+      resources: options.resources ?? [],
     },
   };
 }
@@ -546,6 +733,11 @@ function openFeatherFallWindow(
   session: BattleRuntimeSession,
   fallingCreatureId: CombatantId,
   includeTriggerFact: boolean,
+  invocationRef = spellSlotInvocationRef(
+    featherFallUnitId,
+    1,
+    "featherFallMitigation",
+  ),
 ): BattleResolutionResult {
   return openCreatureFallsInterruptWindow({
     state: session.state,
@@ -554,6 +746,7 @@ function openFeatherFallWindow(
       session,
       fallingCreatureId,
       includeTriggerFact,
+      invocationRef,
     ),
   });
 }
@@ -562,6 +755,11 @@ function featherFallTriggerFacts(
   session: BattleRuntimeSession,
   fallingCreatureId: CombatantId,
   includeTriggerFact: boolean,
+  invocationRef = spellSlotInvocationRef(
+    featherFallUnitId,
+    1,
+    "featherFallMitigation",
+  ),
 ): readonly BattleTargetSpatialFact[] {
   return includeTriggerFact
     ? [
@@ -572,16 +770,27 @@ function featherFallTriggerFacts(
           sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
             session,
             casterId,
-            spellSlotInvocationRef(
-              featherFallUnitId,
-              1,
-              "featherFallMitigation",
-            ),
+            invocationRef,
           ),
           rangeFeet: movementFeet(60),
         },
       ]
     : [];
+}
+
+function wizardSpellListSource(): import("./index.ts").CharacterBattleSpellListFact {
+  const wizard = unitLibrary.requireUnit("class_wizard");
+  if (
+    wizard.kind !== "class" ||
+    wizard.className !== "wizard" ||
+    wizard.spellcasting?.kind !== "wizard_spellcasting_creation"
+  ) {
+    throw new Error("Expected Wizard spell-list source.");
+  }
+  return {
+    className: wizard.className,
+    ...classSpellListForSpellcastingClassRecord(wizard),
+  };
 }
 
 function featherFallTargetListFill(

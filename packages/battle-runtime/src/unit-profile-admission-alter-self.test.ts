@@ -3,6 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-self-transformation-mode
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TRANSFORMATION_MODE
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { activeSelfTransformationModeEffect } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import {
   alterSelfUnitId,
@@ -73,7 +74,50 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
               ...phase,
               mode: {
                 ...phase.mode,
-                options: phase.mode.options.slice(1),
+                options: phase.mode.options.filter(
+                  (option) => option.effects !== undefined,
+                ),
+              },
+            },
+          ],
+        },
+      }),
+      decodeSpellRecordForTest({
+        ...spell,
+        id: "synthetic_duplicate_self_transformation_activation_phase",
+        name: "Synthetic Duplicate Self Transformation Activation Phase",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic-duplicate-self-transformation-activation-phase",
+        },
+        mechanics: {
+          ...spell.mechanics,
+          phases: [phase, phase],
+        },
+      }),
+      decodeSpellRecordForTest({
+        ...spell,
+        id: "synthetic_invalid_self_transformation_effect",
+        name: "Synthetic Invalid Self Transformation Effect",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic-invalid-self-transformation-effect",
+        },
+        mechanics: {
+          ...spell.mechanics,
+          phases: [
+            {
+              ...phase,
+              mode: {
+                ...phase.mode,
+                options: phase.mode.options.map((option) =>
+                  option.effects === undefined
+                    ? {
+                        ...option,
+                        effects: [{ kind: "water_breathing" }],
+                      }
+                    : option,
+                ),
               },
             },
           ],
@@ -179,6 +223,11 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
     }
     const caster = resolved.state.combatants.get(spellCasterId);
     expect(battleCreatureCanBreatheUnderwater(caster)).toBe(true);
+    expect(
+      activeSelfTransformationModeEffect(caster, {
+        sourceCombatantId: spellTargetId,
+      }),
+    ).toBeUndefined();
     expect(caster?.activeEffects).toContainEqual(
       expect.objectContaining({
         kind: "selfTransformation",
@@ -361,6 +410,59 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
           { combatantId: spellTargetId, hp: 5 },
         ],
       },
+    });
+  });
+
+  test("rejects a stale Natural Weapons damage type fill after switching modes", () => {
+    const spell = spellRecord(alterSelfUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      session: state,
+      spellId: alterSelfUnitId,
+      slotLevel: 2,
+    });
+    const modeHole = requireHole(
+      act.initialHoles,
+      "selfTransformationModeChoice",
+    );
+    const naturalMode = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "selfTransformationModeChoice",
+          holeId: modeHole.holeId,
+          value: "naturalWeapons",
+        },
+      ],
+    });
+    const damageTypeHole = requireResultHole(naturalMode, "damageTypeChoice");
+
+    expect(
+      resolveBattleSubject({
+        state: state.state,
+        subject: act.subject,
+        fills: [
+          {
+            kind: "selfTransformationModeChoice",
+            holeId: modeHole.holeId,
+            value: "aquaticAdaptation",
+          },
+          {
+            kind: "damageTypeChoice",
+            holeId: damageTypeHole.holeId,
+            value: "slashing",
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Self-transformation damage type choice is only valid for Natural Weapons.",
     });
   });
 

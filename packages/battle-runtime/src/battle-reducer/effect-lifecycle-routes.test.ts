@@ -121,6 +121,33 @@ describe("effect lifecycle route boundary", () => {
     ).toBeUndefined();
   });
 
+  test("leaves an out-of-order damage reduction fill unclaimed", () => {
+    const session = spellBattle({
+      cantrips: [spellRecord(resistanceUnitId)],
+      preparedSpells: [],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: resistanceUnitId,
+    });
+    const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
+    const damageTypeFill = damageTypeChoiceFill(damageTypeHole, "fire");
+    const needsTarget = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [damageTypeFill],
+    });
+
+    expect(needsTarget.tag).toBe("needsHoles");
+    expect(
+      spellDamageReductionRouteForResolution(
+        { state: session.state, subject: act.subject, fills: [damageTypeFill] },
+        needsTarget,
+      ),
+    ).toBeUndefined();
+  });
+
   test("does not claim an ordinary weapon attack without a roll modifier effect", () => {
     const state = fighterVsGoblinBattle();
 

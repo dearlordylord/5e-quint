@@ -704,16 +704,14 @@ function interruptCheckpointAfterModifier(
       choice.reduction.kind,
       reduction,
     );
-    const nextDamageEvent =
-      frame.continuation.damageInput.kind === "rolledDamage"
-        ? ({
-            kind: "rolledDamage" as const,
-            damageRollByType: nextDamageEntries,
-          } satisfies BattleAttackDamageEvent)
-        : ({
-            kind: "aggregateDamage" as const,
-            damageByTypeBeforeTargetAdjustments: nextDamageEntries,
-          } satisfies BattleAttackDamageEvent);
+    // `damageRollReduction` is admitted only for an unresolved rolled-damage
+    // event by reactionRollOrDamageReductionChoiceForProfile and the matching
+    // lifecycle guard above. The aggregate event branch is therefore not a
+    // reachable runtime state here.
+    const nextDamageEvent = {
+      kind: "rolledDamage" as const,
+      damageRollByType: nextDamageEntries,
+    } satisfies BattleAttackDamageEvent;
     return {
       ...frame,
       continuation: { ...frame.continuation, damageInput: nextDamageEvent },

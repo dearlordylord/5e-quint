@@ -27,12 +27,14 @@ import {
   attackInitialTargetHole,
   attackRollFill,
   attackRollHoleAfterTarget,
+  battleRuntimeContextForStateForTest,
   battleId,
   battleProcedureExecutionRefForTest,
   characterSeed,
   concentrationSavingThrowFill,
   cuttingWordsDamageOnlyUnit,
   cuttingWordsResource,
+  discoverBattleActs,
   fighterId,
   findHole,
   goblinAttacksReactionModifierCharacter,
@@ -59,6 +61,7 @@ import {
   testBattleCreatureStateWithConditions,
   uncannyDodgeUnit,
 } from "./battle-runtime.test-support.ts";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 
 describe("battle runtime: Uncanny Dodge and damage reductions", () => {
   test("Uncanny Dodge is chosen when the attack hits and halves later attack damage", () => {
@@ -326,6 +329,70 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
           choice: expect.objectContaining({ kind: "damageRollReduction" }),
         }),
       ]),
+    );
+  });
+
+  test("static attack damage resolves after its hit-reaction window without a damage roll", () => {
+    const state = goblinAttacksReactionModifierCharacter({
+      unit: uncannyDodgeUnit(),
+      className: "rogue",
+      level: 5,
+      unitId: "rogue_uncanny_dodge",
+    });
+    const subject = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state,
+        context: battleRuntimeContextForStateForTest(state),
+      }),
+    ).find(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.statBlockDamageNotation === "static" &&
+        act.presentation.kind === "attack" &&
+        act.presentation.name === "Scimitar",
+    )?.subject;
+    if (
+      subject?.tag !== "action" ||
+      subject.action !== "attack" ||
+      subject.statBlockDamageNotation !== "static"
+    ) {
+      throw new Error("Expected the discovered static Scimitar attack.");
+    }
+    const target = attackInitialTargetHole(state, subject);
+    const attackRoll = attackRollHoleAfterTarget(
+      state,
+      target,
+      subject,
+      fighterId,
+    );
+    const awaitingHitReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, fighterId),
+        attackRollFill(attackRoll, { total: 20, naturalD20: 15 }),
+      ],
+    });
+    if (awaitingHitReaction.tag !== "needsHoles") {
+      throw new Error("Expected the static attack-hit Reaction window.");
+    }
+
+    const resolved = resolveBattleInterrupt({
+      state: awaitingHitReaction.state,
+      fill: interruptDecisionFill(
+        findHole(awaitingHitReaction.holes, "interruptDecision"),
+        { kind: "decline", responderId: fighterId },
+      ),
+    });
+
+    if (resolved.tag !== "resolved") {
+      throw new Error(`Expected resolved static attack, got ${resolved.tag}.`);
+    }
+    expect(resolved.snapshot.pendingInterrupt).toBeNull();
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(Hp(7));
+    expect(resolved.state.combatants.get(fighterId)?.reactionAvailable).toBe(
+      true,
     );
   });
 

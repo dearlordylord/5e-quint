@@ -5,10 +5,13 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import {
+  attackBonus,
   attackDamageDispositionFill,
+  battleAbilityModifier,
   battleId,
   battleProcedureExecutionRefForTest,
   battleObjectId,
+  battleTablePositionId,
   characterSeed,
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
@@ -23,14 +26,19 @@ import {
   resolveBattleSubject,
   startBattleRight,
   statBlockCreatureInit,
+  supportedBattleUnitRef,
   targetFill,
   testDaggerAttack,
   testLongswordAttack,
   testShortswordAttack,
+  testCharacterD20Statistics,
+  testUnarmedStrikeDieAttack,
+  unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import { combatantId } from "./identity.ts";
 import { spellTargetId } from "./unit-profile-admission-catalog.test-support.ts";
 import { relentlessEnduranceBattle } from "./unit-profile-admission-feature-fixture.test-support.ts";
+import { battleStateWithGroundObjects } from "./battle-reducer/battle-object-lifecycle.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import {
   attackDamageDispositionHole,
@@ -242,7 +250,48 @@ describe("battle runtime: attack pipeline boundaries", () => {
     ).toEqual([]);
   });
 
-  test("Light-property attack projection tracks held weapons and its prerequisite", () => {
+  test("Martial Arts projection accepts a held Monk weapon in the off-hand", () => {
+    const mainAttack = testDaggerAttack();
+    const offHandAttack = {
+      ...testDaggerAttack(),
+      weaponObjectId: battleObjectId("off:weapon_dagger"),
+    };
+    const state = startBattleRight({
+      battleId: battleId("battle-attack-projection-monk-off-hand"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "monk", level: 1 }],
+          attack: mainAttack,
+          offHandAttack,
+          unarmedStrike: testUnarmedStrikeDieAttack(),
+          characterUnitRefs: [
+            supportedBattleUnitRef(
+              unitLibrary.requireUnit("monk_martial_arts"),
+            ),
+          ],
+          selectedLoadout: {
+            weapon: {
+              itemId: mainAttack.weaponObjectId,
+              unitId: parseSharedUnitId("weapon_dagger"),
+              grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: offHandAttack.weaponObjectId,
+              unitId: parseSharedUnitId("weapon_dagger"),
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    expect(
+      martialArtsBonusUnarmedStrikeActionOptionForActor(state, fighterId),
+    ).toMatchObject({ kind: "unarmedStrike" });
+  });
+
+  test("Light-property attack projection tracks held weapons, prerequisite, and non-character helper guards", () => {
     const mainAttack = testShortswordAttack();
     const offHandAttack = {
       ...testDaggerAttack(),
@@ -313,6 +362,9 @@ describe("battle runtime: attack pipeline boundaries", () => {
     expect(
       offHandWeaponItemIdForActor(state, goblinId, actor.origin.offHandAttack),
     ).toBe(undefined);
+    expect(
+      offHandAttackPrerequisiteMet(state, goblinId, actor.origin.offHandAttack),
+    ).toBe(false);
     expect(isLightMeleeWeapon(mainAttack.weapon)).toBe(true);
     expect(isLightMeleeWeapon(testLongswordAttack().weapon)).toBe(false);
     expect(
@@ -322,6 +374,105 @@ describe("battle runtime: attack pipeline boundaries", () => {
       martialArtsBonusUnarmedStrikeActionOptionForActor(
         state,
         combatantId("missing-monk"),
+      ),
+    ).toBeUndefined();
+  });
+
+  test("Light-property projection handles alternate abilities and a dropped off-hand weapon", () => {
+    const mainAttack = testShortswordAttack();
+    const offHandWeaponObjectId = battleObjectId("off:weapon_dagger");
+    const offHandAttack = {
+      ...testDaggerAttack(),
+      weaponObjectId: offHandWeaponObjectId,
+      ability: "dex",
+      abilityModifier: battleAbilityModifier(-1),
+      alternateAbilityChoices: [
+        {
+          ability: "dex",
+          abilityModifier: battleAbilityModifier(-1),
+          attackBonus: attackBonus(1),
+          damageAbilityModifier: battleAbilityModifier(-1),
+        },
+        {
+          ability: "str",
+          abilityModifier: battleAbilityModifier(3),
+          attackBonus: attackBonus(5),
+          damageAbilityModifier: battleAbilityModifier(3),
+        },
+      ],
+    } satisfies ReturnType<typeof testDaggerAttack>;
+    const input = {
+      battleId: battleId("battle-attack-projection-dropped-off-hand"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          d20Statistics: testCharacterD20Statistics({ str: 16, dex: 8 }),
+          attack: mainAttack,
+          offHandAttack,
+          selectedLoadout: {
+            weapon: {
+              itemId: mainAttack.weaponObjectId,
+              unitId: parseSharedUnitId("weapon_shortsword"),
+              grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: offHandWeaponObjectId,
+              unitId: parseSharedUnitId("weapon_dagger"),
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    };
+    const state = startBattleRight(input);
+    const projected = offHandAttackActionOptionsForActor(state, fighterId);
+    expect(projected).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "weapon",
+          ability: "dex",
+          damageAbilityModifier: battleAbilityModifier(-1),
+        }),
+        expect.objectContaining({
+          kind: "weapon",
+          ability: "str",
+          damageAbilityModifier: battleAbilityModifier(0),
+        }),
+      ]),
+    );
+
+    const dropped = battleStateWithGroundObjects(state, [
+      {
+        actorId: fighterId,
+        objectId: offHandWeaponObjectId,
+        positionId: battleTablePositionId("attack-projection-off-hand-drop"),
+        source: {
+          kind: "spell",
+          sourceCombatantId: fighterId,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            "attack-projection-off-hand-drop",
+          ),
+        },
+      },
+    ]);
+    if (dropped.tag !== "applied") {
+      throw new Error("Expected the off-hand weapon drop to apply.");
+    }
+    expect(
+      offHandAttackActionOptionsForActor(dropped.state, fighterId),
+    ).toEqual([]);
+    const actor = state.combatants.get(fighterId);
+    if (
+      actor?.origin.kind !== "character" ||
+      actor.origin.offHandAttack === undefined
+    ) {
+      throw new Error("Expected the dual-wielding character fixture.");
+    }
+    expect(
+      offHandWeaponItemIdForActor(
+        dropped.state,
+        fighterId,
+        actor.origin.offHandAttack,
       ),
     ).toBeUndefined();
   });

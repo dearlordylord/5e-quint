@@ -1,6 +1,7 @@
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { classLevel } from "@dnd/shared/types";
 import {
   startBattleRight,
   startBattleSessionRight,
@@ -23,6 +24,7 @@ import {
   attackDamageDispositionHoleAfterDamage,
   attackDamageDispositionHoleAfterFills,
   attackDamageDispositionFill,
+  battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterSeed,
   combatantId,
@@ -58,8 +60,10 @@ import type {
 import type { AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   AttackDamageRider,
+  BattleAttackRollResult,
   BattleFill,
   SpellAttackDamageComponent,
+  SpellMarkedDamageRider,
 } from "./battle-state-execution.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import {
@@ -70,6 +74,13 @@ import {
   attackDamageModifier,
   attackDamageComponents,
   attackPotentialDamageTypes,
+  attackDamageRiderForProfile,
+  attackRollMissToHitReplacementForProcedure,
+  attackRollMissToHitReplacementHolePayload,
+  clearPendingAttackRollMissToHitReplacementSelection,
+  eligibleAttackDamageDieFloorProcedureRefsForAttacker,
+  recordAttackRollMissToHitReplacementUsed,
+  selectedAttackRollMissToHitReplacement,
   passiveRangedAttackRollBonus,
   selectedAttackDamageRiders,
   statBlockAttackTargetConstraint,
@@ -78,6 +89,7 @@ import {
   unarmedStrikeDamageDiceExpr,
   weaponAttackDamageExpression,
   weaponAttackSupportsFinesseOrRanged,
+  weaponTargetConstraint,
   weaponDamageComponent,
 } from "./battle-reducer/statblock-attacks.ts";
 import {
@@ -86,6 +98,12 @@ import {
   tacticalMasterAttackWithReplacement,
   tacticalMasterReplacementDecisionHole,
 } from "./battle-reducer/attack-roll.ts";
+import { ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE } from "./unit-feature-execution-constants.ts";
+import {
+  combatProwessBattleUnitRef,
+  greatWeaponFightingBattleUnitRef,
+} from "./unit-profile-admission-feature-fixture.test-support.ts";
+import type { UnitFeatureProcedureExecution } from "./character-execution-vocabulary.ts";
 import {
   abilityCheckFill as resolutionAbilityCheckFill,
   grappleFillSet,
@@ -167,6 +185,294 @@ describe("battle runtime: attack rolls and damage", () => {
       damageType: "slashing",
     });
     expect(weaponDamageComponent(scimitar, false)).toBeNull();
+  });
+
+  test("Stat Block damage expressions retain marked riders and thrown ranges", () => {
+    const state = goblinTurnBattle();
+    const goblin = state.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Goblin Warrior Stat Block actor.");
+    }
+    const scimitar = statBlockAttackActionOptions(goblin.origin.execution).find(
+      (option) =>
+        option.attack.attackType === "melee" &&
+        option.damageNotation === "rolled",
+    );
+    if (scimitar === undefined) {
+      throw new Error("Expected a rolled Stat Block melee attack.");
+    }
+
+    const markedRider = {
+      kind: "spellMarkedDamageRider",
+      effectRef: battleActiveEffectExecutionRefForTest(
+        "synthetic-statblock-mark",
+      ),
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-statblock-mark-source",
+      ),
+      sourceCombatantId: fighterId,
+      targetCombatantId: goblinId,
+      transfer: { kind: "awaitingTargetDrop", retargetTiming: "sameTurn" },
+      abilityCheckBehavior: { kind: "none" },
+      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "fire" },
+      expiresAt: { kind: "concentration", combatantId: fighterId },
+    } satisfies SpellMarkedDamageRider;
+
+    const criticalComponents = attackDamageComponents(
+      scimitar,
+      true,
+      { total: 20, naturalD20: DieRollResult(20) },
+      [],
+      [],
+      [markedRider],
+    );
+    expect(criticalComponents).toContainEqual({
+      expr: { dice: 2, dieSize: 6 },
+      damageType: "fire",
+    });
+    const subtractingRider: SpellAttackDamageComponent = {
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-statblock-subtraction",
+      ),
+      sourceCombatantId: fighterId,
+      damage: { expr: { dice: 1, dieSize: 6 }, damageType: "fire" },
+      operation: "subtract",
+    };
+    expect(
+      weaponAttackDamageExpression(
+        scimitar,
+        false,
+        { total: 14, naturalD20: DieRollResult(10) },
+        [],
+        [subtractingRider],
+      ),
+    ).toBe("1d6+2-slashing-1d6-fire");
+
+    const fighter = state.combatants.get(fighterId);
+    if (fighter?.origin.kind !== "character") {
+      throw new Error("Expected the character attack projection.");
+    }
+    const baseUnarmedStrike = fighter.origin.unarmedStrike;
+    if (baseUnarmedStrike === null) {
+      throw new Error("Expected the character Unarmed Strike projection.");
+    }
+    const procedureReplacementUnarmedStrike = {
+      ...baseUnarmedStrike,
+      effect: {
+        ...baseUnarmedStrike.effect,
+        damage: {
+          kind: "procedureReplacement",
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            "synthetic-unarmed-die-replacement",
+          ),
+          dice: 1,
+          dieSize: 6,
+          damageType: "bludgeoning",
+        },
+      },
+    } satisfies typeof baseUnarmedStrike;
+    expect(
+      unarmedStrikeDamageDiceExpr(procedureReplacementUnarmedStrike, false),
+    ).toEqual({ dice: 1, dieSize: 6 });
+    expect(
+      unarmedStrikeDamageDiceExpr(procedureReplacementUnarmedStrike, true),
+    ).toEqual({ dice: 2, dieSize: 6 });
+
+    const dagger = testDaggerAttack();
+    const thrownDaggerWeapon = {
+      ...dagger.weapon,
+      usage: "ranged",
+    } satisfies typeof dagger.weapon;
+    expect(weaponTargetConstraint(thrownDaggerWeapon)).toEqual({
+      kind: "rangedRange",
+      normalFeet: movementFeet(20),
+      longFeet: movementFeet(60),
+    });
+  });
+
+  test("public attack helpers preserve procedure replacement and level-gated rider boundaries", () => {
+    const state = startBattleRight({
+      battleId: battleId("attack-roll-miss-to-hit-level19"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "fighter", level: classLevel(19) }],
+          characterUnitRefs: [combatProwessBattleUnitRef()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const fighter = state.combatants.get(fighterId);
+    if (
+      fighter?.origin.kind !== "character" ||
+      fighter.origin.attack === null
+    ) {
+      throw new Error("Expected the admitted replacement character attack.");
+    }
+    const replacementBinding = fighter.origin.execution.procedureBindings.find(
+      (binding) =>
+        binding.procedure.kind === "unitSupportProfile" &&
+        typeof binding.procedure.execution === "object" &&
+        binding.procedure.execution !== null &&
+        binding.procedure.execution.kind ===
+          ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
+    );
+    if (replacementBinding === undefined) {
+      throw new Error("Expected the admitted miss-to-hit replacement profile.");
+    }
+    const replacement = { procedureRef: replacementBinding.procedureRef };
+    const subject = fighterAttackSubject(state, "Longsword");
+    const attackRoll: BattleAttackRollResult = {
+      total: 12,
+      naturalD20: DieRollResult(2),
+      missToHitReplacementProcedureRef: replacement.procedureRef,
+    };
+    const context = {
+      subject,
+      targetId: goblinId,
+      attackRoll,
+    };
+
+    expect(
+      attackRollMissToHitReplacementHolePayload(
+        state,
+        combatantId("missing-replacement-attacker"),
+      ),
+    ).toEqual({});
+    expect(
+      selectedAttackRollMissToHitReplacement({
+        state,
+        subject,
+        attackerId: fighterId,
+        targetId: goblinId,
+        attackRoll: {
+          total: 16,
+          naturalD20: DieRollResult(10),
+          missToHitReplacementProcedureRef: replacement.procedureRef,
+        },
+        ordinaryHit: true,
+      }),
+    ).toBeNull();
+    expect(
+      attackRollMissToHitReplacementForProcedure(
+        state,
+        goblinId,
+        replacement.procedureRef,
+        context,
+      ),
+    ).toBeNull();
+    expect(
+      attackRollMissToHitReplacementForProcedure(
+        state,
+        fighterId,
+        battleProcedureExecutionRefForTest("not-an-admitted-replacement"),
+        context,
+      ),
+    ).toBeNull();
+    expect(
+      selectedAttackRollMissToHitReplacement({
+        state,
+        subject,
+        attackerId: fighterId,
+        targetId: goblinId,
+        attackRoll,
+        ordinaryHit: false,
+      }),
+    ).toEqual(replacement);
+
+    const usedState = recordAttackRollMissToHitReplacementUsed(
+      state,
+      fighterId,
+      replacement,
+      context,
+    );
+    expect(
+      attackRollMissToHitReplacementForProcedure(
+        usedState,
+        fighterId,
+        replacement.procedureRef,
+        { ...context, attackRoll: { ...attackRoll, total: 13 } },
+      ),
+    ).toBeNull();
+    expect(
+      recordAttackRollMissToHitReplacementUsed(
+        state,
+        combatantId("missing-replacement-attacker"),
+        replacement,
+        context,
+      ),
+    ).toBe(state);
+    expect(
+      clearPendingAttackRollMissToHitReplacementSelection(
+        usedState.currentTurnResources,
+        fighterId,
+      ),
+    ).not.toHaveProperty("pendingAttackRollMissToHitReplacementSelection");
+
+    const noDiceProfile = {
+      kind: "attackDamageRider",
+      optional: true,
+      usageLimit: "oncePerTurn",
+      trigger: "finesseOrRangedAttackWithAdvantageOrAlly",
+      eligibility:
+        "advantageOrNonIncapacitatedAllyWithin5ftOfTargetWithoutDisadvantage",
+      classLevel: classLevel(1),
+      dice: {
+        kind: "classLevelTable",
+        dieSize: 6,
+        diceByLevel: [{ atLevel: 5, count: 1 }],
+      },
+    } satisfies Extract<
+      UnitFeatureProcedureExecution,
+      { readonly kind: "attackDamageRider" }
+    >;
+    expect(
+      attackDamageRiderForProfile(
+        noDiceProfile,
+        battleProcedureExecutionRefForTest("synthetic-level-gated-rider"),
+        fighterId,
+        "fire",
+        0,
+      ),
+    ).toBeNull();
+  });
+
+  test("Great Weapon Fighting exposes its admitted attack damage die-floor procedure", () => {
+    const state = startBattleRight({
+      battleId: battleId("attack-damage-die-floor-fighter"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "fighter", level: classLevel(1) }],
+          characterUnitRefs: [greatWeaponFightingBattleUnitRef()],
+          attack: testLongswordAttack(),
+          selectedLoadout: {
+            weapon: {
+              itemId: battleObjectId("main:weapon_longsword"),
+              unitId: parseSharedUnitId("weapon_longsword"),
+              grip: "two_handed",
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const attacker = [...state.combatants.values()].find(
+      (combatant) => combatant.origin.kind === "character",
+    );
+    if (
+      attacker?.origin.kind !== "character" ||
+      attacker.origin.attack === null
+    ) {
+      throw new Error("Expected the Great Weapon Fighting attacker.");
+    }
+    expect(
+      eligibleAttackDamageDieFloorProcedureRefsForAttacker(
+        attacker,
+        attacker.origin.attack,
+        attacker.origin.attack.procedureRef,
+      ),
+    ).toHaveLength(1);
   });
 
   test("attack rider selection keeps mandatory riders and rejects contradictory choices", () => {

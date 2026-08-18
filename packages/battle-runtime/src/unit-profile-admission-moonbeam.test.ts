@@ -52,6 +52,7 @@ import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
+  spellTargetFill,
   webAreaFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
@@ -76,6 +77,7 @@ import {
 import {
   moonbeamAreaId,
   moonbeamUnitId,
+  longstriderUnitId,
   spellCasterId,
   spellTargetId,
   statBlockCatalog,
@@ -83,7 +85,11 @@ import {
   webUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
-import { markMoonbeamSavedThisTurn } from "./battle-reducer/spells-active-effects.ts";
+import {
+  addMoonbeamShapeShiftSuppression,
+  markMoonbeamSavedThisTurn,
+  removeMoonbeamShapeShiftSuppression,
+} from "./battle-reducer/spells-active-effects.ts";
 
 describe("L12G deterministic Moonbeam admission", () => {
   test("moonbeam is admitted as a movable Cylinder CON-save radiant hazard", () => {
@@ -248,6 +254,214 @@ describe("L12G deterministic Moonbeam admission", () => {
         },
       }),
     ]);
+  });
+
+  test("recasting the same Moonbeam occurrence replaces its source-owned area effect", () => {
+    const spell = spellRecord(moonbeamUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 2 }],
+      casterClassLevels: [{ className: "druid", level: 3 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
+    const area = requireHole(act.initialHoles, "spellAreaChoice");
+
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [moonbeamAreaFill(area)],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Moonbeam cast to resolve.");
+    }
+    expect(
+      requireCombatant(cast.state, spellCasterId).activeEffects.filter(
+        (effect) => effect.kind === "moonbeam",
+      ),
+    ).toHaveLength(1);
+
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster turn to end before recast.");
+    }
+    const casterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected target turn to end before recast.");
+    }
+    const recastSession = battleSessionWithState(session, casterTurn.state);
+    const recastAct = spellAct({
+      session: recastSession,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
+    const recastArea = requireHole(recastAct.initialHoles, "spellAreaChoice");
+    const recast = resolveBattleSubject({
+      state: casterTurn.state,
+      subject: recastAct.subject,
+      fills: [moonbeamAreaFill(recastArea)],
+    });
+    if (recast.tag !== "resolved") {
+      throw new Error("Expected Moonbeam recast to resolve.");
+    }
+
+    expect(
+      requireCombatant(recast.state, spellCasterId).activeEffects.filter(
+        (effect) => effect.kind === "moonbeam",
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        kind: "moonbeam",
+        sourceProcedureRef: recastAct.subject.procedureRef,
+        sourceCombatantId: spellCasterId,
+        areaId: moonbeamAreaId,
+        savedThisTurn: [],
+        shapeShiftSuppressed: [],
+      }),
+    ]);
+  });
+
+  test("Moonbeam marker updates preserve an unrelated timed spell effect", () => {
+    const moonbeam = spellRecord(moonbeamUnitId);
+    const longstrider = spellRecord(longstriderUnitId);
+    const session = spellBattle({
+      preparedSpells: [moonbeam, longstrider],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
+      casterClassLevels: [{ className: "druid", level: 3 }],
+    });
+    const longstriderAct = spellAct({
+      session,
+      spellId: longstriderUnitId,
+      slotLevel: 1,
+    });
+    const longstriderTarget = requireHole(
+      longstriderAct.initialHoles,
+      "targetChoice",
+    );
+    const longstriderCast = resolveBattleSubject({
+      state: session.state,
+      subject: longstriderAct.subject,
+      fills: [
+        spellTargetFill(
+          longstriderTarget,
+          longstriderUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+    if (longstriderCast.tag !== "resolved") {
+      throw new Error("Expected Longstrider cast to resolve.");
+    }
+    expect(
+      requireCombatant(longstriderCast.state, spellCasterId).activeEffects,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "speedDelta",
+          sourceCombatantId: spellCasterId,
+        }),
+      ]),
+    );
+    const targetTurn = endTurn({
+      state: longstriderCast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster turn to end after Longstrider.");
+    }
+    const casterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected target turn to end after Longstrider.");
+    }
+
+    const moonbeamAct = spellAct({
+      session: battleSessionWithState(session, casterTurn.state),
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
+    const moonbeamArea = requireHole(
+      moonbeamAct.initialHoles,
+      "spellAreaChoice",
+    );
+    const moonbeamCast = resolveBattleSubject({
+      state: casterTurn.state,
+      subject: moonbeamAct.subject,
+      fills: [moonbeamAreaFill(moonbeamArea)],
+    });
+    if (moonbeamCast.tag !== "resolved") {
+      throw new Error("Expected Moonbeam cast to resolve.");
+    }
+    const moonbeamEffect = requireCombatant(
+      moonbeamCast.state,
+      spellCasterId,
+    ).activeEffects.find((effect) => effect.kind === "moonbeam");
+    if (moonbeamEffect?.kind !== "moonbeam") {
+      throw new Error("Expected Moonbeam active effect.");
+    }
+
+    const marked = markMoonbeamSavedThisTurn(
+      moonbeamCast.state,
+      spellTargetId,
+      moonbeamEffect,
+    );
+    const suppressed = addMoonbeamShapeShiftSuppression(
+      marked,
+      spellTargetId,
+      moonbeamEffect,
+    );
+    expect(requireCombatant(marked, spellCasterId).activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "moonbeam",
+          savedThisTurn: [spellTargetId],
+          shapeShiftSuppressed: [],
+        }),
+      ]),
+    );
+    expect(requireCombatant(suppressed, spellCasterId).activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "moonbeam",
+          savedThisTurn: [spellTargetId],
+          shapeShiftSuppressed: [spellTargetId],
+        }),
+      ]),
+    );
+    const restored = removeMoonbeamShapeShiftSuppression(
+      suppressed,
+      spellTargetId,
+      moonbeamEffect,
+    );
+
+    expect(requireCombatant(restored, spellCasterId).activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "speedDelta",
+          sourceCombatantId: spellCasterId,
+        }),
+        expect.objectContaining({
+          kind: "moonbeam",
+          savedThisTurn: [spellTargetId],
+          shapeShiftSuppressed: [],
+        }),
+      ]),
+    );
   });
 
   test("end-turn save applies failed-save radiant damage before ending the turn", () => {

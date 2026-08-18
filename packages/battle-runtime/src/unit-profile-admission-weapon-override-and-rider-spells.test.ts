@@ -1417,7 +1417,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
               }).subject.procedureRef,
               sourceCombatantId: spellCasterId,
               holderCombatantId: spellCasterId,
-              weaponItemId: battleObjectId("prior:weapon_longsword"),
+              weaponItemId: battleObjectId("main:weapon_longsword"),
               bonus: 1,
               expiresAt: {
                 kind: "duration",

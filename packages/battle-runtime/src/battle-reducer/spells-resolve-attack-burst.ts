@@ -122,6 +122,50 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
+  return resolveAttackBurstSaveDamageSpell({
+    ...input,
+    release: { kind: "ordinaryCast" },
+  });
+}
+
+export function resolveStoredGlyphAttackBurstSaveDamageSpellRelease(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    BattleExecutableSpellInvocation,
+    { readonly procedure: "attackBurstSaveDamage" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly triggeringTargetId: CombatantId;
+}): BattleResolutionResult {
+  return resolveAttackBurstSaveDamageSpell({
+    ...input,
+    release: {
+      kind: "storedGlyphRelease",
+      triggeringTargetId: input.triggeringTargetId,
+    },
+  });
+}
+
+function resolveAttackBurstSaveDamageSpell(input: {
+  readonly input:
+    | ActionSpellBattleResolutionInput
+    | BonusActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    BattleExecutableSpellInvocation,
+    { readonly procedure: "attackBurstSaveDamage" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly actionCostOverride?: "magicAction" | "bonusAction";
+  readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
+  readonly release:
+    | { readonly kind: "ordinaryCast" }
+    | {
+        readonly kind: "storedGlyphRelease";
+        readonly triggeringTargetId: CombatantId;
+      };
+}): BattleResolutionResult {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetList !== undefined ||
@@ -136,6 +180,18 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: stored Glyph release prepends the canonical triggering creature as the target fill. */
+  if (
+    input.release.kind === "storedGlyphRelease" &&
+    input.fillSet.targetId !== input.release.triggeringTargetId
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Stored Glyph spell target must be the creature that triggered the glyph.",
+    );
+  }
+  /* v8 ignore stop */
   if (input.fillSet.targetId === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellTargetHole(input.input.state, input.actorId, input.invocation),
@@ -145,13 +201,14 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target === undefined ||
-    !spellTargetIsLegal(
-      input.input.state,
-      input.actorId,
-      target.combatantId,
-      input.invocation,
-      input.fillSet.targetSpatialFacts,
-    )
+    (input.release.kind === "ordinaryCast" &&
+      !spellTargetIsLegal(
+        input.input.state,
+        input.actorId,
+        target.combatantId,
+        input.invocation,
+        input.fillSet.targetSpatialFacts,
+      ))
   ) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
@@ -162,125 +219,134 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   }
   /* v8 ignore stop */
 
-  const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
-    state: input.input.state,
-    triggeringProcedureRef: input.invocation.sourceProcedureRef,
-    triggeringCombatantId: input.actorId,
-    wardedCombatantId: target.combatantId,
-    triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
-    replacementTargetKind: "attackRoll",
-    fills: input.input.fills,
-  });
-  if (sanctuaryCheck.tag === "needsHoles") {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      sanctuaryCheck.hole,
-    ]);
-  }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (sanctuaryCheck.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      sanctuaryCheck.message,
-    );
-  }
-  /* v8 ignore stop */
-  if (sanctuaryCheck.tag === "lost") {
-    return spendSpellCastResources({
+  if (input.release.kind === "ordinaryCast") {
+    const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
       state: input.input.state,
-      actorId: input.actorId,
-      invocation: input.invocation,
-      errorState: input.input.state,
-      ...optionalProperty("actionCostOverride", input.actionCostOverride),
-      ...optionalProperty("metamagicApplications", input.metamagicApplications),
+      triggeringProcedureRef: input.invocation.sourceProcedureRef,
+      triggeringCombatantId: input.actorId,
+      wardedCombatantId: target.combatantId,
+      triggeringTargetEventId: ATTACK_TARGET_HOLE_ID,
+      replacementTargetKind: "attackRoll",
+      fills: input.input.fills,
     });
-  }
-  if (sanctuaryCheck.tag === "newTarget") {
-    const replacementTarget = input.input.state.combatants.get(
-      sanctuaryCheck.targetId,
-    );
+    if (sanctuaryCheck.tag === "needsHoles") {
+      return needsHolesResult(input.input.state, input.input.subject, [
+        sanctuaryCheck.hole,
+      ]);
+    }
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (
-      replacementTarget === undefined ||
-      !spellTargetIsLegal(
+    if (sanctuaryCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      return invalidResult(
         input.input.state,
-        input.actorId,
-        replacementTarget.combatantId,
+        "invalidFill",
+        sanctuaryCheck.message,
+      );
+    }
+    /* v8 ignore stop */
+    if (sanctuaryCheck.tag === "lost") {
+      return spendSpellCastResources({
+        state: input.input.state,
+        actorId: input.actorId,
+        invocation: input.invocation,
+        errorState: input.input.state,
+        ...optionalProperty("actionCostOverride", input.actionCostOverride),
+        ...optionalProperty(
+          "metamagicApplications",
+          input.metamagicApplications,
+        ),
+      });
+    }
+    if (sanctuaryCheck.tag === "newTarget") {
+      const replacementTarget = input.input.state.combatants.get(
+        sanctuaryCheck.targetId,
+      );
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      if (
+        replacementTarget === undefined ||
+        !spellTargetIsLegal(
+          input.input.state,
+          input.actorId,
+          replacementTarget.combatantId,
+          input.invocation,
+          sanctuaryCheck.spatialFacts,
+        )
+      ) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          "Sanctuary replacement Ice Knife target must be legal for the selected spell.",
+        );
+      }
+      /* v8 ignore stop */
+      const originalTargetFill = input.input.fills.find(
+        (
+          fill,
+        ): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
+          fill.kind === "targetChoice" && fill.value === target.combatantId,
+      );
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      if (originalTargetFill === undefined) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          "Sanctuary replacement requires the original Ice Knife target fill.",
+        );
+      }
+      /* v8 ignore stop */
+      const fills = input.input.fills
+        .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+        .map(
+          (fill): BattleFill =>
+            fill === originalTargetFill
+              ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
+                  fill,
+                  replacement: sanctuaryCheck,
+                })
+              : fill,
+        );
+      const fillSet = spellFillSet(
+        fills,
         input.invocation,
-        sanctuaryCheck.spatialFacts,
-      )
-    ) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
+        input.invocation.sourceProcedureRef,
+        input.actorId,
         input.input.state,
-        "invalidFill",
-        "Sanctuary replacement Ice Knife target must be legal for the selected spell.",
       );
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      if (fillSet.tag === "invalid") {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+        return invalidResult(input.input.state, "invalidFill", fillSet.message);
+      }
+      /* v8 ignore stop */
+      return resolveAttackBurstSaveDamageSpellAct({
+        ...input,
+        input: { ...input.input, fills },
+        fillSet,
+      });
     }
-    /* v8 ignore stop */
-    const originalTargetFill = input.input.fills.find(
-      (fill): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
-        fill.kind === "targetChoice" && fill.value === target.combatantId,
-    );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (originalTargetFill === undefined) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.input.state,
-        "invalidFill",
-        "Sanctuary replacement requires the original Ice Knife target fill.",
-      );
-    }
-    /* v8 ignore stop */
-    const fills = input.input.fills
-      .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
-      .map(
-        (fill): BattleFill =>
-          fill === originalTargetFill
-            ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
-                fill,
-                replacement: sanctuaryCheck,
-              })
-            : fill,
-      );
-    const fillSet = spellFillSet(
-      fills,
-      input.invocation,
-      input.invocation.sourceProcedureRef,
-      input.actorId,
-      input.input.state,
-    );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (fillSet.tag === "invalid") {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(input.input.state, "invalidFill", fillSet.message);
-    }
-    /* v8 ignore stop */
-    return resolveAttackBurstSaveDamageSpellAct({
-      ...input,
-      input: { ...input.input, fills },
-      fillSet,
-    });
   }
 
-  const spellCastReactionWindow = maybeOpenInterruptWindow(
-    input.input.state,
-    spellCastInterruptFrame({
-      casterId: input.actorId,
-      invocation: input.invocation,
-      targetIds: [target.combatantId],
-      reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
-      castingResource: spellCastingTimeResourceForSpellCast({
+  if (input.release.kind === "ordinaryCast") {
+    const spellCastReactionWindow = maybeOpenInterruptWindow(
+      input.input.state,
+      spellCastInterruptFrame({
+        casterId: input.actorId,
         invocation: input.invocation,
-        actionCostOverride: input.actionCostOverride,
+        targetIds: [target.combatantId],
+        reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
+        castingResource: spellCastingTimeResourceForSpellCast({
+          invocation: input.invocation,
+          actionCostOverride: input.actionCostOverride,
+        }),
+        continuation: spellReplayContinuation(input.input),
       }),
-      continuation: spellReplayContinuation(input.input),
-    }),
-    input.input.handledInterruptTrigger,
-  );
-  if (spellCastReactionWindow !== null) {
-    return spellCastReactionWindow;
+      input.input.handledInterruptTrigger,
+    );
+    if (spellCastReactionWindow !== null) {
+      return spellCastReactionWindow;
+    }
   }
 
   const requiredRollMode = requiredSpellAttackRollMode(
@@ -1324,16 +1390,20 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
           });
         }, damagedByAttackWithConcentration);
 
-  const spentResources = spendSpellCastResources({
-    state: damagedByBurst,
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...optionalProperty("actionCostOverride", input.actionCostOverride),
-    ...optionalProperty("metamagicApplications", input.metamagicApplications),
-  });
-  if (spentResources.tag !== "resolved") {
-    return spentResources;
+  let afterResources = damagedByBurst;
+  if (input.release.kind === "ordinaryCast") {
+    const spentResources = spendSpellCastResources({
+      state: damagedByBurst,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.input.state,
+      ...optionalProperty("actionCostOverride", input.actionCostOverride),
+      ...optionalProperty("metamagicApplications", input.metamagicApplications),
+    });
+    if (spentResources.tag !== "resolved") {
+      return spentResources;
+    }
+    afterResources = spentResources.state;
   }
 
   const afterDamageEvents: BattleAfterDamageEvent[] = [
@@ -1370,7 +1440,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     }),
   ];
   const afterDamageReactionWindow = openAfterDamageSequenceInterruptWindow({
-    state: spentResources.state,
+    state: afterResources,
     subject: input.input.subject,
     events: afterDamageEvents,
     objectDamages: [],
@@ -1384,7 +1454,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
 
   return {
     tag: "resolved",
-    state: spentResources.state,
-    snapshot: snapshotBattle(spentResources.state),
+    state: afterResources,
+    snapshot: snapshotBattle(afterResources),
   };
 }

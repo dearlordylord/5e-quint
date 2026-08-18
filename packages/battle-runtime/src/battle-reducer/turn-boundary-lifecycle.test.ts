@@ -1,5 +1,6 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
+  classLevel,
   difficultyClass,
   movementDeltaFeet,
   movementFeet,
@@ -10,6 +11,8 @@ import {
   battleId,
   battleProcedureExecutionRefForTest,
   characterSeed,
+  damageRollFillWithGroups,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   fighterId,
   fighterVsGoblinBattle,
   goblinTurnBattle,
@@ -19,6 +22,28 @@ import {
   startBattleRight,
   wizardId,
 } from "../battle-runtime.test-support.ts";
+import {
+  acidArrowUnitId,
+  orcRelentlessEnduranceUnitId,
+  spellCasterId,
+  spellTargetId,
+  unitLibrary,
+} from "../unit-profile-admission-catalog.test-support.ts";
+import {
+  attackRollFill,
+  requireHole,
+  requireResultHole,
+} from "../unit-profile-admission-creature-fixture.test-support.ts";
+import { spellBattle } from "../unit-profile-admission-spell-battle.test-support.ts";
+import {
+  spellAct,
+  spellTargetFill,
+} from "../unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "../unit-profile-admission-spell-record.test-support.ts";
+import {
+  endTurn,
+  resolveBattleSubject,
+} from "../unit-profile-admission.test-support.ts";
 import type {
   BattleActiveEffect,
   BattleState,
@@ -381,6 +406,109 @@ describe("turn-boundary active-effect occurrence updates", () => {
     if (failed.tag !== "resolved") return;
     expect(failed.state.combatants.get(goblinId)?.activeEffects).toEqual([
       expect.objectContaining({ kind: "sleepUnconscious" }),
+    ]);
+  });
+
+  test("requests a damage disposition when turn-end damage drops the actor to zero HP", () => {
+    const acidArrow = spellRecord(acidArrowUnitId);
+    const enduranceUnit = unitLibrary.requireUnit(orcRelentlessEnduranceUnitId);
+    const session = spellBattle({
+      preparedSpells: [acidArrow],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "wizard", level: classLevel(3) }],
+      targetHp: 5,
+      targetMaxHp: 12,
+      targetResources: [{ unit: enduranceUnit }],
+      targetUnitRefs: [
+        {
+          unit: enduranceUnit,
+          supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+        },
+      ],
+    });
+    const act = spellAct({
+      session,
+      spellId: acidArrowUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      targetHole,
+      acidArrowUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attackHole = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const attackFill = attackRollFill(attackHole, {
+      total: 18,
+      naturalD20: 12,
+    });
+    const initialDamageHole = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [targetFill, attackFill],
+      }),
+      "rolledDice",
+    );
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(initialDamageHole, [[1, 1, 1, 1]]),
+      ],
+    });
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+
+    const casterTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    expect(casterTurn.tag).toBe("resolved");
+    if (casterTurn.tag !== "resolved") return;
+    const targetTurn = endTurn({
+      state: casterTurn.state,
+      actorId: spellTargetId,
+    });
+    expect(targetTurn.tag).toBe("needsHoles");
+    if (targetTurn.tag !== "needsHoles") return;
+    const laterDamageHole = requireResultHole(targetTurn, "rolledDice");
+    expect(laterDamageHole).toMatchObject({
+      spellTurnEndDamage: {
+        targetId: spellTargetId,
+        sourceProcedureRef: act.subject.procedureRef,
+        damage: { expr: { dice: 2, dieSize: 4 }, damageType: "acid" },
+      },
+    });
+    const laterDamageFill = damageRollFillWithGroups(laterDamageHole, [[1, 1]]);
+
+    const awaitingDisposition = endTurn({
+      state: casterTurn.state,
+      actorId: spellTargetId,
+      fills: [laterDamageFill],
+    });
+    expect(awaitingDisposition.tag).toBe("needsHoles");
+    if (awaitingDisposition.tag !== "needsHoles") return;
+    expect(awaitingDisposition.holes).toEqual([
+      expect.objectContaining({
+        kind: "attackDamageDisposition",
+        attackerId: spellCasterId,
+        targetId: spellTargetId,
+        choices: expect.arrayContaining([
+          { kind: "ordinaryDamage" },
+          expect.objectContaining({ kind: "zeroHitPointReplacement" }),
+        ]),
+      }),
     ]);
   });
 

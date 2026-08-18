@@ -393,6 +393,64 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(result.snapshot.turn.actionResources).toEqual([]);
   });
 
+  test("Grappler does not offer Punch and Grab for an already Grappled target", () => {
+    const grappled = fighterGrapplesGoblin(
+      startBattleRight({
+        battleId: battleId("battle-grappler-already-grappled"),
+        combatants: [
+          characterSeed({
+            initiative: 20,
+            classLevel: 4,
+            d20Statistics: testCharacterD20Statistics({
+              str: 16,
+              dex: 13,
+            }),
+            characterUnitRefs: grapplerUnitRefs(),
+          }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      }),
+    ).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    const state = requireResolved(
+      endTurn({ state: goblinTurn, actorId: goblinId }),
+    ).state;
+    const subject = fighterAttackSubject(state, "Unarmed Strike");
+    const target = attackInitialTargetHole(state, subject);
+    const attackRoll = attackRollHoleAfterTarget(
+      state,
+      target,
+      subject,
+      goblinId,
+    );
+    if (attackRoll.kind !== "attackRoll") {
+      throw new Error("Expected Unarmed Strike attack-roll hole.");
+    }
+
+    const result = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(attackRoll, {
+            naturalD20: 12,
+            total: 17,
+            rollMode: attackRoll.rollMode ?? "normal",
+          }),
+        ],
+      }),
+    );
+
+    expect(result.state.grapples).toEqual(state.grapples);
+    expect(result.state.combatants.get(goblinId)?.hp).toBe(6);
+    expect(
+      result.state.currentTurnResources.grapplerPunchAndGrabUsedThisTurn,
+    ).toEqual([]);
+  });
+
   test("Grappler Punch and Grab extends enemy-saving-throw ongoing features through the Grapple lifecycle", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-grappler-punch-and-grab-save-lifecycle"),
@@ -2104,6 +2162,89 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       reactionAvailable: false,
     });
     expect(released.state.readiedResponses.has(fighterId)).toBe(false);
+  });
+
+  test("Ready restores the interrupted turn while a released Help action requests its fills", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-ready-help-release-frontier"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: combatantId("ready-help-ally"),
+          initiative: 5,
+        }),
+      ],
+    });
+    const readySubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "ready" as const,
+    };
+    const declarationHole = findAct(state, readySubject).initialHoles[0];
+    if (declarationHole?.kind !== "readyDeclaration") {
+      throw new Error("Expected Ready declaration hole.");
+    }
+    const helpResponse = declarationHole.responseChoices.find(
+      (response) =>
+        response.kind === "action" && response.subject.action === "helpAttack",
+    );
+    if (helpResponse?.kind !== "action") {
+      throw new Error("Expected an offered Help response.");
+    }
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: readySubject,
+        fills: [
+          readyDeclarationFillForTest(
+            declarationHole,
+            "the goblin raises its weapon",
+            helpResponse,
+          ),
+        ],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: fighterId }),
+    );
+    const reported = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "reportReadyTrigger",
+        readiedActorId: fighterId,
+      },
+      fills: [],
+    });
+    if (reported.tag !== "needsHoles") {
+      throw new Error("Expected a reported Ready trigger interrupt.");
+    }
+    const released = resolveBattleInterrupt({
+      state: reported.state,
+      fill: interruptDecisionFill(requireHole(reported, "interruptDecision"), {
+        kind: "resolve",
+        responderId: fighterId,
+        choice: {
+          kind: "releaseReadiedAction",
+          reactorId: fighterId,
+          fills: [],
+        },
+      }),
+    });
+    expect(released).toMatchObject({
+      tag: "needsHoles",
+      subject: { command: "releaseReadiedAction", reactorId: fighterId },
+      holes: [{ kind: "helpAttackAllyDecision" }],
+    });
+    if (released.tag !== "needsHoles") {
+      throw new Error("Expected the released Help action to request an ally.");
+    }
+    expect(released.state.readiedResponses.has(fighterId)).toBe(true);
+    expect(released.state.currentTurnResources).toEqual(
+      reported.state.currentTurnResources,
+    );
   });
 
   test("a multi-step Ready response restores the subject that was already awaiting fills", () => {

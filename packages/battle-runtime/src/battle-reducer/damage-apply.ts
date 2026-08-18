@@ -156,6 +156,10 @@ type HideousLaughterEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "hideousLaughter" }
 >;
+type ConcentrationSavingThrowFillHolePair = {
+  readonly fill: ConcentrationSavingThrowFill;
+  readonly hole: BattleConcentrationSavingThrowHole;
+};
 
 export function breakBattleConcentration(
   state: BattleState,
@@ -620,16 +624,15 @@ export function damageLifecycleConcentrationSavingThrowFillCheck(input: {
   if (missingHoles.length > 0) {
     return { tag: "needsHoles", holes: missingHoles };
   }
-  const invalidFill = input.fills.find(
-    (fill) => !holes.some((hole) => hole.holeId === fill.holeId),
-  );
-  if (invalidFill === undefined) {
+  const pairs: readonly ConcentrationSavingThrowFillHolePair[] =
+    input.fills.flatMap((fill) => {
+      const hole = holes.find((candidate) => candidate.holeId === fill.holeId);
+      return hole === undefined ? [] : [{ fill, hole }];
+    });
+  const everyFillHasMatchingHole = pairs.length === input.fills.length;
+  if (everyFillHasMatchingHole) {
     const d20TestNaturalOneRerollIssue =
-      concentrationD20TestNaturalOneRerollIssue(
-        input.state,
-        input.fills,
-        holes,
-      );
+      concentrationD20TestNaturalOneRerollIssue(input.state, pairs);
     return d20TestNaturalOneRerollIssue === null
       ? { tag: "ok", holes }
       : { tag: "invalid", message: d20TestNaturalOneRerollIssue };
@@ -645,23 +648,15 @@ export function damageLifecycleConcentrationSavingThrowFillCheck(input: {
 
 function concentrationD20TestNaturalOneRerollIssue(
   state: BattleState,
-  fills: readonly ConcentrationSavingThrowFill[],
-  holes: readonly BattleConcentrationSavingThrowHole[],
+  pairs: readonly ConcentrationSavingThrowFillHolePair[],
 ): string | null {
-  for (const fill of fills) {
-    const hole = holes.find((candidate) => candidate.holeId === fill.holeId);
-    if (hole === undefined) {
-      continue;
-    }
+  for (const { fill, hole } of pairs) {
     const actor = state.combatants.get(hole.combatantId);
     const issue = d20TestNaturalOneRerollOutcomeIssue({
       actor,
       rollMode: hole.rollMode,
       rolledD20s: fill.value.rolledD20s,
-      originalNaturalD20:
-        fill.value.naturalD20 === undefined
-          ? undefined
-          : Number(fill.value.naturalD20),
+      originalNaturalD20: fill.value.naturalD20,
       decision: fill.value.d20TestNaturalOneReroll,
       withoutRoll: fill.value.withoutRoll,
       succeeded: fill.value.succeeded,

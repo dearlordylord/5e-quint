@@ -4,6 +4,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 
 import {
   abilityModifier,
@@ -19,6 +20,7 @@ import {
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
+  classSpellListForSpellcastingClassRecord,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -77,6 +79,108 @@ type AttackAct = AvailableBattleAct & {
 };
 
 describe("Shield Reaction spell", () => {
+  test("spends a source-scoped free cast when Shield resolves from an attack-hit Reaction", () => {
+    const shield = srdSpellRecord(shieldUnitId);
+    const session = battleWithShieldReactionSpell(shield, {
+      sourceScopedFreeCast: true,
+    });
+    const freeCastOwnership = session.context.characters
+      .get(spellCasterId)
+      ?.resourceOwnership.find(
+        (ownership) =>
+          ownership.purpose.tag === "spellAccessFreeCast" &&
+          ownership.purpose.spellId === shieldUnitId,
+      );
+    if (freeCastOwnership === undefined) {
+      throw new Error("Expected Shield free-cast resource ownership.");
+    }
+    const awaitingReaction = resolveAttackRollOnly({
+      state: session.state,
+      attackerId: spellTargetId,
+      targetId: spellCasterId,
+      total: 14,
+      naturalD20: 10,
+    });
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Shield to open an attack-hit Reaction window.");
+    }
+    const reactionChoice =
+      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+        (choice) => choice.kind === "castTriggeredReactionSpell",
+      );
+    if (
+      reactionChoice === undefined ||
+      reactionChoice.kind !== "castTriggeredReactionSpell"
+    ) {
+      throw new Error("Expected Shield Reaction spell choice.");
+    }
+    const interruptDecisionHole = requireHole(
+      awaitingReaction.holes,
+      "interruptDecision",
+    );
+    const invocation = characterSpellInvocationRefForProcedureRefForTest(
+      battleRuntimeSessionForTest({
+        state: awaitingReaction.state,
+        context: session.context,
+      }),
+      spellCasterId,
+      reactionChoice.subject.procedureRef,
+    );
+    expect(invocation).toMatchObject({
+      tag: "spellAccessFreeCast",
+      spellId: shieldUnitId,
+      procedure: "shieldReaction",
+    });
+
+    const resolved = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: {
+        kind: "interruptDecision",
+        holeId: interruptDecisionHole.holeId,
+        value: {
+          kind: "resolve",
+          responderId: spellCasterId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            procedureRef: reactionChoice.subject.procedureRef,
+            fills: [],
+          },
+        },
+      },
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingInterrupt: null },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected source-scoped Shield free cast to resolve.");
+    }
+    const caster = resolved.state.combatants.get(spellCasterId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected Shield caster character after cast.");
+    }
+    expect(
+      caster.origin.resources.find(
+        (resource) =>
+          resource.resourcePoolRef === freeCastOwnership.resourcePoolRef,
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        resourcePoolRef: freeCastOwnership.resourcePoolRef,
+        usesRemaining: 0,
+      }),
+    );
+    expect(
+      caster?.origin.kind === "character"
+        ? caster.origin.spellcasting?.spellSlots
+        : [],
+    ).toEqual([]);
+  });
+
   test("is offered when the caster is hit by an Attack Roll and adds +5 Armor Class against the triggering Attack Roll", () => {
     const spell = srdSpellRecord(shieldUnitId);
     const session = battleWithShieldReactionSpell(spell);
@@ -595,6 +699,21 @@ function srdSpellRecord(unitId: string): SpellRecord {
   return unit;
 }
 
+function wizardSpellListSource(): import("./index.ts").CharacterBattleSpellListFact {
+  const wizard = unitLibrary.requireUnit("class_wizard");
+  if (
+    wizard.kind !== "class" ||
+    wizard.className !== "wizard" ||
+    wizard.spellcasting?.kind !== "wizard_spellcasting_creation"
+  ) {
+    throw new Error("Expected Wizard spell-list source.");
+  }
+  return {
+    className: wizard.className,
+    ...classSpellListForSpellcastingClassRecord(wizard),
+  };
+}
+
 function spellBattle(input: {
   readonly preparedSpells?: readonly SpellRecord[];
 }): BattleRuntimeSession {
@@ -638,7 +757,19 @@ function spellBattle(input: {
 
 function battleWithShieldReactionSpell(
   spell: SpellRecord,
+  options: { readonly sourceScopedFreeCast?: boolean } = {},
 ): BattleRuntimeSession {
+  const freeCastSource = {
+    id: authoredUnitId("feat_synthetic_shield_dabbler"),
+    kind: "feat",
+    category: "origin",
+    name: "Synthetic Shield Dabbler",
+    provenance: { kind: "synthetic-test", section: "shield regression" },
+    mechanics: { family: "magic_initiate", spellList: "wizard" },
+  } as const;
+  const sourceScopedFreeCast = options.sourceScopedFreeCast === true;
+  const rayOfFrost = srdSpellRecord(rayOfFrostUnitId);
+  const acidSplash = srdSpellRecord("acid_splash");
   const result = startBattle({
     battleId: battleId("shield-reaction-spell-attack-roll"),
     combatants: [
@@ -651,6 +782,23 @@ function battleWithShieldReactionSpell(
         combatantId: spellCasterId,
         displayName: "Shield caster",
         initiative: 10,
+        resources: sourceScopedFreeCast
+          ? [
+              {
+                unit: freeCastSource,
+                spellAccessFreeCast: { spellId: spell.id, count: 1 },
+                usesRemaining: 1,
+              },
+            ]
+          : [],
+        characterUnitRefs: sourceScopedFreeCast
+          ? [
+              { unit: rayOfFrost, supportProfiles: [] },
+              { unit: acidSplash, supportProfiles: [] },
+              { unit: spell, supportProfiles: [] },
+              { unit: freeCastSource, supportProfiles: [] },
+            ]
+          : [],
         spellcasting: {
           spellcastingSource: {
             tag: "classSpellcasting",
@@ -662,10 +810,23 @@ function battleWithShieldReactionSpell(
           cantrips: [],
           preparedSpells: [spell],
           featurePreparedSpells: [],
-          spellAccesses: [],
+          spellAccesses: sourceScopedFreeCast
+            ? [
+                {
+                  source: {
+                    tag: "feat",
+                    sourceUnit: freeCastSource,
+                    spellList: wizardSpellListSource(),
+                  },
+                  spellcastingAbilityModifier: 3,
+                  cantrips: [rayOfFrost, acidSplash],
+                  levelOneSpell: spell,
+                },
+              ]
+            : [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
-          spellSlots: [{ spellLevel: 1, count: 2 }],
+          spellSlots: sourceScopedFreeCast ? [] : [{ spellLevel: 1, count: 2 }],
         },
       }),
     ],
@@ -853,6 +1014,14 @@ function characterCreature(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["spellcasting"];
+  readonly resources?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"];
+  readonly characterUnitRefs?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"];
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
@@ -862,7 +1031,7 @@ function characterCreature(input: {
       kind: "character",
       ammunitionStocks: [],
       characterId: characterId(`${input.combatantId}-character`),
-      characterUnitRefs: [],
+      characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: [{ className: "wizard", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
@@ -889,6 +1058,7 @@ function characterCreature(input: {
       ...(input.spellcasting === undefined
         ? {}
         : { spellcasting: input.spellcasting }),
+      resources: input.resources ?? [],
     },
   };
 }

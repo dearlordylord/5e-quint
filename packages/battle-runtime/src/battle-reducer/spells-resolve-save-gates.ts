@@ -136,6 +136,7 @@ import {
   type BattleSpellSavingThrowOutcomeValue,
   type BattleState,
   type BattleThunderwavePushDisposition,
+  type SpellTargeting,
   type BonusActionSpellBattleResolutionInput,
   type SaveDamageResult,
 } from "../battle-state-execution.ts";
@@ -3196,9 +3197,172 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
   };
 }
 
+type SavingThrowValidationInvocation = Parameters<
+  typeof spellSavingThrowOutcomeHole
+>[2];
+
+type SavingThrowSelectionValidationContext = {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly carefulSpellProtectedTargetIds: readonly CombatantId[];
+  readonly heightenedSpellTargetId: CombatantId | undefined;
+  readonly spellcastingAbilityModifier: SavingThrowValidationInvocation["spellRuleFacts"]["castingSource"]["abilityModifier"];
+};
+
+function validateRollModifierSavingThrowOutcomeIdentities(input: {
+  readonly outcomes: readonly BattleSavingThrowOutcome[];
+  readonly state: BattleState;
+}): string | null {
+  const seenTargets = new Set<CombatantId>();
+  for (const outcome of input.outcomes) {
+    if (!input.state.combatants.has(outcome.targetId)) {
+      return "Save-gated roll modifier spell target must be a combatant in this battle.";
+    }
+    if (seenTargets.has(outcome.targetId)) {
+      return "Save-gated roll modifier spell Saving Throw outcomes must not duplicate targets.";
+    }
+    seenTargets.add(outcome.targetId);
+  }
+  return null;
+}
+
+function validateRollModifierSavingThrowOutcomes(input: {
+  readonly value: BattleSpellSavingThrowOutcomeValue;
+  readonly invocation: Extract<
+    SavingThrowValidationInvocation,
+    { readonly procedure: "rollModifier" }
+  >;
+  readonly state: BattleState;
+}): string | null {
+  const outcomes = input.value.outcomes;
+  if (outcomes.length === 0) {
+    return "Save-gated roll modifier spell must include at least one target Saving Throw outcome.";
+  }
+  if ("area" in input.value) {
+    return "Save-gated roll modifier spell outcomes must not include area facts.";
+  }
+  const identityIssue = validateRollModifierSavingThrowOutcomeIdentities({
+    outcomes,
+    state: input.state,
+  });
+  if (identityIssue !== null) {
+    return identityIssue;
+  }
+  if (input.invocation.targeting.kind === "selfAndChosenLegalTargets") {
+    return null;
+  }
+  if (
+    input.invocation.targeting.maxTargets === "allLegalTargets" ||
+    outcomes.length <= input.invocation.targeting.maxTargets
+  ) {
+    return null;
+  }
+  return "Save-gated roll modifier spell Saving Throw outcomes exceed the selected spell's target count.";
+}
+
+function validateSingleCombatantSavingThrowOutcomes(input: {
+  readonly value: BattleSpellSavingThrowOutcomeValue;
+  readonly targetId: CombatantId | undefined;
+  readonly context: SavingThrowSelectionValidationContext;
+}): string | null {
+  const outcomes = input.value.outcomes;
+  if (outcomes.length === 0) {
+    return "Save-gate spell must include at least one affected target Saving Throw outcome.";
+  }
+  if ("area" in input.value) {
+    return "Single-target save-gate spell outcomes must not include area facts.";
+  }
+  if (input.targetId === undefined) {
+    return "Single-target save-gate spell requires one target before Saving Throw outcomes.";
+  }
+  if (outcomes.length !== 1 || outcomes[0]?.targetId !== input.targetId) {
+    return "Single-target save-gate spell Saving Throw outcome must match the selected target.";
+  }
+  if (!input.context.state.combatants.has(input.targetId)) {
+    return "Save-gate spell target must be a combatant in this battle.";
+  }
+  return validateSavingThrowOutcomeSelections({
+    outcomes,
+    state: input.context.state,
+    actorId: input.context.actorId,
+    allowedTargetIds: new Set([input.targetId]),
+    carefulSpellProtectedTargetIds:
+      input.context.carefulSpellProtectedTargetIds,
+    heightenedSpellTargetId: input.context.heightenedSpellTargetId,
+    spellcastingAbilityModifier: input.context.spellcastingAbilityModifier,
+  });
+}
+
+function validateTargetListSavingThrowOutcomeIdentities(input: {
+  readonly outcomes: readonly BattleSavingThrowOutcome[];
+  readonly state: BattleState;
+  readonly selectedTargets: ReadonlySet<CombatantId>;
+}): string | null {
+  const seenTargets = new Set<CombatantId>();
+  for (const outcome of input.outcomes) {
+    if (!input.selectedTargets.has(outcome.targetId)) {
+      return "Target-list save-gate spell Saving Throw outcomes must match the selected targets.";
+    }
+    if (!input.state.combatants.has(outcome.targetId)) {
+      return "Target-list save-gate spell target must be a combatant in this battle.";
+    }
+    if (seenTargets.has(outcome.targetId)) {
+      return "Target-list save-gate spell Saving Throw outcomes must not duplicate targets.";
+    }
+    seenTargets.add(outcome.targetId);
+  }
+  return null;
+}
+
+function validateTargetListSavingThrowOutcomes(input: {
+  readonly value: BattleSpellSavingThrowOutcomeValue;
+  readonly targeting: Extract<SpellTargeting, { readonly kind: "targetList" }>;
+  readonly targetListIds: readonly CombatantId[] | undefined;
+  readonly context: SavingThrowSelectionValidationContext;
+}): string | null {
+  if ("area" in input.value) {
+    return "Target-list save-gate spell outcomes must not include area facts.";
+  }
+  if (input.targetListIds === undefined) {
+    return "Target-list save-gate spell requires target choices before Saving Throw outcomes.";
+  }
+  const outcomes = input.value.outcomes;
+  if (outcomes.length === 0) {
+    return "Target-list save-gate spell must include at least one target Saving Throw outcome.";
+  }
+  if (
+    input.targetListIds.length < input.targeting.minTargets ||
+    input.targetListIds.length > input.targeting.maxTargets
+  ) {
+    return "Target-list save-gate spell target count is outside the selected spell's target count.";
+  }
+  if (outcomes.length !== input.targetListIds.length) {
+    return "Target-list save-gate spell Saving Throw outcomes exceed the selected spell's target count.";
+  }
+  const selectedTargets = new Set(input.targetListIds);
+  const identityIssue = validateTargetListSavingThrowOutcomeIdentities({
+    outcomes,
+    state: input.context.state,
+    selectedTargets,
+  });
+  if (identityIssue !== null) {
+    return identityIssue;
+  }
+  return validateSavingThrowOutcomeSelections({
+    outcomes,
+    state: input.context.state,
+    actorId: input.context.actorId,
+    allowedTargetIds: selectedTargets,
+    carefulSpellProtectedTargetIds:
+      input.context.carefulSpellProtectedTargetIds,
+    heightenedSpellTargetId: input.context.heightenedSpellTargetId,
+    spellcastingAbilityModifier: input.context.spellcastingAbilityModifier,
+  });
+}
+
 export function validateSavingThrowOutcomes(
   value: BattleSpellSavingThrowOutcomeValue,
-  invocation: Parameters<typeof spellSavingThrowOutcomeHole>[2],
+  invocation: SavingThrowValidationInvocation,
   state: BattleState,
   actorId: CombatantId,
   targetId: CombatantId | undefined,
@@ -3209,32 +3373,11 @@ export function validateSavingThrowOutcomes(
 ): string | null {
   const outcomes = value.outcomes;
   if (invocation.procedure === "rollModifier") {
-    if (outcomes.length === 0) {
-      return "Save-gated roll modifier spell must include at least one target Saving Throw outcome.";
-    }
-    if ("area" in value) {
-      return "Save-gated roll modifier spell outcomes must not include area facts.";
-    }
-    const seenTargets = new Set<CombatantId>();
-    for (const outcome of outcomes) {
-      if (!state.combatants.has(outcome.targetId)) {
-        return "Save-gated roll modifier spell target must be a combatant in this battle.";
-      }
-      if (seenTargets.has(outcome.targetId)) {
-        return "Save-gated roll modifier spell Saving Throw outcomes must not duplicate targets.";
-      }
-      seenTargets.add(outcome.targetId);
-    }
-    if (invocation.targeting.kind === "selfAndChosenLegalTargets") {
-      return null;
-    }
-    if (
-      invocation.targeting.maxTargets === "allLegalTargets" ||
-      outcomes.length <= invocation.targeting.maxTargets
-    ) {
-      return null;
-    }
-    return "Save-gated roll modifier spell Saving Throw outcomes exceed the selected spell's target count.";
+    return validateRollModifierSavingThrowOutcomes({
+      value,
+      invocation,
+      state,
+    });
   }
   const targeting = spellSavingThrowTargeting(invocation);
   if (invocation.procedure === "sleepTargetAdmission") {
@@ -3251,75 +3394,27 @@ export function validateSavingThrowOutcomes(
       state,
     });
   }
+  const selectionValidationContext: SavingThrowSelectionValidationContext = {
+    state,
+    actorId,
+    carefulSpellProtectedTargetIds,
+    heightenedSpellTargetId,
+    spellcastingAbilityModifier:
+      invocation.spellRuleFacts.castingSource.abilityModifier,
+  };
   if (targeting.kind === "singleCombatant") {
-    if (outcomes.length === 0) {
-      return "Save-gate spell must include at least one affected target Saving Throw outcome.";
-    }
-    if ("area" in value) {
-      return "Single-target save-gate spell outcomes must not include area facts.";
-    }
-    if (targetId === undefined) {
-      return "Single-target save-gate spell requires one target before Saving Throw outcomes.";
-    }
-    if (outcomes.length !== 1 || outcomes[0]?.targetId !== targetId) {
-      return "Single-target save-gate spell Saving Throw outcome must match the selected target.";
-    }
-    if (!state.combatants.has(targetId)) {
-      return "Save-gate spell target must be a combatant in this battle.";
-    }
-    return validateSavingThrowOutcomeSelections({
-      outcomes,
-      state,
-      actorId,
-      allowedTargetIds: new Set([targetId]),
-      carefulSpellProtectedTargetIds,
-      heightenedSpellTargetId,
-      spellcastingAbilityModifier:
-        invocation.spellRuleFacts.castingSource.abilityModifier,
+    return validateSingleCombatantSavingThrowOutcomes({
+      value,
+      targetId,
+      context: selectionValidationContext,
     });
   }
   if (targeting.kind === "targetList") {
-    if ("area" in value) {
-      return "Target-list save-gate spell outcomes must not include area facts.";
-    }
-    if (targetListIds === undefined) {
-      return "Target-list save-gate spell requires target choices before Saving Throw outcomes.";
-    }
-    if (outcomes.length === 0) {
-      return "Target-list save-gate spell must include at least one target Saving Throw outcome.";
-    }
-    if (
-      targetListIds.length < targeting.minTargets ||
-      targetListIds.length > targeting.maxTargets
-    ) {
-      return "Target-list save-gate spell target count is outside the selected spell's target count.";
-    }
-    if (outcomes.length !== targetListIds.length) {
-      return "Target-list save-gate spell Saving Throw outcomes exceed the selected spell's target count.";
-    }
-    const selectedTargets = new Set(targetListIds);
-    const seenTargets = new Set<CombatantId>();
-    for (const outcome of outcomes) {
-      if (!selectedTargets.has(outcome.targetId)) {
-        return "Target-list save-gate spell Saving Throw outcomes must match the selected targets.";
-      }
-      if (!state.combatants.has(outcome.targetId)) {
-        return "Target-list save-gate spell target must be a combatant in this battle.";
-      }
-      if (seenTargets.has(outcome.targetId)) {
-        return "Target-list save-gate spell Saving Throw outcomes must not duplicate targets.";
-      }
-      seenTargets.add(outcome.targetId);
-    }
-    return validateSavingThrowOutcomeSelections({
-      outcomes,
-      state,
-      actorId,
-      allowedTargetIds: selectedTargets,
-      carefulSpellProtectedTargetIds,
-      heightenedSpellTargetId,
-      spellcastingAbilityModifier:
-        invocation.spellRuleFacts.castingSource.abilityModifier,
+    return validateTargetListSavingThrowOutcomes({
+      value,
+      targeting,
+      targetListIds,
+      context: selectionValidationContext,
     });
   }
   /* v8 ignore start -- The public save-gate fill adapter rejects area-less values before this reducer validator; keep this defensive fallback for internal callers. */
@@ -3448,13 +3543,14 @@ export function validateSavingThrowOutcomes(
   }
   return validateSavingThrowOutcomeSelections({
     outcomes,
-    state,
-    actorId,
+    state: selectionValidationContext.state,
+    actorId: selectionValidationContext.actorId,
     allowedTargetIds: affectedTargets,
-    carefulSpellProtectedTargetIds,
-    heightenedSpellTargetId,
+    carefulSpellProtectedTargetIds:
+      selectionValidationContext.carefulSpellProtectedTargetIds,
+    heightenedSpellTargetId: selectionValidationContext.heightenedSpellTargetId,
     spellcastingAbilityModifier:
-      invocation.spellRuleFacts.castingSource.abilityModifier,
+      selectionValidationContext.spellcastingAbilityModifier,
   });
 }
 

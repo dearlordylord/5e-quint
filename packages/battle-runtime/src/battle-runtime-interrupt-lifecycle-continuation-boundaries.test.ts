@@ -600,6 +600,51 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     if (afterReduction.tag !== "needsHoles") {
       throw new Error("Expected the reduced damage to request Concentration.");
     }
+    const concentrationFrame = afterReduction.state.interruptStack.at(-1);
+    if (concentrationFrame?.kind !== "attackDamageContinuationConcentration") {
+      throw new Error("Expected an active Concentration continuation frame.");
+    }
+    const replayExecution = ReplayContinuationExecution.fromExecutionRegistry(
+      spellProcedureExecutionRegistry(),
+      () => ({
+        tag: "resolved" as const,
+        state: afterReduction.state,
+        snapshot: snapshotBattle(afterReduction.state),
+      }),
+    );
+    const routeResolvers = {
+      ...ATTACK_RESOLVERS,
+      resolveMonkFocusFlurryOfBlowsStrike: () => {
+        throw new Error("Unexpected Monk continuation resolution.");
+      },
+      resolvePactOfTheChainFamiliarReactionAttack: () => {
+        throw new Error("Unexpected Familiar continuation resolution.");
+      },
+    } satisfies BattleAttackRouteResolvers;
+    expect(
+      resolveActiveInterruptContinuation({
+        state: afterReduction.state,
+        frame: concentrationFrame,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: goblinId,
+          command: "endTurn",
+        },
+        fills: [],
+        execution: InterruptContinuationExecution.fromExecution(
+          replayExecution,
+          routeResolvers,
+        ),
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      result: {
+        tag: "invalid",
+        reason: "staleSubject",
+        message:
+          "Attack damage Concentration save must be resolved before other battle subjects.",
+      },
+    });
     const concentration = findHole(
       afterReduction.holes,
       "concentrationSavingThrow",

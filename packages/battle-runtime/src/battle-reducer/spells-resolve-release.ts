@@ -108,6 +108,7 @@ import {
 } from "./statblock-attacks.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
+import { resolveStoredGlyphAttackBurstSaveDamageSpellRelease } from "./spells-resolve-attack-burst.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import type { ReadiedSpellRuntimeLaneInvocation } from "./spell-execution-facts.ts";
 import type { StoredGlyphSpellReleasePlan } from "./spell-procedure-profiles/resolution-contract.ts";
@@ -823,8 +824,28 @@ export function resolveSpellRelease(
 ): BattleResolutionResult {
   if (request.kind === "storedGlyphTriggeringCreature") {
     const invocation = request.invocation;
-    return invocation.procedure === "spiritualWeaponAttackProxy" ||
-      invocation.procedure === "attackBurstSaveDamage"
+    if (invocation.procedure === "attackBurstSaveDamage") {
+      const fillSet = spellFillSet(
+        input.fills,
+        invocation,
+        invocation.sourceProcedureRef,
+        input.subject.actorId,
+        input.state,
+      );
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered holes. */
+      if (fillSet.tag === "invalid") {
+        return invalidResult(input.state, "invalidFill", fillSet.message);
+      }
+      /* v8 ignore stop */
+      return resolveStoredGlyphAttackBurstSaveDamageSpellRelease({
+        input,
+        actorId: input.subject.actorId,
+        invocation,
+        fillSet,
+        triggeringTargetId: request.targetId,
+      });
+    }
+    return invocation.procedure === "spiritualWeaponAttackProxy"
       ? resolveStoredGlyphDirectTargetRelease(
           input,
           invocation,

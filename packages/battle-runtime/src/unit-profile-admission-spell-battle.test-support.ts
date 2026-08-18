@@ -58,6 +58,12 @@ export function spellBattle(input: {
   readonly casterSpellcastingSourceClassName?: ClassName;
   readonly cantrips?: readonly SpellRecord[];
   readonly preparedSpells?: readonly SpellRecord[];
+  readonly casterFeaturePreparedSpells?: NonNullable<
+    Extract<
+      BattleCreatureInit["creatureInit"],
+      { readonly kind: "character" }
+    >["spellcasting"]
+  >["featurePreparedSpells"];
   readonly attack?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -164,7 +170,7 @@ export function spellBattle(input: {
           canCastSpells: true,
           cantrips: input.cantrips ?? [],
           preparedSpells: input.preparedSpells ?? [],
-          featurePreparedSpells: [],
+          featurePreparedSpells: input.casterFeaturePreparedSpells ?? [],
           spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],

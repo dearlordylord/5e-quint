@@ -13,7 +13,11 @@ import {
   resolveBonusActionSpellAct,
   resolveSpellAct,
 } from "./battle-reducer/spells-resolve.ts";
-import { spendSpellCastResources } from "./battle-reducer/spells-resolve-resources.ts";
+import {
+  commitSpellAccessFreeCastResourceUse,
+  spendSpellAccessFreeCastResource,
+  spendSpellCastResources,
+} from "./battle-reducer/spells-resolve-resources.ts";
 import { spellActTurnResourceAvailable } from "./battle-reducer/spell-turn-resources.ts";
 import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
 import { characterSpellProcedure } from "./character-execution-queries.ts";
@@ -47,6 +51,7 @@ import {
   battleId,
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllSpellSlotsExpended,
   cantripSpellInvocationRef,
   characterSeed,
   combatantId,
@@ -253,6 +258,77 @@ describe("battle runtime: spellcasting actions and slots", () => {
         errorState: freeSpent.state,
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    expect(
+      spendSpellAccessFreeCastResource(
+        session.state,
+        skeletonId,
+        resourcePoolRef,
+        featFreeInvocation,
+        session.state,
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Spell Access free cast is no longer available for the current actor.",
+    });
+    expect(
+      spendSpellAccessFreeCastResource(
+        freeSpent.state,
+        fighterId,
+        resourcePoolRef,
+        featFreeInvocation,
+        freeSpent.state,
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Spell Access free cast is no longer available for the current actor.",
+    });
+    const committed = commitSpellAccessFreeCastResourceUse({
+      state: session.state,
+      actorId: fighterId,
+      resourcePoolRef,
+    });
+    expect(committed).toMatchObject({
+      _tag: "Right",
+      right: expect.objectContaining({
+        combatants: expect.any(Map),
+      }),
+    });
+    if (committed._tag !== "Right") {
+      throw new Error("Expected the interrupted free cast to commit.");
+    }
+    const committedActor = committed.right.combatants.get(fighterId);
+    expect(
+      committedActor?.origin.kind === "character"
+        ? committedActor.origin.resources.find(
+            (resource) => resource.resourcePoolRef === resourcePoolRef,
+          )?.usesRemaining
+        : undefined,
+    ).toBe(0);
+    expect(
+      commitSpellAccessFreeCastResourceUse({
+        state: session.state,
+        actorId: skeletonId,
+        resourcePoolRef,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: "Spell Access free cast is no longer available for the interrupted spell.",
+    });
+    expect(
+      commitSpellAccessFreeCastResourceUse({
+        state: freeSpent.state,
+        actorId: fighterId,
+        resourcePoolRef,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: "Spell Access free cast is no longer available for the interrupted spell.",
+    });
 
     const slotSpent = spendSpellCastResources({
       state: session.state,
@@ -629,21 +705,16 @@ describe("battle runtime: spellcasting actions and slots", () => {
     if (actionAdmission.tag !== "admitted") {
       throw new Error("Expected admitted Magic Missile resolution input.");
     }
-    const depletedActionActor = characterWithDepletedSpellSlots(
-      actionSession.state.combatants.get(actionAct.subject.actorId),
+    const depletedActionState = battleStateWithAllSpellSlotsExpended(
+      actionAdmission.input.state,
+      actionAct.subject.actorId,
     );
     expect(
       resolveSpellAct(
         {
           ...actionAdmission.input,
           subject: actionAct.subject,
-          state: {
-            ...actionAdmission.input.state,
-            combatants: new Map(actionSession.state.combatants).set(
-              depletedActionActor.combatantId,
-              depletedActionActor,
-            ),
-          },
+          state: depletedActionState,
         },
         spellProcedureExecutionRegistry(),
       ),
@@ -688,21 +759,16 @@ describe("battle runtime: spellcasting actions and slots", () => {
     if (bonusActionAdmission.tag !== "admitted") {
       throw new Error("Expected admitted Healing Word resolution input.");
     }
-    const depletedBonusActionActor = characterWithDepletedSpellSlots(
-      bonusActionSession.state.combatants.get(bonusActionAct.subject.actorId),
+    const depletedBonusActionState = battleStateWithAllSpellSlotsExpended(
+      bonusActionAdmission.input.state,
+      bonusActionAct.subject.actorId,
     );
     expect(
       resolveBonusActionSpellAct(
         {
           ...bonusActionAdmission.input,
           subject: bonusActionAct.subject,
-          state: {
-            ...bonusActionAdmission.input.state,
-            combatants: new Map(bonusActionSession.state.combatants).set(
-              depletedBonusActionActor.combatantId,
-              depletedBonusActionActor,
-            ),
-          },
+          state: depletedBonusActionState,
         },
         spellProcedureExecutionRegistry(),
       ),
@@ -2207,30 +2273,6 @@ describe("battle runtime: spellcasting actions and slots", () => {
     ).toBe("Use Slot Save Damage.");
   });
 });
-
-function characterWithDepletedSpellSlots(
-  actor: BattleCreatureState | undefined,
-) {
-  if (
-    actor?.origin.kind !== "character" ||
-    actor.origin.spellcasting === undefined
-  ) {
-    throw new Error("Expected character spell caster.");
-  }
-  return {
-    ...actor,
-    origin: {
-      ...actor.origin,
-      spellcasting: {
-        ...actor.origin.spellcasting,
-        spellSlots: actor.origin.spellcasting.spellSlots.map((slot) => ({
-          ...slot,
-          expended: slot.count,
-        })),
-      },
-    },
-  };
-}
 
 function characterWithUnavailableSpellExecution(
   actor: BattleCreatureState | undefined,

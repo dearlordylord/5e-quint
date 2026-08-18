@@ -668,21 +668,37 @@ describe("battle runtime: Cunning Strike", () => {
       toolIds: ["poisoners_kit"],
     });
 
-    const save = requireHole(
-      resolveBattleSubject({
-        state: window.state,
-        subject: window.subject,
-        fills: [
-          ...window.damageAppliedFills,
-          toolPossessionFactsFill(kit, ["poisoners_kit"]),
-        ],
-      }),
-      "savingThrowOutcome",
-    );
+    const needsSave = resolveBattleSubject({
+      state: window.state,
+      subject: window.subject,
+      fills: [
+        ...window.damageAppliedFills,
+        toolPossessionFactsFill(kit, ["poisoners_kit"]),
+      ],
+    });
+    const save = requireHole(needsSave, "savingThrowOutcome");
+    if (needsSave.tag !== "needsHoles") {
+      throw new Error("Expected Cunning Strike Poison saving-throw hole.");
+    }
     expect(save).toMatchObject({
       ability: "con",
       dc: { kind: "fixed", dc: difficultyClass(14) },
       targetIds: [goblinId],
+    });
+    expect(
+      resolveBattleSubject({
+        state: needsSave.state,
+        subject: window.subject,
+        fills: [
+          ...window.damageAppliedFills,
+          savingThrowOutcomeFill(save, [
+            { targetId: goblinId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "toolPossessionFacts" }],
     });
 
     const poisoned = requireResolved(

@@ -2879,51 +2879,6 @@ export function resolveSelectedAttackProcedure<
       );
     }
     /* v8 ignore stop */
-    const attackDamageReactionWindow = maybeOpenInterruptWindow(
-      grapplerPunchAndGrab.state,
-      {
-        trigger: "attackDamage",
-        continuation: attackDamageInterruptionFrame({
-          participant: input.subject,
-          targetId: target.combatantId,
-          targetSpatialFacts: fillSet.targetSpatialFacts,
-          attackResult: effectiveAttackRoll,
-          damageInput: reducedDamageEventAfterSpellReduction,
-          critical,
-          continuation: {
-            kind: "primaryAttackDamage",
-            concentrationSavingThrows: primaryConcentrationSavingThrows,
-            damageDisposition: primaryAttackDamageDisposition(fillSet),
-            attackDamageRiders: [],
-            attack,
-            fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
-            ...optionalProperty(
-              "relationshipDecisions",
-              relationshipCheck.decisions,
-            ),
-          },
-        }),
-      },
-      input.handledInterruptTrigger,
-    );
-    if (attackDamageReactionWindow !== null) {
-      const spent = spendAttackProcedure(
-        battleStateAfterBrutalStrikeAttackCompletion(
-          attackDamageReactionWindow.state,
-          brutalStrikePending,
-        ),
-        attackerId,
-        attack,
-        { kind: "acceptedAttack" },
-      );
-      return spent.tag === "invalid"
-        ? spent
-        : {
-            ...attackDamageReactionWindow,
-            state: spent.state,
-            snapshot: snapshotBattle(spent.state),
-          };
-    }
     const concentrationSave = concentrationSavingThrowHole(
       spellReduction.target,
       reducedFixedDamageAmount,
