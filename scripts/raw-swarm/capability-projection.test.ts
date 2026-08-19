@@ -106,6 +106,7 @@ describe("Raw Swarm capability projection", () => {
       expect(context).toContain("one exclusive spatial boundary");
       expect(context).toContain("not a reusable conditional terrain rule");
       expect(context).toContain("becomes stale");
+      expect(context).toContain("do not create hypothetical spatial branches");
     }
   });
 

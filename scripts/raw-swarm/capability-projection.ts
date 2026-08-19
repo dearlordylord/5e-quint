@@ -311,7 +311,7 @@ const CANONICAL_BOUNDARIES = [
     id: "table-witness-ownership",
     roles: ["generation", "setupAuthoring", "player", "review"],
     statement:
-      "A scenario session selects one exclusive spatial boundary. geometryDerived owns its arena, placements, movement, and every supported spatial question and accepts no Table decisions. tableAuthored has no arena or placements, so every needed relation or movement route must be an exact fingerprint-bound decision. A Table decision supplies one typed mechanical answer, such as a specific Cover degree; it is not a reusable conditional terrain rule, becomes stale when its spatial fingerprint changes, and cannot be overridden by the player.",
+      "A scenario session selects one exclusive spatial boundary. geometryDerived owns its arena, placements, movement, and every supported spatial question and accepts no Table decisions. tableAuthored has no arena or placements, so every needed relation or movement route must be an exact fingerprint-bound decision. A Table decision supplies one typed mechanical answer, such as a specific Cover degree; it is not a reusable conditional terrain rule, becomes stale when its spatial fingerprint changes, and cannot be overridden by the player. Within this public flow, only resolved Scenario movement advances the spatial fingerprint; conditions, rolls, and other Battle outcomes do not create hypothetical spatial branches, so exact non-movement decisions remain bound while the fingerprint is unchanged.",
   },
   {
     id: "ordinary-typescript",
