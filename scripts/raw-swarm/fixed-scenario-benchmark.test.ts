@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { resolve } from "node:path";
 
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
@@ -14,6 +16,7 @@ import {
   fixedBenchmarkContextForRole,
   fixedBenchmarkDocumentDeclarationContextForRole,
   fixedScenarioCanonicalBundle,
+  initializeFixedBenchmarkProfileDirectory,
   validateBenchmarkReviewAuthority,
 } from "./fixed-scenario-benchmark.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
@@ -46,6 +49,21 @@ const currentReview = {
 };
 
 describe("fixed scenario benchmark boundary", () => {
+  test("creates a profile beneath a missing run directory and refuses overwrite", () => {
+    const temporaryRoot = mkdtempSync(resolve(tmpdir(), "dnd-fixed-profile-"));
+    const profileRoot = resolve(temporaryRoot, "run", "profile");
+    try {
+      initializeFixedBenchmarkProfileDirectory(profileRoot);
+
+      expect(existsSync(profileRoot)).toBe(true);
+      expect(() =>
+        initializeFixedBenchmarkProfileDirectory(profileRoot),
+      ).toThrow();
+    } finally {
+      rmSync(temporaryRoot, { recursive: true });
+    }
+  });
+
   test("retains the exact tracked generated-battle-009 source bundle", () => {
     const bundle = fixedScenarioCanonicalBundle();
 

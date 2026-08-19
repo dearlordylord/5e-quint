@@ -284,6 +284,13 @@ export function fixedBenchmarkProfilePaths(
   };
 }
 
+export function initializeFixedBenchmarkProfileDirectory(
+  profileRoot: string,
+): void {
+  mkdirSync(resolve(profileRoot, ".."), { recursive: true });
+  mkdirSync(profileRoot, { recursive: false });
+}
+
 function assertRunId(runId: string | undefined): string {
   if (runId === undefined || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(runId)) {
     return fail("Fixed benchmark run id has unsafe characters.");
@@ -1191,7 +1198,7 @@ async function prepareProfile(input: {
     assertRunId(input.runId),
     input.profile,
   );
-  mkdirSync(paths.root, { recursive: false });
+  initializeFixedBenchmarkProfileDirectory(paths.root);
   mkdirSync(paths.contextDirectory, { recursive: true });
   mkdirSync(paths.eventDirectory, { recursive: true });
   mkdirSync(paths.reviewDirectory, { recursive: true });
