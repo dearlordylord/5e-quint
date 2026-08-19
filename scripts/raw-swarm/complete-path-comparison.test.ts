@@ -557,6 +557,19 @@ describe("complete Raw Swarm path comparison", () => {
       expect.objectContaining({ _tag: "Right" }),
     );
 
+    const afterFinalReview = retainOrdered([
+      ...source.invocations.slice(0, 3),
+      generationFollowup,
+      ...source.invocations.slice(3),
+    ]);
+    const finalReviewValidation =
+      validateCompletePathMeasurement(afterFinalReview);
+    expect(Either.isLeft(finalReviewValidation)).toBe(true);
+    if (Either.isRight(finalReviewValidation)) return;
+    expect(finalReviewValidation.left).toContain(
+      "follow the retained final review",
+    );
+
     const reversed = retainOrdered([
       ...source.invocations.slice(0, 5),
       generationFollowup,
@@ -609,7 +622,7 @@ describe("complete Raw Swarm path comparison", () => {
       equivalence: { tag: "equivalent" },
       baseline: {
         outcome: { tag: "completed" },
-        acceptedCalls: { tag: "available", count: 1 },
+        acceptedCallVerdicts: { tag: "available", count: 1 },
         corrections: { tag: "available", count: 1 },
         failedStages: { tag: "available", count: 0 },
       },
@@ -878,7 +891,7 @@ describe("complete Raw Swarm path comparison", () => {
       },
       baseline: {
         evidenceVersion: "historical",
-        acceptedCalls: { tag: "unavailable" },
+        acceptedCallVerdicts: { tag: "unavailable" },
         corrections: { tag: "unavailable" },
       },
       inputTokens: { tag: "incomparable" },

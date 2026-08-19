@@ -678,6 +678,33 @@ describe("scenario setup public-SDK boundary", () => {
         message: expect.stringContaining("malformed Opportunity Attack threat"),
       },
     });
+    const malformedTraversalIdentity = tableAuthoredSpatialDecision({
+      decisionId: "malformed-traversal-identity",
+      question: tableMovementDecision.question,
+      answer: {
+        ...tableMovementDecision.answer,
+        creatureSpaceTraversal: {
+          kind: "fact",
+          value: {
+            kind: "occupiedCreatureSpaceTraversal",
+            occupiedSpaces: [
+              { occupantId: " ", positionId: "occupied-position" },
+            ],
+            destination: {
+              kind: "unoccupiedSpace",
+              positionId: "destination-position",
+            },
+          },
+        },
+      },
+    });
+    expect(malformedTraversalIdentity).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "invalid-spatial-decision",
+        message: expect.stringContaining("invalid occupied-space"),
+      },
+    });
     const trimmedProcedureRef = tableAuthoredSpatialDecision({
       decisionId: "trimmed-procedure-ref",
       question: {

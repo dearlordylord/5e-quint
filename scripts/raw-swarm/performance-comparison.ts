@@ -1324,7 +1324,7 @@ export type CompletePathEquivalenceWitness =
 export type CompletePathSummary = Readonly<{
   readonly evidenceVersion: "current" | "historical";
   readonly outcome: PathOutcome | UnavailableEvidence;
-  readonly acceptedCalls: EvidenceCount;
+  readonly acceptedCallVerdicts: EvidenceCount;
   readonly corrections: EvidenceCount;
   readonly failedStages: EvidenceCount;
   readonly failureReasons: EvidenceList;
@@ -1654,7 +1654,7 @@ function currentSummary(
   return {
     evidenceVersion: "current",
     outcome: measurement.outcome,
-    acceptedCalls: pathDimension(
+    acceptedCallVerdicts: pathDimension(
       measurement.findings.findings.filter(
         ({ kind }) => kind === "accepted-call-verdict",
       ).length,
@@ -1692,7 +1692,7 @@ function historicalSummary(
   return {
     evidenceVersion: "historical",
     outcome: measurement.outcome,
-    acceptedCalls: {
+    acceptedCallVerdicts: {
       tag: "unavailable",
       reason: "Historical findings were not retained in this envelope.",
     },
@@ -2368,6 +2368,18 @@ function currentAuthorityContentIssues(
     if (milestoneIndex < 0 || finalIndex < 0 || milestoneIndex >= finalIndex) {
       issues.push(
         "Composite-review invocations must retain milestone before final order.",
+      );
+    } else if (
+      measurement.invocations
+        .slice(finalIndex + 1)
+        .some(
+          ({ phase }) =>
+            phase === "scenarioGeneration" ||
+            phase === "scenarioCompositeReview",
+        )
+    ) {
+      issues.push(
+        "No generation or composite-review invocation may follow the retained final review.",
       );
     }
   }

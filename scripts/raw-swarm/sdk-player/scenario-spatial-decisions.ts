@@ -5,10 +5,14 @@ import type {
   BattleMovementSpeedKind,
   BattleObjectId,
   BattleOpportunityAttackThreat,
-  BattleTablePositionId,
   BattleProcedureExecutionRef,
+  BattleTablePositionId,
   CombatantId,
 } from "@dnd/battle-runtime";
+import {
+  battleTablePositionId,
+  combatantId,
+} from "../../../packages/battle-runtime/src/index.ts";
 import {
   ABILITIES,
   DAMAGE_TYPES,
@@ -833,6 +837,10 @@ function isString(value: unknown): value is string {
   return typeof value === "string";
 }
 
+function isNonEmptyTrimmedString(value: unknown): value is string {
+  return isString(value) && value.length > 0 && value === value.trim();
+}
+
 function parseProcedureRef(
   value: unknown,
 ): BattleProcedureExecutionRef | undefined {
@@ -1199,8 +1207,8 @@ function parseCreatureSpaceTraversal(
       (space) =>
         isRecord(space) &&
         hasOnlyKeys(space, ["occupantId", "positionId"]) &&
-        isString(space.occupantId) &&
-        isString(space.positionId),
+        isNonEmptyTrimmedString(space.occupantId) &&
+        isNonEmptyTrimmedString(space.positionId),
     ) ||
     !isRecord(fact.destination) ||
     !hasOnlyKeys(
@@ -1210,9 +1218,9 @@ function parseCreatureSpaceTraversal(
         : ["kind", "positionId"],
     ) ||
     !isString(fact.destination.kind) ||
-    !isString(fact.destination.positionId) ||
+    !isNonEmptyTrimmedString(fact.destination.positionId) ||
     (fact.destination.kind === "occupiedCreatureSpace" &&
-      !isString(fact.destination.occupantId)) ||
+      !isNonEmptyTrimmedString(fact.destination.occupantId)) ||
     (fact.destination.kind !== "occupiedCreatureSpace" &&
       fact.destination.kind !== "unoccupiedSpace")
   ) {
@@ -1222,8 +1230,8 @@ function parseCreatureSpaceTraversal(
     );
   }
   const occupiedSpaces = fact.occupiedSpaces.map((space) => ({
-    occupantId: space.occupantId as CombatantId,
-    positionId: space.positionId as BattleTablePositionId,
+    occupantId: combatantId(space.occupantId),
+    positionId: battleTablePositionId(space.positionId),
   }));
   const firstOccupiedSpace = occupiedSpaces[0];
   if (firstOccupiedSpace === undefined) {
@@ -1236,22 +1244,24 @@ function parseCreatureSpaceTraversal(
     readonly occupantId: CombatantId;
     readonly positionId: BattleTablePositionId;
   }> = [firstOccupiedSpace, ...occupiedSpaces.slice(1)];
+  const destination =
+    fact.destination.kind === "occupiedCreatureSpace" &&
+    isNonEmptyTrimmedString(fact.destination.occupantId)
+      ? {
+          kind: "occupiedCreatureSpace" as const,
+          occupantId: combatantId(fact.destination.occupantId),
+          positionId: battleTablePositionId(fact.destination.positionId),
+        }
+      : {
+          kind: "unoccupiedSpace" as const,
+          positionId: battleTablePositionId(fact.destination.positionId),
+        };
   return Either.right({
     kind: "fact",
     value: {
       kind: "occupiedCreatureSpaceTraversal",
       occupiedSpaces: nonEmptyOccupiedSpaces,
-      destination:
-        fact.destination.kind === "occupiedCreatureSpace"
-          ? {
-              kind: "occupiedCreatureSpace",
-              occupantId: fact.destination.occupantId as CombatantId,
-              positionId: fact.destination.positionId as BattleTablePositionId,
-            }
-          : {
-              kind: "unoccupiedSpace",
-              positionId: fact.destination.positionId as BattleTablePositionId,
-            },
+      destination,
     },
   });
 }
@@ -1617,49 +1627,44 @@ function normalizeSpatialDecision(
     );
   }
   if (isGrappleTargetSpatialDecisionInput(input)) {
-    return Either.right(
-      cloneAndFreeze({
-        decisionId,
-        question: input.question,
-        answer: input.answer,
-      }) as ScenarioGrappleTargetSpatialDecision,
-    );
+    const decision: ScenarioGrappleTargetSpatialDecision = {
+      decisionId,
+      question: input.question,
+      answer: input.answer,
+    };
+    return Either.right(cloneAndFreeze(decision));
   }
   if (isShoveTargetSpatialDecisionInput(input)) {
-    return Either.right(
-      cloneAndFreeze({
-        decisionId,
-        question: input.question,
-        answer: input.answer,
-      }) as ScenarioShoveTargetSpatialDecision,
-    );
+    const decision: ScenarioShoveTargetSpatialDecision = {
+      decisionId,
+      question: input.question,
+      answer: input.answer,
+    };
+    return Either.right(cloneAndFreeze(decision));
   }
   if (isSleepShakeAwakeTargetSpatialDecisionInput(input)) {
-    return Either.right(
-      cloneAndFreeze({
-        decisionId,
-        question: input.question,
-        answer: input.answer,
-      }) as ScenarioSleepShakeAwakeTargetSpatialDecision,
-    );
+    const decision: ScenarioSleepShakeAwakeTargetSpatialDecision = {
+      decisionId,
+      question: input.question,
+      answer: input.answer,
+    };
+    return Either.right(cloneAndFreeze(decision));
   }
   if (isHypnoticPatternShakeAwakeTargetSpatialDecisionInput(input)) {
-    return Either.right(
-      cloneAndFreeze({
-        decisionId,
-        question: input.question,
-        answer: input.answer,
-      }) as ScenarioHypnoticPatternShakeAwakeTargetSpatialDecision,
-    );
+    const decision: ScenarioHypnoticPatternShakeAwakeTargetSpatialDecision = {
+      decisionId,
+      question: input.question,
+      answer: input.answer,
+    };
+    return Either.right(cloneAndFreeze(decision));
   }
   if (isHelpAttackTargetSpatialDecisionInput(input)) {
-    return Either.right(
-      cloneAndFreeze({
-        decisionId,
-        question: input.question,
-        answer: input.answer,
-      }) as ScenarioHelpAttackTargetSpatialDecision,
-    );
+    const decision: ScenarioHelpAttackTargetSpatialDecision = {
+      decisionId,
+      question: input.question,
+      answer: input.answer,
+    };
+    return Either.right(cloneAndFreeze(decision));
   }
   if (!isMovementRouteSpatialDecisionInput(input)) {
     return Either.left(
