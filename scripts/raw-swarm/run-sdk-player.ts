@@ -5,15 +5,17 @@ import {
   copyFileSync,
   cpSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   openSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
 import {
   consumerPermissionProfileAvailable,
@@ -67,6 +69,83 @@ import { projectTranscriptlessFindings } from "./generation-findings.ts";
 
 const PLAYER_MODEL = "gpt-5.6-sol";
 const PLAYER_REASONING_EFFORT = "medium";
+
+type RepositoryPathKind = "read" | "prospectiveOutput";
+
+function pathExists(path: string): boolean {
+  try {
+    lstatSync(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function pathIsContained(root: string, candidate: string): boolean {
+  const pathFromRoot = relative(root, candidate);
+  return (
+    pathFromRoot !== ".." &&
+    !pathFromRoot.startsWith(`..${sep}`) &&
+    !isAbsolute(pathFromRoot)
+  );
+}
+
+function canonicalPath(path: string, value: string): string {
+  try {
+    return realpathSync(path);
+  } catch {
+    fail(`Repository path could not be canonicalized: ${value}`);
+  }
+}
+
+function repositoryPath(value: string, kind: RepositoryPathKind): string {
+  if (value.includes("\u0000")) {
+    fail("Repository path values cannot contain NUL bytes.");
+  }
+  const repository = canonicalPath(repoRoot, repoRoot);
+  const absolute = resolve(repoRoot, value);
+  if (!pathIsContained(repository, absolute)) {
+    fail(
+      `${kind === "read" ? "Read" : "Output"} path must remain inside the repository root: ${value}`,
+    );
+  }
+
+  // A read path may be absent (setup and character sources are optional), and
+  // an output path is intentionally prospective. Check the nearest existing
+  // component in either case so a symlink anywhere in the path cannot escape.
+  let nearestExisting = absolute;
+  while (!pathExists(nearestExisting)) {
+    const parent = dirname(nearestExisting);
+    if (parent === nearestExisting) {
+      fail(`Repository path has no existing ancestor: ${value}`);
+    }
+    nearestExisting = parent;
+  }
+  const canonicalNearest = canonicalPath(nearestExisting, value);
+  if (!pathIsContained(repository, canonicalNearest)) {
+    fail(`Repository path escapes through a symlink: ${value}`);
+  }
+
+  if (pathExists(absolute)) {
+    const canonical = canonicalPath(absolute, value);
+    if (!pathIsContained(repository, canonical)) {
+      fail(`Repository path escapes through a symlink: ${value}`);
+    }
+    // Read authorities should follow an in-repository symlink to the canonical
+    // source; prospective output paths retain their lexical destination so a
+    // missing leaf can be created beneath an in-repository directory link.
+    return kind === "read" ? canonical : absolute;
+  }
+  return absolute;
+}
+
+function repositoryReadPath(value: string): string {
+  return repositoryPath(value, "read");
+}
+
+function repositoryOutputPath(value: string): string {
+  return repositoryPath(value, "prospectiveOutput");
+}
 
 function fail(message: string): never {
   throw new Error(message);
@@ -350,6 +429,44 @@ async function main(args: readonly string[]): Promise<void> {
   }
   const acceptedScenarioId = decodedScenarioId.right;
   const acceptedEvidenceId = decodedEvidenceId.right;
+  const pathValue = (flag: string): string | undefined => pathValues.get(flag);
+  const output = repositoryOutputPath(
+    pathValue("--output-path") ??
+      `scripts/raw-swarm/out/${acceptedEvidenceId}-sdk-player`,
+  );
+  const scenarioPath = repositoryReadPath(
+    pathValue("--scenario-path") ??
+      `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.md`,
+  );
+  const setupPath = repositoryReadPath(
+    pathValue("--setup-path") ??
+      `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.setup.ts`,
+  );
+  const charactersPath = repositoryReadPath(
+    pathValue("--characters-path") ??
+      `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.characters.ts`,
+  );
+  const scenarioReviewPath = repositoryReadPath(
+    pathValue("--scenario-review-path") ??
+      `${scenarioPath}.scenario-review.json`,
+  );
+  const benchmarkContextPathInput = pathValue("--benchmark-context-path");
+  const benchmarkContextPath =
+    benchmarkContextPathInput === undefined
+      ? undefined
+      : repositoryReadPath(benchmarkContextPathInput);
+  const customStagePlanPathInput = pathValue("--stage-plan-path");
+  const customStagePlanFindingsPathInput = pathValue(
+    "--stage-plan-findings-path",
+  );
+  const customStagePlanPath =
+    customStagePlanPathInput === undefined
+      ? undefined
+      : repositoryReadPath(customStagePlanPathInput);
+  const customStagePlanFindingsPath =
+    customStagePlanFindingsPathInput === undefined
+      ? undefined
+      : repositoryReadPath(customStagePlanFindingsPathInput);
   const revision = currentGitRevision();
   if (revision.tag === "dirty") {
     fail("SDK player recording requires a clean Git worktree.");
@@ -357,45 +474,15 @@ async function main(args: readonly string[]): Promise<void> {
   const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
   if (Either.isLeft(gitSha)) fail(gitSha.left.message);
   const startedAt = new Date().toISOString();
-  const pathValue = (flag: string): string | undefined => pathValues.get(flag);
-  const output = resolve(
-    repoRoot,
-    pathValue("--output-path") ??
-      `scripts/raw-swarm/out/${acceptedEvidenceId}-sdk-player`,
-  );
   if (existsSync(output)) {
     fail(`Refusing to overwrite SDK player evidence: ${output}`);
   }
-  const scenarioPath = resolve(
-    repoRoot,
-    pathValue("--scenario-path") ??
-      `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.md`,
-  );
-  const setupPath = resolve(
-    repoRoot,
-    pathValue("--setup-path") ??
-      `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.setup.ts`,
-  );
-  const charactersPath = resolve(
-    repoRoot,
-    pathValue("--characters-path") ??
-      `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.characters.ts`,
-  );
-  const scenarioReviewPath = resolve(
-    repoRoot,
-    pathValue("--scenario-review-path") ??
-      `${scenarioPath}.scenario-review.json`,
-  );
-  const benchmarkContextPath = pathValue("--benchmark-context-path");
   const contextDelivery: ContextDelivery<"player"> =
     benchmarkContextPath === undefined
       ? { tag: "canonicalRoleProjection", role: "player" }
       : {
           tag: "benchmarkContext",
-          content: readFileSync(
-            resolve(repoRoot, benchmarkContextPath),
-            "utf8",
-          ),
+          content: readFileSync(benchmarkContextPath, "utf8"),
         };
   const deliveredContextFileName =
     contextDelivery.tag === "canonicalRoleProjection"
@@ -429,8 +516,6 @@ async function main(args: readonly string[]): Promise<void> {
     )}\n`,
     { flag: "wx" },
   );
-  const customStagePlanPath = pathValue("--stage-plan-path");
-  const customStagePlanFindingsPath = pathValue("--stage-plan-findings-path");
   if (
     (customStagePlanPath === undefined) !==
     (customStagePlanFindingsPath === undefined)
@@ -449,8 +534,8 @@ async function main(args: readonly string[]): Promise<void> {
           scenarioReviewSha256: admission.right.scenarioReviewSha256,
         })
       : (() => {
-          const planPath = resolve(repoRoot, customStagePlanPath);
-          const findingsPath = resolve(repoRoot, customStagePlanFindingsPath);
+          const planPath = customStagePlanPath;
+          const findingsPath = customStagePlanFindingsPath;
           if (!existsSync(planPath) || !existsSync(findingsPath)) {
             return Either.left(
               "Profile stage-plan authorities must both be readable.",
@@ -504,11 +589,9 @@ async function main(args: readonly string[]): Promise<void> {
     fail(retainedPlan.left);
   }
   const stagePlanPath = resolve(
-    repoRoot,
     customStagePlanPath ?? retainedScenarioStagePlanPath(acceptedScenarioId),
   );
   const stagePlanFindingsPath = resolve(
-    repoRoot,
     customStagePlanFindingsPath ??
       retainedScenarioStagePlanFindingsPath(acceptedScenarioId),
   );

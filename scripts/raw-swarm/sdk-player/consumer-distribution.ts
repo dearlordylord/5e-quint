@@ -306,7 +306,7 @@ export function buildConsumerDistribution(
   copyFileSync(input.scenarioPath, resolve(input.destination, "SCENARIO.md"));
   writeFileSync(
     resolve(input.destination, contextFileName(input.contextDelivery)),
-    `${contextText(input.contextDelivery)}\n`,
+    contextText(input.contextDelivery),
   );
   copyFileSync(
     resolve(repoRoot, "scripts/raw-swarm/sdk-player/PLAYER.md"),
@@ -382,7 +382,7 @@ export function buildScenarioSetupDistribution(
   );
   writeFileSync(
     resolve(input.destination, contextFileName(input.contextDelivery)),
-    `${contextText(input.contextDelivery)}\n`,
+    contextText(input.contextDelivery),
   );
   copyFileSync(
     resolve(repoRoot, "scripts/raw-swarm/sdk-player/SCENARIO_SETUP.md"),
@@ -437,7 +437,7 @@ export function buildScenarioCharacterDistribution(
   );
   writeFileSync(
     resolve(input.destination, contextFileName(input.contextDelivery)),
-    `${contextText(input.contextDelivery)}\n`,
+    contextText(input.contextDelivery),
   );
   copyFileSync(
     resolve(repoRoot, "scripts/raw-swarm/sdk-player/SCENARIO_CHARACTERS.md"),

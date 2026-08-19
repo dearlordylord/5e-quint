@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RAW_REVIEW_ROOT=$(git rev-parse --show-toplevel)
+RAW_REVIEW_ROOT=$(realpath -- "$(git rev-parse --show-toplevel)")
 RAW_REVIEW_PROMPT=${1:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
 RAW_REVIEW_TRANSCRIPT=${2:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
 RAW_REVIEW_OUTPUT=${3:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
@@ -33,10 +33,26 @@ RAW_REVIEW_PACKET_BYTES=$(wc -c <"$RAW_REVIEW_PACKET" | tr -d ' ')
 RAW_REVIEW_PACKET_SHA256=$(sha256sum "$RAW_REVIEW_PACKET" | cut -d' ' -f1)
 RAW_REVIEW_EXTRACT_COMMAND="pnpm exec tsx scripts/raw-swarm/sdk-player/sdk-audit-cli.ts extract $RAW_REVIEW_AUDIT scripts/raw-swarm/out/review-extract-UNIQUE.records.jsonl scripts/raw-swarm/out/review-extract-UNIQUE.provenance.json SEQUENCE [SEQUENCE ...]"
 if [[ -n "${RAW_REVIEW_CONTEXT_PATH:-}" ]]; then
-  if [[ ! -f "$RAW_REVIEW_CONTEXT_PATH" ]]; then
+  if [[ "$RAW_REVIEW_CONTEXT_PATH" = /* ]]; then
+    RAW_REVIEW_CONTEXT_CANDIDATE=$RAW_REVIEW_CONTEXT_PATH
+  else
+    RAW_REVIEW_CONTEXT_CANDIDATE=$RAW_REVIEW_ROOT/$RAW_REVIEW_CONTEXT_PATH
+  fi
+  if [[ ! -f "$RAW_REVIEW_CONTEXT_CANDIDATE" ]]; then
     printf 'RAW_REVIEW_CONTEXT_PATH is not a readable file: %s\n' "$RAW_REVIEW_CONTEXT_PATH" >&2
     exit 1
   fi
+  if ! RAW_REVIEW_CONTEXT_PATH=$(realpath -- "$RAW_REVIEW_CONTEXT_CANDIDATE"); then
+    printf 'RAW_REVIEW_CONTEXT_PATH could not be canonicalized: %s\n' "$RAW_REVIEW_CONTEXT_CANDIDATE" >&2
+    exit 1
+  fi
+  case "$RAW_REVIEW_CONTEXT_PATH" in
+    "$RAW_REVIEW_ROOT"/*) ;;
+    *)
+      printf 'RAW_REVIEW_CONTEXT_PATH escapes the repository root: %s\n' "$RAW_REVIEW_CONTEXT_CANDIDATE" >&2
+      exit 1
+      ;;
+  esac
   RAW_REVIEW_CONTEXT_SHA256=$(sha256sum "$RAW_REVIEW_CONTEXT_PATH" | cut -d' ' -f1)
   RAW_REVIEW_CAPABILITY_CONTEXT="Read the exact delivered review context at $RAW_REVIEW_CONTEXT_PATH with SHA-256 $RAW_REVIEW_CONTEXT_SHA256."
 else

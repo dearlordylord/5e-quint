@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdtempSync, readFileSync, rmSync, symlinkSync } from "node:fs";
+import { relative, resolve, sep } from "node:path";
+import { tmpdir } from "node:os";
 import { describe, expect, test } from "vitest";
 
 import { repoRoot } from "./transcript.ts";
@@ -54,6 +55,11 @@ describe("RAW swarm runner boundaries", () => {
     expect(script).toContain("RAW_REVIEW_INVOCATION_GIT_SHA");
     expect(script).toContain("RAW_REVIEW_CONTEXT_SHA256=$(sha256sum");
     expect(script).toContain("Read the exact delivered review context at");
+    expect(script).toContain("RAW_REVIEW_CONTEXT_CANDIDATE");
+    expect(script).toContain("realpath --");
+    expect(script).toContain(
+      "RAW_REVIEW_CONTEXT_PATH escapes the repository root",
+    );
     expect(script).not.toContain(
       'RAW_REVIEW_CAPABILITY_CONTEXT=$(<"$RAW_REVIEW_CONTEXT_PATH")',
     );
@@ -105,6 +111,30 @@ describe("RAW swarm runner boundaries", () => {
         "scenario.setup.ts",
       ],
     ],
+    [
+      "path traversal outside the repository",
+      [
+        "tracer-001-goblin-warrior-vs-skeleton",
+        "--scenario-path",
+        "../outside/scenario.md",
+      ],
+    ],
+    [
+      "absolute output outside the repository",
+      [
+        "tracer-001-goblin-warrior-vs-skeleton",
+        "--output-path",
+        resolve(tmpdir(), "raw-swarm-outside"),
+      ],
+    ],
+    [
+      "benchmark context traversal outside the repository",
+      [
+        "tracer-001-goblin-warrior-vs-skeleton",
+        "--benchmark-context-path",
+        "../outside/context.md",
+      ],
+    ],
   ])(
     "rejects direct-SDK launcher %s",
     (_label, args) => {
@@ -112,6 +142,36 @@ describe("RAW swarm runner boundaries", () => {
     },
     30_000,
   );
+
+  test("rejects read and prospective output paths through an escaping symlink", () => {
+    const boundaryRoot = mkdtempSync(
+      resolve(repoRoot, "scripts/raw-swarm/out/runner-boundary-"),
+    );
+    const outside = mkdtempSync(resolve(tmpdir(), "dnd-runner-outside-"));
+    const escape = resolve(boundaryRoot, "escape");
+    symlinkSync(outside, escape, "dir");
+    const escapedRead = `${relative(repoRoot, escape)}${sep}scenario.md`;
+    const escapedOutput = `${relative(repoRoot, escape)}${sep}new-run`;
+    try {
+      expect(() =>
+        run(sdkPlayerLauncher, [
+          "tracer-001-goblin-warrior-vs-skeleton",
+          "--scenario-path",
+          escapedRead,
+        ]),
+      ).toThrow();
+      expect(() =>
+        run(sdkPlayerLauncher, [
+          "tracer-001-goblin-warrior-vs-skeleton",
+          "--output-path",
+          escapedOutput,
+        ]),
+      ).toThrow();
+    } finally {
+      rmSync(boundaryRoot, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
+  }, 30_000);
 
   test("loads the direct-SDK launcher before rejecting invalid input", () => {
     expect(() => run(sdkPlayerLauncher, [])).toThrowError(

@@ -19,6 +19,7 @@ import { promisify } from "node:util";
 import { describe, expect, test } from "vitest";
 import { buildSync } from "esbuild";
 
+import { capabilityContextForRole } from "../capability-projection.ts";
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import {
@@ -94,9 +95,9 @@ describe("SDK player consumer distribution", () => {
         scenarioPath,
         contextDelivery: { tag: "benchmarkContext", content: profileContext },
       });
-      expect(
-        readFileSync(join(destination, "BENCHMARK_CONTEXT.md"), "utf8"),
-      ).toBe(`${profileContext}\n`);
+      expect(readFileSync(join(destination, "BENCHMARK_CONTEXT.md"))).toEqual(
+        Buffer.from(profileContext),
+      );
     },
     10 * 60 * 1_000,
   );
@@ -142,6 +143,9 @@ describe("SDK player consumer distribution", () => {
         guidance:
           "No SDK call has been recorded. Replace the attempt.ts starter body with the first tactical continuation.",
       });
+      expect(readFileSync(join(destination, "CAPABILITY_CONTEXT.md"))).toEqual(
+        Buffer.from(capabilityContextForRole("player")),
+      );
       const characterBoundaryPath = join(destination, "character-boundary.ts");
       copyFileSync(
         resolve(
