@@ -229,6 +229,19 @@ describe("fixed scenario benchmark boundary", () => {
             type: "item.completed",
             item: {
               id: "item_7",
+              type: "command_execution",
+              command:
+                "/bin/bash -c 'rg -n -m 120 \"^--- \" BENCHMARK_CONTEXT.md'",
+              aggregated_output: "synthetic context\n",
+              exit_code: 0,
+              status: "completed",
+            },
+          }) +
+          "\n" +
+          JSON.stringify({
+            type: "item.completed",
+            item: {
+              id: "item_8",
               type: "agent_message",
               text: `The model's prose may mention ${resolve("/outside")}.`,
             },
@@ -327,6 +340,18 @@ describe("fixed scenario benchmark boundary", () => {
     [
       "an rg context option after the pattern",
       () => "/bin/bash -lc 'rg context -C 6 BENCHMARK_CONTEXT.md'",
+    ],
+    [
+      "an rg max-count option without a count",
+      () => "/bin/bash -lc 'rg -m context BENCHMARK_CONTEXT.md'",
+    ],
+    [
+      "an rg max-count option with a noncanonical count",
+      () => "/bin/bash -lc 'rg -m 012 context BENCHMARK_CONTEXT.md'",
+    ],
+    [
+      "an rg max-count option after the pattern",
+      () => "/bin/bash -lc 'rg context -m 120 BENCHMARK_CONTEXT.md'",
     ],
     ["a tail line option without a count", () => "/bin/bash -c 'tail -n'"],
     [

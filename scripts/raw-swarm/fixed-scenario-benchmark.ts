@@ -645,6 +645,7 @@ const BENCHMARK_PREPARATION_READ_COMMANDS = new Set([
   "wc",
 ]);
 const BENCHMARK_PREPARATION_RG_OPTIONS = new Set(["-F", "-i", "-n", "-o"]);
+const BENCHMARK_PREPARATION_RG_COUNT_OPTIONS = new Set(["-C", "-m"]);
 const BENCHMARK_PREPARATION_SHELL_OPERATORS = new Set([
   ";",
   "&&",
@@ -1025,9 +1026,9 @@ function commandArguments(
           operandIndex += 1;
           break;
         }
-        if (argument === "-C") {
-          const contextLineCount = args[operandIndex + 1];
-          if (!isCanonicalUnsignedDecimal(contextLineCount)) {
+        if (BENCHMARK_PREPARATION_RG_COUNT_OPTIONS.has(argument)) {
+          const count = args[operandIndex + 1];
+          if (!isCanonicalUnsignedDecimal(count)) {
             return Either.left("rg has unsupported arguments");
           }
           operandIndex += 2;
