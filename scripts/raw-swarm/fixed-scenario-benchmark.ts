@@ -860,6 +860,7 @@ function retainReviewEnvelope(input: {
   readonly stage: "milestone" | "final";
   readonly result: unknown;
   readonly entry: CurrentModelInvocationLedgerEntry;
+  readonly eventPath: string;
   readonly prompt: string;
 }): string {
   const outputJsonSchema =
@@ -895,6 +896,7 @@ function retainReviewEnvelope(input: {
       ? input.profilePaths.milestoneReviewInput
       : input.profilePaths.finalReviewInput;
   writeJsonExclusive(replayPath, parsed.right);
+  retainBenchmarkReviewReplayEvents(input.eventPath, replayPath);
   const sourceEnvelope = {
     ...parsed.right,
     invocationId: "source-" + parsed.right.invocationId,
@@ -910,6 +912,17 @@ function retainReviewEnvelope(input: {
       : input.profilePaths.finalReviewSource;
   writeJsonExclusive(sourcePath, sourceParsed.right);
   return replayPath;
+}
+
+export function retainBenchmarkReviewReplayEvents(
+  eventPath: string,
+  replayPath: string,
+): string {
+  const retainedPath = replayPath.endsWith(".json")
+    ? replayPath.slice(0, -".json".length) + ".events.jsonl"
+    : replayPath + ".events.jsonl";
+  copyFileSync(eventPath, retainedPath, constants.COPYFILE_EXCL);
+  return retainedPath;
 }
 
 const BenchmarkReadinessInputSchema = Schema.Struct({
@@ -1267,6 +1280,7 @@ async function prepareProfile(input: {
     stage: "milestone",
     result: milestone.value,
     entry: milestone.currentEntry,
+    eventPath: milestone.eventPath,
     prompt: reviewPrompt(input.profile, "milestone", reviewContext, bundle),
   });
   if (input.profile === "documentDeclarationSet") {
@@ -1311,6 +1325,7 @@ async function prepareProfile(input: {
     stage: "final",
     result: final.value,
     entry: final.currentEntry,
+    eventPath: final.eventPath,
     prompt: reviewPrompt(input.profile, "final", reviewContext, bundle),
   });
   const characterResult = await evaluateScenarioCharacters(

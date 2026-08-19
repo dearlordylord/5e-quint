@@ -1,4 +1,10 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
@@ -18,6 +24,7 @@ import {
   fixedBenchmarkDocumentDeclarationContextForRole,
   fixedScenarioCanonicalBundle,
   initializeFixedBenchmarkProfileDirectory,
+  retainBenchmarkReviewReplayEvents,
   validateBenchmarkReviewAuthority,
 } from "./fixed-scenario-benchmark.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
@@ -70,6 +77,32 @@ describe("fixed scenario benchmark boundary", () => {
       expect(existsSync(profileRoot)).toBe(true);
       expect(() =>
         initializeFixedBenchmarkProfileDirectory(profileRoot),
+      ).toThrow();
+    } finally {
+      rmSync(temporaryRoot, { recursive: true });
+    }
+  });
+
+  test("retains review events adjacent to their replay envelope", () => {
+    const temporaryRoot = mkdtempSync(resolve(tmpdir(), "dnd-fixed-review-"));
+    const eventPath = resolve(temporaryRoot, "invocation.events.jsonl");
+    const replayPath = resolve(temporaryRoot, "milestone.input.json");
+    try {
+      writeFileSync(eventPath, '{"type":"thread.started"}\n');
+
+      const retainedPath = retainBenchmarkReviewReplayEvents(
+        eventPath,
+        replayPath,
+      );
+
+      expect(retainedPath).toBe(
+        resolve(temporaryRoot, "milestone.input.events.jsonl"),
+      );
+      expect(readFileSync(retainedPath, "utf8")).toBe(
+        '{"type":"thread.started"}\n',
+      );
+      expect(() =>
+        retainBenchmarkReviewReplayEvents(eventPath, replayPath),
       ).toThrow();
     } finally {
       rmSync(temporaryRoot, { recursive: true });
