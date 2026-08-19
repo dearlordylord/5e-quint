@@ -19,7 +19,10 @@ import {
   consumerPermissionProfileAvailable,
   createConsumerCodexHome,
 } from "./sdk-player/consumer-codex-profile.ts";
-import { buildConsumerDistribution } from "./sdk-player/consumer-distribution.ts";
+import {
+  buildConsumerDistribution,
+  type ContextDelivery,
+} from "./sdk-player/consumer-distribution.ts";
 import {
   parseSdkTranscript,
   sdkInitialTurnProjectionEvidence,
@@ -31,11 +34,13 @@ import {
   retainedScenarioStageFactsPath,
   retainedScenarioStagePlanFindingsPath,
   retainedScenarioStagePlanPath,
+  validateAdmittedScenarioStagePlanEvidence,
 } from "./stage-plan-authority.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
 import {
   RAW_SWARM_STAGE_PLAN_REASONS,
   stagePlanEntry,
+  validateScenarioStagePlan,
 } from "./scenario-stage-plan.ts";
 import {
   currentGitRevision,
@@ -282,6 +287,35 @@ async function main(args: readonly string[]): Promise<void> {
   const [scenarioId, ...options] = args;
   const decodedScenarioId = decodeScenarioId(scenarioId);
   const instructionalFallback = options.includes("--instructional-isolation");
+  const pathFlags = [
+    "--scenario-path",
+    "--scenario-review-path",
+    "--characters-path",
+    "--setup-path",
+    "--stage-plan-path",
+    "--stage-plan-findings-path",
+    "--output-path",
+    "--benchmark-context-path",
+  ] as const;
+  const pathValues = new Map<string, string>();
+  const pathOptionIndexes = new Set<number>();
+  let invalidPathValue = false;
+  for (const [index, option] of options.entries()) {
+    if (!pathFlags.includes(option as (typeof pathFlags)[number])) continue;
+    const value = options[index + 1];
+    if (
+      value === undefined ||
+      value.trim().length === 0 ||
+      value.startsWith("-") ||
+      pathValues.has(option)
+    ) {
+      invalidPathValue = true;
+      continue;
+    }
+    pathValues.set(option, value);
+    pathOptionIndexes.add(index);
+    pathOptionIndexes.add(index + 1);
+  }
   const evidenceIdFlagIndex = options.indexOf("--evidence-id");
   const evidenceIdInput =
     evidenceIdFlagIndex === -1 ? scenarioId : options[evidenceIdFlagIndex + 1];
@@ -291,19 +325,27 @@ async function main(args: readonly string[]): Promise<void> {
       ? new Set<number>()
       : new Set([evidenceIdFlagIndex, evidenceIdFlagIndex + 1]);
   const acceptedOptions = options.filter(
-    (_option, index) => !evidenceIdOptionIndexes.has(index),
+    (_option, index) =>
+      !evidenceIdOptionIndexes.has(index) && !pathOptionIndexes.has(index),
   );
   if (
     Either.isLeft(decodedScenarioId) ||
     Either.isLeft(decodedEvidenceId) ||
+    invalidPathValue ||
     acceptedOptions.some((option) => option !== "--instructional-isolation") ||
+    options.some(
+      (option, index) =>
+        pathFlags.includes(option as (typeof pathFlags)[number]) &&
+        (!pathOptionIndexes.has(index) ||
+          options.filter((candidate) => candidate === option).length !== 1),
+    ) ||
     options.filter((option) => option === "--instructional-isolation").length >
       1 ||
     options.filter((option) => option === "--evidence-id").length > 1 ||
     (evidenceIdFlagIndex !== -1 && evidenceIdFlagIndex + 1 >= options.length)
   ) {
     fail(
-      "Usage: run-sdk-player.ts <scenario-id> [--evidence-id <evidence-id>] [--instructional-isolation]",
+      "Usage: run-sdk-player.ts <scenario-id> [--evidence-id <evidence-id>] [--instructional-isolation] [--scenario-path <path>] [--scenario-review-path <path>] [--characters-path <path>] [--setup-path <path>] [--stage-plan-path <path>] [--stage-plan-findings-path <path>] [--output-path <path>] [--benchmark-context-path <path>]",
     );
   }
   const acceptedScenarioId = decodedScenarioId.right;
@@ -315,26 +357,50 @@ async function main(args: readonly string[]): Promise<void> {
   const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
   if (Either.isLeft(gitSha)) fail(gitSha.left.message);
   const startedAt = new Date().toISOString();
+  const pathValue = (flag: string): string | undefined => pathValues.get(flag);
   const output = resolve(
     repoRoot,
-    `scripts/raw-swarm/out/${acceptedEvidenceId}-sdk-player`,
+    pathValue("--output-path") ??
+      `scripts/raw-swarm/out/${acceptedEvidenceId}-sdk-player`,
   );
   if (existsSync(output)) {
     fail(`Refusing to overwrite SDK player evidence: ${output}`);
   }
   const scenarioPath = resolve(
     repoRoot,
-    `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.md`,
+    pathValue("--scenario-path") ??
+      `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.md`,
   );
   const setupPath = resolve(
     repoRoot,
-    `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.setup.ts`,
+    pathValue("--setup-path") ??
+      `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.setup.ts`,
   );
   const charactersPath = resolve(
     repoRoot,
-    `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.characters.ts`,
+    pathValue("--characters-path") ??
+      `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.characters.ts`,
   );
-  const scenarioReviewPath = `${scenarioPath}.scenario-review.json`;
+  const scenarioReviewPath = resolve(
+    repoRoot,
+    pathValue("--scenario-review-path") ??
+      `${scenarioPath}.scenario-review.json`,
+  );
+  const benchmarkContextPath = pathValue("--benchmark-context-path");
+  const contextDelivery: ContextDelivery<"player"> =
+    benchmarkContextPath === undefined
+      ? { tag: "canonicalRoleProjection", role: "player" }
+      : {
+          tag: "benchmarkContext",
+          content: readFileSync(
+            resolve(repoRoot, benchmarkContextPath),
+            "utf8",
+          ),
+        };
+  const deliveredContextFileName =
+    contextDelivery.tag === "canonicalRoleProjection"
+      ? "CAPABILITY_CONTEXT.md"
+      : "BENCHMARK_CONTEXT.md";
   if (!existsSync(scenarioPath) || !existsSync(scenarioReviewPath)) {
     fail(
       `Scenario requires adjacent .md and .scenario-review.json files: ${acceptedScenarioId}`,
@@ -363,12 +429,48 @@ async function main(args: readonly string[]): Promise<void> {
     )}\n`,
     { flag: "wx" },
   );
-  const retainedPlan = retainAdmittedScenarioStagePlan({
-    scenarioId: acceptedScenarioId,
-    scenarioPath,
-    scenarioSha256: admission.right.scenarioSha256,
-    scenarioReviewSha256: admission.right.scenarioReviewSha256,
-  });
+  const customStagePlanPath = pathValue("--stage-plan-path");
+  const customStagePlanFindingsPath = pathValue("--stage-plan-findings-path");
+  if (
+    (customStagePlanPath === undefined) !==
+    (customStagePlanFindingsPath === undefined)
+  ) {
+    fail(
+      "--stage-plan-path and --stage-plan-findings-path must be supplied together.",
+    );
+  }
+  const retainedPlan =
+    customStagePlanPath === undefined ||
+    customStagePlanFindingsPath === undefined
+      ? retainAdmittedScenarioStagePlan({
+          scenarioId: acceptedScenarioId,
+          scenarioPath,
+          scenarioSha256: admission.right.scenarioSha256,
+          scenarioReviewSha256: admission.right.scenarioReviewSha256,
+        })
+      : (() => {
+          const planPath = resolve(repoRoot, customStagePlanPath);
+          const findingsPath = resolve(repoRoot, customStagePlanFindingsPath);
+          if (!existsSync(planPath) || !existsSync(findingsPath)) {
+            return Either.left(
+              "Profile stage-plan authorities must both be readable.",
+            );
+          }
+          const plan = validateScenarioStagePlan(
+            JSON.parse(readFileSync(planPath, "utf8")),
+          );
+          if (Either.isLeft(plan)) return Either.left(plan.left);
+          const validation = validateAdmittedScenarioStagePlanEvidence({
+            plan: plan.right,
+            findings: JSON.parse(readFileSync(findingsPath, "utf8")),
+            scenarioId: acceptedScenarioId,
+            scenarioSha256: admission.right.scenarioSha256,
+            scenarioReviewSha256: admission.right.scenarioReviewSha256,
+          });
+          return Either.isLeft(validation)
+            ? Either.left(validation.left)
+            : Either.right(plan.right);
+        })();
   if (Either.isLeft(retainedPlan)) {
     emitTranscriptlessFindings({
       output,
@@ -401,14 +503,20 @@ async function main(args: readonly string[]): Promise<void> {
     });
     fail(retainedPlan.left);
   }
-  const stagePlanPath = retainedScenarioStagePlanPath(acceptedScenarioId);
+  const stagePlanPath = resolve(
+    repoRoot,
+    customStagePlanPath ?? retainedScenarioStagePlanPath(acceptedScenarioId),
+  );
+  const stagePlanFindingsPath = resolve(
+    repoRoot,
+    customStagePlanFindingsPath ??
+      retainedScenarioStagePlanFindingsPath(acceptedScenarioId),
+  );
   if (retainedPlan.right.outcome.tag === "rejected") {
     mkdirSync(output, { recursive: true });
     copyFileSync(scenarioPath, resolve(output, "SCENARIO.md"));
     copyFileSync(scenarioReviewPath, resolve(output, "SCENARIO_REVIEW.json"));
     copyFileSync(stagePlanPath, resolve(output, "STAGE_PLAN.json"));
-    const stagePlanFindingsPath =
-      retainedScenarioStagePlanFindingsPath(acceptedScenarioId);
     if (existsSync(stagePlanFindingsPath)) {
       copyFileSync(
         stagePlanFindingsPath,
@@ -479,13 +587,11 @@ async function main(args: readonly string[]): Promise<void> {
         { role: "scenario", path: scenarioPath },
         { role: "scenarioReview", path: scenarioReviewPath },
         { role: "stagePlan", path: stagePlanPath },
-        ...(existsSync(
-          retainedScenarioStagePlanFindingsPath(acceptedScenarioId),
-        )
+        ...(existsSync(stagePlanFindingsPath)
           ? [
               {
                 role: "stagePlanFindings",
-                path: retainedScenarioStagePlanFindingsPath(acceptedScenarioId),
+                path: stagePlanFindingsPath,
               },
             ]
           : []),
@@ -559,12 +665,11 @@ async function main(args: readonly string[]): Promise<void> {
       destination: scratch,
       trustedDestination: trusted,
       scenarioPath,
+      contextDelivery,
     });
     copyFileSync(scenarioReviewPath, resolve(scratch, "SCENARIO_REVIEW.json"));
     mkdirSync(resolve(trusted, "evidence"));
     copyFileSync(stagePlanPath, resolve(trusted, "evidence/stage-plan.json"));
-    const stagePlanFindingsPath =
-      retainedScenarioStagePlanFindingsPath(acceptedScenarioId);
     if (existsSync(stagePlanFindingsPath)) {
       copyFileSync(
         stagePlanFindingsPath,
@@ -653,7 +758,7 @@ async function main(args: readonly string[]): Promise<void> {
         "--output-last-message",
         resolve(trusted, "evidence/agent-final.txt"),
         [
-          "Read CAPABILITY_CONTEXT.md, PLAYER.md, SCENARIO.md, OBSERVATION.json, and attempt.ts.",
+          `Read ${deliveredContextFileName}, PLAYER.md, SCENARIO.md, OBSERVATION.json, and attempt.ts.`,
           "Act as the player described there and continue until the SDK supervisor accepts a playerConcluded outcome or returns a terminalObstruction. Stop immediately after a terminalObstruction; it is retained evidence.",
           "For each tactical continuation, edit only attempt.ts and run `node player-client.mjs attempt.ts`. After the call, reread OBSERVATION.json before replacing the attempt body for the next continuation.",
           "At subjectSelection, discover acts and attempt a surfaced act in the same continuation. At subjectContinuation, resume the retained subject and do not discover fresh acts.",
@@ -741,15 +846,11 @@ async function main(args: readonly string[]): Promise<void> {
             ...(existsSync(stagePlanPath)
               ? [{ role: "stagePlan", path: stagePlanPath }]
               : []),
-            ...(existsSync(
-              retainedScenarioStagePlanFindingsPath(acceptedScenarioId),
-            )
+            ...(existsSync(stagePlanFindingsPath)
               ? [
                   {
                     role: "stagePlanFindings",
-                    path: retainedScenarioStagePlanFindingsPath(
-                      acceptedScenarioId,
-                    ),
+                    path: stagePlanFindingsPath,
                   },
                 ]
               : []),

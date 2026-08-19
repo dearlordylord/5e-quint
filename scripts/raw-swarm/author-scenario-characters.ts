@@ -108,6 +108,10 @@ async function main(args: readonly string[]): Promise<void> {
       destination: scratch,
       scenarioPath,
       scenarioReviewPath: reviewPath,
+      contextDelivery: {
+        tag: "canonicalRoleProjection",
+        role: "characterAuthoring",
+      },
     });
     const profileAvailable = consumerPermissionProfileAvailable(
       codexHome,

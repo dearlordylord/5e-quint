@@ -12,7 +12,10 @@ import {
 import { relative, resolve, sep } from "node:path";
 import { buildSync } from "esbuild";
 
-import { capabilityContextForRole } from "../capability-projection.ts";
+import {
+  capabilityContextForRole,
+  type CapabilityRole,
+} from "../capability-projection.ts";
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import type { JsonValue } from "./continuation-contract.ts";
@@ -21,7 +24,12 @@ export type ConsumerDistributionInput = {
   readonly destination: string;
   readonly trustedDestination: string;
   readonly scenarioPath: string;
+  readonly contextDelivery: ContextDelivery<"player">;
 };
+
+export type ContextDelivery<Role extends CapabilityRole = CapabilityRole> =
+  | { readonly tag: "canonicalRoleProjection"; readonly role: Role }
+  | { readonly tag: "benchmarkContext"; readonly content: string };
 
 export type ScenarioSetupDistributionInput = {
   readonly destination: string;
@@ -32,13 +40,27 @@ export type ScenarioSetupDistributionInput = {
     readonly name: string;
   }[];
   readonly characterObservation: JsonValue;
+  readonly contextDelivery: ContextDelivery<"setupAuthoring">;
 };
 
 export type ScenarioCharacterDistributionInput = {
   readonly destination: string;
   readonly scenarioPath: string;
   readonly scenarioReviewPath: string;
+  readonly contextDelivery: ContextDelivery<"characterAuthoring">;
 };
+
+function contextFileName(delivery: ContextDelivery): string {
+  return delivery.tag === "canonicalRoleProjection"
+    ? "CAPABILITY_CONTEXT.md"
+    : "BENCHMARK_CONTEXT.md";
+}
+
+function contextText(delivery: ContextDelivery): string {
+  return delivery.tag === "canonicalRoleProjection"
+    ? capabilityContextForRole(delivery.role)
+    : delivery.content;
+}
 
 const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
 /** The emitted declaration graph is compilation support, not an unbounded SDK. */
@@ -109,7 +131,7 @@ export function assertPublicDeclarationBundle(
   return { files: files.length, bytes };
 }
 
-function emitPublicDeclarations(
+export function emitPublicDeclarations(
   destination: string,
 ): PublicDeclarationBundleMeasure {
   const declarationsDirectory = resolve(destination, "declarations");
@@ -283,8 +305,8 @@ export function buildConsumerDistribution(
   }
   copyFileSync(input.scenarioPath, resolve(input.destination, "SCENARIO.md"));
   writeFileSync(
-    resolve(input.destination, "CAPABILITY_CONTEXT.md"),
-    `${capabilityContextForRole("player")}\n`,
+    resolve(input.destination, contextFileName(input.contextDelivery)),
+    `${contextText(input.contextDelivery)}\n`,
   );
   copyFileSync(
     resolve(repoRoot, "scripts/raw-swarm/sdk-player/PLAYER.md"),
@@ -359,8 +381,8 @@ export function buildScenarioSetupDistribution(
     resolve(input.destination, "SCENARIO_REVIEW.json"),
   );
   writeFileSync(
-    resolve(input.destination, "CAPABILITY_CONTEXT.md"),
-    `${capabilityContextForRole("setupAuthoring")}\n`,
+    resolve(input.destination, contextFileName(input.contextDelivery)),
+    `${contextText(input.contextDelivery)}\n`,
   );
   copyFileSync(
     resolve(repoRoot, "scripts/raw-swarm/sdk-player/SCENARIO_SETUP.md"),
@@ -414,8 +436,8 @@ export function buildScenarioCharacterDistribution(
     resolve(input.destination, "SCENARIO_REVIEW.json"),
   );
   writeFileSync(
-    resolve(input.destination, "CAPABILITY_CONTEXT.md"),
-    `${capabilityContextForRole("characterAuthoring")}\n`,
+    resolve(input.destination, contextFileName(input.contextDelivery)),
+    `${contextText(input.contextDelivery)}\n`,
   );
   copyFileSync(
     resolve(repoRoot, "scripts/raw-swarm/sdk-player/SCENARIO_CHARACTERS.md"),

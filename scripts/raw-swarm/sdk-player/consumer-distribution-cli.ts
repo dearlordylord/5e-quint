@@ -23,4 +23,5 @@ buildConsumerDistribution({
   destination: resolve(destination),
   trustedDestination: resolve(trustedDestination),
   scenarioPath: resolve(scenarioPath),
+  contextDelivery: { tag: "canonicalRoleProjection", role: "player" },
 });

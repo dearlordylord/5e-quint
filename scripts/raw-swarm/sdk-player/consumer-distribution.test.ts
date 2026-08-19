@@ -23,6 +23,7 @@ import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import {
   assertPublicDeclarationBundle,
+  buildConsumerDistribution,
   PUBLIC_DECLARATION_BUNDLE_MAX_BYTES,
   PUBLIC_DECLARATION_BUNDLE_MAX_FILES,
 } from "./consumer-distribution.ts";
@@ -74,6 +75,31 @@ describe("SDK player consumer distribution", () => {
       /non-declaration file/,
     );
   });
+
+  test(
+    "uses the caller's exact profile context for the player consumer",
+    () => {
+      const destination = mkdtempSync(join(tmpdir(), "dnd-profile-player-"));
+      const trustedDestination = mkdtempSync(
+        join(tmpdir(), "dnd-profile-player-trusted-"),
+      );
+      const scenarioPath = resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
+      );
+      const profileContext = "fixed benchmark profile context\n";
+      buildConsumerDistribution({
+        destination,
+        trustedDestination,
+        scenarioPath,
+        contextDelivery: { tag: "benchmarkContext", content: profileContext },
+      });
+      expect(
+        readFileSync(join(destination, "BENCHMARK_CONTEXT.md"), "utf8"),
+      ).toBe(`${profileContext}\n`);
+    },
+    10 * 60 * 1_000,
+  );
 
   test(
     "runs typed continuations, freezes observed source, and replays SDK calls",

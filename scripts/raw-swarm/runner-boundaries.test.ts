@@ -91,6 +91,15 @@ describe("RAW swarm runner boundaries", () => {
         "second",
       ],
     ],
+    [
+      "path flag used as value",
+      [
+        "tracer-001-goblin-warrior-vs-skeleton",
+        "--scenario-path",
+        "--setup-path",
+        "scenario.setup.ts",
+      ],
+    ],
   ])(
     "rejects direct-SDK launcher %s",
     (_label, args) => {

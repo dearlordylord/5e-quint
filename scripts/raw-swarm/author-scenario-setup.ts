@@ -192,6 +192,10 @@ async function main(args: readonly string[]): Promise<void> {
       scenarioReviewPath: reviewPath,
       statBlocks: statBlocks.statBlocks,
       characterObservation: characters.observation,
+      contextDelivery: {
+        tag: "canonicalRoleProjection",
+        role: "setupAuthoring",
+      },
     });
     const profileAvailable = consumerPermissionProfileAvailable(
       codexHome,

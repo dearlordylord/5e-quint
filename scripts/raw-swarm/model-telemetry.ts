@@ -940,3 +940,129 @@ export function runCodexInvocation(input: {
   });
   return result;
 }
+
+/**
+ * Run one benchmark-only auxiliary call through the same first-party event
+ * and ledger boundary as the production invocation runner.  The historical
+ * profile keeps these calls visible without widening the v2 stage vocabulary.
+ */
+export type BenchmarkAuxiliaryInvocationKind =
+  | {
+      readonly responsibility: "scenarioQuality";
+      readonly phase: "scenarioReadiness";
+    }
+  | {
+      readonly responsibility: "redundantCharacterPreparation";
+      readonly phase: "scenarioCharacterAuthoring";
+    };
+
+export function runBenchmarkAuxiliaryInvocation(input: {
+  readonly args: readonly [string, ...string[]];
+  readonly cwd: string;
+  readonly env: NodeJS.ProcessEnv;
+  readonly eventPath: string;
+  readonly logPath: string;
+  readonly ledgerPath: string;
+  readonly kind: BenchmarkAuxiliaryInvocationKind;
+  readonly stagePlanReason: string;
+  readonly scenarioId: ScenarioId;
+  readonly gitSha: GitSha;
+  readonly fallbackInvocationId: string;
+  readonly model: string;
+  readonly reasoningEffort: string;
+}): Either.Either<SpawnSyncReturns<Buffer>, string> {
+  try {
+    const startedAt = new Date().toISOString();
+    const startedMilliseconds = Date.now();
+    const startedEvent = benchmarkModelInvocationStartedEvent({
+      scenarioId: input.scenarioId,
+      gitSha: input.gitSha,
+      profile: "documentDeclarationSet",
+      responsibility: input.kind.responsibility,
+      phase: input.kind.phase,
+      stagePlanReason: input.stagePlanReason,
+      fallbackInvocationId: input.fallbackInvocationId,
+      model: input.model,
+      reasoningEffort: input.reasoningEffort,
+      startedAt,
+    });
+    if (Either.isLeft(startedEvent)) {
+      throw new Error(
+        `Cannot create benchmark invocation start event: ${startedEvent.left.message}`,
+      );
+    }
+    const codexArgs = codexJsonArgs(input.args);
+    if (
+      !codexInvocationMetadataMatchesArgs({
+        args: codexArgs,
+        model: input.model,
+        reasoningEffort: input.reasoningEffort,
+      })
+    ) {
+      throw new Error(
+        "Benchmark invocation ledger model and reasoning effort must match the Codex arguments.",
+      );
+    }
+    const eventFd = openSync(input.eventPath, "wx");
+    const result = (() => {
+      try {
+        writeSync(eventFd, `${JSON.stringify(startedEvent.right)}\n`);
+        const logFd = openSync(input.logPath, "wx");
+        try {
+          const spawned = spawnSync("codex", codexArgs, {
+            cwd: input.cwd,
+            env: input.env,
+            stdio: ["ignore", eventFd, logFd],
+          });
+          const exit: ModelInvocationLedgerEntry["exit"] =
+            spawned.error !== undefined
+              ? { tag: "failedToStart", message: spawned.error.message }
+              : spawned.signal !== null
+                ? { tag: "signaled", signal: spawned.signal }
+                : spawned.status !== null
+                  ? { tag: "exited", status: spawned.status }
+                  : {
+                      tag: "failedToStart",
+                      message: "Codex returned no process status.",
+                    };
+          const completedEvent = benchmarkModelInvocationCompletedEvent({
+            elapsedMilliseconds: Date.now() - startedMilliseconds,
+            exit,
+            result: resultFromExit(exit),
+          });
+          if (Either.isLeft(completedEvent)) {
+            throw new Error(
+              `Cannot create benchmark invocation completion event: ${completedEvent.left.message}`,
+            );
+          }
+          writeSync(eventFd, `${JSON.stringify(completedEvent.right)}\n`);
+          return spawned;
+        } finally {
+          closeSync(logFd);
+        }
+      } finally {
+        closeSync(eventFd);
+      }
+    })();
+    const parsedEvents = readCodexEvents(input.eventPath);
+    if (parsedEvents.tag === "invalid") throw new Error(parsedEvents.message);
+    const evidence = benchmarkModelInvocationEvidenceFromEvents(
+      parsedEvents.events,
+    );
+    if (evidence.tag === "invalid") throw new Error(evidence.message);
+    appendFileSync(
+      input.ledgerPath,
+      `${JSON.stringify({
+        ...evidence.entry,
+        eventsSha256: invocationEventsSha256(input.eventPath),
+      })}\n`,
+    );
+    return Either.right(result);
+  } catch (error: unknown) {
+    return Either.left(
+      error instanceof Error
+        ? error.message
+        : `Benchmark auxiliary invocation failed: ${String(error)}`,
+    );
+  }
+}

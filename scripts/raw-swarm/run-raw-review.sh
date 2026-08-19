@@ -32,7 +32,15 @@ RAW_REVIEW_TRANSCRIPT_SHA256=$(sha256sum "$RAW_REVIEW_TRANSCRIPT" | cut -d' ' -f
 RAW_REVIEW_PACKET_BYTES=$(wc -c <"$RAW_REVIEW_PACKET" | tr -d ' ')
 RAW_REVIEW_PACKET_SHA256=$(sha256sum "$RAW_REVIEW_PACKET" | cut -d' ' -f1)
 RAW_REVIEW_EXTRACT_COMMAND="pnpm exec tsx scripts/raw-swarm/sdk-player/sdk-audit-cli.ts extract $RAW_REVIEW_AUDIT scripts/raw-swarm/out/review-extract-UNIQUE.records.jsonl scripts/raw-swarm/out/review-extract-UNIQUE.provenance.json SEQUENCE [SEQUENCE ...]"
-RAW_REVIEW_CAPABILITY_CONTEXT=$(pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/capability-projection-cli.ts" review)
+if [[ -n "${RAW_REVIEW_CONTEXT_PATH:-}" ]]; then
+  if [[ ! -f "$RAW_REVIEW_CONTEXT_PATH" ]]; then
+    printf 'RAW_REVIEW_CONTEXT_PATH is not a readable file: %s\n' "$RAW_REVIEW_CONTEXT_PATH" >&2
+    exit 1
+  fi
+  RAW_REVIEW_CAPABILITY_CONTEXT=$(<"$RAW_REVIEW_CONTEXT_PATH")
+else
+  RAW_REVIEW_CAPABILITY_CONTEXT=$(pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/capability-projection-cli.ts" review)
+fi
 RAW_REVIEW_RENDERED=${RAW_REVIEW_INSTRUCTIONS//\{\{TRANSCRIPT_PATH\}\}/$RAW_REVIEW_TRANSCRIPT}
 RAW_REVIEW_RENDERED=${RAW_REVIEW_RENDERED//\{\{TRANSCRIPT_BYTES\}\}/$RAW_REVIEW_TRANSCRIPT_BYTES}
 RAW_REVIEW_RENDERED=${RAW_REVIEW_RENDERED//\{\{TRANSCRIPT_SHA256\}\}/$RAW_REVIEW_TRANSCRIPT_SHA256}
