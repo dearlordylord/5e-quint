@@ -840,6 +840,93 @@ export function invocationEventsSha256(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
 
+type InvocationCompletionInput = {
+  readonly elapsedMilliseconds: number;
+  readonly exit: ModelInvocationLedgerEntry["exit"];
+  readonly result: Schema.Schema.Type<typeof ModelInvocationResultSchema>;
+};
+
+function runCodexProcess(input: {
+  readonly args: readonly [string, ...string[]];
+  readonly cwd: string;
+  readonly env: NodeJS.ProcessEnv;
+  readonly eventPath: string;
+  readonly logPath: string;
+  readonly startedEvent: object;
+  readonly startedMilliseconds: number;
+  readonly model: string;
+  readonly reasoningEffort: string;
+  readonly metadataErrorMessage: string;
+  readonly completionEvent: (
+    input: InvocationCompletionInput,
+  ) => Either.Either<object, ParseResult.ParseError>;
+  readonly completionErrorPrefix: string;
+}): SpawnSyncReturns<Buffer> {
+  const codexArgs = codexJsonArgs(input.args);
+  if (
+    !codexInvocationMetadataMatchesArgs({
+      args: codexArgs,
+      model: input.model,
+      reasoningEffort: input.reasoningEffort,
+    })
+  ) {
+    throw new Error(input.metadataErrorMessage);
+  }
+  const eventFd = openSync(input.eventPath, "wx");
+  try {
+    writeSync(eventFd, `${JSON.stringify(input.startedEvent)}\n`);
+    const logFd = openSync(input.logPath, "wx");
+    try {
+      const spawned = spawnSync("codex", codexArgs, {
+        cwd: input.cwd,
+        env: input.env,
+        stdio: ["ignore", eventFd, logFd],
+      });
+      const exit: ModelInvocationLedgerEntry["exit"] =
+        spawned.error !== undefined
+          ? { tag: "failedToStart", message: spawned.error.message }
+          : spawned.signal !== null
+            ? { tag: "signaled", signal: spawned.signal }
+            : spawned.status !== null
+              ? { tag: "exited", status: spawned.status }
+              : {
+                  tag: "failedToStart",
+                  message: "Codex returned no process status.",
+                };
+      const completedEvent = input.completionEvent({
+        elapsedMilliseconds: Date.now() - input.startedMilliseconds,
+        exit,
+        result: resultFromExit(exit),
+      });
+      if (Either.isLeft(completedEvent)) {
+        throw new Error(
+          `${input.completionErrorPrefix}: ${completedEvent.left.message}`,
+        );
+      }
+      writeSync(eventFd, `${JSON.stringify(completedEvent.right)}\n`);
+      return spawned;
+    } finally {
+      closeSync(logFd);
+    }
+  } finally {
+    closeSync(eventFd);
+  }
+}
+
+function appendInvocationEvidenceLedger(input: {
+  readonly eventPath: string;
+  readonly ledgerPath: string;
+  readonly entry: object;
+}): void {
+  appendFileSync(
+    input.ledgerPath,
+    `${JSON.stringify({
+      ...input.entry,
+      eventsSha256: invocationEventsSha256(input.eventPath),
+    })}\n`,
+  );
+}
+
 export function runCodexInvocation(input: {
   readonly args: readonly [string, ...string[]];
   readonly cwd: string;
@@ -872,59 +959,21 @@ export function runCodexInvocation(input: {
       `Cannot create invocation start event: ${startedEvent.left.message}`,
     );
   }
-  const codexArgs = codexJsonArgs(input.args);
-  if (
-    !codexInvocationMetadataMatchesArgs({
-      args: codexArgs,
-      model: input.model,
-      reasoningEffort: input.reasoningEffort,
-    })
-  ) {
-    throw new Error(
+  const result = runCodexProcess({
+    args: input.args,
+    cwd: input.cwd,
+    env: input.env,
+    eventPath: input.eventPath,
+    logPath: input.logPath,
+    startedEvent: startedEvent.right,
+    startedMilliseconds,
+    model: input.model,
+    reasoningEffort: input.reasoningEffort,
+    metadataErrorMessage:
       "Invocation ledger model and reasoning effort must match the Codex arguments.",
-    );
-  }
-  const eventFd = openSync(input.eventPath, "wx");
-  const result = (() => {
-    try {
-      writeSync(eventFd, `${JSON.stringify(startedEvent.right)}\n`);
-      const logFd = openSync(input.logPath, "wx");
-      try {
-        const spawned = spawnSync("codex", codexArgs, {
-          cwd: input.cwd,
-          env: input.env,
-          stdio: ["ignore", eventFd, logFd],
-        });
-        const exit: ModelInvocationLedgerEntry["exit"] =
-          spawned.error !== undefined
-            ? { tag: "failedToStart", message: spawned.error.message }
-            : spawned.signal !== null
-              ? { tag: "signaled", signal: spawned.signal }
-              : spawned.status !== null
-                ? { tag: "exited", status: spawned.status }
-                : {
-                    tag: "failedToStart",
-                    message: "Codex returned no process status.",
-                  };
-        const completedEvent = modelInvocationCompletedEvent({
-          elapsedMilliseconds: Date.now() - startedMilliseconds,
-          exit,
-          result: resultFromExit(exit),
-        });
-        if (Either.isLeft(completedEvent)) {
-          throw new Error(
-            `Cannot create invocation completion event: ${completedEvent.left.message}`,
-          );
-        }
-        writeSync(eventFd, `${JSON.stringify(completedEvent.right)}\n`);
-        return spawned;
-      } finally {
-        closeSync(logFd);
-      }
-    } finally {
-      closeSync(eventFd);
-    }
-  })();
+    completionEvent: modelInvocationCompletedEvent,
+    completionErrorPrefix: "Cannot create invocation completion event",
+  });
   const parsedEvents = readCodexEvents(input.eventPath);
   if (parsedEvents.tag === "invalid") throw new Error(parsedEvents.message);
   const evidence = modelInvocationEvidenceFromEvents(parsedEvents.events);
@@ -934,9 +983,10 @@ export function runCodexInvocation(input: {
       "The current invocation runner must emit v2 model telemetry evidence.",
     );
   }
-  appendInvocationLedger(input.ledgerPath, {
-    ...evidence.entry,
-    eventsSha256: invocationEventsSha256(input.eventPath),
+  appendInvocationEvidenceLedger({
+    eventPath: input.eventPath,
+    ledgerPath: input.ledgerPath,
+    entry: evidence.entry,
   });
   return result;
 }
@@ -991,72 +1041,33 @@ export function runBenchmarkAuxiliaryInvocation(input: {
         `Cannot create benchmark invocation start event: ${startedEvent.left.message}`,
       );
     }
-    const codexArgs = codexJsonArgs(input.args);
-    if (
-      !codexInvocationMetadataMatchesArgs({
-        args: codexArgs,
-        model: input.model,
-        reasoningEffort: input.reasoningEffort,
-      })
-    ) {
-      throw new Error(
+    const result = runCodexProcess({
+      args: input.args,
+      cwd: input.cwd,
+      env: input.env,
+      eventPath: input.eventPath,
+      logPath: input.logPath,
+      startedEvent: startedEvent.right,
+      startedMilliseconds,
+      model: input.model,
+      reasoningEffort: input.reasoningEffort,
+      metadataErrorMessage:
         "Benchmark invocation ledger model and reasoning effort must match the Codex arguments.",
-      );
-    }
-    const eventFd = openSync(input.eventPath, "wx");
-    const result = (() => {
-      try {
-        writeSync(eventFd, `${JSON.stringify(startedEvent.right)}\n`);
-        const logFd = openSync(input.logPath, "wx");
-        try {
-          const spawned = spawnSync("codex", codexArgs, {
-            cwd: input.cwd,
-            env: input.env,
-            stdio: ["ignore", eventFd, logFd],
-          });
-          const exit: ModelInvocationLedgerEntry["exit"] =
-            spawned.error !== undefined
-              ? { tag: "failedToStart", message: spawned.error.message }
-              : spawned.signal !== null
-                ? { tag: "signaled", signal: spawned.signal }
-                : spawned.status !== null
-                  ? { tag: "exited", status: spawned.status }
-                  : {
-                      tag: "failedToStart",
-                      message: "Codex returned no process status.",
-                    };
-          const completedEvent = benchmarkModelInvocationCompletedEvent({
-            elapsedMilliseconds: Date.now() - startedMilliseconds,
-            exit,
-            result: resultFromExit(exit),
-          });
-          if (Either.isLeft(completedEvent)) {
-            throw new Error(
-              `Cannot create benchmark invocation completion event: ${completedEvent.left.message}`,
-            );
-          }
-          writeSync(eventFd, `${JSON.stringify(completedEvent.right)}\n`);
-          return spawned;
-        } finally {
-          closeSync(logFd);
-        }
-      } finally {
-        closeSync(eventFd);
-      }
-    })();
+      completionEvent: benchmarkModelInvocationCompletedEvent,
+      completionErrorPrefix:
+        "Cannot create benchmark invocation completion event",
+    });
     const parsedEvents = readCodexEvents(input.eventPath);
     if (parsedEvents.tag === "invalid") throw new Error(parsedEvents.message);
     const evidence = benchmarkModelInvocationEvidenceFromEvents(
       parsedEvents.events,
     );
     if (evidence.tag === "invalid") throw new Error(evidence.message);
-    appendFileSync(
-      input.ledgerPath,
-      `${JSON.stringify({
-        ...evidence.entry,
-        eventsSha256: invocationEventsSha256(input.eventPath),
-      })}\n`,
-    );
+    appendInvocationEvidenceLedger({
+      eventPath: input.eventPath,
+      ledgerPath: input.ledgerPath,
+      entry: evidence.entry,
+    });
     return Either.right(result);
   } catch (error: unknown) {
     return Either.left(

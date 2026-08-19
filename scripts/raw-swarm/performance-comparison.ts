@@ -29,6 +29,7 @@ import {
 import {
   FindingsProjectionSchema,
   validateFindingsProjection,
+  type Finding,
   type FindingsProjection,
 } from "./findings.ts";
 import {
@@ -1318,8 +1319,6 @@ export const BenchmarkContextSourceManifestDocumentSchema = Schema.Struct({
   scenarioId: ScenarioIdSchema,
   sources: BenchmarkContextSourceManifestSourcesSchema,
 });
-export const BenchmarkContextSourceManifestSchema =
-  BenchmarkContextSourceManifestDocumentSchema;
 export type BenchmarkContextSourceManifestDocument = Schema.Schema.Type<
   typeof BenchmarkContextSourceManifestDocumentSchema
 >;
@@ -1455,23 +1454,29 @@ type ImplementationPhase =
   | BenchmarkModelInvocationPhase
   | "scenarioSetupAuthoring";
 type ImplementationProfile = "production" | BenchmarkImplementationProfile;
+type HistoricalBenchmarkReview = Schema.Schema.Type<
+  typeof HistoricalScenarioCompositeReviewSchema
+>;
+type ScenarioQualityReview = Schema.Schema.Type<
+  typeof ScenarioQualityReviewSchema
+>;
+type ReviewVerdictClass = Schema.Schema.Type<
+  typeof ReviewOutputSchema
+>["verdicts"][number]["class"];
 type BenchmarkReviewClassifications = Readonly<{
-  readonly raw: string;
-  readonly contentAvailability: string;
-  readonly sdkCapability: string;
-  readonly artifactPolicy: string;
-  readonly scenarioQuality: string;
+  readonly raw: HistoricalBenchmarkReview["raw"]["classification"];
+  readonly contentAvailability: HistoricalBenchmarkReview["contentAvailability"]["classification"];
+  readonly sdkCapability: HistoricalBenchmarkReview["sdkCapability"]["classification"];
+  readonly artifactPolicy: HistoricalBenchmarkReview["artifactPolicy"]["classification"];
+  readonly scenarioQuality: ScenarioQualityReview["classification"];
 }>;
 type BenchmarkPostPlayReviewIdentity = Readonly<{
-  readonly verdictClasses: readonly string[];
+  readonly verdictClasses: readonly ReviewVerdictClass[];
 }>;
-type BenchmarkFindingIdentity = Readonly<{
-  readonly stage: string;
-  readonly category: string;
-  readonly kind: string;
-  readonly pointer: unknown;
-  readonly fingerprint?: string;
-}>;
+type BenchmarkFindingIdentity = Pick<
+  Finding,
+  "stage" | "category" | "kind" | "pointer" | "fingerprint"
+>;
 type BenchmarkReviewIdentity = Readonly<{
   readonly prePlay: Readonly<{
     readonly milestone: BenchmarkReviewClassifications;
@@ -3337,17 +3342,23 @@ function benchmarkContextAuthorityIssues(input: {
   if (bytes === undefined) {
     return [`Benchmark context ${input.role} authority is unreadable.`];
   }
-  let expected: string;
-  try {
-    expected = benchmarkContextForRole(input.profile, input.role);
-  } catch (error: unknown) {
-    return [
-      `Benchmark context ${input.role} canonical projection could not be constructed: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-    ];
-  }
-  return bytes.toString("utf8") === expected
+  const expected = (() => {
+    try {
+      return {
+        tag: "available" as const,
+        value: benchmarkContextForRole(input.profile, input.role),
+      };
+    } catch (error: unknown) {
+      return {
+        tag: "unavailable" as const,
+        message: `Benchmark context ${input.role} canonical projection could not be constructed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+    }
+  })();
+  if (expected.tag === "unavailable") return [expected.message];
+  return bytes.toString("utf8") === expected.value
     ? []
     : [
         `Benchmark context ${input.role} authority bytes do not equal the canonical ${input.profile} role projection.`,
