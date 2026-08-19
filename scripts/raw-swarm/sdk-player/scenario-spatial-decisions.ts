@@ -10,6 +10,8 @@ import type {
   CombatantId,
 } from "@dnd/battle-runtime";
 import {
+  BattleAttackProcedureExecutionRef,
+  BattleStatBlockProcedureExecutionRef,
   battleObjectId,
   battleTablePositionId,
   combatantId,
@@ -31,7 +33,7 @@ import {
   type SpatialSnapshot,
   type StateFingerprint,
 } from "../../../packages/tactical-space/src/index.ts";
-import { Either, Match } from "effect";
+import { Either, Match, Schema } from "effect";
 
 export type ScenarioTokenId = CombatantId | BattleObjectId;
 
@@ -872,6 +874,23 @@ function isBattleMovementSpeedKind(
   );
 }
 
+type ScenarioAttackAbility = (typeof ABILITIES)[number] | "spellcasting";
+type ScenarioAttackDamageType = (typeof DAMAGE_TYPES)[number];
+
+function isScenarioAttackAbility(
+  value: unknown,
+): value is ScenarioAttackAbility {
+  return (
+    value === "spellcasting" || ABILITIES.some((ability) => ability === value)
+  );
+}
+
+function isScenarioAttackDamageType(
+  value: unknown,
+): value is ScenarioAttackDamageType {
+  return DAMAGE_TYPES.some((damageType) => damageType === value);
+}
+
 function parseSpatialQuestion(
   value: unknown,
   input: unknown,
@@ -1118,9 +1137,9 @@ function parseRelationAnswer(
   });
 }
 
-function isOpportunityAttackThreatInput(
+function parseOpportunityAttackThreatInput(
   value: unknown,
-): value is BattleOpportunityAttackThreat {
+): BattleOpportunityAttackThreat | undefined {
   if (
     !isRecord(value) ||
     !hasOnlyKeys(value, [
@@ -1131,11 +1150,10 @@ function isOpportunityAttackThreatInput(
       "attackName",
       "statBlockDamageNotation",
     ]) ||
-    !isString(value.reactorId) ||
-    !isString(value.procedureRef) ||
-    value.procedureRef.trim().length === 0
+    !isNonEmptyTrimmedString(value.reactorId) ||
+    !isNonEmptyTrimmedString(value.procedureRef)
   ) {
-    return false;
+    return undefined;
   }
   const selection = value;
   const attackAbility = selection.attackAbility;
@@ -1143,31 +1161,45 @@ function isOpportunityAttackThreatInput(
   const hasAttackAbility = attackAbility !== undefined;
   const hasAttackDamageType = attackDamageType !== undefined;
   if (hasAttackAbility !== hasAttackDamageType) {
-    return false;
+    return undefined;
   }
-  if (
-    hasAttackAbility &&
-    (typeof attackAbility !== "string" ||
-      (!(ABILITIES as readonly string[]).includes(attackAbility) &&
-        attackAbility !== "spellcasting"))
-  ) {
-    return false;
+  if (hasAttackAbility && !isScenarioAttackAbility(attackAbility)) {
+    return undefined;
   }
-  if (
-    hasAttackDamageType &&
-    (typeof attackDamageType !== "string" ||
-      !(DAMAGE_TYPES as readonly string[]).includes(attackDamageType))
-  ) {
-    return false;
+  if (hasAttackDamageType && !isScenarioAttackDamageType(attackDamageType)) {
+    return undefined;
   }
-  if (selection.attackName !== undefined) return false;
+  if (selection.attackName !== undefined) return undefined;
   if (
     selection.statBlockDamageNotation !== undefined &&
     selection.statBlockDamageNotation !== "static"
   ) {
-    return false;
+    return undefined;
   }
-  return true;
+  const reactorId = combatantId(value.reactorId);
+  if (hasAttackAbility && hasAttackDamageType) {
+    const procedureRef = Schema.decodeUnknownEither(
+      BattleAttackProcedureExecutionRef,
+    )(value.procedureRef);
+    if (Either.isLeft(procedureRef)) return undefined;
+    return {
+      reactorId,
+      procedureRef: procedureRef.right,
+      attackAbility,
+      attackDamageType,
+    };
+  }
+  const procedureRef = Schema.decodeUnknownEither(
+    BattleStatBlockProcedureExecutionRef,
+  )(value.procedureRef);
+  if (Either.isLeft(procedureRef)) return undefined;
+  return selection.statBlockDamageNotation === "static"
+    ? {
+        reactorId,
+        procedureRef: procedureRef.right,
+        statBlockDamageNotation: "static",
+      }
+    : { reactorId, procedureRef: procedureRef.right };
 }
 
 function parseCreatureSpaceTraversal(
@@ -1306,11 +1338,16 @@ function parseMovementAnswer(
       "A movement-route answer requires an array of Opportunity Attack threats.",
     );
   }
-  if (!value.provokedOpportunityAttacks.every(isOpportunityAttackThreatInput)) {
-    return malformedDecision(
-      input,
-      "A movement-route answer contains a malformed Opportunity Attack threat selection.",
-    );
+  const provokedOpportunityAttacks: BattleOpportunityAttackThreat[] = [];
+  for (const threatInput of value.provokedOpportunityAttacks) {
+    const threat = parseOpportunityAttackThreatInput(threatInput);
+    if (threat === undefined) {
+      return malformedDecision(
+        input,
+        "A movement-route answer contains a malformed Opportunity Attack threat selection.",
+      );
+    }
+    provokedOpportunityAttacks.push(threat);
   }
   if (!rememberObject(value, seen)) {
     return malformedDecision(
@@ -1368,9 +1405,7 @@ function parseMovementAnswer(
   return Either.right({
     kind: "movementRoute",
     movementCostFeet: movementFeet(value.movementCostFeet),
-    provokedOpportunityAttacks: value.provokedOpportunityAttacks.map(
-      (threat) => ({ ...threat }) as BattleOpportunityAttackThreat,
-    ),
+    provokedOpportunityAttacks,
     creatureSpaceTraversal: traversal.right,
     postMoveSpatialState: {
       kind: "tableAuthored",

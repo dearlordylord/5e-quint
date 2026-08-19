@@ -702,6 +702,23 @@ describe("scenario setup public-SDK boundary", () => {
         message: expect.stringContaining("malformed Opportunity Attack threat"),
       },
     });
+    const blankThreatReactor = tableAuthoredSpatialDecision({
+      decisionId: "blank-threat-reactor",
+      question: tableMovementDecision.question,
+      answer: {
+        ...tableMovementDecision.answer,
+        provokedOpportunityAttacks: [
+          { reactorId: "", procedureRef: "movement-threat-procedure" },
+        ],
+      },
+    });
+    expect(blankThreatReactor).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "invalid-spatial-decision",
+        message: expect.stringContaining("malformed Opportunity Attack threat"),
+      },
+    });
     const malformedTraversalIdentity = tableAuthoredSpatialDecision({
       decisionId: "malformed-traversal-identity",
       question: tableMovementDecision.question,
