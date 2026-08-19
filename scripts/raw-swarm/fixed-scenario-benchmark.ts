@@ -989,14 +989,6 @@ function commandArguments(
   );
 }
 
-function validatePreparationCommand(
-  command: string,
-  input: BenchmarkPreparationEventValidationInput,
-): string | undefined {
-  const parsed = commandArguments(command, input);
-  return Either.isLeft(parsed) ? parsed.left : undefined;
-}
-
 function validatePreparationStructuredPath(
   value: string,
   input: BenchmarkPreparationEventValidationInput,
@@ -1021,13 +1013,17 @@ function validatePreparationEventItem(
   if (type === "command_execution") {
     if (typeof item.command !== "string")
       return "command execution has no structured command";
-    const commandIssue = validatePreparationCommand(item.command, input);
-    if (commandIssue !== undefined) return commandIssue;
-    if (
-      eventType === "item.completed" &&
-      (item.status !== "completed" || item.exit_code !== 0)
-    ) {
-      return "preparation read command did not complete successfully";
+    const command = commandArguments(item.command, input);
+    if (Either.isLeft(command)) return command.left;
+    if (eventType === "item.completed") {
+      const completed = item.status === "completed" && item.exit_code === 0;
+      const noRipgrepMatches =
+        command.right[0] === "rg" &&
+        item.status === "failed" &&
+        item.exit_code === 1;
+      if (!completed && !noRipgrepMatches) {
+        return "preparation read command did not complete successfully";
+      }
     }
     if (typeof item.cwd === "string") {
       const cwdIssue = validatePreparationStructuredPath(item.cwd, input);

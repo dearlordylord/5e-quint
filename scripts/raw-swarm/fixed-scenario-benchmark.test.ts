@@ -147,8 +147,8 @@ describe("fixed scenario benchmark boundary", () => {
               type: "command_execution",
               command: `/bin/bash -lc "rg -n -o context ${contextPath}"`,
               aggregated_output: "",
-              exit_code: 0,
-              status: "completed",
+              exit_code: 1,
+              status: "failed",
             },
           }) +
           "\n" +
