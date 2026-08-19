@@ -25,17 +25,22 @@ run.
 
 | Role                | UTF-8 bytes | Estimated tokens |
 | ------------------- | ----------: | ---------------: |
-| generation          |       1,928 |              482 |
+| generation          |       2,219 |              555 |
 | character authoring |       1,719 |              430 |
-| setup authoring     |       2,257 |              565 |
-| player              |       2,345 |              587 |
-| review              |       2,109 |              528 |
-| total role views    |      10,358 |            2,592 |
+| setup authoring     |       2,548 |              637 |
+| player              |       2,636 |              659 |
+| review              |       2,400 |              600 |
+| total role views    |      11,522 |            2,881 |
 
 Generation and review include concise setup/play capability summaries because
 those roles must select and assess representable scenarios. The summaries name
 the public boundary without copying declarations; omitting them made a live
-review unable to distinguish supported play from an unsupported probe.
+review unable to distinguish supported play from an unsupported probe. The
+spatial boundary also states that geometry-derived and Table-authored sessions
+are exclusive, and that exact Table decisions are fingerprint-bound answers,
+not reusable conditional terrain rules. This was required after the retained
+`generated-battle-011` review admitted a mixed-source portcullis rule that setup
+correctly retained as an obstruction.
 
 For comparison, the retained #287 `generated-battle-009` report records 7.94
 million input tokens for four accepted SDK calls, including 7.00 million
@@ -70,7 +75,7 @@ The focused tests cover equivalent implementation deltas, failed-versus-
 completed outcome rejection, unexplained phases, duplicate composite reviews,
 hash-linked authority validation, unavailable token dimensions, strict version
 decoding, and the role-view size estimate. A live #292 scenario run is not checked into this worktree, so
-this note makes no unsupported claim that the 2,592-token estimate is a
+this note makes no unsupported claim that the 2,881-token estimate is a
 complete-path model measurement. Operators must record hash-linked canonical
 ledger, stage-plan, and findings authorities for baseline and candidate before
 claiming a complete-path performance gate.

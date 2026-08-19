@@ -103,7 +103,9 @@ describe("Raw Swarm capability projection", () => {
       const context = capabilityContextForRole(role);
       expect(context).toContain("public setup SDK initializes");
       expect(context).toContain("public player SDK discovers Battle acts");
-      expect(context).toContain("specific Cover degree");
+      expect(context).toContain("one exclusive spatial boundary");
+      expect(context).toContain("not a reusable conditional terrain rule");
+      expect(context).toContain("becomes stale");
     }
   });
 

@@ -311,7 +311,7 @@ const CANONICAL_BOUNDARIES = [
     id: "table-witness-ownership",
     roles: ["generation", "setupAuthoring", "player", "review"],
     statement:
-      "One exact spatial question has one source: geometry-derived or Table-authored. A Table decision supplies the exact typed mechanical answer, such as a specific Cover degree, rather than an unresolved whether-question; the player cannot override it.",
+      "A scenario session selects one exclusive spatial boundary. geometryDerived owns its arena, placements, movement, and every supported spatial question and accepts no Table decisions. tableAuthored has no arena or placements, so every needed relation or movement route must be an exact fingerprint-bound decision. A Table decision supplies one typed mechanical answer, such as a specific Cover degree; it is not a reusable conditional terrain rule, becomes stale when its spatial fingerprint changes, and cannot be overridden by the player.",
   },
   {
     id: "ordinary-typescript",
