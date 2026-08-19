@@ -41,7 +41,9 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const battle = sdk.startBattle({
     battleId: sdk.battleId("generated-battle-011"),
-    combatants: creatureInits.map((result) => result.right),
+    combatants: creatureInits
+      .filter((result) => !sdk.isLeft(result))
+      .map((result) => result.right),
   });
   if (sdk.isLeft(battle)) {
     return {
