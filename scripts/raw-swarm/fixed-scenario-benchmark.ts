@@ -7,6 +7,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -22,6 +23,7 @@ import {
 } from "./artifact-authority.ts";
 import {
   BENCHMARK_CONTEXT_ROLES,
+  BenchmarkContextDeliveryEvidenceSchema,
   benchmarkContextForRole,
   historicalDeclarationBundleText,
   historicalDocumentDeclarationContextForRole,
@@ -82,6 +84,7 @@ import {
   GitShaSchema,
   repoRoot,
   sha256Canonical,
+  isJsonRecord,
   type GitSha,
   type ScenarioId,
 } from "./transcript.ts";
@@ -148,6 +151,7 @@ export type FixedBenchmarkProfilePaths = Readonly<{
   readonly authoringDirectory: string;
   readonly playerDirectory: string;
   readonly postPlayReview: string;
+  readonly postPlayContextDelivery: string;
   readonly postPlayLog: string;
   readonly measurement: string;
   readonly commands: string;
@@ -234,6 +238,98 @@ export function assertFixedScenarioCanonicalBundle(
   }
 }
 
+type FixedBenchmarkPreparationState = Readonly<{
+  readonly bundle: FixedScenarioCanonicalBundle;
+  readonly contextAuthorities: readonly ArtifactAuthority[];
+  readonly contextManifest: ArtifactAuthority;
+  readonly gitSha: GitSha;
+  readonly runDescriptor: ArtifactAuthority;
+  readonly stageFacts: ArtifactAuthority;
+  readonly stagePlan: ArtifactAuthority;
+  readonly stagePlanFindings: ArtifactAuthority;
+}>;
+
+function authorityAt(path: string): ArtifactAuthority {
+  return artifactAuthority(repoRelative(path));
+}
+
+function assertAuthorityUnchanged(
+  label: string,
+  expected: ArtifactAuthority,
+  path: string,
+): void {
+  const actual = authorityAt(path);
+  if (sha256Canonical(actual) !== sha256Canonical(expected)) {
+    fail(`Fixed benchmark ${label} authority changed during preparation.`);
+  }
+}
+
+function preparationState(
+  bundle: FixedScenarioCanonicalBundle,
+  paths: FixedBenchmarkProfilePaths,
+  gitSha: GitSha,
+): FixedBenchmarkPreparationState {
+  return {
+    bundle,
+    contextAuthorities: FIXED_BENCHMARK_CONTEXT_ROLES.map((role) =>
+      authorityAt(resolve(paths.contextDirectory, role + ".md")),
+    ),
+    contextManifest: authorityAt(paths.contextManifest),
+    gitSha,
+    runDescriptor: authorityAt(paths.runDescriptor),
+    stageFacts: authorityAt(paths.stageFacts),
+    stagePlan: authorityAt(paths.stagePlan),
+    stagePlanFindings: authorityAt(paths.stagePlanFindings),
+  };
+}
+
+function assertPreparationState(
+  state: FixedBenchmarkPreparationState,
+  paths: FixedBenchmarkProfilePaths,
+): void {
+  const revision = currentGitRevision();
+  if (revision.tag === "dirty") {
+    fail(
+      "Fixed benchmark preparation requires the original clean Git worktree.",
+    );
+  }
+  const currentSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
+  if (Either.isLeft(currentSha)) fail(currentSha.left.message);
+  if (currentSha.right !== state.gitSha) {
+    fail(
+      `Fixed benchmark Git revision changed during preparation: expected ${state.gitSha}, got ${currentSha.right}.`,
+    );
+  }
+  assertFixedScenarioCanonicalBundle(state.bundle);
+  assertAuthorityUnchanged("stage facts", state.stageFacts, paths.stageFacts);
+  assertAuthorityUnchanged("stage plan", state.stagePlan, paths.stagePlan);
+  assertAuthorityUnchanged(
+    "stage-plan findings",
+    state.stagePlanFindings,
+    paths.stagePlanFindings,
+  );
+  assertAuthorityUnchanged(
+    "context manifest",
+    state.contextManifest,
+    paths.contextManifest,
+  );
+  for (const [index, role] of FIXED_BENCHMARK_CONTEXT_ROLES.entries()) {
+    const authority = state.contextAuthorities[index];
+    if (authority === undefined)
+      fail("Fixed benchmark context authority is missing.");
+    assertAuthorityUnchanged(
+      `context ${role}`,
+      authority,
+      resolve(paths.contextDirectory, role + ".md"),
+    );
+  }
+  assertAuthorityUnchanged(
+    "run descriptor",
+    state.runDescriptor,
+    paths.runDescriptor,
+  );
+}
+
 export function fixedScenarioStageFacts(): ScenarioStageFacts {
   return {
     schemaVersion: 1,
@@ -277,6 +373,10 @@ export function fixedBenchmarkProfilePaths(
     authoringDirectory: resolve(root, "authoring"),
     playerDirectory: resolve(root, "player"),
     postPlayReview: resolve(root, "post-play-review.json"),
+    postPlayContextDelivery: resolve(
+      root,
+      "post-play-review.context-delivery.json",
+    ),
     postPlayLog: resolve(root, "post-play-review-agent.log"),
     measurement: resolve(root, "measurement.json"),
     commands: resolve(root, "commands.json"),
@@ -506,58 +606,24 @@ function scratchIsolationPrompt(scratch: string, prompt: string): string {
   return (
     "The scratch workspace at " +
     scratch +
-    " is complete and contains the entire benchmark input. Use only files inside that scratch workspace. Do not inspect, read, search, or execute against any path outside it, including the repository, parent directories, hidden files outside scratch, or network resources. Run all commands with the scratch workspace as their working directory.\n\n" +
+    " is complete and contains the entire benchmark input. Use only files inside that scratch workspace. Do not inspect, read, search, or execute against any path outside it, including the repository, parent directories, hidden files outside scratch, or network resources. Run all commands with the scratch workspace as their working directory. For preparation reads, use only one `/bin/bash -lc` wrapper around one read-only command: `cat`, `head`, `tail`, `sed` with a numeric print range, `sha256sum`, `wc`, `od`, or `rg` against named scratch files. Do not use Node, Python, another executable, shell expansion, shell operators, pipelines, redirections, loops, scripts, or structured file/search tools.\n\n" +
     prompt
   );
 }
 
-const BENCHMARK_PREPARATION_SAFE_ITEM_TYPES = new Set([
-  "agent_message",
-  "reasoning",
-  "status",
-]);
-const BENCHMARK_PREPARATION_FORBIDDEN_COMMANDS = new Set([
-  "curl",
-  "du",
-  "eval",
-  "fd",
-  "find",
-  "for",
-  "git",
-  "locate",
-  "rsync",
-  "select",
-  "scp",
-  "ssh",
-  "tree",
-  "until",
-  "wget",
-  "while",
-  "xargs",
-]);
-const BENCHMARK_PREPARATION_EXECUTABLE_PATHS = new Set([
+const BENCHMARK_PREPARATION_SHELL_LAUNCHERS = new Set([
   "/bin/bash",
-  "/bin/sh",
-  "/usr/bin/env",
-  "/usr/bin/node",
+  "/usr/bin/bash",
 ]);
-const BENCHMARK_PREPARATION_PATH_KEYS = new Set([
-  "cwd",
-  "directory",
-  "destination",
-  "file",
-  "file_path",
-  "filePath",
-  "filename",
-  "inputPath",
-  "path",
-  "paths",
-  "root",
-  "source",
-  "target",
-  "uri",
-  "working_directory",
-  "workingDirectory",
+const BENCHMARK_PREPARATION_READ_COMMANDS = new Set([
+  "cat",
+  "head",
+  "od",
+  "rg",
+  "sed",
+  "sha256sum",
+  "tail",
+  "wc",
 ]);
 const BENCHMARK_PREPARATION_SHELL_OPERATORS = new Set([
   ";",
@@ -569,12 +635,42 @@ const BENCHMARK_PREPARATION_SHELL_OPERATORS = new Set([
   ")",
   "{",
   "}",
+  "<",
+  ">",
+]);
+const BENCHMARK_PREPARATION_SAFE_ITEM_TYPES = new Set([
+  "agent_message",
+  "reasoning",
+  "status",
+]);
+const BENCHMARK_PREPARATION_ITEM_KEYS = new Set([
+  "aggregated_output",
+  "command",
+  "cwd",
+  "exit_code",
+  "id",
+  "status",
+  "type",
+]);
+const BENCHMARK_PREPARATION_EVENT_TYPES = new Set([
+  "item.completed",
+  "item.started",
+  "raw-swarm.invocation.completed",
+  "raw-swarm.invocation.started",
+  "thread.started",
+  "turn.completed",
+  "turn.started",
 ]);
 
 type BenchmarkPreparationEventValidationInput = Readonly<{
   readonly eventPath: string;
   readonly scratch: string;
   readonly namedInputs: readonly string[];
+}>;
+
+type StrictShellWords = Readonly<{
+  readonly quoted: readonly boolean[];
+  readonly words: readonly string[];
 }>;
 
 function scratchNamedFiles(root: string): readonly string[] {
@@ -591,74 +687,61 @@ function scratchNamedFiles(root: string): readonly string[] {
   return files;
 }
 
-function shellTokens(command: string): readonly string[] {
-  const tokens: string[] = [];
+function parseStrictShellWords(
+  value: string,
+): Either.Either<StrictShellWords, string> {
+  const words: string[] = [];
+  const quoted: boolean[] = [];
   let current = "";
   let quote: "'" | '"' | undefined;
-  let escaped = false;
+  let wasQuoted = false;
   const flush = (): void => {
-    if (current.length > 0) tokens.push(current);
-    current = "";
-  };
-  for (const character of command) {
-    if (escaped) {
-      current += character;
-      escaped = false;
-      continue;
+    if (current.length > 0 || wasQuoted) {
+      words.push(current);
+      quoted.push(wasQuoted);
     }
-    if (character === "\\" && quote !== "'") {
-      escaped = true;
-      continue;
+    current = "";
+    wasQuoted = false;
+  };
+  for (const character of value) {
+    if (character === "\\") {
+      return Either.left("command uses backslash escaping");
     }
     if (quote !== undefined) {
-      if (character === quote) quote = undefined;
-      else current += character;
+      if (character === quote) {
+        quote = undefined;
+        wasQuoted = true;
+      } else {
+        current += character;
+      }
       continue;
     }
     if (character === "'" || character === '"') {
       quote = character;
+      wasQuoted = true;
       continue;
+    }
+    if (
+      character === "$" ||
+      character === "`" ||
+      character === "~" ||
+      character === "*" ||
+      character === "?" ||
+      character === "[" ||
+      character === "]" ||
+      BENCHMARK_PREPARATION_SHELL_OPERATORS.has(character)
+    ) {
+      return Either.left("command uses unsupported shell syntax");
     }
     if (/\s/.test(character)) {
       flush();
       continue;
     }
-    if (character === ";" || character === "|" || character === "&") {
-      flush();
-      const previous = tokens.at(-1);
-      if ((character === "&" || character === "|") && previous === character) {
-        tokens[tokens.length - 1] = character + character;
-      } else {
-        tokens.push(character);
-      }
-      continue;
-    }
-    if (character === "(" || character === ")" || character === "{") {
-      flush();
-      tokens.push(character);
-      continue;
-    }
-    if (character === "}") {
-      flush();
-      tokens.push(character);
-      continue;
-    }
     current += character;
   }
-  if (escaped) current += "\\";
+  if (quote !== undefined) return Either.left("command has an unmatched quote");
   flush();
-  return tokens;
-}
-
-function shellCommandStreams(command: string): readonly (readonly string[])[] {
-  const root = shellTokens(command);
-  const streams: (readonly string[])[] = [root];
-  for (let index = 0; index < root.length - 1; index += 1) {
-    if (root[index] !== "-c" && root[index] !== "-lc") continue;
-    const nested = root[index + 1];
-    if (nested !== undefined) streams.push(shellTokens(nested));
-  }
-  return streams;
+  return Either.right({ quoted, words });
 }
 
 function pathWithinScratch(
@@ -668,6 +751,13 @@ function pathWithinScratch(
 ): boolean {
   if (candidate.includes("\0") || candidate.startsWith("~")) return false;
   if (/^(?:https?|file):\/\//.test(candidate)) return false;
+  if (
+    candidate
+      .split(/[\\/]/u)
+      .some((segment) => segment === "." || segment === "..")
+  ) {
+    return false;
+  }
   const root = resolve(scratch);
   const absolute = isAbsolute(candidate)
     ? resolve(candidate)
@@ -678,6 +768,20 @@ function pathWithinScratch(
     fromRoot.startsWith(`..${sep}`) ||
     isAbsolute(fromRoot)
   ) {
+    return false;
+  }
+  try {
+    const realRoot = realpathSync(root);
+    const realCandidate = realpathSync(absolute);
+    const fromRealRoot = relative(realRoot, realCandidate);
+    if (
+      fromRealRoot === ".." ||
+      fromRealRoot.startsWith(`..${sep}`) ||
+      isAbsolute(fromRealRoot)
+    ) {
+      return false;
+    }
+  } catch {
     return false;
   }
   if (fromRoot === "") return true;
@@ -694,126 +798,189 @@ function namedScratchFile(
   const absolute = isAbsolute(candidate)
     ? resolve(candidate)
     : resolve(root, candidate);
-  return namedInputs.has(relative(root, absolute));
-}
-
-function pathCandidates(value: string): readonly string[] {
-  const candidates: string[] = [];
-  const pathPattern =
-    /(?:^|[\s"'=])((?:\.{1,2}\/|~\/|\/|(?:[A-Za-z0-9_.-]+\/)+)[^\s"';&|()<>`]*)/g;
-  for (const match of value.matchAll(pathPattern)) {
-    const candidate = match[1];
-    if (candidate !== undefined) candidates.push(candidate);
+  const relativePath = relative(root, absolute);
+  if (!namedInputs.has(relativePath)) return false;
+  try {
+    const realRoot = realpathSync(root);
+    const realPath = realpathSync(absolute);
+    const fromRealRoot = relative(realRoot, realPath);
+    return (
+      fromRealRoot !== ".." &&
+      !fromRealRoot.startsWith(`..${sep}`) &&
+      !isAbsolute(fromRealRoot)
+    );
+  } catch {
+    return false;
   }
-  return candidates;
 }
 
-function fileNameCandidates(value: string): readonly string[] {
-  const candidates: string[] = [];
-  const filePattern =
-    /\b[A-Za-z0-9_.-]+\.(?:d\.ts|jsonl?|md|ts|tsx|js|mjs|txt|yaml|yml)\b/g;
-  for (const match of value.matchAll(filePattern)) {
-    const candidate = match[0];
-    if (candidate !== undefined) candidates.push(candidate);
+function scratchRelativePath(
+  scratch: string,
+  candidate: string,
+): string | undefined {
+  const root = resolve(scratch);
+  const absolute = isAbsolute(candidate)
+    ? resolve(candidate)
+    : resolve(root, candidate);
+  const fromRoot = relative(root, absolute);
+  if (
+    fromRoot === "" ||
+    fromRoot === ".." ||
+    fromRoot.startsWith(`..${sep}`) ||
+    isAbsolute(fromRoot)
+  ) {
+    return undefined;
   }
-  return candidates;
+  return fromRoot;
 }
 
-function validateCommandPath(
-  value: string,
+function namedInputSet(
+  input: BenchmarkPreparationEventValidationInput,
+): ReadonlySet<string> {
+  return new Set(
+    input.namedInputs.flatMap((path) => {
+      const relativePath = scratchRelativePath(input.scratch, path);
+      return relativePath === undefined ? [] : [relativePath];
+    }),
+  );
+}
+
+function validateNamedFile(
+  candidate: string,
   input: BenchmarkPreparationEventValidationInput,
 ): string | undefined {
-  if (value.includes("\0")) return "command contains a NUL byte";
-  if (value.includes("$(") || value.includes("`") || value.includes("${")) {
-    return "command uses indirect shell expansion";
+  const namedInputs = namedInputSet(input);
+  if (!pathWithinScratch(input.scratch, candidate, namedInputs)) {
+    return `command references an unnamed or external scratch file: ${candidate}`;
   }
-  const namedInputs = new Set(
-    input.namedInputs.map((path) =>
-      relative(resolve(input.scratch), resolve(path)),
-    ),
-  );
-  for (const candidate of pathCandidates(value)) {
-    if (BENCHMARK_PREPARATION_EXECUTABLE_PATHS.has(candidate)) continue;
-    if (!pathWithinScratch(input.scratch, candidate, namedInputs)) {
-      return `command references path outside scratch: ${candidate}`;
-    }
-  }
-  for (const candidate of fileNameCandidates(value)) {
-    if (candidate.includes("/")) continue;
-    if (!pathWithinScratch(input.scratch, candidate, namedInputs)) {
-      return `command references unnamed file: ${candidate}`;
-    }
+  if (!namedScratchFile(input.scratch, candidate, namedInputs)) {
+    return `command references a non-file scratch path: ${candidate}`;
   }
   return undefined;
 }
 
-function commandName(segment: readonly string[]): string | undefined {
-  for (const token of segment) {
-    if (BENCHMARK_PREPARATION_SHELL_OPERATORS.has(token)) return undefined;
-    if (/^[A-Za-z_][A-Za-z0-9_]*=.*/.test(token)) continue;
-    if (token.startsWith("-")) continue;
-    return token.split("/").at(-1);
+function commandArguments(
+  command: string,
+  input: BenchmarkPreparationEventValidationInput,
+): Either.Either<readonly string[], string> {
+  const outer = parseStrictShellWords(command);
+  if (Either.isLeft(outer)) return Either.left(outer.left);
+  if (
+    outer.right.words.length !== 3 ||
+    !BENCHMARK_PREPARATION_SHELL_LAUNCHERS.has(outer.right.words[0] ?? "") ||
+    outer.right.words[1] !== "-lc" ||
+    outer.right.quoted[2] !== true
+  ) {
+    return Either.left(
+      "preparation command must be one quoted /bin/bash -lc read operation",
+    );
   }
-  return undefined;
+  const inner = parseStrictShellWords(outer.right.words[2] ?? "");
+  if (Either.isLeft(inner)) return Either.left(inner.left);
+  const [executable, ...args] = inner.right.words;
+  if (
+    executable === undefined ||
+    executable.includes("/") ||
+    !BENCHMARK_PREPARATION_READ_COMMANDS.has(executable)
+  ) {
+    return Either.left(
+      `preparation command uses a non-read executable: ${executable ?? "<missing>"}`,
+    );
+  }
+  if (args.length === 0) return Either.left("read operation names no file");
+  const validateFiles = (files: readonly string[]): string | undefined => {
+    for (const file of files) {
+      const issue = validateNamedFile(file, input);
+      if (issue !== undefined) return issue;
+    }
+    return undefined;
+  };
+  switch (executable) {
+    case "cat":
+    case "head":
+    case "tail":
+    case "sha256sum": {
+      const files = args.filter((value) => !value.startsWith("-"));
+      if (files.length === 0 || files.length !== args.length) {
+        return Either.left(`${executable} has unsupported arguments`);
+      }
+      const issue = validateFiles(files);
+      return issue === undefined
+        ? Either.right(inner.right.words)
+        : Either.left(issue);
+    }
+    case "sed": {
+      const [option, script, ...files] = args;
+      if (
+        option !== "-n" ||
+        script === undefined ||
+        !/^\d+(?:,\d+)?p$/.test(script) ||
+        files.length === 0
+      ) {
+        return Either.left(
+          "sed must use only a numeric print range and named files",
+        );
+      }
+      const issue = validateFiles(files);
+      return issue === undefined
+        ? Either.right(inner.right.words)
+        : Either.left(issue);
+    }
+    case "wc": {
+      const files = args.filter((value) => !value.startsWith("-"));
+      const options = args.filter((value) => value.startsWith("-"));
+      if (
+        files.length === 0 ||
+        options.some((value) => !["-c", "-l", "-m", "-w"].includes(value))
+      ) {
+        return Either.left("wc has unsupported arguments");
+      }
+      const issue = validateFiles(files);
+      return issue === undefined
+        ? Either.right(inner.right.words)
+        : Either.left(issue);
+    }
+    case "od": {
+      const files = args.filter((value) => !value.startsWith("-"));
+      const options = args.filter((value) => value.startsWith("-"));
+      if (
+        files.length !== 1 ||
+        options.some((value) => !/^(?:-An|-tx[0-9]+|-N\d+|-j\d+)$/.test(value))
+      ) {
+        return Either.left("od has unsupported arguments");
+      }
+      const issue = validateFiles(files);
+      return issue === undefined
+        ? Either.right(inner.right.words)
+        : Either.left(issue);
+    }
+    case "rg": {
+      if (args.includes("--files") || args.includes("--hidden")) {
+        return Either.left("rg cannot enumerate scratch files");
+      }
+      const pathArguments = args.filter(
+        (value) => !value.startsWith("-") && value !== "--",
+      );
+      if (pathArguments.length < 2) {
+        return Either.left("rg must name a scratch file after its pattern");
+      }
+      const issue = validateFiles(pathArguments.slice(1));
+      return issue === undefined
+        ? Either.right(inner.right.words)
+        : Either.left(issue);
+    }
+  }
+  return Either.left(
+    `preparation command uses an unsupported read operation: ${executable}`,
+  );
 }
 
 function validatePreparationCommand(
   command: string,
   input: BenchmarkPreparationEventValidationInput,
 ): string | undefined {
-  const pathIssue = validateCommandPath(command, input);
-  if (pathIssue !== undefined) return pathIssue;
-  for (const tokens of shellCommandStreams(command)) {
-    let segment: string[] = [];
-    const segments = [...tokens, ";"];
-    const inspect = (current: readonly string[]): string | undefined => {
-      const name = commandName(current);
-      if (name === undefined) return undefined;
-      if (BENCHMARK_PREPARATION_FORBIDDEN_COMMANDS.has(name)) {
-        return `preparation command is not isolated: ${name}`;
-      }
-      if (name === "rg" && current.some((token) => token === "--files")) {
-        return "preparation command cannot enumerate scratch files";
-      }
-      if (
-        name === "rg" &&
-        !current
-          .slice(1)
-          .some((token) =>
-            namedScratchFile(
-              input.scratch,
-              token,
-              new Set(
-                input.namedInputs.map((path) =>
-                  relative(resolve(input.scratch), resolve(path)),
-                ),
-              ),
-            ),
-          )
-      ) {
-        return "search command must name a scratch input";
-      }
-      if (name === "ls")
-        return "preparation command cannot enumerate scratch files";
-      if (
-        name === "node" &&
-        current.some((token) =>
-          /(?:readdir|opendir|glob|fast-glob|walk|recursive)/i.test(token),
-        )
-      ) {
-        return "node command attempts scratch enumeration";
-      }
-      return undefined;
-    };
-    for (const token of segments) {
-      if (BENCHMARK_PREPARATION_SHELL_OPERATORS.has(token)) {
-        const issue = inspect(segment);
-        if (issue !== undefined) return issue;
-        segment = [];
-      } else segment.push(token);
-    }
-  }
-  return undefined;
+  const parsed = commandArguments(command, input);
+  return Either.isLeft(parsed) ? parsed.left : undefined;
 }
 
 function validatePreparationStructuredPath(
@@ -844,48 +1011,18 @@ function validatePreparationEventItem(
     if (typeof item.cwd === "string") {
       const cwdIssue = validatePreparationStructuredPath(item.cwd, input);
       if (cwdIssue !== undefined) return cwdIssue;
+    } else if ("cwd" in item) {
+      return "command execution has a non-string cwd";
+    }
+    for (const key of Object.keys(item)) {
+      if (!BENCHMARK_PREPARATION_ITEM_KEYS.has(key)) {
+        return `command execution has an unsupported field: ${key}`;
+      }
     }
     return undefined;
   }
   if (BENCHMARK_PREPARATION_SAFE_ITEM_TYPES.has(type)) return undefined;
-  if (
-    type === "file_read" ||
-    type === "file_search" ||
-    type === "search" ||
-    type === "file_change" ||
-    type === "apply_patch"
-  ) {
-    return undefined;
-  }
   return `preparation event uses an unsupported tool item: ${type}`;
-}
-
-function validatePreparationEventValue(
-  value: unknown,
-  input: BenchmarkPreparationEventValidationInput,
-  key?: string,
-): string | undefined {
-  if (typeof value === "string") {
-    if (key === "command") return validatePreparationCommand(value, input);
-    if (key !== undefined && BENCHMARK_PREPARATION_PATH_KEYS.has(key)) {
-      return validatePreparationStructuredPath(value, input);
-    }
-    return undefined;
-  }
-  if (Array.isArray(value)) {
-    for (const child of value) {
-      const issue = validatePreparationEventValue(child, input, key);
-      if (issue !== undefined) return issue;
-    }
-    return undefined;
-  }
-  if (typeof value !== "object" || value === null) return undefined;
-  for (const [childKey, child] of Object.entries(value)) {
-    if (childKey === "aggregated_output" || childKey === "text") continue;
-    const issue = validatePreparationEventValue(child, input, childKey);
-    if (issue !== undefined) return issue;
-  }
-  return undefined;
 }
 
 /**
@@ -899,31 +1036,34 @@ export function validateBenchmarkPreparationEventStream(
   const parsed = readCodexEvents(input.eventPath);
   if (parsed.tag === "invalid") return Either.left(parsed.message);
   for (const [index, event] of parsed.events.entries()) {
-    if (typeof event !== "object" || event === null || Array.isArray(event)) {
-      continue;
+    if (!isJsonRecord(event)) {
+      return Either.left(
+        `Preparation event line ${String(index + 1)} must be a JSON record.`,
+      );
     }
-    const record = event as Readonly<Record<string, unknown>>;
-    if (record.type === "item.started" || record.type === "item.completed") {
-      if (typeof record.item !== "object" || record.item === null) {
+    const eventType = event.type;
+    if (typeof eventType !== "string") {
+      return Either.left(
+        `Preparation event line ${String(index + 1)} has no event type.`,
+      );
+    }
+    if (!BENCHMARK_PREPARATION_EVENT_TYPES.has(eventType)) {
+      return Either.left(
+        `Preparation event line ${String(index + 1)} has an unsupported event type: ${eventType}`,
+      );
+    }
+    if (eventType === "item.started" || eventType === "item.completed") {
+      if (!isJsonRecord(event.item)) {
         return Either.left(
           `Preparation event line ${String(index + 1)} has no item.`,
         );
       }
-      const itemIssue = validatePreparationEventItem(
-        record.item as Readonly<Record<string, unknown>>,
-        input,
-      );
+      const itemIssue = validatePreparationEventItem(event.item, input);
       if (itemIssue !== undefined) {
         return Either.left(
           `Preparation event line ${String(index + 1)}: ${itemIssue}`,
         );
       }
-    }
-    const issue = validatePreparationEventValue(record, input);
-    if (issue !== undefined) {
-      return Either.left(
-        `Preparation event line ${String(index + 1)}: ${issue}`,
-      );
     }
   }
   return Either.right(undefined);
@@ -945,6 +1085,7 @@ type StructuredCallResult<A> = Readonly<{
 
 function runStructuredCall<A, I>(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
+  readonly preparation: FixedBenchmarkPreparationState;
   readonly contextPath: string;
   readonly bundle: FixedScenarioCanonicalBundle;
   readonly ordinal: number;
@@ -961,6 +1102,7 @@ function runStructuredCall<A, I>(input: {
   readonly gitSha: GitSha;
   readonly scenarioId: ScenarioId;
 }): StructuredCallResult<A> {
+  assertPreparationState(input.preparation, input.profilePaths);
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-benchmark-call-"));
   const local = copyBenchmarkCallInputs({
     scratch,
@@ -1041,12 +1183,14 @@ function runStructuredCall<A, I>(input: {
       currentEntry: entry.right,
     };
   } finally {
+    assertPreparationState(input.preparation, input.profilePaths);
     rmSync(scratch, { recursive: true });
   }
 }
 
 function runCompositeReviewCall(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
+  readonly preparation: FixedBenchmarkPreparationState;
   readonly ordinal: number;
   readonly profile: FixedBenchmarkProfile;
   readonly contextPath: string;
@@ -1056,6 +1200,7 @@ function runCompositeReviewCall(input: {
 }): StructuredCallResult<unknown> {
   const common = {
     profilePaths: input.profilePaths,
+    preparation: input.preparation,
     contextPath: input.contextPath,
     bundle: input.bundle,
     ordinal: input.ordinal,
@@ -1080,6 +1225,7 @@ function runCompositeReviewCall(input: {
 
 function runAuxiliaryStructuredCall<A, I>(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
+  readonly preparation: FixedBenchmarkPreparationState;
   readonly contextPath: string;
   readonly bundle: FixedScenarioCanonicalBundle;
   readonly ordinal: number;
@@ -1089,6 +1235,7 @@ function runAuxiliaryStructuredCall<A, I>(input: {
   readonly gitSha: GitSha;
   readonly scenarioId: ScenarioId;
 }): StructuredCallResult<A> {
+  assertPreparationState(input.preparation, input.profilePaths);
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-benchmark-aux-"));
   const local = copyBenchmarkCallInputs({
     scratch,
@@ -1176,6 +1323,7 @@ function runAuxiliaryStructuredCall<A, I>(input: {
       auxiliaryEntry: entry.right,
     };
   } finally {
+    assertPreparationState(input.preparation, input.profilePaths);
     rmSync(scratch, { recursive: true });
   }
 }
@@ -1412,8 +1560,9 @@ function retainReadinessEnvelope(input: {
 
 function characterSourceCall(input: {
   readonly paths: FixedBenchmarkProfilePaths;
+  readonly preparation: FixedBenchmarkPreparationState;
   readonly ordinal: number;
-  readonly context: string;
+  readonly profile: FixedBenchmarkProfile;
   readonly bundle: FixedScenarioCanonicalBundle;
   readonly gitSha: GitSha;
 }): string {
@@ -1427,7 +1576,8 @@ function characterSourceCall(input: {
       scenarioReviewPath: input.bundle.paths.scenarioReview,
       contextDelivery: {
         tag: "benchmarkContext",
-        content: input.context,
+        profile: input.profile,
+        role: "characterAuthoring",
       },
     });
     const sourcePath = resolve(scratch, "characters.ts");
@@ -1440,41 +1590,48 @@ function characterSourceCall(input: {
     const namedInputs = scratchNamedFiles(scratch).map((path) =>
       resolve(scratch, path),
     );
-    const result = runBenchmarkAuxiliaryInvocation({
-      args: fixedBenchmarkCodexArgs(
-        scratch,
-        "gpt-5.6-sol",
-        "medium",
-        scratchIsolationPrompt(
-          scratch,
-          "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_CHARACTERS.md, SCENARIO.md, and SCENARIO_REVIEW.json. Review characters.ts, run its documented typecheck, and leave it byte-identical to the existing zero-sheet source. Do not invent Character Sheets.",
-        ),
-        undefined,
-        undefined,
-        "workspace-write",
-      ),
-      cwd: scratch,
-      env: process.env,
-      eventPath: events,
-      logPath: resolve(
-        input.paths.root,
-        "logs",
-        String(input.ordinal) + "-characters.log",
-      ),
-      ledgerPath: input.paths.auxiliaryLedger,
-      kind: {
-        responsibility: "redundantCharacterPreparation",
-        phase: "scenarioCharacterAuthoring",
-      },
-      stagePlanReason:
-        "The document-declaration benchmark retains redundant character preparation calls.",
-      scenarioId: fixedScenarioId(),
-      gitSha: input.gitSha,
-      fallbackInvocationId:
-        FIXED_SCENARIO_ID + "-redundant-character-" + String(input.ordinal),
-      model: "gpt-5.6-sol",
-      reasoningEffort: "medium",
-    });
+    assertPreparationState(input.preparation, input.paths);
+    const result = (() => {
+      try {
+        return runBenchmarkAuxiliaryInvocation({
+          args: fixedBenchmarkCodexArgs(
+            scratch,
+            "gpt-5.6-sol",
+            "medium",
+            scratchIsolationPrompt(
+              scratch,
+              "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_CHARACTERS.md, SCENARIO.md, and SCENARIO_REVIEW.json. Review characters.ts, run its documented typecheck, and leave it byte-identical to the existing zero-sheet source. Do not invent Character Sheets.",
+            ),
+            undefined,
+            undefined,
+            "workspace-write",
+          ),
+          cwd: scratch,
+          env: process.env,
+          eventPath: events,
+          logPath: resolve(
+            input.paths.root,
+            "logs",
+            String(input.ordinal) + "-characters.log",
+          ),
+          ledgerPath: input.paths.auxiliaryLedger,
+          kind: {
+            responsibility: "redundantCharacterPreparation",
+            phase: "scenarioCharacterAuthoring",
+          },
+          stagePlanReason:
+            "The document-declaration benchmark retains redundant character preparation calls.",
+          scenarioId: fixedScenarioId(),
+          gitSha: input.gitSha,
+          fallbackInvocationId:
+            FIXED_SCENARIO_ID + "-redundant-character-" + String(input.ordinal),
+          model: "gpt-5.6-sol",
+          reasoningEffort: "medium",
+        });
+      } finally {
+        assertPreparationState(input.preparation, input.paths);
+      }
+    })();
     assertBenchmarkPreparationEventStream({
       eventPath: events,
       scratch,
@@ -1510,7 +1667,8 @@ function characterSourceCall(input: {
 
 function setupSourceCalls(input: {
   readonly paths: FixedBenchmarkProfilePaths;
-  readonly context: string;
+  readonly preparation: FixedBenchmarkPreparationState;
+  readonly profile: FixedBenchmarkProfile;
   readonly bundle: FixedScenarioCanonicalBundle;
   readonly gitSha: GitSha;
   readonly characters: Extract<
@@ -1530,7 +1688,8 @@ function setupSourceCalls(input: {
       characterObservation: input.characters.observation,
       contextDelivery: {
         tag: "benchmarkContext",
-        content: input.context,
+        profile: input.profile,
+        role: "setupAuthoring",
       },
     });
     const sourcePath = resolve(scratch, "setup.ts");
@@ -1550,33 +1709,41 @@ function setupSourceCalls(input: {
       prompt: string,
     ): void => {
       const events = eventPath(input.paths, ordinal, phase);
-      const result = runCodexInvocation({
-        args: fixedBenchmarkCodexArgs(
-          scratch,
-          "gpt-5.6-sol",
-          "medium",
-          scratchIsolationPrompt(scratch, prompt),
-          undefined,
-          undefined,
-          "workspace-write",
-        ),
-        cwd: scratch,
-        env: process.env,
-        eventPath: events,
-        logPath: resolve(
-          input.paths.root,
-          "logs",
-          String(ordinal) + "-" + phase + ".log",
-        ),
-        ledgerPath: input.paths.currentLedger,
-        phase,
-        stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioSetupAuthoring,
-        scenarioId: fixedScenarioId(),
-        gitSha: input.gitSha,
-        fallbackInvocationId: FIXED_SCENARIO_ID + "-" + phase,
-        model: "gpt-5.6-sol",
-        reasoningEffort: "medium",
-      });
+      assertPreparationState(input.preparation, input.paths);
+      const result = (() => {
+        try {
+          return runCodexInvocation({
+            args: fixedBenchmarkCodexArgs(
+              scratch,
+              "gpt-5.6-sol",
+              "medium",
+              scratchIsolationPrompt(scratch, prompt),
+              undefined,
+              undefined,
+              "workspace-write",
+            ),
+            cwd: scratch,
+            env: process.env,
+            eventPath: events,
+            logPath: resolve(
+              input.paths.root,
+              "logs",
+              String(ordinal) + "-" + phase + ".log",
+            ),
+            ledgerPath: input.paths.currentLedger,
+            phase,
+            stagePlanReason:
+              RAW_SWARM_STAGE_PLAN_REASONS.scenarioSetupAuthoring,
+            scenarioId: fixedScenarioId(),
+            gitSha: input.gitSha,
+            fallbackInvocationId: FIXED_SCENARIO_ID + "-" + phase,
+            model: "gpt-5.6-sol",
+            reasoningEffort: "medium",
+          });
+        } finally {
+          assertPreparationState(input.preparation, input.paths);
+        }
+      })();
       assertBenchmarkPreparationEventStream({
         eventPath: events,
         scratch,
@@ -1646,6 +1813,8 @@ export function benchmarkCommands(input: {
     repoRelative(input.paths.stagePlanFindings) +
     " --implementation-git-sha " +
     input.implementationGitSha +
+    " --benchmark-profile " +
+    input.profile +
     " --benchmark-context-path " +
     contextPlayer +
     " --instructional-isolation";
@@ -1657,6 +1826,9 @@ export function benchmarkCommands(input: {
     postPlayReview:
       "RAW_REVIEW_IMPLEMENTATION_GIT_SHA=" +
       input.implementationGitSha +
+      " RAW_REVIEW_CONTEXT_PROFILE=" +
+      input.profile +
+      " RAW_REVIEW_CONTEXT_ROLE=postPlayReview" +
       " RAW_REVIEW_CONTEXT_PATH=" +
       repoRelative(resolve(input.paths.contextDirectory, "postPlayReview.md")) +
       " scripts/raw-swarm/run-raw-review.sh scripts/raw-swarm/reviews/sdk-player.prompt.txt " +
@@ -1713,6 +1885,8 @@ async function prepareProfile(input: {
     scenarioBundle,
     contextManifest,
   });
+  const preparation = preparationState(bundle, paths, gitSha.right);
+  assertPreparationState(preparation, paths);
   const generationContext = resolve(
     paths.contextDirectory,
     "scenarioGeneration.md",
@@ -1720,6 +1894,7 @@ async function prepareProfile(input: {
   for (const ordinal of [1, 2] as const) {
     const result = runStructuredCall({
       profilePaths: paths,
+      preparation,
       contextPath: generationContext,
       bundle,
       ordinal,
@@ -1751,6 +1926,7 @@ async function prepareProfile(input: {
   // ordered pair so either timing boundary cannot be silently omitted.
   const milestone = runCompositeReviewCall({
     profilePaths: paths,
+    preparation,
     ordinal: 3,
     profile: input.profile,
     contextPath: reviewContext,
@@ -1773,6 +1949,7 @@ async function prepareProfile(input: {
   if (input.profile === "documentDeclarationSet") {
     const readiness = runAuxiliaryStructuredCall({
       profilePaths: paths,
+      preparation,
       contextPath: reviewContext,
       bundle,
       ordinal: 4,
@@ -1803,6 +1980,7 @@ async function prepareProfile(input: {
   const finalOrdinal = input.profile === "documentDeclarationSet" ? 5 : 4;
   const final = runCompositeReviewCall({
     profilePaths: paths,
+    preparation,
     ordinal: finalOrdinal,
     profile: input.profile,
     contextPath: reviewContext,
@@ -1827,31 +2005,27 @@ async function prepareProfile(input: {
   if (characterResult.tag !== "ready")
     fail("Tracked characters are not ready.");
   if (input.profile === "documentDeclarationSet") {
-    const characterContext = readFileSync(
-      resolve(paths.contextDirectory, "characterAuthoring.md"),
-      "utf8",
-    );
     characterSourceCall({
       paths,
+      preparation,
       ordinal: 6,
-      context: characterContext,
+      profile: input.profile,
       bundle,
       gitSha: gitSha.right,
     });
     characterSourceCall({
       paths,
+      preparation,
       ordinal: 7,
-      context: characterContext,
+      profile: input.profile,
       bundle,
       gitSha: gitSha.right,
     });
   }
   setupSourceCalls({
     paths,
-    context: readFileSync(
-      resolve(paths.contextDirectory, "setupAuthoring.md"),
-      "utf8",
-    ),
+    preparation,
+    profile: input.profile,
     bundle,
     gitSha: gitSha.right,
     characters: characterResult,
@@ -1940,6 +2114,53 @@ function validateRetainedReadinessAuthority(
   }
 }
 
+function validateContextDeliveryEvidence(input: {
+  readonly path: string;
+  readonly profile: FixedBenchmarkProfile;
+  readonly role: "player" | "postPlayReview";
+  readonly manifest: Schema.Schema.Type<
+    typeof BenchmarkContextSourceManifestDocumentSchema
+  >;
+}): void {
+  if (!existsSync(input.path)) {
+    fail(`Missing retained ${input.role} context-delivery evidence.`);
+  }
+  const parsed = Schema.decodeUnknownEither(
+    BenchmarkContextDeliveryEvidenceSchema,
+    { onExcessProperty: "error" },
+  )(JSON.parse(readFileSync(input.path, "utf8")));
+  if (Either.isLeft(parsed)) fail(parsed.left.message);
+  if (
+    parsed.right.profile !== input.profile ||
+    parsed.right.role !== input.role
+  ) {
+    fail(
+      `Retained ${input.role} context delivery is bound to another profile or role.`,
+    );
+  }
+  const source = input.manifest.sources.find(({ role }) => role === input.role);
+  if (source === undefined) {
+    fail(`Context manifest has no ${input.role} authority.`);
+  }
+  if (
+    parsed.right.path !== source.authority.path ||
+    parsed.right.byteLength !== source.authority.byteLength ||
+    parsed.right.sha256 !== source.authority.sha256
+  ) {
+    fail(
+      `Retained ${input.role} context delivery does not match its manifest authority.`,
+    );
+  }
+  const actual = artifactAuthority(source.authority.path);
+  if (
+    actual.path !== source.authority.path ||
+    actual.byteLength !== source.authority.byteLength ||
+    actual.sha256 !== source.authority.sha256
+  ) {
+    fail(`Context manifest ${input.role} authority is no longer canonical.`);
+  }
+}
+
 function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
   const bundle = fixedScenarioCanonicalBundle();
   const paths = fixedBenchmarkProfilePaths(assertRunId(runId), profile);
@@ -1972,6 +2193,23 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
   const contextManifestAuthority = artifactAuthority(
     repoRelative(paths.contextManifest),
   );
+  const contextManifest = Schema.decodeUnknownEither(
+    BenchmarkContextSourceManifestDocumentSchema,
+    { onExcessProperty: "error" },
+  )(JSON.parse(readFileSync(paths.contextManifest, "utf8")));
+  if (Either.isLeft(contextManifest)) fail(contextManifest.left.message);
+  validateContextDeliveryEvidence({
+    path: resolve(paths.playerDirectory, "evidence/context-delivery.json"),
+    profile,
+    role: "player",
+    manifest: contextManifest.right,
+  });
+  validateContextDeliveryEvidence({
+    path: paths.postPlayContextDelivery,
+    profile,
+    role: "postPlayReview",
+    manifest: contextManifest.right,
+  });
   if (
     sha256Canonical(runDescriptor.right.scenarioBundle) !==
       sha256Canonical(preparedBundle) ||
@@ -1990,6 +2228,7 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     !existsSync(transcript) ||
     !existsSync(replay) ||
     !existsSync(paths.postPlayReview) ||
+    !existsSync(paths.postPlayContextDelivery) ||
     !existsSync(postLedger)
   ) {
     fail(
@@ -2123,6 +2362,18 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     ...baseFindings,
     authorities: [
       ...baseFindings.authorities,
+      {
+        role: "playerContextDelivery",
+        ...artifactAuthority(
+          repoRelative(
+            resolve(paths.playerDirectory, "evidence/context-delivery.json"),
+          ),
+        ),
+      },
+      {
+        role: "postPlayReviewContextDelivery",
+        ...artifactAuthority(repoRelative(paths.postPlayContextDelivery)),
+      },
       ...sourceReviewAuthorities,
       ...readinessAuthorities,
     ].sort((left, right) => left.role.localeCompare(right.role)),
@@ -2165,6 +2416,18 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
   writeJsonExclusive(paths.measurement, measurement);
 }
 
+export function parseFixedBenchmarkProfile(
+  value: unknown,
+): Either.Either<FixedBenchmarkProfile, string> {
+  if (
+    value === "documentDeclarationSet" ||
+    value === "boundedCapabilityProjection"
+  ) {
+    return Either.right(value);
+  }
+  return Either.left("Unknown fixed benchmark profile: " + String(value));
+}
+
 async function main(args: readonly string[]): Promise<void> {
   const command = args[0];
   const runId = args[1];
@@ -2176,11 +2439,11 @@ async function main(args: readonly string[]): Promise<void> {
     const profiles =
       profileInput === undefined
         ? FIXED_BENCHMARK_PROFILES
-        : FIXED_BENCHMARK_PROFILES.includes(
-              profileInput as FixedBenchmarkProfile,
-            )
-          ? [profileInput as FixedBenchmarkProfile]
-          : fail("Unknown fixed benchmark profile: " + profileInput);
+        : (() => {
+            const parsed = parseFixedBenchmarkProfile(profileInput);
+            if (Either.isLeft(parsed)) fail(parsed.left);
+            return [parsed.right] as const;
+          })();
     for (const profile of profiles) {
       await prepareProfile({ runId: assertRunId(runId), profile });
     }
@@ -2190,12 +2453,9 @@ async function main(args: readonly string[]): Promise<void> {
     if (runId === undefined || profileInput === undefined || args.length > 3) {
       fail("Usage: fixed-scenario-benchmark.ts assemble <run-id> <profile>");
     }
-    if (
-      !FIXED_BENCHMARK_PROFILES.includes(profileInput as FixedBenchmarkProfile)
-    ) {
-      fail("Unknown fixed benchmark profile: " + profileInput);
-    }
-    assembleProfile(runId, profileInput as FixedBenchmarkProfile);
+    const parsed = parseFixedBenchmarkProfile(profileInput);
+    if (Either.isLeft(parsed)) fail(parsed.left);
+    assembleProfile(runId, parsed.right);
     return;
   }
   if (command === "compare") {

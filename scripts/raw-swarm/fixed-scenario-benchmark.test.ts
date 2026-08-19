@@ -24,6 +24,7 @@ import {
   fixedBenchmarkDocumentDeclarationContextForRole,
   fixedScenarioCanonicalBundle,
   initializeFixedBenchmarkProfileDirectory,
+  parseFixedBenchmarkProfile,
   retainBenchmarkReviewReplayEvents,
   validateBenchmarkPreparationEventStream,
   validateBenchmarkReviewAuthority,
@@ -207,6 +208,102 @@ describe("fixed scenario benchmark boundary", () => {
       }
     },
   );
+
+  test.each([
+    [
+      "an encoded Node path reader",
+      (scratch: string) =>
+        `/bin/bash -lc "node -e 'require(\"fs\").readFileSync(\"${scratch}/%2e%2e/AGENTS.md\")'"`,
+    ],
+    [
+      "a path encoded as a shell expansion",
+      (scratch: string) =>
+        `/bin/bash -lc "cat \$(printf '%s' '${scratch}/BENCHMARK_CONTEXT.md')"`,
+    ],
+    [
+      "a literal encoded parent traversal",
+      (scratch: string) => `/bin/bash -lc "cat ${scratch}/%2e%2e/AGENTS.md"`,
+    ],
+    [
+      "a Python path reader",
+      (scratch: string) =>
+        `/bin/bash -lc "python3 -c 'open(\"${scratch}/BENCHMARK_CONTEXT.md\").read()'"`,
+    ],
+  ])(
+    "rejects encoded executable and path bypasses: %s",
+    (_label, commandFactory) => {
+      const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
+      const eventPath = resolve(scratch, "events.jsonl");
+      const contextPath = resolve(scratch, "BENCHMARK_CONTEXT.md");
+      try {
+        writeFileSync(contextPath, "synthetic context\n");
+        writeFileSync(
+          eventPath,
+          JSON.stringify({
+            type: "item.completed",
+            item: {
+              id: "item_1",
+              type: "command_execution",
+              command: commandFactory(scratch),
+            },
+          }) + "\n",
+        );
+        expect(
+          Either.isLeft(
+            validateBenchmarkPreparationEventStream({
+              eventPath,
+              scratch,
+              namedInputs: [contextPath],
+            }),
+          ),
+        ).toBe(true);
+      } finally {
+        rmSync(scratch, { recursive: true });
+      }
+    },
+  );
+
+  test.each([
+    [
+      "an unknown tool item",
+      {
+        type: "item.completed",
+        item: { id: "item_1", type: "mcp_tool_call", name: "search" },
+      },
+    ],
+    ["an array event record", []],
+    ["an unknown event type", { type: "tool.output", payload: {} }],
+  ])("rejects %s rather than treating it as prose", (_label, event) => {
+    const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
+    const eventPath = resolve(scratch, "events.jsonl");
+    const contextPath = resolve(scratch, "BENCHMARK_CONTEXT.md");
+    try {
+      writeFileSync(contextPath, "synthetic context\n");
+      writeFileSync(eventPath, JSON.stringify(event) + "\n");
+      expect(
+        Either.isLeft(
+          validateBenchmarkPreparationEventStream({
+            eventPath,
+            scratch,
+            namedInputs: [contextPath],
+          }),
+        ),
+      ).toBe(true);
+    } finally {
+      rmSync(scratch, { recursive: true });
+    }
+  });
+
+  test("parses the CLI profile as a closed domain value", () => {
+    expect(parseFixedBenchmarkProfile("documentDeclarationSet")).toEqual(
+      Either.right("documentDeclarationSet"),
+    );
+    expect(parseFixedBenchmarkProfile("boundedCapabilityProjection")).toEqual(
+      Either.right("boundedCapabilityProjection"),
+    );
+    expect(Either.isLeft(parseFixedBenchmarkProfile("node"))).toBe(true);
+    expect(Either.isLeft(parseFixedBenchmarkProfile([]))).toBe(true);
+  });
 
   test("rejects structured reads and external tools while retaining prose-only results", () => {
     const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
