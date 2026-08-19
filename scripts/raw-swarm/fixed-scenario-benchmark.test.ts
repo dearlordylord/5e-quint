@@ -278,6 +278,43 @@ describe("fixed scenario benchmark boundary", () => {
     }
   });
 
+  test("rejects reading the generated output target as a preparation input", () => {
+    const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
+    const eventPath = resolve(scratch, "events.jsonl");
+    const contextPath = resolve(scratch, "BENCHMARK_CONTEXT.md");
+    const outputPath = resolve(scratch, "output.json");
+    try {
+      writeFileSync(contextPath, "synthetic context\n");
+      writeFileSync(outputPath, "{}\n");
+      writeFileSync(
+        eventPath,
+        JSON.stringify({
+          type: "item.completed",
+          item: {
+            id: "item_1",
+            type: "command_execution",
+            command: "/bin/bash -lc 'cat output.json'",
+            aggregated_output: "{}\n",
+            exit_code: 0,
+            status: "completed",
+          },
+        }) + "\n",
+      );
+
+      expect(
+        Either.isLeft(
+          validateBenchmarkPreparationEventStream({
+            eventPath,
+            scratch,
+            namedInputs: [contextPath],
+          }),
+        ),
+      ).toBe(true);
+    } finally {
+      rmSync(scratch, { recursive: true });
+    }
+  });
+
   test.each([
     [
       "a commandless stream",

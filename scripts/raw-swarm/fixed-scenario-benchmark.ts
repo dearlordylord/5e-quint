@@ -1236,10 +1236,7 @@ function runStructuredCall<A, I>(input: {
   const events = eventPath(input.profilePaths, input.ordinal, input.phase);
   writeJsonExclusive(schemaPath, codexOutputJsonSchema(input.schema));
   const readableFiles = scratchNamedFiles(scratch);
-  const namedInputs = [
-    ...readableFiles.map((path) => resolve(scratch, path)),
-    outputPath,
-  ];
+  const namedInputs = readableFiles.map((path) => resolve(scratch, path));
   try {
     const result = runCodexInvocation({
       args: fixedBenchmarkCodexArgs(
@@ -1375,10 +1372,7 @@ function runAuxiliaryStructuredCall<A, I>(input: {
   const events = eventPath(input.profilePaths, input.ordinal, input.kind.phase);
   writeJsonExclusive(schemaPath, codexOutputJsonSchema(input.schema));
   const readableFiles = scratchNamedFiles(scratch);
-  const namedInputs = [
-    ...readableFiles.map((path) => resolve(scratch, path)),
-    outputPath,
-  ];
+  const namedInputs = readableFiles.map((path) => resolve(scratch, path));
   const execution =
     input.kind.responsibility === "scenarioQuality"
       ? { model: "gpt-5.6-luna", reasoningEffort: "max" }
