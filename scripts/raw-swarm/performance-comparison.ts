@@ -1131,16 +1131,19 @@ export const COMPLETE_PATH_PHASE_STAGE = [
     phases: ["scenarioGeneration"],
     stage: "scenarioGeneration",
     countPolicy: "oneOrMore",
+    orderGroup: "prePlayAdmission",
   },
   {
     phases: ["scenarioCompositeReview"],
     stage: "scenarioCompositeReview",
     countPolicy: "exactlyTwo",
+    orderGroup: "prePlayAdmission",
   },
   {
     phases: ["scenarioCharacterAuthoring"],
     stage: "scenarioCharacterAuthoring",
     countPolicy: "exactlyOne",
+    orderGroup: "characterAuthoring",
   },
   {
     phases: [
@@ -1149,25 +1152,51 @@ export const COMPLETE_PATH_PHASE_STAGE = [
     ],
     stage: "scenarioSetupAuthoring",
     countPolicy: "exactlyTwo",
+    orderGroup: "setupAuthoring",
   },
   {
     phases: ["player"],
     stage: "player",
     countPolicy: "exactlyOne",
+    orderGroup: "player",
   },
   {
     phases: ["postPlayReview"],
     stage: "postPlayReview",
     countPolicy: "exactlyOne",
+    orderGroup: "postPlayReview",
   },
 ] as const;
 type CompletePathPhaseStage = (typeof COMPLETE_PATH_PHASE_STAGE)[number];
 type CompletePathStageName = CompletePathPhaseStage["stage"];
 type CompletePathPhase = CompletePathPhaseStage["phases"][number];
+export const COMPLETE_PATH_ORDER_GROUPS = [
+  "prePlayAdmission",
+  "characterAuthoring",
+  "setupAuthoring",
+  "player",
+  "postPlayReview",
+] as const;
+type CompletePathOrderGroup = (typeof COMPLETE_PATH_ORDER_GROUPS)[number];
 const COMPLETE_PATH_EXACTLY_TWO_DESCRIPTIONS = {
   scenarioCompositeReview: "one milestone and one final",
   scenarioSetupAuthoring: "one neutral and one controller",
 } as const satisfies Partial<Record<CompletePathStageName, string>>;
+
+function completePathOrderForPhase(phase: CompletePathPhase): number {
+  const mapping = COMPLETE_PATH_PHASE_STAGE.find(({ phases }) =>
+    phases.some((candidate) => candidate === phase),
+  );
+  if (mapping === undefined) {
+    return fail(`Complete-path phase has no order group: ${phase}`);
+  }
+  const group: CompletePathOrderGroup = mapping.orderGroup;
+  const order = COMPLETE_PATH_ORDER_GROUPS.indexOf(group);
+  if (order < 0) {
+    return fail(`Complete-path order group is not canonical: ${group}`);
+  }
+  return order;
+}
 
 /**
  * Current complete-path evidence composes canonical authorities. It does not
@@ -1474,11 +1503,6 @@ function currentStagePlanBindingIssues(
       mapping.phases.map((phase) => [phase, mapping] as const),
     ),
   );
-  const phaseOrder = new Map<CompletePathPhase, number>(
-    COMPLETE_PATH_PHASE_STAGE.flatMap((mapping) => mapping.phases).map(
-      (phase, index) => [phase, index] as const,
-    ),
-  );
   let previousPhaseOrder = -1;
   for (const invocation of measurement.invocations) {
     const mapping = mappingByPhase.get(invocation.phase);
@@ -1488,12 +1512,8 @@ function currentStagePlanBindingIssues(
       );
       continue;
     }
-    const currentPhaseOrder = phaseOrder.get(invocation.phase);
-    if (currentPhaseOrder === undefined) {
-      issues.push(
-        `Invocation phase ${invocation.phase} has no canonical order.`,
-      );
-    } else if (currentPhaseOrder < previousPhaseOrder) {
+    const currentPhaseOrder = completePathOrderForPhase(invocation.phase);
+    if (currentPhaseOrder < previousPhaseOrder) {
       issues.push(
         `Invocation phase ${invocation.phase} is out of order in the complete-path ledger.`,
       );
@@ -1547,11 +1567,6 @@ function currentSemanticIssues(
       mapping.phases.map((phase) => [phase, mapping] as const),
     ),
   );
-  const phaseOrder = new Map<CompletePathPhase, number>(
-    COMPLETE_PATH_PHASE_STAGE.flatMap((mapping) => mapping.phases).map(
-      (phase, index) => [phase, index] as const,
-    ),
-  );
   const counts = new Map<CompletePathStageName, number>();
   const invocationIds = new Set<string>();
   let previousPhaseOrder = -1;
@@ -1569,12 +1584,8 @@ function currentSemanticIssues(
       );
       continue;
     }
-    const currentPhaseOrder = phaseOrder.get(invocation.phase);
-    if (currentPhaseOrder === undefined) {
-      issues.push(
-        `Invocation phase ${invocation.phase} has no canonical order.`,
-      );
-    } else if (currentPhaseOrder < previousPhaseOrder) {
+    const currentPhaseOrder = completePathOrderForPhase(invocation.phase);
+    if (currentPhaseOrder < previousPhaseOrder) {
       issues.push(
         `Invocation phase ${invocation.phase} is out of order in the complete-path ledger.`,
       );
@@ -1995,11 +2006,12 @@ function numberedAuthorityRole(role: string, prefix: string): boolean {
 }
 
 function namedReviewStageAuthorityRole(role: string, prefix: string): boolean {
+  const normalizedPrefix = prefix.endsWith("-") ? prefix.slice(0, -1) : prefix;
   return (
-    role === `${prefix}-milestone` ||
-    role === `${prefix}-final` ||
-    role === `${prefix}milestone` ||
-    role === `${prefix}final`
+    role === `${normalizedPrefix}-milestone` ||
+    role === `${normalizedPrefix}-final` ||
+    role === `${normalizedPrefix}milestone` ||
+    role === `${normalizedPrefix}final`
   );
 }
 
@@ -2015,12 +2027,12 @@ function isReplayAuthorityRole(role: string): boolean {
   return (
     numberedAuthorityRole(role, "replay") ||
     namedReviewStageAuthorityRole(role, "replay") ||
-    namedReviewStageAuthorityRole(role, "prePlayReviewReplayInput-")
+    namedReviewStageAuthorityRole(role, "prePlayReviewReplayInput")
   );
 }
 
 function isPrePlayReviewSourceAuthorityRole(role: string): boolean {
-  return namedReviewStageAuthorityRole(role, "prePlayReviewSourceInput-");
+  return namedReviewStageAuthorityRole(role, "prePlayReviewSourceInput");
 }
 
 function readAuthorityJson(authority: FindingAuthority):

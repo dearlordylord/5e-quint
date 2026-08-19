@@ -491,6 +491,7 @@ function findings(args: readonly string[]): void {
   const reviewPaths = flagValues(rest, "--review");
   const scenarioReviewPaths = flagValues(rest, "--scenario-review");
   const generationLedgerPaths = flagValues(rest, "--generation-ledger");
+  const reviewReplayPaths = flagValues(rest, "--review-replay");
   const outputPath =
     flagValue(rest, "--output") ??
     findingsArtifactPath(runDirectory ?? defaultRunDirectory(transcriptPath));
@@ -533,6 +534,7 @@ function findings(args: readonly string[]): void {
     reviewPaths: importedReviewPaths,
     scenarioReviewPaths,
     generationLedgerPaths,
+    ...(reviewReplayPaths.length === 0 ? {} : { reviewReplayPaths }),
     issueLinks,
   });
   if (

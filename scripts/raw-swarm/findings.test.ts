@@ -244,6 +244,66 @@ function finalScenarioReview(input: {
   };
 }
 
+function retainedCompositeReviewInput(input: {
+  readonly reviewStage: "milestone" | "final";
+  readonly invocationId: string;
+}) {
+  return {
+    schemaVersion: 2 as const,
+    phase: "scenarioCompositeReview" as const,
+    reviewStage: input.reviewStage,
+    scenarioId: "findings-example",
+    sourceGitSha: "a".repeat(40),
+    invocationId: input.invocationId,
+    model: "gpt-5.6-luna" as const,
+    reasoningEffort: "max" as const,
+    prompt: `${input.reviewStage} prompt`,
+    outputJsonSchema: { type: "object" },
+    result: {
+      raw: { classification: "supported" as const, evidence: "RAW." },
+      contentAvailability: {
+        classification: "supplied" as const,
+        evidence: "Catalog.",
+      },
+      sdkCapability: {
+        classification: "supported" as const,
+        evidence: "SDK.",
+      },
+      artifactPolicy: { classification: "safe" as const, evidence: "Policy." },
+      scenarioQuality: {
+        classification: "ready" as const,
+        evidence: "Quality.",
+      },
+    },
+  };
+}
+
+function retainedGenerationReviewLedger(root: string): string {
+  const path = resolve(root, "generation-invocations.jsonl");
+  const entry = (invocationId: string) => ({
+    schemaVersion: 2,
+    scenarioId: "findings-example",
+    gitSha: "a".repeat(40),
+    eventsSha256:
+      invocationId === "original-milestone" ? "a".repeat(64) : "b".repeat(64),
+    phase: "scenarioCompositeReview",
+    stagePlanReason: "The campaign requires a composite review.",
+    invocationId,
+    model: "gpt-5.6-luna",
+    reasoningEffort: "max",
+    startedAt: "2026-08-18T00:00:00.000Z",
+    elapsedMilliseconds: 10,
+    exit: { tag: "exited", status: 0 },
+    result: { tag: "succeeded" },
+    usage: { tag: "unavailable", reason: "Fixture usage omitted." },
+  });
+  writeFileSync(
+    path,
+    `${JSON.stringify(entry("original-milestone"))}\n${JSON.stringify(entry("original-final"))}\n`,
+  );
+  return relative(repoRoot, path);
+}
+
 function findingIdentity(finding: {
   readonly stage: string;
   readonly category: string;
@@ -275,6 +335,189 @@ function reportCommand(args: readonly string[]): string {
 }
 
 describe("Raw Swarm findings projection", () => {
+  test("retains original milestone/final composite-review envelopes as replay authorities without ledger rows", () => {
+    const input = fixture();
+    const generationLedgerRelative = retainedGenerationReviewLedger(input.root);
+    const milestonePath = resolve(input.root, "original-milestone.json");
+    const finalPath = resolve(input.root, "original-final.json");
+    writeFileSync(
+      milestonePath,
+      `${JSON.stringify(
+        retainedCompositeReviewInput({
+          reviewStage: "milestone",
+          invocationId: "original-milestone",
+        }),
+      )}\n`,
+    );
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "original-final",
+        }),
+      )}\n`,
+    );
+    const projection = projectRunFindings({
+      transcriptPath: input.transcriptRelative,
+      runDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [generationLedgerRelative],
+      reviewReplayPaths: [
+        relative(repoRoot, milestonePath),
+        relative(repoRoot, finalPath),
+      ],
+      issueLinks: [],
+    });
+    expect(projection.authorities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ role: "replay-milestone" }),
+        expect.objectContaining({ role: "replay-final" }),
+      ]),
+    );
+    expect(
+      projection.authorities.filter(({ role }) => role.startsWith("replay-")),
+    ).toHaveLength(2);
+    expect(JSON.stringify(projection)).not.toContain("usage");
+    expect(projection.findings).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          pointer: expect.objectContaining({
+            authorityRole: "replay-milestone",
+          }),
+        }),
+      ]),
+    );
+  });
+
+  test("rejects missing, duplicate-stage, and mismatched original review replay inputs", () => {
+    const input = fixture();
+    const generationLedgerRelative = retainedGenerationReviewLedger(input.root);
+    const milestonePath = resolve(input.root, "original-milestone.json");
+    const finalPath = resolve(input.root, "original-final.json");
+    writeFileSync(
+      milestonePath,
+      `${JSON.stringify(
+        retainedCompositeReviewInput({
+          reviewStage: "milestone",
+          invocationId: "original-milestone",
+        }),
+      )}\n`,
+    );
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "original-final",
+        }),
+      )}\n`,
+    );
+    const common = {
+      transcriptPath: input.transcriptRelative,
+      runDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [generationLedgerRelative],
+      issueLinks: [],
+    } as const;
+    expect(() =>
+      projectRunFindings({
+        ...common,
+        reviewReplayPaths: [relative(repoRoot, milestonePath)],
+      }),
+    ).toThrow(/exactly two/);
+    expect(() =>
+      projectRunFindings({
+        ...common,
+        reviewReplayPaths: [
+          relative(repoRoot, milestonePath),
+          relative(repoRoot, milestonePath),
+        ],
+      }),
+    ).toThrow(/distinct envelope paths/);
+    const duplicateStagePath = resolve(input.root, "duplicate-milestone.json");
+    writeFileSync(
+      duplicateStagePath,
+      `${JSON.stringify(
+        retainedCompositeReviewInput({
+          reviewStage: "milestone",
+          invocationId: "original-final",
+        }),
+      )}\n`,
+    );
+    expect(() =>
+      projectRunFindings({
+        ...common,
+        reviewReplayPaths: [
+          relative(repoRoot, milestonePath),
+          relative(repoRoot, duplicateStagePath),
+        ],
+      }),
+    ).toThrow(/duplicate milestone/);
+
+    const foreign = JSON.parse(readFileSync(finalPath, "utf8")) as Record<
+      string,
+      unknown
+    >;
+    foreign.scenarioId = "foreign-scenario";
+    writeFileSync(finalPath, `${JSON.stringify(foreign)}\n`);
+    expect(() =>
+      projectRunFindings({
+        ...common,
+        reviewReplayPaths: [
+          relative(repoRoot, milestonePath),
+          relative(repoRoot, finalPath),
+        ],
+      }),
+    ).toThrow(/belongs to scenario foreign-scenario/);
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "original-final",
+        }),
+      )}\n`,
+    );
+
+    const ledgerPath = resolve(repoRoot, generationLedgerRelative);
+    const ledgerEntries = readFileSync(ledgerPath, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as Record<string, unknown>);
+    for (const [field, value] of [
+      ["model", "gpt-5.6-sol"],
+      ["reasoningEffort", "medium"],
+      ["gitSha", "b".repeat(40)],
+    ] as const) {
+      ledgerEntries[1] = { ...ledgerEntries[1], [field]: value };
+      writeFileSync(
+        ledgerPath,
+        `${ledgerEntries.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
+      );
+      expect(() =>
+        projectRunFindings({
+          ...common,
+          reviewReplayPaths: [
+            relative(repoRoot, milestonePath),
+            relative(repoRoot, finalPath),
+          ],
+        }),
+      ).toThrow(/does not match original composite-review invocation/);
+      ledgerEntries[1] = {
+        ...ledgerEntries[1],
+        [field]:
+          field === "gitSha"
+            ? "a".repeat(40)
+            : field === "model"
+              ? "gpt-5.6-luna"
+              : "max",
+      };
+    }
+  });
+
   test("retains pre-call failure, correction, accepted verdict, and exact authorities", () => {
     const input = fixture();
     const projection = projectRunFindings({

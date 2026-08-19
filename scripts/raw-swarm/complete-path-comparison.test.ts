@@ -441,7 +441,7 @@ function measurement(
     "invocations.jsonl",
     `${retainedInvocations.map(({ entry }) => JSON.stringify(entry)).join("\n")}\n`,
   );
-  return {
+  const result = {
     ...base,
     pathId: base.pathId,
     stagePlanAuthority,
@@ -452,7 +452,8 @@ function measurement(
       finding("accepted-call-verdict", 1),
       finding("successful-correction", 2),
     ]),
-  } as unknown as CurrentCompletePathMeasurement;
+  } satisfies CurrentCompletePathMeasurement;
+  return result;
 }
 
 function validated(
@@ -464,6 +465,67 @@ function validated(
 }
 
 describe("complete Raw Swarm path comparison", () => {
+  test("allows generation and composite review interleaving within pre-play admission, but rejects a later-stage reversal", () => {
+    const source = measurement();
+    const root = resolve(repoRoot, source.stagePlanAuthority.path, "..");
+    const generationFollowup = invocation({
+      phase: "scenarioGeneration",
+      stagePlanReason: stageReason("scenarioGeneration"),
+      invocationId: "generation-followup",
+    });
+    const retainOrdered = (ordered: readonly CurrentInvocation[]) => {
+      const retained = ordered.map((entry) => retainInvocation(root, entry));
+      const ledger = writeAuthority(
+        root,
+        "ordered-invocations.jsonl",
+        `${retained.map(({ entry }) => JSON.stringify(entry)).join("\n")}\n`,
+      );
+      return {
+        ...source,
+        invocations: retained.map(({ entry }) => entry),
+        invocationLedgers: [ledger],
+        invocationEvents: retained.map(({ authority }) => authority),
+      };
+    };
+
+    const interleaved = retainOrdered([
+      source.invocations[0]!,
+      source.invocations[1]!,
+      generationFollowup,
+      ...source.invocations.slice(2),
+    ]);
+    expect(validateCompletePathMeasurement(interleaved)).toEqual(
+      expect.objectContaining({ _tag: "Right" }),
+    );
+
+    const reversed = retainOrdered([
+      ...source.invocations.slice(0, 5),
+      generationFollowup,
+      ...source.invocations.slice(5),
+    ]);
+    const validation = validateCompletePathMeasurement(reversed);
+    expect(Either.isLeft(validation)).toBe(true);
+    if (Either.isRight(validation)) return;
+    expect(validation.left).toContain("out of order");
+  });
+
+  test("recognizes the hyphenated pre-play replay authority role", () => {
+    const source = measurement();
+    const findings = {
+      ...source.findings,
+      authorities: source.findings.authorities.map((authority) =>
+        authority.role === "replay-milestone"
+          ? { ...authority, role: "prePlayReviewReplayInput-milestone" }
+          : authority.role === "replay-final"
+            ? { ...authority, role: "prePlayReviewReplayInput-final" }
+            : authority,
+      ),
+    };
+    expect(validateCompletePathMeasurement({ ...source, findings })).toEqual(
+      expect.objectContaining({ _tag: "Right" }),
+    );
+  });
+
   test("compares consolidated implementations when outcome and evidence semantics match", () => {
     const baseline = measurement({
       invocations: measurement().invocations.map((entry) => ({

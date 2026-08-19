@@ -619,6 +619,8 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts findings \
   --db scripts/raw-swarm/out/player-swarm.db \
   --review "scripts/raw-swarm/out/$SCENARIO-sdk-review.json" \
   --generation-ledger "scripts/raw-swarm/out/$SCENARIO-generation-invocations.jsonl" \
+  --review-replay "scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/scenarioCompositeReview-MILESTONE.json" \
+  --review-replay "scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/scenarioCompositeReview-FINAL.json" \
   --render "scripts/raw-swarm/out/$SCENARIO-run-audit.md"
 
 # Render later from the same hash-linked indexed projection.
@@ -626,6 +628,17 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts audit \
   --run <run-id> \
   --db scripts/raw-swarm/out/player-swarm.db
 ```
+
+The optional --review-replay inputs are the two original composite-review
+envelopes, not new model invocations. When supplied, the pair must contain
+exactly one milestone and one final envelope, and each envelope must match
+one v2 composite-review row in the supplied generation ledger by invocation id,
+model, reasoning effort, scenario, and Git identity. Their bytes become
+replay-milestone and replay-final authorities in the findings projection;
+they do not add ledger rows or duplicate usage totals. Complete-path assembly
+allows one or more generation invocations interleaved with the milestone/final
+composite reviews within the pre-play admission group, while later authoring,
+player, and post-play stages remain ordered.
 
 The findings projection records generation rejection, character/setup
 obstruction, pre-call compilation/runtime failure, malformed submissions and

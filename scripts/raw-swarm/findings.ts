@@ -34,6 +34,7 @@ import {
   repoRoot,
   sha256Canonical,
 } from "./transcript.ts";
+import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
 
 export const RAW_SWARM_FINDINGS_SCHEMA_VERSION = 1;
 
@@ -170,6 +171,8 @@ export type FindingsProjectionInput = {
   readonly reviewPaths: readonly string[];
   readonly scenarioReviewPaths: readonly string[];
   readonly generationLedgerPaths: readonly string[];
+  /** Original composite-review envelopes; when present they must be milestone and final. */
+  readonly reviewReplayPaths?: readonly string[];
   readonly issueLinks: readonly FindingIssueLink[];
 };
 
@@ -888,6 +891,127 @@ export function findingsFromGenerationLedger(
   return findings;
 }
 
+type RetainedCompositeReviewInput = Schema.Schema.Type<
+  typeof RetainedScenarioReviewInputSchema
+>;
+
+function originalCompositeReviewInputs(
+  sources: Source[],
+  paths: readonly string[],
+  generationLedgerPaths: readonly string[],
+  expectedScenarioId: string,
+): void {
+  if (paths.length === 0) return;
+  if (paths.length !== 2) {
+    fail(
+      `Review replay inputs require exactly two retained composite-review envelopes (milestone and final), received ${String(paths.length)}.`,
+    );
+  }
+  if (generationLedgerPaths.length === 0) {
+    fail(
+      "Review replay inputs require at least one original generation ledger for invocation matching.",
+    );
+  }
+
+  const canonicalPaths = paths.map(sourcePath);
+  if (new Set(canonicalPaths).size !== canonicalPaths.length) {
+    fail("Review replay inputs must identify two distinct envelope paths.");
+  }
+
+  const ledgerEntries = generationLedgerPaths.flatMap((path) => {
+    const canonical = sourcePath(path);
+    let records: readonly JsonLineRecord[];
+    try {
+      records = readJsonLineRecords(canonical);
+    } catch {
+      fail(`Original generation ledger is unreadable: ${canonical}`);
+    }
+    return records.map(({ value, line }) => {
+      const decoded = parseModelInvocationLedgerEntry(value);
+      if (Either.isLeft(decoded)) {
+        fail(
+          `Original generation ledger ${canonical} line ${String(line)} is malformed: ${decoded.left.message}`,
+        );
+      }
+      return decoded.right;
+    });
+  });
+
+  const stages = new Set<RetainedCompositeReviewInput["reviewStage"]>();
+  const invocationIds = new Set<string>();
+  for (const [index, canonical] of canonicalPaths.entries()) {
+    const decoded = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(readSourceRecord(canonical));
+    if (Either.isLeft(decoded)) {
+      fail(
+        `Review replay input ${canonical} is invalid: ${decoded.left.message}`,
+      );
+    }
+    const review = decoded.right;
+    if (review.scenarioId !== expectedScenarioId) {
+      fail(
+        `Review replay input ${canonical} belongs to scenario ${review.scenarioId}, expected ${expectedScenarioId}.`,
+      );
+    }
+    if (stages.has(review.reviewStage)) {
+      fail(
+        `Review replay inputs contain duplicate ${review.reviewStage} stage envelopes.`,
+      );
+    }
+    stages.add(review.reviewStage);
+    if (invocationIds.has(review.invocationId)) {
+      fail(
+        `Review replay inputs contain duplicate original invocation id ${review.invocationId}.`,
+      );
+    }
+    invocationIds.add(review.invocationId);
+    const matches = ledgerEntries.filter(
+      (entry) => entry.invocationId === review.invocationId,
+    );
+    if (matches.length !== 1) {
+      fail(
+        `Review replay input ${canonical} must match exactly one original generation ledger invocation id ${review.invocationId}, found ${String(matches.length)}.`,
+      );
+    }
+    const entry = matches[0]!;
+    if (
+      entry.schemaVersion !== 2 ||
+      entry.phase !== "scenarioCompositeReview" ||
+      entry.scenarioId !== review.scenarioId ||
+      entry.gitSha !== review.sourceGitSha ||
+      entry.model !== review.model ||
+      entry.reasoningEffort !== review.reasoningEffort
+    ) {
+      fail(
+        `Review replay input ${canonical} does not match original composite-review invocation ${review.invocationId} model, effort, scenario, or Git identity.`,
+      );
+    }
+    if (sources.some((source) => source.path === canonical)) {
+      fail(
+        `Review replay input ${canonical} is already registered as another findings authority.`,
+      );
+    }
+    const role = addSource(sources, canonical, `replay-${review.reviewStage}`);
+    if (role !== `replay-${review.reviewStage}`) {
+      fail(
+        `Review replay input ${canonical} could not retain its closed ${review.reviewStage} authority role.`,
+      );
+    }
+    if (index === canonicalPaths.length - 1 && stages.size !== 2) {
+      fail(
+        "Review replay inputs must contain exactly one milestone and one final envelope.",
+      );
+    }
+  }
+  if (!stages.has("milestone") || !stages.has("final")) {
+    fail(
+      "Review replay inputs must contain exactly one milestone and one final envelope.",
+    );
+  }
+}
+
 function findingStageForPlanStage(stage: RawSwarmStageName): FindingStage {
   return Match.value(stage).pipe(
     Match.when("scenarioGeneration", () => "generation" as const),
@@ -1541,6 +1665,12 @@ export function projectRunFindings(
       ),
     );
   }
+  originalCompositeReviewInputs(
+    sources,
+    input.reviewReplayPaths ?? [],
+    input.generationLedgerPaths,
+    parsed.scenarioId,
+  );
 
   if (existsSync(resolve(repoRoot, runDirectory, "evidence"))) {
     for (const name of readdirSync(
