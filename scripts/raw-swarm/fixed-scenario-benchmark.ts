@@ -53,8 +53,10 @@ import {
 } from "./model-telemetry.ts";
 import {
   BENCHMARK_IMPLEMENTATION_PROFILES,
+  BenchmarkReadinessInputSchema,
   BenchmarkContextSourceManifestDocumentSchema,
   BenchmarkRunDescriptorSchema,
+  deriveBenchmarkPathOutcome,
   parseBenchmarkMeasurement,
   readCompletePathMeasurement,
   validateCompletePathMeasurement,
@@ -1346,6 +1348,14 @@ export function validateBenchmarkReviewAuthority(input: {
   readonly result: unknown;
   readonly outputJsonSchema: unknown;
 }): Either.Either<void, string> {
+  if (
+    input.profile === "boundedCapabilityProjection" &&
+    input.reviewStage === "milestone"
+  ) {
+    return Either.left(
+      "The bounded capability-projection benchmark retains only its final composite review.",
+    );
+  }
   const parsed =
     input.profile === "documentDeclarationSet"
       ? Schema.decodeUnknownEither(HistoricalScenarioCompositeReviewSchema, {
@@ -1512,21 +1522,6 @@ export function benchmarkReviewReplayEventsPath(replayPath: string): string {
     : replayPath + ".events.jsonl";
 }
 
-const BenchmarkReadinessInputSchema = Schema.Struct({
-  schemaVersion: Schema.Literal(1),
-  profile: Schema.Literal("documentDeclarationSet"),
-  scenarioId: Schema.Literal(FIXED_SCENARIO_ID),
-  responsibility: Schema.Literal("scenarioQuality"),
-  phase: Schema.Literal("scenarioReadiness"),
-  sourceGitSha: GitShaSchema,
-  invocationId: Schema.NonEmptyString,
-  model: Schema.Literal("gpt-5.6-luna"),
-  reasoningEffort: Schema.Literal("max"),
-  prompt: Schema.NonEmptyString,
-  outputJsonSchema: Schema.Unknown,
-  result: ScenarioQualityReviewSchema,
-});
-
 function retainReadinessEnvelope(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
   readonly result: unknown;
@@ -1671,6 +1666,7 @@ function setupSourceCalls(input: {
   readonly profile: FixedBenchmarkProfile;
   readonly bundle: FixedScenarioCanonicalBundle;
   readonly gitSha: GitSha;
+  readonly firstOrdinal: number;
   readonly characters: Extract<
     ScenarioCharacterEvaluation,
     { readonly tag: "ready" }
@@ -1768,12 +1764,12 @@ function setupSourceCalls(input: {
       );
     };
     run(
-      8,
+      input.firstOrdinal,
       "scenarioSetupNeutralAuthoring",
       "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_SETUP.md, SCENARIO.md, SCENARIO_REVIEW.json, CHARACTERS.json, and STAT_BLOCKS.json. Review setup.ts as the exact neutral source, run the documented typecheck, and leave it byte-identical.",
     );
     run(
-      9,
+      input.firstOrdinal + 1,
       "scenarioSetupControllerAuthoring",
       "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_SETUP_CONTROLLER.md, NEUTRAL_SETUP.ts, SCENARIO.md, and SCENARIO_REVIEW.json. Review setup.ts as the exact controller-retained source, preserve fixed facts, run the documented typecheck, and leave it byte-identical.",
     );
@@ -1920,32 +1916,30 @@ async function prepareProfile(input: {
     }
   }
   const reviewContext = resolve(paths.contextDirectory, "scenarioReview.md");
-  // Both composite reviews are retained deliberately: milestone is the first
-  // pre-preparation admission authority, while final is the last independent
-  // authority before source preparation. The comparison validator requires the
-  // ordered pair so either timing boundary cannot be silently omitted.
-  const milestone = runCompositeReviewCall({
-    profilePaths: paths,
-    preparation,
-    ordinal: 3,
-    profile: input.profile,
-    contextPath: reviewContext,
-    bundle,
-    prompt: reviewPrompt(input.profile, "milestone", reviewContext, bundle),
-    gitSha: gitSha.right,
-  });
-  if (milestone.currentEntry === undefined)
-    fail("Milestone review row is missing.");
-  retainReviewEnvelope({
-    profilePaths: paths,
-    profile: input.profile,
-    stage: "milestone",
-    result: milestone.value,
-    entry: milestone.currentEntry,
-    eventPath: milestone.eventPath,
-    scenarioReviewGitSha: bundle.scenarioReviewGitSha,
-    prompt: reviewPrompt(input.profile, "milestone", reviewContext, bundle),
-  });
+  if (input.profile === "documentDeclarationSet") {
+    const milestone = runCompositeReviewCall({
+      profilePaths: paths,
+      preparation,
+      ordinal: 3,
+      profile: input.profile,
+      contextPath: reviewContext,
+      bundle,
+      prompt: reviewPrompt(input.profile, "milestone", reviewContext, bundle),
+      gitSha: gitSha.right,
+    });
+    if (milestone.currentEntry === undefined)
+      fail("Milestone review row is missing.");
+    retainReviewEnvelope({
+      profilePaths: paths,
+      profile: input.profile,
+      stage: "milestone",
+      result: milestone.value,
+      entry: milestone.currentEntry,
+      eventPath: milestone.eventPath,
+      scenarioReviewGitSha: bundle.scenarioReviewGitSha,
+      prompt: reviewPrompt(input.profile, "milestone", reviewContext, bundle),
+    });
+  }
   if (input.profile === "documentDeclarationSet") {
     const readiness = runAuxiliaryStructuredCall({
       profilePaths: paths,
@@ -1977,7 +1971,7 @@ async function prepareProfile(input: {
         " and return the separate historical scenario-quality readiness result. Do not add it to a composite review.",
     });
   }
-  const finalOrdinal = input.profile === "documentDeclarationSet" ? 5 : 4;
+  const finalOrdinal = input.profile === "documentDeclarationSet" ? 5 : 3;
   const final = runCompositeReviewCall({
     profilePaths: paths,
     preparation,
@@ -2028,6 +2022,7 @@ async function prepareProfile(input: {
     profile: input.profile,
     bundle,
     gitSha: gitSha.right,
+    firstOrdinal: input.profile === "documentDeclarationSet" ? 8 : 4,
     characters: characterResult,
   });
   assertFixedScenarioCanonicalBundle(bundle);
@@ -2198,18 +2193,26 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     { onExcessProperty: "error" },
   )(JSON.parse(readFileSync(paths.contextManifest, "utf8")));
   if (Either.isLeft(contextManifest)) fail(contextManifest.left.message);
-  validateContextDeliveryEvidence({
-    path: resolve(paths.playerDirectory, "evidence/context-delivery.json"),
-    profile,
-    role: "player",
-    manifest: contextManifest.right,
-  });
-  validateContextDeliveryEvidence({
-    path: paths.postPlayContextDelivery,
-    profile,
-    role: "postPlayReview",
-    manifest: contextManifest.right,
-  });
+  const playerContextDelivery = resolve(
+    paths.playerDirectory,
+    "evidence/context-delivery.json",
+  );
+  if (existsSync(playerContextDelivery)) {
+    validateContextDeliveryEvidence({
+      path: playerContextDelivery,
+      profile,
+      role: "player",
+      manifest: contextManifest.right,
+    });
+  }
+  if (existsSync(paths.postPlayContextDelivery)) {
+    validateContextDeliveryEvidence({
+      path: paths.postPlayContextDelivery,
+      profile,
+      role: "postPlayReview",
+      manifest: contextManifest.right,
+    });
+  }
   if (
     sha256Canonical(runDescriptor.right.scenarioBundle) !==
       sha256Canonical(preparedBundle) ||
@@ -2221,41 +2224,74 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     );
   }
   const transcript = resolve(paths.playerDirectory, "evidence/sdk-calls.jsonl");
+  const frozenPrefix = resolve(
+    paths.playerDirectory,
+    "evidence/frozen-prefix.json",
+  );
+  const finalArtifact = resolve(paths.playerDirectory, "evidence/final.json");
   const replay = resolve(paths.playerDirectory, "evidence/replay-result.json");
   const postLedger =
     paths.postPlayReview.slice(0, -".json".length) + ".invocations.jsonl";
-  if (
-    !existsSync(transcript) ||
-    !existsSync(replay) ||
-    !existsSync(paths.postPlayReview) ||
-    !existsSync(paths.postPlayContextDelivery) ||
-    !existsSync(postLedger)
-  ) {
+  if (!existsSync(transcript) || !existsSync(frozenPrefix)) {
     fail(
-      "Player, replay, and post-play authorities are all required before assembly.",
+      "Player transcript and frozen-prefix authorities are required before assembly.",
     );
   }
-  validateRetainedReviewAuthority(
-    profile,
-    paths.milestoneReviewInput,
-    "milestone",
-  );
-  validateRetainedReviewAuthority(profile, paths.finalReviewInput, "final");
-  validateRetainedReviewAuthority(
-    profile,
-    paths.milestoneReviewSource,
-    "milestone",
-  );
-  validateRetainedReviewAuthority(profile, paths.finalReviewSource, "final");
+  const derivedOutcome = deriveBenchmarkPathOutcome({
+    transcriptPath: repoRelative(transcript),
+    frozenPrefixPath: repoRelative(frozenPrefix),
+    finalArtifactPath: repoRelative(finalArtifact),
+  });
+  if (Either.isLeft(derivedOutcome)) fail(derivedOutcome.left);
+  const completed = derivedOutcome.right.tag === "completed";
+  if (
+    completed &&
+    (!existsSync(replay) ||
+      !existsSync(paths.postPlayReview) ||
+      !existsSync(paths.postPlayContextDelivery) ||
+      !existsSync(postLedger))
+  ) {
+    fail(
+      "A completed benchmark path requires replay and post-play authorities before assembly.",
+    );
+  }
+  const reviewStages =
+    profile === "documentDeclarationSet"
+      ? (["milestone", "final"] as const)
+      : (["final"] as const);
+  for (const stage of reviewStages) {
+    validateRetainedReviewAuthority(
+      profile,
+      stage === "milestone"
+        ? paths.milestoneReviewInput
+        : paths.finalReviewInput,
+      stage,
+    );
+    validateRetainedReviewAuthority(
+      profile,
+      stage === "milestone"
+        ? paths.milestoneReviewSource
+        : paths.finalReviewSource,
+      stage,
+    );
+  }
   validateRetainedReadinessAuthority(profile, paths);
   const benchmarkLedger = artifactAuthority(
     repoRelative(paths.benchmarkLedger),
   );
-  const playerLedger = artifactAuthority(
-    repoRelative(resolve(paths.playerDirectory, "evidence/invocations.jsonl")),
+  const playerLedgerPath = resolve(
+    paths.playerDirectory,
+    "evidence/invocations.jsonl",
   );
-  const postPlayLedger = artifactAuthority(repoRelative(postLedger));
-  const ledgers = [benchmarkLedger, playerLedger, postPlayLedger] as const;
+  const ledgers = [
+    benchmarkLedger,
+    ...(existsSync(playerLedgerPath)
+      ? [artifactAuthority(repoRelative(playerLedgerPath))]
+      : []),
+    ...(existsSync(postLedger)
+      ? [artifactAuthority(repoRelative(postLedger))]
+      : []),
+  ] as const;
   const values = ledgers.flatMap((authority) => readJsonLines(authority.path));
   const invocations = values.flatMap(
     (value): readonly FixedBenchmarkInvocation[] => {
@@ -2283,14 +2319,19 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
   }
   const retainedInvocations = nonEmpty(invocations, "invocations");
   const eventCandidates = [
-    benchmarkReviewReplayEventsPath(paths.milestoneReviewInput),
-    benchmarkReviewReplayEventsPath(paths.finalReviewInput),
+    ...reviewStages.map((stage) =>
+      benchmarkReviewReplayEventsPath(
+        stage === "milestone"
+          ? paths.milestoneReviewInput
+          : paths.finalReviewInput,
+      ),
+    ),
     ...readdirSync(paths.eventDirectory).map((name) =>
       resolve(paths.eventDirectory, name),
     ),
     resolve(paths.playerDirectory, "evidence/player-events.jsonl"),
     paths.postPlayLog + ".events.jsonl",
-  ];
+  ].filter((path) => existsSync(path));
   const events = invocations.map((invocation) =>
     eventAuthorityForHash(eventCandidates, invocation.eventsSha256),
   );
@@ -2308,25 +2349,30 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
   const baseFindings = projectRunFindings({
     transcriptPath: repoRelative(transcript),
     runDirectory: repoRelative(paths.playerDirectory),
-    reviewPaths: [repoRelative(paths.postPlayReview)],
+    reviewPaths: existsSync(paths.postPlayReview)
+      ? [repoRelative(paths.postPlayReview)]
+      : [],
     scenarioReviewPaths: [repoRelative(bundle.paths.scenarioReview)],
     generationLedgerPaths: [repoRelative(paths.currentLedger)],
-    reviewReplayPaths: [
-      repoRelative(paths.milestoneReviewInput),
-      repoRelative(paths.finalReviewInput),
-    ],
+    reviewReplayPaths: reviewStages.map((stage) =>
+      repoRelative(
+        stage === "milestone"
+          ? paths.milestoneReviewInput
+          : paths.finalReviewInput,
+      ),
+    ),
     issueLinks: [],
   });
-  const sourceReviewAuthorities = [
-    {
-      role: "prePlayReviewSourceInput-milestone",
-      ...artifactAuthority(repoRelative(paths.milestoneReviewSource)),
-    },
-    {
-      role: "prePlayReviewSourceInput-final",
-      ...artifactAuthority(repoRelative(paths.finalReviewSource)),
-    },
-  ] as const;
+  const sourceReviewAuthorities = reviewStages.map((stage) => ({
+    role: `prePlayReviewSourceInput-${stage}`,
+    ...artifactAuthority(
+      repoRelative(
+        stage === "milestone"
+          ? paths.milestoneReviewSource
+          : paths.finalReviewSource,
+      ),
+    ),
+  }));
   const readinessAuthorities =
     profile === "documentDeclarationSet"
       ? (() => {
@@ -2362,18 +2408,22 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     ...baseFindings,
     authorities: [
       ...baseFindings.authorities,
-      {
-        role: "playerContextDelivery",
-        ...artifactAuthority(
-          repoRelative(
-            resolve(paths.playerDirectory, "evidence/context-delivery.json"),
-          ),
-        ),
-      },
-      {
-        role: "postPlayReviewContextDelivery",
-        ...artifactAuthority(repoRelative(paths.postPlayContextDelivery)),
-      },
+      ...(existsSync(playerContextDelivery)
+        ? [
+            {
+              role: "playerContextDelivery",
+              ...artifactAuthority(repoRelative(playerContextDelivery)),
+            },
+          ]
+        : []),
+      ...(existsSync(paths.postPlayContextDelivery)
+        ? [
+            {
+              role: "postPlayReviewContextDelivery",
+              ...artifactAuthority(repoRelative(paths.postPlayContextDelivery)),
+            },
+          ]
+        : []),
       ...sourceReviewAuthorities,
       ...readinessAuthorities,
     ].sort((left, right) => left.role.localeCompare(right.role)),
@@ -2393,7 +2443,7 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     invocationLedgers: ledgers,
     invocationEvents,
     findings,
-    outcome: { tag: "completed" as const },
+    outcome: derivedOutcome.right,
   };
   const measurement: CurrentBenchmarkMeasurement =
     profile === "documentDeclarationSet"

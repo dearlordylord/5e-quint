@@ -449,6 +449,22 @@ describe("fixed scenario benchmark boundary", () => {
     ).toBe(true);
   });
 
+  test("does not retain a bounded milestone review authority", () => {
+    const currentSchema = codexOutputJsonSchema(
+      CurrentScenarioCompositeReviewSchema,
+    );
+    const result = validateBenchmarkReviewAuthority({
+      profile: "boundedCapabilityProjection",
+      reviewStage: "milestone",
+      result: currentReview,
+      outputJsonSchema: currentSchema,
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left).toContain("only its final composite review");
+  });
+
   test("awaits the canonical zero-sheet character evaluation", async () => {
     const bundle = fixedScenarioCanonicalBundle();
     const result = await evaluateScenarioCharacters(bundle.paths.characters);

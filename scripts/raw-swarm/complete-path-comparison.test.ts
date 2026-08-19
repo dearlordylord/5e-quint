@@ -11,6 +11,7 @@ import {
   CurrentScenarioCompositeReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
   compareCompleteEquivalentPaths,
+  deriveBenchmarkPathOutcome,
   parseBenchmarkMeasurement,
   parseCompletePathMeasurement,
   readCompletePathMeasurement,
@@ -258,6 +259,21 @@ function findingsProjection(
     "replay-supervisor.mjs",
     "export default {};\n",
   );
+  const frozenPrefix = writeAuthority(
+    root,
+    "evidence/frozen-prefix.json",
+    `${JSON.stringify({
+      run: {
+        kind: "playerConcluded",
+        conclusion: "Synthetic player concluded after an accepted SDK call.",
+      },
+    })}\n`,
+  );
+  const finalArtifact = writeAuthority(
+    root,
+    "evidence/final.json",
+    `${JSON.stringify({ tag: "syntheticFinal" })}\n`,
+  );
   const characterAuthority = writeAuthority(
     root,
     "characters.json",
@@ -406,6 +422,8 @@ function findingsProjection(
       ...replayEventAuthorities,
       { role: "replaySupervisor", ...replaySupervisor },
       { role: "replayResult", ...replayResult },
+      { role: "frozenPrefix", ...frozenPrefix },
+      { role: "final", ...finalArtifact },
     ],
     findings,
   };
@@ -774,7 +792,12 @@ function benchmarkMeasurement(
     profile === "documentDeclarationSet"
       ? historicalCompositeReview()
       : syntheticCompositeReview();
-  const canonicalRetained = source.invocations.map((entry) =>
+  const benchmarkEntries = source.invocations.filter(
+    (entry) =>
+      profile === "documentDeclarationSet" ||
+      entry.invocationId !== "composite-milestone",
+  );
+  const canonicalRetained = benchmarkEntries.map((entry) =>
     retainInvocation(root, entry, compositeReview),
   );
   const auxiliaryRetained =
@@ -800,128 +823,191 @@ function benchmarkMeasurement(
           }),
         ]
       : [];
-  const orderedRetained = [
-    canonicalRetained[0]!,
-    canonicalRetained[1]!,
-    ...(profile === "documentDeclarationSet" ? [auxiliaryRetained[0]!] : []),
-    canonicalRetained[2]!,
-    ...(profile === "documentDeclarationSet"
-      ? [auxiliaryRetained[1]!, auxiliaryRetained[2]!]
-      : []),
-    ...canonicalRetained.slice(3),
-  ];
+  const generationRetained = canonicalRetained.filter(
+    ({ entry }) => entry.phase === "scenarioGeneration",
+  );
+  const compositeRetained = canonicalRetained.filter(
+    ({ entry }) => entry.phase === "scenarioCompositeReview",
+  );
+  const laterRetained = canonicalRetained.filter(
+    ({ entry }) =>
+      entry.phase !== "scenarioGeneration" &&
+      entry.phase !== "scenarioCompositeReview",
+  );
+  const requiredComposite = (index: number) => {
+    const retained = compositeRetained[index];
+    if (retained === undefined) {
+      throw new Error(
+        `Synthetic composite review ${String(index)} is missing.`,
+      );
+    }
+    return retained;
+  };
+  const requiredAuxiliary = (index: number) => {
+    const retained = auxiliaryRetained[index];
+    if (retained === undefined) {
+      throw new Error(
+        `Synthetic auxiliary invocation ${String(index)} is missing.`,
+      );
+    }
+    return retained;
+  };
+  const orderedRetained =
+    profile === "documentDeclarationSet"
+      ? [
+          ...generationRetained,
+          requiredComposite(0),
+          requiredAuxiliary(0),
+          requiredComposite(1),
+          requiredAuxiliary(1),
+          requiredAuxiliary(2),
+          ...laterRetained,
+        ]
+      : [...generationRetained, ...compositeRetained, ...laterRetained];
   const benchmarkLedger = writeAuthority(
     root,
     `benchmark-${profile}-invocations.jsonl`,
     `${orderedRetained.map(({ entry }) => JSON.stringify(entry)).join("\n")}\n`,
   );
-  const retainedReplayAuthorities = (["milestone", "final"] as const).map(
-    (reviewStage) => {
-      const invocationId =
-        reviewStage === "milestone" ? "composite-milestone" : "composite-final";
-      const retainedInput = {
-        schemaVersion: 2 as const,
-        phase: "scenarioCompositeReview" as const,
-        reviewStage,
-        scenarioId,
-        sourceGitSha: implementationGitSha,
-        invocationId,
-        model: "gpt-5.6-luna" as const,
-        reasoningEffort: "max" as const,
-        prompt: `Synthetic ${reviewStage} review prompt.`,
-        outputJsonSchema: codexOutputJsonSchema(
-          profile === "documentDeclarationSet"
-            ? HistoricalScenarioCompositeReviewSchema
-            : CurrentScenarioCompositeReviewSchema,
-        ),
-        result: compositeReview,
-      };
-      return writeAuthority(
-        root,
-        `benchmark-${profile}-pre-play-${reviewStage}.json`,
-        `${JSON.stringify(retainedInput)}\n`,
+  const reviewStages =
+    profile === "documentDeclarationSet"
+      ? (["milestone", "final"] as const)
+      : (["final"] as const);
+  const retainedReplayAuthorities = reviewStages.map((reviewStage) => {
+    const invocationId =
+      reviewStage === "milestone" ? "composite-milestone" : "composite-final";
+    const retainedInput = {
+      schemaVersion: 2 as const,
+      phase: "scenarioCompositeReview" as const,
+      reviewStage,
+      scenarioId,
+      sourceGitSha: implementationGitSha,
+      invocationId,
+      model: "gpt-5.6-luna" as const,
+      reasoningEffort: "max" as const,
+      prompt: `Synthetic ${reviewStage} review prompt.`,
+      outputJsonSchema: codexOutputJsonSchema(
+        profile === "documentDeclarationSet"
+          ? HistoricalScenarioCompositeReviewSchema
+          : CurrentScenarioCompositeReviewSchema,
+      ),
+      result: compositeReview,
+    };
+    return writeAuthority(
+      root,
+      `benchmark-${profile}-pre-play-${reviewStage}.json`,
+      `${JSON.stringify(retainedInput)}\n`,
+    );
+  });
+  const retainedSourceAuthorities = reviewStages.map((reviewStage) => {
+    const invocationId =
+      reviewStage === "milestone"
+        ? "source-composite-milestone"
+        : "source-composite-final";
+    const retainedInput = {
+      schemaVersion: 2 as const,
+      phase: "scenarioCompositeReview" as const,
+      reviewStage,
+      scenarioId,
+      sourceGitSha: gitSha,
+      invocationId,
+      model: "gpt-5.6-luna" as const,
+      reasoningEffort: "max" as const,
+      prompt: `Synthetic ${reviewStage} review prompt.`,
+      outputJsonSchema: codexOutputJsonSchema(
+        profile === "documentDeclarationSet"
+          ? HistoricalScenarioCompositeReviewSchema
+          : CurrentScenarioCompositeReviewSchema,
+      ),
+      result: compositeReview,
+    };
+    return writeAuthority(
+      root,
+      `benchmark-${profile}-pre-play-source-${reviewStage}.json`,
+      `${JSON.stringify(retainedInput)}\n`,
+    );
+  });
+  const retainedReviewEvents = new Map(
+    reviewStages.map((reviewStage) => {
+      const retained = canonicalRetained.find(
+        ({ entry }) => entry.invocationId === `composite-${reviewStage}`,
       );
-    },
+      if (retained === undefined) {
+        throw new Error(`Synthetic ${reviewStage} review event is missing.`);
+      }
+      return [reviewStage, retained.authority] as const;
+    }),
   );
-  const retainedSourceAuthorities = (["milestone", "final"] as const).map(
-    (reviewStage) => {
-      const invocationId =
-        reviewStage === "milestone"
-          ? "source-composite-milestone"
-          : "source-composite-final";
-      const retainedInput = {
-        schemaVersion: 2 as const,
-        phase: "scenarioCompositeReview" as const,
-        reviewStage,
-        scenarioId,
-        sourceGitSha: gitSha,
-        invocationId,
-        model: "gpt-5.6-luna" as const,
-        reasoningEffort: "max" as const,
-        prompt: `Synthetic ${reviewStage} review prompt.`,
-        outputJsonSchema: codexOutputJsonSchema(
-          profile === "documentDeclarationSet"
-            ? HistoricalScenarioCompositeReviewSchema
-            : CurrentScenarioCompositeReviewSchema,
-        ),
-        result: compositeReview,
-      };
-      return writeAuthority(
-        root,
-        `benchmark-${profile}-pre-play-source-${reviewStage}.json`,
-        `${JSON.stringify(retainedInput)}\n`,
-      );
-    },
+  const retainedReplayByStage = new Map(
+    reviewStages.map((reviewStage, index) => {
+      const authority = retainedReplayAuthorities[index];
+      if (authority === undefined) {
+        throw new Error(`Synthetic ${reviewStage} replay is missing.`);
+      }
+      return [reviewStage, authority] as const;
+    }),
   );
-  const retainedReviewEvents = canonicalRetained.filter(
-    ({ entry }) =>
-      entry.invocationId === "composite-milestone" ||
-      entry.invocationId === "composite-final",
+  const retainedSourceByStage = new Map(
+    reviewStages.map((reviewStage, index) => {
+      const authority = retainedSourceAuthorities[index];
+      if (authority === undefined) {
+        throw new Error(`Synthetic ${reviewStage} source review is missing.`);
+      }
+      return [reviewStage, authority] as const;
+    }),
   );
-  const retainedReviewEventAuthorities = {
-    milestone: retainedReviewEvents.find(
-      ({ entry }) => entry.invocationId === "composite-milestone",
-    )!.authority,
-    final: retainedReviewEvents.find(
-      ({ entry }) => entry.invocationId === "composite-final",
-    )!.authority,
-  } as const;
+  const reviewEventFor = (reviewStage: "milestone" | "final") => {
+    const authority = retainedReviewEvents.get(reviewStage);
+    if (authority === undefined) {
+      throw new Error(`Synthetic ${reviewStage} review event is missing.`);
+    }
+    return authority;
+  };
+  const replayFor = (reviewStage: "milestone" | "final") => {
+    const authority = retainedReplayByStage.get(reviewStage);
+    if (authority === undefined) {
+      throw new Error(`Synthetic ${reviewStage} replay is missing.`);
+    }
+    return authority;
+  };
+  const sourceReviewFor = (reviewStage: "milestone" | "final") => {
+    const authority = retainedSourceByStage.get(reviewStage);
+    if (authority === undefined) {
+      throw new Error(`Synthetic ${reviewStage} source review is missing.`);
+    }
+    return authority;
+  };
   const benchmarkFindings = {
     ...source.findings,
     authorities: [
       ...source.findings.authorities.flatMap((authority) => {
         if (authority.role === "replay-milestone") {
-          return [{ role: authority.role, ...retainedReplayAuthorities[0]! }];
+          return profile === "documentDeclarationSet"
+            ? [{ role: authority.role, ...replayFor("milestone") }]
+            : [];
         }
         if (authority.role === "replay-final") {
-          return [{ role: authority.role, ...retainedReplayAuthorities[1]! }];
+          return [{ role: authority.role, ...replayFor("final") }];
         }
         if (authority.role === "prePlayReviewReplayEvents-milestone") {
-          return [
-            {
-              role: authority.role,
-              ...retainedReviewEventAuthorities.milestone,
-            },
-          ];
+          return profile === "documentDeclarationSet"
+            ? [{ role: authority.role, ...reviewEventFor("milestone") }]
+            : [];
         }
         if (authority.role === "prePlayReviewReplayEvents-final") {
           return [
             {
               role: authority.role,
-              ...retainedReviewEventAuthorities.final,
+              ...reviewEventFor("final"),
             },
           ];
         }
         return [authority];
       }),
-      {
-        role: "prePlayReviewSourceInput-milestone",
-        ...retainedSourceAuthorities[0]!,
-      },
-      {
-        role: "prePlayReviewSourceInput-final",
-        ...retainedSourceAuthorities[1]!,
-      },
+      ...reviewStages.map((reviewStage) => ({
+        role: `prePlayReviewSourceInput-${reviewStage}`,
+        ...sourceReviewFor(reviewStage),
+      })),
       {
         role: "playerContextDelivery",
         ...playerContextDelivery,
@@ -932,7 +1018,7 @@ function benchmarkMeasurement(
       },
       ...(profile === "documentDeclarationSet"
         ? (() => {
-            const readinessInvocation = auxiliaryRetained[0]!.entry;
+            const readinessInvocation = requiredAuxiliary(0).entry;
             const readinessResultValue = {
               classification: "ready" as const,
               evidence: "Synthetic readiness review is ready.",
@@ -973,7 +1059,7 @@ function benchmarkMeasurement(
               },
               {
                 role: "prePlayReviewReadinessEvents",
-                ...auxiliaryRetained[0]!.authority,
+                ...requiredAuxiliary(0).authority,
               },
             ];
           })()
@@ -1137,6 +1223,24 @@ describe("complete Raw Swarm path comparison", () => {
       scenarioBundle: baseline.scenarioBundle,
       stagePlan: baseline.stagePlan,
     });
+    expect(
+      baseline.invocations.filter(
+        (entry) => entry.phase === "scenarioCompositeReview",
+      ),
+    ).toHaveLength(2);
+    expect(
+      candidate.invocations.filter(
+        (entry) => entry.phase === "scenarioCompositeReview",
+      ),
+    ).toHaveLength(1);
+    expect(
+      candidate.findings.authorities.some(
+        ({ role }) =>
+          role === "replay-milestone" ||
+          role === "prePlayReviewSourceInput-milestone" ||
+          role === "prePlayReviewReplayEvents-milestone",
+      ),
+    ).toBe(false);
     const comparison = compareCompleteEquivalentPaths({
       baseline: validated(baseline),
       candidate: validated(candidate),
@@ -1164,6 +1268,182 @@ describe("complete Raw Swarm path comparison", () => {
       _tag: "Left",
       left: expect.stringContaining("setup authority"),
     });
+  }, 60_000);
+
+  test("retains player obstruction evidence, rejects zero-call conclusion, and blocks comparison", () => {
+    const obstructed = benchmarkMeasurement("boundedCapabilityProjection");
+    const frozenPrefix = obstructed.findings.authorities.find(
+      ({ role }) => role === "frozenPrefix",
+    );
+    expect(frozenPrefix).toBeDefined();
+    if (frozenPrefix === undefined) return;
+    const root = resolve(repoRoot, frozenPrefix.path, "..", "..");
+    const obstructionAuthority = writeAuthority(
+      root,
+      "evidence/frozen-prefix-obstructed.json",
+      `${JSON.stringify({
+        run: {
+          kind: "playerObstructed",
+          obstruction: {
+            kind: "continuationLimit",
+            limit: 128,
+            message: "Synthetic player protocol obstruction.",
+          },
+        },
+      })}\n`,
+    );
+    const retainedObstruction = {
+      ...obstructed,
+      outcome: {
+        tag: "failed" as const,
+        reason: "Synthetic player protocol obstruction.",
+      },
+      findings: {
+        ...obstructed.findings,
+        authorities: obstructed.findings.authorities.map((authority) =>
+          authority.role === "frozenPrefix"
+            ? { role: authority.role, ...obstructionAuthority }
+            : authority,
+        ),
+      },
+    };
+    const validatedObstruction =
+      validateCompletePathMeasurement(retainedObstruction);
+    expect(validatedObstruction).toMatchObject({ _tag: "Right" });
+    if (Either.isLeft(validatedObstruction)) return;
+    const comparison = compareCompleteEquivalentPaths({
+      baseline: validatedObstruction.right,
+      candidate: validated(obstructed),
+    });
+    expect(comparison.identity).toBe("different-path");
+    expect(comparison.equivalence.reason).toContain("failed");
+
+    const transcript = obstructed.findings.authorities.find(
+      ({ role }) => role === "transcript",
+    );
+    expect(transcript).toBeDefined();
+    if (transcript === undefined) return;
+    const noCallRoot = rawSwarmTestOutputDirectory("benchmark-no-call-");
+    temporaryDirectories.push(noCallRoot);
+    const header = readFileSync(
+      resolve(repoRoot, transcript.path),
+      "utf8",
+    ).split("\n")[0];
+    const noCallTranscript = writeAuthority(
+      noCallRoot,
+      "no-call-transcript.jsonl",
+      `${header}\n`,
+    );
+    const noCallFrozenPrefix = writeAuthority(
+      noCallRoot,
+      "no-call-frozen-prefix.json",
+      `${JSON.stringify({
+        run: {
+          kind: "playerConcluded",
+          conclusion: "Synthetic conclusion without a call.",
+        },
+      })}\n`,
+    );
+    const noCallFinal = writeAuthority(
+      noCallRoot,
+      "no-call-final.json",
+      "{}\n",
+    );
+    const replaySupervisor = obstructed.findings.authorities.find(
+      ({ role }) => role === "replaySupervisor",
+    );
+    expect(replaySupervisor).toBeDefined();
+    if (replaySupervisor === undefined) return;
+    const noCallReview = writeAuthority(
+      noCallRoot,
+      "no-call-review.json",
+      `${JSON.stringify({
+        scenarioId,
+        gitSha,
+        transcriptSha256: noCallTranscript.sha256,
+        reviewer: "synthetic-reviewer",
+        verdicts: [
+          {
+            class: "pass" as const,
+            claim: "The synthetic path is reviewable.",
+            evidence: "The synthetic transcript is retained.",
+          },
+        ],
+      })}\n`,
+    );
+    const noCallReplayResult = writeAuthority(
+      noCallRoot,
+      "no-call-replay-result.json",
+      `${JSON.stringify({
+        type: "raw-swarm-sdk-replay-result",
+        schemaVersion: 1,
+        scenarioId,
+        transcriptSha256: noCallTranscript.sha256,
+        replaySupervisorSha256: replaySupervisor.sha256,
+        matchedCallCount: 0,
+        status: "succeeded",
+      })}\n`,
+    );
+    const noCallOutcome = deriveBenchmarkPathOutcome({
+      transcriptPath: noCallTranscript.path,
+      frozenPrefixPath: noCallFrozenPrefix.path,
+      finalArtifactPath: noCallFinal.path,
+    });
+    expect(Either.isRight(noCallOutcome)).toBe(true);
+    if (Either.isLeft(noCallOutcome)) return;
+    expect(noCallOutcome.right).toEqual({
+      tag: "failed",
+      reason:
+        "Player terminal evidence claims playerConcluded without an SDK call.",
+    });
+
+    const noCallRun = {
+      ...obstructed.findings.run,
+      callCount: 0,
+      transcriptSha256: noCallTranscript.sha256,
+    };
+    const noCallFindings = {
+      ...obstructed.findings,
+      run: noCallRun,
+      runIdentity: sha256Canonical(noCallRun),
+      authorities: obstructed.findings.authorities.flatMap((authority) => {
+        if (authority.role === "review-1") {
+          return [{ role: authority.role, ...noCallReview }];
+        }
+        if (authority.role === "replayResult") {
+          return [{ role: authority.role, ...noCallReplayResult }];
+        }
+        if (authority.role === "transcript") {
+          return [{ role: authority.role, ...noCallTranscript }];
+        }
+        if (authority.role === "frozenPrefix") {
+          return [{ role: authority.role, ...noCallFrozenPrefix }];
+        }
+        if (authority.role === "final") {
+          return [{ role: authority.role, ...noCallFinal }];
+        }
+        return [authority];
+      }),
+      findings: obstructed.findings.findings.filter(
+        ({ pointer }) => pointer.kind !== "sdkSequence",
+      ),
+    };
+    const noCallMeasurement = {
+      ...obstructed,
+      outcome: noCallOutcome.right,
+      findings: noCallFindings,
+    };
+    const validatedNoCall = validateCompletePathMeasurement(noCallMeasurement);
+    expect(validatedNoCall).toMatchObject({ _tag: "Right" });
+    if (Either.isLeft(validatedNoCall)) return;
+    const noCallComparison = compareCompleteEquivalentPaths({
+      baseline: validatedNoCall.right,
+      candidate: validated(obstructed),
+    });
+    expect(noCallComparison.identity).toBe("different-path");
+    expect(noCallComparison.equivalence.reason).toContain(
+      "no accepted SDK-call finding",
+    );
   }, 60_000);
 
   test("rejects an internally valid benchmark pair from mixed implementation revisions", () => {
@@ -1378,7 +1658,7 @@ describe("complete Raw Swarm path comparison", () => {
       findings: {
         ...benchmark.findings,
         authorities: benchmark.findings.authorities.filter(
-          ({ role }) => role !== "replay-milestone",
+          ({ role }) => role !== "replay-final",
         ),
       },
     });

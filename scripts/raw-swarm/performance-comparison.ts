@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { Either, ParseResult, Schema } from "effect";
@@ -54,7 +54,10 @@ export {
 };
 import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
-import { playerContinuationEvidence } from "./player-continuation-evidence.ts";
+import {
+  playerContinuationEvidence,
+  PlayerRunStateSchema,
+} from "./player-continuation-evidence.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { SdkReplayResultEvidenceSchema } from "./sdk-player/sdk-replay-result.ts";
 import { ReviewOutputSchema } from "./review-contract.ts";
@@ -1133,7 +1136,7 @@ export function readControlledPerformance(
   return run;
 }
 
-const PathOutcomeSchema = Schema.Union(
+export const PathOutcomeSchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("completed") }),
   Schema.Struct({
     tag: Schema.Literal("failed"),
@@ -1442,7 +1445,78 @@ type EvidenceCount =
 type EvidenceList =
   | { readonly tag: "available"; readonly values: readonly string[] }
   | UnavailableEvidence;
-type PathOutcome = Schema.Schema.Type<typeof PathOutcomeSchema>;
+export type PathOutcome = Schema.Schema.Type<typeof PathOutcomeSchema>;
+
+/**
+ * Derive the player path outcome from the two retained execution authorities.
+ * A terminal state without a call, or without its final artifact, is retained
+ * as a failed path rather than being promoted to a completed measurement.
+ */
+export function deriveBenchmarkPathOutcome(input: {
+  readonly transcriptPath: string;
+  readonly frozenPrefixPath: string;
+  readonly finalArtifactPath?: string;
+}): Either.Either<PathOutcome, string> {
+  try {
+    const transcript = parseSdkTranscript(readJsonLines(input.transcriptPath));
+    if (transcript.tag === "invalid") {
+      return Either.left(
+        `Benchmark player transcript is invalid: ${transcript.message}`,
+      );
+    }
+    const frozenPrefix = Schema.decodeUnknownEither(
+      Schema.Struct({ run: PlayerRunStateSchema }),
+      { onExcessProperty: "error" },
+    )(
+      JSON.parse(
+        readFileSync(resolve(repoRoot, input.frozenPrefixPath), "utf8"),
+      ),
+    );
+    if (Either.isLeft(frozenPrefix)) {
+      return Either.left(
+        `Benchmark frozen-prefix evidence is invalid: ${frozenPrefix.left.message}`,
+      );
+    }
+    const state = frozenPrefix.right.run;
+    if (state.kind === "playerObstructed") {
+      return Either.right({
+        tag: "failed",
+        reason: state.obstruction.message,
+      });
+    }
+    if (state.kind === "active") {
+      return Either.right({
+        tag: "failed",
+        reason:
+          "Player execution ended without a playerConcluded terminal state.",
+      });
+    }
+    if (transcript.value.calls.length === 0) {
+      return Either.right({
+        tag: "failed",
+        reason:
+          "Player terminal evidence claims playerConcluded without an SDK call.",
+      });
+    }
+    if (
+      input.finalArtifactPath === undefined ||
+      !existsSync(resolve(repoRoot, input.finalArtifactPath))
+    ) {
+      return Either.right({
+        tag: "failed",
+        reason:
+          "Player terminal evidence claims playerConcluded without a final artifact.",
+      });
+    }
+    return Either.right({ tag: "completed" });
+  } catch (error: unknown) {
+    return Either.left(
+      error instanceof Error
+        ? error.message
+        : `Unable to read benchmark player evidence: ${String(error)}`,
+    );
+  }
+}
 type CurrentEvidenceWitness = Readonly<{
   readonly transcript: "retained" | "missing";
   readonly replay: "retained" | "missing";
@@ -1478,14 +1552,24 @@ type BenchmarkFindingIdentity = Pick<
   Finding,
   "stage" | "category" | "kind" | "pointer" | "fingerprint"
 >;
-type BenchmarkReviewIdentity = Readonly<{
-  readonly prePlay: Readonly<{
-    readonly milestone: BenchmarkReviewClassifications;
-    readonly final: BenchmarkReviewClassifications;
-  }>;
-  readonly postPlay: BenchmarkPostPlayReviewIdentity;
-  readonly findings: readonly BenchmarkFindingIdentity[];
-}>;
+type BenchmarkReviewIdentity =
+  | Readonly<{
+      readonly profile: "documentDeclarationSet";
+      readonly prePlay: Readonly<{
+        readonly milestone: BenchmarkReviewClassifications;
+        readonly final: BenchmarkReviewClassifications;
+      }>;
+      readonly postPlay: BenchmarkPostPlayReviewIdentity;
+      readonly findings: readonly BenchmarkFindingIdentity[];
+    }>
+  | Readonly<{
+      readonly profile: "boundedCapabilityProjection";
+      readonly prePlay: Readonly<{
+        readonly final: BenchmarkReviewClassifications;
+      }>;
+      readonly postPlay: BenchmarkPostPlayReviewIdentity;
+      readonly findings: readonly BenchmarkFindingIdentity[];
+    }>;
 export type CompletePathEquivalenceWitness =
   | Readonly<{
       readonly tag: "current";
@@ -1830,21 +1914,30 @@ function benchmarkReviewIdentity(
       ].sort(),
     };
   })();
-  return {
-    prePlay: { milestone: source("milestone"), final: source("final") },
-    postPlay,
-    findings: measurement.findings.findings
-      .map(({ stage, category, kind, pointer, fingerprint }) => ({
-        stage,
-        category,
-        kind,
-        pointer,
-        ...(fingerprint === undefined ? {} : { fingerprint }),
-      }))
-      .sort((left, right) =>
-        canonicalJson(left).localeCompare(canonicalJson(right)),
-      ),
-  };
+  const findings = measurement.findings.findings
+    .map(({ stage, category, kind, pointer, fingerprint }) => ({
+      stage,
+      category,
+      kind,
+      pointer,
+      ...(fingerprint === undefined ? {} : { fingerprint }),
+    }))
+    .sort((left, right) =>
+      canonicalJson(left).localeCompare(canonicalJson(right)),
+    );
+  return measurement.profile === "documentDeclarationSet"
+    ? {
+        profile: measurement.profile,
+        prePlay: { milestone: source("milestone"), final: source("final") },
+        postPlay,
+        findings,
+      }
+    : {
+        profile: measurement.profile,
+        prePlay: { final: source("final") },
+        postPlay,
+        findings,
+      };
 }
 
 function benchmarkContextIdentity(
@@ -1990,6 +2083,10 @@ function currentStagePlanBindingIssues(
 
 function currentSemanticIssues(
   measurement: CurrentCompletePathMeasurement,
+  options: Readonly<{
+    readonly compositeReviewCount?: number;
+    readonly requirePlayerInvocation?: boolean;
+  }> = {},
 ): readonly string[] {
   const issues: string[] = [];
   if (measurement.stagePlan.identity.tag !== "admitted") {
@@ -2084,7 +2181,22 @@ function currentSemanticIssues(
       }
       continue;
     }
-    if (mapping.countPolicy === "exactlyOne" && count !== 1) {
+    if (
+      mapping.stage === "scenarioCompositeReview" &&
+      options.compositeReviewCount !== undefined
+    ) {
+      if (count !== options.compositeReviewCount) {
+        issues.push(
+          `Stage ${mapping.stage} requires exactly ${String(options.compositeReviewCount)} invocation(s), received ${String(count)}.`,
+        );
+      }
+    } else if (
+      mapping.stage === "player" &&
+      options.requirePlayerInvocation === false &&
+      count === 0
+    ) {
+      continue;
+    } else if (mapping.countPolicy === "exactlyOne" && count !== 1) {
       issues.push(
         `Stage ${mapping.stage} requires exactly one invocation, received ${String(count)}.`,
       );
@@ -2235,10 +2347,15 @@ function equivalenceWitnessIdentity(
   witness: CompletePathEquivalenceWitness,
 ): unknown {
   if (witness.tag !== "benchmark") return witness;
-  const { profile: _profile, context, ...identity } = witness;
+  const { profile: _profile, context, reviews, ...identity } = witness;
   return {
     ...identity,
     context: { roles: context.roles },
+    reviews: {
+      prePlay: { final: reviews.prePlay.final },
+      postPlay: reviews.postPlay,
+      findings: reviews.findings,
+    },
   };
 }
 
@@ -3371,8 +3488,12 @@ function benchmarkContextDeliveryAuthorityIssues(input: {
   readonly role: "player" | "postPlayReview";
   readonly authority: FindingAuthority | undefined;
   readonly manifest: BenchmarkContextSourceManifestDocument;
+  readonly outcome: PathOutcome;
 }): readonly string[] {
   if (input.authority === undefined) {
+    if (input.outcome.tag !== "completed") {
+      return [];
+    }
     return [
       `Benchmark findings have no retained ${input.role} context-delivery authority.`,
     ];
@@ -3469,16 +3590,31 @@ function benchmarkReplayReviewStage(
   );
 }
 
+function benchmarkReviewStages(
+  profile: BenchmarkImplementationProfile,
+): readonly ("milestone" | "final")[] {
+  return profile === "documentDeclarationSet"
+    ? (["milestone", "final"] as const)
+    : (["final"] as const);
+}
+
 function benchmarkReviewAuthorityByStage(
   authorities: readonly FindingAuthority[],
   stageForRole: (role: string) => "milestone" | "final" | undefined,
   label: string,
+  expectedStages: readonly ("milestone" | "final")[],
   issues: string[],
 ): ReadonlyMap<"milestone" | "final", FindingAuthority> {
   const byStage = new Map<"milestone" | "final", FindingAuthority>();
   for (const authority of authorities) {
     const stage = stageForRole(authority.role);
     if (stage === undefined) continue;
+    if (!expectedStages.includes(stage)) {
+      issues.push(
+        `Benchmark ${label} authorities retain unexpected ${stage} review stage for this profile.`,
+      );
+      continue;
+    }
     if (byStage.has(stage)) {
       issues.push(
         `Benchmark ${label} authorities contain duplicate ${stage} review stages.`,
@@ -3487,10 +3623,12 @@ function benchmarkReviewAuthorityByStage(
     }
     byStage.set(stage, authority);
   }
-  if (!byStage.has("milestone") || !byStage.has("final")) {
-    issues.push(
-      `Benchmark ${label} authorities require exactly one milestone and one final authority.`,
-    );
+  for (const stage of expectedStages) {
+    if (!byStage.has(stage)) {
+      issues.push(
+        `Benchmark ${label} authorities require exactly one ${stage} authority for this profile.`,
+      );
+    }
   }
   return byStage;
 }
@@ -3519,6 +3657,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
   const replayEventAuthorities = findings.authorities.filter(({ role }) =>
     isPrePlayReviewEventsAuthorityRole(role),
   );
+  const expectedStages = benchmarkReviewStages(measurement.profile);
   for (const authority of findings.authorities) {
     if (
       (authority.role.startsWith("replay-") &&
@@ -3550,37 +3689,40 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     outputJsonSchema: Schema.Unknown,
     result: expectedReviewSchema,
   });
-  if (sourceAuthorities.length !== 2) {
+  if (sourceAuthorities.length !== expectedStages.length) {
     issues.push(
-      `Benchmark ${measurement.profile} profile requires two retained pre-play source review authorities, received ${String(sourceAuthorities.length)}.`,
+      `Benchmark ${measurement.profile} profile requires ${String(expectedStages.length)} retained pre-play source review authorities, received ${String(sourceAuthorities.length)}.`,
     );
   }
-  if (replayAuthorities.length !== 2) {
+  if (replayAuthorities.length !== expectedStages.length) {
     issues.push(
-      `Benchmark ${measurement.profile} profile requires two retained pre-play replay authorities, received ${String(replayAuthorities.length)}.`,
+      `Benchmark ${measurement.profile} profile requires ${String(expectedStages.length)} retained pre-play replay authorities, received ${String(replayAuthorities.length)}.`,
     );
   }
-  if (replayEventAuthorities.length !== 2) {
+  if (replayEventAuthorities.length !== expectedStages.length) {
     issues.push(
-      `Benchmark ${measurement.profile} profile requires two retained pre-play replay event authorities, received ${String(replayEventAuthorities.length)}.`,
+      `Benchmark ${measurement.profile} profile requires ${String(expectedStages.length)} retained pre-play replay event authorities, received ${String(replayEventAuthorities.length)}.`,
     );
   }
   const sourceByStage = benchmarkReviewAuthorityByStage(
     sourceAuthorities,
     (role) => reviewStageForAuthorityRole(role, "prePlayReviewSourceInput"),
     "pre-play source review",
+    expectedStages,
     issues,
   );
   const replayByStage = benchmarkReviewAuthorityByStage(
     replayAuthorities,
     benchmarkReplayReviewStage,
     "pre-play replay",
+    expectedStages,
     issues,
   );
   const replayEventsByStage = benchmarkReviewAuthorityByStage(
     replayEventAuthorities,
     (role) => reviewStageForAuthorityRole(role, "prePlayReviewReplayEvents"),
     "pre-play replay event",
+    expectedStages,
     issues,
   );
 
@@ -3596,7 +3738,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       authority,
     ]),
   );
-  for (const reviewStage of ["milestone", "final"] as const) {
+  for (const reviewStage of expectedStages) {
     const sourceAuthority = sourceByStage.get(reviewStage);
     const replayAuthority = replayByStage.get(reviewStage);
     const replayEventsAuthority = replayEventsByStage.get(reviewStage);
@@ -3805,16 +3947,76 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
   return issues;
 }
 
+function benchmarkPlayerEvidenceIssues(input: {
+  readonly measurement: CurrentBenchmarkMeasurement;
+  readonly findings: FindingsProjection;
+}): readonly string[] {
+  const { measurement, findings } = input;
+  const issues: string[] = [];
+  const transcript = findings.authorities.find(
+    ({ role }) => role === "transcript",
+  );
+  const frozenPrefix = findings.authorities.find(
+    ({ role }) => role === "frozenPrefix",
+  );
+  const finalArtifact = findings.authorities.find(
+    ({ role }) => role === "final",
+  );
+  if (transcript === undefined) {
+    issues.push("Benchmark player evidence has no transcript authority.");
+  }
+  if (frozenPrefix === undefined) {
+    issues.push("Benchmark player evidence has no frozen-prefix authority.");
+  }
+  if (transcript !== undefined && frozenPrefix !== undefined) {
+    const derived = deriveBenchmarkPathOutcome({
+      transcriptPath: transcript.path,
+      frozenPrefixPath: frozenPrefix.path,
+      ...(finalArtifact === undefined
+        ? {}
+        : { finalArtifactPath: finalArtifact.path }),
+    });
+    if (Either.isLeft(derived)) {
+      issues.push(derived.left);
+    } else if (
+      canonicalJson(derived.right) !== canonicalJson(measurement.outcome)
+    ) {
+      issues.push(
+        "Benchmark measurement outcome does not match the retained player terminal evidence.",
+      );
+    }
+  }
+  if (measurement.outcome.tag === "completed") {
+    if (findings.run.callCount < 1) {
+      issues.push(
+        "A completed benchmark path requires at least one accepted SDK call.",
+      );
+    }
+    if (
+      !findings.findings.some(({ kind }) => kind === "accepted-call-verdict")
+    ) {
+      issues.push(
+        "A completed benchmark path requires an accepted SDK-call finding.",
+      );
+    }
+  }
+  return issues;
+}
+
 function benchmarkCompleteEvidenceIssues(input: {
   readonly measurement: CurrentBenchmarkMeasurement;
   readonly findings: FindingsProjection;
 }): readonly string[] {
   const { measurement, findings } = input;
   const issues: string[] = [];
+  issues.push(...benchmarkPlayerEvidenceIssues(input));
   const postPlayAuthorities = findings.authorities.filter(({ role }) =>
     isPostPlayReviewAuthorityRole(role),
   );
-  if (postPlayAuthorities.length !== 1) {
+  if (
+    measurement.outcome.tag === "completed" &&
+    postPlayAuthorities.length !== 1
+  ) {
     issues.push(
       `Benchmark ${measurement.profile} profile requires exactly one post-play review authority, received ${String(postPlayAuthorities.length)}.`,
     );
@@ -3851,12 +4053,18 @@ function benchmarkCompleteEvidenceIssues(input: {
   const replayResultAuthorities = findings.authorities.filter(
     ({ role }) => role === "replayResult",
   );
-  if (supervisorAuthorities.length !== 1) {
+  if (
+    measurement.outcome.tag === "completed" &&
+    supervisorAuthorities.length !== 1
+  ) {
     issues.push(
       `Benchmark ${measurement.profile} profile requires exactly one replay supervisor authority, received ${String(supervisorAuthorities.length)}.`,
     );
   }
-  if (replayResultAuthorities.length !== 1) {
+  if (
+    measurement.outcome.tag === "completed" &&
+    replayResultAuthorities.length !== 1
+  ) {
     issues.push(
       `Benchmark ${measurement.profile} profile requires exactly one replay-result authority, received ${String(replayResultAuthorities.length)}.`,
     );
@@ -3989,6 +4197,7 @@ function benchmarkAuthorityIssues(
                 : "postPlayReviewContextDelivery"),
           ),
           manifest: manifest.right,
+          outcome: measurement.outcome,
         }),
       );
     }
@@ -4126,19 +4335,29 @@ function benchmarkAuthorityIssues(
         } else {
           const header = parsedTranscript.value.header;
           if (
-            header.characterOutcome !== "ready" ||
-            header.setupOutcome !== "ready"
-          ) {
-            issues.push(
-              "Benchmark transcript does not retain ready character and setup bundle authorities.",
-            );
-          } else if (
             header.scenarioId !== measurement.scenarioId ||
             header.gitSha !== measurement.implementationGitSha ||
             header.scenarioSha256 !== bundle.scenario.sha256 ||
-            header.scenarioReviewSha256 !== bundle.scenarioReview.sha256 ||
-            header.charactersSha256 !== bundle.characters.sha256 ||
-            header.setupSha256 !== bundle.setup.sha256
+            header.scenarioReviewSha256 !== bundle.scenarioReview.sha256
+          ) {
+            issues.push(
+              "Benchmark transcript is not bound to the immutable scenario identity.",
+            );
+          } else if (
+            measurement.outcome.tag === "completed" &&
+            (header.characterOutcome !== "ready" ||
+              header.setupOutcome !== "ready" ||
+              header.charactersSha256 !== bundle.characters.sha256 ||
+              header.setupSha256 !== bundle.setup.sha256)
+          ) {
+            issues.push(
+              "A completed benchmark transcript must retain ready character and setup bundle authorities.",
+            );
+          } else if (
+            header.characterOutcome === "ready" &&
+            header.setupOutcome === "ready" &&
+            (header.charactersSha256 !== bundle.characters.sha256 ||
+              header.setupSha256 !== bundle.setup.sha256)
           ) {
             issues.push(
               "Benchmark transcript is not bound to every immutable scenario-bundle authority.",
@@ -4319,7 +4538,12 @@ function benchmarkAuthorityIssues(
     findings: measurement.findings,
     outcome: measurement.outcome,
   };
-  issues.push(...currentSemanticIssues(canonicalMeasurement));
+  issues.push(
+    ...currentSemanticIssues(canonicalMeasurement, {
+      compositeReviewCount: benchmarkReviewStages(measurement.profile).length,
+      requirePlayerInvocation: measurement.outcome.tag === "completed",
+    }),
+  );
   if (
     measurement.outcome.tag === "completed" &&
     measurement.invocations.some(({ result }) => result.tag === "failed")
@@ -4349,7 +4573,12 @@ function benchmarkSemanticIssues(
     findings: measurement.findings,
     outcome: measurement.outcome,
   };
-  const issues = [...currentSemanticIssues(canonicalMeasurement)];
+  const issues = [
+    ...currentSemanticIssues(canonicalMeasurement, {
+      compositeReviewCount: benchmarkReviewStages(measurement.profile).length,
+      requirePlayerInvocation: measurement.outcome.tag === "completed",
+    }),
+  ];
   const readiness = measurement.invocations.filter(
     (invocation) =>
       invocation.schemaVersion === 3 &&
@@ -4360,6 +4589,17 @@ function benchmarkSemanticIssues(
       invocation.schemaVersion === 3 &&
       invocation.responsibility === "redundantCharacterPreparation",
   );
+  const compositeReviewStages = benchmarkReviewStages(measurement.profile);
+  const compositeReviewInvocations = measurement.invocations.filter(
+    (invocation) =>
+      invocation.schemaVersion === 2 &&
+      invocation.phase === "scenarioCompositeReview",
+  );
+  if (compositeReviewInvocations.length !== compositeReviewStages.length) {
+    issues.push(
+      `The ${measurement.profile} benchmark profile requires exactly ${String(compositeReviewStages.length)} composite review invocation(s), received ${String(compositeReviewInvocations.length)}.`,
+    );
+  }
   if (measurement.profile === "documentDeclarationSet") {
     if (readiness.length !== 1) {
       issues.push(
@@ -4477,6 +4717,25 @@ export function compareCompleteEquivalentPaths(input: {
             "The candidate is historical and lacks current stage-plan, findings, and v2 invocation authorities.",
           ]),
   ];
+  for (const [label, measurement, pathSummary] of [
+    ["baseline", input.baseline, baseline] as const,
+    ["candidate", input.candidate, candidate] as const,
+  ]) {
+    if (measurement.schemaVersion !== 3) continue;
+    if (measurement.outcome.tag !== "completed") {
+      issues.push(
+        `The ${label} benchmark path is ${measurement.outcome.tag} and cannot pass equivalent-path comparison.`,
+      );
+    }
+    if (
+      pathSummary.acceptedCallVerdicts.tag !== "available" ||
+      pathSummary.acceptedCallVerdicts.count < 1
+    ) {
+      issues.push(
+        `The ${label} benchmark path has no accepted SDK-call finding and cannot pass equivalent-path comparison.`,
+      );
+    }
+  }
   if (
     input.baseline.schemaVersion === 3 &&
     input.candidate.schemaVersion === 3 &&
