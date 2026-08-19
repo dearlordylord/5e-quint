@@ -1,0 +1,29 @@
+{
+  "scenarioId": "generated-battle-011",
+  "scenarioSha256": "f9d0ef81285267ed94daf97457b4af1d55d21e647034d51eace267e74829ab3a",
+  "gitSha": "f51e33da68126ace8410171738253651792a6b4b",
+  "admitReviewedUnsupported": false,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "SRD 5.2.1 supplies valid 30-foot movement, shortbow range, melee reach, attack resolution, cover, ordinary movement through spaces, and combat departure rules for these stat blocks. The scenario supplies the required Table-owned Three-Quarters Cover ruling and an open exit; ASSUMPTIONS.md A33 permits caller-owned departure from the modeled combat."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The scenario exposes only permitted SRD identities and generic independently authored scene language. It contains no PHB+ identities, protected expression, private correspondence, source crosswalk, or non-public provenance."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicyQuality",
+  "scenarioQuality": {
+    "classification": "ready",
+    "evidence": "The encounter has meaningful ranged and melee hostility, cover, gate traversal, route pressure, and three serious strategy-bearing objectives. Fixed positions and the exact Table-owned cover ruling fit the requested compact stat-block-only distribution while leaving a bounded spatial choice for the farther Goblin Warrior."
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "Both selected canonical identities—Goblin Warrior and Skeleton—appear in the supplied availability list, and the scenario uses only those stat blocks with no Character Sheets under availableOnly intent."
+  },
+  "sdkCapabilityIntent": "supportedOnly",
+  "sdkCapabilityReview": {
+    "classification": "supported",
+    "evidence": "Setup facts map to supported canonical Stat Blocks, illumination, environment, objects, pairwise relationships, and one exact Table-authored spatial source. Play requires only surfaced typed attacks and targets, rolls, damage, movement, interrupts, and End Turn continuations; no extra geometry or action is required."
+  }
+}
