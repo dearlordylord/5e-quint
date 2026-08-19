@@ -1536,17 +1536,35 @@ export type CompletePathEquivalenceWitness =
       readonly evidence: UnavailableEvidence;
     }>;
 
-export type CompletePathSummary = Readonly<{
-  readonly evidenceVersion: "current" | "historical";
+type CompletePathSummaryCommon = Readonly<{
   readonly outcome: PathOutcome | UnavailableEvidence;
   readonly acceptedCallVerdicts: EvidenceCount;
   readonly corrections: EvidenceCount;
   readonly failedStages: EvidenceCount;
   readonly failureReasons: EvidenceList;
-  readonly elapsedMilliseconds: EvidenceCount;
   readonly usage: ModelUsage;
   readonly evidence: CompletePathEquivalenceWitness;
 }>;
+
+export type CompletePathSummary =
+  | (CompletePathSummaryCommon &
+      Readonly<{
+        readonly evidenceVersion: "current";
+        /**
+         * Sum of the retained model invocation durations. This is not
+         * whole-path wall time because invocations and non-model work may
+         * overlap or be omitted from the retained invocation ledger.
+         */
+        readonly modelInvocationElapsedMilliseconds: EvidenceCount;
+      }>)
+  | (CompletePathSummaryCommon &
+      Readonly<{
+        readonly evidenceVersion: "historical";
+        /** Retained historical authority, whose name explicitly claims wall time. */
+        readonly wholePathElapsedMilliseconds: EvidenceCount;
+        /** Historical evidence has no comparable model-invocation elapsed sum. */
+        readonly modelInvocationElapsedMilliseconds: UnavailableEvidence;
+      }>);
 
 export type CompletePathComparison = Readonly<{
   readonly schemaVersion: 2;
@@ -1573,7 +1591,7 @@ export type CompletePathComparison = Readonly<{
   }>;
   readonly baseline: CompletePathSummary;
   readonly candidate: CompletePathSummary;
-  readonly elapsedMilliseconds: Readonly<{
+  readonly modelInvocationElapsedMilliseconds: Readonly<{
     readonly tag: "comparable" | "incomparable";
     readonly reduction?: number;
     readonly reason?: string;
@@ -2104,7 +2122,7 @@ function currentSummary(
       tag: "available",
       values: [...new Set(failureReasons)],
     },
-    elapsedMilliseconds: pathDimension(
+    modelInvocationElapsedMilliseconds: pathDimension(
       measurement.invocations.reduce(
         (total, { elapsedMilliseconds }) => total + elapsedMilliseconds,
         0,
@@ -2142,7 +2160,7 @@ function benchmarkSummary(
       tag: "available",
       values: [...new Set(failureReasons)],
     },
-    elapsedMilliseconds: pathDimension(
+    modelInvocationElapsedMilliseconds: pathDimension(
       measurement.invocations.reduce(
         (total, { elapsedMilliseconds }) => total + elapsedMilliseconds,
         0,
@@ -2181,9 +2199,14 @@ function historicalSummary(
       reason:
         "Historical invocation result reasons were not retained in this envelope.",
     },
-    elapsedMilliseconds: pathDimension(
+    wholePathElapsedMilliseconds: pathDimension(
       measurement.legacy.wholePathElapsedMilliseconds,
     ),
+    modelInvocationElapsedMilliseconds: {
+      tag: "unavailable",
+      reason:
+        "Historical invocation durations are not retained as a comparable model-invocation elapsed sum.",
+    },
     usage: aggregatePathUsage(invocations),
     evidence: historicalPathWitness(measurement),
   };
@@ -2276,7 +2299,7 @@ function metricComparison(
   identity: CompletePathComparison["identity"],
   select: (summary: CompletePathSummary) => EvidenceCount,
   label: string,
-): CompletePathComparison["elapsedMilliseconds"] {
+): CompletePathComparison["modelInvocationElapsedMilliseconds"] {
   if (identity !== "equivalent-path") {
     return {
       tag: "incomparable",
@@ -4377,6 +4400,15 @@ export function compareCompleteEquivalentPaths(input: {
           ]),
   ];
   if (
+    input.baseline.schemaVersion === 3 &&
+    input.candidate.schemaVersion === 3 &&
+    input.baseline.implementationGitSha !== input.candidate.implementationGitSha
+  ) {
+    issues.push(
+      "Benchmark implementation revisions differ; equivalent-path comparison requires one implementation Git revision.",
+    );
+  }
+  if (
     canonicalJson(equivalenceWitnessIdentity(baselineWitness)) !==
     canonicalJson(equivalenceWitnessIdentity(candidateWitness))
   ) {
@@ -4417,12 +4449,12 @@ export function compareCompleteEquivalentPaths(input: {
     implementation,
     baseline,
     candidate,
-    elapsedMilliseconds: metricComparison(
+    modelInvocationElapsedMilliseconds: metricComparison(
       baseline,
       candidate,
       identity,
-      (value) => value.elapsedMilliseconds,
-      "Elapsed milliseconds",
+      (value) => value.modelInvocationElapsedMilliseconds,
+      "Model-invocation elapsed milliseconds",
     ),
     inputTokens: inputComparison(baseline, candidate, identity),
   };
@@ -4437,7 +4469,7 @@ export function writeCompletePathComparison(input: {
   const gateFailure = (
     label: string,
     metric:
-      | CompletePathComparison["elapsedMilliseconds"]
+      | CompletePathComparison["modelInvocationElapsedMilliseconds"]
       | CompletePathComparison["inputTokens"],
   ): readonly string[] => {
     if (metric.tag === "incomparable") {
@@ -4457,7 +4489,10 @@ export function writeCompletePathComparison(input: {
       : [];
   };
   const gateFailures = [
-    ...gateFailure("elapsed milliseconds", comparison.elapsedMilliseconds),
+    ...gateFailure(
+      "model-invocation elapsed milliseconds",
+      comparison.modelInvocationElapsedMilliseconds,
+    ),
     ...gateFailure("input tokens", comparison.inputTokens),
   ];
   if (gateFailures.length > 0) return Either.left(gateFailures.join(" "));

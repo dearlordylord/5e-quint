@@ -62,6 +62,7 @@ const scenarioId = Schema.decodeUnknownSync(ScenarioIdSchema)(
   "synthetic-complete-path",
 );
 const gitSha = Schema.decodeUnknownSync(GitShaSchema)("a".repeat(40));
+const alternateGitSha = Schema.decodeUnknownSync(GitShaSchema)("b".repeat(40));
 const scenarioBytes = "# Synthetic complete path\n";
 const scenarioReview = {
   scenarioId,
@@ -239,6 +240,7 @@ function findingsProjection(
   root: string,
   findings: readonly ReturnType<typeof finding>[],
   replayEvents: readonly ReturnType<typeof retainInvocation>[] = [],
+  executionGitSha: typeof gitSha = gitSha,
 ): CompletePathMeasurement["findings"] {
   const scenario = writeAuthority(root, "SCENARIO.md", scenarioBytes);
   const scenarioReview = writeAuthority(
@@ -283,7 +285,7 @@ function findingsProjection(
   const transcriptHeader = {
     type: "sdk-player-header" as const,
     scenarioId,
-    gitSha,
+    gitSha: executionGitSha,
     startedAt: "2026-08-14T00:00:00.000Z",
     consumerIsolation: "permissionProfile" as const,
     replaySupervisorSha256: replaySupervisor.sha256,
@@ -310,7 +312,7 @@ function findingsProjection(
     "review.json",
     `${JSON.stringify({
       scenarioId,
-      gitSha,
+      gitSha: executionGitSha,
       transcriptSha256: transcript.sha256,
       reviewer: "synthetic-reviewer",
       verdicts: [
@@ -384,7 +386,7 @@ function findingsProjection(
   );
   const run = {
     scenarioId,
-    gitSha,
+    gitSha: executionGitSha,
     startedAt: "2026-08-14T00:00:00.000Z",
     transcriptSha256: transcript.sha256,
     callCount: calls.length,
@@ -493,15 +495,17 @@ function retainBenchmarkAuxiliaryInvocation(
       | "redundantCharacterPreparation";
     readonly phase: "scenarioReadiness" | "scenarioCharacterAuthoring";
     readonly invocationId: string;
+    readonly implementationGitSha?: typeof gitSha;
   },
 ) {
+  const implementationGitSha = input.implementationGitSha ?? gitSha;
   const stagePlanReason =
     input.responsibility === "scenarioQuality"
       ? "The benchmark retained the historical quality pass."
       : "The benchmark retained redundant character preparation.";
   const started = benchmarkModelInvocationStartedEvent({
     scenarioId,
-    gitSha,
+    gitSha: implementationGitSha,
     profile: "documentDeclarationSet",
     responsibility: input.responsibility,
     phase: input.phase,
@@ -551,7 +555,7 @@ function retainBenchmarkAuxiliaryInvocation(
     responsibility: input.responsibility,
     phase: input.phase,
     scenarioId,
-    gitSha,
+    gitSha: implementationGitSha,
     eventsSha256: authority.sha256,
     stagePlanReason,
     invocationId: input.invocationId,
@@ -579,6 +583,7 @@ function retainBenchmarkAuxiliaryInvocation(
 
 function measurement(
   overrides: Partial<CurrentCompletePathMeasurement> = {},
+  executionGitSha: typeof gitSha = gitSha,
 ): CurrentCompletePathMeasurement {
   const root = rawSwarmTestOutputDirectory("complete-path-test-");
   temporaryDirectories.push(root);
@@ -630,7 +635,11 @@ function measurement(
     outcome: { tag: "completed" },
     ...overrides,
   };
-  const retainedInvocations = base.invocations.map((entry) =>
+  const executionInvocations = base.invocations.map((entry) => ({
+    ...entry,
+    gitSha: executionGitSha,
+  }));
+  const retainedInvocations = executionInvocations.map((entry) =>
     retainInvocation(root, entry),
   );
   const stagePlanAuthority = writeAuthority(
@@ -657,6 +666,7 @@ function measurement(
         finding("successful-correction", 2),
       ],
       retainedInvocations,
+      executionGitSha,
     ),
   } satisfies CurrentCompletePathMeasurement;
   return result;
@@ -665,8 +675,9 @@ function measurement(
 function benchmarkMeasurement(
   profile: "documentDeclarationSet" | "boundedCapabilityProjection",
   overrides: Partial<CurrentBenchmarkMeasurement> = {},
+  implementationGitSha: typeof gitSha = gitSha,
 ): CurrentBenchmarkMeasurement {
-  const source = measurement();
+  const source = measurement({}, implementationGitSha);
   const root = resolve(repoRoot, source.stagePlanAuthority.path, "..");
   const scenario = source.findings.authorities.find(
     ({ role }) => role === "scenario",
@@ -747,16 +758,19 @@ function benchmarkMeasurement(
             responsibility: "scenarioQuality",
             phase: "scenarioReadiness",
             invocationId: "benchmark-readiness",
+            implementationGitSha,
           }),
           retainBenchmarkAuxiliaryInvocation(root, {
             responsibility: "redundantCharacterPreparation",
             phase: "scenarioCharacterAuthoring",
             invocationId: "benchmark-character-1",
+            implementationGitSha,
           }),
           retainBenchmarkAuxiliaryInvocation(root, {
             responsibility: "redundantCharacterPreparation",
             phase: "scenarioCharacterAuthoring",
             invocationId: "benchmark-character-2",
+            implementationGitSha,
           }),
         ]
       : [];
@@ -784,7 +798,7 @@ function benchmarkMeasurement(
         phase: "scenarioCompositeReview" as const,
         reviewStage,
         scenarioId,
-        sourceGitSha: gitSha,
+        sourceGitSha: implementationGitSha,
         invocationId,
         model: "gpt-5.6-luna" as const,
         reasoningEffort: "max" as const,
@@ -903,7 +917,7 @@ function benchmarkMeasurement(
                 scenarioId,
                 responsibility: "scenarioQuality" as const,
                 phase: "scenarioReadiness" as const,
-                sourceGitSha: readinessInvocation.gitSha,
+                sourceGitSha: gitSha,
                 invocationId: readinessInvocation.invocationId,
                 model: readinessInvocation.model,
                 reasoningEffort: readinessInvocation.reasoningEffort,
@@ -937,7 +951,7 @@ function benchmarkMeasurement(
     pathId: `benchmark-${profile}-${root}`,
     profile,
     scenarioId,
-    implementationGitSha: gitSha,
+    implementationGitSha,
     scenarioBundle: {
       scenario: scenarioAuthority,
       scenarioReview: scenarioReviewAuthority,
@@ -1077,7 +1091,7 @@ describe("complete Raw Swarm path comparison", () => {
         phaseSequenceChanged: false,
         modelSequenceChanged: true,
       },
-      elapsedMilliseconds: { tag: "comparable" },
+      modelInvocationElapsedMilliseconds: { tag: "comparable" },
       inputTokens: { tag: "comparable" },
     });
   });
@@ -1115,6 +1129,35 @@ describe("complete Raw Swarm path comparison", () => {
     expect(validateCompletePathMeasurement(malformedBundle)).toMatchObject({
       _tag: "Left",
       left: expect.stringContaining("setup authority"),
+    });
+  }, 60_000);
+
+  test("rejects an internally valid benchmark pair from mixed implementation revisions", () => {
+    const baseline = benchmarkMeasurement("documentDeclarationSet");
+    const candidate = benchmarkMeasurement(
+      "boundedCapabilityProjection",
+      {
+        pathId: "mixed-revision-candidate-benchmark",
+        scenarioBundle: baseline.scenarioBundle,
+        stagePlan: baseline.stagePlan,
+      },
+      alternateGitSha,
+    );
+    expect(validateCompletePathMeasurement(candidate)).toMatchObject({
+      _tag: "Right",
+    });
+    const comparison = compareCompleteEquivalentPaths({
+      baseline: validated(baseline),
+      candidate: validated(candidate),
+    });
+    expect(comparison).toMatchObject({
+      identity: "different-path",
+      equivalence: {
+        tag: "incomparable",
+        reason: expect.stringContaining("implementation revisions differ"),
+      },
+      modelInvocationElapsedMilliseconds: { tag: "incomparable" },
+      inputTokens: { tag: "incomparable" },
     });
   }, 60_000);
 
@@ -1552,11 +1595,14 @@ describe("complete Raw Swarm path comparison", () => {
       outputPath,
     });
     expect(Either.isRight(written)).toBe(true);
-    expect(parseJsonRecord(readFileSync(outputPath, "utf8"))).toMatchObject({
+    const output = parseJsonRecord(readFileSync(outputPath, "utf8"));
+    expect(output).toMatchObject({
       schemaVersion: 2,
       identity: "equivalent-path",
       equivalence: { tag: "equivalent" },
+      modelInvocationElapsedMilliseconds: { tag: "comparable" },
     });
+    expect(output).not.toHaveProperty("elapsedMilliseconds");
 
     const overwrite = writeCompletePathComparison({
       baseline,
@@ -1564,6 +1610,44 @@ describe("complete Raw Swarm path comparison", () => {
       outputPath,
     });
     expect(overwrite).toMatchObject({ _tag: "Left" });
+  });
+
+  test("gates input tokens and model-invocation elapsed without claiming total tokens", () => {
+    const baseline = validated(measurement());
+    const candidate = validated(
+      measurement({
+        invocations: baseline.invocations.map((entry) => ({
+          ...entry,
+          elapsedMilliseconds: Math.floor(entry.elapsedMilliseconds / 2),
+          usage:
+            entry.usage.tag === "available"
+              ? {
+                  ...entry.usage,
+                  input: { tag: "available" as const, count: 50 },
+                  output: { tag: "available" as const, count: 1_000 },
+                }
+              : entry.usage,
+        })),
+      }),
+    );
+    const root = rawSwarmTestOutputDirectory("complete-path-input-gate-");
+    temporaryDirectories.push(root);
+    const result = writeCompletePathComparison({
+      baseline,
+      candidate,
+      outputPath: resolve(root, "comparison.json"),
+    });
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isLeft(result)) return;
+    expect(result.right.inputTokens).toMatchObject({
+      tag: "comparable",
+      reduction: 0.5,
+    });
+    expect(result.right.modelInvocationElapsedMilliseconds).toMatchObject({
+      tag: "comparable",
+      reduction: 0.5,
+    });
+    expect(result.right).not.toHaveProperty("totalTokens");
   });
 
   test("refuses to write a comparison below the forty-percent reduction gate", () => {
@@ -1676,7 +1760,7 @@ describe("complete Raw Swarm path comparison", () => {
         tag: "incomparable",
         reason: expect.stringContaining("skipped/rejected"),
       },
-      elapsedMilliseconds: { tag: "incomparable" },
+      modelInvocationElapsedMilliseconds: { tag: "incomparable" },
       inputTokens: { tag: "incomparable" },
     });
   });
