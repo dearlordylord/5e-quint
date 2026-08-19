@@ -706,9 +706,7 @@ function generationAudit(args: readonly string[]): void {
 
 function legacyInventory(args: readonly string[]): void {
   const legacyDbPath = required(flagValue(args, "--legacy-db"), "--legacy-db");
-  for (const row of inventoryLegacyDatabase({ legacyDbPath })) {
-    console.log(JSON.stringify(row));
-  }
+  console.log(JSON.stringify(inventoryLegacyDatabase({ legacyDbPath })));
 }
 
 function rebuildIndex(args: readonly string[]): void {

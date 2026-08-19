@@ -881,7 +881,10 @@ bundle-relative content-addressed paths, so the directory remains resolvable
 after relocation; copying the database alone is not an evidence backup.
 
 ```sh
-# Inventory and rebuild the pre-index database without mutating it.
+# Inventory and rebuild the pre-index database without mutating it. The command
+# prints one tagged JSON result: `supported` identifies either the historical
+# transcriptPath source or a v1/v2 hash-linked artifact index, while each entry
+# remains `artifactBacked`, `inconsistent`, or `databaseOnly`.
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts legacy-inventory \
   --legacy-db scripts/raw-swarm/out/player-swarm-legacy.db
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts rebuild-index \
@@ -962,8 +965,10 @@ Legacy rebuild classifies each run and review as `artifactBacked`,
 `inconsistent`, or `databaseOnly`. It never mutates the legacy database. The
 rebuilt index stores an exact hash-linked export of every legacy table before
 projecting recoverable transcripts and reviews; database-only rows remain in
-that export and explicit inventory rather than disappearing or blocking the
-recoverable index.
+the export and explicit inventory rather than disappearing or blocking the
+recoverable index. A v1/v2 hash-linked artifact index is already a compact
+evidence store; `legacy-inventory` inspects it read-only, while `rebuild-index`
+continues to accept only the historical transcriptPath source.
 
 Verdict classes are `bug`, `adapter-defect`, `unsupported-capability`,
 `assumption-divergence`, `corpus-ambiguity`, `scenario-invalid`,

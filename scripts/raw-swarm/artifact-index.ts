@@ -86,6 +86,31 @@ export type LegacyArtifactInventory = LegacyArtifactInventoryIdentity &
       }
   );
 
+export type LegacyInventorySource =
+  | { readonly tag: "transcriptPath" }
+  | { readonly tag: "artifactIndex"; readonly schemaVersion: 1 | 2 };
+
+export type LegacyInventoryUnavailableSource =
+  | { readonly tag: "unsupported"; readonly reason: string }
+  | { readonly tag: "transcriptPath"; readonly reason: string }
+  | {
+      readonly tag: "artifactIndex";
+      readonly schemaVersion: 1 | 2;
+      readonly reason: string;
+    };
+
+export type LegacyInventoryResult =
+  | {
+      readonly tag: "supported";
+      readonly source: LegacyInventorySource;
+      readonly inventory: readonly LegacyArtifactInventory[];
+    }
+  | {
+      readonly tag: "unavailable";
+      readonly source: LegacyInventoryUnavailableSource;
+      readonly inventory: readonly [];
+    };
+
 function fail(message: string): never {
   throw new Error(message);
 }
@@ -801,216 +826,398 @@ function recoverBySha(
   return candidates.find((candidate) => shaAt(candidate) === expectedSha256);
 }
 
+type LegacyRunIdentity = {
+  readonly id: number;
+  readonly indexedPath: string;
+  readonly transcriptSha256: string;
+};
+
+type LegacyReviewIdentity = {
+  readonly id: number;
+  readonly indexedPath: string;
+  readonly reviewRoundReviewer: string | null;
+  readonly scenarioId: string;
+  readonly gitSha: string;
+  readonly transcriptSha256: string;
+  readonly verdicts:
+    | { readonly tag: "recorded"; readonly rows: readonly unknown[] }
+    | { readonly tag: "notRecorded" };
+  readonly expectedReviewers: ReadonlySet<string>;
+};
+
+type LegacyReviewRows = {
+  readonly rows: readonly unknown[];
+  readonly referenceColumn: "reviewRoundId" | "reviewId";
+  readonly unavailableSource: LegacyInventoryUnavailableSource;
+};
+
+function inventoryLegacyRun(
+  identity: LegacyRunIdentity,
+  candidates: readonly string[],
+): LegacyArtifactInventory {
+  const currentSha256 = shaAt(resolve(repoRoot, identity.indexedPath));
+  if (currentSha256 === identity.transcriptSha256) {
+    return {
+      kind: "run",
+      legacyId: identity.id,
+      disposition: "artifactBacked",
+      indexedPath: identity.indexedPath,
+      expected: { tag: "recorded", sha256: identity.transcriptSha256 },
+      indexed: { tag: "present", sha256: currentSha256 },
+      recoveredPath: identity.indexedPath,
+    };
+  }
+  const recovered = recoverBySha(identity.transcriptSha256, candidates);
+  return recovered === undefined
+    ? {
+        kind: "run",
+        legacyId: identity.id,
+        disposition: "databaseOnly",
+        indexedPath: identity.indexedPath,
+        expected: { tag: "recorded", sha256: identity.transcriptSha256 },
+        indexed: indexedArtifact(currentSha256),
+      }
+    : {
+        kind: "run",
+        legacyId: identity.id,
+        disposition: "inconsistent",
+        indexedPath: identity.indexedPath,
+        evidence: {
+          tag: "recovered",
+          expectedSha256: identity.transcriptSha256,
+          indexed: indexedArtifact(currentSha256),
+          recoveredPath: relative(repoRoot, recovered),
+        },
+      };
+}
+
+function inventoryLegacyReview(
+  identity: LegacyReviewIdentity,
+  candidates: readonly string[],
+): LegacyArtifactInventory {
+  const matches = (path: string): boolean => {
+    try {
+      const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+        onExcessProperty: "error",
+      })(JSON.parse(readFileSync(path, "utf8")));
+      if (Either.isLeft(decoded)) return false;
+      const value = decoded.right;
+      return (
+        value.scenarioId === identity.scenarioId &&
+        value.gitSha === identity.gitSha &&
+        value.transcriptSha256 === identity.transcriptSha256 &&
+        (identity.reviewRoundReviewer === null ||
+          value.reviewer === identity.reviewRoundReviewer) &&
+        (identity.expectedReviewers.size === 0 ||
+          (identity.expectedReviewers.size === 1 &&
+            identity.expectedReviewers.has(value.reviewer))) &&
+        (identity.verdicts.tag === "notRecorded" ||
+          JSON.stringify(value.verdicts) ===
+            JSON.stringify(identity.verdicts.rows))
+      );
+    } catch {
+      return false;
+    }
+  };
+  const indexed = resolve(repoRoot, identity.indexedPath);
+  const matchesByContent = [indexed, ...candidates]
+    .filter((candidate, index, all) => all.indexOf(candidate) === index)
+    .filter((candidate) => candidate.endsWith(".json") && matches(candidate));
+  const matchingDigests = new Set(
+    matchesByContent.flatMap((candidate) => {
+      const digest = shaAt(candidate);
+      return digest === undefined ? [] : [digest];
+    }),
+  );
+  if (matchingDigests.size > 1) {
+    const currentSha256 = shaAt(indexed);
+    const ambiguousArtifacts = matchesByContent.flatMap((candidate) => {
+      const digest = shaAt(candidate);
+      return digest === undefined
+        ? []
+        : [{ path: relative(repoRoot, candidate), sha256: digest }];
+    });
+    const [firstArtifact, ...remainingArtifacts] = ambiguousArtifacts;
+    if (firstArtifact === undefined) {
+      fail("Ambiguous legacy review has no matching artifact.");
+    }
+    return {
+      kind: "review",
+      legacyId: identity.id,
+      disposition: "inconsistent",
+      indexedPath: identity.indexedPath,
+      evidence: {
+        tag: "ambiguous",
+        indexed: indexedArtifact(currentSha256),
+        firstArtifact,
+        remainingArtifacts,
+      },
+    };
+  }
+  const recovered = matchesByContent[0];
+  const currentSha256 = shaAt(indexed);
+  const expectedSha256 = recovered === undefined ? undefined : shaAt(recovered);
+  if (recovered === undefined || expectedSha256 === undefined) {
+    return {
+      kind: "review",
+      legacyId: identity.id,
+      disposition: "databaseOnly",
+      indexedPath: identity.indexedPath,
+      expected: { tag: "notRecorded" },
+      indexed: indexedArtifact(currentSha256),
+    };
+  }
+  if (recovered === indexed) {
+    return {
+      kind: "review",
+      legacyId: identity.id,
+      disposition: "artifactBacked",
+      indexedPath: identity.indexedPath,
+      expected: { tag: "recorded", sha256: expectedSha256 },
+      indexed: { tag: "present", sha256: currentSha256 ?? expectedSha256 },
+      recoveredPath: relative(repoRoot, recovered),
+    };
+  }
+  return {
+    kind: "review",
+    legacyId: identity.id,
+    disposition: "inconsistent",
+    indexedPath: identity.indexedPath,
+    evidence: {
+      tag: "recovered",
+      expectedSha256,
+      indexed: indexedArtifact(currentSha256),
+      recoveredPath: relative(repoRoot, recovered),
+    },
+  };
+}
+
+function tableColumns(db: DatabaseSync, table: string): ReadonlySet<string> {
+  return new Set(
+    db
+      .prepare(`PRAGMA table_info("${table.replaceAll('"', '""')}")`)
+      .all()
+      .flatMap((column) =>
+        isJsonRecord(column) && typeof column.name === "string"
+          ? [column.name]
+          : [],
+      ),
+  );
+}
+
+function artifactIndexSchemaVersion(db: DatabaseSync): 1 | 2 | undefined {
+  if (!tableExists(db, "indexMetadata")) return undefined;
+  const row = db.prepare("SELECT schemaVersion FROM indexMetadata").get();
+  if (!isJsonRecord(row)) return undefined;
+  return row.schemaVersion === 1 || row.schemaVersion === 2
+    ? row.schemaVersion
+    : undefined;
+}
+
+function detectLegacyInventorySource(
+  db: DatabaseSync,
+):
+  | LegacyInventorySource
+  | { readonly tag: "unsupported"; readonly reason: string } {
+  if (!tableExists(db, "runs")) {
+    return {
+      tag: "unsupported",
+      reason: "Legacy database has no runs authority.",
+    };
+  }
+  const runs = tableColumns(db, "runs");
+  if (runs.has("transcriptPath") && runs.has("transcriptSha256")) {
+    return { tag: "transcriptPath" };
+  }
+  const schemaVersion = artifactIndexSchemaVersion(db);
+  if (
+    runs.has("transcriptSha256") &&
+    schemaVersion !== undefined &&
+    tableExists(db, "artifacts")
+  ) {
+    return { tag: "artifactIndex", schemaVersion };
+  }
+  return {
+    tag: "unsupported",
+    reason:
+      "Legacy database has no supported transcriptPath or hash-linked artifact authority.",
+  };
+}
+
+function unavailableInventory(
+  source: LegacyInventoryUnavailableSource,
+): LegacyInventoryResult {
+  return { tag: "unavailable", source, inventory: [] };
+}
+
 export function inventoryLegacyDatabase(input: {
   readonly legacyDbPath: string;
   readonly artifactSearchRoot?: string;
-}): readonly LegacyArtifactInventory[] {
+}): LegacyInventoryResult {
   const db = new DatabaseSync(resolve(repoRoot, input.legacyDbPath), {
     readOnly: true,
   });
   try {
+    const detectedSource = detectLegacyInventorySource(db);
+    if (detectedSource.tag === "unsupported") {
+      return unavailableInventory(detectedSource);
+    }
     const searchRoot = resolve(
       repoRoot,
       input.artifactSearchRoot ?? "scripts/raw-swarm/out",
     );
     const candidates = filesBelow(searchRoot);
-    const runs = db
-      .prepare(
-        "SELECT id, transcriptPath, transcriptSha256 FROM runs ORDER BY id",
-      )
-      .all();
-    const inventory: LegacyArtifactInventory[] = runs.map((row) => {
+    const runRows =
+      detectedSource.tag === "transcriptPath"
+        ? db
+            .prepare(
+              "SELECT id, transcriptPath, transcriptSha256 FROM runs ORDER BY id",
+            )
+            .all()
+        : db
+            .prepare(
+              `SELECT runs.id, artifacts.path AS transcriptPath, runs.transcriptSha256
+               FROM runs LEFT JOIN artifacts ON artifacts.sha256 = runs.transcriptSha256
+               ORDER BY runs.id`,
+            )
+            .all();
+    const runs: LegacyRunIdentity[] = [];
+    for (const row of runRows) {
       if (
         !isJsonRecord(row) ||
         typeof row.id !== "number" ||
         typeof row.transcriptPath !== "string" ||
         typeof row.transcriptSha256 !== "string"
       ) {
-        fail("Legacy run identity is invalid.");
+        return detectedSource.tag === "artifactIndex"
+          ? unavailableInventory({
+              tag: "artifactIndex",
+              schemaVersion: detectedSource.schemaVersion,
+              reason:
+                "Legacy run identity has no readable transcript authority.",
+            })
+          : unavailableInventory({
+              tag: "transcriptPath",
+              reason:
+                "Legacy run identity has no readable transcript authority.",
+            });
       }
-      const currentSha256 = shaAt(resolve(repoRoot, row.transcriptPath));
-      if (currentSha256 === row.transcriptSha256) {
-        return {
-          kind: "run",
-          legacyId: row.id,
-          disposition: "artifactBacked",
-          indexedPath: row.transcriptPath,
-          expected: { tag: "recorded", sha256: row.transcriptSha256 },
-          indexed: { tag: "present", sha256: currentSha256 },
-          recoveredPath: row.transcriptPath,
-        };
-      }
-      const recovered = recoverBySha(row.transcriptSha256, candidates);
-      return recovered === undefined
-        ? {
-            kind: "run",
-            legacyId: row.id,
-            disposition: "databaseOnly",
-            indexedPath: row.transcriptPath,
-            expected: { tag: "recorded", sha256: row.transcriptSha256 },
-            indexed: indexedArtifact(currentSha256),
-          }
-        : {
-            kind: "run",
-            legacyId: row.id,
-            disposition: "inconsistent",
-            indexedPath: row.transcriptPath,
-            evidence: {
-              tag: "recovered",
-              expectedSha256: row.transcriptSha256,
-              indexed: indexedArtifact(currentSha256),
-              recoveredPath: relative(repoRoot, recovered),
-            },
-          };
-    });
-    const reviewRoundHasReviewer = db
-      .prepare("PRAGMA table_info(reviewRounds)")
-      .all()
-      .some((column) => isJsonRecord(column) && column.name === "reviewer");
-    const reviews = db
-      .prepare(
-        `SELECT rr.id, rr.artifactPath, ${reviewRoundHasReviewer ? "rr.reviewer" : "NULL"} AS reviewRoundReviewer, r.scenarioId, r.gitSha, r.transcriptSha256
-         FROM reviewRounds rr JOIN runs r ON r.id = rr.runId ORDER BY rr.id`,
-      )
-      .all();
+      runs.push({
+        id: row.id,
+        indexedPath: row.transcriptPath,
+        transcriptSha256: row.transcriptSha256,
+      });
+    }
+    const inventory: LegacyArtifactInventory[] = runs.map((identity) =>
+      inventoryLegacyRun(identity, candidates),
+    );
     const hasVerdicts =
       db
         .prepare(
           "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'verdicts'",
         )
         .get() !== undefined;
-    for (const row of reviews) {
-      if (
-        !isJsonRecord(row) ||
-        typeof row.id !== "number" ||
-        typeof row.artifactPath !== "string" ||
-        (row.reviewRoundReviewer !== null &&
-          typeof row.reviewRoundReviewer !== "string")
-      ) {
-        fail("Legacy review identity is invalid.");
-      }
-      const expectedVerdicts = hasVerdicts
-        ? db
-            .prepare(
-              "SELECT class, claim, evidence FROM verdicts WHERE reviewRoundId = ? ORDER BY id",
-            )
-            .all(row.id)
-        : [];
-      const expectedReviewers = hasVerdicts
-        ? new Set(
-            db
+    const reviewRows: LegacyReviewRows | undefined =
+      detectedSource.tag === "transcriptPath" && tableExists(db, "reviewRounds")
+        ? (() => {
+            const reviewRoundHasReviewer = tableColumns(db, "reviewRounds").has(
+              "reviewer",
+            );
+            return {
+              rows: db
+                .prepare(
+                  `SELECT rr.id, rr.artifactPath, ${reviewRoundHasReviewer ? "rr.reviewer" : "NULL"} AS reviewRoundReviewer, r.scenarioId, r.gitSha, r.transcriptSha256
+                   FROM reviewRounds rr JOIN runs r ON r.id = rr.runId ORDER BY rr.id`,
+                )
+                .all(),
+              referenceColumn: "reviewRoundId" as const,
+              unavailableSource: {
+                tag: "transcriptPath" as const,
+                reason:
+                  "Legacy review identity has no readable artifact authority.",
+              },
+            };
+          })()
+        : detectedSource.tag === "artifactIndex" && tableExists(db, "reviews")
+          ? {
+              rows: db
+                .prepare(
+                  `SELECT reviews.id, artifacts.path AS artifactPath, reviews.reviewer AS reviewRoundReviewer,
+                          runs.scenarioId, runs.gitSha, runs.transcriptSha256
+                   FROM reviews
+                   JOIN runs ON runs.id = reviews.runId
+                   LEFT JOIN artifacts ON artifacts.sha256 = reviews.artifactSha256
+                   ORDER BY reviews.id`,
+                )
+                .all(),
+              referenceColumn: "reviewId" as const,
+              unavailableSource: {
+                tag: "artifactIndex" as const,
+                schemaVersion: detectedSource.schemaVersion,
+                reason:
+                  "Artifact-index review has no readable artifact authority.",
+              },
+            }
+          : undefined;
+    if (reviewRows !== undefined) {
+      for (const row of reviewRows.rows) {
+        if (
+          !isJsonRecord(row) ||
+          typeof row.id !== "number" ||
+          typeof row.artifactPath !== "string" ||
+          (row.reviewRoundReviewer !== null &&
+            typeof row.reviewRoundReviewer !== "string") ||
+          typeof row.scenarioId !== "string" ||
+          typeof row.gitSha !== "string" ||
+          typeof row.transcriptSha256 !== "string"
+        ) {
+          return unavailableInventory(reviewRows.unavailableSource);
+        }
+        const expectedVerdicts = hasVerdicts
+          ? db
               .prepare(
-                "SELECT DISTINCT reviewer FROM verdicts WHERE reviewRoundId = ?",
+                `SELECT class, claim, evidence FROM verdicts WHERE ${reviewRows.referenceColumn} = ? ORDER BY id`,
               )
               .all(row.id)
-              .flatMap((value) =>
-                isJsonRecord(value) && typeof value.reviewer === "string"
-                  ? [value.reviewer]
-                  : [],
-              ),
-          )
-        : new Set<string>();
-      const matches = (path: string): boolean => {
-        try {
-          const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
-            onExcessProperty: "error",
-          })(JSON.parse(readFileSync(path, "utf8")));
-          if (Either.isLeft(decoded)) return false;
-          const value = decoded.right;
-          return (
-            value.scenarioId === row.scenarioId &&
-            value.gitSha === row.gitSha &&
-            value.transcriptSha256 === row.transcriptSha256 &&
-            (row.reviewRoundReviewer === null ||
-              value.reviewer === row.reviewRoundReviewer) &&
-            (expectedReviewers.size === 0 ||
-              (expectedReviewers.size === 1 &&
-                expectedReviewers.has(value.reviewer))) &&
-            (!hasVerdicts ||
-              JSON.stringify(value.verdicts) ===
-                JSON.stringify(expectedVerdicts))
-          );
-        } catch {
-          return false;
-        }
-      };
-      const indexed = resolve(repoRoot, row.artifactPath);
-      const matchesByContent = [indexed, ...candidates]
-        .filter((candidate, index, all) => all.indexOf(candidate) === index)
-        .filter(
-          (candidate) => candidate.endsWith(".json") && matches(candidate),
+          : [];
+        const expectedReviewers = hasVerdicts
+          ? new Set(
+              db
+                .prepare(
+                  `SELECT DISTINCT reviewer FROM verdicts WHERE ${reviewRows.referenceColumn} = ?`,
+                )
+                .all(row.id)
+                .flatMap((value) =>
+                  isJsonRecord(value) && typeof value.reviewer === "string"
+                    ? [value.reviewer]
+                    : [],
+                ),
+            )
+          : new Set<string>();
+        inventory.push(
+          inventoryLegacyReview(
+            {
+              id: row.id,
+              indexedPath: row.artifactPath,
+              reviewRoundReviewer: row.reviewRoundReviewer,
+              scenarioId: row.scenarioId,
+              gitSha: row.gitSha,
+              transcriptSha256: row.transcriptSha256,
+              verdicts: hasVerdicts
+                ? { tag: "recorded", rows: expectedVerdicts }
+                : { tag: "notRecorded" },
+              expectedReviewers,
+            },
+            candidates,
+          ),
         );
-      const matchingDigests = new Set(
-        matchesByContent.flatMap((candidate) => {
-          const digest = shaAt(candidate);
-          return digest === undefined ? [] : [digest];
-        }),
-      );
-      if (matchingDigests.size > 1) {
-        const currentSha256 = shaAt(indexed);
-        const ambiguousArtifacts = matchesByContent.flatMap((candidate) => {
-          const digest = shaAt(candidate);
-          return digest === undefined
-            ? []
-            : [{ path: relative(repoRoot, candidate), sha256: digest }];
-        });
-        const [firstArtifact, ...remainingArtifacts] = ambiguousArtifacts;
-        if (firstArtifact === undefined) {
-          fail("Ambiguous legacy review has no matching artifact.");
-        }
-        inventory.push({
-          kind: "review",
-          legacyId: row.id,
-          disposition: "inconsistent",
-          indexedPath: row.artifactPath,
-          evidence: {
-            tag: "ambiguous",
-            indexed: indexedArtifact(currentSha256),
-            firstArtifact,
-            remainingArtifacts,
-          },
-        });
-        continue;
-      }
-      const recovered = matchesByContent[0];
-      const currentSha256 = shaAt(indexed);
-      const expectedSha256 =
-        recovered === undefined ? undefined : shaAt(recovered);
-      if (recovered === undefined || expectedSha256 === undefined) {
-        inventory.push({
-          kind: "review",
-          legacyId: row.id,
-          disposition: "databaseOnly",
-          indexedPath: row.artifactPath,
-          expected: { tag: "notRecorded" },
-          indexed: indexedArtifact(currentSha256),
-        });
-      } else if (recovered === indexed) {
-        inventory.push({
-          kind: "review",
-          legacyId: row.id,
-          disposition: "artifactBacked",
-          indexedPath: row.artifactPath,
-          expected: { tag: "recorded", sha256: expectedSha256 },
-          indexed: { tag: "present", sha256: currentSha256 ?? expectedSha256 },
-          recoveredPath: relative(repoRoot, recovered),
-        });
-      } else {
-        inventory.push({
-          kind: "review",
-          legacyId: row.id,
-          disposition: "inconsistent",
-          indexedPath: row.artifactPath,
-          evidence: {
-            tag: "recovered",
-            expectedSha256,
-            indexed: indexedArtifact(currentSha256),
-            recoveredPath: relative(repoRoot, recovered),
-          },
-        });
       }
     }
-    return inventory;
+    return {
+      tag: "supported",
+      source: detectedSource,
+      inventory,
+    };
   } finally {
     db.close();
   }
@@ -1105,9 +1312,18 @@ export function rebuildLegacyArtifactIndex(input: {
 }): { readonly inventory: readonly LegacyArtifactInventory[] } {
   if (existsSync(resolve(repoRoot, input.dbPath)))
     fail("Refusing to overwrite rebuilt index.");
-  const inventory = inventoryLegacyDatabase({
+  const inventoryResult = inventoryLegacyDatabase({
     legacyDbPath: input.legacyDbPath,
   });
+  if (inventoryResult.tag === "unavailable") {
+    fail(`Legacy inventory is unavailable: ${inventoryResult.source.reason}`);
+  }
+  if (inventoryResult.source.tag === "artifactIndex") {
+    fail(
+      "Hash-linked artifact indexes are already compact evidence stores; rebuild-index only accepts transcriptPath legacy databases.",
+    );
+  }
+  const inventory = inventoryResult.inventory;
   const oldDb = new DatabaseSync(resolve(repoRoot, input.legacyDbPath), {
     readOnly: true,
   });

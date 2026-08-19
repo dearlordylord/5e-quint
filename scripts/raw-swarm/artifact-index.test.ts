@@ -115,6 +115,94 @@ describe("Raw Swarm artifact index", () => {
     );
   });
 
+  test("inventories a pre-transcriptPath index without mutating its source", () => {
+    const directory = temporaryDirectory();
+    const transcript = sdkTranscript(directory);
+    const legacyPath = resolve(directory, "pre-transcript-path.sqlite");
+    const transcriptPath = relative(repoRoot, transcript);
+    const transcriptBytes = readFileSync(transcript);
+    const transcriptSha256 = sha256Text(transcriptBytes.toString("utf8"));
+    const legacy = new DatabaseSync(legacyPath);
+    legacy.exec(`
+      CREATE TABLE indexMetadata(schemaVersion INTEGER PRIMARY KEY);
+      INSERT INTO indexMetadata VALUES (1);
+      CREATE TABLE artifacts(sha256 TEXT PRIMARY KEY, byteLength INTEGER NOT NULL, mediaType TEXT NOT NULL, path TEXT NOT NULL UNIQUE);
+      CREATE TABLE runs(id INTEGER PRIMARY KEY, scenarioId TEXT, gitSha TEXT, startedAt TEXT, transcriptSha256 TEXT);
+      CREATE TABLE reviews(id INTEGER PRIMARY KEY, runId INTEGER, reviewer TEXT, artifactSha256 TEXT, createdAt TEXT);
+    `);
+    legacy
+      .prepare("INSERT INTO artifacts VALUES (?, ?, 'application/x-ndjson', ?)")
+      .run(transcriptSha256, transcriptBytes.byteLength, transcriptPath);
+    legacy
+      .prepare("INSERT INTO artifacts VALUES (?, 0, 'application/x-ndjson', ?)")
+      .run(
+        "b".repeat(64),
+        relative(repoRoot, resolve(directory, "missing.jsonl")),
+      );
+    legacy
+      .prepare("INSERT INTO runs VALUES (1, 'pre-transcript-path', ?, ?, ?)")
+      .run("a".repeat(40), "2026-08-18T00:00:00.000Z", transcriptSha256);
+    legacy
+      .prepare("INSERT INTO runs VALUES (2, 'missing-authority', ?, ?, ?)")
+      .run("b".repeat(40), "2026-08-18T00:01:00.000Z", "b".repeat(64));
+    legacy.close();
+    const sourceBefore = readFileSync(legacyPath);
+
+    const result = inventoryLegacyDatabase({
+      legacyDbPath: relative(repoRoot, legacyPath),
+      artifactSearchRoot: relative(repoRoot, directory),
+    });
+
+    expect(result).toMatchObject({
+      tag: "supported",
+      source: { tag: "artifactIndex", schemaVersion: 1 },
+    });
+    expect(result.inventory).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "run",
+          legacyId: 1,
+          disposition: "artifactBacked",
+          indexedPath: transcriptPath,
+        }),
+        expect.objectContaining({
+          kind: "run",
+          legacyId: 2,
+          disposition: "databaseOnly",
+        }),
+      ]),
+    );
+    expect(readFileSync(legacyPath)).toEqual(sourceBefore);
+  });
+
+  test("keeps current v2 artifact-index inventory hash-linked and read-only", () => {
+    const directory = temporaryDirectory();
+    const transcript = sdkTranscript(directory);
+    const dbPath = resolve(directory, "current-index.sqlite");
+    ingestArtifactRun({
+      transcriptPath: relative(repoRoot, transcript),
+      dbPath: relative(repoRoot, dbPath),
+    });
+    const sourceBefore = readFileSync(dbPath);
+
+    const result = inventoryLegacyDatabase({
+      legacyDbPath: relative(repoRoot, dbPath),
+      artifactSearchRoot: relative(repoRoot, directory),
+    });
+
+    expect(result).toMatchObject({
+      tag: "supported",
+      source: { tag: "artifactIndex", schemaVersion: 2 },
+      inventory: [
+        expect.objectContaining({
+          kind: "run",
+          disposition: "artifactBacked",
+        }),
+      ],
+    });
+    expect(readFileSync(dbPath)).toEqual(sourceBefore);
+  });
+
   test("indexes call metadata without duplicating sessions or results and exports every artifact", () => {
     const directory = temporaryDirectory();
     const transcript = sdkTranscript(directory);
@@ -477,12 +565,15 @@ describe("Raw Swarm artifact index", () => {
     );
     db.close();
 
-    expect(
-      inventoryLegacyDatabase({
-        legacyDbPath: relative(repoRoot, legacyDbPath),
-        artifactSearchRoot: relative(repoRoot, directory),
-      }),
-    ).toEqual(
+    const inventory = inventoryLegacyDatabase({
+      legacyDbPath: relative(repoRoot, legacyDbPath),
+      artifactSearchRoot: relative(repoRoot, directory),
+    });
+    expect(inventory).toMatchObject({
+      tag: "supported",
+      source: { tag: "transcriptPath" },
+    });
+    expect(inventory.inventory).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "run",
