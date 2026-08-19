@@ -7,6 +7,7 @@ import {
   artifactAuthority,
   ArtifactAuthoritySchema,
   readJsonLines,
+  type ArtifactAuthority,
 } from "./artifact-authority.ts";
 export {
   ArtifactAuthoritySchema,
@@ -18,13 +19,17 @@ import {
   readCodexEvents,
   type ModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
+import {
+  finalAgentMessage,
+  retainedReviewInput,
+  validateRetainedScenarioReviewInvocation,
+} from "./review-invocation-binding.ts";
 import { reviewInvocationPolicy } from "./review-invocation-policy.ts";
 import {
   codexOutputJsonSchema,
   FinalScenarioReviewSchema,
   ScenarioCompositeReviewSchema,
 } from "./scenario-campaign.ts";
-import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
 import {
   reviewEvidenceCatalogForPacket,
   validateReviewOutput,
@@ -85,24 +90,6 @@ function json(path: string): unknown {
   }
 }
 
-function retainedReviewInput<const Stage extends "milestone" | "final">(
-  path: string,
-  expectedStage: Stage,
-): Schema.Schema.Type<typeof RetainedScenarioReviewInputSchema> {
-  const decoded = Schema.decodeUnknownEither(
-    RetainedScenarioReviewInputSchema,
-    { onExcessProperty: "error" },
-  )(json(path));
-  if (Either.isLeft(decoded)) {
-    fail(
-      `Retained ${expectedStage} review input is invalid: ${decoded.left.message}`,
-    );
-  }
-  if (decoded.right.reviewStage !== expectedStage)
-    fail(`Retained ${expectedStage} review input has the wrong stage.`);
-  return decoded.right;
-}
-
 function scenarioReviewIdentity(packet: {
   readonly runArtifacts: readonly { readonly path: string }[];
 }): { readonly scenarioId: ScenarioId; readonly gitSha: GitSha } {
@@ -133,32 +120,24 @@ function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
   });
 }
 
-function finalAgentMessage(events: readonly unknown[]): unknown {
-  const messages = events.flatMap((event): readonly string[] => {
-    if (
-      typeof event !== "object" ||
-      event === null ||
-      !("type" in event) ||
-      event.type !== "item.completed" ||
-      !("item" in event) ||
-      typeof event.item !== "object" ||
-      event.item === null ||
-      !("type" in event.item) ||
-      event.item.type !== "agent_message" ||
-      !("text" in event.item) ||
-      typeof event.item.text !== "string"
-    )
-      return [];
-    return [event.item.text];
+/**
+ * Binds one retained original composite-review envelope to the event stream
+ * and v2 ledger row that produced it. The event authority remains separate
+ * from the envelope authority so callers cannot substitute a copied ledger
+ * row or result while retaining the original input path.
+ */
+export function validateRetainedScenarioReviewInvocationEvidence(input: {
+  readonly retainedInputPath: string;
+  readonly eventPath: string;
+  readonly reviewStage: "milestone" | "final";
+  readonly ledgerEntry: ModelInvocationLedgerEntry;
+}): ArtifactAuthority {
+  const eventAuthority = artifactAuthority(input.eventPath);
+  validateRetainedScenarioReviewInvocation({
+    ...input,
+    eventSha256: eventAuthority.sha256,
   });
-  const message = messages.at(-1);
-  if (message === undefined)
-    fail("Review invocation has no final agent message.");
-  try {
-    return JSON.parse(message);
-  } catch {
-    return fail("Review invocation final agent message is not JSON.");
-  }
+  return eventAuthority;
 }
 
 function deriveManifest(input: {

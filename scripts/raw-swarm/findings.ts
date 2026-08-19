@@ -35,6 +35,8 @@ import {
   sha256Canonical,
 } from "./transcript.ts";
 import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
+import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
+import { SdkReplayResultEvidenceSchema } from "./sdk-player/sdk-replay-result.ts";
 
 export const RAW_SWARM_FINDINGS_SCHEMA_VERSION = 1;
 
@@ -988,6 +990,39 @@ function originalCompositeReviewInputs(
         `Review replay input ${canonical} does not match original composite-review invocation ${review.invocationId} model, effort, scenario, or Git identity.`,
       );
     }
+    const eventPath = canonical.endsWith(".json")
+      ? `${canonical.slice(0, -".json".length)}.events.jsonl`
+      : `${canonical}.events.jsonl`;
+    if (sources.some((source) => source.path === eventPath)) {
+      fail(`Review replay event authority ${eventPath} is already registered.`);
+    }
+    const eventRole = `prePlayReviewReplayEvents-${review.reviewStage}`;
+    const retainedEventRole = addSource(sources, eventPath, eventRole);
+    if (retainedEventRole === undefined) {
+      fail(
+        `Retained ${review.reviewStage} review event stream is missing: ${eventPath}.`,
+      );
+    }
+    const eventAuthority = authorityFor({
+      role: retainedEventRole,
+      path: eventPath,
+    });
+    validateRetainedScenarioReviewInvocation({
+      retainedInputPath: canonical,
+      eventPath,
+      eventSha256: eventAuthority.sha256,
+      reviewStage: review.reviewStage,
+      ledgerEntry: entry,
+    });
+    if (
+      retainedEventRole !== eventRole ||
+      eventAuthority.path !== eventPath ||
+      eventAuthority.sha256 !== entry.eventsSha256
+    ) {
+      fail(
+        `Review replay event authority ${eventPath} could not retain its closed ${review.reviewStage} role.`,
+      );
+    }
     if (sources.some((source) => source.path === canonical)) {
       fail(
         `Review replay input ${canonical} is already registered as another findings authority.`,
@@ -1008,6 +1043,38 @@ function originalCompositeReviewInputs(
   if (!stages.has("milestone") || !stages.has("final")) {
     fail(
       "Review replay inputs must contain exactly one milestone and one final envelope.",
+    );
+  }
+}
+
+function validateReplayResultSource(input: {
+  readonly source: Source;
+  readonly replaySupervisor: Source | undefined;
+  readonly parsed: ParsedRun;
+}): void {
+  const decoded = Schema.decodeUnknownEither(SdkReplayResultEvidenceSchema, {
+    onExcessProperty: "error",
+  })(readSourceRecord(input.source.path));
+  if (Either.isLeft(decoded)) {
+    fail(
+      `Replay-result authority ${input.source.path} is invalid: ${decoded.left.message}`,
+    );
+  }
+  if (input.replaySupervisor === undefined) {
+    fail(
+      "Replay-result authority requires the retained replay-supervisor authority.",
+    );
+  }
+  const replayResult = decoded.right;
+  const replaySupervisorAuthority = authorityFor(input.replaySupervisor);
+  if (
+    replayResult.scenarioId !== input.parsed.scenarioId ||
+    replayResult.transcriptSha256 !== input.parsed.transcriptSha256 ||
+    replayResult.replaySupervisorSha256 !== replaySupervisorAuthority.sha256 ||
+    replayResult.matchedCallCount !== input.parsed.callCount
+  ) {
+    fail(
+      `Replay-result authority ${input.source.path} does not match the retained transcript, supervisor, or SDK call count.`,
     );
   }
 }
@@ -1529,6 +1596,16 @@ export function projectRunFindings(
       role: "observations",
       kind: "observations",
     },
+    {
+      suffix: "replay-supervisor.mjs",
+      role: "replaySupervisor",
+      kind: "opaque",
+    },
+    {
+      suffix: "evidence/replay-result.json",
+      role: "replayResult",
+      kind: "replayResult",
+    },
   ] as const;
   for (const candidate of candidateSources) {
     const addedRole = addSource(
@@ -1576,6 +1653,17 @@ export function projectRunFindings(
           expectedScenarioReviewIdentity,
         ),
       );
+    } else if (candidate.kind === "replayResult") {
+      validateReplayResultSource({
+        source: {
+          role: addedRole,
+          path: sourcePath(`${runDirectory}/${candidate.suffix}`),
+        },
+        replaySupervisor: sources.find(
+          (source) => source.role === "replaySupervisor",
+        ),
+        parsed,
+      });
     }
   }
 

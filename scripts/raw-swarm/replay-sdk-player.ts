@@ -1,16 +1,64 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
+import {
+  SdkReplayResultEvidenceSchema,
+  type SdkReplayResultEvidence,
+} from "./sdk-player/sdk-replay-result.ts";
 import { validateAdmittedScenarioStagePlanEvidence } from "./stage-plan-authority.ts";
 import { currentGitRevision, repoRoot, sha256Text } from "./transcript.ts";
 
 function fail(message: string): never {
   throw new Error(message);
+}
+
+export function matchedCallCountFromReplayOutput(
+  output: string,
+  expectedCallCount: number,
+): number {
+  const ready = new RegExp(
+    `SDK player replay deterministic: (\\d+) call\\(s\\) matched\\.`,
+  ).exec(output);
+  if (ready !== null) {
+    const matchedCallCount = Number(ready[1]);
+    if (matchedCallCount !== expectedCallCount) {
+      fail(
+        `SDK replay reported ${String(matchedCallCount)} matched calls; transcript contains ${String(expectedCallCount)}.`,
+      );
+    }
+    return matchedCallCount;
+  }
+  if (
+    /SDK (?:character-composition|setup) obstruction replay deterministic:/.test(
+      output,
+    ) &&
+    expectedCallCount === 0
+  ) {
+    return 0;
+  }
+  fail("SDK replay did not report a deterministic success result.");
+}
+
+export function retainReplayResultEvidence(input: {
+  readonly path: string;
+  readonly evidence: SdkReplayResultEvidence;
+}): void {
+  const encoded = `${JSON.stringify(input.evidence, null, 2)}\n`;
+  if (existsSync(input.path)) {
+    const existing = readFileSync(input.path, "utf8");
+    if (existing !== encoded) {
+      fail(
+        "Refusing to overwrite a different immutable replay-result authority.",
+      );
+    }
+    return;
+  }
+  writeFileSync(input.path, encoded, { flag: "wx" });
 }
 
 function main(args: readonly string[]): void {
@@ -20,8 +68,10 @@ function main(args: readonly string[]): void {
   }
   const runPath = resolve(repoRoot, runPathInput);
   const transcriptPath = resolve(runPath, "evidence/sdk-calls.jsonl");
+  const transcriptBytes = readFileSync(transcriptPath);
   const parsed = parseSdkTranscript(
-    readFileSync(transcriptPath, "utf8")
+    transcriptBytes
+      .toString("utf8")
       .split("\n")
       .filter((line) => line.trim().length > 0)
       .map((line): unknown => JSON.parse(line)),
@@ -78,7 +128,35 @@ function main(args: readonly string[]): void {
   if (result.error !== undefined) throw result.error;
   if (result.signal !== null) fail(`SDK replay stopped by ${result.signal}.`);
   if (result.status !== 0) fail(result.stderr || "SDK replay failed.");
+  const matchedCallCount = matchedCallCountFromReplayOutput(
+    result.stdout,
+    parsed.value.calls.length,
+  );
+  const replayResult: SdkReplayResultEvidence = {
+    type: "raw-swarm-sdk-replay-result",
+    schemaVersion: 1,
+    scenarioId: parsed.value.header.scenarioId,
+    transcriptSha256: sha256Text(transcriptBytes.toString("utf8")),
+    replaySupervisorSha256,
+    matchedCallCount,
+    status: "succeeded",
+  };
+  const decodedReplayResult = Schema.decodeUnknownEither(
+    SdkReplayResultEvidenceSchema,
+    { onExcessProperty: "error" },
+  )(replayResult);
+  if (Either.isLeft(decodedReplayResult)) {
+    fail(
+      `Replay-result authority is invalid: ${decodedReplayResult.left.message}`,
+    );
+  }
+  retainReplayResultEvidence({
+    path: resolve(runPath, "evidence/replay-result.json"),
+    evidence: decodedReplayResult.right,
+  });
   process.stdout.write(result.stdout);
 }
 
-main(process.argv.slice(2));
+if (process.argv[1]?.endsWith("replay-sdk-player.ts")) {
+  main(process.argv.slice(2));
+}

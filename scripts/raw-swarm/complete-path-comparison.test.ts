@@ -169,9 +169,35 @@ function writeAuthority(root: string, name: string, contents: string) {
   };
 }
 
+function syntheticCompositeReview() {
+  return {
+    raw: {
+      classification: "supported" as const,
+      evidence: "Synthetic RAW review is supported.",
+    },
+    contentAvailability: {
+      classification: "supplied" as const,
+      evidence: "Synthetic content is supplied.",
+    },
+    sdkCapability: {
+      classification: "supported" as const,
+      evidence: "Synthetic SDK capability is supported.",
+    },
+    artifactPolicy: {
+      classification: "safe" as const,
+      evidence: "Synthetic artifact policy is safe.",
+    },
+    scenarioQuality: {
+      classification: "ready" as const,
+      evidence: "Synthetic scenario quality is ready.",
+    },
+  };
+}
+
 function findingsProjection(
   root: string,
   findings: readonly ReturnType<typeof finding>[],
+  replayEvents: readonly ReturnType<typeof retainInvocation>[] = [],
 ): CompletePathMeasurement["findings"] {
   const scenario = writeAuthority(root, "SCENARIO.md", scenarioBytes);
   const scenarioReview = writeAuthority(
@@ -184,6 +210,11 @@ function findingsProjection(
   const characterSheets = {};
   const characterSheetsSha256 = sha256Canonical(characterSheets);
   const setupObservation = {};
+  const replaySupervisor = writeAuthority(
+    root,
+    "replay-supervisor.mjs",
+    "export default {};\n",
+  );
   const calls = [1, 2].map((seq) => ({
     type: "sdk-call" as const,
     seq,
@@ -204,7 +235,7 @@ function findingsProjection(
     gitSha,
     startedAt: "2026-08-14T00:00:00.000Z",
     consumerIsolation: "permissionProfile" as const,
-    replaySupervisorSha256: "c".repeat(64),
+    replaySupervisorSha256: replaySupervisor.sha256,
     charactersSha256: "e".repeat(64),
     scenarioSha256: scenario.sha256,
     scenarioReviewSha256: scenarioReview.sha256,
@@ -240,28 +271,7 @@ function findingsProjection(
       ],
     })}\n`,
   );
-  const compositeReview = {
-    raw: {
-      classification: "supported" as const,
-      evidence: "Synthetic RAW review is supported.",
-    },
-    contentAvailability: {
-      classification: "supplied" as const,
-      evidence: "Synthetic content is supplied.",
-    },
-    sdkCapability: {
-      classification: "supported" as const,
-      evidence: "Synthetic SDK capability is supported.",
-    },
-    artifactPolicy: {
-      classification: "safe" as const,
-      evidence: "Synthetic artifact policy is safe.",
-    },
-    scenarioQuality: {
-      classification: "ready" as const,
-      evidence: "Synthetic scenario quality is ready.",
-    },
-  };
+  const compositeReview = syntheticCompositeReview();
   const retainedReviewInput = (
     reviewStage: "milestone" | "final",
     invocationId: string,
@@ -290,6 +300,37 @@ function findingsProjection(
     "replay-final.json",
     `${JSON.stringify(retainedReviewInput("final", "composite-final"))}\n`,
   );
+  const replayResult = writeAuthority(
+    root,
+    "evidence/replay-result.json",
+    `${JSON.stringify({
+      type: "raw-swarm-sdk-replay-result",
+      schemaVersion: 1,
+      scenarioId,
+      transcriptSha256: transcript.sha256,
+      replaySupervisorSha256: replaySupervisor.sha256,
+      matchedCallCount: calls.length,
+      status: "succeeded",
+    })}\n`,
+  );
+  const replayEventAuthorities = replayEvents.flatMap(
+    ({ entry, authority }) => {
+      const reviewStage =
+        entry.invocationId === "composite-milestone"
+          ? "milestone"
+          : entry.invocationId === "composite-final"
+            ? "final"
+            : undefined;
+      return reviewStage === undefined
+        ? []
+        : [
+            {
+              role: `prePlayReviewReplayEvents-${reviewStage}`,
+              ...authority,
+            },
+          ];
+    },
+  );
   const run = {
     scenarioId,
     gitSha,
@@ -309,6 +350,9 @@ function findingsProjection(
       { role: "review-1", ...review },
       { role: "replay-milestone", ...replayMilestone },
       { role: "replay-final", ...replayFinal },
+      ...replayEventAuthorities,
+      { role: "replaySupervisor", ...replaySupervisor },
+      { role: "replayResult", ...replayResult },
     ],
     findings,
   };
@@ -328,6 +372,17 @@ function retainInvocation(root: string, entry: ReturnType<typeof invocation>) {
       reasoningEffort: entry.reasoningEffort,
       startedAt: entry.startedAt,
     },
+    ...(entry.phase === "scenarioCompositeReview"
+      ? [
+          {
+            type: "item.completed",
+            item: {
+              type: "agent_message",
+              text: JSON.stringify({ result: syntheticCompositeReview() }),
+            },
+          },
+        ]
+      : []),
     {
       type: "turn.completed",
       usage:
@@ -448,10 +503,14 @@ function measurement(
     invocationLedgers: [invocationLedger],
     invocations: retainedInvocations.map(({ entry }) => entry),
     invocationEvents: retainedInvocations.map(({ authority }) => authority),
-    findings: findingsProjection(root, [
-      finding("accepted-call-verdict", 1),
-      finding("successful-correction", 2),
-    ]),
+    findings: findingsProjection(
+      root,
+      [
+        finding("accepted-call-verdict", 1),
+        finding("successful-correction", 2),
+      ],
+      retainedInvocations,
+    ),
   } satisfies CurrentCompletePathMeasurement;
   return result;
 }
@@ -921,13 +980,18 @@ describe("complete Raw Swarm path comparison", () => {
     const postPlayReviewAuthority = source.findings.authorities.find(
       ({ role }) => role === "review-1",
     );
+    const replayResultAuthority = source.findings.authorities.find(
+      ({ role }) => role === "replayResult",
+    );
     expect(scenarioReviewAuthority).toBeDefined();
     expect(transcriptAuthority).toBeDefined();
     expect(postPlayReviewAuthority).toBeDefined();
+    expect(replayResultAuthority).toBeDefined();
     if (
       scenarioReviewAuthority === undefined ||
       transcriptAuthority === undefined ||
-      postPlayReviewAuthority === undefined
+      postPlayReviewAuthority === undefined ||
+      replayResultAuthority === undefined
     )
       return;
 
@@ -972,6 +1036,14 @@ describe("complete Raw Swarm path comparison", () => {
     writeFileSync(transcriptPath, transcriptBytes);
     const transcriptSha256 = sha256Text(transcriptBytes);
 
+    const replayResultPath = resolve(repoRoot, replayResultAuthority.path);
+    const replayResult = JSON.parse(
+      readFileSync(replayResultPath, "utf8"),
+    ) as Record<string, unknown>;
+    const replayResultBytes =
+      JSON.stringify({ ...replayResult, transcriptSha256 }) + "\n";
+    writeFileSync(replayResultPath, replayResultBytes);
+
     const postPlayReviewPath = resolve(repoRoot, postPlayReviewAuthority.path);
     const postPlayReview = JSON.parse(
       readFileSync(postPlayReviewPath, "utf8"),
@@ -1000,6 +1072,13 @@ describe("complete Raw Swarm path comparison", () => {
           ...authority,
           byteLength: Buffer.byteLength(postPlayReviewBytes),
           sha256: sha256Text(postPlayReviewBytes),
+        };
+      }
+      if (authority.role === "replayResult") {
+        return {
+          ...authority,
+          byteLength: Buffer.byteLength(replayResultBytes),
+          sha256: sha256Text(replayResultBytes),
         };
       }
       return authority;

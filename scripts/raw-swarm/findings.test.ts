@@ -15,6 +15,10 @@ import {
 import { renderFindingsAudit } from "./findings-audit.ts";
 import { projectGenerationFindings } from "./generation-findings.ts";
 import {
+  codexOutputJsonSchema,
+  CurrentScenarioCompositeReviewSchema,
+} from "./scenario-campaign.ts";
+import {
   ingestGenerationFindings,
   openArtifactIndex,
 } from "./artifact-index.ts";
@@ -258,7 +262,9 @@ function retainedCompositeReviewInput(input: {
     model: "gpt-5.6-luna" as const,
     reasoningEffort: "max" as const,
     prompt: `${input.reviewStage} prompt`,
-    outputJsonSchema: { type: "object" },
+    outputJsonSchema: codexOutputJsonSchema(
+      CurrentScenarioCompositeReviewSchema,
+    ),
     result: {
       raw: { classification: "supported" as const, evidence: "RAW." },
       contentAvailability: {
@@ -280,12 +286,59 @@ function retainedCompositeReviewInput(input: {
 
 function retainedGenerationReviewLedger(root: string): string {
   const path = resolve(root, "generation-invocations.jsonl");
+  const reviewResult = (invocationId: string) =>
+    retainedCompositeReviewInput({
+      reviewStage:
+        invocationId === "original-milestone" ? "milestone" : "final",
+      invocationId,
+    }).result;
+  const eventBytes = (invocationId: string): string =>
+    `${[
+      {
+        type: "raw-swarm.invocation.started",
+        schemaVersion: 2,
+        scenarioId: "findings-example",
+        gitSha: "a".repeat(40),
+        phase: "scenarioCompositeReview",
+        stagePlanReason: "The campaign requires a composite review.",
+        fallbackInvocationId: invocationId,
+        model: "gpt-5.6-luna",
+        reasoningEffort: "max",
+        startedAt: "2026-08-18T00:00:00.000Z",
+      },
+      {
+        type: "thread.started",
+        thread_id: invocationId,
+      },
+      {
+        type: "item.completed",
+        item: {
+          type: "agent_message",
+          text: JSON.stringify({ result: reviewResult(invocationId) }),
+        },
+      },
+      {
+        type: "raw-swarm.invocation.completed",
+        schemaVersion: 2,
+        elapsedMilliseconds: 10,
+        exit: { tag: "exited", status: 0 },
+        result: { tag: "succeeded" },
+      },
+    ]
+      .map((value) => JSON.stringify(value))
+      .join("\n")}\n`;
+  const eventPath = (invocationId: string) =>
+    resolve(root, `${invocationId}.events.jsonl`);
+  for (const invocationId of ["original-milestone", "original-final"]) {
+    writeFileSync(eventPath(invocationId), eventBytes(invocationId));
+  }
   const entry = (invocationId: string) => ({
     schemaVersion: 2,
     scenarioId: "findings-example",
     gitSha: "a".repeat(40),
-    eventsSha256:
-      invocationId === "original-milestone" ? "a".repeat(64) : "b".repeat(64),
+    eventsSha256: createHash("sha256")
+      .update(readFileSync(eventPath(invocationId)))
+      .digest("hex"),
     phase: "scenarioCompositeReview",
     stagePlanReason: "The campaign requires a composite review.",
     invocationId,
@@ -295,7 +348,11 @@ function retainedGenerationReviewLedger(root: string): string {
     elapsedMilliseconds: 10,
     exit: { tag: "exited", status: 0 },
     result: { tag: "succeeded" },
-    usage: { tag: "unavailable", reason: "Fixture usage omitted." },
+    usage: {
+      tag: "unavailable",
+      reason:
+        "The first-party event stream exposed no turn.completed usage object.",
+    },
   });
   writeFileSync(
     path,
@@ -389,6 +446,42 @@ describe("Raw Swarm findings projection", () => {
         }),
       ]),
     );
+    const tamperedEventPath = resolve(
+      input.root,
+      "original-milestone.events.jsonl",
+    );
+    const tamperedEvents = readFileSync(tamperedEventPath, "utf8").replace(
+      '\\"classification\\":\\"supported\\"',
+      '\\"classification\\":\\"unsupported\\"',
+    );
+    writeFileSync(tamperedEventPath, tamperedEvents);
+    const tamperedLedgerPath = resolve(repoRoot, generationLedgerRelative);
+    const tamperedLedgerEntries = readFileSync(tamperedLedgerPath, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as Record<string, unknown>);
+    tamperedLedgerEntries[0] = {
+      ...tamperedLedgerEntries[0],
+      eventsSha256: createHash("sha256").update(tamperedEvents).digest("hex"),
+    };
+    writeFileSync(
+      tamperedLedgerPath,
+      `${tamperedLedgerEntries.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
+    );
+    expect(() =>
+      projectRunFindings({
+        transcriptPath: input.transcriptRelative,
+        runDirectory: input.runRelative,
+        reviewPaths: [input.reviewRelative],
+        scenarioReviewPaths: [],
+        generationLedgerPaths: [generationLedgerRelative],
+        reviewReplayPaths: [
+          relative(repoRoot, milestonePath),
+          relative(repoRoot, finalPath),
+        ],
+        issueLinks: [],
+      }),
+    ).toThrow(/result does not match its invocation event output/);
   });
 
   test("rejects missing, duplicate-stage, and mismatched original review replay inputs", () => {

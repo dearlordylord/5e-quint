@@ -574,6 +574,10 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts \
 mise exec -- pnpm exec tsx scripts/raw-swarm/replay-sdk-player.ts \
   "scripts/raw-swarm/out/$SCENARIO-sdk-player"
 
+# Replay also retains evidence/replay-result.json. It hash-links the exact
+# transcript and replay supervisor, records the exact matched SDK call count,
+# and is immutable once written.
+
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts ingest \
   "scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl" \
   --db scripts/raw-swarm/out/player-swarm.db
@@ -635,10 +639,15 @@ exactly one milestone and one final envelope, and each envelope must match
 one v2 composite-review row in the supplied generation ledger by invocation id,
 model, reasoning effort, scenario, and Git identity. Their bytes become
 replay-milestone and replay-final authorities in the findings projection;
-they do not add ledger rows or duplicate usage totals. Complete-path assembly
-allows one or more generation invocations interleaved with the milestone/final
-composite reviews within the pre-play admission group, while later authoring,
-player, and post-play stages remain ordered.
+their adjacent retained event streams become
+prePlayReviewReplayEvents-milestone/final authorities, and they do not add
+ledger rows or duplicate usage totals. A complete current path additionally
+requires the replay-supervisor.mjs and immutable evidence/replay-result.json
+authorities produced by replay-sdk-player; the latter must match the run
+transcript hash, supervisor hash, and exact SDK call count. Complete-path
+assembly allows one or more generation invocations interleaved with the
+milestone/final composite reviews within the pre-play admission group, while
+later authoring, player, and post-play stages remain ordered.
 
 The findings projection records generation rejection, character/setup
 obstruction, pre-call compilation/runtime failure, malformed submissions and

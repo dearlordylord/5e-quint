@@ -39,8 +39,10 @@ export {
   FinalScenarioReviewSchema,
 };
 import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
+import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
 import { playerContinuationEvidence } from "./player-continuation-evidence.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
+import { SdkReplayResultEvidenceSchema } from "./sdk-player/sdk-replay-result.ts";
 import { ReviewOutputSchema } from "./review-contract.ts";
 import {
   isJsonRecord,
@@ -2035,6 +2037,30 @@ function isPrePlayReviewSourceAuthorityRole(role: string): boolean {
   return namedReviewStageAuthorityRole(role, "prePlayReviewSourceInput");
 }
 
+function isPrePlayReviewEventsAuthorityRole(role: string): boolean {
+  return namedReviewStageAuthorityRole(role, "prePlayReviewReplayEvents");
+}
+
+function reviewStageForAuthorityRole(
+  role: string,
+  prefix: string,
+): "milestone" | "final" | undefined {
+  const normalizedPrefix = prefix.endsWith("-") ? prefix.slice(0, -1) : prefix;
+  if (
+    role === `${normalizedPrefix}-milestone` ||
+    role === `${normalizedPrefix}milestone`
+  ) {
+    return "milestone";
+  }
+  if (
+    role === `${normalizedPrefix}-final` ||
+    role === `${normalizedPrefix}final`
+  ) {
+    return "final";
+  }
+  return undefined;
+}
+
 function readAuthorityJson(authority: FindingAuthority):
   | { readonly tag: "valid"; readonly value: unknown }
   | {
@@ -2263,6 +2289,11 @@ function currentAuthorityContentIssues(
     );
   }
   const replayStages = new Map<string, string>();
+  const replayAuthoritiesByStage = new Map<string, FindingAuthority>();
+  const replayInvocationsByStage = new Map<
+    string,
+    CurrentModelInvocationLedgerEntry
+  >();
   for (const authority of replayAuthorities) {
     const value = readAuthorityJson(authority);
     if (value.tag === "invalid") {
@@ -2314,6 +2345,10 @@ function currentAuthorityContentIssues(
       );
     }
     replayStages.set(replay.reviewStage, replay.invocationId);
+    replayAuthoritiesByStage.set(replay.reviewStage, authority);
+    if (invocation !== undefined) {
+      replayInvocationsByStage.set(replay.reviewStage, invocation);
+    }
   }
   if (!replayStages.has("milestone"))
     issues.push(
@@ -2336,6 +2371,132 @@ function currentAuthorityContentIssues(
       );
     }
   }
+
+  const replayEventAuthorities = findings.authorities.filter(({ role }) =>
+    isPrePlayReviewEventsAuthorityRole(role),
+  );
+  if (replayEventAuthorities.length !== 2) {
+    issues.push(
+      `Current path requires one retained milestone and one final replay event authority, received ${String(replayEventAuthorities.length)}.`,
+    );
+  }
+  const replayEventStages = new Set<string>();
+  for (const authority of replayEventAuthorities) {
+    const reviewStage = reviewStageForAuthorityRole(
+      authority.role,
+      "prePlayReviewReplayEvents",
+    );
+    if (reviewStage === undefined) {
+      issues.push(
+        `Replay event authority role is not stage-specific: ${authority.role}.`,
+      );
+      continue;
+    }
+    if (replayEventStages.has(reviewStage)) {
+      issues.push(
+        `Replay event authorities contain duplicate ${reviewStage} review stages.`,
+      );
+      continue;
+    }
+    replayEventStages.add(reviewStage);
+    const replayAuthority = replayAuthoritiesByStage.get(reviewStage);
+    const invocation = replayInvocationsByStage.get(reviewStage);
+    if (replayAuthority === undefined || invocation === undefined) {
+      issues.push(
+        `Replay event authority ${authority.role} has no matching retained ${reviewStage} envelope and invocation.`,
+      );
+      continue;
+    }
+    const invocationEvent = measurement.invocationEvents.find(
+      ({ path }) => path === authority.path,
+    );
+    if (invocationEvent === undefined) {
+      issues.push(
+        `Replay event authority ${authority.role} is not included in the complete-path invocation event authorities.`,
+      );
+    } else if (
+      invocationEvent.sha256 !== authority.sha256 ||
+      invocationEvent.sha256 !== invocation.eventsSha256
+    ) {
+      issues.push(
+        `Replay event authority ${authority.role} does not match its retained invocation event hash.`,
+      );
+    }
+    try {
+      validateRetainedScenarioReviewInvocation({
+        retainedInputPath: replayAuthority.path,
+        eventPath: authority.path,
+        eventSha256: authority.sha256,
+        reviewStage,
+        ledgerEntry: invocation,
+      });
+    } catch (error: unknown) {
+      issues.push(
+        error instanceof Error
+          ? error.message
+          : `Replay event authority ${authority.role} is not bound to its retained invocation.`,
+      );
+    }
+  }
+  if (!replayEventStages.has("milestone")) {
+    issues.push(
+      "Current path is missing a retained milestone replay event authority.",
+    );
+  }
+  if (!replayEventStages.has("final")) {
+    issues.push(
+      "Current path is missing a retained final replay event authority.",
+    );
+  }
+
+  const replaySupervisorAuthorities = findings.authorities.filter(
+    ({ role }) => role === "replaySupervisor",
+  );
+  if (replaySupervisorAuthorities.length !== 1) {
+    issues.push(
+      `Current path requires exactly one replay supervisor authority, received ${String(replaySupervisorAuthorities.length)}.`,
+    );
+  }
+  const replaySupervisorAuthority = replaySupervisorAuthorities[0];
+  const replayResultAuthorities = findings.authorities.filter(
+    ({ role }) => role === "replayResult",
+  );
+  if (replayResultAuthorities.length !== 1) {
+    issues.push(
+      `Current path requires exactly one replay-result authority, received ${String(replayResultAuthorities.length)}.`,
+    );
+  }
+  const replayResultAuthority = replayResultAuthorities[0];
+  if (replayResultAuthority !== undefined) {
+    const value = readAuthorityJson(replayResultAuthority);
+    if (value.tag === "invalid") {
+      issues.push(value.message);
+    } else {
+      const decoded = Schema.decodeUnknownEither(
+        SdkReplayResultEvidenceSchema,
+        { onExcessProperty: "error" },
+      )(value.value);
+      if (Either.isLeft(decoded)) {
+        issues.push(
+          `Replay-result authority ${replayResultAuthority.role} has an unsupported schema: ${decoded.left.message}`,
+        );
+      } else if (replaySupervisorAuthority === undefined) {
+        issues.push(
+          "Replay-result authority cannot be bound without the replay supervisor authority.",
+        );
+      } else if (
+        decoded.right.scenarioId !== findings.run.scenarioId ||
+        decoded.right.transcriptSha256 !== findings.run.transcriptSha256 ||
+        decoded.right.replaySupervisorSha256 !==
+          replaySupervisorAuthority.sha256 ||
+        decoded.right.matchedCallCount !== findings.run.callCount
+      ) {
+        issues.push(
+          "Replay-result authority is not bound to the retained transcript, replay supervisor, or exact SDK call count.",
+        );
+      }
+    }
+  }
   if (transcriptHeader !== undefined && scenarioReviewGitSha === undefined) {
     issues.push(
       "Current path has no identity-bearing scenario-review authority.",
@@ -2352,7 +2513,9 @@ function currentAuthorityContentIssues(
       (authority.role.startsWith("prePlayReviewSourceInput-") &&
         !isPrePlayReviewSourceAuthorityRole(authority.role)) ||
       (authority.role.startsWith("prePlayReviewReplayInput-") &&
-        !isReplayAuthorityRole(authority.role))
+        !isReplayAuthorityRole(authority.role)) ||
+      (authority.role.startsWith("prePlayReviewReplayEvents-") &&
+        !isPrePlayReviewEventsAuthorityRole(authority.role))
     ) {
       issues.push(`Finding authority role is not closed: ${authority.role}.`);
     }
