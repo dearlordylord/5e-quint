@@ -203,6 +203,82 @@ describe("Raw Swarm artifact index", () => {
     expect(readFileSync(dbPath)).toEqual(sourceBefore);
   });
 
+  test.each([1, 2] as const)(
+    "does not trust a replaced same-metadata review artifact in v%s indexes",
+    (schemaVersion) => {
+      const directory = temporaryDirectory();
+      const transcript = sdkTranscript(directory);
+      const transcriptPath = relative(repoRoot, transcript);
+      const transcriptBytes = readFileSync(transcript);
+      const transcriptSha256 = sha256Text(transcriptBytes.toString("utf8"));
+      const reviewPath = resolve(directory, "review.json");
+      const review = {
+        scenarioId: "artifact-index",
+        gitSha: "a".repeat(40),
+        transcriptSha256,
+        reviewer: "reviewer",
+        verdicts: [{ class: "pass", claim: "claim", evidence: "original" }],
+      };
+      writeFileSync(reviewPath, `${JSON.stringify(review)}\n`);
+      const recordedReviewSha256 = sha256Text(readFileSync(reviewPath, "utf8"));
+      const dbPath = resolve(
+        directory,
+        `index-v${String(schemaVersion)}.sqlite`,
+      );
+      const db = new DatabaseSync(dbPath);
+      db.exec(`
+        CREATE TABLE indexMetadata(schemaVersion INTEGER PRIMARY KEY);
+        INSERT INTO indexMetadata VALUES (${String(schemaVersion)});
+        CREATE TABLE artifacts(sha256 TEXT PRIMARY KEY, byteLength INTEGER NOT NULL, mediaType TEXT NOT NULL, path TEXT NOT NULL UNIQUE);
+        CREATE TABLE runs(id INTEGER PRIMARY KEY, scenarioId TEXT, gitSha TEXT, startedAt TEXT, transcriptSha256 TEXT);
+        CREATE TABLE reviews(id INTEGER PRIMARY KEY, runId INTEGER, reviewer TEXT, artifactSha256 TEXT, createdAt TEXT);
+      `);
+      db.prepare(
+        "INSERT INTO artifacts VALUES (?, ?, 'application/x-ndjson', ?)",
+      ).run(transcriptSha256, transcriptBytes.byteLength, transcriptPath);
+      db.prepare(
+        "INSERT INTO artifacts VALUES (?, ?, 'application/json', ?)",
+      ).run(
+        recordedReviewSha256,
+        readFileSync(reviewPath).byteLength,
+        relative(repoRoot, reviewPath),
+      );
+      db.prepare("INSERT INTO runs VALUES (1, 'artifact-index', ?, ?, ?)").run(
+        "a".repeat(40),
+        "2026-08-18T00:00:00.000Z",
+        transcriptSha256,
+      );
+      db.prepare(
+        "INSERT INTO reviews VALUES (1, 1, 'reviewer', ?, 'created')",
+      ).run(recordedReviewSha256);
+      db.close();
+      writeFileSync(
+        reviewPath,
+        `${JSON.stringify({ ...review, verdicts: [{ ...review.verdicts[0], evidence: "replacement" }] })}\n`,
+      );
+      const sourceBefore = readFileSync(dbPath);
+
+      const result = inventoryLegacyDatabase({
+        legacyDbPath: relative(repoRoot, dbPath),
+        artifactSearchRoot: relative(repoRoot, directory),
+      });
+
+      expect(result).toMatchObject({
+        tag: "supported",
+        source: { tag: "artifactIndex", schemaVersion },
+        inventory: expect.arrayContaining([
+          expect.objectContaining({
+            kind: "review",
+            legacyId: 1,
+            disposition: "databaseOnly",
+            expected: { tag: "recorded", sha256: recordedReviewSha256 },
+          }),
+        ]),
+      });
+      expect(readFileSync(dbPath)).toEqual(sourceBefore);
+    },
+  );
+
   test("indexes call metadata without duplicating sessions or results and exports every artifact", () => {
     const directory = temporaryDirectory();
     const transcript = sdkTranscript(directory);

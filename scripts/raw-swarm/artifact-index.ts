@@ -12,7 +12,7 @@ import { dirname, extname, relative, resolve, sep } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { Either, Schema } from "effect";
 
-import { ReviewOutputSchema } from "./review-contract.ts";
+import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
 import { readFindingsProjection } from "./findings.ts";
 import { playerInvocationNumberFromEventsArtifact } from "./player-continuation-evidence.ts";
 import { preflightSdkTranscript } from "./sdk-player/sdk-audit.ts";
@@ -832,15 +832,27 @@ type LegacyRunIdentity = {
   readonly transcriptSha256: string;
 };
 
+type LegacyReviewVerdict = Schema.Schema.Type<
+  typeof ReviewOutputSchema
+>["verdicts"][number];
+
+type LegacyReviewArtifact =
+  | { readonly tag: "recorded"; readonly sha256: string }
+  | { readonly tag: "notRecorded" };
+
 type LegacyReviewIdentity = {
   readonly id: number;
   readonly indexedPath: string;
-  readonly reviewRoundReviewer: string | null;
+  readonly reviewer: string | null;
   readonly scenarioId: string;
   readonly gitSha: string;
   readonly transcriptSha256: string;
+  readonly artifact: LegacyReviewArtifact;
   readonly verdicts:
-    | { readonly tag: "recorded"; readonly rows: readonly unknown[] }
+    | {
+        readonly tag: "recorded";
+        readonly rows: readonly LegacyReviewVerdict[];
+      }
     | { readonly tag: "notRecorded" };
   readonly expectedReviewers: ReadonlySet<string>;
 };
@@ -897,6 +909,12 @@ function inventoryLegacyReview(
 ): LegacyArtifactInventory {
   const matches = (path: string): boolean => {
     try {
+      if (
+        identity.artifact.tag === "recorded" &&
+        shaAt(path) !== identity.artifact.sha256
+      ) {
+        return false;
+      }
       const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
         onExcessProperty: "error",
       })(JSON.parse(readFileSync(path, "utf8")));
@@ -906,14 +924,12 @@ function inventoryLegacyReview(
         value.scenarioId === identity.scenarioId &&
         value.gitSha === identity.gitSha &&
         value.transcriptSha256 === identity.transcriptSha256 &&
-        (identity.reviewRoundReviewer === null ||
-          value.reviewer === identity.reviewRoundReviewer) &&
+        (identity.reviewer === null || value.reviewer === identity.reviewer) &&
         (identity.expectedReviewers.size === 0 ||
           (identity.expectedReviewers.size === 1 &&
             identity.expectedReviewers.has(value.reviewer))) &&
         (identity.verdicts.tag === "notRecorded" ||
-          JSON.stringify(value.verdicts) ===
-            JSON.stringify(identity.verdicts.rows))
+          verdictRowsEqual(value.verdicts, identity.verdicts.rows))
       );
     } catch {
       return false;
@@ -956,14 +972,22 @@ function inventoryLegacyReview(
   }
   const recovered = matchesByContent[0];
   const currentSha256 = shaAt(indexed);
-  const expectedSha256 = recovered === undefined ? undefined : shaAt(recovered);
+  const expectedSha256 =
+    identity.artifact.tag === "recorded"
+      ? identity.artifact.sha256
+      : recovered === undefined
+        ? undefined
+        : shaAt(recovered);
   if (recovered === undefined || expectedSha256 === undefined) {
     return {
       kind: "review",
       legacyId: identity.id,
       disposition: "databaseOnly",
       indexedPath: identity.indexedPath,
-      expected: { tag: "notRecorded" },
+      expected:
+        identity.artifact.tag === "recorded"
+          ? identity.artifact
+          : { tag: "notRecorded" },
       indexed: indexedArtifact(currentSha256),
     };
   }
@@ -990,6 +1014,51 @@ function inventoryLegacyReview(
       recoveredPath: relative(repoRoot, recovered),
     },
   };
+}
+
+function verdictRowsEqual(
+  actual: readonly LegacyReviewVerdict[],
+  expected: readonly LegacyReviewVerdict[],
+): boolean {
+  return (
+    actual.length === expected.length &&
+    actual.every((row, index) => {
+      const expectedRow = expected[index];
+      return (
+        expectedRow !== undefined &&
+        row.class === expectedRow.class &&
+        row.claim === expectedRow.claim &&
+        row.evidence === expectedRow.evidence
+      );
+    })
+  );
+}
+
+function parseLegacyVerdictRows(
+  rows: readonly unknown[],
+): readonly LegacyReviewVerdict[] | undefined {
+  const decoded: LegacyReviewVerdict[] = [];
+  for (const row of rows) {
+    if (!isJsonRecord(row)) return undefined;
+    const className = VERDICT_CLASSES.find(
+      (candidate) => candidate === row.class,
+    );
+    if (
+      className === undefined ||
+      typeof row.claim !== "string" ||
+      row.claim.trim().length === 0 ||
+      typeof row.evidence !== "string" ||
+      row.evidence.trim().length === 0
+    ) {
+      return undefined;
+    }
+    decoded.push({
+      class: className,
+      claim: row.claim,
+      evidence: row.evidence,
+    });
+  }
+  return decoded;
 }
 
 function tableColumns(db: DatabaseSync, table: string): ReadonlySet<string> {
@@ -1126,7 +1195,7 @@ export function inventoryLegacyDatabase(input: {
             return {
               rows: db
                 .prepare(
-                  `SELECT rr.id, rr.artifactPath, ${reviewRoundHasReviewer ? "rr.reviewer" : "NULL"} AS reviewRoundReviewer, r.scenarioId, r.gitSha, r.transcriptSha256
+                  `SELECT rr.id, rr.artifactPath, ${reviewRoundHasReviewer ? "rr.reviewer" : "NULL"} AS reviewer, NULL AS artifactSha256, r.scenarioId, r.gitSha, r.transcriptSha256
                    FROM reviewRounds rr JOIN runs r ON r.id = rr.runId ORDER BY rr.id`,
                 )
                 .all(),
@@ -1142,7 +1211,8 @@ export function inventoryLegacyDatabase(input: {
           ? {
               rows: db
                 .prepare(
-                  `SELECT reviews.id, artifacts.path AS artifactPath, reviews.reviewer AS reviewRoundReviewer,
+                  `SELECT reviews.id, artifacts.path AS artifactPath, reviews.reviewer AS reviewer,
+                          reviews.artifactSha256 AS artifactSha256,
                           runs.scenarioId, runs.gitSha, runs.transcriptSha256
                    FROM reviews
                    JOIN runs ON runs.id = reviews.runId
@@ -1165,21 +1235,29 @@ export function inventoryLegacyDatabase(input: {
           !isJsonRecord(row) ||
           typeof row.id !== "number" ||
           typeof row.artifactPath !== "string" ||
-          (row.reviewRoundReviewer !== null &&
-            typeof row.reviewRoundReviewer !== "string") ||
+          (row.reviewer !== null && typeof row.reviewer !== "string") ||
+          (row.artifactSha256 !== null &&
+            typeof row.artifactSha256 !== "string") ||
           typeof row.scenarioId !== "string" ||
           typeof row.gitSha !== "string" ||
-          typeof row.transcriptSha256 !== "string"
+          typeof row.transcriptSha256 !== "string" ||
+          (detectedSource.tag === "artifactIndex" &&
+            typeof row.artifactSha256 !== "string")
         ) {
           return unavailableInventory(reviewRows.unavailableSource);
         }
         const expectedVerdicts = hasVerdicts
-          ? db
-              .prepare(
-                `SELECT class, claim, evidence FROM verdicts WHERE ${reviewRows.referenceColumn} = ? ORDER BY id`,
-              )
-              .all(row.id)
+          ? parseLegacyVerdictRows(
+              db
+                .prepare(
+                  `SELECT class, claim, evidence FROM verdicts WHERE ${reviewRows.referenceColumn} = ? ORDER BY id`,
+                )
+                .all(row.id),
+            )
           : [];
+        if (expectedVerdicts === undefined) {
+          return unavailableInventory(reviewRows.unavailableSource);
+        }
         const expectedReviewers = hasVerdicts
           ? new Set(
               db
@@ -1199,10 +1277,14 @@ export function inventoryLegacyDatabase(input: {
             {
               id: row.id,
               indexedPath: row.artifactPath,
-              reviewRoundReviewer: row.reviewRoundReviewer,
+              reviewer: row.reviewer,
               scenarioId: row.scenarioId,
               gitSha: row.gitSha,
               transcriptSha256: row.transcriptSha256,
+              artifact:
+                row.artifactSha256 === null
+                  ? { tag: "notRecorded" }
+                  : { tag: "recorded", sha256: row.artifactSha256 },
               verdicts: hasVerdicts
                 ? { tag: "recorded", rows: expectedVerdicts }
                 : { tag: "notRecorded" },
