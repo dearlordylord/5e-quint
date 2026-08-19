@@ -607,7 +607,7 @@ function scratchIsolationPrompt(scratch: string, prompt: string): string {
   return (
     "The scratch workspace at " +
     scratch +
-    " is complete and contains the entire benchmark input. Use only files inside that scratch workspace. Do not inspect, read, search, or execute against any path outside it, including the repository, parent directories, hidden files outside scratch, or network resources. Run all commands with the scratch workspace as their working directory. Invoke one read-only command directly: `cat`, `head`, `tail`, `sed` with a numeric print range, `sha256sum`, `wc`, `od`, or `rg` against named scratch files. The client records that direct command inside one shell telemetry wrapper; do not invoke Bash or another shell yourself. Do not use Node, Python, another executable, shell expansion, shell operators, pipelines, redirections, loops, scripts, or structured file/search tools.\n\n" +
+    " is complete and contains the entire benchmark input. Use only files inside that scratch workspace. Do not inspect, read, search, or execute against any path outside it, including the repository, parent directories, hidden files outside scratch, or network resources. Run all commands with the scratch workspace as their working directory. You may perform multiple preparation reads. For each read, invoke one read-only command directly: `cat`, `head`, `tail`, `sed` with a numeric print range, `sha256sum`, `wc`, `od`, or `rg` against named scratch files. The client records each direct command inside one shell telemetry wrapper; do not invoke Bash or another shell yourself. Do not use Node, Python, another executable, shell expansion, shell operators, pipelines, redirections, loops, scripts, or structured file/search tools.\n\n" +
     prompt
   );
 }
@@ -1464,7 +1464,7 @@ function generationPrompt(
   facts: ScenarioStageFacts,
 ): string {
   return (
-    "Read the exact delivered context at " +
+    "First read SCENARIO.md directly and run sha256sum on SCENARIO.md and SCENARIO_REVIEW.json so the canonical scenario bytes and both hashes cannot be lost to context-output truncation. Then read the exact delivered context at " +
     contextPath +
     ". Return a generation-preparation JSON record for " +
     FIXED_SCENARIO_ID +
