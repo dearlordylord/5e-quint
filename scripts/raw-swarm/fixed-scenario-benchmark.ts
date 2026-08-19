@@ -21,9 +21,12 @@ import {
   readJsonLines,
 } from "./artifact-authority.ts";
 import {
-  capabilityContextForRole,
-  type CapabilityRole,
-} from "./capability-projection.ts";
+  BENCHMARK_CONTEXT_ROLES,
+  benchmarkContextForRole,
+  historicalDeclarationBundleText,
+  historicalDocumentDeclarationContextForRole,
+  type BenchmarkContextRole,
+} from "./benchmark-context.ts";
 import {
   codexOutputJsonSchema,
   CurrentScenarioCompositeReviewSchema,
@@ -48,6 +51,7 @@ import {
 import {
   BENCHMARK_IMPLEMENTATION_PROFILES,
   BenchmarkContextSourceManifestDocumentSchema,
+  BenchmarkRunDescriptorSchema,
   parseBenchmarkMeasurement,
   readCompletePathMeasurement,
   validateCompletePathMeasurement,
@@ -68,7 +72,6 @@ import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
 import {
   buildScenarioCharacterDistribution,
   buildScenarioSetupDistribution,
-  emitPublicDeclarations,
 } from "./sdk-player/consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
 import { scenarioSetupStatBlocks } from "./sdk-player/scenario-setup-runtime.ts";
@@ -88,16 +91,7 @@ export const FIXED_BENCHMARK_PROFILES = BENCHMARK_IMPLEMENTATION_PROFILES;
 export type FixedBenchmarkProfile = BenchmarkImplementationProfile;
 
 const FIXED_BENCHMARK_ROOT = "scripts/raw-swarm/out/fixed-scenario-benchmark";
-export const FIXED_BENCHMARK_CONTEXT_ROLES = [
-  "scenarioGeneration",
-  "scenarioReview",
-  "characterAuthoring",
-  "setupAuthoring",
-  "player",
-  "postPlayReview",
-] as const;
-export type BenchmarkContextRole =
-  (typeof FIXED_BENCHMARK_CONTEXT_ROLES)[number];
+export const FIXED_BENCHMARK_CONTEXT_ROLES = BENCHMARK_CONTEXT_ROLES;
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 type ScenarioCharacterEvaluation = Awaited<
   ReturnType<typeof evaluateScenarioCharacters>
@@ -138,6 +132,7 @@ export type FixedBenchmarkProfilePaths = Readonly<{
   readonly stagePlanFindings: string;
   readonly contextDirectory: string;
   readonly contextManifest: string;
+  readonly runDescriptor: string;
   readonly benchmarkLedger: string;
   readonly currentLedger: string;
   readonly auxiliaryLedger: string;
@@ -266,6 +261,7 @@ export function fixedBenchmarkProfilePaths(
     stagePlanFindings: resolve(root, "bundle/stage-plan-findings.json"),
     contextDirectory: resolve(root, "context"),
     contextManifest: resolve(root, "context-manifest.json"),
+    runDescriptor: resolve(root, "run.json"),
     benchmarkLedger: resolve(root, "evidence/benchmark-invocations.jsonl"),
     currentLedger: resolve(root, "evidence/current-invocations.jsonl"),
     auxiliaryLedger: resolve(root, "evidence/auxiliary-invocations.jsonl"),
@@ -300,111 +296,11 @@ function assertRunId(runId: string | undefined): string {
   return runId;
 }
 
-function roleCapability(role: BenchmarkContextRole): CapabilityRole {
-  if (role === "scenarioGeneration") return "generation";
-  if (role === "scenarioReview" || role === "postPlayReview") return "review";
-  return role;
-}
-
-const HISTORICAL_SDK_CAPABILITY_DOCUMENTS = [
-  {
-    label: "SCENARIO_CHARACTERS.md",
-    path: "scripts/raw-swarm/sdk-player/SCENARIO_CHARACTERS.md",
-  },
-  {
-    label: "CHARACTER_CREATION_SDK.md",
-    path: "packages/character-creation-runtime/README.md",
-  },
-  {
-    label: "CHARACTER_SHEET_SDK.md",
-    path: "packages/character-sheet-runtime/README.md",
-  },
-  {
-    label: "@dnd/scenario-character-sdk public contract",
-    path: "scripts/raw-swarm/sdk-player/scenario-character-contract.ts",
-  },
-  {
-    label: "SCENARIO_SETUP.md",
-    path: "scripts/raw-swarm/sdk-player/SCENARIO_SETUP.md",
-  },
-  {
-    label: "@dnd/scenario-setup-sdk public contract",
-    path: "scripts/raw-swarm/sdk-player/scenario-setup-contract.ts",
-  },
-  {
-    label: "PLAYER.md",
-    path: "scripts/raw-swarm/sdk-player/PLAYER.md",
-  },
-  {
-    label: "@dnd/player-sdk public contract",
-    path: "scripts/raw-swarm/sdk-player/continuation-contract.ts",
-  },
-  {
-    label: "PUBLIC_SDK.md",
-    path: "packages/battle-runtime/README.md",
-  },
-] as const;
-
-type ContextSource =
-  | {
-      readonly profile: "documentDeclarationSet";
-      readonly declarationBundle: string;
-    }
-  | { readonly profile: "boundedCapabilityProjection" };
-
-function declarationFiles(directory: string): readonly string[] {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = resolve(directory, entry.name);
-    if (entry.isDirectory()) return declarationFiles(path);
-    return entry.isFile() && entry.name.endsWith(".d.ts") ? [path] : [];
-  });
-}
-
-function publicDeclarationBundleText(): string {
-  const scratch = mkdtempSync(
-    resolve(tmpdir(), "dnd-fixed-benchmark-declarations-"),
-  );
-  const declarations = resolve(scratch, "declarations");
-  try {
-    emitPublicDeclarations(scratch);
-    return declarationFiles(declarations)
-      .map((path) => {
-        const label = relative(scratch, path);
-        return "\n--- " + label + " ---\n" + readFileSync(path, "utf8");
-      })
-      .sort()
-      .join("\n");
-  } finally {
-    rmSync(scratch, { recursive: true });
-  }
-}
-
-function historicalDocumentSetText(): string {
-  return HISTORICAL_SDK_CAPABILITY_DOCUMENTS.map(
-    ({ label, path }) =>
-      "## " + label + "\n\n" + readFileSync(resolve(repoRoot, path), "utf8"),
-  ).join("\n\n");
-}
-
-function baselineContextForRole(
-  role: BenchmarkContextRole,
-  declarationBundle: string,
-): string {
-  return [
-    "Raw Swarm fixed benchmark document declaration set",
-    "Role: " + role,
-    "Current public SDK capability documentation:",
-    historicalDocumentSetText(),
-    "Full emitted public declaration bundle (compiler-readable declarations only):",
-    declarationBundle,
-  ].join("\n\n");
-}
-
 /** Canonical unbounded context retained by the historical benchmark profile. */
 export function fixedBenchmarkDocumentDeclarationContextForRole(
   role: BenchmarkContextRole,
 ): string {
-  return baselineContextForRole(role, publicDeclarationBundleText());
+  return historicalDocumentDeclarationContextForRole(role);
 }
 
 /** Canonical delivered context for one benchmark role and profile. */
@@ -412,34 +308,23 @@ export function fixedBenchmarkContextForRole(
   profile: FixedBenchmarkProfile,
   role: BenchmarkContextRole,
 ): string {
-  return profile === "documentDeclarationSet"
-    ? fixedBenchmarkDocumentDeclarationContextForRole(role)
-    : capabilityContextForRole(roleCapability(role));
-}
-
-function profileContextText(
-  source: ContextSource,
-  role: BenchmarkContextRole,
-): string {
-  return source.profile === "documentDeclarationSet"
-    ? baselineContextForRole(role, source.declarationBundle)
-    : capabilityContextForRole(roleCapability(role));
+  return benchmarkContextForRole(profile, role);
 }
 
 function writeProfileContexts(
   profile: FixedBenchmarkProfile,
   paths: FixedBenchmarkProfilePaths,
 ): ArtifactAuthority {
-  const source: ContextSource =
+  const declarationBundle =
     profile === "documentDeclarationSet"
-      ? {
-          profile,
-          declarationBundle: publicDeclarationBundleText(),
-        }
-      : { profile };
+      ? historicalDeclarationBundleText()
+      : undefined;
   const sources = FIXED_BENCHMARK_CONTEXT_ROLES.map((role) => {
     const path = resolve(paths.contextDirectory, role + ".md");
-    writeExclusive(path, profileContextText(source, role));
+    writeExclusive(
+      path,
+      benchmarkContextForRole(profile, role, declarationBundle),
+    );
     return {
       role,
       sourceKind:
@@ -504,6 +389,15 @@ function appendCopiedLedgerEntry(source: string, destination: string): void {
   writeFileSync(destination, JSON.stringify(value) + "\n", { flag: "a" });
 }
 
+function nonEmpty<A>(
+  values: readonly A[],
+  label: string,
+): readonly [A, ...A[]] {
+  const first = values[0];
+  if (first === undefined) fail("Schema-3 assembly requires " + label + ".");
+  return [first, ...values.slice(1)];
+}
+
 function eventPath(
   paths: FixedBenchmarkProfilePaths,
   ordinal: number,
@@ -527,13 +421,14 @@ export function fixedBenchmarkCodexArgs(
   prompt: string,
   schemaPath?: string,
   outputPath?: string,
+  sandbox: "danger-full-access" | "workspace-write" = "danger-full-access",
 ): readonly [string, ...string[]] {
   return [
     "exec",
     "-C",
     cwd,
     "--sandbox",
-    "danger-full-access",
+    sandbox,
     "--skip-git-repo-check",
     "--ephemeral",
     "--json",
@@ -549,6 +444,72 @@ export function fixedBenchmarkCodexArgs(
   ];
 }
 
+function copyBenchmarkCallInputs(input: {
+  readonly scratch: string;
+  readonly contextPath: string;
+  readonly bundle: FixedScenarioCanonicalBundle;
+}): Readonly<{
+  readonly contextPath: string;
+  readonly bundlePaths: FixedScenarioCanonicalPaths;
+}> {
+  const contextPath = resolve(input.scratch, "BENCHMARK_CONTEXT.md");
+  const scenario = resolve(input.scratch, "SCENARIO.md");
+  const scenarioReview = resolve(input.scratch, "SCENARIO_REVIEW.json");
+  const characters = resolve(input.scratch, "CHARACTERS.ts");
+  const setup = resolve(input.scratch, "SETUP.ts");
+  copyFileSync(input.contextPath, contextPath);
+  copyFileSync(input.bundle.paths.scenario, scenario);
+  copyFileSync(input.bundle.paths.scenarioReview, scenarioReview);
+  copyFileSync(input.bundle.paths.characters, characters);
+  copyFileSync(input.bundle.paths.setup, setup);
+  return {
+    contextPath,
+    bundlePaths: { scenario, scenarioReview, characters, setup },
+  };
+}
+
+function localBenchmarkCallPrompt(input: {
+  readonly scratch: string;
+  readonly prompt: string;
+  readonly contextPath: string;
+  readonly bundle: FixedScenarioCanonicalBundle;
+  readonly local: Readonly<{
+    readonly contextPath: string;
+    readonly bundlePaths: FixedScenarioCanonicalPaths;
+  }>;
+}): string {
+  const replacements = [
+    [input.contextPath, input.local.contextPath],
+    [
+      repoRelative(input.bundle.paths.scenario),
+      input.local.bundlePaths.scenario,
+    ],
+    [
+      repoRelative(input.bundle.paths.scenarioReview),
+      input.local.bundlePaths.scenarioReview,
+    ],
+    [
+      repoRelative(input.bundle.paths.characters),
+      input.local.bundlePaths.characters,
+    ],
+    [repoRelative(input.bundle.paths.setup), input.local.bundlePaths.setup],
+  ] as const;
+  const localizedPrompt = replacements.reduce(
+    (prompt, [source, destination]) => prompt.split(source).join(destination),
+    input.prompt,
+  );
+  return scratchIsolationPrompt(input.scratch, localizedPrompt);
+}
+
+function scratchIsolationPrompt(scratch: string, prompt: string): string {
+  return (
+    "The scratch workspace at " +
+    scratch +
+    " is complete and contains the entire benchmark input. Use only files inside that scratch workspace. Do not inspect, read, search, or execute against any path outside it, including the repository, parent directories, hidden files outside scratch, or network resources. Run all commands with the scratch workspace as their working directory.\n\n" +
+    prompt
+  );
+}
+
 type StructuredCallResult<A> = Readonly<{
   readonly value: A;
   readonly eventPath: string;
@@ -558,6 +519,8 @@ type StructuredCallResult<A> = Readonly<{
 
 function runStructuredCall<A, I>(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
+  readonly contextPath: string;
+  readonly bundle: FixedScenarioCanonicalBundle;
   readonly ordinal: number;
   readonly phase:
     | "scenarioGeneration"
@@ -573,6 +536,11 @@ function runStructuredCall<A, I>(input: {
   readonly scenarioId: ScenarioId;
 }): StructuredCallResult<A> {
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-benchmark-call-"));
+  const local = copyBenchmarkCallInputs({
+    scratch,
+    contextPath: input.contextPath,
+    bundle: input.bundle,
+  });
   const schemaPath = resolve(scratch, "output-schema.json");
   const outputPath = resolve(scratch, "output.json");
   const logPath = resolve(
@@ -585,14 +553,15 @@ function runStructuredCall<A, I>(input: {
   try {
     const result = runCodexInvocation({
       args: fixedBenchmarkCodexArgs(
-        repoRoot,
+        scratch,
         input.model,
         input.reasoningEffort,
-        input.prompt,
+        localBenchmarkCallPrompt({ ...input, scratch, local }),
         schemaPath,
         outputPath,
+        "workspace-write",
       ),
-      cwd: repoRoot,
+      cwd: scratch,
       env: process.env,
       eventPath: events,
       logPath,
@@ -645,11 +614,15 @@ function runCompositeReviewCall(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
   readonly ordinal: number;
   readonly profile: FixedBenchmarkProfile;
+  readonly contextPath: string;
+  readonly bundle: FixedScenarioCanonicalBundle;
   readonly prompt: string;
   readonly gitSha: GitSha;
 }): StructuredCallResult<unknown> {
   const common = {
     profilePaths: input.profilePaths,
+    contextPath: input.contextPath,
+    bundle: input.bundle,
     ordinal: input.ordinal,
     phase: "scenarioCompositeReview" as const,
     prompt: input.prompt,
@@ -672,6 +645,8 @@ function runCompositeReviewCall(input: {
 
 function runAuxiliaryStructuredCall<A, I>(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
+  readonly contextPath: string;
+  readonly bundle: FixedScenarioCanonicalBundle;
   readonly ordinal: number;
   readonly kind: BenchmarkAuxiliaryInvocationKind;
   readonly schema: Schema.Schema<A, I>;
@@ -680,6 +655,11 @@ function runAuxiliaryStructuredCall<A, I>(input: {
   readonly scenarioId: ScenarioId;
 }): StructuredCallResult<A> {
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-benchmark-aux-"));
+  const local = copyBenchmarkCallInputs({
+    scratch,
+    contextPath: input.contextPath,
+    bundle: input.bundle,
+  });
   const schemaPath = resolve(scratch, "output-schema.json");
   const outputPath = resolve(scratch, "output.json");
   const logPath = resolve(
@@ -696,14 +676,15 @@ function runAuxiliaryStructuredCall<A, I>(input: {
   try {
     const result = runBenchmarkAuxiliaryInvocation({
       args: fixedBenchmarkCodexArgs(
-        repoRoot,
+        scratch,
         execution.model,
         execution.reasoningEffort,
-        input.prompt,
+        localBenchmarkCallPrompt({ ...input, scratch, local }),
         schemaPath,
         outputPath,
+        "workspace-write",
       ),
-      cwd: repoRoot,
+      cwd: scratch,
       env: process.env,
       eventPath: events,
       logPath,
@@ -1011,7 +992,13 @@ function characterSourceCall(input: {
         scratch,
         "gpt-5.6-sol",
         "medium",
-        "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_CHARACTERS.md, SCENARIO.md, and SCENARIO_REVIEW.json. Review characters.ts, run its documented typecheck, and leave it byte-identical to the existing zero-sheet source. Do not invent Character Sheets.",
+        scratchIsolationPrompt(
+          scratch,
+          "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_CHARACTERS.md, SCENARIO.md, and SCENARIO_REVIEW.json. Review characters.ts, run its documented typecheck, and leave it byte-identical to the existing zero-sheet source. Do not invent Character Sheets.",
+        ),
+        undefined,
+        undefined,
+        "workspace-write",
       ),
       cwd: scratch,
       env: process.env,
@@ -1103,7 +1090,15 @@ function setupSourceCalls(input: {
     ): void => {
       const events = eventPath(input.paths, ordinal, phase);
       const result = runCodexInvocation({
-        args: fixedBenchmarkCodexArgs(scratch, "gpt-5.6-sol", "medium", prompt),
+        args: fixedBenchmarkCodexArgs(
+          scratch,
+          "gpt-5.6-sol",
+          "medium",
+          scratchIsolationPrompt(scratch, prompt),
+          undefined,
+          undefined,
+          "workspace-write",
+        ),
         cwd: scratch,
         env: process.env,
         eventPath: events,
@@ -1157,6 +1152,7 @@ function setupSourceCalls(input: {
 export function benchmarkCommands(input: {
   readonly runId: string;
   readonly profile: FixedBenchmarkProfile;
+  readonly implementationGitSha: GitSha;
   readonly paths: FixedBenchmarkProfilePaths;
   readonly bundle: FixedScenarioCanonicalBundle;
 }): Readonly<
@@ -1182,6 +1178,8 @@ export function benchmarkCommands(input: {
     repoRelative(input.paths.stagePlan) +
     " --stage-plan-findings-path " +
     repoRelative(input.paths.stagePlanFindings) +
+    " --implementation-git-sha " +
+    input.implementationGitSha +
     " --benchmark-context-path " +
     contextPlayer +
     " --instructional-isolation";
@@ -1191,7 +1189,9 @@ export function benchmarkCommands(input: {
       "pnpm exec tsx scripts/raw-swarm/replay-sdk-player.ts " +
       repoRelative(input.paths.playerDirectory),
     postPlayReview:
-      "RAW_REVIEW_CONTEXT_PATH=" +
+      "RAW_REVIEW_IMPLEMENTATION_GIT_SHA=" +
+      input.implementationGitSha +
+      " RAW_REVIEW_CONTEXT_PATH=" +
       repoRelative(resolve(input.paths.contextDirectory, "postPlayReview.md")) +
       " scripts/raw-swarm/run-raw-review.sh scripts/raw-swarm/reviews/sdk-player.prompt.txt " +
       repoRelative(input.paths.playerDirectory) +
@@ -1233,15 +1233,18 @@ async function prepareProfile(input: {
   const facts = fixedScenarioStageFacts();
   retainStagePlan(bundle, paths);
   const contextManifest = writeProfileContexts(input.profile, paths);
+  const scenarioBundle = {
+    ...bundle.authorities,
+    stageFacts: artifactAuthority(repoRelative(paths.stageFacts)),
+    stagePlan: artifactAuthority(repoRelative(paths.stagePlan)),
+  };
   writeJsonExclusive(resolve(paths.root, "run.json"), {
     schemaVersion: 1,
     runId: input.runId,
     profile: input.profile,
     scenarioId: FIXED_SCENARIO_ID,
-    gitSha: gitSha.right,
-    bundle: bundle.authorities,
-    stageFacts: artifactAuthority(repoRelative(paths.stageFacts)),
-    stagePlan: artifactAuthority(repoRelative(paths.stagePlan)),
+    implementationGitSha: gitSha.right,
+    scenarioBundle,
     contextManifest,
   });
   const generationContext = resolve(
@@ -1251,6 +1254,8 @@ async function prepareProfile(input: {
   for (const ordinal of [1, 2] as const) {
     const result = runStructuredCall({
       profilePaths: paths,
+      contextPath: generationContext,
+      bundle,
       ordinal,
       phase: "scenarioGeneration",
       schema: GenerationPreparationSchema,
@@ -1278,6 +1283,8 @@ async function prepareProfile(input: {
     profilePaths: paths,
     ordinal: 3,
     profile: input.profile,
+    contextPath: reviewContext,
+    bundle,
     prompt: reviewPrompt(input.profile, "milestone", reviewContext, bundle),
     gitSha: gitSha.right,
   });
@@ -1296,6 +1303,8 @@ async function prepareProfile(input: {
   if (input.profile === "documentDeclarationSet") {
     const readiness = runAuxiliaryStructuredCall({
       profilePaths: paths,
+      contextPath: reviewContext,
+      bundle,
       ordinal: 4,
       kind: { responsibility: "scenarioQuality", phase: "scenarioReadiness" },
       schema: ScenarioQualityReviewSchema,
@@ -1326,6 +1335,8 @@ async function prepareProfile(input: {
     profilePaths: paths,
     ordinal: finalOrdinal,
     profile: input.profile,
+    contextPath: reviewContext,
+    bundle,
     prompt: reviewPrompt(input.profile, "final", reviewContext, bundle),
     gitSha: gitSha.right,
   });
@@ -1379,6 +1390,7 @@ async function prepareProfile(input: {
   const commands = benchmarkCommands({
     runId: input.runId,
     profile: input.profile,
+    implementationGitSha: gitSha.right,
     paths,
     bundle,
   });
@@ -1461,10 +1473,45 @@ function validateRetainedReadinessAuthority(
 function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
   const bundle = fixedScenarioCanonicalBundle();
   const paths = fixedBenchmarkProfilePaths(assertRunId(runId), profile);
+  const runDescriptor = Schema.decodeUnknownEither(
+    BenchmarkRunDescriptorSchema,
+    { onExcessProperty: "error" },
+  )(JSON.parse(readFileSync(paths.runDescriptor, "utf8")));
+  if (Either.isLeft(runDescriptor)) fail(runDescriptor.left.message);
+  if (
+    runDescriptor.right.runId !== runId ||
+    runDescriptor.right.profile !== profile ||
+    runDescriptor.right.scenarioId !== FIXED_SCENARIO_ID
+  ) {
+    fail(
+      "Fixed benchmark run descriptor is bound to another run, profile, or scenario.",
+    );
+  }
   const plan = validateScenarioStagePlan(
     JSON.parse(readFileSync(paths.stagePlan, "utf8")),
   );
   if (Either.isLeft(plan)) fail(plan.left);
+  const preparedBundle = {
+    scenario: bundle.authorities.scenario,
+    scenarioReview: bundle.authorities.scenarioReview,
+    stageFacts: artifactAuthority(repoRelative(paths.stageFacts)),
+    stagePlan: artifactAuthority(repoRelative(paths.stagePlan)),
+    characters: bundle.authorities.characters,
+    setup: bundle.authorities.setup,
+  };
+  const contextManifestAuthority = artifactAuthority(
+    repoRelative(paths.contextManifest),
+  );
+  if (
+    sha256Canonical(runDescriptor.right.scenarioBundle) !==
+      sha256Canonical(preparedBundle) ||
+    sha256Canonical(runDescriptor.right.contextManifest) !==
+      sha256Canonical(contextManifestAuthority)
+  ) {
+    fail(
+      "Fixed benchmark run descriptor does not match retained preparation authorities.",
+    );
+  }
   const transcript = resolve(paths.playerDirectory, "evidence/sdk-calls.jsonl");
   const replay = resolve(paths.playerDirectory, "evidence/replay-result.json");
   const postLedger =
@@ -1525,6 +1572,7 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
       "Schema-3 assembly requires one distinct event authority per invocation.",
     );
   }
+  const retainedInvocations = nonEmpty(invocations, "invocations");
   const eventCandidates = [
     benchmarkReviewReplayEventsPath(paths.milestoneReviewInput),
     benchmarkReviewReplayEventsPath(paths.finalReviewInput),
@@ -1613,29 +1661,33 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     projection: findings,
     path: findingsArtifactPath(repoRelative(paths.playerDirectory)),
   });
-  const measurement: CurrentBenchmarkMeasurement = {
-    schemaVersion: 3,
+  const measurementCommon = {
+    schemaVersion: 3 as const,
     pathId: runId + "-" + profile,
-    profile,
     scenarioId: fixedScenarioId(),
-    scenarioBundle: {
-      scenario: bundle.authorities.scenario,
-      scenarioReview: bundle.authorities.scenarioReview,
-      stageFacts: artifactAuthority(repoRelative(paths.stageFacts)),
-      stagePlan: artifactAuthority(repoRelative(paths.stagePlan)),
-      characters: bundle.authorities.characters,
-      setup: bundle.authorities.setup,
-    },
-    contextSourceManifest: artifactAuthority(
-      repoRelative(paths.contextManifest),
-    ),
+    implementationGitSha: runDescriptor.right.implementationGitSha,
+    scenarioBundle: preparedBundle,
+    contextSourceManifest: contextManifestAuthority,
     stagePlan: plan.right,
     invocationLedgers: ledgers,
-    invocations,
     invocationEvents,
     findings,
-    outcome: { tag: "completed" },
+    outcome: { tag: "completed" as const },
   };
+  const measurement: CurrentBenchmarkMeasurement =
+    profile === "documentDeclarationSet"
+      ? { ...measurementCommon, profile, invocations: retainedInvocations }
+      : {
+          ...measurementCommon,
+          profile,
+          invocations: nonEmpty(
+            retainedInvocations.filter(
+              (invocation): invocation is CurrentModelInvocationLedgerEntry =>
+                invocation.schemaVersion === 2,
+            ),
+            "bounded invocations",
+          ),
+        };
   const parsed = parseBenchmarkMeasurement(measurement);
   if (Either.isLeft(parsed)) fail(parsed.left.message);
   const validated = validateCompletePathMeasurement(measurement);

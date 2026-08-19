@@ -31,6 +31,11 @@ import {
   validateFindingsProjection,
   type FindingsProjection,
 } from "./findings.ts";
+import {
+  BENCHMARK_CONTEXT_ROLES,
+  benchmarkContextForRole,
+  type BenchmarkContextRole,
+} from "./benchmark-context.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
 import {
   codexOutputJsonSchema,
@@ -1235,6 +1240,7 @@ export type BenchmarkImplementationProfile =
 const BenchmarkImplementationProfileSchema = Schema.Literal(
   ...BENCHMARK_IMPLEMENTATION_PROFILES,
 );
+const ImplementationGitShaSchema = GitShaSchema;
 
 export const BENCHMARK_READINESS_AUTHORITY_ROLES = {
   source: "prePlayReviewReadinessSource",
@@ -1272,14 +1278,21 @@ export type BenchmarkScenarioBundle = Schema.Schema.Type<
   typeof BenchmarkScenarioBundleSchema
 >;
 
-const BENCHMARK_CONTEXT_SOURCE_ROLES = [
-  "scenarioGeneration",
-  "scenarioReview",
-  "characterAuthoring",
-  "setupAuthoring",
-  "player",
-  "postPlayReview",
-] as const;
+/** Retained preparation identity used to bind every later benchmark artifact. */
+export const BenchmarkRunDescriptorSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  runId: Schema.NonEmptyTrimmedString,
+  profile: BenchmarkImplementationProfileSchema,
+  scenarioId: ScenarioIdSchema,
+  implementationGitSha: ImplementationGitShaSchema,
+  scenarioBundle: BenchmarkScenarioBundleSchema,
+  contextManifest: ArtifactAuthoritySchema,
+});
+export type BenchmarkRunDescriptor = Schema.Schema.Type<
+  typeof BenchmarkRunDescriptorSchema
+>;
+
+const BENCHMARK_CONTEXT_SOURCE_ROLES = BENCHMARK_CONTEXT_ROLES;
 const BenchmarkContextSourceManifestEntryFields = {
   role: Schema.Literal(...BENCHMARK_CONTEXT_SOURCE_ROLES),
   authority: ArtifactAuthoritySchema,
@@ -1319,25 +1332,46 @@ export type BenchmarkInvocation = Schema.Schema.Type<
   typeof BenchmarkInvocationSchema
 >;
 
+const BenchmarkMeasurementCommonFields = {
+  schemaVersion: Schema.Literal(3),
+  pathId: Schema.NonEmptyTrimmedString,
+  scenarioId: ScenarioIdSchema,
+  implementationGitSha: ImplementationGitShaSchema,
+  scenarioBundle: BenchmarkScenarioBundleSchema,
+  contextSourceManifest: ArtifactAuthoritySchema,
+  stagePlan: ScenarioStagePlanSchema,
+  invocationLedgers: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+  invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+  findings: FindingsProjectionSchema,
+  outcome: PathOutcomeSchema,
+} as const;
+
+const BaselineBenchmarkMeasurementSchema = Schema.Struct({
+  ...BenchmarkMeasurementCommonFields,
+  profile: Schema.Literal("documentDeclarationSet"),
+  invocations: Schema.NonEmptyArray(
+    Schema.Union(
+      CurrentModelInvocationLedgerEntrySchema,
+      BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
+    ),
+  ),
+});
+
+const BoundedBenchmarkMeasurementSchema = Schema.Struct({
+  ...BenchmarkMeasurementCommonFields,
+  profile: Schema.Literal("boundedCapabilityProjection"),
+  invocations: Schema.NonEmptyArray(CurrentModelInvocationLedgerEntrySchema),
+});
+
 /**
  * A benchmark envelope binds two implementation profiles to the same
  * immutable scenario bundle while allowing the baseline's historical
  * auxiliary invocations to remain visible as separate telemetry rows.
  */
-export const CurrentBenchmarkMeasurementSchema = Schema.Struct({
-  schemaVersion: Schema.Literal(3),
-  pathId: Schema.NonEmptyTrimmedString,
-  profile: BenchmarkImplementationProfileSchema,
-  scenarioId: ScenarioIdSchema,
-  scenarioBundle: BenchmarkScenarioBundleSchema,
-  contextSourceManifest: ArtifactAuthoritySchema,
-  stagePlan: ScenarioStagePlanSchema,
-  invocationLedgers: Schema.NonEmptyArray(ArtifactAuthoritySchema),
-  invocations: Schema.Array(BenchmarkInvocationSchema),
-  invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
-  findings: FindingsProjectionSchema,
-  outcome: PathOutcomeSchema,
-});
+export const CurrentBenchmarkMeasurementSchema = Schema.Union(
+  BaselineBenchmarkMeasurementSchema,
+  BoundedBenchmarkMeasurementSchema,
+);
 export type CurrentBenchmarkMeasurement = Schema.Schema.Type<
   typeof CurrentBenchmarkMeasurementSchema
 >;
@@ -1421,6 +1455,31 @@ type ImplementationPhase =
   | BenchmarkModelInvocationPhase
   | "scenarioSetupAuthoring";
 type ImplementationProfile = "production" | BenchmarkImplementationProfile;
+type BenchmarkReviewClassifications = Readonly<{
+  readonly raw: string;
+  readonly contentAvailability: string;
+  readonly sdkCapability: string;
+  readonly artifactPolicy: string;
+  readonly scenarioQuality: string;
+}>;
+type BenchmarkPostPlayReviewIdentity = Readonly<{
+  readonly verdictClasses: readonly string[];
+}>;
+type BenchmarkFindingIdentity = Readonly<{
+  readonly stage: string;
+  readonly category: string;
+  readonly kind: string;
+  readonly pointer: unknown;
+  readonly fingerprint?: string;
+}>;
+type BenchmarkReviewIdentity = Readonly<{
+  readonly prePlay: Readonly<{
+    readonly milestone: BenchmarkReviewClassifications;
+    readonly final: BenchmarkReviewClassifications;
+  }>;
+  readonly postPlay: BenchmarkPostPlayReviewIdentity;
+  readonly findings: readonly BenchmarkFindingIdentity[];
+}>;
 export type CompletePathEquivalenceWitness =
   | Readonly<{
       readonly tag: "current";
@@ -1456,6 +1515,11 @@ export type CompletePathEquivalenceWitness =
         readonly charactersSha256: string;
         readonly setupSha256: string;
       }>;
+      readonly context: Readonly<{
+        readonly profile: BenchmarkImplementationProfile;
+        readonly roles: readonly BenchmarkContextRole[];
+      }>;
+      readonly reviews: BenchmarkReviewIdentity;
       readonly admissionOutcome: ScenarioStagePlan["outcome"]["tag"];
       readonly outcome: PathOutcome;
       readonly evidence: CurrentEvidenceWitness;
@@ -1520,6 +1584,8 @@ export type CompletePathComparison = Readonly<{
     readonly reason?: string;
   }>;
 }>;
+
+export const COMPLETE_PATH_MIN_REDUCTION = 0.4;
 
 function pathDimension(value: number): EvidenceCount {
   return { tag: "available", count: value };
@@ -1620,6 +1686,159 @@ function currentPathWitness(
   };
 }
 
+function benchmarkReviewResult(
+  value: unknown,
+  profile: BenchmarkImplementationProfile,
+  readiness: Schema.Schema.Type<typeof ScenarioQualityReviewSchema> | undefined,
+): BenchmarkReviewClassifications {
+  const envelope = Schema.decodeUnknownEither(
+    RetainedScenarioReviewInputSchema,
+    {
+      onExcessProperty: "error",
+    },
+  )(value);
+  if (Either.isLeft(envelope)) {
+    return fail(
+      "Validated retained benchmark review envelope became unreadable.",
+    );
+  }
+  const decoded =
+    profile === "documentDeclarationSet"
+      ? Schema.decodeUnknownEither(HistoricalScenarioCompositeReviewSchema, {
+          onExcessProperty: "error",
+        })(envelope.right.result)
+      : Schema.decodeUnknownEither(CurrentScenarioCompositeReviewSchema, {
+          onExcessProperty: "error",
+        })(envelope.right.result);
+  if (Either.isLeft(decoded)) {
+    return fail("Validated benchmark review authority became unreadable.");
+  }
+  const result = decoded.right;
+  const scenarioQuality =
+    profile === "documentDeclarationSet"
+      ? readiness?.classification
+      : "scenarioQuality" in result
+        ? result.scenarioQuality.classification
+        : undefined;
+  if (scenarioQuality === undefined) {
+    return fail(
+      "Validated historical benchmark review has no readiness classification.",
+    );
+  }
+  return {
+    raw: result.raw.classification,
+    contentAvailability: result.contentAvailability.classification,
+    sdkCapability: result.sdkCapability.classification,
+    artifactPolicy: result.artifactPolicy.classification,
+    scenarioQuality,
+  };
+}
+
+function benchmarkReviewIdentity(
+  measurement: CurrentBenchmarkMeasurement,
+): BenchmarkReviewIdentity {
+  const authorityForRole = (role: string): FindingAuthority => {
+    const authority = measurement.findings.authorities.find(
+      (candidate) => candidate.role === role,
+    );
+    if (authority === undefined) {
+      return fail("Validated benchmark review authority is missing: " + role);
+    }
+    return authority;
+  };
+  const jsonFor = (role: string): unknown => {
+    const value = readAuthorityJson(authorityForRole(role));
+    return value.tag === "valid"
+      ? value.value
+      : fail("Validated benchmark authority is unreadable: " + role);
+  };
+  const readiness =
+    measurement.profile === "documentDeclarationSet"
+      ? (() => {
+          const decoded = Schema.decodeUnknownEither(
+            ScenarioQualityReviewSchema,
+            { onExcessProperty: "error" },
+          )(jsonFor("prePlayReviewReadinessResult"));
+          return Either.isRight(decoded)
+            ? decoded.right
+            : fail("Validated readiness authority became unreadable.");
+        })()
+      : undefined;
+  const source = (
+    stage: "milestone" | "final",
+  ): BenchmarkReviewClassifications =>
+    benchmarkReviewResult(
+      jsonFor(`prePlayReviewSourceInput-${stage}`),
+      measurement.profile,
+      readiness,
+    );
+  const postPlay = (() => {
+    const postPlayAuthority = measurement.findings.authorities.find(
+      ({ role }) => isPostPlayReviewAuthorityRole(role),
+    );
+    if (postPlayAuthority === undefined) {
+      return fail("Validated benchmark post-play review authority is missing.");
+    }
+    const authorityValue = readAuthorityJson(postPlayAuthority);
+    const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+      onExcessProperty: "error",
+    })(
+      authorityValue.tag === "valid"
+        ? authorityValue.value
+        : fail("Validated benchmark post-play review authority is unreadable."),
+    );
+    if (Either.isLeft(decoded)) {
+      return fail("Validated post-play review authority became unreadable.");
+    }
+    return {
+      verdictClasses: [
+        ...decoded.right.verdicts.map(
+          ({ class: verdictClass }) => verdictClass,
+        ),
+      ].sort(),
+    };
+  })();
+  return {
+    prePlay: { milestone: source("milestone"), final: source("final") },
+    postPlay,
+    findings: measurement.findings.findings
+      .map(({ stage, category, kind, pointer, fingerprint }) => ({
+        stage,
+        category,
+        kind,
+        pointer,
+        ...(fingerprint === undefined ? {} : { fingerprint }),
+      }))
+      .sort((left, right) =>
+        canonicalJson(left).localeCompare(canonicalJson(right)),
+      ),
+  };
+}
+
+function benchmarkContextIdentity(
+  measurement: CurrentBenchmarkMeasurement,
+): Readonly<{
+  readonly profile: BenchmarkImplementationProfile;
+  readonly roles: readonly BenchmarkContextRole[];
+}> {
+  const value = benchmarkAuthorityJson(
+    measurement.contextSourceManifest,
+    "context-source manifest",
+    [],
+  );
+  const decoded = Schema.decodeUnknownEither(
+    BenchmarkContextSourceManifestDocumentSchema,
+    { onExcessProperty: "error" },
+  )(value);
+  if (Either.isLeft(decoded)) {
+    return fail("Validated benchmark context manifest became unreadable.");
+  }
+  return {
+    profile: decoded.right.profile,
+    roles: [...decoded.right.sources.map(({ role }) => role)].sort(),
+  };
+}
+
 function benchmarkPathWitness(
   measurement: CurrentBenchmarkMeasurement,
 ): CompletePathEquivalenceWitness {
@@ -1641,6 +1860,8 @@ function benchmarkPathWitness(
         charactersSha256: measurement.scenarioBundle.characters.sha256,
         setupSha256: measurement.scenarioBundle.setup.sha256,
       },
+      context: benchmarkContextIdentity(measurement),
+      reviews: benchmarkReviewIdentity(measurement),
       admissionOutcome: measurement.stagePlan.outcome.tag,
       outcome: measurement.outcome,
       evidence: currentEvidenceWitness(measurement.findings),
@@ -1662,6 +1883,8 @@ function benchmarkPathWitness(
       charactersSha256: measurement.scenarioBundle.characters.sha256,
       setupSha256: measurement.scenarioBundle.setup.sha256,
     },
+    context: benchmarkContextIdentity(measurement),
+    reviews: benchmarkReviewIdentity(measurement),
     admissionOutcome: measurement.stagePlan.outcome.tag,
     outcome: measurement.outcome,
     evidence: currentEvidenceWitness(measurement.findings),
@@ -1975,8 +2198,11 @@ function equivalenceWitnessIdentity(
   witness: CompletePathEquivalenceWitness,
 ): unknown {
   if (witness.tag !== "benchmark") return witness;
-  const { profile: _profile, ...identity } = witness;
-  return identity;
+  const { profile: _profile, context, ...identity } = witness;
+  return {
+    ...identity,
+    context: { roles: context.roles },
+  };
 }
 
 function implementationForPath(measurement: CompletePathMeasurement): {
@@ -3071,6 +3297,32 @@ function benchmarkAuthorityJson(
   }
 }
 
+function benchmarkContextAuthorityIssues(input: {
+  readonly profile: BenchmarkImplementationProfile;
+  readonly role: BenchmarkContextRole;
+  readonly authority: ArtifactAuthority;
+}): readonly string[] {
+  const bytes = benchmarkAuthorityBytes(input.authority);
+  if (bytes === undefined) {
+    return [`Benchmark context ${input.role} authority is unreadable.`];
+  }
+  let expected: string;
+  try {
+    expected = benchmarkContextForRole(input.profile, input.role);
+  } catch (error: unknown) {
+    return [
+      `Benchmark context ${input.role} canonical projection could not be constructed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    ];
+  }
+  return bytes.toString("utf8") === expected
+    ? []
+    : [
+        `Benchmark context ${input.role} authority bytes do not equal the canonical ${input.profile} role projection.`,
+      ];
+}
+
 function benchmarkInvocationEntriesFromAuthorities(
   authorities: readonly ArtifactAuthority[],
   issues: string[],
@@ -3105,6 +3357,14 @@ function benchmarkInvocationEntriesFromAuthorities(
     }
   }
   return entries;
+}
+
+function canonicalBenchmarkInvocations(
+  invocations: readonly BenchmarkInvocation[],
+): readonly CurrentModelInvocationLedgerEntry[] {
+  return invocations.flatMap((invocation) =>
+    invocation.schemaVersion === 2 ? [invocation] : [],
+  );
 }
 
 function benchmarkReplayReviewStage(
@@ -3452,6 +3712,98 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
   return issues;
 }
 
+function benchmarkCompleteEvidenceIssues(input: {
+  readonly measurement: CurrentBenchmarkMeasurement;
+  readonly findings: FindingsProjection;
+}): readonly string[] {
+  const { measurement, findings } = input;
+  const issues: string[] = [];
+  const postPlayAuthorities = findings.authorities.filter(({ role }) =>
+    isPostPlayReviewAuthorityRole(role),
+  );
+  if (postPlayAuthorities.length !== 1) {
+    issues.push(
+      `Benchmark ${measurement.profile} profile requires exactly one post-play review authority, received ${String(postPlayAuthorities.length)}.`,
+    );
+  }
+  for (const authority of postPlayAuthorities) {
+    const value = readAuthorityJson(authority);
+    if (value.tag === "invalid") {
+      issues.push(value.message);
+      continue;
+    }
+    const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+      onExcessProperty: "error",
+    })(value.value);
+    if (Either.isLeft(decoded)) {
+      issues.push(
+        `Benchmark post-play review authority ${authority.role} has an unsupported schema: ${decoded.left.message}`,
+      );
+      continue;
+    }
+    if (
+      decoded.right.scenarioId !== measurement.scenarioId ||
+      decoded.right.gitSha !== measurement.implementationGitSha ||
+      decoded.right.transcriptSha256 !== findings.run.transcriptSha256
+    ) {
+      issues.push(
+        `Benchmark post-play review authority ${authority.role} is not bound to the implementation revision and transcript run.`,
+      );
+    }
+  }
+
+  const supervisorAuthorities = findings.authorities.filter(
+    ({ role }) => role === "replaySupervisor",
+  );
+  const replayResultAuthorities = findings.authorities.filter(
+    ({ role }) => role === "replayResult",
+  );
+  if (supervisorAuthorities.length !== 1) {
+    issues.push(
+      `Benchmark ${measurement.profile} profile requires exactly one replay supervisor authority, received ${String(supervisorAuthorities.length)}.`,
+    );
+  }
+  if (replayResultAuthorities.length !== 1) {
+    issues.push(
+      `Benchmark ${measurement.profile} profile requires exactly one replay-result authority, received ${String(replayResultAuthorities.length)}.`,
+    );
+  }
+  const supervisor = supervisorAuthorities[0];
+  for (const authority of replayResultAuthorities) {
+    const value = readAuthorityJson(authority);
+    if (value.tag === "invalid") {
+      issues.push(value.message);
+      continue;
+    }
+    const decoded = Schema.decodeUnknownEither(SdkReplayResultEvidenceSchema, {
+      onExcessProperty: "error",
+    })(value.value);
+    if (Either.isLeft(decoded)) {
+      issues.push(
+        `Benchmark replay-result authority ${authority.role} has an unsupported schema: ${decoded.left.message}`,
+      );
+      continue;
+    }
+    if (supervisor === undefined) {
+      issues.push(
+        "Benchmark replay-result authority cannot be bound without a replay supervisor authority.",
+      );
+      continue;
+    }
+    if (
+      decoded.right.scenarioId !== measurement.scenarioId ||
+      decoded.right.transcriptSha256 !== findings.run.transcriptSha256 ||
+      decoded.right.replaySupervisorSha256 !== supervisor.sha256 ||
+      decoded.right.matchedCallCount !== findings.run.callCount
+    ) {
+      issues.push(
+        "Benchmark replay-result authority is not bound to the retained transcript, replay supervisor, or exact SDK call count.",
+      );
+    }
+  }
+  return issues;
+}
+
 function benchmarkAuthorityIssues(
   measurement: CurrentBenchmarkMeasurement,
 ): readonly string[] {
@@ -3504,6 +3856,13 @@ function benchmarkAuthorityIssues(
           source.authority,
           `context ${source.role}`,
         ),
+      );
+      issues.push(
+        ...benchmarkContextAuthorityIssues({
+          profile: measurement.profile,
+          role: source.role,
+          authority: source.authority,
+        }),
       );
     }
     const expectedSourceKind =
@@ -3621,6 +3980,11 @@ function benchmarkAuthorityIssues(
     if (findings.run.scenarioId !== measurement.scenarioId) {
       issues.push("Benchmark findings belong to a different scenario.");
     }
+    if (findings.run.gitSha !== measurement.implementationGitSha) {
+      issues.push(
+        "Benchmark findings run identity does not match the retained implementation revision.",
+      );
+    }
     const scenarioAuthority = findings.authorities.find(
       ({ role }) => role === "scenario",
     );
@@ -3661,6 +4025,7 @@ function benchmarkAuthorityIssues(
             );
           } else if (
             header.scenarioId !== measurement.scenarioId ||
+            header.gitSha !== measurement.implementationGitSha ||
             header.scenarioSha256 !== bundle.scenario.sha256 ||
             header.scenarioReviewSha256 !== bundle.scenarioReview.sha256 ||
             header.charactersSha256 !== bundle.characters.sha256 ||
@@ -3684,6 +4049,9 @@ function benchmarkAuthorityIssues(
               ? HistoricalScenarioCompositeReviewSchema
               : CurrentScenarioCompositeReviewSchema,
         }),
+      );
+      issues.push(
+        ...benchmarkCompleteEvidenceIssues({ measurement, findings }),
       );
     }
   }
@@ -3718,6 +4086,11 @@ function benchmarkAuthorityIssues(
     if (invocation.scenarioId !== measurement.scenarioId) {
       issues.push(
         `Benchmark invocation ${invocation.invocationId} belongs to a different scenario.`,
+      );
+    }
+    if (invocation.gitSha !== measurement.implementationGitSha) {
+      issues.push(
+        `Benchmark invocation ${invocation.invocationId} belongs to a different implementation revision.`,
       );
     }
     if (
@@ -3823,9 +4196,8 @@ function benchmarkAuthorityIssues(
       "Benchmark measurements require an admitted scenario stage plan.",
     );
   }
-  const canonicalInvocations = measurement.invocations.filter(
-    (invocation): invocation is CurrentModelInvocationLedgerEntry =>
-      invocation.schemaVersion === 2,
+  const canonicalInvocations = canonicalBenchmarkInvocations(
+    measurement.invocations,
   );
   const canonicalMeasurement: CurrentCompletePathMeasurement = {
     schemaVersion: 2,
@@ -3854,9 +4226,8 @@ function benchmarkAuthorityIssues(
 function benchmarkSemanticIssues(
   measurement: CurrentBenchmarkMeasurement,
 ): readonly string[] {
-  const canonicalInvocations = measurement.invocations.filter(
-    (invocation): invocation is CurrentModelInvocationLedgerEntry =>
-      invocation.schemaVersion === 2,
+  const canonicalInvocations = canonicalBenchmarkInvocations(
+    measurement.invocations,
   );
   const canonicalMeasurement: CurrentCompletePathMeasurement = {
     schemaVersion: 2,
@@ -3870,14 +4241,6 @@ function benchmarkSemanticIssues(
     outcome: measurement.outcome,
   };
   const issues = [...currentSemanticIssues(canonicalMeasurement)];
-  if (
-    measurement.profile !== "documentDeclarationSet" &&
-    measurement.invocations.some(({ schemaVersion }) => schemaVersion === 3)
-  ) {
-    issues.push(
-      "Only the document-declaration benchmark profile may retain auxiliary invocations.",
-    );
-  }
   const readiness = measurement.invocations.filter(
     (invocation) =>
       invocation.schemaVersion === 3 &&
@@ -4063,6 +4426,28 @@ export function writeCompletePathComparison(input: {
   readonly outputPath: string;
 }): Either.Either<CompletePathComparison, string> {
   const comparison = compareCompleteEquivalentPaths(input);
+  const gateFailure = (
+    label: string,
+    metric:
+      | CompletePathComparison["elapsedMilliseconds"]
+      | CompletePathComparison["inputTokens"],
+  ): readonly string[] => {
+    if (metric.tag === "incomparable") {
+      return [
+        `Complete-path ${label} is incomparable and cannot pass the ${String(COMPLETE_PATH_MIN_REDUCTION)} reduction gate: ${metric.reason}`,
+      ];
+    }
+    return metric.reduction < COMPLETE_PATH_MIN_REDUCTION
+      ? [
+          `Complete-path ${label} reduction ${String(metric.reduction)} is below the required ${String(COMPLETE_PATH_MIN_REDUCTION)} gate.`,
+        ]
+      : [];
+  };
+  const gateFailures = [
+    ...gateFailure("elapsed milliseconds", comparison.elapsedMilliseconds),
+    ...gateFailure("input tokens", comparison.inputTokens),
+  ];
+  if (gateFailures.length > 0) return Either.left(gateFailures.join(" "));
   try {
     writeFileSync(
       resolve(repoRoot, input.outputPath),
