@@ -1606,7 +1606,8 @@ export function deriveBenchmarkPathOutcome(input: {
     );
     if (
       continuationEvidence.recordedContinuations !== prefix.continuationCount ||
-      continuationEvidence.lastContinuation !== prefix.continuationCount
+      continuationEvidence.lastContinuation !==
+        (prefix.continuationCount === 0 ? undefined : prefix.continuationCount)
     ) {
       return Either.left(
         "Benchmark player continuation evidence must cover every contiguous continuation through the frozen-prefix count.",
