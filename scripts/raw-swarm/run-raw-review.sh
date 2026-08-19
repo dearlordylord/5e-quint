@@ -37,7 +37,8 @@ if [[ -n "${RAW_REVIEW_CONTEXT_PATH:-}" ]]; then
     printf 'RAW_REVIEW_CONTEXT_PATH is not a readable file: %s\n' "$RAW_REVIEW_CONTEXT_PATH" >&2
     exit 1
   fi
-  RAW_REVIEW_CAPABILITY_CONTEXT=$(<"$RAW_REVIEW_CONTEXT_PATH")
+  RAW_REVIEW_CONTEXT_SHA256=$(sha256sum "$RAW_REVIEW_CONTEXT_PATH" | cut -d' ' -f1)
+  RAW_REVIEW_CAPABILITY_CONTEXT="Read the exact delivered review context at $RAW_REVIEW_CONTEXT_PATH with SHA-256 $RAW_REVIEW_CONTEXT_SHA256."
 else
   RAW_REVIEW_CAPABILITY_CONTEXT=$(pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/capability-projection-cli.ts" review)
 fi

@@ -52,6 +52,11 @@ describe("RAW swarm runner boundaries", () => {
     expect(script).toContain("review-invocation-policy.ts");
     expect(script).toContain("git diff --quiet");
     expect(script).toContain("RAW_REVIEW_INVOCATION_GIT_SHA");
+    expect(script).toContain("RAW_REVIEW_CONTEXT_SHA256=$(sha256sum");
+    expect(script).toContain("Read the exact delivered review context at");
+    expect(script).not.toContain(
+      'RAW_REVIEW_CAPABILITY_CONTEXT=$(<"$RAW_REVIEW_CONTEXT_PATH")',
+    );
     expect(script).toContain("| codex exec");
   });
 
