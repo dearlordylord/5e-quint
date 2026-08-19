@@ -518,7 +518,7 @@ function eventPath(
   );
 }
 
-function codexArgs(
+export function fixedBenchmarkCodexArgs(
   cwd: string,
   model: string,
   reasoningEffort: string,
@@ -532,6 +532,7 @@ function codexArgs(
     cwd,
     "--sandbox",
     "danger-full-access",
+    "--skip-git-repo-check",
     "--ephemeral",
     "--json",
     "--disable",
@@ -581,7 +582,7 @@ function runStructuredCall<A, I>(input: {
   writeJsonExclusive(schemaPath, codexOutputJsonSchema(input.schema));
   try {
     const result = runCodexInvocation({
-      args: codexArgs(
+      args: fixedBenchmarkCodexArgs(
         repoRoot,
         input.model,
         input.reasoningEffort,
@@ -692,7 +693,7 @@ function runAuxiliaryStructuredCall<A, I>(input: {
       : { model: "gpt-5.6-sol", reasoningEffort: "medium" };
   try {
     const result = runBenchmarkAuxiliaryInvocation({
-      args: codexArgs(
+      args: fixedBenchmarkCodexArgs(
         repoRoot,
         execution.model,
         execution.reasoningEffort,
@@ -984,7 +985,7 @@ function characterSourceCall(input: {
       "scenarioCharacterAuthoring",
     );
     const result = runBenchmarkAuxiliaryInvocation({
-      args: codexArgs(
+      args: fixedBenchmarkCodexArgs(
         scratch,
         "gpt-5.6-sol",
         "medium",
@@ -1080,7 +1081,7 @@ function setupSourceCalls(input: {
     ): void => {
       const events = eventPath(input.paths, ordinal, phase);
       const result = runCodexInvocation({
-        args: codexArgs(scratch, "gpt-5.6-sol", "medium", prompt),
+        args: fixedBenchmarkCodexArgs(scratch, "gpt-5.6-sol", "medium", prompt),
         cwd: scratch,
         env: process.env,
         eventPath: events,

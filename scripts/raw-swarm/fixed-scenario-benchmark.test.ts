@@ -14,6 +14,7 @@ import {
 import {
   FIXED_SCENARIO_ID,
   fixedBenchmarkContextForRole,
+  fixedBenchmarkCodexArgs,
   fixedBenchmarkDocumentDeclarationContextForRole,
   fixedScenarioCanonicalBundle,
   initializeFixedBenchmarkProfileDirectory,
@@ -49,6 +50,17 @@ const currentReview = {
 };
 
 describe("fixed scenario benchmark boundary", () => {
+  test("allows isolated benchmark consumers outside a Git checkout", () => {
+    expect(
+      fixedBenchmarkCodexArgs(
+        "/tmp/synthetic-consumer",
+        "gpt-5.6-sol",
+        "medium",
+        "Review the synthetic source.",
+      ),
+    ).toContain("--skip-git-repo-check");
+  });
+
   test("creates a profile beneath a missing run directory and refuses overwrite", () => {
     const temporaryRoot = mkdtempSync(resolve(tmpdir(), "dnd-fixed-profile-"));
     const profileRoot = resolve(temporaryRoot, "run", "profile");
