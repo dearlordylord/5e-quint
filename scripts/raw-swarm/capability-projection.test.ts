@@ -99,6 +99,12 @@ describe("Raw Swarm capability projection", () => {
       expect(context).not.toContain(".d.ts");
       expect(context).not.toContain("declarations/");
     }
+    for (const role of ["generation", "review"] as const) {
+      const context = capabilityContextForRole(role);
+      expect(context).toContain("public setup SDK initializes");
+      expect(context).toContain("public player SDK discovers Battle acts");
+      expect(context).toContain("specific Cover degree");
+    }
   });
 
   test("rejects an unrecognized role instead of widening the projection", () => {

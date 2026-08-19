@@ -12,7 +12,7 @@ import type { PlayerSdk } from "./sdk-player/continuation-contract.ts";
 export const CAPABILITY_PROJECTION_SCHEMA_VERSION = 1 as const;
 /**
  * Maximum rendered context for one role. The current largest view is about
- * 2.2 KiB, so 4 KiB leaves measured headroom without allowing a declaration
+ * 2.3 KiB, so 4 KiB leaves measured headroom without allowing a declaration
  * bundle to grow silently into model context.
  */
 export const CAPABILITY_CONTEXT_MAX_BYTES = 4 * 1024;
@@ -138,6 +138,22 @@ const CANONICAL_CAPABILITIES = [
       "Retain separate RAW, content, SDK-capability, policy, and scenario-quality assessments.",
     boundary:
       "The assessments remain distinct fields in one review result; no assessment chooses tactics or rewrites the scenario.",
+  },
+  {
+    id: "scenario-setup-review-surface",
+    roles: ["generation", "review"],
+    summary:
+      "The public setup SDK initializes supplied canonical SRD Stat Blocks, starts Battle Runtime, and composes illumination, environment, objects, pairwise relationships, and one spatial source into ScenarioSession.",
+    boundary:
+      "Setup may use tactical-space inside its documented envelope or exact typed Table-authored decisions outside it; it does not invent combatants, rules, or an encounter side.",
+  },
+  {
+    id: "battle-play-review-surface",
+    roles: ["generation", "review"],
+    summary:
+      "The public player SDK discovers Battle acts and resolves their typed targets, rolls, damage, movement, interrupts, and End Turn continuations.",
+    boundary:
+      "A scenario is representable only when its required tactics can proceed through surfaced acts and holes; the controller cannot add a new action or override Table-owned facts.",
   },
   {
     id: "character-draft",
@@ -295,7 +311,7 @@ const CANONICAL_BOUNDARIES = [
     id: "table-witness-ownership",
     roles: ["generation", "setupAuthoring", "player", "review"],
     statement:
-      "One exact spatial question has one source: geometry-derived or Table-authored. The player cannot override a Table-owned witness.",
+      "One exact spatial question has one source: geometry-derived or Table-authored. A Table decision supplies the exact typed mechanical answer, such as a specific Cover degree, rather than an unresolved whether-question; the player cannot override it.",
   },
   {
     id: "ordinary-typescript",

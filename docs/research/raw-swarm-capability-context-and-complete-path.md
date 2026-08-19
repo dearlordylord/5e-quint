@@ -25,12 +25,17 @@ run.
 
 | Role                | UTF-8 bytes | Estimated tokens |
 | ------------------- | ----------: | ---------------: |
-| generation          |       1,027 |              257 |
+| generation          |       1,928 |              482 |
 | character authoring |       1,719 |              430 |
-| setup authoring     |       2,138 |              535 |
-| player              |       2,226 |              557 |
-| review              |       1,208 |              302 |
-| total role views    |       8,318 |            2,081 |
+| setup authoring     |       2,257 |              565 |
+| player              |       2,345 |              587 |
+| review              |       2,109 |              528 |
+| total role views    |      10,358 |            2,592 |
+
+Generation and review include concise setup/play capability summaries because
+those roles must select and assess representable scenarios. The summaries name
+the public boundary without copying declarations; omitting them made a live
+review unable to distinguish supported play from an unsupported probe.
 
 For comparison, the retained #287 `generated-battle-009` report records 7.94
 million input tokens for four accepted SDK calls, including 7.00 million
@@ -65,7 +70,7 @@ The focused tests cover equivalent implementation deltas, failed-versus-
 completed outcome rejection, unexplained phases, duplicate composite reviews,
 hash-linked authority validation, unavailable token dimensions, strict version
 decoding, and the role-view size estimate. A live #292 scenario run is not checked into this worktree, so
-this note makes no unsupported claim that the 2,081-token estimate is a
+this note makes no unsupported claim that the 2,592-token estimate is a
 complete-path model measurement. Operators must record hash-linked canonical
 ledger, stage-plan, and findings authorities for baseline and candidate before
 claiming a complete-path performance gate.
