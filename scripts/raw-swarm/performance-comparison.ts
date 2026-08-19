@@ -1718,7 +1718,15 @@ function benchmarkReviewResult(
     profile === "documentDeclarationSet"
       ? readiness?.classification
       : "scenarioQuality" in result
-        ? result.scenarioQuality.classification
+        ? (() => {
+            const quality = Schema.decodeUnknownEither(
+              ScenarioQualityReviewSchema,
+              { onExcessProperty: "error" },
+            )(result.scenarioQuality);
+            return Either.isRight(quality)
+              ? quality.right.classification
+              : undefined;
+          })()
         : undefined;
   if (scenarioQuality === undefined) {
     return fail(
@@ -4435,6 +4443,11 @@ export function writeCompletePathComparison(input: {
     if (metric.tag === "incomparable") {
       return [
         `Complete-path ${label} is incomparable and cannot pass the ${String(COMPLETE_PATH_MIN_REDUCTION)} reduction gate: ${metric.reason}`,
+      ];
+    }
+    if (metric.reduction === undefined) {
+      return [
+        `Complete-path ${label} has no reduction value and cannot pass the ${String(COMPLETE_PATH_MIN_REDUCTION)} gate.`,
       ];
     }
     return metric.reduction < COMPLETE_PATH_MIN_REDUCTION

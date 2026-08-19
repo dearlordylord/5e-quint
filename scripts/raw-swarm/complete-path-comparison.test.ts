@@ -29,6 +29,11 @@ import {
 } from "./model-telemetry.ts";
 import { ScenarioQualityReviewSchema } from "./scenario-campaign.ts";
 import { capabilityContextSizeEstimate } from "./capability-context-size-estimate.ts";
+import {
+  BENCHMARK_CONTEXT_ROLES,
+  benchmarkContextForRole,
+  historicalDeclarationBundleText,
+} from "./benchmark-context.ts";
 import { planAdmittedScenarioStages } from "./scenario-stage-plan.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 import {
@@ -181,6 +186,19 @@ function writeAuthority(root: string, name: string, contents: string) {
   const bytes = readFileSync(absolute);
   return {
     path: relative(repoRoot, absolute),
+    byteLength: bytes.byteLength,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  };
+}
+
+function replaceJsonAuthority(
+  authority: CurrentBenchmarkMeasurement["findings"]["authorities"][number],
+  value: unknown,
+) {
+  const bytes = Buffer.from(JSON.stringify(value) + "\n");
+  writeFileSync(resolve(repoRoot, authority.path), bytes);
+  return {
+    ...authority,
     byteLength: bytes.byteLength,
     sha256: createHash("sha256").update(bytes).digest("hex"),
   };
@@ -687,48 +705,28 @@ function benchmarkMeasurement(
     profile === "documentDeclarationSet"
       ? ("document" as const)
       : ("roleProjection" as const);
+  const declarationBundle =
+    profile === "documentDeclarationSet"
+      ? historicalDeclarationBundleText()
+      : undefined;
+  const contextAuthorities = BENCHMARK_CONTEXT_ROLES.map((role) => ({
+    role,
+    authority: writeAuthority(
+      root,
+      `context/${role}.md`,
+      benchmarkContextForRole(profile, role, declarationBundle),
+    ),
+  }));
   const contextDocument = {
     schemaVersion: 1,
     profile,
     scenarioId,
-    sources: [
-      {
-        role: "scenarioGeneration" as const,
-        sourceKind: contextSourceKind,
-        deliveryMode: contextDeliveryMode,
-        authority: scenarioAuthority,
-      },
-      {
-        role: "scenarioReview" as const,
-        sourceKind: contextSourceKind,
-        deliveryMode: contextDeliveryMode,
-        authority: scenarioReviewAuthority,
-      },
-      {
-        role: "characterAuthoring" as const,
-        sourceKind: contextSourceKind,
-        deliveryMode: contextDeliveryMode,
-        authority: characters,
-      },
-      {
-        role: "setupAuthoring" as const,
-        sourceKind: contextSourceKind,
-        deliveryMode: contextDeliveryMode,
-        authority: setup,
-      },
-      {
-        role: "player" as const,
-        sourceKind: contextSourceKind,
-        deliveryMode: contextDeliveryMode,
-        authority: scenarioAuthority,
-      },
-      {
-        role: "postPlayReview" as const,
-        sourceKind: contextSourceKind,
-        deliveryMode: contextDeliveryMode,
-        authority: scenarioReviewAuthority,
-      },
-    ],
+    sources: contextAuthorities.map(({ role, authority }) => ({
+      role,
+      sourceKind: contextSourceKind,
+      deliveryMode: contextDeliveryMode,
+      authority,
+    })),
   };
   const contextSourceManifest = writeAuthority(
     root,
@@ -939,6 +937,7 @@ function benchmarkMeasurement(
     pathId: `benchmark-${profile}-${root}`,
     profile,
     scenarioId,
+    implementationGitSha: gitSha,
     scenarioBundle: {
       scenario: scenarioAuthority,
       scenarioReview: scenarioReviewAuthority,
@@ -1117,6 +1116,193 @@ describe("complete Raw Swarm path comparison", () => {
       _tag: "Left",
       left: expect.stringContaining("setup authority"),
     });
+  }, 60_000);
+
+  test("uses semantic review and finding identity instead of reviewer prose", () => {
+    const baseline = benchmarkMeasurement("documentDeclarationSet");
+    const candidate = benchmarkMeasurement("boundedCapabilityProjection", {
+      pathId: "semantic-candidate-benchmark",
+      scenarioBundle: baseline.scenarioBundle,
+      stagePlan: baseline.stagePlan,
+    });
+    const postPlay = candidate.findings.authorities.find(
+      ({ role }) => role === "review-1",
+    );
+    expect(postPlay).toBeDefined();
+    if (postPlay === undefined) return;
+    const postPlayValue = parseJsonRecord(
+      readFileSync(resolve(repoRoot, postPlay.path), "utf8"),
+    );
+    if (!Array.isArray(postPlayValue.verdicts)) return;
+    const rewrittenPostPlay = replaceJsonAuthority(postPlay, {
+      ...postPlayValue,
+      reviewer: "independent-reviewer",
+      verdicts: postPlayValue.verdicts.map((verdict) =>
+        isJsonRecord(verdict)
+          ? {
+              ...verdict,
+              claim: "Independent wording for the same semantic verdict.",
+              evidence: "Independent wording for the same retained evidence.",
+            }
+          : verdict,
+      ),
+    });
+    const findings = candidate.findings.findings.map((original, index) => {
+      const summary = `Independent finding wording ${String(index)}.`;
+      const detail = "Independent detail for the same semantic finding.";
+      const identity = {
+        stage: original.stage,
+        category: original.category,
+        kind: original.kind,
+        summary,
+        detail,
+        pointer: original.pointer,
+        ...(original.fingerprint === undefined
+          ? {}
+          : { fingerprint: original.fingerprint }),
+      };
+      return {
+        ...original,
+        findingId: sha256Canonical(identity),
+        summary,
+        detail,
+      };
+    });
+    const candidateWithIndependentWording = {
+      ...candidate,
+      findings: {
+        ...candidate.findings,
+        authorities: candidate.findings.authorities.map((authority) =>
+          authority.role === postPlay.role ? rewrittenPostPlay : authority,
+        ),
+        findings,
+      },
+    };
+    const comparison = compareCompleteEquivalentPaths({
+      baseline: validated(baseline),
+      candidate: validated(candidateWithIndependentWording),
+    });
+    expect(comparison).toMatchObject({
+      identity: "equivalent-path",
+      equivalence: { tag: "equivalent" },
+    });
+  }, 60_000);
+
+  test("rejects a benchmark invocation from a mixed implementation revision", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const validation = validateCompletePathMeasurement({
+      ...benchmark,
+      invocations: benchmark.invocations.map((entry, index) =>
+        index === 0 ? { ...entry, gitSha: "b".repeat(40) } : entry,
+      ),
+    });
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("different implementation revision"),
+    });
+  });
+
+  test("rejects a tampered or role-swapped benchmark context authority", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const manifest = parseJsonRecord(
+      readFileSync(
+        resolve(repoRoot, benchmark.contextSourceManifest.path),
+        "utf8",
+      ),
+    );
+    const sources = Array.isArray(manifest.sources)
+      ? manifest.sources.filter(isJsonRecord)
+      : [];
+    expect(sources.length).toBe(BENCHMARK_CONTEXT_ROLES.length);
+    if (sources.length < 2) return;
+    const swappedSources = sources.map((source, index) =>
+      index === 0
+        ? { ...source, authority: sources[1]!.authority }
+        : index === 1
+          ? { ...source, authority: sources[0]!.authority }
+          : source,
+    );
+    const root = resolve(repoRoot, benchmark.contextSourceManifest.path, "..");
+    const swappedManifest = writeAuthority(
+      root,
+      "role-swapped-context-sources.json",
+      `${JSON.stringify({ ...manifest, sources: swappedSources })}\n`,
+    );
+    const validation = validateCompletePathMeasurement({
+      ...benchmark,
+      contextSourceManifest: swappedManifest,
+    });
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("canonical"),
+    });
+
+    const firstAuthority = sources[0]!.authority;
+    if (
+      !isJsonRecord(firstAuthority) ||
+      typeof firstAuthority.path !== "string"
+    )
+      return;
+    writeFileSync(
+      resolve(repoRoot, firstAuthority.path),
+      "Tampered benchmark context.\n",
+    );
+    const tamperedValidation = validateCompletePathMeasurement(benchmark);
+    expect(tamperedValidation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("context"),
+    });
+  });
+
+  test("requires retained post-play and replay authorities for schema-3 paths", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const withoutPostPlay = validateCompletePathMeasurement({
+      ...benchmark,
+      findings: {
+        ...benchmark.findings,
+        authorities: benchmark.findings.authorities.filter(
+          ({ role }) => role !== "review-1",
+        ),
+      },
+    });
+    expect(withoutPostPlay).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("post-play"),
+    });
+
+    const withoutReplay = validateCompletePathMeasurement({
+      ...benchmark,
+      findings: {
+        ...benchmark.findings,
+        authorities: benchmark.findings.authorities.filter(
+          ({ role }) => role !== "replay-milestone",
+        ),
+      },
+    });
+    expect(withoutReplay).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("pre-play replay"),
+    });
+  });
+
+  test("rejects empty and bounded auxiliary invocation sets at the schema boundary", () => {
+    const bounded = benchmarkMeasurement("boundedCapabilityProjection");
+    expect(
+      parseBenchmarkMeasurement({ ...bounded, invocations: [] }),
+    ).toMatchObject({ _tag: "Left" });
+
+    const baseline = benchmarkMeasurement("documentDeclarationSet");
+    const auxiliary = baseline.invocations.find(
+      (entry) => entry.schemaVersion === 3,
+    );
+    expect(auxiliary).toBeDefined();
+    if (auxiliary === undefined) return;
+    expect(
+      parseBenchmarkMeasurement({
+        ...bounded,
+        invocations: [...bounded.invocations, auxiliary],
+      }),
+    ).toMatchObject({ _tag: "Left" });
   });
 
   test("binds an admitted benchmark stage plan to the scenario and review bundle hashes", () => {
@@ -1333,7 +1519,28 @@ describe("complete Raw Swarm path comparison", () => {
   });
 
   test("retains a validated complete equivalent-path comparison without overwriting evidence", () => {
-    const baseline = validated(measurement());
+    const slower = measurement();
+    const baseline = validated(
+      measurement({
+        invocations: slower.invocations.map((entry) => ({
+          ...entry,
+          elapsedMilliseconds: entry.elapsedMilliseconds * 2,
+          usage:
+            entry.usage.tag === "available"
+              ? {
+                  ...entry.usage,
+                  input:
+                    entry.usage.input.tag === "available"
+                      ? {
+                          ...entry.usage.input,
+                          count: entry.usage.input.count * 2,
+                        }
+                      : entry.usage.input,
+                }
+              : entry.usage,
+        })),
+      }),
+    );
     const candidate = validated(measurement());
     const root = rawSwarmTestOutputDirectory("complete-path-comparison-");
     temporaryDirectories.push(root);
@@ -1357,6 +1564,50 @@ describe("complete Raw Swarm path comparison", () => {
       outputPath,
     });
     expect(overwrite).toMatchObject({ _tag: "Left" });
+  });
+
+  test("refuses to write a comparison below the forty-percent reduction gate", () => {
+    const baseline = validated(measurement());
+    const candidate = validated(measurement());
+    const root = rawSwarmTestOutputDirectory("complete-path-below-gate-");
+    temporaryDirectories.push(root);
+    const result = writeCompletePathComparison({
+      baseline,
+      candidate,
+      outputPath: resolve(root, "comparison.json"),
+    });
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("below the required"),
+    });
+  });
+
+  test("refuses to write a comparison with unavailable metrics", () => {
+    const source = measurement();
+    const baseline = validated(
+      measurement({
+        invocations: source.invocations.map((entry) => ({
+          ...entry,
+          usage: {
+            tag: "unavailable" as const,
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        })),
+      }),
+    );
+    const candidate = validated(measurement());
+    const root = rawSwarmTestOutputDirectory("complete-path-incomparable-");
+    temporaryDirectories.push(root);
+    const result = writeCompletePathComparison({
+      baseline,
+      candidate,
+      outputPath: resolve(root, "comparison.json"),
+    });
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("incomparable"),
+    });
   });
 
   test("does not make a skipped redundant stage change semantic identity", () => {
