@@ -26,6 +26,7 @@ import {
   fixedBenchmarkCodexArgs,
   fixedBenchmarkDocumentDeclarationContextForRole,
   fixedBenchmarkProfilePaths,
+  fixedBenchmarkScratchInputManifestPrompt,
   fixedScenarioCanonicalBundle,
   initializeFixedBenchmarkProfileDirectory,
   parseFixedBenchmarkProfile,
@@ -69,6 +70,22 @@ const currentReview = {
 };
 
 describe("fixed scenario benchmark boundary", () => {
+  test("gives preparation calls an exact deterministic scratch input manifest", () => {
+    const prompt = fixedBenchmarkScratchInputManifestPrompt({
+      scratch: "/tmp/synthetic-scratch",
+      readableFiles: ["SCENARIO.md", "BENCHMARK_CONTEXT.md", "SCENARIO.md"],
+      taskPrompt: "Review the supplied scenario.",
+    });
+
+    expect(prompt).toContain(
+      "The only readable scratch files are this exact manifest:\n- `BENCHMARK_CONTEXT.md`\n- `SCENARIO.md`",
+    );
+    expect(prompt).toContain(
+      "Do not attempt to inspect, read, search, hash, count, or otherwise reference any other filename or path.",
+    );
+    expect(prompt).toContain("Review the supplied scenario.");
+  });
+
   test("keeps source preparation instructions read-only", () => {
     for (const prompt of Object.values(FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS)) {
       expect(prompt).toContain(

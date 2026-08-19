@@ -572,6 +572,7 @@ function copyBenchmarkCallInputs(input: {
 
 function localBenchmarkCallPrompt(input: {
   readonly scratch: string;
+  readonly readableFiles: readonly string[];
   readonly prompt: string;
   readonly contextPath: string;
   readonly bundle: FixedScenarioCanonicalBundle;
@@ -600,15 +601,29 @@ function localBenchmarkCallPrompt(input: {
     (prompt, [source, destination]) => prompt.split(source).join(destination),
     input.prompt,
   );
-  return scratchIsolationPrompt(input.scratch, localizedPrompt);
+  return fixedBenchmarkScratchInputManifestPrompt({
+    scratch: input.scratch,
+    readableFiles: input.readableFiles,
+    taskPrompt: localizedPrompt,
+  });
 }
 
-function scratchIsolationPrompt(scratch: string, prompt: string): string {
+export function fixedBenchmarkScratchInputManifestPrompt(input: {
+  readonly scratch: string;
+  readonly readableFiles: readonly string[];
+  readonly taskPrompt: string;
+}): string {
+  const manifest = [...new Set(input.readableFiles)]
+    .sort()
+    .map((file) => "- `" + file + "`")
+    .join("\n");
   return (
     "The scratch workspace at " +
-    scratch +
-    " is complete and contains the entire benchmark input. Use only files inside that scratch workspace. Do not inspect, read, search, or execute against any path outside it, including the repository, parent directories, hidden files outside scratch, or network resources. Run all commands with the scratch workspace as their working directory. You may perform multiple preparation reads. For each read, invoke one read-only command directly: `cat`, `head`, `tail`, `sed` with a numeric print range, `sha256sum`, `wc`, `od`, or `rg` against named scratch files. The client records each direct command inside one shell telemetry wrapper; do not invoke Bash or another shell yourself. Do not use Node, Python, another executable, shell expansion, shell operators, pipelines, redirections, loops, scripts, or structured file/search tools.\n\n" +
-    prompt
+    input.scratch +
+    " is complete and contains the entire benchmark input. The only readable scratch files are this exact manifest:\n" +
+    manifest +
+    "\nDo not attempt to inspect, read, search, hash, count, or otherwise reference any other filename or path. Do not inspect, read, search, or execute against the repository, parent directories, hidden files outside scratch, or network resources. Run all commands with the scratch workspace as their working directory. You may perform multiple preparation reads. For each read, invoke one read-only command directly: `cat`, `head`, `tail`, `sed` with a numeric print range, `sha256sum`, `wc`, `od`, or `rg` against a file in the manifest. The client records each direct command inside one shell telemetry wrapper; do not invoke Bash or another shell yourself. Do not use Node, Python, another executable, shell expansion, shell operators, pipelines, redirections, loops, scripts, or structured file/search tools.\n\n" +
+    input.taskPrompt
   );
 }
 
@@ -711,7 +726,7 @@ function scratchNamedFiles(root: string): readonly string[] {
     }
   };
   visit(root);
-  return files;
+  return files.sort();
 }
 
 function parseStrictShellWords(
@@ -1220,8 +1235,9 @@ function runStructuredCall<A, I>(input: {
   );
   const events = eventPath(input.profilePaths, input.ordinal, input.phase);
   writeJsonExclusive(schemaPath, codexOutputJsonSchema(input.schema));
+  const readableFiles = scratchNamedFiles(scratch);
   const namedInputs = [
-    ...scratchNamedFiles(scratch).map((path) => resolve(scratch, path)),
+    ...readableFiles.map((path) => resolve(scratch, path)),
     outputPath,
   ];
   try {
@@ -1230,7 +1246,12 @@ function runStructuredCall<A, I>(input: {
         scratch,
         input.model,
         input.reasoningEffort,
-        localBenchmarkCallPrompt({ ...input, scratch, local }),
+        localBenchmarkCallPrompt({
+          ...input,
+          scratch,
+          readableFiles,
+          local,
+        }),
         schemaPath,
         outputPath,
         FIXED_BENCHMARK_PREPARATION_SANDBOX,
@@ -1353,8 +1374,9 @@ function runAuxiliaryStructuredCall<A, I>(input: {
   );
   const events = eventPath(input.profilePaths, input.ordinal, input.kind.phase);
   writeJsonExclusive(schemaPath, codexOutputJsonSchema(input.schema));
+  const readableFiles = scratchNamedFiles(scratch);
   const namedInputs = [
-    ...scratchNamedFiles(scratch).map((path) => resolve(scratch, path)),
+    ...readableFiles.map((path) => resolve(scratch, path)),
     outputPath,
   ];
   const execution =
@@ -1367,7 +1389,12 @@ function runAuxiliaryStructuredCall<A, I>(input: {
         scratch,
         execution.model,
         execution.reasoningEffort,
-        localBenchmarkCallPrompt({ ...input, scratch, local }),
+        localBenchmarkCallPrompt({
+          ...input,
+          scratch,
+          readableFiles,
+          local,
+        }),
         schemaPath,
         outputPath,
         FIXED_BENCHMARK_PREPARATION_SANDBOX,
@@ -1665,9 +1692,8 @@ function characterSourceCall(input: {
       input.ordinal,
       "scenarioCharacterAuthoring",
     );
-    const namedInputs = scratchNamedFiles(scratch).map((path) =>
-      resolve(scratch, path),
-    );
+    const readableFiles = scratchNamedFiles(scratch);
+    const namedInputs = readableFiles.map((path) => resolve(scratch, path));
     assertPreparationState(input.preparation, input.paths);
     const result = (() => {
       try {
@@ -1676,10 +1702,12 @@ function characterSourceCall(input: {
             scratch,
             "gpt-5.6-sol",
             "medium",
-            scratchIsolationPrompt(
+            fixedBenchmarkScratchInputManifestPrompt({
               scratch,
-              FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS.scenarioCharacterAuthoring,
-            ),
+              readableFiles,
+              taskPrompt:
+                FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS.scenarioCharacterAuthoring,
+            }),
             undefined,
             undefined,
             FIXED_BENCHMARK_PREPARATION_SANDBOX,
@@ -1777,9 +1805,8 @@ function setupSourceCalls(input: {
       resolve(scratch, "NEUTRAL_SETUP.ts"),
       readFileSync(input.bundle.paths.setup),
     );
-    const namedInputs = scratchNamedFiles(scratch).map((path) =>
-      resolve(scratch, path),
-    );
+    const readableFiles = scratchNamedFiles(scratch);
+    const namedInputs = readableFiles.map((path) => resolve(scratch, path));
     const run = (
       ordinal: number,
       phase:
@@ -1796,7 +1823,11 @@ function setupSourceCalls(input: {
               scratch,
               "gpt-5.6-sol",
               "medium",
-              scratchIsolationPrompt(scratch, prompt),
+              fixedBenchmarkScratchInputManifestPrompt({
+                scratch,
+                readableFiles,
+                taskPrompt: prompt,
+              }),
               undefined,
               undefined,
               FIXED_BENCHMARK_PREPARATION_SANDBOX,
