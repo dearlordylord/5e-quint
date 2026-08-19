@@ -73,11 +73,15 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
 
   const session = sdk.createScenarioSession({
     battle: battle.right,
-    arena: { cells, boundaries: [] },
-    placements: [
-      { tokenId: wolfId, coordinate: { x: 3, y: 3 } },
-      { tokenId: skeletonId, coordinate: { x: 3, y: 6 } },
-    ],
+    spatial: {
+      kind: "geometryDerived",
+      arena: { cells, boundaries: [] },
+      placements: [
+        { tokenId: wolfId, coordinate: { x: 3, y: 3 } },
+        { tokenId: skeletonId, coordinate: { x: 3, y: 6 } },
+      ],
+      spatialDecisions: [],
+    },
     ambientIllumination: "brightLight",
     statBlockDamageNotation: "rolled",
     environment: {
