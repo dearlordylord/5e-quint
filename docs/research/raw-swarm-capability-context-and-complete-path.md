@@ -1,27 +1,22 @@
-# Raw Swarm capability context and complete-path coverage
+# Raw Swarm capability context and complete-path evidence
 
-Research date: 2026-08-18. This note records the #292 bounded-context
-measurement and the evidence boundary for complete-path comparisons. The
-retained `generated-battle-009` figures are the prior report from #287; they
-are not regenerated from an ignored output directory.
+Research date: 2026-08-19. This report records the bounded capability
+projection, the retained complete-003 measurement for #292, and the paired
+coherent/rejected evidence for #293. Ignored `scripts/raw-swarm/out` artifacts
+remain the evidence authorities; this document does not copy their payloads.
 
 ## Canonical capability projection
 
-`scripts/raw-swarm/capability-projection.ts` is the only owner of the v1
+`scripts/raw-swarm/capability-projection.ts` is the sole owner of the v1
 capability projection. Generation, character authoring, setup authoring,
 player execution, and review receive role views derived from that value. The
-view names public operations and experiment boundaries; it does not copy a
-D&D schema, publish a declaration tree, or create a second execution model.
-Declarations emitted into authoring scratch directories remain compilation
-support only.
+projection describes public operations and experiment boundaries; it is not a
+second D&D schema or declaration tree. Declarations emitted into authoring
+scratch directories are compilation support only.
 
-The checked-in size estimate is produced by
-`capabilityContextSizeEstimate()` in
-`scripts/raw-swarm/capability-context-size-estimate.ts`. Each role view is
-enforced at the named 4 KiB byte budget; its token values are explicitly
-estimates (`ceil(UTF-8 bytes / 4)`), not first-party model usage. They are
-useful for a bounded-context regression, not a substitute for a complete model
-run.
+The checked-in `capabilityContextSizeEstimate()` result is a bounded-context
+regression, not first-party model usage. Its token figures are estimates of
+`ceil(UTF-8 bytes / 4)`:
 
 | Role                | UTF-8 bytes | Estimated tokens |
 | ------------------- | ----------: | ---------------: |
@@ -32,130 +27,177 @@ run.
 | review              |       2,662 |              666 |
 | total role views    |      12,570 |            3,145 |
 
-Generation and review include concise setup/play capability summaries because
-those roles must select and assess representable scenarios. The summaries name
-the public boundary without copying declarations; omitting them made a live
-review unable to distinguish supported play from an unsupported probe. The
-spatial boundary also states that geometry-derived and Table-authored sessions
-are exclusive, and that exact Table decisions are fingerprint-bound answers,
-not reusable conditional terrain rules. This was required after the retained
-`generated-battle-011` review admitted a mixed-source portcullis rule that setup
-correctly retained as an obstruction. It also states that non-movement Battle
-outcomes do not create hypothetical spatial fingerprints; the retained
-`generated-battle-012` review invented post-Shove spatial branches that setup
-correctly rejected.
+Generation and review include concise setup/play boundary summaries because
+those roles must select and assess representable scenarios. The projection
+states that geometry-derived and Table-authored sessions are exclusive and
+that a Table decision is bound to one exact situation. The estimate must not
+be described as a live token saving.
 
-For comparison, the retained #287 `generated-battle-009` report records 7.94
+## Retained complete-003 measurement
+
+The assembled measurement is
+`scripts/raw-swarm/out/generated-battle-015-complete-003-measurement.json`
+(schema version 2, path id `generated-battle-015-complete-003`, SHA-256
+`3cc174428148c7c559159c256ebd5511a1945dca16ba962b8cac8ed82ec8cb92`). It
+validates the admitted stage plan, v2 invocation ledgers, every invocation
+event, replay/findings authorities, and the completed terminal outcome.
+
+The stage plan records three generation invocations with two interleaved
+composite reviews (milestone review, revised generation, final review). This
+is the real campaign order, not a duplicate ledger. Character Sheet authoring
+was skipped because the admitted scenario contains only three canonical
+stat-block creatures. Neutral setup, controller setup, player execution, and
+post-play review were required. The phase ledger has nine model invocations:
+
+| Phase                      | Invocations | Model / effort         |         Input | Cached input\* |     Output | Reasoning output |    Elapsed ms |
+| -------------------------- | ----------: | ---------------------- | ------------: | -------------: | ---------: | ---------------: | ------------: |
+| scenario generation        |           3 | `gpt-5.6-sol` / medium |        59,218 |              0 |      4,295 |            1,103 |        94,664 |
+| scenario composite review  |           2 | `gpt-5.6-luna` / max   |       886,024 |        683,776 |     31,054 |           24,748 |       743,345 |
+| neutral setup authoring    |           1 | `gpt-5.6-sol` / medium |       263,518 |        191,744 |      2,711 |              934 |        92,649 |
+| controller setup authoring |           1 | `gpt-5.6-sol` / medium |       427,897 |        331,520 |      7,262 |            1,956 |       195,964 |
+| player                     |           1 | `gpt-5.6-sol` / medium |     1,444,107 |      1,354,752 |     10,943 |            2,059 |       283,508 |
+| post-play review           |           1 | `gpt-5.6-luna` / max   |        87,872 |              0 |     33,079 |           31,596 |       601,446 |
+| **total**                  |       **9** | —                      | **3,168,636** |  **2,561,792** | **89,344** |       **62,396** | **2,011,576** |
+
+\* Cached input is a subset of input, not an additional population. The
+uncached input remainder is 606,844 by subtraction; it is not added to the
+input total. Elapsed time is the sum of invocation elapsed fields, not a claim
+about critical-path wall time. No engineering-agent tokens or unrelated
+harness populations are included.
+
+The phase revisions are retained in the ledger: generation/review ran at
+`790613016870add5fb313f7f2e39c77e897f4d19`, setup authoring at
+`2f5e624b353a56cce0fcca40084a1a76bf73bd5b`, and player/post-play review at
+`2f8f54cb31b3c783850871fdb5e24f89eb695434`. A phase authority is accepted by
+its own revision, event hash, model, effort, and stage binding; the measurement
+does not pretend these were one unchanging source revision.
+
+### Execution and findings
+
+The admitted `generated-battle-015` player run is ordinary public SDK
+TypeScript. It made 16 accepted SDK calls, and the standalone replay matched
+all 16 (`status: succeeded`). The transcript authority is
+`scripts/raw-swarm/out/generated-battle-015-complete-003-sdk-player/evidence/sdk-calls.jsonl`
+(SHA-256
+`20e8326bc51119e2792daf91fb69ed20a0bfe30f4d749e2db9fb51a5a0539f6f`), and the replay
+result is retained at
+`scripts/raw-swarm/out/generated-battle-015-complete-003-sdk-player/evidence/replay-result.json`
+(SHA-256
+`46f89344056cb844d44819c58db0e6967bf4c5749186f83de3c14d9cc6875c94`).
+
+The canonical findings projection is
+`scripts/raw-swarm/out/generated-battle-015-complete-003-sdk-player/evidence/findings.json`
+(SHA-256
+`766c31b23f1b23d92e97a0072d931e78ff3e3570ac8c9ac21d98042749c01621`). It
+contains 20 findings:
+
+- 8 pre-call compilation failures and 4 successful corrections;
+- 1 informational finding for the skipped Character Sheet stage; and
+- 7 independent post-play verdicts: 5 pass and 2 `player-invalid`.
+
+The two invalid verdicts are retained, not hidden. The player summary claimed
+three Prone results although the accepted outcomes were three successful
+Shove saves with no applied effect. Its random d20-like outcome generator is
+also not a RAW-faithful or sufficiently specified normal-resolution procedure
+for the final Shove. Deterministic authored randomness is explicitly owned by
+#281 and remains a limitation/out-of-scope item here. These findings limit the
+claim about player-authored resolution fidelity; they do not invalidate the
+ordinary SDK transcript, replay, Table-decision evidence, or phase accounting.
+
+## Historical comparison and evidence boundary
+
+The retained #287 `generated-battle-009` report is historical context: 7.94
 million input tokens for four accepted SDK calls, including 7.00 million
-cached input tokens. Generation and repeated review used 5.01 million input
-tokens, character/setup authoring used 2.47 million, player execution used
-361.7 thousand, and post-play review used 97.5 thousand. The role-view
-estimate is therefore materially smaller as a bounded-context view, but the
-byte-to-token estimate must not be reported as a live model saving.
+cached input tokens; its report partitions input as 5.01 million for
+generation/repeated review, 2.47 million for character/setup authoring,
+361.7 thousand for player execution, and 97.5 thousand for post-play review.
+Those numbers are not reconstructed from current output files.
 
-## Complete equivalent-path evidence
+They cannot form a formal complete-path baseline for complete-003. The 009
+record has no typed stage plan, v2 invocation ledger, hash-linked replay
+witness, findings projection, or retained phase/event authorities matching the
+current measurement. It also does not establish the same scenario identity,
+stage decisions, model/effort sequence, or terminal/review responsibilities.
+Accordingly:
 
-`CompletePathMeasurementSchema` in `performance-comparison.ts` retains the
-canonical v2 invocation-ledger authorities and entries, every raw
-invocation-event authority, the admitted stage plan, and the findings
-projection. It does not define a
-second phase, result, elapsed-time, or usage schema. Accepted calls and
-corrections are derived from retained findings; invocation failures, elapsed
-milliseconds, stage-plan reasons, and every token dimension come from the
-versioned ledger. The comparison uses a typed witness for scenario identity,
-admission/terminal outcome, and retained transcript/replay/findings/review
-responsibilities. Stage-plan decisions are validated for each path but are not
-part of semantic identity, so an intentionally skipped redundant stage does
-not make equivalent work incomparable. One phase-to-stage map requires at least one
-generation invocation, exactly one feedback plus one final composite review,
-and exactly one setup, player, and post-play invocation for each required stage;
-skipped or `none` stages require zero. A consolidated path can therefore be equivalent
-even when its phase/model sequence changes; that implementation delta is
-reported separately. Unavailable token usage is explicit and never converted
-to zero.
+| Comparison dimension                             | Status                                                 |
+| ------------------------------------------------ | ------------------------------------------------------ |
+| Scenario/path identity and terminal equivalence  | incomparable                                           |
+| Stage plan and phase/invocation counts           | incomparable                                           |
+| Input, cached input, output, and reasoning usage | incomparable; 009 has no equivalent typed authorities  |
+| Phase elapsed time                               | incomparable; 009 has no equivalent typed phase ledger |
+| Complete-path percentage saving                  | unavailable; no saving is claimed                      |
 
-The focused tests cover equivalent implementation deltas, failed-versus-
-completed outcome rejection, unexplained phases, duplicate composite reviews,
-hash-linked authority validation, unavailable token dimensions, strict version
-decoding, and the role-view size estimate. A live #292 scenario run is not checked into this worktree, so
-this note makes no unsupported claim that the 3,145-token estimate is a
-complete-path model measurement. Operators must record hash-linked canonical
-ledger, stage-plan, and findings authorities for baseline and candidate before
-claiming a complete-path performance gate.
+Complete-003 does demonstrate bounded role context, stat-block-only stage
+skipping, retained failures/corrections, independent review, transcript
+replay, and searchable findings. Its drawbacks are also measurable: nine model
+invocations remain, the two composite reviews account for 886,024 input tokens,
+player execution accounts for 1,444,107, and the summed phase elapsed time is
+2,011,576 ms. The historical 009 figures may show scale, but no cached,
+uncached, output, reasoning, engineering-agent, or harness-model populations
+are combined across runs. A future formal performance claim requires a
+same-scenario, same-responsibility baseline with the same typed authorities.
 
-### Acceptance evidence status and rerun plan
+## Rejected incoherent candidate
 
-No retained run in this checkout is a valid prior/current #292 pair. The
-`generated-battle-009` envelope is historical and has no typed stage plan,
-findings projection, replay witness, or v2 invocation ledger. The retained
-generated-battle-004 ledgers are also v1 evidence from an earlier experiment;
-wrapping either artifact in a current envelope would fabricate provenance.
+The paired rejection run is `generated-battle-014-incoherent`. Its campaign
+configuration is
+`scripts/raw-swarm/out/generated-battle-014-incoherent-campaign.json`
+(SHA-256
+`a335a5fe23f55ddeeb216ada347b444776e92bb470c66cc8b22565c01e5a8078`). It
+retains two generation invocations and no composite-review invocation. The
+candidate was rejected before whole-scenario review because, for the same
+Skeleton, northern Goblin Warrior, and unchanged situation, the target was
+asserted both within Shove reach and beyond 30 feet. Character authoring, setup,
+player, and post-play stages were skipped with no model invocation.
 
-The acceptance pair therefore requires one controlled model rerun on the
-immutable simple scenario `tracer-001-goblin-warrior-vs-skeleton` (or another
-recorded simple scenario):
+The rejection authorities are:
 
-1. record the prior-path baseline at the clean pre-#292 revision;
-2. record the candidate at the clean #292 revision, with the same scenario,
-   distribution, model/effort policy, and required terminal outcome; and
-3. validate both measurements through `validateCompletePathMeasurement` before
-   calling `compareCompleteEquivalentPaths`.
+- `scripts/raw-swarm/out/rejected-scenarios/generated-battle-014-incoherent.md`
+  — SHA-256 `27a1959c73bfd2ab0cf9a5328a00e1a60a02384b0b3ea9cec1dc63370f84dd5b`;
+- `scripts/raw-swarm/out/rejected-scenarios/generated-battle-014-incoherent.md.stage-plan.json`
+  — SHA-256 `d7637eb4703c540add7c40ba855148e914b8b78b5404dc3ff502f8c63ac7d349`;
+- `scripts/raw-swarm/out/rejected-scenarios/generated-battle-014-incoherent.md.stage-plan-findings.json`
+  — SHA-256 `8716372a2276485b9145cf07e865b6527f5aa6d7e72768588eff13f424c3d2c5`;
+- `scripts/raw-swarm/out/generated-battle-014-incoherent-generation-invocations.jsonl`
+  — SHA-256 `45317188d1adb0cbafaa52cc263a931cd744b0169700c94039c629a8a37799ee`;
+- `scripts/raw-swarm/out/generated-battle-014-incoherent-generation-run-audit.md`
+  — SHA-256 `8cd866a2cc079e48ac4ba45a83424f903d89244d1918feafe369fe2412b134e9`.
 
-Each run must retain the stage-plan authority, v2 invocation ledger and event
-authorities, transcript/replay authorities, findings projection, and review
-authorities. Equivalence is admitted only when scenario identity, terminal
-outcome, and transcript/replay/findings/review responsibilities match; phase,
-model, and elapsed differences are reported as implementation deltas. The
-same pair supplies a comparable pre-#292/current fixed-floor measurement. The
-`generated-battle-009` number can be used as the acceptance reference only for
-fixed dimensions backed by a retained, hash-linked authority; if that
-authority is absent, the dimension remains unavailable rather than being
-inferred from the role-view byte estimate. Until the rerun and those
-authorities exist, this worktree reports the role-view estimate and historical
-run009 gaps, but does not claim either acceptance saving.
+The stage plan and findings both state that the contradiction must be rejected
+as incoherent rather than delegated to geometry or the Table. This is the
+cheap-rejection half of #293, not a geometry implementation test.
 
-Current generation retains the raw event stream for every generation and
-composite-review invocation; character authoring, neutral/controller setup,
-player execution, and post-play review retain their existing ledgers and event
-streams. A schema-v1 assembly descriptor names the stage plan, findings
-projection, every phase ledger, every phase event stream, and the observed path
-outcome. The canonical command is:
+## Final joint review: geometry obligation
 
-```sh
-mise exec -- pnpm exec tsx scripts/raw-swarm/performance-comparison.ts \
-  assemble <descriptor.json> <measurement.json>
-```
+The coherent and rejected authorities jointly establish the product boundary.
+For coherent 015, the admitted scenario and setup authorities are:
 
-The assembler decodes those authorities, hashes their exact bytes, rejects v1
-or malformed current telemetry, and validates the resulting measurement before
-writing it once. A caller cannot substitute copied in-memory invocation rows.
+- `scripts/raw-swarm/out/generated-battle-015-complete-003-sdk-player/SCENARIO.md`
+  — SHA-256 `6309153a4148436af5968fe3a269827d5222c7c563465c0610c38a64df656dff`;
+- `scripts/raw-swarm/out/generated-battle-015-complete-003-sdk-player/SCENARIO_REVIEW.json`
+  — SHA-256 `e91fd34e8001c871aba40b0cdc42b820a2f08b078c2b8510fb0e06d7d881a6ef`;
+- `scripts/raw-swarm/out/generated-battle-015-complete-003-sdk-player/evidence/setup.ts`
+  — SHA-256 `ceb47db12da59fbd664805c5e35a1919d612a5f2696d7baccb48281c45e1fc1f`;
+- `scripts/raw-swarm/out/generated-battle-015-complete-003-sdk-player/evidence/stage-plan.json`
+  — SHA-256 `c132659481eeb2d0b8244f3c38407951b8c33d7568537090d40d5e9ff0ccfd3b`;
+- `scripts/raw-swarm/out/generated-battle-015-complete-003-sdk-review.json`
+  — SHA-256 `dcb319e637cddec221a08025b4e044637541f4fdf590b32b3c87435712dad7ed`.
 
-The retained evidence design remains justified independently of this pending
-live comparison: the canonical transcript and replay are execution authority,
-findings retain rejected and corrected attempts, the composite pre-play review
-keeps RAW/content/SDK/policy/scenario-quality responsibilities distinct, and
-post-play review remains an independent invocation. Historical final-review
-scope variants remain parseable without inventing scenario-quality evidence;
-new generation emits the versioned quality-bearing scope. No replay cache or
-generic compaction mechanism is retained without complete-path benefit
-evidence.
+015 uses one exclusive `tableAuthored` spatial boundary with exactly three
+reach decisions at one unchanged fingerprint. It has no arena, coordinates,
+placements, geometry-derived question, or movement route. The independent
+scenario review says no geometry, movement, or controller override is
+required; the post-play review accepts the typed reach and action path. Its
+two `player-invalid` findings concern the player’s outcome generator and
+summary, not spatial representation.
 
-Declaration emission remains a measured drawback rather than a claimed
-optimization. The current public compile-support graph is 498 declaration
-files and 4,627,119 bytes, and two accidentally concurrent measurements each
-ran for several minutes before they were stopped. The distribution has a
-separate 512-file/5-MiB regression ceiling, but no declaration cache or facade
-is retained: reuse or reduction must first demonstrate material complete-path
-benefit without weakening the ordinary-TypeScript compile boundary.
-
-## Focused regression coverage
-
-- `capability-projection.test.ts` enforces the 4 KiB role-context budget,
-  rejects document/declaration contexts, and checks role-specific operation
-  subsets.
-- `scenario-campaign.test.ts` checks that composite review does not trigger a
-  duplicate readiness invocation.
-- `model-telemetry.test.ts` checks v2 reason/result fields and explicit v1
-  historical parsing; all current ledger writers reject v1 output.
-- `complete-path-comparison.test.ts` checks failures, corrections, identity,
-  unavailable usage, and fixed-context measurement.
+For incoherent 014, the exact contradiction is rejected before whole-scenario
+review, with no Table adjudication and no geometry request. Thus the joint
+conclusion is bounded and explicit: coherent 015 proves that this interaction
+can execute through a Table-authored witness without a geometry engine, while
+rejected 014 proves that contradictory facts are rejected rather than rescued
+by geometry. Neither candidate creates an obligation to implement, extend, or
+make tactical-space part of Battle Runtime or the Target SDK. Geometry remains
+an auxiliary experiment boundary; the evidence asks for coherent typed
+admission and precise rejection, not geometry expansion.
