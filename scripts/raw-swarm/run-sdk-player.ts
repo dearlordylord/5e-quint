@@ -51,6 +51,7 @@ import {
   isJsonRecord,
   repoRoot,
   sha256Canonical,
+  type GitSha,
 } from "./transcript.ts";
 import { Either, Match, Schema } from "effect";
 import { runCodexInvocation } from "./model-telemetry.ts";
@@ -149,6 +150,20 @@ function repositoryOutputPath(value: string): string {
 
 function fail(message: string): never {
   throw new Error(message);
+}
+
+function parseOptionalImplementationGitSha(
+  input: string | undefined,
+): Either.Either<GitSha | undefined, string> {
+  if (input === undefined) return Either.right(undefined);
+  if (input.trim().length === 0 || input.startsWith("-")) {
+    return Either.left(
+      "--implementation-git-sha requires a lowercase Git SHA value.",
+    );
+  }
+  return Schema.decodeUnknownEither(GitShaSchema)(input).pipe(
+    Either.mapLeft((error) => error.message),
+  );
 }
 
 function runCommand(
@@ -403,13 +418,33 @@ async function main(args: readonly string[]): Promise<void> {
     evidenceIdFlagIndex === -1
       ? new Set<number>()
       : new Set([evidenceIdFlagIndex, evidenceIdFlagIndex + 1]);
+  const implementationGitShaFlagIndex = options.indexOf(
+    "--implementation-git-sha",
+  );
+  const implementationGitShaInput =
+    implementationGitShaFlagIndex === -1
+      ? undefined
+      : options[implementationGitShaFlagIndex + 1];
+  const implementationGitShaOptionIndexes =
+    implementationGitShaFlagIndex === -1
+      ? new Set<number>()
+      : new Set([
+          implementationGitShaFlagIndex,
+          implementationGitShaFlagIndex + 1,
+        ]);
+  const decodedImplementationGitSha = parseOptionalImplementationGitSha(
+    implementationGitShaInput,
+  );
   const acceptedOptions = options.filter(
     (_option, index) =>
-      !evidenceIdOptionIndexes.has(index) && !pathOptionIndexes.has(index),
+      !evidenceIdOptionIndexes.has(index) &&
+      !implementationGitShaOptionIndexes.has(index) &&
+      !pathOptionIndexes.has(index),
   );
   if (
     Either.isLeft(decodedScenarioId) ||
     Either.isLeft(decodedEvidenceId) ||
+    Either.isLeft(decodedImplementationGitSha) ||
     invalidPathValue ||
     acceptedOptions.some((option) => option !== "--instructional-isolation") ||
     options.some(
@@ -421,14 +456,21 @@ async function main(args: readonly string[]): Promise<void> {
     options.filter((option) => option === "--instructional-isolation").length >
       1 ||
     options.filter((option) => option === "--evidence-id").length > 1 ||
-    (evidenceIdFlagIndex !== -1 && evidenceIdFlagIndex + 1 >= options.length)
+    (evidenceIdFlagIndex !== -1 && evidenceIdFlagIndex + 1 >= options.length) ||
+    options.filter((option) => option === "--implementation-git-sha").length >
+      1 ||
+    (implementationGitShaFlagIndex !== -1 &&
+      (implementationGitShaFlagIndex + 1 >= options.length ||
+        implementationGitShaInput === undefined ||
+        implementationGitShaInput.startsWith("-")))
   ) {
     fail(
-      "Usage: run-sdk-player.ts <scenario-id> [--evidence-id <evidence-id>] [--instructional-isolation] [--scenario-path <path>] [--scenario-review-path <path>] [--characters-path <path>] [--setup-path <path>] [--stage-plan-path <path>] [--stage-plan-findings-path <path>] [--output-path <path>] [--benchmark-context-path <path>]",
+      "Usage: run-sdk-player.ts <scenario-id> [--evidence-id <evidence-id>] [--implementation-git-sha <git-sha>] [--instructional-isolation] [--scenario-path <path>] [--scenario-review-path <path>] [--characters-path <path>] [--setup-path <path>] [--stage-plan-path <path>] [--stage-plan-findings-path <path>] [--output-path <path>] [--benchmark-context-path <path>]",
     );
   }
   const acceptedScenarioId = decodedScenarioId.right;
   const acceptedEvidenceId = decodedEvidenceId.right;
+  const requestedImplementationGitSha = decodedImplementationGitSha.right;
   const pathValue = (flag: string): string | undefined => pathValues.get(flag);
   const output = repositoryOutputPath(
     pathValue("--output-path") ??
@@ -471,8 +513,17 @@ async function main(args: readonly string[]): Promise<void> {
   if (revision.tag === "dirty") {
     fail("SDK player recording requires a clean Git worktree.");
   }
-  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
-  if (Either.isLeft(gitSha)) fail(gitSha.left.message);
+  const currentGitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
+  if (Either.isLeft(currentGitSha)) fail(currentGitSha.left.message);
+  if (
+    requestedImplementationGitSha !== undefined &&
+    requestedImplementationGitSha !== currentGitSha.right
+  ) {
+    fail(
+      `--implementation-git-sha does not match the current clean Git revision: expected ${requestedImplementationGitSha}, current ${currentGitSha.right}.`,
+    );
+  }
+  const gitSha = requestedImplementationGitSha ?? currentGitSha.right;
   const startedAt = new Date().toISOString();
   if (existsSync(output)) {
     fail(`Refusing to overwrite SDK player evidence: ${output}`);
@@ -508,7 +559,7 @@ async function main(args: readonly string[]): Promise<void> {
         type: "raw-swarm-player-run-start",
         schemaVersion: 1,
         scenarioId: acceptedScenarioId,
-        gitSha: gitSha.right,
+        gitSha,
         startedAt,
       },
       null,
@@ -561,7 +612,7 @@ async function main(args: readonly string[]): Promise<void> {
       output,
       runStartPath,
       scenarioId: acceptedScenarioId,
-      gitSha: gitSha.right,
+      gitSha,
       startedAt,
       stage: "generation",
       category: "scenario-author-defect",
@@ -614,7 +665,7 @@ async function main(args: readonly string[]): Promise<void> {
       output,
       runStartPath,
       scenarioId: acceptedScenarioId,
-      gitSha: gitSha.right,
+      gitSha,
       startedAt,
       stage: "generation",
       category: "scenario-author-defect",
@@ -658,7 +709,7 @@ async function main(args: readonly string[]): Promise<void> {
       output,
       runStartPath,
       scenarioId: acceptedScenarioId,
-      gitSha: gitSha.right,
+      gitSha,
       startedAt,
       stage: "character-authoring",
       category: "model-controller-mistake",
@@ -718,7 +769,7 @@ async function main(args: readonly string[]): Promise<void> {
         output,
         runStartPath,
         scenarioId: acceptedScenarioId,
-        gitSha: gitSha.right,
+        gitSha,
         startedAt,
         stage: "character-authoring",
         category: "model-controller-mistake",
@@ -858,7 +909,7 @@ async function main(args: readonly string[]): Promise<void> {
       phase: "player",
       stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.player,
       scenarioId: acceptedScenarioId,
-      gitSha: gitSha.right,
+      gitSha,
       fallbackInvocationId: randomUUID(),
       model: PLAYER_MODEL,
       reasoningEffort: PLAYER_REASONING_EFFORT,
@@ -914,7 +965,7 @@ async function main(args: readonly string[]): Promise<void> {
           output,
           runStartPath,
           scenarioId: acceptedScenarioId,
-          gitSha: gitSha.right,
+          gitSha,
           startedAt,
           stage: "setup-authoring",
           category: "experiment-boundary-obstruction",

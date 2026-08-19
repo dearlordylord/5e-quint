@@ -6,7 +6,6 @@ RAW_REVIEW_PROMPT=${1:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> 
 RAW_REVIEW_TRANSCRIPT=${2:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
 RAW_REVIEW_OUTPUT=${3:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
 RAW_REVIEW_LOG=${4:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
-RAW_REVIEW_INSTRUCTIONS=$(<"$RAW_REVIEW_PROMPT")
 RAW_REVIEW_SCHEMA=$(mktemp)
 RAW_REVIEW_AUDIT="${RAW_REVIEW_OUTPUT%.json}.audit.jsonl"
 RAW_REVIEW_PACKET="${RAW_REVIEW_OUTPUT%.json}.packet.json"
@@ -18,7 +17,22 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   printf '%s\n' 'Post-play review recording requires a clean Git worktree.' >&2
   exit 1
 fi
-RAW_REVIEW_INVOCATION_GIT_SHA=$(git rev-parse HEAD)
+RAW_REVIEW_CURRENT_GIT_SHA=$(git rev-parse HEAD)
+if [[ -n "${RAW_REVIEW_IMPLEMENTATION_GIT_SHA:-}" ]]; then
+  if [[ ! "$RAW_REVIEW_IMPLEMENTATION_GIT_SHA" =~ ^([0-9a-f]{40}|[0-9a-f]{64})$ ]]; then
+    printf '%s\n' 'RAW_REVIEW_IMPLEMENTATION_GIT_SHA must be a lowercase 40- or 64-character Git SHA.' >&2
+    exit 1
+  fi
+  if [[ "$RAW_REVIEW_IMPLEMENTATION_GIT_SHA" != "$RAW_REVIEW_CURRENT_GIT_SHA" ]]; then
+    printf 'RAW_REVIEW_IMPLEMENTATION_GIT_SHA does not match the current clean Git revision: expected %s, current %s.\n' \
+      "$RAW_REVIEW_IMPLEMENTATION_GIT_SHA" "$RAW_REVIEW_CURRENT_GIT_SHA" >&2
+    exit 1
+  fi
+  RAW_REVIEW_INVOCATION_GIT_SHA=$RAW_REVIEW_IMPLEMENTATION_GIT_SHA
+else
+  RAW_REVIEW_INVOCATION_GIT_SHA=$RAW_REVIEW_CURRENT_GIT_SHA
+fi
+RAW_REVIEW_INSTRUCTIONS=$(<"$RAW_REVIEW_PROMPT")
 
 mkdir -p "$(dirname "$RAW_REVIEW_OUTPUT")" "$(dirname "$RAW_REVIEW_LOG")"
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/sdk-player/sdk-audit-cli.ts" \
@@ -53,8 +67,8 @@ if [[ -n "${RAW_REVIEW_CONTEXT_PATH:-}" ]]; then
       exit 1
       ;;
   esac
+  RAW_REVIEW_CONTEXT_BYTES=$(wc -c <"$RAW_REVIEW_CONTEXT_PATH" | tr -d ' ')
   RAW_REVIEW_CONTEXT_SHA256=$(sha256sum "$RAW_REVIEW_CONTEXT_PATH" | cut -d' ' -f1)
-  RAW_REVIEW_CAPABILITY_CONTEXT="Read the exact delivered review context at $RAW_REVIEW_CONTEXT_PATH with SHA-256 $RAW_REVIEW_CONTEXT_SHA256."
 else
   RAW_REVIEW_CAPABILITY_CONTEXT=$(pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/capability-projection-cli.ts" review)
 fi
@@ -73,7 +87,14 @@ set +e
 {
   printf '%s\n\n<SDK_REVIEW_PACKET path="%s" bytes="%s" sha256="%s">\n' \
     "$RAW_REVIEW_RENDERED" "$RAW_REVIEW_PACKET" "$RAW_REVIEW_PACKET_BYTES" "$RAW_REVIEW_PACKET_SHA256"
-  printf '<RAW_SWARM_CAPABILITY_CONTEXT role="review">\n%s</RAW_SWARM_CAPABILITY_CONTEXT>\n' "$RAW_REVIEW_CAPABILITY_CONTEXT"
+  if [[ -n "${RAW_REVIEW_CONTEXT_PATH:-}" ]]; then
+    printf '<RAW_SWARM_CAPABILITY_CONTEXT role="review" path="%s" bytes="%s" sha256="%s">\n' \
+      "$RAW_REVIEW_CONTEXT_PATH" "$RAW_REVIEW_CONTEXT_BYTES" "$RAW_REVIEW_CONTEXT_SHA256"
+    cat "$RAW_REVIEW_CONTEXT_PATH"
+    printf '</RAW_SWARM_CAPABILITY_CONTEXT>\n'
+  else
+    printf '<RAW_SWARM_CAPABILITY_CONTEXT role="review">\n%s</RAW_SWARM_CAPABILITY_CONTEXT>\n' "$RAW_REVIEW_CAPABILITY_CONTEXT"
+  fi
   cat "$RAW_REVIEW_PACKET"
   printf '</SDK_REVIEW_PACKET>\n'
 } | codex exec \
