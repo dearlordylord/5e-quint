@@ -136,7 +136,7 @@ describe("fixed scenario benchmark boundary", () => {
           item: {
             id: "item_1",
             type: "command_execution",
-            command: `/bin/bash -lc "sed -n '1,20p' ${contextPath}"`,
+            command: `/bin/bash -c "sed -n '1,20p' ${contextPath}"`,
           },
         }) +
           "\n" +

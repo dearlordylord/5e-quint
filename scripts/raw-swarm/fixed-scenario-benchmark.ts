@@ -618,6 +618,7 @@ const BENCHMARK_PREPARATION_SHELL_LAUNCHERS = new Set([
   "/bin/bash",
   "/usr/bin/bash",
 ]);
+const BENCHMARK_PREPARATION_SHELL_FLAGS = new Set(["-c", "-lc"]);
 const BENCHMARK_PREPARATION_READ_COMMANDS = new Set([
   "cat",
   "head",
@@ -872,11 +873,11 @@ function commandArguments(
   if (
     outer.right.words.length !== 3 ||
     !BENCHMARK_PREPARATION_SHELL_LAUNCHERS.has(outer.right.words[0] ?? "") ||
-    outer.right.words[1] !== "-lc" ||
+    !BENCHMARK_PREPARATION_SHELL_FLAGS.has(outer.right.words[1] ?? "") ||
     outer.right.quoted[2] !== true
   ) {
     return Either.left(
-      "preparation command must be one quoted /bin/bash -lc read operation",
+      "preparation command must be one quoted Bash read operation",
     );
   }
   const inner = parseStrictShellWords(outer.right.words[2] ?? "");
