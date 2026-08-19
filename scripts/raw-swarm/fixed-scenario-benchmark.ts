@@ -2197,14 +2197,31 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     paths.playerDirectory,
     "evidence/context-delivery.json",
   );
-  if (existsSync(playerContextDelivery)) {
-    validateContextDeliveryEvidence({
-      path: playerContextDelivery,
-      profile,
-      role: "player",
-      manifest: contextManifest.right,
-    });
+  if (!existsSync(playerContextDelivery)) {
+    fail(
+      "Every assembly-eligible benchmark path requires retained player context-delivery evidence.",
+    );
   }
+  validateContextDeliveryEvidence({
+    path: playerContextDelivery,
+    profile,
+    role: "player",
+    manifest: contextManifest.right,
+  });
+  const transcript = resolve(paths.playerDirectory, "evidence/sdk-calls.jsonl");
+  const frozenPrefix = resolve(
+    paths.playerDirectory,
+    "evidence/frozen-prefix.json",
+  );
+  const finalArtifact = resolve(paths.playerDirectory, "evidence/final.json");
+  const replay = resolve(paths.playerDirectory, "evidence/replay-result.json");
+  const postLedger =
+    paths.postPlayReview.slice(0, -".json".length) + ".invocations.jsonl";
+  const postPlayRan =
+    existsSync(paths.postPlayReview) ||
+    existsSync(postLedger) ||
+    existsSync(paths.postPlayLog) ||
+    existsSync(paths.postPlayLog + ".events.jsonl");
   if (existsSync(paths.postPlayContextDelivery)) {
     validateContextDeliveryEvidence({
       path: paths.postPlayContextDelivery,
@@ -2212,6 +2229,10 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
       role: "postPlayReview",
       manifest: contextManifest.right,
     });
+  } else if (postPlayRan) {
+    fail(
+      "A benchmark path that ran post-play review requires retained post-play context-delivery evidence.",
+    );
   }
   if (
     sha256Canonical(runDescriptor.right.scenarioBundle) !==
@@ -2223,15 +2244,6 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
       "Fixed benchmark run descriptor does not match retained preparation authorities.",
     );
   }
-  const transcript = resolve(paths.playerDirectory, "evidence/sdk-calls.jsonl");
-  const frozenPrefix = resolve(
-    paths.playerDirectory,
-    "evidence/frozen-prefix.json",
-  );
-  const finalArtifact = resolve(paths.playerDirectory, "evidence/final.json");
-  const replay = resolve(paths.playerDirectory, "evidence/replay-result.json");
-  const postLedger =
-    paths.postPlayReview.slice(0, -".json".length) + ".invocations.jsonl";
   if (!existsSync(transcript) || !existsSync(frozenPrefix)) {
     fail(
       "Player transcript and frozen-prefix authorities are required before assembly.",
@@ -2408,14 +2420,10 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     ...baseFindings,
     authorities: [
       ...baseFindings.authorities,
-      ...(existsSync(playerContextDelivery)
-        ? [
-            {
-              role: "playerContextDelivery",
-              ...artifactAuthority(repoRelative(playerContextDelivery)),
-            },
-          ]
-        : []),
+      {
+        role: "playerContextDelivery",
+        ...artifactAuthority(repoRelative(playerContextDelivery)),
+      },
       ...(existsSync(paths.postPlayContextDelivery)
         ? [
             {

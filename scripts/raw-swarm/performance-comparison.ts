@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 
 import { Either, ParseResult, Schema } from "effect";
 
@@ -59,6 +59,7 @@ import {
   PlayerRunStateSchema,
 } from "./player-continuation-evidence.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
+import { reprojectSdkTranscriptTurns } from "./sdk-player/player-turn-projection.ts";
 import { SdkReplayResultEvidenceSchema } from "./sdk-player/sdk-replay-result.ts";
 import { ReviewOutputSchema } from "./review-contract.ts";
 import {
@@ -68,6 +69,7 @@ import {
   repoRoot,
   ScenarioIdSchema,
   sha256Canonical,
+  sha256Text,
 } from "./transcript.ts";
 import {
   ScenarioStagePlanSchema,
@@ -1448,6 +1450,28 @@ type EvidenceList =
 export type PathOutcome = Schema.Schema.Type<typeof PathOutcomeSchema>;
 
 /**
+ * The frozen-prefix authority is written by the SDK supervisor after every
+ * accepted continuation. Keep this boundary identical to the production
+ * authority; decoding only its nested `run` would allow a forged terminal
+ * state to ignore the frozen program bytes and continuation count.
+ */
+const BenchmarkFrozenPrefixSchema = Schema.Struct({
+  frozenByteLength: NonNegativeIntegerSchema,
+  frozenSha256: HashSchema,
+  continuationCount: NonNegativeIntegerSchema,
+  run: PlayerRunStateSchema,
+});
+
+const BenchmarkFinalArtifactSchema = Schema.Struct({
+  transcriptHeaderSha256: HashSchema,
+  continuation: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0)),
+  kind: Schema.Literal("playerConcluded"),
+  projection: Schema.Unknown,
+  tacticalNote: Schema.String,
+  conclusion: Schema.NonEmptyTrimmedString,
+});
+
+/**
  * Derive the player path outcome from the two retained execution authorities.
  * A terminal state without a call, or without its final artifact, is retained
  * as a failed path rather than being promoted to a completed measurement.
@@ -1465,7 +1489,7 @@ export function deriveBenchmarkPathOutcome(input: {
       );
     }
     const frozenPrefix = Schema.decodeUnknownEither(
-      Schema.Struct({ run: PlayerRunStateSchema }),
+      BenchmarkFrozenPrefixSchema,
       { onExcessProperty: "error" },
     )(
       JSON.parse(
@@ -1477,14 +1501,51 @@ export function deriveBenchmarkPathOutcome(input: {
         `Benchmark frozen-prefix evidence is invalid: ${frozenPrefix.left.message}`,
       );
     }
-    const state = frozenPrefix.right.run;
-    if (state.kind === "playerObstructed") {
+    const prefix = frozenPrefix.right;
+    const programPath = resolve(
+      dirname(resolve(repoRoot, input.frozenPrefixPath)),
+      "program.ts",
+    );
+    if (!existsSync(programPath)) {
+      return Either.left(
+        "Benchmark frozen-prefix evidence has no retained program authority.",
+      );
+    }
+    const program = readFileSync(programPath);
+    if (
+      program.byteLength !== prefix.frozenByteLength ||
+      sha256Text(program.toString("utf8")) !== prefix.frozenSha256
+    ) {
+      return Either.left(
+        "Benchmark frozen-prefix evidence is not bound to the retained program authority.",
+      );
+    }
+
+    const finalArtifactExists =
+      input.finalArtifactPath !== undefined &&
+      existsSync(resolve(repoRoot, input.finalArtifactPath));
+    const concluded = prefix.run.kind === "playerConcluded";
+    if (concluded !== finalArtifactExists) {
+      return Either.left("Player terminal state and final artifact disagree.");
+    }
+
+    const greatestContinuation = transcript.value.calls.reduce(
+      (greatest, call) => Math.max(greatest, call.continuation),
+      0,
+    );
+    if (greatestContinuation > prefix.continuationCount) {
+      return Either.left(
+        "Benchmark frozen-prefix continuation count is behind the retained transcript.",
+      );
+    }
+
+    if (prefix.run.kind === "playerObstructed") {
       return Either.right({
         tag: "failed",
-        reason: state.obstruction.message,
+        reason: prefix.run.obstruction.message,
       });
     }
-    if (state.kind === "active") {
+    if (prefix.run.kind === "active") {
       return Either.right({
         tag: "failed",
         reason:
@@ -1498,15 +1559,58 @@ export function deriveBenchmarkPathOutcome(input: {
           "Player terminal evidence claims playerConcluded without an SDK call.",
       });
     }
+    if (input.finalArtifactPath === undefined) {
+      return Either.left(
+        "Player terminal evidence claims playerConcluded without a final artifact.",
+      );
+    }
+
+    const finalArtifact = Schema.decodeUnknownEither(
+      BenchmarkFinalArtifactSchema,
+      { onExcessProperty: "error" },
+    )(
+      JSON.parse(
+        readFileSync(resolve(repoRoot, input.finalArtifactPath), "utf8"),
+      ),
+    );
+    if (Either.isLeft(finalArtifact)) {
+      return Either.left(
+        `Benchmark final player artifact is invalid: ${finalArtifact.left.message}`,
+      );
+    }
+    const final = finalArtifact.right;
+    const transcriptHeaderSha256 = sha256Canonical(transcript.value.header);
+    if (final.transcriptHeaderSha256 !== transcriptHeaderSha256) {
+      return Either.left(
+        "Benchmark final player artifact is not bound to the retained transcript header.",
+      );
+    }
     if (
-      input.finalArtifactPath === undefined ||
-      !existsSync(resolve(repoRoot, input.finalArtifactPath))
+      final.continuation !== prefix.continuationCount ||
+      final.continuation !== greatestContinuation ||
+      final.conclusion !== prefix.run.conclusion
     ) {
-      return Either.right({
-        tag: "failed",
-        reason:
-          "Player terminal evidence claims playerConcluded without a final artifact.",
-      });
+      return Either.left(
+        "Benchmark final player artifact is not bound to the terminal state or transcript continuation.",
+      );
+    }
+    const projected = reprojectSdkTranscriptTurns({
+      calls: transcript.value.calls,
+      holeEvidenceSource: { kind: "recordedCurrentRuntime" },
+    });
+    if (projected.tag === "invalid") {
+      return Either.left(
+        `Benchmark player transcript cannot produce the canonical terminal projection: ${projected.message}`,
+      );
+    }
+    const terminalProjection = projected.projections.at(-1);
+    if (
+      terminalProjection === undefined ||
+      canonicalJson(final.projection) !== canonicalJson(terminalProjection)
+    ) {
+      return Either.left(
+        "Benchmark final player artifact projection does not match the retained transcript.",
+      );
     }
     return Either.right({ tag: "completed" });
   } catch (error: unknown) {
@@ -3489,9 +3593,15 @@ function benchmarkContextDeliveryAuthorityIssues(input: {
   readonly authority: FindingAuthority | undefined;
   readonly manifest: BenchmarkContextSourceManifestDocument;
   readonly outcome: PathOutcome;
+  readonly postPlayRan: boolean;
 }): readonly string[] {
   if (input.authority === undefined) {
-    if (input.outcome.tag !== "completed") {
+    if (input.role === "player") {
+      return [
+        "Benchmark findings have no retained player context-delivery authority.",
+      ];
+    }
+    if (!input.postPlayRan && input.outcome.tag !== "completed") {
       return [];
     }
     return [
@@ -4198,6 +4308,13 @@ function benchmarkAuthorityIssues(
           ),
           manifest: manifest.right,
           outcome: measurement.outcome,
+          postPlayRan:
+            measurement.invocations.some(
+              ({ phase }) => phase === "postPlayReview",
+            ) ||
+            measurement.findings.authorities.some(({ role: authorityRole }) =>
+              isPostPlayReviewAuthorityRole(authorityRole),
+            ),
         }),
       );
     }

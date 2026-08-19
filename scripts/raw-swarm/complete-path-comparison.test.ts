@@ -45,6 +45,10 @@ import {
   sha256Canonical,
   sha256Text,
 } from "./transcript.ts";
+import {
+  playerInitialTurnProjection,
+  reprojectSdkTranscriptTurns,
+} from "./sdk-player/player-turn-projection.ts";
 
 function parseJsonRecord(text: string): Record<string, unknown> {
   const value: unknown = JSON.parse(text);
@@ -249,7 +253,54 @@ function findingsProjection(
     "SCENARIO_REVIEW.json",
     scenarioReviewBytes,
   );
-  const initialSession = {};
+  const initialSession = {
+    battle: {
+      state: {
+        initiative: { round: 1, stillToAct: [{ creature: "actor" }] },
+        subjectResolutionPhase: { kind: "subjectSelection" },
+        combatants: {
+          $map: [
+            [
+              "actor",
+              {
+                hp: 10,
+                maxHp: 10,
+                tempHp: 0,
+                conditions: {},
+                reactionAvailable: true,
+                movementSpentFeet: 0,
+                zeroHpLifecycle: {
+                  policy: "usesDeathSavingThrows",
+                  deathSaves: {
+                    deathSaves: { successes: 0, failures: 0 },
+                    stable: false,
+                    dead: false,
+                    hpRegained: false,
+                  },
+                },
+                ammunitionStocks: [],
+                origin: {
+                  kind: "character",
+                  resources: [],
+                  spellcasting: { spellSlots: [] },
+                },
+              },
+            ],
+          ],
+        },
+        groundObjects: { $map: [] },
+      },
+    },
+    battlefield: {
+      spatial: {
+        kind: "geometryDerived",
+        space: {
+          placements: [{ token: "actor", coordinate: { x: 0, y: 0 } }],
+        },
+      },
+      objects: [],
+    },
+  } as const;
   const initialSessionSha256 = sha256Canonical(initialSession);
   const characterSheets = {};
   const characterSheetsSha256 = sha256Canonical(characterSheets);
@@ -258,21 +309,6 @@ function findingsProjection(
     root,
     "replay-supervisor.mjs",
     "export default {};\n",
-  );
-  const frozenPrefix = writeAuthority(
-    root,
-    "evidence/frozen-prefix.json",
-    `${JSON.stringify({
-      run: {
-        kind: "playerConcluded",
-        conclusion: "Synthetic player concluded after an accepted SDK call.",
-      },
-    })}\n`,
-  );
-  const finalArtifact = writeAuthority(
-    root,
-    "evidence/final.json",
-    `${JSON.stringify({ tag: "syntheticFinal" })}\n`,
   );
   const characterAuthority = writeAuthority(
     root,
@@ -295,9 +331,16 @@ function findingsProjection(
     outcome: "returned" as const,
     outputSession: initialSession,
     outputSessionSha256: initialSessionSha256,
-    result: {},
-    resultSha256: sha256Canonical({}),
+    result: [],
+    resultSha256: sha256Canonical([]),
   }));
+  const initialProjection = playerInitialTurnProjection({
+    session: initialSession,
+    acts: [],
+  });
+  if (initialProjection.tag === "invalid") {
+    throw new Error(initialProjection.message);
+  }
   const transcriptHeader = {
     type: "sdk-player-header" as const,
     scenarioId,
@@ -317,11 +360,56 @@ function findingsProjection(
     setupObservation,
     initialSession,
     initialSessionSha256,
+    initialTurnProjection: initialProjection.projection,
+    initialTurnProjectionSha256: sha256Canonical(initialProjection.projection),
   };
   const transcript = writeAuthority(
     root,
     "transcript.jsonl",
     `${JSON.stringify(transcriptHeader)}\n${calls.map((call) => JSON.stringify(call)).join("\n")}\n`,
+  );
+  const projected = reprojectSdkTranscriptTurns({
+    calls,
+    holeEvidenceSource: { kind: "recordedCurrentRuntime" },
+  });
+  if (projected.tag === "invalid") throw new Error(projected.message);
+  const terminalProjection = projected.projections.at(-1);
+  if (terminalProjection === undefined) {
+    throw new Error("Synthetic terminal projection is missing.");
+  }
+  const program =
+    'import type { PlayerContinuation } from "@dnd/player-sdk";\n\n' +
+    "export const continuation0001: PlayerContinuation = async (context) => ({\n" +
+    '  kind: "playerConcluded",\n' +
+    "  session: context.session,\n" +
+    '  tacticalNote: "Synthetic tactical note.",\n' +
+    '  conclusion: "Synthetic player concluded after an accepted SDK call.",\n' +
+    "});\n";
+  const programAuthority = writeAuthority(root, "evidence/program.ts", program);
+  const frozenPrefix = writeAuthority(
+    root,
+    "evidence/frozen-prefix.json",
+    `${JSON.stringify({
+      frozenByteLength: programAuthority.byteLength,
+      frozenSha256: programAuthority.sha256,
+      continuationCount: 2,
+      run: {
+        kind: "playerConcluded",
+        conclusion: "Synthetic player concluded after an accepted SDK call.",
+      },
+    })}\n`,
+  );
+  const finalArtifact = writeAuthority(
+    root,
+    "evidence/final.json",
+    `${JSON.stringify({
+      transcriptHeaderSha256: sha256Canonical(transcriptHeader),
+      continuation: 2,
+      kind: "playerConcluded",
+      projection: terminalProjection,
+      tacticalNote: "Synthetic tactical note.",
+      conclusion: "Synthetic player concluded after an accepted SDK call.",
+    })}\n`,
   );
   const review = writeAuthority(
     root,
@@ -1278,10 +1366,16 @@ describe("complete Raw Swarm path comparison", () => {
     expect(frozenPrefix).toBeDefined();
     if (frozenPrefix === undefined) return;
     const root = resolve(repoRoot, frozenPrefix.path, "..", "..");
+    const originalFrozenPrefix = parseJsonRecord(
+      readFileSync(resolve(repoRoot, frozenPrefix.path), "utf8"),
+    );
     const obstructionAuthority = writeAuthority(
       root,
       "evidence/frozen-prefix-obstructed.json",
       `${JSON.stringify({
+        frozenByteLength: originalFrozenPrefix.frozenByteLength,
+        frozenSha256: originalFrozenPrefix.frozenSha256,
+        continuationCount: originalFrozenPrefix.continuationCount,
         run: {
           kind: "playerObstructed",
           obstruction: {
@@ -1307,13 +1401,68 @@ describe("complete Raw Swarm path comparison", () => {
         ),
       },
     };
-    const validatedObstruction =
+    const staleFinalValidation =
       validateCompletePathMeasurement(retainedObstruction);
+    expect(staleFinalValidation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining(
+        "terminal state and final artifact disagree",
+      ),
+    });
+    const finalAuthority = obstructed.findings.authorities.find(
+      ({ role }) => role === "final",
+    );
+    expect(finalAuthority).toBeDefined();
+    if (finalAuthority === undefined) return;
+    const validatedCompletedCandidate = validated(obstructed);
+    rmSync(resolve(repoRoot, finalAuthority.path), { force: true });
+    const obstructionWithoutStaleFinal = {
+      ...retainedObstruction,
+      findings: {
+        ...retainedObstruction.findings,
+        authorities: retainedObstruction.findings.authorities.filter(
+          ({ role }) => role !== "final",
+        ),
+      },
+    };
+    const validatedObstruction = validateCompletePathMeasurement(
+      obstructionWithoutStaleFinal,
+    );
     expect(validatedObstruction).toMatchObject({ _tag: "Right" });
     if (Either.isLeft(validatedObstruction)) return;
+    const missingPlayerContext = validateCompletePathMeasurement({
+      ...obstructionWithoutStaleFinal,
+      findings: {
+        ...obstructionWithoutStaleFinal.findings,
+        authorities: obstructionWithoutStaleFinal.findings.authorities.filter(
+          ({ role }) => role !== "playerContextDelivery",
+        ),
+      },
+    });
+    expect(missingPlayerContext).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining(
+        "no retained player context-delivery authority",
+      ),
+    });
+    const missingPostPlayContext = validateCompletePathMeasurement({
+      ...obstructionWithoutStaleFinal,
+      findings: {
+        ...obstructionWithoutStaleFinal.findings,
+        authorities: obstructionWithoutStaleFinal.findings.authorities.filter(
+          ({ role }) => role !== "postPlayReviewContextDelivery",
+        ),
+      },
+    });
+    expect(missingPostPlayContext).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining(
+        "no retained postPlayReview context-delivery authority",
+      ),
+    });
     const comparison = compareCompleteEquivalentPaths({
       baseline: validatedObstruction.right,
-      candidate: validated(obstructed),
+      candidate: validatedCompletedCandidate,
     });
     expect(comparison.identity).toBe("different-path");
     expect(comparison.equivalence.reason).toContain("failed");
@@ -1334,10 +1483,18 @@ describe("complete Raw Swarm path comparison", () => {
       "no-call-transcript.jsonl",
       `${header}\n`,
     );
+    const noCallProgram = writeAuthority(
+      noCallRoot,
+      "program.ts",
+      'import type { PlayerContinuation } from "@dnd/player-sdk";\n',
+    );
     const noCallFrozenPrefix = writeAuthority(
       noCallRoot,
       "no-call-frozen-prefix.json",
       `${JSON.stringify({
+        frozenByteLength: noCallProgram.byteLength,
+        frozenSha256: noCallProgram.sha256,
+        continuationCount: 1,
         run: {
           kind: "playerConcluded",
           conclusion: "Synthetic conclusion without a call.",
@@ -1438,12 +1595,39 @@ describe("complete Raw Swarm path comparison", () => {
     if (Either.isLeft(validatedNoCall)) return;
     const noCallComparison = compareCompleteEquivalentPaths({
       baseline: validatedNoCall.right,
-      candidate: validated(obstructed),
+      candidate: validatedCompletedCandidate,
     });
     expect(noCallComparison.identity).toBe("different-path");
     expect(noCallComparison.equivalence.reason).toContain(
       "no accepted SDK-call finding",
     );
+  }, 60_000);
+
+  test("rejects a forged completion whose final artifact is not canonical terminal evidence", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const finalAuthority = benchmark.findings.authorities.find(
+      ({ role }) => role === "final",
+    );
+    expect(finalAuthority).toBeDefined();
+    if (finalAuthority === undefined) return;
+    const forgedFinal = replaceJsonAuthority(finalAuthority, {
+      tag: "syntheticFinal",
+    });
+    const validation = validateCompletePathMeasurement({
+      ...benchmark,
+      findings: {
+        ...benchmark.findings,
+        authorities: benchmark.findings.authorities.map((authority) =>
+          authority.role === "final"
+            ? { role: authority.role, ...forgedFinal }
+            : authority,
+        ),
+      },
+    });
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("final player artifact is invalid"),
+    });
   }, 60_000);
 
   test("rejects an internally valid benchmark pair from mixed implementation revisions", () => {
