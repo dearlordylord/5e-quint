@@ -642,6 +642,36 @@ function isAttackTargetSpatialDecisionInput(
   return input.question.kind === "attackTarget";
 }
 
+function isGrappleTargetSpatialDecisionInput(
+  input: ScenarioSpatialDecisionInput,
+): input is ScenarioGrappleTargetSpatialDecisionInput {
+  return input.question.kind === "grappleTarget";
+}
+
+function isShoveTargetSpatialDecisionInput(
+  input: ScenarioSpatialDecisionInput,
+): input is ScenarioShoveTargetSpatialDecisionInput {
+  return input.question.kind === "shoveTarget";
+}
+
+function isSleepShakeAwakeTargetSpatialDecisionInput(
+  input: ScenarioSpatialDecisionInput,
+): input is ScenarioSleepShakeAwakeTargetSpatialDecisionInput {
+  return input.question.kind === "sleepShakeAwakeTarget";
+}
+
+function isHypnoticPatternShakeAwakeTargetSpatialDecisionInput(
+  input: ScenarioSpatialDecisionInput,
+): input is ScenarioHypnoticPatternShakeAwakeTargetSpatialDecisionInput {
+  return input.question.kind === "hypnoticPatternShakeAwakeTarget";
+}
+
+function isHelpAttackTargetSpatialDecisionInput(
+  input: ScenarioSpatialDecisionInput,
+): input is ScenarioHelpAttackTargetSpatialDecisionInput {
+  return input.question.kind === "helpAttackTarget";
+}
+
 function isMovementRouteSpatialDecisionInput(
   input: ScenarioSpatialDecisionInput,
 ): input is ScenarioMovementRouteSpatialDecisionInput {
@@ -1191,17 +1221,26 @@ function parseCreatureSpaceTraversal(
       "A creature-space traversal fact has an invalid occupied-space or destination shape.",
     );
   }
+  const occupiedSpaces = fact.occupiedSpaces.map((space) => ({
+    occupantId: space.occupantId as CombatantId,
+    positionId: space.positionId as BattleTablePositionId,
+  }));
+  const firstOccupiedSpace = occupiedSpaces[0];
+  if (firstOccupiedSpace === undefined) {
+    return malformedDecision(
+      input,
+      "A creature-space traversal fact requires at least one occupied space.",
+    );
+  }
+  const nonEmptyOccupiedSpaces: ReadonlyNonEmptyArray<{
+    readonly occupantId: CombatantId;
+    readonly positionId: BattleTablePositionId;
+  }> = [firstOccupiedSpace, ...occupiedSpaces.slice(1)];
   return Either.right({
     kind: "fact",
     value: {
       kind: "occupiedCreatureSpaceTraversal",
-      occupiedSpaces: fact.occupiedSpaces.map((space) => ({
-        occupantId: space.occupantId as CombatantId,
-        positionId: space.positionId as BattleTablePositionId,
-      })) as unknown as ReadonlyNonEmptyArray<{
-        readonly occupantId: CombatantId;
-        readonly positionId: BattleTablePositionId;
-      }>,
+      occupiedSpaces: nonEmptyOccupiedSpaces,
       destination:
         fact.destination.kind === "occupiedCreatureSpace"
           ? {
@@ -1577,13 +1616,49 @@ function normalizeSpatialDecision(
       }) as ScenarioAttackTargetSpatialDecision,
     );
   }
-  if (input.question.kind !== "movementRoute") {
+  if (isGrappleTargetSpatialDecisionInput(input)) {
     return Either.right(
       cloneAndFreeze({
         decisionId,
         question: input.question,
         answer: input.answer,
-      }) as unknown as ScenarioNonMovementSpatialDecision,
+      }) as ScenarioGrappleTargetSpatialDecision,
+    );
+  }
+  if (isShoveTargetSpatialDecisionInput(input)) {
+    return Either.right(
+      cloneAndFreeze({
+        decisionId,
+        question: input.question,
+        answer: input.answer,
+      }) as ScenarioShoveTargetSpatialDecision,
+    );
+  }
+  if (isSleepShakeAwakeTargetSpatialDecisionInput(input)) {
+    return Either.right(
+      cloneAndFreeze({
+        decisionId,
+        question: input.question,
+        answer: input.answer,
+      }) as ScenarioSleepShakeAwakeTargetSpatialDecision,
+    );
+  }
+  if (isHypnoticPatternShakeAwakeTargetSpatialDecisionInput(input)) {
+    return Either.right(
+      cloneAndFreeze({
+        decisionId,
+        question: input.question,
+        answer: input.answer,
+      }) as ScenarioHypnoticPatternShakeAwakeTargetSpatialDecision,
+    );
+  }
+  if (isHelpAttackTargetSpatialDecisionInput(input)) {
+    return Either.right(
+      cloneAndFreeze({
+        decisionId,
+        question: input.question,
+        answer: input.answer,
+      }) as ScenarioHelpAttackTargetSpatialDecision,
     );
   }
   if (!isMovementRouteSpatialDecisionInput(input)) {
