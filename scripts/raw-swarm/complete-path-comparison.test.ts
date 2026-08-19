@@ -23,11 +23,18 @@ import { planAdmittedScenarioStages } from "./scenario-stage-plan.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 import {
   GitShaSchema,
+  isJsonRecord,
   repoRoot,
   ScenarioIdSchema,
   sha256Canonical,
   sha256Text,
 } from "./transcript.ts";
+
+function parseJsonRecord(text: string): Record<string, unknown> {
+  const value: unknown = JSON.parse(text);
+  if (!isJsonRecord(value)) throw new Error("Expected a JSON object fixture.");
+  return value;
+}
 
 const temporaryDirectories: string[] = [];
 afterEach(() => {
@@ -1010,9 +1017,7 @@ describe("complete Raw Swarm path comparison", () => {
 
     const priorGitSha = "b".repeat(40);
     const scenarioReviewPath = resolve(repoRoot, scenarioReviewAuthority.path);
-    const reviewed = JSON.parse(readFileSync(scenarioReviewPath, "utf8")) as {
-      readonly [key: string]: unknown;
-    };
+    const reviewed = parseJsonRecord(readFileSync(scenarioReviewPath, "utf8"));
     const scenarioReviewBytes =
       JSON.stringify({ ...reviewed, gitSha: priorGitSha }) + "\n";
     writeFileSync(scenarioReviewPath, scenarioReviewBytes);
@@ -1038,7 +1043,7 @@ describe("complete Raw Swarm path comparison", () => {
     const transcriptRecords = readFileSync(transcriptPath, "utf8")
       .trimEnd()
       .split("\n")
-      .map((line) => JSON.parse(line) as Record<string, unknown>);
+      .map(parseJsonRecord);
     transcriptRecords[0] = {
       ...transcriptRecords[0],
       scenarioReviewSha256,
@@ -1050,17 +1055,17 @@ describe("complete Raw Swarm path comparison", () => {
     const transcriptSha256 = sha256Text(transcriptBytes);
 
     const replayResultPath = resolve(repoRoot, replayResultAuthority.path);
-    const replayResult = JSON.parse(
+    const replayResult = parseJsonRecord(
       readFileSync(replayResultPath, "utf8"),
-    ) as Record<string, unknown>;
+    );
     const replayResultBytes =
       JSON.stringify({ ...replayResult, transcriptSha256 }) + "\n";
     writeFileSync(replayResultPath, replayResultBytes);
 
     const postPlayReviewPath = resolve(repoRoot, postPlayReviewAuthority.path);
-    const postPlayReview = JSON.parse(
+    const postPlayReview = parseJsonRecord(
       readFileSync(postPlayReviewPath, "utf8"),
-    ) as Record<string, unknown>;
+    );
     const postPlayReviewBytes =
       JSON.stringify({ ...postPlayReview, transcriptSha256 }) + "\n";
     writeFileSync(postPlayReviewPath, postPlayReviewBytes);

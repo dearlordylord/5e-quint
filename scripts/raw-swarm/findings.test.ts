@@ -23,7 +23,7 @@ import {
   openArtifactIndex,
 } from "./artifact-index.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
-import { repoRoot, sha256Canonical } from "./transcript.ts";
+import { isJsonRecord, repoRoot, sha256Canonical } from "./transcript.ts";
 import {
   planAdmittedScenarioStages,
   planScenarioStages,
@@ -32,6 +32,20 @@ import {
 
 const directories: string[] = [];
 const reportScript = resolve(repoRoot, "scripts/raw-swarm/report.ts");
+
+function parseJsonRecord(text: string): Record<string, unknown> {
+  const value: unknown = JSON.parse(text);
+  if (!isJsonRecord(value)) throw new Error("Expected a JSON object fixture.");
+  return value;
+}
+
+function parseJsonRecordArray(text: string): Array<Record<string, unknown>> {
+  const value: unknown = JSON.parse(text);
+  if (!Array.isArray(value) || !value.every(isJsonRecord)) {
+    throw new Error("Expected a JSON object array fixture.");
+  }
+  return value;
+}
 
 function directory(): string {
   const value = rawSwarmTestOutputDirectory("findings-test-");
@@ -459,7 +473,7 @@ describe("Raw Swarm findings projection", () => {
     const tamperedLedgerEntries = readFileSync(tamperedLedgerPath, "utf8")
       .trim()
       .split("\n")
-      .map((line) => JSON.parse(line) as Record<string, unknown>);
+      .map(parseJsonRecord);
     tamperedLedgerEntries[0] = {
       ...tamperedLedgerEntries[0],
       eventsSha256: createHash("sha256").update(tamperedEvents).digest("hex"),
@@ -550,10 +564,7 @@ describe("Raw Swarm findings projection", () => {
       }),
     ).toThrow(/duplicate milestone/);
 
-    const foreign = JSON.parse(readFileSync(finalPath, "utf8")) as Record<
-      string,
-      unknown
-    >;
+    const foreign = parseJsonRecord(readFileSync(finalPath, "utf8"));
     foreign.scenarioId = "foreign-scenario";
     writeFileSync(finalPath, `${JSON.stringify(foreign)}\n`);
     expect(() =>
@@ -579,7 +590,7 @@ describe("Raw Swarm findings projection", () => {
     const ledgerEntries = readFileSync(ledgerPath, "utf8")
       .trim()
       .split("\n")
-      .map((line) => JSON.parse(line) as Record<string, unknown>);
+      .map(parseJsonRecord);
     for (const [field, value] of [
       ["model", "gpt-5.6-sol"],
       ["reasoningEffort", "medium"],
@@ -709,9 +720,9 @@ describe("Raw Swarm findings projection", () => {
   test("rejects a review authority from another run", () => {
     const input = fixture();
     const foreignReviewPath = resolve(input.root, "foreign-review.json");
-    const foreignReview = JSON.parse(
+    const foreignReview = parseJsonRecord(
       readFileSync(resolve(input.root, "review.json"), "utf8"),
-    ) as Record<string, unknown>;
+    );
     foreignReview.scenarioId = "another-run";
     writeFileSync(foreignReviewPath, `${JSON.stringify(foreignReview)}\n`);
     expect(() =>
@@ -748,7 +759,7 @@ describe("Raw Swarm findings projection", () => {
     const records = readFileSync(input.transcriptPath, "utf8")
       .trimEnd()
       .split("\n")
-      .map((line) => JSON.parse(line) as Record<string, unknown>);
+      .map(parseJsonRecord);
     records[0] = {
       ...records[0],
       scenarioSha256,
@@ -758,12 +769,12 @@ describe("Raw Swarm findings projection", () => {
       input.transcriptPath,
       `${records.map((record) => JSON.stringify(record)).join("\n")}\n`,
     );
-    const stagePlanFindings = JSON.parse(
+    const stagePlanFindings = parseJsonRecordArray(
       readFileSync(
         resolve(input.run, "evidence/stage-plan-findings.json"),
         "utf8",
       ),
-    ) as Array<Record<string, unknown>>;
+    );
     stagePlanFindings[0] = {
       ...stagePlanFindings[0],
       identity: {
@@ -778,9 +789,7 @@ describe("Raw Swarm findings projection", () => {
       `${JSON.stringify(stagePlanFindings)}\n`,
     );
     const stagePlanPath = resolve(input.run, "evidence/stage-plan.json");
-    const stagePlan = JSON.parse(readFileSync(stagePlanPath, "utf8")) as {
-      identity: Record<string, unknown>;
-    };
+    const stagePlan = parseJsonRecord(readFileSync(stagePlanPath, "utf8"));
     stagePlan.identity = {
       tag: "admitted",
       scenarioId: "findings-example",
@@ -1036,10 +1045,7 @@ describe("Raw Swarm findings projection", () => {
       ]),
     );
     const foreignLedger = resolve(root, "foreign-generation.jsonl");
-    const ledgerEntry = JSON.parse(readFileSync(ledger, "utf8")) as Record<
-      string,
-      unknown
-    >;
+    const ledgerEntry = parseJsonRecord(readFileSync(ledger, "utf8"));
     writeFileSync(
       foreignLedger,
       `${JSON.stringify({ ...ledgerEntry, scenarioId: "foreign-scenario" })}\n`,
