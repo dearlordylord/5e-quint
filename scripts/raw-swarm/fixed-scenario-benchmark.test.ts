@@ -145,7 +145,7 @@ describe("fixed scenario benchmark boundary", () => {
             item: {
               id: "item_1",
               type: "command_execution",
-              command: `/bin/bash -lc "sha256sum ${contextPath}"`,
+              command: `/bin/bash -lc "rg -n -o context ${contextPath}"`,
               aggregated_output: "",
               exit_code: 0,
               status: "completed",

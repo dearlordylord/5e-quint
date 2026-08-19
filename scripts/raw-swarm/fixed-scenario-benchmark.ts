@@ -629,7 +629,13 @@ const BENCHMARK_PREPARATION_READ_COMMANDS = new Set([
   "tail",
   "wc",
 ]);
-const BENCHMARK_PREPARATION_RG_OPTIONS = new Set(["--", "-F", "-i", "-n"]);
+const BENCHMARK_PREPARATION_RG_OPTIONS = new Set([
+  "--",
+  "-F",
+  "-i",
+  "-n",
+  "-o",
+]);
 const BENCHMARK_PREPARATION_SHELL_OPERATORS = new Set([
   ";",
   "&&",
