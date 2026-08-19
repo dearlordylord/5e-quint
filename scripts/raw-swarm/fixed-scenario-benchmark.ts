@@ -678,6 +678,12 @@ type StrictShellWords = Readonly<{
   readonly words: readonly string[];
 }>;
 
+function isCanonicalUnsignedDecimal(
+  value: string | undefined,
+): value is string {
+  return value !== undefined && /^(?:0|[1-9]\d*)$/.test(value);
+}
+
 function scratchNamedFiles(root: string): readonly string[] {
   const files: string[] = [];
   const visit = (directory: string): void => {
@@ -902,11 +908,25 @@ function commandArguments(
   };
   switch (executable) {
     case "cat":
-    case "head":
-    case "tail":
     case "sha256sum": {
       const files = args.filter((value) => !value.startsWith("-"));
       if (files.length === 0 || files.length !== args.length) {
+        return Either.left(`${executable} has unsupported arguments`);
+      }
+      const issue = validateFiles(files);
+      return issue === undefined
+        ? Either.right(inner.right.words)
+        : Either.left(issue);
+    }
+    case "head":
+    case "tail": {
+      const files =
+        args[0] === "-n"
+          ? isCanonicalUnsignedDecimal(args[1])
+            ? args.slice(2)
+            : []
+          : args;
+      if (files.length === 0 || files.some((value) => value.startsWith("-"))) {
         return Either.left(`${executable} has unsupported arguments`);
       }
       const issue = validateFiles(files);
@@ -969,10 +989,7 @@ function commandArguments(
         }
         if (argument === "-C") {
           const contextLineCount = args[operandIndex + 1];
-          if (
-            contextLineCount === undefined ||
-            !/^(?:0|[1-9]\d*)$/.test(contextLineCount)
-          ) {
+          if (!isCanonicalUnsignedDecimal(contextLineCount)) {
             return Either.left("rg has unsupported arguments");
           }
           operandIndex += 2;

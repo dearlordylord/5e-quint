@@ -168,6 +168,30 @@ describe("fixed scenario benchmark boundary", () => {
             type: "item.completed",
             item: {
               id: "item_3",
+              type: "command_execution",
+              command: "/bin/bash -c 'tail -n 200 BENCHMARK_CONTEXT.md'",
+              aggregated_output: "synthetic context\n",
+              exit_code: 0,
+              status: "completed",
+            },
+          }) +
+          "\n" +
+          JSON.stringify({
+            type: "item.completed",
+            item: {
+              id: "item_4",
+              type: "command_execution",
+              command: "/bin/bash -c 'head -n 20 BENCHMARK_CONTEXT.md'",
+              aggregated_output: "synthetic context\n",
+              exit_code: 0,
+              status: "completed",
+            },
+          }) +
+          "\n" +
+          JSON.stringify({
+            type: "item.completed",
+            item: {
+              id: "item_5",
               type: "agent_message",
               text: `The model's prose may mention ${resolve("/outside")}.`,
             },
@@ -266,6 +290,23 @@ describe("fixed scenario benchmark boundary", () => {
     [
       "an rg context option after the pattern",
       () => "/bin/bash -lc 'rg context -C 6 BENCHMARK_CONTEXT.md'",
+    ],
+    ["a tail line option without a count", () => "/bin/bash -c 'tail -n'"],
+    [
+      "a tail line option with a nonnumeric count",
+      () => "/bin/bash -c 'tail -n all BENCHMARK_CONTEXT.md'",
+    ],
+    [
+      "a tail line option after the file",
+      () => "/bin/bash -c 'tail BENCHMARK_CONTEXT.md -n 200'",
+    ],
+    [
+      "an unsupported tail byte option",
+      () => "/bin/bash -c 'tail -c 200 BENCHMARK_CONTEXT.md'",
+    ],
+    [
+      "an unsupported head byte option",
+      () => "/bin/bash -c 'head -c 20 BENCHMARK_CONTEXT.md'",
     ],
   ])(
     "rejects preparation event streams that attempt %s",
