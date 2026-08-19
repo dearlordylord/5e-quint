@@ -636,6 +636,7 @@ function retainBenchmarkAuxiliaryInvocation(
     readonly phase: "scenarioReadiness" | "scenarioCharacterAuthoring";
     readonly invocationId: string;
     readonly implementationGitSha?: typeof gitSha;
+    readonly result?: unknown;
   },
 ) {
   const implementationGitSha = input.implementationGitSha ?? gitSha;
@@ -669,6 +670,17 @@ function retainBenchmarkAuxiliaryInvocation(
   }
   const events = [
     started.right,
+    ...(input.result === undefined
+      ? []
+      : [
+          {
+            type: "item.completed",
+            item: {
+              type: "agent_message",
+              text: JSON.stringify({ result: input.result }),
+            },
+          },
+        ]),
     { type: "thread.started", thread_id: input.invocationId },
     {
       type: "turn.completed",
@@ -931,6 +943,10 @@ function benchmarkMeasurement(
       profile === "documentDeclarationSet" ||
       entry.invocationId !== "composite-milestone",
   );
+  const readinessResultValue = {
+    classification: "ready" as const,
+    evidence: "Synthetic readiness review is ready.",
+  };
   const canonicalRetained = benchmarkEntries.map((entry) =>
     retainInvocation(root, entry, compositeReview),
   );
@@ -942,6 +958,7 @@ function benchmarkMeasurement(
             phase: "scenarioReadiness",
             invocationId: "benchmark-readiness",
             implementationGitSha,
+            result: readinessResultValue,
           }),
           retainBenchmarkAuxiliaryInvocation(root, {
             responsibility: "redundantCharacterPreparation",
@@ -1103,10 +1120,6 @@ function benchmarkMeasurement(
             const readinessInvocation = requiredAuxiliary(
               "benchmark-readiness",
             ).entry;
-            const readinessResultValue = {
-              classification: "ready" as const,
-              evidence: "Synthetic readiness review is ready.",
-            };
             const readinessResult = writeAuthority(
               root,
               "benchmark-readiness-result.json",
@@ -1902,6 +1915,127 @@ describe("complete Raw Swarm path comparison", () => {
       left: expect.stringContaining("pre-play replay"),
     });
   });
+
+  test("binds benchmark replay results to final invocation agent messages", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const replay = benchmark.findings.authorities.find(
+      ({ role }) => role === "replay-final",
+    );
+    expect(replay).toBeDefined();
+    if (replay === undefined) return;
+    const replayValue = parseJsonRecord(
+      readFileSync(resolve(repoRoot, replay.path), "utf8"),
+    );
+    if (!isJsonRecord(replayValue.result)) return;
+    if (!isJsonRecord(replayValue.result.raw)) return;
+    const tamperedReplay = replaceJsonAuthority(replay, {
+      ...replayValue,
+      result: {
+        ...replayValue.result,
+        raw: {
+          ...replayValue.result.raw,
+          evidence: "Tampered replay result not present in invocation events.",
+        },
+      },
+    });
+    const validation = validateCompletePathMeasurement({
+      ...benchmark,
+      findings: {
+        ...benchmark.findings,
+        authorities: benchmark.findings.authorities.map((authority) =>
+          authority.role === replay.role ? tamperedReplay : authority,
+        ),
+      },
+    });
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining(
+        "result does not match its invocation event output",
+      ),
+    });
+  });
+
+  test("binds benchmark readiness results to final invocation agent messages", () => {
+    const benchmark = benchmarkMeasurement("documentDeclarationSet");
+    const readinessSource = benchmark.findings.authorities.find(
+      ({ role }) => role === "prePlayReviewReadinessSource",
+    );
+    const readinessResult = benchmark.findings.authorities.find(
+      ({ role }) => role === "prePlayReviewReadinessResult",
+    );
+    expect(readinessSource).toBeDefined();
+    expect(readinessResult).toBeDefined();
+    if (readinessSource === undefined || readinessResult === undefined) return;
+    const sourceValue = parseJsonRecord(
+      readFileSync(resolve(repoRoot, readinessSource.path), "utf8"),
+    );
+    const tamperedResultValue = {
+      classification: "needsRevision" as const,
+      evidence: "Tampered readiness result not present in invocation events.",
+      critique: "Synthetic tampering regression.",
+    };
+    const tamperedSource = replaceJsonAuthority(readinessSource, {
+      ...sourceValue,
+      result: tamperedResultValue,
+    });
+    const tamperedResult = replaceJsonAuthority(
+      readinessResult,
+      tamperedResultValue,
+    );
+    const validation = validateCompletePathMeasurement({
+      ...benchmark,
+      findings: {
+        ...benchmark.findings,
+        authorities: benchmark.findings.authorities.map((authority) =>
+          authority.role === readinessSource.role
+            ? tamperedSource
+            : authority.role === readinessResult.role
+              ? tamperedResult
+              : authority,
+        ),
+      },
+    });
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining(
+        "readiness result does not match its invocation event output",
+      ),
+    });
+  }, 60_000);
+
+  test.each([
+    "prePlayReviewSourceInput-final",
+    "prePlayReviewSourceInputfinal",
+  ])(
+    "rejects retired benchmark pre-play source review authority %s",
+    (role) => {
+      const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+      const root = resolve(
+        repoRoot,
+        benchmark.scenarioBundle.stagePlan.path,
+        "..",
+      );
+      const retiredSource = writeAuthority(
+        root,
+        "retired-pre-play-source-input.json",
+        "{}\n",
+      );
+      const validation = validateCompletePathMeasurement({
+        ...benchmark,
+        findings: {
+          ...benchmark.findings,
+          authorities: [
+            ...benchmark.findings.authorities,
+            { role, ...retiredSource },
+          ],
+        },
+      });
+      expect(validation).toMatchObject({
+        _tag: "Left",
+        left: expect.stringContaining("retired"),
+      });
+    },
+  );
 
   test("rejects empty and bounded auxiliary invocation sets at the schema boundary", () => {
     const bounded = benchmarkMeasurement("boundedCapabilityProjection");

@@ -54,7 +54,10 @@ export {
   HistoricalScenarioCompositeReviewSchema,
 };
 import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
-import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
+import {
+  finalAgentMessage,
+  validateRetainedScenarioReviewInvocation,
+} from "./review-invocation-binding.ts";
 import {
   playerContinuationEvidence,
   PlayerRunStateSchema,
@@ -2906,6 +2909,11 @@ function isPrePlayReviewEventsAuthorityRole(role: string): boolean {
   return namedReviewStageAuthorityRole(role, "prePlayReviewReplayEvents");
 }
 
+function isRetiredPrePlayReviewSourceAuthorityRole(role: string): boolean {
+  const prefix = "prePlayReviewSourceInput";
+  return role.startsWith(prefix);
+}
+
 function benchmarkReadinessAuthority(
   authorities: readonly FindingAuthority[],
   role: (typeof BENCHMARK_READINESS_AUTHORITY_ROLES)[keyof typeof BENCHMARK_READINESS_AUTHORITY_ROLES],
@@ -3811,6 +3819,34 @@ function benchmarkReviewAuthorityByStage(
   return byStage;
 }
 
+function benchmarkReadinessResultEventIssue(input: {
+  readonly authority: FindingAuthority;
+  readonly expected: BenchmarkReadinessInput;
+}): string | undefined {
+  const parsedEvents = readCodexEvents(resolve(repoRoot, input.authority.path));
+  if (parsedEvents.tag === "invalid") {
+    return `Benchmark readiness event authority is invalid: ${parsedEvents.message}`;
+  }
+  try {
+    const output = Schema.decodeUnknownEither(
+      Schema.Struct({ result: ScenarioQualityReviewSchema }),
+      { onExcessProperty: "error" },
+    )(finalAgentMessage(parsedEvents.events));
+    if (
+      Either.isLeft(output) ||
+      canonicalJson(output.right.result) !==
+        canonicalJson(input.expected.result)
+    ) {
+      return "Benchmark readiness result does not match its invocation event output.";
+    }
+    return undefined;
+  } catch (error: unknown) {
+    return `Benchmark readiness event output is invalid: ${
+      error instanceof Error ? error.message : String(error)
+    }`;
+  }
+}
+
 function benchmarkRetainedPrePlayReviewIssues(input: {
   readonly measurement: CurrentBenchmarkMeasurement;
   readonly findings: FindingsProjection;
@@ -3832,7 +3868,11 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
   );
   const expectedStages = benchmarkReviewStages(measurement.profile);
   for (const authority of findings.authorities) {
-    if (
+    if (isRetiredPrePlayReviewSourceAuthorityRole(authority.role)) {
+      issues.push(
+        `Benchmark finding authority role is retired and not permitted: ${authority.role}.`,
+      );
+    } else if (
       (authority.role.startsWith("replay-") &&
         !isReplayAuthorityRole(authority.role)) ||
       (authority.role.startsWith("prePlayReviewReplayInput-") &&
@@ -3947,6 +3987,22 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       issues.push(
         `Benchmark ${reviewStage} pre-play replay event authority does not match its retained composite-review invocation.`,
       );
+    } else if (invocation.schemaVersion === 2) {
+      try {
+        validateRetainedScenarioReviewInvocation({
+          retainedInputPath: replayAuthority.path,
+          eventPath: replayEventsAuthority.path,
+          eventSha256: replayEventsAuthority.sha256,
+          reviewStage,
+          ledgerEntry: invocation,
+        });
+      } catch (error: unknown) {
+        issues.push(
+          error instanceof Error
+            ? error.message
+            : `Benchmark ${reviewStage} pre-play replay result is not bound to its invocation event output.`,
+        );
+      }
     }
   }
 
@@ -4065,15 +4121,26 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
         );
       }
     }
+    const readinessEventAuthority =
+      readinessEventsAuthority === undefined
+        ? undefined
+        : eventAuthoritiesByPath.get(readinessEventsAuthority.path);
     if (
       readinessInvocation === undefined ||
       readinessEventsAuthority === undefined ||
       readinessEventsAuthority.sha256 !== readinessInvocation.eventsSha256 ||
-      !eventAuthoritiesByPath.has(readinessEventsAuthority.path)
+      readinessEventAuthority === undefined ||
+      readinessEventAuthority.sha256 !== readinessEventsAuthority.sha256
     ) {
       issues.push(
         "The document-declaration benchmark readiness events authority is not bound to its retained readiness invocation.",
       );
+    } else if (readinessInput !== undefined) {
+      const outputIssue = benchmarkReadinessResultEventIssue({
+        authority: readinessEventsAuthority,
+        expected: readinessInput,
+      });
+      if (outputIssue !== undefined) issues.push(outputIssue);
     }
   } else if (retainedReadinessAuthorities.length !== 0) {
     issues.push(
