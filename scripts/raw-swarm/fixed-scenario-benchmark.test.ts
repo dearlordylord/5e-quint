@@ -120,6 +120,7 @@ describe("fixed scenario benchmark boundary", () => {
     expect(bundle.authorities.scenarioReview.sha256).toBe(
       bundle.scenarioReviewSha256,
     );
+    expect(bundle.scenarioReviewGitSha).toMatch(/^[0-9a-f]{40}$/);
     expect(readFileSync(bundle.paths.characters, "utf8")).toContain(
       "composeScenarioCharacters",
     );

@@ -128,6 +128,7 @@ export type FixedScenarioCanonicalBundle = Readonly<{
   }>;
   readonly scenarioSha256: string;
   readonly scenarioReviewSha256: string;
+  readonly scenarioReviewGitSha: GitSha;
 }>;
 
 export type FixedBenchmarkProfilePaths = Readonly<{
@@ -218,6 +219,7 @@ export function fixedScenarioCanonicalBundle(): FixedScenarioCanonicalBundle {
     },
     scenarioSha256: admission.right.scenarioSha256,
     scenarioReviewSha256: admission.right.scenarioReviewSha256,
+    scenarioReviewGitSha: review.right.gitSha,
   };
 }
 
@@ -861,6 +863,7 @@ function retainReviewEnvelope(input: {
   readonly result: unknown;
   readonly entry: CurrentModelInvocationLedgerEntry;
   readonly eventPath: string;
+  readonly scenarioReviewGitSha: GitSha;
   readonly prompt: string;
 }): string {
   const outputJsonSchema =
@@ -899,6 +902,7 @@ function retainReviewEnvelope(input: {
   retainBenchmarkReviewReplayEvents(input.eventPath, replayPath);
   const sourceEnvelope = {
     ...parsed.right,
+    sourceGitSha: input.scenarioReviewGitSha,
     invocationId: "source-" + parsed.right.invocationId,
   };
   const sourceParsed = Schema.decodeUnknownEither(
@@ -944,6 +948,7 @@ function retainReadinessEnvelope(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
   readonly result: unknown;
   readonly entry: BenchmarkAuxiliaryModelInvocationLedgerEntry;
+  readonly scenarioReviewGitSha: GitSha;
   readonly prompt: string;
 }): string {
   const outputJsonSchema = codexOutputJsonSchema(ScenarioQualityReviewSchema);
@@ -953,7 +958,7 @@ function retainReadinessEnvelope(input: {
     scenarioId: FIXED_SCENARIO_ID,
     responsibility: "scenarioQuality" as const,
     phase: "scenarioReadiness" as const,
-    sourceGitSha: input.entry.gitSha,
+    sourceGitSha: input.scenarioReviewGitSha,
     invocationId: input.entry.invocationId,
     model: "gpt-5.6-luna" as const,
     reasoningEffort: "max" as const,
@@ -1281,6 +1286,7 @@ async function prepareProfile(input: {
     result: milestone.value,
     entry: milestone.currentEntry,
     eventPath: milestone.eventPath,
+    scenarioReviewGitSha: bundle.scenarioReviewGitSha,
     prompt: reviewPrompt(input.profile, "milestone", reviewContext, bundle),
   });
   if (input.profile === "documentDeclarationSet") {
@@ -1304,6 +1310,7 @@ async function prepareProfile(input: {
       profilePaths: paths,
       result: readiness.value,
       entry: readiness.auxiliaryEntry,
+      scenarioReviewGitSha: bundle.scenarioReviewGitSha,
       prompt:
         "Read " +
         reviewContext +
@@ -1326,6 +1333,7 @@ async function prepareProfile(input: {
     result: final.value,
     entry: final.currentEntry,
     eventPath: final.eventPath,
+    scenarioReviewGitSha: bundle.scenarioReviewGitSha,
     prompt: reviewPrompt(input.profile, "final", reviewContext, bundle),
   });
   const characterResult = await evaluateScenarioCharacters(
