@@ -3153,7 +3153,10 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
   const { measurement, findings, scenarioReviewGitSha, expectedReviewSchema } =
     input;
   const issues: string[] = [];
-  const expectedOutputJsonSchema = codexOutputJsonSchema(expectedReviewSchema);
+  const expectedOutputJsonSchema =
+    expectedReviewSchema === HistoricalScenarioCompositeReviewSchema
+      ? codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema)
+      : codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema);
   const sourceAuthorities = findings.authorities.filter(({ role }) =>
     isPrePlayReviewSourceAuthorityRole(role),
   );
