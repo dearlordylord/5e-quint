@@ -16,6 +16,7 @@ import {
 import {
   battleRuntimeContextFromCharacterAdmission,
   battleRuntimeSessionFromAdmittedContext,
+  battleRuntimeSessionWithRetainedCompanionTransition,
   battleRuntimeSessionWithState,
 } from "../../../packages/battle-runtime/src/battle-runtime-context.ts";
 import { applyCondition } from "../../../packages/shared-algebras/src/conditions-algebra.ts";
@@ -139,6 +140,43 @@ describe("scenario setup public-SDK boundary", () => {
         characterSheets: [{ characterId: createdSheet.right.characterId }],
       });
       if (characters.tag !== "ready") return;
+
+      const readySetup = await evaluateScenarioSetup(
+        setupPath,
+        characters.characterSheets,
+      );
+      expect(readySetup.tag).toBe("ready");
+      if (readySetup.tag !== "ready") return;
+
+      const foreignContextBattle =
+        battleRuntimeSessionWithRetainedCompanionTransition(
+          readySetup.session.battle,
+          combatantId("external-fighter"),
+          readySetup.session.battle.state,
+          {
+            formAccess: "findFamiliar",
+            selectedForm: { tag: "normalNamedForm", formId: "cat" },
+          },
+        );
+      expect(foreignContextBattle).toBeDefined();
+      if (foreignContextBattle === undefined) return;
+      expect(foreignContextBattle.context).not.toBe(
+        readySetup.session.battle.context,
+      );
+      expect(
+        scenarioSessionWithBattleResult(
+          readySetup.session,
+          foreignContextBattle,
+        ),
+      ).toMatchObject({
+        _tag: "Left",
+        left: {
+          tag: "spatial-decision-lineage-conflict",
+          decisionId: "scenario-session",
+          message:
+            "ScenarioSession cannot adopt a same-battle BattleRuntime session from a different admitted context.",
+        },
+      });
 
       const ready = await evaluateScenarioSetup(
         setupPath,
