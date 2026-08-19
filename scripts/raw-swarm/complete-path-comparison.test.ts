@@ -732,8 +732,9 @@ function benchmarkMeasurement(
       : [];
   const orderedRetained = [
     canonicalRetained[0]!,
+    canonicalRetained[1]!,
     ...(profile === "documentDeclarationSet" ? [auxiliaryRetained[0]!] : []),
-    ...canonicalRetained.slice(1, 3),
+    canonicalRetained[2]!,
     ...(profile === "documentDeclarationSet"
       ? [auxiliaryRetained[1]!, auxiliaryRetained[2]!]
       : []),

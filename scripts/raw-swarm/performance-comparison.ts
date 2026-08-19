@@ -3449,15 +3449,17 @@ function benchmarkSemanticIssues(
     );
     const firstComposite = compositeIndexes[0];
     const lastComposite = compositeIndexes.at(-1);
-    if (firstComposite !== undefined) {
+    if (firstComposite !== undefined && lastComposite !== undefined) {
       if (
-        readiness.some(
-          (invocation) =>
-            measurement.invocations.indexOf(invocation) >= firstComposite,
-        )
+        readiness.some((invocation) => {
+          const readinessIndex = measurement.invocations.indexOf(invocation);
+          return (
+            readinessIndex <= firstComposite || readinessIndex >= lastComposite
+          );
+        })
       ) {
         issues.push(
-          "The auxiliary scenario-quality invocation must precede composite review.",
+          "The auxiliary scenario-quality invocation must follow milestone review and precede final review.",
         );
       }
       if (
