@@ -123,7 +123,7 @@ describe("fixed scenario benchmark boundary", () => {
     }
   });
 
-  test("accepts structured preparation commands confined to named scratch inputs", () => {
+  test("accepts captured direct-read commands confined to named scratch inputs", () => {
     const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
     const eventPath = resolve(scratch, "events.jsonl");
     const contextPath = resolve(scratch, "BENCHMARK_CONTEXT.md");
@@ -147,6 +147,8 @@ describe("fixed scenario benchmark boundary", () => {
               type: "command_execution",
               command: `/bin/bash -lc "sha256sum ${contextPath}"`,
               aggregated_output: "",
+              exit_code: 0,
+              status: "completed",
             },
           }) +
           "\n" +
@@ -175,6 +177,49 @@ describe("fixed scenario benchmark boundary", () => {
 
   test.each([
     [
+      "a commandless stream",
+      {
+        type: "item.completed",
+        item: { id: "item_1", type: "agent_message", text: "synthetic" },
+      },
+    ],
+    [
+      "a failed read",
+      {
+        type: "item.completed",
+        item: {
+          id: "item_1",
+          type: "command_execution",
+          command: "/bin/bash -lc 'cat BENCHMARK_CONTEXT.md'",
+          aggregated_output: "blocked",
+          exit_code: 1,
+          status: "failed",
+        },
+      },
+    ],
+  ])("rejects preparation evidence with %s", (_label, event) => {
+    const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
+    const eventPath = resolve(scratch, "events.jsonl");
+    const contextPath = resolve(scratch, "BENCHMARK_CONTEXT.md");
+    try {
+      writeFileSync(contextPath, "synthetic context\n");
+      writeFileSync(eventPath, JSON.stringify(event) + "\n");
+      expect(
+        Either.isLeft(
+          validateBenchmarkPreparationEventStream({
+            eventPath,
+            scratch,
+            namedInputs: [contextPath],
+          }),
+        ),
+      ).toBe(true);
+    } finally {
+      rmSync(scratch, { recursive: true });
+    }
+  });
+
+  test.each([
+    [
       "an absolute repository path",
       (scratch: string) =>
         `/bin/bash -lc "sed -n '1,20p' ${resolve(scratch, "../repository/SCENARIO.md")}"`,
@@ -189,6 +234,15 @@ describe("fixed scenario benchmark boundary", () => {
       () => "/bin/bash -lc 'rg -n context .'",
     ],
     ["a directory listing", () => "/bin/bash -lc 'ls -la .'"],
+    [
+      "a nested shell wrapper",
+      () => "/bin/bash -lc \"/bin/bash -lc 'cat BENCHMARK_CONTEXT.md'\"",
+    ],
+    [
+      "an rg preprocessor",
+      () =>
+        "/bin/bash -lc \"rg --pre='cat /etc/passwd' context BENCHMARK_CONTEXT.md\"",
+    ],
   ])(
     "rejects preparation event streams that attempt %s",
     (_label, commandFactory) => {

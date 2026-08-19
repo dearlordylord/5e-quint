@@ -523,7 +523,7 @@ export function fixedBenchmarkCodexArgs(
   prompt: string,
   schemaPath: string | undefined,
   outputPath: string | undefined,
-  sandbox: "workspace-write",
+  sandbox: "workspace-write" | "danger-full-access",
 ): readonly [string, ...string[]] {
   return [
     "exec",
@@ -607,10 +607,12 @@ function scratchIsolationPrompt(scratch: string, prompt: string): string {
   return (
     "The scratch workspace at " +
     scratch +
-    " is complete and contains the entire benchmark input. Use only files inside that scratch workspace. Do not inspect, read, search, or execute against any path outside it, including the repository, parent directories, hidden files outside scratch, or network resources. Run all commands with the scratch workspace as their working directory. For preparation reads, use only one `/bin/bash -lc` wrapper around one read-only command: `cat`, `head`, `tail`, `sed` with a numeric print range, `sha256sum`, `wc`, `od`, or `rg` against named scratch files. Do not use Node, Python, another executable, shell expansion, shell operators, pipelines, redirections, loops, scripts, or structured file/search tools.\n\n" +
+    " is complete and contains the entire benchmark input. Use only files inside that scratch workspace. Do not inspect, read, search, or execute against any path outside it, including the repository, parent directories, hidden files outside scratch, or network resources. Run all commands with the scratch workspace as their working directory. Invoke one read-only command directly: `cat`, `head`, `tail`, `sed` with a numeric print range, `sha256sum`, `wc`, `od`, or `rg` against named scratch files. The client records that direct command inside one shell telemetry wrapper; do not invoke Bash or another shell yourself. Do not use Node, Python, another executable, shell expansion, shell operators, pipelines, redirections, loops, scripts, or structured file/search tools.\n\n" +
     prompt
   );
 }
+
+const FIXED_BENCHMARK_PREPARATION_SANDBOX = "danger-full-access" as const;
 
 const BENCHMARK_PREPARATION_SHELL_LAUNCHERS = new Set([
   "/bin/bash",
@@ -626,6 +628,7 @@ const BENCHMARK_PREPARATION_READ_COMMANDS = new Set([
   "tail",
   "wc",
 ]);
+const BENCHMARK_PREPARATION_RG_OPTIONS = new Set(["--", "-F", "-i", "-n"]);
 const BENCHMARK_PREPARATION_SHELL_OPERATORS = new Set([
   ";",
   "&&",
@@ -956,8 +959,11 @@ function commandArguments(
         : Either.left(issue);
     }
     case "rg": {
-      if (args.includes("--files") || args.includes("--hidden")) {
-        return Either.left("rg cannot enumerate scratch files");
+      const options = args.filter((value) => value.startsWith("-"));
+      if (
+        options.some((value) => !BENCHMARK_PREPARATION_RG_OPTIONS.has(value))
+      ) {
+        return Either.left("rg has unsupported arguments");
       }
       const pathArguments = args.filter(
         (value) => !value.startsWith("-") && value !== "--",
@@ -1000,6 +1006,7 @@ function validatePreparationStructuredPath(
 
 function validatePreparationEventItem(
   item: Readonly<Record<string, unknown>>,
+  eventType: "item.started" | "item.completed",
   input: BenchmarkPreparationEventValidationInput,
 ): string | undefined {
   const type = item.type;
@@ -1009,6 +1016,12 @@ function validatePreparationEventItem(
       return "command execution has no structured command";
     const commandIssue = validatePreparationCommand(item.command, input);
     if (commandIssue !== undefined) return commandIssue;
+    if (
+      eventType === "item.completed" &&
+      (item.status !== "completed" || item.exit_code !== 0)
+    ) {
+      return "preparation read command did not complete successfully";
+    }
     if (typeof item.cwd === "string") {
       const cwdIssue = validatePreparationStructuredPath(item.cwd, input);
       if (cwdIssue !== undefined) return cwdIssue;
@@ -1036,6 +1049,7 @@ export function validateBenchmarkPreparationEventStream(
 ): Either.Either<void, string> {
   const parsed = readCodexEvents(input.eventPath);
   if (parsed.tag === "invalid") return Either.left(parsed.message);
+  let completedReadCount = 0;
   for (const [index, event] of parsed.events.entries()) {
     if (!isJsonRecord(event)) {
       return Either.left(
@@ -1059,13 +1073,28 @@ export function validateBenchmarkPreparationEventStream(
           `Preparation event line ${String(index + 1)} has no item.`,
         );
       }
-      const itemIssue = validatePreparationEventItem(event.item, input);
+      const itemIssue = validatePreparationEventItem(
+        event.item,
+        eventType,
+        input,
+      );
       if (itemIssue !== undefined) {
         return Either.left(
           `Preparation event line ${String(index + 1)}: ${itemIssue}`,
         );
       }
+      if (
+        eventType === "item.completed" &&
+        event.item.type === "command_execution"
+      ) {
+        completedReadCount += 1;
+      }
     }
+  }
+  if (completedReadCount === 0) {
+    return Either.left(
+      "Preparation event stream has no successfully completed scratch read.",
+    );
   }
   return Either.right(undefined);
 }
@@ -1132,7 +1161,7 @@ function runStructuredCall<A, I>(input: {
         localBenchmarkCallPrompt({ ...input, scratch, local }),
         schemaPath,
         outputPath,
-        "workspace-write",
+        FIXED_BENCHMARK_PREPARATION_SANDBOX,
       ),
       cwd: scratch,
       env: process.env,
@@ -1269,7 +1298,7 @@ function runAuxiliaryStructuredCall<A, I>(input: {
         localBenchmarkCallPrompt({ ...input, scratch, local }),
         schemaPath,
         outputPath,
-        "workspace-write",
+        FIXED_BENCHMARK_PREPARATION_SANDBOX,
       ),
       cwd: scratch,
       env: process.env,
@@ -1581,7 +1610,7 @@ function characterSourceCall(input: {
             ),
             undefined,
             undefined,
-            "workspace-write",
+            FIXED_BENCHMARK_PREPARATION_SANDBOX,
           ),
           cwd: scratch,
           env: process.env,
@@ -1698,7 +1727,7 @@ function setupSourceCalls(input: {
               scratchIsolationPrompt(scratch, prompt),
               undefined,
               undefined,
-              "workspace-write",
+              FIXED_BENCHMARK_PREPARATION_SANDBOX,
             ),
             cwd: scratch,
             env: process.env,

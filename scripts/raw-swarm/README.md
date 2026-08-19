@@ -809,7 +809,10 @@ result against JSON Schema generated from the same Effect codec used by
 report ingestion. The reviewer process uses `danger-full-access` because a
 nested Codex read-only sandbox cannot initialize in the worker environment.
 Read-only behavior is therefore an explicit reviewer-instruction contract, not
-a filesystem-enforced sandbox guarantee.
+a filesystem-enforced sandbox guarantee. Fixed-benchmark preparation uses the
+same contract on hosts without nested sandbox support: each call receives a
+complete scratch workspace, and retained first-party telemetry must contain
+only the closed set of named-file read commands before the run is admissible.
 
 ## Add width to the existing MCP prototype
 
