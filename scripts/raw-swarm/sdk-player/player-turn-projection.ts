@@ -916,8 +916,12 @@ function projectedObjects(
 function positions(
   session: JsonValue,
 ): ReadonlyMap<string, PlayerPositionProjection> | undefined {
-  const space = objectAt(session, ["battlefield", "space"]);
-  if (space === undefined) return undefined;
+  const spatial = objectAt(session, ["battlefield", "spatial"]);
+  if (spatial === undefined || !isJsonObject(spatial)) return undefined;
+  if (spatial.kind === "tableAuthored") return new Map();
+  if (spatial.kind !== "geometryDerived") return undefined;
+  const space = spatial.space;
+  if (!isJsonObject(space)) return undefined;
   if (!Array.isArray(space.placements)) return undefined;
   const placements = space.placements;
   const entries: [string, PlayerPositionProjection][] = [];

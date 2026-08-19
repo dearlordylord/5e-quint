@@ -22,14 +22,16 @@ describe("review invocation evidence", () => {
       directory,
       ledgerEntries: [
         {
-          schemaVersion: 1,
+          schemaVersion: 2,
           phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
           invocationId: "review",
           model: "gpt-5.6-luna",
           reasoningEffort: "max",
           startedAt: "2026-08-17T00:00:00.000Z",
           elapsedMilliseconds: 1,
           exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
           usage: {
             tag: "unavailable",
             reason:
@@ -66,14 +68,16 @@ describe("review invocation evidence", () => {
       directory,
       ledgerEntries: [
         {
-          schemaVersion: 1,
+          schemaVersion: 2,
           phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
           invocationId: "review",
           model: "gpt-5.6-luna",
           reasoningEffort: "max",
           startedAt: "2026-08-17T00:00:00.000Z",
           elapsedMilliseconds: 1,
           exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
           usage: {
             tag: "unavailable",
             reason:
@@ -100,14 +104,16 @@ describe("review invocation evidence", () => {
     );
     directories.push(ledgerDirectory);
     const entry = {
-      schemaVersion: 1 as const,
+      schemaVersion: 2 as const,
       phase: "postPlayReview" as const,
+      stagePlanReason: "The fixture stage requires post-play review.",
       invocationId: "review",
       model: "gpt-5.6-luna",
       reasoningEffort: "max",
       startedAt: "2026-08-17T00:00:00.000Z",
       elapsedMilliseconds: 1,
       exit: { tag: "exited" as const, status: 0 },
+      result: { tag: "succeeded" as const },
       usage: {
         tag: "unavailable" as const,
         reason:
@@ -149,6 +155,49 @@ describe("review invocation evidence", () => {
           },
         ],
       }),
-    ).toThrow(/do not match/);
+    ).toThrow(/do not match|Invocation result must agree/);
+  });
+
+  test("accepts historical v1 parsing only outside the current review manifest", () => {
+    const directory = rawSwarmTestOutputDirectory("review-v1-boundary-test-");
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      ledgerEntries: [
+        {
+          schemaVersion: 2,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const entries = readFileSync(fixture.ledgerPath, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => {
+        const entry = JSON.parse(line) as Record<string, unknown>;
+        delete entry.stagePlanReason;
+        delete entry.result;
+        return { ...entry, schemaVersion: 1 };
+      });
+    writeFileSync(
+      fixture.ledgerPath,
+      `${entries.map(JSON.stringify).join("\n")}\n`,
+    );
+    expect(() =>
+      readReviewInvocationEvidenceManifest(fixture.manifestPath),
+    ).toThrow(/Current review invocation evidence requires v2/);
   });
 });

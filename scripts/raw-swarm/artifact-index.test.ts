@@ -9,6 +9,7 @@ import {
   exportArtifactIndex,
   ingestArtifactRun,
   inventoryLegacyDatabase,
+  openArtifactIndex,
   rebuildLegacyArtifactIndex,
   registerIndexArtifact,
 } from "./artifact-index.ts";
@@ -101,6 +102,19 @@ function sdkTranscript(directory: string): string {
 }
 
 describe("Raw Swarm artifact index", () => {
+  test("refuses a prior compact index schema instead of mutating it in place", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "old-index.sqlite");
+    const old = new DatabaseSync(dbPath);
+    old.exec(
+      "CREATE TABLE indexMetadata(schemaVersion INTEGER PRIMARY KEY CHECK(schemaVersion = 1)); INSERT INTO indexMetadata VALUES (1);",
+    );
+    old.close();
+    expect(() => openArtifactIndex(relative(repoRoot, dbPath))).toThrow(
+      /schema is not version 2/,
+    );
+  });
+
   test("indexes call metadata without duplicating sessions or results and exports every artifact", () => {
     const directory = temporaryDirectory();
     const transcript = sdkTranscript(directory);
@@ -621,5 +635,133 @@ describe("Raw Swarm artifact index", () => {
       legacyRegistry: [{ name: "retained", value: "exactly" }],
     });
     indexed.close();
+  }, 30_000);
+
+  test("rebuilds a historical review whose optional reviewer and createdAt columns are absent", () => {
+    const directory = temporaryDirectory();
+    const transcript = sdkTranscript(directory);
+    const transcriptSha256 = sha256Text(readFileSync(transcript, "utf8"));
+    const reviewPath = resolve(directory, "legacy-review-without-columns.json");
+    writeFileSync(
+      reviewPath,
+      `${JSON.stringify({
+        scenarioId: "artifact-index",
+        gitSha: "a".repeat(40),
+        transcriptSha256,
+        reviewer: "historical-reviewer",
+        verdicts: [{ class: "pass", claim: "claim", evidence: "evidence" }],
+      })}\n`,
+    );
+    const legacyPath = resolve(
+      directory,
+      "legacy-without-review-columns.sqlite",
+    );
+    const legacy = new DatabaseSync(legacyPath);
+    legacy.exec(`
+      CREATE TABLE runs(id INTEGER PRIMARY KEY, scenarioId TEXT, gitSha TEXT, startedAt TEXT, transcriptPath TEXT, transcriptSha256 TEXT);
+      CREATE TABLE steps(runId INTEGER, seq INTEGER);
+      CREATE TABLE reviewRounds(id INTEGER PRIMARY KEY, runId INTEGER, artifactPath TEXT);
+      CREATE TABLE verdicts(id INTEGER PRIMARY KEY, runId INTEGER, class TEXT, claim TEXT, evidence TEXT, reviewer TEXT, createdAt TEXT, reviewRoundId INTEGER, issueFingerprint TEXT);
+      CREATE TABLE issues(fingerprint TEXT PRIMARY KEY, class TEXT, claim TEXT, firstSeenAt TEXT, lastSeenAt TEXT, githubIssueNumber INTEGER);
+    `);
+    legacy
+      .prepare(
+        "INSERT INTO runs VALUES (1, 'artifact-index', ?, 'started', ?, ?)",
+      )
+      .run("a".repeat(40), relative(repoRoot, transcript), transcriptSha256);
+    legacy.prepare("INSERT INTO steps VALUES (1, 1)").run();
+    legacy
+      .prepare("INSERT INTO reviewRounds VALUES (1, 1, ?)")
+      .run(relative(repoRoot, reviewPath));
+    legacy
+      .prepare(
+        "INSERT INTO verdicts VALUES (1, 1, 'pass', 'claim', 'evidence', 'historical-reviewer', 'created', 1, NULL)",
+      )
+      .run();
+    legacy.close();
+
+    const rebuiltPath = resolve(
+      directory,
+      "rebuilt-without-review-columns.sqlite",
+    );
+    rebuildLegacyArtifactIndex({
+      legacyDbPath: relative(repoRoot, legacyPath),
+      dbPath: relative(repoRoot, rebuiltPath),
+      artifactDirectory: relative(repoRoot, resolve(directory, "artifacts")),
+    });
+    const rebuilt = new DatabaseSync(rebuiltPath, { readOnly: true });
+    expect(
+      rebuilt.prepare("SELECT reviewer, createdAt FROM reviews").get(),
+    ).toEqual({
+      reviewer: "historical-reviewer",
+      createdAt: "2026-08-14T00:00:00.000Z",
+    });
+    rebuilt.close();
+  }, 30_000);
+
+  test("rebuilds a historical database whose optional verdicts table is absent", () => {
+    const directory = temporaryDirectory();
+    const transcript = sdkTranscript(directory);
+    const transcriptSha256 = sha256Text(readFileSync(transcript, "utf8"));
+    const reviewPath = resolve(
+      directory,
+      "legacy-review-without-verdicts.json",
+    );
+    writeFileSync(
+      reviewPath,
+      `${JSON.stringify({
+        scenarioId: "artifact-index",
+        gitSha: "a".repeat(40),
+        transcriptSha256,
+        reviewer: "historical-reviewer",
+        verdicts: [
+          {
+            class: "pass",
+            claim: "Historical evidence is retained.",
+            evidence: "No verdict table was present in the source database.",
+          },
+        ],
+      })}\n`,
+    );
+    const legacyPath = resolve(directory, "legacy-without-verdicts.sqlite");
+    const legacy = new DatabaseSync(legacyPath);
+    legacy.exec(`
+      CREATE TABLE runs(id INTEGER PRIMARY KEY, scenarioId TEXT, gitSha TEXT, startedAt TEXT, transcriptPath TEXT, transcriptSha256 TEXT);
+      CREATE TABLE steps(runId INTEGER, seq INTEGER);
+      CREATE TABLE reviewRounds(id INTEGER PRIMARY KEY, runId INTEGER, artifactPath TEXT);
+      CREATE TABLE issues(fingerprint TEXT PRIMARY KEY, class TEXT, claim TEXT, firstSeenAt TEXT, lastSeenAt TEXT, githubIssueNumber INTEGER);
+    `);
+    legacy
+      .prepare(
+        "INSERT INTO runs VALUES (1, 'artifact-index', ?, 'started', ?, ?)",
+      )
+      .run("a".repeat(40), relative(repoRoot, transcript), transcriptSha256);
+    legacy.prepare("INSERT INTO steps VALUES (1, 1)").run();
+    legacy
+      .prepare("INSERT INTO reviewRounds VALUES (1, 1, ?)")
+      .run(relative(repoRoot, reviewPath));
+    legacy.close();
+
+    const rebuiltPath = resolve(directory, "rebuilt-without-verdicts.sqlite");
+    rebuildLegacyArtifactIndex({
+      legacyDbPath: relative(repoRoot, legacyPath),
+      dbPath: relative(repoRoot, rebuiltPath),
+      artifactDirectory: relative(repoRoot, resolve(directory, "artifacts")),
+    });
+    const rebuilt = new DatabaseSync(rebuiltPath, { readOnly: true });
+    expect(
+      rebuilt.prepare("SELECT COUNT(*) AS count FROM reviews").get(),
+    ).toEqual({
+      count: 1,
+    });
+    expect(
+      rebuilt.prepare("SELECT COUNT(*) AS count FROM verdicts").get(),
+    ).toEqual({
+      count: 0,
+    });
+    expect(
+      rebuilt.prepare("SELECT COUNT(*) AS count FROM legacyInventory").get(),
+    ).toEqual({ count: 3 });
+    rebuilt.close();
   }, 30_000);
 });

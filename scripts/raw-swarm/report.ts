@@ -7,11 +7,23 @@ import { DatabaseSync } from "node:sqlite";
 import { Either, Match, Option, Schema } from "effect";
 
 import { artifactAuthorityForBytes } from "./artifact-authority.ts";
+import {
+  defaultRunDirectory,
+  findingsArtifactPath,
+  projectRunFindings,
+  readFindingsProjection,
+  writeFindingsProjection,
+  type FindingAuthority,
+  type Finding,
+  type FindingIssueLink,
+} from "./findings.ts";
+import { renderFindingsAudit, writeFindingsAudit } from "./findings-audit.ts";
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
 import {
   exportArtifactIndex,
   ingestArtifactRun,
+  ingestGenerationFindings,
   inventoryLegacyDatabase,
   openArtifactIndex,
   registerIndexArtifact,
@@ -122,6 +134,14 @@ function flagValue(args: readonly string[], flag: string): string | undefined {
 
 function hasFlag(args: readonly string[], flag: string): boolean {
   return args.includes(flag);
+}
+
+function flagValues(args: readonly string[], flag: string): readonly string[] {
+  return args.flatMap((argument, index) =>
+    argument === flag && args[index + 1] !== undefined
+      ? [args[index + 1]!]
+      : [],
+  );
 }
 
 const liveGitHubCommandRunner: GitHubCommandRunner = {
@@ -257,6 +277,431 @@ export function ingest(args: readonly string[]): void {
   const dbPath = required(flagValue(rest, "--db"), "--db");
   const runId = ingestArtifactRun({ transcriptPath, dbPath });
   console.log(`Indexed run ${runId} from ${transcriptPath} into ${dbPath}`);
+}
+
+function runByTranscript(
+  db: DatabaseSync,
+  transcriptPath: string,
+): {
+  readonly id: number;
+  readonly scenarioId: string;
+  readonly gitSha: string;
+  readonly startedAt: string;
+  readonly transcriptSha256: string;
+} {
+  const transcriptSha256 = createHash("sha256")
+    .update(readFileSync(resolve(repoRoot, transcriptPath)))
+    .digest("hex");
+  const row = db
+    .prepare(
+      "SELECT id, scenarioId, gitSha, startedAt, transcriptSha256 FROM runs WHERE transcriptSha256 = ?",
+    )
+    .get(transcriptSha256);
+  if (
+    !isJsonRecord(row) ||
+    typeof row.id !== "number" ||
+    typeof row.scenarioId !== "string" ||
+    typeof row.gitSha !== "string" ||
+    typeof row.startedAt !== "string" ||
+    row.transcriptSha256 !== transcriptSha256
+  ) {
+    fail(`Transcript ${transcriptPath} is not indexed in the artifact index.`);
+  }
+  return {
+    id: row.id,
+    scenarioId: row.scenarioId,
+    gitSha: row.gitSha,
+    startedAt: row.startedAt,
+    transcriptSha256,
+  };
+}
+
+function issueLinksForRun(
+  db: DatabaseSync,
+  runId: number,
+): readonly FindingIssueLink[] {
+  return db
+    .prepare(
+      `SELECT DISTINCT issues.fingerprint, issues.githubIssueNumber
+       FROM verdicts
+       JOIN issues ON issues.fingerprint = verdicts.issueFingerprint
+       WHERE verdicts.runId = ? AND verdicts.issueFingerprint IS NOT NULL`,
+    )
+    .all(runId)
+    .flatMap((row): readonly FindingIssueLink[] => {
+      if (
+        !isJsonRecord(row) ||
+        typeof row.fingerprint !== "string" ||
+        (row.githubIssueNumber !== null &&
+          typeof row.githubIssueNumber !== "number")
+      ) {
+        return [];
+      }
+      return [
+        {
+          fingerprint: row.fingerprint,
+          ...(row.githubIssueNumber === null
+            ? {}
+            : { githubIssueNumber: row.githubIssueNumber }),
+        },
+      ];
+    });
+}
+
+function reviewPathsForRun(db: DatabaseSync, runId: number): readonly string[] {
+  return db
+    .prepare(
+      `SELECT artifacts.path
+       FROM reviews
+       JOIN artifacts ON artifacts.sha256 = reviews.artifactSha256
+       WHERE reviews.runId = ?
+       ORDER BY reviews.id`,
+    )
+    .all(runId)
+    .map((row) => {
+      if (!isJsonRecord(row) || typeof row.path !== "string") {
+        fail(`Run ${String(runId)} has an invalid imported review authority.`);
+      }
+      return row.path;
+    });
+}
+
+function unlinkedIssueFingerprintsForRun(
+  db: DatabaseSync,
+  runId: number,
+): readonly string[] {
+  return db
+    .prepare(
+      `SELECT DISTINCT issues.fingerprint
+       FROM verdicts
+       JOIN issues ON issues.fingerprint = verdicts.issueFingerprint
+       WHERE verdicts.runId = ?
+         AND verdicts.issueFingerprint IS NOT NULL
+         AND issues.githubIssueNumber IS NULL
+       ORDER BY issues.fingerprint`,
+    )
+    .all(runId)
+    .map((row) => {
+      if (!isJsonRecord(row) || typeof row.fingerprint !== "string") {
+        fail(`Run ${String(runId)} has an invalid issue-link row.`);
+      }
+      return row.fingerprint;
+    });
+}
+
+function insertFindingsProjection(
+  db: DatabaseSync,
+  runId: number,
+  findingArtifactSha256: string,
+  findings: readonly Finding[],
+): void {
+  const existing = db
+    .prepare("SELECT DISTINCT artifactSha256 FROM findings WHERE runId = ?")
+    .all(runId);
+  if (
+    existing.some(
+      (row) =>
+        !isJsonRecord(row) || row.artifactSha256 !== findingArtifactSha256,
+    )
+  ) {
+    fail(`Run ${String(runId)} already has findings from another artifact.`);
+  }
+  const insert = db.prepare(
+    `INSERT INTO findings(runId, findingId, stage, category, kind, summary, detail, pointer, fingerprint, githubIssueNumber, artifactSha256)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  );
+  for (const finding of findings) {
+    const already = db
+      .prepare(
+        "SELECT findingId, artifactSha256 FROM findings WHERE runId = ? AND findingId = ?",
+      )
+      .get(runId, finding.findingId);
+    if (already !== undefined) {
+      if (
+        !isJsonRecord(already) ||
+        already.artifactSha256 !== findingArtifactSha256
+      ) {
+        fail(
+          `Finding ${finding.findingId} is already indexed from another artifact.`,
+        );
+      }
+      continue;
+    }
+    insert.run(
+      runId,
+      finding.findingId,
+      finding.stage,
+      finding.category,
+      finding.kind,
+      finding.summary,
+      finding.detail ?? null,
+      JSON.stringify(finding.pointer),
+      finding.fingerprint ?? null,
+      finding.githubIssueNumber ?? null,
+      findingArtifactSha256,
+    );
+  }
+}
+
+function insertFindingAuthorities(
+  db: DatabaseSync,
+  runId: number,
+  authorities: readonly FindingAuthority[],
+): void {
+  const insert = db.prepare(
+    "INSERT INTO runArtifacts(runId, role, artifactSha256) VALUES (?, ?, ?)",
+  );
+  for (const authority of authorities) {
+    const registered = registerIndexArtifact({
+      db,
+      path: authority.path,
+      mediaType: "application/octet-stream",
+    });
+    if (
+      registered.sha256 !== authority.sha256 ||
+      registered.byteLength !== authority.byteLength
+    ) {
+      fail(`Finding authority hash changed while indexing: ${authority.path}`);
+    }
+    const existing = db
+      .prepare(
+        "SELECT artifactSha256 FROM runArtifacts WHERE runId = ? AND role = ?",
+      )
+      .get(runId, authority.role);
+    if (existing !== undefined) {
+      if (
+        !isJsonRecord(existing) ||
+        existing.artifactSha256 !== registered.sha256
+      ) {
+        fail(
+          `Run ${String(runId)} already has a different authority for role ${authority.role}.`,
+        );
+      }
+      continue;
+    }
+    insert.run(runId, authority.role, registered.sha256);
+  }
+}
+
+function findings(args: readonly string[]): void {
+  const [transcriptArg, ...rest] = args;
+  const transcriptPath = required(transcriptArg, "<transcript.jsonl>");
+  const dbPath = required(flagValue(rest, "--db"), "--db");
+  const runDirectory = flagValue(rest, "--run-directory");
+  const reviewPaths = flagValues(rest, "--review");
+  const scenarioReviewPaths = flagValues(rest, "--scenario-review");
+  const generationLedgerPaths = flagValues(rest, "--generation-ledger");
+  const outputPath =
+    flagValue(rest, "--output") ??
+    findingsArtifactPath(runDirectory ?? defaultRunDirectory(transcriptPath));
+  const renderPath = flagValue(rest, "--render");
+  const db = openArtifactIndex(dbPath);
+  const run = runByTranscript(db, transcriptPath);
+  const importedReviewPaths = reviewPathsForRun(db, run.id);
+  if (importedReviewPaths.length === 0) {
+    db.close();
+    fail(
+      `Run ${String(run.id)} has no imported review; final findings must follow review import.`,
+    );
+  }
+  const requestedReviewPaths = new Set(
+    reviewPaths.map((path) => resolve(repoRoot, path)),
+  );
+  if (
+    requestedReviewPaths.size > 0 &&
+    importedReviewPaths.some(
+      (path) => !requestedReviewPaths.has(resolve(repoRoot, path)),
+    )
+  ) {
+    db.close();
+    fail(
+      `Final findings must include every imported review for run ${String(run.id)}.`,
+    );
+  }
+  const unlinked = unlinkedIssueFingerprintsForRun(db, run.id);
+  if (unlinked.length > 0) {
+    db.close();
+    fail(
+      `Final findings require linked issue fingerprints before projection: ${unlinked.join(", ")}`,
+    );
+  }
+  const issueLinks = issueLinksForRun(db, run.id);
+  db.close();
+  const projection = projectRunFindings({
+    transcriptPath,
+    ...(runDirectory === undefined ? {} : { runDirectory }),
+    reviewPaths: importedReviewPaths,
+    scenarioReviewPaths,
+    generationLedgerPaths,
+    issueLinks,
+  });
+  if (
+    projection.run.scenarioId !== run.scenarioId ||
+    projection.run.gitSha !== run.gitSha ||
+    projection.run.startedAt !== run.startedAt ||
+    projection.run.transcriptSha256 !== run.transcriptSha256
+  ) {
+    fail("Findings projection identity does not match the indexed run.");
+  }
+  const authority = writeFindingsProjection({
+    projection,
+    path: outputPath,
+  });
+  const indexed = openArtifactIndex(dbPath);
+  try {
+    indexed.exec("BEGIN");
+    try {
+      const registered = registerIndexArtifact({
+        db: indexed,
+        path: outputPath,
+        mediaType: "application/json",
+      });
+      if (registered.sha256 !== authority.sha256) {
+        fail("Findings artifact hash changed while indexing.");
+      }
+      insertFindingAuthorities(indexed, run.id, projection.authorities);
+      const existingRole = indexed
+        .prepare(
+          "SELECT artifactSha256 FROM runArtifacts WHERE runId = ? AND role = 'findings'",
+        )
+        .get(run.id);
+      if (existingRole !== undefined) {
+        if (
+          !isJsonRecord(existingRole) ||
+          existingRole.artifactSha256 !== registered.sha256
+        ) {
+          fail(
+            `Run ${String(run.id)} already has a different findings artifact.`,
+          );
+        }
+      } else {
+        indexed
+          .prepare(
+            "INSERT INTO runArtifacts(runId, role, artifactSha256) VALUES (?, 'findings', ?)",
+          )
+          .run(run.id, registered.sha256);
+      }
+      insertFindingsProjection(
+        indexed,
+        run.id,
+        registered.sha256,
+        projection.findings,
+      );
+      indexed.exec("COMMIT");
+    } catch (error) {
+      indexed.exec("ROLLBACK");
+      throw error;
+    }
+  } finally {
+    indexed.close();
+  }
+  if (renderPath !== undefined) {
+    writeFindingsAudit({ projection, path: renderPath });
+  }
+  console.log(
+    `Projected ${String(projection.findings.length)} finding(s) for run ${String(run.id)} into ${outputPath}`,
+  );
+}
+
+function generationFindings(args: readonly string[]): void {
+  const [findingsArg, ...rest] = args;
+  const findingsPath = required(findingsArg, "<findings.json>");
+  const dbPath = required(flagValue(rest, "--db"), "--db");
+  const runId = ingestGenerationFindings({ findingsPath, dbPath });
+  console.log(
+    `Indexed generation findings run ${String(runId)} from ${findingsPath} into ${dbPath}`,
+  );
+}
+
+function audit(args: readonly string[]): void {
+  const dbPath = required(flagValue(args, "--db"), "--db");
+  const runId = positiveRunId(required(flagValue(args, "--run"), "--run"));
+  const outputPath = flagValue(args, "--output");
+  const db = openArtifactIndex(dbPath);
+  const row = db
+    .prepare(
+      `SELECT runs.scenarioId, runs.gitSha, runs.startedAt, runs.transcriptSha256,
+              artifacts.path AS findingsPath
+       FROM runs
+       JOIN runArtifacts ON runArtifacts.runId = runs.id AND runArtifacts.role = 'findings'
+       JOIN artifacts ON artifacts.sha256 = runArtifacts.artifactSha256
+       WHERE runs.id = ?`,
+    )
+    .get(runId);
+  db.close();
+  if (
+    !isJsonRecord(row) ||
+    typeof row.findingsPath !== "string" ||
+    typeof row.scenarioId !== "string" ||
+    typeof row.gitSha !== "string" ||
+    typeof row.startedAt !== "string" ||
+    typeof row.transcriptSha256 !== "string"
+  ) {
+    fail(`Run ${String(runId)} has no indexed findings artifact.`);
+  }
+  const projection = readFindingsProjection(row.findingsPath);
+  if (
+    projection.run.scenarioId !== row.scenarioId ||
+    projection.run.gitSha !== row.gitSha ||
+    projection.run.startedAt !== row.startedAt ||
+    projection.run.transcriptSha256 !== row.transcriptSha256
+  ) {
+    fail(`Findings artifact identity does not match run ${String(runId)}.`);
+  }
+  if (outputPath === undefined) {
+    process.stdout.write(renderFindingsAudit(projection));
+  } else {
+    writeFindingsAudit({ projection, path: outputPath });
+    console.log(`Rendered run ${String(runId)} audit into ${outputPath}`);
+  }
+}
+
+function generationAudit(args: readonly string[]): void {
+  const dbPath = required(flagValue(args, "--db"), "--db");
+  const runId = positiveRunId(
+    required(flagValue(args, "--generation-run"), "--generation-run"),
+  );
+  const outputPath = flagValue(args, "--output");
+  const db = openArtifactIndex(dbPath);
+  const row = db
+    .prepare(
+      `SELECT generationRuns.scenarioId, generationRuns.gitSha, generationRuns.startedAt,
+              artifacts.path AS findingsPath
+       FROM generationRuns
+       JOIN generationRunArtifacts
+         ON generationRunArtifacts.generationRunId = generationRuns.id
+        AND generationRunArtifacts.role = 'findings'
+       JOIN artifacts ON artifacts.sha256 = generationRunArtifacts.artifactSha256
+       WHERE generationRuns.id = ?`,
+    )
+    .get(runId);
+  db.close();
+  if (
+    !isJsonRecord(row) ||
+    typeof row.findingsPath !== "string" ||
+    typeof row.scenarioId !== "string" ||
+    typeof row.gitSha !== "string" ||
+    typeof row.startedAt !== "string"
+  ) {
+    fail(`Generation run ${String(runId)} has no indexed findings artifact.`);
+  }
+  const projection = readFindingsProjection(row.findingsPath);
+  if (
+    projection.run.scenarioId !== row.scenarioId ||
+    projection.run.gitSha !== row.gitSha ||
+    projection.run.startedAt !== row.startedAt ||
+    projection.run.transcriptSha256 !== undefined
+  ) {
+    fail(`Generation findings identity does not match run ${String(runId)}.`);
+  }
+  if (outputPath === undefined) {
+    process.stdout.write(renderFindingsAudit(projection));
+  } else {
+    writeFindingsAudit({ projection, path: outputPath });
+    console.log(
+      `Rendered generation run ${String(runId)} audit into ${outputPath}`,
+    );
+  }
 }
 
 function legacyInventory(args: readonly string[]): void {
@@ -701,6 +1146,23 @@ export function review(args: readonly string[]): void {
     db.close();
     fail("Selected run has no transcript path");
   }
+  const finalFindingsPath = findingsArtifactPath(
+    defaultRunDirectory(run.transcriptPath),
+  );
+  const indexedFinalFindings = db
+    .prepare(
+      "SELECT 1 AS present FROM runArtifacts WHERE runId = ? AND role = 'findings'",
+    )
+    .get(runId);
+  if (
+    indexedFinalFindings !== undefined ||
+    existsSync(resolve(repoRoot, finalFindingsPath))
+  ) {
+    db.close();
+    fail(
+      `Run ${String(runId)} already has immutable final findings; additional review import is not allowed.`,
+    );
+  }
   const currentTranscriptSha256 = createHash("sha256")
     .update(readFileSync(resolve(repoRoot, run.transcriptPath)))
     .digest("hex");
@@ -1102,6 +1564,10 @@ function main(): void {
   const [command, ...rest] = process.argv.slice(2);
   Match.value(command).pipe(
     Match.when("ingest", () => ingest(rest)),
+    Match.when("findings", () => findings(rest)),
+    Match.when("generation-findings", () => generationFindings(rest)),
+    Match.when("audit", () => audit(rest)),
+    Match.when("generation-audit", () => generationAudit(rest)),
     Match.when("verdict", () => verdict(rest)),
     Match.when("review", () => review(rest)),
     Match.when("summary", () => summary(rest)),
@@ -1114,7 +1580,7 @@ function main(): void {
     Match.when("drilldown", () => recordDrilldown(rest)),
     Match.orElse(() =>
       fail(
-        "Usage: report.ts <ingest|verdict|review|summary|issues|link-github-issue|legacy-inventory|rebuild-index|export|controlled-reporting|drilldown> ... (see scripts/raw-swarm/README.md)",
+        "Usage: report.ts <ingest|findings|generation-findings|audit|generation-audit|verdict|review|summary|issues|link-github-issue|legacy-inventory|rebuild-index|export|controlled-reporting|drilldown> ... (see scripts/raw-swarm/README.md)",
       ),
     ),
   );

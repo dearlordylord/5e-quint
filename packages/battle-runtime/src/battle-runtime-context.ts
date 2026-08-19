@@ -111,6 +111,8 @@ class RuntimeContext {
   }
 }
 
+const runtimeSessionPredecessors = new WeakMap<object, object>();
+
 /** Authored context admitted alongside a battle's mechanical execution. */
 export type BattleRuntimeContext = RuntimeContext;
 
@@ -127,8 +129,13 @@ class RuntimeSession {
   static fromAdmittedContext(
     state: import("./battle-state-execution.ts").BattleState,
     context: BattleRuntimeContext,
+    predecessor?: RuntimeSession,
   ): RuntimeSession {
-    return new RuntimeSession(state, context);
+    const session = new RuntimeSession(state, context);
+    if (predecessor !== undefined) {
+      runtimeSessionPredecessors.set(session, predecessor);
+    }
+    return session;
   }
 }
 
@@ -145,6 +152,22 @@ export function isBattleRuntimeSession(
   return value instanceof RuntimeSession;
 }
 
+/**
+ * True only for the same runtime session or for a session produced by one
+ * direct reducer/presentation transition from it.  Scenario controllers use
+ * this to reject an unrelated same-battle session that happens to reuse the
+ * admitted context and battle id.
+ */
+export function battleRuntimeSessionFollows(
+  candidate: BattleRuntimeSession,
+  predecessor: BattleRuntimeSession,
+): boolean {
+  return (
+    candidate === predecessor ||
+    runtimeSessionPredecessors.get(candidate) === predecessor
+  );
+}
+
 /** Package-internal construction after state/context admission. */
 export function battleRuntimeSessionFromAdmittedContext(
   state: import("./battle-state-execution.ts").BattleState,
@@ -158,7 +181,7 @@ export function battleRuntimeSessionWithState(
   session: BattleRuntimeSession,
   state: import("./battle-state-execution.ts").BattleState,
 ): BattleRuntimeSession {
-  return RuntimeSession.fromAdmittedContext(state, session.context);
+  return RuntimeSession.fromAdmittedContext(state, session.context, session);
 }
 
 export function battleRuntimeSessionWithRetainedCompanionTransition(
@@ -188,6 +211,7 @@ export function battleRuntimeSessionWithRetainedCompanionTransition(
   return RuntimeSession.fromAdmittedContext(
     state,
     new RuntimeContext(characters, statBlocks),
+    session,
   );
 }
 
@@ -217,5 +241,6 @@ export function battleRuntimeSessionWithStatBlockPresentation(
   return RuntimeSession.fromAdmittedContext(
     state,
     new RuntimeContext(session.context.characters, statBlocks),
+    session,
   );
 }

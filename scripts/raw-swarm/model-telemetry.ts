@@ -18,7 +18,20 @@ import {
   type ScenarioId,
 } from "./transcript.ts";
 
+/** Current phase vocabulary. New v2 evidence cannot invent a readiness pass. */
 export const MODEL_INVOCATION_PHASES = [
+  "scenarioGeneration",
+  "scenarioCompositeReview",
+  "scenarioCharacterAuthoring",
+  "scenarioSetupNeutralAuthoring",
+  "scenarioSetupControllerAuthoring",
+  "player",
+  "postPlayReview",
+] as const;
+export type ModelInvocationPhase = (typeof MODEL_INVOCATION_PHASES)[number];
+
+/** v1 retained evidence may still name the removed readiness invocation. */
+export const HISTORICAL_MODEL_INVOCATION_PHASES = [
   "scenarioGeneration",
   "scenarioCompositeReview",
   "scenarioReadiness",
@@ -27,7 +40,8 @@ export const MODEL_INVOCATION_PHASES = [
   "player",
   "postPlayReview",
 ] as const;
-export type ModelInvocationPhase = (typeof MODEL_INVOCATION_PHASES)[number];
+export type HistoricalModelInvocationPhase =
+  (typeof HISTORICAL_MODEL_INVOCATION_PHASES)[number];
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
@@ -54,66 +68,159 @@ const ModelUsageSchema = Schema.Union(
     reason: Schema.NonEmptyString,
   }),
 );
+const ModelInvocationResultSchema = Schema.Union(
+  Schema.Struct({ tag: Schema.Literal("succeeded") }),
+  Schema.Struct({
+    tag: Schema.Literal("failed"),
+    reason: Schema.NonEmptyTrimmedString,
+  }),
+);
 
-export const ModelInvocationLedgerEntrySchema = Schema.Struct({
+function invocationResultMatchesExit(input: {
+  readonly exit: { readonly tag: string; readonly status?: number };
+  readonly result: { readonly tag: string };
+}): boolean {
+  const succeeded =
+    (input.exit.tag === "exited" || input.exit.tag === "shellStatus") &&
+    input.exit.status === 0;
+  return succeeded
+    ? input.result.tag === "succeeded"
+    : input.result.tag === "failed";
+}
+
+const ModelInvocationExitSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("exited"),
+    status: Schema.Number.pipe(Schema.int()),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("signaled"),
+    signal: Schema.NonEmptyString,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("failedToStart"),
+    message: Schema.NonEmptyString,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("shellStatus"),
+    status: Schema.Number.pipe(Schema.int()),
+  }),
+);
+
+/** Historical records retain the pre-v2 protocol without invented dimensions. */
+const ModelInvocationLedgerEntryV1Schema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   scenarioId: ScenarioIdSchema,
   gitSha: GitShaSchema,
   eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
-  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
+  phase: Schema.Literal(...HISTORICAL_MODEL_INVOCATION_PHASES),
   invocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
   reasoningEffort: Schema.NonEmptyString,
   startedAt: Schema.NonEmptyString,
   elapsedMilliseconds: NonNegativeIntegerSchema,
-  exit: Schema.Union(
-    Schema.Struct({
-      tag: Schema.Literal("exited"),
-      status: Schema.Number.pipe(Schema.int()),
-    }),
-    Schema.Struct({
-      tag: Schema.Literal("signaled"),
-      signal: Schema.NonEmptyString,
-    }),
-    Schema.Struct({
-      tag: Schema.Literal("failedToStart"),
-      message: Schema.NonEmptyString,
-    }),
-    Schema.Struct({
-      tag: Schema.Literal("shellStatus"),
-      status: Schema.Number.pipe(Schema.int()),
-    }),
-  ),
+  exit: ModelInvocationExitSchema,
   usage: ModelUsageSchema,
 });
 
+/** Current v2 evidence written by the invocation runner. */
+export const CurrentModelInvocationLedgerEntrySchema = Schema.Struct({
+  schemaVersion: Schema.Literal(2),
+  scenarioId: ScenarioIdSchema,
+  gitSha: GitShaSchema,
+  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
+  stagePlanReason: Schema.NonEmptyTrimmedString,
+  invocationId: Schema.NonEmptyString,
+  model: Schema.NonEmptyString,
+  reasoningEffort: Schema.NonEmptyString,
+  startedAt: Schema.NonEmptyString,
+  elapsedMilliseconds: NonNegativeIntegerSchema,
+  exit: ModelInvocationExitSchema,
+  result: ModelInvocationResultSchema,
+  usage: ModelUsageSchema,
+}).pipe(
+  Schema.filter(invocationResultMatchesExit, {
+    message: () => "Invocation result must agree with its exit status.",
+  }),
+);
+
+export const ModelInvocationLedgerEntrySchema = Schema.Union(
+  ModelInvocationLedgerEntryV1Schema,
+  CurrentModelInvocationLedgerEntrySchema,
+);
+
 export type TokenCount = Schema.Schema.Type<typeof TokenCountSchema>;
 export type ModelUsage = Schema.Schema.Type<typeof ModelUsageSchema>;
+type HistoricalModelInvocationLedgerEntry = Schema.Schema.Type<
+  typeof ModelInvocationLedgerEntryV1Schema
+>;
+export type CurrentModelInvocationLedgerEntry = Schema.Schema.Type<
+  typeof CurrentModelInvocationLedgerEntrySchema
+>;
 export type ModelInvocationLedgerEntry = Schema.Schema.Type<
   typeof ModelInvocationLedgerEntrySchema
 >;
-type ModelInvocationLedgerEntryEncoded = Schema.Schema.Encoded<
-  typeof ModelInvocationLedgerEntrySchema
+type CurrentModelInvocationLedgerEntryEncoded = Schema.Schema.Encoded<
+  typeof CurrentModelInvocationLedgerEntrySchema
 >;
+type ModelInvocationEventEntry =
+  | Omit<HistoricalModelInvocationLedgerEntry, "eventsSha256">
+  | Omit<CurrentModelInvocationLedgerEntry, "eventsSha256">;
 
-export const ModelInvocationStartedEventSchema = Schema.Struct({
+const ModelInvocationStartedEventV1Schema = Schema.Struct({
   type: Schema.Literal("raw-swarm.invocation.started"),
   schemaVersion: Schema.Literal(1),
   scenarioId: ScenarioIdSchema,
   gitSha: GitShaSchema,
-  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
+  phase: Schema.Literal(...HISTORICAL_MODEL_INVOCATION_PHASES),
   fallbackInvocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
   reasoningEffort: Schema.NonEmptyString,
   startedAt: Schema.NonEmptyString,
 });
 
-export const ModelInvocationCompletedEventSchema = Schema.Struct({
+const ModelInvocationStartedEventV2Schema = Schema.Struct({
+  type: Schema.Literal("raw-swarm.invocation.started"),
+  schemaVersion: Schema.Literal(2),
+  scenarioId: ScenarioIdSchema,
+  gitSha: GitShaSchema,
+  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
+  stagePlanReason: Schema.NonEmptyTrimmedString,
+  fallbackInvocationId: Schema.NonEmptyString,
+  model: Schema.NonEmptyString,
+  reasoningEffort: Schema.NonEmptyString,
+  startedAt: Schema.NonEmptyString,
+});
+
+export const ModelInvocationStartedEventSchema = Schema.Union(
+  ModelInvocationStartedEventV1Schema,
+  ModelInvocationStartedEventV2Schema,
+);
+
+const ModelInvocationCompletedEventV1Schema = Schema.Struct({
   type: Schema.Literal("raw-swarm.invocation.completed"),
   schemaVersion: Schema.Literal(1),
   elapsedMilliseconds: NonNegativeIntegerSchema,
-  exit: ModelInvocationLedgerEntrySchema.fields.exit,
+  exit: ModelInvocationExitSchema,
 });
+
+const ModelInvocationCompletedEventV2Schema = Schema.Struct({
+  type: Schema.Literal("raw-swarm.invocation.completed"),
+  schemaVersion: Schema.Literal(2),
+  elapsedMilliseconds: NonNegativeIntegerSchema,
+  exit: ModelInvocationExitSchema,
+  result: ModelInvocationResultSchema,
+}).pipe(
+  Schema.filter(invocationResultMatchesExit, {
+    message: () => "Invocation result must agree with its exit status.",
+  }),
+);
+
+export const ModelInvocationCompletedEventSchema = Schema.Union(
+  ModelInvocationCompletedEventV1Schema,
+  ModelInvocationCompletedEventV2Schema,
+);
 
 type ModelInvocationStartedEvent = Schema.Schema.Type<
   typeof ModelInvocationStartedEventSchema
@@ -126,6 +233,7 @@ type ModelInvocationEventInput = {
   readonly scenarioId: unknown;
   readonly gitSha: unknown;
   readonly phase: unknown;
+  readonly stagePlanReason: unknown;
   readonly fallbackInvocationId: unknown;
   readonly model: unknown;
   readonly reasoningEffort: unknown;
@@ -135,7 +243,7 @@ type ModelInvocationEventInput = {
 export type ModelInvocationEventEvidence =
   | {
       readonly tag: "valid";
-      readonly entry: Omit<ModelInvocationLedgerEntry, "eventsSha256">;
+      readonly entry: ModelInvocationEventEntry;
     }
   | { readonly tag: "invalid"; readonly message: string };
 
@@ -151,6 +259,28 @@ function nonNegativeInteger(value: unknown): number | undefined {
   return typeof value === "number" && Number.isInteger(value) && value >= 0
     ? value
     : undefined;
+}
+
+function resultFromExit(
+  exit: Schema.Schema.Type<typeof ModelInvocationExitSchema>,
+): Schema.Schema.Type<typeof ModelInvocationResultSchema> {
+  if (
+    (exit.tag === "exited" || exit.tag === "shellStatus") &&
+    exit.status === 0
+  ) {
+    return { tag: "succeeded" };
+  }
+  return {
+    tag: "failed",
+    reason:
+      exit.tag === "exited"
+        ? `Codex exited with status ${String(exit.status)}.`
+        : exit.tag === "signaled"
+          ? `Codex stopped by ${exit.signal}.`
+          : exit.tag === "failedToStart"
+            ? exit.message
+            : `Codex shell exited with status ${String(exit.status)}.`,
+  };
 }
 
 function summedCounter(
@@ -256,27 +386,60 @@ export function readCodexEvents(path: string): CodexEventReadResult {
   return { tag: "valid", events };
 }
 
-function decodedEvents<A, I>(
+type DecodedInvocationEvents<A> =
+  | {
+      readonly tag: "valid";
+      readonly events: readonly { readonly index: number; readonly value: A }[];
+    }
+  | { readonly tag: "invalid"; readonly message: string };
+
+/**
+ * Runner-owned event records are authorities, so a recognized record that
+ * fails its schema is evidence failure rather than an ignorable event. Other
+ * Codex event kinds remain outside this boundary and are intentionally
+ * ignored.
+ */
+function decodedInvocationEvents<A, I>(
   schema: Schema.Schema<A, I>,
+  eventType: string,
   events: readonly unknown[],
-): readonly { readonly index: number; readonly value: A }[] {
-  return events.flatMap((event, index) => {
-    const decoded = Schema.decodeUnknownEither(schema, {
+): DecodedInvocationEvents<A> {
+  const decoded: { readonly index: number; readonly value: A }[] = [];
+  for (const [index, event] of events.entries()) {
+    if (!isJsonRecord(event) || event.type !== eventType) continue;
+    const parsed = Schema.decodeUnknownEither(schema, {
       onExcessProperty: "error",
     })(event);
-    return Either.isRight(decoded) ? [{ index, value: decoded.right }] : [];
-  });
+    if (Either.isLeft(parsed)) {
+      return {
+        tag: "invalid",
+        message: `Recognized ${eventType} event at line ${String(index + 1)} is malformed: ${parsed.left.message}`,
+      };
+    }
+    decoded.push({ index, value: parsed.right });
+  }
+  return { tag: "valid", events: decoded };
 }
 
 export function modelInvocationEvidenceFromEvents(
   events: readonly unknown[],
 ): ModelInvocationEventEvidence {
-  const started = decodedEvents(ModelInvocationStartedEventSchema, events);
-  const completed = decodedEvents(ModelInvocationCompletedEventSchema, events);
+  const started = decodedInvocationEvents(
+    ModelInvocationStartedEventSchema,
+    "raw-swarm.invocation.started",
+    events,
+  );
+  if (started.tag === "invalid") return started;
+  const completed = decodedInvocationEvents(
+    ModelInvocationCompletedEventSchema,
+    "raw-swarm.invocation.completed",
+    events,
+  );
+  if (completed.tag === "invalid") return completed;
   if (
-    started.length !== 1 ||
-    completed.length !== 1 ||
-    started[0]!.index >= completed[0]!.index
+    started.events.length !== 1 ||
+    completed.events.length !== 1 ||
+    started.events[0]!.index >= completed.events[0]!.index
   ) {
     return {
       tag: "invalid",
@@ -284,21 +447,64 @@ export function modelInvocationEvidenceFromEvents(
         "Model invocation events require one ordered runner start and completion record.",
     };
   }
-  const start: ModelInvocationStartedEvent = started[0]!.value;
-  const completion: ModelInvocationCompletedEvent = completed[0]!.value;
+  const start: ModelInvocationStartedEvent = started.events[0]!.value;
+  const completion: ModelInvocationCompletedEvent = completed.events[0]!.value;
+  if (start.schemaVersion !== completion.schemaVersion) {
+    return {
+      tag: "invalid",
+      message:
+        "Model invocation start and completion records must use the same schema version.",
+    };
+  }
   if (!Number.isFinite(Date.parse(start.startedAt))) {
     return {
       tag: "invalid",
       message: "Model invocation start time is not an ISO timestamp.",
     };
   }
+  if (start.schemaVersion === 1) {
+    if (completion.schemaVersion !== 1) {
+      return {
+        tag: "invalid",
+        message:
+          "Model invocation start and completion records must use the same schema version.",
+      };
+    }
+    return {
+      tag: "valid",
+      entry: {
+        schemaVersion: 1,
+        scenarioId: start.scenarioId,
+        gitSha: start.gitSha,
+        phase: start.phase,
+        invocationId: invocationIdFromCodexEvents(
+          events,
+          start.fallbackInvocationId,
+        ),
+        model: start.model,
+        reasoningEffort: start.reasoningEffort,
+        startedAt: start.startedAt,
+        elapsedMilliseconds: completion.elapsedMilliseconds,
+        exit: completion.exit,
+        usage: modelUsageFromCodexEvents(events),
+      },
+    };
+  }
+  if (completion.schemaVersion !== 2) {
+    return {
+      tag: "invalid",
+      message:
+        "Model invocation start and completion records must use the same schema version.",
+    };
+  }
   return {
     tag: "valid",
     entry: {
-      schemaVersion: 1,
+      schemaVersion: 2,
       scenarioId: start.scenarioId,
       gitSha: start.gitSha,
       phase: start.phase,
+      stagePlanReason: start.stagePlanReason,
       invocationId: invocationIdFromCodexEvents(
         events,
         start.fallbackInvocationId,
@@ -308,6 +514,7 @@ export function modelInvocationEvidenceFromEvents(
       startedAt: start.startedAt,
       elapsedMilliseconds: completion.elapsedMilliseconds,
       exit: completion.exit,
+      result: completion.result,
       usage: modelUsageFromCodexEvents(events),
     },
   };
@@ -320,7 +527,7 @@ export function modelInvocationStartedEvent(
     onExcessProperty: "error",
   })({
     type: "raw-swarm.invocation.started",
-    schemaVersion: 1,
+    schemaVersion: 2,
     ...input,
   });
 }
@@ -328,12 +535,13 @@ export function modelInvocationStartedEvent(
 export function modelInvocationCompletedEvent(input: {
   readonly elapsedMilliseconds: unknown;
   readonly exit: unknown;
+  readonly result: unknown;
 }): Either.Either<ModelInvocationCompletedEvent, ParseResult.ParseError> {
   return Schema.decodeUnknownEither(ModelInvocationCompletedEventSchema, {
     onExcessProperty: "error",
   })({
     type: "raw-swarm.invocation.completed",
-    schemaVersion: 1,
+    schemaVersion: 2,
     ...input,
   });
 }
@@ -399,7 +607,7 @@ export function appendInvocationEvidenceEvents(input: {
 
 export function appendInvocationLedger(
   path: string,
-  entry: ModelInvocationLedgerEntryEncoded,
+  entry: CurrentModelInvocationLedgerEntryEncoded,
 ): void {
   appendFileSync(path, `${JSON.stringify(entry)}\n`);
 }
@@ -416,6 +624,7 @@ export function runCodexInvocation(input: {
   readonly logPath: string;
   readonly ledgerPath: string;
   readonly phase: ModelInvocationPhase;
+  readonly stagePlanReason: string;
   readonly scenarioId: ScenarioId;
   readonly gitSha: GitSha;
   readonly fallbackInvocationId: string;
@@ -428,6 +637,7 @@ export function runCodexInvocation(input: {
     scenarioId: input.scenarioId,
     gitSha: input.gitSha,
     phase: input.phase,
+    stagePlanReason: input.stagePlanReason,
     fallbackInvocationId: input.fallbackInvocationId,
     model: input.model,
     reasoningEffort: input.reasoningEffort,
@@ -475,6 +685,7 @@ export function runCodexInvocation(input: {
         const completedEvent = modelInvocationCompletedEvent({
           elapsedMilliseconds: Date.now() - startedMilliseconds,
           exit,
+          result: resultFromExit(exit),
         });
         if (Either.isLeft(completedEvent)) {
           throw new Error(
@@ -494,6 +705,11 @@ export function runCodexInvocation(input: {
   if (parsedEvents.tag === "invalid") throw new Error(parsedEvents.message);
   const evidence = modelInvocationEvidenceFromEvents(parsedEvents.events);
   if (evidence.tag === "invalid") throw new Error(evidence.message);
+  if (evidence.entry.schemaVersion !== 2) {
+    throw new Error(
+      "The current invocation runner must emit v2 model telemetry evidence.",
+    );
+  }
   appendInvocationLedger(input.ledgerPath, {
     ...evidence.entry,
     eventsSha256: invocationEventsSha256(input.eventPath),

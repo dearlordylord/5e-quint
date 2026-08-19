@@ -1,0 +1,55 @@
+import { Either } from "effect";
+import { describe, expect, test } from "vitest";
+
+import {
+  planAdmittedScenarioStages,
+  scenarioStagePlanFindings,
+} from "./scenario-stage-plan.ts";
+import { validateAdmittedScenarioStagePlanEvidence } from "./stage-plan-authority.ts";
+
+const identity = {
+  tag: "admitted" as const,
+  scenarioId: "stage-authority-test",
+  scenarioSha256: "a".repeat(64),
+  scenarioReviewSha256: "b".repeat(64),
+};
+
+describe("retained stage-plan authorities", () => {
+  test("validates the admitted plan and its exact findings projection", () => {
+    const plan = planAdmittedScenarioStages({
+      ...identity,
+      facts: {
+        schemaVersion: 1,
+        characterRequirement: {
+          tag: "statBlocksOnly",
+          evidence: "The authority test has no authored sheets.",
+        },
+        spatialRequirement: {
+          tag: "notRequired",
+          evidence: "No geometry witness is required.",
+        },
+      },
+    });
+    expect(Either.isRight(plan)).toBe(true);
+    if (Either.isLeft(plan)) return;
+    const findings = scenarioStagePlanFindings(plan.right);
+    expect(
+      validateAdmittedScenarioStagePlanEvidence({
+        plan: plan.right,
+        findings,
+        scenarioId: identity.scenarioId,
+        scenarioSha256: identity.scenarioSha256,
+        scenarioReviewSha256: identity.scenarioReviewSha256,
+      }),
+    ).toEqual(Either.right(undefined));
+    expect(
+      validateAdmittedScenarioStagePlanEvidence({
+        plan: plan.right,
+        findings: findings.slice(1),
+        scenarioId: identity.scenarioId,
+        scenarioSha256: identity.scenarioSha256,
+        scenarioReviewSha256: identity.scenarioReviewSha256,
+      }),
+    ).toMatchObject({ _tag: "Left" });
+  });
+});

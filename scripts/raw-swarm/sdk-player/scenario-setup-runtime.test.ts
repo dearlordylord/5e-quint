@@ -13,7 +13,10 @@ import {
   readyTriggerDescription,
   resolveBattleRuntimeSubject,
 } from "../../../packages/battle-runtime/src/index.ts";
-import { battleRuntimeSessionWithState } from "../../../packages/battle-runtime/src/battle-runtime-context.ts";
+import {
+  battleRuntimeSessionFromAdmittedContext,
+  battleRuntimeSessionWithState,
+} from "../../../packages/battle-runtime/src/battle-runtime-context.ts";
 import { applyCondition } from "../../../packages/shared-algebras/src/conditions-algebra.ts";
 
 import { FIGHTER_EXAMPLE_DRAFT } from "../../../packages/app/src/components/character-creation/characterCreationPresets.ts";
@@ -27,6 +30,7 @@ import {
   damageAmount,
   DieRollResult,
   Hp,
+  movementFeet,
 } from "../../../packages/shared/src/types.ts";
 import {
   buildUnitCatalog,
@@ -38,16 +42,25 @@ import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 import {
   createScenarioSession,
   continueScenarioMovement,
+  scenarioDistanceFeet,
+  scenarioTableSpatialFingerprint,
   scenarioBattleActs,
   scenarioBattleFills,
   scenarioBattleSubject,
   scenarioCreatureSpellTargetFills,
+  scenarioTableSpatialFactFills,
+  scenarioAttackTargetFills,
   scenarioRelation,
   scenarioEnemyWithinFiveFeetCanSeeAttacker,
   scenarioObjectAttackFills,
   scenarioOpportunityAttackExecutionCandidates,
   planScenarioMovement,
   scenarioSessionWithBattleResult,
+  tableAuthoredSpatialDecision,
+} from "./scenario-session.ts";
+import type {
+  ScenarioSession,
+  ScenarioSpatialSetupInput,
 } from "./scenario-session.ts";
 
 const TRACER_SCENARIO_ID = "tracer-001-goblin-warrior-vs-skeleton";
@@ -125,11 +138,22 @@ describe("scenario setup public-SDK boundary", () => {
       });
       if (characters.tag !== "ready") return;
 
-      await expect(
-        evaluateScenarioSetup(setupPath, characters.characterSheets),
-      ).resolves.toMatchObject({
+      const ready = await evaluateScenarioSetup(
+        setupPath,
+        characters.characterSheets,
+      );
+      expect(ready).toMatchObject({
         tag: "ready",
         observation: { combatants: 2 },
+      });
+      await expect(
+        evaluateScenarioSetup(setupPath, characters.characterSheets),
+      ).resolves.toBe(ready);
+      await expect(evaluateScenarioSetup(setupPath, [])).resolves.toEqual({
+        tag: "obstructed",
+        obstruction:
+          "Mixed setup requires exactly one controller-authored Character Sheet.",
+        observation: { phase: "character-cardinality", count: 0 },
       });
     } finally {
       rmSync(directory, { recursive: true });
@@ -137,13 +161,11 @@ describe("scenario setup public-SDK boundary", () => {
   });
 
   test("evaluates an adjacent ordinary TypeScript setup", async () => {
-    const result = await evaluateScenarioSetup(
-      resolve(
-        repoRoot,
-        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.setup.ts`,
-      ),
-      [],
+    const setupPath = resolve(
+      repoRoot,
+      `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.setup.ts`,
     );
+    const result = await evaluateScenarioSetup(setupPath, []);
 
     expect(result).toMatchObject({
       tag: "ready",
@@ -153,6 +175,7 @@ describe("scenario setup public-SDK boundary", () => {
       },
     });
     if (result.tag === "ready") {
+      await expect(evaluateScenarioSetup(setupPath, [])).resolves.toBe(result);
       expect(
         scenarioEnemyWithinFiveFeetCanSeeAttacker(
           result.session,
@@ -160,6 +183,675 @@ describe("scenario setup public-SDK boundary", () => {
         ),
       ).toBe(true);
     }
+  }, 120_000);
+
+  test("accepts a table-authored exact relation without tactical-space", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.setup.ts`,
+      ),
+      [],
+    );
+    expect(setup.tag).toBe("ready");
+    if (setup.tag !== "ready") return;
+
+    const sourceId = combatantId("goblin-warrior");
+    const targetId = combatantId("skeleton");
+    const geometryRelation = scenarioRelation({
+      session: setup.session,
+      sourceId,
+      targetId,
+    });
+    expect(geometryRelation.tag).toBe("relation");
+    if (geometryRelation.tag !== "relation") return;
+    const authoredDistance = scenarioDistanceFeet(
+      Number(geometryRelation.relation.distanceFeet),
+    );
+    expect(Either.isRight(authoredDistance)).toBe(true);
+    if (Either.isLeft(authoredDistance)) return;
+
+    const ordinaryAttack = discoverBattleActs(setup.session.battle).find(
+      ({ subject }) => subject.tag === "action" && subject.action === "attack",
+    );
+    expect(ordinaryAttack).toBeDefined();
+    if (ordinaryAttack === undefined) return;
+    const attackFrontier = resolveBattleRuntimeSubject({
+      session: setup.session.battle,
+      subject: ordinaryAttack.subject,
+      fills: [],
+    });
+    expect(attackFrontier.tag).toBe("needsHoles");
+    if (attackFrontier.tag !== "needsHoles") return;
+    const attackTargetHole = attackFrontier.holes.find(
+      (hole) => hole.kind === "targetChoice" && hole.attack !== undefined,
+    );
+    expect(attackTargetHole?.kind).toBe("targetChoice");
+    if (
+      attackTargetHole?.kind !== "targetChoice" ||
+      attackTargetHole.attack === undefined
+    ) {
+      return;
+    }
+    const attackTarget = attackTargetHole.choices[0];
+    expect(attackTarget).toBeDefined();
+    if (attackTarget === undefined) return;
+    const projectedAttack = scenarioAttackTargetFills({
+      session: setup.session,
+      subject: ordinaryAttack.subject,
+      fills: [
+        {
+          kind: "targetChoice",
+          holeId: attackTargetHole.holeId,
+          value: attackTarget,
+          spatialFacts: [],
+        },
+      ],
+    });
+    expect(Either.isRight(projectedAttack)).toBe(true);
+    if (Either.isLeft(projectedAttack)) return;
+    const expectedAttackFactKind =
+      attackTargetHole.attack.targetConstraint.kind === "meleeReach"
+        ? "attackTargetInMeleeReach"
+        : "attackTargetInRangedRange";
+    expect(projectedAttack.right).toEqual([
+      expect.objectContaining({
+        kind: "targetChoice",
+        holeId: attackTargetHole.holeId,
+        value: attackTarget,
+        spatialFacts: [
+          expect.objectContaining({
+            kind: expectedAttackFactKind,
+            actorId: attackTargetHole.attack.actorId,
+            targetId: attackTarget,
+          }),
+        ],
+      }),
+    ]);
+    const playerSightOverride = scenarioAttackTargetFills({
+      session: setup.session,
+      subject: ordinaryAttack.subject,
+      fills: [
+        {
+          kind: "targetChoice",
+          holeId: attackTargetHole.holeId,
+          value: attackTarget,
+          spatialFacts: [
+            {
+              kind: "attackAttackerCannotSeeTarget" as const,
+              attackerId: attackTargetHole.attack.actorId,
+              targetId: attackTarget,
+            },
+            {
+              kind: "attackTargetCannotSeeAttacker" as const,
+              attackerId: attackTargetHole.attack.actorId,
+              targetId: attackTarget,
+            },
+          ],
+        },
+      ],
+    });
+    expect(playerSightOverride).toMatchObject({ _tag: "Right" });
+    if (Either.isRight(playerSightOverride)) {
+      expect(playerSightOverride.right[0]?.spatialFacts).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ kind: "attackAttackerCannotSeeTarget" }),
+          expect.objectContaining({ kind: "attackTargetCannotSeeAttacker" }),
+        ]),
+      );
+    }
+
+    const tableRelationDecision = {
+      decisionId: "table-relation",
+      question: { kind: "relation" as const, sourceId, targetId },
+      answer: {
+        direction: geometryRelation.relation.direction,
+        distanceFeet: authoredDistance.right,
+        attackerCanSeeTarget: geometryRelation.relation.attackerCanSeeTarget,
+        cover: geometryRelation.relation.cover,
+        traversal: geometryRelation.relation.traversal,
+      },
+    };
+    const tableSessionInput = {
+      battle: setup.session.battle,
+      ambientIllumination: setup.session.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        setup.session.battlefield.statBlockDamageNotation,
+      environment: setup.session.battlefield.environment,
+      initialRangedAttackEnemyRelationships: [],
+      movementAllyRelationships: [],
+      opportunityAttackEnemyRelationships: [],
+      objects: [],
+    } as const;
+    const tableSession = createScenarioSession({
+      ...tableSessionInput,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [tableRelationDecision],
+      },
+    });
+    expect(Either.isRight(tableSession)).toBe(true);
+    if (Either.isLeft(tableSession)) return;
+
+    expect(tableSession.right.battlefield.spatial).toMatchObject({
+      kind: "tableAuthored",
+      tableAuthoredDecisions: [
+        {
+          source: "tableAuthored",
+          decision: { decisionId: "table-relation" },
+          lineage: {
+            battleId: setup.session.battle.state.battleId,
+            spatialFingerprint: expect.any(String),
+          },
+        },
+      ],
+    });
+    expect(Object.keys(tableSession.right.battlefield)).not.toEqual(
+      expect.arrayContaining(["arena", "space"]),
+    );
+    expect(
+      scenarioRelation({
+        session: tableSession.right,
+        sourceId,
+        targetId,
+      }),
+    ).toMatchObject({
+      tag: "relation",
+      relation: {
+        distanceFeet: geometryRelation.relation.distanceFeet,
+        spatialSource: {
+          kind: "tableAuthored",
+          decisionId: "table-relation",
+        },
+      },
+    });
+    const unrelatedSameBattleSession = battleRuntimeSessionFromAdmittedContext(
+      tableSession.right.battle.state,
+      tableSession.right.battle.context,
+    );
+    const unrelatedSessionResult = scenarioSessionWithBattleResult(
+      tableSession.right,
+      unrelatedSameBattleSession,
+    );
+    expect(unrelatedSessionResult).toMatchObject({
+      _tag: "Left",
+      left: { tag: "spatial-decision-lineage-conflict" },
+    });
+    if (tableSession.right.battlefield.spatial.kind === "tableAuthored") {
+      const staleDecision =
+        tableSession.right.battlefield.spatial.tableAuthoredDecisions[0];
+      expect(staleDecision).toBeDefined();
+      if (staleDecision !== undefined) {
+        const staleSession = {
+          ...tableSession.right,
+          battlefield: {
+            ...tableSession.right.battlefield,
+            spatial: {
+              ...tableSession.right.battlefield.spatial,
+              tableAuthoredDecisions: [
+                {
+                  ...staleDecision,
+                  lineage: {
+                    ...staleDecision.lineage,
+                    spatialFingerprint: scenarioTableSpatialFingerprint(
+                      "stale-spatial-revision",
+                    ),
+                  },
+                },
+              ],
+            },
+          },
+        } as ScenarioSession;
+        expect(
+          scenarioRelation({
+            session: staleSession,
+            sourceId,
+            targetId,
+          }),
+        ).toMatchObject({
+          tag: "stale-spatial-decision",
+          decisionId: "table-relation",
+        });
+      }
+    }
+
+    const duplicateDecision = createScenarioSession({
+      ...tableSessionInput,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [
+          tableRelationDecision,
+          { ...tableRelationDecision, decisionId: "table-relation-duplicate" },
+        ],
+      },
+    });
+    expect(duplicateDecision).toMatchObject({
+      _tag: "Left",
+      left: {
+        issues: [{ tag: "duplicate-spatial-decision" }],
+      },
+    });
+    const contradictoryDecision = createScenarioSession({
+      ...tableSessionInput,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [
+          tableRelationDecision,
+          {
+            ...tableRelationDecision,
+            decisionId: "table-relation-contradiction",
+            answer: {
+              ...tableRelationDecision.answer,
+              direction:
+                tableRelationDecision.answer.direction === "north"
+                  ? "south"
+                  : "north",
+            },
+          },
+        ],
+      },
+    });
+    expect(contradictoryDecision).toMatchObject({
+      _tag: "Left",
+      left: {
+        issues: [{ tag: "contradictory-spatial-decision" }],
+      },
+    });
+    const malformedDecision = createScenarioSession({
+      ...tableSessionInput,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [{ ...tableRelationDecision, decisionId: "  " }],
+      },
+    });
+    expect(malformedDecision).toMatchObject({
+      _tag: "Left",
+      left: {
+        issues: [{ tag: "invalid-spatial-decision" }],
+      },
+    });
+
+    const tableRoute = [{ x: 1, y: 0 }] as const;
+    const postMoveFingerprint = scenarioTableSpatialFingerprint({
+      kind: "table-post-move",
+      battleId: String(setup.session.battle.state.battleId),
+      route: tableRoute,
+    });
+    const tableMovementDecision = {
+      decisionId: "table-movement",
+      question: {
+        kind: "movementRoute" as const,
+        moverId: sourceId,
+        route: tableRoute,
+        speedKind: "walk" as const,
+      },
+      answer: {
+        kind: "movementRoute" as const,
+        movementCostFeet: movementFeet(5),
+        provokedOpportunityAttacks: [],
+        creatureSpaceTraversal: { kind: "notRequired" as const },
+        postMoveSpatialState: {
+          kind: "tableAuthored" as const,
+          spatialFingerprint: postMoveFingerprint,
+          tableAuthoredDecisions: [],
+        },
+      },
+    };
+    const tableMovementSession = createScenarioSession({
+      battle: setup.session.battle,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [tableMovementDecision],
+      },
+      ambientIllumination: setup.session.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        setup.session.battlefield.statBlockDamageNotation,
+      environment: setup.session.battlefield.environment,
+      initialRangedAttackEnemyRelationships: [],
+      movementAllyRelationships: [],
+      opportunityAttackEnemyRelationships: [],
+      objects: [],
+    });
+    expect(Either.isRight(tableMovementSession)).toBe(true);
+    if (Either.isLeft(tableMovementSession)) return;
+
+    const malformedMovementCost = tableAuthoredSpatialDecision({
+      decisionId: "malformed-movement-cost",
+      question: tableMovementDecision.question,
+      answer: {
+        ...tableMovementDecision.answer,
+        movementCostFeet: "5",
+      },
+    });
+    expect(malformedMovementCost).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "invalid-spatial-decision",
+        message: expect.stringContaining("finite non-negative movement cost"),
+      },
+    });
+    const malformedMovementThreat = tableAuthoredSpatialDecision({
+      decisionId: "malformed-movement-threat",
+      question: tableMovementDecision.question,
+      answer: {
+        ...tableMovementDecision.answer,
+        provokedOpportunityAttacks: [
+          {
+            reactorId: sourceId,
+            procedureRef: "movement-threat-procedure",
+            selection: { procedureRef: "nested-selection" },
+          },
+        ],
+      },
+    });
+    expect(malformedMovementThreat).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "invalid-spatial-decision",
+        message: expect.stringContaining("malformed Opportunity Attack threat"),
+      },
+    });
+    const trimmedProcedureRef = tableAuthoredSpatialDecision({
+      decisionId: "trimmed-procedure-ref",
+      question: {
+        kind: "attackTarget",
+        actorId: sourceId,
+        targetId,
+        sourceProcedureRef: " attack-procedure ",
+        targetConstraint: "meleeReach",
+      },
+      answer: {
+        direction: geometryRelation.relation.direction,
+        distanceFeet: geometryRelation.relation.distanceFeet,
+        attackerCanSeeTarget: geometryRelation.relation.attackerCanSeeTarget,
+        cover: "none",
+        traversal: geometryRelation.relation.traversal,
+      },
+    });
+    expect(trimmedProcedureRef).toMatchObject({ _tag: "Right" });
+    if (Either.isRight(trimmedProcedureRef)) {
+      expect(trimmedProcedureRef.right.question).toMatchObject({
+        sourceProcedureRef: "attack-procedure",
+      });
+    }
+    const whitespaceProcedureRef = tableAuthoredSpatialDecision({
+      decisionId: "whitespace-procedure-ref",
+      question: {
+        kind: "attackTarget",
+        actorId: sourceId,
+        targetId,
+        sourceProcedureRef: " \t\n ",
+        targetConstraint: "meleeReach",
+      },
+      answer: {
+        direction: geometryRelation.relation.direction,
+        distanceFeet: geometryRelation.relation.distanceFeet,
+        attackerCanSeeTarget: geometryRelation.relation.attackerCanSeeTarget,
+        cover: "none",
+        traversal: geometryRelation.relation.traversal,
+      },
+    });
+    expect(whitespaceProcedureRef).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "invalid-spatial-decision",
+        message: expect.stringContaining("non-empty sourceProcedureRef"),
+      },
+    });
+    if (
+      tableMovementSession.right.battlefield.spatial.kind === "tableAuthored"
+    ) {
+      const acceptedMovement =
+        tableMovementSession.right.battlefield.spatial
+          .tableAuthoredDecisions[0];
+      expect(acceptedMovement).toBeDefined();
+      if (acceptedMovement !== undefined) {
+        expect(Object.isFrozen(acceptedMovement)).toBe(true);
+        expect(Object.isFrozen(acceptedMovement.decision)).toBe(true);
+        expect(Object.isFrozen(acceptedMovement.decision.question.route)).toBe(
+          true,
+        );
+        expect(Object.isFrozen(acceptedMovement.decision.answer)).toBe(true);
+        if (acceptedMovement.decision.answer.kind === "movementRoute") {
+          expect(
+            Object.isFrozen(
+              acceptedMovement.decision.answer.provokedOpportunityAttacks,
+            ),
+          ).toBe(true);
+          expect(
+            Object.isFrozen(
+              acceptedMovement.decision.answer.postMoveSpatialState,
+            ),
+          ).toBe(true);
+          expect(
+            Object.isFrozen(
+              acceptedMovement.decision.answer.postMoveSpatialState
+                .tableAuthoredDecisions,
+            ),
+          ).toBe(true);
+        }
+      }
+    }
+
+    const duplicateDecisionIdAcrossQuestions = createScenarioSession({
+      ...tableSessionInput,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [
+          tableRelationDecision,
+          {
+            ...tableRelationDecision,
+            question: {
+              kind: "relation" as const,
+              sourceId: targetId,
+              targetId: sourceId,
+            },
+          },
+        ],
+      },
+    });
+    expect(duplicateDecisionIdAcrossQuestions).toMatchObject({
+      _tag: "Left",
+      left: {
+        issues: [
+          {
+            tag: "duplicate-spatial-decision",
+            decisionId: "table-relation",
+            message: expect.stringContaining("reused"),
+          },
+        ],
+      },
+    });
+    const duplicateNestedDecisionId = createScenarioSession({
+      ...tableSessionInput,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [
+          tableRelationDecision,
+          {
+            ...tableMovementDecision,
+            decisionId: "table-movement-with-nested-id-reuse",
+            answer: {
+              ...tableMovementDecision.answer,
+              postMoveSpatialState: {
+                ...tableMovementDecision.answer.postMoveSpatialState,
+                tableAuthoredDecisions: [tableRelationDecision],
+              },
+            },
+          },
+        ],
+      },
+    });
+    expect(duplicateNestedDecisionId).toMatchObject({
+      _tag: "Left",
+      left: {
+        issues: [
+          {
+            tag: "duplicate-spatial-decision",
+            decisionId: "table-relation",
+            message: expect.stringContaining("reused"),
+          },
+        ],
+      },
+    });
+
+    const unknownNestedPostMoveTarget = createScenarioSession({
+      battle: setup.session.battle,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [
+          {
+            ...tableMovementDecision,
+            decisionId: "table-movement-unknown-post-move-target",
+            answer: {
+              ...tableMovementDecision.answer,
+              postMoveSpatialState: {
+                ...tableMovementDecision.answer.postMoveSpatialState,
+                tableAuthoredDecisions: [
+                  {
+                    ...tableRelationDecision,
+                    decisionId: "nested-unknown-target",
+                    question: {
+                      ...tableRelationDecision.question,
+                      targetId: combatantId("missing-post-move-target"),
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
+      },
+      ambientIllumination: setup.session.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        setup.session.battlefield.statBlockDamageNotation,
+      environment: setup.session.battlefield.environment,
+      initialRangedAttackEnemyRelationships: [],
+      movementAllyRelationships: [],
+      opportunityAttackEnemyRelationships: [],
+      objects: [],
+    });
+    expect(unknownNestedPostMoveTarget).toMatchObject({
+      _tag: "Left",
+      left: {
+        issues: [
+          {
+            tag: "invalid-spatial-decision",
+            decisionId: "table-movement-unknown-post-move-target",
+            message: expect.stringContaining("missing-post-move-target"),
+          },
+        ],
+      },
+    });
+
+    const lineageConflictSession = {
+      ...tableMovementSession.right,
+      lineage: {
+        ...tableMovementSession.right.lineage,
+        battleRuntimeSessionIdentity: `${tableMovementSession.right.lineage.battleRuntimeSessionIdentity}:foreign`,
+      },
+    } as ScenarioSession;
+    const lineageConflictMovementPlan = planScenarioMovement({
+      session: lineageConflictSession,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: sourceId,
+        command: "move",
+      },
+      route: tableRoute,
+      speedKind: "walk",
+      fills: [],
+    });
+    expect(lineageConflictMovementPlan).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "spatial-decision-lineage-conflict",
+        decisionId: "table-movement",
+        question: { kind: "movementRoute", moverId: sourceId },
+        message: expect.stringContaining(
+          "different ScenarioSession/BattleRuntime lineage",
+        ),
+      },
+    });
+
+    const tableMovementPlan = planScenarioMovement({
+      session: tableMovementSession.right,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: sourceId,
+        command: "move",
+      },
+      route: tableRoute,
+      speedKind: "walk",
+      fills: [],
+    });
+    expect(tableMovementPlan).toMatchObject({
+      _tag: "Right",
+      right: {
+        fills: [{ kind: "movement", value: { movementCostFeet: 5 } }],
+        session: {
+          movementResolution: { kind: "tableAuthoredPending" },
+        },
+      },
+    });
+    if (Either.isLeft(tableMovementPlan)) return;
+    const resolvedTableMovement = resolveBattleRuntimeSubject({
+      session: tableMovementPlan.right.session.battle,
+      subject: tableMovementPlan.right.subject,
+      fills: tableMovementPlan.right.fills,
+    });
+    expect(resolvedTableMovement.tag).toBe("resolved");
+    if (resolvedTableMovement.tag !== "resolved") return;
+    const committedTableMovement = scenarioSessionWithBattleResult(
+      tableMovementPlan.right.session,
+      resolvedTableMovement.session,
+      resolvedTableMovement.objectDamages,
+      resolvedTableMovement.movements,
+    );
+    expect(committedTableMovement).toMatchObject({
+      _tag: "Right",
+      right: {
+        movementResolution: { kind: "idle" },
+        battlefield: {
+          spatial: {
+            kind: "tableAuthored",
+            spatialFingerprint: postMoveFingerprint,
+          },
+        },
+      },
+    });
+
+    const mixedGeometrySpatial = {
+      kind: "geometryDerived" as const,
+      arena: {
+        cells: [
+          { x: 0, y: 0, terrain: "ordinary" as const },
+          { x: 1, y: 0, terrain: "ordinary" as const },
+        ],
+        boundaries: [],
+      },
+      placements: [
+        { tokenId: sourceId, coordinate: { x: 0, y: 0 } },
+        { tokenId: targetId, coordinate: { x: 1, y: 0 } },
+      ],
+      spatialDecisions: [tableRelationDecision],
+    } as ScenarioSpatialSetupInput;
+    const mixedGeometry = createScenarioSession({
+      ...tableSessionInput,
+      spatial: mixedGeometrySpatial,
+    });
+    expect(mixedGeometry).toMatchObject({
+      _tag: "Left",
+      left: {
+        issues: [
+          {
+            tag: "contradictory-spatial-decision",
+            decisionId: "table-relation",
+            message: expect.stringContaining("geometry-derived"),
+          },
+        ],
+      },
+    });
   }, 120_000);
 
   test("crosses dead and Incapacitated creature spaces without ending there", async () => {
@@ -189,18 +881,22 @@ describe("scenario setup public-SDK boundary", () => {
     ) =>
       createScenarioSession({
         battle,
-        arena: {
-          cells: [0, 1, 2].map((x) => ({
-            x,
-            y: 0,
-            terrain: "ordinary" as const,
-          })),
-          boundaries: [],
+        spatial: {
+          kind: "geometryDerived",
+          arena: {
+            cells: [0, 1, 2].map((x) => ({
+              x,
+              y: 0,
+              terrain: "ordinary" as const,
+            })),
+            boundaries: [],
+          },
+          placements: [
+            { tokenId: moverId, coordinate: { x: 0, y: 0 } },
+            { tokenId: occupantId, coordinate: { x: 1, y: 0 } },
+          ],
+          spatialDecisions: [],
         },
-        placements: [
-          { tokenId: moverId, coordinate: { x: 0, y: 0 } },
-          { tokenId: occupantId, coordinate: { x: 1, y: 0 } },
-        ],
         ambientIllumination: "brightLight",
         statBlockDamageNotation: "rolled",
         environment: { overhead: { kind: "open" }, barrierHeights: [] },
@@ -394,18 +1090,22 @@ describe("scenario setup public-SDK boundary", () => {
     const reactorId = combatantId("skeleton");
     const scenarioInput = {
       battle: setup.session.battle,
-      arena: {
-        cells: [-1, 0, 1].map((x) => ({
-          x,
-          y: 0,
-          terrain: "ordinary" as const,
-        })),
-        boundaries: [],
+      spatial: {
+        kind: "geometryDerived" as const,
+        arena: {
+          cells: [-1, 0, 1].map((x) => ({
+            x,
+            y: 0,
+            terrain: "ordinary" as const,
+          })),
+          boundaries: [],
+        },
+        placements: [
+          { tokenId: moverId, coordinate: { x: 0, y: 0 } },
+          { tokenId: reactorId, coordinate: { x: 1, y: 0 } },
+        ],
+        spatialDecisions: [],
       },
-      placements: [
-        { tokenId: moverId, coordinate: { x: 0, y: 0 } },
-        { tokenId: reactorId, coordinate: { x: 1, y: 0 } },
-      ],
       ambientIllumination: "brightLight",
       statBlockDamageNotation: "rolled",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
@@ -537,14 +1237,18 @@ describe("scenario setup public-SDK boundary", () => {
 
     const result = createScenarioSession({
       battle: setup.session.battle,
-      arena: {
-        cells: [
-          { x: 0, y: 0, terrain: "ordinary" },
-          { x: 1, y: 0, terrain: "ordinary" },
-        ],
-        boundaries: [],
+      spatial: {
+        kind: "geometryDerived",
+        arena: {
+          cells: [
+            { x: 0, y: 0, terrain: "ordinary" },
+            { x: 1, y: 0, terrain: "ordinary" },
+          ],
+          boundaries: [],
+        },
+        placements: [],
+        spatialDecisions: [],
       },
-      placements: [],
       ambientIllumination: "brightLight",
       statBlockDamageNotation: "rolled",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
@@ -589,19 +1293,23 @@ describe("scenario setup public-SDK boundary", () => {
 
     const result = createScenarioSession({
       battle: setup.session.battle,
-      arena: {
-        cells: [
-          { x: 0, y: 0, terrain: "ordinary" },
-          { x: 0, y: 0, terrain: "ordinary" },
-        ],
-        boundaries: [],
-      },
-      placements: [
-        {
-          tokenId: setup.session.battle.state.activeCombatantId,
-          coordinate: { x: Number.NaN, y: 0 },
+      spatial: {
+        kind: "geometryDerived",
+        arena: {
+          cells: [
+            { x: 0, y: 0, terrain: "ordinary" },
+            { x: 0, y: 0, terrain: "ordinary" },
+          ],
+          boundaries: [],
         },
-      ],
+        placements: [
+          {
+            tokenId: setup.session.battle.state.activeCombatantId,
+            coordinate: { x: Number.NaN, y: 0 },
+          },
+        ],
+        spatialDecisions: [],
+      },
       ambientIllumination: "brightLight",
       statBlockDamageNotation: "rolled",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
@@ -634,22 +1342,26 @@ describe("scenario setup public-SDK boundary", () => {
     const objectId = battleObjectId("synthetic-intervening-object");
     const composed = createScenarioSession({
       battle: setup.session.battle,
-      arena: {
-        cells: [0, 1, 2].map((x) => ({
-          x,
-          y: 0,
-          terrain: "ordinary" as const,
-        })),
-        boundaries: [],
-      },
-      placements: [
-        {
-          tokenId: combatantId("goblin-warrior"),
-          coordinate: { x: 0, y: 0 },
+      spatial: {
+        kind: "geometryDerived",
+        arena: {
+          cells: [0, 1, 2].map((x) => ({
+            x,
+            y: 0,
+            terrain: "ordinary" as const,
+          })),
+          boundaries: [],
         },
-        { tokenId: objectId, coordinate: { x: 1, y: 0 } },
-        { tokenId: combatantId("skeleton"), coordinate: { x: 2, y: 0 } },
-      ],
+        placements: [
+          {
+            tokenId: combatantId("goblin-warrior"),
+            coordinate: { x: 0, y: 0 },
+          },
+          { tokenId: objectId, coordinate: { x: 1, y: 0 } },
+          { tokenId: combatantId("skeleton"), coordinate: { x: 2, y: 0 } },
+        ],
+        spatialDecisions: [],
+      },
       ambientIllumination: "brightLight",
       statBlockDamageNotation: "rolled",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
@@ -887,9 +1599,15 @@ describe("scenario setup public-SDK boundary", () => {
     });
     if (result.tag !== "ready") return;
     expect(result.session.battle.state.combatants.size).toBe(10);
+    const resultSpatial = result.session.battlefield.spatial;
+    expect(resultSpatial.kind).toBe("geometryDerived");
+    if (resultSpatial.kind !== "geometryDerived") return;
     expect(result.session.battlefield).toMatchObject({
-      arena: { cellSizeFeet: 5 },
-      space: { revision: 11 },
+      spatial: {
+        kind: "geometryDerived",
+        arena: { cellSizeFeet: 5 },
+        space: { revision: 11 },
+      },
       ambientIllumination: "brightLight",
       statBlockDamageNotation: "rolled",
       environment: {
@@ -907,9 +1625,9 @@ describe("scenario setup public-SDK boundary", () => {
         },
       ],
     });
-    expect(result.session.battlefield.arena.cells).toHaveLength(120);
-    expect(result.session.battlefield.arena.boundaries).toHaveLength(28);
-    expect(result.session.battlefield.space.placements).toHaveLength(11);
+    expect(resultSpatial.arena.cells).toHaveLength(120);
+    expect(resultSpatial.arena.boundaries).toHaveLength(28);
+    expect(resultSpatial.space.placements).toHaveLength(11);
     expect(result.session.battlefield.environment.barrierHeights).toHaveLength(
       20,
     );
@@ -996,15 +1714,21 @@ describe("scenario setup public-SDK boundary", () => {
         },
       ],
     });
-    expect(forgedOccludedTarget[0]).toMatchObject({
-      kind: "spellTargetAllocation",
-      spatialFacts: [],
+    expect(forgedOccludedTarget).toMatchObject({
+      _tag: "Right",
+      right: [
+        {
+          kind: "spellTargetAllocation",
+          spatialFacts: [],
+        },
+      ],
     });
+    if (Either.isLeft(forgedOccludedTarget)) return;
     expect(
       resolveBattleRuntimeSubject({
         session: result.session.battle,
         subject: magicMissileAct.subject,
-        fills: forgedOccludedTarget,
+        fills: forgedOccludedTarget.right,
       }).tag,
     ).toBe("invalid");
 
@@ -1024,16 +1748,22 @@ describe("scenario setup public-SDK boundary", () => {
         },
       ],
     });
-    expect(projectedVisibleTarget[0]).toMatchObject({
-      kind: "spellTargetAllocation",
-      spatialFacts: [
+    expect(projectedVisibleTarget).toMatchObject({
+      _tag: "Right",
+      right: [
         {
-          kind: "spellTarget",
-          casterId: "beacon-warden-ember",
-          targetId: "beacon-warden-aegis",
+          kind: "spellTargetAllocation",
+          spatialFacts: [
+            {
+              kind: "spellTarget",
+              casterId: "beacon-warden-ember",
+              targetId: "beacon-warden-aegis",
+            },
+          ],
         },
       ],
     });
+    if (Either.isLeft(projectedVisibleTarget)) return;
 
     const genericTargetActs = discoverBattleActs(result.session.battle);
     const scalarTargetAct = genericTargetActs.find(
@@ -1105,6 +1835,46 @@ describe("scenario setup public-SDK boundary", () => {
       return;
     }
     const ordinaryRequest = ordinaryTargetHole.spellTargetSpatialFactRequest;
+    const tableWithoutSpellDecision = createScenarioSession({
+      battle: result.session.battle,
+      spatial: { kind: "tableAuthored", spatialDecisions: [] },
+      ambientIllumination: result.session.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        result.session.battlefield.statBlockDamageNotation,
+      environment: {
+        ...result.session.battlefield.environment,
+        barrierHeights: [],
+      },
+      initialRangedAttackEnemyRelationships:
+        result.session.battlefield.initialRangedAttackEnemyRelationships,
+      movementAllyRelationships:
+        result.session.battlefield.movementAllyRelationships,
+      opportunityAttackEnemyRelationships:
+        result.session.battlefield.opportunityAttackEnemyRelationships,
+      objects: result.session.battlefield.objects,
+    });
+    expect(tableWithoutSpellDecision).toMatchObject({ _tag: "Right" });
+    if (Either.isRight(tableWithoutSpellDecision)) {
+      const missingSpellDecision = scenarioCreatureSpellTargetFills({
+        session: tableWithoutSpellDecision.right,
+        subject: ordinarySpellAttackAct.subject,
+        fills: [
+          {
+            kind: "targetChoice",
+            holeId: ordinaryTargetHole.holeId,
+            value: ordinaryTargetHole.choices[0]!,
+            spatialFacts: [],
+          },
+        ],
+      });
+      expect(missingSpellDecision).toMatchObject({
+        _tag: "Left",
+        left: {
+          tag: "spell-target-projection",
+          message: expect.stringContaining("requires a Table-authored"),
+        },
+      });
+    }
     const forgedOrdinaryTarget = scenarioCreatureSpellTargetFills({
       session: result.session,
       subject: ordinarySpellAttackAct.subject,
@@ -1124,10 +1894,16 @@ describe("scenario setup public-SDK boundary", () => {
         },
       ],
     });
-    expect(forgedOrdinaryTarget[0]).toMatchObject({
-      kind: "targetChoice",
-      spatialFacts: [],
+    expect(forgedOrdinaryTarget).toMatchObject({
+      _tag: "Right",
+      right: [
+        {
+          kind: "targetChoice",
+          spatialFacts: [],
+        },
+      ],
     });
+    if (Either.isLeft(forgedOrdinaryTarget)) return;
 
     const visibleOrdinaryTarget = ordinaryTargetHole.choices.find(
       (targetId) => {
@@ -1146,6 +1922,164 @@ describe("scenario setup public-SDK boundary", () => {
     );
     expect(visibleOrdinaryTarget).toBeDefined();
     if (visibleOrdinaryTarget === undefined) return;
+    const visibleRelation = scenarioRelation({
+      session: result.session,
+      sourceId: ordinaryRequest.casterId,
+      targetId: visibleOrdinaryTarget,
+    });
+    expect(visibleRelation.tag).toBe("relation");
+    if (visibleRelation.tag !== "relation") return;
+    const staleSpellDecisionSession = createScenarioSession({
+      battle: result.session.battle,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [
+          {
+            decisionId: "stale-spell-projection",
+            question: {
+              kind: "spellTarget" as const,
+              casterId: ordinaryRequest.casterId,
+              targetId: visibleOrdinaryTarget,
+              sourceProcedureRef: ordinaryRequest.sourceProcedureRef,
+            },
+            answer: {
+              direction: visibleRelation.relation.direction,
+              distanceFeet: visibleRelation.relation.distanceFeet,
+              attackerCanSeeTarget:
+                visibleRelation.relation.attackerCanSeeTarget,
+              cover: visibleRelation.relation.cover,
+              traversal: visibleRelation.relation.traversal,
+            },
+          },
+        ],
+      },
+      ambientIllumination: result.session.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        result.session.battlefield.statBlockDamageNotation,
+      environment: {
+        ...result.session.battlefield.environment,
+        barrierHeights: [],
+      },
+      initialRangedAttackEnemyRelationships:
+        result.session.battlefield.initialRangedAttackEnemyRelationships,
+      movementAllyRelationships:
+        result.session.battlefield.movementAllyRelationships,
+      opportunityAttackEnemyRelationships:
+        result.session.battlefield.opportunityAttackEnemyRelationships,
+      objects: result.session.battlefield.objects,
+    });
+    expect(staleSpellDecisionSession).toMatchObject({ _tag: "Right" });
+    if (Either.isRight(staleSpellDecisionSession)) {
+      const spatial = staleSpellDecisionSession.right.battlefield.spatial;
+      expect(spatial.kind).toBe("tableAuthored");
+      if (spatial.kind === "tableAuthored") {
+        const staleDecision = spatial.tableAuthoredDecisions[0];
+        expect(staleDecision).toBeDefined();
+        if (staleDecision !== undefined) {
+          const staleSession = {
+            ...staleSpellDecisionSession.right,
+            battlefield: {
+              ...staleSpellDecisionSession.right.battlefield,
+              spatial: {
+                ...spatial,
+                tableAuthoredDecisions: [
+                  {
+                    ...staleDecision,
+                    lineage: {
+                      ...staleDecision.lineage,
+                      spatialFingerprint: scenarioTableSpatialFingerprint(
+                        "stale-spell-spatial-revision",
+                      ),
+                    },
+                  },
+                ],
+              },
+            },
+          } as ScenarioSession;
+          const staleSpellProjection = scenarioCreatureSpellTargetFills({
+            session: staleSession,
+            subject: ordinarySpellAttackAct.subject,
+            fills: [
+              {
+                kind: "targetChoice",
+                holeId: ordinaryTargetHole.holeId,
+                value: visibleOrdinaryTarget,
+                spatialFacts: [],
+              },
+            ],
+          });
+          expect(staleSpellProjection).toMatchObject({
+            _tag: "Left",
+            left: {
+              tag: "spell-target-projection",
+              message: expect.stringContaining("stale"),
+            },
+          });
+        }
+      }
+    }
+    const mismatchedSpellDecision = createScenarioSession({
+      battle: result.session.battle,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [
+          {
+            decisionId: "mismatched-spell-procedure",
+            question: {
+              kind: "spellTarget" as const,
+              casterId: ordinaryRequest.casterId,
+              targetId: visibleOrdinaryTarget,
+              sourceProcedureRef:
+                `${String(ordinaryRequest.sourceProcedureRef)}:wrong` as typeof ordinaryRequest.sourceProcedureRef,
+            },
+            answer: {
+              direction: visibleRelation.relation.direction,
+              distanceFeet: visibleRelation.relation.distanceFeet,
+              attackerCanSeeTarget:
+                visibleRelation.relation.attackerCanSeeTarget,
+              cover: visibleRelation.relation.cover,
+              traversal: visibleRelation.relation.traversal,
+            },
+          },
+        ],
+      },
+      ambientIllumination: result.session.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        result.session.battlefield.statBlockDamageNotation,
+      environment: {
+        ...result.session.battlefield.environment,
+        barrierHeights: [],
+      },
+      initialRangedAttackEnemyRelationships:
+        result.session.battlefield.initialRangedAttackEnemyRelationships,
+      movementAllyRelationships:
+        result.session.battlefield.movementAllyRelationships,
+      opportunityAttackEnemyRelationships:
+        result.session.battlefield.opportunityAttackEnemyRelationships,
+      objects: result.session.battlefield.objects,
+    });
+    expect(mismatchedSpellDecision).toMatchObject({ _tag: "Right" });
+    if (Either.isRight(mismatchedSpellDecision)) {
+      const mismatchedProjection = scenarioCreatureSpellTargetFills({
+        session: mismatchedSpellDecision.right,
+        subject: ordinarySpellAttackAct.subject,
+        fills: [
+          {
+            kind: "targetChoice",
+            holeId: ordinaryTargetHole.holeId,
+            value: visibleOrdinaryTarget,
+            spatialFacts: [],
+          },
+        ],
+      });
+      expect(mismatchedProjection).toMatchObject({
+        _tag: "Left",
+        left: {
+          tag: "spell-target-projection",
+          message: expect.stringContaining("requires a Table-authored"),
+        },
+      });
+    }
     expect(
       scenarioCreatureSpellTargetFills({
         session: result.session,
@@ -1158,16 +2092,19 @@ describe("scenario setup public-SDK boundary", () => {
             spatialFacts: [],
           },
         ],
-      })[0],
+      }).pipe(Either.map((fills) => fills[0])),
     ).toMatchObject({
-      kind: "targetChoice",
-      spatialFacts: [
-        {
-          kind: "spellTarget",
-          casterId: ordinaryRequest.casterId,
-          targetId: visibleOrdinaryTarget,
-        },
-      ],
+      _tag: "Right",
+      right: {
+        kind: "targetChoice",
+        spatialFacts: [
+          {
+            kind: "spellTarget",
+            casterId: ordinaryRequest.casterId,
+            targetId: visibleOrdinaryTarget,
+          },
+        ],
+      },
     });
     const damaged = scenarioSessionWithBattleResult(
       result.session,
@@ -1242,15 +2179,16 @@ describe("scenario setup public-SDK boundary", () => {
       left: { tag: "object-damage-state-conflict" },
     });
     expect(
-      result.session.battlefield.arena.cells
+      resultSpatial.arena.cells
         .filter(({ terrain }) => terrain === "difficult")
         .map(({ coordinate }) => `${coordinate.x},${coordinate.y}`),
     ).toEqual(["8,3", "8,4", "13,3", "13,4"]);
     expect(
       Object.fromEntries(
-        result.session.battlefield.space.placements.map(
-          ({ token, coordinate }) => [token, `${coordinate.x},${coordinate.y}`],
-        ),
+        resultSpatial.space.placements.map(({ token, coordinate }) => [
+          token,
+          `${coordinate.x},${coordinate.y}`,
+        ]),
       ),
     ).toEqual({
       "beacon-crystal": "11,3",
@@ -1309,8 +2247,12 @@ describe("scenario setup public-SDK boundary", () => {
     };
     const twoThreatInput = {
       battle: result.session.battle,
-      arena: twoThreatArena,
-      placements: twoThreatPlacements,
+      spatial: {
+        kind: "geometryDerived" as const,
+        arena: twoThreatArena,
+        placements: twoThreatPlacements,
+        spatialDecisions: [],
+      },
       ambientIllumination: "brightLight" as const,
       statBlockDamageNotation: "rolled",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
@@ -1336,25 +2278,76 @@ describe("scenario setup public-SDK boundary", () => {
       fills: [],
     });
     expect(Either.isRight(twoThreatPlan)).toBe(true);
+    const expectedThreats = twoThreatReactorIds.flatMap((reactorId) =>
+      scenarioOpportunityAttackExecutionCandidates({
+        session: twoThreatScenario.right,
+        reactorId,
+        moverId: twoThreatMoverId,
+      }).map(({ reactorId: candidateReactorId, selection }) => ({
+        reactorId: candidateReactorId,
+        ...selection,
+      })),
+    );
     if (Either.isRight(twoThreatPlan)) {
       const movementFill = twoThreatPlan.right.fills[0];
       expect(movementFill?.kind).toBe("movement");
       if (movementFill?.kind !== "movement") return;
-      const expectedThreats = twoThreatReactorIds.flatMap((reactorId) =>
-        scenarioOpportunityAttackExecutionCandidates({
-          session: twoThreatScenario.right,
-          reactorId,
-          moverId: twoThreatMoverId,
-        }).map(({ reactorId: candidateReactorId, selection }) => ({
-          reactorId: candidateReactorId,
-          ...selection,
-        })),
-      );
       expect(expectedThreats).toHaveLength(4);
       expect(movementFill.value.provokedOpportunityAttacks).toEqual(
         expectedThreats,
       );
     }
+    const knownThreat = expectedThreats[0];
+    expect(knownThreat).toBeDefined();
+    if (knownThreat === undefined) return;
+    const unknownTableMovementThreat = createScenarioSession({
+      ...twoThreatInput,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [
+          {
+            decisionId: "table-movement-unknown-threat-reactor",
+            question: {
+              kind: "movementRoute" as const,
+              moverId: twoThreatMoverId,
+              route: [{ x: 0, y: 2 }],
+              speedKind: "walk" as const,
+            },
+            answer: {
+              kind: "movementRoute" as const,
+              movementCostFeet: movementFeet(5),
+              provokedOpportunityAttacks: [
+                {
+                  ...knownThreat,
+                  reactorId: combatantId("missing-threat-reactor"),
+                },
+              ],
+              creatureSpaceTraversal: { kind: "notRequired" as const },
+              postMoveSpatialState: {
+                kind: "tableAuthored" as const,
+                spatialFingerprint: scenarioTableSpatialFingerprint({
+                  kind: "unknown-threat-post-move",
+                }),
+                tableAuthoredDecisions: [],
+              },
+            },
+          },
+        ],
+      },
+      opportunityAttackEnemyRelationships: [],
+    });
+    expect(unknownTableMovementThreat).toMatchObject({
+      _tag: "Left",
+      left: {
+        issues: [
+          {
+            tag: "invalid-spatial-decision",
+            decisionId: "table-movement-unknown-threat-reactor",
+            message: expect.stringContaining("missing-threat-reactor"),
+          },
+        ],
+      },
+    });
     const invalidRelationshipCases = [
       {
         expectedTag: "unknown-opportunity-attack-enemy-relationship-combatant",
@@ -1423,19 +2416,22 @@ describe("scenario setup public-SDK boundary", () => {
     }
     const blockedSightScenario = createScenarioSession({
       ...twoThreatInput,
-      arena: {
-        ...twoThreatArena,
-        boundaries: [
-          {
-            between: [
-              { x: 1, y: 0 },
-              { x: 1, y: 1 },
-            ] as const,
-            traversal: "open" as const,
-            sight: "blocked" as const,
-            cover: { kind: "intervening" as const, degree: "total" as const },
-          },
-        ],
+      spatial: {
+        ...twoThreatInput.spatial,
+        arena: {
+          ...twoThreatArena,
+          boundaries: [
+            {
+              between: [
+                { x: 1, y: 0 },
+                { x: 1, y: 1 },
+              ] as const,
+              traversal: "open" as const,
+              sight: "blocked" as const,
+              cover: { kind: "intervening" as const, degree: "total" as const },
+            },
+          ],
+        },
       },
       opportunityAttackEnemyRelationships: [
         { reactorId: twoThreatReactorIds[0], moverId: twoThreatMoverId },
@@ -1566,8 +2562,10 @@ describe("scenario setup public-SDK boundary", () => {
       expect(interrupted).toMatchObject({
         _tag: "Right",
         right: {
-          movementResolution: { kind: "pending" },
-          battlefield: { space: { revision: 11 } },
+          movementResolution: { kind: "geometryDerivedPending" },
+          battlefield: {
+            spatial: { kind: "geometryDerived", space: { revision: 11 } },
+          },
         },
       });
       if (Either.isRight(interrupted)) {
@@ -1593,8 +2591,10 @@ describe("scenario setup public-SDK boundary", () => {
               },
             ],
             session: {
-              movementResolution: { kind: "pending" },
-              battlefield: { space: { revision: 11 } },
+              movementResolution: { kind: "geometryDerivedPending" },
+              battlefield: {
+                spatial: { kind: "geometryDerived", space: { revision: 11 } },
+              },
             },
           },
         });
@@ -1627,8 +2627,11 @@ describe("scenario setup public-SDK boundary", () => {
             tag: "relation",
             relation: { distanceFeet: 10 },
           });
-          expect(result.session.battlefield.space.revision).toBe(11);
-          expect(moved.right.battlefield.space.revision).toBe(12);
+          expect(resultSpatial.space.revision).toBe(11);
+          const movedSpatial = moved.right.battlefield.spatial;
+          expect(movedSpatial.kind).toBe("geometryDerived");
+          if (movedSpatial.kind !== "geometryDerived") return;
+          expect(movedSpatial.space.revision).toBe(12);
         }
       }
     }
@@ -1662,15 +2665,13 @@ describe("scenario setup public-SDK boundary", () => {
         fills: [{ kind: "movement", value: { movementCostFeet: 15 } }],
       },
     });
-    const totalCoverBoundaries =
-      result.session.battlefield.arena.boundaries.filter(
-        ({ cover }) => cover.kind === "intervening" && cover.degree === "total",
-      );
-    const barricadeBoundaries =
-      result.session.battlefield.arena.boundaries.filter(
-        ({ cover }) =>
-          cover.kind === "protected-occupant" && cover.degree === "half",
-      );
+    const totalCoverBoundaries = resultSpatial.arena.boundaries.filter(
+      ({ cover }) => cover.kind === "intervening" && cover.degree === "total",
+    );
+    const barricadeBoundaries = resultSpatial.arena.boundaries.filter(
+      ({ cover }) =>
+        cover.kind === "protected-occupant" && cover.degree === "half",
+    );
     expect(totalCoverBoundaries).toHaveLength(20);
     expect(barricadeBoundaries).toHaveLength(8);
     expect(barricadeBoundaries).toEqual(
@@ -1711,6 +2712,476 @@ describe("scenario setup public-SDK boundary", () => {
         }),
       ]),
     );
+  }, 120_000);
+
+  test("projects Table-authored attack, spell, and object decisions deterministically", async () => {
+    const scenarioDirectory = resolve(
+      repoRoot,
+      "scripts/raw-swarm/sdk-player/scenarios",
+    );
+    const characters = await evaluateScenarioCharacters(
+      resolve(scenarioDirectory, "generated-battle-example.characters.ts"),
+    );
+    expect(characters.tag).toBe("ready");
+    if (characters.tag !== "ready") return;
+    const result = await evaluateScenarioSetup(
+      resolve(scenarioDirectory, "generated-battle-example.setup.ts"),
+      characters.characterSheets,
+    );
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+    const geometrySession = result.session;
+    const crystalId = battleObjectId("beacon-crystal");
+    const attackActs = discoverBattleActs(geometrySession.battle).filter(
+      ({ subject }) => subject.tag === "action" && subject.action === "attack",
+    );
+    expect(attackActs).not.toEqual([]);
+    const creatureAttack = attackActs
+      .map((act) => {
+        const frontier = resolveBattleRuntimeSubject({
+          session: geometrySession.battle,
+          subject: act.subject,
+          fills: [],
+        });
+        if (frontier.tag !== "needsHoles") return undefined;
+        const hole = frontier.holes.find(
+          (candidate) =>
+            candidate.kind === "targetChoice" &&
+            candidate.attack !== undefined &&
+            candidate.choices.some(
+              (choice) => String(choice) === "beacon-warden-aegis",
+            ),
+        );
+        return hole?.kind === "targetChoice" && hole.attack !== undefined
+          ? { act, hole }
+          : undefined;
+      })
+      .find((value) => value !== undefined);
+    expect(creatureAttack).toBeDefined();
+    if (creatureAttack === undefined) return;
+    const attackTarget = combatantId("beacon-warden-aegis");
+    expect(attackTarget).toBeDefined();
+    if (attackTarget === undefined) return;
+    const attackAnswer = scenarioRelation({
+      session: geometrySession,
+      sourceId: creatureAttack.hole.attack.actorId,
+      targetId: attackTarget,
+    });
+    expect(attackAnswer.tag).toBe("relation");
+    if (attackAnswer.tag !== "relation") return;
+    const authoredAttackDistance = scenarioDistanceFeet(5);
+    expect(Either.isRight(authoredAttackDistance)).toBe(true);
+    if (Either.isLeft(authoredAttackDistance)) return;
+
+    const objectAttack = attackActs
+      .map((act) => {
+        const frontier = resolveBattleRuntimeSubject({
+          session: geometrySession.battle,
+          subject: act.subject,
+          fills: [],
+        });
+        if (frontier.tag !== "needsHoles") return undefined;
+        const hole = frontier.holes.find(
+          (candidate) =>
+            candidate.kind === "targetChoice" &&
+            candidate.attack?.acceptsObjectTarget === true,
+        );
+        return hole?.kind === "targetChoice" && hole.attack !== undefined
+          ? { act, hole }
+          : undefined;
+      })
+      .find((value) => value !== undefined);
+    expect(objectAttack).toBeDefined();
+    if (objectAttack === undefined) return;
+    const objectAnswer = scenarioRelation({
+      session: geometrySession,
+      sourceId: objectAttack.hole.attack.actorId,
+      targetId: crystalId,
+    });
+    expect(objectAnswer.tag).toBe("relation");
+    if (objectAnswer.tag !== "relation") return;
+
+    const ordinarySpellAttackAct = discoverBattleActs(
+      geometrySession.battle,
+    ).find(
+      (act) =>
+        battleActSpellPresentation(act)?.invocation.procedure ===
+        "spellAttackDamage",
+    );
+    expect(ordinarySpellAttackAct).toBeDefined();
+    if (ordinarySpellAttackAct === undefined) return;
+    const ordinarySpellFrontier = resolveBattleRuntimeSubject({
+      session: geometrySession.battle,
+      subject: ordinarySpellAttackAct.subject,
+      fills: [],
+    });
+    expect(ordinarySpellFrontier.tag).toBe("needsHoles");
+    if (ordinarySpellFrontier.tag !== "needsHoles") return;
+    const ordinarySpellHole = ordinarySpellFrontier.holes.find(
+      (candidate) => candidate.kind === "targetChoice",
+    );
+    expect(ordinarySpellHole?.kind).toBe("targetChoice");
+    if (
+      ordinarySpellHole?.kind !== "targetChoice" ||
+      ordinarySpellHole.spellTargetSpatialFactRequest === undefined
+    ) {
+      return;
+    }
+    const spellRequest = ordinarySpellHole.spellTargetSpatialFactRequest;
+    const spellTarget = ordinarySpellHole.choices.find((candidate) => {
+      const relation = scenarioRelation({
+        session: geometrySession,
+        sourceId: spellRequest.casterId,
+        targetId: candidate,
+      });
+      return (
+        relation.tag === "relation" &&
+        relation.relation.cover !== "total" &&
+        relation.relation.attackerCanSeeTarget &&
+        Number(relation.relation.distanceFeet) <= Number(spellRequest.rangeFeet)
+      );
+    });
+    expect(spellTarget).toBeDefined();
+    if (spellTarget === undefined) return;
+    const spellAnswer = scenarioRelation({
+      session: geometrySession,
+      sourceId: spellRequest.casterId,
+      targetId: spellTarget,
+    });
+    expect(spellAnswer.tag).toBe("relation");
+    if (spellAnswer.tag !== "relation") return;
+
+    const grappleAct = discoverBattleActs(geometrySession.battle).find(
+      ({ subject }) => subject.tag === "action" && subject.action === "grapple",
+    );
+    const shoveAct = discoverBattleActs(geometrySession.battle).find(
+      ({ subject }) => subject.tag === "action" && subject.action === "shove",
+    );
+    expect(grappleAct).toBeDefined();
+    expect(shoveAct).toBeDefined();
+    if (grappleAct === undefined || shoveAct === undefined) return;
+    if (grappleAct.subject.tag !== "action") return;
+    const factSourceId = grappleAct.subject.actorId;
+    const grappleFrontier = resolveBattleRuntimeSubject({
+      session: geometrySession.battle,
+      subject: grappleAct.subject,
+      fills: [],
+    });
+    const shoveFrontier = resolveBattleRuntimeSubject({
+      session: geometrySession.battle,
+      subject: shoveAct.subject,
+      fills: [],
+    });
+    expect(grappleFrontier.tag).toBe("needsHoles");
+    expect(shoveFrontier.tag).toBe("needsHoles");
+    if (
+      grappleFrontier.tag !== "needsHoles" ||
+      shoveFrontier.tag !== "needsHoles"
+    )
+      return;
+    const closeTargetForFact = grappleFrontier.holes.find(
+      (hole) => hole.kind === "targetChoice",
+    )?.choices[0];
+    const shoveTargetForFact = shoveFrontier.holes.find(
+      (hole) => hole.kind === "targetChoice",
+    )?.choices[0];
+    expect(closeTargetForFact).toBeDefined();
+    expect(shoveTargetForFact).toBeDefined();
+    if (closeTargetForFact === undefined || shoveTargetForFact === undefined)
+      return;
+    const grappleRelation = {
+      direction: "east" as const,
+      distanceFeet: authoredAttackDistance.right,
+      attackerCanSeeTarget: true,
+      cover: "none" as const,
+      traversal: "open" as const,
+    };
+
+    const decisions = [
+      {
+        decisionId: "table-attack-target",
+        question: {
+          kind: "attackTarget" as const,
+          actorId: creatureAttack.hole.attack.actorId,
+          targetId: attackTarget,
+          sourceProcedureRef: creatureAttack.hole.attack.selection.procedureRef,
+          targetConstraint: creatureAttack.hole.attack.targetConstraint.kind,
+        },
+        answer: {
+          direction: attackAnswer.relation.direction,
+          distanceFeet: authoredAttackDistance.right,
+          attackerCanSeeTarget: attackAnswer.relation.attackerCanSeeTarget,
+          cover: attackAnswer.relation.cover,
+          traversal: attackAnswer.relation.traversal,
+        },
+      },
+      {
+        decisionId: "table-spell-target",
+        question: {
+          kind: "spellTarget" as const,
+          casterId: spellRequest.casterId,
+          targetId: spellTarget,
+          sourceProcedureRef: spellRequest.sourceProcedureRef,
+        },
+        answer: {
+          direction: spellAnswer.relation.direction,
+          distanceFeet: spellAnswer.relation.distanceFeet,
+          attackerCanSeeTarget: spellAnswer.relation.attackerCanSeeTarget,
+          cover: spellAnswer.relation.cover,
+          traversal: spellAnswer.relation.traversal,
+        },
+      },
+      {
+        decisionId: "table-object-target",
+        question: {
+          kind: "objectTarget" as const,
+          actorId: objectAttack.hole.attack.actorId,
+          objectId: crystalId,
+          sourceProcedureRef: objectAttack.hole.attack.selection.procedureRef,
+        },
+        answer: {
+          direction: objectAnswer.relation.direction,
+          distanceFeet: objectAnswer.relation.distanceFeet,
+          attackerCanSeeTarget: objectAnswer.relation.attackerCanSeeTarget,
+          cover: objectAnswer.relation.cover,
+          traversal: objectAnswer.relation.traversal,
+        },
+      },
+      {
+        decisionId: "table-grapple-target",
+        question: {
+          kind: "grappleTarget" as const,
+          grapplerId: factSourceId,
+          targetId: closeTargetForFact,
+        },
+        answer: {
+          ...grappleRelation,
+        },
+      },
+      {
+        decisionId: "table-shove-target",
+        question: {
+          kind: "shoveTarget" as const,
+          shoverId: factSourceId,
+          targetId: shoveTargetForFact,
+        },
+        answer: {
+          ...grappleRelation,
+        },
+      },
+    ];
+    const tableSession = createScenarioSession({
+      battle: geometrySession.battle,
+      spatial: { kind: "tableAuthored", spatialDecisions: decisions },
+      ambientIllumination: geometrySession.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        geometrySession.battlefield.statBlockDamageNotation,
+      environment: {
+        overhead: geometrySession.battlefield.environment.overhead,
+        barrierHeights: [],
+      },
+      initialRangedAttackEnemyRelationships:
+        geometrySession.battlefield.initialRangedAttackEnemyRelationships,
+      movementAllyRelationships:
+        geometrySession.battlefield.movementAllyRelationships,
+      opportunityAttackEnemyRelationships:
+        geometrySession.battlefield.opportunityAttackEnemyRelationships,
+      objects: geometrySession.battlefield.objects,
+    });
+    expect(Either.isRight(tableSession)).toBe(true);
+    if (Either.isLeft(tableSession)) return;
+
+    const tableGrappleFrontier = resolveBattleRuntimeSubject({
+      session: tableSession.right.battle,
+      subject: grappleAct.subject,
+      fills: [],
+    });
+    const tableShoveFrontier = resolveBattleRuntimeSubject({
+      session: tableSession.right.battle,
+      subject: shoveAct.subject,
+      fills: [],
+    });
+    expect(tableGrappleFrontier.tag).toBe("needsHoles");
+    expect(tableShoveFrontier.tag).toBe("needsHoles");
+    if (
+      tableGrappleFrontier.tag !== "needsHoles" ||
+      tableShoveFrontier.tag !== "needsHoles"
+    )
+      return;
+    const grappleHole = tableGrappleFrontier.holes.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    const shoveHole = tableShoveFrontier.holes.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    expect(grappleHole?.kind).toBe("targetChoice");
+    expect(shoveHole?.kind).toBe("targetChoice");
+    if (
+      grappleHole?.kind !== "targetChoice" ||
+      shoveHole?.kind !== "targetChoice"
+    )
+      return;
+    for (const [subject, hole, targetId, expectedKind] of [
+      [
+        grappleAct.subject,
+        grappleHole,
+        closeTargetForFact,
+        "grappleTargetWithinReach",
+      ],
+      [
+        shoveAct.subject,
+        shoveHole,
+        shoveTargetForFact,
+        "shoveTargetWithinReach",
+      ],
+    ] as const) {
+      const projectedSpatialFact = scenarioTableSpatialFactFills({
+        session: tableSession.right,
+        subject,
+        fills: [
+          {
+            kind: "targetChoice" as const,
+            holeId: hole.holeId,
+            value: targetId,
+            spatialFacts: [],
+          },
+        ],
+      });
+      expect(projectedSpatialFact).toMatchObject({
+        _tag: "Right",
+        right: [{ spatialFacts: [{ kind: expectedKind }] }],
+      });
+    }
+
+    const attackFill = {
+      kind: "targetChoice" as const,
+      holeId: creatureAttack.hole.holeId,
+      value: attackTarget,
+      spatialFacts: [],
+    };
+    const projectedAttack = scenarioAttackTargetFills({
+      session: tableSession.right,
+      subject: creatureAttack.act.subject,
+      fills: [attackFill],
+    });
+    expect(Either.isRight(projectedAttack)).toBe(true);
+    if (Either.isLeft(projectedAttack)) return;
+    expect(projectedAttack.right[0]).toMatchObject({
+      spatialFacts: [
+        expect.objectContaining({
+          kind: expect.stringMatching(/^attackTargetIn/),
+          targetId: attackTarget,
+        }),
+      ],
+    });
+    expect(
+      scenarioAttackTargetFills({
+        session: tableSession.right,
+        subject: creatureAttack.act.subject,
+        fills: [attackFill],
+      }),
+    ).toEqual(projectedAttack);
+
+    const projectedSpell = scenarioCreatureSpellTargetFills({
+      session: tableSession.right,
+      subject: ordinarySpellAttackAct.subject,
+      fills: [
+        {
+          kind: "targetChoice",
+          holeId: ordinarySpellHole.holeId,
+          value: spellTarget,
+          spatialFacts: [],
+        },
+      ],
+    });
+    expect(projectedSpell).toMatchObject({
+      _tag: "Right",
+      right: [
+        {
+          spatialFacts: [
+            {
+              kind: "spellTarget",
+              casterId: spellRequest.casterId,
+              targetId: spellTarget,
+              sourceProcedureRef: spellRequest.sourceProcedureRef,
+            },
+          ],
+        },
+      ],
+    });
+    if (Either.isLeft(projectedSpell)) return;
+
+    const projectedObject = scenarioObjectAttackFills({
+      session: tableSession.right,
+      subject: objectAttack.act.subject,
+      fills: [
+        {
+          kind: "objectTargetChoice",
+          holeId: objectAttack.hole.holeId,
+          value: crystalId,
+          spatialFacts: [],
+        },
+      ],
+    });
+    expect(Either.isRight(projectedObject)).toBe(true);
+    if (Either.isLeft(projectedObject)) return;
+    expect(projectedObject.right[0]).toMatchObject({
+      spatialFacts: [
+        {
+          kind: "attackObjectTarget",
+          actorId: objectAttack.hole.attack.actorId,
+          objectId: crystalId,
+        },
+      ],
+    });
+
+    const alternateAttack = attackActs.find(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "attack" &&
+        act.subject.procedureRef !==
+          creatureAttack.hole.attack?.selection.procedureRef,
+    );
+    expect(alternateAttack).toBeDefined();
+    if (alternateAttack === undefined) return;
+    const mismatchedSession = createScenarioSession({
+      battle: geometrySession.battle,
+      spatial: {
+        kind: "tableAuthored",
+        spatialDecisions: [
+          {
+            ...decisions[0]!,
+            question: {
+              ...decisions[0]!.question,
+              sourceProcedureRef: alternateAttack.subject.procedureRef,
+            },
+          },
+        ],
+      },
+      ambientIllumination: geometrySession.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        geometrySession.battlefield.statBlockDamageNotation,
+      environment: {
+        overhead: geometrySession.battlefield.environment.overhead,
+        barrierHeights: [],
+      },
+      initialRangedAttackEnemyRelationships: [],
+      movementAllyRelationships: [],
+      opportunityAttackEnemyRelationships: [],
+      objects: geometrySession.battlefield.objects,
+    });
+    expect(Either.isRight(mismatchedSession)).toBe(true);
+    if (Either.isLeft(mismatchedSession)) return;
+    expect(
+      scenarioAttackTargetFills({
+        session: mismatchedSession.right,
+        subject: creatureAttack.act.subject,
+        fills: [attackFill],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("requires") },
+    });
   }, 120_000);
 
   test("retains the second generated battle with its authored Skeleton initiative and ammunition", async () => {
@@ -1804,6 +3275,20 @@ describe("scenario setup public-SDK boundary", () => {
         obstruction: "The required character-build setup is not exposed.",
         observation: { missing: "character-build" },
       });
+      writeFileSync(
+        setupPath,
+        `export const setupScenario = () => ({
+  kind: "obstructed",
+  obstruction: "The changed setup is unavailable.",
+  observation: { missing: "changed-setup" },
+});
+`,
+      );
+      await expect(evaluateScenarioSetup(setupPath, [])).resolves.toEqual({
+        tag: "obstructed",
+        obstruction: "The changed setup is unavailable.",
+        observation: { missing: "changed-setup" },
+      });
     } finally {
       rmSync(directory, { recursive: true });
     }
@@ -1827,6 +3312,20 @@ describe("scenario setup public-SDK boundary", () => {
       await expect(evaluateScenarioSetup(setupPath, [])).resolves.toEqual({
         tag: "invalid",
         message: "Scenario setup observation must be JSON data.",
+      });
+    } finally {
+      rmSync(directory, { recursive: true });
+    }
+  });
+
+  test("returns a typed setup failure for an unreadable source", async () => {
+    const directory = mkdtempSync(resolve(tmpdir(), "dnd-missing-setup-"));
+    try {
+      await expect(
+        evaluateScenarioSetup(resolve(directory, "missing.ts"), []),
+      ).resolves.toMatchObject({
+        tag: "invalid",
+        message: expect.stringContaining("Scenario setup evaluation failed"),
       });
     } finally {
       rmSync(directory, { recursive: true });

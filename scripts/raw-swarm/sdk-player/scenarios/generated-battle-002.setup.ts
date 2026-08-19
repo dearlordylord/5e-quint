@@ -149,26 +149,30 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const session = sdk.createScenarioSession({
     battle: battle.right,
-    arena: {
-      cells: Array.from({ length: 13 * 11 }, (_, index) => {
-        const x = (index % 13) + 1;
-        const y = Math.floor(index / 13) + 1;
-        return {
-          x,
-          y,
-          terrain: x >= 6 && x <= 8 ? "difficult" : "ordinary",
-        };
-      }),
-      boundaries: [],
+    spatial: {
+      kind: "geometryDerived",
+      arena: {
+        cells: Array.from({ length: 13 * 11 }, (_, index) => {
+          const x = (index % 13) + 1;
+          const y = Math.floor(index / 13) + 1;
+          return {
+            x,
+            y,
+            terrain: x >= 6 && x <= 8 ? "difficult" : "ordinary",
+          };
+        }),
+        boundaries: [],
+      },
+      placements: [
+        { tokenId: ardenId, coordinate: { x: 2, y: 5 } },
+        { tokenId: brynId, coordinate: { x: 2, y: 7 } },
+        { tokenId: skeletonIds[0], coordinate: { x: 11, y: 3 } },
+        { tokenId: skeletonIds[1], coordinate: { x: 11, y: 5 } },
+        { tokenId: skeletonIds[2], coordinate: { x: 11, y: 7 } },
+        { tokenId: skeletonIds[3], coordinate: { x: 11, y: 9 } },
+      ],
+      spatialDecisions: [],
     },
-    placements: [
-      { tokenId: ardenId, coordinate: { x: 2, y: 5 } },
-      { tokenId: brynId, coordinate: { x: 2, y: 7 } },
-      { tokenId: skeletonIds[0], coordinate: { x: 11, y: 3 } },
-      { tokenId: skeletonIds[1], coordinate: { x: 11, y: 5 } },
-      { tokenId: skeletonIds[2], coordinate: { x: 11, y: 7 } },
-      { tokenId: skeletonIds[3], coordinate: { x: 11, y: 9 } },
-    ],
     ambientIllumination: "brightLight",
     statBlockDamageNotation: "rolled",
     environment: {

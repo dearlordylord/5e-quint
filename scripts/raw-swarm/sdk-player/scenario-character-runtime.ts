@@ -45,6 +45,21 @@ type CharacterContextResult =
   | { readonly tag: "ready"; readonly context: ScenarioCharacterContext }
   | { readonly tag: "invalid"; readonly message: string };
 
+/** Canonical non-model source for a stat-block-only admitted scenario. */
+export function scenarioCharactersWithoutSheetsSource(): string {
+  return `import type { ScenarioCharacters } from "@dnd/scenario-character-sdk";
+
+export const composeScenarioCharacters: ScenarioCharacters = () => ({
+  kind: "ready",
+  characterSheets: [],
+  observation: {
+    characters:
+      "No Character Sheets are delegated: the admitted scenario uses canonical stat-block creatures.",
+  },
+});
+`;
+}
+
 function characterContext(): CharacterContextResult {
   return Match.value(
     buildUnitCatalog({ collections: [srdUnitCollection] }),

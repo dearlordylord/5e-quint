@@ -220,6 +220,11 @@ function deriveManifest(input: {
     );
   }
   const entries = input.invocationLedgerPaths.flatMap(ledgerEntries);
+  if (entries.some((entry) => entry.schemaVersion !== 2)) {
+    fail(
+      "Current review invocation evidence requires v2 ledger entries; v1 is historical evidence only.",
+    );
+  }
   if (
     entries.some((entry) => entry.scenarioId !== audit.audit.header.scenarioId)
   )

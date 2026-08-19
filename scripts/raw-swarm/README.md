@@ -53,10 +53,31 @@ the initial battle session. Its neutral author first projects only fixed facts;
 a controller then reviews that exact source and supplies delegated pre-battle
 choices such as Initiative rolls and starting-square assignments through
 ordinary SDK code. The retained `ScenarioSession` pairs the untouched battle
-runtime session with canonical five-foot arena/current-placement snapshots and
-table-owned illumination and scenario-object facts. Multiple battle controllers and branching
-remain later workflow increments. Missing capability is reported as an
+runtime session with a canonical spatial boundary: geometry-derived sessions
+retain five-foot arena/current-placement snapshots, while table-authored
+sessions retain exact table decisions without a tactical map. Both retain
+table-owned illumination and scenario-object facts. Multiple battle controllers
+and branching remain later workflow increments. Missing capability is reported as an
 obstruction rather than modeled in a harness language.
+
+### Geometry is an optional Table aid
+
+Geometry is auxiliary to Raw Swarm's rules and public-SDK audit. The
+[`@dnd/tactical-space`](../../packages/tactical-space/README.md) package is an
+optional experimental Table adapter, not a Battle Runtime or Target SDK
+completeness gate. A scenario may use it when its documented envelope helps,
+but the Table may instead supply one coherent, typed spatial witness for the
+exact question under adjudication. The player must not restate or override
+that Table-owned fact inside a Battle fill.
+
+An unsupported tactical-space feature is an experiment-boundary observation,
+not by itself a rules defect, public SDK defect, or reason to expand geometry.
+Reviewers still reject contradictory spatial assertions or scenarios whose
+objectives and tactics are fundamentally incoherent; ordinary Table
+authorship is not permission to rescue nonsense. Keep those dispositions
+separate from a runtime defect that mishandles an accepted witness or a public
+contract defect that exposes the wrong witness shape. See the product boundary
+in [`ARCHITECTURE.md`](../../ARCHITECTURE.md#spatial-modeling-frontier).
 
 ### Generate battle scenarios as prose
 
@@ -90,16 +111,17 @@ unaudited diversity heuristic, not evidence of an unbiased distribution. It can
 reduce choice-after-generation bias, but cannot remove bias in the generated
 candidate set.
 
-Generation has campaign-configured minimum and maximum iteration counts. It
-cannot stop before the minimum or before every configured review milestone.
-After both boundaries, an independent readiness
-reviewer decides whether the scenario has a mechanically meaningful setup,
-enough strategic substance in every strategy-bearing brief, and the campaign's
-requested balance of fixed and delegated choices. A ready decision stops
-generation; a critique continues it. Reaching the maximum also stops generation
-and sends the result to final review. Readiness output is disposable generation
-material, not part of the final scenario. These bounds and decisions are
-authoring control, not scenario stages or domain states.
+Generation has campaign-configured minimum and maximum iteration counts and one
+feedback review milestone. It cannot stop before the minimum or before that
+milestone. The milestone and the final pre-play boundary use one composite
+review invocation with independently named RAW, content-availability,
+SDK-capability, artifact-policy, and scenario-quality assessments. A critique continues the next
+complete revision; an empty composite result after the minimum and feedback
+milestone stops generation. There is no second readiness model pass: setup
+meaning, strategic substance, and fixed/delegated fit are part of the retained
+composite review contract. Reaching the maximum also stops generation and sends
+the result to final review. These bounds and decisions are authoring control,
+not scenario stages or domain states.
 
 Scenario prose may mix degrees of prescription. It can require an exact level,
 class, ability priority, SRD or synthetic item, SRD or synthetic spell,
@@ -123,7 +145,8 @@ controls conflicting roles, it must pursue each brief faithfully rather than
 collapsing them into one cooperative strategy.
 
 At selected generation milestones, one review invocation reports separate RAW,
-content-availability, SDK-capability, and artifact-policy assessments. The RAW
+content-availability, SDK-capability, artifact-policy, and scenario-quality
+assessments. The RAW
 assessment classifies the accumulated prose against the local SRD and the
 registered ambiguity decisions in [`ASSUMPTIONS.md`](../../ASSUMPTIONS.md) for
 legality, coherence, and executability. The content assessment compares
@@ -131,7 +154,8 @@ authored canonical identities with the supplied catalog and explicit campaign
 intent. The SDK assessment compares the scenario with the current public
 consumer documentation. Keeping the reported responsibilities separate keeps
 “RAW-supported,” “available in this product profile,” and “representable
-through the current SDK” distinct without paying for four model conversations.
+through the current SDK” distinct without paying for separate model
+conversations.
 The
 SDK review does not use historical run verdicts as a permanent blacklist: when
 the public SDK and its documentation gain a capability, the next review sees it
@@ -139,13 +163,31 @@ as supported, so ordinary generation can use it and an obsolete capability
 probe is rejected. These reviewers report problems without choosing tactics,
 declaring an outcome, or silently rewriting the scenario, and their critiques
 become input to a later generation iteration. Final RAW, content,
-SDK-capability, and policy reviews happen before play.
+SDK-capability, policy, and scenario-quality reviews happen before play.
 
-Generation uses the Sol model at medium reasoning. Readiness uses Luna at max
-reasoning. The four generation-review responsibilities share one Luna
-invocation at max reasoning and remain separate report sections, not concurrent
-voters or scenario domain roles. The post-play adversarial review remains an
-independent invocation.
+Generation uses the Sol model at medium reasoning. The five composite-review
+responsibilities share one Luna invocation at max reasoning and remain separate
+report fields, not concurrent voters or scenario domain roles. The post-play
+adversarial review remains an independent invocation.
+
+Every model invocation retains its own raw first-party event stream beside the
+phase ledger. Generation events are retained under
+out/$SCENARIO-generation/invocation-events/; character and setup events are
+retained beside their \*-authoring-invocations.jsonl ledger, player events
+under the SDK-player evidence directory, and post-play review events beside
+its review ledger. A ledger's eventsSha256 is the binding between one typed
+row and one retained event authority; event filenames are transport names and
+are not identity.
+
+Every generation, authoring, player, and review role receives a bounded,
+versioned `CAPABILITY_CONTEXT.md` projection for its role. The projection is
+derived from one canonical owner and describes supported public operations and
+experiment boundaries; it is not a copied D&D schema or a model-facing
+declaration bundle. Declarations may be emitted into an isolated authoring
+directory solely so ordinary TypeScript can compile the submitted module. The
+author prompt names only the operations and declaration imports needed for its
+role. The complete transcript, replay evidence, findings, and retained review
+results remain the authorities.
 
 An impossible or partially unsupported scenario can still be valuable evidence.
 After preserving the RAW and availability verdicts, the campaign may admit the
@@ -164,7 +206,7 @@ the whole document. These prose sections do not constitute a scenario DSL.
 The executable campaign boundary is a small JSON authoring configuration, not a
 D&D scenario model. It contains only the distribution preference, explicit
 content-availability and SDK-capability intents, iteration bounds, candidate
-count, review milestones, and whether a reviewed RAW-unsupported result may be
+count, one review milestone, and whether a reviewed RAW-unsupported result may be
 admitted.
 Start from
 [`scenario-campaign.example.json`](scenario-campaign.example.json), then run
@@ -177,12 +219,14 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/generate-scenario.ts \
 
 The command refuses to overwrite either output. It retains only the selected
 final prose and its adjacent `.scenario-review.json` as authored scenario
-artifacts; candidate batches, random indices, readiness decisions, and agent
-process output are discarded. Ignored generation evidence retains the typed
+artifacts, plus a controller-owned `.stage-facts.json` authority containing
+the selected candidate's typed planning facts. Candidate batches, random
+indices, candidate-selection decisions, and agent process output are discarded. Ignored
+generation evidence retains the typed
 invocation ledger and the exact prompt/result envelope for each composite
 milestone and final pre-play review so a controlled review comparison can replay
-the same input. Separate final RAW, content-availability, SDK-capability, and
-public-artifact policy reviews record the scenario id, clean Git revision,
+the same input. Separate final RAW, content-availability, SDK-capability,
+public-artifact policy, and scenario-quality reviews record the scenario id, clean Git revision,
 availability/capability/admission intent, and a hash of the exact final prose
 bytes. The command derives both output filenames from the validated scenario
 id. Admitted
@@ -191,8 +235,21 @@ under ignored `out/rejected-scenarios/` and is not playable input.
 The review's `reviewScope` states which independent review responsibilities
 actually ran. Retained pre-capability-review artifacts remain
 `rawContentPolicy`; do not backfill a verdict that was never produced. New
-campaigns retain `rawContentSdkCapabilityPolicy` and require the SDK-capability
-intent and verdict.
+campaigns retain `rawContentSdkCapabilityPolicyQuality`, including the named
+scenario-quality result, and require the SDK-capability intent and verdict.
+
+The candidate output is not prose-parsed: each candidate carries its own
+versioned `stageFacts`. The controller plans that candidate before invoking the
+expensive whole-scenario review. An incoherent outside-envelope candidate is
+rejected there and retains a candidate stage plan and stage-plan findings under
+`out/rejected-scenarios/`; a coherent Table-owned spatial fact proceeds to
+review. Candidate stage-plan identity includes the SHA-256 of the exact
+retained candidate prose, and findings projection checks that binding against
+the scenario authority. For an admitted scenario, the retained plan is derived from the
+controller-owned stage-facts authority and review identity, and skipped-stage
+findings are retained beside it. Historical review artifacts are never edited
+to claim facts their reviewer did not emit; an older artifact without this
+authority is explicitly unavailable to the new stage-planned authoring path.
 
 For a controlled performance comparison, replay each retained milestone or
 final review-input envelope through the same production composite-review
@@ -458,6 +515,41 @@ inventory/size baseline; use controlled reruns for performance acceptance.
 Comparable same-scenario evidence gates packet-based post-play review tokens and wall
 time at a 50% reduction, comparable-path model tokens and wall time at a 40%
 reduction, and player tokens per continuation and call at a 40% reduction.
+For the broader #292 gate, the complete-path comparison exported by
+`performance-comparison.ts` composes the canonical stage plan, v2 invocation
+ledger, and findings projection. It retains failures, corrections, stage-plan
+reasons, and every token dimension for the candidate path, while historical
+baseline authorities remain explicitly unavailable where #287 predates them.
+It marks paths incomparable when required identity/evidence or first-party
+usage is unavailable; missing usage is never zero. The current bounded-context
+size estimate and the retained `generated-battle-009` report are
+documented in
+[`docs/research/raw-swarm-capability-context-and-complete-path.md`](../../docs/research/raw-swarm-capability-context-and-complete-path.md).
+The role-view byte estimate is not a live model result; a complete-path claim
+requires hash-linked baseline and candidate measurements.
+
+Assemble a current measurement only from retained authorities. Prepare a
+descriptor naming the stage plan, findings projection, every phase ledger,
+every phase event stream, and observed terminal outcome. The typed assembler
+decodes and composes those rows, validates their hashes and stage bindings,
+and refuses to write an invalid or already-existing measurement. Its descriptor
+has schemaVersion 1, pathId, stagePlanPath, findingsPath,
+invocationLedgerPaths, invocationEventPaths, and outcome fields. Populate the
+event array with every retained generation, composite-review, character,
+neutral-setup, controller-setup, player, and post-play-review event authority;
+do not use an estimate or fabricate a missing legacy stream.
+
+```sh
+mise exec -- pnpm exec tsx scripts/raw-swarm/performance-comparison.ts \
+  assemble scripts/raw-swarm/out/tracer-001-controlled-001-assembly.json \
+  scripts/raw-swarm/out/tracer-001-controlled-001-measurement.json
+```
+
+The assemble operation rejects v1 ledgers, missing or malformed recognized
+invocation events, omitted phase authorities, mismatched event hashes, and
+scenario or review identities that disagree with the retained stage plan and
+findings. Do not wrap the historical generated-battle-009 footer in this
+schema: its missing authorities remain unavailable.
 
 Recording requires a clean revision and refuses to overwrite prior evidence:
 
@@ -487,9 +579,22 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts ingest \
   --db scripts/raw-swarm/out/player-swarm.db
 ```
 
-Run and import the independent whole-trace RAW review exactly like the MCP lane:
+### Run findings and human audit
+
+The direct-SDK runner first emits an immutable
+`evidence/findings-checkpoint.json` when it retains a transcript. This
+checkpoint covers the run, setup, player, and retained evidence that exists at
+the runner boundary; it is deliberately not the final review projection.
+After the transcript and any review have been imported, project the canonical
+bounded run audit. The canonical projection contains only stable run identity,
+hashes of the evidence authorities, classified findings, and exact pointers;
+the transcript, model events, and review remain the authorities. Review,
+scenario-review, and generation-ledger inputs may be repeated when they are
+retained outside the run directory. The final `findings.json` is immutable
+once written, so later review rounds cannot silently replace it.
 
 ```sh
+# Run and import the independent whole-trace review first.
 mise exec -- scripts/raw-swarm/run-raw-review.sh \
   scripts/raw-swarm/reviews/sdk-player.prompt.txt \
   "scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl" \
@@ -499,9 +604,66 @@ mise exec -- scripts/raw-swarm/run-raw-review.sh \
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts review \
   "scripts/raw-swarm/out/$SCENARIO-sdk-review.json" \
   --run <run-id> --db scripts/raw-swarm/out/player-swarm.db
+
+# Resolve every promoted issue fingerprint before finalization. Repeat the
+# link command for each retained unlinked fingerprint that warrants an issue.
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts issues \
+  --db scripts/raw-swarm/out/player-swarm.db --unlinked
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts link-github-issue \
+  --db scripts/raw-swarm/out/player-swarm.db \
+  --fingerprint <sha256> --github-issue <number>
+
+# Finalize only after all review rounds have been imported and linked.
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts findings \
+  "scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl" \
+  --db scripts/raw-swarm/out/player-swarm.db \
+  --review "scripts/raw-swarm/out/$SCENARIO-sdk-review.json" \
+  --generation-ledger "scripts/raw-swarm/out/$SCENARIO-generation-invocations.jsonl" \
+  --render "scripts/raw-swarm/out/$SCENARIO-run-audit.md"
+
+# Render later from the same hash-linked indexed projection.
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts audit \
+  --run <run-id> \
+  --db scripts/raw-swarm/out/player-swarm.db
 ```
 
-The review launcher first derives `<review-name>.audit.jsonl` and a review
+The findings projection records generation rejection, character/setup
+obstruction, pre-call compilation/runtime failure, malformed submissions and
+successful corrections, accepted-call review verdicts, and promoted issue
+fingerprints when those authorities are supplied. A GitHub issue number is
+included when the corresponding indexed fingerprint is already linked. SQLite
+stores finding metadata and the projection artifact reference, never complete
+sessions, SDK results, transcripts, or model event logs. Every external
+authority supplied to the projection is also registered as a hash-linked run
+artifact, so portable export retains the review, scenario-review, and
+generation-ledger files referenced by the projection. `audit` reads the
+indexed projection rather than reconstructing a second report.
+
+Scenario-generation runs also emit a transcript-free projection at
+`scripts/raw-swarm/out/$SCENARIO-generation/evidence/findings.json`. Its
+`run.json` authority supplies the stable scenario/Git/time identity; no fake
+SDK transcript is created. The generation runner indexes this projection in
+the generation findings tables of the configured SQLite store (the default is
+`scripts/raw-swarm/out/player-swarm.db`). To index or render a retained
+projection manually:
+
+```sh
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts generation-findings \
+  "scripts/raw-swarm/out/$SCENARIO-generation/evidence/findings.json" \
+  --db scripts/raw-swarm/out/player-swarm.db
+
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts generation-audit \
+  --generation-run <generation-run-id> \
+  --db scripts/raw-swarm/out/player-swarm.db
+```
+
+The SQLite artifact-index schema is versioned. Opening an older compact index
+fails with an inventory/rebuild instruction instead of silently mutating its
+format. Preserve or export that v1 file first; rebuild a v2 index from the
+retained transcripts with `report ingest` (or deliberately discard the old
+compact index when its authorities were not retained).
+
+The review launcher shown above first derives `<review-name>.audit.jsonl` and a review
 evidence packet at `<review-name>.packet.json`. The packet combines the audit, retained header
 evidence without the initial session, current-turn projections, line-numbered
 run artifacts, domain authorities, and scenario-selected local SRD passages.
@@ -815,6 +977,18 @@ triage, assignment, priority, discussion, and open/closed status, as required by
 [`docs/agents/issue-tracker.md`](../../docs/agents/issue-tracker.md). Do not
 delete an SQLite issue to represent a fix, and do not add a second local
 open/closed status that can disagree with GitHub.
+
+Pure tactical-space limits and geometry expansion remain experiment-boundary
+findings. They are not silently promoted to runtime or public-API work. The
+following existing tickets are explicitly independent of that geometry
+classification: [#279](https://github.com/dearlordylord/5e-quint/issues/279)
+(per-test Table circumstance decisions),
+[#283](https://github.com/dearlordylord/5e-quint/issues/283) (ordinary-object
+targeting), [#284](https://github.com/dearlordylord/5e-quint/issues/284)
+(Cover's attack-AC consequence), and
+[#286](https://github.com/dearlordylord/5e-quint/issues/286) (canonical public
+spatial-witness shape). Those tickets remain rules or SDK work even when a
+scenario happens to mention spatial facts.
 
 Every verdict remains immutable run evidence. For each non-pass verdict, first
 classify and disposition it:

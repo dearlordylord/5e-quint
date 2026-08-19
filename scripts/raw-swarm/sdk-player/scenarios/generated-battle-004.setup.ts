@@ -153,26 +153,30 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const session = sdk.createScenarioSession({
     battle: battle.right,
-    arena: {
-      cells,
-      boundaries: [
-        rackCover({ x: 4, y: 4 }, { x: 5, y: 4 }),
-        rackCover({ x: 5, y: 4 }, { x: 6, y: 4 }),
-        rackCover({ x: 5, y: 5 }, { x: 6, y: 5 }),
-        rackCover({ x: 5, y: 3 }, { x: 5, y: 4 }),
-        rackCover({ x: 5, y: 5 }, { x: 5, y: 6 }),
-        rackCover({ x: 4, y: 5 }, { x: 5, y: 5 }),
-        rackCover({ x: 5, y: 4 }, { x: 5, y: 5 }),
+    spatial: {
+      kind: "geometryDerived",
+      arena: {
+        cells,
+        boundaries: [
+          rackCover({ x: 4, y: 4 }, { x: 5, y: 4 }),
+          rackCover({ x: 5, y: 4 }, { x: 6, y: 4 }),
+          rackCover({ x: 5, y: 5 }, { x: 6, y: 5 }),
+          rackCover({ x: 5, y: 3 }, { x: 5, y: 4 }),
+          rackCover({ x: 5, y: 5 }, { x: 5, y: 6 }),
+          rackCover({ x: 4, y: 5 }, { x: 5, y: 5 }),
+          rackCover({ x: 5, y: 4 }, { x: 5, y: 5 }),
+        ],
+      },
+      placements: [
+        { tokenId: fighterId, coordinate: { x: 3, y: 4 } },
+        { tokenId: rogueId, coordinate: { x: 3, y: 5 } },
+        { tokenId: wolfAId, coordinate: { x: 6, y: 3 } },
+        { tokenId: wolfBId, coordinate: { x: 6, y: 6 } },
+        { tokenId: goblinId, coordinate: { x: 7, y: 5 } },
+        { tokenId: prismId, coordinate: { x: 8, y: 5 } },
       ],
+      spatialDecisions: [],
     },
-    placements: [
-      { tokenId: fighterId, coordinate: { x: 3, y: 4 } },
-      { tokenId: rogueId, coordinate: { x: 3, y: 5 } },
-      { tokenId: wolfAId, coordinate: { x: 6, y: 3 } },
-      { tokenId: wolfBId, coordinate: { x: 6, y: 6 } },
-      { tokenId: goblinId, coordinate: { x: 7, y: 5 } },
-      { tokenId: prismId, coordinate: { x: 8, y: 5 } },
-    ],
     ambientIllumination: "brightLight",
     statBlockDamageNotation: "static",
     environment: { overhead: { kind: "open" }, barrierHeights: [] },

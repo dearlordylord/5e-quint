@@ -14,6 +14,8 @@ import { Either, Schema } from "effect";
 
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import { runCodexInvocation } from "./model-telemetry.ts";
+import { RAW_SWARM_STAGE_PLAN_REASONS } from "./scenario-stage-plan.ts";
+import { retainAdmittedScenarioStagePlan } from "./stage-plan-authority.ts";
 import {
   consumerPermissionProfileAvailable,
   createConsumerCodexHome,
@@ -79,7 +81,11 @@ function runSetupAuthor(input: {
       input.evidenceDirectory,
       `${input.scenarioId}-authoring-invocations.jsonl`,
     ),
-    phase: "scenarioSetupAuthoring",
+    phase:
+      input.role === "neutral"
+        ? "scenarioSetupNeutralAuthoring"
+        : "scenarioSetupControllerAuthoring",
+    stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioSetupAuthoring,
     scenarioId: input.scenarioId,
     gitSha: input.gitSha,
     fallbackInvocationId: `${input.scenarioId}-setup-${input.role}-authoring`,
@@ -155,6 +161,19 @@ async function main(args: readonly string[]): Promise<void> {
   });
   if (Either.isLeft(admission)) fail(admission.left);
 
+  const retainedPlan = retainAdmittedScenarioStagePlan({
+    scenarioId: scenarioId.right,
+    scenarioPath,
+    scenarioSha256: admission.right.scenarioSha256,
+    scenarioReviewSha256: admission.right.scenarioReviewSha256,
+  });
+  if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
+  if (retainedPlan.right.outcome.tag === "rejected") {
+    fail(
+      `Scenario stage plan rejected setup authoring: ${retainedPlan.right.outcome.reason}`,
+    );
+  }
+
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-scenario-setup-"));
   const codexHome = createConsumerCodexHome();
   const evidenceDirectory = resolve(repoRoot, "scripts/raw-swarm/out");
@@ -196,7 +215,7 @@ async function main(args: readonly string[]): Promise<void> {
           instruction:
             role === "neutral"
               ? [
-                  "Read SCENARIO_SETUP.md, SCENARIO.md, SCENARIO_REVIEW.json, CHARACTERS.json, PUBLIC_SDK.md, STAT_BLOCKS.json, and the public declarations.",
+                  "Read CAPABILITY_CONTEXT.md, SCENARIO_SETUP.md, SCENARIO.md, SCENARIO_REVIEW.json, CHARACTERS.json, STAT_BLOCKS.json, and only the declarations needed for the listed public operations.",
                   "Edit setup.ts into the closest faithful ordinary TypeScript setup and run its documented typecheck.",
                   "Leave player- and GM-delegated choices with their owners and return an explicit obstruction when the public setup surface cannot represent the scenario; do not invent support.",
                   "Do not inspect paths outside this scratch consumer.",

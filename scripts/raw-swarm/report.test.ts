@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   chmodSync,
   existsSync,
+  mkdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -147,6 +148,19 @@ describe("RAW swarm artifact report index", () => {
     expect(query(dbPath, "SELECT COUNT(*) AS count FROM issues")).toEqual({
       count: 1,
     });
+    const evidenceDirectory = resolve(directory, "evidence");
+    mkdirSync(evidenceDirectory);
+    writeFileSync(resolve(evidenceDirectory, "findings.json"), "{}\n");
+    expect(() =>
+      report([
+        "review",
+        relative(repoRoot, reviewPath),
+        "--run",
+        "1",
+        "--db",
+        relative(repoRoot, dbPath),
+      ]),
+    ).toThrow(/immutable final findings/);
 
     const controlledDbPath = resolve(directory, "controlled.sqlite");
     const controlledExportPath = resolve(directory, "controlled-portable");
@@ -158,14 +172,16 @@ describe("RAW swarm artifact report index", () => {
       directory: resolve(directory, "controlled-evidence"),
       ledgerEntries: [
         {
-          schemaVersion: 1,
+          schemaVersion: 2,
           phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
           invocationId: "controlled-review",
           model: "gpt-5.6-luna",
           reasoningEffort: "max",
           startedAt: "2026-08-17T00:00:00.000Z",
           elapsedMilliseconds: 1,
           exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
           usage: {
             tag: "unavailable",
             reason:

@@ -21,6 +21,11 @@ import { buildSync } from "esbuild";
 
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
+import {
+  assertPublicDeclarationBundle,
+  PUBLIC_DECLARATION_BUNDLE_MAX_BYTES,
+  PUBLIC_DECLARATION_BUNDLE_MAX_FILES,
+} from "./consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 
@@ -55,6 +60,21 @@ function copyDistribution(source: string, destination: string): void {
 }
 
 describe("SDK player consumer distribution", () => {
+  test("bounds the declaration bundle to accessible declaration files", () => {
+    expect(PUBLIC_DECLARATION_BUNDLE_MAX_FILES).toBe(512);
+    expect(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES).toBe(5 * 1024 * 1024);
+    const directory = mkdtempSync(join(tmpdir(), "dnd-declaration-gate-"));
+    writeFileSync(join(directory, "allowed.d.ts"), "export {};\n");
+    expect(assertPublicDeclarationBundle(directory)).toEqual({
+      files: 1,
+      bytes: "export {};\n".length,
+    });
+    writeFileSync(join(directory, "README.md"), "not a declaration\n");
+    expect(() => assertPublicDeclarationBundle(directory)).toThrow(
+      /non-declaration file/,
+    );
+  });
+
   test(
     "runs typed continuations, freezes observed source, and replays SDK calls",
     async () => {
@@ -82,6 +102,12 @@ describe("SDK player consumer distribution", () => {
           timeout: CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
         },
       );
+      const declarationMeasure = assertPublicDeclarationBundle(
+        join(destination, "declarations"),
+      );
+      expect(
+        assertPublicDeclarationBundle(join(trustedDestination, "declarations")),
+      ).toEqual(declarationMeasure);
       expect(
         JSON.parse(readFileSync(join(destination, "OBSERVATION.json"), "utf8")),
       ).toEqual({
@@ -294,6 +320,15 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
       expect(readFileSync(join(destination, "SCENARIO.md"), "utf8")).toContain(
         "External Fighter",
       );
+      const capabilityContext = readFileSync(
+        join(destination, "CAPABILITY_CONTEXT.md"),
+        "utf8",
+      );
+      expect(capabilityContext).toContain("Raw Swarm capability projection v1");
+      expect(capabilityContext).toContain("Role: player");
+      expect(capabilityContext).not.toContain("README.md");
+      expect(existsSync(join(destination, "FILL_TYPES.json"))).toBe(false);
+      expect(existsSync(join(destination, "PUBLIC_SDK.md"))).toBe(false);
       expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
         'kind: "objectTargetChoice" as const',
       );
@@ -316,7 +351,7 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
         "fills: [...acceptedFills, nextFill]",
       );
       expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
-        "Route entries use the tactical cell coordinates",
+        "route entries use the tactical cell coordinates",
       );
       expect(
         filesBelow(destination).some((path) => path.endsWith("supervisor.mjs")),
@@ -326,7 +361,6 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
           path.endsWith("player-client.mjs"),
         ),
       ).toBe(true);
-      expect(existsSync(join(destination, "FILL_TYPES.json"))).toBe(false);
       expect(existsSync(join(trustedDestination, "FILL_TYPES.json"))).toBe(
         false,
       );
@@ -835,10 +869,13 @@ export const continueBattle: PlayerContinuation = (context) => {
         .map((line): Readonly<Record<string, unknown>> => JSON.parse(line));
       expect(header?.initialSession).toMatchObject({
         battlefield: {
-          arena: { cellSizeFeet: 5 },
           ambientIllumination: "brightLight",
           objects: [],
-          space: { revision: 2 },
+          spatial: {
+            kind: "geometryDerived",
+            arena: { cellSizeFeet: 5 },
+            space: { revision: 2 },
+          },
         },
       });
       expect(header?.initialTurnProjection).toEqual(
@@ -848,15 +885,20 @@ export const continueBattle: PlayerContinuation = (context) => {
         if (call.outcome === "returned") {
           expect(call.outputSession).toMatchObject({
             battlefield: {
-              arena: { cellSizeFeet: 5 },
               ambientIllumination: "brightLight",
               objects: [],
+              spatial: {
+                kind: "geometryDerived",
+                arena: { cellSizeFeet: 5 },
+              },
             },
           });
         }
       }
       expect(calls.at(-1)?.outputSession).toMatchObject({
-        battlefield: { space: { revision: 3 } },
+        battlefield: {
+          spatial: { kind: "geometryDerived", space: { revision: 3 } },
+        },
         movementResolution: { kind: "idle" },
       });
       const pendingMovementCalls = calls.filter(
@@ -869,9 +911,14 @@ export const continueBattle: PlayerContinuation = (context) => {
           expect.objectContaining({
             outputSession: expect.objectContaining({
               battlefield: expect.objectContaining({
-                space: expect.objectContaining({ revision: 2 }),
+                spatial: expect.objectContaining({
+                  kind: "geometryDerived",
+                  space: expect.objectContaining({ revision: 2 }),
+                }),
               }),
-              movementResolution: expect.objectContaining({ kind: "pending" }),
+              movementResolution: expect.objectContaining({
+                kind: "geometryDerivedPending",
+              }),
             }),
           }),
         ]),
@@ -880,7 +927,9 @@ export const continueBattle: PlayerContinuation = (context) => {
         pendingMovementCalls
           .slice(0, 3)
           .every((call) =>
-            JSON.stringify(call.outputSession).includes('"kind":"pending"'),
+            JSON.stringify(call.outputSession).includes(
+              '"kind":"geometryDerivedPending"',
+            ),
           ),
       ).toBe(true);
 
@@ -901,6 +950,147 @@ export const continueBattle: PlayerContinuation = (context) => {
           encoding: "utf8",
         }),
       ).toContain("13 call(s) matched");
+    },
+    CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
+  );
+
+  test(
+    "runs and replays the retained Table-authored terminal movement transcript",
+    async () => {
+      const destination = mkdtempSync(join(tmpdir(), "dnd-player-table-"));
+      const trustedDestination = mkdtempSync(
+        join(tmpdir(), "dnd-player-table-supervisor-"),
+      );
+      try {
+        await execFileAsync(
+          "pnpm",
+          [
+            "exec",
+            "tsx",
+            "scripts/raw-swarm/sdk-player/consumer-distribution-cli.ts",
+            destination,
+            trustedDestination,
+            resolve(
+              repoRoot,
+              "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
+            ),
+          ],
+          {
+            cwd: repoRoot,
+            timeout: CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
+          },
+        );
+        mkdirSync(join(trustedDestination, "evidence"), {
+          recursive: true,
+        });
+        copyFileSync(
+          resolve(
+            repoRoot,
+            "scripts/raw-swarm/sdk-player/test-fixtures/ready-fighter.characters.ts",
+          ),
+          join(trustedDestination, "evidence/characters.ts"),
+        );
+        copyFileSync(
+          resolve(
+            repoRoot,
+            "scripts/raw-swarm/sdk-player/test-fixtures/table-authored-movement.setup.ts",
+          ),
+          join(trustedDestination, "evidence/setup.ts"),
+        );
+        copyFileSync(
+          resolve(
+            repoRoot,
+            "scripts/raw-swarm/sdk-player/test-fixtures/table-authored-movement.attempt.ts",
+          ),
+          join(destination, "attempt.ts"),
+        );
+
+        const supervisor = join(trustedDestination, "supervisor.mjs");
+        const supervisorOptions = {
+          cwd: trustedDestination,
+          env: { ...process.env, RAW_SWARM_PLAYER_ROOT: destination },
+          stdio: "pipe" as const,
+        };
+        execFileSync(
+          process.execPath,
+          [
+            supervisor,
+            "init",
+            "table-authored-movement-transcript",
+            "a".repeat(40),
+            "instructionalFallback",
+            "b".repeat(64),
+            "c".repeat(64),
+            "d".repeat(64),
+          ],
+          supervisorOptions,
+        );
+        const initialTranscript = readFileSync(
+          join(trustedDestination, "evidence/sdk-calls.jsonl"),
+          "utf8",
+        )
+          .trim()
+          .split("\n")
+          .map((line) => JSON.parse(line) as Readonly<Record<string, unknown>>);
+        expect(initialTranscript).toHaveLength(1);
+        expect(initialTranscript[0]).toMatchObject({
+          setupOutcome: "ready",
+          initialSession: {
+            battlefield: { spatial: { kind: "tableAuthored" } },
+          },
+        });
+
+        execFileSync(
+          process.execPath,
+          [supervisor, "attempt", join(destination, "attempt.ts")],
+          supervisorOptions,
+        );
+        const transcript = readFileSync(
+          join(trustedDestination, "evidence/sdk-calls.jsonl"),
+          "utf8",
+        )
+          .trim()
+          .split("\n")
+          .map((line) => JSON.parse(line) as Readonly<Record<string, unknown>>);
+        const calls = transcript.slice(1);
+        expect(calls).toHaveLength(2);
+        expect(calls.map((call) => call.operation)).toEqual([
+          "discoverBattleActs",
+          "resolveScenarioMovement",
+        ]);
+        expect(calls[1]).toMatchObject({
+          outcome: "returned",
+          input: {
+            kind: "route",
+            route: [{ x: 1, y: 0 }],
+          },
+          outputSession: {
+            battlefield: { spatial: { kind: "tableAuthored" } },
+            movementResolution: { kind: "idle" },
+          },
+        });
+        expect(
+          JSON.parse(
+            readFileSync(
+              join(trustedDestination, "evidence/final.json"),
+              "utf8",
+            ),
+          ),
+        ).toMatchObject({
+          kind: "playerConcluded",
+          conclusion:
+            "The retained Table movement transcript reached terminal resolution.",
+        });
+        expect(
+          execFileSync(process.execPath, [supervisor, "replay"], {
+            cwd: trustedDestination,
+            encoding: "utf8",
+          }),
+        ).toContain("2 call(s) matched");
+      } finally {
+        rmSync(destination, { recursive: true, force: true });
+        rmSync(trustedDestination, { recursive: true, force: true });
+      }
     },
     CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
   );

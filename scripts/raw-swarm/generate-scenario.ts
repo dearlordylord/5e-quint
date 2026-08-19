@@ -14,22 +14,37 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Either, Schema } from "effect";
 
+import { capabilityContextForRole } from "./capability-projection.ts";
 import {
   codexOutputJsonSchema,
   finalScenarioDisposition,
   FinalScenarioReviewSchema,
   retentionRevisionMatches,
   runScenarioCampaign,
+  scenarioContentSha256,
   ScenarioCandidateBatchSchema,
   ScenarioCampaignConfigSchema,
-  ScenarioCompositeReviewSchema,
-  ScenarioReadinessSchema,
+  CurrentScenarioCompositeReviewSchema,
+  HistoricalScenarioCompositeReviewSchema,
   verifyFinalScenarioReview,
   type ContentAvailabilityIntent,
+  type ScenarioCampaignCandidateRejection,
   type ScenarioCampaignAgents,
+  type ScenarioCampaignResult,
+  type ScenarioCompositeReview,
   type SdkCapabilityIntent,
 } from "./scenario-campaign.ts";
 import type { RetainedScenarioReviewInput } from "./scenario-review-input.ts";
+import {
+  retainCandidateScenarioStagePlan,
+  retainAdmittedScenarioStagePlan,
+  retainedRejectedScenarioStagePlanFindingsPath,
+  retainedRejectedScenarioStagePlanPath,
+  retainedScenarioStagePlanFindingsPath,
+  retainedScenarioStagePlanPath,
+  retainScenarioStageFacts,
+} from "./stage-plan-authority.ts";
+import { RAW_SWARM_STAGE_PLAN_REASONS } from "./scenario-stage-plan.ts";
 import { scenarioSetupStatBlocks } from "./sdk-player/scenario-setup-runtime.ts";
 import {
   canonicalJson,
@@ -43,13 +58,22 @@ import {
   invocationIdFromCodexEvents,
   readCodexEvents,
   runCodexInvocation,
-  type ModelInvocationLedgerEntry,
+  type ModelInvocationPhase,
 } from "./model-telemetry.ts";
+import { findingsArtifactPath, writeFindingsProjection } from "./findings.ts";
+import { projectGenerationFindings } from "./generation-findings.ts";
+import { ingestGenerationFindings } from "./artifact-index.ts";
 
 const FAILURE_LOG_TAIL_CHARACTERS = 64 * 1024;
 
 function fail(message: string): never {
   throw new Error(message);
+}
+
+function isCandidateRejection(
+  value: ScenarioCampaignResult,
+): value is ScenarioCampaignCandidateRejection {
+  return "tag" in value && value.tag === "candidateRejected";
 }
 
 function runCodexJson<A, I>(
@@ -58,19 +82,18 @@ function runCodexJson<A, I>(
   execution: {
     readonly model: "gpt-5.6-sol" | "gpt-5.6-luna";
     readonly reasoningEffort: "medium" | "max";
-    readonly phase: ModelInvocationLedgerEntry["phase"];
+    readonly phase: ModelInvocationPhase;
     readonly ledgerPath: string;
     readonly scenarioId: ScenarioId;
     readonly gitSha: GitSha;
-  } & (
-    | { readonly retention?: undefined }
-    | {
-        readonly retention: {
-          readonly directory: string;
-          readonly reviewStage: "milestone" | "final";
-        };
-      }
-  ),
+    readonly stagePlanReason: string;
+    readonly retention?: {
+      /** Every invocation keeps its raw first-party event stream. */
+      readonly directory: string;
+      /** Composite reviews additionally retain their exact replay input. */
+      readonly reviewStage?: "milestone" | "final";
+    };
+  },
 ): A {
   const outputSchema = Schema.Struct({ result: schema });
   const temporary = mkdtempSync(resolve(tmpdir(), "dnd-scenario-campaign-"));
@@ -82,39 +105,57 @@ function runCodexJson<A, I>(
     const outputJsonSchema = codexOutputJsonSchema(schema);
     writeFileSync(schemaPath, `${JSON.stringify(outputJsonSchema, null, 2)}\n`);
     const fallbackInvocationId = randomUUID();
-    const result = runCodexInvocation({
-      args: [
-        "exec",
-        "-C",
-        repoRoot,
-        "--sandbox",
-        "danger-full-access",
-        "--ephemeral",
-        "--json",
-        "--disable",
-        "tool_call_mcp_elicitation",
-        "-m",
-        execution.model,
-        "-c",
-        `model_reasoning_effort=${JSON.stringify(execution.reasoningEffort)}`,
-        "--output-schema",
-        schemaPath,
-        "--output-last-message",
-        outputPath,
-        prompt,
-      ],
-      cwd: repoRoot,
-      env: process.env,
-      eventPath,
-      logPath: agentLogPath,
-      ledgerPath: execution.ledgerPath,
-      phase: execution.phase,
-      scenarioId: execution.scenarioId,
-      gitSha: execution.gitSha,
-      fallbackInvocationId,
-      model: execution.model,
-      reasoningEffort: execution.reasoningEffort,
-    });
+    const result = (() => {
+      try {
+        return runCodexInvocation({
+          args: [
+            "exec",
+            "-C",
+            repoRoot,
+            "--sandbox",
+            "danger-full-access",
+            "--ephemeral",
+            "--json",
+            "--disable",
+            "tool_call_mcp_elicitation",
+            "-m",
+            execution.model,
+            "-c",
+            `model_reasoning_effort=${JSON.stringify(execution.reasoningEffort)}`,
+            "--output-schema",
+            schemaPath,
+            "--output-last-message",
+            outputPath,
+            prompt,
+          ],
+          cwd: repoRoot,
+          env: process.env,
+          eventPath,
+          logPath: agentLogPath,
+          ledgerPath: execution.ledgerPath,
+          phase: execution.phase,
+          stagePlanReason: execution.stagePlanReason,
+          scenarioId: execution.scenarioId,
+          gitSha: execution.gitSha,
+          fallbackInvocationId,
+          model: execution.model,
+          reasoningEffort: execution.reasoningEffort,
+        });
+      } finally {
+        if (execution.retention !== undefined && existsSync(eventPath)) {
+          mkdirSync(execution.retention.directory, { recursive: true });
+          const retainedStem = `${execution.phase}-${fallbackInvocationId}`;
+          writeFileSync(
+            resolve(
+              execution.retention.directory,
+              `${retainedStem}.events.jsonl`,
+            ),
+            readFileSync(eventPath),
+            { flag: "wx" },
+          );
+        }
+      }
+    })();
     const parsedEvents = readCodexEvents(eventPath);
     const codexEvents = parsedEvents.tag === "valid" ? parsedEvents.events : [];
     const invocationId = invocationIdFromCodexEvents(
@@ -139,14 +180,11 @@ function runCodexJson<A, I>(
         `Scenario agent returned invalid output: ${decoded.left.message}`,
       );
     }
-    if (execution.retention !== undefined) {
-      mkdirSync(execution.retention.directory, { recursive: true });
+    if (
+      execution.retention?.reviewStage !== undefined &&
+      execution.retention !== undefined
+    ) {
       const retainedStem = `${execution.phase}-${fallbackInvocationId}`;
-      writeFileSync(
-        resolve(execution.retention.directory, `${retainedStem}.events.jsonl`),
-        readFileSync(eventPath),
-        { flag: "wx" },
-      );
       writeFileSync(
         resolve(execution.retention.directory, `${retainedStem}.json`),
         `${JSON.stringify(
@@ -179,7 +217,7 @@ function generationPreamble(
   statBlockNames: readonly string[],
   contentAvailabilityIntent: ContentAvailabilityIntent,
   sdkCapabilityIntent: SdkCapabilityIntent,
-  sdkCapabilityDocs: string,
+  capabilityContext: string,
 ): string {
   return `You generate battle-testing scenarios for an SRD 5.2.1 adjudicator SDK.
 Return complete prose scenario revisions, not outlines or patches. Bias toward combat, serious pursuit of authored objectives, and materially different or changing tactics. Keep story to mechanically consequential terrain, visibility, distance, objectives, builds, and encounter facts. Mix exact constraints with delegated player choices naturally in prose. Do not invent a stage system, command language, or expected result. Do not describe a winner, victory, winning side, or encounter-wide partition; retain concrete combatants, pairwise relationships, and objective facts. Use only SRD identity or visibly synthetic unsupported material; never copy non-SRD official D&D identity or expression.
@@ -195,76 +233,30 @@ SDK-capability intent: ${sdkCapabilityIntent}
 
 ${sdkCapabilityIntent === "supportedOnly" ? "Use only scenario facts and interactions representable through the current public SDK described below. Do not repeat known unsupported mechanics merely because a prior scenario used them." : "Deliberately exercise one capability absent from the current public SDK described below, and explicitly name that capability as the intended probe. Keep the remaining scenario representable."}
 
-Current public SDK capability documentation:
-${sdkCapabilityDocs}`;
+${capabilityContext}`;
 }
 
 export function scenarioCampaignAgents(input: {
   readonly ledgerPath: string;
+  readonly eventDirectory: string;
   readonly scenarioId: ScenarioId;
   readonly gitSha: GitSha;
 }): ScenarioCampaignAgents {
   const statBlocks = scenarioSetupStatBlocks();
   if (statBlocks.tag === "invalid") fail(statBlocks.message);
-  const sdkCapabilityDocs = [
-    {
-      label: "SCENARIO_CHARACTERS.md",
-      path: "scripts/raw-swarm/sdk-player/SCENARIO_CHARACTERS.md",
-    },
-    {
-      label: "CHARACTER_CREATION_SDK.md",
-      path: "packages/character-creation-runtime/README.md",
-    },
-    {
-      label: "CHARACTER_SHEET_SDK.md",
-      path: "packages/character-sheet-runtime/README.md",
-    },
-    {
-      label: "@dnd/scenario-character-sdk public contract",
-      path: "scripts/raw-swarm/sdk-player/scenario-character-contract.ts",
-    },
-    {
-      label: "SCENARIO_SETUP.md",
-      path: "scripts/raw-swarm/sdk-player/SCENARIO_SETUP.md",
-    },
-    {
-      label: "@dnd/scenario-setup-sdk public contract",
-      path: "scripts/raw-swarm/sdk-player/scenario-setup-contract.ts",
-    },
-    {
-      label: "PLAYER.md",
-      path: "scripts/raw-swarm/sdk-player/PLAYER.md",
-    },
-    {
-      label: "@dnd/player-sdk public contract",
-      path: "scripts/raw-swarm/sdk-player/continuation-contract.ts",
-    },
-    {
-      label: "PUBLIC_SDK.md",
-      path: "packages/battle-runtime/README.md",
-    },
-  ]
-    .map(
-      ({ label, path }) =>
-        `## ${label}\n\n${readFileSync(resolve(repoRoot, path), "utf8")}`,
-    )
-    .join("\n\n");
+  const eventDirectory = input.eventDirectory;
   const generatorExecution = {
     model: "gpt-5.6-sol",
     reasoningEffort: "medium",
     phase: "scenarioGeneration",
+    stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioGeneration,
     ...input,
   } as const;
   const reviewerExecution = {
     model: "gpt-5.6-luna",
     reasoningEffort: "max",
     phase: "scenarioCompositeReview",
-    ...input,
-  } as const;
-  const readinessExecution = {
-    model: "gpt-5.6-luna",
-    reasoningEffort: "max",
-    phase: "scenarioReadiness",
+    stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioCompositeReview,
     ...input,
   } as const;
   return {
@@ -274,7 +266,7 @@ export function scenarioCampaignAgents(input: {
           statBlocks.statBlocks.map(({ name }) => name),
           input.contentAvailabilityIntent,
           input.sdkCapabilityIntent,
-          sdkCapabilityDocs,
+          capabilityContextForRole("generation"),
         )}
 
 Distribution preference:
@@ -289,44 +281,22 @@ ${input.priorRevision.tag === "initial" ? "No prior scenario; create the first c
 Independent critiques to address in the next complete revision:
 ${input.priorRevision.tag === "initial" || input.priorRevision.critiques.length === 0 ? "None." : input.priorRevision.critiques.join("\n\n")}
 
-Produce exactly ${input.candidateCount} materially different complete prose revisions. Differences must affect mechanics, character choices, encounter composition, or tactical intent—not wording alone. Return only the required JSON.`,
+Produce exactly ${input.candidateCount} materially different candidate objects. Each object must contain complete scenario prose in 'prose' and typed controller facts in 'stageFacts'. Differences must affect mechanics, character choices, encounter composition, or tactical intent—not wording alone. For stageFacts, use characterRequirement statBlocksOnly only when no Character Sheets are needed, otherwise characterSheetsRequired. Use spatialRequirement notRequired when no spatial witness is needed, geometryAssisted when the optional helper is sufficient, outsideExperimentEnvelope/tableAuthored for a coherent Table-owned spatial fact, and outsideExperimentEnvelope/incoherent only for an internally contradictory or fundamentally nonsensical candidate. These are typed planning facts, not a prose parser. Return only the required JSON.`,
         ScenarioCandidateBatchSchema,
-        generatorExecution,
+        {
+          ...generatorExecution,
+          retention: { directory: eventDirectory },
+        },
       ),
-    reviewReadiness: async ({
+    reviewScenario: async ({
       scenario,
+      finalReview,
       distributionPreference,
       contentAvailabilityIntent,
       sdkCapabilityIntent,
     }) =>
       runCodexJson(
-        `Independently judge whether this battle-testing scenario is ready. It is ready only if the setup is mechanically meaningful, every represented combatant or group seriously pursues an authored strategy-bearing objective, and its fixed versus delegated choices fit the campaign's distribution preference. Do not impose a generic balance: a deliberately loose or highly prescribed scenario can be ready. Do not judge RAW legality, choose tactics, predict the outcome, rewrite prose, or stop merely because the document is coherent. Reject prose that introduces a winner, victory, winning side, or encounter-wide partition instead of concrete combatant, pairwise-relationship, and objective facts. Return ready or one concise critique that would materially improve the next whole revision.
-
-Available canonical stat-block identities:
-${statBlocks.statBlocks.map(({ name }) => name).join(", ")}
-
-Content-availability intent: ${contentAvailabilityIntent}
-
-SDK-capability intent: ${sdkCapabilityIntent}
-
-An availableOnly scenario is not ready when it selects a canonical stat block absent from that list. A probeUnavailableContent scenario is ready on this axis only when its prose states that unsupported intent.
-
-Campaign distribution preference:
-${distributionPreference}
-
-Scenario:
-${scenario}`,
-        ScenarioReadinessSchema,
-        readinessExecution,
-      ),
-    reviewScenario: async ({
-      scenario,
-      finalReview,
-      contentAvailabilityIntent,
-      sdkCapabilityIntent,
-    }) =>
-      runCodexJson(
-        `Perform one ${finalReview ? "final pre-play" : "milestone"} review invocation with four mandatory, independently scoped assessments. Do not produce an aggregate verdict and do not merge their evidence or responsibilities.
+        `Perform one ${finalReview ? "final pre-play" : "milestone"} review invocation with five mandatory, independently scoped assessments. Do not produce an aggregate verdict and do not merge their evidence or responsibilities.
 
 RAW: use only .references/srd-5.2.1/ and ASSUMPTIONS.md. Check legality, coherence, executability, and missing Table Decisions. Do not choose tactics, predict an outcome, rewrite prose, or decide artifact policy.
 
@@ -336,20 +306,23 @@ SDK capability: compare required setup/play facts with the current public SDK do
 
 Artifact policy: apply docs/mushroom-playbook/AUTHORING.md only to public identity/expression safety. Do not judge mechanics or tactics.
 
+Scenario quality: independently classify the setup and encounter as ready only when it is mechanically meaningful, every represented combatant or group seriously pursues an authored strategy-bearing objective, and fixed versus delegated choices fit the campaign distribution preference. Do not impose generic balance: a deliberately loose or highly prescribed scenario can be ready. Do not choose tactics, predict an outcome, or rewrite prose. Return one concise critique when this quality responsibility needs a material revision.
+
 Content-availability intent: ${contentAvailabilityIntent}
 SDK-capability intent: ${sdkCapabilityIntent}
+Campaign distribution preference: ${distributionPreference}
 
 Available canonical stat-block identities:
 ${statBlocks.statBlocks.map(({ name }) => name).join(", ")}
 
-Current public SDK capability documentation:
-${sdkCapabilityDocs}
+${capabilityContextForRole("review")}
 
 Scenario:
 ${scenario}`,
-        ScenarioCompositeReviewSchema,
+        CurrentScenarioCompositeReviewSchema,
         {
           ...reviewerExecution,
+          stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioCompositeReview,
           retention: {
             directory: `${input.ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
             reviewStage: finalReview ? "final" : "milestone",
@@ -363,34 +336,48 @@ export function replayRetainedScenarioReview(input: {
   readonly retainedInput: RetainedScenarioReviewInput;
   readonly ledgerPath: string;
   readonly gitSha: GitSha;
-}): Schema.Schema.Type<typeof ScenarioCompositeReviewSchema> {
-  const expectedOutputSchema = codexOutputJsonSchema(
-    ScenarioCompositeReviewSchema,
+}): ScenarioCompositeReview {
+  const currentOutputSchema = codexOutputJsonSchema(
+    CurrentScenarioCompositeReviewSchema,
   );
-  if (
-    canonicalJson(input.retainedInput.outputJsonSchema) !==
-    canonicalJson(expectedOutputSchema)
-  ) {
+  const historicalOutputSchema = codexOutputJsonSchema(
+    HistoricalScenarioCompositeReviewSchema,
+  );
+  const isCurrent =
+    canonicalJson(input.retainedInput.outputJsonSchema) ===
+    canonicalJson(currentOutputSchema);
+  const isHistorical =
+    canonicalJson(input.retainedInput.outputJsonSchema) ===
+    canonicalJson(historicalOutputSchema);
+  if (!isCurrent && !isHistorical) {
     fail(
       "Retained scenario review input does not use the production composite-review schema.",
     );
   }
-  return runCodexJson(
-    input.retainedInput.prompt,
-    ScenarioCompositeReviewSchema,
-    {
-      model: input.retainedInput.model,
-      reasoningEffort: input.retainedInput.reasoningEffort,
-      phase: input.retainedInput.phase,
-      ledgerPath: input.ledgerPath,
-      scenarioId: input.retainedInput.scenarioId,
-      gitSha: input.gitSha,
-      retention: {
-        directory: `${input.ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
-        reviewStage: input.retainedInput.reviewStage,
-      },
+  const execution = {
+    model: input.retainedInput.model,
+    reasoningEffort: input.retainedInput.reasoningEffort,
+    phase: input.retainedInput.phase,
+    ledgerPath: input.ledgerPath,
+    scenarioId: input.retainedInput.scenarioId,
+    gitSha: input.gitSha,
+    stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioCompositeReview,
+    retention: {
+      directory: `${input.ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
+      reviewStage: input.retainedInput.reviewStage,
     },
-  );
+  } as const;
+  return isCurrent
+    ? runCodexJson(
+        input.retainedInput.prompt,
+        CurrentScenarioCompositeReviewSchema,
+        execution,
+      )
+    : runCodexJson(
+        input.retainedInput.prompt,
+        HistoricalScenarioCompositeReviewSchema,
+        execution,
+      );
 }
 
 function verifyRetainedScenario(
@@ -416,9 +403,26 @@ function verifyRetainedScenario(
 }
 
 async function main(args: readonly string[]): Promise<void> {
-  const [configInput, ...unexpected] = args;
-  if (configInput === undefined || unexpected.length > 0) {
-    fail("Usage: generate-scenario.ts <campaign.json>");
+  const [configInput, ...options] = args;
+  const dbFlagIndex = options.indexOf("--db");
+  const dbPath =
+    dbFlagIndex === -1
+      ? resolve(repoRoot, "scripts/raw-swarm/out/player-swarm.db")
+      : options[dbFlagIndex + 1];
+  const unexpected = options.filter(
+    (_option, index) =>
+      dbFlagIndex === -1 ||
+      (index !== dbFlagIndex && index !== dbFlagIndex + 1),
+  );
+  if (
+    configInput === undefined ||
+    unexpected.length > 0 ||
+    (dbFlagIndex !== -1 &&
+      (dbFlagIndex + 1 >= options.length ||
+        options.filter((option) => option === "--db").length !== 1)) ||
+    dbPath === undefined
+  ) {
+    fail("Usage: generate-scenario.ts <campaign.json> [--db <sqlite-path>]");
   }
   const revision = currentGitRevision();
   if (revision.tag === "dirty") {
@@ -458,8 +462,10 @@ async function main(args: readonly string[]): Promise<void> {
   if (
     existsSync(admittedPath) ||
     existsSync(`${admittedPath}.scenario-review.json`) ||
+    existsSync(`${admittedPath}.stage-facts.json`) ||
     existsSync(rejectedPath) ||
-    existsSync(`${rejectedPath}.scenario-review.json`)
+    existsSync(`${rejectedPath}.scenario-review.json`) ||
+    existsSync(`${rejectedPath}.stage-facts.json`)
   ) {
     fail("Refusing to overwrite a retained scenario or final scenario review.");
   }
@@ -467,32 +473,180 @@ async function main(args: readonly string[]): Promise<void> {
     repoRoot,
     `scripts/raw-swarm/out/${decodedConfig.right.scenarioId}-generation-invocations.jsonl`,
   );
+  const generationRunDirectory = resolve(
+    repoRoot,
+    `scripts/raw-swarm/out/${decodedConfig.right.scenarioId}-generation`,
+  );
+  const generationRunManifestPath = resolve(generationRunDirectory, "run.json");
   if (existsSync(ledgerPath)) {
     fail(`Refusing to overwrite scenario invocation ledger: ${ledgerPath}`);
   }
-  const result = await runScenarioCampaign(
-    decodedConfig.right,
-    scenarioCampaignAgents({
-      ledgerPath,
+  if (existsSync(generationRunDirectory)) {
+    fail(
+      `Refusing to overwrite generation run evidence: ${generationRunDirectory}`,
+    );
+  }
+  const generationStartedAt = new Date().toISOString();
+  mkdirSync(generationRunDirectory, { recursive: true });
+  writeFileSync(
+    generationRunManifestPath,
+    `${JSON.stringify(
+      {
+        type: "raw-swarm-generation-run",
+        schemaVersion: 1,
+        scenarioId: decodedConfig.right.scenarioId,
+        gitSha: gitSha.right,
+        startedAt: generationStartedAt,
+        configSha256: createHash("sha256")
+          .update(readFileSync(configPath))
+          .digest("hex"),
+      },
+      null,
+      2,
+    )}\n`,
+    { flag: "wx" },
+  );
+  const emitGenerationFindings = (input: {
+    readonly rejectionReason?: string;
+    readonly scenarioReviewPath?: string;
+    readonly scenarioPath?: string;
+    readonly stagePlanPath?: string;
+    readonly stagePlanFindingsPath?: string;
+    readonly stageFactsPath?: string;
+  }): void => {
+    const authorityPaths = [
+      { role: "run", path: generationRunManifestPath },
+      { role: "campaign", path: configPath },
+      ...(input.scenarioPath === undefined
+        ? []
+        : [{ role: "scenario", path: input.scenarioPath }]),
+      ...(input.scenarioReviewPath === undefined
+        ? []
+        : [{ role: "scenarioReview", path: input.scenarioReviewPath }]),
+      ...(input.stagePlanPath === undefined
+        ? []
+        : [{ role: "stagePlan", path: input.stagePlanPath }]),
+      ...(input.stagePlanFindingsPath === undefined
+        ? []
+        : [{ role: "stagePlanFindings", path: input.stagePlanFindingsPath }]),
+      ...(input.stageFactsPath === undefined
+        ? []
+        : [{ role: "stageFacts", path: input.stageFactsPath }]),
+      { role: "generationLedger", path: ledgerPath },
+    ];
+    const pointerAuthorityRole =
+      input.stagePlanFindingsPath !== undefined &&
+      existsSync(input.stagePlanFindingsPath)
+        ? "stagePlanFindings"
+        : input.scenarioReviewPath !== undefined &&
+            existsSync(input.scenarioReviewPath)
+          ? "scenarioReview"
+          : input.stagePlanPath !== undefined && existsSync(input.stagePlanPath)
+            ? "stagePlan"
+            : existsSync(ledgerPath)
+              ? "generationLedger"
+              : "run";
+    const projection = projectGenerationFindings({
       scenarioId: decodedConfig.right.scenarioId,
       gitSha: gitSha.right,
-    }),
-    {
-      select: randomInt,
-    },
-  );
-  if (Either.isLeft(result)) fail(result.left);
+      startedAt: generationStartedAt,
+      authorityPaths,
+      scenarioReviewPaths:
+        input.scenarioReviewPath === undefined
+          ? []
+          : [input.scenarioReviewPath],
+      generationLedgerPaths: existsSync(ledgerPath) ? [ledgerPath] : [],
+      stagePlanFindingsPaths:
+        input.stagePlanFindingsPath === undefined
+          ? []
+          : [input.stagePlanFindingsPath],
+      stagePlanPaths:
+        input.stagePlanPath === undefined ? [] : [input.stagePlanPath],
+      ...(input.rejectionReason === undefined
+        ? {}
+        : { rejectionReason: input.rejectionReason }),
+      pointerAuthorityRole,
+    });
+    writeFindingsProjection({
+      projection,
+      path: findingsArtifactPath(generationRunDirectory),
+    });
+    ingestGenerationFindings({
+      findingsPath: findingsArtifactPath(generationRunDirectory),
+      dbPath,
+    });
+  };
+  let result: Either.Either<ScenarioCampaignResult, string>;
+  try {
+    result = await runScenarioCampaign(
+      decodedConfig.right,
+      scenarioCampaignAgents({
+        ledgerPath,
+        eventDirectory: resolve(generationRunDirectory, "invocation-events"),
+        scenarioId: decodedConfig.right.scenarioId,
+        gitSha: gitSha.right,
+      }),
+      {
+        select: randomInt,
+      },
+    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    emitGenerationFindings({ rejectionReason: message });
+    throw error;
+  }
+  if (Either.isLeft(result)) {
+    emitGenerationFindings({ rejectionReason: result.left });
+    fail(result.left);
+  }
   if (!retentionRevisionMatches(gitSha.right, currentGitRevision())) {
+    emitGenerationFindings({
+      rejectionReason:
+        "Git revision changed during scenario generation; nothing was retained.",
+    });
     fail(
       "Git revision changed during scenario generation; nothing was retained.",
     );
   }
   const scenarioBytes = `${result.right.scenario.trim()}\n`;
+  const scenarioSha256 = scenarioContentSha256(result.right.scenario);
+  if (isCandidateRejection(result.right)) {
+    const outputDirectory = rejectedDirectory;
+    const outputPath = resolve(
+      outputDirectory,
+      `${result.right.scenarioId}.md`,
+    );
+    mkdirSync(outputDirectory, { recursive: true });
+    writeFileSync(outputPath, scenarioBytes, { flag: "wx" });
+    const retainedPlan = retainCandidateScenarioStagePlan({
+      scenarioId: result.right.scenarioId,
+      candidateScenarioSha256: scenarioSha256,
+      plan: result.right.candidateStagePlan,
+    });
+    if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
+    emitGenerationFindings({
+      scenarioPath: outputPath,
+      stagePlanPath: retainedRejectedScenarioStagePlanPath(
+        result.right.scenarioId,
+      ),
+      stagePlanFindingsPath: retainedRejectedScenarioStagePlanFindingsPath(
+        result.right.scenarioId,
+      ),
+      rejectionReason:
+        result.right.candidateStagePlan.outcome.tag === "rejected"
+          ? result.right.candidateStagePlan.outcome.reason
+          : "Candidate stage plan was rejected.",
+    });
+    console.log(
+      `Rejected ${outputPath} before whole-scenario review after ${result.right.iterations} iteration(s): ${result.right.candidateStagePlan.outcome.tag === "rejected" ? result.right.candidateStagePlan.outcome.reason : "candidate stage plan rejection"}.`,
+    );
+    return;
+  }
   const review = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
     onExcessProperty: "error",
   })({
     scenarioId: result.right.scenarioId,
-    scenarioSha256: createHash("sha256").update(scenarioBytes).digest("hex"),
+    scenarioSha256,
     gitSha: gitSha.right,
     reviewScope: result.right.reviewScope,
     contentAvailabilityIntent: result.right.contentAvailabilityIntent,
@@ -502,8 +656,12 @@ async function main(args: readonly string[]): Promise<void> {
     contentReview: result.right.contentReview,
     sdkCapabilityReview: result.right.sdkCapabilityReview,
     policyReview: result.right.policyReview,
+    scenarioQuality: result.right.scenarioQuality,
   });
   if (Either.isLeft(review)) {
+    emitGenerationFindings({
+      rejectionReason: `Invalid final scenario review: ${review.left.message}`,
+    });
     fail(`Invalid final scenario review: ${review.left.message}`);
   }
   const disposition = finalScenarioDisposition(review.right);
@@ -511,6 +669,13 @@ async function main(args: readonly string[]): Promise<void> {
     disposition === "admitted" ? admittedDirectory : rejectedDirectory;
   const outputPath = resolve(outputDirectory, `${result.right.scenarioId}.md`);
   const reviewPath = `${outputPath}.scenario-review.json`;
+  const retainedFacts = retainScenarioStageFacts({
+    scenarioId: result.right.scenarioId,
+    scenarioPath: outputPath,
+    scenarioSha256,
+    facts: result.right.stageFacts,
+  });
+  if (Either.isLeft(retainedFacts)) fail(retainedFacts.left);
   mkdirSync(outputDirectory, { recursive: true });
   const staging = mkdtempSync(resolve(outputDirectory, ".scenario-stage-"));
   const stagedScenario = resolve(staging, "scenario.md");
@@ -530,6 +695,57 @@ async function main(args: readonly string[]): Promise<void> {
   } finally {
     rmSync(staging, { recursive: true });
   }
+  let retainedStagePlanPath: string | undefined;
+  let retainedStagePlanFindingsPath: string | undefined;
+  if (disposition === "admitted") {
+    const retainedPlan = retainAdmittedScenarioStagePlan({
+      scenarioId: result.right.scenarioId,
+      scenarioPath: outputPath,
+      scenarioSha256,
+      scenarioReviewSha256: createHash("sha256")
+        .update(readFileSync(reviewPath))
+        .digest("hex"),
+    });
+    if (Either.isLeft(retainedPlan)) {
+      emitGenerationFindings({
+        scenarioPath: outputPath,
+        scenarioReviewPath: reviewPath,
+        stageFactsPath: `${outputPath}.stage-facts.json`,
+        rejectionReason: `Unable to retain admitted scenario stage plan: ${retainedPlan.left}`,
+      });
+      fail(retainedPlan.left);
+    }
+    if (retainedPlan.right.outcome.tag !== "admitted") {
+      const reason =
+        retainedPlan.right.outcome.tag === "rejected"
+          ? retainedPlan.right.outcome.reason
+          : "The retained stage plan did not admit the generated scenario.";
+      emitGenerationFindings({
+        scenarioPath: outputPath,
+        scenarioReviewPath: reviewPath,
+        stageFactsPath: `${outputPath}.stage-facts.json`,
+        rejectionReason: reason,
+      });
+      fail(reason);
+    }
+    retainedStagePlanPath = retainedScenarioStagePlanPath(
+      result.right.scenarioId,
+    );
+    retainedStagePlanFindingsPath = retainedScenarioStagePlanFindingsPath(
+      result.right.scenarioId,
+    );
+  }
+  emitGenerationFindings({
+    scenarioPath: outputPath,
+    scenarioReviewPath: reviewPath,
+    stageFactsPath: `${outputPath}.stage-facts.json`,
+    ...(retainedStagePlanPath === undefined
+      ? {}
+      : { stagePlanPath: retainedStagePlanPath }),
+    ...(retainedStagePlanFindingsPath === undefined
+      ? {}
+      : { stagePlanFindingsPath: retainedStagePlanFindingsPath }),
+  });
   verifyRetainedScenario(
     result.right.scenarioId,
     outputPath,

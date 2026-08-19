@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import type {
+  AttackTargetConstraint,
   BattleIllumination,
   BattleId,
   BattleObjectDamageDisposition,
@@ -16,6 +17,7 @@ import type {
   BattleRuntimeSession,
   BattleStatBlockProcedureExecutionRef,
   BattleSubject,
+  BattleTargetSpatialFact,
   BattleTablePositionId,
   CombatantId,
   StatBlockDamageNotation,
@@ -23,6 +25,7 @@ import type {
 } from "@dnd/battle-runtime";
 import {
   battleTablePositionId,
+  battleRuntimeSessionFollows,
   combatantEffectiveSize,
   deriveOrdinaryMovementTableRouteFacts,
   discoverBattleActs,
@@ -55,7 +58,6 @@ import {
   restoreState,
   snapshot,
   type ArenaDefinition,
-  type ArenaSnapshot,
   type BoundaryOpenness,
   type CellCoordinate,
   type CoverDegree,
@@ -63,10 +65,59 @@ import {
   type SpatialSnapshot,
   type TokenId,
   type CoordinateInput,
+  type DistanceFeet,
   type StateFingerprint,
   type SpatialState,
 } from "../../../packages/tactical-space/src/index.ts";
 import { Either, Match } from "effect";
+import {
+  scenarioTableSpatialFingerprint,
+  scenarioSpatialDecisionEntityReferences,
+  scenarioSpatialDecisionIds,
+  spatialDecisionIssue,
+  spatialDecisionValueKey,
+  spatialQuestionKey,
+  tableAuthoredSpatialDecision,
+  type ScenarioDirection,
+  type ScenarioSpatialBoundary,
+  type ScenarioSpatialDecisionInput,
+  type ScenarioSpatialDecisionIssue,
+  type ScenarioSpatialDecisionQuestion,
+  type ScenarioSpatialRelationAnswer,
+  type ScenarioSessionLineageId,
+  type ScenarioSpatialWitnessSource,
+  type ScenarioTableSpatialDecision,
+  type ScenarioTableSpatialPostMoveState,
+  type ScenarioTokenId,
+} from "./scenario-spatial-decisions.ts";
+
+export type {
+  ScenarioDirection,
+  ScenarioSpatialBoundary,
+  ScenarioSpatialDecision,
+  ScenarioSpatialDecisionId,
+  ScenarioSpatialDecisionInput,
+  ScenarioSpatialDecisionIssue,
+  ScenarioSpatialDistanceFeetIssue,
+  ScenarioNonMovementSpatialDecisionInput,
+  ScenarioSpatialDecisionQuestion,
+  ScenarioSessionLineageId,
+  ScenarioSpatialRelationAnswer,
+  ScenarioSpatialWitness,
+  ScenarioSpatialWitnessSource,
+  ScenarioTableSpatialDecision,
+  ScenarioTableSpatialPostMoveState,
+  ScenarioTableSpatialPostMoveStateInput,
+  ScenarioTokenId,
+} from "./scenario-spatial-decisions.ts";
+
+export {
+  scenarioDistanceFeet,
+  scenarioSpatialDecisionIds,
+  scenarioSpatialDecisionEntityReferences,
+  scenarioTableSpatialFingerprint,
+  tableAuthoredSpatialDecision,
+} from "./scenario-spatial-decisions.ts";
 
 declare const scenarioSessionBrand: unique symbol;
 
@@ -110,8 +161,8 @@ export type ScenarioOpportunityAttackEnemyRelationship = Readonly<{
 }>;
 
 export type ScenarioBattlefield = Readonly<{
-  readonly arena: ArenaSnapshot;
-  readonly space: SpatialSnapshot;
+  /** Canonical spatial ownership boundary; geometry is optional by construction. */
+  readonly spatial: ScenarioSpatialBoundary;
   readonly ambientIllumination: BattleIllumination;
   readonly statBlockDamageNotation: StatBlockDamageNotation;
   readonly environment: ScenarioEnvironment;
@@ -126,12 +177,23 @@ export type ScenarioPlacement = Readonly<{
   readonly coordinate: CoordinateInput;
 }>;
 
-export type ScenarioTokenId = CombatantId | BattleObjectId;
+export type ScenarioSpatialSetupInput =
+  | Readonly<{
+      readonly kind: "geometryDerived";
+      readonly arena: ArenaDefinition;
+      readonly placements: readonly ScenarioPlacement[];
+      /** Geometry is the sole source for every supported spatial question. */
+      readonly spatialDecisions: readonly [];
+    }>
+  | Readonly<{
+      readonly kind: "tableAuthored";
+      readonly spatialDecisions: readonly ScenarioSpatialDecisionInput[];
+    }>;
 
 type ScenarioMovementResolution =
   | Readonly<{ readonly kind: "idle" }>
   | Readonly<{
-      readonly kind: "pending";
+      readonly kind: "geometryDerivedPending";
       readonly subject: Extract<
         BattleSubject,
         { readonly tag: "runtimeCommand"; readonly command: "move" }
@@ -139,12 +201,27 @@ type ScenarioMovementResolution =
       readonly fill: Extract<BattleFill, { readonly kind: "movement" }>;
       readonly originFingerprint: StateFingerprint;
       readonly plannedSpace: SpatialSnapshot;
+    }>
+  | Readonly<{
+      readonly kind: "tableAuthoredPending";
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "runtimeCommand"; readonly command: "move" }
+      >;
+      readonly fill: Extract<BattleFill, { readonly kind: "movement" }>;
+      readonly decision: ScenarioTableSpatialDecision;
+      readonly postMoveSpatial: ScenarioSpatialBoundary;
     }>;
 
 export type ScenarioSession = Readonly<{
   readonly battle: BattleRuntimeSession;
   readonly battlefield: ScenarioBattlefield;
   readonly movementResolution: ScenarioMovementResolution;
+  readonly lineage: Readonly<{
+    readonly scenarioSessionLineageId: ScenarioSessionLineageId;
+    readonly battleRuntimeSessionIdentity: string;
+    readonly battleRuntimeContextIdentity: string;
+  }>;
   readonly [scenarioSessionBrand]: true;
 }>;
 
@@ -415,7 +492,8 @@ export type ScenarioSessionFactIssue =
         | "unknown-opportunity-attack-enemy-relationship-combatant";
       readonly combatantId: CombatantId;
       readonly message: string;
-    }>;
+    }>
+  | ScenarioSpatialDecisionIssue;
 
 export type ScenarioSessionIssue = Readonly<{
   readonly tag: "invalid-scenario-session";
@@ -449,12 +527,20 @@ export type ScenarioSessionUpdateIssue =
         | "movement-outcome-conflict"
         | "multiple-battle-movements";
       readonly message: string;
-    }>;
+    }>
+  | Readonly<ScenarioSpatialDecisionIssue>;
 
-export type ScenarioMovementIssue = Readonly<{
-  readonly tag: "scenario-movement-rejected";
-  readonly message: string;
-}>;
+export type ScenarioMovementIssue =
+  | Readonly<{
+      readonly tag: "scenario-movement-rejected";
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag: "spatial-decision-lineage-conflict";
+      readonly decisionId: string;
+      readonly question: ScenarioSpatialDecisionQuestion;
+      readonly message: string;
+    }>;
 
 export type ScenarioMovementPlan = Readonly<{
   readonly session: ScenarioSession;
@@ -466,6 +552,23 @@ export type ScenarioMovementPlan = Readonly<{
 }>;
 
 const sessions = new WeakSet<object>();
+const runtimeObjectIdentities = new WeakMap<object, string>();
+let nextRuntimeObjectIdentity = 0;
+let nextScenarioSessionLineage = 0;
+
+function runtimeObjectIdentity(value: object): string {
+  const existing = runtimeObjectIdentities.get(value);
+  if (existing !== undefined) return existing;
+  nextRuntimeObjectIdentity += 1;
+  const identity = `runtime-object:${String(nextRuntimeObjectIdentity)}`;
+  runtimeObjectIdentities.set(value, identity);
+  return identity;
+}
+
+function newScenarioSessionLineageId(): ScenarioSessionLineageId {
+  nextScenarioSessionLineage += 1;
+  return `scenario-session:${String(nextScenarioSessionLineage)}` as ScenarioSessionLineageId;
+}
 
 function freezeObject(object: ScenarioBattleObject): ScenarioBattleObject {
   return Object.freeze({
@@ -480,8 +583,18 @@ function makeScenarioSession(
   movementResolution: ScenarioMovementResolution = Object.freeze({
     kind: "idle",
   }),
+  sessionLineageId: ScenarioSessionLineageId = newScenarioSessionLineageId(),
 ): ScenarioSession {
-  const session = Object.freeze({ battle, battlefield, movementResolution });
+  const session = Object.freeze({
+    battle,
+    battlefield,
+    movementResolution,
+    lineage: Object.freeze({
+      scenarioSessionLineageId: sessionLineageId,
+      battleRuntimeSessionIdentity: runtimeObjectIdentity(battle),
+      battleRuntimeContextIdentity: runtimeObjectIdentity(battle.context),
+    }),
+  });
   sessions.add(session);
   // The brand is compile-time only; WeakSet membership is the runtime proof
   // that this value passed createScenarioSession's composition checks.
@@ -519,8 +632,7 @@ function placementIssueMessage(
 
 export function createScenarioSession(input: {
   readonly battle: BattleRuntimeSession;
-  readonly arena: ArenaDefinition;
-  readonly placements: readonly ScenarioPlacement[];
+  readonly spatial: ScenarioSpatialSetupInput;
   readonly ambientIllumination: BattleIllumination;
   readonly statBlockDamageNotation: StatBlockDamageNotation;
   readonly environment: ScenarioEnvironment;
@@ -530,8 +642,12 @@ export function createScenarioSession(input: {
   readonly objects: readonly ScenarioBattleObject[];
 }): Either.Either<ScenarioSession, ScenarioSessionIssue> {
   const issues: ScenarioSessionFactIssue[] = [];
-  const parsedArena = parseArena(input.arena);
-  if (parsedArena.tag === "error") {
+  const geometrySupplied = input.spatial.kind === "geometryDerived";
+  const suppliedArena = geometrySupplied ? input.spatial.arena : undefined;
+  const suppliedPlacements = geometrySupplied ? input.spatial.placements : [];
+  const parsedArena =
+    suppliedArena === undefined ? undefined : parseArena(suppliedArena);
+  if (parsedArena?.tag === "error") {
     const [first, ...rest] = parsedArena.issues;
     const arenaFactIssue = ({ path, message }: typeof first) => ({
       tag: "arena-definition" as const,
@@ -653,7 +769,7 @@ export function createScenarioSession(input: {
     readonly coordinate: CellCoordinate;
     readonly supplied: ScenarioPlacement;
   }> = [];
-  for (const placement of input.placements) {
+  for (const placement of suppliedPlacements) {
     const token = parseTokenId(String(placement.tokenId));
     const coordinate = parseCoordinate(placement.coordinate);
     if (token.tag === "error") {
@@ -681,7 +797,7 @@ export function createScenarioSession(input: {
     }
   }
 
-  if (parsedArena.tag === "error") {
+  if (parsedArena?.tag === "error") {
     // The arena parser's nonempty issue list was appended above.
     return Either.left({
       tag: "invalid-scenario-session",
@@ -689,9 +805,12 @@ export function createScenarioSession(input: {
     });
   }
 
-  const arena = arenaSnapshot(parsedArena.value);
-  let spatialState = createState(parsedArena.value);
+  const arena =
+    parsedArena === undefined ? undefined : arenaSnapshot(parsedArena.value);
+  let spatialState =
+    parsedArena === undefined ? undefined : createState(parsedArena.value);
   for (const placement of parsedPlacements) {
+    if (spatialState === undefined) continue;
     const placed = placeToken(
       spatialState,
       placement.token,
@@ -711,9 +830,18 @@ export function createScenarioSession(input: {
     }
     spatialState = placed.value;
   }
-  const space = snapshot(spatialState);
+  const space = spatialState === undefined ? undefined : snapshot(spatialState);
 
   for (const barrier of input.environment.barrierHeights) {
+    if (arena === undefined) {
+      issues.push({
+        tag: "invalid-spatial-decision",
+        decisionId: "scenario-geometry",
+        message:
+          "Barrier heights require a tactical-space arena; Table-authored spatial decisions cannot retain a geometry boundary.",
+      });
+      break;
+    }
     const matchingBoundary = arena.boundaries.some(
       ({ between, traversal }) =>
         traversal === "blocked" && sameUndirectedEdge(between, barrier.between),
@@ -731,34 +859,156 @@ export function createScenarioSession(input: {
 
   const expectedTokens = new Set([...combatantIds, ...objectIds]);
   const placedTokens = new Set(
-    space.placements.map(({ token }) => String(token)),
+    space?.placements.map(({ token }) => String(token)) ?? [],
   );
-  for (const token of expectedTokens) {
-    if (!placedTokens.has(token)) {
-      issues.push({
-        tag: "missing-placement",
-        tokenId: token,
-        message: `Scenario token ${token} has no tactical-space placement.`,
-      });
+  if (geometrySupplied) {
+    for (const token of expectedTokens) {
+      if (!placedTokens.has(token)) {
+        issues.push({
+          tag: "missing-placement",
+          tokenId: token,
+          message: `Scenario token ${token} has no tactical-space placement.`,
+        });
+      }
+    }
+    for (const token of placedTokens) {
+      if (!expectedTokens.has(token)) {
+        issues.push({
+          tag: "unexpected-placement",
+          tokenId: token,
+          message: `Tactical-space token ${token} is neither a combatant nor a scenario object.`,
+        });
+      }
     }
   }
-  for (const token of placedTokens) {
-    if (!expectedTokens.has(token)) {
-      issues.push({
-        tag: "unexpected-placement",
-        tokenId: token,
-        message: `Tactical-space token ${token} is neither a combatant nor a scenario object.`,
-      });
+
+  const spatialDecisions: ScenarioTableSpatialDecision[] = [];
+  const decisionByQuestion = new Map<string, ScenarioTableSpatialDecision>();
+  const decisionIds = new Set<string>();
+  const sessionLineageId = newScenarioSessionLineageId();
+  const battleRuntimeSessionIdentity = runtimeObjectIdentity(input.battle);
+  const initialSpatialFingerprint =
+    space?.fingerprint ??
+    scenarioTableSpatialFingerprint({
+      kind: "initial-table-authored-spatial-state",
+      battleId: String(input.battle.state.battleId),
+    });
+  for (const suppliedDecision of input.spatial.spatialDecisions) {
+    const normalized = tableAuthoredSpatialDecision(suppliedDecision);
+    if (Either.isLeft(normalized)) {
+      issues.push(normalized.left);
+      continue;
     }
+    const decision = normalized.right;
+    if (geometrySupplied) {
+      issues.push(
+        spatialDecisionIssue(
+          "contradictory-spatial-decision",
+          decision.decisionId,
+          `Table-authored spatial decision ${decision.decisionId} cannot be combined with a geometry-derived spatial boundary; geometry owns every supported spatial question.`,
+        ),
+      );
+      continue;
+    }
+    const unknownReference = scenarioSpatialDecisionEntityReferences(
+      decision,
+    ).find(
+      (tokenId) =>
+        !combatantIds.has(String(tokenId)) && !objectIds.has(String(tokenId)),
+    );
+    if (unknownReference !== undefined) {
+      issues.push(
+        spatialDecisionIssue(
+          "invalid-spatial-decision",
+          decision.decisionId,
+          `Table-authored spatial decision ${decision.decisionId} names unknown scenario entity ${String(unknownReference)}.`,
+        ),
+      );
+      continue;
+    }
+    const candidateDecisionIds =
+      scenarioSpatialDecisionIds(decision).map(String);
+    const candidateDecisionIdSet = new Set<string>();
+    const reusedDecisionId = candidateDecisionIds.find((candidateId) => {
+      if (candidateDecisionIdSet.has(candidateId)) return true;
+      candidateDecisionIdSet.add(candidateId);
+      return decisionIds.has(candidateId);
+    });
+    if (reusedDecisionId !== undefined) {
+      issues.push(
+        spatialDecisionIssue(
+          "duplicate-spatial-decision",
+          reusedDecisionId,
+          `Table-authored spatial decision id ${reusedDecisionId} is reused across distinct or nested questions.`,
+        ),
+      );
+      continue;
+    }
+    const questionKey = spatialQuestionKey(decision.question);
+    const previous = decisionByQuestion.get(questionKey);
+    if (previous !== undefined) {
+      issues.push(
+        spatialDecisionIssue(
+          spatialDecisionValueKey(previous.decision) ===
+            spatialDecisionValueKey(decision)
+            ? "duplicate-spatial-decision"
+            : "contradictory-spatial-decision",
+          decision.decisionId,
+          `Table-authored spatial decision ${decision.decisionId} answers the same exact question as ${previous.decision.decisionId}.`,
+        ),
+      );
+      continue;
+    }
+    const bound: ScenarioTableSpatialDecision = Object.freeze({
+      source: "tableAuthored",
+      decision,
+      lineage: Object.freeze({
+        battleId: input.battle.state.battleId,
+        scenarioSessionLineageId: sessionLineageId,
+        battleRuntimeSessionIdentity,
+        spatialFingerprint: initialSpatialFingerprint,
+      }),
+    });
+    decisionByQuestion.set(questionKey, bound);
+    for (const decisionId of candidateDecisionIds) {
+      decisionIds.add(decisionId);
+    }
+    spatialDecisions.push(bound);
   }
 
   const invalid = nonEmptyIssues(issues);
   if (invalid !== undefined) {
     return Either.left({ tag: "invalid-scenario-session", issues: invalid });
   }
-  const battlefield = Object.freeze({
-    arena,
-    space: space,
+  let spatial: ScenarioSpatialBoundary;
+  if (input.spatial.kind === "geometryDerived") {
+    if (arena === undefined || space === undefined) {
+      return Either.left({
+        tag: "invalid-scenario-session",
+        issues: [
+          {
+            tag: "invalid-spatial-decision",
+            decisionId: "scenario-geometry",
+            message:
+              "A geometry-derived spatial setup must produce both an arena and a spatial snapshot.",
+          },
+        ],
+      });
+    }
+    spatial = Object.freeze({
+      kind: "geometryDerived" as const,
+      arena,
+      space,
+    });
+  } else {
+    spatial = Object.freeze({
+      kind: "tableAuthored" as const,
+      spatialFingerprint: initialSpatialFingerprint,
+      tableAuthoredDecisions: Object.freeze(spatialDecisions),
+    });
+  }
+  const battlefieldValue = {
+    spatial,
     ambientIllumination: input.ambientIllumination,
     statBlockDamageNotation: input.statBlockDamageNotation,
     environment: Object.freeze({
@@ -791,8 +1041,16 @@ export function createScenarioSession(input: {
       ),
     ),
     objects: Object.freeze(input.objects.map(freezeObject)),
-  });
-  return Either.right(makeScenarioSession(input.battle, battlefield));
+  };
+  const battlefield = Object.freeze(battlefieldValue);
+  return Either.right(
+    makeScenarioSession(
+      input.battle,
+      battlefield,
+      Object.freeze({ kind: "idle" }),
+      sessionLineageId,
+    ),
+  );
 }
 
 export type ScenarioRelationResult =
@@ -804,16 +1062,34 @@ export type ScenarioRelationResult =
       readonly tag: "unknown-token";
       readonly tokenId: string;
       readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag: "spatial-decision-required";
+      readonly question: ScenarioSpatialDecisionQuestion;
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag: "stale-spatial-decision";
+      readonly decisionId: string;
+      readonly question: ScenarioSpatialDecisionQuestion;
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag: "spatial-decision-lineage-conflict";
+      readonly decisionId: string;
+      readonly question: ScenarioSpatialDecisionQuestion;
+      readonly message: string;
     }>;
 
 export type ScenarioSpatialRelation = Readonly<{
   readonly source: TokenId;
   readonly target: TokenId;
-  readonly direction: import("../../../packages/tactical-space/src/index.ts").Direction;
-  readonly distanceFeet: import("../../../packages/tactical-space/src/index.ts").DistanceFeet;
+  readonly direction: ScenarioDirection;
+  readonly distanceFeet: DistanceFeet;
   readonly attackerCanSeeTarget: boolean;
   readonly cover: CoverType;
   readonly traversal: BoundaryOpenness;
+  readonly spatialSource: ScenarioSpatialWitnessSource;
 }>;
 
 export function scenarioTokenId(
@@ -834,12 +1110,252 @@ export function scenarioRelation(input: {
   readonly sourceId: ScenarioTokenId;
   readonly targetId: ScenarioTokenId;
 }): ScenarioRelationResult {
-  return scenarioRelationInSpace(
-    input.session,
-    spatialState(input.session),
-    input.sourceId,
-    input.targetId,
+  const question: Extract<
+    ScenarioSpatialDecisionQuestion,
+    { readonly kind: "relation" }
+  > = {
+    kind: "relation",
+    sourceId: input.sourceId,
+    targetId: input.targetId,
+  };
+  return scenarioRelationForSpatialQuestion(input.session, question);
+}
+
+type ScenarioRelationSpatialQuestion = Exclude<
+  ScenarioSpatialDecisionQuestion,
+  Extract<ScenarioSpatialDecisionQuestion, { readonly kind: "movementRoute" }>
+>;
+
+function scenarioSpatialQuestionEndpoints(
+  question: ScenarioRelationSpatialQuestion,
+): Readonly<{
+  readonly sourceId: ScenarioTokenId;
+  readonly targetId: ScenarioTokenId;
+}> {
+  return Match.value(question).pipe(
+    Match.when({ kind: "relation" }, ({ sourceId, targetId }) => ({
+      sourceId,
+      targetId,
+    })),
+    Match.when({ kind: "spellTarget" }, ({ casterId, targetId }) => ({
+      sourceId: casterId,
+      targetId,
+    })),
+    Match.when({ kind: "objectTarget" }, ({ actorId, objectId }) => ({
+      sourceId: actorId,
+      targetId: objectId,
+    })),
+    Match.when({ kind: "attackTarget" }, ({ actorId, targetId }) => ({
+      sourceId: actorId,
+      targetId,
+    })),
+    Match.when({ kind: "grappleTarget" }, ({ grapplerId, targetId }) => ({
+      sourceId: grapplerId,
+      targetId,
+    })),
+    Match.when({ kind: "shoveTarget" }, ({ shoverId, targetId }) => ({
+      sourceId: shoverId,
+      targetId,
+    })),
+    Match.when({ kind: "sleepShakeAwakeTarget" }, ({ actorId, targetId }) => ({
+      sourceId: actorId,
+      targetId,
+    })),
+    Match.when(
+      { kind: "hypnoticPatternShakeAwakeTarget" },
+      ({ actorId, targetId }) => ({ sourceId: actorId, targetId }),
+    ),
+    Match.when({ kind: "helpAttackTarget" }, ({ helperId, targetEnemyId }) => ({
+      sourceId: helperId,
+      targetId: targetEnemyId,
+    })),
+    Match.exhaustive,
   );
+}
+
+function scenarioRelationForSpatialQuestion(
+  session: ScenarioSession,
+  question: ScenarioRelationSpatialQuestion,
+): ScenarioRelationResult {
+  const tableDecision =
+    session.battlefield.spatial.kind === "tableAuthored"
+      ? scenarioSpatialDecision(session, question)
+      : ({ tag: "none" } as const);
+  if (tableDecision.tag === "lineageConflict") {
+    return {
+      tag: "spatial-decision-lineage-conflict",
+      decisionId: tableDecision.decision.decision.decisionId,
+      question,
+      message: `Table-authored spatial decision ${tableDecision.decision.decision.decisionId} belongs to a different ScenarioSession/BattleRuntime lineage.`,
+    };
+  }
+  if (tableDecision.tag === "stale") {
+    return {
+      tag: "stale-spatial-decision",
+      decisionId: tableDecision.decision.decision.decisionId,
+      question,
+      message: `Table-authored spatial decision ${tableDecision.decision.decision.decisionId} is stale for the current ScenarioSession spatial lineage.`,
+    };
+  }
+  if (tableDecision.tag === "found") {
+    if ("kind" in tableDecision.decision.decision.answer) {
+      return {
+        tag: "unknown-token",
+        tokenId: "scenario-spatial-decision",
+        message:
+          "A movement-route answer cannot satisfy a relation, spell-target, or object-target question.",
+      };
+    }
+    return scenarioRelationFromAnswer(
+      session,
+      question,
+      tableDecision.decision.decision.answer,
+      {
+        kind: "tableAuthored",
+        decisionId: tableDecision.decision.decision.decisionId,
+        lineage: tableDecision.decision.lineage,
+      },
+    );
+  }
+  const geometry = spatialBoundary(session);
+  if (geometry === undefined) {
+    return {
+      tag: "spatial-decision-required",
+      question,
+      message: `Scenario ${question.kind} requires a Table-authored spatial decision when tactical-space is not selected.`,
+    };
+  }
+  const spatial = restoreSpatialState(geometry);
+  if (spatial === undefined) {
+    return {
+      tag: "unknown-token",
+      tokenId: "scenario-spatial-state",
+      message:
+        "Scenario geometry-derived spatial evidence could not be restored from its canonical snapshots.",
+    };
+  }
+  const { sourceId, targetId } = scenarioSpatialQuestionEndpoints(question);
+  return scenarioRelationInSpace(session, spatial, sourceId, targetId);
+}
+
+type ScenarioSpatialDecisionLookup =
+  | Readonly<{ readonly tag: "none" }>
+  | Readonly<{
+      readonly tag: "found";
+      readonly decision: ScenarioTableSpatialDecision;
+    }>
+  | Readonly<{
+      readonly tag: "stale";
+      readonly decision: ScenarioTableSpatialDecision;
+    }>
+  | Readonly<{
+      readonly tag: "lineageConflict";
+      readonly decision: ScenarioTableSpatialDecision;
+    }>;
+
+function spatialBoundary(
+  session: ScenarioSession,
+):
+  | Extract<ScenarioSpatialBoundary, { readonly kind: "geometryDerived" }>
+  | undefined {
+  return session.battlefield.spatial.kind === "geometryDerived"
+    ? session.battlefield.spatial
+    : undefined;
+}
+
+function currentSpatialFingerprint(session: ScenarioSession): StateFingerprint {
+  const spatial = session.battlefield.spatial;
+  return spatial.kind === "geometryDerived"
+    ? spatial.space.fingerprint
+    : spatial.spatialFingerprint;
+}
+
+function scenarioSpatialDecision(
+  session: ScenarioSession,
+  question: ScenarioSpatialDecisionQuestion,
+): ScenarioSpatialDecisionLookup {
+  if (session.battlefield.spatial.kind !== "tableAuthored") {
+    return { tag: "none" };
+  }
+  const decision = session.battlefield.spatial.tableAuthoredDecisions.find(
+    (candidate) =>
+      spatialQuestionKey(candidate.decision.question) ===
+      spatialQuestionKey(question),
+  );
+  if (decision === undefined) return { tag: "none" };
+  if (
+    decision.lineage.battleId !== session.battle.state.battleId ||
+    decision.lineage.spatialFingerprint !== currentSpatialFingerprint(session)
+  ) {
+    return { tag: "stale", decision };
+  }
+  if (
+    decision.lineage.scenarioSessionLineageId !==
+      session.lineage.scenarioSessionLineageId ||
+    decision.lineage.battleRuntimeSessionIdentity !==
+      session.lineage.battleRuntimeSessionIdentity
+  ) {
+    return { tag: "lineageConflict", decision };
+  }
+  return { tag: "found", decision };
+}
+
+function scenarioTablePostMoveSpatialBoundary(
+  session: ScenarioSession,
+  state: ScenarioTableSpatialPostMoveState,
+): ScenarioSpatialBoundary {
+  const decisions = state.tableAuthoredDecisions.map((decision) =>
+    Object.freeze({
+      source: "tableAuthored" as const,
+      decision,
+      lineage: Object.freeze({
+        battleId: session.battle.state.battleId,
+        scenarioSessionLineageId: session.lineage.scenarioSessionLineageId,
+        battleRuntimeSessionIdentity:
+          session.lineage.battleRuntimeSessionIdentity,
+        spatialFingerprint: state.spatialFingerprint,
+      }),
+    }),
+  );
+  return Object.freeze({
+    kind: "tableAuthored" as const,
+    spatialFingerprint: state.spatialFingerprint,
+    tableAuthoredDecisions: Object.freeze(decisions),
+  });
+}
+
+function scenarioRelationFromAnswer(
+  _session: ScenarioSession,
+  question: ScenarioRelationSpatialQuestion,
+  answer: ScenarioSpatialRelationAnswer,
+  source: ScenarioSpatialWitnessSource,
+): ScenarioRelationResult {
+  const { sourceId, targetId } = scenarioSpatialQuestionEndpoints(question);
+  const sourceToken = parseTokenId(String(sourceId));
+  const targetToken = parseTokenId(String(targetId));
+  if (sourceToken.tag === "error") {
+    return {
+      tag: "unknown-token",
+      tokenId: String(sourceId),
+      message: sourceToken.error.message,
+    };
+  }
+  if (targetToken.tag === "error") {
+    return {
+      tag: "unknown-token",
+      tokenId: String(targetId),
+      message: targetToken.error.message,
+    };
+  }
+  return {
+    tag: "relation",
+    relation: {
+      source: sourceToken.value,
+      target: targetToken.value,
+      ...answer,
+      spatialSource: source,
+    },
+  };
 }
 
 function scenarioRelationInSpace(
@@ -901,6 +1417,7 @@ function scenarioRelationInSpace(
       )
         ? "blocked"
         : "open",
+      spatialSource: { kind: "geometryDerived", adapter: "tactical-space" },
     },
   };
 }
@@ -915,7 +1432,7 @@ export function planScenarioMovement(input: {
   readonly speedKind: BattleMovementSpeedKind;
   readonly fills: readonly BattleFill[];
 }): Either.Either<ScenarioMovementPlan, ScenarioMovementIssue> {
-  if (input.session.movementResolution.kind === "pending") {
+  if (input.session.movementResolution.kind !== "idle") {
     return Either.left({
       tag: "scenario-movement-rejected",
       message:
@@ -953,8 +1470,106 @@ export function planScenarioMovement(input: {
     });
   }
 
-  let routeState = spatialState(input.session);
-  const originFingerprint = input.session.battlefield.space.fingerprint;
+  const movementQuestion: Extract<
+    ScenarioSpatialDecisionQuestion,
+    { readonly kind: "movementRoute" }
+  > = {
+    kind: "movementRoute",
+    moverId: input.subject.actorId,
+    route: input.route,
+    speedKind: input.speedKind,
+  };
+  const tableDecision = scenarioSpatialDecision(
+    input.session,
+    movementQuestion,
+  );
+  if (tableDecision.tag === "stale") {
+    return Either.left({
+      tag: "scenario-movement-rejected",
+      message: `Table-authored movement route decision ${String(tableDecision.decision.decision.decisionId)} is stale for the current spatial fingerprint.`,
+    });
+  }
+  if (tableDecision.tag === "lineageConflict") {
+    return Either.left({
+      tag: "spatial-decision-lineage-conflict",
+      decisionId: String(tableDecision.decision.decision.decisionId),
+      question: tableDecision.decision.decision.question,
+      message: `Table-authored movement route decision ${String(tableDecision.decision.decision.decisionId)} belongs to a different ScenarioSession/BattleRuntime lineage.`,
+    });
+  }
+  if (tableDecision.tag === "found") {
+    const decision = tableDecision.decision;
+    if (!("kind" in decision.decision.answer)) {
+      return Either.left({
+        tag: "scenario-movement-rejected",
+        message:
+          "A relation answer cannot satisfy the exact movement-route question.",
+      });
+    }
+    const answer = decision.decision.answer;
+    const creatureSpaceTraversal =
+      answer.creatureSpaceTraversal.kind === "fact"
+        ? answer.creatureSpaceTraversal.value
+        : undefined;
+    const fill: Extract<BattleFill, { readonly kind: "movement" }> =
+      Object.freeze({
+        kind: "movement",
+        holeId: movementHole.holeId,
+        value: Object.freeze({
+          speedKind: input.speedKind,
+          movementCostFeet: answer.movementCostFeet,
+          provokedOpportunityAttacks: Object.freeze(
+            answer.provokedOpportunityAttacks.map((threat) =>
+              Object.freeze({ ...threat }),
+            ),
+          ),
+          ...(creatureSpaceTraversal === undefined
+            ? {}
+            : { creatureSpaceTraversal }),
+        }),
+      });
+    const postMoveSpatial = scenarioTablePostMoveSpatialBoundary(
+      input.session,
+      answer.postMoveSpatialState,
+    );
+    const movementResolution = Object.freeze({
+      kind: "tableAuthoredPending" as const,
+      subject: Object.freeze({ ...input.subject }),
+      fill,
+      decision,
+      postMoveSpatial,
+    });
+    return Either.right({
+      session: makeScenarioSession(
+        input.session.battle,
+        input.session.battlefield,
+        movementResolution,
+        input.session.lineage.scenarioSessionLineageId,
+      ),
+      subject: movementResolution.subject,
+      fills: [fill, ...input.fills],
+    });
+  }
+
+  const geometry = spatialBoundary(input.session);
+  if (geometry === undefined) {
+    return Either.left({
+      tag: "scenario-movement-rejected",
+      message:
+        "Scenario movement requires a Table-authored route when tactical-space is not selected.",
+    });
+  }
+  const restoredSpatialState = restoreSpatialState(geometry);
+  if (restoredSpatialState === undefined) {
+    return Either.left({
+      tag: "scenario-movement-rejected",
+      message:
+        "Scenario geometry-derived spatial evidence could not be restored from its canonical snapshots.",
+    });
+  }
+
+  let routeState = restoredSpatialState;
+  const originFingerprint = geometry.space.fingerprint;
   let movementCost = 0;
   const objectByToken = new Map(
     input.session.battlefield.objects.map((object) => [
@@ -1023,7 +1638,7 @@ export function planScenarioMovement(input: {
   const movementOccupants = [
     ...combatantByToken.values(),
   ].flatMap<BattleOrdinaryMovementRouteOccupant>((combatant) => {
-    const placement = input.session.battlefield.space.placements.find(
+    const placement = geometry.space.placements.find(
       ({ token }) => String(token) === String(combatant.combatantId),
     );
     if (placement === undefined) return [];
@@ -1162,7 +1777,13 @@ export function planScenarioMovement(input: {
     }
     routeState = committed.value;
   }
-  const destination = routeSteps.at(-1)!;
+  const destination = routeSteps.at(-1);
+  if (destination === undefined) {
+    return Either.left({
+      tag: "scenario-movement-rejected",
+      message: "Scenario movement requires a nonempty route.",
+    });
+  }
   const routeFacts = deriveOrdinaryMovementTableRouteFacts({
     moverId: input.subject.actorId,
     moverSize,
@@ -1202,7 +1823,7 @@ export function planScenarioMovement(input: {
       }),
     });
   const movementResolution = Object.freeze({
-    kind: "pending" as const,
+    kind: "geometryDerivedPending" as const,
     subject: Object.freeze({ ...input.subject }),
     fill,
     originFingerprint,
@@ -1213,6 +1834,7 @@ export function planScenarioMovement(input: {
       input.session.battle,
       input.session.battlefield,
       movementResolution,
+      input.session.lineage.scenarioSessionLineageId,
     ),
     subject: movementResolution.subject,
     fills: [fill, ...input.fills],
@@ -1224,7 +1846,7 @@ export function continueScenarioMovement(input: {
   readonly fills: readonly BattleFill[];
 }): Either.Either<ScenarioMovementPlan, ScenarioMovementIssue> {
   const pending = input.session.movementResolution;
-  if (pending.kind !== "pending") {
+  if (pending.kind === "idle") {
     return Either.left({
       tag: "scenario-movement-rejected",
       message: "No scenario movement transaction is awaiting continuation.",
@@ -1249,6 +1871,11 @@ type ScenarioCreatureSpellTargetFill = Extract<
   }
 >;
 
+export type ScenarioCreatureSpellTargetProjectionIssue = Readonly<{
+  readonly tag: "spell-target-projection";
+  readonly message: string;
+}>;
+
 function isScenarioCreatureSpellTargetFill(
   fill: BattleFill,
 ): fill is ScenarioCreatureSpellTargetFill {
@@ -1263,7 +1890,10 @@ export function scenarioCreatureSpellTargetFills(input: {
   readonly session: ScenarioSession;
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
-}): readonly BattleFill[] {
+}): Either.Either<
+  readonly BattleFill[],
+  ScenarioCreatureSpellTargetProjectionIssue
+> {
   const projectedFills: BattleFill[] = [];
   for (const fill of input.fills) {
     const frontier = resolveBattleRuntimeSubject({
@@ -1297,30 +1927,37 @@ export function scenarioCreatureSpellTargetFills(input: {
       Match.when({ kind: "spellTargetList" }, ({ value }) => value.targetIds),
       Match.exhaustive,
     );
-    const canonicalFacts = [...new Set(targetIds)].flatMap((targetId) => {
-      const relation = scenarioRelation({
-        session: input.session,
-        sourceId: request.casterId,
+    const canonicalFacts: Array<
+      Extract<BattleTargetSpatialFact, { readonly kind: "spellTarget" }>
+    > = [];
+    for (const targetId of [...new Set(targetIds)]) {
+      const relation = scenarioRelationForSpatialQuestion(input.session, {
+        kind: "spellTarget",
+        casterId: request.casterId,
         targetId,
+        sourceProcedureRef: request.sourceProcedureRef,
       });
+      if (relation.tag !== "relation") {
+        return Either.left({
+          tag: "spell-target-projection",
+          message: relation.message,
+        });
+      }
       if (
-        relation.tag !== "relation" ||
         Number(relation.relation.distanceFeet) > Number(request.rangeFeet) ||
         relation.relation.cover === "total" ||
         (request.visibility === "requiresSight" &&
           !relation.relation.attackerCanSeeTarget)
       ) {
-        return [];
+        continue;
       }
-      return [
-        {
-          kind: "spellTarget" as const,
-          casterId: request.casterId,
-          targetId,
-          sourceProcedureRef: request.sourceProcedureRef,
-        },
-      ];
-    });
+      canonicalFacts.push({
+        kind: "spellTarget" as const,
+        casterId: request.casterId,
+        targetId,
+        sourceProcedureRef: request.sourceProcedureRef,
+      });
+    }
     projectedFills.push(
       Match.value(fill).pipe(
         Match.when({ kind: "targetChoice" }, (targetChoice) => ({
@@ -1354,7 +1991,367 @@ export function scenarioCreatureSpellTargetFills(input: {
       ),
     );
   }
-  return projectedFills;
+  return Either.right(projectedFills);
+}
+
+export type ScenarioAttackTargetProjectionIssue = Readonly<{
+  readonly tag: "attack-target-projection";
+  readonly message: string;
+}>;
+
+export type ScenarioTableSpatialFactProjectionIssue = Readonly<{
+  readonly tag: "table-spatial-fact-projection";
+  readonly message: string;
+}>;
+
+type ScenarioTableSpatialFactQuestion = Extract<
+  ScenarioSpatialDecisionQuestion,
+  | { readonly kind: "grappleTarget" }
+  | { readonly kind: "shoveTarget" }
+  | { readonly kind: "sleepShakeAwakeTarget" }
+  | { readonly kind: "hypnoticPatternShakeAwakeTarget" }
+  | { readonly kind: "helpAttackTarget" }
+>;
+
+function scenarioTableSpatialFactForQuestion(
+  question: ScenarioTableSpatialFactQuestion,
+): BattleTargetSpatialFact {
+  return Match.value(question).pipe(
+    Match.when({ kind: "grappleTarget" }, ({ grapplerId, targetId }) => ({
+      kind: "grappleTargetWithinReach" as const,
+      grapplerId,
+      targetId,
+    })),
+    Match.when({ kind: "shoveTarget" }, ({ shoverId, targetId }) => ({
+      kind: "shoveTargetWithinReach" as const,
+      shoverId,
+      targetId,
+    })),
+    Match.when({ kind: "sleepShakeAwakeTarget" }, ({ actorId, targetId }) => ({
+      kind: "sleepShakeAwakeActorWithin5Feet" as const,
+      actorId,
+      targetId,
+    })),
+    Match.when(
+      { kind: "hypnoticPatternShakeAwakeTarget" },
+      ({ actorId, targetId }) => ({
+        kind: "hypnoticPatternShakeAwakeActorWithin5Feet" as const,
+        actorId,
+        targetId,
+      }),
+    ),
+    Match.when({ kind: "helpAttackTarget" }, ({ helperId, targetEnemyId }) => ({
+      kind: "helpAttackTargetWithin5Feet" as const,
+      helperId,
+      targetEnemyId,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function scenarioTableSpatialFactQuestionForSubject(
+  subject: BattleSubject,
+  targetId: CombatantId,
+): ScenarioTableSpatialFactQuestion | undefined {
+  if (subject.tag !== "action") return undefined;
+  return Match.value(subject).pipe(
+    Match.when({ tag: "action", action: "grapple" }, ({ actorId }) => ({
+      kind: "grappleTarget" as const,
+      grapplerId: actorId,
+      targetId,
+    })),
+    Match.when({ tag: "action", action: "shove" }, ({ actorId }) => ({
+      kind: "shoveTarget" as const,
+      shoverId: actorId,
+      targetId,
+    })),
+    Match.when(
+      { tag: "action", action: "shakeAwakeFromSleep" },
+      ({ actorId }) => ({
+        kind: "sleepShakeAwakeTarget" as const,
+        actorId,
+        targetId,
+      }),
+    ),
+    Match.when(
+      { tag: "action", action: "shakeAwakeFromHypnoticPattern" },
+      ({ actorId }) => ({
+        kind: "hypnoticPatternShakeAwakeTarget" as const,
+        actorId,
+        targetId,
+      }),
+    ),
+    Match.orElse(() => undefined),
+  );
+}
+
+/**
+ * Projects the exact Table/geometry spatial witness for ordinary target
+ * choices whose Battle hole consumes a reach or adjacency fact. The caller
+ * still supplies the ordinary target choice; only the spatial witness is
+ * automatic and canonical.
+ */
+export function scenarioTableSpatialFactFills(input: {
+  readonly session: ScenarioSession;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+}): Either.Either<
+  readonly BattleFill[],
+  ScenarioTableSpatialFactProjectionIssue
+> {
+  const projectedFills: BattleFill[] = [];
+  for (const fill of input.fills) {
+    const frontier = resolveBattleRuntimeSubject({
+      session: input.session.battle,
+      subject: input.subject,
+      fills: projectedFills,
+    });
+    if (frontier.tag !== "needsHoles") {
+      projectedFills.push(fill);
+      continue;
+    }
+
+    if (
+      fill.kind === "helpAttackEnemyDecision" &&
+      input.subject.tag === "action" &&
+      input.subject.action === "helpAttack"
+    ) {
+      const targetQuestion: Extract<
+        ScenarioSpatialDecisionQuestion,
+        { readonly kind: "helpAttackTarget" }
+      > = {
+        kind: "helpAttackTarget",
+        helperId: input.subject.actorId,
+        targetEnemyId: fill.targetEnemyId,
+      };
+      const relation = scenarioRelationForSpatialQuestion(
+        input.session,
+        targetQuestion,
+      );
+      if (relation.tag !== "relation") {
+        return Either.left({
+          tag: "table-spatial-fact-projection",
+          message: relation.message,
+        });
+      }
+      if (relation.relation.distanceFeet > 5) {
+        return Either.left({
+          tag: "table-spatial-fact-projection",
+          message:
+            "The helpAttackTarget spatial witness is outside the supported 5-foot adjacency boundary.",
+        });
+      }
+      // The helper's adjacency is a Table-owned fact.  The player may choose
+      // the ordinary target, but cannot override the distance witness.
+      projectedFills.push({
+        ...fill,
+        targetWithinFiveFeetOfHelper: true,
+      });
+      continue;
+    }
+
+    if (
+      fill.kind === "abilityCheck" &&
+      input.subject.tag === "action" &&
+      input.subject.action === "escapeSpellRestraint" &&
+      input.subject.actorId !== input.subject.targetId
+    ) {
+      return Either.left({
+        tag: "table-spatial-fact-projection",
+        message:
+          "Escape Spell Restraint by a helper is unsupported: the public Battle hole exposes no canonical reach constraint, so spatial facts cannot be player-authored.",
+      });
+    }
+
+    if (fill.kind !== "targetChoice") {
+      projectedFills.push(fill);
+      continue;
+    }
+    const targetQuestion = scenarioTableSpatialFactQuestionForSubject(
+      input.subject,
+      fill.value,
+    );
+    if (targetQuestion === undefined) {
+      projectedFills.push(fill);
+      continue;
+    }
+    const targetHole = frontier.holes.find(
+      (hole) => hole.kind === "targetChoice" && hole.holeId === fill.holeId,
+    );
+    if (targetHole?.kind !== "targetChoice") {
+      projectedFills.push(fill);
+      continue;
+    }
+    const relation = scenarioRelationForSpatialQuestion(
+      input.session,
+      targetQuestion,
+    );
+    if (relation.tag !== "relation") {
+      return Either.left({
+        tag: "table-spatial-fact-projection",
+        message: relation.message,
+      });
+    }
+    if (Number(relation.relation.distanceFeet) > 5) {
+      return Either.left({
+        tag: "table-spatial-fact-projection",
+        message: `The ${targetQuestion.kind} spatial witness is outside the supported 5-foot reach/adjacency boundary.`,
+      });
+    }
+    const fact = scenarioTableSpatialFactForQuestion(targetQuestion);
+    const canonicalKinds = new Set([
+      "grappleTargetWithinReach",
+      "shoveTargetWithinReach",
+      "sleepShakeAwakeActorWithin5Feet",
+      "hypnoticPatternShakeAwakeActorWithin5Feet",
+      "helpAttackTargetWithin5Feet",
+    ]);
+    projectedFills.push({
+      ...fill,
+      spatialFacts: [
+        ...(fill.spatialFacts ?? []).filter(
+          (candidate) => !canonicalKinds.has(candidate.kind),
+        ),
+        fact,
+      ],
+    });
+  }
+  return Either.right(projectedFills);
+}
+
+type ScenarioAttackRange =
+  | Readonly<{ readonly kind: "meleeReach" }>
+  | Readonly<{
+      readonly kind: "rangedRange";
+      readonly band: "normal" | "long";
+    }>;
+
+function scenarioAttackRange(input: {
+  readonly constraint: AttackTargetConstraint;
+  readonly distanceFeet: number;
+  readonly targetLabel: "Target" | "Object";
+}): Either.Either<ScenarioAttackRange, string> {
+  return Match.value(input.constraint).pipe(
+    Match.when({ kind: "meleeReach" }, ({ reachFeet }) =>
+      input.distanceFeet <= Number(reachFeet)
+        ? Either.right({ kind: "meleeReach" as const })
+        : Either.left(
+            `${input.targetLabel} is ${input.distanceFeet} feet away, outside ${Number(reachFeet)}-foot reach.`,
+          ),
+    ),
+    Match.when({ kind: "rangedRange" }, ({ normalFeet, longFeet }) =>
+      input.distanceFeet <= Number(normalFeet)
+        ? Either.right({
+            kind: "rangedRange" as const,
+            band: "normal" as const,
+          })
+        : input.distanceFeet <= Number(longFeet)
+          ? Either.right({
+              kind: "rangedRange" as const,
+              band: "long" as const,
+            })
+          : Either.left(
+              `${input.targetLabel} is ${input.distanceFeet} feet away, outside ${Number(longFeet)}-foot long range.`,
+            ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function scenarioAttackTargetFills(input: {
+  readonly session: ScenarioSession;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+}): Either.Either<readonly BattleFill[], ScenarioAttackTargetProjectionIssue> {
+  const projectedFills: BattleFill[] = [];
+  for (const fill of input.fills) {
+    const frontier = resolveBattleRuntimeSubject({
+      session: input.session.battle,
+      subject: input.subject,
+      fills: projectedFills,
+    });
+    if (frontier.tag !== "needsHoles" || fill.kind !== "targetChoice") {
+      projectedFills.push(fill);
+      continue;
+    }
+    const targetHole = frontier.holes.find(
+      (hole) =>
+        hole.kind === "targetChoice" &&
+        hole.holeId === fill.holeId &&
+        hole.attack !== undefined,
+    );
+    if (
+      targetHole?.kind !== "targetChoice" ||
+      targetHole.attack === undefined
+    ) {
+      projectedFills.push(fill);
+      continue;
+    }
+    const attack = targetHole.attack;
+    const relation = scenarioRelationForSpatialQuestion(input.session, {
+      kind: "attackTarget",
+      actorId: attack.actorId,
+      targetId: fill.value,
+      sourceProcedureRef: attack.selection.procedureRef,
+      targetConstraint: attack.targetConstraint.kind,
+    });
+    if (relation.tag !== "relation") {
+      return Either.left({
+        tag: "attack-target-projection",
+        message: relation.message,
+      });
+    }
+    const distanceFeet = Number(relation.relation.distanceFeet);
+    const range = scenarioAttackRange({
+      constraint: attack.targetConstraint,
+      distanceFeet,
+      targetLabel: "Target",
+    });
+    if (Either.isLeft(range)) {
+      return Either.left({
+        tag: "attack-target-projection",
+        message: range.left,
+      });
+    }
+    const rangeFact = Match.value(range.right).pipe(
+      Match.when({ kind: "meleeReach" }, () => ({
+        kind: "attackTargetInMeleeReach" as const,
+        actorId: attack.actorId,
+        targetId: fill.value,
+        ...attack.selection,
+      })),
+      Match.when({ kind: "rangedRange" }, ({ band }) => ({
+        kind: "attackTargetInRangedRange" as const,
+        actorId: attack.actorId,
+        targetId: fill.value,
+        ...attack.selection,
+        rangeBand: band,
+      })),
+      Match.exhaustive,
+    );
+    const canonicalSightFact = relation.relation.attackerCanSeeTarget
+      ? undefined
+      : {
+          kind: "attackAttackerCannotSeeTarget" as const,
+          attackerId: attack.actorId,
+          targetId: fill.value,
+        };
+    projectedFills.push({
+      ...fill,
+      spatialFacts: [
+        ...(fill.spatialFacts ?? []).filter(
+          (fact) =>
+            fact.kind !== "attackTargetInMeleeReach" &&
+            fact.kind !== "attackTargetInRangedRange" &&
+            fact.kind !== "attackAttackerCannotSeeTarget" &&
+            fact.kind !== "attackTargetCannotSeeAttacker",
+        ),
+        rangeFact,
+        ...(canonicalSightFact === undefined ? [] : [canonicalSightFact]),
+      ],
+    });
+  }
+  return Either.right(projectedFills);
 }
 
 export function scenarioObjectAttackFills(input: {
@@ -1402,10 +2399,11 @@ export function scenarioObjectAttackFills(input: {
     });
   }
   const attack = targetHole.attack;
-  const relation = scenarioRelation({
-    session: input.session,
-    sourceId: attack.actorId,
-    targetId: object.objectId,
+  const relation = scenarioRelationForSpatialQuestion(input.session, {
+    kind: "objectTarget",
+    actorId: attack.actorId,
+    objectId: object.objectId,
+    sourceProcedureRef: attack.selection.procedureRef,
   });
   if (relation.tag !== "relation") {
     return Either.left({
@@ -1414,41 +2412,11 @@ export function scenarioObjectAttackFills(input: {
     });
   }
   const distanceFeet = Number(relation.relation.distanceFeet);
-  const range = Match.value(attack.targetConstraint).pipe(
-    Match.when({ kind: "meleeReach" }, ({ reachFeet }) =>
-      distanceFeet <= Number(reachFeet)
-        ? Either.right({ kind: "meleeReach" } as const)
-        : Either.left(
-            `Object is ${distanceFeet} feet away, outside ${Number(reachFeet)}-foot reach.`,
-          ),
-    ),
-    Match.when({ kind: "rangedRange" }, ({ normalFeet, longFeet }) =>
-      distanceFeet <= Number(normalFeet)
-        ? Either.right({
-            kind: "rangedRange" as const,
-            band: "normal" as const,
-            enemyWithin5FeetCanSeeAttacker:
-              scenarioEnemyWithinFiveFeetCanSeeAttacker(
-                input.session,
-                attack.actorId,
-              ),
-          })
-        : distanceFeet <= Number(longFeet)
-          ? Either.right({
-              kind: "rangedRange" as const,
-              band: "long" as const,
-              enemyWithin5FeetCanSeeAttacker:
-                scenarioEnemyWithinFiveFeetCanSeeAttacker(
-                  input.session,
-                  attack.actorId,
-                ),
-            })
-          : Either.left(
-              `Object is ${distanceFeet} feet away, outside ${Number(longFeet)}-foot long range.`,
-            ),
-    ),
-    Match.exhaustive,
-  );
+  const range = scenarioAttackRange({
+    constraint: attack.targetConstraint,
+    distanceFeet,
+    targetLabel: "Object",
+  });
   if (Either.isLeft(range)) {
     return Either.left({
       tag: "object-attack-projection",
@@ -1462,7 +2430,21 @@ export function scenarioObjectAttackFills(input: {
         kind: "attackObjectTarget",
         actorId: attack.actorId,
         objectId: object.objectId,
-        range: range.right,
+        range: Match.value(range.right).pipe(
+          Match.when({ kind: "meleeReach" }, () => ({
+            kind: "meleeReach" as const,
+          })),
+          Match.when({ kind: "rangedRange" }, ({ band }) => ({
+            kind: "rangedRange" as const,
+            band,
+            enemyWithin5FeetCanSeeAttacker:
+              scenarioEnemyWithinFiveFeetCanSeeAttacker(
+                input.session,
+                attack.actorId,
+              ),
+          })),
+          Match.exhaustive,
+        ),
         attackerCanSeeObject: relation.relation.attackerCanSeeTarget,
         cover: relation.relation.cover,
         armorClass: object.armorClass,
@@ -1492,12 +2474,10 @@ export function isScenarioSession(value: unknown): value is ScenarioSession {
   );
 }
 
-export function scenarioSessionWithBattleResult(
+function admitScenarioBattleSuccessor(
   session: ScenarioSession,
   battle: BattleRuntimeSession,
-  objectDamages: readonly BattleObjectDamageOutcome[] = [],
-  movements: readonly BattleResolvedMovement[] = [],
-): Either.Either<ScenarioSession, ScenarioSessionUpdateIssue> {
+): Either.Either<void, ScenarioSessionUpdateIssue> {
   if (session.battle.state.battleId !== battle.state.battleId) {
     return Either.left({
       tag: "battle-lineage-conflict",
@@ -1506,6 +2486,41 @@ export function scenarioSessionWithBattleResult(
       message: `Scenario battle ${String(session.battle.state.battleId)} cannot adopt battle ${String(battle.state.battleId)}.`,
     });
   }
+  if (
+    battle !== session.battle &&
+    !battleRuntimeSessionFollows(battle, session.battle)
+  ) {
+    return Either.left(
+      spatialDecisionIssue(
+        "spatial-decision-lineage-conflict",
+        "scenario-session",
+        "ScenarioSession cannot adopt an unrelated same-battle BattleRuntime session; results must follow the current runtime session directly.",
+      ),
+    );
+  }
+  if (
+    runtimeObjectIdentity(battle.context) !==
+    session.lineage.battleRuntimeContextIdentity
+  ) {
+    return Either.left(
+      spatialDecisionIssue(
+        "spatial-decision-lineage-conflict",
+        "scenario-session",
+        "ScenarioSession cannot adopt a same-battle BattleRuntime session from a different admitted context.",
+      ),
+    );
+  }
+  return Either.right(undefined);
+}
+
+export function scenarioSessionWithBattleResult(
+  session: ScenarioSession,
+  battle: BattleRuntimeSession,
+  objectDamages: readonly BattleObjectDamageOutcome[] = [],
+  movements: readonly BattleResolvedMovement[] = [],
+): Either.Either<ScenarioSession, ScenarioSessionUpdateIssue> {
+  const admittedBattle = admitScenarioBattleSuccessor(session, battle);
+  if (Either.isLeft(admittedBattle)) return Either.left(admittedBattle.left);
   let objects = session.battlefield.objects;
   for (const outcome of objectDamages) {
     const index = objects.findIndex(
@@ -1556,7 +2571,8 @@ export function scenarioSessionWithBattleResult(
     });
   }
   const [movement] = movements;
-  if (movement !== undefined && session.movementResolution.kind === "idle") {
+  const pendingMovement = session.movementResolution;
+  if (movement !== undefined && pendingMovement.kind === "idle") {
     return Either.left({
       tag: "unexpected-battle-movement",
       message: "Battle resolved movement without a table-owned scenario route.",
@@ -1564,10 +2580,11 @@ export function scenarioSessionWithBattleResult(
   }
   if (
     movement !== undefined &&
-    session.movementResolution.kind === "pending" &&
-    (session.battlefield.space.fingerprint !==
-      session.movementResolution.originFingerprint ||
-      !sameScenarioMovement(movement, session.movementResolution))
+    pendingMovement.kind === "geometryDerivedPending" &&
+    (session.battlefield.spatial.kind !== "geometryDerived" ||
+      session.battlefield.spatial.space.fingerprint !==
+        pendingMovement.originFingerprint ||
+      !sameScenarioMovement(movement, pendingMovement))
   ) {
     return Either.left({
       tag: "movement-outcome-conflict",
@@ -1575,20 +2592,73 @@ export function scenarioSessionWithBattleResult(
         "Battle resolved movement that does not match the pending scenario route.",
     });
   }
+  if (
+    movement !== undefined &&
+    pendingMovement.kind === "tableAuthoredPending" &&
+    !sameScenarioMovement(movement, pendingMovement)
+  ) {
+    return Either.left({
+      tag: "movement-outcome-conflict",
+      message:
+        "Battle resolved movement that does not match the Table-authored route consequence.",
+    });
+  }
   const movementResolution =
     movement === undefined
       ? session.movementResolution
       : ({ kind: "idle" } as const);
-  const battlefield =
-    movement === undefined || session.movementResolution.kind === "idle"
-      ? Object.freeze({ ...session.battlefield, objects })
-      : Object.freeze({
-          ...session.battlefield,
-          objects,
-          space: session.movementResolution.plannedSpace,
-        });
+  if (
+    movement !== undefined &&
+    pendingMovement.kind === "geometryDerivedPending"
+  ) {
+    if (session.battlefield.spatial.kind !== "geometryDerived") {
+      return Either.left({
+        tag: "movement-outcome-conflict",
+        message:
+          "Geometry-derived movement cannot commit against a Table-authored spatial boundary.",
+      });
+    }
+    const battlefield: ScenarioBattlefield = Object.freeze({
+      ...session.battlefield,
+      objects,
+      spatial: Object.freeze({
+        ...session.battlefield.spatial,
+        space: pendingMovement.plannedSpace,
+      }),
+    });
+    return Either.right(
+      makeScenarioSession(
+        battle,
+        battlefield,
+        movementResolution,
+        session.lineage.scenarioSessionLineageId,
+      ),
+    );
+  }
+  const nextSpatialBoundary =
+    movement !== undefined && pendingMovement.kind === "tableAuthoredPending"
+      ? pendingMovement.postMoveSpatial
+      : session.battlefield.spatial;
+  const spatial =
+    nextSpatialBoundary.kind === "tableAuthored"
+      ? rebindTableSpatialBoundary(
+          nextSpatialBoundary,
+          battle,
+          session.lineage.scenarioSessionLineageId,
+        )
+      : nextSpatialBoundary;
+  const battlefield: ScenarioBattlefield = Object.freeze({
+    ...session.battlefield,
+    objects,
+    spatial,
+  });
   return Either.right(
-    makeScenarioSession(battle, battlefield, movementResolution),
+    makeScenarioSession(
+      battle,
+      battlefield,
+      movementResolution,
+      session.lineage.scenarioSessionLineageId,
+    ),
   );
 }
 
@@ -1596,35 +2666,62 @@ export function scenarioSessionAfterRejectedMovement(
   session: ScenarioSession,
   battle: BattleRuntimeSession,
 ): Either.Either<ScenarioSession, ScenarioSessionUpdateIssue> {
-  if (session.battle.state.battleId !== battle.state.battleId) {
-    return Either.left({
-      tag: "battle-lineage-conflict",
-      expectedBattleId: session.battle.state.battleId,
-      receivedBattleId: battle.state.battleId,
-      message: `Scenario battle ${String(session.battle.state.battleId)} cannot adopt battle ${String(battle.state.battleId)}.`,
-    });
-  }
+  const admittedBattle = admitScenarioBattleSuccessor(session, battle);
+  if (Either.isLeft(admittedBattle)) return Either.left(admittedBattle.left);
   return Either.right(
-    makeScenarioSession(battle, session.battlefield, { kind: "idle" }),
+    makeScenarioSession(
+      battle,
+      session.battlefield,
+      { kind: "idle" },
+      session.lineage.scenarioSessionLineageId,
+    ),
   );
 }
 
-function spatialState(session: ScenarioSession) {
-  const restored = restoreState(
-    session.battlefield.arena,
-    session.battlefield.space,
-  );
-  if (restored.tag === "error") {
-    throw new Error(
-      "A recognized scenario session must retain internally consistent spatial evidence.",
-    );
-  }
-  return restored.value;
+function rebindTableSpatialBoundary(
+  boundary: Extract<
+    ScenarioSpatialBoundary,
+    { readonly kind: "tableAuthored" }
+  >,
+  battle: BattleRuntimeSession,
+  sessionLineageId: ScenarioSessionLineageId,
+): ScenarioSpatialBoundary {
+  const battleRuntimeSessionIdentity = runtimeObjectIdentity(battle);
+  return Object.freeze({
+    kind: "tableAuthored" as const,
+    spatialFingerprint: boundary.spatialFingerprint,
+    tableAuthoredDecisions: Object.freeze(
+      boundary.tableAuthoredDecisions.map((candidate) =>
+        Object.freeze({
+          ...candidate,
+          lineage: Object.freeze({
+            ...candidate.lineage,
+            battleId: battle.state.battleId,
+            scenarioSessionLineageId: sessionLineageId,
+            battleRuntimeSessionIdentity,
+          }),
+        }),
+      ),
+    ),
+  });
+}
+
+function restoreSpatialState(
+  boundary: Extract<
+    ScenarioSpatialBoundary,
+    { readonly kind: "geometryDerived" }
+  >,
+): SpatialState | undefined {
+  const restored = restoreState(boundary.arena, boundary.space);
+  return restored.tag === "error" ? undefined : restored.value;
 }
 
 function sameScenarioMovement(
   movement: BattleResolvedMovement,
-  pending: Extract<ScenarioMovementResolution, { readonly kind: "pending" }>,
+  pending: Extract<
+    ScenarioMovementResolution,
+    { readonly kind: "geometryDerivedPending" | "tableAuthoredPending" }
+  >,
 ): boolean {
   const value = pending.fill.value;
   return (

@@ -95,8 +95,11 @@ function validatedPacketFixture() {
       },
     },
     battlefield: {
-      space: {
-        placements: [{ token: "actor", coordinate: { x: 0, y: 0 } }],
+      spatial: {
+        kind: "geometryDerived",
+        space: {
+          placements: [{ token: "actor", coordinate: { x: 0, y: 0 } }],
+        },
       },
       objects: [],
     },

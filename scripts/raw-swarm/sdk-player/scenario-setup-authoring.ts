@@ -6,7 +6,7 @@ export const scenarioSetupAuthorProtectedInputFiles = [
   "SCENARIO_REVIEW.json",
   "CHARACTERS.json",
   "STAT_BLOCKS.json",
-  "PUBLIC_SDK.md",
+  "CAPABILITY_CONTEXT.md",
   "SCENARIO_SETUP.md",
   "SCENARIO_SETUP_CONTROLLER.md",
 ] as const;

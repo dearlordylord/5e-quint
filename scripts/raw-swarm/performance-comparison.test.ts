@@ -29,14 +29,16 @@ describe("whole-path performance evidence", () => {
       invocationId: string,
     ) =>
       ({
-        schemaVersion: 1,
+        schemaVersion: 2,
         phase,
+        stagePlanReason: `The fixture ${phase} stage requires this invocation.`,
         invocationId,
         model: phase === "player" ? "gpt-5.6-sol" : "gpt-5.6-luna",
         reasoningEffort: phase === "player" ? "medium" : "max",
         startedAt: "2026-08-14T00:00:00.000Z",
         elapsedMilliseconds: 1_000,
         exit: { tag: "exited", status: 0 },
+        result: { tag: "succeeded" },
         usage: {
           tag: "available",
           input: { tag: "available", count: input },

@@ -10,6 +10,7 @@ import {
   openSync,
   readFileSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -26,6 +27,17 @@ import {
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import { readJsonLines } from "./artifact-authority.ts";
 import {
+  retainAdmittedScenarioStagePlan,
+  retainedScenarioStageFactsPath,
+  retainedScenarioStagePlanFindingsPath,
+  retainedScenarioStagePlanPath,
+} from "./stage-plan-authority.ts";
+import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
+import {
+  RAW_SWARM_STAGE_PLAN_REASONS,
+  stagePlanEntry,
+} from "./scenario-stage-plan.ts";
+import {
   currentGitRevision,
   decodeScenarioId,
   GitShaSchema,
@@ -40,6 +52,13 @@ import {
   playerContinuationEvidence,
   type PlayerEvidenceState,
 } from "./player-continuation-evidence.ts";
+import {
+  findingsArtifactPath,
+  projectRunFindings,
+  findingsCheckpointArtifactPath,
+  writeFindingsProjection,
+} from "./findings.ts";
+import { projectTranscriptlessFindings } from "./generation-findings.ts";
 
 const PLAYER_MODEL = "gpt-5.6-sol";
 const PLAYER_REASONING_EFFORT = "medium";
@@ -79,6 +98,70 @@ function retainRun(player: string, trusted: string, output: string): void {
   if (existsSync(evidence)) {
     cpSync(evidence, resolve(output, "evidence"), { recursive: true });
   }
+}
+
+function emitRunFindings(output: string): void {
+  const transcriptPath = resolve(output, "evidence/sdk-calls.jsonl");
+  if (!existsSync(transcriptPath)) return;
+  const projection = projectRunFindings({
+    transcriptPath,
+    runDirectory: output,
+    reviewPaths: [],
+    scenarioReviewPaths: [],
+    generationLedgerPaths: [],
+    issueLinks: [],
+  });
+  writeFindingsProjection({
+    projection,
+    path: findingsCheckpointArtifactPath(output),
+  });
+}
+
+function emitTranscriptlessFindings(input: {
+  readonly output: string;
+  readonly runStartPath: string;
+  readonly scenarioId: string;
+  readonly gitSha: string;
+  readonly startedAt: string;
+  readonly stage: "generation" | "character-authoring" | "setup-authoring";
+  readonly category:
+    | "scenario-author-defect"
+    | "experiment-boundary-obstruction"
+    | "model-controller-mistake";
+  readonly kind:
+    | "generation-rejection"
+    | "character-obstruction"
+    | "setup-obstruction"
+    | "informational-observation";
+  readonly summary: string;
+  readonly detail: string;
+  readonly authorityPaths?: readonly {
+    readonly role: string;
+    readonly path: string;
+  }[];
+  readonly pointerAuthorityRole?: string;
+}): void {
+  const projection = projectTranscriptlessFindings({
+    scenarioId: input.scenarioId,
+    gitSha: input.gitSha,
+    startedAt: input.startedAt,
+    authorityPaths: [
+      { role: "run", path: input.runStartPath },
+      ...(input.authorityPaths ?? []),
+    ],
+    stage: input.stage,
+    category: input.category,
+    kind: input.kind,
+    summary: input.summary,
+    detail: input.detail,
+    ...(input.pointerAuthorityRole === undefined
+      ? {}
+      : { pointerAuthorityRole: input.pointerAuthorityRole }),
+  });
+  writeFindingsProjection({
+    projection,
+    path: findingsArtifactPath(input.output),
+  });
 }
 
 function playerEvidenceState(
@@ -231,6 +314,7 @@ async function main(args: readonly string[]): Promise<void> {
   }
   const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
   if (Either.isLeft(gitSha)) fail(gitSha.left.message);
+  const startedAt = new Date().toISOString();
   const output = resolve(
     repoRoot,
     `scripts/raw-swarm/out/${acceptedEvidenceId}-sdk-player`,
@@ -251,13 +335,9 @@ async function main(args: readonly string[]): Promise<void> {
     `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.characters.ts`,
   );
   const scenarioReviewPath = `${scenarioPath}.scenario-review.json`;
-  if (
-    !existsSync(scenarioPath) ||
-    !existsSync(scenarioReviewPath) ||
-    !existsSync(charactersPath)
-  ) {
+  if (!existsSync(scenarioPath) || !existsSync(scenarioReviewPath)) {
     fail(
-      `Scenario requires adjacent .md, .scenario-review.json, and .characters.ts files; ready characters additionally require .setup.ts: ${acceptedScenarioId}`,
+      `Scenario requires adjacent .md and .scenario-review.json files: ${acceptedScenarioId}`,
     );
   }
   const admission = admittedScenarioIdentity({
@@ -266,11 +346,214 @@ async function main(args: readonly string[]): Promise<void> {
     reviewPath: scenarioReviewPath,
   });
   if (Either.isLeft(admission)) fail(admission.left);
+  mkdirSync(resolve(output, "evidence"), { recursive: true });
+  const runStartPath = resolve(output, "evidence/run-start.json");
+  writeFileSync(
+    runStartPath,
+    `${JSON.stringify(
+      {
+        type: "raw-swarm-player-run-start",
+        schemaVersion: 1,
+        scenarioId: acceptedScenarioId,
+        gitSha: gitSha.right,
+        startedAt,
+      },
+      null,
+      2,
+    )}\n`,
+    { flag: "wx" },
+  );
+  const retainedPlan = retainAdmittedScenarioStagePlan({
+    scenarioId: acceptedScenarioId,
+    scenarioPath,
+    scenarioSha256: admission.right.scenarioSha256,
+    scenarioReviewSha256: admission.right.scenarioReviewSha256,
+  });
+  if (Either.isLeft(retainedPlan)) {
+    emitTranscriptlessFindings({
+      output,
+      runStartPath,
+      scenarioId: acceptedScenarioId,
+      gitSha: gitSha.right,
+      startedAt,
+      stage: "generation",
+      category: "scenario-author-defect",
+      kind: "generation-rejection",
+      summary: "Scenario stage planning could not produce a retained plan.",
+      detail: retainedPlan.left,
+      authorityPaths: [
+        { role: "scenario", path: scenarioPath },
+        { role: "scenarioReview", path: scenarioReviewPath },
+        ...(existsSync(retainedScenarioStageFactsPath(scenarioPath))
+          ? [
+              {
+                role: "stageFacts",
+                path: retainedScenarioStageFactsPath(scenarioPath),
+              },
+            ]
+          : []),
+      ],
+      pointerAuthorityRole: existsSync(
+        retainedScenarioStageFactsPath(scenarioPath),
+      )
+        ? "stageFacts"
+        : "scenario",
+    });
+    fail(retainedPlan.left);
+  }
+  const stagePlanPath = retainedScenarioStagePlanPath(acceptedScenarioId);
+  if (retainedPlan.right.outcome.tag === "rejected") {
+    mkdirSync(output, { recursive: true });
+    copyFileSync(scenarioPath, resolve(output, "SCENARIO.md"));
+    copyFileSync(scenarioReviewPath, resolve(output, "SCENARIO_REVIEW.json"));
+    copyFileSync(stagePlanPath, resolve(output, "STAGE_PLAN.json"));
+    const stagePlanFindingsPath =
+      retainedScenarioStagePlanFindingsPath(acceptedScenarioId);
+    if (existsSync(stagePlanFindingsPath)) {
+      copyFileSync(
+        stagePlanFindingsPath,
+        resolve(output, "STAGE_PLAN_FINDINGS.json"),
+      );
+    }
+    writeFileSync(
+      resolve(output, "STAGE_PLAN_REJECTION.json"),
+      `${JSON.stringify(retainedPlan.right.outcome, null, 2)}\n`,
+    );
+    emitTranscriptlessFindings({
+      output,
+      runStartPath,
+      scenarioId: acceptedScenarioId,
+      gitSha: gitSha.right,
+      startedAt,
+      stage: "generation",
+      category: "scenario-author-defect",
+      kind: "generation-rejection",
+      summary:
+        "Scenario stage planning rejected the candidate before SDK preparation.",
+      detail: retainedPlan.right.outcome.reason,
+      authorityPaths: [
+        { role: "scenario", path: resolve(output, "SCENARIO.md") },
+        {
+          role: "scenarioReview",
+          path: resolve(output, "SCENARIO_REVIEW.json"),
+        },
+        { role: "stagePlan", path: resolve(output, "STAGE_PLAN.json") },
+        ...(existsSync(resolve(output, "STAGE_PLAN_FINDINGS.json"))
+          ? [
+              {
+                role: "stagePlanFindings",
+                path: resolve(output, "STAGE_PLAN_FINDINGS.json"),
+              },
+            ]
+          : []),
+        {
+          role: "stagePlanRejection",
+          path: resolve(output, "STAGE_PLAN_REJECTION.json"),
+        },
+      ],
+      pointerAuthorityRole: existsSync(
+        resolve(output, "STAGE_PLAN_FINDINGS.json"),
+      )
+        ? "stagePlanFindings"
+        : "stagePlan",
+    });
+    console.log(
+      `Scenario stage plan rejected before SDK player preparation: ${retainedPlan.right.outcome.reason}`,
+    );
+    return;
+  }
+  if (!existsSync(charactersPath)) {
+    emitTranscriptlessFindings({
+      output,
+      runStartPath,
+      scenarioId: acceptedScenarioId,
+      gitSha: gitSha.right,
+      startedAt,
+      stage: "character-authoring",
+      category: "model-controller-mistake",
+      kind: "character-obstruction",
+      summary:
+        "Controller-authored character source was missing after stage planning.",
+      detail: `Scenario requires controller-authored .characters.ts after stage planning: ${acceptedScenarioId}`,
+      authorityPaths: [
+        { role: "scenario", path: scenarioPath },
+        { role: "scenarioReview", path: scenarioReviewPath },
+        { role: "stagePlan", path: stagePlanPath },
+        ...(existsSync(
+          retainedScenarioStagePlanFindingsPath(acceptedScenarioId),
+        )
+          ? [
+              {
+                role: "stagePlanFindings",
+                path: retainedScenarioStagePlanFindingsPath(acceptedScenarioId),
+              },
+            ]
+          : []),
+        ...(existsSync(retainedScenarioStageFactsPath(scenarioPath))
+          ? [
+              {
+                role: "stageFacts",
+                path: retainedScenarioStageFactsPath(scenarioPath),
+              },
+            ]
+          : []),
+      ],
+      pointerAuthorityRole: "stagePlan",
+    });
+    fail(
+      `Scenario requires controller-authored .characters.ts after stage planning: ${acceptedScenarioId}`,
+    );
+  }
+  const characterStage = stagePlanEntry(
+    retainedPlan.right,
+    "scenarioCharacterAuthoring",
+  );
+  if (characterStage?.decision === "skipped") {
+    const evaluatedCharacters =
+      await evaluateScenarioCharacters(charactersPath);
+    if (
+      evaluatedCharacters.tag !== "ready" ||
+      evaluatedCharacters.characterSheets.length !== 0
+    ) {
+      const detail = Match.value(evaluatedCharacters).pipe(
+        Match.when(
+          { tag: "ready" },
+          ({ characterSheets }) =>
+            `Skipped Character Sheet stage returned ${String(characterSheets.length)} sheets.`,
+        ),
+        Match.when({ tag: "obstructed" }, ({ obstruction }) => obstruction),
+        Match.when({ tag: "invalid" }, ({ message }) => message),
+        Match.exhaustive,
+      );
+      emitTranscriptlessFindings({
+        output,
+        runStartPath,
+        scenarioId: acceptedScenarioId,
+        gitSha: gitSha.right,
+        startedAt,
+        stage: "character-authoring",
+        category: "model-controller-mistake",
+        kind: "character-obstruction",
+        summary:
+          "Stat-block-only stage plan was not backed by a valid zero-sheet character source.",
+        detail,
+        authorityPaths: [
+          { role: "scenario", path: scenarioPath },
+          { role: "scenarioReview", path: scenarioReviewPath },
+          { role: "stagePlan", path: stagePlanPath },
+          { role: "characters", path: charactersPath },
+        ],
+        pointerAuthorityRole: "characters",
+      });
+      fail(detail);
+    }
+  }
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-sdk-player-"));
   const trusted = mkdtempSync(resolve(tmpdir(), "dnd-sdk-supervisor-"));
   const codexHome = createConsumerCodexHome();
   let supervisorProcess: ReturnType<typeof spawn> | undefined;
   let supervisorLog: number | undefined;
+  let preparationFailure: string | undefined;
   try {
     buildConsumerDistribution({
       destination: scratch,
@@ -279,6 +562,15 @@ async function main(args: readonly string[]): Promise<void> {
     });
     copyFileSync(scenarioReviewPath, resolve(scratch, "SCENARIO_REVIEW.json"));
     mkdirSync(resolve(trusted, "evidence"));
+    copyFileSync(stagePlanPath, resolve(trusted, "evidence/stage-plan.json"));
+    const stagePlanFindingsPath =
+      retainedScenarioStagePlanFindingsPath(acceptedScenarioId);
+    if (existsSync(stagePlanFindingsPath)) {
+      copyFileSync(
+        stagePlanFindingsPath,
+        resolve(trusted, "evidence/stage-plan-findings.json"),
+      );
+    }
     copyFileSync(charactersPath, resolve(trusted, "evidence/characters.ts"));
     if (existsSync(setupPath)) {
       copyFileSync(setupPath, resolve(trusted, "evidence/setup.ts"));
@@ -315,6 +607,8 @@ async function main(args: readonly string[]): Promise<void> {
       { ...process.env, RAW_SWARM_PLAYER_ROOT: scratch },
     );
     if (!existsSync(resolve(trusted, "evidence/frozen-prefix.json"))) {
+      preparationFailure =
+        "Scenario preparation recorded an obstruction; player execution was not started.";
       console.log(
         `Scenario preparation recorded an obstruction; player execution was not started: ${acceptedScenarioId}`,
       );
@@ -359,12 +653,12 @@ async function main(args: readonly string[]): Promise<void> {
         "--output-last-message",
         resolve(trusted, "evidence/agent-final.txt"),
         [
-          "Read PLAYER.md, SCENARIO.md, OBSERVATION.json, and attempt.ts.",
+          "Read CAPABILITY_CONTEXT.md, PLAYER.md, SCENARIO.md, OBSERVATION.json, and attempt.ts.",
           "Act as the player described there and continue until the SDK supervisor accepts a playerConcluded outcome or returns a terminalObstruction. Stop immediately after a terminalObstruction; it is retained evidence.",
           "For each tactical continuation, edit only attempt.ts and run `node player-client.mjs attempt.ts`. After the call, reread OBSERVATION.json before replacing the attempt body for the next continuation.",
           "At subjectSelection, discover acts and attempt a surfaced act in the same continuation. At subjectContinuation, resume the retained subject and do not discover fresh acts.",
           "Correct compilation or runtime failures that occur before the first SDK call. A returned SDK rejection is frozen evidence; use the next continuation to correct it.",
-          "Inspect only the four named scratch-consumer files. Do not enumerate other files, inspect declarations, repository source, internal tests, or prior implementation knowledge.",
+          "Inspect only the five named scratch-consumer files. Do not enumerate other files, inspect declarations, repository source, internal tests, or prior implementation knowledge.",
           "Do not edit evidence files. Preserve and report an SDK obstruction instead of fabricating support.",
         ].join(" "),
       ],
@@ -374,6 +668,7 @@ async function main(args: readonly string[]): Promise<void> {
       logPath: agentLogPath,
       ledgerPath: resolve(trusted, "evidence/invocations.jsonl"),
       phase: "player",
+      stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.player,
       scenarioId: acceptedScenarioId,
       gitSha: gitSha.right,
       fallbackInvocationId: randomUUID(),
@@ -397,34 +692,92 @@ async function main(args: readonly string[]): Promise<void> {
         `Player run retained a player-protocol obstruction after ${String(evidenceState.recordedContinuations)} continuations: ${evidenceState.obstruction.message}`,
       );
     }
+  } catch (error: unknown) {
+    preparationFailure = error instanceof Error ? error.message : String(error);
+    throw error;
   } finally {
-    if (supervisorProcess !== undefined) {
-      const runningSupervisor = supervisorProcess;
-      const stopped = new Promise<void>((resolveStopped) => {
-        if (runningSupervisor.exitCode !== null) {
-          resolveStopped();
-          return;
-        }
-        runningSupervisor.once("exit", () => resolveStopped());
-      });
-      runningSupervisor.kill("SIGTERM");
-      await stopped;
-    }
-    if (supervisorLog !== undefined) closeSync(supervisorLog);
-    if (existsSync(resolve(trusted, "evidence/sdk-calls.jsonl"))) {
-      const agentLogPath = resolve(trusted, "agent.log");
-      if (existsSync(agentLogPath)) {
-        copyFileSync(agentLogPath, resolve(scratch, "agent.log"));
+    try {
+      if (supervisorProcess !== undefined) {
+        const runningSupervisor = supervisorProcess;
+        const stopped = new Promise<void>((resolveStopped) => {
+          if (runningSupervisor.exitCode !== null) {
+            resolveStopped();
+            return;
+          }
+          runningSupervisor.once("exit", () => resolveStopped());
+        });
+        runningSupervisor.kill("SIGTERM");
+        await stopped;
       }
-      retainRun(scratch, trusted, output);
-      copyFileSync(
-        resolve(trusted, "supervisor.mjs"),
-        resolve(output, "replay-supervisor.mjs"),
-      );
+      if (supervisorLog !== undefined) closeSync(supervisorLog);
+      if (existsSync(resolve(trusted, "evidence/sdk-calls.jsonl"))) {
+        const agentLogPath = resolve(trusted, "agent.log");
+        if (existsSync(agentLogPath)) {
+          copyFileSync(agentLogPath, resolve(scratch, "agent.log"));
+        }
+        retainRun(scratch, trusted, output);
+        emitRunFindings(output);
+        copyFileSync(
+          resolve(trusted, "supervisor.mjs"),
+          resolve(output, "replay-supervisor.mjs"),
+        );
+      } else {
+        emitTranscriptlessFindings({
+          output,
+          runStartPath,
+          scenarioId: acceptedScenarioId,
+          gitSha: gitSha.right,
+          startedAt,
+          stage: "setup-authoring",
+          category: "experiment-boundary-obstruction",
+          kind: "setup-obstruction",
+          summary: "SDK player preparation did not produce a transcript.",
+          detail:
+            preparationFailure ??
+            "SDK player preparation ended before a canonical transcript was written.",
+          authorityPaths: [
+            { role: "scenario", path: scenarioPath },
+            { role: "scenarioReview", path: scenarioReviewPath },
+            ...(existsSync(stagePlanPath)
+              ? [{ role: "stagePlan", path: stagePlanPath }]
+              : []),
+            ...(existsSync(
+              retainedScenarioStagePlanFindingsPath(acceptedScenarioId),
+            )
+              ? [
+                  {
+                    role: "stagePlanFindings",
+                    path: retainedScenarioStagePlanFindingsPath(
+                      acceptedScenarioId,
+                    ),
+                  },
+                ]
+              : []),
+            ...(existsSync(retainedScenarioStageFactsPath(scenarioPath))
+              ? [
+                  {
+                    role: "stageFacts",
+                    path: retainedScenarioStageFactsPath(scenarioPath),
+                  },
+                ]
+              : []),
+            ...(existsSync(charactersPath)
+              ? [{ role: "characters", path: charactersPath }]
+              : []),
+            ...(existsSync(setupPath)
+              ? [{ role: "setup", path: setupPath }]
+              : []),
+          ],
+          pointerAuthorityRole: existsSync(stagePlanPath)
+            ? "stagePlan"
+            : "scenario",
+        });
+      }
+    } finally {
+      rmSync(scratch, { recursive: true });
+      rmSync(trusted, { recursive: true });
+      rmSync(codexHome, { recursive: true });
     }
-    rmSync(scratch, { recursive: true });
-    rmSync(trusted, { recursive: true });
-    rmSync(codexHome, { recursive: true });
   }
   console.log(`SDK player evidence: ${output}`);
 }

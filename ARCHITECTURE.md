@@ -216,13 +216,20 @@ own Units merely because Stat Blocks may reuse shared Surface sub-shapes.
 
 ## Spatial Modeling Frontier
 
-Spatial modeling is table-owned. Runtimes and MCP may consume explicit spatial
-facts submitted by the table/caller/session, and a runtime may store one of
-those submitted facts when a reducer procedure needs it for later replay, but no
-package computes geometry inference. Do not add a grid engine, pathfinding layer,
-persistent map model, coordinate system, line-of-sight engine, cover-geometry
-engine, or adjacency/reach cache to Core, promoted runtime packages, or MCP as a
-workaround for a rule needing spatial context.
+Spatial modeling is table-owned at the product boundary. Battle Runtime, MCP,
+and the Target SDK may consume explicit spatial facts submitted by the
+table/caller/session, and a runtime may store one of those submitted facts when
+a reducer procedure needs it for later replay, but those product layers do not
+infer geometry or require a geometry engine. The optional
+[`@dnd/tactical-space`](packages/tactical-space/README.md) package is an
+experimental Table adapter outside Battle Runtime and Target SDK completeness:
+it may derive explicit facts within its documented envelope, which the Table
+then supplies through the same typed witness boundary. A scenario may omit the
+adapter and author a coherent spatial decision directly. Do not add a grid
+engine, pathfinding layer, persistent map model, coordinate system,
+line-of-sight engine, cover-geometry engine, or adjacency/reach cache to Core,
+promoted runtime packages, or MCP as a workaround for a rule needing spatial
+context.
 
 The SRD defines mechanical consequences for spatial relations, but it often does
 not prescribe how the table determines those relations. The runtime therefore
@@ -247,6 +254,14 @@ the boundary where the procedure needs them:
   relationship partition. Help attack proximity is a separate table-supplied
   spatial fact; battle owns the resulting help link, expiry, and consumption by
   the later qualifying attack.
+
+For one exact pending spatial question, an adapter-derived witness and a
+Table-authored spatial decision are alternative sources. The session supplies
+one authoritative fact with the question and lineage it answers; it must not
+store competing values and ask the runtime to choose a precedence. A coherent
+Table decision is therefore a valid way to exercise a spatial rule without
+making geometry a product requirement. Contradictory or stale decisions remain
+invalid inputs.
 
 If a package stores an explicit spatial fact, the type must name that fact rather
 than imply ownership of geometry. For example, a caller-supplied attack range

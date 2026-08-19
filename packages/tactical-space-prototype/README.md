@@ -29,10 +29,11 @@ visible tokens, while privileged relations can explicitly report blocked
 visibility. Route results are bound to the arena and spatial revision from which
 they were derived, so a stale route cannot be traversed.
 
-The accepted main architecture currently says that packages do not infer
-geometry. This package is intentionally unintegrated evidence for deciding
-whether that ownership rule should later change; adopting it as production
-table infrastructure would require an explicit architecture decision first.
+The main architecture keeps geometry out of Battle Runtime, MCP, and Target SDK
+completeness. This package is intentionally unintegrated evidence for the
+optional Table-adapter boundary; using it as product infrastructure still
+requires an explicit composition decision and does not change that ownership
+rule.
 
 Companion experiments remain separate packages:
 

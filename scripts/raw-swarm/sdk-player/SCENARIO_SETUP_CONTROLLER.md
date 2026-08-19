@@ -1,7 +1,7 @@
 # Scenario setup controller
 
-Read `SCENARIO.md`, `SCENARIO_REVIEW.json`, `CHARACTERS.json`, `PUBLIC_SDK.md`,
-`SCENARIO_SETUP.md`, the neutral author's immutable `NEUTRAL_SETUP.ts`, and its
+Read `CAPABILITY_CONTEXT.md`, `SCENARIO.md`, `SCENARIO_REVIEW.json`,
+`CHARACTERS.json`, `SCENARIO_SETUP.md`, the neutral author's immutable `NEUTRAL_SETUP.ts`, and its
 working copy `setup.ts`. The neutral source is the closest faithful setup and
 is your review baseline, not a reusable module or blank starter. Edit only the
 working copy, and do not import `NEUTRAL_SETUP.ts`; it is removed before the
@@ -13,9 +13,15 @@ Sheet occupies each scenario-delegated starting square. Supply those choices as
 ordinary TypeScript through the canonical public SDK. Do not add a choice
 record, scenario schema, command vocabulary, or parallel rules model.
 Supply the final assignment in the `placements` passed to the neutral source's
-single `createScenarioSession` call. Preserve its arena, ambient Illumination,
-vertical environment, and scenario-object facts; they are table-owned session
-facts, not battle state.
+single `createScenarioSession` call when the scenario uses a geometry-derived
+spatial source. Preserve its arena, ambient Illumination, vertical
+environment, and scenario-object facts; they are table-owned session facts,
+not battle state. A setup with no tactical-space may instead provide
+Table-authored `spatialDecisions`. Each decision must answer one exact
+relation, spell-target, object-target, attack-target, grapple, shove, Help,
+wake-from-sleep or hypnotic-pattern, or movement-route question. Do not provide a Table decision that duplicates a geometry-derived
+relation or movement question, and do not create a player override operation.
+Table-authored movement includes its canonical post-move spatial state.
 If no delegated pre-battle choice remains, leave `setup.ts` byte-for-byte
 unchanged.
 

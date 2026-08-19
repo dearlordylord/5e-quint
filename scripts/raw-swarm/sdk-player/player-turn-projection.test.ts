@@ -94,7 +94,12 @@ const beforeSession = {
     },
   },
   battlefield: {
-    space: { placements: [{ token: "fighter", coordinate: { x: 1, y: 1 } }] },
+    spatial: {
+      kind: "geometryDerived",
+      arena: {},
+      space: { placements: [{ token: "fighter", coordinate: { x: 1, y: 1 } }] },
+      tableAuthoredDecisions: [],
+    },
     objects: [
       {
         objectId: "door",
@@ -603,7 +608,10 @@ describe("player current-turn projection", () => {
     fighter.ammunitionStocks[0].remaining = 1;
     fighter.origin.resources[0].usesRemaining = 0;
     fighter.origin.spellcasting.spellSlots[0].remaining = 0;
-    afterSession.battlefield.space.placements[0].coordinate = { x: 2, y: 1 };
+    afterSession.battlefield.spatial.space.placements[0].coordinate = {
+      x: 2,
+      y: 1,
+    };
     afterSession.battlefield.objects[0].damageDisposition.hitPoints = 3;
     const result = {
       tag: "needsHoles",

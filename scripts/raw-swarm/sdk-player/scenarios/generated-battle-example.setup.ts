@@ -230,8 +230,12 @@ export const setupScenario: ScenarioSetup = ({
     .map(({ combatantId }) => combatantId);
   const scenarioSession = sdk.createScenarioSession({
     battle: started.right,
-    arena: { cells, boundaries },
-    placements,
+    spatial: {
+      kind: "geometryDerived",
+      arena: { cells, boundaries },
+      placements,
+      spatialDecisions: [],
+    },
     ambientIllumination: "brightLight",
     statBlockDamageNotation: "rolled",
     environment: {

@@ -3,7 +3,10 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { Either } from "effect";
+
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
+import { validateAdmittedScenarioStagePlanEvidence } from "./stage-plan-authority.ts";
 import { currentGitRevision, repoRoot, sha256Text } from "./transcript.ts";
 
 function fail(message: string): never {
@@ -40,6 +43,27 @@ function main(args: readonly string[]): void {
   ) {
     fail("Retained scenario or admission review diverged from the recording.");
   }
+  const stagePlanPath = resolve(runPath, "evidence/stage-plan.json");
+  const stagePlanFindingsPath = resolve(
+    runPath,
+    "evidence/stage-plan-findings.json",
+  );
+  let stagePlan: unknown;
+  let stagePlanFindings: unknown;
+  try {
+    stagePlan = JSON.parse(readFileSync(stagePlanPath, "utf8"));
+    stagePlanFindings = JSON.parse(readFileSync(stagePlanFindingsPath, "utf8"));
+  } catch {
+    fail("Replay requires readable retained stage-plan authorities.");
+  }
+  const stagePlanEvidence = validateAdmittedScenarioStagePlanEvidence({
+    plan: stagePlan,
+    findings: stagePlanFindings,
+    scenarioId: parsed.value.header.scenarioId,
+    scenarioSha256: parsed.value.header.scenarioSha256,
+    scenarioReviewSha256: parsed.value.header.scenarioReviewSha256,
+  });
+  if (Either.isLeft(stagePlanEvidence)) fail(stagePlanEvidence.left);
   const replaySupervisor = resolve(runPath, "replay-supervisor.mjs");
   const replaySupervisorSha256 = createHash("sha256")
     .update(readFileSync(replaySupervisor))

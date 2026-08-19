@@ -200,8 +200,13 @@ export function controlledReviewEvidenceFixture(input: {
       },
     },
     battlefield: {
-      space: {
-        placements: [{ token: "actor", coordinate: { x: 0, y: 0 } }],
+      spatial: {
+        kind: "geometryDerived",
+        arena: {},
+        space: {
+          placements: [{ token: "actor", coordinate: { x: 0, y: 0 } }],
+        },
+        tableAuthoredDecisions: [],
       },
       objects: [],
     },
@@ -317,14 +322,16 @@ export function controlledReviewEvidenceFixture(input: {
       ModelInvocationLedgerEntry,
       "scenarioId" | "gitSha" | "eventsSha256"
     > => ({
-      schemaVersion: 1,
+      schemaVersion: 2,
       phase: "scenarioCompositeReview",
+      stagePlanReason: "The fixture stage requires a composite review.",
       invocationId: `pre-play-${index + 1}`,
       model: "gpt-5.6-luna",
       reasoningEffort: "max",
       startedAt: `2026-08-14T00:00:0${index}.000Z`,
       elapsedMilliseconds: 1,
       exit: { tag: "exited", status: 0 },
+      result: { tag: "succeeded" },
       usage: {
         tag: "unavailable",
         reason:
@@ -348,6 +355,9 @@ export function controlledReviewEvidenceFixture(input: {
           scenarioId: input.ledgerScenarioId ?? header.scenarioId,
           gitSha: invocationGitSha,
           phase: eventEntry.phase,
+          stagePlanReason:
+            eventEntry.stagePlanReason ??
+            `The fixture ${eventEntry.phase} stage requires this invocation.`,
           fallbackInvocationId: eventEntry.invocationId,
           model: eventEntry.model,
           reasoningEffort: eventEntry.reasoningEffort,
@@ -415,6 +425,14 @@ export function controlledReviewEvidenceFixture(input: {
         modelInvocationCompletedEvent({
           elapsedMilliseconds: eventEntry.elapsedMilliseconds,
           exit: eventEntry.exit,
+          result:
+            eventEntry.result ??
+            (eventEntry.exit.tag === "exited" && eventEntry.exit.status === 0
+              ? { tag: "succeeded" }
+              : {
+                  tag: "failed",
+                  reason: "The fixture invocation exited unsuccessfully.",
+                }),
         }),
       ),
     ];

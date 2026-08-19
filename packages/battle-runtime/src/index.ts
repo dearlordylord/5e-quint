@@ -54,6 +54,7 @@ export type {
 } from "./character-execution-admission.ts";
 
 export {
+  battleRuntimeSessionFollows,
   emptyBattleRuntimeContext,
   isBattleRuntimeSession,
   type BattleRuntimeContext,
@@ -482,6 +483,8 @@ export {
   type BattleSuccessfulAbilityCheckFacts,
   type BattleTargetChoiceHole,
   type BattleTargetSpatialFact,
+  type AttackTargetConstraint,
+  type BattleCreatureSpaceTraversalMovementFact,
   type BattleAttackExecutionSelection,
   type BattleSelectedSpellInvocation,
   type BattleThaumaturgyActiveOneMinuteEffectCountHole,

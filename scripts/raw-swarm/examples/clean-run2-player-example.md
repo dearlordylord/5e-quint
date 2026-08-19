@@ -17,7 +17,7 @@ The workflow first retained the reviewed prose, then separately authored and
 committed character and setup TypeScript, and finally let the external player
 write the append-only program against public declarations and documentation.
 The generation campaign intentionally discarded its candidate alternatives,
-random selection indices, readiness decisions, and agent reasoning, so those
+random selection indices, candidate-selection decisions, and agent reasoning, so those
 are not recoverable from this run. The retained prose, review, executable
 source, concrete SDK calls, observations, and whole-trace review are the
 debuggable evidence.

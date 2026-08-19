@@ -32,6 +32,7 @@ RAW_REVIEW_TRANSCRIPT_SHA256=$(sha256sum "$RAW_REVIEW_TRANSCRIPT" | cut -d' ' -f
 RAW_REVIEW_PACKET_BYTES=$(wc -c <"$RAW_REVIEW_PACKET" | tr -d ' ')
 RAW_REVIEW_PACKET_SHA256=$(sha256sum "$RAW_REVIEW_PACKET" | cut -d' ' -f1)
 RAW_REVIEW_EXTRACT_COMMAND="pnpm exec tsx scripts/raw-swarm/sdk-player/sdk-audit-cli.ts extract $RAW_REVIEW_AUDIT scripts/raw-swarm/out/review-extract-UNIQUE.records.jsonl scripts/raw-swarm/out/review-extract-UNIQUE.provenance.json SEQUENCE [SEQUENCE ...]"
+RAW_REVIEW_CAPABILITY_CONTEXT=$(pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/capability-projection-cli.ts" review)
 RAW_REVIEW_RENDERED=${RAW_REVIEW_INSTRUCTIONS//\{\{TRANSCRIPT_PATH\}\}/$RAW_REVIEW_TRANSCRIPT}
 RAW_REVIEW_RENDERED=${RAW_REVIEW_RENDERED//\{\{TRANSCRIPT_BYTES\}\}/$RAW_REVIEW_TRANSCRIPT_BYTES}
 RAW_REVIEW_RENDERED=${RAW_REVIEW_RENDERED//\{\{TRANSCRIPT_SHA256\}\}/$RAW_REVIEW_TRANSCRIPT_SHA256}
@@ -47,6 +48,7 @@ set +e
 {
   printf '%s\n\n<SDK_REVIEW_PACKET path="%s" bytes="%s" sha256="%s">\n' \
     "$RAW_REVIEW_RENDERED" "$RAW_REVIEW_PACKET" "$RAW_REVIEW_PACKET_BYTES" "$RAW_REVIEW_PACKET_SHA256"
+  printf '<RAW_SWARM_CAPABILITY_CONTEXT role="review">\n%s</RAW_SWARM_CAPABILITY_CONTEXT>\n' "$RAW_REVIEW_CAPABILITY_CONTEXT"
   cat "$RAW_REVIEW_PACKET"
   printf '</SDK_REVIEW_PACKET>\n'
 } | codex exec \
@@ -70,6 +72,7 @@ pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/model-telemetry-cli.ts" \
   --ledger "$RAW_REVIEW_LEDGER" \
   --model gpt-5.6-luna \
   --reasoning-effort max \
+  --stage-plan-reason 'The admitted run reached its independent post-play review stage.' \
   --started-at "$RAW_REVIEW_STARTED_AT" \
   --elapsed-ms "$RAW_REVIEW_ELAPSED_MS" \
   --shell-status "$RAW_REVIEW_STATUS"

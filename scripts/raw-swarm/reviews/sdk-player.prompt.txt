@@ -57,6 +57,11 @@ call correspondence without reexecuting the SDK. Cite every extracted
 sequence and preserve its provenance file. Do not claim that the derived
 audit can reconstruct omitted results.
 
+The launcher supplies one bounded, versioned Raw Swarm capability projection
+for the review role immediately before the packet. Use it to distinguish
+runtime/rules, public-SDK, experiment-boundary, and evidence responsibilities;
+do not replace it with repository-wide documentation or declarations.
+
 A scenario that selects a canonical record absent from the supplied setup
 catalog is scenario-invalid unless its prose explicitly identifies content
 availability as the deliberate probe. The resulting setup may be obstructed,

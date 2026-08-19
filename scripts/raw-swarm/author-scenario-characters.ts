@@ -7,6 +7,7 @@ import {
   mkdtempSync,
   mkdirSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -15,11 +16,19 @@ import { Either, Match, Schema } from "effect";
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import { runCodexInvocation } from "./model-telemetry.ts";
 import {
+  RAW_SWARM_STAGE_PLAN_REASONS,
+  stageRequiresModelInvocation,
+} from "./scenario-stage-plan.ts";
+import { retainAdmittedScenarioStagePlan } from "./stage-plan-authority.ts";
+import {
   consumerPermissionProfileAvailable,
   createConsumerCodexHome,
 } from "./sdk-player/consumer-codex-profile.ts";
 import { buildScenarioCharacterDistribution } from "./sdk-player/consumer-distribution.ts";
-import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
+import {
+  evaluateScenarioCharacters,
+  scenarioCharactersWithoutSheetsSource,
+} from "./sdk-player/scenario-character-runtime.ts";
 import {
   currentGitRevision,
   decodeScenarioId,
@@ -65,6 +74,33 @@ async function main(args: readonly string[]): Promise<void> {
   });
   if (Either.isLeft(admission)) fail(admission.left);
 
+  const retainedPlan = retainAdmittedScenarioStagePlan({
+    scenarioId: scenarioId.right,
+    scenarioPath,
+    scenarioSha256: admission.right.scenarioSha256,
+    scenarioReviewSha256: admission.right.scenarioReviewSha256,
+  });
+  if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
+  const stagePlan = retainedPlan.right;
+  if (stagePlan.outcome.tag === "rejected") {
+    fail(`Scenario stage plan rejected authoring: ${stagePlan.outcome.reason}`);
+  }
+  if (!stageRequiresModelInvocation(stagePlan, "scenarioCharacterAuthoring")) {
+    writeFileSync(outputPath, scenarioCharactersWithoutSheetsSource(), {
+      flag: "wx",
+    });
+    const evaluated = await evaluateScenarioCharacters(outputPath);
+    if (evaluated.tag !== "ready" || evaluated.characterSheets.length !== 0) {
+      fail(
+        "The canonical stat-block-only character source did not evaluate to zero sheets.",
+      );
+    }
+    console.log(
+      `Skipped Character Sheet authoring; retained zero-sheet source: ${outputPath}`,
+    );
+    return;
+  }
+
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-scenario-characters-"));
   const codexHome = createConsumerCodexHome();
   try {
@@ -108,7 +144,7 @@ async function main(args: readonly string[]): Promise<void> {
         "-c",
         'model_reasoning_effort="medium"',
         [
-          "Read SCENARIO_CHARACTERS.md, SCENARIO.md, SCENARIO_REVIEW.json, the public SDK READMEs, and declarations.",
+          "Read CAPABILITY_CONTEXT.md, SCENARIO_CHARACTERS.md, SCENARIO.md, SCENARIO_REVIEW.json, and only the declarations needed for the listed public operations.",
           "Edit characters.ts into one faithful controller-owned ordinary TypeScript character composition.",
           "Run both documented commands and iterate until the module is ready or returns a precise public-SDK obstruction.",
           "Do not inspect paths outside this scratch consumer.",
@@ -120,6 +156,7 @@ async function main(args: readonly string[]): Promise<void> {
       logPath,
       ledgerPath,
       phase: "scenarioCharacterAuthoring",
+      stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioCharacterAuthoring,
       scenarioId: scenarioId.right,
       gitSha: gitSha.right,
       fallbackInvocationId: `${scenarioId.right}-character-authoring`,

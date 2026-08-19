@@ -3,7 +3,10 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
-import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
+import {
+  evaluateScenarioCharacters,
+  scenarioCharactersWithoutSheetsSource,
+} from "./scenario-character-runtime.ts";
 
 async function evaluateSource(source: string) {
   const directory = mkdtempSync(resolve(tmpdir(), "dnd-scenario-characters-"));
@@ -17,6 +20,15 @@ async function evaluateSource(source: string) {
 }
 
 describe("scenario character composition boundary", () => {
+  test("evaluates the canonical stat-block-only source without model authoring", async () => {
+    await expect(
+      evaluateSource(scenarioCharactersWithoutSheetsSource()),
+    ).resolves.toMatchObject({
+      tag: "ready",
+      characterSheets: [],
+    });
+  });
+
   test("retains a precise character-composition obstruction", async () => {
     await expect(
       evaluateSource(`export const composeScenarioCharacters = () => ({

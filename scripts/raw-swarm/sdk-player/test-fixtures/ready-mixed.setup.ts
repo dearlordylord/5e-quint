@@ -61,18 +61,22 @@ export const setupScenario: ScenarioSetup = ({
   }
   const session = sdk.createScenarioSession({
     battle: started.right,
-    arena: {
-      cells: [
-        { x: 0, y: 0, terrain: "ordinary" },
-        { x: 1, y: 0, terrain: "ordinary" },
-        { x: 2, y: 0, terrain: "ordinary" },
+    spatial: {
+      kind: "geometryDerived",
+      arena: {
+        cells: [
+          { x: 0, y: 0, terrain: "ordinary" },
+          { x: 1, y: 0, terrain: "ordinary" },
+          { x: 2, y: 0, terrain: "ordinary" },
+        ],
+        boundaries: [],
+      },
+      placements: [
+        { tokenId: character.right.combatantId, coordinate: { x: 0, y: 0 } },
+        { tokenId: monster.right.combatantId, coordinate: { x: 1, y: 0 } },
       ],
-      boundaries: [],
+      spatialDecisions: [],
     },
-    placements: [
-      { tokenId: character.right.combatantId, coordinate: { x: 0, y: 0 } },
-      { tokenId: monster.right.combatantId, coordinate: { x: 1, y: 0 } },
-    ],
     ambientIllumination: "brightLight",
     statBlockDamageNotation: "rolled",
     environment: { overhead: { kind: "open" }, barrierHeights: [] },

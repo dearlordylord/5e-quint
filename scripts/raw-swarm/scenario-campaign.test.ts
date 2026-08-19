@@ -22,12 +22,88 @@ const config = {
   minimumIterations: 2,
   maximumIterations: 4,
   candidatesPerIteration: 3,
-  reviewMilestones: [2],
+  reviewMilestone: 2,
   admitReviewedUnsupported: false,
 };
 
+const stageFacts = {
+  schemaVersion: 1 as const,
+  characterRequirement: {
+    tag: "characterSheetsRequired" as const,
+    evidence: "Synthetic delegated character fact.",
+  },
+  spatialRequirement: {
+    tag: "notRequired" as const,
+    evidence: "Synthetic test does not need a spatial witness.",
+  },
+};
+
+const candidate = (prose: string, facts = stageFacts) => ({
+  prose,
+  stageFacts: facts,
+});
+
+const readyQuality = {
+  scenarioQuality: {
+    classification: "ready" as const,
+    evidence: "The synthetic setup and objectives are mechanically meaningful.",
+  },
+};
+
 describe("scenario generation campaign", () => {
-  test("selects one whole revision and stops only after minimum readiness", async () => {
+  test("rejects an incoherent candidate before invoking whole-scenario review", async () => {
+    const incoherentFacts = {
+      ...stageFacts,
+      spatialRequirement: {
+        tag: "outsideExperimentEnvelope" as const,
+        resolution: "incoherent" as const,
+        evidence: "The candidate contradicts its own spatial objective.",
+      },
+    };
+    const reviewScenario = vi.fn();
+    const result = await runScenarioCampaign(
+      {
+        ...config,
+        minimumIterations: 1,
+        maximumIterations: 2,
+        reviewMilestone: 1,
+      },
+      {
+        generate: async () => ({
+          candidates: [
+            candidate("incoherent candidate", incoherentFacts),
+            candidate("other candidate", incoherentFacts),
+            candidate("third candidate", incoherentFacts),
+          ],
+        }),
+        reviewScenario,
+      },
+      { select: () => 0 },
+    );
+
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isRight(result)) {
+      expect(result.right.tag).toBe("candidateRejected");
+      if (result.right.tag === "candidateRejected") {
+        expect(result.right.candidateStagePlan.outcome.tag).toBe("rejected");
+        expect(result.right.candidateStagePlan.identity).toMatchObject({
+          tag: "candidate",
+          scenarioId: "synthetic-battle",
+          candidateScenarioSha256: createHash("sha256")
+            .update("incoherent candidate\n")
+            .digest("hex"),
+        });
+        expect(
+          result.right.candidateStagePlan.stages.find(
+            ({ stage }) => stage === "scenarioCompositeReview",
+          )?.modelInvocation,
+        ).toBe("none");
+      }
+    }
+    expect(reviewScenario).not.toHaveBeenCalled();
+  });
+
+  test("selects one whole revision and stops only after minimum composite review", async () => {
     const inputs: string[] = [];
     const agents: ScenarioCampaignAgents = {
       generate: vi.fn(async (input) => {
@@ -38,16 +114,12 @@ describe("scenario generation campaign", () => {
         );
         return {
           candidates: [
-            `iteration ${input.iteration} candidate A`,
-            `iteration ${input.iteration} candidate B`,
-            `iteration ${input.iteration} candidate C`,
+            candidate(`iteration ${input.iteration} candidate A`),
+            candidate(`iteration ${input.iteration} candidate B`),
+            candidate(`iteration ${input.iteration} candidate C`),
           ],
         };
       }),
-      reviewReadiness: vi
-        .fn()
-        .mockResolvedValueOnce({ decision: "ready" })
-        .mockResolvedValueOnce({ decision: "ready" }),
       reviewScenario: vi.fn(async () => ({
         raw: {
           classification: "supported",
@@ -65,6 +137,7 @@ describe("scenario generation campaign", () => {
           classification: "safe",
           evidence: "Synthetic policy evidence.",
         },
+        ...readyQuality,
       })),
     };
 
@@ -81,17 +154,10 @@ describe("scenario generation campaign", () => {
       });
     }
     expect(inputs).toEqual(["start", "iteration 1 candidate B"]);
-    expect(agents.reviewReadiness).toHaveBeenCalledTimes(1);
-    expect(agents.reviewReadiness).toHaveBeenCalledWith({
-      scenario: "iteration 2 candidate B",
-      distributionPreference: config.distributionPreference,
-      contentAvailabilityIntent: "availableOnly",
-      sdkCapabilityIntent: "supportedOnly",
-    });
     expect(agents.reviewScenario).toHaveBeenCalledTimes(2);
   });
 
-  test("carries critiques forward, stops at maximum, and can admit unsupported prose", async () => {
+  test("carries composite critiques forward without a duplicate readiness invocation", async () => {
     const generationInputs: unknown[] = [];
     const result = await runScenarioCampaign(
       { ...config, minimumIterations: 1, admitReviewedUnsupported: true },
@@ -101,14 +167,11 @@ describe("scenario generation campaign", () => {
           return {
             candidates: Array.from(
               { length: input.candidateCount },
-              (_, index) => `iteration ${input.iteration} candidate ${index}`,
+              (_, index) =>
+                candidate(`iteration ${input.iteration} candidate ${index}`),
             ),
           };
         },
-        reviewReadiness: async () => ({
-          decision: "continue",
-          critique: "Add another meaningful tactical constraint.",
-        }),
         reviewScenario: async ({ finalReview }) => ({
           raw: finalReview
             ? {
@@ -133,6 +196,7 @@ describe("scenario generation campaign", () => {
             classification: "safe",
             evidence: "Synthetic policy evidence.",
           },
+          ...readyQuality,
         }),
       },
       { select: (count) => count - 1 },
@@ -141,8 +205,8 @@ describe("scenario generation campaign", () => {
     expect(Either.isRight(result)).toBe(true);
     if (Either.isRight(result)) {
       expect(result.right).toMatchObject({
-        iterations: 4,
-        stopReason: "maximum",
+        iterations: 3,
+        stopReason: "ready",
         rawReview: { classification: "unsupported" },
       });
       expect(finalScenarioDisposition(result.right)).toBe("admitted");
@@ -152,6 +216,70 @@ describe("scenario generation campaign", () => {
         tag: "selected",
         prose: "iteration 2 candidate 2",
         critiques: ["Clarify the unsupported request without erasing it."],
+      },
+    });
+  });
+
+  test("retains scenario-quality critique in the consolidated review path", async () => {
+    const generationInputs: unknown[] = [];
+    let reviewCount = 0;
+    const result = await runScenarioCampaign(
+      {
+        ...config,
+        minimumIterations: 1,
+        maximumIterations: 2,
+        reviewMilestone: 1,
+      },
+      {
+        generate: async (input) => {
+          generationInputs.push(input);
+          return {
+            candidates: Array.from(
+              { length: input.candidateCount },
+              (_, index) =>
+                candidate(`quality candidate ${input.iteration}-${index}`),
+            ),
+          };
+        },
+        reviewScenario: async () => {
+          reviewCount += 1;
+          return {
+            raw: {
+              classification: "supported" as const,
+              evidence: "Synthetic RAW evidence.",
+            },
+            contentAvailability: {
+              classification: "supplied" as const,
+              evidence: "Synthetic content evidence.",
+            },
+            sdkCapability: {
+              classification: "supported" as const,
+              evidence: "Synthetic SDK evidence.",
+            },
+            artifactPolicy: {
+              classification: "safe" as const,
+              evidence: "Synthetic policy evidence.",
+            },
+            scenarioQuality:
+              reviewCount === 1
+                ? {
+                    classification: "needsRevision" as const,
+                    evidence:
+                      "The first revision lacks an objective-bearing setup.",
+                    critique:
+                      "Give every combatant a strategy-bearing objective.",
+                  }
+                : readyQuality.scenarioQuality,
+          };
+        },
+      },
+      { select: () => 0 },
+    );
+    expect(Either.isRight(result)).toBe(true);
+    expect(reviewCount).toBe(2);
+    expect(generationInputs[1]).toMatchObject({
+      priorRevision: {
+        critiques: ["Give every combatant a strategy-bearing objective."],
       },
     });
   });
@@ -175,15 +303,14 @@ describe("scenario generation campaign", () => {
         classification: "safe" as const,
         evidence: "Synthetic policy evidence.",
       },
+      ...readyQuality,
     }));
     const agents: ScenarioCampaignAgents = {
       generate: async (input) => ({
-        candidates: Array.from(
-          { length: input.candidateCount },
-          (_, index) => `candidate ${index}`,
+        candidates: Array.from({ length: input.candidateCount }, (_, index) =>
+          candidate(`candidate ${index}`),
         ),
       }),
-      reviewReadiness: async () => ({ decision: "ready" }),
       reviewScenario,
     };
 
@@ -196,9 +323,21 @@ describe("scenario generation campaign", () => {
     ).toBe(true);
     expect(
       Either.isLeft(
-        await runScenarioCampaign({ ...config, reviewMilestones: [] }, agents, {
+        await runScenarioCampaign({ ...config, reviewMilestone: 0 }, agents, {
           select: () => 0,
         }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        await runScenarioCampaign(
+          {
+            ...config,
+            reviewMilestones: [1],
+          },
+          agents,
+          { select: () => 0 },
+        ),
       ),
     ).toBe(true);
     const result = await runScenarioCampaign(config, agents, {
@@ -246,6 +385,7 @@ describe("scenario generation campaign", () => {
             classification: "safe",
             evidence: "Synthetic policy evidence.",
           },
+          ...readyQuality,
         }),
       },
       { select: () => 0 },
@@ -284,6 +424,7 @@ describe("scenario generation campaign", () => {
                 classification: "safe",
                 evidence: "Synthetic policy evidence.",
               },
+              ...readyQuality,
             }),
           },
           { select: () => 0 },
@@ -325,6 +466,7 @@ describe("scenario generation campaign", () => {
             classification: "safe",
             evidence: "Synthetic policy evidence.",
           },
+          ...readyQuality,
         }),
       },
       { select: () => 0 },
@@ -338,7 +480,9 @@ describe("scenario generation campaign", () => {
       config,
       {
         ...agents,
-        generate: async () => ({ candidates: ["same", "same", "same"] }),
+        generate: async () => ({
+          candidates: [candidate("same"), candidate("same"), candidate("same")],
+        }),
       },
       { select: () => 0 },
     );
@@ -362,13 +506,11 @@ describe("scenario generation campaign", () => {
       generate: async (input) => {
         generationInputs.push(input);
         return {
-          candidates: Array.from(
-            { length: input.candidateCount },
-            (_, index) => `probe candidate ${input.iteration}-${index}`,
+          candidates: Array.from({ length: input.candidateCount }, (_, index) =>
+            candidate(`probe candidate ${input.iteration}-${index}`),
           ),
         };
       },
-      reviewReadiness: async () => ({ decision: "ready" }),
       reviewScenario: async () => ({
         raw: {
           classification: "supported",
@@ -383,6 +525,7 @@ describe("scenario generation campaign", () => {
           classification: "safe",
           evidence: "Synthetic policy evidence.",
         },
+        ...readyQuality,
       }),
     };
 
@@ -392,7 +535,7 @@ describe("scenario generation campaign", () => {
         contentAvailabilityIntent: "probeUnavailableContent",
         minimumIterations: 1,
         maximumIterations: 2,
-        reviewMilestones: [1],
+        reviewMilestone: 1,
       },
       agents,
       { select: () => 0 },
@@ -422,13 +565,11 @@ describe("scenario generation campaign", () => {
       generate: async (input) => {
         generationInputs.push(input);
         return {
-          candidates: Array.from(
-            { length: input.candidateCount },
-            (_, index) => `missing probe candidate ${input.iteration}-${index}`,
+          candidates: Array.from({ length: input.candidateCount }, (_, index) =>
+            candidate(`missing probe candidate ${input.iteration}-${index}`),
           ),
         };
       },
-      reviewReadiness: async () => ({ decision: "ready" }),
       reviewScenario: async () => ({
         raw: {
           classification: "supported",
@@ -443,6 +584,7 @@ describe("scenario generation campaign", () => {
           classification: "safe",
           evidence: "Synthetic policy evidence.",
         },
+        ...readyQuality,
       }),
     };
 
@@ -452,7 +594,7 @@ describe("scenario generation campaign", () => {
         contentAvailabilityIntent: "probeUnavailableContent",
         minimumIterations: 1,
         maximumIterations: 2,
-        reviewMilestones: [1],
+        reviewMilestone: 1,
       },
       agents,
       { select: () => 0 },
@@ -512,6 +654,28 @@ describe("scenario generation campaign", () => {
           gitSha,
           scenarioBytes,
         }),
+      ),
+    ).toBe(true);
+    const currentReview = {
+      ...review,
+      reviewScope: "rawContentSdkCapabilityPolicyQuality" as const,
+      scenarioQuality: readyQuality.scenarioQuality,
+    };
+    expect(
+      Either.isRight(
+        verifyFinalScenarioReview(currentReview, {
+          scenarioId,
+          gitSha,
+          scenarioBytes,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        verifyFinalScenarioReview(
+          { ...currentReview, scenarioQuality: undefined },
+          { scenarioId, gitSha, scenarioBytes },
+        ),
       ),
     ).toBe(true);
     expect(
@@ -610,7 +774,7 @@ describe("scenario generation campaign", () => {
         ...config,
         minimumIterations: 1,
         maximumIterations: 2,
-        reviewMilestones: [1],
+        reviewMilestone: 1,
       },
       {
         generate: async (input) => {
@@ -618,11 +782,11 @@ describe("scenario generation campaign", () => {
           return {
             candidates: Array.from(
               { length: input.candidateCount },
-              (_, index) => `SDK candidate ${input.iteration}-${index}`,
+              (_, index) =>
+                candidate(`SDK candidate ${input.iteration}-${index}`),
             ),
           };
         },
-        reviewReadiness: async () => ({ decision: "ready" }),
         reviewScenario: async () => ({
           raw: {
             classification: "supported",
@@ -637,6 +801,7 @@ describe("scenario generation campaign", () => {
             classification: "safe",
             evidence: "Synthetic policy evidence.",
           },
+          ...readyQuality,
         }),
       },
       { select: () => 0 },
@@ -654,12 +819,10 @@ describe("scenario generation campaign", () => {
   test("admits only an explicit unsupported SDK probe for probe intent", async () => {
     const baseAgents: ScenarioCampaignAgents = {
       generate: async (input) => ({
-        candidates: Array.from(
-          { length: input.candidateCount },
-          (_, index) => `probe ${index}`,
+        candidates: Array.from({ length: input.candidateCount }, (_, index) =>
+          candidate(`probe ${index}`),
         ),
       }),
-      reviewReadiness: async () => ({ decision: "ready" }),
       reviewScenario: async () => ({
         raw: {
           classification: "supported",
@@ -677,6 +840,7 @@ describe("scenario generation campaign", () => {
           classification: "safe",
           evidence: "Synthetic policy evidence.",
         },
+        ...readyQuality,
       }),
     };
     const probeConfig = {
@@ -713,6 +877,7 @@ describe("scenario generation campaign", () => {
             classification: "safe",
             evidence: "Synthetic policy evidence.",
           },
+          ...readyQuality,
         }),
       },
       { select: () => 0 },

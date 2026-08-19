@@ -46,20 +46,22 @@ The supervisor owns one linear SDK-session lineage. Start with `context.session`
 pass that exact current value to each operation, and replace your local session
 with every resolution result's `session`. Stale or foreign sessions are rejected.
 The session's canonical battle reducer state is `session.battle`; its immutable
-`session.battlefield` projection retains the authored five-foot arena, current
-placements, ambient Illumination, vertical environment facts, and scenario objects.
+`session.battlefield` projection retains the authored spatial boundary,
+ambient Illumination, vertical environment facts, and scenario objects. A
+`geometryDerived` boundary contains the five-foot arena and current placements;
+a `tableAuthored` boundary contains exact, lineage-bound Table decisions and
+does not pretend to contain a tactical map.
 Those vertical facts do not currently produce a table-authored per-test
 circumstance witness or an attack-roll mode. Do not infer Advantage or
 Disadvantage from relative height.
-Use `context.sdk.scenarioRelation` to derive current distance, sight,
-Cover, and traversal between retained tokens; do not restate those facts by
-reading coordinates yourself. A creature attack remains table-owned: when its
-`targetChoice` hole has `requiresTableSpatialFact: true`, translate that
-canonical relation into the spatial witness requested by the hole. In
-particular, a ranged attack requires an `attackTargetInRangedRange` witness;
-an empty `spatialFacts` array is invalid. Derive its range band from the
-relation's `distanceFeet` and the hole's `attack.targetConstraint`, then retain
-the hole's procedure selection:
+Use `context.sdk.scenarioRelation` to inspect a current exact relation when
+needed; do not restate spatial facts by reading coordinates yourself. Ordinary
+creature attack, object attack, and creature-spell target holes are projected
+from the session's geometry-derived or Table-authored spatial source by the
+supervisor. Continue to choose the ordinary target or object through its
+surfaced hole, but leave `spatialFacts` empty; there is no player spatial-fact
+override API. The projected witness retains the hole's exact procedure and
+target constraint:
 
 ```ts
 const relation = context.sdk.scenarioRelation({
@@ -69,59 +71,48 @@ const relation = context.sdk.scenarioRelation({
 });
 ```
 
-After observing and narrowing a `relation` result and a `rangedRange`
-constraint, build the witness only when the target is within long range:
+If you call `scenarioRelation` for tactical explanation, the result is not a
+replacement for the automatic target projection. Target eligibility remains
+the canonical session decision. The ordinary fill contains no spatial witness:
 
 ```ts
-const { normalFeet, longFeet } = targetHole.attack.targetConstraint;
-const { distanceFeet } = relation.relation;
-const rangeBand =
-  distanceFeet <= normalFeet
-    ? "normal"
-    : distanceFeet <= longFeet
-      ? "long"
-      : undefined;
-if (rangeBand === undefined) {
-  return {
-    kind: "continue",
-    session: context.session,
-    tacticalNote: `Target ${targetId} is ${distanceFeet} feet away and outside the surfaced range constraint.`,
-  };
-}
 const targetFill = {
   kind: "targetChoice" as const,
   holeId: targetHole.holeId,
   value: targetId,
-  spatialFacts: [
-    {
-      kind: "attackTargetInRangedRange" as const,
-      actorId: targetHole.attack.actorId,
-      targetId,
-      rangeBand,
-      ...targetHole.attack.selection,
-    },
-  ],
+  spatialFacts: [],
 };
 ```
 
-The reducer validates the supplied witness against the selected procedure and
-supported target constraint. `scenarioRelation` does not itself fill a
-creature-attack hole. Its Cover vocabulary is the battle reducer's
-`none | half | threeQuarters | total` vocabulary. For an ordinary Move, call
-`resolveScenarioMovement` with `kind: "route"`, the canonical Move subject, the nonempty sequence
-of grid coordinates entered after the actor's current square, a supported Speed
-kind, and any downstream fills. Route entries use the tactical cell coordinates
-stored in `context.session.battlefield.space.placements` and
-`context.session.battlefield.arena.cells`; they are not physical-distance
+The reducer validates the supervisor-projected witness against the selected
+procedure and supported target constraint. Its Cover vocabulary is the battle
+reducer's `none | half | threeQuarters | total` vocabulary. For an ordinary Move,
+call `resolveScenarioMovement` with `kind: "route"`, the canonical Move subject,
+the nonempty sequence of grid coordinates entered after the actor's current
+square, a supported Speed kind, and any downstream fills. With a
+`geometryDerived` boundary, route entries use the tactical cell coordinates
+stored in `context.session.battlefield.spatial.space.placements` and
+`context.session.battlefield.spatial.arena.cells`; they are not physical-distance
 coordinates copied from scenario prose. `arena.cellSizeFeet` determines the
-distance of a cell step but does not change a cell coordinate. Read the current
-cell from the session and submit adjacent cells that occur in the arena. The
-projection's `changes` are deltas, not coordinate authority; always read route
-coordinates from the current session. After narrowing a surfaced Move act,
+distance of a cell step but does not change a cell coordinate. A `tableAuthored`
+boundary has no map to inspect: submit the ordinary route selected by the
+surfaced Table decision. In either case, the session derives traversal,
+Movement cost, and Opportunity Attack threats; callers do
+not author those facts. The projection's `changes` are deltas, not coordinate
+authority; always read route coordinates from the current session when a map
+exists. After narrowing a surfaced Move act,
 bind its subject to `moveSubject`; the example assumes that proven Move subject:
 
 ```ts
-const moverCoordinate = context.session.battlefield.space.placements.find(
+const spatial = context.session.battlefield.spatial;
+if (spatial.kind !== "geometryDerived") {
+  return {
+    kind: "continue",
+    session: context.session,
+    tacticalNote: "The Table-authored route has no tactical map to inspect.",
+  };
+}
+const moverCoordinate = spatial.space.placements.find(
   ({ token }) => String(token) === moveSubject.actorId,
 )?.coordinate;
 if (moverCoordinate === undefined) {
@@ -135,7 +126,7 @@ const enteredCell = {
   x: moverCoordinate.x + 1,
   y: moverCoordinate.y,
 };
-const enteredCellExists = context.session.battlefield.arena.cells.some(
+const enteredCellExists = spatial.arena.cells.some(
   ({ coordinate }) =>
     coordinate.x === enteredCell.x && coordinate.y === enteredCell.y,
 );
@@ -149,8 +140,9 @@ owns Movement resources and
 the resulting decline-or-resolve interrupt. The operation currently supports
 two-dimensional Walk routes only and reports other movement modes honestly.
 The retained setup's directed movement-ally facts, current creature conditions,
-sizes, terminal zero-HP lifecycle, and placements determine occupied-space
-traversal and Difficult Terrain; callers do not restate those facts in a Move.
+sizes, terminal zero-HP lifecycle, and (when present) placements determine
+occupied-space traversal and Difficult Terrain; callers do not restate those
+facts in a Move.
 If that operation returns downstream holes, call the same operation with
 `kind: "continue"` and only their fills. The session retains the original Move
 subject, derived Movement fill, and planned placement across downstream holes
@@ -170,15 +162,18 @@ const objectTarget = {
 };
 ```
 
-The scenario SDK projects range, sight, Cover, AC, the object's current damage
-disposition, and any visible non-incapacitated enemy within 5 feet from the
-canonical session. SDK
+The scenario SDK projects range and sight for ordinary creature attacks, and
+range, sight, Cover, AC, the object's current damage disposition, and any
+visible non-incapacitated enemy within 5 feet for object attacks, from the
+canonical session's spatial source. The public creature-attack fill vocabulary
+has no Cover fact, so a Table-authored creature attack uses `cover: "none"`
+and cannot smuggle a Cover override through `spatialFacts`. SDK
 operations accept the whole scenario session and preserve those table-owned
 facts while the nested battle advances.
 For a creature-targeting spell hole that surfaces an ordinary spatial-fact
 request, choose targets or damage allocations through that hole. The scenario
 SDK overwrites caller-supplied spell-target facts with the requested range,
-sight, and Total Cover eligibility derived from the retained tactical space.
+sight, and Total Cover eligibility derived from the retained spatial source.
 Specialized and point-origin spell holes retain their dedicated protocols.
 One continuation may make as many ordinary TypeScript decisions and SDK calls
 as one coherent tactical choice requires. Return `kind: "continue"` when a new

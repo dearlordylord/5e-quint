@@ -1,7 +1,7 @@
 # Scenario character controller
 
-Read `SCENARIO.md`, `SCENARIO_REVIEW.json`, the public character runtime
-documentation, and the declarations available through
+Read `CAPABILITY_CONTEXT.md`, `SCENARIO.md`, `SCENARIO_REVIEW.json`, and only
+the declarations needed for the listed public operations available through
 `@dnd/scenario-character-sdk`.
 
 Edit only `characters.ts`. Export one `ScenarioCharacters` named

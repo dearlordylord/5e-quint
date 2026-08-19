@@ -6,6 +6,6 @@
   "minimumIterations": 2,
   "maximumIterations": 4,
   "candidatesPerIteration": 4,
-  "reviewMilestones": [2],
+  "reviewMilestone": 2,
   "admitReviewedUnsupported": true
 }

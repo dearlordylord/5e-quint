@@ -1,9 +1,17 @@
 # `@dnd/tactical-space`
 
-Standalone deterministic tactical space for a public, single-level battlefield.
-The package owns only five-foot square-cell geometry. It has no dependency on
-the battle runtime, adjudicator, CLI, authored content, persistence, or
-networking packages.
+Optional experimental Table adapter for deterministic five-foot square-cell
+geometry on a single-level battlefield. The package owns only its geometry
+experiment. It has no dependency on the battle runtime, adjudicator, CLI,
+authored content, persistence, or networking packages.
+
+This package is not a Battle Runtime, MCP, or Target SDK completeness
+requirement. A Table may select it when its supported envelope is useful, or
+may provide a coherent typed spatial witness directly when it is not. Missing
+geometry support is therefore an experiment boundary, not an automatic product
+feature request; pure geometry expansion requires a separate architecture
+decision. The product ownership rule is in
+[`ARCHITECTURE.md`](../../ARCHITECTURE.md#spatial-modeling-frontier).
 
 ## Kernel boundary
 

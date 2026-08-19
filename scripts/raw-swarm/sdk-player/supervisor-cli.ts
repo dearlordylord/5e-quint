@@ -44,7 +44,9 @@ import {
   scenarioBattleSubject,
   scenarioSessionAfterRejectedMovement,
   scenarioRelation,
+  scenarioAttackTargetFills,
   scenarioObjectAttackFills,
+  scenarioTableSpatialFactFills,
   scenarioCreatureSpellTargetFills,
   scenarioSessionWithBattleResult,
   scenarioTokenId,
@@ -423,7 +425,7 @@ function retainScenarioBattlefield(
     }),
     byResolutionTag("invalid", (invalid) => {
       const updated =
-        cancelInvalidMovement && session.movementResolution.kind === "pending"
+        cancelInvalidMovement && session.movementResolution.kind !== "idle"
           ? scenarioSessionAfterRejectedMovement(session, invalid.session)
           : scenarioSessionWithBattleResult(session, invalid.session);
       return Either.isLeft(updated)
@@ -492,15 +494,70 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
           value: result,
         };
       }
-      const creatureSpellProjectedFills = scenarioCreatureSpellTargetFills({
+      const attackProjectedFills = scenarioAttackTargetFills({
         session,
         subject,
         fills: projectedFills.right,
       });
+      if (Either.isLeft(attackProjectedFills)) {
+        const result: ScenarioBattleResolutionResult = {
+          tag: "invalid",
+          session,
+          reason: "invalidFill",
+          message: attackProjectedFills.left.message,
+          snapshot: snapshotBattle(session.battle.state),
+        };
+        return {
+          operation: "resolveBattleRuntimeSubject" as const,
+          session,
+          result: resolutionProjection(result),
+          value: result,
+        };
+      }
+      const tableSpatialProjectedFills = scenarioTableSpatialFactFills({
+        session,
+        subject,
+        fills: attackProjectedFills.right,
+      });
+      if (Either.isLeft(tableSpatialProjectedFills)) {
+        const result: ScenarioBattleResolutionResult = {
+          tag: "invalid",
+          session,
+          reason: "invalidFill",
+          message: tableSpatialProjectedFills.left.message,
+          snapshot: snapshotBattle(session.battle.state),
+        };
+        return {
+          operation: "resolveBattleRuntimeSubject" as const,
+          session,
+          result: resolutionProjection(result),
+          value: result,
+        };
+      }
+      const creatureSpellProjectedFills = scenarioCreatureSpellTargetFills({
+        session,
+        subject,
+        fills: tableSpatialProjectedFills.right,
+      });
+      if (Either.isLeft(creatureSpellProjectedFills)) {
+        const result: ScenarioBattleResolutionResult = {
+          tag: "invalid",
+          session,
+          reason: "invalidFill",
+          message: creatureSpellProjectedFills.left.message,
+          snapshot: snapshotBattle(session.battle.state),
+        };
+        return {
+          operation: "resolveBattleRuntimeSubject" as const,
+          session,
+          result: resolutionProjection(result),
+          value: result,
+        };
+      }
       const battleResult = resolveBattleRuntimeSubject({
         session: session.battle,
         subject,
-        fills: creatureSpellProjectedFills,
+        fills: creatureSpellProjectedFills.right,
       });
       const result = retainScenarioBattlefield(session, battleResult);
       return {

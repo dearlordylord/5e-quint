@@ -1,22 +1,34 @@
 # Scenario setup author
 
-Read `SCENARIO.md`, `SCENARIO_REVIEW.json`, `CHARACTERS.json`, `PUBLIC_SDK.md`,
-`STAT_BLOCKS.json`, and the declarations available through
+Read `CAPABILITY_CONTEXT.md`, `SCENARIO.md`, `SCENARIO_REVIEW.json`,
+`CHARACTERS.json`, `STAT_BLOCKS.json`, and only the declarations needed for the
+listed public operations available through
 `@dnd/scenario-setup-sdk`.
 
 You are the neutral setup author. Edit only `setup.ts`. Export one
 `ScenarioSetup` named `setupScenario`. Use the canonical functions and catalog
 supplied through its context to construct the closest faithful initial
 `ScenarioSession`. Start the canonical battle, then call
-`createScenarioSession` once with its five-foot arena, initial placements,
-ambient Illumination, stat-block damage notation, vertical environment facts,
-and scenario-fixed objects. The notation is one Table decision for this
-scenario: `rolled` keeps stat-block damage rolls in the player protocol, while
-`static` uses the authored average. Players cannot override it per attack.
-The composed session retains an untouched `BattleRuntimeSession` under
+`createScenarioSession` once with its ambient Illumination, stat-block damage
+notation, vertical environment facts, and scenario-fixed objects. Tactical-space
+is optional, but its source is one coherent choice: either supply both the
+five-foot arena and initial placements for a `geometryDerived`
+`session.battlefield.spatial`, or omit both and supply Table-authored
+`spatialDecisions` for the exact spatial questions the scenario fixes. A
+decision correlates one question and its answer; it is not a second override
+channel for geometry-derived facts. Supported exact target questions include
+relation, spell-target, object-target, attack-target, grapple, shove, Help,
+wake-from-sleep or hypnotic-pattern, and movement-route decisions carry their
+canonical post-move state. The notation is one Table decision for
+this scenario: `rolled` keeps stat-block damage rolls in the player protocol,
+while `static` uses the authored average. Players cannot override it per
+attack. The composed session retains an untouched `BattleRuntimeSession` under
 `session.battle` and table-owned facts under `session.battlefield`; do not add
 those facts to battle state. Do not invent substitute creatures, silently drop
 required combatants, or encode later tactics in setup code.
+For a Table-authored relation or target answer, use
+`context.sdk.scenarioDistanceFeet(number)` to obtain the branded distance and
+handle its typed `Either` result; do not cast a raw number into a spatial fact.
 Vertical environment facts are retained setup evidence only. The current public
 SDK has no table-authored per-test circumstance witness that turns relative
 height into Advantage or Disadvantage; a supported-only scenario must not
@@ -39,12 +51,19 @@ enemy for ordinary Opportunity Attacks; they are not encounter sides. For the
 currently supported bright-light Small/Medium grid projection, the session
 combines those decisions with current reactions, executable melee attacks,
 sight, exact attack reach, and each route transition.
-The retained `space` begins from these setup placements and later advances only
-through the composed scenario movement operation. Setup authors still provide
-only the starting placements. That same retained space canonically projects
-the requested range, sight, and Total Cover eligibility for ordinary
-creature-spell target holes; specialized and point-origin holes keep their
-dedicated protocols rather than acquiring a second spell-target geometry.
+For a `geometryDerived` source, the retained `space` begins from these setup
+placements and later advances only through the composed scenario movement
+operation. Setup authors still provide only the starting placements. That same
+retained space canonically projects relation, attack-target, object-target,
+spell-target, movement traversal, range, sight, and Total Cover facts. The
+supported grapple, shove, Help, and wake-up target holes likewise receive
+their exact reach or adjacency fact automatically. For a `tableAuthored`
+source, supply the corresponding exact decision instead; the SDK projects its
+answer automatically. A table-authored
+movement route must include its canonical post-move spatial state, so the
+session never resolves movement while retaining a stale position. Specialized
+and point-origin spell holes keep their dedicated protocols rather than
+acquiring a second spell-target geometry.
 
 A scenario object is a table-owned target fact: use canonical `BattleObjectId`,
 `ArmorClass`, `BattleObjectDamageDisposition`, and tactical-space

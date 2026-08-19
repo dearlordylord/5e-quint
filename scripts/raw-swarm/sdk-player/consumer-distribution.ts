@@ -3,12 +3,16 @@ import {
   copyFileSync,
   cpSync,
   existsSync,
+  lstatSync,
   mkdirSync,
+  readdirSync,
+  realpathSync,
   writeFileSync,
 } from "node:fs";
-import { resolve } from "node:path";
+import { relative, resolve, sep } from "node:path";
 import { buildSync } from "esbuild";
 
+import { capabilityContextForRole } from "../capability-projection.ts";
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import type { JsonValue } from "./continuation-contract.ts";
@@ -37,6 +41,13 @@ export type ScenarioCharacterDistributionInput = {
 };
 
 const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
+/** The emitted declaration graph is compilation support, not an unbounded SDK. */
+export const PUBLIC_DECLARATION_BUNDLE_MAX_FILES = 512;
+export const PUBLIC_DECLARATION_BUNDLE_MAX_BYTES = 5 * 1024 * 1024;
+export type PublicDeclarationBundleMeasure = {
+  readonly files: number;
+  readonly bytes: number;
+};
 const PLAYER_RUN_START_OBSERVATION = {
   kind: "awaitingFirstContinuation",
   tacticalNote: "",
@@ -44,7 +55,63 @@ const PLAYER_RUN_START_OBSERVATION = {
     "No SDK call has been recorded. Replace the attempt.ts starter body with the first tactical continuation.",
 } as const satisfies JsonValue;
 
-function emitPublicDeclarations(destination: string): void {
+function declarationFiles(directory: string): readonly string[] {
+  const root = realpathSync(directory);
+  const visit = (current: string): readonly string[] =>
+    readdirSync(current, { withFileTypes: true }).flatMap((entry) => {
+      const path = resolve(current, entry.name);
+      if (entry.isSymbolicLink()) {
+        throw new Error(
+          `Public declaration bundle cannot expose a symbolic link: ${relative(root, path)}.`,
+        );
+      }
+      if (entry.isDirectory()) return visit(path);
+      if (!entry.isFile() || !entry.name.endsWith(".d.ts")) {
+        throw new Error(
+          `Public declaration bundle contains a non-declaration file: ${relative(root, path)}.`,
+        );
+      }
+      const canonical = realpathSync(path);
+      const relativeCanonical = relative(root, canonical);
+      if (
+        relativeCanonical === ".." ||
+        relativeCanonical.startsWith(`..${sep}`)
+      ) {
+        throw new Error(
+          `Public declaration bundle file escapes its root: ${relative(root, path)}.`,
+        );
+      }
+      return [path];
+    });
+  return visit(directory);
+}
+
+/**
+ * Enforce the separate declaration accessibility/size boundary. The model
+ * context budget does not constrain files that are reachable by the compiler;
+ * this gate does, and rejects any non-declaration or escaped file outright.
+ */
+export function assertPublicDeclarationBundle(
+  directory: string,
+): PublicDeclarationBundleMeasure {
+  const files = declarationFiles(directory);
+  const bytes = files.reduce((total, path) => total + lstatSync(path).size, 0);
+  if (files.length > PUBLIC_DECLARATION_BUNDLE_MAX_FILES) {
+    throw new Error(
+      `Public declaration bundle has ${String(files.length)} files; maximum is ${String(PUBLIC_DECLARATION_BUNDLE_MAX_FILES)}.`,
+    );
+  }
+  if (bytes > PUBLIC_DECLARATION_BUNDLE_MAX_BYTES) {
+    throw new Error(
+      `Public declaration bundle has ${String(bytes)} bytes; maximum is ${String(PUBLIC_DECLARATION_BUNDLE_MAX_BYTES)}.`,
+    );
+  }
+  return { files: files.length, bytes };
+}
+
+function emitPublicDeclarations(
+  destination: string,
+): PublicDeclarationBundleMeasure {
   const declarationsDirectory = resolve(destination, "declarations");
   const compiler = resolve(repoRoot, "node_modules/typescript/bin/tsc");
   const config = resolve(
@@ -106,6 +173,7 @@ function emitPublicDeclarations(destination: string): void {
       throw new Error(`Public declaration emission omitted ${relativePath}.`);
     }
   }
+  return assertPublicDeclarationBundle(declarationsDirectory);
 }
 
 function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
@@ -196,13 +264,28 @@ export function buildConsumerDistribution(
 ): void {
   mkdirSync(input.destination, { recursive: true });
   mkdirSync(input.trustedDestination, { recursive: true });
-  emitPublicDeclarations(input.destination);
+  const declarationMeasure = emitPublicDeclarations(input.destination);
   cpSync(
     resolve(input.destination, "declarations"),
     resolve(input.trustedDestination, "declarations"),
     { recursive: true, dereference: true },
   );
+  const trustedDeclarationMeasure = assertPublicDeclarationBundle(
+    resolve(input.trustedDestination, "declarations"),
+  );
+  if (
+    trustedDeclarationMeasure.files !== declarationMeasure.files ||
+    trustedDeclarationMeasure.bytes !== declarationMeasure.bytes
+  ) {
+    throw new Error(
+      "Trusted declaration bundle differs from the public declaration bundle.",
+    );
+  }
   copyFileSync(input.scenarioPath, resolve(input.destination, "SCENARIO.md"));
+  writeFileSync(
+    resolve(input.destination, "CAPABILITY_CONTEXT.md"),
+    `${capabilityContextForRole("player")}\n`,
+  );
   copyFileSync(
     resolve(repoRoot, "scripts/raw-swarm/sdk-player/PLAYER.md"),
     resolve(input.destination, "PLAYER.md"),
@@ -275,9 +358,9 @@ export function buildScenarioSetupDistribution(
     input.scenarioReviewPath,
     resolve(input.destination, "SCENARIO_REVIEW.json"),
   );
-  copyFileSync(
-    resolve(repoRoot, "packages/battle-runtime/README.md"),
-    resolve(input.destination, "PUBLIC_SDK.md"),
+  writeFileSync(
+    resolve(input.destination, "CAPABILITY_CONTEXT.md"),
+    `${capabilityContextForRole("setupAuthoring")}\n`,
   );
   copyFileSync(
     resolve(repoRoot, "scripts/raw-swarm/sdk-player/SCENARIO_SETUP.md"),
@@ -330,13 +413,9 @@ export function buildScenarioCharacterDistribution(
     input.scenarioReviewPath,
     resolve(input.destination, "SCENARIO_REVIEW.json"),
   );
-  copyFileSync(
-    resolve(repoRoot, "packages/character-creation-runtime/README.md"),
-    resolve(input.destination, "CHARACTER_CREATION_SDK.md"),
-  );
-  copyFileSync(
-    resolve(repoRoot, "packages/character-sheet-runtime/README.md"),
-    resolve(input.destination, "CHARACTER_SHEET_SDK.md"),
+  writeFileSync(
+    resolve(input.destination, "CAPABILITY_CONTEXT.md"),
+    `${capabilityContextForRole("characterAuthoring")}\n`,
   );
   copyFileSync(
     resolve(repoRoot, "scripts/raw-swarm/sdk-player/SCENARIO_CHARACTERS.md"),

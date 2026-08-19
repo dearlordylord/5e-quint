@@ -13,12 +13,13 @@ import { DatabaseSync } from "node:sqlite";
 import { Either, Schema } from "effect";
 
 import { ReviewOutputSchema } from "./review-contract.ts";
+import { readFindingsProjection } from "./findings.ts";
 import { playerInvocationNumberFromEventsArtifact } from "./player-continuation-evidence.ts";
 import { preflightSdkTranscript } from "./sdk-player/sdk-audit.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { isJsonRecord, parsePlayerTranscript, repoRoot } from "./transcript.ts";
 
-const INDEX_SCHEMA_VERSION = 1;
+const INDEX_SCHEMA_VERSION = 2;
 
 type RunArtifactCandidate = readonly [
   role: string,
@@ -119,6 +120,23 @@ export function openArtifactIndex(path: string): DatabaseSync {
   const absolute = resolve(repoRoot, path);
   mkdirSync(dirname(absolute), { recursive: true });
   const db = new DatabaseSync(absolute);
+  const existingMetadata = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'indexMetadata'",
+    )
+    .get();
+  if (existingMetadata !== undefined) {
+    const version = db.prepare("SELECT schemaVersion FROM indexMetadata").get();
+    if (
+      !isJsonRecord(version) ||
+      version.schemaVersion !== INDEX_SCHEMA_VERSION
+    ) {
+      db.close();
+      return fail(
+        `Raw Swarm index schema is not version ${String(INDEX_SCHEMA_VERSION)}; inventory and rebuild the database before using this command.`,
+      );
+    }
+  }
   const legacySteps = db
     .prepare(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'steps'",
@@ -230,6 +248,46 @@ export function openArtifactIndex(path: string): DatabaseSync {
       provenanceSha256 TEXT NOT NULL REFERENCES artifacts(sha256),
       PRIMARY KEY(reviewId, seq)
     ) STRICT;
+    CREATE TABLE IF NOT EXISTS findings(
+      runId INTEGER NOT NULL REFERENCES runs(id),
+      findingId TEXT NOT NULL CHECK(length(findingId) = 64 AND findingId NOT GLOB '*[^0-9a-f]*'),
+      stage TEXT NOT NULL,
+      category TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      detail TEXT,
+      pointer TEXT NOT NULL CHECK(json_valid(pointer)),
+      fingerprint TEXT CHECK(fingerprint IS NULL OR (length(fingerprint) = 64 AND fingerprint NOT GLOB '*[^0-9a-f]*')),
+      githubIssueNumber INTEGER CHECK(githubIssueNumber IS NULL OR githubIssueNumber > 0),
+      artifactSha256 TEXT NOT NULL REFERENCES artifacts(sha256),
+      PRIMARY KEY(runId, findingId)
+    ) STRICT;
+    CREATE TABLE IF NOT EXISTS generationRuns(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      runIdentity TEXT NOT NULL UNIQUE CHECK(length(runIdentity) = 64 AND runIdentity NOT GLOB '*[^0-9a-f]*'),
+      scenarioId TEXT NOT NULL,
+      gitSha TEXT NOT NULL,
+      startedAt TEXT NOT NULL
+    ) STRICT;
+    CREATE TABLE IF NOT EXISTS generationRunArtifacts(
+      generationRunId INTEGER NOT NULL REFERENCES generationRuns(id),
+      role TEXT NOT NULL,
+      artifactSha256 TEXT NOT NULL REFERENCES artifacts(sha256),
+      PRIMARY KEY(generationRunId, role)
+    ) STRICT;
+    CREATE TABLE IF NOT EXISTS generationFindings(
+      generationRunId INTEGER NOT NULL REFERENCES generationRuns(id),
+      findingId TEXT NOT NULL CHECK(length(findingId) = 64 AND findingId NOT GLOB '*[^0-9a-f]*'),
+      stage TEXT NOT NULL,
+      category TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      detail TEXT,
+      pointer TEXT NOT NULL CHECK(json_valid(pointer)),
+      fingerprint TEXT CHECK(fingerprint IS NULL OR (length(fingerprint) = 64 AND fingerprint NOT GLOB '*[^0-9a-f]*')),
+      artifactSha256 TEXT NOT NULL REFERENCES artifacts(sha256),
+      PRIMARY KEY(generationRunId, findingId)
+    ) STRICT;
     CREATE TABLE IF NOT EXISTS legacyInventory(
       kind TEXT NOT NULL CHECK(kind IN ('run', 'review', 'database')),
       legacyId INTEGER NOT NULL,
@@ -241,6 +299,12 @@ export function openArtifactIndex(path: string): DatabaseSync {
     CREATE INDEX IF NOT EXISTS calls_operation ON calls(operation);
     CREATE INDEX IF NOT EXISTS verdicts_run ON verdicts(runId);
     CREATE INDEX IF NOT EXISTS verdicts_issue ON verdicts(issueFingerprint);
+    CREATE INDEX IF NOT EXISTS findings_run ON findings(runId);
+    CREATE INDEX IF NOT EXISTS findings_category ON findings(category);
+    CREATE INDEX IF NOT EXISTS findings_fingerprint ON findings(fingerprint);
+    CREATE INDEX IF NOT EXISTS generationFindings_run ON generationFindings(generationRunId);
+    CREATE INDEX IF NOT EXISTS generationFindings_category ON generationFindings(category);
+    CREATE INDEX IF NOT EXISTS generationFindings_fingerprint ON generationFindings(fingerprint);
   `);
   return db;
 }
@@ -445,6 +509,24 @@ export function ingestArtifactRun(input: {
             undefined,
           ],
           [
+            "runStart",
+            resolve(runDirectory, "evidence/run-start.json"),
+            "application/json",
+            undefined,
+          ],
+          [
+            "stagePlan",
+            resolve(runDirectory, "evidence/stage-plan.json"),
+            "application/json",
+            undefined,
+          ],
+          [
+            "stagePlanFindings",
+            resolve(runDirectory, "evidence/stage-plan-findings.json"),
+            "application/json",
+            undefined,
+          ],
+          [
             "frozenPrefix",
             resolve(runDirectory, "evidence/frozen-prefix.json"),
             "application/json",
@@ -479,6 +561,18 @@ export function ingestArtifactRun(input: {
             "supervisorTimings",
             resolve(runDirectory, "evidence/supervisor-timings.jsonl"),
             "application/x-ndjson",
+            undefined,
+          ],
+          [
+            "findingsCheckpoint",
+            resolve(runDirectory, "evidence/findings-checkpoint.json"),
+            "application/json",
+            undefined,
+          ],
+          [
+            "findings",
+            resolve(runDirectory, "evidence/findings.json"),
+            "application/json",
             undefined,
           ],
         ];
@@ -546,6 +640,120 @@ export function ingestArtifactRun(input: {
       }
       db.exec("COMMIT");
       return runId;
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
+  } finally {
+    db.close();
+  }
+}
+
+export function ingestGenerationFindings(input: {
+  readonly findingsPath: string;
+  readonly dbPath: string;
+}): number {
+  const projection = readFindingsProjection(input.findingsPath);
+  if (projection.run.transcriptSha256 !== undefined) {
+    fail("Generation findings must not claim an SDK transcript authority.");
+  }
+  const db = openArtifactIndex(input.dbPath);
+  try {
+    db.exec("BEGIN");
+    try {
+      const findingsArtifact = registerArtifact(
+        db,
+        input.findingsPath,
+        "application/json",
+      );
+      const authorityArtifacts = projection.authorities.map((authority) => {
+        const artifact = registerArtifact(
+          db,
+          authority.path,
+          "application/octet-stream",
+        );
+        if (
+          artifact.sha256 !== authority.sha256 ||
+          artifact.byteLength !== authority.byteLength
+        ) {
+          fail(`Finding authority changed while indexing: ${authority.path}`);
+        }
+        return { role: authority.role, sha256: artifact.sha256 };
+      });
+      const existing = db
+        .prepare(
+          "SELECT id, scenarioId, gitSha, startedAt FROM generationRuns WHERE runIdentity = ?",
+        )
+        .get(projection.runIdentity);
+      if (existing !== undefined) {
+        if (
+          !isJsonRecord(existing) ||
+          typeof existing.id !== "number" ||
+          existing.scenarioId !== projection.run.scenarioId ||
+          existing.gitSha !== projection.run.gitSha ||
+          existing.startedAt !== projection.run.startedAt
+        ) {
+          fail(
+            `Generation run ${projection.runIdentity} has contradictory identity.`,
+          );
+        }
+        const indexedArtifact = db
+          .prepare(
+            "SELECT artifactSha256 FROM generationRunArtifacts WHERE generationRunId = ? AND role = 'findings'",
+          )
+          .get(existing.id);
+        if (
+          !isJsonRecord(indexedArtifact) ||
+          indexedArtifact.artifactSha256 !== findingsArtifact.sha256
+        ) {
+          fail(
+            `Generation run ${String(existing.id)} already has another findings artifact.`,
+          );
+        }
+        db.exec("COMMIT");
+        return existing.id;
+      }
+      const inserted = db
+        .prepare(
+          "INSERT INTO generationRuns(runIdentity, scenarioId, gitSha, startedAt) VALUES (?, ?, ?, ?)",
+        )
+        .run(
+          projection.runIdentity,
+          projection.run.scenarioId,
+          projection.run.gitSha,
+          projection.run.startedAt,
+        );
+      const generationRunId = Number(inserted.lastInsertRowid);
+      const insertAuthority = db.prepare(
+        "INSERT INTO generationRunArtifacts(generationRunId, role, artifactSha256) VALUES (?, ?, ?)",
+      );
+      for (const authority of authorityArtifacts) {
+        insertAuthority.run(generationRunId, authority.role, authority.sha256);
+      }
+      if (authorityArtifacts.some(({ role }) => role === "findings")) {
+        fail("Generation findings authorities cannot use the findings role.");
+      }
+      insertAuthority.run(generationRunId, "findings", findingsArtifact.sha256);
+      const insertFinding = db.prepare(
+        `INSERT INTO generationFindings(generationRunId, findingId, stage, category, kind, summary, detail, pointer, fingerprint, artifactSha256)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      );
+      for (const finding of projection.findings) {
+        insertFinding.run(
+          generationRunId,
+          finding.findingId,
+          finding.stage,
+          finding.category,
+          finding.kind,
+          finding.summary,
+          finding.detail ?? null,
+          JSON.stringify(finding.pointer),
+          finding.fingerprint ?? null,
+          findingsArtifact.sha256,
+        );
+      }
+      db.exec("COMMIT");
+      return generationRunId;
     } catch (error) {
       db.exec("ROLLBACK");
       throw error;
@@ -834,13 +1042,22 @@ function tableCount(db: DatabaseSync, table: string): number {
     : fail(`Invalid ${table} count.`);
 }
 
+function tableExists(db: DatabaseSync, table: string): boolean {
+  return (
+    db
+      .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?")
+      .get(table) !== undefined
+  );
+}
+
 function registerLegacyEvidence(input: {
   readonly db: DatabaseSync;
   readonly legacyDb: DatabaseSync;
   readonly item: LegacyArtifactInventory;
   readonly artifactDirectory: string;
+  readonly hasVerdicts: boolean;
 }): string {
-  const { db, legacyDb, item, artifactDirectory } = input;
+  const { db, legacyDb, item, artifactDirectory, hasVerdicts } = input;
   const recoveredPath = recoveredLegacyArtifactPath(item);
   if (recoveredPath !== undefined) {
     const retained = contentAddressedCopy({
@@ -859,9 +1076,13 @@ function registerLegacyEvidence(input: {
       ? legacyDb
           .prepare("SELECT * FROM steps WHERE runId = ? ORDER BY seq")
           .all(item.legacyId)
-      : legacyDb
-          .prepare("SELECT * FROM verdicts WHERE reviewRoundId = ? ORDER BY id")
-          .all(item.legacyId);
+      : hasVerdicts
+        ? legacyDb
+            .prepare(
+              "SELECT * FROM verdicts WHERE reviewRoundId = ? ORDER BY id",
+            )
+            .all(item.legacyId)
+        : [];
   const exportPath = resolve(
     repoRoot,
     artifactDirectory,
@@ -890,6 +1111,7 @@ export function rebuildLegacyArtifactIndex(input: {
   const oldDb = new DatabaseSync(resolve(repoRoot, input.legacyDbPath), {
     readOnly: true,
   });
+  const hasVerdicts = tableExists(oldDb, "verdicts");
   const runIdMap = new Map<number, number>();
   const reviewIdMap = new Map<number, number>();
   try {
@@ -976,6 +1198,7 @@ export function rebuildLegacyArtifactIndex(input: {
           legacyDb: oldDb,
           item,
           artifactDirectory: input.artifactDirectory,
+          hasVerdicts,
         });
         newDb
           .prepare(
@@ -1014,8 +1237,12 @@ export function rebuildLegacyArtifactIndex(input: {
           !isJsonRecord(row) ||
           typeof row.id !== "number" ||
           typeof row.runId !== "number" ||
-          typeof row.reviewer !== "string" ||
-          typeof row.createdAt !== "string"
+          (row.reviewer !== undefined &&
+            row.reviewer !== null &&
+            typeof row.reviewer !== "string") ||
+          (row.createdAt !== undefined &&
+            row.createdAt !== null &&
+            typeof row.createdAt !== "string")
         ) {
           fail("Legacy review row is invalid.");
         }
@@ -1027,6 +1254,14 @@ export function rebuildLegacyArtifactIndex(input: {
         if (artifact === undefined) continue;
         const recoveredPath = recoveredLegacyArtifactPath(artifact);
         if (recoveredPath === undefined) continue;
+        const decodedReview = Schema.decodeUnknownEither(ReviewOutputSchema, {
+          onExcessProperty: "error",
+        })(JSON.parse(readFileSync(resolve(repoRoot, recoveredPath), "utf8")));
+        if (Either.isLeft(decodedReview)) {
+          fail(
+            `Recovered legacy review ${String(row.id)} is invalid: ${decodedReview.left.message}`,
+          );
+        }
         const retained = contentAddressedCopy({
           sourcePath: recoveredPath,
           artifactDirectory: input.artifactDirectory,
@@ -1037,18 +1272,36 @@ export function rebuildLegacyArtifactIndex(input: {
           retained,
           "application/json",
         );
+        const runIdentity = newDb
+          .prepare("SELECT startedAt FROM runs WHERE id = ?")
+          .get(runId);
+        const createdAt =
+          typeof row.createdAt === "string"
+            ? row.createdAt
+            : isJsonRecord(runIdentity) &&
+                typeof runIdentity.startedAt === "string"
+              ? runIdentity.startedAt
+              : `legacy-review-${String(row.id)}`;
         const inserted = newDb
           .prepare(
             "INSERT INTO reviews(runId, reviewer, artifactSha256, auditSha256, invocationLedgerSha256, createdAt) VALUES (?, ?, ?, NULL, NULL, ?)",
           )
-          .run(runId, row.reviewer, registered.sha256, row.createdAt);
+          .run(
+            runId,
+            typeof row.reviewer === "string"
+              ? row.reviewer
+              : decodedReview.right.reviewer,
+            registered.sha256,
+            createdAt,
+          );
         reviewIdMap.set(row.id, Number(inserted.lastInsertRowid));
       }
       let retainedVerdicts = 0;
       let databaseOnlyVerdicts = 0;
-      for (const row of oldDb
-        .prepare("SELECT * FROM verdicts ORDER BY id")
-        .all()) {
+      const legacyVerdictRows = hasVerdicts
+        ? oldDb.prepare("SELECT * FROM verdicts ORDER BY id").all()
+        : [];
+      for (const row of legacyVerdictRows) {
         if (
           !isJsonRecord(row) ||
           typeof row.runId !== "number" ||
@@ -1120,13 +1373,17 @@ export function rebuildLegacyArtifactIndex(input: {
         tableCount(oldDb, "reviewRounds")
       )
         fail("Legacy review disposition count mismatch.");
-      if (tableCount(newDb, "verdicts") !== retainedVerdicts)
-        fail("Recoverable legacy verdict count mismatch.");
-      if (
-        retainedVerdicts + databaseOnlyVerdicts !==
-        tableCount(oldDb, "verdicts")
-      )
-        fail("Legacy verdict disposition count mismatch.");
+      if (hasVerdicts) {
+        if (tableCount(newDb, "verdicts") !== retainedVerdicts)
+          fail("Recoverable legacy verdict count mismatch.");
+        if (
+          retainedVerdicts + databaseOnlyVerdicts !==
+          tableCount(oldDb, "verdicts")
+        )
+          fail("Legacy verdict disposition count mismatch.");
+      } else if (retainedVerdicts !== 0 || databaseOnlyVerdicts !== 0) {
+        fail("Legacy verdict rows appeared without a verdicts table.");
+      }
       if (tableCount(newDb, "issues") !== tableCount(oldDb, "issues"))
         fail("Legacy issue count mismatch.");
       const linked = (db: DatabaseSync): number => {
@@ -1217,6 +1474,8 @@ export function exportArtifactIndex(input: {
          UNION SELECT extractionArtifactSha256 FROM reviewDrilldowns
          UNION SELECT provenanceSha256 FROM reviewDrilldowns
          UNION SELECT evidenceSha256 FROM legacyInventory WHERE evidenceSha256 IS NOT NULL
+         UNION SELECT artifactSha256 FROM generationRunArtifacts
+         UNION SELECT artifactSha256 FROM generationFindings
        )
        ORDER BY artifacts.sha256`,
     )

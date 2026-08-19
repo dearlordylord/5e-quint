@@ -61,17 +61,21 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
   const session = sdk.createScenarioSession({
     battle: started.right,
-    arena: {
-      cells: [
-        { x: 0, y: 0, terrain: "ordinary" },
-        { x: 1, y: 0, terrain: "ordinary" },
+    spatial: {
+      kind: "geometryDerived",
+      arena: {
+        cells: [
+          { x: 0, y: 0, terrain: "ordinary" },
+          { x: 1, y: 0, terrain: "ordinary" },
+        ],
+        boundaries: [],
+      },
+      placements: [
+        { tokenId: goblin.right.combatantId, coordinate: { x: 0, y: 0 } },
+        { tokenId: skeleton.right.combatantId, coordinate: { x: 1, y: 0 } },
       ],
-      boundaries: [],
+      spatialDecisions: [],
     },
-    placements: [
-      { tokenId: goblin.right.combatantId, coordinate: { x: 0, y: 0 } },
-      { tokenId: skeleton.right.combatantId, coordinate: { x: 1, y: 0 } },
-    ],
     ambientIllumination: "brightLight",
     statBlockDamageNotation: "rolled",
     environment: { overhead: { kind: "open" }, barrierHeights: [] },

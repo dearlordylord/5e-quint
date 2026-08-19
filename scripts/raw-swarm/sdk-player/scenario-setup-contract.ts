@@ -23,7 +23,10 @@ import type { Hp, movementFeet } from "@dnd/shared/types";
 import type { JsonValue } from "./continuation-contract.ts";
 import type {
   createScenarioSession,
+  scenarioDistanceFeet,
+  scenarioTableSpatialFingerprint,
   scenarioSessionIssueMessage,
+  tableAuthoredSpatialDecision,
   ScenarioSession,
 } from "./scenario-session.ts";
 
@@ -36,6 +39,22 @@ export type {
   ScenarioMovementAllyRelationship,
   ScenarioOpportunityAttackEnemyRelationship,
   ScenarioPlacement,
+  ScenarioDirection,
+  ScenarioSpatialBoundary,
+  ScenarioSpatialDecision,
+  ScenarioSpatialDecisionId,
+  ScenarioSpatialDecisionInput,
+  ScenarioSpatialDecisionIssue,
+  ScenarioSpatialDistanceFeetIssue,
+  ScenarioNonMovementSpatialDecisionInput,
+  ScenarioSpatialDecisionQuestion,
+  ScenarioSpatialRelationAnswer,
+  ScenarioSpatialSetupInput,
+  ScenarioSpatialWitness,
+  ScenarioSpatialWitnessSource,
+  ScenarioTableSpatialDecision,
+  ScenarioTableSpatialPostMoveState,
+  ScenarioTableSpatialPostMoveStateInput,
   ScenarioSession,
   ScenarioTokenId,
   ScenarioSessionFactIssue,
@@ -58,7 +77,10 @@ export type ScenarioSetupSdk = {
   readonly hp: typeof Hp;
   readonly movementFeet: typeof movementFeet;
   readonly createScenarioSession: typeof createScenarioSession;
+  readonly scenarioDistanceFeet: typeof scenarioDistanceFeet;
+  readonly scenarioTableSpatialFingerprint: typeof scenarioTableSpatialFingerprint;
   readonly scenarioSessionIssueMessage: typeof scenarioSessionIssueMessage;
+  readonly tableAuthoredSpatialDecision: typeof tableAuthoredSpatialDecision;
   readonly isLeft: typeof Either.isLeft;
 };
 

@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Either, ParseResult, Schema } from "effect";
 
 import {
   artifactAuthority,
@@ -11,19 +11,48 @@ import {
 } from "./artifact-authority.ts";
 import {
   MODEL_INVOCATION_PHASES,
+  CurrentModelInvocationLedgerEntrySchema,
+  ModelInvocationLedgerEntrySchema,
+  modelInvocationEvidenceFromEvents,
   parseModelInvocationLedgerEntry,
+  readCodexEvents,
   type ModelInvocationLedgerEntry,
+  type CurrentModelInvocationLedgerEntry,
   type ModelInvocationPhase,
+  type ModelUsage,
+  type TokenCount,
 } from "./model-telemetry.ts";
+import {
+  FindingsProjectionSchema,
+  validateFindingsProjection,
+  type FindingsProjection,
+} from "./findings.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
+import {
+  codexOutputJsonSchema,
+  CurrentScenarioCompositeReviewSchema,
+  FinalScenarioReviewSchema,
+} from "./scenario-campaign.ts";
+export {
+  codexOutputJsonSchema,
+  CurrentScenarioCompositeReviewSchema,
+  FinalScenarioReviewSchema,
+};
+import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
 import { playerContinuationEvidence } from "./player-continuation-evidence.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
+import { ReviewOutputSchema } from "./review-contract.ts";
 import {
   isJsonRecord,
+  canonicalJson,
   repoRoot,
   ScenarioIdSchema,
   sha256Canonical,
 } from "./transcript.ts";
+import {
+  ScenarioStagePlanSchema,
+  type ScenarioStagePlan,
+} from "./scenario-stage-plan.ts";
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 const NonNegativeIntegerSchema = Schema.Number.pipe(
@@ -54,7 +83,7 @@ const ReportingTimingSchema = Schema.Struct({
   elapsedMilliseconds: NonNegativeIntegerSchema,
 });
 
-const LegacyRunEvidenceSchema = Schema.Struct({
+export const LegacyRunEvidenceSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   scenarioId: ScenarioIdSchema,
   scenarioSha256: HashSchema,
@@ -79,7 +108,9 @@ const LegacyRunEvidenceSchema = Schema.Struct({
 });
 
 type RunDescriptor = Schema.Schema.Type<typeof RunDescriptorSchema>;
-type LegacyRunEvidence = Schema.Schema.Type<typeof LegacyRunEvidenceSchema>;
+export type LegacyRunEvidence = Schema.Schema.Type<
+  typeof LegacyRunEvidenceSchema
+>;
 
 const UsageTotalsSchema = Schema.Struct({
   input: NonNegativeIntegerSchema,
@@ -639,7 +670,8 @@ function matchingPhase(
 const UNCHANGED_CONTROL_PHASES = [
   "scenarioGeneration",
   "scenarioCharacterAuthoring",
-  "scenarioSetupAuthoring",
+  "scenarioSetupNeutralAuthoring",
+  "scenarioSetupControllerAuthoring",
 ] as const satisfies readonly ModelInvocationPhase[];
 
 const COMPARABLE_PHASES = [
@@ -1083,8 +1115,1587 @@ export function readControlledPerformance(
   return run;
 }
 
+const PathOutcomeSchema = Schema.Union(
+  Schema.Struct({ tag: Schema.Literal("completed") }),
+  Schema.Struct({
+    tag: Schema.Literal("failed"),
+    reason: Schema.NonEmptyTrimmedString,
+  }),
+);
+const UnavailableEvidenceSchema = Schema.Struct({
+  tag: Schema.Literal("unavailable"),
+  reason: Schema.NonEmptyTrimmedString,
+});
+export const COMPLETE_PATH_PHASE_STAGE = [
+  {
+    phases: ["scenarioGeneration"],
+    stage: "scenarioGeneration",
+    countPolicy: "oneOrMore",
+  },
+  {
+    phases: ["scenarioCompositeReview"],
+    stage: "scenarioCompositeReview",
+    countPolicy: "exactlyTwo",
+  },
+  {
+    phases: ["scenarioCharacterAuthoring"],
+    stage: "scenarioCharacterAuthoring",
+    countPolicy: "exactlyOne",
+  },
+  {
+    phases: [
+      "scenarioSetupNeutralAuthoring",
+      "scenarioSetupControllerAuthoring",
+    ],
+    stage: "scenarioSetupAuthoring",
+    countPolicy: "exactlyTwo",
+  },
+  {
+    phases: ["player"],
+    stage: "player",
+    countPolicy: "exactlyOne",
+  },
+  {
+    phases: ["postPlayReview"],
+    stage: "postPlayReview",
+    countPolicy: "exactlyOne",
+  },
+] as const;
+type CompletePathPhaseStage = (typeof COMPLETE_PATH_PHASE_STAGE)[number];
+type CompletePathStageName = CompletePathPhaseStage["stage"];
+type CompletePathPhase = CompletePathPhaseStage["phases"][number];
+const COMPLETE_PATH_EXACTLY_TWO_DESCRIPTIONS = {
+  scenarioCompositeReview: "one milestone and one final",
+  scenarioSetupAuthoring: "one neutral and one controller",
+} as const satisfies Partial<Record<CompletePathStageName, string>>;
+
+/**
+ * Current complete-path evidence composes canonical authorities. It does not
+ * introduce another per-invocation phase, result, elapsed-time, or usage
+ * schema.
+ */
+const CurrentCompletePathMeasurementSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(2),
+  pathId: Schema.NonEmptyTrimmedString,
+  stagePlan: ScenarioStagePlanSchema,
+  stagePlanAuthority: ArtifactAuthoritySchema,
+  invocationLedgers: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+  invocations: Schema.Array(CurrentModelInvocationLedgerEntrySchema),
+  invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+  findings: FindingsProjectionSchema,
+  outcome: PathOutcomeSchema,
+});
+
+/**
+ * Paths are assembled from retained authority files, not copied ledger rows
+ * supplied by a caller. The assembler hashes and decodes each named source,
+ * composes the canonical entries, and then passes the result through the same
+ * validator used by comparison.
+ */
+export const CompletePathAssemblyDescriptorSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  pathId: Schema.NonEmptyTrimmedString,
+  stagePlanPath: Schema.NonEmptyTrimmedString,
+  findingsPath: Schema.NonEmptyTrimmedString,
+  invocationLedgerPaths: Schema.NonEmptyArray(Schema.NonEmptyTrimmedString),
+  invocationEventPaths: Schema.NonEmptyArray(Schema.NonEmptyTrimmedString),
+  outcome: PathOutcomeSchema,
+});
+export type CompletePathAssemblyDescriptor = Schema.Schema.Type<
+  typeof CompletePathAssemblyDescriptorSchema
+>;
+
+/**
+ * Historical runs, including generated-battle-009, predate the current stage
+ * plan and v2 ledger. Their absent authorities are represented explicitly;
+ * no v2 stage plan, reason, result, or finding is fabricated for comparison.
+ */
+const HistoricalCompletePathMeasurementSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  pathId: Schema.NonEmptyTrimmedString,
+  legacy: LegacyRunEvidenceSchema,
+  stagePlan: UnavailableEvidenceSchema,
+  invocations: Schema.Union(
+    UnavailableEvidenceSchema,
+    // Historical v1 entries remain parseable through the canonical versioned
+    // ledger union. No second telemetry declaration is maintained here.
+    Schema.Array(ModelInvocationLedgerEntrySchema),
+  ),
+  findings: UnavailableEvidenceSchema,
+  outcome: UnavailableEvidenceSchema,
+});
+
+export const CompletePathMeasurementSchema = Schema.Union(
+  HistoricalCompletePathMeasurementSchema,
+  CurrentCompletePathMeasurementSchema,
+);
+export type CompletePathMeasurement = Schema.Schema.Type<
+  typeof CompletePathMeasurementSchema
+>;
+const completePathMeasurementValidated: unique symbol = Symbol(
+  "completePathMeasurementValidated",
+);
+export type ValidatedCompletePathMeasurement = CompletePathMeasurement & {
+  readonly [completePathMeasurementValidated]: true;
+};
+export type CurrentCompletePathMeasurement = Schema.Schema.Type<
+  typeof CurrentCompletePathMeasurementSchema
+>;
+type HistoricalCompletePathMeasurement = Schema.Schema.Type<
+  typeof HistoricalCompletePathMeasurementSchema
+>;
+type UnavailableEvidence = Schema.Schema.Type<typeof UnavailableEvidenceSchema>;
+type EvidenceCount =
+  | { readonly tag: "available"; readonly count: number }
+  | UnavailableEvidence;
+type EvidenceList =
+  | { readonly tag: "available"; readonly values: readonly string[] }
+  | UnavailableEvidence;
+type PathOutcome = Schema.Schema.Type<typeof PathOutcomeSchema>;
+type CurrentEvidenceWitness = Readonly<{
+  readonly transcript: "retained" | "missing";
+  readonly replay: "retained" | "missing";
+  readonly findings: "retained" | "missing";
+  readonly prePlayReview: "retained" | "missing";
+  readonly postPlayReview: "retained" | "missing";
+}>;
+export type CompletePathEquivalenceWitness =
+  | Readonly<{
+      readonly tag: "current";
+      readonly scenario:
+        | Readonly<{
+            readonly tag: "admitted";
+            readonly scenarioId: string;
+            readonly scenarioSha256: string;
+            readonly scenarioReviewSha256: string;
+          }>
+        | Readonly<{
+            readonly tag: "candidate";
+            readonly scenarioId: string;
+            readonly candidateScenarioSha256: string;
+          }>;
+      readonly admissionOutcome: ScenarioStagePlan["outcome"]["tag"];
+      readonly outcome: PathOutcome;
+      readonly evidence: CurrentEvidenceWitness;
+    }>
+  | Readonly<{
+      readonly tag: "historical";
+      readonly scenario: Readonly<{
+        readonly scenarioId: string;
+        readonly scenarioSha256: string;
+        readonly scenarioReviewSha256: string;
+      }>;
+      readonly admissionOutcome: UnavailableEvidence;
+      readonly outcome: UnavailableEvidence;
+      readonly evidence: UnavailableEvidence;
+    }>;
+
+export type CompletePathSummary = Readonly<{
+  readonly evidenceVersion: "current" | "historical";
+  readonly outcome: PathOutcome | UnavailableEvidence;
+  readonly acceptedCalls: EvidenceCount;
+  readonly corrections: EvidenceCount;
+  readonly failedStages: EvidenceCount;
+  readonly failureReasons: EvidenceList;
+  readonly elapsedMilliseconds: EvidenceCount;
+  readonly usage: ModelUsage;
+  readonly evidence: CompletePathEquivalenceWitness;
+}>;
+
+export type CompletePathComparison = Readonly<{
+  readonly schemaVersion: 2;
+  readonly identity: "equivalent-path" | "different-path";
+  readonly equivalence: Readonly<{
+    readonly tag: "equivalent" | "incomparable";
+    readonly baseline: CompletePathEquivalenceWitness;
+    readonly candidate: CompletePathEquivalenceWitness;
+    readonly reason?: string;
+  }>;
+  readonly implementation: Readonly<{
+    readonly baselinePhases:
+      | readonly ModelInvocationPhase[]
+      | UnavailableEvidence;
+    readonly candidatePhases:
+      | readonly ModelInvocationPhase[]
+      | UnavailableEvidence;
+    readonly baselineModels: readonly string[] | UnavailableEvidence;
+    readonly candidateModels: readonly string[] | UnavailableEvidence;
+    readonly phaseSequenceChanged: boolean | UnavailableEvidence;
+    readonly modelSequenceChanged: boolean | UnavailableEvidence;
+  }>;
+  readonly baseline: CompletePathSummary;
+  readonly candidate: CompletePathSummary;
+  readonly elapsedMilliseconds: Readonly<{
+    readonly tag: "comparable" | "incomparable";
+    readonly reduction?: number;
+    readonly reason?: string;
+  }>;
+  readonly inputTokens: Readonly<{
+    readonly tag: "comparable" | "incomparable";
+    readonly reduction?: number;
+    readonly reason?: string;
+  }>;
+}>;
+
+function pathDimension(value: number): EvidenceCount {
+  return { tag: "available", count: value };
+}
+
+function dimensionTotal(dimensions: readonly TokenCount[]): TokenCount {
+  return dimensions.every((dimension) => dimension.tag === "available")
+    ? {
+        tag: "available",
+        count: dimensions.reduce(
+          (total, dimension) =>
+            total + (dimension.tag === "available" ? dimension.count : 0),
+          0,
+        ),
+      }
+    : { tag: "unavailable" };
+}
+
+function aggregatePathUsage(
+  invocations: readonly ModelInvocationLedgerEntry[],
+): ModelUsage {
+  if (invocations.length === 0) {
+    return {
+      tag: "unavailable",
+      reason: "No first-party invocation usage was retained for this path.",
+    };
+  }
+  const unavailableReasons = invocations.flatMap(({ usage }) =>
+    usage.tag === "unavailable" ? [usage.reason] : [],
+  );
+  if (unavailableReasons.length > 0) {
+    return {
+      tag: "unavailable",
+      reason: [...new Set(unavailableReasons)].join("; "),
+    };
+  }
+  const available = invocations.flatMap(({ usage }) =>
+    usage.tag === "available" ? [usage] : [],
+  );
+  return {
+    tag: "available",
+    input: dimensionTotal(available.map(({ input }) => input)),
+    cachedInput: dimensionTotal(
+      available.map(({ cachedInput }) => cachedInput),
+    ),
+    cacheWriteInput: dimensionTotal(
+      available.map(({ cacheWriteInput }) => cacheWriteInput),
+    ),
+    output: dimensionTotal(available.map(({ output }) => output)),
+    reasoningOutput: dimensionTotal(
+      available.map(({ reasoningOutput }) => reasoningOutput),
+    ),
+  };
+}
+
+function currentEvidenceWitness(
+  findings: FindingsProjection,
+): CurrentEvidenceWitness {
+  const roles = findings.authorities.map(({ role }) => role);
+  const prePlayReview = roles.some(isScenarioReviewAuthorityRole);
+  const postPlayReview = roles.some(isPostPlayReviewAuthorityRole);
+  return {
+    transcript:
+      findings.run.transcriptSha256 !== undefined &&
+      roles.includes("transcript")
+        ? "retained"
+        : "missing",
+    replay: roles.some(isReplayAuthorityRole) ? "retained" : "missing",
+    findings: "retained",
+    prePlayReview: prePlayReview ? "retained" : "missing",
+    postPlayReview: postPlayReview ? "retained" : "missing",
+  };
+}
+
+function currentPathWitness(
+  measurement: CurrentCompletePathMeasurement,
+): CompletePathEquivalenceWitness {
+  const identity = measurement.stagePlan.identity;
+  const scenario =
+    identity.tag === "admitted"
+      ? {
+          tag: "admitted" as const,
+          scenarioId: identity.scenarioId,
+          scenarioSha256: identity.scenarioSha256,
+          scenarioReviewSha256: identity.scenarioReviewSha256,
+        }
+      : {
+          tag: "candidate" as const,
+          scenarioId: identity.scenarioId,
+          candidateScenarioSha256: identity.candidateScenarioSha256,
+        };
+  return {
+    tag: "current",
+    scenario,
+    admissionOutcome: measurement.stagePlan.outcome.tag,
+    outcome: measurement.outcome,
+    evidence: currentEvidenceWitness(measurement.findings),
+  };
+}
+
+function historicalPathWitness(
+  measurement: HistoricalCompletePathMeasurement,
+): CompletePathEquivalenceWitness {
+  return {
+    tag: "historical",
+    scenario: {
+      scenarioId: measurement.legacy.scenarioId,
+      scenarioSha256: measurement.legacy.scenarioSha256,
+      scenarioReviewSha256: measurement.legacy.scenarioReviewSha256,
+    },
+    admissionOutcome: {
+      tag: "unavailable",
+      reason: "The historical run predates the retained scenario stage plan.",
+    },
+    outcome: {
+      tag: "unavailable",
+      reason: "The historical run predates typed complete-path outcomes.",
+    },
+    evidence: {
+      tag: "unavailable",
+      reason:
+        "The historical run has no hash-linked transcript/replay/findings/review witness in this envelope.",
+    },
+  };
+}
+
+function currentStagePlanBindingIssues(
+  measurement: CurrentCompletePathMeasurement,
+): readonly string[] {
+  const issues: string[] = [];
+  const planByStage = new Map(
+    measurement.stagePlan.stages.map((entry) => [entry.stage, entry]),
+  );
+  const mappingByPhase = new Map(
+    COMPLETE_PATH_PHASE_STAGE.flatMap((mapping) =>
+      mapping.phases.map((phase) => [phase, mapping] as const),
+    ),
+  );
+  const phaseOrder = new Map<CompletePathPhase, number>(
+    COMPLETE_PATH_PHASE_STAGE.flatMap((mapping) => mapping.phases).map(
+      (phase, index) => [phase, index] as const,
+    ),
+  );
+  let previousPhaseOrder = -1;
+  for (const invocation of measurement.invocations) {
+    const mapping = mappingByPhase.get(invocation.phase);
+    if (mapping === undefined) {
+      issues.push(
+        `Invocation phase ${invocation.phase} has no stage-plan explanation.`,
+      );
+      continue;
+    }
+    const currentPhaseOrder = phaseOrder.get(invocation.phase);
+    if (currentPhaseOrder === undefined) {
+      issues.push(
+        `Invocation phase ${invocation.phase} has no canonical order.`,
+      );
+    } else if (currentPhaseOrder < previousPhaseOrder) {
+      issues.push(
+        `Invocation phase ${invocation.phase} is out of order in the complete-path ledger.`,
+      );
+    } else {
+      previousPhaseOrder = currentPhaseOrder;
+    }
+    const stage = planByStage.get(mapping.stage);
+    if (stage !== undefined && invocation.stagePlanReason !== stage.reason) {
+      issues.push(
+        `Invocation ${invocation.invocationId} stage-plan reason does not match the retained ${mapping.stage} authority.`,
+      );
+    }
+  }
+  return issues;
+}
+
+function currentSemanticIssues(
+  measurement: CurrentCompletePathMeasurement,
+): readonly string[] {
+  const issues: string[] = [];
+  if (measurement.stagePlan.identity.tag !== "admitted") {
+    issues.push(
+      "The current stage plan is a candidate and is not admitted for execution.",
+    );
+  }
+  const scenarioId = measurement.stagePlan.identity.scenarioId;
+  if (measurement.findings.run.scenarioId !== scenarioId) {
+    issues.push("The findings projection belongs to a different scenario.");
+  }
+  if (
+    measurement.invocations.some(
+      ({ scenarioId: invocationScenarioId }) =>
+        invocationScenarioId !== scenarioId,
+    )
+  ) {
+    issues.push("An invocation ledger entry belongs to a different scenario.");
+  }
+  const failedInvocations = measurement.invocations.filter(
+    ({ result }) => result.tag === "failed",
+  );
+  if (measurement.outcome.tag === "completed" && failedInvocations.length > 0) {
+    issues.push(
+      "A completed complete path cannot retain a failed model invocation.",
+    );
+  }
+  const planByStage = new Map(
+    measurement.stagePlan.stages.map((entry) => [entry.stage, entry]),
+  );
+  const mappingByPhase = new Map(
+    COMPLETE_PATH_PHASE_STAGE.flatMap((mapping) =>
+      mapping.phases.map((phase) => [phase, mapping] as const),
+    ),
+  );
+  const phaseOrder = new Map<CompletePathPhase, number>(
+    COMPLETE_PATH_PHASE_STAGE.flatMap((mapping) => mapping.phases).map(
+      (phase, index) => [phase, index] as const,
+    ),
+  );
+  const counts = new Map<CompletePathStageName, number>();
+  const invocationIds = new Set<string>();
+  let previousPhaseOrder = -1;
+  for (const invocation of measurement.invocations) {
+    if (invocationIds.has(invocation.invocationId)) {
+      issues.push(
+        `Invocation ${invocation.invocationId} appears more than once in the complete-path ledger.`,
+      );
+    }
+    invocationIds.add(invocation.invocationId);
+    const mapping = mappingByPhase.get(invocation.phase);
+    if (mapping === undefined) {
+      issues.push(
+        `Invocation phase ${invocation.phase} has no stage-plan explanation.`,
+      );
+      continue;
+    }
+    const currentPhaseOrder = phaseOrder.get(invocation.phase);
+    if (currentPhaseOrder === undefined) {
+      issues.push(
+        `Invocation phase ${invocation.phase} has no canonical order.`,
+      );
+    } else if (currentPhaseOrder < previousPhaseOrder) {
+      issues.push(
+        `Invocation phase ${invocation.phase} is out of order in the complete-path ledger.`,
+      );
+    } else {
+      previousPhaseOrder = currentPhaseOrder;
+    }
+    counts.set(mapping.stage, (counts.get(mapping.stage) ?? 0) + 1);
+    const stage = planByStage.get(mapping.stage);
+    if (stage === undefined) {
+      issues.push(
+        `Invocation phase ${invocation.phase} has no retained stage-plan entry.`,
+      );
+      continue;
+    }
+    if (invocation.stagePlanReason !== stage.reason) {
+      issues.push(
+        `Invocation ${invocation.invocationId} stage-plan reason does not match the retained ${mapping.stage} authority.`,
+      );
+    }
+    if (stage.decision === "skipped" || stage.decision === "rejected") {
+      issues.push(
+        `Invocation phase ${invocation.phase} is recorded for a skipped/rejected stage.`,
+      );
+    }
+  }
+  for (const mapping of COMPLETE_PATH_PHASE_STAGE) {
+    const stage = planByStage.get(mapping.stage);
+    if (stage === undefined) {
+      issues.push(`Stage ${mapping.stage} is absent from the stage plan.`);
+      continue;
+    }
+    const count = counts.get(mapping.stage) ?? 0;
+    if (stage.decision === "skipped" || stage.decision === "rejected") {
+      if (count !== 0) {
+        issues.push(
+          `Stage ${mapping.stage} is skipped/rejected or none but has ${String(count)} invocation(s).`,
+        );
+      }
+      continue;
+    }
+    if (mapping.countPolicy === "exactlyOne" && count !== 1) {
+      issues.push(
+        `Stage ${mapping.stage} requires exactly one invocation, received ${String(count)}.`,
+      );
+    } else if (mapping.countPolicy === "exactlyTwo" && count !== 2) {
+      issues.push(
+        `Stage ${mapping.stage} requires exactly two invocations (${COMPLETE_PATH_EXACTLY_TWO_DESCRIPTIONS[mapping.stage]}), received ${String(count)}.`,
+      );
+    } else if (mapping.countPolicy === "oneOrMore" && count < 1) {
+      issues.push(
+        `Stage ${mapping.stage} requires at least one invocation, received none.`,
+      );
+    }
+  }
+  return issues;
+}
+
+function currentSummary(
+  measurement: CurrentCompletePathMeasurement,
+): CompletePathSummary {
+  const failureReasons = measurement.invocations.flatMap(({ result }) =>
+    result.tag === "failed" ? [result.reason] : [],
+  );
+  return {
+    evidenceVersion: "current",
+    outcome: measurement.outcome,
+    acceptedCalls: pathDimension(
+      measurement.findings.findings.filter(
+        ({ kind }) => kind === "accepted-call-verdict",
+      ).length,
+    ),
+    corrections: pathDimension(
+      measurement.findings.findings.filter(
+        ({ kind }) => kind === "successful-correction",
+      ).length,
+    ),
+    failedStages: pathDimension(
+      measurement.invocations.filter(({ result }) => result.tag === "failed")
+        .length,
+    ),
+    failureReasons: {
+      tag: "available",
+      values: [...new Set(failureReasons)],
+    },
+    elapsedMilliseconds: pathDimension(
+      measurement.invocations.reduce(
+        (total, { elapsedMilliseconds }) => total + elapsedMilliseconds,
+        0,
+      ),
+    ),
+    usage: aggregatePathUsage(measurement.invocations),
+    evidence: currentPathWitness(measurement),
+  };
+}
+
+function historicalSummary(
+  measurement: HistoricalCompletePathMeasurement,
+): CompletePathSummary {
+  const invocations = Array.isArray(measurement.invocations)
+    ? measurement.invocations
+    : [];
+  return {
+    evidenceVersion: "historical",
+    outcome: measurement.outcome,
+    acceptedCalls: {
+      tag: "unavailable",
+      reason: "Historical findings were not retained in this envelope.",
+    },
+    corrections: {
+      tag: "unavailable",
+      reason:
+        "Historical correction findings were not retained in this envelope.",
+    },
+    failedStages: {
+      tag: "unavailable",
+      reason:
+        "Historical per-stage results were not retained in this envelope.",
+    },
+    failureReasons: {
+      tag: "unavailable",
+      reason:
+        "Historical invocation result reasons were not retained in this envelope.",
+    },
+    elapsedMilliseconds: pathDimension(
+      measurement.legacy.wholePathElapsedMilliseconds,
+    ),
+    usage: aggregatePathUsage(invocations),
+    evidence: historicalPathWitness(measurement),
+  };
+}
+
+function summary(measurement: CompletePathMeasurement): CompletePathSummary {
+  return measurement.schemaVersion === 2
+    ? currentSummary(measurement)
+    : historicalSummary(measurement);
+}
+
+function sequenceChanged<A>(
+  baseline: readonly A[],
+  candidate: readonly A[],
+): boolean {
+  return canonicalJson(baseline) !== canonicalJson(candidate);
+}
+
+function implementationForPath(measurement: CompletePathMeasurement): {
+  readonly phases: readonly ModelInvocationPhase[] | UnavailableEvidence;
+  readonly models: readonly string[] | UnavailableEvidence;
+} {
+  if (measurement.schemaVersion === 1) {
+    const unavailable: UnavailableEvidence = {
+      tag: "unavailable",
+      reason:
+        "Historical evidence has no canonical per-invocation phase sequence.",
+    };
+    if (!Array.isArray(measurement.invocations)) {
+      return { phases: unavailable, models: unavailable };
+    }
+    return {
+      phases: measurement.invocations.map(({ phase }) => phase),
+      models: measurement.invocations.map(({ model }) => model),
+    };
+  }
+  return {
+    phases: measurement.invocations.map(({ phase }) => phase),
+    models: measurement.invocations.map(({ model }) => model),
+  };
+}
+
+function availableMetric(
+  baseline: EvidenceCount,
+  candidate: EvidenceCount,
+): { readonly baseline: number; readonly candidate: number } | undefined {
+  return baseline.tag === "available" && candidate.tag === "available"
+    ? { baseline: baseline.count, candidate: candidate.count }
+    : undefined;
+}
+
+function compareSequences<A>(
+  baseline: readonly A[] | UnavailableEvidence,
+  candidate: readonly A[] | UnavailableEvidence,
+): boolean | UnavailableEvidence {
+  if (!Array.isArray(baseline) || !Array.isArray(candidate)) {
+    return {
+      tag: "unavailable",
+      reason:
+        "At least one path has unavailable implementation sequence evidence.",
+    };
+  }
+  return sequenceChanged(baseline, candidate);
+}
+
+function metricComparison(
+  baseline: CompletePathSummary,
+  candidate: CompletePathSummary,
+  identity: CompletePathComparison["identity"],
+  select: (summary: CompletePathSummary) => EvidenceCount,
+  label: string,
+): CompletePathComparison["elapsedMilliseconds"] {
+  if (identity !== "equivalent-path") {
+    return {
+      tag: "incomparable",
+      reason:
+        "Scenario outcome or retained evidence semantics differ; historical and current authorities are not interchangeable.",
+    };
+  }
+  const values = availableMetric(select(baseline), select(candidate));
+  if (values === undefined) {
+    return {
+      tag: "incomparable",
+      reason: `${label} is unavailable in at least one path; unavailable is not zero.`,
+    };
+  }
+  return {
+    tag: "comparable",
+    reduction: reduction(values.baseline, values.candidate),
+  };
+}
+
+function inputComparison(
+  baseline: CompletePathSummary,
+  candidate: CompletePathSummary,
+  identity: CompletePathComparison["identity"],
+): CompletePathComparison["inputTokens"] {
+  if (identity !== "equivalent-path") {
+    return {
+      tag: "incomparable",
+      reason:
+        "Scenario outcome or retained evidence semantics differ; input usage cannot be compared.",
+    };
+  }
+  const baselineValue =
+    baseline.usage.tag === "available" &&
+    baseline.usage.input.tag === "available"
+      ? baseline.usage.input.count
+      : undefined;
+  const candidateValue =
+    candidate.usage.tag === "available" &&
+    candidate.usage.input.tag === "available"
+      ? candidate.usage.input.count
+      : undefined;
+  if (baselineValue !== undefined && candidateValue !== undefined) {
+    return {
+      tag: "comparable",
+      reduction: reduction(baselineValue, candidateValue),
+    };
+  }
+  return {
+    tag: "incomparable",
+    reason:
+      "Input-token usage is unavailable in at least one path; unavailable is not zero.",
+  };
+}
+
+export function parseCompletePathMeasurement(
+  value: unknown,
+): Either.Either<CompletePathMeasurement, ParseResult.ParseError> {
+  return Schema.decodeUnknownEither(CompletePathMeasurementSchema, {
+    onExcessProperty: "error",
+  })(value);
+}
+
+function readJsonAuthority(path: string): unknown {
+  return JSON.parse(readFileSync(resolve(repoRoot, path), "utf8"));
+}
+
+function currentInvocationEntriesFromLedger(
+  path: string,
+): readonly CurrentModelInvocationLedgerEntry[] {
+  const values = readJsonLines(path);
+  if (values.length === 0) {
+    fail("Complete-path invocation ledger is empty: " + path);
+  }
+  return values.map((value) => {
+    const parsed = parseModelInvocationLedgerEntry(value);
+    if (Either.isLeft(parsed)) {
+      fail(
+        "Invalid invocation ledger entry in " +
+          path +
+          ": " +
+          parsed.left.message,
+      );
+    }
+    if (parsed.right.schemaVersion !== 2) {
+      fail(
+        "Current complete-path assembly cannot use v1 ledger evidence: " + path,
+      );
+    }
+    return parsed.right;
+  });
+}
+
+function mapNonEmpty<A, B>(
+  values: readonly [A, ...A[]],
+  map: (value: A) => B,
+): readonly [B, ...B[]] {
+  const [first, ...rest] = values;
+  return [map(first), ...rest.map(map)];
+}
+
+/**
+ * Assemble a current measurement from the retained stage plan, findings,
+ * ledger, and raw event authorities. Every row is decoded from its source;
+ * callers cannot provide a parallel in-memory phase or usage record.
+ */
+export function assembleCompletePathMeasurement(
+  value: unknown,
+): Either.Either<ValidatedCompletePathMeasurement, string> {
+  const descriptor = Schema.decodeUnknownEither(
+    CompletePathAssemblyDescriptorSchema,
+    { onExcessProperty: "error" },
+  )(value);
+  if (Either.isLeft(descriptor)) return Either.left(descriptor.left.message);
+  try {
+    const stagePlanAuthority = artifactAuthority(
+      descriptor.right.stagePlanPath,
+    );
+    const stagePlanDecoded = Schema.decodeUnknownEither(
+      ScenarioStagePlanSchema,
+      { onExcessProperty: "error" },
+    )(readJsonAuthority(stagePlanAuthority.path));
+    if (Either.isLeft(stagePlanDecoded)) {
+      return Either.left(
+        "Invalid complete-path stage plan: " + stagePlanDecoded.left.message,
+      );
+    }
+    const findingsAuthority = artifactAuthority(descriptor.right.findingsPath);
+    const findingsDecoded = Schema.decodeUnknownEither(
+      FindingsProjectionSchema,
+      { onExcessProperty: "error" },
+    )(readJsonAuthority(findingsAuthority.path));
+    if (Either.isLeft(findingsDecoded)) {
+      return Either.left(
+        "Invalid complete-path findings projection: " +
+          findingsDecoded.left.message,
+      );
+    }
+    const findingsValidation = validateFindingsProjection(
+      findingsDecoded.right,
+    );
+    if (findingsValidation.tag === "invalid") {
+      return Either.left(
+        "Invalid complete-path findings projection: " +
+          findingsValidation.message,
+      );
+    }
+    const ledgerAuthorities = mapNonEmpty(
+      descriptor.right.invocationLedgerPaths,
+      artifactAuthority,
+    );
+    const ledgerPaths = new Set(ledgerAuthorities.map(({ path }) => path));
+    if (ledgerPaths.size !== ledgerAuthorities.length) {
+      return Either.left(
+        "Complete-path invocation ledger authorities must have distinct paths.",
+      );
+    }
+    const invocations = ledgerAuthorities.flatMap(({ path }) =>
+      currentInvocationEntriesFromLedger(path),
+    );
+    const eventAuthorities = mapNonEmpty(
+      descriptor.right.invocationEventPaths,
+      artifactAuthority,
+    );
+    const eventPaths = new Set(eventAuthorities.map(({ path }) => path));
+    if (eventPaths.size !== eventAuthorities.length) {
+      return Either.left(
+        "Complete-path invocation event authorities must have distinct paths.",
+      );
+    }
+    const measurement: CurrentCompletePathMeasurement = {
+      schemaVersion: 2,
+      pathId: descriptor.right.pathId,
+      stagePlan: stagePlanDecoded.right,
+      stagePlanAuthority,
+      invocationLedgers: ledgerAuthorities,
+      invocations,
+      invocationEvents: eventAuthorities,
+      findings: findingsValidation.projection,
+      outcome: descriptor.right.outcome,
+    };
+    return validateCompletePathMeasurement(measurement);
+  } catch (error: unknown) {
+    return Either.left(
+      error instanceof Error
+        ? error.message
+        : "Unable to assemble complete-path measurement: " + String(error),
+    );
+  }
+}
+
+export function writeCompletePathMeasurement(input: {
+  readonly descriptor: unknown;
+  readonly outputPath: string;
+}): Either.Either<ValidatedCompletePathMeasurement, string> {
+  const assembled = assembleCompletePathMeasurement(input.descriptor);
+  if (Either.isLeft(assembled)) return assembled;
+  try {
+    writeFileSync(
+      resolve(repoRoot, input.outputPath),
+      JSON.stringify(assembled.right, null, 2) + "\n",
+      { flag: "wx" },
+    );
+    return assembled;
+  } catch (error: unknown) {
+    return Either.left(
+      error instanceof Error
+        ? error.message
+        : "Unable to write complete-path measurement: " + String(error),
+    );
+  }
+}
+
+type FindingAuthority = FindingsProjection["authorities"][number];
+
+function numberedAuthorityRole(role: string, prefix: string): boolean {
+  if (role === prefix) return true;
+  const suffix = role.slice(prefix.length + 1);
+  return role.startsWith(`${prefix}-`) && /^[1-9][0-9]*$/.test(suffix);
+}
+
+function namedReviewStageAuthorityRole(role: string, prefix: string): boolean {
+  return (
+    role === `${prefix}-milestone` ||
+    role === `${prefix}-final` ||
+    role === `${prefix}milestone` ||
+    role === `${prefix}final`
+  );
+}
+
+function isScenarioReviewAuthorityRole(role: string): boolean {
+  return numberedAuthorityRole(role, "scenarioReview");
+}
+
+function isPostPlayReviewAuthorityRole(role: string): boolean {
+  return numberedAuthorityRole(role, "review");
+}
+
+function isReplayAuthorityRole(role: string): boolean {
+  return (
+    numberedAuthorityRole(role, "replay") ||
+    namedReviewStageAuthorityRole(role, "replay") ||
+    namedReviewStageAuthorityRole(role, "prePlayReviewReplayInput-")
+  );
+}
+
+function isPrePlayReviewSourceAuthorityRole(role: string): boolean {
+  return namedReviewStageAuthorityRole(role, "prePlayReviewSourceInput-");
+}
+
+function readAuthorityJson(authority: FindingAuthority):
+  | { readonly tag: "valid"; readonly value: unknown }
+  | {
+      readonly tag: "invalid";
+      readonly message: string;
+    } {
+  try {
+    return {
+      tag: "valid",
+      value: JSON.parse(
+        readFileSync(resolve(repoRoot, authority.path), "utf8"),
+      ),
+    };
+  } catch {
+    return {
+      tag: "invalid",
+      message: `Authority ${authority.role} is not valid JSON.`,
+    };
+  }
+}
+
+function readAuthorityJsonLines(
+  authority: FindingAuthority | ArtifactAuthority,
+):
+  | { readonly tag: "valid"; readonly value: readonly unknown[] }
+  | {
+      readonly tag: "invalid";
+      readonly message: string;
+    } {
+  try {
+    return { tag: "valid", value: readJsonLines(authority.path) };
+  } catch {
+    return {
+      tag: "invalid",
+      message: `Authority ${"role" in authority ? authority.role : authority.path} is not valid JSONL.`,
+    };
+  }
+}
+
+function currentAuthorityContentIssues(
+  measurement: CurrentCompletePathMeasurement,
+  findings: FindingsProjection,
+): readonly string[] {
+  const issues: string[] = [];
+  const scenarioIdentity = measurement.stagePlan.identity;
+  const expectedScenarioSha256 =
+    scenarioIdentity.tag === "admitted"
+      ? scenarioIdentity.scenarioSha256
+      : scenarioIdentity.candidateScenarioSha256;
+  const expectedOutputJsonSchema = codexOutputJsonSchema(
+    CurrentScenarioCompositeReviewSchema,
+  );
+  const transcriptAuthority = findings.authorities.find(
+    ({ role }) => role === "transcript",
+  );
+  type ParsedTranscriptHeader = Extract<
+    ReturnType<typeof parseSdkTranscript>,
+    { readonly tag: "valid" }
+  >["value"]["header"];
+  let transcriptHeader: ParsedTranscriptHeader | undefined;
+  if (transcriptAuthority === undefined) {
+    issues.push("Current path has no canonical transcript authority.");
+  } else {
+    const records = readAuthorityJsonLines(transcriptAuthority);
+    if (records.tag === "invalid") {
+      issues.push(records.message);
+    } else {
+      const parsed = parseSdkTranscript(records.value);
+      if (parsed.tag === "invalid") {
+        issues.push(`Transcript authority is invalid: ${parsed.message}`);
+      } else {
+        transcriptHeader = parsed.value.header;
+        if (transcriptHeader.scenarioId !== findings.run.scenarioId) {
+          issues.push("Transcript authority belongs to a different scenario.");
+        }
+        if (transcriptHeader.gitSha !== findings.run.gitSha) {
+          issues.push("Transcript authority belongs to a different revision.");
+        }
+        if (transcriptHeader.startedAt !== findings.run.startedAt) {
+          issues.push("Transcript start time does not match the findings run.");
+        }
+        if (transcriptHeader.scenarioSha256 !== expectedScenarioSha256) {
+          issues.push(
+            "Transcript scenario hash does not match the stage plan.",
+          );
+        }
+        if (
+          scenarioIdentity.tag === "admitted" &&
+          transcriptHeader.scenarioReviewSha256 !==
+            scenarioIdentity.scenarioReviewSha256
+        ) {
+          issues.push(
+            "Transcript scenario-review hash does not match the admitted stage plan.",
+          );
+        }
+        if (parsed.value.calls.length !== findings.run.callCount) {
+          issues.push("Transcript call count does not match the findings run.");
+        }
+      }
+    }
+  }
+
+  const scenarioReviewAuthorities = findings.authorities.filter(({ role }) =>
+    isScenarioReviewAuthorityRole(role),
+  );
+  let scenarioReviewGitSha: string | undefined;
+  for (const authority of scenarioReviewAuthorities) {
+    const value = readAuthorityJson(authority);
+    if (value.tag === "invalid") {
+      issues.push(value.message);
+      continue;
+    }
+    const decoded = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
+      onExcessProperty: "error",
+    })(value.value);
+    if (Either.isLeft(decoded)) {
+      issues.push(
+        `Scenario-review authority ${authority.role} has an unsupported current schema.`,
+      );
+      continue;
+    }
+    scenarioReviewGitSha ??= decoded.right.gitSha;
+    if (
+      decoded.right.scenarioId !== findings.run.scenarioId ||
+      decoded.right.scenarioSha256 !== expectedScenarioSha256 ||
+      (scenarioIdentity.tag === "admitted" &&
+        authority.sha256 !== scenarioIdentity.scenarioReviewSha256)
+    ) {
+      issues.push(
+        `Scenario-review authority ${authority.role} is not bound to the exact scenario/review identity.`,
+      );
+    }
+  }
+
+  const prePlayReviewSourceAuthorities = findings.authorities.filter(
+    ({ role }) => isPrePlayReviewSourceAuthorityRole(role),
+  );
+  if (
+    prePlayReviewSourceAuthorities.length !== 0 &&
+    prePlayReviewSourceAuthorities.length !== 2
+  ) {
+    issues.push(
+      `Current path requires both pre-play source review authorities when one is retained, received ${String(prePlayReviewSourceAuthorities.length)}.`,
+    );
+  }
+  const prePlaySourceStages = new Set<string>();
+  for (const authority of prePlayReviewSourceAuthorities) {
+    const value = readAuthorityJson(authority);
+    if (value.tag === "invalid") {
+      issues.push(value.message);
+      continue;
+    }
+    const decoded = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(value.value);
+    if (Either.isLeft(decoded)) {
+      issues.push(
+        `Pre-play source authority ${authority.role} has an unsupported retained-review schema.`,
+      );
+      continue;
+    }
+    const source = decoded.right;
+    const currentResult = Schema.decodeUnknownEither(
+      CurrentScenarioCompositeReviewSchema,
+      { onExcessProperty: "error" },
+    )(source.result);
+    const expectedOutputMatches =
+      canonicalJson(source.outputJsonSchema) ===
+      canonicalJson(expectedOutputJsonSchema);
+    if (
+      Either.isLeft(currentResult) ||
+      source.scenarioId !== findings.run.scenarioId ||
+      (scenarioReviewGitSha !== undefined &&
+        source.sourceGitSha !== scenarioReviewGitSha) ||
+      !expectedOutputMatches ||
+      prePlaySourceStages.has(source.reviewStage)
+    ) {
+      issues.push(
+        `Pre-play source authority ${authority.role} is not bound to the current scenario-review identity and current composite schema.`,
+      );
+    }
+    prePlaySourceStages.add(source.reviewStage);
+  }
+
+  const postPlayReviewAuthorities = findings.authorities.filter(({ role }) =>
+    isPostPlayReviewAuthorityRole(role),
+  );
+  if (postPlayReviewAuthorities.length !== 1) {
+    issues.push(
+      `Current path requires exactly one post-play review authority, received ${String(postPlayReviewAuthorities.length)}.`,
+    );
+  }
+  for (const authority of postPlayReviewAuthorities) {
+    const value = readAuthorityJson(authority);
+    if (value.tag === "invalid") {
+      issues.push(value.message);
+      continue;
+    }
+    const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
+      onExcessProperty: "error",
+    })(value.value);
+    if (Either.isLeft(decoded)) {
+      issues.push(
+        `Post-play review authority ${authority.role} has an unsupported schema.`,
+      );
+      continue;
+    }
+    if (
+      decoded.right.scenarioId !== findings.run.scenarioId ||
+      decoded.right.gitSha !== findings.run.gitSha ||
+      decoded.right.transcriptSha256 !== findings.run.transcriptSha256
+    ) {
+      issues.push(
+        `Post-play review authority ${authority.role} is not bound to the transcript run.`,
+      );
+    }
+  }
+
+  const replayAuthorities = findings.authorities.filter(({ role }) =>
+    isReplayAuthorityRole(role),
+  );
+  if (replayAuthorities.length !== 2) {
+    issues.push(
+      `Current path requires one retained milestone and one final replay authority, received ${String(replayAuthorities.length)}.`,
+    );
+  }
+  const replayStages = new Map<string, string>();
+  for (const authority of replayAuthorities) {
+    const value = readAuthorityJson(authority);
+    if (value.tag === "invalid") {
+      issues.push(value.message);
+      continue;
+    }
+    const decoded = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(value.value);
+    if (Either.isLeft(decoded)) {
+      issues.push(
+        `Replay authority ${authority.role} has an unsupported retained-review schema.`,
+      );
+      continue;
+    }
+    const replay = decoded.right;
+    const currentResult = Schema.decodeUnknownEither(
+      CurrentScenarioCompositeReviewSchema,
+      { onExcessProperty: "error" },
+    )(replay.result);
+    if (
+      replay.scenarioId !== findings.run.scenarioId ||
+      canonicalJson(replay.outputJsonSchema) !==
+        canonicalJson(expectedOutputJsonSchema) ||
+      Either.isLeft(currentResult)
+    ) {
+      issues.push(
+        `Replay authority ${authority.role} is not bound to the current scenario review schema and identity.`,
+      );
+    }
+    const invocation = measurement.invocations.find(
+      ({ invocationId }) => invocationId === replay.invocationId,
+    );
+    if (
+      invocation === undefined ||
+      invocation.phase !== "scenarioCompositeReview" ||
+      replay.sourceGitSha !== invocation.gitSha ||
+      invocation.model !== replay.model ||
+      invocation.reasoningEffort !== replay.reasoningEffort
+    ) {
+      issues.push(
+        `Replay authority ${authority.role} does not identify a matching composite-review invocation.`,
+      );
+    }
+    if (replayStages.has(replay.reviewStage)) {
+      issues.push(
+        `Replay authorities contain duplicate ${replay.reviewStage} review stages.`,
+      );
+    }
+    replayStages.set(replay.reviewStage, replay.invocationId);
+  }
+  if (!replayStages.has("milestone"))
+    issues.push(
+      "Current path is missing a retained milestone review authority.",
+    );
+  if (!replayStages.has("final"))
+    issues.push("Current path is missing a retained final review authority.");
+  const milestoneInvocationId = replayStages.get("milestone");
+  const finalInvocationId = replayStages.get("final");
+  if (milestoneInvocationId !== undefined && finalInvocationId !== undefined) {
+    const milestoneIndex = measurement.invocations.findIndex(
+      ({ invocationId }) => invocationId === milestoneInvocationId,
+    );
+    const finalIndex = measurement.invocations.findIndex(
+      ({ invocationId }) => invocationId === finalInvocationId,
+    );
+    if (milestoneIndex < 0 || finalIndex < 0 || milestoneIndex >= finalIndex) {
+      issues.push(
+        "Composite-review invocations must retain milestone before final order.",
+      );
+    }
+  }
+  if (transcriptHeader !== undefined && scenarioReviewGitSha === undefined) {
+    issues.push(
+      "Current path has no identity-bearing scenario-review authority.",
+    );
+  }
+  for (const authority of findings.authorities) {
+    if (
+      (authority.role.startsWith("scenarioReview-") &&
+        !isScenarioReviewAuthorityRole(authority.role)) ||
+      (authority.role.startsWith("review-") &&
+        !isPostPlayReviewAuthorityRole(authority.role)) ||
+      (authority.role.startsWith("replay-") &&
+        !isReplayAuthorityRole(authority.role)) ||
+      (authority.role.startsWith("prePlayReviewSourceInput-") &&
+        !isPrePlayReviewSourceAuthorityRole(authority.role)) ||
+      (authority.role.startsWith("prePlayReviewReplayInput-") &&
+        !isReplayAuthorityRole(authority.role))
+    ) {
+      issues.push(`Finding authority role is not closed: ${authority.role}.`);
+    }
+  }
+  return issues;
+}
+
+function currentAuthorityIssues(
+  measurement: CurrentCompletePathMeasurement,
+): readonly string[] {
+  const issues: string[] = [];
+  const findingsValidation = validateFindingsProjection(measurement.findings);
+  if (findingsValidation.tag === "invalid") {
+    issues.push(`Findings authority is invalid: ${findingsValidation.message}`);
+    return issues;
+  }
+  const findings = findingsValidation.projection;
+  const evidence = currentEvidenceWitness(findings);
+  for (const [responsibility, status] of Object.entries(evidence)) {
+    if (status === "missing") {
+      issues.push(
+        `Current path is missing retained ${responsibility} evidence.`,
+      );
+    }
+  }
+  const scenarioIdentity = measurement.stagePlan.identity;
+  if (scenarioIdentity.scenarioId !== findings.run.scenarioId) {
+    issues.push(
+      "Stage-plan scenario identity does not match the findings run.",
+    );
+  }
+  const expectedScenarioAuthority = findings.authorities.find(
+    ({ role }) => role === "scenario",
+  );
+  const expectedScenarioReviewAuthority = findings.authorities.find(
+    ({ role }) => role === "scenarioReview",
+  );
+  if (
+    scenarioIdentity.tag === "admitted" &&
+    (expectedScenarioAuthority?.sha256 !== scenarioIdentity.scenarioSha256 ||
+      expectedScenarioReviewAuthority?.sha256 !==
+        scenarioIdentity.scenarioReviewSha256)
+  ) {
+    issues.push(
+      "Admitted stage-plan scenario and review hashes are not bound to findings authorities.",
+    );
+  }
+  if (
+    scenarioIdentity.tag === "candidate" &&
+    expectedScenarioAuthority?.sha256 !==
+      scenarioIdentity.candidateScenarioSha256
+  ) {
+    issues.push(
+      "Candidate stage-plan scenario hash is not bound to the findings scenario authority.",
+    );
+  }
+  const invocationScenarioIds = new Set(
+    measurement.invocations.map(({ scenarioId }) => String(scenarioId)),
+  );
+  if (
+    invocationScenarioIds.size !== 1 ||
+    !invocationScenarioIds.has(String(findings.run.scenarioId))
+  ) {
+    issues.push(
+      "Invocation ledger scenario identity does not match the findings run authority.",
+    );
+  }
+  const ledgerAuthorities = new Map(
+    measurement.invocationLedgers.map((authority) => [
+      authority.sha256,
+      authority,
+    ]),
+  );
+  if (ledgerAuthorities.size !== measurement.invocationLedgers.length) {
+    issues.push("Invocation ledger authorities must have distinct hashes.");
+  }
+  const ledgerEntries = measurement.invocationLedgers.flatMap((authority) => {
+    try {
+      const canonicalAuthority = artifactAuthority(authority.path);
+      if (
+        canonicalAuthority.sha256 !== authority.sha256 ||
+        canonicalAuthority.byteLength !== authority.byteLength
+      ) {
+        issues.push(
+          `Invocation ledger authority hash is not canonical: ${authority.path}.`,
+        );
+        return [];
+      }
+    } catch {
+      issues.push(
+        `Invocation ledger authority is unreadable: ${authority.path}.`,
+      );
+      return [];
+    }
+    const parsed = readAuthorityJsonLines(authority);
+    if (parsed.tag === "invalid") {
+      issues.push(parsed.message);
+      return [];
+    }
+    return parsed.value.flatMap((value) => {
+      const decoded = parseModelInvocationLedgerEntry(value);
+      if (Either.isLeft(decoded)) {
+        issues.push(
+          `Invocation ledger authority ${authority.path} has an invalid entry: ${decoded.left.message}`,
+        );
+        return [];
+      }
+      return [decoded.right];
+    });
+  });
+  if (canonicalJson(ledgerEntries) !== canonicalJson(measurement.invocations)) {
+    issues.push(
+      "Composed invocation entries do not match the retained ledger authorities.",
+    );
+  }
+  if (measurement.invocationEvents.length !== measurement.invocations.length) {
+    issues.push(
+      "Each current invocation must have exactly one retained event authority.",
+    );
+    return issues;
+  }
+  const eventAuthorities = new Map(
+    measurement.invocationEvents.map((authority) => [
+      authority.sha256,
+      authority,
+    ]),
+  );
+  if (eventAuthorities.size !== measurement.invocationEvents.length) {
+    issues.push("Invocation event authorities must have distinct hashes.");
+  }
+  const invocationEventHashes = new Set(
+    measurement.invocations.map(({ eventsSha256 }) => eventsSha256),
+  );
+  if (invocationEventHashes.size !== measurement.invocations.length) {
+    issues.push("Each invocation must reference a distinct event authority.");
+  }
+  if (
+    [...eventAuthorities.keys()].some(
+      (sha256) => !invocationEventHashes.has(sha256),
+    )
+  ) {
+    issues.push("Every invocation event authority must be referenced once.");
+  }
+  for (const invocation of measurement.invocations) {
+    const authority = eventAuthorities.get(invocation.eventsSha256);
+    if (authority === undefined) {
+      issues.push(
+        `Invocation ${invocation.invocationId} has no event authority matching its hash.`,
+      );
+      continue;
+    }
+    let canonicalAuthority: ArtifactAuthority;
+    try {
+      canonicalAuthority = artifactAuthority(authority.path);
+    } catch {
+      issues.push(
+        `Invocation ${invocation.invocationId} event authority is unreadable.`,
+      );
+      continue;
+    }
+    if (
+      canonicalAuthority.path !== authority.path ||
+      canonicalAuthority.byteLength !== authority.byteLength ||
+      canonicalAuthority.sha256 !== authority.sha256
+    ) {
+      issues.push(
+        `Invocation ${invocation.invocationId} event authority hash is not canonical.`,
+      );
+      continue;
+    }
+    const events = readCodexEvents(resolve(repoRoot, canonicalAuthority.path));
+    if (events.tag === "invalid") {
+      issues.push(events.message);
+      continue;
+    }
+    const evidence = modelInvocationEvidenceFromEvents(events.events);
+    if (evidence.tag === "invalid" || evidence.entry.schemaVersion !== 2) {
+      issues.push(
+        `Invocation ${invocation.invocationId} does not have valid current v2 event evidence.`,
+      );
+      continue;
+    }
+    const withoutEventsHash = Object.fromEntries(
+      Object.entries(invocation).filter(([key]) => key !== "eventsSha256"),
+    );
+    if (canonicalJson(evidence.entry) !== canonicalJson(withoutEventsHash)) {
+      issues.push(
+        `Invocation ${invocation.invocationId} does not match its retained event evidence.`,
+      );
+    }
+  }
+  try {
+    const stagePlanHash = artifactAuthority(
+      measurement.stagePlanAuthority.path,
+    );
+    const stagePlanBytes = readFileSync(resolve(repoRoot, stagePlanHash.path));
+    if (
+      stagePlanHash.sha256 !== measurement.stagePlanAuthority.sha256 ||
+      stagePlanHash.byteLength !== measurement.stagePlanAuthority.byteLength ||
+      canonicalJson(JSON.parse(stagePlanBytes.toString("utf8"))) !==
+        canonicalJson(measurement.stagePlan)
+    ) {
+      issues.push(
+        "Retained stage-plan authority does not match the stage plan.",
+      );
+    }
+  } catch {
+    issues.push("Retained stage-plan authority is unreadable.");
+  }
+  issues.push(...currentStagePlanBindingIssues(measurement));
+  if (
+    measurement.outcome.tag === "completed" &&
+    measurement.invocations.some(({ result }) => result.tag === "failed")
+  ) {
+    issues.push(
+      "A completed complete path cannot retain a failed model invocation.",
+    );
+  }
+  issues.push(...currentAuthorityContentIssues(measurement, findings));
+  return issues;
+}
+
+/**
+ * Read current evidence only after every source has passed its canonical
+ * authority validator. Structural parsing remains available for historical
+ * envelopes and pure schema tests; comparison inputs should come from this
+ * validated boundary.
+ */
+export function validateCompletePathMeasurement(
+  value: unknown,
+): Either.Either<ValidatedCompletePathMeasurement, string> {
+  const parsed = parseCompletePathMeasurement(value);
+  if (Either.isLeft(parsed)) return Either.left(parsed.left.message);
+  if (parsed.right.schemaVersion === 2) {
+    const issues = currentAuthorityIssues(parsed.right);
+    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
+  }
+  return Either.right({
+    ...parsed.right,
+    [completePathMeasurementValidated]: true,
+  } as ValidatedCompletePathMeasurement);
+}
+
+export function readCompletePathMeasurement(
+  path: string,
+): ValidatedCompletePathMeasurement {
+  let value: unknown;
+  try {
+    value = JSON.parse(readFileSync(resolve(repoRoot, path), "utf8"));
+  } catch {
+    fail(`Complete-path measurement ${path} is unreadable JSON.`);
+  }
+  const validated = validateCompletePathMeasurement(value);
+  return Either.isRight(validated)
+    ? validated.right
+    : fail(`Invalid complete-path measurement: ${validated.left}`);
+}
+
+export function compareCompleteEquivalentPaths(input: {
+  readonly baseline: ValidatedCompletePathMeasurement;
+  readonly candidate: ValidatedCompletePathMeasurement;
+}): CompletePathComparison {
+  const baseline = summary(input.baseline);
+  const candidate = summary(input.candidate);
+  const baselineWitness = baseline.evidence;
+  const candidateWitness = candidate.evidence;
+  const issues = [
+    ...(input.baseline.schemaVersion === 2
+      ? currentSemanticIssues(input.baseline)
+      : [
+          "The baseline is historical and lacks current stage-plan, findings, and v2 invocation authorities.",
+        ]),
+    ...(input.candidate.schemaVersion === 2
+      ? currentSemanticIssues(input.candidate)
+      : [
+          "The candidate is historical and lacks current stage-plan, findings, and v2 invocation authorities.",
+        ]),
+  ];
+  if (canonicalJson(baselineWitness) !== canonicalJson(candidateWitness)) {
+    issues.push(
+      "Scenario identity, required responsibilities, or retained evidence differs.",
+    );
+  }
+  const identity = issues.length === 0 ? "equivalent-path" : "different-path";
+  const implementationBaseline = implementationForPath(input.baseline);
+  const implementationCandidate = implementationForPath(input.candidate);
+  const implementation = {
+    baselinePhases: implementationBaseline.phases,
+    candidatePhases: implementationCandidate.phases,
+    baselineModels: implementationBaseline.models,
+    candidateModels: implementationCandidate.models,
+    phaseSequenceChanged: compareSequences(
+      implementationBaseline.phases,
+      implementationCandidate.phases,
+    ),
+    modelSequenceChanged: compareSequences(
+      implementationBaseline.models,
+      implementationCandidate.models,
+    ),
+  };
+  return {
+    schemaVersion: 2,
+    identity,
+    equivalence: {
+      tag: identity === "equivalent-path" ? "equivalent" : "incomparable",
+      baseline: baselineWitness,
+      candidate: candidateWitness,
+      ...(issues.length === 0
+        ? {}
+        : { reason: [...new Set(issues)].join(" ") }),
+    },
+    implementation,
+    baseline,
+    candidate,
+    elapsedMilliseconds: metricComparison(
+      baseline,
+      candidate,
+      identity,
+      (value) => value.elapsedMilliseconds,
+      "Elapsed milliseconds",
+    ),
+    inputTokens: inputComparison(baseline, candidate, identity),
+  };
+}
+
 function main(args: readonly string[]): void {
   const [command, ...rest] = args;
+  if (command === "assemble") {
+    const [descriptorPath, outputPath, ...unexpected] = rest;
+    if (
+      descriptorPath === undefined ||
+      outputPath === undefined ||
+      unexpected.length > 0
+    ) {
+      fail(
+        "Usage: performance-comparison.ts assemble <descriptor.json> <output.json>",
+      );
+    }
+    let descriptor: unknown;
+    try {
+      descriptor = JSON.parse(
+        readFileSync(resolve(repoRoot, descriptorPath), "utf8"),
+      );
+    } catch {
+      fail("Complete-path assembly descriptor is unreadable JSON.");
+    }
+    const assembled = writeCompletePathMeasurement({
+      descriptor,
+      outputPath,
+    });
+    if (Either.isLeft(assembled)) {
+      fail("Unable to assemble complete-path measurement: " + assembled.left);
+    }
+    return;
+  }
   if (command === "summarize") {
     const [descriptorPath, outputPath, ...unexpected] = rest;
     if (
@@ -1149,7 +2760,7 @@ function main(args: readonly string[]): void {
     );
     return;
   }
-  fail("Expected summarize, compare, or compare-legacy command.");
+  fail("Expected assemble, summarize, compare, or compare-legacy command.");
 }
 
 if (process.argv[1]?.endsWith("performance-comparison.ts"))
