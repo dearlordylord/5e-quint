@@ -6,7 +6,11 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 import { Either } from "effect";
 import {
+  battleAttackExecutionScopeRef,
+  battleAttackProcedureExecutionRef,
   battleActSpellPresentation,
+  battleExecutionScopeOrdinal,
+  battleId,
   battleObjectId,
   combatantId,
   discoverBattleActs,
@@ -33,6 +37,7 @@ import {
   DieRollResult,
   Hp,
   movementFeet,
+  NonNegativeInteger,
 } from "../../../packages/shared/src/types.ts";
 import {
   buildUnitCatalog,
@@ -713,6 +718,37 @@ describe("scenario setup public-SDK boundary", () => {
       },
     });
     expect(blankThreatReactor).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "invalid-spatial-decision",
+        message: expect.stringContaining("malformed Opportunity Attack threat"),
+      },
+    });
+    const characterAttackProcedureRef = battleAttackProcedureExecutionRef(
+      battleAttackExecutionScopeRef(
+        battleId("mixed-threat-fields"),
+        sourceId,
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+    const mixedThreatFields = tableAuthoredSpatialDecision({
+      decisionId: "mixed-threat-fields",
+      question: tableMovementDecision.question,
+      answer: {
+        ...tableMovementDecision.answer,
+        provokedOpportunityAttacks: [
+          {
+            reactorId: sourceId,
+            procedureRef: characterAttackProcedureRef,
+            attackAbility: "strength",
+            attackDamageType: "slashing",
+            statBlockDamageNotation: "static",
+          },
+        ],
+      },
+    });
+    expect(mixedThreatFields).toMatchObject({
       _tag: "Left",
       left: {
         tag: "invalid-spatial-decision",

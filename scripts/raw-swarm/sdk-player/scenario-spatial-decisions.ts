@@ -1176,6 +1176,9 @@ function parseOpportunityAttackThreatInput(
   ) {
     return undefined;
   }
+  if (hasAttackAbility && selection.statBlockDamageNotation !== undefined) {
+    return undefined;
+  }
   const reactorId = combatantId(value.reactorId);
   if (hasAttackAbility && hasAttackDamageType) {
     const procedureRef = Schema.decodeUnknownEither(
