@@ -614,6 +614,21 @@ function scratchIsolationPrompt(scratch: string, prompt: string): string {
 
 const FIXED_BENCHMARK_PREPARATION_SANDBOX = "danger-full-access" as const;
 
+const READ_ONLY_SOURCE_REVIEW_INSTRUCTION =
+  " Do not execute typecheck, Node, or client commands during this preparation call; later deterministic benchmark commands own executable validation. Use only the read commands listed by the scratch isolation instructions.";
+
+export const FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS = {
+  scenarioCharacterAuthoring:
+    "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_CHARACTERS.md, SCENARIO.md, and SCENARIO_REVIEW.json. Review characters.ts and leave it byte-identical to the existing zero-sheet source. Do not invent Character Sheets." +
+    READ_ONLY_SOURCE_REVIEW_INSTRUCTION,
+  scenarioSetupNeutralAuthoring:
+    "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_SETUP.md, SCENARIO.md, SCENARIO_REVIEW.json, CHARACTERS.json, and STAT_BLOCKS.json. Review setup.ts as the exact neutral source and leave it byte-identical." +
+    READ_ONLY_SOURCE_REVIEW_INSTRUCTION,
+  scenarioSetupControllerAuthoring:
+    "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_SETUP_CONTROLLER.md, NEUTRAL_SETUP.ts, SCENARIO.md, and SCENARIO_REVIEW.json. Review setup.ts as the exact controller-retained source, preserve fixed facts, and leave it byte-identical." +
+    READ_ONLY_SOURCE_REVIEW_INSTRUCTION,
+} as const;
+
 const BENCHMARK_PREPARATION_SHELL_LAUNCHERS = new Set([
   "/bin/bash",
   "/usr/bin/bash",
@@ -1662,7 +1677,7 @@ function characterSourceCall(input: {
             "medium",
             scratchIsolationPrompt(
               scratch,
-              "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_CHARACTERS.md, SCENARIO.md, and SCENARIO_REVIEW.json. Review characters.ts, run its documented typecheck, and leave it byte-identical to the existing zero-sheet source. Do not invent Character Sheets.",
+              FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS.scenarioCharacterAuthoring,
             ),
             undefined,
             undefined,
@@ -1833,12 +1848,12 @@ function setupSourceCalls(input: {
     run(
       input.firstOrdinal,
       "scenarioSetupNeutralAuthoring",
-      "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_SETUP.md, SCENARIO.md, SCENARIO_REVIEW.json, CHARACTERS.json, and STAT_BLOCKS.json. Review setup.ts as the exact neutral source, run the documented typecheck, and leave it byte-identical.",
+      FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS.scenarioSetupNeutralAuthoring,
     );
     run(
       input.firstOrdinal + 1,
       "scenarioSetupControllerAuthoring",
-      "Read BENCHMARK_CONTEXT.md, including its complete emitted public declaration bundle, plus SCENARIO_SETUP_CONTROLLER.md, NEUTRAL_SETUP.ts, SCENARIO.md, and SCENARIO_REVIEW.json. Review setup.ts as the exact controller-retained source, preserve fixed facts, run the documented typecheck, and leave it byte-identical.",
+      FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS.scenarioSetupControllerAuthoring,
     );
   } finally {
     rmSync(scratch, { recursive: true });

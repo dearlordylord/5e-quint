@@ -19,6 +19,7 @@ import {
   HistoricalScenarioCompositeReviewSchema,
 } from "./scenario-campaign.ts";
 import {
+  FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS,
   FIXED_SCENARIO_ID,
   benchmarkCommands,
   fixedBenchmarkContextForRole,
@@ -68,6 +69,18 @@ const currentReview = {
 };
 
 describe("fixed scenario benchmark boundary", () => {
+  test("keeps source preparation instructions read-only", () => {
+    for (const prompt of Object.values(FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS)) {
+      expect(prompt).toContain(
+        "Do not execute typecheck, Node, or client commands",
+      );
+      expect(prompt).toContain(
+        "Use only the read commands listed by the scratch isolation instructions",
+      );
+      expect(prompt).not.toContain("run the documented typecheck");
+    }
+  });
+
   test("allows isolated benchmark consumers outside a Git checkout", () => {
     expect(
       fixedBenchmarkCodexArgs(
