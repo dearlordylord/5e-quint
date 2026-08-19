@@ -597,6 +597,15 @@ describe("scenario setup public-SDK boundary", () => {
         issues: [{ tag: "invalid-spatial-decision" }],
       },
     });
+    const blankRelationIdentity = tableAuthoredSpatialDecision({
+      ...tableRelationDecision,
+      decisionId: "blank-relation-identity",
+      question: { ...tableRelationDecision.question, sourceId: "" },
+    });
+    expect(blankRelationIdentity).toMatchObject({
+      _tag: "Left",
+      left: { tag: "invalid-spatial-decision" },
+    });
 
     const tableRoute = [{ x: 1, y: 0 }] as const;
     const postMoveFingerprint = scenarioTableSpatialFingerprint({
@@ -655,6 +664,21 @@ describe("scenario setup public-SDK boundary", () => {
       left: {
         tag: "invalid-spatial-decision",
         message: expect.stringContaining("finite non-negative movement cost"),
+      },
+    });
+    const fractionalMovementCost = tableAuthoredSpatialDecision({
+      decisionId: "fractional-movement-cost",
+      question: tableMovementDecision.question,
+      answer: {
+        ...tableMovementDecision.answer,
+        movementCostFeet: 2.5,
+      },
+    });
+    expect(fractionalMovementCost).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "invalid-spatial-decision",
+        message: expect.stringContaining("movement cost"),
       },
     });
     const malformedMovementThreat = tableAuthoredSpatialDecision({

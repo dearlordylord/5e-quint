@@ -10,12 +10,14 @@ import type {
   CombatantId,
 } from "@dnd/battle-runtime";
 import {
+  battleObjectId,
   battleTablePositionId,
   combatantId,
 } from "../../../packages/battle-runtime/src/index.ts";
 import {
   ABILITIES,
   DAMAGE_TYPES,
+  movementFeet,
   type CoverType,
   type MovementFeet,
   type ReadonlyNonEmptyArray,
@@ -766,7 +768,7 @@ export function scenarioSpatialDecisionEntityReferences(
       const traversalReferences = Match.value(
         movement.answer.creatureSpaceTraversal,
       ).pipe(
-        Match.when({ kind: "notRequired" }, () => [] as ScenarioTokenId[]),
+        Match.when({ kind: "notRequired" }, (): ScenarioTokenId[] => []),
         Match.when({ kind: "fact" }, ({ value }) => {
           const factReferences: ScenarioTokenId[] = value.occupiedSpaces.map(
             ({ occupantId }) => occupantId,
@@ -886,8 +888,8 @@ function parseSpatialQuestion(
   if (value.kind === "relation") {
     if (
       !hasOnlyKeys(value, ["kind", "sourceId", "targetId"]) ||
-      !isString(value.sourceId) ||
-      !isString(value.targetId)
+      !isNonEmptyTrimmedString(value.sourceId) ||
+      !isNonEmptyTrimmedString(value.targetId)
     ) {
       return malformedDecision(
         input,
@@ -896,8 +898,8 @@ function parseSpatialQuestion(
     }
     return Either.right({
       kind: "relation",
-      sourceId: value.sourceId as ScenarioTokenId,
-      targetId: value.targetId as ScenarioTokenId,
+      sourceId: combatantId(value.sourceId),
+      targetId: combatantId(value.targetId),
     });
   }
   if (value.kind === "spellTarget") {
@@ -909,8 +911,8 @@ function parseSpatialQuestion(
         "targetId",
         "sourceProcedureRef",
       ]) ||
-      !isString(value.casterId) ||
-      !isString(value.targetId) ||
+      !isNonEmptyTrimmedString(value.casterId) ||
+      !isNonEmptyTrimmedString(value.targetId) ||
       sourceProcedureRef === undefined
     ) {
       return malformedDecision(
@@ -920,8 +922,8 @@ function parseSpatialQuestion(
     }
     return Either.right({
       kind: "spellTarget",
-      casterId: value.casterId as CombatantId,
-      targetId: value.targetId as CombatantId,
+      casterId: combatantId(value.casterId),
+      targetId: combatantId(value.targetId),
       sourceProcedureRef,
     });
   }
@@ -934,8 +936,8 @@ function parseSpatialQuestion(
         "objectId",
         "sourceProcedureRef",
       ]) ||
-      !isString(value.actorId) ||
-      !isString(value.objectId) ||
+      !isNonEmptyTrimmedString(value.actorId) ||
+      !isNonEmptyTrimmedString(value.objectId) ||
       sourceProcedureRef === undefined
     ) {
       return malformedDecision(
@@ -945,8 +947,8 @@ function parseSpatialQuestion(
     }
     return Either.right({
       kind: "objectTarget",
-      actorId: value.actorId as CombatantId,
-      objectId: value.objectId as BattleObjectId,
+      actorId: combatantId(value.actorId),
+      objectId: battleObjectId(value.objectId),
       sourceProcedureRef,
     });
   }
@@ -960,8 +962,8 @@ function parseSpatialQuestion(
         "sourceProcedureRef",
         "targetConstraint",
       ]) ||
-      !isString(value.actorId) ||
-      !isString(value.targetId) ||
+      !isNonEmptyTrimmedString(value.actorId) ||
+      !isNonEmptyTrimmedString(value.targetId) ||
       sourceProcedureRef === undefined ||
       (value.targetConstraint !== "meleeReach" &&
         value.targetConstraint !== "rangedRange")
@@ -973,8 +975,8 @@ function parseSpatialQuestion(
     }
     return Either.right({
       kind: "attackTarget",
-      actorId: value.actorId as CombatantId,
-      targetId: value.targetId as CombatantId,
+      actorId: combatantId(value.actorId),
+      targetId: combatantId(value.targetId),
       sourceProcedureRef,
       targetConstraint: value.targetConstraint,
     });
@@ -993,45 +995,47 @@ function parseSpatialQuestion(
           : "actorId";
     if (
       !hasOnlyKeys(value, ["kind", actorField, "targetId"]) ||
-      !isString(value[actorField]) ||
-      !isString(value.targetId)
+      !isNonEmptyTrimmedString(value[actorField]) ||
+      !isNonEmptyTrimmedString(value.targetId)
     ) {
       return malformedDecision(
         input,
         `A ${value.kind} question requires string ${actorField} and targetId values.`,
       );
     }
+    const actorId = combatantId(value[actorField]);
+    const targetId = combatantId(value.targetId);
     return Either.right(
       value.kind === "grappleTarget"
         ? {
             kind: "grappleTarget" as const,
-            grapplerId: value.grapplerId as CombatantId,
-            targetId: value.targetId as CombatantId,
+            grapplerId: actorId,
+            targetId,
           }
         : value.kind === "shoveTarget"
           ? {
               kind: "shoveTarget" as const,
-              shoverId: value.shoverId as CombatantId,
-              targetId: value.targetId as CombatantId,
+              shoverId: actorId,
+              targetId,
             }
           : value.kind === "sleepShakeAwakeTarget"
             ? {
                 kind: "sleepShakeAwakeTarget" as const,
-                actorId: value.actorId as CombatantId,
-                targetId: value.targetId as CombatantId,
+                actorId,
+                targetId,
               }
             : {
                 kind: "hypnoticPatternShakeAwakeTarget" as const,
-                actorId: value.actorId as CombatantId,
-                targetId: value.targetId as CombatantId,
+                actorId,
+                targetId,
               },
     );
   }
   if (value.kind === "helpAttackTarget") {
     if (
       !hasOnlyKeys(value, ["kind", "helperId", "targetEnemyId"]) ||
-      !isString(value.helperId) ||
-      !isString(value.targetEnemyId)
+      !isNonEmptyTrimmedString(value.helperId) ||
+      !isNonEmptyTrimmedString(value.targetEnemyId)
     ) {
       return malformedDecision(
         input,
@@ -1040,14 +1044,14 @@ function parseSpatialQuestion(
     }
     return Either.right({
       kind: "helpAttackTarget" as const,
-      helperId: value.helperId as CombatantId,
-      targetEnemyId: value.targetEnemyId as CombatantId,
+      helperId: combatantId(value.helperId),
+      targetEnemyId: combatantId(value.targetEnemyId),
     });
   }
   if (value.kind === "movementRoute") {
     if (
       !hasOnlyKeys(value, ["kind", "moverId", "route", "speedKind"]) ||
-      !isString(value.moverId) ||
+      !isNonEmptyTrimmedString(value.moverId) ||
       !isBattleMovementSpeedKind(value.speedKind) ||
       !Array.isArray(value.route) ||
       value.route.length === 0 ||
@@ -1058,12 +1062,16 @@ function parseSpatialQuestion(
         "A movement-route question requires a non-empty route of finite coordinate objects, a string moverId, and a supported speedKind.",
       );
     }
+    const firstCoordinate = value.route[0];
+    if (firstCoordinate === undefined) {
+      return malformedDecision(input, "A movement route cannot be empty.");
+    }
     return Either.right({
       kind: "movementRoute",
-      moverId: value.moverId as CombatantId,
-      route: value.route.map(({ x, y }) => ({ x, y })) as [
-        CoordinateInput,
-        ...CoordinateInput[],
+      moverId: combatantId(value.moverId),
+      route: [
+        { x: firstCoordinate.x, y: firstCoordinate.y },
+        ...value.route.slice(1).map(({ x, y }) => ({ x, y })),
       ],
       speedKind: value.speedKind,
     });
@@ -1284,7 +1292,8 @@ function parseMovementAnswer(
       "postMoveSpatialState",
     ]) ||
     value.kind !== "movementRoute" ||
-    !isFiniteNonNegativeNumber(value.movementCostFeet)
+    !isFiniteNonNegativeNumber(value.movementCostFeet) ||
+    !Number.isInteger(value.movementCostFeet)
   ) {
     return malformedDecision(
       input,
@@ -1358,7 +1367,7 @@ function parseMovementAnswer(
   }
   return Either.right({
     kind: "movementRoute",
-    movementCostFeet: value.movementCostFeet as MovementFeet,
+    movementCostFeet: movementFeet(value.movementCostFeet),
     provokedOpportunityAttacks: value.provokedOpportunityAttacks.map(
       (threat) => ({ ...threat }) as BattleOpportunityAttackThreat,
     ),

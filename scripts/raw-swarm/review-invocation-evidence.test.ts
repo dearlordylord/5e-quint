@@ -6,8 +6,15 @@ import { afterEach, describe, expect, test } from "vitest";
 import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
+import { isJsonRecord } from "./transcript.ts";
 
 const directories: string[] = [];
+
+function parseJsonRecord(text: string): Record<string, unknown> {
+  const value: unknown = JSON.parse(text);
+  if (!isJsonRecord(value)) throw new Error("Expected a JSON object fixture.");
+  return value;
+}
 
 afterEach(() => {
   for (const directory of directories.splice(0))
@@ -187,7 +194,7 @@ describe("review invocation evidence", () => {
       .trim()
       .split("\n")
       .map((line) => {
-        const entry = JSON.parse(line) as Record<string, unknown>;
+        const entry = parseJsonRecord(line);
         delete entry.stagePlanReason;
         delete entry.result;
         return { ...entry, schemaVersion: 1 };
