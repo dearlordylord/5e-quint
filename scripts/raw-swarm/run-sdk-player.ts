@@ -410,11 +410,14 @@ async function main(args: readonly string[]): Promise<void> {
     "--output-path",
     "--benchmark-context-path",
   ] as const;
-  const pathValues = new Map<string, string>();
+  type PathFlag = (typeof pathFlags)[number];
+  const isPathFlag = (value: string): value is PathFlag =>
+    pathFlags.some((flag) => flag === value);
+  const pathValues = new Map<PathFlag, string>();
   const pathOptionIndexes = new Set<number>();
   let invalidPathValue = false;
   for (const [index, option] of options.entries()) {
-    if (!pathFlags.includes(option as (typeof pathFlags)[number])) continue;
+    if (!isPathFlag(option)) continue;
     const value = options[index + 1];
     if (
       value === undefined ||
@@ -482,7 +485,7 @@ async function main(args: readonly string[]): Promise<void> {
     acceptedOptions.some((option) => option !== "--instructional-isolation") ||
     options.some(
       (option, index) =>
-        pathFlags.includes(option as (typeof pathFlags)[number]) &&
+        isPathFlag(option) &&
         (!pathOptionIndexes.has(index) ||
           options.filter((candidate) => candidate === option).length !== 1),
     ) ||
@@ -510,7 +513,8 @@ async function main(args: readonly string[]): Promise<void> {
   const acceptedEvidenceId = decodedEvidenceId.right;
   const requestedImplementationGitSha = decodedImplementationGitSha.right;
   const requestedBenchmarkProfile = decodedBenchmarkProfile.right;
-  const pathValue = (flag: string): string | undefined => pathValues.get(flag);
+  const pathValue = (flag: PathFlag): string | undefined =>
+    pathValues.get(flag);
   const benchmarkContextPathInput = pathValue("--benchmark-context-path");
   if (
     (benchmarkContextPathInput === undefined) !==

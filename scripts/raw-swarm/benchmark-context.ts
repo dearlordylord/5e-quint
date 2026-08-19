@@ -45,9 +45,6 @@ export const BenchmarkContextDeliveryEvidenceSchema = Schema.Struct({
   byteLength: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
   sha256: HashSchema,
 });
-export type BenchmarkContextDeliveryEvidence = Schema.Schema.Type<
-  typeof BenchmarkContextDeliveryEvidenceSchema
->;
 
 /** A benchmark context can only be selected by its profile and model role. */
 export type BenchmarkContextDelivery = Readonly<{

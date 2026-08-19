@@ -2512,16 +2512,17 @@ async function main(args: readonly string[]): Promise<void> {
     if (runId === undefined || profileInput === undefined || args.length > 3) {
       fail("Usage: fixed-scenario-benchmark.ts compare <run-id> <output.json>");
     }
+    const acceptedRunId = assertRunId(runId);
     const baseline = readCompletePathMeasurement(
       FIXED_BENCHMARK_ROOT +
         "/" +
-        runId +
+        acceptedRunId +
         "/documentDeclarationSet/measurement.json",
     );
     const candidate = readCompletePathMeasurement(
       FIXED_BENCHMARK_ROOT +
         "/" +
-        runId +
+        acceptedRunId +
         "/boundedCapabilityProjection/measurement.json",
     );
     const result = writeCompletePathComparison({

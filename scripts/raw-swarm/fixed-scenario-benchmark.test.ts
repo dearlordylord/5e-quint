@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import {
   existsSync,
   mkdtempSync,
@@ -30,6 +31,12 @@ import {
   validateBenchmarkReviewAuthority,
 } from "./fixed-scenario-benchmark.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
+import { repoRoot } from "./transcript.ts";
+
+const fixedBenchmarkCli = resolve(
+  repoRoot,
+  "scripts/raw-swarm/fixed-scenario-benchmark.ts",
+);
 
 const historicalReview = {
   raw: {
@@ -304,6 +311,23 @@ describe("fixed scenario benchmark boundary", () => {
     expect(Either.isLeft(parseFixedBenchmarkProfile("node"))).toBe(true);
     expect(Either.isLeft(parseFixedBenchmarkProfile([]))).toBe(true);
   });
+
+  test("rejects compare run-id traversal before constructing measurement paths", () => {
+    expect(() =>
+      execFileSync(
+        "pnpm",
+        [
+          "exec",
+          "tsx",
+          fixedBenchmarkCli,
+          "compare",
+          "../outside",
+          "comparison.json",
+        ],
+        { cwd: repoRoot, stdio: "pipe" },
+      ),
+    ).toThrow(/unsafe characters/);
+  }, 30_000);
 
   test("rejects structured reads and external tools while retaining prose-only results", () => {
     const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
