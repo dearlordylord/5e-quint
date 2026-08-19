@@ -1,0 +1,29 @@
+{
+  "scenarioId": "generated-battle-013",
+  "scenarioSha256": "b428449321078f448fa61411cc7cc757ff7234fe7bad165d74c385a0e4619e79",
+  "gitSha": "439d33ed360c956b22a4a4ed5c6e44200b7ebc19",
+  "admitReviewedUnsupported": false,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "The SRD supports these ordinary Unarmed Strike Grapple and Shove options, their 5-foot reach, size limits, free-hand requirement, prone option, and resulting conditions. The supplied relations, Rivet’s free-hand decision, non-movement constraint, and turn order provide the required inputs; ASSUMPTIONS.md adds no conflict."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The scenario uses canonical SRD identities, synthetic instance names, standard rules terminology, and generic setting expression. It exposes no PHB+ identity, protected prose, private crosswalk, or Mushroom-authored publication record."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicyQuality",
+  "scenarioQuality": {
+    "classification": "ready",
+    "evidence": "Each combatant has a serious actionable objective mapped to an ordinary Grapple or Shove act. The exact one-fingerprint relations and free-hand fact make the acts executable, Tangle’s target choice is intentionally delegated, and the compact stat-block-only distribution matches the campaign preference."
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "The selected roster is two Goblin Warriors, one Skeleton, and one Wolf. Every canonical identity appears in the supplied availability list."
+  },
+  "sdkCapabilityIntent": "supportedOnly",
+  "sdkCapabilityReview": {
+    "classification": "supported",
+    "evidence": "The supplied public surfaces cover canonical stat-block setup, environment and object composition, tableAuthored exact spatial decisions, Battle-act target selection, typed rolls and outcomes, interrupts, and End Turn continuations. No geometry-derived operation or controller-added action is required."
+  }
+}
