@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "generated-battle-015",
+  "scenarioSha256": "6309153a4148436af5968fe3a269827d5222c7c563465c0610c38a64df656dff",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The scenario uses exactly three distinct canonical SRD stat blocks—Goblin Warrior, Skeleton, and Wolf—with no repeated identity and no Character Sheets."
+    },
+    "spatialRequirement": {
+      "tag": "outsideExperimentEnvelope",
+      "resolution": "tableAuthored",
+      "evidence": "The scenario coherently requires exactly three Table-owned Shove-target reach answers at one unchanged spatial fingerprint while excluding arenas, placements, geometry-derived questions, and movement routes."
+    }
+  }
+}
