@@ -34,6 +34,7 @@ import {
 } from "./findings.ts";
 import {
   BENCHMARK_CONTEXT_ROLES,
+  BenchmarkContextDeliveryEvidenceSchema,
   benchmarkContextForRole,
   type BenchmarkContextRole,
 } from "./benchmark-context.ts";
@@ -3365,6 +3366,56 @@ function benchmarkContextAuthorityIssues(input: {
       ];
 }
 
+function benchmarkContextDeliveryAuthorityIssues(input: {
+  readonly profile: BenchmarkImplementationProfile;
+  readonly role: "player" | "postPlayReview";
+  readonly authority: FindingAuthority | undefined;
+  readonly manifest: BenchmarkContextSourceManifestDocument;
+}): readonly string[] {
+  if (input.authority === undefined) {
+    return [
+      `Benchmark findings have no retained ${input.role} context-delivery authority.`,
+    ];
+  }
+  const issues = benchmarkAuthorityMatches(
+    input.authority,
+    `${input.role} context delivery`,
+  ).slice();
+  const value = benchmarkAuthorityJson(
+    input.authority,
+    `${input.role} context delivery`,
+    issues,
+  );
+  const decoded = Schema.decodeUnknownEither(
+    BenchmarkContextDeliveryEvidenceSchema,
+    { onExcessProperty: "error" },
+  )(value);
+  if (Either.isLeft(decoded)) {
+    issues.push(
+      `Benchmark ${input.role} context-delivery authority is invalid: ${decoded.left.message}`,
+    );
+    return issues;
+  }
+  const source = input.manifest.sources.find(({ role }) => role === input.role);
+  if (source === undefined) {
+    issues.push(`Benchmark context manifest has no ${input.role} authority.`);
+    return issues;
+  }
+  const evidence = decoded.right;
+  if (
+    evidence.profile !== input.profile ||
+    evidence.role !== input.role ||
+    evidence.path !== source.authority.path ||
+    evidence.byteLength !== source.authority.byteLength ||
+    evidence.sha256 !== source.authority.sha256
+  ) {
+    issues.push(
+      `Benchmark ${input.role} context delivery does not match its profile, role, or manifest authority.`,
+    );
+  }
+  return issues;
+}
+
 function benchmarkInvocationEntriesFromAuthorities(
   authorities: readonly ArtifactAuthority[],
   issues: string[],
@@ -3924,6 +3975,22 @@ function benchmarkAuthorityIssues(
           `Benchmark context-source manifest does not retain a ${expectedSourceKind} delivery for the ${role} role.`,
         );
       }
+    }
+    for (const role of ["player", "postPlayReview"] as const) {
+      issues.push(
+        ...benchmarkContextDeliveryAuthorityIssues({
+          profile: measurement.profile,
+          role,
+          authority: measurement.findings.authorities.find(
+            (candidate) =>
+              candidate.role ===
+              (role === "player"
+                ? "playerContextDelivery"
+                : "postPlayReviewContextDelivery"),
+          ),
+          manifest: manifest.right,
+        }),
+      );
     }
   }
 

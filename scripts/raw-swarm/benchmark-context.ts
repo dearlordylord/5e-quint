@@ -2,6 +2,8 @@ import { readdirSync, readFileSync, rmSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { relative, resolve } from "node:path";
 
+import { Schema } from "effect";
+
 import { capabilityContextForRole } from "./capability-projection.ts";
 import { emitPublicDeclarations } from "./sdk-player/consumer-distribution.ts";
 import { repoRoot } from "./transcript.ts";
@@ -23,6 +25,45 @@ export const BENCHMARK_CONTEXT_PROFILES = [
 ] as const;
 export type BenchmarkContextProfile =
   (typeof BENCHMARK_CONTEXT_PROFILES)[number];
+
+export const BenchmarkContextProfileSchema = Schema.Literal(
+  ...BENCHMARK_CONTEXT_PROFILES,
+);
+
+export const BenchmarkContextRoleSchema = Schema.Literal(
+  ...BENCHMARK_CONTEXT_ROLES,
+);
+
+const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
+
+/** The immutable bytes actually delivered to one benchmark model role. */
+export const BenchmarkContextDeliveryEvidenceSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  profile: BenchmarkContextProfileSchema,
+  role: BenchmarkContextRoleSchema,
+  path: Schema.NonEmptyTrimmedString,
+  byteLength: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
+  sha256: HashSchema,
+});
+export type BenchmarkContextDeliveryEvidence = Schema.Schema.Type<
+  typeof BenchmarkContextDeliveryEvidenceSchema
+>;
+
+/** A benchmark context can only be selected by its profile and model role. */
+export type BenchmarkContextDelivery = Readonly<{
+  readonly tag: "benchmarkContext";
+  readonly profile: BenchmarkContextProfile;
+  readonly role: BenchmarkContextRole;
+}>;
+
+export function benchmarkContextDeliveryForRole<
+  Role extends BenchmarkContextRole,
+>(
+  profile: BenchmarkContextProfile,
+  role: Role,
+): BenchmarkContextDelivery & Readonly<{ readonly role: Role }> {
+  return { tag: "benchmarkContext", profile, role };
+}
 
 type CapabilityContextRole = Parameters<typeof capabilityContextForRole>[0];
 

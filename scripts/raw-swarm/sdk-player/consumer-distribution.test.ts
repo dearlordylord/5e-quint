@@ -20,6 +20,7 @@ import { describe, expect, test } from "vitest";
 import { buildSync } from "esbuild";
 
 import { capabilityContextForRole } from "../capability-projection.ts";
+import { benchmarkContextForRole } from "../benchmark-context.ts";
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import {
@@ -88,15 +89,20 @@ describe("SDK player consumer distribution", () => {
         repoRoot,
         "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
       );
-      const profileContext = "fixed benchmark profile context\n";
       buildConsumerDistribution({
         destination,
         trustedDestination,
         scenarioPath,
-        contextDelivery: { tag: "benchmarkContext", content: profileContext },
+        contextDelivery: {
+          tag: "benchmarkContext",
+          profile: "boundedCapabilityProjection",
+          role: "player",
+        },
       });
       expect(readFileSync(join(destination, "BENCHMARK_CONTEXT.md"))).toEqual(
-        Buffer.from(profileContext),
+        Buffer.from(
+          benchmarkContextForRole("boundedCapabilityProjection", "player"),
+        ),
       );
     },
     10 * 60 * 1_000,

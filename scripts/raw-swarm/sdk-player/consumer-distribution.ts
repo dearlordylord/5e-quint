@@ -13,6 +13,10 @@ import { relative, resolve, sep } from "node:path";
 import { buildSync } from "esbuild";
 
 import {
+  benchmarkContextForRole,
+  type BenchmarkContextDelivery,
+} from "../benchmark-context.ts";
+import {
   capabilityContextForRole,
   type CapabilityRole,
 } from "../capability-projection.ts";
@@ -29,7 +33,23 @@ export type ConsumerDistributionInput = {
 
 export type ContextDelivery<Role extends CapabilityRole = CapabilityRole> =
   | { readonly tag: "canonicalRoleProjection"; readonly role: Role }
-  | { readonly tag: "benchmarkContext"; readonly content: string };
+  | (Role extends "player"
+      ? BenchmarkPlayerContextDelivery
+      : Role extends "setupAuthoring"
+        ? BenchmarkSetupContextDelivery
+        : Role extends "characterAuthoring"
+          ? BenchmarkCharacterContextDelivery
+          : BenchmarkContextDelivery);
+
+type BenchmarkPlayerContextDelivery = BenchmarkContextDelivery & {
+  readonly role: "player";
+};
+type BenchmarkSetupContextDelivery = BenchmarkContextDelivery & {
+  readonly role: "setupAuthoring";
+};
+type BenchmarkCharacterContextDelivery = BenchmarkContextDelivery & {
+  readonly role: "characterAuthoring";
+};
 
 export type ScenarioSetupDistributionInput = {
   readonly destination: string;
@@ -59,7 +79,7 @@ function contextFileName(delivery: ContextDelivery): string {
 function contextText(delivery: ContextDelivery): string {
   return delivery.tag === "canonicalRoleProjection"
     ? capabilityContextForRole(delivery.role)
-    : delivery.content;
+    : benchmarkContextForRole(delivery.profile, delivery.role);
 }
 
 const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);

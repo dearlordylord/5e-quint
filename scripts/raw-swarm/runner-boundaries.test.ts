@@ -176,6 +176,22 @@ describe("RAW swarm runner boundaries", () => {
         "../outside/context.md",
       ],
     ],
+    [
+      "benchmark profile without context path",
+      [
+        "tracer-001-goblin-warrior-vs-skeleton",
+        "--benchmark-profile",
+        "boundedCapabilityProjection",
+      ],
+    ],
+    [
+      "benchmark context path without profile",
+      [
+        "tracer-001-goblin-warrior-vs-skeleton",
+        "--benchmark-context-path",
+        "scripts/raw-swarm/reviews/sdk-player.prompt.txt",
+      ],
+    ],
   ])(
     "rejects direct-SDK launcher %s",
     (_label, args) => {
@@ -327,6 +343,8 @@ printf '%s' '{}' > "$output"
           PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
           RAW_REVIEW_CAPTURE: capturePath,
           RAW_REVIEW_CONTEXT_PATH: relative(repoRoot, contextPath),
+          RAW_REVIEW_CONTEXT_PROFILE: "boundedCapabilityProjection",
+          RAW_REVIEW_CONTEXT_ROLE: "postPlayReview",
           RAW_REVIEW_IMPLEMENTATION_GIT_SHA: currentGitSha,
         },
         encoding: "utf8",
@@ -338,7 +356,7 @@ printf '%s' '{}' > "$output"
       expect(captured.includes(Buffer.from(context))).toBe(true);
       const capturedText = captured.toString("utf8");
       expect(capturedText).toContain(
-        `<RAW_SWARM_CAPABILITY_CONTEXT role="review" path="${resolve(contextPath)}" bytes="${Buffer.byteLength(context)}"`,
+        `<RAW_SWARM_CAPABILITY_CONTEXT role="postPlayReview" profile="boundedCapabilityProjection" path="${resolve(contextPath)}" bytes="${Buffer.byteLength(context)}"`,
       );
       const contextSha = execFileSync("sha256sum", [contextPath], {
         encoding: "utf8",
@@ -347,6 +365,15 @@ printf '%s' '{}' > "$output"
         ?.trim();
       expect(contextSha).toBeDefined();
       expect(capturedText).toContain(`sha256="${contextSha}"`);
+      const deliveryPath = `${reviewPath.slice(0, -".json".length)}.context-delivery.json`;
+      expect(JSON.parse(readFileSync(deliveryPath, "utf8"))).toEqual({
+        schemaVersion: 1,
+        profile: "boundedCapabilityProjection",
+        role: "postPlayReview",
+        path: relative(repoRoot, resolve(contextPath)),
+        byteLength: Buffer.byteLength(context),
+        sha256: contextSha,
+      });
     } finally {
       rmSync(testRoot, { recursive: true, force: true });
       rmSync(commandRoot, { recursive: true, force: true });

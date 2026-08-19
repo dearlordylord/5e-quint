@@ -18,6 +18,13 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
 import {
+  benchmarkContextDeliveryForRole,
+  benchmarkContextForRole,
+  BenchmarkContextDeliveryEvidenceSchema,
+  BenchmarkContextProfileSchema,
+  type BenchmarkContextProfile,
+} from "./benchmark-context.ts";
+import {
   consumerPermissionProfileAvailable,
   createConsumerCodexHome,
 } from "./sdk-player/consumer-codex-profile.ts";
@@ -30,7 +37,10 @@ import {
   sdkInitialTurnProjectionEvidence,
 } from "./sdk-player/sdk-transcript.ts";
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
-import { readJsonLines } from "./artifact-authority.ts";
+import {
+  artifactAuthorityForBytes,
+  readJsonLines,
+} from "./artifact-authority.ts";
 import {
   retainAdmittedScenarioStagePlan,
   retainedScenarioStageFactsPath,
@@ -162,6 +172,15 @@ function parseOptionalImplementationGitSha(
     );
   }
   return Schema.decodeUnknownEither(GitShaSchema)(input).pipe(
+    Either.mapLeft((error) => error.message),
+  );
+}
+
+function parseOptionalBenchmarkProfile(
+  input: string | undefined,
+): Either.Either<BenchmarkContextProfile | undefined, string> {
+  if (input === undefined) return Either.right(undefined);
+  return Schema.decodeUnknownEither(BenchmarkContextProfileSchema)(input).pipe(
     Either.mapLeft((error) => error.message),
   );
 }
@@ -435,16 +454,30 @@ async function main(args: readonly string[]): Promise<void> {
   const decodedImplementationGitSha = parseOptionalImplementationGitSha(
     implementationGitShaInput,
   );
+  const benchmarkProfileFlagIndex = options.indexOf("--benchmark-profile");
+  const benchmarkProfileInput =
+    benchmarkProfileFlagIndex === -1
+      ? undefined
+      : options[benchmarkProfileFlagIndex + 1];
+  const benchmarkProfileOptionIndexes =
+    benchmarkProfileFlagIndex === -1
+      ? new Set<number>()
+      : new Set([benchmarkProfileFlagIndex, benchmarkProfileFlagIndex + 1]);
+  const decodedBenchmarkProfile = parseOptionalBenchmarkProfile(
+    benchmarkProfileInput,
+  );
   const acceptedOptions = options.filter(
     (_option, index) =>
       !evidenceIdOptionIndexes.has(index) &&
       !implementationGitShaOptionIndexes.has(index) &&
+      !benchmarkProfileOptionIndexes.has(index) &&
       !pathOptionIndexes.has(index),
   );
   if (
     Either.isLeft(decodedScenarioId) ||
     Either.isLeft(decodedEvidenceId) ||
     Either.isLeft(decodedImplementationGitSha) ||
+    Either.isLeft(decodedBenchmarkProfile) ||
     invalidPathValue ||
     acceptedOptions.some((option) => option !== "--instructional-isolation") ||
     options.some(
@@ -462,16 +495,31 @@ async function main(args: readonly string[]): Promise<void> {
     (implementationGitShaFlagIndex !== -1 &&
       (implementationGitShaFlagIndex + 1 >= options.length ||
         implementationGitShaInput === undefined ||
-        implementationGitShaInput.startsWith("-")))
+        implementationGitShaInput.startsWith("-"))) ||
+    options.filter((option) => option === "--benchmark-profile").length > 1 ||
+    (benchmarkProfileFlagIndex !== -1 &&
+      (benchmarkProfileFlagIndex + 1 >= options.length ||
+        benchmarkProfileInput === undefined ||
+        benchmarkProfileInput.startsWith("-")))
   ) {
     fail(
-      "Usage: run-sdk-player.ts <scenario-id> [--evidence-id <evidence-id>] [--implementation-git-sha <git-sha>] [--instructional-isolation] [--scenario-path <path>] [--scenario-review-path <path>] [--characters-path <path>] [--setup-path <path>] [--stage-plan-path <path>] [--stage-plan-findings-path <path>] [--output-path <path>] [--benchmark-context-path <path>]",
+      "Usage: run-sdk-player.ts <scenario-id> [--evidence-id <evidence-id>] [--implementation-git-sha <git-sha>] [--benchmark-profile <profile>] [--instructional-isolation] [--scenario-path <path>] [--scenario-review-path <path>] [--characters-path <path>] [--setup-path <path>] [--stage-plan-path <path>] [--stage-plan-findings-path <path>] [--output-path <path>] [--benchmark-context-path <path>]",
     );
   }
   const acceptedScenarioId = decodedScenarioId.right;
   const acceptedEvidenceId = decodedEvidenceId.right;
   const requestedImplementationGitSha = decodedImplementationGitSha.right;
+  const requestedBenchmarkProfile = decodedBenchmarkProfile.right;
   const pathValue = (flag: string): string | undefined => pathValues.get(flag);
+  const benchmarkContextPathInput = pathValue("--benchmark-context-path");
+  if (
+    (benchmarkContextPathInput === undefined) !==
+    (requestedBenchmarkProfile === undefined)
+  ) {
+    fail(
+      "--benchmark-profile and --benchmark-context-path must be supplied together.",
+    );
+  }
   const output = repositoryOutputPath(
     pathValue("--output-path") ??
       `scripts/raw-swarm/out/${acceptedEvidenceId}-sdk-player`,
@@ -492,7 +540,6 @@ async function main(args: readonly string[]): Promise<void> {
     pathValue("--scenario-review-path") ??
       `${scenarioPath}.scenario-review.json`,
   );
-  const benchmarkContextPathInput = pathValue("--benchmark-context-path");
   const benchmarkContextPath =
     benchmarkContextPathInput === undefined
       ? undefined
@@ -528,13 +575,43 @@ async function main(args: readonly string[]): Promise<void> {
   if (existsSync(output)) {
     fail(`Refusing to overwrite SDK player evidence: ${output}`);
   }
+  const benchmarkContextEvidence =
+    benchmarkContextPath === undefined ||
+    requestedBenchmarkProfile === undefined
+      ? undefined
+      : (() => {
+          const deliveredBytes = readFileSync(benchmarkContextPath);
+          const expectedBytes = Buffer.from(
+            benchmarkContextForRole(requestedBenchmarkProfile, "player"),
+            "utf8",
+          );
+          if (!deliveredBytes.equals(expectedBytes)) {
+            fail(
+              "--benchmark-context-path does not contain the canonical context for its profile and player role.",
+            );
+          }
+          const path = relative(repoRoot, benchmarkContextPath);
+          const authority = artifactAuthorityForBytes(path, deliveredBytes);
+          const evidence = {
+            schemaVersion: 1 as const,
+            profile: requestedBenchmarkProfile,
+            role: "player" as const,
+            ...authority,
+          };
+          const parsed = Schema.decodeUnknownEither(
+            BenchmarkContextDeliveryEvidenceSchema,
+            { onExcessProperty: "error" },
+          )(evidence);
+          if (Either.isLeft(parsed)) fail(parsed.left.message);
+          return parsed.right;
+        })();
   const contextDelivery: ContextDelivery<"player"> =
-    benchmarkContextPath === undefined
+    benchmarkContextEvidence === undefined
       ? { tag: "canonicalRoleProjection", role: "player" }
-      : {
-          tag: "benchmarkContext",
-          content: readFileSync(benchmarkContextPath, "utf8"),
-        };
+      : benchmarkContextDeliveryForRole(
+          benchmarkContextEvidence.profile,
+          "player",
+        );
   const deliveredContextFileName =
     contextDelivery.tag === "canonicalRoleProjection"
       ? "CAPABILITY_CONTEXT.md"
@@ -551,6 +628,13 @@ async function main(args: readonly string[]): Promise<void> {
   });
   if (Either.isLeft(admission)) fail(admission.left);
   mkdirSync(resolve(output, "evidence"), { recursive: true });
+  if (benchmarkContextEvidence !== undefined) {
+    writeFileSync(
+      resolve(output, "evidence/context-delivery.json"),
+      `${JSON.stringify(benchmarkContextEvidence, null, 2)}\n`,
+      { flag: "wx" },
+    );
+  }
   const runStartPath = resolve(output, "evidence/run-start.json");
   writeFileSync(
     runStartPath,

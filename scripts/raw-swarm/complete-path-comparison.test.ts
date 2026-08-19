@@ -744,6 +744,32 @@ function benchmarkMeasurement(
     "benchmark-context-sources.json",
     `${JSON.stringify(contextDocument)}\n`,
   );
+  const playerContextAuthority = contextAuthorities.find(
+    ({ role }) => role === "player",
+  )!.authority;
+  const postPlayContextAuthority = contextAuthorities.find(
+    ({ role }) => role === "postPlayReview",
+  )!.authority;
+  const playerContextDelivery = writeAuthority(
+    root,
+    "player-context-delivery.json",
+    `${JSON.stringify({
+      schemaVersion: 1,
+      profile,
+      role: "player",
+      ...playerContextAuthority,
+    })}\n`,
+  );
+  const postPlayContextDelivery = writeAuthority(
+    root,
+    "post-play-context-delivery.json",
+    `${JSON.stringify({
+      schemaVersion: 1,
+      profile,
+      role: "postPlayReview",
+      ...postPlayContextAuthority,
+    })}\n`,
+  );
   const compositeReview =
     profile === "documentDeclarationSet"
       ? historicalCompositeReview()
@@ -895,6 +921,14 @@ function benchmarkMeasurement(
       {
         role: "prePlayReviewSourceInput-final",
         ...retainedSourceAuthorities[1]!,
+      },
+      {
+        role: "playerContextDelivery",
+        ...playerContextDelivery,
+      },
+      {
+        role: "postPlayReviewContextDelivery",
+        ...postPlayContextDelivery,
       },
       ...(profile === "documentDeclarationSet"
         ? (() => {
@@ -1292,6 +1326,32 @@ describe("complete Raw Swarm path comparison", () => {
     );
     const tamperedValidation = validateCompletePathMeasurement(benchmark);
     expect(tamperedValidation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("context"),
+    });
+  });
+
+  test.each([
+    ["profile", { profile: "documentDeclarationSet" }],
+    ["role", { role: "player" }],
+    ["path", { path: "context/player.md" }],
+    ["hash", { sha256: "f".repeat(64) }],
+  ])("rejects tampered post-play context-delivery %s", (_label, patch) => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const authority = benchmark.findings.authorities.find(
+      ({ role }) => role === "postPlayReviewContextDelivery",
+    );
+    expect(authority).toBeDefined();
+    if (authority === undefined) return;
+    const value = parseJsonRecord(
+      readFileSync(resolve(repoRoot, authority.path), "utf8"),
+    );
+    writeFileSync(
+      resolve(repoRoot, authority.path),
+      `${JSON.stringify({ ...value, ...patch })}\n`,
+    );
+    const validation = validateCompletePathMeasurement(benchmark);
+    expect(validation).toMatchObject({
       _tag: "Left",
       left: expect.stringContaining("context"),
     });

@@ -11,6 +11,7 @@ RAW_REVIEW_AUDIT="${RAW_REVIEW_OUTPUT%.json}.audit.jsonl"
 RAW_REVIEW_PACKET="${RAW_REVIEW_OUTPUT%.json}.packet.json"
 RAW_REVIEW_EVENTS="${RAW_REVIEW_LOG}.events.jsonl"
 RAW_REVIEW_LEDGER="${RAW_REVIEW_OUTPUT%.json}.invocations.jsonl"
+RAW_REVIEW_CONTEXT_DELIVERY="${RAW_REVIEW_OUTPUT%.json}.context-delivery.json"
 trap 'rm -f "$RAW_REVIEW_SCHEMA"' EXIT
 
 if ! git diff --quiet || ! git diff --cached --quiet; then
@@ -47,6 +48,24 @@ RAW_REVIEW_PACKET_BYTES=$(wc -c <"$RAW_REVIEW_PACKET" | tr -d ' ')
 RAW_REVIEW_PACKET_SHA256=$(sha256sum "$RAW_REVIEW_PACKET" | cut -d' ' -f1)
 RAW_REVIEW_EXTRACT_COMMAND="pnpm exec tsx scripts/raw-swarm/sdk-player/sdk-audit-cli.ts extract $RAW_REVIEW_AUDIT scripts/raw-swarm/out/review-extract-UNIQUE.records.jsonl scripts/raw-swarm/out/review-extract-UNIQUE.provenance.json SEQUENCE [SEQUENCE ...]"
 if [[ -n "${RAW_REVIEW_CONTEXT_PATH:-}" ]]; then
+  if [[ -z "${RAW_REVIEW_CONTEXT_ROLE:-}" || -z "${RAW_REVIEW_CONTEXT_PROFILE:-}" ]]; then
+    printf '%s\n' 'RAW_REVIEW_CONTEXT_ROLE and RAW_REVIEW_CONTEXT_PROFILE are required with RAW_REVIEW_CONTEXT_PATH.' >&2
+    exit 1
+  fi
+  case "$RAW_REVIEW_CONTEXT_ROLE" in
+    postPlayReview) ;;
+    *)
+      printf 'Unsupported RAW_REVIEW_CONTEXT_ROLE: %s\n' "$RAW_REVIEW_CONTEXT_ROLE" >&2
+      exit 1
+      ;;
+  esac
+  case "$RAW_REVIEW_CONTEXT_PROFILE" in
+    documentDeclarationSet|boundedCapabilityProjection) ;;
+    *)
+      printf 'Unsupported RAW_REVIEW_CONTEXT_PROFILE: %s\n' "$RAW_REVIEW_CONTEXT_PROFILE" >&2
+      exit 1
+      ;;
+  esac
   if [[ "$RAW_REVIEW_CONTEXT_PATH" = /* ]]; then
     RAW_REVIEW_CONTEXT_CANDIDATE=$RAW_REVIEW_CONTEXT_PATH
   else
@@ -69,7 +88,27 @@ if [[ -n "${RAW_REVIEW_CONTEXT_PATH:-}" ]]; then
   esac
   RAW_REVIEW_CONTEXT_BYTES=$(wc -c <"$RAW_REVIEW_CONTEXT_PATH" | tr -d ' ')
   RAW_REVIEW_CONTEXT_SHA256=$(sha256sum "$RAW_REVIEW_CONTEXT_PATH" | cut -d' ' -f1)
+  RAW_REVIEW_CONTEXT_REPOSITORY_PATH=$(realpath --relative-to="$RAW_REVIEW_ROOT" "$RAW_REVIEW_CONTEXT_PATH")
+  if [[ -e "$RAW_REVIEW_CONTEXT_DELIVERY" ]]; then
+    printf 'Refusing to overwrite immutable context-delivery evidence: %s\n' "$RAW_REVIEW_CONTEXT_DELIVERY" >&2
+    exit 1
+  fi
+  (
+    set -o noclobber
+    jq -n \
+      --arg profile "$RAW_REVIEW_CONTEXT_PROFILE" \
+      --arg role "$RAW_REVIEW_CONTEXT_ROLE" \
+      --arg path "$RAW_REVIEW_CONTEXT_REPOSITORY_PATH" \
+      --arg sha256 "$RAW_REVIEW_CONTEXT_SHA256" \
+      --argjson byteLength "$RAW_REVIEW_CONTEXT_BYTES" \
+      '{schemaVersion: 1, profile: $profile, role: $role, path: $path, byteLength: $byteLength, sha256: $sha256}' \
+      >"$RAW_REVIEW_CONTEXT_DELIVERY"
+  )
 else
+  if [[ -n "${RAW_REVIEW_CONTEXT_ROLE:-}" || -n "${RAW_REVIEW_CONTEXT_PROFILE:-}" ]]; then
+    printf '%s\n' 'RAW_REVIEW_CONTEXT_ROLE and RAW_REVIEW_CONTEXT_PROFILE require RAW_REVIEW_CONTEXT_PATH.' >&2
+    exit 1
+  fi
   RAW_REVIEW_CAPABILITY_CONTEXT=$(pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/capability-projection-cli.ts" review)
 fi
 RAW_REVIEW_RENDERED=${RAW_REVIEW_INSTRUCTIONS//\{\{TRANSCRIPT_PATH\}\}/$RAW_REVIEW_TRANSCRIPT}
@@ -88,8 +127,8 @@ set +e
   printf '%s\n\n<SDK_REVIEW_PACKET path="%s" bytes="%s" sha256="%s">\n' \
     "$RAW_REVIEW_RENDERED" "$RAW_REVIEW_PACKET" "$RAW_REVIEW_PACKET_BYTES" "$RAW_REVIEW_PACKET_SHA256"
   if [[ -n "${RAW_REVIEW_CONTEXT_PATH:-}" ]]; then
-    printf '<RAW_SWARM_CAPABILITY_CONTEXT role="review" path="%s" bytes="%s" sha256="%s">\n' \
-      "$RAW_REVIEW_CONTEXT_PATH" "$RAW_REVIEW_CONTEXT_BYTES" "$RAW_REVIEW_CONTEXT_SHA256"
+    printf '<RAW_SWARM_CAPABILITY_CONTEXT role="%s" profile="%s" path="%s" bytes="%s" sha256="%s">\n' \
+      "$RAW_REVIEW_CONTEXT_ROLE" "$RAW_REVIEW_CONTEXT_PROFILE" "$RAW_REVIEW_CONTEXT_PATH" "$RAW_REVIEW_CONTEXT_BYTES" "$RAW_REVIEW_CONTEXT_SHA256"
     cat "$RAW_REVIEW_CONTEXT_PATH"
     printf '</RAW_SWARM_CAPABILITY_CONTEXT>\n'
   else
