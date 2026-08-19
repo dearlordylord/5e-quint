@@ -2853,6 +2853,28 @@ export function compareCompleteEquivalentPaths(input: {
   };
 }
 
+export function writeCompletePathComparison(input: {
+  readonly baseline: ValidatedCompletePathMeasurement;
+  readonly candidate: ValidatedCompletePathMeasurement;
+  readonly outputPath: string;
+}): Either.Either<CompletePathComparison, string> {
+  const comparison = compareCompleteEquivalentPaths(input);
+  try {
+    writeFileSync(
+      resolve(repoRoot, input.outputPath),
+      JSON.stringify(comparison, null, 2) + "\n",
+      { flag: "wx" },
+    );
+    return Either.right(comparison);
+  } catch (error: unknown) {
+    return Either.left(
+      error instanceof Error
+        ? error.message
+        : "Unable to write complete-path comparison: " + String(error),
+    );
+  }
+}
+
 function main(args: readonly string[]): void {
   const [command, ...rest] = args;
   if (command === "assemble") {
@@ -2947,7 +2969,29 @@ function main(args: readonly string[]): void {
     );
     return;
   }
-  fail("Expected assemble, summarize, compare, or compare-legacy command.");
+  if (command === "compare-complete") {
+    const [baselinePath, candidatePath, outputPath, ...unexpected] = rest;
+    if (
+      baselinePath === undefined ||
+      candidatePath === undefined ||
+      outputPath === undefined ||
+      unexpected.length > 0
+    )
+      fail(
+        "Usage: performance-comparison.ts compare-complete <baseline.json> <candidate.json> <output.json>",
+      );
+    const written = writeCompletePathComparison({
+      baseline: readCompletePathMeasurement(baselinePath),
+      candidate: readCompletePathMeasurement(candidatePath),
+      outputPath,
+    });
+    if (Either.isLeft(written))
+      fail("Unable to retain complete-path comparison: " + written.left);
+    return;
+  }
+  fail(
+    "Expected assemble, summarize, compare, compare-complete, or compare-legacy command.",
+  );
 }
 
 if (process.argv[1]?.endsWith("performance-comparison.ts"))

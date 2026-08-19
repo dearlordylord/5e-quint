@@ -13,6 +13,7 @@ import {
   parseCompletePathMeasurement,
   readCompletePathMeasurement,
   validateCompletePathMeasurement,
+  writeCompletePathComparison,
   writeCompletePathMeasurement,
   type CurrentCompletePathMeasurement,
   type CompletePathMeasurement,
@@ -645,6 +646,33 @@ describe("complete Raw Swarm path comparison", () => {
       elapsedMilliseconds: { tag: "comparable" },
       inputTokens: { tag: "comparable" },
     });
+  });
+
+  test("retains a validated complete equivalent-path comparison without overwriting evidence", () => {
+    const baseline = validated(measurement());
+    const candidate = validated(measurement());
+    const root = rawSwarmTestOutputDirectory("complete-path-comparison-");
+    temporaryDirectories.push(root);
+    const outputPath = resolve(root, "comparison.json");
+
+    const written = writeCompletePathComparison({
+      baseline,
+      candidate,
+      outputPath,
+    });
+    expect(Either.isRight(written)).toBe(true);
+    expect(parseJsonRecord(readFileSync(outputPath, "utf8"))).toMatchObject({
+      schemaVersion: 2,
+      identity: "equivalent-path",
+      equivalence: { tag: "equivalent" },
+    });
+
+    const overwrite = writeCompletePathComparison({
+      baseline,
+      candidate,
+      outputPath,
+    });
+    expect(overwrite).toMatchObject({ _tag: "Left" });
   });
 
   test("does not make a skipped redundant stage change semantic identity", () => {

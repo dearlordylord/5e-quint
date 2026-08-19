@@ -543,13 +543,20 @@ do not use an estimate or fabricate a missing legacy stream.
 mise exec -- pnpm exec tsx scripts/raw-swarm/performance-comparison.ts \
   assemble scripts/raw-swarm/out/tracer-001-controlled-001-assembly.json \
   scripts/raw-swarm/out/tracer-001-controlled-001-measurement.json
+
+mise exec -- pnpm exec tsx scripts/raw-swarm/performance-comparison.ts \
+  compare-complete scripts/raw-swarm/out/baseline-measurement.json \
+  scripts/raw-swarm/out/candidate-measurement.json \
+  scripts/raw-swarm/out/complete-path-comparison.json
 ```
 
 The assemble operation rejects v1 ledgers, missing or malformed recognized
 invocation events, omitted phase authorities, mismatched event hashes, and
 scenario or review identities that disagree with the retained stage plan and
 findings. Do not wrap the historical generated-battle-009 footer in this
-schema: its missing authorities remain unavailable.
+schema: its missing authorities remain unavailable. `compare-complete` reads
+and validates both measurements before retaining their equivalence result, and
+also refuses to overwrite an existing comparison.
 
 Recording requires a clean revision and refuses to overwrite prior evidence:
 
