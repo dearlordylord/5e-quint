@@ -922,11 +922,15 @@ export function retainBenchmarkReviewReplayEvents(
   eventPath: string,
   replayPath: string,
 ): string {
-  const retainedPath = replayPath.endsWith(".json")
-    ? replayPath.slice(0, -".json".length) + ".events.jsonl"
-    : replayPath + ".events.jsonl";
+  const retainedPath = benchmarkReviewReplayEventsPath(replayPath);
   copyFileSync(eventPath, retainedPath, constants.COPYFILE_EXCL);
   return retainedPath;
+}
+
+export function benchmarkReviewReplayEventsPath(replayPath: string): string {
+  return replayPath.endsWith(".json")
+    ? replayPath.slice(0, -".json".length) + ".events.jsonl"
+    : replayPath + ".events.jsonl";
 }
 
 const BenchmarkReadinessInputSchema = Schema.Struct({
@@ -1522,6 +1526,8 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     );
   }
   const eventCandidates = [
+    benchmarkReviewReplayEventsPath(paths.milestoneReviewInput),
+    benchmarkReviewReplayEventsPath(paths.finalReviewInput),
     ...readdirSync(paths.eventDirectory).map((name) =>
       resolve(paths.eventDirectory, name),
     ),
