@@ -156,6 +156,18 @@ describe("fixed scenario benchmark boundary", () => {
             type: "item.completed",
             item: {
               id: "item_2",
+              type: "command_execution",
+              command: `/bin/bash -lc "rg -n -C 6 context ${contextPath}"`,
+              aggregated_output: "synthetic context\n",
+              exit_code: 0,
+              status: "completed",
+            },
+          }) +
+          "\n" +
+          JSON.stringify({
+            type: "item.completed",
+            item: {
+              id: "item_3",
               type: "agent_message",
               text: `The model's prose may mention ${resolve("/outside")}.`,
             },
@@ -242,6 +254,18 @@ describe("fixed scenario benchmark boundary", () => {
       "an rg preprocessor",
       () =>
         "/bin/bash -lc \"rg --pre='cat /etc/passwd' context BENCHMARK_CONTEXT.md\"",
+    ],
+    [
+      "an rg context option without a count",
+      () => "/bin/bash -lc 'rg -C context BENCHMARK_CONTEXT.md'",
+    ],
+    [
+      "an rg context option with a nonnumeric count",
+      () => "/bin/bash -lc 'rg -C all context BENCHMARK_CONTEXT.md'",
+    ],
+    [
+      "an rg context option after the pattern",
+      () => "/bin/bash -lc 'rg context -C 6 BENCHMARK_CONTEXT.md'",
     ],
   ])(
     "rejects preparation event streams that attempt %s",

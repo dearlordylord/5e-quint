@@ -629,13 +629,7 @@ const BENCHMARK_PREPARATION_READ_COMMANDS = new Set([
   "tail",
   "wc",
 ]);
-const BENCHMARK_PREPARATION_RG_OPTIONS = new Set([
-  "--",
-  "-F",
-  "-i",
-  "-n",
-  "-o",
-]);
+const BENCHMARK_PREPARATION_RG_OPTIONS = new Set(["-F", "-i", "-n", "-o"]);
 const BENCHMARK_PREPARATION_SHELL_OPERATORS = new Set([
   ";",
   "&&",
@@ -966,19 +960,38 @@ function commandArguments(
         : Either.left(issue);
     }
     case "rg": {
-      const options = args.filter((value) => value.startsWith("-"));
-      if (
-        options.some((value) => !BENCHMARK_PREPARATION_RG_OPTIONS.has(value))
-      ) {
-        return Either.left("rg has unsupported arguments");
+      let operandIndex = 0;
+      while (operandIndex < args.length) {
+        const argument = args[operandIndex] ?? "";
+        if (argument === "--") {
+          operandIndex += 1;
+          break;
+        }
+        if (argument === "-C") {
+          const contextLineCount = args[operandIndex + 1];
+          if (
+            contextLineCount === undefined ||
+            !/^(?:0|[1-9]\d*)$/.test(contextLineCount)
+          ) {
+            return Either.left("rg has unsupported arguments");
+          }
+          operandIndex += 2;
+          continue;
+        }
+        if (BENCHMARK_PREPARATION_RG_OPTIONS.has(argument)) {
+          operandIndex += 1;
+          continue;
+        }
+        if (argument.startsWith("-")) {
+          return Either.left("rg has unsupported arguments");
+        }
+        break;
       }
-      const pathArguments = args.filter(
-        (value) => !value.startsWith("-") && value !== "--",
-      );
-      if (pathArguments.length < 2) {
+      const operands = args.slice(operandIndex);
+      if (operands.length < 2) {
         return Either.left("rg must name a scratch file after its pattern");
       }
-      const issue = validateFiles(pathArguments.slice(1));
+      const issue = validateFiles(operands.slice(1));
       return issue === undefined
         ? Either.right(inner.right.words)
         : Either.left(issue);
