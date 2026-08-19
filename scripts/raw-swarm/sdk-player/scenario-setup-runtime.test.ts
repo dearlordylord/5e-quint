@@ -14,6 +14,7 @@ import {
   resolveBattleRuntimeSubject,
 } from "../../../packages/battle-runtime/src/index.ts";
 import {
+  battleRuntimeContextFromCharacterAdmission,
   battleRuntimeSessionFromAdmittedContext,
   battleRuntimeSessionWithState,
 } from "../../../packages/battle-runtime/src/battle-runtime-context.ts";
@@ -36,9 +37,10 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "../../../packages/surface/src/surface/unit-catalog.ts";
-import { repoRoot } from "../transcript.ts";
+import { repoRoot, sha256Canonical } from "../transcript.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
+import { jsonValue } from "./json-value.ts";
 import {
   createScenarioSession,
   continueScenarioMovement,
@@ -184,6 +186,87 @@ describe("scenario setup public-SDK boundary", () => {
       ).toBe(true);
     }
   }, 120_000);
+
+  test("reconstructs an equivalent SDK successor with the same transcript lineage", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios/generated-battle-013.setup.ts",
+      ),
+      [],
+    );
+    expect(setup.tag).toBe("ready");
+    if (setup.tag !== "ready") return;
+
+    const subject = {
+      tag: "action" as const,
+      actorId: combatantId("brine"),
+      action: "shove" as const,
+    };
+    const fill = {
+      kind: "targetChoice" as const,
+      holeId: "battle:shove:target",
+      value: combatantId("rivet"),
+      spatialFacts: [],
+    };
+    const resolveRetainedCall = () => {
+      const canonicalSubject = scenarioBattleSubject(setup.session, subject);
+      const projected = scenarioTableSpatialFactFills({
+        session: setup.session,
+        subject: canonicalSubject,
+        fills: scenarioBattleFills(setup.session, canonicalSubject, [fill]),
+      });
+      expect(Either.isRight(projected)).toBe(true);
+      if (Either.isLeft(projected)) return undefined;
+      return resolveBattleRuntimeSubject({
+        session: setup.session.battle,
+        subject: canonicalSubject,
+        fills: projected.right,
+      });
+    };
+    const firstBattleResolution = resolveRetainedCall();
+    const replayedBattleResolution = resolveRetainedCall();
+    expect(firstBattleResolution?.tag).toBe("needsHoles");
+    expect(replayedBattleResolution?.tag).toBe("needsHoles");
+    if (
+      firstBattleResolution?.tag !== "needsHoles" ||
+      replayedBattleResolution?.tag !== "needsHoles"
+    ) {
+      return;
+    }
+    const firstSuccessor = scenarioSessionWithBattleResult(
+      setup.session,
+      firstBattleResolution.session,
+    );
+    const replayedSuccessor = scenarioSessionWithBattleResult(
+      setup.session,
+      replayedBattleResolution.session,
+    );
+    expect(Either.isRight(firstSuccessor)).toBe(true);
+    expect(Either.isRight(replayedSuccessor)).toBe(true);
+    if (Either.isLeft(firstSuccessor) || Either.isLeft(replayedSuccessor)) {
+      return;
+    }
+
+    expect(sha256Canonical(jsonValue(replayedSuccessor.right))).toBe(
+      sha256Canonical(jsonValue(firstSuccessor.right)),
+    );
+
+    const foreignContext = battleRuntimeContextFromCharacterAdmission(
+      setup.session.battle.context.characters,
+      setup.session.battle.context.statBlocks,
+    );
+    const foreignContextBattle = battleRuntimeSessionFromAdmittedContext(
+      setup.session.battle.state,
+      foreignContext,
+    );
+    expect(
+      scenarioSessionWithBattleResult(setup.session, foreignContextBattle),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { tag: "spatial-decision-lineage-conflict" },
+    });
+  });
 
   test("accepts a table-authored exact relation without tactical-space", async () => {
     const setup = await evaluateScenarioSetup(

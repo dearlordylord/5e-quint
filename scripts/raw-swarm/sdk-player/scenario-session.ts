@@ -70,6 +70,7 @@ import {
   type SpatialState,
 } from "../../../packages/tactical-space/src/index.ts";
 import { Either, Match } from "effect";
+import { sha256Canonical } from "../transcript.ts";
 import {
   scenarioTableSpatialFingerprint,
   scenarioSpatialDecisionEntityReferences,
@@ -90,6 +91,7 @@ import {
   type ScenarioTableSpatialPostMoveState,
   type ScenarioTokenId,
 } from "./scenario-spatial-decisions.ts";
+import { jsonValue } from "./json-value.ts";
 
 export type {
   ScenarioDirection,
@@ -552,17 +554,11 @@ export type ScenarioMovementPlan = Readonly<{
 }>;
 
 const sessions = new WeakSet<object>();
-const runtimeObjectIdentities = new WeakMap<object, string>();
-let nextRuntimeObjectIdentity = 0;
+const scenarioSpatialDecisionRuntimeLineages = new WeakMap<object, object>();
 let nextScenarioSessionLineage = 0;
 
-function runtimeObjectIdentity(value: object): string {
-  const existing = runtimeObjectIdentities.get(value);
-  if (existing !== undefined) return existing;
-  nextRuntimeObjectIdentity += 1;
-  const identity = `runtime-object:${String(nextRuntimeObjectIdentity)}`;
-  runtimeObjectIdentities.set(value, identity);
-  return identity;
+function runtimeValueIdentity(value: object): string {
+  return `runtime-object:${sha256Canonical(jsonValue(value))}`;
 }
 
 function newScenarioSessionLineageId(): ScenarioSessionLineageId {
@@ -591,11 +587,16 @@ function makeScenarioSession(
     movementResolution,
     lineage: Object.freeze({
       scenarioSessionLineageId: sessionLineageId,
-      battleRuntimeSessionIdentity: runtimeObjectIdentity(battle),
-      battleRuntimeContextIdentity: runtimeObjectIdentity(battle.context),
+      battleRuntimeSessionIdentity: runtimeValueIdentity(battle),
+      battleRuntimeContextIdentity: runtimeValueIdentity(battle.context),
     }),
   });
   sessions.add(session);
+  if (session.battlefield.spatial.kind === "tableAuthored") {
+    for (const decision of session.battlefield.spatial.tableAuthoredDecisions) {
+      scenarioSpatialDecisionRuntimeLineages.set(decision, battle);
+    }
+  }
   // The brand is compile-time only; WeakSet membership is the runtime proof
   // that this value passed createScenarioSession's composition checks.
   return session as ScenarioSession;
@@ -886,7 +887,7 @@ export function createScenarioSession(input: {
   const decisionByQuestion = new Map<string, ScenarioTableSpatialDecision>();
   const decisionIds = new Set<string>();
   const sessionLineageId = newScenarioSessionLineageId();
-  const battleRuntimeSessionIdentity = runtimeObjectIdentity(input.battle);
+  const battleRuntimeSessionIdentity = runtimeValueIdentity(input.battle);
   const initialSpatialFingerprint =
     space?.fingerprint ??
     scenarioTableSpatialFingerprint({
@@ -1294,6 +1295,14 @@ function scenarioSpatialDecision(
       session.lineage.scenarioSessionLineageId ||
     decision.lineage.battleRuntimeSessionIdentity !==
       session.lineage.battleRuntimeSessionIdentity
+  ) {
+    return { tag: "lineageConflict", decision };
+  }
+  const decisionRuntimeLineage =
+    scenarioSpatialDecisionRuntimeLineages.get(decision);
+  if (
+    decisionRuntimeLineage !== undefined &&
+    decisionRuntimeLineage !== session.battle
   ) {
     return { tag: "lineageConflict", decision };
   }
@@ -2498,10 +2507,7 @@ function admitScenarioBattleSuccessor(
       ),
     );
   }
-  if (
-    runtimeObjectIdentity(battle.context) !==
-    session.lineage.battleRuntimeContextIdentity
-  ) {
+  if (battle.context !== session.battle.context) {
     return Either.left(
       spatialDecisionIssue(
         "spatial-decision-lineage-conflict",
@@ -2686,7 +2692,7 @@ function rebindTableSpatialBoundary(
   battle: BattleRuntimeSession,
   sessionLineageId: ScenarioSessionLineageId,
 ): ScenarioSpatialBoundary {
-  const battleRuntimeSessionIdentity = runtimeObjectIdentity(battle);
+  const battleRuntimeSessionIdentity = runtimeValueIdentity(battle);
   return Object.freeze({
     kind: "tableAuthored" as const,
     spatialFingerprint: boundary.spatialFingerprint,
