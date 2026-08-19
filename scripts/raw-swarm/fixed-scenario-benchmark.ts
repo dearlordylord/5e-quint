@@ -128,7 +128,6 @@ export type FixedScenarioCanonicalBundle = Readonly<{
   }>;
   readonly scenarioSha256: string;
   readonly scenarioReviewSha256: string;
-  readonly scenarioReviewGitSha: GitSha;
 }>;
 
 export type FixedBenchmarkProfilePaths = Readonly<{
@@ -146,8 +145,6 @@ export type FixedBenchmarkProfilePaths = Readonly<{
   readonly reviewDirectory: string;
   readonly milestoneReviewInput: string;
   readonly finalReviewInput: string;
-  readonly milestoneReviewSource: string;
-  readonly finalReviewSource: string;
   readonly readinessResult: string;
   readonly readinessInput: string;
   readonly authoringDirectory: string;
@@ -221,7 +218,6 @@ export function fixedScenarioCanonicalBundle(): FixedScenarioCanonicalBundle {
     },
     scenarioSha256: admission.right.scenarioSha256,
     scenarioReviewSha256: admission.right.scenarioReviewSha256,
-    scenarioReviewGitSha: review.right.gitSha,
   };
 }
 
@@ -352,7 +348,12 @@ export function fixedBenchmarkProfilePaths(
   runId: string,
   profile: FixedBenchmarkProfile,
 ): FixedBenchmarkProfilePaths {
-  const root = resolve(repoRoot, FIXED_BENCHMARK_ROOT, runId, profile);
+  const root = resolve(
+    repoRoot,
+    FIXED_BENCHMARK_ROOT,
+    assertRunId(runId),
+    profile,
+  );
   return {
     root,
     stageFacts: resolve(root, "bundle/stage-facts.json"),
@@ -368,8 +369,6 @@ export function fixedBenchmarkProfilePaths(
     reviewDirectory: resolve(root, "reviews"),
     milestoneReviewInput: resolve(root, "reviews/milestone.input.json"),
     finalReviewInput: resolve(root, "reviews/final.input.json"),
-    milestoneReviewSource: resolve(root, "reviews/milestone.source.input.json"),
-    finalReviewSource: resolve(root, "reviews/final.source.input.json"),
     readinessResult: resolve(root, "reviews/readiness.json"),
     readinessInput: resolve(root, "reviews/readiness.input.json"),
     authoringDirectory: resolve(root, "authoring"),
@@ -1452,7 +1451,6 @@ function retainReviewEnvelope(input: {
   readonly result: unknown;
   readonly entry: CurrentModelInvocationLedgerEntry;
   readonly eventPath: string;
-  readonly scenarioReviewGitSha: GitSha;
   readonly prompt: string;
 }): string {
   const outputJsonSchema =
@@ -1489,21 +1487,6 @@ function retainReviewEnvelope(input: {
       : input.profilePaths.finalReviewInput;
   writeJsonExclusive(replayPath, parsed.right);
   retainBenchmarkReviewReplayEvents(input.eventPath, replayPath);
-  const sourceEnvelope = {
-    ...parsed.right,
-    sourceGitSha: input.scenarioReviewGitSha,
-    invocationId: "source-" + parsed.right.invocationId,
-  };
-  const sourceParsed = Schema.decodeUnknownEither(
-    RetainedScenarioReviewInputSchema,
-    { onExcessProperty: "error" },
-  )(sourceEnvelope);
-  if (Either.isLeft(sourceParsed)) fail(sourceParsed.left.message);
-  const sourcePath =
-    input.stage === "milestone"
-      ? input.profilePaths.milestoneReviewSource
-      : input.profilePaths.finalReviewSource;
-  writeJsonExclusive(sourcePath, sourceParsed.right);
   return replayPath;
 }
 
@@ -1526,7 +1509,6 @@ function retainReadinessEnvelope(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
   readonly result: unknown;
   readonly entry: BenchmarkAuxiliaryModelInvocationLedgerEntry;
-  readonly scenarioReviewGitSha: GitSha;
   readonly prompt: string;
 }): string {
   const outputJsonSchema = codexOutputJsonSchema(ScenarioQualityReviewSchema);
@@ -1536,7 +1518,7 @@ function retainReadinessEnvelope(input: {
     scenarioId: FIXED_SCENARIO_ID,
     responsibility: "scenarioQuality" as const,
     phase: "scenarioReadiness" as const,
-    sourceGitSha: input.scenarioReviewGitSha,
+    sourceGitSha: input.entry.gitSha,
     invocationId: input.entry.invocationId,
     model: "gpt-5.6-luna" as const,
     reasoningEffort: "max" as const,
@@ -1787,6 +1769,7 @@ export function benchmarkCommands(input: {
 }): Readonly<
   Record<"player" | "replay" | "postPlayReview" | "assemble", string>
 > {
+  const runId = assertRunId(input.runId);
   const contextPlayer = repoRelative(
     resolve(input.paths.contextDirectory, "player.md"),
   );
@@ -1835,7 +1818,7 @@ export function benchmarkCommands(input: {
       repoRelative(input.paths.postPlayLog),
     assemble:
       "pnpm exec tsx scripts/raw-swarm/fixed-scenario-benchmark.ts assemble " +
-      input.runId +
+      runId +
       " " +
       input.profile,
   };
@@ -1936,7 +1919,6 @@ async function prepareProfile(input: {
       result: milestone.value,
       entry: milestone.currentEntry,
       eventPath: milestone.eventPath,
-      scenarioReviewGitSha: bundle.scenarioReviewGitSha,
       prompt: reviewPrompt(input.profile, "milestone", reviewContext, bundle),
     });
   }
@@ -1964,7 +1946,6 @@ async function prepareProfile(input: {
       profilePaths: paths,
       result: readiness.value,
       entry: readiness.auxiliaryEntry,
-      scenarioReviewGitSha: bundle.scenarioReviewGitSha,
       prompt:
         "Read " +
         reviewContext +
@@ -1990,7 +1971,6 @@ async function prepareProfile(input: {
     result: final.value,
     entry: final.currentEntry,
     eventPath: final.eventPath,
-    scenarioReviewGitSha: bundle.scenarioReviewGitSha,
     prompt: reviewPrompt(input.profile, "final", reviewContext, bundle),
   });
   const characterResult = await evaluateScenarioCharacters(
@@ -2058,6 +2038,7 @@ function validateRetainedReviewAuthority(
   profile: FixedBenchmarkProfile,
   path: string,
   stage: "milestone" | "final",
+  implementationGitSha: GitSha,
 ): void {
   if (!existsSync(path)) fail("Missing retained " + stage + " review input.");
   const parsed = Schema.decodeUnknownEither(RetainedScenarioReviewInputSchema, {
@@ -2066,9 +2047,12 @@ function validateRetainedReviewAuthority(
   if (Either.isLeft(parsed)) fail(parsed.left.message);
   if (
     parsed.right.scenarioId !== FIXED_SCENARIO_ID ||
-    parsed.right.reviewStage !== stage
+    parsed.right.reviewStage !== stage ||
+    parsed.right.sourceGitSha !== implementationGitSha
   ) {
-    fail("Retained review input is bound to a different scenario or stage.");
+    fail(
+      "Retained review input is bound to a different scenario, stage, or implementation revision.",
+    );
   }
   const valid = validateBenchmarkReviewAuthority({
     profile,
@@ -2082,6 +2066,7 @@ function validateRetainedReviewAuthority(
 function validateRetainedReadinessAuthority(
   profile: FixedBenchmarkProfile,
   paths: FixedBenchmarkProfilePaths,
+  implementationGitSha: GitSha,
 ): void {
   if (profile !== "documentDeclarationSet") return;
   if (!existsSync(paths.readinessInput))
@@ -2092,8 +2077,13 @@ function validateRetainedReadinessAuthority(
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(paths.readinessInput, "utf8")));
   if (Either.isLeft(parsed)) fail(parsed.left.message);
-  if (parsed.right.scenarioId !== FIXED_SCENARIO_ID) {
-    fail("Retained scenario readiness is bound to a different scenario.");
+  if (
+    parsed.right.scenarioId !== FIXED_SCENARIO_ID ||
+    parsed.right.sourceGitSha !== implementationGitSha
+  ) {
+    fail(
+      "Retained scenario readiness is bound to a different scenario or implementation revision.",
+    );
   }
   const result = JSON.parse(readFileSync(paths.readinessResult, "utf8"));
   if (sha256Canonical(result) !== sha256Canonical(parsed.right.result)) {
@@ -2209,6 +2199,10 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     manifest: contextManifest.right,
   });
   const transcript = resolve(paths.playerDirectory, "evidence/sdk-calls.jsonl");
+  const observations = resolve(
+    paths.playerDirectory,
+    "evidence/observations.jsonl",
+  );
   const frozenPrefix = resolve(
     paths.playerDirectory,
     "evidence/frozen-prefix.json",
@@ -2252,6 +2246,7 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
   const derivedOutcome = deriveBenchmarkPathOutcome({
     transcriptPath: repoRelative(transcript),
     frozenPrefixPath: repoRelative(frozenPrefix),
+    continuationObservationPath: repoRelative(observations),
     finalArtifactPath: repoRelative(finalArtifact),
   });
   if (Either.isLeft(derivedOutcome)) fail(derivedOutcome.left);
@@ -2278,16 +2273,14 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
         ? paths.milestoneReviewInput
         : paths.finalReviewInput,
       stage,
-    );
-    validateRetainedReviewAuthority(
-      profile,
-      stage === "milestone"
-        ? paths.milestoneReviewSource
-        : paths.finalReviewSource,
-      stage,
+      runDescriptor.right.implementationGitSha,
     );
   }
-  validateRetainedReadinessAuthority(profile, paths);
+  validateRetainedReadinessAuthority(
+    profile,
+    paths,
+    runDescriptor.right.implementationGitSha,
+  );
   const benchmarkLedger = artifactAuthority(
     repoRelative(paths.benchmarkLedger),
   );
@@ -2375,16 +2368,6 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     ),
     issueLinks: [],
   });
-  const sourceReviewAuthorities = reviewStages.map((stage) => ({
-    role: `prePlayReviewSourceInput-${stage}`,
-    ...artifactAuthority(
-      repoRelative(
-        stage === "milestone"
-          ? paths.milestoneReviewSource
-          : paths.finalReviewSource,
-      ),
-    ),
-  }));
   const readinessAuthorities =
     profile === "documentDeclarationSet"
       ? (() => {
@@ -2432,7 +2415,6 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
             },
           ]
         : []),
-      ...sourceReviewAuthorities,
       ...readinessAuthorities,
     ].sort((left, right) => left.role.localeCompare(right.role)),
   };

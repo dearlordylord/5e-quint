@@ -1536,6 +1536,7 @@ const BenchmarkFinalArtifactSchema = Schema.Struct({
 export function deriveBenchmarkPathOutcome(input: {
   readonly transcriptPath: string;
   readonly frozenPrefixPath: string;
+  readonly continuationObservationPath: string;
   readonly finalArtifactPath?: string;
 }): Either.Either<PathOutcome, string> {
   try {
@@ -1559,6 +1560,19 @@ export function deriveBenchmarkPathOutcome(input: {
       );
     }
     const prefix = frozenPrefix.right;
+    const observations = readJsonLines(input.continuationObservationPath);
+    const continuationEvidence = playerContinuationEvidence({
+      transcriptHeaderSha256: sha256Canonical(transcript.value.header),
+      observations,
+      callContinuations: transcript.value.calls.map(
+        ({ continuation }) => continuation,
+      ),
+    });
+    if (continuationEvidence.tag === "invalid") {
+      return Either.left(
+        `Benchmark player continuation evidence is invalid: ${continuationEvidence.message}`,
+      );
+    }
     const programPath = resolve(
       dirname(resolve(repoRoot, input.frozenPrefixPath)),
       "program.ts",
@@ -1590,12 +1604,32 @@ export function deriveBenchmarkPathOutcome(input: {
       (greatest, call) => Math.max(greatest, call.continuation),
       0,
     );
-    if (greatestContinuation > prefix.continuationCount) {
+    if (
+      continuationEvidence.recordedContinuations !== prefix.continuationCount ||
+      continuationEvidence.lastContinuation !== prefix.continuationCount
+    ) {
       return Either.left(
-        "Benchmark frozen-prefix continuation count is behind the retained transcript.",
+        "Benchmark player continuation evidence must cover every contiguous continuation through the frozen-prefix count.",
       );
     }
-
+    const expectedContinuations = Array.from(
+      { length: prefix.continuationCount },
+      (_, index) => index + 1,
+    );
+    const recordedCallContinuations = new Set(
+      transcript.value.calls.map(({ continuation }) => continuation),
+    );
+    if (
+      transcript.value.calls.length > 0 &&
+      (greatestContinuation !== prefix.continuationCount ||
+        expectedContinuations.some(
+          (continuation) => !recordedCallContinuations.has(continuation),
+        ))
+    ) {
+      return Either.left(
+        "Benchmark failed player evidence must retain exact continuation coverage for its transcript.",
+      );
+    }
     if (prefix.run.kind === "playerObstructed") {
       return Either.right({
         tag: "failed",
@@ -1615,6 +1649,25 @@ export function deriveBenchmarkPathOutcome(input: {
         reason:
           "Player terminal evidence claims playerConcluded without an SDK call.",
       });
+    }
+    const finalObservation = observations.at(-1);
+    if (
+      !isJsonRecord(finalObservation) ||
+      typeof finalObservation.continuation !== "number" ||
+      !Number.isInteger(finalObservation.continuation) ||
+      typeof finalObservation.kind !== "string"
+    ) {
+      return Either.left(
+        "Benchmark player continuation evidence has no valid terminal observation.",
+      );
+    }
+    if (
+      finalObservation.continuation !== prefix.continuationCount ||
+      finalObservation.kind !== "playerConcluded"
+    ) {
+      return Either.left(
+        "Benchmark terminal observation is not bound to the last contiguous continuation.",
+      );
     }
     if (input.finalArtifactPath === undefined) {
       return Either.left(
@@ -1645,7 +1698,13 @@ export function deriveBenchmarkPathOutcome(input: {
     if (
       final.continuation !== prefix.continuationCount ||
       final.continuation !== greatestContinuation ||
-      final.conclusion !== prefix.run.conclusion
+      final.conclusion !== prefix.run.conclusion ||
+      finalObservation.kind !== "playerConcluded" ||
+      finalObservation.transcriptHeaderSha256 !== transcriptHeaderSha256 ||
+      finalObservation.tacticalNote !== final.tacticalNote ||
+      canonicalJson(finalObservation.projection) !==
+        canonicalJson(final.projection) ||
+      finalObservation.conclusion !== final.conclusion
     ) {
       return Either.left(
         "Benchmark final player artifact is not bound to the terminal state or transcript continuation.",
@@ -2041,11 +2100,11 @@ function benchmarkReviewIdentity(
             : fail("Validated readiness authority became unreadable.");
         })()
       : undefined;
-  const source = (
+  const reviewFor = (
     stage: "milestone" | "final",
   ): BenchmarkReviewClassifications =>
     benchmarkReviewResult(
-      jsonFor(`prePlayReviewSourceInput-${stage}`),
+      jsonFor(stage === "milestone" ? "replay-milestone" : "replay-final"),
       measurement.profile,
       readiness,
     );
@@ -2089,13 +2148,16 @@ function benchmarkReviewIdentity(
   return measurement.profile === "documentDeclarationSet"
     ? {
         profile: measurement.profile,
-        prePlay: { milestone: source("milestone"), final: source("final") },
+        prePlay: {
+          milestone: reviewFor("milestone"),
+          final: reviewFor("final"),
+        },
         postPlay,
         findings,
       }
     : {
         profile: measurement.profile,
-        prePlay: { final: source("final") },
+        prePlay: { final: reviewFor("final") },
         postPlay,
         findings,
       };
@@ -2839,10 +2901,6 @@ function isReplayAuthorityRole(role: string): boolean {
   );
 }
 
-function isPrePlayReviewSourceAuthorityRole(role: string): boolean {
-  return namedReviewStageAuthorityRole(role, "prePlayReviewSourceInput");
-}
-
 function isPrePlayReviewEventsAuthorityRole(role: string): boolean {
   return namedReviewStageAuthorityRole(role, "prePlayReviewReplayEvents");
 }
@@ -3017,57 +3075,6 @@ function currentAuthorityContentIssues(
         `Scenario-review authority ${authority.role} is not bound to the exact scenario/review identity.`,
       );
     }
-  }
-
-  const prePlayReviewSourceAuthorities = findings.authorities.filter(
-    ({ role }) => isPrePlayReviewSourceAuthorityRole(role),
-  );
-  if (
-    prePlayReviewSourceAuthorities.length !== 0 &&
-    prePlayReviewSourceAuthorities.length !== 2
-  ) {
-    issues.push(
-      `Current path requires both pre-play source review authorities when one is retained, received ${String(prePlayReviewSourceAuthorities.length)}.`,
-    );
-  }
-  const prePlaySourceStages = new Set<string>();
-  for (const authority of prePlayReviewSourceAuthorities) {
-    const value = readAuthorityJson(authority);
-    if (value.tag === "invalid") {
-      issues.push(value.message);
-      continue;
-    }
-    const decoded = Schema.decodeUnknownEither(
-      RetainedScenarioReviewInputSchema,
-      { onExcessProperty: "error" },
-    )(value.value);
-    if (Either.isLeft(decoded)) {
-      issues.push(
-        `Pre-play source authority ${authority.role} has an unsupported retained-review schema.`,
-      );
-      continue;
-    }
-    const source = decoded.right;
-    const currentResult = Schema.decodeUnknownEither(
-      CurrentScenarioCompositeReviewSchema,
-      { onExcessProperty: "error" },
-    )(source.result);
-    const expectedOutputMatches =
-      canonicalJson(source.outputJsonSchema) ===
-      canonicalJson(expectedOutputJsonSchema);
-    if (
-      Either.isLeft(currentResult) ||
-      source.scenarioId !== findings.run.scenarioId ||
-      (scenarioReviewGitSha !== undefined &&
-        source.sourceGitSha !== scenarioReviewGitSha) ||
-      !expectedOutputMatches ||
-      prePlaySourceStages.has(source.reviewStage)
-    ) {
-      issues.push(
-        `Pre-play source authority ${authority.role} is not bound to the current scenario-review identity and current composite schema.`,
-      );
-    }
-    prePlaySourceStages.add(source.reviewStage);
   }
 
   const postPlayReviewAuthorities = findings.authorities.filter(({ role }) =>
@@ -3346,8 +3353,6 @@ function currentAuthorityContentIssues(
         !isPostPlayReviewAuthorityRole(authority.role)) ||
       (authority.role.startsWith("replay-") &&
         !isReplayAuthorityRole(authority.role)) ||
-      (authority.role.startsWith("prePlayReviewSourceInput-") &&
-        !isPrePlayReviewSourceAuthorityRole(authority.role)) ||
       (authority.role.startsWith("prePlayReviewReplayInput-") &&
         !isReplayAuthorityRole(authority.role)) ||
       (authority.role.startsWith("prePlayReviewReplayEvents-") &&
@@ -3808,21 +3813,16 @@ function benchmarkReviewAuthorityByStage(
 function benchmarkRetainedPrePlayReviewIssues(input: {
   readonly measurement: CurrentBenchmarkMeasurement;
   readonly findings: FindingsProjection;
-  readonly scenarioReviewGitSha: GitSha;
   readonly expectedReviewSchema:
     | typeof HistoricalScenarioCompositeReviewSchema
     | typeof CurrentScenarioCompositeReviewSchema;
 }): readonly string[] {
-  const { measurement, findings, scenarioReviewGitSha, expectedReviewSchema } =
-    input;
+  const { measurement, findings, expectedReviewSchema } = input;
   const issues: string[] = [];
   const expectedOutputJsonSchema =
     expectedReviewSchema === HistoricalScenarioCompositeReviewSchema
       ? codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema)
       : codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema);
-  const sourceAuthorities = findings.authorities.filter(({ role }) =>
-    isPrePlayReviewSourceAuthorityRole(role),
-  );
   const replayAuthorities = findings.authorities.filter(({ role }) =>
     isReplayAuthorityRole(role),
   );
@@ -3834,8 +3834,6 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     if (
       (authority.role.startsWith("replay-") &&
         !isReplayAuthorityRole(authority.role)) ||
-      (authority.role.startsWith("prePlayReviewSourceInput-") &&
-        !isPrePlayReviewSourceAuthorityRole(authority.role)) ||
       (authority.role.startsWith("prePlayReviewReplayInput-") &&
         !isReplayAuthorityRole(authority.role)) ||
       (authority.role.startsWith("prePlayReviewReplayEvents-") &&
@@ -3861,11 +3859,6 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     outputJsonSchema: Schema.Unknown,
     result: expectedReviewSchema,
   });
-  if (sourceAuthorities.length !== expectedStages.length) {
-    issues.push(
-      `Benchmark ${measurement.profile} profile requires ${String(expectedStages.length)} retained pre-play source review authorities, received ${String(sourceAuthorities.length)}.`,
-    );
-  }
   if (replayAuthorities.length !== expectedStages.length) {
     issues.push(
       `Benchmark ${measurement.profile} profile requires ${String(expectedStages.length)} retained pre-play replay authorities, received ${String(replayAuthorities.length)}.`,
@@ -3876,13 +3869,6 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       `Benchmark ${measurement.profile} profile requires ${String(expectedStages.length)} retained pre-play replay event authorities, received ${String(replayEventAuthorities.length)}.`,
     );
   }
-  const sourceByStage = benchmarkReviewAuthorityByStage(
-    sourceAuthorities,
-    (role) => reviewStageForAuthorityRole(role, "prePlayReviewSourceInput"),
-    "pre-play source review",
-    expectedStages,
-    issues,
-  );
   const replayByStage = benchmarkReviewAuthorityByStage(
     replayAuthorities,
     benchmarkReplayReviewStage,
@@ -3911,61 +3897,34 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     ]),
   );
   for (const reviewStage of expectedStages) {
-    const sourceAuthority = sourceByStage.get(reviewStage);
     const replayAuthority = replayByStage.get(reviewStage);
     const replayEventsAuthority = replayEventsByStage.get(reviewStage);
-    if (
-      sourceAuthority === undefined ||
-      replayAuthority === undefined ||
-      replayEventsAuthority === undefined
-    ) {
+    if (replayAuthority === undefined || replayEventsAuthority === undefined) {
       continue;
     }
-    const sourceValue = readAuthorityJson(sourceAuthority);
     const replayValue = readAuthorityJson(replayAuthority);
-    if (sourceValue.tag === "invalid") {
-      issues.push(sourceValue.message);
-      continue;
-    }
     if (replayValue.tag === "invalid") {
       issues.push(replayValue.message);
       continue;
     }
-    const source = Schema.decodeUnknownEither(retainedReviewEnvelopeSchema, {
-      onExcessProperty: "error",
-    })(sourceValue.value);
     const replay = Schema.decodeUnknownEither(retainedReviewEnvelopeSchema, {
       onExcessProperty: "error",
     })(replayValue.value);
-    if (Either.isLeft(source) || Either.isLeft(replay)) {
+    if (Either.isLeft(replay)) {
       issues.push(
         `Benchmark ${reviewStage} pre-play review authority is not a retained review envelope.`,
       );
       continue;
     }
-    const sourceIdentityValid =
-      source.right.reviewStage === reviewStage &&
-      source.right.scenarioId === measurement.scenarioId &&
-      source.right.sourceGitSha === scenarioReviewGitSha &&
-      canonicalJson(source.right.outputJsonSchema) ===
-        canonicalJson(expectedOutputJsonSchema);
     const replayIdentityValid =
       replay.right.reviewStage === reviewStage &&
       replay.right.scenarioId === measurement.scenarioId &&
+      replay.right.sourceGitSha === measurement.implementationGitSha &&
       canonicalJson(replay.right.outputJsonSchema) ===
         canonicalJson(expectedOutputJsonSchema);
-    if (
-      !sourceIdentityValid ||
-      !replayIdentityValid ||
-      source.right.invocationId === replay.right.invocationId ||
-      source.right.model !== replay.right.model ||
-      source.right.reasoningEffort !== replay.right.reasoningEffort ||
-      canonicalJson(source.right.prompt) !==
-        canonicalJson(replay.right.prompt) ||
-      canonicalJson(source.right.result) !== canonicalJson(replay.right.result)
-    ) {
+    if (!replayIdentityValid) {
       issues.push(
-        `Benchmark ${reviewStage} pre-play review source and replay are not bound to the ${measurement.profile} composite-review schema, scenario identity, and Git authority.`,
+        `Benchmark ${reviewStage} pre-play review authority is not bound to the ${measurement.profile} composite-review schema, scenario identity, implementation revision, and Git authority.`,
       );
       continue;
     }
@@ -3978,8 +3937,8 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       invocation.schemaVersion !== 2 ||
       invocation.phase !== "scenarioCompositeReview" ||
       invocation.gitSha !== replay.right.sourceGitSha ||
-      invocation.model !== source.right.model ||
-      invocation.reasoningEffort !== source.right.reasoningEffort ||
+      invocation.model !== replay.right.model ||
+      invocation.reasoningEffort !== replay.right.reasoningEffort ||
       eventAuthority === undefined ||
       eventAuthority.sha256 !== replayEventsAuthority.sha256 ||
       eventAuthority.sha256 !== invocation.eventsSha256
@@ -4061,14 +4020,14 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
             const input = decoded.right;
             if (
               input.scenarioId !== measurement.scenarioId ||
-              input.sourceGitSha !== scenarioReviewGitSha ||
+              input.sourceGitSha !== measurement.implementationGitSha ||
               canonicalJson(input.outputJsonSchema) !==
                 canonicalJson(
                   codexOutputJsonSchema(ScenarioQualityReviewSchema),
                 )
             ) {
               issues.push(
-                "Benchmark readiness source authority is not bound to the scenario review identity and readiness schema.",
+                "Benchmark readiness input authority is not bound to the implementation revision and readiness schema.",
               );
             }
             if (
@@ -4078,7 +4037,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
                 input.reasoningEffort !== readinessInvocation.reasoningEffort)
             ) {
               issues.push(
-                "Benchmark readiness source authority does not identify its retained readiness invocation.",
+                "Benchmark readiness input authority does not identify its retained readiness invocation.",
               );
             }
             return input;
@@ -4135,6 +4094,9 @@ function benchmarkPlayerEvidenceIssues(input: {
   const frozenPrefix = findings.authorities.find(
     ({ role }) => role === "frozenPrefix",
   );
+  const observations = findings.authorities.find(
+    ({ role }) => role === "observations",
+  );
   const finalArtifact = findings.authorities.find(
     ({ role }) => role === "final",
   );
@@ -4144,10 +4106,18 @@ function benchmarkPlayerEvidenceIssues(input: {
   if (frozenPrefix === undefined) {
     issues.push("Benchmark player evidence has no frozen-prefix authority.");
   }
-  if (transcript !== undefined && frozenPrefix !== undefined) {
+  if (observations === undefined) {
+    issues.push("Benchmark player evidence has no observations authority.");
+  }
+  if (
+    transcript !== undefined &&
+    frozenPrefix !== undefined &&
+    observations !== undefined
+  ) {
     const derived = deriveBenchmarkPathOutcome({
       transcriptPath: transcript.path,
       frozenPrefixPath: frozenPrefix.path,
+      continuationObservationPath: observations.path,
       ...(finalArtifact === undefined
         ? {}
         : { finalArtifactPath: finalArtifact.path }),
@@ -4436,11 +4406,6 @@ function benchmarkAuthorityIssues(
     FinalScenarioReviewSchema,
     { onExcessProperty: "error" },
   )(scenarioReviewValue);
-  const scenarioReviewGitSha: GitSha | undefined = Either.isRight(
-    decodedScenarioReview,
-  )
-    ? decodedScenarioReview.right.gitSha
-    : undefined;
   if (Either.isLeft(decodedScenarioReview)) {
     issues.push(
       `Benchmark scenario-review authority is invalid: ${decodedScenarioReview.left.message}`,
@@ -4552,22 +4517,17 @@ function benchmarkAuthorityIssues(
         }
       }
     }
-    if (scenarioReviewGitSha !== undefined) {
-      issues.push(
-        ...benchmarkRetainedPrePlayReviewIssues({
-          measurement,
-          findings,
-          scenarioReviewGitSha,
-          expectedReviewSchema:
-            measurement.profile === "documentDeclarationSet"
-              ? HistoricalScenarioCompositeReviewSchema
-              : CurrentScenarioCompositeReviewSchema,
-        }),
-      );
-      issues.push(
-        ...benchmarkCompleteEvidenceIssues({ measurement, findings }),
-      );
-    }
+    issues.push(
+      ...benchmarkRetainedPrePlayReviewIssues({
+        measurement,
+        findings,
+        expectedReviewSchema:
+          measurement.profile === "documentDeclarationSet"
+            ? HistoricalScenarioCompositeReviewSchema
+            : CurrentScenarioCompositeReviewSchema,
+      }),
+    );
+    issues.push(...benchmarkCompleteEvidenceIssues({ measurement, findings }));
   }
 
   const ledgerAuthorities = measurement.invocationLedgers;

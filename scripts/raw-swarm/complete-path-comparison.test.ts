@@ -383,9 +383,36 @@ function findingsProjection(
   if (terminalProjection === undefined) {
     throw new Error("Synthetic terminal projection is missing.");
   }
+  const firstProjection = projected.projections.at(0);
+  if (firstProjection === undefined) {
+    throw new Error("Synthetic first continuation projection is missing.");
+  }
+  const observations = writeAuthority(
+    root,
+    "evidence/observations.jsonl",
+    `${JSON.stringify({
+      transcriptHeaderSha256: sha256Canonical(transcriptHeader),
+      continuation: 1,
+      kind: "continue" as const,
+      projection: firstProjection,
+      tacticalNote: "Synthetic first continuation.",
+    })}\n${JSON.stringify({
+      transcriptHeaderSha256: sha256Canonical(transcriptHeader),
+      continuation: 2,
+      kind: "playerConcluded" as const,
+      projection: terminalProjection,
+      tacticalNote: "Synthetic tactical note.",
+      conclusion: "Synthetic player concluded after an accepted SDK call.",
+    })}\n`,
+  );
   const program =
     'import type { PlayerContinuation } from "@dnd/player-sdk";\n\n' +
     "export const continuation0001: PlayerContinuation = async (context) => ({\n" +
+    '  kind: "continue",\n' +
+    "  session: context.session,\n" +
+    '  tacticalNote: "Synthetic first continuation.",\n' +
+    "});\n\n" +
+    "export const continuation0002: PlayerContinuation = async (context) => ({\n" +
     '  kind: "playerConcluded",\n' +
     "  session: context.session,\n" +
     '  tacticalNote: "Synthetic tactical note.",\n' +
@@ -516,6 +543,7 @@ function findingsProjection(
       ...replayEventAuthorities,
       { role: "replaySupervisor", ...replaySupervisor },
       { role: "replayResult", ...replayResult },
+      { role: "observations", ...observations },
       { role: "frozenPrefix", ...frozenPrefix },
       { role: "final", ...finalArtifact },
     ],
@@ -1013,38 +1041,6 @@ function benchmarkMeasurement(
       ),
     );
   }
-  const retainedSourceByStage = new Map<
-    ReviewStage,
-    ReturnType<typeof writeAuthority>
-  >();
-  for (const reviewStage of reviewStages) {
-    const invocationId = `source-composite-${reviewStage}`;
-    const retainedInput = {
-      schemaVersion: 2 as const,
-      phase: "scenarioCompositeReview" as const,
-      reviewStage,
-      scenarioId,
-      sourceGitSha: gitSha,
-      invocationId,
-      model: "gpt-5.6-luna" as const,
-      reasoningEffort: "max" as const,
-      prompt: `Synthetic ${reviewStage} review prompt.`,
-      outputJsonSchema: codexOutputJsonSchema(
-        profile === "documentDeclarationSet"
-          ? HistoricalScenarioCompositeReviewSchema
-          : CurrentScenarioCompositeReviewSchema,
-      ),
-      result: compositeReview,
-    };
-    retainedSourceByStage.set(
-      reviewStage,
-      writeAuthority(
-        root,
-        `benchmark-${profile}-pre-play-source-${reviewStage}.json`,
-        `${JSON.stringify(retainedInput)}\n`,
-      ),
-    );
-  }
   const retainedReviewEvents = new Map<
     ReviewStage,
     ReturnType<typeof writeAuthority>
@@ -1064,13 +1060,6 @@ function benchmarkMeasurement(
     const authority = retainedReplayByStage.get(reviewStage);
     if (authority === undefined) {
       throw new Error(`Synthetic ${reviewStage} replay is missing.`);
-    }
-    return authority;
-  };
-  const sourceReviewFor = (reviewStage: "milestone" | "final") => {
-    const authority = retainedSourceByStage.get(reviewStage);
-    if (authority === undefined) {
-      throw new Error(`Synthetic ${reviewStage} source review is missing.`);
     }
     return authority;
   };
@@ -1101,10 +1090,6 @@ function benchmarkMeasurement(
         }
         return [authority];
       }),
-      ...reviewStages.map((reviewStage) => ({
-        role: `prePlayReviewSourceInput-${reviewStage}`,
-        ...sourceReviewFor(reviewStage),
-      })),
       {
         role: "playerContextDelivery",
         ...playerContextDelivery,
@@ -1136,7 +1121,7 @@ function benchmarkMeasurement(
                 scenarioId,
                 responsibility: "scenarioQuality" as const,
                 phase: "scenarioReadiness" as const,
-                sourceGitSha: gitSha,
+                sourceGitSha: implementationGitSha,
                 invocationId: readinessInvocation.invocationId,
                 model: readinessInvocation.model,
                 reasoningEffort: readinessInvocation.reasoningEffort,
@@ -1336,7 +1321,6 @@ describe("complete Raw Swarm path comparison", () => {
       candidate.findings.authorities.some(
         ({ role }) =>
           role === "replay-milestone" ||
-          role === "prePlayReviewSourceInput-milestone" ||
           role === "prePlayReviewReplayEvents-milestone",
       ),
     ).toBe(false);
@@ -1505,12 +1489,17 @@ describe("complete Raw Swarm path comparison", () => {
       `${JSON.stringify({
         frozenByteLength: noCallProgram.byteLength,
         frozenSha256: noCallProgram.sha256,
-        continuationCount: 1,
+        continuationCount: 0,
         run: {
           kind: "playerConcluded",
           conclusion: "Synthetic conclusion without a call.",
         },
       })}\n`,
+    );
+    const noCallObservations = writeAuthority(
+      noCallRoot,
+      "no-call-observations.jsonl",
+      "",
     );
     const noCallFinal = writeAuthority(
       noCallRoot,
@@ -1555,6 +1544,7 @@ describe("complete Raw Swarm path comparison", () => {
     const noCallOutcome = deriveBenchmarkPathOutcome({
       transcriptPath: noCallTranscript.path,
       frozenPrefixPath: noCallFrozenPrefix.path,
+      continuationObservationPath: noCallObservations.path,
       finalArtifactPath: noCallFinal.path,
     });
     expect(Either.isRight(noCallOutcome)).toBe(true);
@@ -1586,6 +1576,9 @@ describe("complete Raw Swarm path comparison", () => {
         }
         if (authority.role === "frozenPrefix") {
           return [{ role: authority.role, ...noCallFrozenPrefix }];
+        }
+        if (authority.role === "observations") {
+          return [{ role: authority.role, ...noCallObservations }];
         }
         if (authority.role === "final") {
           return [{ role: authority.role, ...noCallFinal }];
@@ -1638,6 +1631,46 @@ describe("complete Raw Swarm path comparison", () => {
     expect(validation).toMatchObject({
       _tag: "Left",
       left: expect.stringContaining("final player artifact is invalid"),
+    });
+  }, 60_000);
+
+  test("rejects a gap in contiguous player continuation observations", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const observationsAuthority = benchmark.findings.authorities.find(
+      ({ role }) => role === "observations",
+    );
+    expect(observationsAuthority).toBeDefined();
+    if (observationsAuthority === undefined) return;
+    const root = resolve(repoRoot, observationsAuthority.path, "..", "..");
+    const observations = readFileSync(
+      resolve(repoRoot, observationsAuthority.path),
+      "utf8",
+    )
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    const gapObservations = observations.map((observation, index) =>
+      index === 1 ? { ...observation, continuation: 3 } : observation,
+    );
+    const gapAuthority = writeAuthority(
+      root,
+      "evidence/gap-observations.jsonl",
+      `${gapObservations.map((observation) => JSON.stringify(observation)).join("\n")}\n`,
+    );
+    const validation = validateCompletePathMeasurement({
+      ...benchmark,
+      findings: {
+        ...benchmark.findings,
+        authorities: benchmark.findings.authorities.map((authority) =>
+          authority.role === "observations"
+            ? { role: authority.role, ...gapAuthority }
+            : authority,
+        ),
+      },
+    });
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("continuation evidence is invalid"),
     });
   }, 60_000);
 
@@ -1766,24 +1799,25 @@ describe("complete Raw Swarm path comparison", () => {
       ? manifest.sources.filter(isJsonRecord)
       : [];
     expect(sources.length).toBe(BENCHMARK_CONTEXT_ROLES.length);
-    if (sources.length < 2) return;
-    const sourceAuthorityAt = (index: number): Record<string, unknown> => {
-      const source = sources[index];
+    const sourceAuthorityForRole = (
+      role: "player" | "postPlayReview",
+    ): Record<string, unknown> => {
+      const source = sources.find((candidate) => candidate.role === role);
       if (source === undefined || !isJsonRecord(source.authority)) {
-        throw new Error(
-          `Synthetic context authority ${String(index)} is missing.`,
-        );
+        throw new Error(`Synthetic context authority ${role} is missing.`);
       }
       return source.authority;
     };
-    const firstAuthority = sourceAuthorityAt(0);
-    const secondAuthority = sourceAuthorityAt(1);
-    const swappedSources = sources.map((source, index) =>
-      index === 0
-        ? { ...source, authority: secondAuthority }
-        : index === 1
-          ? { ...source, authority: firstAuthority }
-          : source,
+    const playerAuthority = sourceAuthorityForRole("player");
+    const postPlayAuthority = sourceAuthorityForRole("postPlayReview");
+    const swappedSources = sources.map((source) =>
+      source.role !== "player" && source.role !== "postPlayReview"
+        ? source
+        : {
+            ...source,
+            authority:
+              source.role === "player" ? postPlayAuthority : playerAuthority,
+          },
     );
     const root = resolve(repoRoot, benchmark.contextSourceManifest.path, "..");
     const swappedManifest = writeAuthority(
@@ -1800,9 +1834,9 @@ describe("complete Raw Swarm path comparison", () => {
       left: expect.stringContaining("canonical"),
     });
 
-    if (typeof firstAuthority.path !== "string") return;
+    if (typeof playerAuthority.path !== "string") return;
     writeFileSync(
-      resolve(repoRoot, firstAuthority.path),
+      resolve(repoRoot, playerAuthority.path),
       "Tampered benchmark context.\n",
     );
     const tamperedValidation = validateCompletePathMeasurement(benchmark);

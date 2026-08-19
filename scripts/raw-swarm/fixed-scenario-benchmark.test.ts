@@ -9,7 +9,7 @@ import {
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { capabilityContextForRole } from "./capability-projection.ts";
@@ -20,9 +20,11 @@ import {
 } from "./scenario-campaign.ts";
 import {
   FIXED_SCENARIO_ID,
+  benchmarkCommands,
   fixedBenchmarkContextForRole,
   fixedBenchmarkCodexArgs,
   fixedBenchmarkDocumentDeclarationContextForRole,
+  fixedBenchmarkProfilePaths,
   fixedScenarioCanonicalBundle,
   initializeFixedBenchmarkProfileDirectory,
   parseFixedBenchmarkProfile,
@@ -31,7 +33,7 @@ import {
   validateBenchmarkReviewAuthority,
 } from "./fixed-scenario-benchmark.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
-import { repoRoot } from "./transcript.ts";
+import { GitShaSchema, repoRoot } from "./transcript.ts";
 
 const fixedBenchmarkCli = resolve(
   repoRoot,
@@ -332,6 +334,29 @@ describe("fixed scenario benchmark boundary", () => {
     ).toThrow(/unsafe characters/);
   }, 30_000);
 
+  test("rejects traversal in direct benchmark path and command helpers", () => {
+    expect(() =>
+      fixedBenchmarkProfilePaths("../outside", "boundedCapabilityProjection"),
+    ).toThrow(/unsafe characters/);
+
+    const paths = fixedBenchmarkProfilePaths(
+      "safe-run",
+      "boundedCapabilityProjection",
+    );
+    const bundle = fixedScenarioCanonicalBundle();
+    expect(() =>
+      benchmarkCommands({
+        runId: "../outside",
+        profile: "boundedCapabilityProjection",
+        implementationGitSha: Schema.decodeUnknownSync(GitShaSchema)(
+          "a".repeat(40),
+        ),
+        paths,
+        bundle,
+      }),
+    ).toThrow(/unsafe characters/);
+  });
+
   test("rejects structured reads and external tools while retaining prose-only results", () => {
     const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
     const eventPath = resolve(scratch, "events.jsonl");
@@ -401,7 +426,6 @@ describe("fixed scenario benchmark boundary", () => {
     expect(bundle.authorities.scenarioReview.sha256).toBe(
       bundle.scenarioReviewSha256,
     );
-    expect(bundle.scenarioReviewGitSha).toMatch(/^[0-9a-f]{40}$/);
     expect(readFileSync(bundle.paths.characters, "utf8")).toContain(
       "composeScenarioCharacters",
     );
