@@ -36,11 +36,14 @@ import {
   codexOutputJsonSchema,
   CurrentScenarioCompositeReviewSchema,
   FinalScenarioReviewSchema,
+  HistoricalScenarioCompositeReviewSchema,
+  ScenarioQualityReviewSchema,
 } from "./scenario-campaign.ts";
 export {
   codexOutputJsonSchema,
   CurrentScenarioCompositeReviewSchema,
   FinalScenarioReviewSchema,
+  HistoricalScenarioCompositeReviewSchema,
 };
 import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
@@ -51,6 +54,7 @@ import { ReviewOutputSchema } from "./review-contract.ts";
 import {
   isJsonRecord,
   canonicalJson,
+  GitShaSchema,
   repoRoot,
   ScenarioIdSchema,
   sha256Canonical,
@@ -1232,6 +1236,30 @@ const BenchmarkImplementationProfileSchema = Schema.Literal(
   ...BENCHMARK_IMPLEMENTATION_PROFILES,
 );
 
+export const BENCHMARK_READINESS_AUTHORITY_ROLES = {
+  source: "prePlayReviewReadinessSource",
+  result: "prePlayReviewReadinessResult",
+  events: "prePlayReviewReadinessEvents",
+} as const;
+
+export const BenchmarkReadinessInputSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  profile: Schema.Literal("documentDeclarationSet"),
+  scenarioId: ScenarioIdSchema,
+  responsibility: Schema.Literal("scenarioQuality"),
+  phase: Schema.Literal("scenarioReadiness"),
+  sourceGitSha: GitShaSchema,
+  invocationId: Schema.NonEmptyString,
+  model: Schema.Literal("gpt-5.6-luna"),
+  reasoningEffort: Schema.Literal("max"),
+  prompt: Schema.NonEmptyString,
+  outputJsonSchema: Schema.Unknown,
+  result: ScenarioQualityReviewSchema,
+});
+export type BenchmarkReadinessInput = Schema.Schema.Type<
+  typeof BenchmarkReadinessInputSchema
+>;
+
 export const BenchmarkScenarioBundleSchema = Schema.Struct({
   scenario: ArtifactAuthoritySchema,
   scenarioReview: ArtifactAuthoritySchema,
@@ -2278,6 +2306,19 @@ function isPrePlayReviewEventsAuthorityRole(role: string): boolean {
   return namedReviewStageAuthorityRole(role, "prePlayReviewReplayEvents");
 }
 
+function benchmarkReadinessAuthority(
+  authorities: readonly FindingAuthority[],
+  role: (typeof BENCHMARK_READINESS_AUTHORITY_ROLES)[keyof typeof BENCHMARK_READINESS_AUTHORITY_ROLES],
+): readonly FindingAuthority[] {
+  return authorities.filter((authority) => authority.role === role);
+}
+
+function isBenchmarkReadinessAuthorityRole(role: string): boolean {
+  return Object.values(BENCHMARK_READINESS_AUTHORITY_ROLES).some(
+    (candidate) => candidate === role,
+  );
+}
+
 function reviewStageForAuthorityRole(
   role: string,
   prefix: string,
@@ -3066,6 +3107,348 @@ function benchmarkInvocationEntriesFromAuthorities(
   return entries;
 }
 
+function benchmarkReplayReviewStage(
+  role: string,
+): "milestone" | "final" | undefined {
+  return (
+    reviewStageForAuthorityRole(role, "replay") ??
+    reviewStageForAuthorityRole(role, "prePlayReviewReplayInput")
+  );
+}
+
+function benchmarkReviewAuthorityByStage(
+  authorities: readonly FindingAuthority[],
+  stageForRole: (role: string) => "milestone" | "final" | undefined,
+  label: string,
+  issues: string[],
+): ReadonlyMap<"milestone" | "final", FindingAuthority> {
+  const byStage = new Map<"milestone" | "final", FindingAuthority>();
+  for (const authority of authorities) {
+    const stage = stageForRole(authority.role);
+    if (stage === undefined) continue;
+    if (byStage.has(stage)) {
+      issues.push(
+        `Benchmark ${label} authorities contain duplicate ${stage} review stages.`,
+      );
+      continue;
+    }
+    byStage.set(stage, authority);
+  }
+  if (!byStage.has("milestone") || !byStage.has("final")) {
+    issues.push(
+      `Benchmark ${label} authorities require exactly one milestone and one final authority.`,
+    );
+  }
+  return byStage;
+}
+
+function benchmarkRetainedPrePlayReviewIssues(input: {
+  readonly measurement: CurrentBenchmarkMeasurement;
+  readonly findings: FindingsProjection;
+  readonly scenarioReviewGitSha: string;
+  readonly expectedReviewSchema:
+    | typeof HistoricalScenarioCompositeReviewSchema
+    | typeof CurrentScenarioCompositeReviewSchema;
+}): readonly string[] {
+  const { measurement, findings, scenarioReviewGitSha, expectedReviewSchema } =
+    input;
+  const issues: string[] = [];
+  const expectedOutputJsonSchema = codexOutputJsonSchema(expectedReviewSchema);
+  const sourceAuthorities = findings.authorities.filter(({ role }) =>
+    isPrePlayReviewSourceAuthorityRole(role),
+  );
+  const replayAuthorities = findings.authorities.filter(({ role }) =>
+    isReplayAuthorityRole(role),
+  );
+  const replayEventAuthorities = findings.authorities.filter(({ role }) =>
+    isPrePlayReviewEventsAuthorityRole(role),
+  );
+  for (const authority of findings.authorities) {
+    if (
+      (authority.role.startsWith("replay-") &&
+        !isReplayAuthorityRole(authority.role)) ||
+      (authority.role.startsWith("prePlayReviewSourceInput-") &&
+        !isPrePlayReviewSourceAuthorityRole(authority.role)) ||
+      (authority.role.startsWith("prePlayReviewReplayInput-") &&
+        !isReplayAuthorityRole(authority.role)) ||
+      (authority.role.startsWith("prePlayReviewReplayEvents-") &&
+        !isPrePlayReviewEventsAuthorityRole(authority.role)) ||
+      (authority.role.startsWith("prePlayReviewReadiness") &&
+        !isBenchmarkReadinessAuthorityRole(authority.role))
+    ) {
+      issues.push(
+        `Benchmark finding authority role is not closed: ${authority.role}.`,
+      );
+    }
+  }
+  const retainedReviewEnvelopeSchema = Schema.Struct({
+    schemaVersion: Schema.Literal(2),
+    phase: Schema.Literal("scenarioCompositeReview"),
+    reviewStage: Schema.Literal("milestone", "final"),
+    scenarioId: ScenarioIdSchema,
+    sourceGitSha: GitShaSchema,
+    invocationId: Schema.NonEmptyString,
+    model: Schema.Literal("gpt-5.6-luna"),
+    reasoningEffort: Schema.Literal("max"),
+    prompt: Schema.NonEmptyString,
+    outputJsonSchema: Schema.Unknown,
+    result: expectedReviewSchema,
+  });
+  if (sourceAuthorities.length !== 2) {
+    issues.push(
+      `Benchmark ${measurement.profile} profile requires two retained pre-play source review authorities, received ${String(sourceAuthorities.length)}.`,
+    );
+  }
+  if (replayAuthorities.length !== 2) {
+    issues.push(
+      `Benchmark ${measurement.profile} profile requires two retained pre-play replay authorities, received ${String(replayAuthorities.length)}.`,
+    );
+  }
+  if (replayEventAuthorities.length !== 2) {
+    issues.push(
+      `Benchmark ${measurement.profile} profile requires two retained pre-play replay event authorities, received ${String(replayEventAuthorities.length)}.`,
+    );
+  }
+  const sourceByStage = benchmarkReviewAuthorityByStage(
+    sourceAuthorities,
+    (role) => reviewStageForAuthorityRole(role, "prePlayReviewSourceInput"),
+    "pre-play source review",
+    issues,
+  );
+  const replayByStage = benchmarkReviewAuthorityByStage(
+    replayAuthorities,
+    benchmarkReplayReviewStage,
+    "pre-play replay",
+    issues,
+  );
+  const replayEventsByStage = benchmarkReviewAuthorityByStage(
+    replayEventAuthorities,
+    (role) => reviewStageForAuthorityRole(role, "prePlayReviewReplayEvents"),
+    "pre-play replay event",
+    issues,
+  );
+
+  const invocationById = new Map(
+    measurement.invocations.map((invocation) => [
+      invocation.invocationId,
+      invocation,
+    ]),
+  );
+  const eventAuthoritiesByPath = new Map(
+    measurement.invocationEvents.map((authority) => [
+      authority.path,
+      authority,
+    ]),
+  );
+  for (const reviewStage of ["milestone", "final"] as const) {
+    const sourceAuthority = sourceByStage.get(reviewStage);
+    const replayAuthority = replayByStage.get(reviewStage);
+    const replayEventsAuthority = replayEventsByStage.get(reviewStage);
+    if (
+      sourceAuthority === undefined ||
+      replayAuthority === undefined ||
+      replayEventsAuthority === undefined
+    ) {
+      continue;
+    }
+    const sourceValue = readAuthorityJson(sourceAuthority);
+    const replayValue = readAuthorityJson(replayAuthority);
+    if (sourceValue.tag === "invalid") {
+      issues.push(sourceValue.message);
+      continue;
+    }
+    if (replayValue.tag === "invalid") {
+      issues.push(replayValue.message);
+      continue;
+    }
+    const source = Schema.decodeUnknownEither(retainedReviewEnvelopeSchema, {
+      onExcessProperty: "error",
+    })(sourceValue.value);
+    const replay = Schema.decodeUnknownEither(retainedReviewEnvelopeSchema, {
+      onExcessProperty: "error",
+    })(replayValue.value);
+    if (Either.isLeft(source) || Either.isLeft(replay)) {
+      issues.push(
+        `Benchmark ${reviewStage} pre-play review authority is not a retained review envelope.`,
+      );
+      continue;
+    }
+    const sourceIdentityValid =
+      source.right.reviewStage === reviewStage &&
+      source.right.scenarioId === measurement.scenarioId &&
+      source.right.sourceGitSha === scenarioReviewGitSha &&
+      canonicalJson(source.right.outputJsonSchema) ===
+        canonicalJson(expectedOutputJsonSchema);
+    const replayIdentityValid =
+      replay.right.reviewStage === reviewStage &&
+      replay.right.scenarioId === measurement.scenarioId &&
+      canonicalJson(replay.right.outputJsonSchema) ===
+        canonicalJson(expectedOutputJsonSchema);
+    if (
+      !sourceIdentityValid ||
+      !replayIdentityValid ||
+      source.right.invocationId === replay.right.invocationId ||
+      source.right.model !== replay.right.model ||
+      source.right.reasoningEffort !== replay.right.reasoningEffort ||
+      canonicalJson(source.right.prompt) !==
+        canonicalJson(replay.right.prompt) ||
+      canonicalJson(source.right.result) !== canonicalJson(replay.right.result)
+    ) {
+      issues.push(
+        `Benchmark ${reviewStage} pre-play review source and replay are not bound to the ${measurement.profile} composite-review schema, scenario identity, and Git authority.`,
+      );
+      continue;
+    }
+    const invocation = invocationById.get(replay.right.invocationId);
+    const eventAuthority = eventAuthoritiesByPath.get(
+      replayEventsAuthority.path,
+    );
+    if (
+      invocation === undefined ||
+      invocation.schemaVersion !== 2 ||
+      invocation.phase !== "scenarioCompositeReview" ||
+      invocation.gitSha !== replay.right.sourceGitSha ||
+      invocation.model !== source.right.model ||
+      invocation.reasoningEffort !== source.right.reasoningEffort ||
+      eventAuthority === undefined ||
+      eventAuthority.sha256 !== replayEventsAuthority.sha256 ||
+      eventAuthority.sha256 !== invocation.eventsSha256
+    ) {
+      issues.push(
+        `Benchmark ${reviewStage} pre-play replay event authority does not match its retained composite-review invocation.`,
+      );
+    }
+  }
+
+  const readinessAuthorities = {
+    source: benchmarkReadinessAuthority(
+      findings.authorities,
+      BENCHMARK_READINESS_AUTHORITY_ROLES.source,
+    ),
+    result: benchmarkReadinessAuthority(
+      findings.authorities,
+      BENCHMARK_READINESS_AUTHORITY_ROLES.result,
+    ),
+    events: benchmarkReadinessAuthority(
+      findings.authorities,
+      BENCHMARK_READINESS_AUTHORITY_ROLES.events,
+    ),
+  } as const;
+  const retainedReadinessAuthorities = [
+    ...readinessAuthorities.source,
+    ...readinessAuthorities.result,
+    ...readinessAuthorities.events,
+  ];
+  if (measurement.profile === "documentDeclarationSet") {
+    for (const [kind, authorities] of Object.entries(readinessAuthorities)) {
+      if (authorities.length !== 1) {
+        issues.push(
+          `The document-declaration benchmark profile requires exactly one retained readiness ${kind} authority, received ${String(authorities.length)}.`,
+        );
+      }
+    }
+    if (
+      new Set(retainedReadinessAuthorities.map(({ path }) => path)).size !==
+      retainedReadinessAuthorities.length
+    ) {
+      issues.push(
+        "The document-declaration benchmark profile requires distinct readiness source, result, and event authorities.",
+      );
+    }
+    const readinessInvocations = measurement.invocations.filter(
+      (invocation) =>
+        invocation.schemaVersion === 3 &&
+        invocation.responsibility === "scenarioQuality",
+    );
+    if (readinessInvocations.length !== 1) {
+      issues.push(
+        `The document-declaration benchmark profile requires exactly one retained readiness invocation, received ${String(readinessInvocations.length)}.`,
+      );
+    }
+    const readinessInvocation = readinessInvocations[0];
+    const readinessSourceAuthority = readinessAuthorities.source[0];
+    const readinessResultAuthority = readinessAuthorities.result[0];
+    const readinessEventsAuthority = readinessAuthorities.events[0];
+    let readinessInput: BenchmarkReadinessInput | undefined;
+    if (readinessSourceAuthority !== undefined) {
+      const readinessSource = benchmarkAuthorityJson(
+        readinessSourceAuthority,
+        "readiness source",
+        issues,
+      );
+      const decoded = Schema.decodeUnknownEither(
+        BenchmarkReadinessInputSchema,
+        { onExcessProperty: "error" },
+      )(readinessSource);
+      if (Either.isLeft(decoded)) {
+        issues.push(
+          `Benchmark readiness source authority is not a retained readiness envelope: ${decoded.left.message}`,
+        );
+      } else {
+        readinessInput = decoded.right;
+        if (
+          readinessInput.scenarioId !== measurement.scenarioId ||
+          readinessInput.sourceGitSha !== scenarioReviewGitSha ||
+          canonicalJson(readinessInput.outputJsonSchema) !==
+            canonicalJson(codexOutputJsonSchema(ScenarioQualityReviewSchema))
+        ) {
+          issues.push(
+            "Benchmark readiness source authority is not bound to the scenario review identity and readiness schema.",
+          );
+        }
+        if (
+          readinessInvocation !== undefined &&
+          (readinessInput.invocationId !== readinessInvocation.invocationId ||
+            readinessInput.model !== readinessInvocation.model ||
+            readinessInput.reasoningEffort !==
+              readinessInvocation.reasoningEffort)
+        ) {
+          issues.push(
+            "Benchmark readiness source authority does not identify its retained readiness invocation.",
+          );
+        }
+      }
+    }
+    if (readinessResultAuthority !== undefined) {
+      const readinessResult = benchmarkAuthorityJson(
+        readinessResultAuthority,
+        "readiness result",
+        issues,
+      );
+      const decoded = Schema.decodeUnknownEither(ScenarioQualityReviewSchema, {
+        onExcessProperty: "error",
+      })(readinessResult);
+      if (Either.isLeft(decoded)) {
+        issues.push(
+          `Benchmark readiness result authority is not a scenario-quality result: ${decoded.left.message}`,
+        );
+      } else if (
+        readinessInput !== undefined &&
+        canonicalJson(decoded.right) !== canonicalJson(readinessInput.result)
+      ) {
+        issues.push(
+          "Benchmark readiness result authority does not match its retained readiness source.",
+        );
+      }
+    }
+    if (
+      readinessInvocation === undefined ||
+      readinessEventsAuthority === undefined ||
+      readinessEventsAuthority.sha256 !== readinessInvocation.eventsSha256 ||
+      !eventAuthoritiesByPath.has(readinessEventsAuthority.path)
+    ) {
+      issues.push(
+        "The document-declaration benchmark readiness events authority is not bound to its retained readiness invocation.",
+      );
+    }
+  } else if (retainedReadinessAuthorities.length !== 0) {
+    issues.push(
+      "The bounded capability-projection benchmark profile retains no readiness source, result, or event authority.",
+    );
+  }
+  return issues;
+}
+
 function benchmarkAuthorityIssues(
   measurement: CurrentBenchmarkMeasurement,
 ): readonly string[] {
@@ -3181,6 +3564,52 @@ function benchmarkAuthorityIssues(
     );
   }
 
+  let scenarioReviewGitSha: string | undefined;
+  const scenarioReviewValue = benchmarkAuthorityJson(
+    bundle.scenarioReview,
+    "scenario review",
+    issues,
+  );
+  const decodedScenarioReview = Schema.decodeUnknownEither(
+    FinalScenarioReviewSchema,
+    { onExcessProperty: "error" },
+  )(scenarioReviewValue);
+  if (Either.isLeft(decodedScenarioReview)) {
+    issues.push(
+      `Benchmark scenario-review authority is invalid: ${decodedScenarioReview.left.message}`,
+    );
+  } else {
+    scenarioReviewGitSha = decodedScenarioReview.right.gitSha;
+    if (
+      decodedScenarioReview.right.scenarioId !== measurement.scenarioId ||
+      decodedScenarioReview.right.scenarioSha256 !== bundle.scenario.sha256
+    ) {
+      issues.push(
+        "Benchmark scenario-review authority is not bound to the scenario bundle identity.",
+      );
+    }
+  }
+  const stagePlanIdentity = measurement.stagePlan.identity;
+  if (stagePlanIdentity.tag === "admitted") {
+    if (stagePlanIdentity.scenarioId !== measurement.scenarioId) {
+      issues.push(
+        "Admitted benchmark stage-plan scenario identity does not match the benchmark scenario.",
+      );
+    }
+    if (stagePlanIdentity.scenarioSha256 !== bundle.scenario.sha256) {
+      issues.push(
+        "Admitted benchmark stage-plan scenario hash is not bound to the scenario bundle.",
+      );
+    }
+    if (
+      stagePlanIdentity.scenarioReviewSha256 !== bundle.scenarioReview.sha256
+    ) {
+      issues.push(
+        "Admitted benchmark stage-plan scenario-review hash is not bound to the scenario bundle.",
+      );
+    }
+  }
+
   const findingsValidation = validateFindingsProjection(measurement.findings);
   if (findingsValidation.tag === "invalid") {
     issues.push(`Findings authority is invalid: ${findingsValidation.message}`);
@@ -3241,6 +3670,19 @@ function benchmarkAuthorityIssues(
         }
       }
     }
+    if (scenarioReviewGitSha !== undefined) {
+      issues.push(
+        ...benchmarkRetainedPrePlayReviewIssues({
+          measurement,
+          findings,
+          scenarioReviewGitSha,
+          expectedReviewSchema:
+            measurement.profile === "documentDeclarationSet"
+              ? HistoricalScenarioCompositeReviewSchema
+              : CurrentScenarioCompositeReviewSchema,
+        }),
+      );
+    }
   }
 
   const ledgerAuthorities = measurement.invocationLedgers;
@@ -3299,6 +3741,25 @@ function benchmarkAuthorityIssues(
   if (eventAuthorities.size !== measurement.invocationEvents.length) {
     issues.push(
       "Benchmark invocation event authorities must have distinct hashes.",
+    );
+  }
+  const invocationEventHashes = measurement.invocations.map(
+    ({ eventsSha256 }) => eventsSha256,
+  );
+  if (new Set(invocationEventHashes).size !== invocationEventHashes.length) {
+    issues.push(
+      "Benchmark invocations must reference distinct event authority hashes.",
+    );
+  }
+  if (
+    eventAuthorities.size !== invocationEventHashes.length ||
+    [...eventAuthorities.keys()].some(
+      (sha256) => !invocationEventHashes.includes(sha256),
+    ) ||
+    invocationEventHashes.some((sha256) => !eventAuthorities.has(sha256))
+  ) {
+    issues.push(
+      "Benchmark invocation event authorities must form an exact bijection with invocation eventsSha256 values.",
     );
   }
   for (const authority of measurement.invocationEvents) {

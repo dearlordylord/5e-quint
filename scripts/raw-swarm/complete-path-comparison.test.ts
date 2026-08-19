@@ -9,6 +9,7 @@ import {
   assembleCompletePathMeasurement,
   codexOutputJsonSchema,
   CurrentScenarioCompositeReviewSchema,
+  HistoricalScenarioCompositeReviewSchema,
   compareCompleteEquivalentPaths,
   parseBenchmarkMeasurement,
   parseCompletePathMeasurement,
@@ -26,6 +27,7 @@ import {
   benchmarkModelInvocationStartedEvent,
   BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
 } from "./model-telemetry.ts";
+import { ScenarioQualityReviewSchema } from "./scenario-campaign.ts";
 import { capabilityContextSizeEstimate } from "./capability-context-size-estimate.ts";
 import { planAdmittedScenarioStages } from "./scenario-stage-plan.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
@@ -209,6 +211,12 @@ function syntheticCompositeReview() {
   };
 }
 
+function historicalCompositeReview() {
+  const { scenarioQuality: _scenarioQuality, ...historical } =
+    syntheticCompositeReview();
+  return historical;
+}
+
 function findingsProjection(
   root: string,
   findings: readonly ReturnType<typeof finding>[],
@@ -383,7 +391,11 @@ function findingsProjection(
   };
 }
 
-function retainInvocation(root: string, entry: ReturnType<typeof invocation>) {
+function retainInvocation(
+  root: string,
+  entry: ReturnType<typeof invocation>,
+  compositeReview: unknown = syntheticCompositeReview(),
+) {
   const events = [
     {
       type: "raw-swarm.invocation.started",
@@ -403,7 +415,7 @@ function retainInvocation(root: string, entry: ReturnType<typeof invocation>) {
             type: "item.completed",
             item: {
               type: "agent_message",
-              text: JSON.stringify({ result: syntheticCompositeReview() }),
+              text: JSON.stringify({ result: compositeReview }),
             },
           },
         ]
@@ -477,8 +489,12 @@ function retainBenchmarkAuxiliaryInvocation(
     phase: input.phase,
     stagePlanReason,
     fallbackInvocationId: input.invocationId,
-    model: "gpt-5.6-sol",
-    reasoningEffort: "medium",
+    model:
+      input.responsibility === "scenarioQuality"
+        ? "gpt-5.6-luna"
+        : "gpt-5.6-sol",
+    reasoningEffort:
+      input.responsibility === "scenarioQuality" ? "max" : "medium",
     startedAt: "2026-08-14T00:00:00.000Z",
   });
   const completed = benchmarkModelInvocationCompletedEvent({
@@ -521,8 +537,12 @@ function retainBenchmarkAuxiliaryInvocation(
     eventsSha256: authority.sha256,
     stagePlanReason,
     invocationId: input.invocationId,
-    model: "gpt-5.6-sol",
-    reasoningEffort: "medium",
+    model:
+      input.responsibility === "scenarioQuality"
+        ? "gpt-5.6-luna"
+        : "gpt-5.6-sol",
+    reasoningEffort:
+      input.responsibility === "scenarioQuality" ? "max" : "medium",
     startedAt: "2026-08-14T00:00:00.000Z",
     elapsedMilliseconds: 25,
     exit: { tag: "exited", status: 0 },
@@ -715,8 +735,12 @@ function benchmarkMeasurement(
     "benchmark-context-sources.json",
     `${JSON.stringify(contextDocument)}\n`,
   );
+  const compositeReview =
+    profile === "documentDeclarationSet"
+      ? historicalCompositeReview()
+      : syntheticCompositeReview();
   const canonicalRetained = source.invocations.map((entry) =>
-    retainInvocation(root, entry),
+    retainInvocation(root, entry, compositeReview),
   );
   const auxiliaryRetained =
     profile === "documentDeclarationSet"
@@ -753,6 +777,163 @@ function benchmarkMeasurement(
     `benchmark-${profile}-invocations.jsonl`,
     `${orderedRetained.map(({ entry }) => JSON.stringify(entry)).join("\n")}\n`,
   );
+  const retainedReplayAuthorities = (["milestone", "final"] as const).map(
+    (reviewStage) => {
+      const invocationId =
+        reviewStage === "milestone" ? "composite-milestone" : "composite-final";
+      const retainedInput = {
+        schemaVersion: 2 as const,
+        phase: "scenarioCompositeReview" as const,
+        reviewStage,
+        scenarioId,
+        sourceGitSha: gitSha,
+        invocationId,
+        model: "gpt-5.6-luna" as const,
+        reasoningEffort: "max" as const,
+        prompt: `Synthetic ${reviewStage} review prompt.`,
+        outputJsonSchema: codexOutputJsonSchema(
+          profile === "documentDeclarationSet"
+            ? HistoricalScenarioCompositeReviewSchema
+            : CurrentScenarioCompositeReviewSchema,
+        ),
+        result: compositeReview,
+      };
+      return writeAuthority(
+        root,
+        `benchmark-${profile}-pre-play-${reviewStage}.json`,
+        `${JSON.stringify(retainedInput)}\n`,
+      );
+    },
+  );
+  const retainedSourceAuthorities = (["milestone", "final"] as const).map(
+    (reviewStage) => {
+      const invocationId =
+        reviewStage === "milestone"
+          ? "source-composite-milestone"
+          : "source-composite-final";
+      const retainedInput = {
+        schemaVersion: 2 as const,
+        phase: "scenarioCompositeReview" as const,
+        reviewStage,
+        scenarioId,
+        sourceGitSha: gitSha,
+        invocationId,
+        model: "gpt-5.6-luna" as const,
+        reasoningEffort: "max" as const,
+        prompt: `Synthetic ${reviewStage} review prompt.`,
+        outputJsonSchema: codexOutputJsonSchema(
+          profile === "documentDeclarationSet"
+            ? HistoricalScenarioCompositeReviewSchema
+            : CurrentScenarioCompositeReviewSchema,
+        ),
+        result: compositeReview,
+      };
+      return writeAuthority(
+        root,
+        `benchmark-${profile}-pre-play-source-${reviewStage}.json`,
+        `${JSON.stringify(retainedInput)}\n`,
+      );
+    },
+  );
+  const retainedReviewEvents = canonicalRetained.filter(
+    ({ entry }) =>
+      entry.invocationId === "composite-milestone" ||
+      entry.invocationId === "composite-final",
+  );
+  const retainedReviewEventAuthorities = {
+    milestone: retainedReviewEvents.find(
+      ({ entry }) => entry.invocationId === "composite-milestone",
+    )!.authority,
+    final: retainedReviewEvents.find(
+      ({ entry }) => entry.invocationId === "composite-final",
+    )!.authority,
+  } as const;
+  const benchmarkFindings = {
+    ...source.findings,
+    authorities: [
+      ...source.findings.authorities.flatMap((authority) => {
+        if (authority.role === "replay-milestone") {
+          return [{ role: authority.role, ...retainedReplayAuthorities[0]! }];
+        }
+        if (authority.role === "replay-final") {
+          return [{ role: authority.role, ...retainedReplayAuthorities[1]! }];
+        }
+        if (authority.role === "prePlayReviewReplayEvents-milestone") {
+          return [
+            {
+              role: authority.role,
+              ...retainedReviewEventAuthorities.milestone,
+            },
+          ];
+        }
+        if (authority.role === "prePlayReviewReplayEvents-final") {
+          return [
+            {
+              role: authority.role,
+              ...retainedReviewEventAuthorities.final,
+            },
+          ];
+        }
+        return [authority];
+      }),
+      {
+        role: "prePlayReviewSourceInput-milestone",
+        ...retainedSourceAuthorities[0]!,
+      },
+      {
+        role: "prePlayReviewSourceInput-final",
+        ...retainedSourceAuthorities[1]!,
+      },
+      ...(profile === "documentDeclarationSet"
+        ? (() => {
+            const readinessInvocation = auxiliaryRetained[0]!.entry;
+            const readinessResultValue = {
+              classification: "ready" as const,
+              evidence: "Synthetic readiness review is ready.",
+            };
+            const readinessResult = writeAuthority(
+              root,
+              "benchmark-readiness-result.json",
+              `${JSON.stringify(readinessResultValue)}\n`,
+            );
+            const readinessSource = writeAuthority(
+              root,
+              "benchmark-readiness-source.json",
+              `${JSON.stringify({
+                schemaVersion: 1 as const,
+                profile: "documentDeclarationSet" as const,
+                scenarioId,
+                responsibility: "scenarioQuality" as const,
+                phase: "scenarioReadiness" as const,
+                sourceGitSha: readinessInvocation.gitSha,
+                invocationId: readinessInvocation.invocationId,
+                model: readinessInvocation.model,
+                reasoningEffort: readinessInvocation.reasoningEffort,
+                prompt: "Synthetic historical readiness prompt.",
+                outputJsonSchema: codexOutputJsonSchema(
+                  ScenarioQualityReviewSchema,
+                ),
+                result: readinessResultValue,
+              })}\n`,
+            );
+            return [
+              {
+                role: "prePlayReviewReadinessSource",
+                ...readinessSource,
+              },
+              {
+                role: "prePlayReviewReadinessResult",
+                ...readinessResult,
+              },
+              {
+                role: "prePlayReviewReadinessEvents",
+                ...auxiliaryRetained[0]!.authority,
+              },
+            ];
+          })()
+        : []),
+    ],
+  };
   return {
     schemaVersion: 3,
     pathId: `benchmark-${profile}-${root}`,
@@ -771,7 +952,7 @@ function benchmarkMeasurement(
     invocations: orderedRetained.map(({ entry }) => entry),
     invocationLedgers: [benchmarkLedger],
     invocationEvents: orderedRetained.map(({ authority }) => authority),
-    findings: source.findings,
+    findings: benchmarkFindings,
     outcome: source.outcome,
     ...overrides,
   };
@@ -908,7 +1089,6 @@ describe("complete Raw Swarm path comparison", () => {
       pathId: "candidate-benchmark",
       scenarioBundle: baseline.scenarioBundle,
       stagePlan: baseline.stagePlan,
-      findings: baseline.findings,
     });
     const comparison = compareCompleteEquivalentPaths({
       baseline: validated(baseline),
@@ -936,6 +1116,173 @@ describe("complete Raw Swarm path comparison", () => {
     expect(validateCompletePathMeasurement(malformedBundle)).toMatchObject({
       _tag: "Left",
       left: expect.stringContaining("setup authority"),
+    });
+  });
+
+  test("binds an admitted benchmark stage plan to the scenario and review bundle hashes", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    if (benchmark.stagePlan.identity.tag !== "admitted") return;
+    const root = resolve(
+      repoRoot,
+      benchmark.scenarioBundle.stagePlan.path,
+      "..",
+    );
+    const mismatchedStagePlan = {
+      ...benchmark.stagePlan,
+      identity: {
+        ...benchmark.stagePlan.identity,
+        scenarioSha256: "f".repeat(64),
+      },
+    };
+    const stagePlanAuthority = writeAuthority(
+      root,
+      "mismatched-stage-plan.json",
+      `${JSON.stringify(mismatchedStagePlan)}\n`,
+    );
+    const validation = validateCompletePathMeasurement({
+      ...benchmark,
+      stagePlan: mismatchedStagePlan,
+      scenarioBundle: {
+        ...benchmark.scenarioBundle,
+        stagePlan: stagePlanAuthority,
+      },
+    });
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining(
+        "Admitted benchmark stage-plan scenario hash is not bound",
+      ),
+    });
+  });
+
+  test("decodes and binds the benchmark scenario-review authority identity", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const root = resolve(
+      repoRoot,
+      benchmark.scenarioBundle.scenarioReview.path,
+      "..",
+    );
+    const scenarioReview = parseJsonRecord(
+      readFileSync(
+        resolve(repoRoot, benchmark.scenarioBundle.scenarioReview.path),
+        "utf8",
+      ),
+    );
+    const malformedScenarioReview = writeAuthority(
+      root,
+      "mismatched-scenario-review.json",
+      `${JSON.stringify({ ...scenarioReview, scenarioId: "other-scenario" })}\n`,
+    );
+    const validation = validateCompletePathMeasurement({
+      ...benchmark,
+      scenarioBundle: {
+        ...benchmark.scenarioBundle,
+        scenarioReview: malformedScenarioReview,
+      },
+    });
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining(
+        "Benchmark scenario-review authority is not bound",
+      ),
+    });
+  });
+
+  test("requires an exact invocation-event hash bijection for benchmark paths", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const duplicateAuthority = benchmark.invocationEvents[0]!;
+    const malformed = {
+      ...benchmark,
+      invocationEvents: benchmark.invocationEvents.map((authority, index) =>
+        index === 1 ? duplicateAuthority : authority,
+      ),
+    };
+    const validation = validateCompletePathMeasurement(malformed);
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("exact bijection"),
+    });
+  });
+
+  test("keeps historical baseline review fields separate from readiness and rejects readiness on the bounded profile", () => {
+    const baseline = benchmarkMeasurement("documentDeclarationSet");
+    const baselineReplay = baseline.findings.authorities.find(
+      ({ role }) => role === "replay-milestone",
+    );
+    expect(baselineReplay).toBeDefined();
+    if (baselineReplay === undefined) return;
+    const baselineReview = parseJsonRecord(
+      readFileSync(resolve(repoRoot, baselineReplay.path), "utf8"),
+    );
+    if (!isJsonRecord(baselineReview.result)) return;
+    writeFileSync(
+      resolve(repoRoot, baselineReplay.path),
+      `${JSON.stringify({
+        ...baselineReview,
+        result: {
+          ...baselineReview.result,
+          scenarioQuality: {
+            classification: "ready",
+            evidence: "Must remain a separate readiness result.",
+          },
+        },
+      })}\n`,
+    );
+    const historicalReplayBytes = readFileSync(
+      resolve(repoRoot, baselineReplay.path),
+    );
+    const baselineWithHistoricalReview = {
+      ...baseline,
+      findings: {
+        ...baseline.findings,
+        authorities: baseline.findings.authorities.map((authority) =>
+          authority.path === baselineReplay.path
+            ? {
+                ...authority,
+                byteLength: historicalReplayBytes.byteLength,
+                sha256: createHash("sha256")
+                  .update(historicalReplayBytes)
+                  .digest("hex"),
+              }
+            : authority,
+        ),
+      },
+    };
+    const historicalValidation = validateCompletePathMeasurement(
+      baselineWithHistoricalReview,
+    );
+    expect(historicalValidation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("not a retained review envelope"),
+    });
+
+    const candidate = benchmarkMeasurement("boundedCapabilityProjection");
+    const root = resolve(
+      repoRoot,
+      candidate.scenarioBundle.stagePlan.path,
+      "..",
+    );
+    const readinessAuthority = writeAuthority(
+      root,
+      "unexpected-readiness-source.txt",
+      "Unexpected readiness source.\n",
+    );
+    const candidateWithReadiness = {
+      ...candidate,
+      findings: {
+        ...candidate.findings,
+        authorities: [
+          ...candidate.findings.authorities,
+          { role: "prePlayReviewReadinessSource", ...readinessAuthority },
+        ],
+      },
+    };
+    const readinessValidation = validateCompletePathMeasurement(
+      candidateWithReadiness,
+    );
+    expect(readinessValidation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("retains no readiness"),
     });
   });
 
