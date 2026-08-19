@@ -11,7 +11,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, relative, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
 import { Either, Schema } from "effect";
 
@@ -42,6 +42,7 @@ import {
 import {
   parseBenchmarkModelInvocationLedgerEntry,
   parseModelInvocationLedgerEntry,
+  readCodexEvents,
   runBenchmarkAuxiliaryInvocation,
   runCodexInvocation,
   type BenchmarkAuxiliaryModelInvocationLedgerEntry,
@@ -510,6 +511,431 @@ function scratchIsolationPrompt(scratch: string, prompt: string): string {
   );
 }
 
+const BENCHMARK_PREPARATION_SAFE_ITEM_TYPES = new Set([
+  "agent_message",
+  "reasoning",
+  "status",
+]);
+const BENCHMARK_PREPARATION_FORBIDDEN_COMMANDS = new Set([
+  "curl",
+  "du",
+  "eval",
+  "fd",
+  "find",
+  "for",
+  "git",
+  "locate",
+  "rsync",
+  "select",
+  "scp",
+  "ssh",
+  "tree",
+  "until",
+  "wget",
+  "while",
+  "xargs",
+]);
+const BENCHMARK_PREPARATION_EXECUTABLE_PATHS = new Set([
+  "/bin/bash",
+  "/bin/sh",
+  "/usr/bin/env",
+  "/usr/bin/node",
+]);
+const BENCHMARK_PREPARATION_PATH_KEYS = new Set([
+  "cwd",
+  "directory",
+  "destination",
+  "file",
+  "file_path",
+  "filePath",
+  "filename",
+  "inputPath",
+  "path",
+  "paths",
+  "root",
+  "source",
+  "target",
+  "uri",
+  "working_directory",
+  "workingDirectory",
+]);
+const BENCHMARK_PREPARATION_SHELL_OPERATORS = new Set([
+  ";",
+  "&&",
+  "||",
+  "|",
+  "&",
+  "(",
+  ")",
+  "{",
+  "}",
+]);
+
+type BenchmarkPreparationEventValidationInput = Readonly<{
+  readonly eventPath: string;
+  readonly scratch: string;
+  readonly namedInputs: readonly string[];
+}>;
+
+function scratchNamedFiles(root: string): readonly string[] {
+  const files: string[] = [];
+  const visit = (directory: string): void => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = resolve(directory, entry.name);
+      if (entry.isSymbolicLink()) continue;
+      if (entry.isDirectory()) visit(path);
+      else if (entry.isFile()) files.push(relative(root, path));
+    }
+  };
+  visit(root);
+  return files;
+}
+
+function shellTokens(command: string): readonly string[] {
+  const tokens: string[] = [];
+  let current = "";
+  let quote: "'" | '"' | undefined;
+  let escaped = false;
+  const flush = (): void => {
+    if (current.length > 0) tokens.push(current);
+    current = "";
+  };
+  for (const character of command) {
+    if (escaped) {
+      current += character;
+      escaped = false;
+      continue;
+    }
+    if (character === "\\" && quote !== "'") {
+      escaped = true;
+      continue;
+    }
+    if (quote !== undefined) {
+      if (character === quote) quote = undefined;
+      else current += character;
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+      continue;
+    }
+    if (/\s/.test(character)) {
+      flush();
+      continue;
+    }
+    if (character === ";" || character === "|" || character === "&") {
+      flush();
+      const previous = tokens.at(-1);
+      if ((character === "&" || character === "|") && previous === character) {
+        tokens[tokens.length - 1] = character + character;
+      } else {
+        tokens.push(character);
+      }
+      continue;
+    }
+    if (character === "(" || character === ")" || character === "{") {
+      flush();
+      tokens.push(character);
+      continue;
+    }
+    if (character === "}") {
+      flush();
+      tokens.push(character);
+      continue;
+    }
+    current += character;
+  }
+  if (escaped) current += "\\";
+  flush();
+  return tokens;
+}
+
+function shellCommandStreams(command: string): readonly (readonly string[])[] {
+  const root = shellTokens(command);
+  const streams: (readonly string[])[] = [root];
+  for (let index = 0; index < root.length - 1; index += 1) {
+    if (root[index] !== "-c" && root[index] !== "-lc") continue;
+    const nested = root[index + 1];
+    if (nested !== undefined) streams.push(shellTokens(nested));
+  }
+  return streams;
+}
+
+function pathWithinScratch(
+  scratch: string,
+  candidate: string,
+  namedInputs: ReadonlySet<string>,
+): boolean {
+  if (candidate.includes("\0") || candidate.startsWith("~")) return false;
+  if (/^(?:https?|file):\/\//.test(candidate)) return false;
+  const root = resolve(scratch);
+  const absolute = isAbsolute(candidate)
+    ? resolve(candidate)
+    : resolve(root, candidate);
+  const fromRoot = relative(root, absolute);
+  if (
+    fromRoot === ".." ||
+    fromRoot.startsWith(`..${sep}`) ||
+    isAbsolute(fromRoot)
+  ) {
+    return false;
+  }
+  if (fromRoot === "") return true;
+  if (namedInputs.has(fromRoot)) return true;
+  return [...namedInputs].some((path) => path.startsWith(`${fromRoot}${sep}`));
+}
+
+function namedScratchFile(
+  scratch: string,
+  candidate: string,
+  namedInputs: ReadonlySet<string>,
+): boolean {
+  const root = resolve(scratch);
+  const absolute = isAbsolute(candidate)
+    ? resolve(candidate)
+    : resolve(root, candidate);
+  return namedInputs.has(relative(root, absolute));
+}
+
+function pathCandidates(value: string): readonly string[] {
+  const candidates: string[] = [];
+  const pathPattern =
+    /(?:^|[\s"'=])((?:\.{1,2}\/|~\/|\/|(?:[A-Za-z0-9_.-]+\/)+)[^\s"';&|()<>`]*)/g;
+  for (const match of value.matchAll(pathPattern)) {
+    const candidate = match[1];
+    if (candidate !== undefined) candidates.push(candidate);
+  }
+  return candidates;
+}
+
+function fileNameCandidates(value: string): readonly string[] {
+  const candidates: string[] = [];
+  const filePattern =
+    /\b[A-Za-z0-9_.-]+\.(?:d\.ts|jsonl?|md|ts|tsx|js|mjs|txt|yaml|yml)\b/g;
+  for (const match of value.matchAll(filePattern)) {
+    const candidate = match[0];
+    if (candidate !== undefined) candidates.push(candidate);
+  }
+  return candidates;
+}
+
+function validateCommandPath(
+  value: string,
+  input: BenchmarkPreparationEventValidationInput,
+): string | undefined {
+  if (value.includes("\0")) return "command contains a NUL byte";
+  if (value.includes("$(") || value.includes("`") || value.includes("${")) {
+    return "command uses indirect shell expansion";
+  }
+  const namedInputs = new Set(
+    input.namedInputs.map((path) =>
+      relative(resolve(input.scratch), resolve(path)),
+    ),
+  );
+  for (const candidate of pathCandidates(value)) {
+    if (BENCHMARK_PREPARATION_EXECUTABLE_PATHS.has(candidate)) continue;
+    if (!pathWithinScratch(input.scratch, candidate, namedInputs)) {
+      return `command references path outside scratch: ${candidate}`;
+    }
+  }
+  for (const candidate of fileNameCandidates(value)) {
+    if (candidate.includes("/")) continue;
+    if (!pathWithinScratch(input.scratch, candidate, namedInputs)) {
+      return `command references unnamed file: ${candidate}`;
+    }
+  }
+  return undefined;
+}
+
+function commandName(segment: readonly string[]): string | undefined {
+  for (const token of segment) {
+    if (BENCHMARK_PREPARATION_SHELL_OPERATORS.has(token)) return undefined;
+    if (/^[A-Za-z_][A-Za-z0-9_]*=.*/.test(token)) continue;
+    if (token.startsWith("-")) continue;
+    return token.split("/").at(-1);
+  }
+  return undefined;
+}
+
+function validatePreparationCommand(
+  command: string,
+  input: BenchmarkPreparationEventValidationInput,
+): string | undefined {
+  const pathIssue = validateCommandPath(command, input);
+  if (pathIssue !== undefined) return pathIssue;
+  for (const tokens of shellCommandStreams(command)) {
+    let segment: string[] = [];
+    const segments = [...tokens, ";"];
+    const inspect = (current: readonly string[]): string | undefined => {
+      const name = commandName(current);
+      if (name === undefined) return undefined;
+      if (BENCHMARK_PREPARATION_FORBIDDEN_COMMANDS.has(name)) {
+        return `preparation command is not isolated: ${name}`;
+      }
+      if (name === "rg" && current.some((token) => token === "--files")) {
+        return "preparation command cannot enumerate scratch files";
+      }
+      if (
+        name === "rg" &&
+        !current
+          .slice(1)
+          .some((token) =>
+            namedScratchFile(
+              input.scratch,
+              token,
+              new Set(
+                input.namedInputs.map((path) =>
+                  relative(resolve(input.scratch), resolve(path)),
+                ),
+              ),
+            ),
+          )
+      ) {
+        return "search command must name a scratch input";
+      }
+      if (name === "ls")
+        return "preparation command cannot enumerate scratch files";
+      if (
+        name === "node" &&
+        current.some((token) =>
+          /(?:readdir|opendir|glob|fast-glob|walk|recursive)/i.test(token),
+        )
+      ) {
+        return "node command attempts scratch enumeration";
+      }
+      return undefined;
+    };
+    for (const token of segments) {
+      if (BENCHMARK_PREPARATION_SHELL_OPERATORS.has(token)) {
+        const issue = inspect(segment);
+        if (issue !== undefined) return issue;
+        segment = [];
+      } else segment.push(token);
+    }
+  }
+  return undefined;
+}
+
+function validatePreparationStructuredPath(
+  value: string,
+  input: BenchmarkPreparationEventValidationInput,
+): string | undefined {
+  const namedInputs = new Set(
+    input.namedInputs.map((path) =>
+      relative(resolve(input.scratch), resolve(path)),
+    ),
+  );
+  return pathWithinScratch(input.scratch, value, namedInputs)
+    ? undefined
+    : `tool references path outside scratch: ${value}`;
+}
+
+function validatePreparationEventItem(
+  item: Readonly<Record<string, unknown>>,
+  input: BenchmarkPreparationEventValidationInput,
+): string | undefined {
+  const type = item.type;
+  if (typeof type !== "string") return "event item has no type";
+  if (type === "command_execution") {
+    if (typeof item.command !== "string")
+      return "command execution has no structured command";
+    const commandIssue = validatePreparationCommand(item.command, input);
+    if (commandIssue !== undefined) return commandIssue;
+    if (typeof item.cwd === "string") {
+      const cwdIssue = validatePreparationStructuredPath(item.cwd, input);
+      if (cwdIssue !== undefined) return cwdIssue;
+    }
+    return undefined;
+  }
+  if (BENCHMARK_PREPARATION_SAFE_ITEM_TYPES.has(type)) return undefined;
+  if (
+    type === "file_read" ||
+    type === "file_search" ||
+    type === "search" ||
+    type === "file_change" ||
+    type === "apply_patch"
+  ) {
+    return undefined;
+  }
+  return `preparation event uses an unsupported tool item: ${type}`;
+}
+
+function validatePreparationEventValue(
+  value: unknown,
+  input: BenchmarkPreparationEventValidationInput,
+  key?: string,
+): string | undefined {
+  if (typeof value === "string") {
+    if (key === "command") return validatePreparationCommand(value, input);
+    if (key !== undefined && BENCHMARK_PREPARATION_PATH_KEYS.has(key)) {
+      return validatePreparationStructuredPath(value, input);
+    }
+    return undefined;
+  }
+  if (Array.isArray(value)) {
+    for (const child of value) {
+      const issue = validatePreparationEventValue(child, input, key);
+      if (issue !== undefined) return issue;
+    }
+    return undefined;
+  }
+  if (typeof value !== "object" || value === null) return undefined;
+  for (const [childKey, child] of Object.entries(value)) {
+    if (childKey === "aggregated_output" || childKey === "text") continue;
+    const issue = validatePreparationEventValue(child, input, childKey);
+    if (issue !== undefined) return issue;
+  }
+  return undefined;
+}
+
+/**
+ * Validate first-party preparation telemetry as an execution boundary. Model
+ * prose is intentionally ignored; only structured tool items and path-bearing
+ * fields can make this check fail.
+ */
+export function validateBenchmarkPreparationEventStream(
+  input: BenchmarkPreparationEventValidationInput,
+): Either.Either<void, string> {
+  const parsed = readCodexEvents(input.eventPath);
+  if (parsed.tag === "invalid") return Either.left(parsed.message);
+  for (const [index, event] of parsed.events.entries()) {
+    if (typeof event !== "object" || event === null || Array.isArray(event)) {
+      continue;
+    }
+    const record = event as Readonly<Record<string, unknown>>;
+    if (record.type === "item.started" || record.type === "item.completed") {
+      if (typeof record.item !== "object" || record.item === null) {
+        return Either.left(
+          `Preparation event line ${String(index + 1)} has no item.`,
+        );
+      }
+      const itemIssue = validatePreparationEventItem(
+        record.item as Readonly<Record<string, unknown>>,
+        input,
+      );
+      if (itemIssue !== undefined) {
+        return Either.left(
+          `Preparation event line ${String(index + 1)}: ${itemIssue}`,
+        );
+      }
+    }
+    const issue = validatePreparationEventValue(record, input);
+    if (issue !== undefined) {
+      return Either.left(
+        `Preparation event line ${String(index + 1)}: ${issue}`,
+      );
+    }
+  }
+  return Either.right(undefined);
+}
+
+function assertBenchmarkPreparationEventStream(
+  input: BenchmarkPreparationEventValidationInput,
+): void {
+  const validation = validateBenchmarkPreparationEventStream(input);
+  if (Either.isLeft(validation)) fail(validation.left);
+}
+
 type StructuredCallResult<A> = Readonly<{
   readonly value: A;
   readonly eventPath: string;
@@ -550,6 +976,10 @@ function runStructuredCall<A, I>(input: {
   );
   const events = eventPath(input.profilePaths, input.ordinal, input.phase);
   writeJsonExclusive(schemaPath, codexOutputJsonSchema(input.schema));
+  const namedInputs = [
+    ...scratchNamedFiles(scratch).map((path) => resolve(scratch, path)),
+    outputPath,
+  ];
   try {
     const result = runCodexInvocation({
       args: fixedBenchmarkCodexArgs(
@@ -574,6 +1004,11 @@ function runStructuredCall<A, I>(input: {
         input.scenarioId + "-" + input.phase + "-" + String(input.ordinal),
       model: input.model,
       reasoningEffort: input.reasoningEffort,
+    });
+    assertBenchmarkPreparationEventStream({
+      eventPath: events,
+      scratch,
+      namedInputs,
     });
     if (result.error !== undefined) throw result.error;
     if (result.signal !== null) fail("Codex stopped by " + result.signal + ".");
@@ -669,6 +1104,10 @@ function runAuxiliaryStructuredCall<A, I>(input: {
   );
   const events = eventPath(input.profilePaths, input.ordinal, input.kind.phase);
   writeJsonExclusive(schemaPath, codexOutputJsonSchema(input.schema));
+  const namedInputs = [
+    ...scratchNamedFiles(scratch).map((path) => resolve(scratch, path)),
+    outputPath,
+  ];
   const execution =
     input.kind.responsibility === "scenarioQuality"
       ? { model: "gpt-5.6-luna", reasoningEffort: "max" }
@@ -700,6 +1139,11 @@ function runAuxiliaryStructuredCall<A, I>(input: {
         input.scenarioId + "-" + input.kind.phase + "-" + String(input.ordinal),
       model: execution.model,
       reasoningEffort: execution.reasoningEffort,
+    });
+    assertBenchmarkPreparationEventStream({
+      eventPath: events,
+      scratch,
+      namedInputs,
     });
     if (Either.isLeft(result)) fail(result.left);
     if (result.right.error !== undefined) throw result.right.error;
@@ -802,6 +1246,10 @@ function reviewPrompt(
     profile === "documentDeclarationSet"
       ? "raw, contentAvailability, sdkCapability, and artifactPolicy"
       : "raw, contentAvailability, sdkCapability, artifactPolicy, and scenarioQuality";
+  const responsibility =
+    stage === "milestone"
+      ? "This is the initial admission authority, before any profile-specific auxiliary preparation."
+      : "This is the final admission authority, after profile-specific review work and immediately before source preparation; independently re-establish every classification.";
   return (
     "Read the exact delivered context at " +
     contextPath +
@@ -811,7 +1259,9 @@ function reviewPrompt(
     stage +
     " stage. Return only JSON with exactly these independent fields: " +
     fields +
-    ". Do not rewrite prose, choose tactics, or predict an outcome. The scenario authority is " +
+    ". " +
+    responsibility +
+    " Do not rewrite prose, choose tactics, or predict an outcome. The scenario authority is " +
     repoRelative(bundle.paths.scenario) +
     " with SHA-256 " +
     bundle.authorities.scenario.sha256 +
@@ -987,6 +1437,9 @@ function characterSourceCall(input: {
       input.ordinal,
       "scenarioCharacterAuthoring",
     );
+    const namedInputs = scratchNamedFiles(scratch).map((path) =>
+      resolve(scratch, path),
+    );
     const result = runBenchmarkAuxiliaryInvocation({
       args: fixedBenchmarkCodexArgs(
         scratch,
@@ -1021,6 +1474,11 @@ function characterSourceCall(input: {
         FIXED_SCENARIO_ID + "-redundant-character-" + String(input.ordinal),
       model: "gpt-5.6-sol",
       reasoningEffort: "medium",
+    });
+    assertBenchmarkPreparationEventStream({
+      eventPath: events,
+      scratch,
+      namedInputs,
     });
     if (Either.isLeft(result)) fail(result.left);
     if (result.right.status !== 0)
@@ -1081,6 +1539,9 @@ function setupSourceCalls(input: {
       resolve(scratch, "NEUTRAL_SETUP.ts"),
       readFileSync(input.bundle.paths.setup),
     );
+    const namedInputs = scratchNamedFiles(scratch).map((path) =>
+      resolve(scratch, path),
+    );
     const run = (
       ordinal: number,
       phase:
@@ -1115,6 +1576,11 @@ function setupSourceCalls(input: {
         fallbackInvocationId: FIXED_SCENARIO_ID + "-" + phase,
         model: "gpt-5.6-sol",
         reasoningEffort: "medium",
+      });
+      assertBenchmarkPreparationEventStream({
+        eventPath: events,
+        scratch,
+        namedInputs,
       });
       if (result.status !== 0) fail(phase + " authoring failed.");
       appendCopiedLedgerEntry(
@@ -1279,6 +1745,10 @@ async function prepareProfile(input: {
     }
   }
   const reviewContext = resolve(paths.contextDirectory, "scenarioReview.md");
+  // Both composite reviews are retained deliberately: milestone is the first
+  // pre-preparation admission authority, while final is the last independent
+  // authority before source preparation. The comparison validator requires the
+  // ordered pair so either timing boundary cannot be silently omitted.
   const milestone = runCompositeReviewCall({
     profilePaths: paths,
     ordinal: 3,

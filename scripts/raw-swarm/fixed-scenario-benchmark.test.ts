@@ -25,6 +25,7 @@ import {
   fixedScenarioCanonicalBundle,
   initializeFixedBenchmarkProfileDirectory,
   retainBenchmarkReviewReplayEvents,
+  validateBenchmarkPreparationEventStream,
   validateBenchmarkReviewAuthority,
 } from "./fixed-scenario-benchmark.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
@@ -106,6 +107,162 @@ describe("fixed scenario benchmark boundary", () => {
       ).toThrow();
     } finally {
       rmSync(temporaryRoot, { recursive: true });
+    }
+  });
+
+  test("accepts structured preparation commands confined to named scratch inputs", () => {
+    const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
+    const eventPath = resolve(scratch, "events.jsonl");
+    const contextPath = resolve(scratch, "BENCHMARK_CONTEXT.md");
+    try {
+      writeFileSync(contextPath, "synthetic context\n");
+      writeFileSync(
+        eventPath,
+        JSON.stringify({
+          type: "item.started",
+          item: {
+            id: "item_1",
+            type: "command_execution",
+            command: `/bin/bash -lc "sed -n '1,20p' ${contextPath}"`,
+          },
+        }) +
+          "\n" +
+          JSON.stringify({
+            type: "item.completed",
+            item: {
+              id: "item_1",
+              type: "command_execution",
+              command: `/bin/bash -lc "sha256sum ${contextPath}"`,
+              aggregated_output: "",
+            },
+          }) +
+          "\n" +
+          JSON.stringify({
+            type: "item.completed",
+            item: {
+              id: "item_2",
+              type: "agent_message",
+              text: `The model's prose may mention ${resolve("/outside")}.`,
+            },
+          }) +
+          "\n",
+      );
+
+      expect(
+        validateBenchmarkPreparationEventStream({
+          eventPath,
+          scratch,
+          namedInputs: [contextPath],
+        }),
+      ).toEqual(Either.right(undefined));
+    } finally {
+      rmSync(scratch, { recursive: true });
+    }
+  });
+
+  test.each([
+    [
+      "an absolute repository path",
+      (scratch: string) =>
+        `/bin/bash -lc "sed -n '1,20p' ${resolve(scratch, "../repository/SCENARIO.md")}"`,
+    ],
+    ["a parent traversal", () => "/bin/bash -lc 'cat ../SCENARIO.md'"],
+    [
+      "an unfiltered file enumeration",
+      () => "/bin/bash -lc 'rg --files -g BENCHMARK_CONTEXT.md'",
+    ],
+    [
+      "a directory search beyond named inputs",
+      () => "/bin/bash -lc 'rg -n context .'",
+    ],
+    ["a directory listing", () => "/bin/bash -lc 'ls -la .'"],
+  ])(
+    "rejects preparation event streams that attempt %s",
+    (_label, commandFactory) => {
+      const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
+      const eventPath = resolve(scratch, "events.jsonl");
+      const contextPath = resolve(scratch, "BENCHMARK_CONTEXT.md");
+      try {
+        writeFileSync(contextPath, "synthetic context\n");
+        writeFileSync(
+          eventPath,
+          JSON.stringify({
+            type: "item.started",
+            item: {
+              id: "item_1",
+              type: "command_execution",
+              command: commandFactory(scratch),
+            },
+          }) + "\n",
+        );
+
+        const validation = validateBenchmarkPreparationEventStream({
+          eventPath,
+          scratch,
+          namedInputs: [contextPath],
+        });
+        expect(Either.isLeft(validation)).toBe(true);
+      } finally {
+        rmSync(scratch, { recursive: true });
+      }
+    },
+  );
+
+  test("rejects structured reads and external tools while retaining prose-only results", () => {
+    const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
+    const eventPath = resolve(scratch, "events.jsonl");
+    const contextPath = resolve(scratch, "BENCHMARK_CONTEXT.md");
+    try {
+      writeFileSync(contextPath, "synthetic context\n");
+      writeFileSync(
+        eventPath,
+        [
+          {
+            type: "item.completed",
+            item: {
+              id: "item_1",
+              type: "file_read",
+              path: "/workspace/typescript/dnd/AGENTS.md",
+            },
+          },
+          {
+            type: "item.completed",
+            item: {
+              id: "item_2",
+              type: "agent_message",
+              text: "The structured result is complete.",
+            },
+          },
+        ]
+          .map((event) => JSON.stringify(event))
+          .join("\n") + "\n",
+      );
+
+      const validation = validateBenchmarkPreparationEventStream({
+        eventPath,
+        scratch,
+        namedInputs: [contextPath],
+      });
+      expect(Either.isLeft(validation)).toBe(true);
+
+      writeFileSync(
+        eventPath,
+        JSON.stringify({
+          type: "item.completed",
+          item: { id: "item_1", type: "mcp_tool_call", name: "search" },
+        }) + "\n",
+      );
+      expect(
+        Either.isLeft(
+          validateBenchmarkPreparationEventStream({
+            eventPath,
+            scratch,
+            namedInputs: [contextPath],
+          }),
+        ),
+      ).toBe(true);
+    } finally {
+      rmSync(scratch, { recursive: true });
     }
   });
 
