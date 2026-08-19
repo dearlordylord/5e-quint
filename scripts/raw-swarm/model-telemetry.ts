@@ -30,6 +30,18 @@ export const MODEL_INVOCATION_PHASES = [
 ] as const;
 export type ModelInvocationPhase = (typeof MODEL_INVOCATION_PHASES)[number];
 
+/**
+ * A benchmark can retain historical auxiliary work without making that work
+ * part of the production v2 stage vocabulary.  The benchmark parser below is
+ * the only boundary that accepts these additional phases.
+ */
+export const BENCHMARK_MODEL_INVOCATION_PHASES = [
+  ...MODEL_INVOCATION_PHASES,
+  "scenarioReadiness",
+] as const;
+export type BenchmarkModelInvocationPhase =
+  (typeof BENCHMARK_MODEL_INVOCATION_PHASES)[number];
+
 /** v1 retained evidence may still name the removed readiness invocation. */
 export const HISTORICAL_MODEL_INVOCATION_PHASES = [
   "scenarioGeneration",
@@ -222,6 +234,94 @@ export const ModelInvocationCompletedEventSchema = Schema.Union(
   ModelInvocationCompletedEventV2Schema,
 );
 
+const BenchmarkAuxiliaryInvocationCommonFields = {
+  schemaVersion: Schema.Literal(3),
+  profile: Schema.Literal("documentDeclarationSet"),
+  scenarioId: ScenarioIdSchema,
+  gitSha: GitShaSchema,
+  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  stagePlanReason: Schema.NonEmptyTrimmedString,
+  invocationId: Schema.NonEmptyString,
+  model: Schema.NonEmptyString,
+  reasoningEffort: Schema.NonEmptyString,
+  startedAt: Schema.NonEmptyString,
+  elapsedMilliseconds: NonNegativeIntegerSchema,
+  exit: ModelInvocationExitSchema,
+  result: ModelInvocationResultSchema,
+  usage: ModelUsageSchema,
+} as const;
+
+/**
+ * Benchmark-only rows preserve work that the current stage plan deliberately
+ * omits.  The responsibility/phase pairing is closed so readiness cannot be
+ * relabeled as composite review and character declarations cannot satisfy the
+ * canonical Character Sheet stage.
+ */
+export const BenchmarkAuxiliaryModelInvocationLedgerEntrySchema = Schema.Union(
+  Schema.Struct({
+    ...BenchmarkAuxiliaryInvocationCommonFields,
+    responsibility: Schema.Literal("scenarioQuality"),
+    phase: Schema.Literal("scenarioReadiness"),
+  }),
+  Schema.Struct({
+    ...BenchmarkAuxiliaryInvocationCommonFields,
+    responsibility: Schema.Literal("redundantCharacterPreparation"),
+    phase: Schema.Literal("scenarioCharacterAuthoring"),
+  }),
+).pipe(
+  Schema.filter(invocationResultMatchesExit, {
+    message: () => "Invocation result must agree with its exit status.",
+  }),
+);
+export type BenchmarkAuxiliaryModelInvocationLedgerEntry = Schema.Schema.Type<
+  typeof BenchmarkAuxiliaryModelInvocationLedgerEntrySchema
+>;
+
+const BenchmarkAuxiliaryInvocationStartedEventCommonFields = {
+  type: Schema.Literal("raw-swarm.invocation.started"),
+  schemaVersion: Schema.Literal(3),
+  profile: Schema.Literal("documentDeclarationSet"),
+  scenarioId: ScenarioIdSchema,
+  gitSha: GitShaSchema,
+  stagePlanReason: Schema.NonEmptyTrimmedString,
+  fallbackInvocationId: Schema.NonEmptyString,
+  model: Schema.NonEmptyString,
+  reasoningEffort: Schema.NonEmptyString,
+  startedAt: Schema.NonEmptyString,
+} as const;
+
+const BenchmarkAuxiliaryInvocationStartedEventSchema = Schema.Union(
+  Schema.Struct({
+    ...BenchmarkAuxiliaryInvocationStartedEventCommonFields,
+    responsibility: Schema.Literal("scenarioQuality"),
+    phase: Schema.Literal("scenarioReadiness"),
+  }),
+  Schema.Struct({
+    ...BenchmarkAuxiliaryInvocationStartedEventCommonFields,
+    responsibility: Schema.Literal("redundantCharacterPreparation"),
+    phase: Schema.Literal("scenarioCharacterAuthoring"),
+  }),
+);
+
+const BenchmarkAuxiliaryInvocationCompletedEventSchema = Schema.Struct({
+  type: Schema.Literal("raw-swarm.invocation.completed"),
+  schemaVersion: Schema.Literal(3),
+  elapsedMilliseconds: NonNegativeIntegerSchema,
+  exit: ModelInvocationExitSchema,
+  result: ModelInvocationResultSchema,
+}).pipe(
+  Schema.filter(invocationResultMatchesExit, {
+    message: () => "Invocation result must agree with its exit status.",
+  }),
+);
+
+type BenchmarkAuxiliaryInvocationStartedEvent = Schema.Schema.Type<
+  typeof BenchmarkAuxiliaryInvocationStartedEventSchema
+>;
+type BenchmarkAuxiliaryInvocationCompletedEvent = Schema.Schema.Type<
+  typeof BenchmarkAuxiliaryInvocationCompletedEventSchema
+>;
+
 type ModelInvocationStartedEvent = Schema.Schema.Type<
   typeof ModelInvocationStartedEventSchema
 >;
@@ -253,6 +353,18 @@ export function parseModelInvocationLedgerEntry(
   return Schema.decodeUnknownEither(ModelInvocationLedgerEntrySchema, {
     onExcessProperty: "error",
   })(value);
+}
+
+export function parseBenchmarkModelInvocationLedgerEntry(
+  value: unknown,
+): Either.Either<
+  BenchmarkAuxiliaryModelInvocationLedgerEntry,
+  ParseResult.ParseError
+> {
+  return Schema.decodeUnknownEither(
+    BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
+    { onExcessProperty: "error" },
+  )(value);
 }
 
 function nonNegativeInteger(value: unknown): number | undefined {
@@ -520,6 +632,75 @@ export function modelInvocationEvidenceFromEvents(
   };
 }
 
+export function benchmarkModelInvocationEvidenceFromEvents(
+  events: readonly unknown[],
+):
+  | {
+      readonly tag: "valid";
+      readonly entry: Omit<
+        BenchmarkAuxiliaryModelInvocationLedgerEntry,
+        "eventsSha256"
+      >;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const started = decodedInvocationEvents(
+    BenchmarkAuxiliaryInvocationStartedEventSchema,
+    "raw-swarm.invocation.started",
+    events,
+  );
+  if (started.tag === "invalid") return started;
+  const completed = decodedInvocationEvents(
+    BenchmarkAuxiliaryInvocationCompletedEventSchema,
+    "raw-swarm.invocation.completed",
+    events,
+  );
+  if (completed.tag === "invalid") return completed;
+  if (
+    started.events.length !== 1 ||
+    completed.events.length !== 1 ||
+    started.events[0]!.index >= completed.events[0]!.index
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Benchmark invocation events require one ordered runner start and completion record.",
+    };
+  }
+  const start: BenchmarkAuxiliaryInvocationStartedEvent =
+    started.events[0]!.value;
+  const completion: BenchmarkAuxiliaryInvocationCompletedEvent =
+    completed.events[0]!.value;
+  if (!Number.isFinite(Date.parse(start.startedAt))) {
+    return {
+      tag: "invalid",
+      message: "Benchmark invocation start time is not an ISO timestamp.",
+    };
+  }
+  return {
+    tag: "valid",
+    entry: {
+      schemaVersion: 3,
+      profile: start.profile,
+      responsibility: start.responsibility,
+      scenarioId: start.scenarioId,
+      gitSha: start.gitSha,
+      phase: start.phase,
+      stagePlanReason: start.stagePlanReason,
+      invocationId: invocationIdFromCodexEvents(
+        events,
+        start.fallbackInvocationId,
+      ),
+      model: start.model,
+      reasoningEffort: start.reasoningEffort,
+      startedAt: start.startedAt,
+      elapsedMilliseconds: completion.elapsedMilliseconds,
+      exit: completion.exit,
+      result: completion.result,
+      usage: modelUsageFromCodexEvents(events),
+    },
+  };
+}
+
 export function modelInvocationStartedEvent(
   input: ModelInvocationEventInput,
 ): Either.Either<ModelInvocationStartedEvent, ParseResult.ParseError> {
@@ -528,6 +709,31 @@ export function modelInvocationStartedEvent(
   })({
     type: "raw-swarm.invocation.started",
     schemaVersion: 2,
+    ...input,
+  });
+}
+
+export function benchmarkModelInvocationStartedEvent(input: {
+  readonly scenarioId: unknown;
+  readonly gitSha: unknown;
+  readonly profile: unknown;
+  readonly responsibility: unknown;
+  readonly phase: unknown;
+  readonly stagePlanReason: unknown;
+  readonly fallbackInvocationId: unknown;
+  readonly model: unknown;
+  readonly reasoningEffort: unknown;
+  readonly startedAt: unknown;
+}): Either.Either<
+  BenchmarkAuxiliaryInvocationStartedEvent,
+  ParseResult.ParseError
+> {
+  return Schema.decodeUnknownEither(
+    BenchmarkAuxiliaryInvocationStartedEventSchema,
+    { onExcessProperty: "error" },
+  )({
+    type: "raw-swarm.invocation.started",
+    schemaVersion: 3,
     ...input,
   });
 }
@@ -542,6 +748,24 @@ export function modelInvocationCompletedEvent(input: {
   })({
     type: "raw-swarm.invocation.completed",
     schemaVersion: 2,
+    ...input,
+  });
+}
+
+export function benchmarkModelInvocationCompletedEvent(input: {
+  readonly elapsedMilliseconds: unknown;
+  readonly exit: unknown;
+  readonly result: unknown;
+}): Either.Either<
+  BenchmarkAuxiliaryInvocationCompletedEvent,
+  ParseResult.ParseError
+> {
+  return Schema.decodeUnknownEither(
+    BenchmarkAuxiliaryInvocationCompletedEventSchema,
+    { onExcessProperty: "error" },
+  )({
+    type: "raw-swarm.invocation.completed",
+    schemaVersion: 3,
     ...input,
   });
 }

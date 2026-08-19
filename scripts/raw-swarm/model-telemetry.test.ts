@@ -5,11 +5,15 @@ import { Either, Schema } from "effect";
 import {
   codexInvocationMetadataMatchesArgs,
   codexJsonArgs,
+  benchmarkModelInvocationCompletedEvent,
+  benchmarkModelInvocationEvidenceFromEvents,
+  benchmarkModelInvocationStartedEvent,
   modelInvocationCompletedEvent,
   modelInvocationEvidenceFromEvents,
   modelInvocationStartedEvent,
   modelUsageFromCodexEvents,
   parseModelInvocationLedgerEntry,
+  parseBenchmarkModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
 import { GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
 
@@ -429,5 +433,106 @@ describe("Raw Swarm model invocation telemetry", () => {
         exit: { tag: "exited", status: "not-a-number" },
       }),
     ).toMatchObject({ _tag: "Left" });
+  });
+
+  test("keeps benchmark auxiliary responsibilities outside production v2", () => {
+    const readiness = {
+      schemaVersion: 3,
+      profile: "documentDeclarationSet",
+      responsibility: "scenarioQuality",
+      phase: "scenarioReadiness",
+      scenarioId: "scenario",
+      gitSha: "a".repeat(40),
+      eventsSha256: "b".repeat(64),
+      stagePlanReason: "The benchmark retained the historical quality pass.",
+      invocationId: "readiness",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt: "2026-08-14T00:00:00.000Z",
+      elapsedMilliseconds: 5,
+      exit: { tag: "exited", status: 0 },
+      result: { tag: "succeeded" },
+      usage: { tag: "unavailable", reason: "historical event stream" },
+    } as const;
+    expect(Either.isLeft(parseModelInvocationLedgerEntry(readiness))).toBe(
+      true,
+    );
+    const parsed = parseBenchmarkModelInvocationLedgerEntry(readiness);
+    expect(Either.isRight(parsed)).toBe(true);
+    if (Either.isLeft(parsed)) return;
+    expect(parsed.right).toMatchObject({
+      schemaVersion: 3,
+      profile: "documentDeclarationSet",
+      responsibility: "scenarioQuality",
+      phase: "scenarioReadiness",
+      result: { tag: "succeeded" },
+    });
+
+    const character = {
+      ...readiness,
+      responsibility: "redundantCharacterPreparation" as const,
+      phase: "scenarioCharacterAuthoring" as const,
+      invocationId: "character-authoring-1",
+    };
+    expect(parseBenchmarkModelInvocationLedgerEntry(character)).toMatchObject({
+      _tag: "Right",
+      right: {
+        responsibility: "redundantCharacterPreparation",
+        phase: "scenarioCharacterAuthoring",
+      },
+    });
+  });
+
+  test("derives benchmark auxiliary result and identity from schema-3 events", () => {
+    const started = benchmarkModelInvocationStartedEvent({
+      scenarioId: "scenario",
+      gitSha: "a".repeat(40),
+      profile: "documentDeclarationSet",
+      responsibility: "redundantCharacterPreparation",
+      phase: "scenarioCharacterAuthoring",
+      stagePlanReason: "The baseline retained document declarations.",
+      fallbackInvocationId: "fallback",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt: "2026-08-14T00:00:00.000Z",
+    });
+    const completed = benchmarkModelInvocationCompletedEvent({
+      elapsedMilliseconds: 123,
+      exit: { tag: "exited", status: 0 },
+      result: { tag: "succeeded" },
+    });
+    expect(Either.isRight(started)).toBe(true);
+    expect(Either.isRight(completed)).toBe(true);
+    if (Either.isLeft(started) || Either.isLeft(completed)) return;
+    const evidence = benchmarkModelInvocationEvidenceFromEvents([
+      started.right,
+      { type: "thread.started", thread_id: "benchmark-thread" },
+      {
+        type: "turn.completed",
+        usage: {
+          input_tokens: 10,
+          cached_input_tokens: 2,
+          cache_write_input_tokens: 0,
+          output_tokens: 3,
+          reasoning_output_tokens: 1,
+        },
+      },
+      completed.right,
+    ]);
+    expect(
+      modelInvocationEvidenceFromEvents([started.right, completed.right]),
+    ).toMatchObject({ tag: "invalid" });
+    expect(evidence).toMatchObject({
+      tag: "valid",
+      entry: {
+        schemaVersion: 3,
+        profile: "documentDeclarationSet",
+        responsibility: "redundantCharacterPreparation",
+        phase: "scenarioCharacterAuthoring",
+        invocationId: "benchmark-thread",
+        result: { tag: "succeeded" },
+        usage: { tag: "available", input: { count: 10 } },
+      },
+    });
   });
 });

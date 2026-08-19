@@ -10,6 +10,7 @@ import {
   codexOutputJsonSchema,
   CurrentScenarioCompositeReviewSchema,
   compareCompleteEquivalentPaths,
+  parseBenchmarkMeasurement,
   parseCompletePathMeasurement,
   readCompletePathMeasurement,
   validateCompletePathMeasurement,
@@ -17,8 +18,14 @@ import {
   writeCompletePathMeasurement,
   type CurrentCompletePathMeasurement,
   type CompletePathMeasurement,
+  type CurrentBenchmarkMeasurement,
   type ValidatedCompletePathMeasurement,
 } from "./performance-comparison.ts";
+import {
+  benchmarkModelInvocationCompletedEvent,
+  benchmarkModelInvocationStartedEvent,
+  BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
+} from "./model-telemetry.ts";
 import { capabilityContextSizeEstimate } from "./capability-context-size-estimate.ts";
 import { planAdmittedScenarioStages } from "./scenario-stage-plan.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
@@ -223,6 +230,16 @@ function findingsProjection(
     "replay-supervisor.mjs",
     "export default {};\n",
   );
+  const characterAuthority = writeAuthority(
+    root,
+    "characters.json",
+    `${JSON.stringify(characterSheets)}\n`,
+  );
+  const setupAuthority = writeAuthority(
+    root,
+    "setup.json",
+    `${JSON.stringify(setupObservation)}\n`,
+  );
   const calls = [1, 2].map((seq) => ({
     type: "sdk-call" as const,
     seq,
@@ -244,14 +261,14 @@ function findingsProjection(
     startedAt: "2026-08-14T00:00:00.000Z",
     consumerIsolation: "permissionProfile" as const,
     replaySupervisorSha256: replaySupervisor.sha256,
-    charactersSha256: "e".repeat(64),
+    charactersSha256: characterAuthority.sha256,
     scenarioSha256: scenario.sha256,
     scenarioReviewSha256: scenarioReview.sha256,
     characterOutcome: "ready" as const,
     characterObservation: {},
     characterSheets,
     characterSheetsSha256,
-    setupSha256: "f".repeat(64),
+    setupSha256: setupAuthority.sha256,
     setupOutcome: "ready" as const,
     setupObservation,
     initialSession,
@@ -438,6 +455,90 @@ function retainInvocation(root: string, entry: ReturnType<typeof invocation>) {
   };
 }
 
+function retainBenchmarkAuxiliaryInvocation(
+  root: string,
+  input: {
+    readonly responsibility:
+      | "scenarioQuality"
+      | "redundantCharacterPreparation";
+    readonly phase: "scenarioReadiness" | "scenarioCharacterAuthoring";
+    readonly invocationId: string;
+  },
+) {
+  const stagePlanReason =
+    input.responsibility === "scenarioQuality"
+      ? "The benchmark retained the historical quality pass."
+      : "The benchmark retained redundant character preparation.";
+  const started = benchmarkModelInvocationStartedEvent({
+    scenarioId,
+    gitSha,
+    profile: "documentDeclarationSet",
+    responsibility: input.responsibility,
+    phase: input.phase,
+    stagePlanReason,
+    fallbackInvocationId: input.invocationId,
+    model: "gpt-5.6-sol",
+    reasoningEffort: "medium",
+    startedAt: "2026-08-14T00:00:00.000Z",
+  });
+  const completed = benchmarkModelInvocationCompletedEvent({
+    elapsedMilliseconds: 25,
+    exit: { tag: "exited", status: 0 },
+    result: { tag: "succeeded" },
+  });
+  if (Either.isLeft(started) || Either.isLeft(completed)) {
+    throw new Error("Synthetic benchmark event fixture is invalid.");
+  }
+  const events = [
+    started.right,
+    { type: "thread.started", thread_id: input.invocationId },
+    {
+      type: "turn.completed",
+      usage: {
+        input_tokens: 30,
+        cached_input_tokens: 0,
+        cache_write_input_tokens: 0,
+        output_tokens: 4,
+        reasoning_output_tokens: 1,
+      },
+    },
+    completed.right,
+  ];
+  const authority = writeAuthority(
+    root,
+    `events/${input.invocationId}.benchmark.jsonl`,
+    `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
+  );
+  const parsed = Schema.decodeUnknownSync(
+    BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
+  )({
+    schemaVersion: 3,
+    profile: "documentDeclarationSet",
+    responsibility: input.responsibility,
+    phase: input.phase,
+    scenarioId,
+    gitSha,
+    eventsSha256: authority.sha256,
+    stagePlanReason,
+    invocationId: input.invocationId,
+    model: "gpt-5.6-sol",
+    reasoningEffort: "medium",
+    startedAt: "2026-08-14T00:00:00.000Z",
+    elapsedMilliseconds: 25,
+    exit: { tag: "exited", status: 0 },
+    result: { tag: "succeeded" },
+    usage: {
+      tag: "available",
+      input: { tag: "available", count: 30 },
+      cachedInput: { tag: "available", count: 0 },
+      cacheWriteInput: { tag: "available", count: 0 },
+      output: { tag: "available", count: 4 },
+      reasoningOutput: { tag: "available", count: 1 },
+    },
+  });
+  return { entry: parsed, authority };
+}
+
 function measurement(
   overrides: Partial<CurrentCompletePathMeasurement> = {},
 ): CurrentCompletePathMeasurement {
@@ -521,6 +622,150 @@ function measurement(
     ),
   } satisfies CurrentCompletePathMeasurement;
   return result;
+}
+
+function benchmarkMeasurement(
+  profile: "documentDeclarationSet" | "boundedCapabilityProjection",
+  overrides: Partial<CurrentBenchmarkMeasurement> = {},
+): CurrentBenchmarkMeasurement {
+  const source = measurement();
+  const root = resolve(repoRoot, source.stagePlanAuthority.path, "..");
+  const scenario = source.findings.authorities.find(
+    ({ role }) => role === "scenario",
+  )!;
+  const scenarioReview = source.findings.authorities.find(
+    ({ role }) => role === "scenarioReview",
+  )!;
+  const authorityOnly = ({
+    path,
+    byteLength,
+    sha256,
+  }: (typeof source.findings.authorities)[number]) => ({
+    path,
+    byteLength,
+    sha256,
+  });
+  const scenarioAuthority = authorityOnly(scenario);
+  const scenarioReviewAuthority = authorityOnly(scenarioReview);
+  const stageFacts = writeAuthority(
+    root,
+    "benchmark-stage-facts.json",
+    `${JSON.stringify(source.stagePlan.facts)}\n`,
+  );
+  const stagePlan = writeAuthority(
+    root,
+    "benchmark-stage-plan.json",
+    `${JSON.stringify(source.stagePlan)}\n`,
+  );
+  const characters = writeAuthority(root, "characters.json", "{}\n");
+  const setup = writeAuthority(root, "setup.json", "{}\n");
+  const contextDocument = {
+    schemaVersion: 1,
+    profile,
+    scenarioId,
+    sources: [
+      {
+        role: "scenarioGeneration" as const,
+        sourceKind: "scenarioArtifact" as const,
+        deliveryMode: "artifact" as const,
+        authority: scenarioAuthority,
+      },
+      {
+        role: "scenarioReview" as const,
+        sourceKind: "reviewArtifact" as const,
+        deliveryMode: "artifact" as const,
+        authority: scenarioReviewAuthority,
+      },
+      {
+        role: "characterAuthoring" as const,
+        sourceKind:
+          profile === "documentDeclarationSet"
+            ? ("declarationSet" as const)
+            : ("capabilityProjection" as const),
+        deliveryMode:
+          profile === "documentDeclarationSet"
+            ? ("document" as const)
+            : ("roleProjection" as const),
+        authority: characters,
+      },
+      {
+        role: "setupAuthoring" as const,
+        sourceKind:
+          profile === "documentDeclarationSet"
+            ? ("declarationSet" as const)
+            : ("capabilityProjection" as const),
+        deliveryMode:
+          profile === "documentDeclarationSet"
+            ? ("document" as const)
+            : ("roleProjection" as const),
+        authority: setup,
+      },
+    ],
+  };
+  const contextSourceManifest = writeAuthority(
+    root,
+    "benchmark-context-sources.json",
+    `${JSON.stringify(contextDocument)}\n`,
+  );
+  const canonicalRetained = source.invocations.map((entry) =>
+    retainInvocation(root, entry),
+  );
+  const auxiliaryRetained =
+    profile === "documentDeclarationSet"
+      ? [
+          retainBenchmarkAuxiliaryInvocation(root, {
+            responsibility: "scenarioQuality",
+            phase: "scenarioReadiness",
+            invocationId: "benchmark-readiness",
+          }),
+          retainBenchmarkAuxiliaryInvocation(root, {
+            responsibility: "redundantCharacterPreparation",
+            phase: "scenarioCharacterAuthoring",
+            invocationId: "benchmark-character-1",
+          }),
+          retainBenchmarkAuxiliaryInvocation(root, {
+            responsibility: "redundantCharacterPreparation",
+            phase: "scenarioCharacterAuthoring",
+            invocationId: "benchmark-character-2",
+          }),
+        ]
+      : [];
+  const orderedRetained = [
+    canonicalRetained[0]!,
+    ...(profile === "documentDeclarationSet" ? [auxiliaryRetained[0]!] : []),
+    ...canonicalRetained.slice(1, 3),
+    ...(profile === "documentDeclarationSet"
+      ? [auxiliaryRetained[1]!, auxiliaryRetained[2]!]
+      : []),
+    ...canonicalRetained.slice(3),
+  ];
+  const benchmarkLedger = writeAuthority(
+    root,
+    `benchmark-${profile}-invocations.jsonl`,
+    `${orderedRetained.map(({ entry }) => JSON.stringify(entry)).join("\n")}\n`,
+  );
+  return {
+    schemaVersion: 3,
+    pathId: `benchmark-${profile}-${root}`,
+    profile,
+    scenarioId,
+    scenarioBundle: {
+      scenario: scenarioAuthority,
+      scenarioReview: scenarioReviewAuthority,
+      stageFacts,
+      stagePlan,
+      characters,
+      setup,
+    },
+    contextSourceManifest,
+    stagePlan: source.stagePlan,
+    invocations: orderedRetained.map(({ entry }) => entry),
+    invocationLedgers: [benchmarkLedger],
+    invocationEvents: orderedRetained.map(({ authority }) => authority),
+    findings: source.findings,
+    outcome: source.outcome,
+    ...overrides,
+  };
 }
 
 function validated(
@@ -646,6 +891,57 @@ describe("complete Raw Swarm path comparison", () => {
       elapsedMilliseconds: { tag: "comparable" },
       inputTokens: { tag: "comparable" },
     });
+  });
+
+  test("binds benchmark equivalence to an immutable scenario bundle and exposes profiles", () => {
+    const baseline = benchmarkMeasurement("documentDeclarationSet");
+    const candidate = benchmarkMeasurement("boundedCapabilityProjection", {
+      pathId: "candidate-benchmark",
+      scenarioBundle: baseline.scenarioBundle,
+      stagePlan: baseline.stagePlan,
+      findings: baseline.findings,
+    });
+    const comparison = compareCompleteEquivalentPaths({
+      baseline: validated(baseline),
+      candidate: validated(candidate),
+    });
+    expect(comparison).toMatchObject({
+      identity: "equivalent-path",
+      equivalence: { tag: "equivalent" },
+      implementation: {
+        baselineProfile: "documentDeclarationSet",
+        candidateProfile: "boundedCapabilityProjection",
+      },
+    });
+
+    const malformedBundle = {
+      ...candidate,
+      scenarioBundle: {
+        ...candidate.scenarioBundle,
+        setup: {
+          ...candidate.scenarioBundle.setup,
+          sha256: "f".repeat(64),
+        },
+      },
+    };
+    expect(validateCompletePathMeasurement(malformedBundle)).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("setup authority"),
+    });
+  });
+
+  test("parses benchmark measurements without widening production complete-path parsing", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const parsed = parseBenchmarkMeasurement(benchmark);
+    expect(Either.isRight(parsed)).toBe(true);
+    expect(
+      Either.isLeft(
+        parseCompletePathMeasurement({
+          ...benchmark,
+          schemaVersion: 2,
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("retains a validated complete equivalent-path comparison without overwriting evidence", () => {

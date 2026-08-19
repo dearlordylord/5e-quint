@@ -10,6 +10,10 @@ import {
   type ArtifactAuthority,
 } from "./artifact-authority.ts";
 import {
+  BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
+  benchmarkModelInvocationEvidenceFromEvents,
+  parseBenchmarkModelInvocationLedgerEntry,
+  type BenchmarkModelInvocationPhase,
   MODEL_INVOCATION_PHASES,
   CurrentModelInvocationLedgerEntrySchema,
   ModelInvocationLedgerEntrySchema,
@@ -53,6 +57,7 @@ import {
 } from "./transcript.ts";
 import {
   ScenarioStagePlanSchema,
+  ScenarioStageFactsSchema,
   type ScenarioStagePlan,
 } from "./scenario-stage-plan.ts";
 
@@ -1217,6 +1222,108 @@ const CurrentCompletePathMeasurementSchema = Schema.Struct({
   outcome: PathOutcomeSchema,
 });
 
+export const BENCHMARK_IMPLEMENTATION_PROFILES = [
+  "documentDeclarationSet",
+  "boundedCapabilityProjection",
+] as const;
+export type BenchmarkImplementationProfile =
+  (typeof BENCHMARK_IMPLEMENTATION_PROFILES)[number];
+const BenchmarkImplementationProfileSchema = Schema.Literal(
+  ...BENCHMARK_IMPLEMENTATION_PROFILES,
+);
+
+export const BenchmarkScenarioBundleSchema = Schema.Struct({
+  scenario: ArtifactAuthoritySchema,
+  scenarioReview: ArtifactAuthoritySchema,
+  stageFacts: ArtifactAuthoritySchema,
+  stagePlan: ArtifactAuthoritySchema,
+  characters: ArtifactAuthoritySchema,
+  setup: ArtifactAuthoritySchema,
+});
+export type BenchmarkScenarioBundle = Schema.Schema.Type<
+  typeof BenchmarkScenarioBundleSchema
+>;
+
+const BENCHMARK_CONTEXT_SOURCE_ROLES = [
+  "scenarioGeneration",
+  "scenarioReview",
+  "characterAuthoring",
+  "setupAuthoring",
+  "player",
+  "postPlayReview",
+] as const;
+const BenchmarkContextSourceManifestEntryFields = {
+  role: Schema.Literal(...BENCHMARK_CONTEXT_SOURCE_ROLES),
+  authority: ArtifactAuthoritySchema,
+} as const;
+const BenchmarkContextSourceManifestEntrySchema = Schema.Union(
+  Schema.Struct({
+    ...BenchmarkContextSourceManifestEntryFields,
+    sourceKind: Schema.Literal(
+      "scenarioArtifact",
+      "reviewArtifact",
+      "stageFacts",
+      "stagePlan",
+    ),
+    deliveryMode: Schema.Literal("artifact"),
+  }),
+  Schema.Struct({
+    ...BenchmarkContextSourceManifestEntryFields,
+    sourceKind: Schema.Literal("declarationSet"),
+    deliveryMode: Schema.Literal("document"),
+  }),
+  Schema.Struct({
+    ...BenchmarkContextSourceManifestEntryFields,
+    sourceKind: Schema.Literal("capabilityProjection"),
+    deliveryMode: Schema.Literal("roleProjection"),
+  }),
+);
+const BenchmarkContextSourceManifestSourcesSchema = Schema.NonEmptyArray(
+  BenchmarkContextSourceManifestEntrySchema,
+);
+export const BenchmarkContextSourceManifestDocumentSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  profile: BenchmarkImplementationProfileSchema,
+  scenarioId: ScenarioIdSchema,
+  sources: BenchmarkContextSourceManifestSourcesSchema,
+});
+export const BenchmarkContextSourceManifestSchema =
+  BenchmarkContextSourceManifestDocumentSchema;
+export type BenchmarkContextSourceManifestDocument = Schema.Schema.Type<
+  typeof BenchmarkContextSourceManifestDocumentSchema
+>;
+
+export const BenchmarkInvocationSchema = Schema.Union(
+  CurrentModelInvocationLedgerEntrySchema,
+  BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
+);
+export type BenchmarkInvocation = Schema.Schema.Type<
+  typeof BenchmarkInvocationSchema
+>;
+
+/**
+ * A benchmark envelope binds two implementation profiles to the same
+ * immutable scenario bundle while allowing the baseline's historical
+ * auxiliary invocations to remain visible as separate telemetry rows.
+ */
+export const CurrentBenchmarkMeasurementSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(3),
+  pathId: Schema.NonEmptyTrimmedString,
+  profile: BenchmarkImplementationProfileSchema,
+  scenarioId: ScenarioIdSchema,
+  scenarioBundle: BenchmarkScenarioBundleSchema,
+  contextSourceManifest: ArtifactAuthoritySchema,
+  stagePlan: ScenarioStagePlanSchema,
+  invocationLedgers: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+  invocations: Schema.Array(BenchmarkInvocationSchema),
+  invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+  findings: FindingsProjectionSchema,
+  outcome: PathOutcomeSchema,
+});
+export type CurrentBenchmarkMeasurement = Schema.Schema.Type<
+  typeof CurrentBenchmarkMeasurementSchema
+>;
+
 /**
  * Paths are assembled from retained authority files, not copied ledger rows
  * supplied by a caller. The assembler hashes and decodes each named source,
@@ -1259,6 +1366,7 @@ const HistoricalCompletePathMeasurementSchema = Schema.Struct({
 export const CompletePathMeasurementSchema = Schema.Union(
   HistoricalCompletePathMeasurementSchema,
   CurrentCompletePathMeasurementSchema,
+  CurrentBenchmarkMeasurementSchema,
 );
 export type CompletePathMeasurement = Schema.Schema.Type<
   typeof CompletePathMeasurementSchema
@@ -1290,6 +1398,11 @@ type CurrentEvidenceWitness = Readonly<{
   readonly prePlayReview: "retained" | "missing";
   readonly postPlayReview: "retained" | "missing";
 }>;
+type ImplementationPhase =
+  | ModelInvocationPhase
+  | BenchmarkModelInvocationPhase
+  | "scenarioSetupAuthoring";
+type ImplementationProfile = "production" | BenchmarkImplementationProfile;
 export type CompletePathEquivalenceWitness =
   | Readonly<{
       readonly tag: "current";
@@ -1305,6 +1418,26 @@ export type CompletePathEquivalenceWitness =
             readonly scenarioId: string;
             readonly candidateScenarioSha256: string;
           }>;
+      readonly admissionOutcome: ScenarioStagePlan["outcome"]["tag"];
+      readonly outcome: PathOutcome;
+      readonly evidence: CurrentEvidenceWitness;
+    }>
+  | Readonly<{
+      readonly tag: "benchmark";
+      readonly profile: BenchmarkImplementationProfile;
+      readonly scenario: Readonly<{
+        readonly scenarioId: string;
+        readonly scenarioSha256: string;
+        readonly scenarioReviewSha256: string;
+      }>;
+      readonly scenarioBundle: Readonly<{
+        readonly scenarioSha256: string;
+        readonly scenarioReviewSha256: string;
+        readonly stageFactsSha256: string;
+        readonly stagePlanSha256: string;
+        readonly charactersSha256: string;
+        readonly setupSha256: string;
+      }>;
       readonly admissionOutcome: ScenarioStagePlan["outcome"]["tag"];
       readonly outcome: PathOutcome;
       readonly evidence: CurrentEvidenceWitness;
@@ -1344,13 +1477,15 @@ export type CompletePathComparison = Readonly<{
   }>;
   readonly implementation: Readonly<{
     readonly baselinePhases:
-      | readonly ModelInvocationPhase[]
+      | readonly ImplementationPhase[]
       | UnavailableEvidence;
     readonly candidatePhases:
-      | readonly ModelInvocationPhase[]
+      | readonly ImplementationPhase[]
       | UnavailableEvidence;
     readonly baselineModels: readonly string[] | UnavailableEvidence;
     readonly candidateModels: readonly string[] | UnavailableEvidence;
+    readonly baselineProfile: ImplementationProfile | UnavailableEvidence;
+    readonly candidateProfile: ImplementationProfile | UnavailableEvidence;
     readonly phaseSequenceChanged: boolean | UnavailableEvidence;
     readonly modelSequenceChanged: boolean | UnavailableEvidence;
   }>;
@@ -1386,7 +1521,7 @@ function dimensionTotal(dimensions: readonly TokenCount[]): TokenCount {
 }
 
 function aggregatePathUsage(
-  invocations: readonly ModelInvocationLedgerEntry[],
+  invocations: readonly (ModelInvocationLedgerEntry | BenchmarkInvocation)[],
 ): ModelUsage {
   if (invocations.length === 0) {
     return {
@@ -1461,6 +1596,54 @@ function currentPathWitness(
   return {
     tag: "current",
     scenario,
+    admissionOutcome: measurement.stagePlan.outcome.tag,
+    outcome: measurement.outcome,
+    evidence: currentEvidenceWitness(measurement.findings),
+  };
+}
+
+function benchmarkPathWitness(
+  measurement: CurrentBenchmarkMeasurement,
+): CompletePathEquivalenceWitness {
+  const identity = measurement.stagePlan.identity;
+  if (identity.tag !== "admitted") {
+    return {
+      tag: "benchmark",
+      profile: measurement.profile,
+      scenario: {
+        scenarioId: identity.scenarioId,
+        scenarioSha256: identity.candidateScenarioSha256,
+        scenarioReviewSha256: measurement.scenarioBundle.scenarioReview.sha256,
+      },
+      scenarioBundle: {
+        scenarioSha256: measurement.scenarioBundle.scenario.sha256,
+        scenarioReviewSha256: measurement.scenarioBundle.scenarioReview.sha256,
+        stageFactsSha256: measurement.scenarioBundle.stageFacts.sha256,
+        stagePlanSha256: measurement.scenarioBundle.stagePlan.sha256,
+        charactersSha256: measurement.scenarioBundle.characters.sha256,
+        setupSha256: measurement.scenarioBundle.setup.sha256,
+      },
+      admissionOutcome: measurement.stagePlan.outcome.tag,
+      outcome: measurement.outcome,
+      evidence: currentEvidenceWitness(measurement.findings),
+    };
+  }
+  return {
+    tag: "benchmark",
+    profile: measurement.profile,
+    scenario: {
+      scenarioId: identity.scenarioId,
+      scenarioSha256: identity.scenarioSha256,
+      scenarioReviewSha256: identity.scenarioReviewSha256,
+    },
+    scenarioBundle: {
+      scenarioSha256: measurement.scenarioBundle.scenario.sha256,
+      scenarioReviewSha256: measurement.scenarioBundle.scenarioReview.sha256,
+      stageFactsSha256: measurement.scenarioBundle.stageFacts.sha256,
+      stagePlanSha256: measurement.scenarioBundle.stagePlan.sha256,
+      charactersSha256: measurement.scenarioBundle.characters.sha256,
+      setupSha256: measurement.scenarioBundle.setup.sha256,
+    },
     admissionOutcome: measurement.stagePlan.outcome.tag,
     outcome: measurement.outcome,
     evidence: currentEvidenceWitness(measurement.findings),
@@ -1683,6 +1866,44 @@ function currentSummary(
   };
 }
 
+function benchmarkSummary(
+  measurement: CurrentBenchmarkMeasurement,
+): CompletePathSummary {
+  const failureReasons = measurement.invocations.flatMap(({ result }) =>
+    result.tag === "failed" ? [result.reason] : [],
+  );
+  return {
+    evidenceVersion: "current",
+    outcome: measurement.outcome,
+    acceptedCallVerdicts: pathDimension(
+      measurement.findings.findings.filter(
+        ({ kind }) => kind === "accepted-call-verdict",
+      ).length,
+    ),
+    corrections: pathDimension(
+      measurement.findings.findings.filter(
+        ({ kind }) => kind === "successful-correction",
+      ).length,
+    ),
+    failedStages: pathDimension(
+      measurement.invocations.filter(({ result }) => result.tag === "failed")
+        .length,
+    ),
+    failureReasons: {
+      tag: "available",
+      values: [...new Set(failureReasons)],
+    },
+    elapsedMilliseconds: pathDimension(
+      measurement.invocations.reduce(
+        (total, { elapsedMilliseconds }) => total + elapsedMilliseconds,
+        0,
+      ),
+    ),
+    usage: aggregatePathUsage(measurement.invocations),
+    evidence: benchmarkPathWitness(measurement),
+  };
+}
+
 function historicalSummary(
   measurement: HistoricalCompletePathMeasurement,
 ): CompletePathSummary {
@@ -1720,9 +1941,9 @@ function historicalSummary(
 }
 
 function summary(measurement: CompletePathMeasurement): CompletePathSummary {
-  return measurement.schemaVersion === 2
-    ? currentSummary(measurement)
-    : historicalSummary(measurement);
+  if (measurement.schemaVersion === 2) return currentSummary(measurement);
+  if (measurement.schemaVersion === 3) return benchmarkSummary(measurement);
+  return historicalSummary(measurement);
 }
 
 function sequenceChanged<A>(
@@ -1732,9 +1953,18 @@ function sequenceChanged<A>(
   return canonicalJson(baseline) !== canonicalJson(candidate);
 }
 
+function equivalenceWitnessIdentity(
+  witness: CompletePathEquivalenceWitness,
+): unknown {
+  if (witness.tag !== "benchmark") return witness;
+  const { profile: _profile, ...identity } = witness;
+  return identity;
+}
+
 function implementationForPath(measurement: CompletePathMeasurement): {
-  readonly phases: readonly ModelInvocationPhase[] | UnavailableEvidence;
+  readonly phases: readonly ImplementationPhase[] | UnavailableEvidence;
   readonly models: readonly string[] | UnavailableEvidence;
+  readonly profile: ImplementationProfile | UnavailableEvidence;
 } {
   if (measurement.schemaVersion === 1) {
     const unavailable: UnavailableEvidence = {
@@ -1743,16 +1973,25 @@ function implementationForPath(measurement: CompletePathMeasurement): {
         "Historical evidence has no canonical per-invocation phase sequence.",
     };
     if (!Array.isArray(measurement.invocations)) {
-      return { phases: unavailable, models: unavailable };
+      return { phases: unavailable, models: unavailable, profile: unavailable };
     }
     return {
       phases: measurement.invocations.map(({ phase }) => phase),
       models: measurement.invocations.map(({ model }) => model),
+      profile: unavailable,
+    };
+  }
+  if (measurement.schemaVersion === 3) {
+    return {
+      phases: measurement.invocations.map(({ phase }) => phase),
+      models: measurement.invocations.map(({ model }) => model),
+      profile: measurement.profile,
     };
   }
   return {
     phases: measurement.invocations.map(({ phase }) => phase),
     models: measurement.invocations.map(({ model }) => model),
+    profile: "production",
   };
 }
 
@@ -1845,6 +2084,14 @@ export function parseCompletePathMeasurement(
   value: unknown,
 ): Either.Either<CompletePathMeasurement, ParseResult.ParseError> {
   return Schema.decodeUnknownEither(CompletePathMeasurementSchema, {
+    onExcessProperty: "error",
+  })(value);
+}
+
+export function parseBenchmarkMeasurement(
+  value: unknown,
+): Either.Either<CurrentBenchmarkMeasurement, ParseResult.ParseError> {
+  return Schema.decodeUnknownEither(CurrentBenchmarkMeasurementSchema, {
     onExcessProperty: "error",
   })(value);
 }
@@ -2750,6 +2997,489 @@ function currentAuthorityIssues(
   return issues;
 }
 
+function benchmarkAuthorityMatches(
+  expected: ArtifactAuthority,
+  label: string,
+): readonly string[] {
+  try {
+    const actual = artifactAuthority(expected.path);
+    return actual.sha256 === expected.sha256 &&
+      actual.byteLength === expected.byteLength
+      ? []
+      : [`Benchmark ${label} authority hash is not canonical.`];
+  } catch {
+    return [`Benchmark ${label} authority is unreadable.`];
+  }
+}
+
+function benchmarkAuthorityBytes(
+  authority: ArtifactAuthority,
+): Buffer | undefined {
+  try {
+    return readFileSync(resolve(repoRoot, authority.path));
+  } catch {
+    return undefined;
+  }
+}
+
+function benchmarkAuthorityJson(
+  authority: ArtifactAuthority,
+  label: string,
+  issues: string[],
+): unknown {
+  const bytes = benchmarkAuthorityBytes(authority);
+  if (bytes === undefined) {
+    issues.push(`Benchmark ${label} authority is unreadable.`);
+    return undefined;
+  }
+  try {
+    return JSON.parse(bytes.toString("utf8"));
+  } catch {
+    issues.push(`Benchmark ${label} authority is not valid JSON.`);
+    return undefined;
+  }
+}
+
+function benchmarkInvocationEntriesFromAuthorities(
+  authorities: readonly ArtifactAuthority[],
+  issues: string[],
+): readonly BenchmarkInvocation[] {
+  const entries: BenchmarkInvocation[] = [];
+  for (const authority of authorities) {
+    const parsed = readAuthorityJsonLines(authority);
+    if (parsed.tag === "invalid") {
+      issues.push(parsed.message);
+      continue;
+    }
+    for (const value of parsed.value) {
+      const current = parseModelInvocationLedgerEntry(value);
+      if (Either.isRight(current)) {
+        if (current.right.schemaVersion === 1) {
+          issues.push(
+            `Benchmark invocation ledger ${authority.path} cannot use historical v1 evidence.`,
+          );
+        } else {
+          entries.push(current.right);
+        }
+        continue;
+      }
+      const auxiliary = parseBenchmarkModelInvocationLedgerEntry(value);
+      if (Either.isLeft(auxiliary)) {
+        issues.push(
+          `Benchmark invocation ledger ${authority.path} has an invalid entry: ${auxiliary.left.message}`,
+        );
+      } else {
+        entries.push(auxiliary.right);
+      }
+    }
+  }
+  return entries;
+}
+
+function benchmarkAuthorityIssues(
+  measurement: CurrentBenchmarkMeasurement,
+): readonly string[] {
+  const issues: string[] = [];
+  const bundle = measurement.scenarioBundle;
+  const bundleEntries = [
+    ["scenario", bundle.scenario],
+    ["scenario review", bundle.scenarioReview],
+    ["stage facts", bundle.stageFacts],
+    ["stage plan", bundle.stagePlan],
+    ["characters", bundle.characters],
+    ["setup", bundle.setup],
+  ] as const;
+  for (const [label, authority] of bundleEntries) {
+    issues.push(...benchmarkAuthorityMatches(authority, label));
+  }
+
+  const manifestValue = benchmarkAuthorityJson(
+    measurement.contextSourceManifest,
+    "context-source manifest",
+    issues,
+  );
+  const manifest = Schema.decodeUnknownEither(
+    BenchmarkContextSourceManifestDocumentSchema,
+    { onExcessProperty: "error" },
+  )(manifestValue);
+  if (Either.isLeft(manifest)) {
+    issues.push(
+      `Benchmark context-source manifest is invalid: ${manifest.left.message}`,
+    );
+  } else {
+    if (
+      manifest.right.profile !== measurement.profile ||
+      manifest.right.scenarioId !== measurement.scenarioId
+    ) {
+      issues.push(
+        "Benchmark context-source manifest is not bound to the benchmark profile and scenario.",
+      );
+    }
+    const roles = new Set<string>();
+    for (const source of manifest.right.sources) {
+      if (roles.has(source.role)) {
+        issues.push(
+          `Benchmark context-source manifest repeats role ${source.role}.`,
+        );
+      }
+      roles.add(source.role);
+      issues.push(
+        ...benchmarkAuthorityMatches(
+          source.authority,
+          `context ${source.role}`,
+        ),
+      );
+    }
+    const expectedSourceKind =
+      measurement.profile === "documentDeclarationSet"
+        ? "declarationSet"
+        : "capabilityProjection";
+    if (
+      !manifest.right.sources.some(
+        ({ sourceKind }) => sourceKind === expectedSourceKind,
+      )
+    ) {
+      issues.push(
+        `Benchmark context-source manifest does not retain a ${expectedSourceKind} delivery for its profile.`,
+      );
+    }
+  }
+
+  const factsValue = benchmarkAuthorityJson(
+    bundle.stageFacts,
+    "stage-facts",
+    issues,
+  );
+  const facts = Schema.decodeUnknownEither(ScenarioStageFactsSchema, {
+    onExcessProperty: "error",
+  })(factsValue);
+  if (Either.isLeft(facts)) {
+    issues.push(
+      `Benchmark stage-facts authority is invalid: ${facts.left.message}`,
+    );
+  } else if (
+    canonicalJson(facts.right) !== canonicalJson(measurement.stagePlan.facts)
+  ) {
+    issues.push(
+      "Benchmark stage-facts authority does not match the stage plan.",
+    );
+  }
+
+  const stagePlanValue = benchmarkAuthorityJson(
+    bundle.stagePlan,
+    "stage-plan",
+    issues,
+  );
+  const decodedStagePlan = Schema.decodeUnknownEither(ScenarioStagePlanSchema, {
+    onExcessProperty: "error",
+  })(stagePlanValue);
+  if (Either.isLeft(decodedStagePlan)) {
+    issues.push(
+      `Benchmark stage-plan authority is invalid: ${decodedStagePlan.left.message}`,
+    );
+  } else if (
+    canonicalJson(decodedStagePlan.right) !==
+    canonicalJson(measurement.stagePlan)
+  ) {
+    issues.push(
+      "Benchmark stage-plan authority does not match the measurement.",
+    );
+  }
+
+  const findingsValidation = validateFindingsProjection(measurement.findings);
+  if (findingsValidation.tag === "invalid") {
+    issues.push(`Findings authority is invalid: ${findingsValidation.message}`);
+  } else {
+    const findings = findingsValidation.projection;
+    if (findings.run.scenarioId !== measurement.scenarioId) {
+      issues.push("Benchmark findings belong to a different scenario.");
+    }
+    const scenarioAuthority = findings.authorities.find(
+      ({ role }) => role === "scenario",
+    );
+    const scenarioReviewAuthority = findings.authorities.find(
+      ({ role }) => role === "scenarioReview",
+    );
+    if (
+      scenarioAuthority?.sha256 !== bundle.scenario.sha256 ||
+      scenarioReviewAuthority?.sha256 !== bundle.scenarioReview.sha256
+    ) {
+      issues.push(
+        "Benchmark scenario and scenario-review authorities are not bound to findings.",
+      );
+    }
+    const transcriptAuthority = findings.authorities.find(
+      ({ role }) => role === "transcript",
+    );
+    if (transcriptAuthority === undefined) {
+      issues.push("Benchmark findings have no transcript authority.");
+    } else {
+      const transcript = readAuthorityJsonLines(transcriptAuthority);
+      if (transcript.tag === "invalid") {
+        issues.push(transcript.message);
+      } else {
+        const parsedTranscript = parseSdkTranscript(transcript.value);
+        if (parsedTranscript.tag === "invalid") {
+          issues.push(
+            `Benchmark transcript is invalid: ${parsedTranscript.message}`,
+          );
+        } else {
+          const header = parsedTranscript.value.header;
+          if (
+            header.characterOutcome !== "ready" ||
+            header.setupOutcome !== "ready"
+          ) {
+            issues.push(
+              "Benchmark transcript does not retain ready character and setup bundle authorities.",
+            );
+          } else if (
+            header.scenarioId !== measurement.scenarioId ||
+            header.scenarioSha256 !== bundle.scenario.sha256 ||
+            header.scenarioReviewSha256 !== bundle.scenarioReview.sha256 ||
+            header.charactersSha256 !== bundle.characters.sha256 ||
+            header.setupSha256 !== bundle.setup.sha256
+          ) {
+            issues.push(
+              "Benchmark transcript is not bound to every immutable scenario-bundle authority.",
+            );
+          }
+        }
+      }
+    }
+  }
+
+  const ledgerAuthorities = measurement.invocationLedgers;
+  const ledgerHashes = new Set(ledgerAuthorities.map(({ sha256 }) => sha256));
+  if (ledgerHashes.size !== ledgerAuthorities.length) {
+    issues.push(
+      "Benchmark invocation ledger authorities must have distinct hashes.",
+    );
+  }
+  for (const authority of ledgerAuthorities) {
+    issues.push(...benchmarkAuthorityMatches(authority, "invocation ledger"));
+  }
+  const composed = benchmarkInvocationEntriesFromAuthorities(
+    ledgerAuthorities,
+    issues,
+  );
+  if (canonicalJson(composed) !== canonicalJson(measurement.invocations)) {
+    issues.push(
+      "Benchmark invocation entries do not match the retained ledger authorities.",
+    );
+  }
+  const invocationIds = new Set<string>();
+  for (const invocation of measurement.invocations) {
+    if (invocationIds.has(invocation.invocationId)) {
+      issues.push(
+        `Benchmark invocation ${invocation.invocationId} appears more than once.`,
+      );
+    }
+    invocationIds.add(invocation.invocationId);
+    if (invocation.scenarioId !== measurement.scenarioId) {
+      issues.push(
+        `Benchmark invocation ${invocation.invocationId} belongs to a different scenario.`,
+      );
+    }
+    if (
+      invocation.schemaVersion === 3 &&
+      measurement.profile !== "documentDeclarationSet"
+    ) {
+      issues.push(
+        "Only the document-declaration benchmark profile may retain auxiliary invocations.",
+      );
+    }
+  }
+
+  if (measurement.invocationEvents.length !== measurement.invocations.length) {
+    issues.push(
+      "Each benchmark invocation must have exactly one retained event authority.",
+    );
+  }
+  const eventAuthorities = new Map(
+    measurement.invocationEvents.map((authority) => [
+      authority.sha256,
+      authority,
+    ]),
+  );
+  if (eventAuthorities.size !== measurement.invocationEvents.length) {
+    issues.push(
+      "Benchmark invocation event authorities must have distinct hashes.",
+    );
+  }
+  for (const authority of measurement.invocationEvents) {
+    issues.push(...benchmarkAuthorityMatches(authority, "invocation event"));
+  }
+  for (const invocation of measurement.invocations) {
+    const authority = eventAuthorities.get(invocation.eventsSha256);
+    if (authority === undefined) {
+      issues.push(
+        `Benchmark invocation ${invocation.invocationId} has no matching event authority.`,
+      );
+      continue;
+    }
+    const events = readCodexEvents(resolve(repoRoot, authority.path));
+    if (events.tag === "invalid") {
+      issues.push(events.message);
+      continue;
+    }
+    if (invocation.schemaVersion === 2) {
+      const evidence = modelInvocationEvidenceFromEvents(events.events);
+      if (evidence.tag === "invalid" || evidence.entry.schemaVersion !== 2) {
+        issues.push(
+          `Benchmark invocation ${invocation.invocationId} does not have valid v2 event evidence.`,
+        );
+        continue;
+      }
+      const withoutEventsHash = Object.fromEntries(
+        Object.entries(invocation).filter(([key]) => key !== "eventsSha256"),
+      );
+      if (canonicalJson(evidence.entry) !== canonicalJson(withoutEventsHash)) {
+        issues.push(
+          `Benchmark invocation ${invocation.invocationId} does not match its v2 event evidence.`,
+        );
+      }
+    } else {
+      const evidence = benchmarkModelInvocationEvidenceFromEvents(
+        events.events,
+      );
+      if (evidence.tag === "invalid") {
+        issues.push(
+          `Benchmark invocation ${invocation.invocationId} does not have valid auxiliary event evidence.`,
+        );
+        continue;
+      }
+      const withoutEventsHash = Object.fromEntries(
+        Object.entries(invocation).filter(([key]) => key !== "eventsSha256"),
+      );
+      if (canonicalJson(evidence.entry) !== canonicalJson(withoutEventsHash)) {
+        issues.push(
+          `Benchmark invocation ${invocation.invocationId} does not match its auxiliary event evidence.`,
+        );
+      }
+    }
+  }
+
+  if (measurement.stagePlan.identity.tag !== "admitted") {
+    issues.push(
+      "Benchmark measurements require an admitted scenario stage plan.",
+    );
+  }
+  const canonicalInvocations = measurement.invocations.filter(
+    (invocation): invocation is CurrentModelInvocationLedgerEntry =>
+      invocation.schemaVersion === 2,
+  );
+  const canonicalMeasurement: CurrentCompletePathMeasurement = {
+    schemaVersion: 2,
+    pathId: measurement.pathId,
+    stagePlan: measurement.stagePlan,
+    stagePlanAuthority: bundle.stagePlan,
+    invocationLedgers: measurement.invocationLedgers,
+    invocations: canonicalInvocations,
+    invocationEvents: measurement.invocationEvents,
+    findings: measurement.findings,
+    outcome: measurement.outcome,
+  };
+  issues.push(...currentSemanticIssues(canonicalMeasurement));
+  if (
+    measurement.outcome.tag === "completed" &&
+    measurement.invocations.some(({ result }) => result.tag === "failed")
+  ) {
+    issues.push(
+      "A completed benchmark path cannot retain a failed invocation.",
+    );
+  }
+  issues.push(...benchmarkSemanticIssues(measurement));
+  return issues;
+}
+
+function benchmarkSemanticIssues(
+  measurement: CurrentBenchmarkMeasurement,
+): readonly string[] {
+  const canonicalInvocations = measurement.invocations.filter(
+    (invocation): invocation is CurrentModelInvocationLedgerEntry =>
+      invocation.schemaVersion === 2,
+  );
+  const canonicalMeasurement: CurrentCompletePathMeasurement = {
+    schemaVersion: 2,
+    pathId: measurement.pathId,
+    stagePlan: measurement.stagePlan,
+    stagePlanAuthority: measurement.scenarioBundle.stagePlan,
+    invocationLedgers: measurement.invocationLedgers,
+    invocations: canonicalInvocations,
+    invocationEvents: measurement.invocationEvents,
+    findings: measurement.findings,
+    outcome: measurement.outcome,
+  };
+  const issues = [...currentSemanticIssues(canonicalMeasurement)];
+  if (
+    measurement.profile !== "documentDeclarationSet" &&
+    measurement.invocations.some(({ schemaVersion }) => schemaVersion === 3)
+  ) {
+    issues.push(
+      "Only the document-declaration benchmark profile may retain auxiliary invocations.",
+    );
+  }
+  const readiness = measurement.invocations.filter(
+    (invocation) =>
+      invocation.schemaVersion === 3 &&
+      invocation.responsibility === "scenarioQuality",
+  );
+  const redundantCharacters = measurement.invocations.filter(
+    (invocation) =>
+      invocation.schemaVersion === 3 &&
+      invocation.responsibility === "redundantCharacterPreparation",
+  );
+  if (measurement.profile === "documentDeclarationSet") {
+    if (readiness.length !== 1) {
+      issues.push(
+        `The document-declaration benchmark profile requires exactly one auxiliary scenario-quality invocation, received ${String(readiness.length)}.`,
+      );
+    }
+    if (redundantCharacters.length !== 2) {
+      issues.push(
+        `The document-declaration benchmark profile requires exactly two redundant character-preparation invocations, received ${String(redundantCharacters.length)}.`,
+      );
+    }
+    const compositeIndexes = measurement.invocations.flatMap(
+      (invocation, index) =>
+        invocation.schemaVersion === 2 &&
+        invocation.phase === "scenarioCompositeReview"
+          ? [index]
+          : [],
+    );
+    const firstComposite = compositeIndexes[0];
+    const lastComposite = compositeIndexes.at(-1);
+    if (firstComposite !== undefined) {
+      if (
+        readiness.some(
+          (invocation) =>
+            measurement.invocations.indexOf(invocation) >= firstComposite,
+        )
+      ) {
+        issues.push(
+          "The auxiliary scenario-quality invocation must precede composite review.",
+        );
+      }
+      if (
+        redundantCharacters.some(
+          (invocation) =>
+            lastComposite !== undefined &&
+            measurement.invocations.indexOf(invocation) <= lastComposite,
+        )
+      ) {
+        issues.push(
+          "Redundant character-preparation invocations must follow composite review.",
+        );
+      }
+    }
+  } else if (readiness.length !== 0 || redundantCharacters.length !== 0) {
+    issues.push(
+      "The bounded capability-projection benchmark profile retains no auxiliary invocations.",
+    );
+  }
+  return issues;
+}
+
 /**
  * Read current evidence only after every source has passed its canonical
  * authority validator. Structural parsing remains available for historical
@@ -2763,6 +3493,10 @@ export function validateCompletePathMeasurement(
   if (Either.isLeft(parsed)) return Either.left(parsed.left.message);
   if (parsed.right.schemaVersion === 2) {
     const issues = currentAuthorityIssues(parsed.right);
+    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
+  }
+  if (parsed.right.schemaVersion === 3) {
+    const issues = benchmarkAuthorityIssues(parsed.right);
     if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
   }
   return Either.right({
@@ -2797,18 +3531,25 @@ export function compareCompleteEquivalentPaths(input: {
   const issues = [
     ...(input.baseline.schemaVersion === 2
       ? currentSemanticIssues(input.baseline)
-      : [
-          "The baseline is historical and lacks current stage-plan, findings, and v2 invocation authorities.",
-        ]),
+      : input.baseline.schemaVersion === 3
+        ? benchmarkSemanticIssues(input.baseline)
+        : [
+            "The baseline is historical and lacks current stage-plan, findings, and v2 invocation authorities.",
+          ]),
     ...(input.candidate.schemaVersion === 2
       ? currentSemanticIssues(input.candidate)
-      : [
-          "The candidate is historical and lacks current stage-plan, findings, and v2 invocation authorities.",
-        ]),
+      : input.candidate.schemaVersion === 3
+        ? benchmarkSemanticIssues(input.candidate)
+        : [
+            "The candidate is historical and lacks current stage-plan, findings, and v2 invocation authorities.",
+          ]),
   ];
-  if (canonicalJson(baselineWitness) !== canonicalJson(candidateWitness)) {
+  if (
+    canonicalJson(equivalenceWitnessIdentity(baselineWitness)) !==
+    canonicalJson(equivalenceWitnessIdentity(candidateWitness))
+  ) {
     issues.push(
-      "Scenario identity, required responsibilities, or retained evidence differs.",
+      "Scenario identity, immutable bundle, required responsibilities, or retained evidence differs.",
     );
   }
   const identity = issues.length === 0 ? "equivalent-path" : "different-path";
@@ -2819,6 +3560,8 @@ export function compareCompleteEquivalentPaths(input: {
     candidatePhases: implementationCandidate.phases,
     baselineModels: implementationBaseline.models,
     candidateModels: implementationCandidate.models,
+    baselineProfile: implementationBaseline.profile,
+    candidateProfile: implementationCandidate.profile,
     phaseSequenceChanged: compareSequences(
       implementationBaseline.phases,
       implementationCandidate.phases,
