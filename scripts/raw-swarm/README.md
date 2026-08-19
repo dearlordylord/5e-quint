@@ -189,6 +189,24 @@ author prompt names only the operations and declaration imports needed for its
 role. The complete transcript, replay evidence, findings, and retained review
 results remain the authorities.
 
+The current tracer post-play review keeps this bounded context inline and is
+commandless; its review-invocation manifest intentionally does not admit a
+legacy context-read exception. The fixed benchmark's historical
+`documentDeclarationSet` profile is a separate baseline path: its oversized
+declaration authority remains an immutable path/byte-length/SHA-256 evidence
+record and is accessed only through strictly validated direct read/search
+commands against that exact path. First-party command output may be client-
+truncated, so this historical profile proves bounded authority access and
+telemetry—not complete ingestion of every authority byte. The packet remains
+inline, one post-play invocation is retained, and no transcript, packet,
+repository, unrelated path, write, or non-read command is admitted.
+Historical equivalence is established from the retained review classifications
+and findings, the review outcome, and the canonical SDK-call authorities bound
+to the same scenario—not by asserting that every source byte entered model
+context. The immutable authority path, byte length, and SHA-256 prove that
+the command-read target did not change while those comparable semantic
+authorities are evaluated.
+
 An impossible or partially unsupported scenario can still be valuable evidence.
 After preserving the RAW and availability verdicts, the campaign may admit the
 scenario when its explicit intent makes the unsupported boundary diagnostic

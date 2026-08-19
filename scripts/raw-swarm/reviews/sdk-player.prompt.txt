@@ -11,10 +11,7 @@ numbers and per-passage hashes. Catalog passages are selected only when their
 authored heading is present in the retained scenario artifacts.
 
 Review the supplied packet directly and return the required JSON in this one
-model turn without commands or tools. Do not reread packet sources from the
-repository. If a material claim cannot be decided from the packet, do not
-guess: state only the narrower claim the supplied evidence proves. Any command
-or tool call invalidates the controlled measurement.
+model turn. {{POST_PLAY_REVIEW_ACCESS_POLICY}}
 
 Use the packet copies of SCENARIO.md, SCENARIO_REVIEW.json,
 evidence/characters.ts, and retained header evidence. If
@@ -57,10 +54,7 @@ call correspondence without reexecuting the SDK. Cite every extracted
 sequence and preserve its provenance file. Do not claim that the derived
 audit can reconstruct omitted results.
 
-The launcher supplies one bounded, versioned Raw Swarm capability projection
-for the review role immediately before the packet. Use it to distinguish
-runtime/rules, public-SDK, experiment-boundary, and evidence responsibilities;
-do not replace it with repository-wide documentation or declarations.
+{{POST_PLAY_REVIEW_CONTEXT_DESCRIPTION}}
 
 A scenario that selects a canonical record absent from the supplied setup
 catalog is scenario-invalid unless its prose explicitly identifies content

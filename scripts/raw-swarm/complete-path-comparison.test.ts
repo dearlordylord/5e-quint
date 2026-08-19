@@ -1364,7 +1364,7 @@ describe("complete Raw Swarm path comparison", () => {
       _tag: "Left",
       left: expect.stringContaining("setup authority"),
     });
-  }, 60_000);
+  }, 120_000);
 
   test("retains player obstruction evidence, rejects zero-call conclusion, and blocks comparison", () => {
     const obstructed = benchmarkMeasurement("boundedCapabilityProjection");

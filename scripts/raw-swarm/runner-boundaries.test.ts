@@ -59,6 +59,10 @@ describe("RAW swarm runner boundaries", () => {
 
   test("runs the instructionally read-only reviewer without nested sandboxing", () => {
     const script = readFileSync(reviewer, "utf8");
+    const prompt = readFileSync(
+      resolve(repoRoot, "scripts/raw-swarm/reviews/sdk-player.prompt.txt"),
+      "utf8",
+    );
 
     expect(script).toContain("--sandbox danger-full-access");
     expect(script).not.toContain("RAW_REVIEW_SANDBOX");
@@ -82,7 +86,16 @@ describe("RAW swarm runner boundaries", () => {
     expect(script).not.toContain(
       'RAW_REVIEW_CAPABILITY_CONTEXT=$(<"$RAW_REVIEW_CONTEXT_PATH")',
     );
-    expect(script).toContain("| codex exec");
+    expect(script).not.toContain("RAW_REVIEW_CONTEXT_READ_PLAN");
+    expect(script).not.toContain("Read every listed contiguous range");
+    expect(script).toContain("client-truncated");
+    expect(script).toContain("codex exec");
+    expect(script.indexOf("model-telemetry-cli.ts")).toBeGreaterThan(
+      script.indexOf("review-invocation-policy.ts"),
+    );
+    expect(prompt).toContain("{{POST_PLAY_REVIEW_ACCESS_POLICY}}");
+    expect(prompt).toContain("{{POST_PLAY_REVIEW_CONTEXT_DESCRIPTION}}");
+    expect(prompt).not.toContain("without commands or tools");
   });
 
   test.each([
@@ -283,7 +296,10 @@ esac
     const capturePath = resolve(testRoot, "codex-input.bin");
     const context = "exact context bytes α\nwith no pointer substitution";
     writeFileSync(contextPath, context);
-    writeFileSync(promptPath, "Review the packet.\n");
+    writeFileSync(
+      promptPath,
+      "Review the packet.\n{{POST_PLAY_REVIEW_ACCESS_POLICY}}\n{{POST_PLAY_REVIEW_CONTEXT_DESCRIPTION}}\n",
+    );
     writeFileSync(transcriptPath, "synthetic transcript\n");
     const fakePnpm = resolve(commandRoot, "pnpm");
     const fakeCodex = resolve(commandRoot, "codex");
@@ -365,6 +381,15 @@ printf '%s' '{}' > "$output"
         ?.trim();
       expect(contextSha).toBeDefined();
       expect(capturedText).toContain(`sha256="${contextSha}"`);
+      expect(capturedText).toContain(
+        "This is the bounded capability-projection profile.",
+      );
+      expect(capturedText).toContain(
+        "Do not read files or use commands or tools",
+      );
+      expect(capturedText).toContain(
+        "one bounded, versioned Raw Swarm capability projection",
+      );
       const deliveryPath = `${reviewPath.slice(0, -".json".length)}.context-delivery.json`;
       expect(JSON.parse(readFileSync(deliveryPath, "utf8"))).toEqual({
         schemaVersion: 1,
@@ -374,6 +399,264 @@ printf '%s' '{}' > "$output"
         byteLength: Buffer.byteLength(context),
         sha256: contextSha,
       });
+    } finally {
+      rmSync(testRoot, { recursive: true, force: true });
+      rmSync(commandRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("keeps the legacy document authority out of initial input and records command-read policy", () => {
+    const testRoot = mkdtempSync(resolve(repoRoot, "scripts/raw-swarm/out/"));
+    const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-review-command-"));
+    const contextPath = resolve(testRoot, "review context;with spaces.md");
+    const promptPath = resolve(testRoot, "prompt.txt");
+    const transcriptPath = resolve(testRoot, "transcript.jsonl");
+    const reviewPath = resolve(testRoot, "review.json");
+    const logPath = resolve(testRoot, "review.log");
+    const capturePath = resolve(testRoot, "codex-input.bin");
+    const pnpmCapturePath = resolve(testRoot, "pnpm-commands.log");
+    const context = "LEGACY_CONTEXT_BYTES_MUST_NOT_BE_INLINE\nsecond line\n";
+    writeFileSync(contextPath, context);
+    writeFileSync(
+      promptPath,
+      "Review the packet.\n{{POST_PLAY_REVIEW_ACCESS_POLICY}}\n{{POST_PLAY_REVIEW_CONTEXT_DESCRIPTION}}\n",
+    );
+    writeFileSync(transcriptPath, "synthetic transcript\n");
+    const fakeGit = resolve(commandRoot, "git");
+    const fakePnpm = resolve(commandRoot, "pnpm");
+    const fakeCodex = resolve(commandRoot, "codex");
+    const contextSha = execFileSync("sha256sum", [contextPath], {
+      encoding: "utf8",
+    })
+      .split(" ")[0]
+      ?.trim();
+    expect(contextSha).toBeDefined();
+    const shellQuote = (value: string): string =>
+      `'${value.replaceAll("'", "'\"'\"'")}'`;
+    const contextReadEvent = JSON.stringify({
+      type: "item.completed",
+      item: {
+        type: "command_execution",
+        command: `/bin/bash -lc ${JSON.stringify(`cat ${shellQuote(resolve(contextPath))}`)}`,
+        aggregated_output:
+          "LEGACY_CONTEXT_BYTES_MUST_NOT_BE_INLINE\n[client truncated]",
+        exit_code: 0,
+        status: "completed",
+      },
+    });
+    writeFileSync(
+      fakeGit,
+      [
+        "#!/bin/sh",
+        "set -eu",
+        'case "$*" in',
+        `  *show-toplevel*) printf '%s\\n' '${repoRoot}' ;;`,
+        `  *rev-parse\\ HEAD*) printf '%s\\n' '${currentGitSha}' ;;`,
+        "  *) exit 0 ;;",
+        "esac",
+        "",
+      ].join("\n"),
+    );
+    writeFileSync(
+      fakePnpm,
+      [
+        "#!/bin/sh",
+        "set -eu",
+        'printf \'%s\\n\' "$*" >> "$RAW_REVIEW_PNPM_CAPTURE"',
+        'last=""',
+        'for arg do last="$arg"; done',
+        'case "$*" in',
+        '  *sdk-audit-cli.ts\\ build*) printf \'%s\\n\' \'{"scenarioId":"synthetic-review"}\' > "$last" ;;',
+        "  *sdk-review-packet-cli.ts*) printf '%s\\n' '{}' > \"$last\" ;;",
+        "  *review-schema.ts*) printf '%s\\n' '{}' > \"$last\" ;;",
+        "  *) ;;",
+        "esac",
+        "",
+      ].join("\n"),
+    );
+    writeFileSync(
+      fakeCodex,
+      [
+        "#!/bin/sh",
+        "set -eu",
+        'output=""',
+        'while [ "$#" -gt 0 ]; do',
+        '  if [ "$1" = "--output-last-message" ]; then',
+        '    output="$2"',
+        "    shift 2",
+        "  else",
+        "    shift",
+        "  fi",
+        "done",
+        'cat > "$RAW_REVIEW_CAPTURE"',
+        "printf '%s\\n' \"$RAW_REVIEW_CONTEXT_READ_EVENT\"",
+        "printf '%s' '{}' > \"$output\"",
+        "",
+      ].join("\n"),
+    );
+    chmodSync(fakeGit, 0o755);
+    chmodSync(fakePnpm, 0o755);
+    chmodSync(fakeCodex, 0o755);
+    const result = spawnSync(
+      reviewer,
+      [promptPath, transcriptPath, reviewPath, logPath],
+      {
+        cwd: repoRoot,
+        env: {
+          ...process.env,
+          PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
+          RAW_REVIEW_CAPTURE: capturePath,
+          RAW_REVIEW_CONTEXT_PATH: relative(repoRoot, contextPath),
+          RAW_REVIEW_CONTEXT_PROFILE: "documentDeclarationSet",
+          RAW_REVIEW_CONTEXT_ROLE: "postPlayReview",
+          RAW_REVIEW_CONTEXT_READ_EVENT: contextReadEvent,
+          RAW_REVIEW_PNPM_CAPTURE: pnpmCapturePath,
+          RAW_REVIEW_IMPLEMENTATION_GIT_SHA: currentGitSha,
+        },
+        encoding: "utf8",
+      },
+    );
+    try {
+      expect(result.status).toBe(0);
+      const capturedText = readFileSync(capturePath, "utf8");
+      expect(capturedText).not.toContain(context);
+      expect(capturedText).toContain(
+        `<RAW_SWARM_CAPABILITY_CONTEXT role="postPlayReview" profile="documentDeclarationSet" delivery="commandRead" path="${resolve(contextPath)}" bytes="${Buffer.byteLength(context)}"`,
+      );
+      expect(capturedText).toContain("client-truncated");
+      expect(capturedText).not.toContain("contiguous range");
+      expect(capturedText).toContain(
+        "This is the historical documentDeclarationSet profile.",
+      );
+      expect(capturedText).toContain(
+        "exact immutable document-declaration authority",
+      );
+      expect(capturedText).not.toContain(
+        "one bounded, versioned Raw Swarm capability projection",
+      );
+      expect(capturedText).toContain(
+        "do not claim complete authority ingestion",
+      );
+      expect(capturedText).not.toContain(
+        "This is the bounded capability-projection profile.",
+      );
+      expect(capturedText).not.toContain(
+        "any command or tool call invalidates the controlled measurement",
+      );
+      const pnpmCommands = readFileSync(pnpmCapturePath, "utf8");
+      expect(pnpmCommands).toContain(
+        `--profile documentDeclarationSet --context-path ${resolve(contextPath)} --context-byte-length ${Buffer.byteLength(context)} --context-sha256 ${contextSha}`,
+      );
+      const deliveryPath = `${reviewPath.slice(0, -".json".length)}.context-delivery.json`;
+      expect(JSON.parse(readFileSync(deliveryPath, "utf8"))).toEqual({
+        schemaVersion: 1,
+        profile: "documentDeclarationSet",
+        role: "postPlayReview",
+        path: relative(repoRoot, resolve(contextPath)),
+        byteLength: Buffer.byteLength(context),
+        sha256: contextSha,
+      });
+    } finally {
+      rmSync(testRoot, { recursive: true, force: true });
+      rmSync(commandRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("retains a policy-invalid post-play phase as failed telemetry", () => {
+    const testRoot = mkdtempSync(resolve(repoRoot, "scripts/raw-swarm/out/"));
+    const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-review-command-"));
+    const promptPath = resolve(testRoot, "prompt.txt");
+    const transcriptPath = resolve(testRoot, "transcript.jsonl");
+    const reviewPath = resolve(testRoot, "review.json");
+    const logPath = resolve(testRoot, "review.log");
+    const ledgerPath = `${reviewPath.slice(0, -".json".length)}.invocations.jsonl`;
+    const pnpmCapturePath = resolve(testRoot, "pnpm-commands.log");
+    const fakePnpm = resolve(commandRoot, "pnpm");
+    const fakeCodex = resolve(commandRoot, "codex");
+    const fakeGit = resolve(commandRoot, "git");
+    const realPnpm = execFileSync("which", ["pnpm"], {
+      encoding: "utf8",
+    }).trim();
+    writeFileSync(promptPath, "Review the packet.\n");
+    writeFileSync(transcriptPath, "synthetic transcript\n");
+    writeFileSync(
+      fakeGit,
+      String.raw`#!/bin/sh
+set -eu
+case "$*" in
+  *show-toplevel*) printf '%s\n' '${repoRoot}' ;;
+  *rev-parse\ HEAD*) printf '%s\n' '${currentGitSha}' ;;
+  *) exit 0 ;;
+esac
+`,
+    );
+    writeFileSync(
+      fakePnpm,
+      [
+        "#!/bin/sh",
+        "set -eu",
+        `printf '%s\\n' \"$*\" >> '${pnpmCapturePath}'`,
+        'last=""',
+        'for arg do last="$arg"; done',
+        'case "$*" in',
+        `  *model-telemetry-cli.ts*) exec '${realPnpm}' "$@" ;;`,
+        "  *review-invocation-policy.ts*) exit 1 ;;",
+        '  *sdk-audit-cli.ts\\ build*) printf \'%s\\n\' \'{"scenarioId":"synthetic-review"}\' > "$last" ;;',
+        "  *sdk-review-packet-cli.ts*) printf '%s\\n' '{}' > \"$last\" ;;",
+        "  *review-schema.ts*) printf '%s\\n' '{}' > \"$last\" ;;",
+        "  *) ;;",
+        "esac",
+        "",
+      ].join("\n"),
+    );
+    writeFileSync(
+      fakeCodex,
+      [
+        "#!/bin/sh",
+        "set -eu",
+        'output=""',
+        'while [ "$#" -gt 0 ]; do',
+        '  if [ "$1" = "--output-last-message" ]; then',
+        '    output="$2"',
+        "    shift 2",
+        "  else",
+        "    shift",
+        "  fi",
+        "done",
+        'printf \'%s\\n\' \'{"type":"item.completed","item":{"type":"command_execution","command":"cat unrelated.txt","aggregated_output":"","exit_code":0,"status":"completed"}}\'',
+        "printf '%s' '{}' > \"$output\"",
+        "",
+      ].join("\n"),
+    );
+    chmodSync(fakeGit, 0o755);
+    chmodSync(fakePnpm, 0o755);
+    chmodSync(fakeCodex, 0o755);
+    const result = spawnSync(
+      reviewer,
+      [promptPath, transcriptPath, reviewPath, logPath],
+      {
+        cwd: repoRoot,
+        env: {
+          ...process.env,
+          PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
+          RAW_REVIEW_PNPM_CAPTURE: pnpmCapturePath,
+          RAW_REVIEW_IMPLEMENTATION_GIT_SHA: currentGitSha,
+        },
+        encoding: "utf8",
+      },
+    );
+    try {
+      expect(result.status).toBe(1);
+      const telemetryCommand = readFileSync(pnpmCapturePath, "utf8")
+        .split("\n")
+        .find((line) => line.includes("model-telemetry-cli.ts"));
+      expect(telemetryCommand).toContain("--shell-status 1");
+      const ledger = JSON.parse(readFileSync(ledgerPath, "utf8")) as {
+        readonly exit: { readonly tag: string; readonly status?: number };
+        readonly result: { readonly tag: string };
+      };
+      expect(ledger.exit).toEqual({ tag: "shellStatus", status: 1 });
+      expect(ledger.result.tag).toBe("failed");
     } finally {
       rmSync(testRoot, { recursive: true, force: true });
       rmSync(commandRoot, { recursive: true, force: true });

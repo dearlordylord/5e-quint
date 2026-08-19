@@ -48,6 +48,15 @@ import {
   type ScenarioId,
 } from "./transcript.ts";
 
+// This manifest is the current tracer evidence shape: unlike the fixed
+// benchmark's historical documentDeclarationSet path, it retains the packet
+// inline and therefore intentionally requires a commandless post-play review.
+// The benchmark context-delivery manifest is the separate authority for the
+// legacy command-read profile and is not an optional bypass here.
+const CURRENT_TRACER_REVIEW_INVOCATION_POLICY = {
+  profile: "boundedCapabilityProjection",
+} as const;
+
 export const ReviewInvocationEvidenceManifestSchema = Schema.Struct({
   type: Schema.Literal("review-invocation-evidence"),
   schemaVersion: Schema.Literal(1),
@@ -362,7 +371,10 @@ function deriveManifest(input: {
   );
   if (postPlayEvents === undefined)
     fail("Post-play review events are missing.");
-  const policy = reviewInvocationPolicy(postPlayEvents.events);
+  const policy = reviewInvocationPolicy(
+    postPlayEvents.events,
+    CURRENT_TRACER_REVIEW_INVOCATION_POLICY,
+  );
   if (policy.tag === "invalid") fail(policy.message);
   if (
     canonicalJson(finalAgentMessage(postPlayEvents.events)) !==

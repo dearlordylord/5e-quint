@@ -105,7 +105,7 @@ describe("review invocation evidence", () => {
     ).toThrow(/Retained milestone source and replay inputs/);
   });
 
-  test("rejects an unrelated ledger and a tool-using reviewer", () => {
+  test("rejects an unrelated ledger and enforces current tracer commandless policy", () => {
     const ledgerDirectory = rawSwarmTestOutputDirectory(
       "review-ledger-identity-test-",
     );

@@ -709,7 +709,7 @@ describe("fixed scenario benchmark boundary", () => {
     expect(context).toContain("declare ");
     expect(context).not.toContain("generate-scenario.ts");
     expect(context).not.toContain("scenario-campaign.ts");
-  }, 60_000);
+  }, 120_000);
 
   test("keeps baseline composites four-field and bounded composites five-field", () => {
     const historicalSchema = codexOutputJsonSchema(

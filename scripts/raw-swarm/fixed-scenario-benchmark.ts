@@ -41,6 +41,7 @@ import {
   projectRunFindings,
   writeFindingsProjection,
 } from "./findings.ts";
+import { parseStrictReadCommand } from "./review-read-validation.ts";
 import {
   parseBenchmarkModelInvocationLedgerEntry,
   parseModelInvocationLedgerEntry,
@@ -644,36 +645,8 @@ export const FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS = {
     READ_ONLY_SOURCE_REVIEW_INSTRUCTION,
 } as const;
 
-const BENCHMARK_PREPARATION_SHELL_LAUNCHERS = new Set([
-  "/bin/bash",
-  "/usr/bin/bash",
-]);
-const BENCHMARK_PREPARATION_SHELL_FLAGS = new Set(["-c", "-lc"]);
-const BENCHMARK_PREPARATION_READ_COMMANDS = new Set([
-  "cat",
-  "head",
-  "od",
-  "rg",
-  "sed",
-  "sha256sum",
-  "tail",
-  "wc",
-]);
 const BENCHMARK_PREPARATION_RG_OPTIONS = new Set(["-F", "-i", "-n", "-o"]);
 const BENCHMARK_PREPARATION_RG_COUNT_OPTIONS = new Set(["-C", "-m"]);
-const BENCHMARK_PREPARATION_SHELL_OPERATORS = new Set([
-  ";",
-  "&&",
-  "||",
-  "|",
-  "&",
-  "(",
-  ")",
-  "{",
-  "}",
-  "<",
-  ">",
-]);
 const BENCHMARK_PREPARATION_SAFE_ITEM_TYPES = new Set([
   "agent_message",
   "reasoning",
@@ -704,11 +677,6 @@ type BenchmarkPreparationEventValidationInput = Readonly<{
   readonly namedInputs: readonly string[];
 }>;
 
-type StrictShellWords = Readonly<{
-  readonly quoted: readonly boolean[];
-  readonly words: readonly string[];
-}>;
-
 function isCanonicalUnsignedDecimal(
   value: string | undefined,
 ): value is string {
@@ -727,86 +695,6 @@ function scratchNamedFiles(root: string): readonly string[] {
   };
   visit(root);
   return files.sort();
-}
-
-function parseStrictShellWords(
-  value: string,
-): Either.Either<StrictShellWords, string> {
-  const words: string[] = [];
-  const quoted: boolean[] = [];
-  let current = "";
-  let quote: "'" | '"' | undefined;
-  let wasQuoted = false;
-  const flush = (): void => {
-    if (current.length > 0 || wasQuoted) {
-      words.push(current);
-      quoted.push(wasQuoted);
-    }
-    current = "";
-    wasQuoted = false;
-  };
-  for (let index = 0; index < value.length; index += 1) {
-    const character = value[index] ?? "";
-    if (character === "\0" || character === "\n" || character === "\r") {
-      return Either.left("command uses unsupported shell syntax");
-    }
-    if (character === "\\") {
-      if (quote === "'") {
-        current += character;
-        continue;
-      }
-      if (quote !== '"') {
-        return Either.left("command uses unquoted backslash escaping");
-      }
-      const escaped = value[index + 1];
-      if (escaped === undefined || escaped === "$" || escaped === "`") {
-        return Either.left("command uses unsupported shell syntax");
-      }
-      if (escaped === '"' || escaped === "\\") {
-        current += escaped;
-        index += 1;
-      } else {
-        current += character;
-      }
-      continue;
-    }
-    if (quote !== undefined) {
-      if (character === quote) {
-        quote = undefined;
-        wasQuoted = true;
-      } else if (quote === '"' && (character === "$" || character === "`")) {
-        return Either.left("command uses unsupported shell syntax");
-      } else {
-        current += character;
-      }
-      continue;
-    }
-    if (character === "'" || character === '"') {
-      quote = character;
-      wasQuoted = true;
-      continue;
-    }
-    if (
-      character === "$" ||
-      character === "`" ||
-      character === "~" ||
-      character === "*" ||
-      character === "?" ||
-      character === "[" ||
-      character === "]" ||
-      BENCHMARK_PREPARATION_SHELL_OPERATORS.has(character)
-    ) {
-      return Either.left("command uses unsupported shell syntax");
-    }
-    if (/\s/.test(character)) {
-      flush();
-      continue;
-    }
-    current += character;
-  }
-  if (quote !== undefined) return Either.left("command has an unmatched quote");
-  flush();
-  return Either.right({ quoted, words });
 }
 
 function pathWithinScratch(
@@ -928,31 +816,9 @@ function commandArguments(
   command: string,
   input: BenchmarkPreparationEventValidationInput,
 ): Either.Either<readonly string[], string> {
-  const outer = parseStrictShellWords(command);
-  if (Either.isLeft(outer)) return Either.left(outer.left);
-  if (
-    outer.right.words.length !== 3 ||
-    !BENCHMARK_PREPARATION_SHELL_LAUNCHERS.has(outer.right.words[0] ?? "") ||
-    !BENCHMARK_PREPARATION_SHELL_FLAGS.has(outer.right.words[1] ?? "") ||
-    outer.right.quoted[2] !== true
-  ) {
-    return Either.left(
-      "preparation command must be one quoted Bash read operation",
-    );
-  }
-  const inner = parseStrictShellWords(outer.right.words[2] ?? "");
-  if (Either.isLeft(inner)) return Either.left(inner.left);
-  const [executable, ...args] = inner.right.words;
-  if (
-    executable === undefined ||
-    executable.includes("/") ||
-    !BENCHMARK_PREPARATION_READ_COMMANDS.has(executable)
-  ) {
-    return Either.left(
-      `preparation command uses a non-read executable: ${executable ?? "<missing>"}`,
-    );
-  }
-  if (args.length === 0) return Either.left("read operation names no file");
+  const parsed = parseStrictReadCommand(command);
+  if (Either.isLeft(parsed)) return Either.left(parsed.left);
+  const { executable, args, words } = parsed.right;
   const validateFiles = (files: readonly string[]): string | undefined => {
     for (const file of files) {
       const issue = validateNamedFile(file, input);
@@ -968,9 +834,7 @@ function commandArguments(
         return Either.left(`${executable} has unsupported arguments`);
       }
       const issue = validateFiles(files);
-      return issue === undefined
-        ? Either.right(inner.right.words)
-        : Either.left(issue);
+      return issue === undefined ? Either.right(words) : Either.left(issue);
     }
     case "head":
     case "tail": {
@@ -984,9 +848,7 @@ function commandArguments(
         return Either.left(`${executable} has unsupported arguments`);
       }
       const issue = validateFiles(files);
-      return issue === undefined
-        ? Either.right(inner.right.words)
-        : Either.left(issue);
+      return issue === undefined ? Either.right(words) : Either.left(issue);
     }
     case "sed": {
       const [option, script, ...files] = args;
@@ -1001,9 +863,7 @@ function commandArguments(
         );
       }
       const issue = validateFiles(files);
-      return issue === undefined
-        ? Either.right(inner.right.words)
-        : Either.left(issue);
+      return issue === undefined ? Either.right(words) : Either.left(issue);
     }
     case "wc": {
       const files = args.filter((value) => !value.startsWith("-"));
@@ -1015,9 +875,7 @@ function commandArguments(
         return Either.left("wc has unsupported arguments");
       }
       const issue = validateFiles(files);
-      return issue === undefined
-        ? Either.right(inner.right.words)
-        : Either.left(issue);
+      return issue === undefined ? Either.right(words) : Either.left(issue);
     }
     case "od": {
       const files = args.filter((value) => !value.startsWith("-"));
@@ -1029,9 +887,7 @@ function commandArguments(
         return Either.left("od has unsupported arguments");
       }
       const issue = validateFiles(files);
-      return issue === undefined
-        ? Either.right(inner.right.words)
-        : Either.left(issue);
+      return issue === undefined ? Either.right(words) : Either.left(issue);
     }
     case "rg": {
       let operandIndex = 0;
@@ -1063,9 +919,7 @@ function commandArguments(
         return Either.left("rg must name a scratch file after its pattern");
       }
       const issue = validateFiles(operands.slice(1));
-      return issue === undefined
-        ? Either.right(inner.right.words)
-        : Either.left(issue);
+      return issue === undefined ? Either.right(words) : Either.left(issue);
     }
   }
   return Either.left(
