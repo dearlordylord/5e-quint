@@ -222,7 +222,6 @@ export type ScenarioSession = Readonly<{
   readonly lineage: Readonly<{
     readonly scenarioSessionLineageId: ScenarioSessionLineageId;
     readonly battleRuntimeSessionIdentity: string;
-    readonly battleRuntimeContextIdentity: string;
   }>;
   readonly [scenarioSessionBrand]: true;
 }>;
@@ -554,7 +553,6 @@ export type ScenarioMovementPlan = Readonly<{
 }>;
 
 const sessions = new WeakSet<object>();
-const scenarioSpatialDecisionRuntimeLineages = new WeakMap<object, object>();
 let nextScenarioSessionLineage = 0;
 
 function runtimeValueIdentity(value: object): string {
@@ -588,15 +586,9 @@ function makeScenarioSession(
     lineage: Object.freeze({
       scenarioSessionLineageId: sessionLineageId,
       battleRuntimeSessionIdentity: runtimeValueIdentity(battle),
-      battleRuntimeContextIdentity: runtimeValueIdentity(battle.context),
     }),
   });
   sessions.add(session);
-  if (session.battlefield.spatial.kind === "tableAuthored") {
-    for (const decision of session.battlefield.spatial.tableAuthoredDecisions) {
-      scenarioSpatialDecisionRuntimeLineages.set(decision, battle);
-    }
-  }
   // The brand is compile-time only; WeakSet membership is the runtime proof
   // that this value passed createScenarioSession's composition checks.
   return session as ScenarioSession;
@@ -1295,14 +1287,6 @@ function scenarioSpatialDecision(
       session.lineage.scenarioSessionLineageId ||
     decision.lineage.battleRuntimeSessionIdentity !==
       session.lineage.battleRuntimeSessionIdentity
-  ) {
-    return { tag: "lineageConflict", decision };
-  }
-  const decisionRuntimeLineage =
-    scenarioSpatialDecisionRuntimeLineages.get(decision);
-  if (
-    decisionRuntimeLineage !== undefined &&
-    decisionRuntimeLineage !== session.battle
   ) {
     return { tag: "lineageConflict", decision };
   }

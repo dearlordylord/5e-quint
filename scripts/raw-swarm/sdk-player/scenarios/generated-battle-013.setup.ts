@@ -1,34 +1,72 @@
 import type { ScenarioDirection, ScenarioSetup } from "@dnd/scenario-setup-sdk";
 
 export const setupScenario: ScenarioSetup = (context) => {
-  const { sdk, statBlockCatalog } = context;
+  const { sdk, statBlocks } = context;
   const brineId = sdk.combatantId("brine");
   const sootId = sdk.combatantId("soot");
   const rivetId = sdk.combatantId("rivet");
   const tangleId = sdk.combatantId("tangle");
 
+  const brineStatBlock = statBlocks.find(
+    ({ id }) => id === "stat_block_goblin_warrior",
+  );
+  if (brineStatBlock === undefined) {
+    return {
+      kind: "obstructed",
+      obstruction: "The public catalog has no Goblin Warrior Stat Block.",
+      observation: {
+        scenarioId: "generated-battle-013",
+        statBlockId: "stat_block_goblin_warrior",
+      },
+    };
+  }
+  const rivetStatBlock = statBlocks.find(
+    ({ id }) => id === "stat_block_skeleton",
+  );
+  if (rivetStatBlock === undefined) {
+    return {
+      kind: "obstructed",
+      obstruction: "The public catalog has no Skeleton Stat Block.",
+      observation: {
+        scenarioId: "generated-battle-013",
+        statBlockId: "stat_block_skeleton",
+      },
+    };
+  }
+  const tangleStatBlock = statBlocks.find(({ id }) => id === "stat_block_wolf");
+  if (tangleStatBlock === undefined) {
+    return {
+      kind: "obstructed",
+      obstruction: "The public catalog has no Wolf Stat Block.",
+      observation: {
+        scenarioId: "generated-battle-013",
+        statBlockId: "stat_block_wolf",
+      },
+    };
+  }
+
   const combatantInits = [
     sdk.battleCreatureInitFromStatBlock({
       combatantId: brineId,
-      statBlock: statBlockCatalog.requireStatBlock("stat_block_goblin_warrior"),
+      statBlock: brineStatBlock,
       initiative: sdk.initiativeScore(22),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     }),
     sdk.battleCreatureInitFromStatBlock({
       combatantId: rivetId,
-      statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      statBlock: rivetStatBlock,
       initiative: sdk.initiativeScore(17),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     }),
     sdk.battleCreatureInitFromStatBlock({
       combatantId: sootId,
-      statBlock: statBlockCatalog.requireStatBlock("stat_block_goblin_warrior"),
+      statBlock: brineStatBlock,
       initiative: sdk.initiativeScore(12),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     }),
     sdk.battleCreatureInitFromStatBlock({
       combatantId: tangleId,
-      statBlock: statBlockCatalog.requireStatBlock("stat_block_wolf"),
+      statBlock: tangleStatBlock,
       initiative: sdk.initiativeScore(7),
       ammunitionStocks: [],
     }),

@@ -260,11 +260,17 @@ describe("scenario setup public-SDK boundary", () => {
       setup.session.battle.state,
       foreignContext,
     );
+    expect(foreignContextBattle.context).not.toBe(setup.session.battle.context);
     expect(
       scenarioSessionWithBattleResult(setup.session, foreignContextBattle),
     ).toMatchObject({
       _tag: "Left",
-      left: { tag: "spatial-decision-lineage-conflict" },
+      left: {
+        tag: "spatial-decision-lineage-conflict",
+        decisionId: "scenario-session",
+        message:
+          "ScenarioSession cannot adopt an unrelated same-battle BattleRuntime session; results must follow the current runtime session directly.",
+      },
     });
   });
 
