@@ -192,6 +192,30 @@ describe("fixed scenario benchmark boundary", () => {
             type: "item.completed",
             item: {
               id: "item_5",
+              type: "command_execution",
+              command: String.raw`/bin/bash -c "rg -n -i \"SCENARIO_REVIEW\\.json|CAPABILITY_CONTEXT\\.md\" BENCHMARK_CONTEXT.md"`,
+              aggregated_output: "synthetic context\n",
+              exit_code: 0,
+              status: "completed",
+            },
+          }) +
+          "\n" +
+          JSON.stringify({
+            type: "item.completed",
+            item: {
+              id: "item_6",
+              type: "command_execution",
+              command: String.raw`/bin/bash -c "rg -n 'SCENARIO_REVIEW\.json' BENCHMARK_CONTEXT.md"`,
+              aggregated_output: "synthetic context\n",
+              exit_code: 0,
+              status: "completed",
+            },
+          }) +
+          "\n" +
+          JSON.stringify({
+            type: "item.completed",
+            item: {
+              id: "item_7",
               type: "agent_message",
               text: `The model's prose may mention ${resolve("/outside")}.`,
             },
@@ -350,6 +374,32 @@ describe("fixed scenario benchmark boundary", () => {
       "a path encoded as a shell expansion",
       (scratch: string) =>
         `/bin/bash -lc "cat \$(printf '%s' '${scratch}/BENCHMARK_CONTEXT.md')"`,
+    ],
+    [
+      "a command substitution inside an inner double-quoted rg pattern",
+      () => "/bin/bash -lc 'rg \"$(cat /etc/passwd)\" BENCHMARK_CONTEXT.md'",
+    ],
+    [
+      "multiple commands separated by an embedded newline",
+      () =>
+        "/bin/bash -lc 'cat BENCHMARK_CONTEXT.md\ncat BENCHMARK_CONTEXT.md'",
+    ],
+    [
+      "multiple commands separated by an embedded carriage return",
+      () =>
+        "/bin/bash -lc 'cat BENCHMARK_CONTEXT.md\rcat BENCHMARK_CONTEXT.md'",
+    ],
+    [
+      "an embedded null byte",
+      () => "/bin/bash -lc 'cat BENCHMARK_CONTEXT.md\0'",
+    ],
+    [
+      "a backtick substitution inside double quotes",
+      () => '/bin/bash -lc "rg `cat /etc/passwd` BENCHMARK_CONTEXT.md"',
+    ],
+    [
+      "an unquoted backslash escape",
+      () => "/bin/bash -lc 'cat BENCHMARK_CONTEXT\\.md'",
     ],
     [
       "a literal encoded parent traversal",

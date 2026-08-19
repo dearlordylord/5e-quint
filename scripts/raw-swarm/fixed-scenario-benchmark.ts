@@ -714,14 +714,37 @@ function parseStrictShellWords(
     current = "";
     wasQuoted = false;
   };
-  for (const character of value) {
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index] ?? "";
+    if (character === "\0" || character === "\n" || character === "\r") {
+      return Either.left("command uses unsupported shell syntax");
+    }
     if (character === "\\") {
-      return Either.left("command uses backslash escaping");
+      if (quote === "'") {
+        current += character;
+        continue;
+      }
+      if (quote !== '"') {
+        return Either.left("command uses unquoted backslash escaping");
+      }
+      const escaped = value[index + 1];
+      if (escaped === undefined || escaped === "$" || escaped === "`") {
+        return Either.left("command uses unsupported shell syntax");
+      }
+      if (escaped === '"' || escaped === "\\") {
+        current += escaped;
+        index += 1;
+      } else {
+        current += character;
+      }
+      continue;
     }
     if (quote !== undefined) {
       if (character === quote) {
         quote = undefined;
         wasQuoted = true;
+      } else if (quote === '"' && (character === "$" || character === "`")) {
+        return Either.left("command uses unsupported shell syntax");
       } else {
         current += character;
       }
