@@ -659,6 +659,14 @@ function benchmarkMeasurement(
   );
   const characters = writeAuthority(root, "characters.json", "{}\n");
   const setup = writeAuthority(root, "setup.json", "{}\n");
+  const contextSourceKind =
+    profile === "documentDeclarationSet"
+      ? ("declarationSet" as const)
+      : ("capabilityProjection" as const);
+  const contextDeliveryMode =
+    profile === "documentDeclarationSet"
+      ? ("document" as const)
+      : ("roleProjection" as const);
   const contextDocument = {
     schemaVersion: 1,
     profile,
@@ -666,39 +674,39 @@ function benchmarkMeasurement(
     sources: [
       {
         role: "scenarioGeneration" as const,
-        sourceKind: "scenarioArtifact" as const,
-        deliveryMode: "artifact" as const,
+        sourceKind: contextSourceKind,
+        deliveryMode: contextDeliveryMode,
         authority: scenarioAuthority,
       },
       {
         role: "scenarioReview" as const,
-        sourceKind: "reviewArtifact" as const,
-        deliveryMode: "artifact" as const,
+        sourceKind: contextSourceKind,
+        deliveryMode: contextDeliveryMode,
         authority: scenarioReviewAuthority,
       },
       {
         role: "characterAuthoring" as const,
-        sourceKind:
-          profile === "documentDeclarationSet"
-            ? ("declarationSet" as const)
-            : ("capabilityProjection" as const),
-        deliveryMode:
-          profile === "documentDeclarationSet"
-            ? ("document" as const)
-            : ("roleProjection" as const),
+        sourceKind: contextSourceKind,
+        deliveryMode: contextDeliveryMode,
         authority: characters,
       },
       {
         role: "setupAuthoring" as const,
-        sourceKind:
-          profile === "documentDeclarationSet"
-            ? ("declarationSet" as const)
-            : ("capabilityProjection" as const),
-        deliveryMode:
-          profile === "documentDeclarationSet"
-            ? ("document" as const)
-            : ("roleProjection" as const),
+        sourceKind: contextSourceKind,
+        deliveryMode: contextDeliveryMode,
         authority: setup,
+      },
+      {
+        role: "player" as const,
+        sourceKind: contextSourceKind,
+        deliveryMode: contextDeliveryMode,
+        authority: scenarioAuthority,
+      },
+      {
+        role: "postPlayReview" as const,
+        sourceKind: contextSourceKind,
+        deliveryMode: contextDeliveryMode,
+        authority: scenarioReviewAuthority,
       },
     ],
   };
@@ -928,6 +936,38 @@ describe("complete Raw Swarm path comparison", () => {
     expect(validateCompletePathMeasurement(malformedBundle)).toMatchObject({
       _tag: "Left",
       left: expect.stringContaining("setup authority"),
+    });
+  });
+
+  test("requires one profile context authority for every model role", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const manifest = parseJsonRecord(
+      readFileSync(
+        resolve(repoRoot, benchmark.contextSourceManifest.path),
+        "utf8",
+      ),
+    );
+    expect(Array.isArray(manifest.sources)).toBe(true);
+    if (!Array.isArray(manifest.sources)) return;
+    const root = resolve(repoRoot, benchmark.contextSourceManifest.path, "..");
+    const incompleteManifest = writeAuthority(
+      root,
+      "incomplete-benchmark-context-sources.json",
+      `${JSON.stringify({
+        ...manifest,
+        sources: manifest.sources.filter(
+          (source) => isJsonRecord(source) && source.role !== "postPlayReview",
+        ),
+      })}\n`,
+    );
+
+    const validation = validateCompletePathMeasurement({
+      ...benchmark,
+      contextSourceManifest: incompleteManifest,
+    });
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("postPlayReview"),
     });
   });
 

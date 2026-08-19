@@ -1259,16 +1259,6 @@ const BenchmarkContextSourceManifestEntryFields = {
 const BenchmarkContextSourceManifestEntrySchema = Schema.Union(
   Schema.Struct({
     ...BenchmarkContextSourceManifestEntryFields,
-    sourceKind: Schema.Literal(
-      "scenarioArtifact",
-      "reviewArtifact",
-      "stageFacts",
-      "stagePlan",
-    ),
-    deliveryMode: Schema.Literal("artifact"),
-  }),
-  Schema.Struct({
-    ...BenchmarkContextSourceManifestEntryFields,
     sourceKind: Schema.Literal("declarationSet"),
     deliveryMode: Schema.Literal("document"),
   }),
@@ -3134,14 +3124,19 @@ function benchmarkAuthorityIssues(
       measurement.profile === "documentDeclarationSet"
         ? "declarationSet"
         : "capabilityProjection";
-    if (
-      !manifest.right.sources.some(
-        ({ sourceKind }) => sourceKind === expectedSourceKind,
-      )
-    ) {
-      issues.push(
-        `Benchmark context-source manifest does not retain a ${expectedSourceKind} delivery for its profile.`,
+    for (const role of BENCHMARK_CONTEXT_SOURCE_ROLES) {
+      const source = manifest.right.sources.find(
+        (candidate) => candidate.role === role,
       );
+      if (source === undefined) {
+        issues.push(
+          `Benchmark context-source manifest does not retain the ${role} role.`,
+        );
+      } else if (source.sourceKind !== expectedSourceKind) {
+        issues.push(
+          `Benchmark context-source manifest does not retain a ${expectedSourceKind} delivery for the ${role} role.`,
+        );
+      }
     }
   }
 
