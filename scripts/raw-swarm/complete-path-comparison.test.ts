@@ -7,6 +7,7 @@ import { afterEach, describe, expect, test } from "vitest";
 
 import {
   assembleCompletePathMeasurement,
+  BenchmarkContextSourceManifestDocumentSchema,
   codexOutputJsonSchema,
   CurrentScenarioCompositeReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
@@ -123,7 +124,12 @@ if (Either.isLeft(stagePlanResult)) throw new Error(stagePlanResult.left);
 const stagePlan = stagePlanResult.right;
 const stageReason = (
   stage: (typeof stagePlan.stages)[number]["stage"],
-): string => stagePlan.stages.find((entry) => entry.stage === stage)!.reason;
+): string => {
+  const entry = stagePlan.stages.find((candidate) => candidate.stage === stage);
+  if (entry === undefined)
+    throw new Error(`Synthetic ${stage} stage is missing.`);
+  return entry.reason;
+};
 type CurrentInvocation = CurrentCompletePathMeasurement["invocations"][number];
 
 const usage = {
@@ -785,12 +791,15 @@ function benchmarkMeasurement(
 ): CurrentBenchmarkMeasurement {
   const source = measurement({}, implementationGitSha);
   const root = resolve(repoRoot, source.stagePlanAuthority.path, "..");
-  const scenario = source.findings.authorities.find(
-    ({ role }) => role === "scenario",
-  )!;
-  const scenarioReview = source.findings.authorities.find(
-    ({ role }) => role === "scenarioReview",
-  )!;
+  const requiredFindingAuthority = (role: string) => {
+    const authority = source.findings.authorities.find(
+      (candidate) => candidate.role === role,
+    );
+    if (authority === undefined) {
+      throw new Error(`Synthetic ${role} finding authority is missing.`);
+    }
+    return authority;
+  };
   const authorityOnly = ({
     path,
     byteLength,
@@ -800,8 +809,10 @@ function benchmarkMeasurement(
     byteLength,
     sha256,
   });
-  const scenarioAuthority = authorityOnly(scenario);
-  const scenarioReviewAuthority = authorityOnly(scenarioReview);
+  const scenarioAuthority = authorityOnly(requiredFindingAuthority("scenario"));
+  const scenarioReviewAuthority = authorityOnly(
+    requiredFindingAuthority("scenarioReview"),
+  );
   const stageFacts = writeAuthority(
     root,
     "benchmark-stage-facts.json",
@@ -834,6 +845,17 @@ function benchmarkMeasurement(
       benchmarkContextForRole(profile, role, declarationBundle),
     ),
   }));
+  const contextAuthorityForRole = (
+    role: (typeof BENCHMARK_CONTEXT_ROLES)[number],
+  ) => {
+    const context = contextAuthorities.find(
+      (candidate) => candidate.role === role,
+    );
+    if (context === undefined) {
+      throw new Error(`Synthetic ${role} context authority is missing.`);
+    }
+    return context.authority;
+  };
   const contextDocument = {
     schemaVersion: 1,
     profile,
@@ -850,12 +872,8 @@ function benchmarkMeasurement(
     "benchmark-context-sources.json",
     `${JSON.stringify(contextDocument)}\n`,
   );
-  const playerContextAuthority = contextAuthorities.find(
-    ({ role }) => role === "player",
-  )!.authority;
-  const postPlayContextAuthority = contextAuthorities.find(
-    ({ role }) => role === "postPlayReview",
-  )!.authority;
+  const playerContextAuthority = contextAuthorityForRole("player");
+  const postPlayContextAuthority = contextAuthorityForRole("postPlayReview");
   const playerContextDelivery = writeAuthority(
     root,
     "player-context-delivery.json",
@@ -922,33 +940,39 @@ function benchmarkMeasurement(
       entry.phase !== "scenarioGeneration" &&
       entry.phase !== "scenarioCompositeReview",
   );
-  const requiredComposite = (index: number) => {
-    const retained = compositeRetained[index];
+  const requiredComposite = (reviewStage: "milestone" | "final") => {
+    const invocationId = `composite-${reviewStage}`;
+    const retained = compositeRetained.find(
+      ({ entry }) => entry.invocationId === invocationId,
+    );
+    if (retained === undefined) {
+      throw new Error(`Synthetic ${reviewStage} composite review is missing.`);
+    }
+    return retained;
+  };
+  const requiredAuxiliary = (invocationId: string) => {
+    const retained = auxiliaryRetained.find(
+      ({ entry }) => entry.invocationId === invocationId,
+    );
     if (retained === undefined) {
       throw new Error(
-        `Synthetic composite review ${String(index)} is missing.`,
+        `Synthetic auxiliary invocation ${invocationId} is missing.`,
       );
     }
     return retained;
   };
-  const requiredAuxiliary = (index: number) => {
-    const retained = auxiliaryRetained[index];
-    if (retained === undefined) {
-      throw new Error(
-        `Synthetic auxiliary invocation ${String(index)} is missing.`,
-      );
-    }
-    return retained;
-  };
+  type ReviewStage = "milestone" | "final";
+  const reviewStages: readonly ReviewStage[] =
+    profile === "documentDeclarationSet" ? ["milestone", "final"] : ["final"];
   const orderedRetained =
     profile === "documentDeclarationSet"
       ? [
           ...generationRetained,
-          requiredComposite(0),
-          requiredAuxiliary(0),
-          requiredComposite(1),
-          requiredAuxiliary(1),
-          requiredAuxiliary(2),
+          requiredComposite("milestone"),
+          requiredAuxiliary("benchmark-readiness"),
+          requiredComposite("final"),
+          requiredAuxiliary("benchmark-character-1"),
+          requiredAuxiliary("benchmark-character-2"),
           ...laterRetained,
         ]
       : [...generationRetained, ...compositeRetained, ...laterRetained];
@@ -957,13 +981,12 @@ function benchmarkMeasurement(
     `benchmark-${profile}-invocations.jsonl`,
     `${orderedRetained.map(({ entry }) => JSON.stringify(entry)).join("\n")}\n`,
   );
-  const reviewStages =
-    profile === "documentDeclarationSet"
-      ? (["milestone", "final"] as const)
-      : (["final"] as const);
-  const retainedReplayAuthorities = reviewStages.map((reviewStage) => {
-    const invocationId =
-      reviewStage === "milestone" ? "composite-milestone" : "composite-final";
+  const retainedReplayByStage = new Map<
+    ReviewStage,
+    ReturnType<typeof writeAuthority>
+  >();
+  for (const reviewStage of reviewStages) {
+    const invocationId = `composite-${reviewStage}`;
     const retainedInput = {
       schemaVersion: 2 as const,
       phase: "scenarioCompositeReview" as const,
@@ -981,17 +1004,21 @@ function benchmarkMeasurement(
       ),
       result: compositeReview,
     };
-    return writeAuthority(
-      root,
-      `benchmark-${profile}-pre-play-${reviewStage}.json`,
-      `${JSON.stringify(retainedInput)}\n`,
+    retainedReplayByStage.set(
+      reviewStage,
+      writeAuthority(
+        root,
+        `benchmark-${profile}-pre-play-${reviewStage}.json`,
+        `${JSON.stringify(retainedInput)}\n`,
+      ),
     );
-  });
-  const retainedSourceAuthorities = reviewStages.map((reviewStage) => {
-    const invocationId =
-      reviewStage === "milestone"
-        ? "source-composite-milestone"
-        : "source-composite-final";
+  }
+  const retainedSourceByStage = new Map<
+    ReviewStage,
+    ReturnType<typeof writeAuthority>
+  >();
+  for (const reviewStage of reviewStages) {
+    const invocationId = `source-composite-${reviewStage}`;
     const retainedInput = {
       schemaVersion: 2 as const,
       phase: "scenarioCompositeReview" as const,
@@ -1009,41 +1036,23 @@ function benchmarkMeasurement(
       ),
       result: compositeReview,
     };
-    return writeAuthority(
-      root,
-      `benchmark-${profile}-pre-play-source-${reviewStage}.json`,
-      `${JSON.stringify(retainedInput)}\n`,
+    retainedSourceByStage.set(
+      reviewStage,
+      writeAuthority(
+        root,
+        `benchmark-${profile}-pre-play-source-${reviewStage}.json`,
+        `${JSON.stringify(retainedInput)}\n`,
+      ),
     );
-  });
-  const retainedReviewEvents = new Map(
-    reviewStages.map((reviewStage) => {
-      const retained = canonicalRetained.find(
-        ({ entry }) => entry.invocationId === `composite-${reviewStage}`,
-      );
-      if (retained === undefined) {
-        throw new Error(`Synthetic ${reviewStage} review event is missing.`);
-      }
-      return [reviewStage, retained.authority] as const;
-    }),
-  );
-  const retainedReplayByStage = new Map(
-    reviewStages.map((reviewStage, index) => {
-      const authority = retainedReplayAuthorities[index];
-      if (authority === undefined) {
-        throw new Error(`Synthetic ${reviewStage} replay is missing.`);
-      }
-      return [reviewStage, authority] as const;
-    }),
-  );
-  const retainedSourceByStage = new Map(
-    reviewStages.map((reviewStage, index) => {
-      const authority = retainedSourceAuthorities[index];
-      if (authority === undefined) {
-        throw new Error(`Synthetic ${reviewStage} source review is missing.`);
-      }
-      return [reviewStage, authority] as const;
-    }),
-  );
+  }
+  const retainedReviewEvents = new Map<
+    ReviewStage,
+    ReturnType<typeof writeAuthority>
+  >();
+  for (const reviewStage of reviewStages) {
+    const retained = requiredComposite(reviewStage);
+    retainedReviewEvents.set(reviewStage, retained.authority);
+  }
   const reviewEventFor = (reviewStage: "milestone" | "final") => {
     const authority = retainedReviewEvents.get(reviewStage);
     if (authority === undefined) {
@@ -1106,7 +1115,9 @@ function benchmarkMeasurement(
       },
       ...(profile === "documentDeclarationSet"
         ? (() => {
-            const readinessInvocation = requiredAuxiliary(0).entry;
+            const readinessInvocation = requiredAuxiliary(
+              "benchmark-readiness",
+            ).entry;
             const readinessResultValue = {
               classification: "ready" as const,
               evidence: "Synthetic readiness review is ready.",
@@ -1147,7 +1158,7 @@ function benchmarkMeasurement(
               },
               {
                 role: "prePlayReviewReadinessEvents",
-                ...requiredAuxiliary(0).authority,
+                ...requiredAuxiliary("benchmark-readiness").authority,
               },
             ];
           })()
@@ -1756,11 +1767,22 @@ describe("complete Raw Swarm path comparison", () => {
       : [];
     expect(sources.length).toBe(BENCHMARK_CONTEXT_ROLES.length);
     if (sources.length < 2) return;
+    const sourceAuthorityAt = (index: number): Record<string, unknown> => {
+      const source = sources[index];
+      if (source === undefined || !isJsonRecord(source.authority)) {
+        throw new Error(
+          `Synthetic context authority ${String(index)} is missing.`,
+        );
+      }
+      return source.authority;
+    };
+    const firstAuthority = sourceAuthorityAt(0);
+    const secondAuthority = sourceAuthorityAt(1);
     const swappedSources = sources.map((source, index) =>
       index === 0
-        ? { ...source, authority: sources[1]!.authority }
+        ? { ...source, authority: secondAuthority }
         : index === 1
-          ? { ...source, authority: sources[0]!.authority }
+          ? { ...source, authority: firstAuthority }
           : source,
     );
     const root = resolve(repoRoot, benchmark.contextSourceManifest.path, "..");
@@ -1778,12 +1800,7 @@ describe("complete Raw Swarm path comparison", () => {
       left: expect.stringContaining("canonical"),
     });
 
-    const firstAuthority = sources[0]!.authority;
-    if (
-      !isJsonRecord(firstAuthority) ||
-      typeof firstAuthority.path !== "string"
-    )
-      return;
+    if (typeof firstAuthority.path !== "string") return;
     writeFileSync(
       resolve(repoRoot, firstAuthority.path),
       "Tampered benchmark context.\n",
@@ -2069,6 +2086,46 @@ describe("complete Raw Swarm path comparison", () => {
       _tag: "Left",
       left: expect.stringContaining("postPlayReview"),
     });
+  });
+
+  test("decodes context manifests as canonical profile-specific six-role tuples", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const manifest = parseJsonRecord(
+      readFileSync(
+        resolve(repoRoot, benchmark.contextSourceManifest.path),
+        "utf8",
+      ),
+    );
+    const decodeManifest = (value: unknown) =>
+      Schema.decodeUnknownEither(BenchmarkContextSourceManifestDocumentSchema, {
+        onExcessProperty: "error",
+      })(value);
+    expect(Either.isRight(decodeManifest(manifest))).toBe(true);
+    if (!Array.isArray(manifest.sources)) return;
+    expect(
+      Either.isLeft(
+        decodeManifest({
+          ...manifest,
+          sources: [...manifest.sources].reverse(),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodeManifest({
+          ...manifest,
+          sources: manifest.sources.slice(0, -1),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decodeManifest({
+          ...manifest,
+          profile: "documentDeclarationSet",
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("parses benchmark measurements without widening production complete-path parsing", () => {

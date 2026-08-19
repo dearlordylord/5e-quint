@@ -522,9 +522,9 @@ export function fixedBenchmarkCodexArgs(
   model: string,
   reasoningEffort: string,
   prompt: string,
-  schemaPath?: string,
-  outputPath?: string,
-  sandbox: "danger-full-access" | "workspace-write" = "danger-full-access",
+  schemaPath: string | undefined,
+  outputPath: string | undefined,
+  sandbox: "workspace-write",
 ): readonly [string, ...string[]] {
   return [
     "exec",

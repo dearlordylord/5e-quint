@@ -73,6 +73,9 @@ describe("fixed scenario benchmark boundary", () => {
         "gpt-5.6-sol",
         "medium",
         "Review the synthetic source.",
+        undefined,
+        undefined,
+        "workspace-write",
       ),
     ).toContain("--skip-git-repo-check");
   });

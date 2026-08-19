@@ -16,6 +16,7 @@ import {
   type BenchmarkModelInvocationPhase,
   MODEL_INVOCATION_PHASES,
   CurrentModelInvocationLedgerEntrySchema,
+  ModelInvocationIdentityFields,
   ModelInvocationLedgerEntrySchema,
   modelInvocationEvidenceFromEvents,
   parseModelInvocationLedgerEntry,
@@ -70,6 +71,7 @@ import {
   ScenarioIdSchema,
   sha256Canonical,
   sha256Text,
+  type GitSha,
 } from "./transcript.ts";
 import {
   ScenarioStagePlanSchema,
@@ -1258,13 +1260,12 @@ export const BENCHMARK_READINESS_AUTHORITY_ROLES = {
 export const BenchmarkReadinessInputSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   profile: Schema.Literal("documentDeclarationSet"),
-  scenarioId: ScenarioIdSchema,
+  ...ModelInvocationIdentityFields,
+  model: Schema.Literal("gpt-5.6-luna"),
+  reasoningEffort: Schema.Literal("max"),
   responsibility: Schema.Literal("scenarioQuality"),
   phase: Schema.Literal("scenarioReadiness"),
   sourceGitSha: GitShaSchema,
-  invocationId: Schema.NonEmptyString,
-  model: Schema.Literal("gpt-5.6-luna"),
-  reasoningEffort: Schema.Literal("max"),
   prompt: Schema.NonEmptyString,
   outputJsonSchema: Schema.Unknown,
   result: ScenarioQualityReviewSchema,
@@ -1300,31 +1301,87 @@ export type BenchmarkRunDescriptor = Schema.Schema.Type<
 >;
 
 const BENCHMARK_CONTEXT_SOURCE_ROLES = BENCHMARK_CONTEXT_ROLES;
-const BenchmarkContextSourceManifestEntryFields = {
-  role: Schema.Literal(...BENCHMARK_CONTEXT_SOURCE_ROLES),
-  authority: ArtifactAuthoritySchema,
-} as const;
-const BenchmarkContextSourceManifestEntrySchema = Schema.Union(
-  Schema.Struct({
-    ...BenchmarkContextSourceManifestEntryFields,
-    sourceKind: Schema.Literal("declarationSet"),
-    deliveryMode: Schema.Literal("document"),
-  }),
-  Schema.Struct({
-    ...BenchmarkContextSourceManifestEntryFields,
-    sourceKind: Schema.Literal("capabilityProjection"),
-    deliveryMode: Schema.Literal("roleProjection"),
-  }),
-);
-const BenchmarkContextSourceManifestSourcesSchema = Schema.NonEmptyArray(
-  BenchmarkContextSourceManifestEntrySchema,
-);
-export const BenchmarkContextSourceManifestDocumentSchema = Schema.Struct({
+type BenchmarkContextSourceKind = "declarationSet" | "capabilityProjection";
+type BenchmarkContextDeliveryMode = "document" | "roleProjection";
+
+function benchmarkContextSourceManifestEntrySchema<
+  Role extends BenchmarkContextRole,
+  SourceKind extends BenchmarkContextSourceKind,
+  DeliveryMode extends BenchmarkContextDeliveryMode,
+>(role: Role, sourceKind: SourceKind, deliveryMode: DeliveryMode) {
+  return Schema.Struct({
+    role: Schema.Literal(role),
+    sourceKind: Schema.Literal(sourceKind),
+    deliveryMode: Schema.Literal(deliveryMode),
+    authority: ArtifactAuthoritySchema,
+  });
+}
+
+function benchmarkContextSourceManifestSourcesSchema<
+  SourceKind extends BenchmarkContextSourceKind,
+  DeliveryMode extends BenchmarkContextDeliveryMode,
+>(sourceKind: SourceKind, deliveryMode: DeliveryMode) {
+  return Schema.Tuple(
+    benchmarkContextSourceManifestEntrySchema(
+      BENCHMARK_CONTEXT_SOURCE_ROLES[0],
+      sourceKind,
+      deliveryMode,
+    ),
+    benchmarkContextSourceManifestEntrySchema(
+      BENCHMARK_CONTEXT_SOURCE_ROLES[1],
+      sourceKind,
+      deliveryMode,
+    ),
+    benchmarkContextSourceManifestEntrySchema(
+      BENCHMARK_CONTEXT_SOURCE_ROLES[2],
+      sourceKind,
+      deliveryMode,
+    ),
+    benchmarkContextSourceManifestEntrySchema(
+      BENCHMARK_CONTEXT_SOURCE_ROLES[3],
+      sourceKind,
+      deliveryMode,
+    ),
+    benchmarkContextSourceManifestEntrySchema(
+      BENCHMARK_CONTEXT_SOURCE_ROLES[4],
+      sourceKind,
+      deliveryMode,
+    ),
+    benchmarkContextSourceManifestEntrySchema(
+      BENCHMARK_CONTEXT_SOURCE_ROLES[5],
+      sourceKind,
+      deliveryMode,
+    ),
+  );
+}
+
+const BenchmarkContextSourceManifestCommonFields = {
   schemaVersion: Schema.Literal(1),
-  profile: BenchmarkImplementationProfileSchema,
   scenarioId: ScenarioIdSchema,
-  sources: BenchmarkContextSourceManifestSourcesSchema,
+} as const;
+
+const BenchmarkDocumentDeclarationSetSourceManifestSchema = Schema.Struct({
+  ...BenchmarkContextSourceManifestCommonFields,
+  profile: Schema.Literal("documentDeclarationSet"),
+  sources: benchmarkContextSourceManifestSourcesSchema(
+    "declarationSet",
+    "document",
+  ),
 });
+
+const BenchmarkBoundedCapabilityProjectionSourceManifestSchema = Schema.Struct({
+  ...BenchmarkContextSourceManifestCommonFields,
+  profile: Schema.Literal("boundedCapabilityProjection"),
+  sources: benchmarkContextSourceManifestSourcesSchema(
+    "capabilityProjection",
+    "roleProjection",
+  ),
+});
+
+export const BenchmarkContextSourceManifestDocumentSchema = Schema.Union(
+  BenchmarkDocumentDeclarationSetSourceManifestSchema,
+  BenchmarkBoundedCapabilityProjectionSourceManifestSchema,
+);
 export type BenchmarkContextSourceManifestDocument = Schema.Schema.Type<
   typeof BenchmarkContextSourceManifestDocumentSchema
 >;
@@ -2928,26 +2985,31 @@ function currentAuthorityContentIssues(
   const scenarioReviewAuthorities = findings.authorities.filter(({ role }) =>
     isScenarioReviewAuthorityRole(role),
   );
-  let scenarioReviewGitSha: string | undefined;
-  for (const authority of scenarioReviewAuthorities) {
-    const value = readAuthorityJson(authority);
-    if (value.tag === "invalid") {
-      issues.push(value.message);
-      continue;
-    }
-    const decoded = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
-      onExcessProperty: "error",
-    })(value.value);
-    if (Either.isLeft(decoded)) {
-      issues.push(
-        `Scenario-review authority ${authority.role} has an unsupported current schema.`,
-      );
-      continue;
-    }
-    scenarioReviewGitSha ??= decoded.right.gitSha;
+  const decodedScenarioReviews = scenarioReviewAuthorities.flatMap(
+    (authority) => {
+      const value = readAuthorityJson(authority);
+      if (value.tag === "invalid") {
+        issues.push(value.message);
+        return [];
+      }
+      const decoded = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
+        onExcessProperty: "error",
+      })(value.value);
+      if (Either.isLeft(decoded)) {
+        issues.push(
+          `Scenario-review authority ${authority.role} has an unsupported current schema.`,
+        );
+        return [];
+      }
+      return [{ authority, review: decoded.right }];
+    },
+  );
+  const scenarioReviewGitSha: GitSha | undefined =
+    decodedScenarioReviews[0]?.review.gitSha;
+  for (const { authority, review } of decodedScenarioReviews) {
     if (
-      decoded.right.scenarioId !== findings.run.scenarioId ||
-      decoded.right.scenarioSha256 !== expectedScenarioSha256 ||
+      review.scenarioId !== findings.run.scenarioId ||
+      review.scenarioSha256 !== expectedScenarioSha256 ||
       (scenarioIdentity.tag === "admitted" &&
         authority.sha256 !== scenarioIdentity.scenarioReviewSha256)
     ) {
@@ -3746,7 +3808,7 @@ function benchmarkReviewAuthorityByStage(
 function benchmarkRetainedPrePlayReviewIssues(input: {
   readonly measurement: CurrentBenchmarkMeasurement;
   readonly findings: FindingsProjection;
-  readonly scenarioReviewGitSha: string;
+  readonly scenarioReviewGitSha: GitSha;
   readonly expectedReviewSchema:
     | typeof HistoricalScenarioCompositeReviewSchema
     | typeof CurrentScenarioCompositeReviewSchema;
@@ -3977,46 +4039,50 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     const readinessSourceAuthority = readinessAuthorities.source[0];
     const readinessResultAuthority = readinessAuthorities.result[0];
     const readinessEventsAuthority = readinessAuthorities.events[0];
-    let readinessInput: BenchmarkReadinessInput | undefined;
-    if (readinessSourceAuthority !== undefined) {
-      const readinessSource = benchmarkAuthorityJson(
-        readinessSourceAuthority,
-        "readiness source",
-        issues,
-      );
-      const decoded = Schema.decodeUnknownEither(
-        BenchmarkReadinessInputSchema,
-        { onExcessProperty: "error" },
-      )(readinessSource);
-      if (Either.isLeft(decoded)) {
-        issues.push(
-          `Benchmark readiness source authority is not a retained readiness envelope: ${decoded.left.message}`,
-        );
-      } else {
-        readinessInput = decoded.right;
-        if (
-          readinessInput.scenarioId !== measurement.scenarioId ||
-          readinessInput.sourceGitSha !== scenarioReviewGitSha ||
-          canonicalJson(readinessInput.outputJsonSchema) !==
-            canonicalJson(codexOutputJsonSchema(ScenarioQualityReviewSchema))
-        ) {
-          issues.push(
-            "Benchmark readiness source authority is not bound to the scenario review identity and readiness schema.",
-          );
-        }
-        if (
-          readinessInvocation !== undefined &&
-          (readinessInput.invocationId !== readinessInvocation.invocationId ||
-            readinessInput.model !== readinessInvocation.model ||
-            readinessInput.reasoningEffort !==
-              readinessInvocation.reasoningEffort)
-        ) {
-          issues.push(
-            "Benchmark readiness source authority does not identify its retained readiness invocation.",
-          );
-        }
-      }
-    }
+    const readinessInput: BenchmarkReadinessInput | undefined =
+      readinessSourceAuthority === undefined
+        ? undefined
+        : (() => {
+            const readinessSource = benchmarkAuthorityJson(
+              readinessSourceAuthority,
+              "readiness source",
+              issues,
+            );
+            const decoded = Schema.decodeUnknownEither(
+              BenchmarkReadinessInputSchema,
+              { onExcessProperty: "error" },
+            )(readinessSource);
+            if (Either.isLeft(decoded)) {
+              issues.push(
+                `Benchmark readiness source authority is not a retained readiness envelope: ${decoded.left.message}`,
+              );
+              return undefined;
+            }
+            const input = decoded.right;
+            if (
+              input.scenarioId !== measurement.scenarioId ||
+              input.sourceGitSha !== scenarioReviewGitSha ||
+              canonicalJson(input.outputJsonSchema) !==
+                canonicalJson(
+                  codexOutputJsonSchema(ScenarioQualityReviewSchema),
+                )
+            ) {
+              issues.push(
+                "Benchmark readiness source authority is not bound to the scenario review identity and readiness schema.",
+              );
+            }
+            if (
+              readinessInvocation !== undefined &&
+              (input.invocationId !== readinessInvocation.invocationId ||
+                input.model !== readinessInvocation.model ||
+                input.reasoningEffort !== readinessInvocation.reasoningEffort)
+            ) {
+              issues.push(
+                "Benchmark readiness source authority does not identify its retained readiness invocation.",
+              );
+            }
+            return input;
+          })();
     if (readinessResultAuthority !== undefined) {
       const readinessResult = benchmarkAuthorityJson(
         readinessResultAuthority,
@@ -4361,7 +4427,6 @@ function benchmarkAuthorityIssues(
     );
   }
 
-  let scenarioReviewGitSha: string | undefined;
   const scenarioReviewValue = benchmarkAuthorityJson(
     bundle.scenarioReview,
     "scenario review",
@@ -4371,12 +4436,16 @@ function benchmarkAuthorityIssues(
     FinalScenarioReviewSchema,
     { onExcessProperty: "error" },
   )(scenarioReviewValue);
+  const scenarioReviewGitSha: GitSha | undefined = Either.isRight(
+    decodedScenarioReview,
+  )
+    ? decodedScenarioReview.right.gitSha
+    : undefined;
   if (Either.isLeft(decodedScenarioReview)) {
     issues.push(
       `Benchmark scenario-review authority is invalid: ${decodedScenarioReview.left.message}`,
     );
   } else {
-    scenarioReviewGitSha = decodedScenarioReview.right.gitSha;
     if (
       decodedScenarioReview.right.scenarioId !== measurement.scenarioId ||
       decodedScenarioReview.right.scenarioSha256 !== bundle.scenario.sha256

@@ -119,16 +119,21 @@ const ModelInvocationExitSchema = Schema.Union(
   }),
 );
 
-/** Historical records retain the pre-v2 protocol without invented dimensions. */
-const ModelInvocationLedgerEntryV1Schema = Schema.Struct({
-  schemaVersion: Schema.Literal(1),
+/** Identity fields shared by every retained model invocation envelope. */
+export const ModelInvocationIdentityFields = {
   scenarioId: ScenarioIdSchema,
-  gitSha: GitShaSchema,
-  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
-  phase: Schema.Literal(...HISTORICAL_MODEL_INVOCATION_PHASES),
   invocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
   reasoningEffort: Schema.NonEmptyString,
+} as const;
+
+/** Historical records retain the pre-v2 protocol without invented dimensions. */
+const ModelInvocationLedgerEntryV1Schema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  ...ModelInvocationIdentityFields,
+  gitSha: GitShaSchema,
+  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  phase: Schema.Literal(...HISTORICAL_MODEL_INVOCATION_PHASES),
   startedAt: Schema.NonEmptyString,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: ModelInvocationExitSchema,
@@ -138,14 +143,11 @@ const ModelInvocationLedgerEntryV1Schema = Schema.Struct({
 /** Current v2 evidence written by the invocation runner. */
 export const CurrentModelInvocationLedgerEntrySchema = Schema.Struct({
   schemaVersion: Schema.Literal(2),
-  scenarioId: ScenarioIdSchema,
+  ...ModelInvocationIdentityFields,
   gitSha: GitShaSchema,
   eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
   phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
   stagePlanReason: Schema.NonEmptyTrimmedString,
-  invocationId: Schema.NonEmptyString,
-  model: Schema.NonEmptyString,
-  reasoningEffort: Schema.NonEmptyString,
   startedAt: Schema.NonEmptyString,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: ModelInvocationExitSchema,
@@ -237,13 +239,10 @@ export const ModelInvocationCompletedEventSchema = Schema.Union(
 const BenchmarkAuxiliaryInvocationCommonFields = {
   schemaVersion: Schema.Literal(3),
   profile: Schema.Literal("documentDeclarationSet"),
-  scenarioId: ScenarioIdSchema,
+  ...ModelInvocationIdentityFields,
   gitSha: GitShaSchema,
   eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
   stagePlanReason: Schema.NonEmptyTrimmedString,
-  invocationId: Schema.NonEmptyString,
-  model: Schema.NonEmptyString,
-  reasoningEffort: Schema.NonEmptyString,
   startedAt: Schema.NonEmptyString,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: ModelInvocationExitSchema,
