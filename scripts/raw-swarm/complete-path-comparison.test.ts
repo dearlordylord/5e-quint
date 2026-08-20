@@ -1873,6 +1873,66 @@ describe("complete Raw Swarm path comparison", () => {
       identity: "equivalent-path",
       equivalence: { tag: "equivalent" },
     });
+
+    const firstVerdict = postPlayValue.verdicts[0];
+    if (!isJsonRecord(firstVerdict)) return;
+    const postPlayWithAdditionalPass = replaceJsonAuthority(postPlay, {
+      ...postPlayValue,
+      verdicts: [
+        ...postPlayValue.verdicts,
+        {
+          ...firstVerdict,
+          claim: "An additional pass row over the same retained semantics.",
+          evidence: "Reviewer row count is not a semantic outcome.",
+        },
+      ],
+    });
+    const candidateWithAdditionalPass = withRetainedFindings(candidate, {
+      ...candidate.findings,
+      authorities: candidate.findings.authorities.map((authority) =>
+        authority.role === postPlay.role
+          ? postPlayWithAdditionalPass
+          : authority,
+      ),
+    });
+    expect(
+      compareCompleteEquivalentPaths({
+        baseline: validated(baseline),
+        candidate: validated(candidateWithAdditionalPass),
+      }),
+    ).toMatchObject({
+      identity: "equivalent-path",
+      equivalence: { tag: "equivalent" },
+    });
+
+    const postPlayWithReviewerError = replaceJsonAuthority(postPlay, {
+      ...postPlayValue,
+      verdicts: [
+        ...postPlayValue.verdicts,
+        {
+          class: "reviewer-error",
+          claim: "Synthetic reviewer error remains a distinct semantic class.",
+          evidence: "Distinct verdict classes must remain comparison evidence.",
+        },
+      ],
+    });
+    const candidateWithReviewerError = withRetainedFindings(candidate, {
+      ...candidate.findings,
+      authorities: candidate.findings.authorities.map((authority) =>
+        authority.role === postPlay.role
+          ? postPlayWithReviewerError
+          : authority,
+      ),
+    });
+    expect(
+      compareCompleteEquivalentPaths({
+        baseline: validated(baseline),
+        candidate: validated(candidateWithReviewerError),
+      }),
+    ).toMatchObject({
+      identity: "different-path",
+      equivalence: { tag: "incomparable" },
+    });
   }, 60_000);
 
   test("compares retained reliability observations without equating actionable issue fingerprints", () => {

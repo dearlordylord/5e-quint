@@ -2200,8 +2200,8 @@ function benchmarkReviewIdentity(
     }
     return {
       verdictClasses: [
-        ...decoded.right.verdicts.map(
-          ({ class: verdictClass }) => verdictClass,
+        ...new Set(
+          decoded.right.verdicts.map(({ class: verdictClass }) => verdictClass),
         ),
       ].sort(),
     };
