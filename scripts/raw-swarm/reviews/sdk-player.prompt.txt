@@ -25,6 +25,12 @@ intentionally do not exist: review whether the responsible boundary faithfully
 identified a real scenario/SDK obstruction without inventing or dropping
 scenario facts.
 
+`SCENARIO_REVIEW.json.gitSha` is the source revision at which that immutable
+scenario review was authored and admitted. It is not the execution revision and
+is expected to differ after later implementation-only commits. Bind the current
+execution to the transcript header and the post-play output `gitSha`; do not
+classify a difference from the scenario-review source revision as a defect.
+
 Treat recorded canonical SDK calls and results, not a player's prose summary,
 as execution authority. Try to falsify setup, Initiative, turn ownership,
 action economy, targeting, range and spatial claims, attack and damage

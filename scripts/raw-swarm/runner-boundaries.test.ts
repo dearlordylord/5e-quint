@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { describe, expect, test } from "vitest";
 
 import { repoRoot } from "./transcript.ts";
+import { PLAYER_CONTINUATION_PROTOCOL_REMINDER } from "./sdk-player/continuation-contract.ts";
 
 const recorder = resolve(repoRoot, "scripts/raw-swarm/mcp-recording-shim.ts");
 const launcher = resolve(repoRoot, "scripts/raw-swarm/run-freeplay.ts");
@@ -107,20 +108,24 @@ describe("RAW swarm runner boundaries", () => {
     );
     expect(prompt).toContain("{{POST_PLAY_REVIEW_ACCESS_POLICY}}");
     expect(prompt).toContain("{{POST_PLAY_REVIEW_CONTEXT_DESCRIPTION}}");
+    expect(prompt).toContain(
+      "SCENARIO_REVIEW.json.gitSha` is the source revision",
+    );
+    expect(prompt.replaceAll(/\s+/g, " ")).toContain(
+      "do not classify a difference from the scenario-review source revision as a defect",
+    );
     expect(prompt).not.toContain("without commands or tools");
   });
 
   test("gives the SDK player the surfaced protocol facts needed before its first call", () => {
     const script = readFileSync(sdkPlayerLauncher, "utf8");
 
-    expect(script).toContain(
-      "discoverBattleActs(context.session) returns the readonly act array directly",
+    expect(script).toContain("PLAYER_CONTINUATION_PROTOCOL_REMINDER.join");
+    expect(PLAYER_CONTINUATION_PROTOCOL_REMINDER.join(" ")).toContain(
+      'resolveScenarioMovement({ kind: "route", session, subject, route, speedKind, fills })',
     );
-    expect(script).toContain(
-      "resolveBattleRuntimeSubject({ session, subject, fills })",
-    );
-    expect(script).toContain(
-      "Every playerConcluded submission requires a nonempty conclusion field",
+    expect(PLAYER_CONTINUATION_PROTOCOL_REMINDER.join(" ")).toContain(
+      "Every continue and playerConcluded outcome must include a tacticalNote string",
     );
   });
 

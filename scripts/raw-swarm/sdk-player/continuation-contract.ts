@@ -12,6 +12,19 @@ import type { ScenarioSessionUpdateIssue } from "./scenario-session.ts";
 import type { ScenarioRelationResult } from "./scenario-session.ts";
 import type { CoordinateInput } from "../../../packages/tactical-space/src/index.ts";
 
+/**
+ * Minimal call-shape reference shared by the generated attempt and controller
+ * prompt. Keep it beside the public contract so those two delivery surfaces
+ * cannot drift into separate protocol descriptions.
+ */
+export const PLAYER_CONTINUATION_PROTOCOL_REMINDER = [
+  "discoverBattleActs(context.session) returns the readonly act array directly; do not read an .acts property from it.",
+  "Resolve an ordinary surfaced subject with resolveBattleRuntimeSubject({ session, subject, fills }).",
+  'Start surfaced movement with resolveScenarioMovement({ kind: "route", session, subject, route, speedKind, fills }); there is no movement field.',
+  'Continue surfaced movement holes with resolveScenarioMovement({ kind: "continue", session, fills }).',
+  "Every continue and playerConcluded outcome must include a tacticalNote string; playerConcluded also requires a nonempty conclusion.",
+] as const;
+
 export type ScenarioBattleResolutionResult =
   | (BattleRuntimeResolutionResult extends infer Result
       ? Result extends BattleRuntimeResolutionResult

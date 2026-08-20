@@ -406,6 +406,16 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
       expect(
         existsSync(join(trustedDestination, "FRONTIER_FILL_TYPES.md")),
       ).toBe(false);
+      const initialAttempt = readFileSync(
+        join(destination, "attempt.ts"),
+        "utf8",
+      );
+      expect(initialAttempt).toContain(
+        '// Start surfaced movement with resolveScenarioMovement({ kind: "route", session, subject, route, speedKind, fills }); there is no movement field.',
+      );
+      expect(initialAttempt).toContain(
+        "// Every continue and playerConcluded outcome must include a tacticalNote string; playerConcluded also requires a nonempty conclusion.",
+      );
 
       writeFileSync(
         join(destination, "attempt.ts"),
@@ -481,7 +491,6 @@ export const continueBattle: PlayerContinuation = (context) => {
           frontier: { kind: "acts" },
         },
       });
-
       writeFileSync(
         join(destination, "attempt.ts"),
         attemptSource('  const invalid: number = "not a number";'),

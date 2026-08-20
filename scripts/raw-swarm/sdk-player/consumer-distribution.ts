@@ -22,6 +22,7 @@ import {
 } from "../capability-projection.ts";
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
+import { PLAYER_CONTINUATION_PROTOCOL_REMINDER } from "./continuation-contract.ts";
 import type { JsonValue } from "./continuation-contract.ts";
 
 export type ConsumerDistributionInput = {
@@ -343,7 +344,8 @@ export function buildConsumerDistribution(
   writeFileSync(
     resolve(input.destination, "attempt.ts"),
     attemptSource(
-      `  return {
+      `${PLAYER_CONTINUATION_PROTOCOL_REMINDER.map((line) => `  // ${line}`).join("\n")}
+  return {
     kind: "continue",
     session: context.session,
     tacticalNote: "Replace this starter body with one coherent tactical continuation that makes at least one SDK call.",
