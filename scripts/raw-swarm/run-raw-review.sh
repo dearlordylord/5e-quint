@@ -42,6 +42,9 @@ pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/sdk-player/sdk-audit-cli.ts" \
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/sdk-player/sdk-review-packet-cli.ts" \
   "$RAW_REVIEW_AUDIT" "$RAW_REVIEW_TRANSCRIPT" "$RAW_REVIEW_PACKET"
 RAW_REVIEW_SCENARIO_ID=$(head -n 1 "$RAW_REVIEW_AUDIT" | jq -er '.scenarioId')
+RAW_REVIEW_EXECUTION_MANIFEST=$(realpath -- "$(dirname "$RAW_REVIEW_TRANSCRIPT")/../execution.json")
+RAW_REVIEW_EXECUTION_ID=$(jq -er '.executionId' "$RAW_REVIEW_EXECUTION_MANIFEST")
+RAW_REVIEW_EVIDENCE_SET_ID=$(jq -er '.evidenceSetId' "$RAW_REVIEW_EXECUTION_MANIFEST")
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/review-schema.ts" "$RAW_REVIEW_SCHEMA"
 RAW_REVIEW_TRANSCRIPT_BYTES=$(wc -c <"$RAW_REVIEW_TRANSCRIPT" | tr -d ' ')
 RAW_REVIEW_TRANSCRIPT_SHA256=$(sha256sum "$RAW_REVIEW_TRANSCRIPT" | cut -d' ' -f1)
@@ -222,12 +225,14 @@ fi
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/model-telemetry-cli.ts" \
   --phase postPlayReview \
   --scenario-id "$RAW_REVIEW_SCENARIO_ID" \
+  --execution-id "$RAW_REVIEW_EXECUTION_ID" \
+  --evidence-set-id "$RAW_REVIEW_EVIDENCE_SET_ID" \
   --git-sha "$RAW_REVIEW_INVOCATION_GIT_SHA" \
   --events "$RAW_REVIEW_EVENTS" \
   --ledger "$RAW_REVIEW_LEDGER" \
   --model gpt-5.6-luna \
   --reasoning-effort "$RAW_REVIEW_REASONING_EFFORT" \
-  --stage-plan-reason 'The admitted run reached its independent post-play review stage.' \
+  --stage-plan-reason 'The Execution reached its independent post-play review stage.' \
   --started-at "$RAW_REVIEW_STARTED_AT" \
   --elapsed-ms "$RAW_REVIEW_ELAPSED_MS" \
   --shell-status "$RAW_REVIEW_EFFECTIVE_STATUS"

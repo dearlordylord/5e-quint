@@ -54,7 +54,7 @@ type PacketAuditHeader = Pick<SdkAudit["header"], "transcriptPath"> &
     >
   >;
 
-function isRunArtifactRole(
+function isExecutionArtifactRole(
   role: string,
 ): role is (typeof SDK_REVIEW_PACKET_RUN_ARTIFACT_ROLES)[number] {
   return SDK_REVIEW_PACKET_RUN_ARTIFACT_ROLES.some(
@@ -63,18 +63,18 @@ function isRunArtifactRole(
 }
 
 function packetSourceRole(
-  runDirectory: string,
+  evidenceSetDirectory: string,
   path: string,
 ): string | undefined {
-  const role = relative(runDirectory, resolve(repoRoot, path));
+  const role = relative(evidenceSetDirectory, resolve(repoRoot, path));
   return role.length === 0 || role.startsWith("..") || role.startsWith("/")
     ? undefined
     : role;
 }
 
-function packetRunSourcesMatchAudit(packet: {
+function packetExecutionSourcesMatchAudit(packet: {
   readonly audit: { readonly header: PacketAuditHeader };
-  readonly runArtifacts: readonly {
+  readonly executionArtifacts: readonly {
     readonly path: string;
     readonly sha256: string;
     readonly firstLine: number;
@@ -88,12 +88,12 @@ function packetRunSourcesMatchAudit(packet: {
     readonly firstLine: number;
   }[];
 }): string | undefined {
-  const runDirectory = resolve(
+  const evidenceSetDirectory = resolve(
     repoRoot,
     dirname(dirname(packet.audit.header.transcriptPath)),
   );
   const sourceCoordinates = [
-    ...packet.runArtifacts.map(({ path, firstLine }) =>
+    ...packet.executionArtifacts.map(({ path, firstLine }) =>
       JSON.stringify(["run", path, firstLine]),
     ),
     ...packet.domainAuthorities.map(({ path, firstLine }) =>
@@ -106,12 +106,14 @@ function packetRunSourcesMatchAudit(packet: {
   if (new Set(sourceCoordinates).size !== sourceCoordinates.length) {
     return "Review evidence packet contains duplicate source coordinates.";
   }
-  const runRoles = packet.runArtifacts.map(({ path }) =>
-    packetSourceRole(runDirectory, path),
+  const runRoles = packet.executionArtifacts.map(({ path }) =>
+    packetSourceRole(evidenceSetDirectory, path),
   );
   if (
     runRoles.some((role) => role === undefined) ||
-    runRoles.some((role) => role !== undefined && !isRunArtifactRole(role))
+    runRoles.some(
+      (role) => role !== undefined && !isExecutionArtifactRole(role),
+    )
   ) {
     return "Review evidence packet contains a run artifact outside the audited run roles.";
   }
@@ -139,7 +141,7 @@ function packetRunSourcesMatchAudit(packet: {
   }
   const header = packet.audit.header;
   const sourceByRole = new Map(
-    packet.runArtifacts.flatMap((source, index) => {
+    packet.executionArtifacts.flatMap((source, index) => {
       const role = runRoles[index];
       return role === undefined ? [] : [[role, source] as const];
     }),
@@ -165,7 +167,7 @@ export function reviewEvidenceCatalogForPacket(packet: {
     readonly calls: readonly Pick<SdkAudit["calls"][number], "seq">[];
   };
   readonly retainedHeaderEvidence: JsonValue;
-  readonly runArtifacts: readonly Pick<
+  readonly executionArtifacts: readonly Pick<
     SdkReviewPacketSource,
     "path" | "numberedContent" | "sha256" | "firstLine"
   >[];
@@ -178,20 +180,22 @@ export function reviewEvidenceCatalogForPacket(packet: {
     "path" | "firstLine"
   >[];
 }): ReviewEvidenceSourceValidation {
-  const sourceBindingFailure = packetRunSourcesMatchAudit({
+  const sourceBindingFailure = packetExecutionSourcesMatchAudit({
     audit: packet.audit,
-    runArtifacts: packet.runArtifacts,
+    executionArtifacts: packet.executionArtifacts,
     domainAuthorities: packet.domainAuthorities ?? [],
     rawAuthorities: packet.rawAuthorities ?? [],
   });
   if (sourceBindingFailure !== undefined) {
     return { tag: "invalid", message: sourceBindingFailure };
   }
-  const runDirectory = dirname(dirname(packet.audit.header.transcriptPath));
+  const evidenceSetDirectory = dirname(
+    dirname(packet.audit.header.transcriptPath),
+  );
   const expectedPath = (name: "setup.ts" | "characters.ts") =>
-    resolve(repoRoot, runDirectory, "evidence", name);
+    resolve(repoRoot, evidenceSetDirectory, "evidence", name);
   const sourceFor = (name: "setup.ts" | "characters.ts") =>
-    packet.runArtifacts.find(
+    packet.executionArtifacts.find(
       (source) => resolve(repoRoot, source.path) === expectedPath(name),
     );
   const setup = sourceFor("setup.ts");

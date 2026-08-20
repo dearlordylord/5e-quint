@@ -29,7 +29,7 @@ describe("review invocation evidence", () => {
       directory,
       ledgerEntries: [
         {
-          schemaVersion: 2,
+          schemaVersion: 4,
           phase: "postPlayReview",
           stagePlanReason: "The fixture stage requires post-play review.",
           invocationId: "review",
@@ -75,7 +75,7 @@ describe("review invocation evidence", () => {
       directory,
       ledgerEntries: [
         {
-          schemaVersion: 2,
+          schemaVersion: 4,
           phase: "postPlayReview",
           stagePlanReason: "The fixture stage requires post-play review.",
           invocationId: "review",
@@ -111,7 +111,7 @@ describe("review invocation evidence", () => {
     );
     directories.push(ledgerDirectory);
     const entry = {
-      schemaVersion: 2 as const,
+      schemaVersion: 4 as const,
       phase: "postPlayReview" as const,
       stagePlanReason: "The fixture stage requires post-play review.",
       invocationId: "review",
@@ -172,7 +172,7 @@ describe("review invocation evidence", () => {
       directory,
       ledgerEntries: [
         {
-          schemaVersion: 2,
+          schemaVersion: 4,
           phase: "postPlayReview",
           stagePlanReason: "The fixture stage requires post-play review.",
           invocationId: "review",
@@ -195,6 +195,9 @@ describe("review invocation evidence", () => {
       .split("\n")
       .map((line) => {
         const entry = parseJsonRecord(line);
+        const subject = parseJsonRecord(JSON.stringify(entry.subject));
+        entry.scenarioId = subject.scenarioId;
+        delete entry.subject;
         delete entry.stagePlanReason;
         delete entry.result;
         return { ...entry, schemaVersion: 1 };
@@ -205,6 +208,6 @@ describe("review invocation evidence", () => {
     );
     expect(() =>
       readReviewInvocationEvidenceManifest(fixture.manifestPath),
-    ).toThrow(/Current review invocation evidence requires v2/);
+    ).toThrow(/Current review invocation evidence requires v4/);
   });
 });

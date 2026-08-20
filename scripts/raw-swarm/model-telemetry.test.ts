@@ -83,7 +83,11 @@ describe("Raw Swarm model invocation telemetry", () => {
     });
 
     const started = modelInvocationStartedEvent({
-      scenarioId: "synthetic-scenario",
+      subject: {
+        tag: "scenarioCampaign",
+        campaignId: "synthetic-campaign",
+        plannedScenarioId: "synthetic-scenario",
+      },
       gitSha: "a".repeat(40),
       phase: "scenarioGeneration",
       stagePlanReason: "The admitted plan requires scenario generation.",
@@ -131,6 +135,10 @@ describe("Raw Swarm model invocation telemetry", () => {
       "postPlayReview",
       "--scenario-id",
       "synthetic-scenario",
+      "--execution-id",
+      "synthetic-execution",
+      "--evidence-set-id",
+      "synthetic-evidence",
       "--git-sha",
       "a".repeat(40),
       "--events",
@@ -281,8 +289,13 @@ describe("Raw Swarm model invocation telemetry", () => {
 
   test("parses strict invocation ledger entries for downstream evidence", () => {
     const entry = {
-      schemaVersion: 2,
-      scenarioId: "generated-battle-test",
+      schemaVersion: 4,
+      subject: {
+        tag: "execution",
+        executionId: "synthetic-execution",
+        evidenceSetId: "synthetic-evidence",
+        scenarioId: "synthetic-model-telemetry-scenario",
+      },
       gitSha: "a".repeat(40),
       eventsSha256: "b".repeat(64),
       phase: "player",
@@ -336,7 +349,7 @@ describe("Raw Swarm model invocation telemetry", () => {
       Either.isRight(
         parseModelInvocationLedgerEntry({
           schemaVersion: 1,
-          scenarioId: entry.scenarioId,
+          scenarioId: entry.subject.scenarioId,
           gitSha: entry.gitSha,
           eventsSha256: entry.eventsSha256,
           phase: entry.phase,
@@ -354,7 +367,12 @@ describe("Raw Swarm model invocation telemetry", () => {
 
   test("rederives invocation identity and runner-owned timing from events", () => {
     const started = modelInvocationStartedEvent({
-      scenarioId: Schema.decodeUnknownSync(ScenarioIdSchema)("scenario"),
+      subject: {
+        tag: "execution",
+        executionId: "execution",
+        evidenceSetId: "evidence",
+        scenarioId: Schema.decodeUnknownSync(ScenarioIdSchema)("scenario"),
+      },
       gitSha: Schema.decodeUnknownSync(GitShaSchema)("a".repeat(40)),
       phase: "postPlayReview",
       stagePlanReason: "The admitted plan requires post-play review.",
@@ -389,7 +407,7 @@ describe("Raw Swarm model invocation telemetry", () => {
     expect(modelInvocationEvidenceFromEvents(events)).toMatchObject({
       tag: "valid",
       entry: {
-        schemaVersion: 2,
+        schemaVersion: 4,
         phase: "postPlayReview",
         stagePlanReason: "The admitted plan requires post-play review.",
         invocationId: "thread",
@@ -405,7 +423,7 @@ describe("Raw Swarm model invocation telemetry", () => {
     if (Either.isRight(currentEvidence)) {
       expect(currentEvidence.right.entry).toEqual(
         expect.objectContaining({
-          schemaVersion: 2,
+          schemaVersion: 4,
           stagePlanReason: expect.any(String),
           result: expect.objectContaining({ tag: "succeeded" }),
         }),
@@ -418,7 +436,12 @@ describe("Raw Swarm model invocation telemetry", () => {
 
   test("rejects malformed recognized runner events while ignoring unknown Codex events", () => {
     const started = modelInvocationStartedEvent({
-      scenarioId: "scenario",
+      subject: {
+        tag: "execution",
+        executionId: "execution",
+        evidenceSetId: "evidence",
+        scenarioId: "scenario",
+      },
       gitSha: "a".repeat(40),
       phase: "player",
       stagePlanReason: "The admitted stage requires player execution.",
@@ -536,7 +559,12 @@ describe("Raw Swarm model invocation telemetry", () => {
       entry: { schemaVersion: 1 },
     });
     const current = modelInvocationStartedEvent({
-      scenarioId: "scenario",
+      subject: {
+        tag: "execution",
+        executionId: "execution",
+        evidenceSetId: "evidence",
+        scenarioId: "scenario",
+      },
       gitSha: "a".repeat(40),
       phase: "player",
       stagePlanReason: "The admitted stage requires player execution.",
@@ -547,7 +575,7 @@ describe("Raw Swarm model invocation telemetry", () => {
     });
     expect(current).toMatchObject({
       _tag: "Right",
-      right: { schemaVersion: 2, stagePlanReason: expect.any(String) },
+      right: { schemaVersion: 4, stagePlanReason: expect.any(String) },
     });
     const historicalReadiness = modelInvocationEvidenceFromEvents([
       {
@@ -574,7 +602,7 @@ describe("Raw Swarm model invocation telemetry", () => {
     });
     expect(
       modelInvocationStartedEvent({
-        scenarioId: "scenario",
+        subject: { tag: "scenario", scenarioId: "scenario" },
         gitSha: "a".repeat(40),
         phase: "scenarioReadiness",
         stagePlanReason: "Readiness is historical only.",
@@ -589,7 +617,7 @@ describe("Raw Swarm model invocation telemetry", () => {
   test("returns parse failures instead of throwing for invalid event primitives", () => {
     expect(
       modelInvocationStartedEvent({
-        scenarioId: "",
+        subject: { tag: "scenario", scenarioId: "" },
         gitSha: "not-a-sha",
         phase: "not-a-phase",
         fallbackInvocationId: "",

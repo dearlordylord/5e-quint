@@ -62,12 +62,12 @@ export function retainReplayResultEvidence(input: {
 }
 
 function main(args: readonly string[]): void {
-  const [runPathInput, ...unexpected] = args;
-  if (runPathInput === undefined || unexpected.length > 0) {
-    fail("Usage: replay-sdk-player.ts <sdk-player-run-directory>");
+  const [evidenceSetPathInput, ...unexpected] = args;
+  if (evidenceSetPathInput === undefined || unexpected.length > 0) {
+    fail("Usage: replay-sdk-player.ts <evidence-set-directory>");
   }
-  const runPath = resolve(repoRoot, runPathInput);
-  const transcriptPath = resolve(runPath, "evidence/sdk-calls.jsonl");
+  const evidenceSetPath = resolve(repoRoot, evidenceSetPathInput);
+  const transcriptPath = resolve(evidenceSetPath, "evidence/sdk-calls.jsonl");
   const transcriptBytes = readFileSync(transcriptPath);
   const parsed = parseSdkTranscript(
     transcriptBytes
@@ -85,17 +85,18 @@ function main(args: readonly string[]): void {
     );
   }
   if (
-    sha256Text(readFileSync(resolve(runPath, "SCENARIO.md"), "utf8")) !==
-      parsed.value.header.scenarioSha256 ||
     sha256Text(
-      readFileSync(resolve(runPath, "SCENARIO_REVIEW.json"), "utf8"),
+      readFileSync(resolve(evidenceSetPath, "SCENARIO.md"), "utf8"),
+    ) !== parsed.value.header.scenarioSha256 ||
+    sha256Text(
+      readFileSync(resolve(evidenceSetPath, "SCENARIO_REVIEW.json"), "utf8"),
     ) !== parsed.value.header.scenarioReviewSha256
   ) {
     fail("Retained scenario or admission review diverged from the recording.");
   }
-  const stagePlanPath = resolve(runPath, "evidence/stage-plan.json");
+  const stagePlanPath = resolve(evidenceSetPath, "evidence/stage-plan.json");
   const stagePlanFindingsPath = resolve(
-    runPath,
+    evidenceSetPath,
     "evidence/stage-plan-findings.json",
   );
   let stagePlan: unknown;
@@ -114,7 +115,7 @@ function main(args: readonly string[]): void {
     scenarioReviewSha256: parsed.value.header.scenarioReviewSha256,
   });
   if (Either.isLeft(stagePlanEvidence)) fail(stagePlanEvidence.left);
-  const replaySupervisor = resolve(runPath, "replay-supervisor.mjs");
+  const replaySupervisor = resolve(evidenceSetPath, "replay-supervisor.mjs");
   const replaySupervisorSha256 = createHash("sha256")
     .update(readFileSync(replaySupervisor))
     .digest("hex");
@@ -122,7 +123,7 @@ function main(args: readonly string[]): void {
     fail("Retained SDK replay supervisor does not match its recorded hash.");
   }
   const result = spawnSync(process.execPath, [replaySupervisor, "replay"], {
-    cwd: runPath,
+    cwd: evidenceSetPath,
     encoding: "utf8",
   });
   if (result.error !== undefined) throw result.error;
@@ -151,7 +152,7 @@ function main(args: readonly string[]): void {
     );
   }
   retainReplayResultEvidence({
-    path: resolve(runPath, "evidence/replay-result.json"),
+    path: resolve(evidenceSetPath, "evidence/replay-result.json"),
     evidence: decodedReplayResult.right,
   });
   process.stdout.write(result.stdout);

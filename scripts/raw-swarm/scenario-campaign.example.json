@@ -1,5 +1,9 @@
 {
-  "scenarioId": "generated-battle-example",
+  "campaignId": "synthetic-beacon-defense-authoring",
+  "plannedScenarioId": "synthetic-beacon-eight-round-defense",
+  "scenarioTitle": "Synthetic beacon eight-round defense",
+  "scenarioPurpose": "Explore four delegated Character Sheets defending a visibly synthetic objective through a bounded battle.",
+  "evidenceSetId": "synthetic-beacon-defense-authoring-evidence",
   "distributionPreference": "Favor materially different approaches to authored objectives, changing tactics, varied SRD combatant compositions, and a mix of delegated and exact character choices. Keep the encounter compact enough to play through the public SDK.",
   "contentAvailabilityIntent": "availableOnly",
   "sdkCapabilityIntent": "supportedOnly",

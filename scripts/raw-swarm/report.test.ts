@@ -3,7 +3,6 @@ import { createHash } from "node:crypto";
 import {
   chmodSync,
   existsSync,
-  mkdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -131,7 +130,7 @@ describe("RAW swarm artifact report index", () => {
     ).toThrow(/--review-replay-milestone requires a value/);
   });
 
-  test("indexes a transcript, verifies immutable review identity, and retains verdict facts", () => {
+  test("rejects unclassified historical input and retains controlled Execution verdict facts", () => {
     const directory = temporaryDirectory();
     const transcriptPath = resolve(directory, "run.jsonl");
     const dbPath = resolve(directory, "report.sqlite");
@@ -163,70 +162,14 @@ describe("RAW swarm artifact report index", () => {
         .map((record) => JSON.stringify(record))
         .join("\n")}\n`,
     );
-    report([
-      "ingest",
-      relative(repoRoot, transcriptPath),
-      "--db",
-      relative(repoRoot, dbPath),
-    ]);
-    expect(query(dbPath, "SELECT operation, outcome FROM calls")).toEqual({
-      operation: "resolve_battle_act",
-      outcome: "returned",
-    });
-    expect(
-      query(
-        dbPath,
-        "SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'table' AND name = 'steps'",
-      ),
-    ).toEqual({ count: 0 });
-
-    const reviewPath = resolve(directory, "review.json");
-    writeFileSync(
-      reviewPath,
-      JSON.stringify({
-        scenarioId: "player-run-from-header",
-        gitSha: "0".repeat(40),
-        transcriptSha256: createHash("sha256")
-          .update(readFileSync(transcriptPath))
-          .digest("hex"),
-        reviewer: "adversarial-reviewer",
-        verdicts: [
-          {
-            class: "bug",
-            claim: "Recorded transition contradicts its cited rule.",
-            evidence: "Transcript seq 1; Rules-Glossary.md#action.",
-          },
-        ],
-      }),
-    );
-    report([
-      "review",
-      relative(repoRoot, reviewPath),
-      "--run",
-      "1",
-      "--db",
-      relative(repoRoot, dbPath),
-    ]);
-    expect(query(dbPath, "SELECT class, reviewer FROM verdicts")).toEqual({
-      class: "bug",
-      reviewer: "adversarial-reviewer",
-    });
-    expect(query(dbPath, "SELECT COUNT(*) AS count FROM issues")).toEqual({
-      count: 1,
-    });
-    const evidenceDirectory = resolve(directory, "evidence");
-    mkdirSync(evidenceDirectory);
-    writeFileSync(resolve(evidenceDirectory, "findings.json"), "{}\n");
     expect(() =>
       report([
-        "review",
-        relative(repoRoot, reviewPath),
-        "--run",
-        "1",
+        "ingest",
+        relative(repoRoot, transcriptPath),
         "--db",
         relative(repoRoot, dbPath),
       ]),
-    ).toThrow(/immutable final findings/);
+    ).toThrow(/use legacy rebuild for Historical Observations/);
 
     const controlledDbPath = resolve(directory, "controlled.sqlite");
     const controlledExportPath = resolve(directory, "controlled-portable");
@@ -238,7 +181,7 @@ describe("RAW swarm artifact report index", () => {
       directory: resolve(directory, "controlled-evidence"),
       ledgerEntries: [
         {
-          schemaVersion: 2,
+          schemaVersion: 4,
           phase: "postPlayReview",
           stagePlanReason: "The fixture stage requires post-play review.",
           invocationId: "controlled-review",
@@ -327,6 +270,29 @@ describe("RAW swarm artifact report index", () => {
         .update(readFileSync(controlledEvidence.ledgerPath))
         .digest("hex"),
     });
+    report([
+      "findings",
+      relative(repoRoot, controlledEvidence.transcriptPath),
+      "--db",
+      relative(repoRoot, controlledDbPath),
+      "--review",
+      relative(repoRoot, controlledEvidence.reviewPath),
+      "--generation-ledger",
+      relative(repoRoot, controlledEvidence.ledgerPath),
+      "--review-replay-milestone",
+      relative(repoRoot, controlledEvidence.replayPrePlayReviewInputPaths[0]!),
+      "--review-replay-final",
+      relative(repoRoot, controlledEvidence.replayPrePlayReviewInputPaths[1]!),
+    ]);
+    expect(
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, controlledDbPath),
+      ]),
+    ).toContain("fixture-execution");
   }, 30_000);
 
   test("establishes and verifies the GitHub backlink and label idempotently", () => {

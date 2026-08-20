@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "synthetic-beacon-eight-round-defense",
+  "scenarioSha256": "ca42ec447f1f3e91ac4abe84b0cfe6872b2b47dcd8afcf23ecaa7e7c1c87d3ff",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "characterSheetsRequired",
+      "evidence": "The scenario delegates four SRD-legal level-4 Character Sheets."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "The beacon-defense arena and placements use the geometry-derived scenario boundary."
+    }
+  }
+}

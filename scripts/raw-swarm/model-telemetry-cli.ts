@@ -14,6 +14,10 @@ import {
   type ModelInvocationPhase,
 } from "./model-telemetry.ts";
 import { decodeScenarioId, GitShaSchema } from "./transcript.ts";
+import {
+  decodeEvidenceSetId,
+  decodeExecutionId,
+} from "./raw-swarm-identities.ts";
 
 function fail(message: string): never {
   throw new Error(message);
@@ -30,6 +34,10 @@ const args = process.argv.slice(2);
 const phaseInput = flag(args, "--phase");
 const scenarioId = decodeScenarioId(flag(args, "--scenario-id"));
 if (Either.isLeft(scenarioId)) fail(scenarioId.left);
+const executionId = decodeExecutionId(flag(args, "--execution-id"));
+if (Either.isLeft(executionId)) fail(executionId.left);
+const evidenceSetId = decodeEvidenceSetId(flag(args, "--evidence-set-id"));
+if (Either.isLeft(evidenceSetId)) fail(evidenceSetId.left);
 const gitSha = Schema.decodeUnknownEither(GitShaSchema)(
   flag(args, "--git-sha"),
 );
@@ -59,7 +67,12 @@ if (
   fail("Model, reasoning effort, and ISO start time are required.");
 }
 const start = modelInvocationStartedEvent({
-  scenarioId: scenarioId.right,
+  subject: {
+    tag: "execution",
+    executionId: executionId.right,
+    evidenceSetId: evidenceSetId.right,
+    scenarioId: scenarioId.right,
+  },
   gitSha: gitSha.right,
   phase,
   stagePlanReason,
@@ -91,8 +104,8 @@ const parsedEvents = readCodexEvents(eventsPath);
 if (parsedEvents.tag === "invalid") fail(parsedEvents.message);
 const evidence = modelInvocationEvidenceFromEvents(parsedEvents.events);
 if (evidence.tag === "invalid") fail(evidence.message);
-if (evidence.entry.schemaVersion !== 2) {
-  fail("The current telemetry CLI must emit v2 model invocation evidence.");
+if (evidence.entry.schemaVersion !== 4) {
+  fail("The current telemetry CLI must emit v4 model invocation evidence.");
 }
 appendInvocationLedger(ledgerPath, {
   ...evidence.entry,

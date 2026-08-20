@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "goblin-warrior-skeleton-tracer",
+  "title": "Goblin Warrior and Skeleton tracer",
+  "purpose": "Exercise the minimal direct-SDK battle path with two canonical stat blocks on an open grid.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/goblin-warrior-skeleton-tracer.md",
+    "byteLength": 1204,
+    "sha256": "d2b68e4f67e7ed80db02ced51d4d0dd9e15cd1e966c0dc429cc6fe43ada5b196"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/goblin-warrior-skeleton-tracer.md.scenario-review.json",
+    "byteLength": 1018,
+    "sha256": "06a9c22f50f7acb5c3bcdd9e3023730bd039d67b7479b2b37b91a922a26b8787"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/goblin-warrior-skeleton-tracer.md.stage-facts.json",
+    "byteLength": 599,
+    "sha256": "7dc6eaf01a6cf4235ddf509519fb07ccc4bb54f66410c4543bb35a718f0af393"
+  }
+}

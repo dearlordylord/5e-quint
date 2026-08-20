@@ -31,10 +31,13 @@ export type ReplayCacheMeasurement = {
 };
 
 export function measurePrefixReplay(input: {
-  readonly runDirectory: string;
+  readonly evidenceSetDirectory: string;
 }): ReplayCacheMeasurement {
-  const runDirectory = resolve(repoRoot, input.runDirectory);
-  const transcriptPath = resolve(runDirectory, "evidence/sdk-calls.jsonl");
+  const evidenceSetDirectory = resolve(repoRoot, input.evidenceSetDirectory);
+  const transcriptPath = resolve(
+    evidenceSetDirectory,
+    "evidence/sdk-calls.jsonl",
+  );
   const transcriptText = readFileSync(transcriptPath, "utf8");
   const lines = transcriptText
     .split("\n")
@@ -49,13 +52,13 @@ export function measurePrefixReplay(input: {
   );
   try {
     cpSync(
-      resolve(runDirectory, "replay-supervisor.mjs"),
+      resolve(evidenceSetDirectory, "replay-supervisor.mjs"),
       resolve(temporaryDirectory, "replay-supervisor.mjs"),
     );
     mkdirSync(resolve(temporaryDirectory, "evidence"), { recursive: true });
     for (const name of ["characters.ts", "setup.ts", "program.ts"])
       cpSync(
-        resolve(runDirectory, "evidence", name),
+        resolve(evidenceSetDirectory, "evidence", name),
         resolve(temporaryDirectory, "evidence", name),
       );
     const groups = parsed.value.calls.reduce((byContinuation, call) => {
@@ -111,16 +114,16 @@ export function measurePrefixReplay(input: {
 }
 
 function main(args: readonly string[]): void {
-  const [runDirectory, outputPath, ...unexpected] = args;
+  const [evidenceSetDirectory, outputPath, ...unexpected] = args;
   if (
-    runDirectory === undefined ||
+    evidenceSetDirectory === undefined ||
     outputPath === undefined ||
     unexpected.length > 0
   )
     fail(
-      `Usage: ${basename(import.meta.filename)} <run-directory> <output.json>`,
+      `Usage: ${basename(import.meta.filename)} <evidence-set-directory> <output.json>`,
     );
-  const measurement = measurePrefixReplay({ runDirectory });
+  const measurement = measurePrefixReplay({ evidenceSetDirectory });
   const destination = resolve(repoRoot, outputPath);
   mkdirSync(dirname(destination), { recursive: true });
   writeFileSync(destination, `${JSON.stringify(measurement, null, 2)}\n`, {

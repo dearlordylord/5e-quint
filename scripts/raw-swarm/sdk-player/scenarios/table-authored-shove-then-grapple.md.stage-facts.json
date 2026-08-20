@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "table-authored-shove-then-grapple",
+  "scenarioSha256": "5629ee1ef8adb5764d63602be806c8295ac235c7f09f94f12a715d98d0a63a84",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "Only canonical Skeleton and Goblin Warrior stat blocks are initialized, and their tactics use surfaced ordinary battle acts rather than Character Sheet features."
+    },
+    "spatialRequirement": {
+      "tag": "outsideExperimentEnvelope",
+      "resolution": "tableAuthored",
+      "evidence": "Exact Table-owned reach decisions cover the initial Skeleton Shove and both possible post-Shove fingerprints needed for the Goblin Warrior’s Grapple."
+    }
+  }
+}

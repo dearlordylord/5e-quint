@@ -144,9 +144,7 @@ const usage = {
 function invocation(
   overrides: Record<string, unknown> = {},
 ): CurrentInvocation {
-  const entry = {
-    schemaVersion: 2,
-    scenarioId,
+  const values = {
     gitSha,
     eventsSha256: "d".repeat(64),
     phase: "player",
@@ -160,6 +158,34 @@ function invocation(
     result: { tag: "succeeded" },
     usage,
     ...overrides,
+  };
+  const subject =
+    values.phase === "scenarioGeneration"
+      ? {
+          tag: "scenarioCampaign" as const,
+          campaignId: "synthetic-complete-path-campaign",
+          plannedScenarioId: scenarioId,
+        }
+      : values.phase === "scenarioCompositeReview"
+        ? {
+            tag: "scenarioCandidate" as const,
+            campaignId: "synthetic-complete-path-campaign",
+            candidateId: "synthetic-complete-path-candidate",
+            candidateScenarioSha256: "a".repeat(64),
+            plannedScenarioId: scenarioId,
+          }
+        : values.phase === "player" || values.phase === "postPlayReview"
+          ? {
+              tag: "execution" as const,
+              executionId: "synthetic-complete-path-execution",
+              evidenceSetId: "synthetic-complete-path-evidence",
+              scenarioId,
+            }
+          : { tag: "scenario" as const, scenarioId };
+  const entry = {
+    schemaVersion: 4,
+    subject,
+    ...values,
   } as CurrentInvocation;
   return {
     ...entry,
@@ -544,18 +570,24 @@ function findingsProjection(
           ];
     },
   );
-  const run = {
+  const subject = {
+    tag: "execution" as const,
+    executionId: "synthetic-complete-path-execution",
+    evidenceSetId: "synthetic-complete-path-evidence",
     scenarioId,
     gitSha: executionGitSha,
     startedAt: "2026-08-14T00:00:00.000Z",
-    transcriptSha256: transcript.sha256,
-    callCount: calls.length,
+    sdkCalls: {
+      tag: "retainedTranscript" as const,
+      transcriptSha256: transcript.sha256,
+      callCount: calls.length,
+    },
   };
   return {
     type: "raw-swarm-findings",
-    schemaVersion: 1,
-    runIdentity: sha256Canonical(run),
-    run,
+    schemaVersion: 2,
+    subjectIdentity: sha256Canonical(subject),
+    subject,
     authorities: [
       { role: "transcript", ...transcript },
       { role: "scenario", ...scenario },
@@ -582,8 +614,8 @@ function retainInvocation(
   const events = [
     {
       type: "raw-swarm.invocation.started",
-      schemaVersion: 2,
-      scenarioId: entry.scenarioId,
+      schemaVersion: 4,
+      subject: entry.subject,
       gitSha: entry.gitSha,
       phase: entry.phase,
       stagePlanReason: entry.stagePlanReason,
@@ -633,7 +665,7 @@ function retainInvocation(
     },
     {
       type: "raw-swarm.invocation.completed",
-      schemaVersion: 2,
+      schemaVersion: 4,
       elapsedMilliseconds: entry.elapsedMilliseconds,
       exit: entry.exit,
       result: entry.result,
@@ -881,6 +913,11 @@ function benchmarkMeasurement(
   const scenarioAuthority = authorityOnly(requiredFindingAuthority("scenario"));
   const scenarioReviewAuthority = authorityOnly(
     requiredFindingAuthority("scenarioReview"),
+  );
+  const scenarioRecord = writeAuthority(
+    root,
+    "benchmark-scenario-record.json",
+    `${JSON.stringify({ schemaVersion: 1, scenarioId })}\n`,
   );
   const stageFacts = writeAuthority(
     root,
@@ -1214,6 +1251,7 @@ function benchmarkMeasurement(
     implementationGitSha,
     scenarioBundle: {
       scenario: scenarioAuthority,
+      scenarioRecord,
       scenarioReview: scenarioReviewAuthority,
       stageFacts,
       stagePlan,
@@ -1428,7 +1466,7 @@ describe("complete Raw Swarm path comparison", () => {
     const wrongEffortCandidate = {
       ...candidate,
       invocations: candidate.invocations.map((invocation) =>
-        invocation.schemaVersion === 2 &&
+        invocation.schemaVersion === 4 &&
         invocation.phase === "scenarioCompositeReview"
           ? { ...invocation, reasoningEffort: "max" }
           : invocation,
@@ -1661,15 +1699,18 @@ describe("complete Raw Swarm path comparison", () => {
         "Player terminal evidence claims playerConcluded without an SDK call.",
     });
 
-    const noCallRun = {
-      ...obstructed.findings.run,
-      callCount: 0,
-      transcriptSha256: noCallTranscript.sha256,
+    const noCallSubject = {
+      ...obstructed.findings.subject,
+      sdkCalls: {
+        tag: "retainedTranscript" as const,
+        callCount: 0,
+        transcriptSha256: noCallTranscript.sha256,
+      },
     };
     const noCallFindings = {
       ...obstructed.findings,
-      run: noCallRun,
-      runIdentity: sha256Canonical(noCallRun),
+      subject: noCallSubject,
+      subjectIdentity: sha256Canonical(noCallSubject),
       authorities: obstructed.findings.authorities.flatMap((authority) => {
         if (authority.role === "review-1") {
           return [{ role: authority.role, ...noCallReview }];
@@ -3082,10 +3123,10 @@ describe("complete Raw Swarm path comparison", () => {
   test("retains historical baseline gaps instead of fabricating current authorities", () => {
     const historical = {
       schemaVersion: 1 as const,
-      pathId: "generated-battle-009",
+      pathId: "open-grid-wolf-skeleton-pursuit",
       legacy: {
         schemaVersion: 1 as const,
-        scenarioId: "generated-battle-009",
+        scenarioId: "open-grid-wolf-skeleton-pursuit",
         scenarioSha256: "1".repeat(64),
         scenarioReviewSha256: "2".repeat(64),
         charactersSha256: "3".repeat(64),
@@ -3180,7 +3221,7 @@ describe("complete Raw Swarm path comparison", () => {
       ...measurement(),
       findings: {
         ...measurement().findings,
-        runIdentity: "e".repeat(64),
+        subjectIdentity: "e".repeat(64),
       },
     });
     expect(Either.isLeft(malformed)).toBe(true);
@@ -3341,14 +3382,21 @@ describe("complete Raw Swarm path comparison", () => {
       }
       return authority;
     });
-    const findingsRun = {
-      ...source.findings.run,
-      transcriptSha256,
+    const findingsSubject = {
+      ...source.findings.subject,
+      sdkCalls: {
+        tag: "retainedTranscript" as const,
+        transcriptSha256,
+        callCount:
+          source.findings.subject.sdkCalls.tag === "retainedTranscript"
+            ? source.findings.subject.sdkCalls.callCount
+            : 0,
+      },
     };
     const findings = {
       ...source.findings,
-      run: findingsRun,
-      runIdentity: sha256Canonical(findingsRun),
+      subject: findingsSubject,
+      subjectIdentity: sha256Canonical(findingsSubject),
       authorities,
     };
     const validation = validateCompletePathMeasurement(

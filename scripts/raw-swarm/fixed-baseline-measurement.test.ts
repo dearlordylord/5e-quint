@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   directFrontierUseChecks,
   fixedBaselineEntityResourceFactAudit,
-  fixedBaselineRunEvidencePaths,
+  fixedBaselineExecutionEvidencePaths,
   retainedProgramSessionAudit,
 } from "./fixed-baseline-measurement.ts";
 import {
@@ -125,21 +125,21 @@ function fixedFactProjection(): PlayerCurrentTurnProjection {
 describe("fixed baseline omission audit", () => {
   test("derives the immutable program artifacts from the exact retained transcript", () => {
     expect(
-      fixedBaselineRunEvidencePaths(
-        "scripts/raw-swarm/out/generated-battle-004-sdk-player/evidence/sdk-calls.jsonl",
+      fixedBaselineExecutionEvidencePaths(
+        "scripts/raw-swarm/out/orc-fighter-rogue-close-interception-sdk-player/evidence/sdk-calls.jsonl",
       ),
     ).toMatchObject({
       programPath: expect.stringMatching(
-        /generated-battle-004-sdk-player\/evidence\/program\.ts$/,
+        /orc-fighter-rogue-close-interception-sdk-player\/evidence\/program\.ts$/,
       ),
       observationsPath: expect.stringMatching(
-        /generated-battle-004-sdk-player\/evidence\/observations\.jsonl$/,
+        /orc-fighter-rogue-close-interception-sdk-player\/evidence\/observations\.jsonl$/,
       ),
       frozenPrefixPath: expect.stringMatching(/evidence\/frozen-prefix\.json$/),
       finalResultPath: expect.stringMatching(/evidence\/final\.json$/),
     });
     expect(() =>
-      fixedBaselineRunEvidencePaths(
+      fixedBaselineExecutionEvidencePaths(
         "scripts/raw-swarm/out/substituted/evidence/sdk-calls.jsonl",
       ),
     ).toThrow("requires the retained run-4 transcript");

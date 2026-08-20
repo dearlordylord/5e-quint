@@ -6,7 +6,7 @@ import { relative, resolve } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
-  projectRunFindings,
+  projectExecutionFindings,
   readFindingsProjection,
   makeFinding,
   validateFindingsProjection,
@@ -64,12 +64,14 @@ function fixture() {
   const run = resolve(root, "run");
   const evidence = resolve(run, "evidence");
   mkdirSync(evidence, { recursive: true });
-  const runStartPath = resolve(evidence, "run-start.json");
+  const executionStartPath = resolve(evidence, "execution-start.json");
   writeFileSync(
-    runStartPath,
+    executionStartPath,
     `${JSON.stringify({
-      type: "raw-swarm-player-run-start",
+      type: "raw-swarm-execution-start",
       schemaVersion: 1,
+      executionId: "findings-execution",
+      evidenceSetId: "findings-evidence",
       scenarioId: "findings-example",
       gitSha: "a".repeat(40),
       startedAt: "2026-08-18T00:00:00.000Z",
@@ -229,7 +231,7 @@ function fixture() {
     reviewPath,
     transcriptRelative: relative(repoRoot, transcriptPath),
     eventRelative: relative(repoRoot, eventPath),
-    runStartRelative: relative(repoRoot, runStartPath),
+    runStartRelative: relative(repoRoot, executionStartPath),
     reviewRelative: relative(repoRoot, reviewPath),
     runRelative: relative(repoRoot, run),
     claim,
@@ -310,8 +312,8 @@ function retainedGenerationReviewLedger(root: string): string {
     `${[
       {
         type: "raw-swarm.invocation.started",
-        schemaVersion: 2,
-        scenarioId: "findings-example",
+        schemaVersion: 4,
+        subject: { tag: "scenario", scenarioId: "findings-example" },
         gitSha: "a".repeat(40),
         phase: "scenarioCompositeReview",
         stagePlanReason: "The campaign requires a composite review.",
@@ -333,7 +335,7 @@ function retainedGenerationReviewLedger(root: string): string {
       },
       {
         type: "raw-swarm.invocation.completed",
-        schemaVersion: 2,
+        schemaVersion: 4,
         elapsedMilliseconds: 10,
         exit: { tag: "exited", status: 0 },
         result: { tag: "succeeded" },
@@ -347,8 +349,8 @@ function retainedGenerationReviewLedger(root: string): string {
     writeFileSync(eventPath(invocationId), eventBytes(invocationId));
   }
   const entry = (invocationId: string) => ({
-    schemaVersion: 2,
-    scenarioId: "findings-example",
+    schemaVersion: 4,
+    subject: { tag: "scenario", scenarioId: "findings-example" },
     gitSha: "a".repeat(40),
     eventsSha256: createHash("sha256")
       .update(readFileSync(eventPath(invocationId)))
@@ -429,9 +431,9 @@ describe("Raw Swarm findings projection", () => {
         }),
       )}\n`,
     );
-    const projection = projectRunFindings({
+    const projection = projectExecutionFindings({
       transcriptPath: input.transcriptRelative,
-      runDirectory: input.runRelative,
+      evidenceSetDirectory: input.runRelative,
       reviewPaths: [input.reviewRelative],
       scenarioReviewPaths: [],
       generationLedgerPaths: [generationLedgerRelative],
@@ -484,9 +486,9 @@ describe("Raw Swarm findings projection", () => {
       `${tamperedLedgerEntries.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
     );
     expect(() =>
-      projectRunFindings({
+      projectExecutionFindings({
         transcriptPath: input.transcriptRelative,
-        runDirectory: input.runRelative,
+        evidenceSetDirectory: input.runRelative,
         reviewPaths: [input.reviewRelative],
         scenarioReviewPaths: [],
         generationLedgerPaths: [generationLedgerRelative],
@@ -514,9 +516,9 @@ describe("Raw Swarm findings projection", () => {
       )}\n`,
     );
 
-    const projection = projectRunFindings({
+    const projection = projectExecutionFindings({
       transcriptPath: input.transcriptRelative,
-      runDirectory: input.runRelative,
+      evidenceSetDirectory: input.runRelative,
       reviewPaths: [input.reviewRelative],
       scenarioReviewPaths: [],
       generationLedgerPaths: [generationLedgerRelative],
@@ -565,14 +567,14 @@ describe("Raw Swarm findings projection", () => {
     );
     const common = {
       transcriptPath: input.transcriptRelative,
-      runDirectory: input.runRelative,
+      evidenceSetDirectory: input.runRelative,
       reviewPaths: [input.reviewRelative],
       scenarioReviewPaths: [],
       generationLedgerPaths: [generationLedgerRelative],
       issueLinks: [],
     } as const;
     expect(() =>
-      projectRunFindings({
+      projectExecutionFindings({
         ...common,
         reviewReplay: {
           tag: "finalOnly",
@@ -581,7 +583,7 @@ describe("Raw Swarm findings projection", () => {
       }),
     ).toThrow(/expected final/);
     expect(() =>
-      projectRunFindings({
+      projectExecutionFindings({
         ...common,
         reviewReplay: {
           tag: "milestoneAndFinal",
@@ -601,7 +603,7 @@ describe("Raw Swarm findings projection", () => {
       )}\n`,
     );
     expect(() =>
-      projectRunFindings({
+      projectExecutionFindings({
         ...common,
         reviewReplay: {
           tag: "milestoneAndFinal",
@@ -615,7 +617,7 @@ describe("Raw Swarm findings projection", () => {
     foreign.scenarioId = "foreign-scenario";
     writeFileSync(finalPath, `${JSON.stringify(foreign)}\n`);
     expect(() =>
-      projectRunFindings({
+      projectExecutionFindings({
         ...common,
         reviewReplay: {
           tag: "milestoneAndFinal",
@@ -650,7 +652,7 @@ describe("Raw Swarm findings projection", () => {
         `${ledgerEntries.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
       );
       expect(() =>
-        projectRunFindings({
+        projectExecutionFindings({
           ...common,
           reviewReplay: {
             tag: "milestoneAndFinal",
@@ -673,9 +675,9 @@ describe("Raw Swarm findings projection", () => {
 
   test("retains pre-call failure, correction, accepted verdict, and exact authorities", () => {
     const input = fixture();
-    const projection = projectRunFindings({
+    const projection = projectExecutionFindings({
       transcriptPath: input.transcriptRelative,
-      runDirectory: input.runRelative,
+      evidenceSetDirectory: input.runRelative,
       reviewPaths: [input.reviewRelative],
       scenarioReviewPaths: [],
       generationLedgerPaths: [],
@@ -685,7 +687,10 @@ describe("Raw Swarm findings projection", () => {
       tag: "valid",
       projection,
     });
-    expect(projection.run.callCount).toBe(1);
+    expect(projection.subject.sdkCalls).toMatchObject({
+      tag: "retainedTranscript",
+      callCount: 1,
+    });
     expect(projection.authorities).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -740,14 +745,14 @@ describe("Raw Swarm findings projection", () => {
     const input = fixture();
     const options = {
       transcriptPath: input.transcriptRelative,
-      runDirectory: input.runRelative,
+      evidenceSetDirectory: input.runRelative,
       reviewPaths: [input.reviewRelative],
       scenarioReviewPaths: [],
       generationLedgerPaths: [],
       issueLinks: [],
     } as const;
-    const first = projectRunFindings(options);
-    const second = projectRunFindings(options);
+    const first = projectExecutionFindings(options);
+    const second = projectExecutionFindings(options);
     expect(second).toEqual(first);
     const path = resolve(input.run, "evidence/findings.json");
     const authority = writeFindingsProjection({
@@ -775,15 +780,15 @@ describe("Raw Swarm findings projection", () => {
     foreignReview.scenarioId = "another-run";
     writeFileSync(foreignReviewPath, `${JSON.stringify(foreignReview)}\n`);
     expect(() =>
-      projectRunFindings({
+      projectExecutionFindings({
         transcriptPath: input.transcriptRelative,
-        runDirectory: input.runRelative,
+        evidenceSetDirectory: input.runRelative,
         reviewPaths: [relative(repoRoot, foreignReviewPath)],
         scenarioReviewPaths: [],
         generationLedgerPaths: [],
         issueLinks: [],
       }),
-    ).toThrow(/Review authority identity does not match the run/);
+    ).toThrow(/Review authority identity does not match the findings subject/);
   });
 
   test("binds a pre-play scenario review without requiring the player commit", () => {
@@ -847,9 +852,9 @@ describe("Raw Swarm findings projection", () => {
     };
     writeFileSync(stagePlanPath, `${JSON.stringify(stagePlan, null, 2)}\n`);
 
-    const projection = projectRunFindings({
+    const projection = projectExecutionFindings({
       transcriptPath: input.transcriptRelative,
-      runDirectory: input.runRelative,
+      evidenceSetDirectory: input.runRelative,
       reviewPaths: [],
       scenarioReviewPaths: [relative(repoRoot, reviewPath)],
       generationLedgerPaths: [],
@@ -883,22 +888,23 @@ describe("Raw Swarm findings projection", () => {
       })}\n`,
     );
     expect(() =>
-      projectRunFindings({
+      projectExecutionFindings({
         transcriptPath: input.transcriptRelative,
-        runDirectory: input.runRelative,
+        evidenceSetDirectory: input.runRelative,
         reviewPaths: [],
         scenarioReviewPaths: [relative(repoRoot, historicalPath)],
         generationLedgerPaths: [],
         issueLinks: [],
       }),
-    ).toThrow(/Historical scenario review has no run identity/);
+    ).toThrow(/Historical scenario review has no execution identity/);
     expect(() =>
       projectGenerationFindings({
+        disposition: { tag: "completed" },
         scenarioId: "findings-example",
         gitSha: "a".repeat(40),
         startedAt: "2026-08-18T00:00:00.000Z",
         authorityPaths: [
-          { role: "run", path: input.runStartRelative },
+          { role: "execution", path: input.runStartRelative },
           { role: "scenario", path: relative(repoRoot, scenarioPath) },
           { role: "review", path: input.reviewRelative },
         ],
@@ -932,11 +938,12 @@ describe("Raw Swarm findings projection", () => {
     );
     expect(() =>
       projectGenerationFindings({
+        disposition: { tag: "completed" },
         scenarioId: "findings-example",
         gitSha: "a".repeat(40),
         startedAt: "2026-08-18T00:00:00.000Z",
         authorityPaths: [
-          { role: "run", path: input.runStartRelative },
+          { role: "execution", path: input.runStartRelative },
           { role: "scenario", path: relative(repoRoot, scenarioPath) },
           { role: "scenarioReview", path: relative(repoRoot, reviewPath) },
         ],
@@ -945,64 +952,61 @@ describe("Raw Swarm findings projection", () => {
         stagePlanPaths: [],
         stagePlanFindingsPaths: [],
       }),
-    ).toThrow(/Scenario review authority identity does not match the run/);
+    ).toThrow(
+      /Scenario review authority identity does not match the findings subject/,
+    );
   });
 
-  test("requires transcript-free identities to have no calls or transcript authority", () => {
+  test("rejects a transcript authority for a transcript-free identity", () => {
     const input = fixture();
     const projection = projectGenerationFindings({
+      disposition: { tag: "completed" },
       scenarioId: "findings-example",
       gitSha: "a".repeat(40),
       startedAt: "2026-08-18T00:00:00.000Z",
-      authorityPaths: [{ role: "run", path: input.runStartRelative }],
+      authorityPaths: [{ role: "execution", path: input.runStartRelative }],
       scenarioReviewPaths: [],
       generationLedgerPaths: [],
       stagePlanPaths: [],
       stagePlanFindingsPaths: [],
     });
-    const run = { ...projection.run, callCount: 1 };
-    expect(
-      validateFindingsProjection({
-        ...projection,
-        run,
-        runIdentity: sha256Canonical(run),
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      message: /transcript-free run must have zero SDK calls/,
-    });
     expect(
       validateFindingsProjection({
         ...projection,
         authorities: projection.authorities.map((authority) =>
-          authority.role === "run"
+          authority.role === "execution"
             ? { ...authority, role: "transcript" }
             : authority,
         ),
       }),
     ).toMatchObject({
       tag: "invalid",
-      message: /transcript-free run cannot have a transcript authority/,
+      message: /transcript-free subject cannot have a transcript authority/,
     });
   });
 
   test("projects and indexes a generation rejection without inventing a transcript", () => {
     const root = directory();
     const run = resolve(root, "generation-run");
-    const manifest = resolve(run, "run.json");
+    const manifest = resolve(run, "campaign.json");
     const campaign = resolve(root, "campaign.json");
     const ledger = resolve(root, "generation.jsonl");
     const scenario = resolve(root, "candidate.md");
     const stagePlanFindings = resolve(root, "stage-plan-findings.json");
+    const candidateRejection = resolve(root, "candidate-rejection.json");
+    const candidateReview = resolve(root, "candidate-review.json");
     mkdirSync(run, { recursive: true });
     writeFileSync(
       manifest,
       `${JSON.stringify({
-        type: "raw-swarm-generation-run",
+        type: "raw-swarm-scenario-campaign",
         schemaVersion: 1,
-        scenarioId: "generation-example",
+        campaignId: "generation-campaign",
+        plannedScenarioId: "generation-example",
+        evidenceSetId: "generation-evidence",
         gitSha: "a".repeat(40),
         startedAt: "2026-08-18T00:00:00.000Z",
+        configSha256: "c".repeat(64),
       })}\n`,
     );
     writeFileSync(campaign, '{"scenarioId":"generation-example"}\n');
@@ -1014,7 +1018,8 @@ describe("Raw Swarm findings projection", () => {
     const stagePlan = planScenarioStages({
       identity: {
         tag: "candidate",
-        scenarioId: "generation-example",
+        campaignId: "generation-campaign",
+        candidateId: "generation-candidate",
         candidateScenarioSha256,
       },
       facts: {
@@ -1057,30 +1062,65 @@ describe("Raw Swarm findings projection", () => {
       stagePlanFindings,
       `${JSON.stringify(scenarioStagePlanFindings(stagePlan.right), null, 2)}\n`,
     );
+    writeFileSync(
+      candidateRejection,
+      `${JSON.stringify({ schemaVersion: 1, candidateId: "generation-candidate", campaignId: "generation-campaign", evidenceSetId: "generation-evidence", reason: "The candidate is incoherent." })}\n`,
+    );
+    writeFileSync(
+      candidateReview,
+      `${JSON.stringify({
+        campaignId: "generation-campaign",
+        candidateId: "generation-candidate",
+        candidateScenarioSha256,
+        gitSha: "a".repeat(40),
+        admitReviewedUnsupported: false,
+        reviewScope: "rawContentSdkCapabilityPolicyQuality",
+        contentAvailabilityIntent: "availableOnly",
+        sdkCapabilityIntent: "supportedOnly",
+        rawReview: { classification: "supported", evidence: "Supported." },
+        contentReview: { classification: "supplied", evidence: "Supplied." },
+        sdkCapabilityReview: {
+          classification: "supported",
+          evidence: "Supported.",
+        },
+        policyReview: { classification: "safe", evidence: "Safe." },
+        scenarioQuality: {
+          classification: "needsRevision",
+          evidence: "The candidate is incoherent.",
+          critique: "Repair the contradictory geometry.",
+        },
+      })}\n`,
+    );
     const projectionInput = {
       scenarioId: "generation-example",
       gitSha: "a".repeat(40),
       startedAt: "2026-08-18T00:00:00.000Z",
       authorityPaths: [
-        { role: "run", path: relative(repoRoot, manifest) },
+        { role: "campaign", path: relative(repoRoot, manifest) },
         { role: "campaign", path: relative(repoRoot, campaign) },
-        { role: "scenario", path: relative(repoRoot, scenario) },
         { role: "generationLedger", path: relative(repoRoot, ledger) },
-        { role: "stagePlan", path: relative(repoRoot, stagePlanPath) },
-        {
-          role: "stagePlanFindings",
-          path: relative(repoRoot, stagePlanFindings),
-        },
       ],
       scenarioReviewPaths: [],
       generationLedgerPaths: [relative(repoRoot, ledger)],
-      stagePlanPaths: [relative(repoRoot, stagePlanPath)],
-      stagePlanFindingsPaths: [relative(repoRoot, stagePlanFindings)],
       pointerAuthorityRole: "stagePlanFindings",
-      rejectionReason: "The final candidate failed the admission boundary.",
+      disposition: {
+        tag: "reviewedCandidateRejection",
+        candidateRejectionPath: relative(repoRoot, candidateRejection),
+        candidateProsePath: relative(repoRoot, scenario),
+        candidateReviewPath: relative(repoRoot, candidateReview),
+        stagePlanPath: relative(repoRoot, stagePlanPath),
+        stagePlanFindingsPath: relative(repoRoot, stagePlanFindings),
+      },
     } as const;
     const projection = projectGenerationFindings(projectionInput);
-    expect(projection.run.transcriptSha256).toBeUndefined();
+    expect(projection.subject.sdkCalls).toEqual({ tag: "transcriptFree" });
+    expect(projection.authorities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: relative(repoRoot, candidateReview),
+        }),
+      ]),
+    );
     expect(projection.findings).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "generation-rejection" }),
@@ -1088,7 +1128,7 @@ describe("Raw Swarm findings projection", () => {
         expect.objectContaining({
           kind: "generation-rejection",
           pointer: expect.objectContaining({
-            authorityRole: "stagePlanFindings",
+            authorityRole: "candidateRejection",
           }),
         }),
       ]),
@@ -1113,7 +1153,7 @@ describe("Raw Swarm findings projection", () => {
         ],
         generationLedgerPaths: [relative(repoRoot, foreignLedger)],
       }),
-    ).toThrow(/belongs to a different run identity/);
+    ).toThrow(/belongs to a different findings identity/);
     const mismatchedStagePlanFindings = resolve(
       root,
       "mismatched-stage-plan-findings.json",
@@ -1136,21 +1176,14 @@ describe("Raw Swarm findings projection", () => {
     );
     expect(() =>
       projectGenerationFindings({
-        scenarioId: "generation-example",
-        gitSha: "a".repeat(40),
-        startedAt: "2026-08-18T00:00:00.000Z",
-        authorityPaths: [
-          { role: "run", path: relative(repoRoot, manifest) },
-          { role: "scenario", path: relative(repoRoot, scenario) },
-          { role: "stagePlan", path: relative(repoRoot, stagePlanPath) },
-        ],
-        scenarioReviewPaths: [],
-        generationLedgerPaths: [],
-        stagePlanPaths: [relative(repoRoot, stagePlanPath)],
-        stagePlanFindingsPaths: [
-          relative(repoRoot, mismatchedStagePlanFindings),
-        ],
-        pointerAuthorityRole: "stagePlanFindings",
+        ...projectionInput,
+        disposition: {
+          ...projectionInput.disposition,
+          stagePlanFindingsPath: relative(
+            repoRoot,
+            mismatchedStagePlanFindings,
+          ),
+        },
       }),
     ).toThrow(/Stage-plan findings authority does not match the retained plan/);
     const wrongCandidateHashFindings = resolve(
@@ -1164,7 +1197,8 @@ describe("Raw Swarm findings projection", () => {
           ...finding,
           identity: {
             tag: "candidate" as const,
-            scenarioId: "generation-example",
+            campaignId: "generation-campaign",
+            candidateId: "generation-candidate",
             candidateScenarioSha256: "0".repeat(64),
           },
         })),
@@ -1174,21 +1208,11 @@ describe("Raw Swarm findings projection", () => {
     );
     expect(() =>
       projectGenerationFindings({
-        scenarioId: "generation-example",
-        gitSha: "a".repeat(40),
-        startedAt: "2026-08-18T00:00:00.000Z",
-        authorityPaths: [
-          { role: "run", path: relative(repoRoot, manifest) },
-          { role: "scenario", path: relative(repoRoot, scenario) },
-          { role: "stagePlan", path: relative(repoRoot, stagePlanPath) },
-        ],
-        scenarioReviewPaths: [],
-        generationLedgerPaths: [],
-        stagePlanPaths: [relative(repoRoot, stagePlanPath)],
-        stagePlanFindingsPaths: [
-          relative(repoRoot, wrongCandidateHashFindings),
-        ],
-        pointerAuthorityRole: "stagePlanFindings",
+        ...projectionInput,
+        disposition: {
+          ...projectionInput.disposition,
+          stagePlanFindingsPath: relative(repoRoot, wrongCandidateHashFindings),
+        },
       }),
     ).toThrow(/Stage-plan findings authority does not match the retained plan/);
     const findingsPath = resolve(run, "evidence/findings.json");
@@ -1205,18 +1229,28 @@ describe("Raw Swarm findings projection", () => {
     ).toBe(1);
     const db = openArtifactIndex(relative(repoRoot, dbPath));
     try {
-      expect(db.prepare("SELECT scenarioId FROM generationRuns").get()).toEqual(
-        { scenarioId: "generation-example" },
-      );
       expect(
-        db.prepare("SELECT COUNT(*) AS count FROM generationFindings").get(),
+        db
+          .prepare(
+            "SELECT campaignId, plannedScenarioId, evidenceSetId FROM scenarioCampaigns",
+          )
+          .get(),
+      ).toEqual({
+        campaignId: "generation-campaign",
+        plannedScenarioId: "generation-example",
+        evidenceSetId: "generation-evidence",
+      });
+      expect(
+        db
+          .prepare("SELECT COUNT(*) AS count FROM scenarioCampaignFindings")
+          .get(),
       ).toEqual({ count: 7 });
     } finally {
       db.close();
     }
     const audit = reportCommand([
       "generation-audit",
-      "--generation-run",
+      "--campaign-row",
       "1",
       "--db",
       relative(repoRoot, dbPath),
@@ -1226,9 +1260,9 @@ describe("Raw Swarm findings projection", () => {
 
   test("rejects malformed projections, duplicate identities, broken pointers, and tampering", () => {
     const input = fixture();
-    const projection = projectRunFindings({
+    const projection = projectExecutionFindings({
       transcriptPath: input.transcriptRelative,
-      runDirectory: input.runRelative,
+      evidenceSetDirectory: input.runRelative,
       reviewPaths: [input.reviewRelative],
       scenarioReviewPaths: [],
       generationLedgerPaths: [],
@@ -1298,9 +1332,9 @@ describe("Raw Swarm findings projection", () => {
     expect(
       validateFindingsProjection({
         ...projection,
-        runIdentity: "0".repeat(64),
+        subjectIdentity: "0".repeat(64),
       }),
-    ).toMatchObject({ tag: "invalid", message: /run identity/ });
+    ).toMatchObject({ tag: "invalid", message: /subject identity/ });
     expect(
       validateFindingsProjection({
         ...projection,
@@ -1346,9 +1380,9 @@ describe("Raw Swarm findings projection", () => {
       "\n\n" +
         `${JSON.stringify({ kind: "executionError", message: "line three" })}\n`,
     );
-    const projection = projectRunFindings({
+    const projection = projectExecutionFindings({
       transcriptPath: input.transcriptRelative,
-      runDirectory: input.runRelative,
+      evidenceSetDirectory: input.runRelative,
       reviewPaths: [],
       scenarioReviewPaths: [],
       generationLedgerPaths: [],
@@ -1379,9 +1413,9 @@ describe("Raw Swarm findings projection", () => {
       })}\n${JSON.stringify({ type: "not-an-sdk-call" })}\n`,
     );
     expect(() =>
-      projectRunFindings({
+      projectExecutionFindings({
         transcriptPath: input.transcriptRelative,
-        runDirectory: input.runRelative,
+        evidenceSetDirectory: input.runRelative,
         reviewPaths: [],
         scenarioReviewPaths: [],
         generationLedgerPaths: [],
@@ -1401,9 +1435,9 @@ describe("Raw Swarm findings projection", () => {
       `${JSON.stringify({ type: "header", scenarioId: "not-sdk" })}\n`,
     );
     expect(() =>
-      projectRunFindings({
+      projectExecutionFindings({
         transcriptPath: relative(repoRoot, transcriptPath),
-        runDirectory: relative(repoRoot, run),
+        evidenceSetDirectory: relative(repoRoot, run),
         reviewPaths: [],
         scenarioReviewPaths: [],
         generationLedgerPaths: [],

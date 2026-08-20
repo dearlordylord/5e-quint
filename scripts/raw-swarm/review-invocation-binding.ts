@@ -11,11 +11,13 @@ import {
 } from "./scenario-campaign.ts";
 import {
   modelInvocationEvidenceFromEvents,
+  modelInvocationScenarioReference,
   readCodexEvents,
   type ModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
 import {
   RetainedScenarioReviewInputSchema,
+  retainedScenarioReviewSubject,
   type RetainedScenarioReviewInput,
 } from "./scenario-review-input.ts";
 import { canonicalJson, repoRoot } from "./transcript.ts";
@@ -98,8 +100,8 @@ export function validateRetainedScenarioReviewInvocation(input: {
     input.retainedInputPath,
     input.reviewStage,
   );
-  if (input.ledgerEntry.schemaVersion !== 2) {
-    fail("Retained original composite reviews require v2 ledger evidence.");
+  if (input.ledgerEntry.schemaVersion !== 4) {
+    fail("Retained original composite reviews require v4 ledger evidence.");
   }
   if (input.eventSha256 !== input.ledgerEntry.eventsSha256) {
     fail(
@@ -111,9 +113,9 @@ export function validateRetainedScenarioReviewInvocation(input: {
     fail(parsedEvents.message);
   }
   const derived = modelInvocationEvidenceFromEvents(parsedEvents.events);
-  if (derived.tag === "invalid" || derived.entry.schemaVersion !== 2) {
+  if (derived.tag === "invalid" || derived.entry.schemaVersion !== 4) {
     fail(
-      `Retained ${input.reviewStage} review input event stream is not valid v2 invocation evidence.`,
+      `Retained ${input.reviewStage} review input event stream is not valid v4 invocation evidence.`,
     );
   }
   const withoutEventsHash = Object.fromEntries(
@@ -142,7 +144,11 @@ export function validateRetainedScenarioReviewInvocation(input: {
   }
   if (
     retained.invocationId !== input.ledgerEntry.invocationId ||
-    retained.scenarioId !== input.ledgerEntry.scenarioId ||
+    (retained.schemaVersion === 2
+      ? retained.scenarioId !==
+        modelInvocationScenarioReference(input.ledgerEntry)
+      : canonicalJson(retainedScenarioReviewSubject(retained)) !==
+        canonicalJson(input.ledgerEntry.subject)) ||
     retained.sourceGitSha !== input.ledgerEntry.gitSha ||
     retained.model !== input.ledgerEntry.model ||
     retained.reasoningEffort !== input.ledgerEntry.reasoningEffort

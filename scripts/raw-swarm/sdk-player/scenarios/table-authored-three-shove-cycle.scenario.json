@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "table-authored-three-shove-cycle",
+  "title": "Table-authored three-Shove cycle",
+  "purpose": "Explore three independent hostile Shove objectives using exact Table-authored reach decisions.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/table-authored-three-shove-cycle.md",
+    "byteLength": 2049,
+    "sha256": "6309153a4148436af5968fe3a269827d5222c7c563465c0610c38a64df656dff"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/table-authored-three-shove-cycle.md.scenario-review.json",
+    "byteLength": 1952,
+    "sha256": "e5f6e50c78792c9c2becd6455f80cc2aed6fb03e3f79a03c460880b4746af76c"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/table-authored-three-shove-cycle.md.stage-facts.json",
+    "byteLength": 836,
+    "sha256": "3e1bf21afd6035de2a35b6fe393bd08ea8a7f4b3b2855b0b45cb80a3c7e6ea2a"
+  }
+}

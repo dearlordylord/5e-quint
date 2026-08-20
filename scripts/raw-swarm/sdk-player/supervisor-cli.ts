@@ -71,7 +71,7 @@ import {
 } from "./sdk-transcript.ts";
 import { canonicalJson, sha256Canonical, sha256Text } from "../transcript.ts";
 import {
-  PlayerRunStateSchema,
+  PlayerExecutionStateSchema,
   playerContinuationAdmission,
 } from "../player-continuation-evidence.ts";
 
@@ -116,7 +116,7 @@ const PrefixSchema = Schema.Struct({
   frozenByteLength: NonNegativeIntegerSchema,
   frozenSha256: HashSchema,
   continuationCount: NonNegativeIntegerSchema,
-  run: PlayerRunStateSchema,
+  run: PlayerExecutionStateSchema,
 });
 type FrozenPrefix = Schema.Schema.Type<typeof PrefixSchema>;
 
@@ -212,7 +212,7 @@ function verifyFrozenPrefix(): FrozenPrefix {
       fail(`Player has already concluded its run: ${conclusion}`),
     ),
     Match.when({ kind: "playerObstructed" }, ({ obstruction }) =>
-      fail(`Player run is obstructed: ${obstruction.message}`),
+      fail(`Player Execution is obstructed: ${obstruction.message}`),
     ),
     Match.exhaustive,
   );

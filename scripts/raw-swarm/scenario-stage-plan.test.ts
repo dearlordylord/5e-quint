@@ -132,7 +132,8 @@ describe("Raw Swarm deterministic stage planning", () => {
     const planned = planScenarioStages({
       identity: {
         tag: "candidate",
-        scenarioId,
+        campaignId: "stage-plan-campaign",
+        candidateId: "stage-plan-candidate",
         candidateScenarioSha256: "c".repeat(64),
       },
       facts: facts(
@@ -149,14 +150,15 @@ describe("Raw Swarm deterministic stage planning", () => {
     expect(planned.right.outcome.tag).toBe("rejected");
     expect(planned.right.identity).toEqual({
       tag: "candidate",
-      scenarioId,
+      campaignId: "stage-plan-campaign",
+      candidateId: "stage-plan-candidate",
       candidateScenarioSha256: "c".repeat(64),
     });
     const invalidCandidateIdentity = Schema.decodeUnknownEither(
       ScenarioStagePlanSchema,
     )({
       ...planned.right,
-      identity: { tag: "candidate", scenarioId },
+      identity: { tag: "candidate", candidateId: "stage-plan-candidate" },
     });
     expect(Either.isLeft(invalidCandidateIdentity)).toBe(true);
     expect(

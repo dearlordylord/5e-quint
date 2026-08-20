@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "mounted-dispatch-through-flooded-orchard",
+  "scenarioSha256": "81b3ca56ba4e8bbf24b7f4ecd043794eecb224eda2fad71c8f54c50407b00c72",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The admitted unsupported-capability probe delegates no Character Sheets."
+    },
+    "spatialRequirement": {
+      "tag": "outsideExperimentEnvelope",
+      "resolution": "tableAuthored",
+      "evidence": "The probe requires mounted and elevated spatial relationships that the geometry experiment does not represent; the Table owns the authored witness while setup reports the public-SDK obstruction."
+    }
+  }
+}

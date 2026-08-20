@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "four-way-crank-control-cycle",
+  "title": "Four-way crank-control cycle",
+  "purpose": "Explore four hostile stat-block turns with changing pairwise Shove targets at a Table-authored spatial boundary.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/four-way-crank-control-cycle.md",
+    "byteLength": 3006,
+    "sha256": "b428449321078f448fa61411cc7cc757ff7234fe7bad165d74c385a0e4619e79"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/four-way-crank-control-cycle.md.scenario-review.json",
+    "byteLength": 2078,
+    "sha256": "0621f13146b914cacfa5ab63b2f91b55207edb1ce65678488859f7fcd4830ff3"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/four-way-crank-control-cycle.md.stage-facts.json",
+    "byteLength": 755,
+    "sha256": "66fe402c7459835d8a5d12603915f784ce8d82166997765220680c89b52147f8"
+  }
+}

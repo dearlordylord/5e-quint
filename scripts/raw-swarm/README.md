@@ -32,6 +32,47 @@ regression layer for known claims. The swarm adds discovery:
 The regression preserves the discovery. It does not drive or guide later
 player agents.
 
+## Identity vocabulary and catalogue
+
+Raw Swarm separates authored inputs from attempts and retained output:
+
+- A **Scenario Campaign** is an offline authoring process that produces and
+  revises candidates.
+- A **Scenario Candidate** is authored material before admission. A rejected
+  candidate never becomes a Scenario.
+- A **Scenario** is one immutable, admitted, playable authored input with a
+  stable semantic ID, title, and exploratory purpose.
+- An **Execution** is one attempt to exercise exactly one Scenario through the
+  public SDK.
+- A **Benchmark** is one controlled comparison whose child Execution IDs are
+  explicit.
+- An **Evidence Set** is a retained artifact collection. Its ID is distinct
+  from the Scenario, Execution, Campaign, Candidate, or Benchmark that produced
+  it, and its storage path is only a projection of that ID.
+
+`Run` is not a Raw Swarm domain term. A few SQLite tables retain numeric
+`runId` columns as database-local row keys; those keys do not identify a
+Scenario, Execution, Benchmark, or Evidence Set.
+
+A Campaign may reserve a `plannedScenarioId`, but that reservation is not a
+Scenario. The identity becomes an admitted Scenario only when the campaign
+writes the canonical `.scenario.json` record after successful admission.
+
+Render the canonical admitted-scenario catalogue from the checked-in admission
+records and their referenced authorities:
+
+```sh
+pnpm raw-swarm:catalogue
+pnpm raw-swarm:catalogue -- --json
+pnpm raw-swarm:catalogue -- --rejected
+```
+
+The admitted projection lists each Scenario exactly once regardless of local
+Execution or Benchmark evidence. The rejected projection is separate. A
+catalogue entry records exploratory intent and admitted facts; membership is
+not a claim of RAW coverage, SDK completeness, player correctness, or tactical
+quality.
+
 Run commands under mise-managed Node 24 from the worktree root:
 
 ```sh
@@ -157,7 +198,7 @@ consumer documentation. Keeping the reported responsibilities separate keeps
 through the current SDK” distinct without paying for separate model
 conversations.
 The
-SDK review does not use historical run verdicts as a permanent blacklist: when
+SDK review does not use historical execution verdicts as a permanent blacklist: when
 the public SDK and its documentation gain a capability, the next review sees it
 as supported, so ordinary generation can use it and an obsolete capability
 probe is rejected. These reviewers report problems without choosing tactics,
@@ -177,8 +218,8 @@ so the implementation-sequence difference is explicit and independently
 validatable.
 
 Every model invocation retains its own raw first-party event stream beside the
-phase ledger. Generation events are retained under
-out/$SCENARIO-generation/invocation-events/; character and setup events are
+phase ledger. Generation events are retained under the Campaign Evidence Set at
+`out/$CAMPAIGN_EVIDENCE/invocation-events/`; character and setup events are
 retained beside their \*-authoring-invocations.jsonl ledger, player events
 under the SDK-player evidence directory, and post-play review events beside
 its review ledger. A ledger's eventsSha256 is the binding between one typed
@@ -228,10 +269,11 @@ and only their own brief; a single agent controlling every combatant may receive
 the whole document. These prose sections do not constitute a scenario DSL.
 
 The executable campaign boundary is a small JSON authoring configuration, not a
-D&D scenario model. It contains only the distribution preference, explicit
-content-availability and SDK-capability intents, iteration bounds, candidate
-count, one review milestone, and whether a reviewed RAW-unsupported result may be
-admitted.
+D&D scenario model. It identifies the Scenario Campaign, planned semantic
+Scenario, human title and exploratory purpose, and authoring Evidence Set. It
+also contains the distribution preference, explicit content-availability and
+SDK-capability intents, iteration bounds, candidate count, one review milestone,
+and whether a reviewed RAW-unsupported result may be admitted.
 Start from
 [`scenario-campaign.example.json`](scenario-campaign.example.json), then run
 from a clean revision:
@@ -241,21 +283,24 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/generate-scenario.ts \
   scripts/raw-swarm/scenario-campaign.example.json
 ```
 
-The command refuses to overwrite either output. It retains only the selected
-final prose and its adjacent `.scenario-review.json` as authored scenario
-artifacts, plus a controller-owned `.stage-facts.json` authority containing
-the selected candidate's typed planning facts. Candidate batches, random
+The command refuses to overwrite existing Scenario or Evidence Set artifacts.
+On admission it retains the selected final prose, adjacent
+`.scenario-review.json`, canonical `.scenario.json` admission record, and a
+controller-owned `.stage-facts.json` authority containing the selected
+candidate's typed planning facts. Rejection retains a separately identified
+Candidate rejection record. Unselected candidate batches, random
 indices, candidate-selection decisions, and agent process output are discarded. Ignored
 generation evidence retains the typed
 invocation ledger and the exact prompt/result envelope for each composite
 milestone and final pre-play review so a controlled review comparison can replay
 the same input. Separate final RAW, content-availability, SDK-capability,
-public-artifact policy, and scenario-quality reviews record the scenario id, clean Git revision,
+public-artifact policy, and scenario-quality reviews record the planned Scenario id, clean Git revision,
 availability/capability/admission intent, and a hash of the exact final prose
-bytes. The command derives both output filenames from the validated scenario
-id. Admitted
+bytes. Admitted artifacts use the planned semantic Scenario ID after admission;
+rejected diagnostic artifacts use the selected Candidate ID. Campaign evidence
+is always stored beneath its independently supplied Evidence Set ID. Admitted
 artifacts go under `sdk-player/scenarios/`; rejected diagnostic output goes
-under ignored `out/rejected-scenarios/` and is not playable input.
+under ignored `out/rejected-scenarios/` and is not executable input.
 The review's `reviewScope` states which independent review responsibilities
 actually ran. Retained pre-capability-review artifacts remain
 `rawContentPolicy`; do not backfill a verdict that was never produced. New
@@ -284,9 +329,9 @@ also retains the replayed prompt, schema, and typed result beside that ledger:
 
 ```sh
 mise exec -- pnpm exec tsx scripts/raw-swarm/review-scenario.ts \
-  scripts/raw-swarm/out/generated-battle-004-generation-invocations-review-inputs/scenarioCompositeReview-MILESTONE.json \
-  scripts/raw-swarm/out/generated-battle-004-milestone-review.json \
-  scripts/raw-swarm/out/generated-battle-004-scenario-review-invocations.jsonl
+  scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/generation-invocations-review-inputs/scenarioCompositeReview-MILESTONE.json \
+  scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/replayed-milestone-review.json \
+  scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/replayed-review-invocations.jsonl
 ```
 
 Run the same command with the retained `reviewStage: "final"` envelope and
@@ -310,7 +355,7 @@ author may substitute missing creatures, drop required combatants, or encode
 later tactics. From a clean revision run:
 
 ```sh
-SCENARIO=generated-battle-example
+SCENARIO=synthetic-beacon-eight-round-defense
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/author-scenario-characters.ts \
   "$SCENARIO"
@@ -353,7 +398,7 @@ scenario may be run by one agent controlling every combatant or by separate
 agents with explicit combatant-to-controller assignments. The SDK supplies the
 currently acting creature; the execution configuration maps that creature to a
 decision owner. It must not infer an encounter-wide `side` that the battle
-domain does not model. Record the assignment with the run. For the simple
+domain does not model. Record the assignment with the Execution. For the simple
 multi-agent form, one neutral battle-session supervisor:
 
 1. owns the SDK process, append-only program, execution transcript, and turn
@@ -425,11 +470,12 @@ call-stream replay and adversarial review.
 MCP may remain an optional parity and compound-coverage lane. It is not a
 required part of the target SDK-player workflow.
 
-## Run a direct-SDK scenario
+## Execute a direct-SDK scenario
 
 The first tracer remains a manually authored Goblin Warrior versus Skeleton
-scenario. Every scenario run starts from adjacent `.md` prose, admitted
-`.scenario-review.json`, and controller-owned `.characters.ts` files. A ready
+scenario. Every Execution starts from adjacent `.scenario.json` identity,
+`.md` prose, admitted `.scenario-review.json`, and controller-owned
+`.characters.ts` files. A ready
 character composition additionally requires the retained controller-reviewed
 `.setup.ts` produced by the neutral-to-controller authoring flow; an obstructed
 composition is retained and replayed without one. The runner refuses
@@ -461,7 +507,7 @@ projection and hash. Replay
 re-evaluates every reached source and requires those facts to match before the
 first recorded SDK call.
 
-An obstructed character composition or setup is a successful diagnostic run,
+An obstructed character composition or setup is a successful diagnostic Execution,
 not a failed or fabricated battle. The runner retains the available authored
 source and a call-free transcript, does
 not launch the player, and supports the same replay, report ingestion, and
@@ -533,7 +579,7 @@ and call. It records the byte length and SHA-256 of every source artifact and
 refuses a saved summary that no longer recomputes from those exact sources.
 `compare-legacy` marks legacy footer token totals as
 incomparable with first-party JSON usage instead of claiming a token reduction.
-Legacy whole-path wall time is also incomparable because the retained run does
+Legacy whole-path wall time is also incomparable because the retained Execution does
 not prove per-phase model identity or invocation counts. Preserve it as an
 inventory/size baseline; use controlled reruns for performance acceptance.
 Comparable same-scenario evidence gates packet-based post-play review tokens and wall
@@ -563,7 +609,7 @@ recovery is not a regression and is interpreted alongside the failure count.
 Both paths must retain independently reviewed `completed` outcomes for the same
 scenario and immutable bundle; tactical trace differences are reliability
 observations, not a second spelling of scenario identity. The current
-bounded-context size estimate and the retained `generated-battle-009` report are
+bounded-context size estimate and the retained `open-grid-wolf-skeleton-pursuit` report are
 documented in
 [`docs/research/raw-swarm-capability-context-and-complete-path.md`](../../docs/research/raw-swarm-capability-context-and-complete-path.md).
 The role-view byte estimate is not a live model result; a complete-path claim
@@ -601,7 +647,7 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/performance-comparison.ts \
 The assemble operation rejects v1 ledgers, missing or malformed recognized
 invocation events, omitted phase authorities, mismatched event hashes, and
 scenario or review identities that disagree with the retained stage plan and
-findings. Do not wrap the historical generated-battle-009 footer in this
+findings. Do not wrap the historical open-grid-wolf-skeleton-pursuit footer in this
 schema: its missing authorities remain unavailable. `compare-complete` reads
 and validates both measurements before retaining their equivalence result, and
 also refuses to overwrite an existing comparison.
@@ -609,60 +655,65 @@ also refuses to overwrite an existing comparison.
 Recording requires a clean revision and refuses to overwrite prior evidence:
 
 ```sh
-SCENARIO=tracer-001-goblin-warrior-vs-skeleton
+SCENARIO=goblin-warrior-skeleton-tracer
+EXECUTION=goblin-skeleton-tracer-execution
+EVIDENCE=goblin-skeleton-tracer-evidence
+CAMPAIGN_EVIDENCE=<campaign-evidence-set-id>
 
-mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts "$SCENARIO"
+mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts \
+  "$SCENARIO" --execution-id "$EXECUTION" --evidence-set-id "$EVIDENCE"
 
 # The standard Codex worker environment does not currently provide the Linux
 # filesystem isolation required by the preferred profile. The runner proves
 # that capability at startup and otherwise requires this explicit fallback:
 mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts \
-  "$SCENARIO" --instructional-isolation
+  "$SCENARIO" --execution-id "$EXECUTION" --evidence-set-id "$EVIDENCE" \
+  --instructional-isolation
 
-# Record another controlled run of the same immutable scenario without
-# overwriting its earlier evidence. The transcript still records SCENARIO as
-# its scenario identity; the evidence id names only the output artifact set.
+# Record another controlled Execution of the same immutable Scenario without
+# overwriting its earlier Evidence Set. Each identity is supplied explicitly.
 mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts \
-  "$SCENARIO" --evidence-id "$SCENARIO-controlled-001" \
+  "$SCENARIO" --execution-id goblin-skeleton-tracer-execution-two \
+  --evidence-set-id goblin-skeleton-tracer-evidence-two \
   --instructional-isolation
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/replay-sdk-player.ts \
-  "scripts/raw-swarm/out/$SCENARIO-sdk-player"
+  "scripts/raw-swarm/out/$EVIDENCE"
 
 # Replay also retains evidence/replay-result.json. It hash-links the exact
 # transcript and replay supervisor, records the exact matched SDK call count,
 # and is immutable once written.
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts ingest \
-  "scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl" \
+  "scripts/raw-swarm/out/$EVIDENCE/evidence/sdk-calls.jsonl" \
   --db scripts/raw-swarm/out/player-swarm.db
 ```
 
-### Run findings and human audit
+### Execution findings and human audit
 
 The direct-SDK runner first emits an immutable
 `evidence/findings-checkpoint.json` when it retains a transcript. This
-checkpoint covers the run, setup, player, and retained evidence that exists at
+checkpoint covers the Execution, setup, player, and retained evidence that exists at
 the runner boundary; it is deliberately not the final review projection.
 After the transcript and any review have been imported, project the canonical
-bounded run audit. The canonical projection contains only stable run identity,
+bounded Execution audit. The canonical projection contains only stable Execution identity,
 hashes of the evidence authorities, classified findings, and exact pointers;
 the transcript, model events, and review remain the authorities. Review,
 scenario-review, and generation-ledger inputs may be repeated when they are
-retained outside the run directory. The final `findings.json` is immutable
+retained outside the Evidence Set directory. The final `findings.json` is immutable
 once written, so later review rounds cannot silently replace it.
 
 ```sh
 # Run and import the independent whole-trace review first.
 mise exec -- scripts/raw-swarm/run-raw-review.sh \
   scripts/raw-swarm/reviews/sdk-player.prompt.txt \
-  "scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl" \
-  "scripts/raw-swarm/out/$SCENARIO-sdk-review.json" \
-  "scripts/raw-swarm/out/$SCENARIO-sdk-review-agent.log"
+  "scripts/raw-swarm/out/$EVIDENCE/evidence/sdk-calls.jsonl" \
+  "scripts/raw-swarm/out/$EVIDENCE/review/sdk-review.json" \
+  "scripts/raw-swarm/out/$EVIDENCE/review/sdk-review-agent.log"
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts review \
-  "scripts/raw-swarm/out/$SCENARIO-sdk-review.json" \
-  --run <run-id> --db scripts/raw-swarm/out/player-swarm.db
+  "scripts/raw-swarm/out/$EVIDENCE/review/sdk-review.json" \
+  --execution-row <sqlite-execution-row-id> --db scripts/raw-swarm/out/player-swarm.db
 
 # Resolve every promoted issue fingerprint before finalization. Repeat the
 # link command for each retained unlinked fingerprint that warrants an issue.
@@ -674,17 +725,17 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts link-github-issue \
 
 # Finalize only after all review rounds have been imported and linked.
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts findings \
-  "scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl" \
+  "scripts/raw-swarm/out/$EVIDENCE/evidence/sdk-calls.jsonl" \
   --db scripts/raw-swarm/out/player-swarm.db \
-  --review "scripts/raw-swarm/out/$SCENARIO-sdk-review.json" \
-  --generation-ledger "scripts/raw-swarm/out/$SCENARIO-generation-invocations.jsonl" \
-  --review-replay-milestone "scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/scenarioCompositeReview-MILESTONE.json" \
-  --review-replay-final "scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/scenarioCompositeReview-FINAL.json" \
-  --render "scripts/raw-swarm/out/$SCENARIO-run-audit.md"
+  --review "scripts/raw-swarm/out/$EVIDENCE/review/sdk-review.json" \
+  --generation-ledger "scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/generation-invocations.jsonl" \
+  --review-replay-milestone "scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/generation-invocations-review-inputs/scenarioCompositeReview-MILESTONE.json" \
+  --review-replay-final "scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/generation-invocations-review-inputs/scenarioCompositeReview-FINAL.json" \
+  --render "scripts/raw-swarm/out/$EVIDENCE-execution-audit.md"
 
 # Render later from the same hash-linked indexed projection.
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts audit \
-  --run <run-id> \
+  --execution-row <sqlite-execution-row-id> \
   --db scripts/raw-swarm/out/player-swarm.db
 ```
 
@@ -699,7 +750,7 @@ their adjacent retained event streams become
 prePlayReviewReplayEvents-milestone/final authorities, and they do not add
 ledger rows or duplicate usage totals. A complete current path additionally
 requires the replay-supervisor.mjs and immutable evidence/replay-result.json
-authorities produced by replay-sdk-player; the latter must match the run
+authorities produced by replay-sdk-player; the latter must match the Execution
 transcript hash, supervisor hash, and exact SDK call count. Complete-path
 assembly allows one or more generation invocations interleaved with the
 milestone/final composite reviews within the pre-play admission group, while
@@ -712,39 +763,39 @@ fingerprints when those authorities are supplied. A GitHub issue number is
 included when the corresponding indexed fingerprint is already linked. SQLite
 stores finding metadata and the projection artifact reference, never complete
 sessions, SDK results, transcripts, or model event logs. Every external
-authority supplied to the projection is also registered as a hash-linked run
+authority supplied to the projection is also registered as a hash-linked execution
 artifact, so portable export retains the review, scenario-review, and
 generation-ledger files referenced by the projection. `audit` reads the
 indexed projection rather than reconstructing a second report.
 
-Scenario-generation runs also emit a transcript-free projection at
-`scripts/raw-swarm/out/$SCENARIO-generation/evidence/findings.json`. Its
-`run.json` authority supplies the stable scenario/Git/time identity; no fake
+Scenario Campaigns also emit a transcript-free projection beneath their
+Evidence Set directory. Its `campaign.json` authority supplies the Campaign,
+planned Scenario, Evidence Set, Git, and time identities; no fake
 SDK transcript is created. The generation runner indexes this projection in
-the generation findings tables of the configured SQLite store (the default is
+the Scenario Campaign tables of the configured SQLite store (the default is
 `scripts/raw-swarm/out/player-swarm.db`). To index or render a retained
 projection manually:
 
 ```sh
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts generation-findings \
-  "scripts/raw-swarm/out/$SCENARIO-generation/evidence/findings.json" \
+  "scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/evidence/findings.json" \
   --db scripts/raw-swarm/out/player-swarm.db
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts generation-audit \
-  --generation-run <generation-run-id> \
+  --campaign-row <sqlite-campaign-row-id> \
   --db scripts/raw-swarm/out/player-swarm.db
 ```
 
 The SQLite artifact-index schema is versioned. Opening an older compact index
 fails with an inventory/rebuild instruction instead of silently mutating its
-format. Preserve or export that v1 file first; rebuild a v2 index from the
+format. Preserve or export that older file first; rebuild a current v3 index from the
 retained transcripts with `report ingest` (or deliberately discard the old
 compact index when its authorities were not retained).
 
 The review launcher shown above first derives `<review-name>.audit.jsonl` and a review
 evidence packet at `<review-name>.packet.json`. The packet combines the audit, retained header
 evidence without the initial session, current-turn projections, line-numbered
-run artifacts, domain authorities, and scenario-selected local SRD passages.
+execution artifacts, domain authorities, and scenario-selected local SRD passages.
 It is capped at 900 KiB and is supplied directly as one review turn; exceeding
 the cap is a precise failure, never truncation. Commands and tools invalidate
 that measured invocation, preventing a second accumulating turn from replacing
@@ -793,8 +844,8 @@ a known repository file. The distribution test checks the intentionally
 provided files. Neither claim turns submitted TypeScript into untrusted code;
 that is deliberately outside this game-testing prototype.
 
-Retained evidence lives under
-`scripts/raw-swarm/out/<scenario>-sdk-player/`. Every outcome retains
+Retained evidence lives under the explicitly supplied
+`scripts/raw-swarm/out/<evidence-set-id>/`. Every outcome retains
 `SCENARIO.md`, `SCENARIO_REVIEW.json`, the replay bundle, canonical SDK JSONL,
 and the reached authored sources. Ready character composition adds its sheet
 projection and setup source; ready setup adds the append-only program and
@@ -832,7 +883,7 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts ingest \
 `run-freeplay.ts` pins the model, reasoning effort, sandbox, MCP server, and
 recording policy in one place. The scenario id also fixes the prompt,
 transcript, agent-log, and reviewer-prompt naming convention so later steps
-cannot silently inspect another run. Agent choices are intentionally
+cannot silently inspect another Execution. Agent choices are intentionally
 nondeterministic; the recorded calls are the deterministic replay input.
 Recording requires a clean worktree so the recorded Git SHA identifies all
 tested code. Replay also requires that exact revision to be checked out.
@@ -848,7 +899,7 @@ mise exec -- scripts/raw-swarm/run-raw-review.sh \
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts review \
   "scripts/raw-swarm/out/$SCENARIO-review.json" \
-  --run <run-id> --db scripts/raw-swarm/out/player-swarm.db
+  --execution-row <sqlite-execution-row-id> --db scripts/raw-swarm/out/player-swarm.db
 ```
 
 The reviewer uses only `.references/srd-5.2.1/` as RAW authority and consults
@@ -861,12 +912,12 @@ Read-only behavior is therefore an explicit reviewer-instruction contract, not
 a filesystem-enforced sandbox guarantee. Fixed-benchmark preparation uses the
 same contract on hosts without nested sandbox support: each call receives a
 complete scratch workspace, and retained first-party telemetry must contain
-only the closed set of named-file read commands before the run is admissible.
+only the closed set of named-file read commands before the Execution is admissible.
 
 ## Add width to the existing MCP prototype
 
 The following steps extend the checked-in MCP experiment only. They are useful
-for another immediate run, but do not replace or redefine the target SDK-player
+for another immediate Execution, but do not replace or redefine the target SDK-player
 workflow above. Do not widen MCP solely to implement that target; begin from the
 external-consumer and battle-session supervisor requirements in
 [Execute through the public SDK](#execute-through-the-public-sdk).
@@ -881,13 +932,13 @@ generic sequencing DSL. Add another player experiment like this:
    do not prescribe internal SDK calls or declare the outcome the agent must
    obtain.
 3. Run `run-freeplay.ts <scenario-id>`, replay the transcript, and ingest it.
-4. Add `reviews/<scenario-id>.prompt.txt` that tries to falsify the whole run,
+4. Add `reviews/<scenario-id>.prompt.txt` that tries to falsify the whole trace,
    then run and import the review.
 5. Inspect the summary and unlinked bug observations. Classify every non-pass as
    described in [Finding and bug lifecycle](#finding-and-bug-lifecycle).
 6. When a finding is actionable, put the smallest deterministic regression at
    its canonical SDK or adapter owner while fixing it. Confirm with a fresh
-   player run and review.
+   player Execution and review.
 
 Prefer width over a Cartesian product. A new prompt should add one useful source
 of surprise, such as a different character build, act family, pending-hole
@@ -954,7 +1005,7 @@ the Table ended combat.
 
 `report.ts` creates a WAL-mode SQLite store on first use. The store is a
 searchable index, not a second archive of complete sessions, transcripts, or
-agent logs. It retains run identity, sequence and operation metadata, hashes,
+agent logs. It retains Execution identity, sequence and operation metadata, hashes,
 derived review facts, verdicts, issue links, and paths to immutable hash-linked
 evidence files. A portable copy is an explicit export containing the database
 and every referenced artifact. Its snapshot rewrites artifact paths to
@@ -964,7 +1015,7 @@ after relocation; copying the database alone is not an evidence backup.
 ```sh
 # Inventory and rebuild the pre-index database without mutating it. The command
 # prints one tagged JSON result: `supported` identifies either the historical
-# transcriptPath source or a v1/v2 hash-linked artifact index, while each entry
+# transcriptPath source or a v1/v2/v3 hash-linked artifact index, while each entry
 # remains `artifactBacked`, `inconsistent`, or `databaseOnly`.
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts legacy-inventory \
   --legacy-db scripts/raw-swarm/out/player-swarm-legacy.db
@@ -985,40 +1036,40 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts export \
 # the exact retained review JSON.
 {
   jq -c 'select(.phase == "scenarioCompositeReview")' \
-    scripts/raw-swarm/out/$SCENARIO-generation-invocations.jsonl
-  cat scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/invocations.jsonl
-  cat scripts/raw-swarm/out/$SCENARIO-sdk-review.invocations.jsonl
-} > scripts/raw-swarm/out/$SCENARIO-controlled-invocations.jsonl
+    scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/generation-invocations.jsonl
+  cat scripts/raw-swarm/out/$EVIDENCE/evidence/invocations.jsonl
+  cat scripts/raw-swarm/out/$EVIDENCE/review/sdk-review.invocations.jsonl
+} > scripts/raw-swarm/out/$EVIDENCE/review/controlled-invocations.jsonl
 
 # Bind the transcript, review, audit, packet, exact source/replay inputs,
 # ledger, and each event stream before reporting or performance comparison.
 mise exec -- pnpm exec tsx scripts/raw-swarm/review-invocation-evidence.ts \
   create \
-  scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl \
-  scripts/raw-swarm/out/$SCENARIO-sdk-review.json \
-  scripts/raw-swarm/out/$SCENARIO-sdk-review.audit.jsonl \
-  scripts/raw-swarm/out/$SCENARIO-sdk-review.packet.json \
-  scripts/raw-swarm/out/$SCENARIO-review-invocation-evidence.json \
+  scripts/raw-swarm/out/$EVIDENCE/evidence/sdk-calls.jsonl \
+  scripts/raw-swarm/out/$EVIDENCE/review/sdk-review.json \
+  scripts/raw-swarm/out/$EVIDENCE/review/sdk-review.audit.jsonl \
+  scripts/raw-swarm/out/$EVIDENCE/review/sdk-review.packet.json \
+  scripts/raw-swarm/out/$EVIDENCE/review/review-invocation-evidence.json \
   "$MILESTONE_SOURCE_INPUT" \
   "$MILESTONE_REPLAY_INPUT" \
   "$FINAL_SOURCE_INPUT" \
   "$FINAL_REPLAY_INPUT" \
-  scripts/raw-swarm/out/$SCENARIO-controlled-invocations.jsonl \
-  scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/*.events.jsonl \
-  scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/player-events.jsonl \
-  scripts/raw-swarm/out/$SCENARIO-sdk-review-agent.log.events.jsonl
+  scripts/raw-swarm/out/$EVIDENCE/review/controlled-invocations.jsonl \
+  scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/generation-invocations-review-inputs/*.events.jsonl \
+  scripts/raw-swarm/out/$EVIDENCE/evidence/player-events.jsonl \
+  scripts/raw-swarm/out/$EVIDENCE/review/sdk-review-agent.log.events.jsonl
 
 # For controlled evidence, time the actual reporting work. This operation owns
 # the timing artifact; callers do not supply an elapsed duration. It refuses a
 # transcript or review outside the hash-linked invocation evidence.
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts controlled-reporting \
-  scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl \
-  scripts/raw-swarm/out/$SCENARIO-sdk-review.json \
-  --db scripts/raw-swarm/out/$SCENARIO-controlled-index.db \
-  --destination scripts/raw-swarm/out/$SCENARIO-controlled-portable \
-  --timing scripts/raw-swarm/out/$SCENARIO-controlled-portable/reporting-timing.json \
+  scripts/raw-swarm/out/$EVIDENCE/evidence/sdk-calls.jsonl \
+  scripts/raw-swarm/out/$EVIDENCE/review/sdk-review.json \
+  --db scripts/raw-swarm/out/$EVIDENCE/review/controlled-index.db \
+  --destination scripts/raw-swarm/out/$EVIDENCE/review/controlled-portable \
+  --timing scripts/raw-swarm/out/$EVIDENCE/review/controlled-portable/reporting-timing.json \
   --review-invocation-evidence \
-  scripts/raw-swarm/out/$SCENARIO-review-invocation-evidence.json
+  scripts/raw-swarm/out/$EVIDENCE/review/review-invocation-evidence.json
 
 # Summarize controlled telemetry and compare it with retained legacy evidence.
 mise exec -- pnpm exec tsx scripts/raw-swarm/performance-comparison.ts \
@@ -1029,7 +1080,7 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/performance-comparison.ts \
   scripts/raw-swarm/out/fresh-performance.json \
   scripts/raw-swarm/out/performance-comparison.json
 
-# summary by verdict class
+# separate current Execution and historical-observation counts and verdicts
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts summary \
   --db scripts/raw-swarm/out/player-swarm.db
 
@@ -1042,12 +1093,12 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts issues \
   --db scripts/raw-swarm/out/player-swarm.db --linked
 ```
 
-Legacy rebuild classifies each run and review as `artifactBacked`,
+Legacy rebuild classifies each historical observation and review as `artifactBacked`,
 `inconsistent`, or `databaseOnly`. It never mutates the legacy database. The
 rebuilt index stores an exact hash-linked export of every legacy table before
 projecting recoverable transcripts and reviews; database-only rows remain in
 the export and explicit inventory rather than disappearing or blocking the
-recoverable index. A v1/v2 hash-linked artifact index is already a compact
+recoverable index. A v1/v2/v3 hash-linked artifact index is already a compact
 evidence store; `legacy-inventory` inspects it read-only, while `rebuild-index`
 continues to accept only the historical transcriptPath source.
 
@@ -1057,7 +1108,7 @@ Verdict classes are `bug`, `adapter-defect`, `unsupported-capability`,
 
 ## Finding and bug lifecycle
 
-Hash-linked run artifacts own immutable execution and review evidence. SQLite
+Hash-linked execution artifacts own immutable execution and review evidence. SQLite
 owns their searchable index and immutable verdict records. GitHub Issues owns
 triage, assignment, priority, discussion, and open/closed status, as required by
 [`docs/agents/issue-tracker.md`](../../docs/agents/issue-tracker.md). Do not
@@ -1076,7 +1127,7 @@ targeting), [#284](https://github.com/dearlordylord/5e-quint/issues/284)
 spatial-witness shape). Those tickets remain rules or SDK work even when a
 scenario happens to mention spatial facts.
 
-Every verdict remains immutable run evidence. For each non-pass verdict, first
+Every verdict remains immutable Execution evidence. For each non-pass verdict, first
 classify and disposition it:
 
 1. Inspect the transcript sequence and local RAW evidence. Classify it as an SDK
@@ -1096,7 +1147,7 @@ Other classes remain in the review evidence without an issue fingerprint.
    different wording is one semantic issue.
 4. Search existing GitHub Issues. Create one only when no semantic duplicate
    exists. Use the **RAW swarm finding** issue form, which applies `raw-swarm`
-   and `bug` labels and requires the fingerprint, run id, tested Git SHA,
+   and `bug` labels and requires the fingerprint, SQLite Execution row ID, tested Git SHA,
    transcript sequences, RAW citations, reproduction, expected behavior,
    owning package, and regression level. Put each fingerprint on an exact
    `Raw-Swarm-Fingerprint: <sha256>` line.
@@ -1110,11 +1161,11 @@ Other classes remain in the review evidence without an issue fingerprint.
 
 6. Fix the canonical SDK owner unless the defect is specifically in the MCP
    adapter. Add the smallest deterministic regression at that owner.
-7. Generate a fresh player run and adversarial review for the corrected
+7. Generate a fresh player Execution and adversarial review for the corrected
    behavior. Preserve the original evidence; replaying an old revision can
    intentionally diverge after a behavior fix.
 8. Comment on the GitHub issue with the regression, fix commit, confirming
-   run/review, and remaining limits, then close it. A recurrence links new
+   Execution/review, and remaining limits, then close it. A recurrence links new
    evidence to the same reopened issue.
 
 SQLite stores only `githubIssueNumber`, not GitHub lifecycle state. Generated

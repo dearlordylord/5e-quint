@@ -39,7 +39,7 @@ import {
 } from "./scenario-campaign.ts";
 import {
   findingsArtifactPath,
-  projectRunFindings,
+  projectExecutionFindings,
   writeFindingsProjection,
 } from "./findings.ts";
 import { parseStrictReadCommand } from "./review-read-validation.ts";
@@ -59,7 +59,7 @@ import {
   benchmarkReviewReasoningEffort,
   BenchmarkReadinessInputSchema,
   BenchmarkContextSourceManifestDocumentSchema,
-  BenchmarkRunDescriptorSchema,
+  BenchmarkExecutionProfileDescriptorSchema,
   benchmarkReviewPlan,
   deriveBenchmarkPathOutcome,
   parseBenchmarkMeasurement,
@@ -78,7 +78,10 @@ import {
   type ScenarioStageFacts,
   type ScenarioStagePlan,
 } from "./scenario-stage-plan.ts";
-import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
+import {
+  RetainedScenarioReviewInputSchema,
+  retainedScenarioReviewScenarioId,
+} from "./scenario-review-input.ts";
 import {
   buildScenarioCharacterDistribution,
   buildScenarioSetupDistribution,
@@ -96,8 +99,17 @@ import {
   type ScenarioId,
 } from "./transcript.ts";
 import { RAW_SWARM_STAGE_PLAN_REASONS } from "./scenario-stage-plan.ts";
+import {
+  decodeBenchmarkId,
+  decodeEvidenceSetId,
+  decodeExecutionId,
+  type BenchmarkId,
+  type EvidenceSetId,
+  type ExecutionId,
+} from "./raw-swarm-identities.ts";
+import { BenchmarkRecordSchema } from "./scenario-catalogue.ts";
 
-export const FIXED_SCENARIO_ID = "generated-battle-009" as const;
+export const FIXED_SCENARIO_ID = "open-grid-wolf-skeleton-pursuit" as const;
 export const FIXED_BENCHMARK_PROFILES = BENCHMARK_IMPLEMENTATION_PROFILES;
 export type FixedBenchmarkProfile = BenchmarkImplementationProfile;
 
@@ -118,6 +130,7 @@ function fixedScenarioId(): ScenarioId {
 
 export type FixedScenarioCanonicalPaths = Readonly<{
   readonly scenario: string;
+  readonly scenarioRecord: string;
   readonly scenarioReview: string;
   readonly characters: string;
   readonly setup: string;
@@ -127,6 +140,7 @@ export type FixedScenarioCanonicalBundle = Readonly<{
   readonly paths: FixedScenarioCanonicalPaths;
   readonly authorities: Readonly<{
     readonly scenario: ArtifactAuthority;
+    readonly scenarioRecord: ArtifactAuthority;
     readonly scenarioReview: ArtifactAuthority;
     readonly characters: ArtifactAuthority;
     readonly setup: ArtifactAuthority;
@@ -136,13 +150,15 @@ export type FixedScenarioCanonicalBundle = Readonly<{
 }>;
 
 export type FixedBenchmarkProfilePaths = Readonly<{
+  readonly benchmarkId: BenchmarkId;
+  readonly profile: FixedBenchmarkProfile;
   readonly root: string;
   readonly stageFacts: string;
   readonly stagePlan: string;
   readonly stagePlanFindings: string;
   readonly contextDirectory: string;
   readonly contextManifest: string;
-  readonly runDescriptor: string;
+  readonly executionProfileDescriptor: string;
   readonly benchmarkLedger: string;
   readonly currentLedger: string;
   readonly auxiliaryLedger: string;
@@ -189,6 +205,7 @@ function fixedCanonicalPaths(): FixedScenarioCanonicalPaths {
   );
   return {
     scenario,
+    scenarioRecord: scenario.replace(/\.md$/, ".scenario.json"),
     scenarioReview: scenario + ".scenario-review.json",
     characters: scenario.slice(0, -".md".length) + ".characters.ts",
     setup: scenario.slice(0, -".md".length) + ".setup.ts",
@@ -205,6 +222,7 @@ export function fixedScenarioCanonicalBundle(): FixedScenarioCanonicalBundle {
     scenarioId: fixedScenarioId(),
     scenarioPath: paths.scenario,
     reviewPath: paths.scenarioReview,
+    recordPath: paths.scenario.replace(/\.md$/, ".scenario.json"),
   });
   if (Either.isLeft(admission)) fail(admission.left);
   const review = Schema.decodeUnknownEither(
@@ -217,6 +235,7 @@ export function fixedScenarioCanonicalBundle(): FixedScenarioCanonicalBundle {
     paths,
     authorities: {
       scenario: artifactAuthority(repoRelative(paths.scenario)),
+      scenarioRecord: artifactAuthority(repoRelative(paths.scenarioRecord)),
       scenarioReview: artifactAuthority(repoRelative(paths.scenarioReview)),
       characters: artifactAuthority(repoRelative(paths.characters)),
       setup: artifactAuthority(repoRelative(paths.setup)),
@@ -236,7 +255,7 @@ export function assertFixedScenarioCanonicalBundle(
     sha256Canonical(expected.authorities)
   ) {
     fail(
-      "The tracked generated-battle-009 bundle changed during the benchmark.",
+      "The tracked open-grid-wolf-skeleton-pursuit bundle changed during the benchmark.",
     );
   }
 }
@@ -246,7 +265,7 @@ type FixedBenchmarkPreparationState = Readonly<{
   readonly contextAuthorities: readonly ArtifactAuthority[];
   readonly contextManifest: ArtifactAuthority;
   readonly gitSha: GitSha;
-  readonly runDescriptor: ArtifactAuthority;
+  readonly executionProfileDescriptor: ArtifactAuthority;
   readonly stageFacts: ArtifactAuthority;
   readonly stagePlan: ArtifactAuthority;
   readonly stagePlanFindings: ArtifactAuthority;
@@ -279,7 +298,7 @@ function preparationState(
     ),
     contextManifest: authorityAt(paths.contextManifest),
     gitSha,
-    runDescriptor: authorityAt(paths.runDescriptor),
+    executionProfileDescriptor: authorityAt(paths.executionProfileDescriptor),
     stageFacts: authorityAt(paths.stageFacts),
     stagePlan: authorityAt(paths.stagePlan),
     stagePlanFindings: authorityAt(paths.stagePlanFindings),
@@ -327,9 +346,9 @@ function assertPreparationState(
     );
   }
   assertAuthorityUnchanged(
-    "run descriptor",
-    state.runDescriptor,
-    paths.runDescriptor,
+    "execution profile descriptor",
+    state.executionProfileDescriptor,
+    paths.executionProfileDescriptor,
   );
 }
 
@@ -339,34 +358,31 @@ export function fixedScenarioStageFacts(): ScenarioStageFacts {
     characterRequirement: {
       tag: "statBlocksOnly",
       evidence:
-        "The tracked generated-battle-009 character source is ready and returns zero Character Sheets.",
+        "The tracked open-grid-wolf-skeleton-pursuit character source is ready and returns zero Character Sheets.",
     },
     spatialRequirement: {
       tag: "geometryAssisted",
       evidence:
-        "The tracked generated-battle-009 setup source owns its open grid through the geometry-derived spatial boundary.",
+        "The tracked open-grid-wolf-skeleton-pursuit setup source owns its open grid through the geometry-derived spatial boundary.",
     },
   };
 }
 
 export function fixedBenchmarkProfilePaths(
-  runId: string,
+  benchmarkId: BenchmarkId,
   profile: FixedBenchmarkProfile,
 ): FixedBenchmarkProfilePaths {
-  const root = resolve(
-    repoRoot,
-    FIXED_BENCHMARK_ROOT,
-    assertRunId(runId),
-    profile,
-  );
+  const root = resolve(repoRoot, FIXED_BENCHMARK_ROOT, benchmarkId, profile);
   return {
+    benchmarkId,
+    profile,
     root,
     stageFacts: resolve(root, "bundle/stage-facts.json"),
     stagePlan: resolve(root, "bundle/stage-plan.json"),
     stagePlanFindings: resolve(root, "bundle/stage-plan-findings.json"),
     contextDirectory: resolve(root, "context"),
     contextManifest: resolve(root, "context-manifest.json"),
-    runDescriptor: resolve(root, "run.json"),
+    executionProfileDescriptor: resolve(root, "execution-profile.json"),
     benchmarkLedger: resolve(root, "evidence/benchmark-invocations.jsonl"),
     currentLedger: resolve(root, "evidence/current-invocations.jsonl"),
     auxiliaryLedger: resolve(root, "evidence/auxiliary-invocations.jsonl"),
@@ -396,11 +412,22 @@ export function initializeFixedBenchmarkProfileDirectory(
   mkdirSync(profileRoot, { recursive: false });
 }
 
-function assertRunId(runId: string | undefined): string {
-  if (runId === undefined || !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(runId)) {
-    return fail("Fixed benchmark run id has unsafe characters.");
-  }
-  return runId;
+function assertBenchmarkId(benchmarkId: string | undefined): BenchmarkId {
+  const decoded = decodeBenchmarkId(benchmarkId);
+  if (Either.isLeft(decoded)) return fail(decoded.left);
+  return decoded.right;
+}
+
+function freshBenchmarkExecutionId(): ExecutionId {
+  const decoded = decodeExecutionId(`execution-${randomUUID()}`);
+  if (Either.isLeft(decoded)) return fail(decoded.left);
+  return decoded.right;
+}
+
+function freshBenchmarkEvidenceSetId(): EvidenceSetId {
+  const decoded = decodeEvidenceSetId(`evidence-${randomUUID()}`);
+  if (Either.isLeft(decoded)) return fail(decoded.left);
+  return decoded.right;
 }
 
 /** Canonical unbounded context retained by the historical benchmark profile. */
@@ -561,17 +588,25 @@ function copyBenchmarkCallInputs(input: {
 }> {
   const contextPath = resolve(input.scratch, "BENCHMARK_CONTEXT.md");
   const scenario = resolve(input.scratch, "SCENARIO.md");
+  const scenarioRecord = resolve(input.scratch, "SCENARIO_RECORD.json");
   const scenarioReview = resolve(input.scratch, "SCENARIO_REVIEW.json");
   const characters = resolve(input.scratch, "CHARACTERS.ts");
   const setup = resolve(input.scratch, "SETUP.ts");
   copyFileSync(input.contextPath, contextPath);
   copyFileSync(input.bundle.paths.scenario, scenario);
+  copyFileSync(input.bundle.paths.scenarioRecord, scenarioRecord);
   copyFileSync(input.bundle.paths.scenarioReview, scenarioReview);
   copyFileSync(input.bundle.paths.characters, characters);
   copyFileSync(input.bundle.paths.setup, setup);
   return {
     contextPath,
-    bundlePaths: { scenario, scenarioReview, characters, setup },
+    bundlePaths: {
+      scenario,
+      scenarioRecord,
+      scenarioReview,
+      characters,
+      setup,
+    },
   };
 }
 
@@ -1128,7 +1163,12 @@ function runStructuredCall<A, I>(input: {
       ledgerPath: input.profilePaths.currentLedger,
       phase: input.phase,
       stagePlanReason: input.stagePlanReason,
-      scenarioId: input.scenarioId,
+      subject: {
+        tag: "benchmark",
+        benchmarkId: input.profilePaths.benchmarkId,
+        profile: input.profilePaths.profile,
+        scenarioId: input.scenarioId,
+      },
       gitSha: input.gitSha,
       fallbackInvocationId:
         input.scenarioId + "-" + input.phase + "-" + String(input.ordinal),
@@ -1162,8 +1202,8 @@ function runStructuredCall<A, I>(input: {
     const row = readJsonLines(input.profilePaths.currentLedger).at(-1);
     if (row === undefined) fail("Current invocation row was not retained.");
     const entry = parseModelInvocationLedgerEntry(row);
-    if (Either.isLeft(entry) || entry.right.schemaVersion !== 2) {
-      fail("Current invocation row is not schema v2.");
+    if (Either.isLeft(entry) || entry.right.schemaVersion !== 4) {
+      fail("Current invocation row is not schema v4.");
     }
     return {
       value: decoded.right.result,
@@ -1804,7 +1844,12 @@ function setupSourceCalls(input: {
             phase,
             stagePlanReason:
               RAW_SWARM_STAGE_PLAN_REASONS.scenarioSetupAuthoring,
-            scenarioId: fixedScenarioId(),
+            subject: {
+              tag: "benchmark",
+              benchmarkId: input.paths.benchmarkId,
+              profile: input.paths.profile,
+              scenarioId: fixedScenarioId(),
+            },
             gitSha: input.gitSha,
             fallbackInvocationId: FIXED_SCENARIO_ID + "-" + phase,
             model: "gpt-5.6-sol",
@@ -1853,21 +1898,27 @@ function setupSourceCalls(input: {
 }
 
 export function benchmarkCommands(input: {
-  readonly runId: string;
+  readonly benchmarkId: BenchmarkId;
   readonly profile: FixedBenchmarkProfile;
+  readonly executionId: ExecutionId;
+  readonly evidenceSetId: EvidenceSetId;
   readonly implementationGitSha: GitSha;
   readonly paths: FixedBenchmarkProfilePaths;
   readonly bundle: FixedScenarioCanonicalBundle;
 }): Readonly<
   Record<"player" | "replay" | "postPlayReview" | "assemble", string>
 > {
-  const runId = assertRunId(input.runId);
+  const benchmarkId = input.benchmarkId;
   const contextPlayer = repoRelative(
     resolve(input.paths.contextDirectory, "player.md"),
   );
   const player =
     "pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts " +
     FIXED_SCENARIO_ID +
+    " --execution-id " +
+    input.executionId +
+    " --evidence-set-id " +
+    input.evidenceSetId +
     " --output-path " +
     repoRelative(input.paths.playerDirectory) +
     " --scenario-path " +
@@ -1910,14 +1961,14 @@ export function benchmarkCommands(input: {
       repoRelative(input.paths.postPlayLog),
     assemble:
       "pnpm exec tsx scripts/raw-swarm/fixed-scenario-benchmark.ts assemble " +
-      runId +
+      benchmarkId +
       " " +
       input.profile,
   };
 }
 
 async function prepareProfile(input: {
-  readonly runId: string;
+  readonly benchmarkId: BenchmarkId;
   readonly profile: FixedBenchmarkProfile;
 }): Promise<void> {
   const bundle = fixedScenarioCanonicalBundle();
@@ -1926,10 +1977,9 @@ async function prepareProfile(input: {
     fail("Fixed benchmark preparation requires a clean Git worktree.");
   const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
   if (Either.isLeft(gitSha)) fail(gitSha.left.message);
-  const paths = fixedBenchmarkProfilePaths(
-    assertRunId(input.runId),
-    input.profile,
-  );
+  const paths = fixedBenchmarkProfilePaths(input.benchmarkId, input.profile);
+  const executionId = freshBenchmarkExecutionId();
+  const evidenceSetId = freshBenchmarkEvidenceSetId();
   initializeFixedBenchmarkProfileDirectory(paths.root);
   mkdirSync(paths.contextDirectory, { recursive: true });
   mkdirSync(paths.eventDirectory, { recursive: true });
@@ -1947,9 +1997,10 @@ async function prepareProfile(input: {
     stageFacts: artifactAuthority(repoRelative(paths.stageFacts)),
     stagePlan: artifactAuthority(repoRelative(paths.stagePlan)),
   };
-  writeJsonExclusive(resolve(paths.root, "run.json"), {
+  writeJsonExclusive(paths.executionProfileDescriptor, {
     schemaVersion: 1,
-    runId: input.runId,
+    executionId,
+    evidenceSetId,
     profile: input.profile,
     scenarioId: FIXED_SCENARIO_ID,
     implementationGitSha: gitSha.right,
@@ -2104,15 +2155,17 @@ async function prepareProfile(input: {
   });
   assertFixedScenarioCanonicalBundle(bundle);
   const commands = benchmarkCommands({
-    runId: input.runId,
+    benchmarkId: input.benchmarkId,
     profile: input.profile,
+    executionId,
+    evidenceSetId,
     implementationGitSha: gitSha.right,
     paths,
     bundle,
   });
   writeJsonExclusive(paths.commands, {
     schemaVersion: 1,
-    runId: input.runId,
+    benchmarkId: input.benchmarkId,
     profile: input.profile,
     scenarioId: FIXED_SCENARIO_ID,
     commands,
@@ -2143,7 +2196,7 @@ function validateRetainedReviewAuthority(
   })(JSON.parse(readFileSync(path, "utf8")));
   if (Either.isLeft(parsed)) fail(parsed.left.message);
   if (
-    parsed.right.scenarioId !== FIXED_SCENARIO_ID ||
+    retainedScenarioReviewScenarioId(parsed.right) !== FIXED_SCENARIO_ID ||
     parsed.right.reviewStage !== stage ||
     parsed.right.sourceGitSha !== implementationGitSha
   ) {
@@ -2259,21 +2312,24 @@ function validateContextDeliveryEvidence(input: {
   }
 }
 
-function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
+function assembleProfile(
+  benchmarkId: BenchmarkId,
+  profile: FixedBenchmarkProfile,
+): void {
   const bundle = fixedScenarioCanonicalBundle();
-  const paths = fixedBenchmarkProfilePaths(assertRunId(runId), profile);
-  const runDescriptor = Schema.decodeUnknownEither(
-    BenchmarkRunDescriptorSchema,
+  const paths = fixedBenchmarkProfilePaths(benchmarkId, profile);
+  const executionProfileDescriptor = Schema.decodeUnknownEither(
+    BenchmarkExecutionProfileDescriptorSchema,
     { onExcessProperty: "error" },
-  )(JSON.parse(readFileSync(paths.runDescriptor, "utf8")));
-  if (Either.isLeft(runDescriptor)) fail(runDescriptor.left.message);
+  )(JSON.parse(readFileSync(paths.executionProfileDescriptor, "utf8")));
+  if (Either.isLeft(executionProfileDescriptor))
+    fail(executionProfileDescriptor.left.message);
   if (
-    runDescriptor.right.runId !== runId ||
-    runDescriptor.right.profile !== profile ||
-    runDescriptor.right.scenarioId !== FIXED_SCENARIO_ID
+    executionProfileDescriptor.right.profile !== profile ||
+    executionProfileDescriptor.right.scenarioId !== FIXED_SCENARIO_ID
   ) {
     fail(
-      "Fixed benchmark run descriptor is bound to another run, profile, or scenario.",
+      "Fixed benchmark execution profile descriptor is bound to another execution, profile, or scenario.",
     );
   }
   const plan = validateScenarioStagePlan(
@@ -2282,6 +2338,7 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
   if (Either.isLeft(plan)) fail(plan.left);
   const preparedBundle = {
     scenario: bundle.authorities.scenario,
+    scenarioRecord: bundle.authorities.scenarioRecord,
     scenarioReview: bundle.authorities.scenarioReview,
     stageFacts: artifactAuthority(repoRelative(paths.stageFacts)),
     stagePlan: artifactAuthority(repoRelative(paths.stagePlan)),
@@ -2342,13 +2399,13 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     );
   }
   if (
-    sha256Canonical(runDescriptor.right.scenarioBundle) !==
+    sha256Canonical(executionProfileDescriptor.right.scenarioBundle) !==
       sha256Canonical(preparedBundle) ||
-    sha256Canonical(runDescriptor.right.contextManifest) !==
+    sha256Canonical(executionProfileDescriptor.right.contextManifest) !==
       sha256Canonical(contextManifestAuthority)
   ) {
     fail(
-      "Fixed benchmark run descriptor does not match retained preparation authorities.",
+      "Fixed benchmark execution profile descriptor does not match retained preparation authorities.",
     );
   }
   if (!existsSync(transcript) || !existsSync(frozenPrefix)) {
@@ -2384,13 +2441,13 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
         ? paths.milestoneReviewInput
         : paths.finalReviewInput,
       stage,
-      runDescriptor.right.implementationGitSha,
+      executionProfileDescriptor.right.implementationGitSha,
     );
   }
   validateRetainedReadinessAuthority(
     profile,
     paths,
-    runDescriptor.right.implementationGitSha,
+    executionProfileDescriptor.right.implementationGitSha,
   );
   const benchmarkLedger = artifactAuthority(
     repoRelative(paths.benchmarkLedger),
@@ -2413,9 +2470,9 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     (value): readonly FixedBenchmarkInvocation[] => {
       const current = parseModelInvocationLedgerEntry(value);
       if (Either.isRight(current)) {
-        if (current.right.schemaVersion !== 2) {
+        if (current.right.schemaVersion !== 4) {
           return fail(
-            "Historical v1 invocation rows cannot enter schema-3 assembly.",
+            "Historical invocation rows cannot enter schema-3 assembly.",
           );
         }
         return [current.right];
@@ -2462,9 +2519,9 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
   if (firstEvent === undefined)
     fail("Schema-3 assembly requires invocation events.");
   const invocationEvents = [firstEvent, ...events.slice(1)] as const;
-  const baseFindings = projectRunFindings({
+  const baseFindings = projectExecutionFindings({
     transcriptPath: repoRelative(transcript),
-    runDirectory: repoRelative(paths.playerDirectory),
+    evidenceSetDirectory: repoRelative(paths.playerDirectory),
     reviewPaths: existsSync(paths.postPlayReview)
       ? [repoRelative(paths.postPlayReview)]
       : [],
@@ -2543,9 +2600,9 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
   });
   const measurementCommon = {
     schemaVersion: 5 as const,
-    pathId: runId + "-" + profile,
+    pathId: benchmarkId + "-" + profile,
     scenarioId: fixedScenarioId(),
-    implementationGitSha: runDescriptor.right.implementationGitSha,
+    implementationGitSha: executionProfileDescriptor.right.implementationGitSha,
     scenarioBundle: preparedBundle,
     contextSourceManifest: contextManifestAuthority,
     stagePlan: plan.right,
@@ -2564,7 +2621,7 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
           invocations: nonEmpty(
             retainedInvocations.filter(
               (invocation): invocation is CurrentModelInvocationLedgerEntry =>
-                invocation.schemaVersion === 2,
+                invocation.schemaVersion === 4,
             ),
             "bounded invocations",
           ),
@@ -2590,11 +2647,13 @@ export function parseFixedBenchmarkProfile(
 
 async function main(args: readonly string[]): Promise<void> {
   const command = args[0];
-  const runId = args[1];
+  const benchmarkId = args[1];
   const profileInput = args[2];
   if (command === "prepare") {
-    if (runId === undefined || args.length > 3) {
-      fail("Usage: fixed-scenario-benchmark.ts prepare <run-id> [profile]");
+    if (benchmarkId === undefined || args.length > 3) {
+      fail(
+        "Usage: fixed-scenario-benchmark.ts prepare <benchmark-id> [profile]",
+      );
     }
     const profiles =
       profileInput === undefined
@@ -2605,34 +2664,49 @@ async function main(args: readonly string[]): Promise<void> {
             return [parsed.right] as const;
           })();
     for (const profile of profiles) {
-      await prepareProfile({ runId: assertRunId(runId), profile });
+      await prepareProfile({
+        benchmarkId: assertBenchmarkId(benchmarkId),
+        profile,
+      });
     }
     return;
   }
   if (command === "assemble") {
-    if (runId === undefined || profileInput === undefined || args.length > 3) {
-      fail("Usage: fixed-scenario-benchmark.ts assemble <run-id> <profile>");
+    if (
+      benchmarkId === undefined ||
+      profileInput === undefined ||
+      args.length > 3
+    ) {
+      fail(
+        "Usage: fixed-scenario-benchmark.ts assemble <benchmark-id> <profile>",
+      );
     }
     const parsed = parseFixedBenchmarkProfile(profileInput);
     if (Either.isLeft(parsed)) fail(parsed.left);
-    assembleProfile(runId, parsed.right);
+    assembleProfile(assertBenchmarkId(benchmarkId), parsed.right);
     return;
   }
   if (command === "compare") {
-    if (runId === undefined || profileInput === undefined || args.length > 3) {
-      fail("Usage: fixed-scenario-benchmark.ts compare <run-id> <output.json>");
+    if (
+      benchmarkId === undefined ||
+      profileInput === undefined ||
+      args.length > 3
+    ) {
+      fail(
+        "Usage: fixed-scenario-benchmark.ts compare <benchmark-id> <output.json>",
+      );
     }
-    const acceptedRunId = assertRunId(runId);
+    const acceptedBenchmarkId = assertBenchmarkId(benchmarkId);
     const baseline = readCompletePathMeasurement(
       FIXED_BENCHMARK_ROOT +
         "/" +
-        acceptedRunId +
+        acceptedBenchmarkId +
         "/documentDeclarationSet/measurement.json",
     );
     const candidate = readCompletePathMeasurement(
       FIXED_BENCHMARK_ROOT +
         "/" +
-        acceptedRunId +
+        acceptedBenchmarkId +
         "/boundedCapabilityProjection/measurement.json",
     );
     const result = writeCompletePathComparison({
@@ -2641,6 +2715,32 @@ async function main(args: readonly string[]): Promise<void> {
       outputPath: profileInput,
     });
     if (Either.isLeft(result)) fail(result.left);
+    const benchmarkRecord = Schema.decodeUnknownEither(BenchmarkRecordSchema, {
+      onExcessProperty: "error",
+    })({
+      schemaVersion: 1,
+      benchmarkId: acceptedBenchmarkId,
+      evidenceSetId: freshBenchmarkEvidenceSetId(),
+      executionIds: FIXED_BENCHMARK_PROFILES.map((profile) => {
+        const paths = fixedBenchmarkProfilePaths(acceptedBenchmarkId, profile);
+        const descriptor = Schema.decodeUnknownEither(
+          BenchmarkExecutionProfileDescriptorSchema,
+          { onExcessProperty: "error" },
+        )(JSON.parse(readFileSync(paths.executionProfileDescriptor, "utf8")));
+        if (Either.isLeft(descriptor)) fail(descriptor.left.message);
+        return descriptor.right.executionId;
+      }),
+    });
+    if (Either.isLeft(benchmarkRecord)) fail(benchmarkRecord.left.message);
+    writeJsonExclusive(
+      resolve(
+        repoRoot,
+        FIXED_BENCHMARK_ROOT,
+        acceptedBenchmarkId,
+        "benchmark.json",
+      ),
+      benchmarkRecord.right,
+    );
     return;
   }
   fail("Expected prepare, assemble, or compare command.");

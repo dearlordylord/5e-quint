@@ -15,6 +15,7 @@ export {
 } from "./artifact-authority.ts";
 import {
   modelInvocationEvidenceFromEvents,
+  modelInvocationScenarioReference,
   parseModelInvocationLedgerEntry,
   readCodexEvents,
   type ModelInvocationLedgerEntry,
@@ -25,8 +26,8 @@ import {
   validateRetainedScenarioReviewInvocation,
 } from "./review-invocation-binding.ts";
 import { reviewInvocationPolicy } from "./review-invocation-policy.ts";
+import { retainedScenarioReviewScenarioId } from "./scenario-review-input.ts";
 import {
-  codexOutputJsonSchema,
   FinalScenarioReviewSchema,
   ScenarioCompositeReviewSchema,
 } from "./scenario-campaign.ts";
@@ -100,9 +101,9 @@ function json(path: string): unknown {
 }
 
 function scenarioReviewIdentity(packet: {
-  readonly runArtifacts: readonly { readonly path: string }[];
+  readonly executionArtifacts: readonly { readonly path: string }[];
 }): { readonly scenarioId: ScenarioId; readonly gitSha: GitSha } {
-  const sources = packet.runArtifacts.filter(({ path }) =>
+  const sources = packet.executionArtifacts.filter(({ path }) =>
     path.endsWith("/SCENARIO_REVIEW.json"),
   );
   const source = sources[0];
@@ -131,7 +132,7 @@ function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
 
 /**
  * Binds one retained original composite-review envelope to the event stream
- * and v2 ledger row that produced it. The event authority remains separate
+ * and current ledger row that produced it. The event authority remains separate
  * from the envelope authority so callers cannot substitute a copied ledger
  * row or result while retaining the original input path.
  */
@@ -181,7 +182,7 @@ function deriveManifest(input: {
   if (packetValidation.tag === "invalid") fail(packetValidation.message);
   const scenarioReview = scenarioReviewIdentity(packetValidation.packet);
   if (scenarioReview.scenarioId !== audit.audit.header.scenarioId)
-    fail("Scenario review authority does not match the audited run.");
+    fail("Scenario review authority does not match the audited execution.");
   const evidence = reviewEvidenceCatalogForPacket(packetValidation.packet);
   if (evidence.tag === "invalid") fail(evidence.message);
   const review = json(input.reviewPath);
@@ -208,15 +209,21 @@ function deriveManifest(input: {
     );
   }
   const entries = input.invocationLedgerPaths.flatMap(ledgerEntries);
-  if (entries.some((entry) => entry.schemaVersion !== 2)) {
+  if (entries.some((entry) => entry.schemaVersion !== 4)) {
     fail(
-      "Current review invocation evidence requires v2 ledger entries; v1 is historical evidence only.",
+      "Current review invocation evidence requires v4 ledger entries; earlier versions are historical evidence only.",
     );
   }
   if (
-    entries.some((entry) => entry.scenarioId !== audit.audit.header.scenarioId)
+    entries.some(
+      (entry) =>
+        modelInvocationScenarioReference(entry) !==
+        audit.audit.header.scenarioId,
+    )
   )
-    fail("Review invocation ledger identity does not match the audited run.");
+    fail(
+      "Review invocation ledger identity does not match the audited execution.",
+    );
   if (
     new Set(entries.map(({ invocationId }) => invocationId)).size !==
     entries.length
@@ -255,9 +262,6 @@ function deriveManifest(input: {
   const invocationGitSha = entries[0]?.gitSha;
   if (invocationGitShas.size !== 1 || invocationGitSha === undefined)
     fail("Controlled review invocations require one implementation revision.");
-  const expectedOutputSchema = codexOutputJsonSchema(
-    ScenarioCompositeReviewSchema,
-  );
   const scenarioReviewEntries = entries.filter(
     ({ phase }) => phase === "scenarioCompositeReview",
   );
@@ -311,15 +315,15 @@ function deriveManifest(input: {
     const sourceInput = retainedReviewInput(sourceInputPath, reviewStage);
     const replayInput = retainedReviewInput(replayInputPath, reviewStage);
     if (
-      sourceInput.scenarioId !== audit.audit.header.scenarioId ||
+      retainedScenarioReviewScenarioId(sourceInput) !==
+        audit.audit.header.scenarioId ||
       sourceInput.sourceGitSha !== scenarioReview.gitSha ||
-      replayInput.scenarioId !== audit.audit.header.scenarioId ||
+      retainedScenarioReviewScenarioId(replayInput) !==
+        audit.audit.header.scenarioId ||
       replayInput.sourceGitSha !== invocationGitSha ||
       canonicalJson(sourceInput.prompt) !== canonicalJson(replayInput.prompt) ||
       canonicalJson(sourceInput.outputJsonSchema) !==
-        canonicalJson(expectedOutputSchema) ||
-      canonicalJson(replayInput.outputJsonSchema) !==
-        canonicalJson(expectedOutputSchema)
+        canonicalJson(replayInput.outputJsonSchema)
     ) {
       fail(
         `Retained ${reviewStage} source and replay inputs do not describe the measured review.`,

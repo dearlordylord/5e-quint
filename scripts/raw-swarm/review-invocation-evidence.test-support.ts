@@ -1,12 +1,12 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 
 import {
   codexOutputJsonSchema,
-  ScenarioCompositeReviewSchema,
+  HistoricalScenarioCompositeReviewSchema,
 } from "./scenario-campaign.ts";
-import type { ModelInvocationLedgerEntry } from "./model-telemetry.ts";
+import type { CurrentModelInvocationLedgerEntry } from "./model-telemetry.ts";
 import {
   invocationEventsSha256,
   modelInvocationCompletedEvent,
@@ -25,6 +25,11 @@ import {
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { reprojectSdkTranscriptTurns } from "./sdk-player/player-turn-projection.ts";
 import { repoRoot, sha256Canonical, sha256Text } from "./transcript.ts";
+import { ScenarioIdSchema } from "./transcript.ts";
+import {
+  planAdmittedScenarioStages,
+  scenarioStagePlanFindings,
+} from "./scenario-stage-plan.ts";
 
 function eventValue<A, E>(result: Either.Either<A, E>): A {
   if (Either.isLeft(result)) throw new Error(String(result.left));
@@ -34,15 +39,15 @@ function eventValue<A, E>(result: Either.Either<A, E>): A {
 export function controlledReviewEvidenceFixture(input: {
   readonly directory: string;
   readonly ledgerEntries: readonly Omit<
-    ModelInvocationLedgerEntry,
-    "scenarioId" | "gitSha" | "eventsSha256"
+    CurrentModelInvocationLedgerEntry,
+    "subject" | "gitSha" | "eventsSha256"
   >[];
   readonly callCount?: number;
   readonly ledgerScenarioId?: string;
   readonly postPlayUsesTool?: boolean;
   readonly eventEntries?: readonly Omit<
-    ModelInvocationLedgerEntry,
-    "scenarioId" | "gitSha" | "eventsSha256"
+    CurrentModelInvocationLedgerEntry,
+    "subject" | "gitSha" | "eventsSha256"
   >[];
 }) {
   if (
@@ -51,20 +56,35 @@ export function controlledReviewEvidenceFixture(input: {
   ) {
     throw new Error("Event and ledger fixture entries must have equal length.");
   }
-  const runDirectory = resolve(input.directory, "run");
-  const evidenceDirectory = resolve(runDirectory, "evidence");
+  const evidenceSetDirectory = resolve(input.directory, "run");
+  const evidenceDirectory = resolve(evidenceSetDirectory, "evidence");
   mkdirSync(evidenceDirectory, { recursive: true });
   const charactersPath = resolve(evidenceDirectory, "characters.ts");
   const setupPath = resolve(evidenceDirectory, "setup.ts");
-  const scenarioPath = resolve(runDirectory, "SCENARIO.md");
-  const scenarioReviewPath = resolve(runDirectory, "SCENARIO_REVIEW.json");
+  const scenarioPath = resolve(evidenceSetDirectory, "SCENARIO.md");
+  const scenarioReviewPath = resolve(
+    evidenceSetDirectory,
+    "SCENARIO_REVIEW.json",
+  );
   const transcriptPath = resolve(evidenceDirectory, "sdk-calls.jsonl");
   const programPath = resolve(evidenceDirectory, "program.ts");
+  writeFileSync(
+    resolve(evidenceSetDirectory, "execution.json"),
+    `${JSON.stringify({
+      schemaVersion: 1,
+      executionId: "fixture-execution",
+      evidenceSetId: "fixture-evidence",
+      scenarioId: "same",
+    })}\n`,
+  );
   const frozenPrefixPath = resolve(evidenceDirectory, "frozen-prefix.json");
   const finalPath = resolve(evidenceDirectory, "final.json");
-  const observationPath = resolve(runDirectory, "OBSERVATION.json");
+  const observationPath = resolve(evidenceSetDirectory, "OBSERVATION.json");
   const agentFinalPath = resolve(evidenceDirectory, "agent-final.txt");
-  const replaySupervisorPath = resolve(runDirectory, "replay-supervisor.mjs");
+  const replaySupervisorPath = resolve(
+    evidenceSetDirectory,
+    "replay-supervisor.mjs",
+  );
   const reviewPath = resolve(input.directory, "review.json");
   const auditPath = resolve(input.directory, "review.audit.jsonl");
   const packetPath = resolve(input.directory, "review.packet.json");
@@ -84,6 +104,18 @@ export function controlledReviewEvidenceFixture(input: {
   const scenarioSourceGitSha = "a".repeat(40);
   const transcriptGitSha = "b".repeat(40);
   const invocationGitSha = "c".repeat(40);
+  writeFileSync(
+    resolve(evidenceDirectory, "execution-start.json"),
+    `${JSON.stringify({
+      type: "raw-swarm-execution-start",
+      schemaVersion: 1,
+      executionId: "fixture-execution",
+      evidenceSetId: "fixture-evidence",
+      scenarioId: "same",
+      gitSha: transcriptGitSha,
+      startedAt: "2026-08-14T00:00:00.000Z",
+    })}\n`,
+  );
   const scenarioCompositeResults = [0, 1].map(() => ({
     raw: { classification: "supported" as const, evidence: "supported" },
     contentAvailability: {
@@ -128,6 +160,31 @@ export function controlledReviewEvidenceFixture(input: {
   writeFileSync(setupPath, setup);
   writeFileSync(scenarioPath, scenario);
   writeFileSync(scenarioReviewPath, scenarioReview);
+  const stagePlan = planAdmittedScenarioStages({
+    scenarioId: Schema.decodeUnknownSync(ScenarioIdSchema)("same"),
+    scenarioSha256: sha256Text(scenario),
+    scenarioReviewSha256: sha256Text(scenarioReview),
+    facts: {
+      schemaVersion: 1,
+      characterRequirement: {
+        tag: "statBlocksOnly",
+        evidence: "The fixture uses canonical stat blocks.",
+      },
+      spatialRequirement: {
+        tag: "notRequired",
+        evidence: "The fixture requires no geometry.",
+      },
+    },
+  });
+  if (Either.isLeft(stagePlan)) throw new Error(stagePlan.left);
+  writeFileSync(
+    resolve(evidenceDirectory, "stage-plan.json"),
+    `${JSON.stringify(stagePlan.right)}\n`,
+  );
+  writeFileSync(
+    resolve(evidenceDirectory, "stage-plan-findings.json"),
+    `${JSON.stringify(scenarioStagePlanFindings(stagePlan.right))}\n`,
+  );
   writeFileSync(replaySupervisorPath, replaySupervisor);
   writeFileSync(programPath, program);
   writeFileSync(frozenPrefixPath, frozenPrefix);
@@ -148,7 +205,9 @@ export function controlledReviewEvidenceFixture(input: {
     model: "gpt-5.6-luna",
     reasoningEffort: "max",
     prompt: `review input ${index + 1}`,
-    outputJsonSchema: codexOutputJsonSchema(ScenarioCompositeReviewSchema),
+    outputJsonSchema: codexOutputJsonSchema(
+      HistoricalScenarioCompositeReviewSchema,
+    ),
     result: scenarioCompositeResults[index],
   });
   sourcePrePlayReviewInputPaths.forEach((path, index) => {
@@ -266,7 +325,7 @@ export function controlledReviewEvidenceFixture(input: {
     holeEvidenceSource: { kind: "recordedCurrentRuntime" },
   });
   if (projections.tag === "invalid") throw new Error(projections.message);
-  const runArtifacts = (
+  const executionArtifacts = (
     [
       [scenarioPath, scenario],
       [scenarioReviewPath, scenarioReview],
@@ -292,7 +351,7 @@ export function controlledReviewEvidenceFixture(input: {
       parsedTranscript.value.header,
     ),
     currentTurnProjections: projections.projections,
-    runArtifacts,
+    executionArtifacts,
     domainAuthorities: [],
     rawAuthorities: [],
   });
@@ -319,10 +378,10 @@ export function controlledReviewEvidenceFixture(input: {
     (
       index,
     ): Omit<
-      ModelInvocationLedgerEntry,
-      "scenarioId" | "gitSha" | "eventsSha256"
+      CurrentModelInvocationLedgerEntry,
+      "subject" | "gitSha" | "eventsSha256"
     > => ({
-      schemaVersion: 2,
+      schemaVersion: 4,
       phase: "scenarioCompositeReview",
       stagePlanReason: "The fixture stage requires a composite review.",
       invocationId: `pre-play-${index + 1}`,
@@ -347,12 +406,26 @@ export function controlledReviewEvidenceFixture(input: {
   const eventPaths = ledgerEntryInputs.map((_, index) =>
     resolve(input.directory, `invocation-${index + 1}.events.jsonl`),
   );
+  const invocationSubject = (
+    phase: CurrentModelInvocationLedgerEntry["phase"],
+  ) =>
+    phase === "player" || phase === "postPlayReview"
+      ? {
+          tag: "execution" as const,
+          executionId: "fixture-execution",
+          evidenceSetId: "fixture-evidence",
+          scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+        }
+      : {
+          tag: "scenario" as const,
+          scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+        };
   ledgerEntryInputs.forEach((entry, index) => {
     const eventEntry = eventEntryInputs[index]!;
     const events = [
       eventValue(
         modelInvocationStartedEvent({
-          scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+          subject: invocationSubject(eventEntry.phase),
           gitSha: invocationGitSha,
           phase: eventEntry.phase,
           stagePlanReason:
@@ -436,14 +509,19 @@ export function controlledReviewEvidenceFixture(input: {
         }),
       ),
     ];
-    writeFileSync(
-      eventPaths[index]!,
-      `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
-    );
+    const eventBytes = `${events.map((event) => JSON.stringify(event)).join("\n")}\n`;
+    writeFileSync(eventPaths[index]!, eventBytes);
+    const replayInputPath = replayPrePlayReviewInputPaths[index];
+    if (replayInputPath !== undefined) {
+      writeFileSync(
+        `${replayInputPath.slice(0, -".json".length)}.events.jsonl`,
+        eventBytes,
+      );
+    }
   });
   const ledgerEntries = ledgerEntryInputs.map((entry, index) => ({
     ...entry,
-    scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+    subject: invocationSubject(entry.phase),
     gitSha: invocationGitSha,
     eventsSha256: invocationEventsSha256(eventPaths[index]!),
   }));

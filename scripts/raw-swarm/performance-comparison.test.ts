@@ -4,9 +4,9 @@ import { resolve } from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
-  compareControlledRuns,
+  compareControlledExecutions,
   readControlledPerformance,
-  summarizeControlledRun,
+  summarizeControlledExecution,
 } from "./performance-comparison.ts";
 import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
@@ -29,7 +29,7 @@ describe("whole-path performance evidence", () => {
       invocationId: string,
     ) =>
       ({
-        schemaVersion: 2,
+        schemaVersion: 4,
         phase,
         stagePlanReason: `The fixture ${phase} stage requires this invocation.`,
         invocationId,
@@ -109,7 +109,7 @@ describe("whole-path performance evidence", () => {
       );
     };
     writeReportingTiming(50);
-    const summary = summarizeControlledRun({
+    const summary = summarizeControlledExecution({
       schemaVersion: 1,
       reviewInvocationEvidencePath: fixture.manifestPath,
       continuationObservationPath: observations,
@@ -144,7 +144,7 @@ describe("whole-path performance evidence", () => {
     });
     writeSupervisorTimings("f".repeat(64));
     expect(() =>
-      summarizeControlledRun({
+      summarizeControlledExecution({
         schemaVersion: 1,
         reviewInvocationEvidencePath: fixture.manifestPath,
         continuationObservationPath: observations,
@@ -155,7 +155,7 @@ describe("whole-path performance evidence", () => {
     ).toThrow(/every authoritative continuation observation exactly once/);
     writeSupervisorTimings(transcriptHeaderSha256);
     expect(
-      compareControlledRuns(
+      compareControlledExecutions(
         {
           schemaVersion: 1,
           scenarioId: "same",
@@ -263,7 +263,7 @@ describe("whole-path performance evidence", () => {
       },
     };
     expect(
-      compareControlledRuns(controlledBaseline, freshControlled),
+      compareControlledExecutions(controlledBaseline, freshControlled),
     ).toMatchObject({
       packetBasedPostPlayTokens: { tag: "comparable", passes: true },
       packetBasedPostPlayWall: { tag: "comparable", passes: true },
@@ -272,7 +272,7 @@ describe("whole-path performance evidence", () => {
       playerNormalizedTokens: { tag: "comparable", passes: true },
     });
     expect(
-      compareControlledRuns(
+      compareControlledExecutions(
         {
           ...controlledBaseline,
           phases: {
@@ -291,7 +291,7 @@ describe("whole-path performance evidence", () => {
       playerNormalizedTokens: { tag: "comparable" },
     });
     expect(
-      compareControlledRuns(
+      compareControlledExecutions(
         {
           ...controlledBaseline,
           charactersSha256: "9".repeat(64),
@@ -373,7 +373,7 @@ describe("whole-path performance evidence", () => {
       })}\n`,
     );
     expect(() =>
-      summarizeControlledRun({
+      summarizeControlledExecution({
         schemaVersion: 1,
         reviewInvocationEvidencePath: fixture.manifestPath,
         continuationObservationPath: observations,
@@ -397,7 +397,7 @@ describe("whole-path performance evidence", () => {
       })}\n`,
     );
     expect(() =>
-      summarizeControlledRun({
+      summarizeControlledExecution({
         schemaVersion: 1,
         reviewInvocationEvidencePath: fixture.manifestPath,
         continuationObservationPath: observations,

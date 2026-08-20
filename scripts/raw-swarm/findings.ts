@@ -27,18 +27,36 @@ import {
   parseSdkTranscript,
   type SdkCallRecord,
 } from "./sdk-player/sdk-transcript.ts";
-import { parseModelInvocationLedgerEntry } from "./model-telemetry.ts";
+import {
+  modelInvocationScenarioReference,
+  parseModelInvocationLedgerEntry,
+} from "./model-telemetry.ts";
 import {
   canonicalJson,
+  GitShaSchema,
   isJsonRecord,
   repoRoot,
   sha256Canonical,
 } from "./transcript.ts";
-import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
+import {
+  RetainedScenarioReviewInputSchema,
+  retainedScenarioReviewScenarioId,
+} from "./scenario-review-input.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
 import { SdkReplayResultEvidenceSchema } from "./sdk-player/sdk-replay-result.ts";
+import {
+  EvidenceSetIdSchema,
+  ExecutionIdSchema,
+  ScenarioCampaignIdSchema,
+  ScenarioIdSchema,
+  type ScenarioCampaignId,
+  type ScenarioCandidateId,
+  type ScenarioId,
+} from "./raw-swarm-identities.ts";
+import type { GitSha } from "./transcript.ts";
+import { ExecutionStartRecordSchema } from "./evidence-manifests.ts";
 
-export const RAW_SWARM_FINDINGS_SCHEMA_VERSION = 1;
+export const RAW_SWARM_FINDINGS_SCHEMA_VERSION = 2;
 
 export const FINDING_CATEGORIES = [
   "runtime-rules-defect",
@@ -137,20 +155,59 @@ const FindingSchema = Schema.Struct({
 });
 export type Finding = Schema.Schema.Type<typeof FindingSchema>;
 
-const RunIdentitySchema = Schema.Struct({
-  scenarioId: Schema.NonEmptyTrimmedString,
-  gitSha: Schema.String.pipe(Schema.pattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/)),
+const FindingsSubjectCommonFields = {
+  gitSha: GitShaSchema,
   startedAt: Schema.NonEmptyTrimmedString,
-  transcriptSha256: Schema.optional(HashSchema),
-  callCount: NonNegativeIntegerSchema,
-});
-export type FindingsRunIdentity = Schema.Schema.Type<typeof RunIdentitySchema>;
+} as const;
+
+const FindingsSdkCallsSchema = Schema.Union(
+  Schema.Struct({ tag: Schema.Literal("transcriptFree") }),
+  Schema.Struct({
+    tag: Schema.Literal("retainedTranscript"),
+    transcriptSha256: HashSchema,
+    callCount: NonNegativeIntegerSchema,
+  }),
+);
+
+const FindingsSubjectSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("execution"),
+    executionId: ExecutionIdSchema,
+    evidenceSetId: EvidenceSetIdSchema,
+    scenarioId: ScenarioIdSchema,
+    ...FindingsSubjectCommonFields,
+    sdkCalls: FindingsSdkCallsSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("scenarioCampaign"),
+    campaignId: ScenarioCampaignIdSchema,
+    evidenceSetId: EvidenceSetIdSchema,
+    plannedScenarioId: ScenarioIdSchema,
+    ...FindingsSubjectCommonFields,
+    sdkCalls: Schema.Struct({ tag: Schema.Literal("transcriptFree") }),
+  }),
+);
+export type FindingsSubject = Schema.Schema.Type<typeof FindingsSubjectSchema>;
+
+export function findingsTranscriptSha256(
+  subject: FindingsSubject,
+): string | undefined {
+  return subject.sdkCalls.tag === "retainedTranscript"
+    ? subject.sdkCalls.transcriptSha256
+    : undefined;
+}
+
+export function findingsSdkCallCount(subject: FindingsSubject): number {
+  return subject.sdkCalls.tag === "retainedTranscript"
+    ? subject.sdkCalls.callCount
+    : 0;
+}
 
 export const FindingsProjectionSchema = Schema.Struct({
   type: Schema.Literal("raw-swarm-findings"),
   schemaVersion: Schema.Literal(RAW_SWARM_FINDINGS_SCHEMA_VERSION),
-  runIdentity: HashSchema,
-  run: RunIdentitySchema,
+  subjectIdentity: HashSchema,
+  subject: FindingsSubjectSchema,
   authorities: Schema.Array(AuthoritySchema).pipe(Schema.minItems(1)),
   findings: Schema.Array(FindingSchema),
 });
@@ -180,7 +237,7 @@ export type CompositeReviewReplaySelection =
 
 export type FindingsProjectionInput = {
   readonly transcriptPath: string;
-  readonly runDirectory?: string;
+  readonly evidenceSetDirectory?: string;
   readonly reviewPaths: readonly string[];
   readonly scenarioReviewPaths: readonly string[];
   readonly generationLedgerPaths: readonly string[];
@@ -195,8 +252,8 @@ export type Source = {
 };
 
 type ParsedRun = {
-  readonly scenarioId: string;
-  readonly gitSha: string;
+  readonly scenarioId: ScenarioId;
+  readonly gitSha: GitSha;
   readonly startedAt: string;
   readonly scenarioSha256?: string;
   readonly scenarioReviewSha256?: string;
@@ -208,8 +265,8 @@ type ParsedRun = {
 };
 
 export type ReviewIdentityExpectation = {
-  readonly scenarioId: string;
-  readonly gitSha: string;
+  readonly scenarioId: ScenarioId;
+  readonly gitSha: GitSha;
   readonly transcriptSha256: string;
   readonly scenarioSha256?: string;
   readonly scenarioReviewSha256?: string;
@@ -217,25 +274,52 @@ export type ReviewIdentityExpectation = {
 };
 
 export type ScenarioReviewIdentityExpectation = {
-  readonly scenarioId: string;
+  readonly scenarioId: ScenarioId;
   /** Generation and player runs may retain this artifact across commits. */
-  readonly gitSha?: string;
+  readonly gitSha?: GitSha;
   readonly scenarioSha256?: string;
   readonly scenarioReviewSha256?: string;
 };
 
 export type StagePlanIdentityExpectation =
-  | {
+  | Readonly<{
       readonly tag: "candidate";
-      readonly scenarioId: string;
+      readonly campaignId: ScenarioCampaignId;
+      readonly candidateId: ScenarioCandidateId;
       readonly candidateScenarioSha256: string;
-    }
-  | {
+    }>
+  | Readonly<{
       readonly tag: "admitted";
-      readonly scenarioId: string;
+      readonly scenarioId: ScenarioId;
       readonly scenarioSha256: string;
       readonly scenarioReviewSha256: string;
-    };
+    }>;
+
+function stagePlanIdentitiesMatch(
+  actual: ScenarioStagePlanFinding["identity"],
+  expected: StagePlanIdentityExpectation,
+): boolean {
+  if (actual.tag !== expected.tag) return false;
+  return Match.value(actual).pipe(
+    Match.when(
+      { tag: "candidate" },
+      (candidate) =>
+        expected.tag === "candidate" &&
+        candidate.campaignId === expected.campaignId &&
+        candidate.candidateId === expected.candidateId &&
+        candidate.candidateScenarioSha256 === expected.candidateScenarioSha256,
+    ),
+    Match.when(
+      { tag: "admitted" },
+      (scenario) =>
+        expected.tag === "admitted" &&
+        scenario.scenarioId === expected.scenarioId &&
+        scenario.scenarioSha256 === expected.scenarioSha256 &&
+        scenario.scenarioReviewSha256 === expected.scenarioReviewSha256,
+    ),
+    Match.exhaustive,
+  );
+}
 
 function fail(message: string): never {
   throw new Error(message);
@@ -394,7 +478,9 @@ function assertReviewOutputIdentity(
       review.gitSha !== expected.gitSha ||
       review.transcriptSha256 !== expected.transcriptSha256)
   ) {
-    fail(`Review authority identity does not match the run: ${path}`);
+    fail(
+      `Review authority identity does not match the findings subject: ${path}`,
+    );
   }
 }
 
@@ -415,7 +501,9 @@ function assertFinalScenarioReviewIdentity(
     (expected.scenarioReviewSha256 !== undefined &&
       reviewSha256 !== expected.scenarioReviewSha256)
   ) {
-    fail(`Scenario review authority identity does not match the run: ${path}`);
+    fail(
+      `Scenario review authority identity does not match the findings subject: ${path}`,
+    );
   }
 }
 
@@ -729,8 +817,8 @@ export function findingsFromFinalScenarioReview(
 /**
  * Scenario-review authorities have a distinct schema boundary from post-play
  * ReviewOutput authorities. Historical composite reviews remain readable only
- * when no current-run identity is being asserted; they cannot be attributed to
- * a current run because that schema carries no identity fields.
+ * when no current execution identity is being asserted; they cannot be attributed to
+ * a current execution because that schema carries no identity fields.
  */
 export function findingsFromScenarioReviewSource(
   path: string,
@@ -754,7 +842,7 @@ export function findingsFromScenarioReviewSource(
   })(value);
   if (Either.isRight(composite)) {
     if (expectedIdentity !== undefined) {
-      fail(`Historical scenario review has no run identity: ${path}`);
+      fail(`Historical scenario review has no execution identity: ${path}`);
     }
     return findingsFromScenarioReview(composite.right, authorityRole);
   }
@@ -862,8 +950,8 @@ function findingsFromObservationSource(source: Source): readonly Finding[] {
 export function findingsFromGenerationLedger(
   source: Source,
   expected: Readonly<{
-    readonly scenarioId: string;
-    readonly gitSha?: string;
+    readonly scenarioId: ScenarioId;
+    readonly gitSha?: GitSha;
   }>,
 ): readonly Finding[] {
   const findings: Finding[] = [];
@@ -875,12 +963,13 @@ export function findingsFromGenerationLedger(
       );
     }
     if (
-      String(decoded.right.scenarioId) !== expected.scenarioId ||
+      String(modelInvocationScenarioReference(decoded.right)) !==
+        expected.scenarioId ||
       (expected.gitSha !== undefined &&
         String(decoded.right.gitSha) !== expected.gitSha)
     ) {
       fail(
-        `Generation invocation ledger ${source.path} line ${String(line)} belongs to a different run identity.`,
+        `Generation invocation ledger ${source.path} line ${String(line)} belongs to a different findings identity.`,
       );
     }
     const exit = decoded.right.exit;
@@ -974,9 +1063,10 @@ function originalCompositeReviewInputs(
       );
     }
     const review = decoded.right;
-    if (review.scenarioId !== expectedScenarioId) {
+    const reviewScenarioId = retainedScenarioReviewScenarioId(review);
+    if (reviewScenarioId !== expectedScenarioId) {
       fail(
-        `Review replay input ${canonical} belongs to scenario ${review.scenarioId}, expected ${expectedScenarioId}.`,
+        `Review replay input ${canonical} belongs to scenario ${reviewScenarioId}, expected ${expectedScenarioId}.`,
       );
     }
     if (review.reviewStage !== expectedStage) {
@@ -1000,9 +1090,9 @@ function originalCompositeReviewInputs(
     }
     const entry = matches[0]!;
     if (
-      entry.schemaVersion !== 2 ||
+      entry.schemaVersion !== 4 ||
       entry.phase !== "scenarioCompositeReview" ||
-      entry.scenarioId !== review.scenarioId ||
+      modelInvocationScenarioReference(entry) !== reviewScenarioId ||
       entry.gitSha !== review.sourceGitSha ||
       entry.model !== review.model ||
       entry.reasoningEffort !== review.reasoningEffort
@@ -1127,21 +1217,10 @@ export function findingsFromStagePlanSource(
   return decoded.right.map((finding: ScenarioStagePlanFinding) => {
     if (
       expectedIdentity !== undefined &&
-      (finding.identity.tag !== expectedIdentity.tag ||
-        finding.identity.scenarioId !== expectedIdentity.scenarioId ||
-        (expectedIdentity.tag === "candidate" &&
-          (finding.identity.tag !== "candidate" ||
-            finding.identity.candidateScenarioSha256 !==
-              expectedIdentity.candidateScenarioSha256)) ||
-        (expectedIdentity.tag === "admitted" &&
-          (finding.identity.tag !== "admitted" ||
-            finding.identity.scenarioSha256 !==
-              expectedIdentity.scenarioSha256 ||
-            finding.identity.scenarioReviewSha256 !==
-              expectedIdentity.scenarioReviewSha256)))
+      !stagePlanIdentitiesMatch(finding.identity, expectedIdentity)
     ) {
       fail(
-        `Stage-plan finding identity does not match the run: ${source.path}`,
+        `Stage-plan finding identity does not match the findings subject: ${source.path}`,
       );
     }
     return makeFinding({
@@ -1176,10 +1255,10 @@ export function deduplicateFindings(
 function validateDecodedProjection(
   projection: FindingsProjection,
 ): FindingsProjectionResult {
-  if (projection.runIdentity !== sha256Canonical(projection.run)) {
+  if (projection.subjectIdentity !== sha256Canonical(projection.subject)) {
     return {
       tag: "invalid",
-      message: "Finding run identity does not match the run fields.",
+      message: "Finding subject identity does not match the subject fields.",
     };
   }
   const roles = new Set<string>();
@@ -1242,42 +1321,37 @@ function validateDecodedProjection(
       };
     }
   }
-  if (
-    projection.run.transcriptSha256 !== undefined &&
-    !roles.has("transcript")
-  ) {
-    return {
-      tag: "invalid",
-      message: "A run transcript hash requires a transcript authority.",
-    };
-  }
-  if (projection.run.transcriptSha256 === undefined) {
-    if (projection.run.callCount !== 0) {
-      return {
-        tag: "invalid",
-        message: "A transcript-free run must have zero SDK calls.",
-      };
-    }
+  if (projection.subject.sdkCalls.tag === "transcriptFree") {
     if (roles.has("transcript")) {
       return {
         tag: "invalid",
-        message: "A transcript-free run cannot have a transcript authority.",
+        message:
+          "A transcript-free subject cannot have a transcript authority.",
       };
     }
   } else {
+    if (projection.subject.tag !== "execution") {
+      return {
+        tag: "invalid",
+        message:
+          "Only an Execution findings subject can retain an SDK transcript.",
+      };
+    }
     const transcript = projection.authorities.find(
       (authority) => authority.role === "transcript",
     );
-    if (transcript?.sha256 !== projection.run.transcriptSha256) {
+    if (transcript?.sha256 !== projection.subject.sdkCalls.transcriptSha256) {
       return {
         tag: "invalid",
-        message: "Transcript authority does not match run transcript hash.",
+        message:
+          "Transcript authority does not match execution transcript hash.",
       };
     }
     if (transcript === undefined) {
       return {
         tag: "invalid",
-        message: "A run transcript hash requires a transcript authority.",
+        message:
+          "An execution transcript hash requires a transcript authority.",
       };
     }
     const parsedTranscript = parseRun(transcript.path);
@@ -1289,26 +1363,29 @@ function validateDecodedProjection(
     }
     const parsed = parsedTranscript.right;
     if (
-      parsed.scenarioId !== projection.run.scenarioId ||
-      parsed.gitSha !== projection.run.gitSha ||
-      parsed.startedAt !== projection.run.startedAt
+      parsed.scenarioId !== projection.subject.scenarioId ||
+      parsed.gitSha !== projection.subject.gitSha ||
+      parsed.startedAt !== projection.subject.startedAt
     ) {
       return {
         tag: "invalid",
-        message: "Finding run identity does not match the transcript header.",
+        message:
+          "Finding execution identity does not match the transcript header.",
       };
     }
-    if (parsed.transcriptSha256 !== projection.run.transcriptSha256) {
+    if (
+      parsed.transcriptSha256 !== projection.subject.sdkCalls.transcriptSha256
+    ) {
       return {
         tag: "invalid",
         message:
           "Finding transcript hash does not match the parsed transcript.",
       };
     }
-    if (parsed.callCount !== projection.run.callCount) {
+    if (parsed.callCount !== projection.subject.sdkCalls.callCount) {
       return {
         tag: "invalid",
-        message: `Finding callCount ${String(projection.run.callCount)} does not match the transcript SDK call count ${String(parsed.callCount)}.`,
+        message: `Finding callCount ${String(projection.subject.sdkCalls.callCount)} does not match the transcript SDK call count ${String(parsed.callCount)}.`,
       };
     }
   }
@@ -1341,8 +1418,8 @@ function validateDecodedProjection(
     }
     if (
       finding.pointer.kind === "sdkSequence" &&
-      (projection.run.transcriptSha256 === undefined ||
-        finding.pointer.sequence > projection.run.callCount)
+      (projection.subject.sdkCalls.tag === "transcriptFree" ||
+        finding.pointer.sequence > projection.subject.sdkCalls.callCount)
     ) {
       return {
         tag: "invalid",
@@ -1427,17 +1504,41 @@ export function validateFindingsProjection(
     : validateDecodedProjection(decoded.right);
 }
 
-export function projectRunFindings(
+export function projectExecutionFindings(
   input: FindingsProjectionInput,
 ): FindingsProjection {
   const transcriptPath = sourcePath(input.transcriptPath);
-  const runDirectory = sourcePath(
-    input.runDirectory ?? defaultRunDirectory(transcriptPath),
+  const evidenceSetDirectory = sourcePath(
+    input.evidenceSetDirectory ?? defaultEvidenceSetDirectory(transcriptPath),
   );
   const parsedResult = parseRun(transcriptPath);
   if (Either.isLeft(parsedResult)) fail(parsedResult.left);
   const parsed = parsedResult.right;
-  const sources: Source[] = [{ role: "transcript", path: transcriptPath }];
+  const executionStartPath = sourcePath(
+    `${evidenceSetDirectory}/evidence/execution-start.json`,
+  );
+  const executionStart = Schema.decodeUnknownEither(
+    ExecutionStartRecordSchema,
+    {
+      onExcessProperty: "error",
+    },
+  )(readSourceRecord(executionStartPath));
+  if (Either.isLeft(executionStart)) {
+    fail(
+      `Execution start authority is invalid: ${executionStartPath}: ${executionStart.left.message}`,
+    );
+  }
+  if (
+    executionStart.right.scenarioId !== parsed.scenarioId ||
+    executionStart.right.gitSha !== parsed.gitSha ||
+    executionStart.right.startedAt !== parsed.startedAt
+  ) {
+    fail("Execution start authority does not match the transcript identity.");
+  }
+  const sources: Source[] = [
+    { role: "transcript", path: transcriptPath },
+    { role: "executionStart", path: executionStartPath },
+  ];
   const sourceFindings: Finding[] = [];
 
   if (parsed.characterObstruction !== undefined) {
@@ -1508,11 +1609,11 @@ export function projectRunFindings(
     }
   }
 
-  const scenarioPath = sourcePath(`${runDirectory}/SCENARIO.md`);
+  const scenarioPath = sourcePath(`${evidenceSetDirectory}/SCENARIO.md`);
   const scenarioExists = existsSync(resolve(repoRoot, scenarioPath));
   if (parsed.scenarioSha256 !== undefined && !scenarioExists) {
     fail(
-      `Scenario authority is required by the run transcript: ${scenarioPath}`,
+      `Scenario authority is required by the execution transcript: ${scenarioPath}`,
     );
   }
   const scenarioAuthoritySha256 = scenarioExists
@@ -1522,28 +1623,34 @@ export function projectRunFindings(
     parsed.scenarioSha256 !== undefined &&
     scenarioAuthoritySha256 !== parsed.scenarioSha256
   ) {
-    fail(`Scenario authority hash does not match the run: ${scenarioPath}`);
+    fail(
+      `Scenario authority hash does not match the findings subject: ${scenarioPath}`,
+    );
   }
-  const scenarioReviewPath = sourcePath(`${runDirectory}/SCENARIO_REVIEW.json`);
+  const scenarioReviewPath = sourcePath(
+    `${evidenceSetDirectory}/SCENARIO_REVIEW.json`,
+  );
   if (
     parsed.scenarioReviewSha256 !== undefined &&
     !existsSync(resolve(repoRoot, scenarioReviewPath))
   ) {
     fail(
-      `Scenario review authority is required by the run transcript: ${scenarioReviewPath}`,
+      `Scenario review authority is required by the execution transcript: ${scenarioReviewPath}`,
     );
   }
-  const stagePlanPath = sourcePath(`${runDirectory}/evidence/stage-plan.json`);
+  const stagePlanPath = sourcePath(
+    `${evidenceSetDirectory}/evidence/stage-plan.json`,
+  );
   if (
     parsed.scenarioSha256 !== undefined &&
     !existsSync(resolve(repoRoot, stagePlanPath))
   ) {
     fail(
-      `Stage-plan authority is required by the run transcript: ${stagePlanPath}`,
+      `Stage-plan authority is required by the execution transcript: ${stagePlanPath}`,
     );
   }
   const expectedReviewIdentity: ReviewIdentityExpectation = {
-    scenarioId: parsed.scenarioId,
+    scenarioId: executionStart.right.scenarioId,
     gitSha: parsed.gitSha,
     transcriptSha256: parsed.transcriptSha256,
     ...(parsed.scenarioSha256 === undefined
@@ -1557,7 +1664,7 @@ export function projectRunFindings(
       : { candidateScenarioSha256: scenarioAuthoritySha256 }),
   };
   const expectedScenarioReviewIdentity: ScenarioReviewIdentityExpectation = {
-    scenarioId: parsed.scenarioId,
+    scenarioId: executionStart.right.scenarioId,
     ...(parsed.scenarioSha256 === undefined
       ? {}
       : { scenarioSha256: parsed.scenarioSha256 }),
@@ -1566,7 +1673,6 @@ export function projectRunFindings(
       : { scenarioReviewSha256: parsed.scenarioReviewSha256 }),
   };
   const candidateSources = [
-    { suffix: "evidence/run-start.json", role: "runStart", kind: "opaque" },
     { suffix: "evidence/stage-plan.json", role: "stagePlan", kind: "opaque" },
     {
       suffix: "evidence/stage-plan-findings.json",
@@ -1621,7 +1727,7 @@ export function projectRunFindings(
   for (const candidate of candidateSources) {
     const addedRole = addSource(
       sources,
-      `${runDirectory}/${candidate.suffix}`,
+      `${evidenceSetDirectory}/${candidate.suffix}`,
       candidate.role,
     );
     if (addedRole === undefined) continue;
@@ -1629,7 +1735,7 @@ export function projectRunFindings(
       sourceFindings.push(
         ...findingsFromObservationSource({
           role: addedRole,
-          path: sourcePath(`${runDirectory}/${candidate.suffix}`),
+          path: sourcePath(`${evidenceSetDirectory}/${candidate.suffix}`),
         }),
       );
     } else if (candidate.kind === "stagePlanFindings") {
@@ -1638,14 +1744,14 @@ export function projectRunFindings(
         parsed.scenarioReviewSha256 === undefined
       ) {
         fail(
-          `Admitted stage-plan findings require scenario and scenario-review hashes: ${runDirectory}`,
+          `Admitted stage-plan findings require scenario and scenario-review hashes: ${evidenceSetDirectory}`,
         );
       }
       sourceFindings.push(
         ...findingsFromStagePlanSource(
           {
             role: addedRole,
-            path: sourcePath(`${runDirectory}/${candidate.suffix}`),
+            path: sourcePath(`${evidenceSetDirectory}/${candidate.suffix}`),
           },
           {
             tag: "admitted",
@@ -1656,7 +1762,7 @@ export function projectRunFindings(
         ),
       );
     } else if (candidate.kind === "scenarioReview") {
-      const path = sourcePath(`${runDirectory}/${candidate.suffix}`);
+      const path = sourcePath(`${evidenceSetDirectory}/${candidate.suffix}`);
       sourceFindings.push(
         ...findingsFromScenarioReviewSource(
           path,
@@ -1668,7 +1774,7 @@ export function projectRunFindings(
       validateReplayResultSource({
         source: {
           role: addedRole,
-          path: sourcePath(`${runDirectory}/${candidate.suffix}`),
+          path: sourcePath(`${evidenceSetDirectory}/${candidate.suffix}`),
         },
         replaySupervisor: sources.find(
           (source) => source.role === "replaySupervisor",
@@ -1691,15 +1797,15 @@ export function projectRunFindings(
         parsed.scenarioReviewSha256
     ) {
       fail(
-        `Stage-plan authority identity does not match the run: ${stagePlanPath}`,
+        `Stage-plan authority identity does not match the findings subject: ${stagePlanPath}`,
       );
     }
     const stagePlanFindingsPath = sourcePath(
-      `${runDirectory}/evidence/stage-plan-findings.json`,
+      `${evidenceSetDirectory}/evidence/stage-plan-findings.json`,
     );
     if (!existsSync(resolve(repoRoot, stagePlanFindingsPath))) {
       fail(
-        `Stage-plan findings authority is required by the run transcript: ${stagePlanFindingsPath}`,
+        `Stage-plan findings authority is required by the execution transcript: ${stagePlanFindingsPath}`,
       );
     }
     const decodedFindings = Schema.decodeUnknownEither(
@@ -1771,15 +1877,15 @@ export function projectRunFindings(
     parsed.scenarioId,
   );
 
-  if (existsSync(resolve(repoRoot, runDirectory, "evidence"))) {
+  if (existsSync(resolve(repoRoot, evidenceSetDirectory, "evidence"))) {
     for (const name of readdirSync(
-      resolve(repoRoot, runDirectory, "evidence"),
+      resolve(repoRoot, evidenceSetDirectory, "evidence"),
     )) {
       if (name !== "player-events.jsonl" && !name.endsWith(".events.jsonl"))
         continue;
       const role = addSource(
         sources,
-        `${runDirectory}/evidence/${name}`,
+        `${evidenceSetDirectory}/evidence/${name}`,
         name === "player-events.jsonl"
           ? "playerEvents"
           : "playerEventsInvocation",
@@ -1788,7 +1894,7 @@ export function projectRunFindings(
         sourceFindings.push(
           ...findingsFromPlayerEventSource({
             role,
-            path: sourcePath(`${runDirectory}/evidence/${name}`),
+            path: sourcePath(`${evidenceSetDirectory}/evidence/${name}`),
           }),
         );
       }
@@ -1804,18 +1910,24 @@ export function projectRunFindings(
   const authorities = sources
     .map(authorityFor)
     .sort((left, right) => left.role.localeCompare(right.role));
-  const run = {
-    scenarioId: parsed.scenarioId,
+  const subject = {
+    tag: "execution" as const,
+    executionId: executionStart.right.executionId,
+    evidenceSetId: executionStart.right.evidenceSetId,
+    scenarioId: executionStart.right.scenarioId,
     gitSha: parsed.gitSha,
     startedAt: parsed.startedAt,
-    transcriptSha256: parsed.transcriptSha256,
-    callCount: parsed.callCount,
+    sdkCalls: {
+      tag: "retainedTranscript" as const,
+      transcriptSha256: parsed.transcriptSha256,
+      callCount: parsed.callCount,
+    },
   };
   const projection: FindingsProjection = {
     type: "raw-swarm-findings",
     schemaVersion: RAW_SWARM_FINDINGS_SCHEMA_VERSION,
-    runIdentity: sha256Canonical(run),
-    run,
+    subjectIdentity: sha256Canonical(subject),
+    subject,
     authorities,
     findings: deduplicateFindings(sourceFindings),
   };
@@ -1824,18 +1936,22 @@ export function projectRunFindings(
   return projection;
 }
 
-export function defaultRunDirectory(transcriptPath: string): string {
+export function defaultEvidenceSetDirectory(transcriptPath: string): string {
   return basename(transcriptPath) === "sdk-calls.jsonl"
     ? dirname(dirname(transcriptPath))
     : dirname(transcriptPath);
 }
 
-export function findingsArtifactPath(runDirectory: string): string {
-  return sourcePath(`${runDirectory}/evidence/findings.json`);
+export function findingsArtifactPath(evidenceSetDirectory: string): string {
+  return sourcePath(`${evidenceSetDirectory}/evidence/findings.json`);
 }
 
-export function findingsCheckpointArtifactPath(runDirectory: string): string {
-  return sourcePath(`${runDirectory}/evidence/findings-checkpoint.json`);
+export function findingsCheckpointArtifactPath(
+  evidenceSetDirectory: string,
+): string {
+  return sourcePath(
+    `${evidenceSetDirectory}/evidence/findings-checkpoint.json`,
+  );
 }
 
 export function writeFindingsProjection(input: {

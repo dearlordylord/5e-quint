@@ -18,10 +18,22 @@ import { playerInvocationNumberFromEventsArtifact } from "./player-continuation-
 import { preflightSdkTranscript } from "./sdk-player/sdk-audit.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { isJsonRecord, parsePlayerTranscript, repoRoot } from "./transcript.ts";
+import {
+  EvidenceSetIdSchema,
+  ExecutionIdSchema,
+  ScenarioIdSchema,
+} from "./raw-swarm-identities.ts";
 
-const INDEX_SCHEMA_VERSION = 2;
+const INDEX_SCHEMA_VERSION = 3;
 
-type RunArtifactCandidate = readonly [
+const IndexedExecutionRecordSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  executionId: ExecutionIdSchema,
+  evidenceSetId: EvidenceSetIdSchema,
+  scenarioId: ScenarioIdSchema,
+});
+
+type ExecutionArtifactCandidate = readonly [
   role: string,
   path: string,
   mediaType: string,
@@ -88,14 +100,14 @@ export type LegacyArtifactInventory = LegacyArtifactInventoryIdentity &
 
 export type LegacyInventorySource =
   | { readonly tag: "transcriptPath" }
-  | { readonly tag: "artifactIndex"; readonly schemaVersion: 1 | 2 };
+  | { readonly tag: "artifactIndex"; readonly schemaVersion: 1 | 2 | 3 };
 
 export type LegacyInventoryUnavailableSource =
   | { readonly tag: "unsupported"; readonly reason: string }
   | { readonly tag: "transcriptPath"; readonly reason: string }
   | {
       readonly tag: "artifactIndex";
-      readonly schemaVersion: 1 | 2;
+      readonly schemaVersion: 1 | 2 | 3;
       readonly reason: string;
     };
 
@@ -189,11 +201,20 @@ export function openArtifactIndex(path: string): DatabaseSync {
     ) STRICT;
     CREATE TABLE IF NOT EXISTS runs(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      evidenceKind TEXT NOT NULL CHECK(evidenceKind IN ('currentExecution', 'historicalObservation')),
+      transport TEXT NOT NULL CHECK(transport IN ('sdk', 'mcp')),
+      executionId TEXT UNIQUE,
+      evidenceSetId TEXT UNIQUE,
       scenarioId TEXT NOT NULL,
       gitSha TEXT NOT NULL,
       startedAt TEXT NOT NULL,
       transcriptSha256 TEXT NOT NULL UNIQUE REFERENCES artifacts(sha256),
-      consumerIsolation TEXT CHECK(consumerIsolation IS NULL OR consumerIsolation IN ('permissionProfile', 'instructionalFallback'))
+      consumerIsolation TEXT CHECK(consumerIsolation IS NULL OR consumerIsolation IN ('permissionProfile', 'instructionalFallback')),
+      CHECK(
+        (evidenceKind = 'currentExecution' AND transport = 'sdk' AND executionId IS NOT NULL AND evidenceSetId IS NOT NULL)
+        OR
+        (evidenceKind = 'historicalObservation' AND executionId IS NULL AND evidenceSetId IS NULL)
+      )
     ) STRICT;
     CREATE TABLE IF NOT EXISTS calls(
       runId INTEGER NOT NULL REFERENCES runs(id),
@@ -230,6 +251,27 @@ export function openArtifactIndex(path: string): DatabaseSync {
       ),
       PRIMARY KEY(runId, seq)
     ) STRICT;
+    CREATE TRIGGER IF NOT EXISTS calls_match_observation_transport
+    BEFORE INSERT ON calls
+    WHEN (SELECT transport FROM runs WHERE id = NEW.runId) <> NEW.source
+    BEGIN
+      SELECT RAISE(ABORT, 'call source does not match observation transport');
+    END;
+    CREATE TRIGGER IF NOT EXISTS updated_calls_match_observation_transport
+    BEFORE UPDATE OF runId, source ON calls
+    WHEN (SELECT transport FROM runs WHERE id = NEW.runId) <> NEW.source
+    BEGIN
+      SELECT RAISE(ABORT, 'call source does not match observation transport');
+    END;
+    CREATE TRIGGER IF NOT EXISTS observation_transport_matches_calls
+    BEFORE UPDATE OF transport ON runs
+    WHEN EXISTS(
+      SELECT 1 FROM calls
+      WHERE calls.runId = NEW.id AND calls.source <> NEW.transport
+    )
+    BEGIN
+      SELECT RAISE(ABORT, 'observation transport does not match call source');
+    END;
     CREATE TABLE IF NOT EXISTS runArtifacts(
       runId INTEGER NOT NULL REFERENCES runs(id),
       role TEXT NOT NULL,
@@ -287,21 +329,23 @@ export function openArtifactIndex(path: string): DatabaseSync {
       artifactSha256 TEXT NOT NULL REFERENCES artifacts(sha256),
       PRIMARY KEY(runId, findingId)
     ) STRICT;
-    CREATE TABLE IF NOT EXISTS generationRuns(
+    CREATE TABLE IF NOT EXISTS scenarioCampaigns(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      runIdentity TEXT NOT NULL UNIQUE CHECK(length(runIdentity) = 64 AND runIdentity NOT GLOB '*[^0-9a-f]*'),
-      scenarioId TEXT NOT NULL,
+      subjectIdentity TEXT NOT NULL UNIQUE CHECK(length(subjectIdentity) = 64 AND subjectIdentity NOT GLOB '*[^0-9a-f]*'),
+      campaignId TEXT NOT NULL UNIQUE,
+      plannedScenarioId TEXT NOT NULL,
+      evidenceSetId TEXT NOT NULL UNIQUE,
       gitSha TEXT NOT NULL,
       startedAt TEXT NOT NULL
     ) STRICT;
-    CREATE TABLE IF NOT EXISTS generationRunArtifacts(
-      generationRunId INTEGER NOT NULL REFERENCES generationRuns(id),
+    CREATE TABLE IF NOT EXISTS scenarioCampaignArtifacts(
+      scenarioCampaignRowId INTEGER NOT NULL REFERENCES scenarioCampaigns(id),
       role TEXT NOT NULL,
       artifactSha256 TEXT NOT NULL REFERENCES artifacts(sha256),
-      PRIMARY KEY(generationRunId, role)
+      PRIMARY KEY(scenarioCampaignRowId, role)
     ) STRICT;
-    CREATE TABLE IF NOT EXISTS generationFindings(
-      generationRunId INTEGER NOT NULL REFERENCES generationRuns(id),
+    CREATE TABLE IF NOT EXISTS scenarioCampaignFindings(
+      scenarioCampaignRowId INTEGER NOT NULL REFERENCES scenarioCampaigns(id),
       findingId TEXT NOT NULL CHECK(length(findingId) = 64 AND findingId NOT GLOB '*[^0-9a-f]*'),
       stage TEXT NOT NULL,
       category TEXT NOT NULL,
@@ -311,7 +355,7 @@ export function openArtifactIndex(path: string): DatabaseSync {
       pointer TEXT NOT NULL CHECK(json_valid(pointer)),
       fingerprint TEXT CHECK(fingerprint IS NULL OR (length(fingerprint) = 64 AND fingerprint NOT GLOB '*[^0-9a-f]*')),
       artifactSha256 TEXT NOT NULL REFERENCES artifacts(sha256),
-      PRIMARY KEY(generationRunId, findingId)
+      PRIMARY KEY(scenarioCampaignRowId, findingId)
     ) STRICT;
     CREATE TABLE IF NOT EXISTS legacyInventory(
       kind TEXT NOT NULL CHECK(kind IN ('run', 'review', 'database')),
@@ -327,9 +371,9 @@ export function openArtifactIndex(path: string): DatabaseSync {
     CREATE INDEX IF NOT EXISTS findings_run ON findings(runId);
     CREATE INDEX IF NOT EXISTS findings_category ON findings(category);
     CREATE INDEX IF NOT EXISTS findings_fingerprint ON findings(fingerprint);
-    CREATE INDEX IF NOT EXISTS generationFindings_run ON generationFindings(generationRunId);
-    CREATE INDEX IF NOT EXISTS generationFindings_category ON generationFindings(category);
-    CREATE INDEX IF NOT EXISTS generationFindings_fingerprint ON generationFindings(fingerprint);
+    CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_campaign ON scenarioCampaignFindings(scenarioCampaignRowId);
+    CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_category ON scenarioCampaignFindings(category);
+    CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_fingerprint ON scenarioCampaignFindings(fingerprint);
   `);
   return db;
 }
@@ -391,9 +435,9 @@ export function registerIndexArtifact(input: {
 }
 
 function playerInvocationEventCandidates(
-  runDirectory: string,
-): readonly RunArtifactCandidate[] {
-  const evidenceDirectory = resolve(runDirectory, "evidence");
+  evidenceSetDirectory: string,
+): readonly ExecutionArtifactCandidate[] {
+  const evidenceDirectory = resolve(evidenceSetDirectory, "evidence");
   const invocationEvents = readdirSync(evidenceDirectory)
     .flatMap((name) => {
       const invocation = playerInvocationNumberFromEventsArtifact(name);
@@ -425,7 +469,7 @@ function playerInvocationEventCandidates(
       : [];
   }
   return invocationEvents.map(
-    ({ invocation, name }): RunArtifactCandidate => [
+    ({ invocation, name }): ExecutionArtifactCandidate => [
       `playerInvocationEvents-${String(invocation)}`,
       resolve(evidenceDirectory, name),
       "application/x-ndjson",
@@ -434,10 +478,11 @@ function playerInvocationEventCandidates(
   );
 }
 
-export function ingestArtifactRun(input: {
+function ingestArtifactRunWithDisposition(input: {
   readonly transcriptPath: string;
   readonly dbPath: string;
   readonly indexedTranscriptPath?: string;
+  readonly ingestion: "currentEvidence" | "historicalRebuild";
 }): number {
   const absoluteTranscript = resolve(repoRoot, input.transcriptPath);
   const records = jsonLines(absoluteTranscript);
@@ -446,6 +491,11 @@ export function ingestArtifactRun(input: {
     sdk.tag === "invalid" ? parsePlayerTranscript(records) : undefined;
   if (sdk.tag === "invalid" && (mcp === undefined || mcp.tag === "invalid")) {
     fail(sdk.message);
+  }
+  if (input.ingestion === "currentEvidence" && sdk.tag === "invalid") {
+    fail(
+      "Current evidence ingestion requires an SDK transcript with an Execution manifest; use legacy rebuild for Historical Observations.",
+    );
   }
   const db = openArtifactIndex(input.dbPath);
   try {
@@ -479,11 +529,46 @@ export function ingestArtifactRun(input: {
       })();
       const isolation =
         sdk.tag === "valid" ? sdk.value.header.consumerIsolation : null;
+      const executionIdentity =
+        sdk.tag === "valid" && input.ingestion === "currentEvidence"
+          ? (() => {
+              const manifestPath = resolve(
+                dirname(dirname(absoluteTranscript)),
+                "execution.json",
+              );
+              if (!existsSync(manifestPath)) {
+                return fail(
+                  `Current SDK transcript requires its Execution manifest: ${relative(repoRoot, manifestPath)}`,
+                );
+              }
+              const decoded = Schema.decodeUnknownEither(
+                IndexedExecutionRecordSchema,
+                { onExcessProperty: "error" },
+              )(JSON.parse(readFileSync(manifestPath, "utf8")));
+              if (Either.isLeft(decoded)) {
+                return fail(
+                  `Invalid Execution manifest: ${decoded.left.message}`,
+                );
+              }
+              if (decoded.right.scenarioId !== identity.scenarioId) {
+                return fail(
+                  "Execution manifest Scenario does not match its transcript.",
+                );
+              }
+              return decoded.right;
+            })()
+          : undefined;
       const run = db
         .prepare(
-          "INSERT INTO runs(scenarioId, gitSha, startedAt, transcriptSha256, consumerIsolation) VALUES (?, ?, ?, ?, ?)",
+          "INSERT INTO runs(evidenceKind, transport, executionId, evidenceSetId, scenarioId, gitSha, startedAt, transcriptSha256, consumerIsolation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
         .run(
+          executionIdentity === undefined
+            ? "historicalObservation"
+            : "currentExecution",
+          sdk.tag === "valid" ? "sdk" : "mcp",
+          executionIdentity?.executionId ?? null,
+          executionIdentity?.evidenceSetId ?? null,
           identity.scenarioId,
           identity.gitSha,
           identity.startedAt,
@@ -493,35 +578,35 @@ export function ingestArtifactRun(input: {
       const runId = Number(run.lastInsertRowid);
       if (sdk.tag === "valid") {
         const header = sdk.value.header;
-        const runDirectory = dirname(dirname(absoluteTranscript));
-        const candidates: readonly RunArtifactCandidate[] = [
+        const evidenceSetDirectory = dirname(dirname(absoluteTranscript));
+        const candidates: readonly ExecutionArtifactCandidate[] = [
           [
             "scenario",
-            resolve(runDirectory, "SCENARIO.md"),
+            resolve(evidenceSetDirectory, "SCENARIO.md"),
             "text/markdown",
             header.scenarioSha256,
           ],
           [
             "scenarioReview",
-            resolve(runDirectory, "SCENARIO_REVIEW.json"),
+            resolve(evidenceSetDirectory, "SCENARIO_REVIEW.json"),
             "application/json",
             header.scenarioReviewSha256,
           ],
           [
             "replaySupervisor",
-            resolve(runDirectory, "replay-supervisor.mjs"),
+            resolve(evidenceSetDirectory, "replay-supervisor.mjs"),
             "text/javascript",
             header.replaySupervisorSha256,
           ],
           [
             "characters",
-            resolve(runDirectory, "evidence/characters.ts"),
+            resolve(evidenceSetDirectory, "evidence/characters.ts"),
             "text/typescript",
             header.charactersSha256,
           ],
           [
             "setup",
-            resolve(runDirectory, "evidence/setup.ts"),
+            resolve(evidenceSetDirectory, "evidence/setup.ts"),
             "text/typescript",
             header.characterOutcome === "ready"
               ? header.setupSha256
@@ -529,74 +614,74 @@ export function ingestArtifactRun(input: {
           ],
           [
             "program",
-            resolve(runDirectory, "evidence/program.ts"),
+            resolve(evidenceSetDirectory, "evidence/program.ts"),
             "text/typescript",
             undefined,
           ],
           [
-            "runStart",
-            resolve(runDirectory, "evidence/run-start.json"),
+            "executionStart",
+            resolve(evidenceSetDirectory, "evidence/execution-start.json"),
             "application/json",
             undefined,
           ],
           [
             "stagePlan",
-            resolve(runDirectory, "evidence/stage-plan.json"),
+            resolve(evidenceSetDirectory, "evidence/stage-plan.json"),
             "application/json",
             undefined,
           ],
           [
             "stagePlanFindings",
-            resolve(runDirectory, "evidence/stage-plan-findings.json"),
+            resolve(evidenceSetDirectory, "evidence/stage-plan-findings.json"),
             "application/json",
             undefined,
           ],
           [
             "frozenPrefix",
-            resolve(runDirectory, "evidence/frozen-prefix.json"),
+            resolve(evidenceSetDirectory, "evidence/frozen-prefix.json"),
             "application/json",
             undefined,
           ],
           [
             "final",
-            resolve(runDirectory, "evidence/final.json"),
+            resolve(evidenceSetDirectory, "evidence/final.json"),
             "application/json",
             undefined,
           ],
           [
             "modelInvocations",
-            resolve(runDirectory, "evidence/invocations.jsonl"),
+            resolve(evidenceSetDirectory, "evidence/invocations.jsonl"),
             "application/x-ndjson",
             undefined,
           ],
-          ...playerInvocationEventCandidates(runDirectory),
+          ...playerInvocationEventCandidates(evidenceSetDirectory),
           [
             "continuationObservations",
-            resolve(runDirectory, "evidence/observations.jsonl"),
+            resolve(evidenceSetDirectory, "evidence/observations.jsonl"),
             "application/x-ndjson",
             undefined,
           ],
           [
             "initialObservation",
-            resolve(runDirectory, "evidence/initial-observation.json"),
+            resolve(evidenceSetDirectory, "evidence/initial-observation.json"),
             "application/json",
             undefined,
           ],
           [
             "supervisorTimings",
-            resolve(runDirectory, "evidence/supervisor-timings.jsonl"),
+            resolve(evidenceSetDirectory, "evidence/supervisor-timings.jsonl"),
             "application/x-ndjson",
             undefined,
           ],
           [
             "findingsCheckpoint",
-            resolve(runDirectory, "evidence/findings-checkpoint.json"),
+            resolve(evidenceSetDirectory, "evidence/findings-checkpoint.json"),
             "application/json",
             undefined,
           ],
           [
             "findings",
-            resolve(runDirectory, "evidence/findings.json"),
+            resolve(evidenceSetDirectory, "evidence/findings.json"),
             "application/json",
             undefined,
           ],
@@ -607,7 +692,7 @@ export function ingestArtifactRun(input: {
         for (const [role, path, mediaType, expectedSha256] of candidates) {
           if (!existsSync(path)) {
             if (expectedSha256 !== undefined) {
-              fail(`Run artifact ${role} is missing.`);
+              fail(`Execution artifact ${role} is missing.`);
             }
             continue;
           }
@@ -616,7 +701,9 @@ export function ingestArtifactRun(input: {
             expectedSha256 !== undefined &&
             registered.sha256 !== expectedSha256
           ) {
-            fail(`Run artifact ${role} does not match its transcript hash.`);
+            fail(
+              `Execution artifact ${role} does not match its transcript hash.`,
+            );
           }
           insertArtifact.run(runId, role, registered.sha256);
         }
@@ -674,13 +761,29 @@ export function ingestArtifactRun(input: {
   }
 }
 
+export function ingestArtifactRun(input: {
+  readonly transcriptPath: string;
+  readonly dbPath: string;
+  readonly indexedTranscriptPath?: string;
+}): number {
+  return ingestArtifactRunWithDisposition({
+    ...input,
+    ingestion: "currentEvidence",
+  });
+}
+
 export function ingestGenerationFindings(input: {
   readonly findingsPath: string;
   readonly dbPath: string;
 }): number {
   const projection = readFindingsProjection(input.findingsPath);
-  if (projection.run.transcriptSha256 !== undefined) {
-    fail("Generation findings must not claim an SDK transcript authority.");
+  if (
+    projection.subject.tag !== "scenarioCampaign" ||
+    projection.subject.sdkCalls.tag !== "transcriptFree"
+  ) {
+    fail(
+      "Scenario Campaign findings must have a campaign subject without an SDK transcript authority.",
+    );
   }
   const db = openArtifactIndex(input.dbPath);
   try {
@@ -707,24 +810,26 @@ export function ingestGenerationFindings(input: {
       });
       const existing = db
         .prepare(
-          "SELECT id, scenarioId, gitSha, startedAt FROM generationRuns WHERE runIdentity = ?",
+          "SELECT id, campaignId, plannedScenarioId, evidenceSetId, gitSha, startedAt FROM scenarioCampaigns WHERE subjectIdentity = ?",
         )
-        .get(projection.runIdentity);
+        .get(projection.subjectIdentity);
       if (existing !== undefined) {
         if (
           !isJsonRecord(existing) ||
           typeof existing.id !== "number" ||
-          existing.scenarioId !== projection.run.scenarioId ||
-          existing.gitSha !== projection.run.gitSha ||
-          existing.startedAt !== projection.run.startedAt
+          existing.campaignId !== projection.subject.campaignId ||
+          existing.plannedScenarioId !== projection.subject.plannedScenarioId ||
+          existing.evidenceSetId !== projection.subject.evidenceSetId ||
+          existing.gitSha !== projection.subject.gitSha ||
+          existing.startedAt !== projection.subject.startedAt
         ) {
           fail(
-            `Generation run ${projection.runIdentity} has contradictory identity.`,
+            `Scenario Campaign findings ${projection.subjectIdentity} have contradictory identity.`,
           );
         }
         const indexedArtifact = db
           .prepare(
-            "SELECT artifactSha256 FROM generationRunArtifacts WHERE generationRunId = ? AND role = 'findings'",
+            "SELECT artifactSha256 FROM scenarioCampaignArtifacts WHERE scenarioCampaignRowId = ? AND role = 'findings'",
           )
           .get(existing.id);
         if (
@@ -732,7 +837,7 @@ export function ingestGenerationFindings(input: {
           indexedArtifact.artifactSha256 !== findingsArtifact.sha256
         ) {
           fail(
-            `Generation run ${String(existing.id)} already has another findings artifact.`,
+            `Scenario Campaign row ${String(existing.id)} already has another findings artifact.`,
           );
         }
         db.exec("COMMIT");
@@ -740,32 +845,42 @@ export function ingestGenerationFindings(input: {
       }
       const inserted = db
         .prepare(
-          "INSERT INTO generationRuns(runIdentity, scenarioId, gitSha, startedAt) VALUES (?, ?, ?, ?)",
+          "INSERT INTO scenarioCampaigns(subjectIdentity, campaignId, plannedScenarioId, evidenceSetId, gitSha, startedAt) VALUES (?, ?, ?, ?, ?, ?)",
         )
         .run(
-          projection.runIdentity,
-          projection.run.scenarioId,
-          projection.run.gitSha,
-          projection.run.startedAt,
+          projection.subjectIdentity,
+          projection.subject.campaignId,
+          projection.subject.plannedScenarioId,
+          projection.subject.evidenceSetId,
+          projection.subject.gitSha,
+          projection.subject.startedAt,
         );
-      const generationRunId = Number(inserted.lastInsertRowid);
+      const scenarioCampaignRowId = Number(inserted.lastInsertRowid);
       const insertAuthority = db.prepare(
-        "INSERT INTO generationRunArtifacts(generationRunId, role, artifactSha256) VALUES (?, ?, ?)",
+        "INSERT INTO scenarioCampaignArtifacts(scenarioCampaignRowId, role, artifactSha256) VALUES (?, ?, ?)",
       );
       for (const authority of authorityArtifacts) {
-        insertAuthority.run(generationRunId, authority.role, authority.sha256);
+        insertAuthority.run(
+          scenarioCampaignRowId,
+          authority.role,
+          authority.sha256,
+        );
       }
       if (authorityArtifacts.some(({ role }) => role === "findings")) {
         fail("Generation findings authorities cannot use the findings role.");
       }
-      insertAuthority.run(generationRunId, "findings", findingsArtifact.sha256);
+      insertAuthority.run(
+        scenarioCampaignRowId,
+        "findings",
+        findingsArtifact.sha256,
+      );
       const insertFinding = db.prepare(
-        `INSERT INTO generationFindings(generationRunId, findingId, stage, category, kind, summary, detail, pointer, fingerprint, artifactSha256)
+        `INSERT INTO scenarioCampaignFindings(scenarioCampaignRowId, findingId, stage, category, kind, summary, detail, pointer, fingerprint, artifactSha256)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       );
       for (const finding of projection.findings) {
         insertFinding.run(
-          generationRunId,
+          scenarioCampaignRowId,
           finding.findingId,
           finding.stage,
           finding.category,
@@ -778,7 +893,7 @@ export function ingestGenerationFindings(input: {
         );
       }
       db.exec("COMMIT");
-      return generationRunId;
+      return scenarioCampaignRowId;
     } catch (error) {
       db.exec("ROLLBACK");
       throw error;
@@ -826,7 +941,7 @@ function recoverBySha(
   return candidates.find((candidate) => shaAt(candidate) === expectedSha256);
 }
 
-type LegacyRunIdentity = {
+type LegacyArtifactIdentity = {
   readonly id: number;
   readonly indexedPath: string;
   readonly transcriptSha256: string;
@@ -863,8 +978,8 @@ type LegacyReviewRows = {
   readonly unavailableSource: LegacyInventoryUnavailableSource;
 };
 
-function inventoryLegacyRun(
-  identity: LegacyRunIdentity,
+function inventoryLegacyArtifact(
+  identity: LegacyArtifactIdentity,
   candidates: readonly string[],
 ): LegacyArtifactInventory {
   const currentSha256 = shaAt(resolve(repoRoot, identity.indexedPath));
@@ -1074,11 +1189,13 @@ function tableColumns(db: DatabaseSync, table: string): ReadonlySet<string> {
   );
 }
 
-function artifactIndexSchemaVersion(db: DatabaseSync): 1 | 2 | undefined {
+function artifactIndexSchemaVersion(db: DatabaseSync): 1 | 2 | 3 | undefined {
   if (!tableExists(db, "indexMetadata")) return undefined;
   const row = db.prepare("SELECT schemaVersion FROM indexMetadata").get();
   if (!isJsonRecord(row)) return undefined;
-  return row.schemaVersion === 1 || row.schemaVersion === 2
+  return row.schemaVersion === 1 ||
+    row.schemaVersion === 2 ||
+    row.schemaVersion === 3
     ? row.schemaVersion
     : undefined;
 }
@@ -1150,7 +1267,7 @@ export function inventoryLegacyDatabase(input: {
                ORDER BY runs.id`,
             )
             .all();
-    const runs: LegacyRunIdentity[] = [];
+    const runs: LegacyArtifactIdentity[] = [];
     for (const row of runRows) {
       if (
         !isJsonRecord(row) ||
@@ -1163,12 +1280,12 @@ export function inventoryLegacyDatabase(input: {
               tag: "artifactIndex",
               schemaVersion: detectedSource.schemaVersion,
               reason:
-                "Legacy run identity has no readable transcript authority.",
+                "Legacy database execution row has no readable transcript authority.",
             })
           : unavailableInventory({
               tag: "transcriptPath",
               reason:
-                "Legacy run identity has no readable transcript authority.",
+                "Legacy database execution row has no readable transcript authority.",
             });
       }
       runs.push({
@@ -1178,7 +1295,7 @@ export function inventoryLegacyDatabase(input: {
       });
     }
     const inventory: LegacyArtifactInventory[] = runs.map((identity) =>
-      inventoryLegacyRun(identity, candidates),
+      inventoryLegacyArtifact(identity, candidates),
     );
     const hasVerdicts =
       db
@@ -1423,10 +1540,11 @@ export function rebuildLegacyArtifactIndex(input: {
       });
       runIdMap.set(
         item.legacyId,
-        ingestArtifactRun({
+        ingestArtifactRunWithDisposition({
           transcriptPath: recoveredPath,
           indexedTranscriptPath: retained,
           dbPath: input.dbPath,
+          ingestion: "historicalRebuild",
         }),
       );
     }
@@ -1570,15 +1688,15 @@ export function rebuildLegacyArtifactIndex(input: {
           retained,
           "application/json",
         );
-        const runIdentity = newDb
+        const subjectIdentity = newDb
           .prepare("SELECT startedAt FROM runs WHERE id = ?")
           .get(runId);
         const createdAt =
           typeof row.createdAt === "string"
             ? row.createdAt
-            : isJsonRecord(runIdentity) &&
-                typeof runIdentity.startedAt === "string"
-              ? runIdentity.startedAt
+            : isJsonRecord(subjectIdentity) &&
+                typeof subjectIdentity.startedAt === "string"
+              ? subjectIdentity.startedAt
               : `legacy-review-${String(row.id)}`;
         const inserted = newDb
           .prepare(
@@ -1772,8 +1890,8 @@ export function exportArtifactIndex(input: {
          UNION SELECT extractionArtifactSha256 FROM reviewDrilldowns
          UNION SELECT provenanceSha256 FROM reviewDrilldowns
          UNION SELECT evidenceSha256 FROM legacyInventory WHERE evidenceSha256 IS NOT NULL
-         UNION SELECT artifactSha256 FROM generationRunArtifacts
-         UNION SELECT artifactSha256 FROM generationFindings
+         UNION SELECT artifactSha256 FROM scenarioCampaignArtifacts
+         UNION SELECT artifactSha256 FROM scenarioCampaignFindings
        )
        ORDER BY artifacts.sha256`,
     )

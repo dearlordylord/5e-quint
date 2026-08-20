@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "mounted-dispatch-through-flooded-orchard",
+  "title": "Mounted dispatch through a flooded orchard",
+  "purpose": "Probe unsupported mounted-carrier, object-transfer, elevation, and objective-state capabilities without treating obstruction as scenario incoherence.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/mounted-dispatch-through-flooded-orchard.md",
+    "byteLength": 4310,
+    "sha256": "81b3ca56ba4e8bbf24b7f4ecd043794eecb224eda2fad71c8f54c50407b00c72"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/mounted-dispatch-through-flooded-orchard.md.scenario-review.json",
+    "byteLength": 3563,
+    "sha256": "85f9b44c854fd53cbfeacd40b29c6a535f2c2c4169b44fdc721e21eb21bdb59b"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/mounted-dispatch-through-flooded-orchard.md.stage-facts.json",
+    "byteLength": 747,
+    "sha256": "1483b24314da410025ef892123f6750683186eb9f913a47e5dbb405636f8f2bf"
+  }
+}

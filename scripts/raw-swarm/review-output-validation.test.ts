@@ -113,7 +113,7 @@ describe("review output validation", () => {
         calls: [{ seq: 1 }],
       },
       retainedHeaderEvidence: {},
-      runArtifacts: [],
+      executionArtifacts: [],
     };
     const emptyPacketCatalog = reviewEvidenceCatalogForPacket(packet);
     expect(emptyPacketCatalog).toMatchObject({
@@ -144,7 +144,7 @@ describe("review output validation", () => {
 
     const packetWithSources = {
       ...packet,
-      runArtifacts: [
+      executionArtifacts: [
         {
           path: "scripts/raw-swarm/out/review-example/evidence/setup.ts",
           byteLength: 7,
@@ -184,7 +184,7 @@ describe("review output validation", () => {
         calls: [{ seq: 1 }],
       },
       retainedHeaderEvidence: {},
-      runArtifacts: [
+      executionArtifacts: [
         {
           path: "scripts/raw-swarm/out/review-example/SCENARIO.md",
           sha256: "f".repeat(64),
@@ -202,7 +202,7 @@ describe("review output validation", () => {
     expect(
       reviewEvidenceCatalogForPacket({
         ...packet,
-        runArtifacts: [],
+        executionArtifacts: [],
         rawAuthorities: [{ path: "docs/not-raw.md", firstLine: 1 }],
       }),
     ).toMatchObject({
@@ -211,7 +211,7 @@ describe("review output validation", () => {
     });
     const repeatedRawFileExcerpts = {
       ...packet,
-      runArtifacts: [],
+      executionArtifacts: [],
       rawAuthorities: [
         {
           path: ".references/srd-5.2.1/Spells/Descriptions-A-D.md",

@@ -71,7 +71,7 @@ import type {
   ScenarioSpatialSetupInput,
 } from "./scenario-session.ts";
 
-const TRACER_SCENARIO_ID = "tracer-001-goblin-warrior-vs-skeleton";
+const TRACER_SCENARIO_ID = "goblin-warrior-skeleton-tracer";
 
 describe("scenario setup public-SDK boundary", () => {
   test("passes controller-authored Character Sheets into neutral setup", async () => {
@@ -234,7 +234,7 @@ describe("scenario setup public-SDK boundary", () => {
     const setup = await evaluateScenarioSetup(
       resolve(
         repoRoot,
-        "scripts/raw-swarm/sdk-player/scenarios/generated-battle-013.setup.ts",
+        "scripts/raw-swarm/sdk-player/scenarios/four-way-crank-control-cycle.setup.ts",
       ),
       [],
     );
@@ -1805,18 +1805,24 @@ describe("scenario setup public-SDK boundary", () => {
     ]);
   }, 120_000);
 
-  test("retains the generated battle's tactical and interactive setup", async () => {
+  test("retains the four-way scenario's tactical and interactive setup", async () => {
     const scenarioDirectory = resolve(
       repoRoot,
       "scripts/raw-swarm/sdk-player/scenarios",
     );
     const characters = await evaluateScenarioCharacters(
-      resolve(scenarioDirectory, "generated-battle-example.characters.ts"),
+      resolve(
+        scenarioDirectory,
+        "synthetic-beacon-eight-round-defense.characters.ts",
+      ),
     );
     expect(characters.tag).toBe("ready");
     if (characters.tag !== "ready") return;
     const result = await evaluateScenarioSetup(
-      resolve(scenarioDirectory, "generated-battle-example.setup.ts"),
+      resolve(
+        scenarioDirectory,
+        "synthetic-beacon-eight-round-defense.setup.ts",
+      ),
       characters.characterSheets,
     );
     expect(result).toMatchObject({
@@ -2951,12 +2957,18 @@ describe("scenario setup public-SDK boundary", () => {
       "scripts/raw-swarm/sdk-player/scenarios",
     );
     const characters = await evaluateScenarioCharacters(
-      resolve(scenarioDirectory, "generated-battle-example.characters.ts"),
+      resolve(
+        scenarioDirectory,
+        "synthetic-beacon-eight-round-defense.characters.ts",
+      ),
     );
     expect(characters.tag).toBe("ready");
     if (characters.tag !== "ready") return;
     const result = await evaluateScenarioSetup(
-      resolve(scenarioDirectory, "generated-battle-example.setup.ts"),
+      resolve(
+        scenarioDirectory,
+        "synthetic-beacon-eight-round-defense.setup.ts",
+      ),
       characters.characterSheets,
     );
     expect(result.tag).toBe("ready");
@@ -3415,13 +3427,16 @@ describe("scenario setup public-SDK boundary", () => {
     });
   }, 120_000);
 
-  test("retains the second generated battle with its authored Skeleton initiative and ammunition", async () => {
+  test("retains the pursuit scenario's authored Skeleton initiative and ammunition", async () => {
     const scenarioDirectory = resolve(
       repoRoot,
       "scripts/raw-swarm/sdk-player/scenarios",
     );
     const characters = await evaluateScenarioCharacters(
-      resolve(scenarioDirectory, "generated-battle-002.characters.ts"),
+      resolve(
+        scenarioDirectory,
+        "sand-band-four-skeleton-skirmish.characters.ts",
+      ),
     );
     expect(characters.tag).toBe("ready");
     if (characters.tag !== "ready") return;
@@ -3450,13 +3465,13 @@ describe("scenario setup public-SDK boundary", () => {
     ).toEqual([1300, 1300]);
 
     const result = await evaluateScenarioSetup(
-      resolve(scenarioDirectory, "generated-battle-002.setup.ts"),
+      resolve(scenarioDirectory, "sand-band-four-skeleton-skirmish.setup.ts"),
       characters.characterSheets,
     );
     expect(result).toMatchObject({
       tag: "ready",
       observation: {
-        scenarioId: "generated-battle-002",
+        scenarioId: "sand-band-four-skeleton-skirmish",
         skeletonAmmunition: {
           ammunition: "arrow",
           quantityPerSkeleton: 20,
