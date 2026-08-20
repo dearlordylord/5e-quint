@@ -167,14 +167,25 @@ export type FindingIssueLink = {
   readonly githubIssueNumber?: number;
 };
 
+export type CompositeReviewReplaySelection =
+  | {
+      readonly tag: "finalOnly";
+      readonly finalPath: string;
+    }
+  | {
+      readonly tag: "milestoneAndFinal";
+      readonly milestonePath: string;
+      readonly finalPath: string;
+    };
+
 export type FindingsProjectionInput = {
   readonly transcriptPath: string;
   readonly runDirectory?: string;
   readonly reviewPaths: readonly string[];
   readonly scenarioReviewPaths: readonly string[];
   readonly generationLedgerPaths: readonly string[];
-  /** Original composite-review envelopes; when present they must be milestone and final. */
-  readonly reviewReplayPaths?: readonly string[];
+  /** Original composite-review envelopes required by the owning stage plan. */
+  readonly reviewReplay?: CompositeReviewReplaySelection;
   readonly issueLinks: readonly FindingIssueLink[];
 };
 
@@ -893,31 +904,43 @@ export function findingsFromGenerationLedger(
   return findings;
 }
 
-type RetainedCompositeReviewInput = Schema.Schema.Type<
-  typeof RetainedScenarioReviewInputSchema
->;
-
 function originalCompositeReviewInputs(
   sources: Source[],
-  paths: readonly string[],
+  selection: CompositeReviewReplaySelection | undefined,
   generationLedgerPaths: readonly string[],
   expectedScenarioId: string,
 ): void {
-  if (paths.length === 0) return;
-  if (paths.length !== 2) {
-    fail(
-      `Review replay inputs require exactly two retained composite-review envelopes (milestone and final), received ${String(paths.length)}.`,
-    );
-  }
+  if (selection === undefined) return;
+  const replayContract = Match.value(selection).pipe(
+    Match.when({ tag: "finalOnly" }, ({ finalPath }) => ({
+      entries: [{ path: finalPath, stage: "final" as const }] as const,
+    })),
+    Match.when(
+      { tag: "milestoneAndFinal" },
+      ({ milestonePath, finalPath }) => ({
+        entries: [
+          { path: milestonePath, stage: "milestone" as const },
+          { path: finalPath, stage: "final" as const },
+        ] as const,
+      }),
+    ),
+    Match.exhaustive,
+  );
   if (generationLedgerPaths.length === 0) {
     fail(
       "Review replay inputs require at least one original generation ledger for invocation matching.",
     );
   }
 
-  const canonicalPaths = paths.map(sourcePath);
-  if (new Set(canonicalPaths).size !== canonicalPaths.length) {
-    fail("Review replay inputs must identify two distinct envelope paths.");
+  const canonicalEntries = replayContract.entries.map((entry) => ({
+    ...entry,
+    path: sourcePath(entry.path),
+  }));
+  if (
+    new Set(canonicalEntries.map(({ path }) => path)).size !==
+    canonicalEntries.length
+  ) {
+    fail("Review replay inputs must identify distinct envelope paths.");
   }
 
   const ledgerEntries = generationLedgerPaths.flatMap((path) => {
@@ -939,9 +962,8 @@ function originalCompositeReviewInputs(
     });
   });
 
-  const stages = new Set<RetainedCompositeReviewInput["reviewStage"]>();
   const invocationIds = new Set<string>();
-  for (const [index, canonical] of canonicalPaths.entries()) {
+  for (const { path: canonical, stage: expectedStage } of canonicalEntries) {
     const decoded = Schema.decodeUnknownEither(
       RetainedScenarioReviewInputSchema,
       { onExcessProperty: "error" },
@@ -957,12 +979,11 @@ function originalCompositeReviewInputs(
         `Review replay input ${canonical} belongs to scenario ${review.scenarioId}, expected ${expectedScenarioId}.`,
       );
     }
-    if (stages.has(review.reviewStage)) {
+    if (review.reviewStage !== expectedStage) {
       fail(
-        `Review replay inputs contain duplicate ${review.reviewStage} stage envelopes.`,
+        `Review replay input ${canonical} has stage ${review.reviewStage}, expected ${expectedStage}.`,
       );
     }
-    stages.add(review.reviewStage);
     if (invocationIds.has(review.invocationId)) {
       fail(
         `Review replay inputs contain duplicate original invocation id ${review.invocationId}.`,
@@ -1034,16 +1055,6 @@ function originalCompositeReviewInputs(
         `Review replay input ${canonical} could not retain its closed ${review.reviewStage} authority role.`,
       );
     }
-    if (index === canonicalPaths.length - 1 && stages.size !== 2) {
-      fail(
-        "Review replay inputs must contain exactly one milestone and one final envelope.",
-      );
-    }
-  }
-  if (!stages.has("milestone") || !stages.has("final")) {
-    fail(
-      "Review replay inputs must contain exactly one milestone and one final envelope.",
-    );
   }
 }
 
@@ -1755,7 +1766,7 @@ export function projectRunFindings(
   }
   originalCompositeReviewInputs(
     sources,
-    input.reviewReplayPaths ?? [],
+    input.reviewReplay,
     input.generationLedgerPaths,
     parsed.scenarioId,
   );

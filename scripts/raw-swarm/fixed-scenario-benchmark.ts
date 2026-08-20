@@ -14,7 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
-import { Either, Option, Schema } from "effect";
+import { Either, Match, Option, Schema } from "effect";
 
 import {
   artifactAuthority,
@@ -58,6 +58,7 @@ import {
   BenchmarkReadinessInputSchema,
   BenchmarkContextSourceManifestDocumentSchema,
   BenchmarkRunDescriptorSchema,
+  benchmarkReviewPlan,
   deriveBenchmarkPathOutcome,
   parseBenchmarkMeasurement,
   readCompletePathMeasurement,
@@ -2253,10 +2254,8 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
       "A completed benchmark path requires replay and post-play authorities before assembly.",
     );
   }
-  const reviewStages =
-    profile === "documentDeclarationSet"
-      ? (["milestone", "final"] as const)
-      : (["final"] as const);
+  const reviewPlan = benchmarkReviewPlan(profile);
+  const reviewStages = reviewPlan.stages;
   for (const stage of reviewStages) {
     validateRetainedReviewAuthority(
       profile,
@@ -2350,12 +2349,17 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
       : [],
     scenarioReviewPaths: [repoRelative(bundle.paths.scenarioReview)],
     generationLedgerPaths: [repoRelative(paths.currentLedger)],
-    reviewReplayPaths: reviewStages.map((stage) =>
-      repoRelative(
-        stage === "milestone"
-          ? paths.milestoneReviewInput
-          : paths.finalReviewInput,
-      ),
+    reviewReplay: Match.value(reviewPlan).pipe(
+      Match.when({ tag: "milestoneAndFinal" }, () => ({
+        tag: "milestoneAndFinal" as const,
+        milestonePath: repoRelative(paths.milestoneReviewInput),
+        finalPath: repoRelative(paths.finalReviewInput),
+      })),
+      Match.when({ tag: "finalOnly" }, () => ({
+        tag: "finalOnly" as const,
+        finalPath: repoRelative(paths.finalReviewInput),
+      })),
+      Match.exhaustive,
     ),
     issueLinks: [],
   });

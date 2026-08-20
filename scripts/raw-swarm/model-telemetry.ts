@@ -454,7 +454,7 @@ export function modelInvocationResultFromCodexEvents(
   string
 > {
   const failureReason = firstPartyCodexFailureReason(events);
-  if (Either.isLeft(failureReason)) return failureReason;
+  if (Either.isLeft(failureReason)) return Either.left(failureReason.left);
   const processResult = resultFromExit(exit);
   if (processResult.tag === "succeeded" && Option.isSome(failureReason.right)) {
     return Either.left(

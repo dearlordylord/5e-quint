@@ -144,6 +144,22 @@ function flagValues(args: readonly string[], flag: string): readonly string[] {
   );
 }
 
+function optionalSingleFlagValue(
+  args: readonly string[],
+  flag: string,
+): string | undefined {
+  const indexes = args.flatMap((argument, index) =>
+    argument === flag ? [index] : [],
+  );
+  if (indexes.length === 0) return undefined;
+  if (indexes.length > 1) fail(`${flag} may be supplied only once.`);
+  const value = args[indexes[0]! + 1];
+  if (value === undefined || value.startsWith("--")) {
+    fail(`${flag} requires a value.`);
+  }
+  return value;
+}
+
 const liveGitHubCommandRunner: GitHubCommandRunner = {
   run: (args, input) => {
     const result = spawnSync("gh", args, {
@@ -491,7 +507,51 @@ function findings(args: readonly string[]): void {
   const reviewPaths = flagValues(rest, "--review");
   const scenarioReviewPaths = flagValues(rest, "--scenario-review");
   const generationLedgerPaths = flagValues(rest, "--generation-ledger");
-  const reviewReplayPaths = flagValues(rest, "--review-replay");
+  const supportedReviewReplayFlags = new Set([
+    "--review-replay-milestone",
+    "--review-replay-final",
+  ]);
+  const unsupportedReviewReplayFlag = rest.find(
+    (argument) =>
+      argument.startsWith("--review-replay") &&
+      !supportedReviewReplayFlags.has(argument),
+  );
+  if (
+    unsupportedReviewReplayFlag !== undefined &&
+    unsupportedReviewReplayFlag !== "--review-replay"
+  ) {
+    fail(`Unsupported findings replay flag: ${unsupportedReviewReplayFlag}.`);
+  }
+  if (hasFlag(rest, "--review-replay")) {
+    fail(
+      "Findings review replay uses the named --review-replay-milestone and --review-replay-final flags.",
+    );
+  }
+  const milestoneReviewReplayPath = optionalSingleFlagValue(
+    rest,
+    "--review-replay-milestone",
+  );
+  const finalReviewReplayPath = optionalSingleFlagValue(
+    rest,
+    "--review-replay-final",
+  );
+  if (
+    (milestoneReviewReplayPath === undefined) !==
+    (finalReviewReplayPath === undefined)
+  ) {
+    fail(
+      "Findings review replay requires one named milestone envelope and one named final envelope.",
+    );
+  }
+  const reviewReplay =
+    milestoneReviewReplayPath === undefined ||
+    finalReviewReplayPath === undefined
+      ? undefined
+      : {
+          tag: "milestoneAndFinal" as const,
+          milestonePath: milestoneReviewReplayPath,
+          finalPath: finalReviewReplayPath,
+        };
   const outputPath =
     flagValue(rest, "--output") ??
     findingsArtifactPath(runDirectory ?? defaultRunDirectory(transcriptPath));
@@ -534,7 +594,7 @@ function findings(args: readonly string[]): void {
     reviewPaths: importedReviewPaths,
     scenarioReviewPaths,
     generationLedgerPaths,
-    ...(reviewReplayPaths.length === 0 ? {} : { reviewReplayPaths }),
+    ...(reviewReplay === undefined ? {} : { reviewReplay }),
     issueLinks,
   });
   if (

@@ -65,6 +65,72 @@ function query(dbPath: string, sql: string): unknown {
 }
 
 describe("RAW swarm artifact report index", () => {
+  test("rejects the unnamed review-replay flag with a value", () => {
+    expect(() =>
+      report([
+        "findings",
+        "transcript.jsonl",
+        "--db",
+        "report.sqlite",
+        "--review-replay",
+        "final.json",
+      ]),
+    ).toThrow(/review replay uses the named/);
+  });
+
+  test("rejects a bare unnamed review-replay flag", () => {
+    expect(() =>
+      report([
+        "findings",
+        "transcript.jsonl",
+        "--db",
+        "report.sqlite",
+        "--review-replay",
+      ]),
+    ).toThrow(/review replay uses the named/);
+  });
+
+  test("rejects an unknown review-replay flag", () => {
+    expect(() =>
+      report([
+        "findings",
+        "transcript.jsonl",
+        "--db",
+        "report.sqlite",
+        "--review-replay-fnal",
+        "final.json",
+      ]),
+    ).toThrow(/Unsupported findings replay flag/);
+  });
+
+  test("rejects a named review-replay pair with one member absent", () => {
+    expect(() =>
+      report([
+        "findings",
+        "transcript.jsonl",
+        "--db",
+        "report.sqlite",
+        "--review-replay-final",
+        "final.json",
+      ]),
+    ).toThrow(
+      /review replay requires one named milestone envelope and one named final envelope/,
+    );
+  });
+
+  test("rejects a named review-replay flag without a value", () => {
+    expect(() =>
+      report([
+        "findings",
+        "transcript.jsonl",
+        "--db",
+        "report.sqlite",
+        "--review-replay-milestone",
+        "--review-replay-final",
+      ]),
+    ).toThrow(/--review-replay-milestone requires a value/);
+  });
+
   test("indexes a transcript, verifies immutable review identity, and retains verdict facts", () => {
     const directory = temporaryDirectory();
     const transcriptPath = resolve(directory, "run.jsonl");

@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
-import { Either, ParseResult, Schema } from "effect";
+import { Either, Match, ParseResult, Schema } from "effect";
 
 import {
   artifactAuthority,
@@ -3776,12 +3776,30 @@ function benchmarkReplayReviewStage(
   );
 }
 
-function benchmarkReviewStages(
+export type BenchmarkReviewPlan =
+  | {
+      readonly tag: "finalOnly";
+      readonly stages: readonly ["final"];
+    }
+  | {
+      readonly tag: "milestoneAndFinal";
+      readonly stages: readonly ["milestone", "final"];
+    };
+
+export function benchmarkReviewPlan(
   profile: BenchmarkImplementationProfile,
-): readonly ("milestone" | "final")[] {
-  return profile === "documentDeclarationSet"
-    ? (["milestone", "final"] as const)
-    : (["final"] as const);
+): BenchmarkReviewPlan {
+  return Match.value(profile).pipe(
+    Match.when("documentDeclarationSet", () => ({
+      tag: "milestoneAndFinal" as const,
+      stages: ["milestone", "final"] as const,
+    })),
+    Match.when("boundedCapabilityProjection", () => ({
+      tag: "finalOnly" as const,
+      stages: ["final"] as const,
+    })),
+    Match.exhaustive,
+  );
 }
 
 function benchmarkReviewAuthorityByStage(
@@ -3866,7 +3884,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
   const replayEventAuthorities = findings.authorities.filter(({ role }) =>
     isPrePlayReviewEventsAuthorityRole(role),
   );
-  const expectedStages = benchmarkReviewStages(measurement.profile);
+  const expectedStages = benchmarkReviewPlan(measurement.profile).stages;
   for (const authority of findings.authorities) {
     if (isRetiredPrePlayReviewSourceAuthorityRole(authority.role)) {
       issues.push(
@@ -4754,7 +4772,8 @@ function benchmarkAuthorityIssues(
   };
   issues.push(
     ...currentSemanticIssues(canonicalMeasurement, {
-      compositeReviewCount: benchmarkReviewStages(measurement.profile).length,
+      compositeReviewCount: benchmarkReviewPlan(measurement.profile).stages
+        .length,
       requirePlayerInvocation: measurement.outcome.tag === "completed",
     }),
   );
@@ -4789,7 +4808,8 @@ function benchmarkSemanticIssues(
   };
   const issues = [
     ...currentSemanticIssues(canonicalMeasurement, {
-      compositeReviewCount: benchmarkReviewStages(measurement.profile).length,
+      compositeReviewCount: benchmarkReviewPlan(measurement.profile).stages
+        .length,
       requirePlayerInvocation: measurement.outcome.tag === "completed",
     }),
   ];
@@ -4803,7 +4823,7 @@ function benchmarkSemanticIssues(
       invocation.schemaVersion === 3 &&
       invocation.responsibility === "redundantCharacterPreparation",
   );
-  const compositeReviewStages = benchmarkReviewStages(measurement.profile);
+  const compositeReviewStages = benchmarkReviewPlan(measurement.profile).stages;
   const compositeReviewInvocations = measurement.invocations.filter(
     (invocation) =>
       invocation.schemaVersion === 2 &&

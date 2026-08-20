@@ -648,8 +648,8 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts findings \
   --db scripts/raw-swarm/out/player-swarm.db \
   --review "scripts/raw-swarm/out/$SCENARIO-sdk-review.json" \
   --generation-ledger "scripts/raw-swarm/out/$SCENARIO-generation-invocations.jsonl" \
-  --review-replay "scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/scenarioCompositeReview-MILESTONE.json" \
-  --review-replay "scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/scenarioCompositeReview-FINAL.json" \
+  --review-replay-milestone "scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/scenarioCompositeReview-MILESTONE.json" \
+  --review-replay-final "scripts/raw-swarm/out/$SCENARIO-generation-invocations-review-inputs/scenarioCompositeReview-FINAL.json" \
   --render "scripts/raw-swarm/out/$SCENARIO-run-audit.md"
 
 # Render later from the same hash-linked indexed projection.
@@ -658,7 +658,8 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts audit \
   --db scripts/raw-swarm/out/player-swarm.db
 ```
 
-The optional --review-replay inputs are the two original composite-review
+The optional named --review-replay-milestone and --review-replay-final inputs
+are the two original composite-review
 envelopes, not new model invocations. When supplied, the pair must contain
 exactly one milestone and one final envelope, and each envelope must match
 one v2 composite-review row in the supplied generation ledger by invocation id,

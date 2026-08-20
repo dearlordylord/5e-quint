@@ -435,10 +435,11 @@ describe("Raw Swarm findings projection", () => {
       reviewPaths: [input.reviewRelative],
       scenarioReviewPaths: [],
       generationLedgerPaths: [generationLedgerRelative],
-      reviewReplayPaths: [
-        relative(repoRoot, milestonePath),
-        relative(repoRoot, finalPath),
-      ],
+      reviewReplay: {
+        tag: "milestoneAndFinal",
+        milestonePath: relative(repoRoot, milestonePath),
+        finalPath: relative(repoRoot, finalPath),
+      },
       issueLinks: [],
     });
     expect(projection.authorities).toEqual(
@@ -489,13 +490,54 @@ describe("Raw Swarm findings projection", () => {
         reviewPaths: [input.reviewRelative],
         scenarioReviewPaths: [],
         generationLedgerPaths: [generationLedgerRelative],
-        reviewReplayPaths: [
-          relative(repoRoot, milestonePath),
-          relative(repoRoot, finalPath),
-        ],
+        reviewReplay: {
+          tag: "milestoneAndFinal",
+          milestonePath: relative(repoRoot, milestonePath),
+          finalPath: relative(repoRoot, finalPath),
+        },
         issueLinks: [],
       }),
     ).toThrow(/result does not match its invocation event output/);
+  });
+
+  test("retains the bounded final-only composite-review envelope", () => {
+    const input = fixture();
+    const generationLedgerRelative = retainedGenerationReviewLedger(input.root);
+    const finalPath = resolve(input.root, "original-final.json");
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "original-final",
+        }),
+      )}\n`,
+    );
+
+    const projection = projectRunFindings({
+      transcriptPath: input.transcriptRelative,
+      runDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [generationLedgerRelative],
+      reviewReplay: {
+        tag: "finalOnly",
+        finalPath: relative(repoRoot, finalPath),
+      },
+      issueLinks: [],
+    });
+
+    expect(projection.authorities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ role: "replay-final" }),
+        expect.objectContaining({
+          role: "prePlayReviewReplayEvents-final",
+        }),
+      ]),
+    );
+    expect(
+      projection.authorities.some(({ role }) => role.includes("milestone")),
+    ).toBe(false);
   });
 
   test("rejects missing, duplicate-stage, and mismatched original review replay inputs", () => {
@@ -532,16 +574,20 @@ describe("Raw Swarm findings projection", () => {
     expect(() =>
       projectRunFindings({
         ...common,
-        reviewReplayPaths: [relative(repoRoot, milestonePath)],
+        reviewReplay: {
+          tag: "finalOnly",
+          finalPath: relative(repoRoot, milestonePath),
+        },
       }),
-    ).toThrow(/exactly two/);
+    ).toThrow(/expected final/);
     expect(() =>
       projectRunFindings({
         ...common,
-        reviewReplayPaths: [
-          relative(repoRoot, milestonePath),
-          relative(repoRoot, milestonePath),
-        ],
+        reviewReplay: {
+          tag: "milestoneAndFinal",
+          milestonePath: relative(repoRoot, milestonePath),
+          finalPath: relative(repoRoot, milestonePath),
+        },
       }),
     ).toThrow(/distinct envelope paths/);
     const duplicateStagePath = resolve(input.root, "duplicate-milestone.json");
@@ -557,12 +603,13 @@ describe("Raw Swarm findings projection", () => {
     expect(() =>
       projectRunFindings({
         ...common,
-        reviewReplayPaths: [
-          relative(repoRoot, milestonePath),
-          relative(repoRoot, duplicateStagePath),
-        ],
+        reviewReplay: {
+          tag: "milestoneAndFinal",
+          milestonePath: relative(repoRoot, milestonePath),
+          finalPath: relative(repoRoot, duplicateStagePath),
+        },
       }),
-    ).toThrow(/duplicate milestone/);
+    ).toThrow(/expected final/);
 
     const foreign = parseJsonRecord(readFileSync(finalPath, "utf8"));
     foreign.scenarioId = "foreign-scenario";
@@ -570,10 +617,11 @@ describe("Raw Swarm findings projection", () => {
     expect(() =>
       projectRunFindings({
         ...common,
-        reviewReplayPaths: [
-          relative(repoRoot, milestonePath),
-          relative(repoRoot, finalPath),
-        ],
+        reviewReplay: {
+          tag: "milestoneAndFinal",
+          milestonePath: relative(repoRoot, milestonePath),
+          finalPath: relative(repoRoot, finalPath),
+        },
       }),
     ).toThrow(/belongs to scenario foreign-scenario/);
     writeFileSync(
@@ -604,10 +652,11 @@ describe("Raw Swarm findings projection", () => {
       expect(() =>
         projectRunFindings({
           ...common,
-          reviewReplayPaths: [
-            relative(repoRoot, milestonePath),
-            relative(repoRoot, finalPath),
-          ],
+          reviewReplay: {
+            tag: "milestoneAndFinal",
+            milestonePath: relative(repoRoot, milestonePath),
+            finalPath: relative(repoRoot, finalPath),
+          },
         }),
       ).toThrow(/does not match original composite-review invocation/);
       ledgerEntries[1] = {
