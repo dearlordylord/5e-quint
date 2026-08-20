@@ -259,6 +259,18 @@ describe("fixed scenario benchmark boundary", () => {
             type: "item.completed",
             item: {
               id: "item_8",
+              type: "command_execution",
+              command: "/bin/sh -c 'cat BENCHMARK_CONTEXT.md'",
+              aggregated_output: "synthetic context\n",
+              exit_code: 0,
+              status: "completed",
+            },
+          }) +
+          "\n" +
+          JSON.stringify({
+            type: "item.completed",
+            item: {
+              id: "item_9",
               type: "agent_message",
               text: `The model's prose may mention ${resolve("/outside")}.`,
             },

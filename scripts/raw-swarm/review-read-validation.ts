@@ -24,6 +24,13 @@ export const STRICT_READ_EXECUTABLES = [
 
 export type StrictReadExecutable = (typeof STRICT_READ_EXECUTABLES)[number];
 
+const STRICT_READ_SHELL_EXECUTABLES = [
+  "/bin/bash",
+  "/usr/bin/bash",
+  "/bin/sh",
+  "/usr/bin/sh",
+] as const;
+
 const SHELL_OPERATOR_CHARACTERS = new Set([
   ";",
   "&",
@@ -122,7 +129,7 @@ export function parseStrictShellWords(
 }
 
 /**
- * Parse the one first-party shell wrapper used for isolated read telemetry.
+ * Parse a named first-party shell wrapper used for isolated read telemetry.
  * The command body is still literal shell words; callers apply their own
  * named-path restrictions after this shared executable/argument boundary.
  */
@@ -133,11 +140,15 @@ export function parseStrictReadCommand(
   if (Either.isLeft(outer)) return Either.left(outer.left);
   if (
     outer.right.words.length !== 3 ||
-    !["/bin/bash", "/usr/bin/bash"].includes(outer.right.words[0] ?? "") ||
+    !STRICT_READ_SHELL_EXECUTABLES.some(
+      (executable) => executable === outer.right.words[0],
+    ) ||
     !["-c", "-lc"].includes(outer.right.words[1] ?? "") ||
     outer.right.quoted[2] !== true
   ) {
-    return Either.left("command must be one quoted Bash read operation");
+    return Either.left(
+      "command must be one quoted supported-shell read operation",
+    );
   }
   const inner = parseStrictShellWords(outer.right.words[2] ?? "");
   if (Either.isLeft(inner)) return Either.left(inner.left);
