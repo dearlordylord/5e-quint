@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "open-grid-wolf-skeleton-pursuit",
+  "title": "Open-grid Wolf and Skeleton pursuit",
+  "purpose": "Explore pursuit, melee engagement, Opportunity Attacks, and turn completion through the public SDK.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/open-grid-wolf-skeleton-pursuit.md",
+    "byteLength": 1631,
+    "sha256": "0a0e06e2179ed3c79d5eedb9cfa4dcce04b3ecff32687da3434faa5b45095723"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/open-grid-wolf-skeleton-pursuit.md.scenario-review.json",
+    "byteLength": 2295,
+    "sha256": "78fb2999bba0bc87f7d821823dc6ffd9098b8ef073153a57b140d74c42fdd163"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/open-grid-wolf-skeleton-pursuit.md.stage-facts.json",
+    "byteLength": 600,
+    "sha256": "d2703fe4af7f721aace698c11eafb80e8b34356f77b07e795f70f5d56161551e"
+  }
+}

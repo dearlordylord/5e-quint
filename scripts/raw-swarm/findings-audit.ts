@@ -2,7 +2,11 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve, sep } from "node:path";
 import { Match } from "effect";
 
-import { type FindingPointer, type FindingsProjection } from "./findings.ts";
+import {
+  findingsSdkCallCount,
+  type FindingPointer,
+  type FindingsProjection,
+} from "./findings.ts";
 import { repoRoot } from "./transcript.ts";
 
 function repositoryPath(path: string): string {
@@ -46,14 +50,29 @@ function renderPointer(pointer: FindingPointer): string {
 }
 
 export function renderFindingsAudit(projection: FindingsProjection): string {
+  const subjectLines = Match.value(projection.subject).pipe(
+    Match.when({ tag: "execution" }, (execution) => [
+      "# Raw Swarm Execution audit",
+      `- Execution: \`${execution.executionId}\``,
+      `- Evidence Set: \`${execution.evidenceSetId}\``,
+      `- Scenario: \`${execution.scenarioId}\``,
+    ]),
+    Match.when({ tag: "scenarioCampaign" }, (campaign) => [
+      "# Raw Swarm Scenario Campaign audit",
+      `- Scenario Campaign: \`${campaign.campaignId}\``,
+      `- Evidence Set: \`${campaign.evidenceSetId}\``,
+      `- Planned Scenario: \`${campaign.plannedScenarioId}\``,
+    ]),
+    Match.exhaustive,
+  );
   const lines = [
-    "# Raw Swarm run audit",
+    subjectLines[0]!,
     "",
-    `- Scenario: \`${projection.run.scenarioId}\``,
-    `- Git revision: \`${projection.run.gitSha}\``,
-    `- Started: ${projection.run.startedAt}`,
-    `- Run identity: \`${projection.runIdentity}\``,
-    `- SDK calls: ${String(projection.run.callCount)}`,
+    ...subjectLines.slice(1),
+    `- Git revision: \`${projection.subject.gitSha}\``,
+    `- Started: ${projection.subject.startedAt}`,
+    `- Findings subject identity: \`${projection.subjectIdentity}\``,
+    `- SDK calls: ${String(findingsSdkCallCount(projection.subject))}`,
     `- Evidence authorities: ${String(projection.authorities.length)}`,
     `- Findings: ${String(projection.findings.length)}`,
     "",

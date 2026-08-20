@@ -1,6 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -25,6 +26,21 @@ const currentGitSha = execFileSync("git", ["rev-parse", "HEAD"], {
   cwd: repoRoot,
   encoding: "utf8",
 }).trim();
+
+function reviewTranscriptPath(testRoot: string): string {
+  const evidenceDirectory = resolve(testRoot, "evidence");
+  mkdirSync(evidenceDirectory);
+  writeFileSync(
+    resolve(testRoot, "execution.json"),
+    `${JSON.stringify({
+      schemaVersion: 1,
+      executionId: "synthetic-review-execution",
+      evidenceSetId: "synthetic-review-evidence",
+      scenarioId: "synthetic-review",
+    })}\n`,
+  );
+  return resolve(evidenceDirectory, "transcript.jsonl");
+}
 
 function run(
   script: string,
@@ -134,31 +150,25 @@ describe("RAW swarm runner boundaries", () => {
     [
       "duplicate isolation fallback",
       [
-        "tracer-001-goblin-warrior-vs-skeleton",
+        "goblin-warrior-skeleton-tracer",
         "--instructional-isolation",
         "--instructional-isolation",
       ],
     ],
+    ["unknown option", ["goblin-warrior-skeleton-tracer", "--no-isolation"]],
+    ["lone unknown option", ["goblin-warrior-skeleton-tracer", "--bogus"]],
     [
-      "unknown option",
-      ["tracer-001-goblin-warrior-vs-skeleton", "--no-isolation"],
-    ],
-    [
-      "lone unknown option",
-      ["tracer-001-goblin-warrior-vs-skeleton", "--bogus"],
-    ],
-    [
-      "missing evidence id",
-      ["tracer-001-goblin-warrior-vs-skeleton", "--evidence-id"],
+      "missing execution id",
+      ["goblin-warrior-skeleton-tracer", "--execution-id"],
     ],
     [
       "missing implementation revision",
-      ["tracer-001-goblin-warrior-vs-skeleton", "--implementation-git-sha"],
+      ["goblin-warrior-skeleton-tracer", "--implementation-git-sha"],
     ],
     [
       "malformed implementation revision",
       [
-        "tracer-001-goblin-warrior-vs-skeleton",
+        "goblin-warrior-skeleton-tracer",
         "--implementation-git-sha",
         "not-a-git-sha",
       ],
@@ -166,7 +176,7 @@ describe("RAW swarm runner boundaries", () => {
     [
       "duplicate implementation revision",
       [
-        "tracer-001-goblin-warrior-vs-skeleton",
+        "goblin-warrior-skeleton-tracer",
         "--implementation-git-sha",
         currentGitSha,
         "--implementation-git-sha",
@@ -174,23 +184,23 @@ describe("RAW swarm runner boundaries", () => {
       ],
     ],
     [
-      "invalid evidence id",
-      ["tracer-001-goblin-warrior-vs-skeleton", "--evidence-id", "../outside"],
+      "invalid evidence-set id",
+      ["goblin-warrior-skeleton-tracer", "--evidence-set-id", "../outside"],
     ],
     [
-      "duplicate evidence id",
+      "duplicate evidence-set id",
       [
-        "tracer-001-goblin-warrior-vs-skeleton",
-        "--evidence-id",
+        "goblin-warrior-skeleton-tracer",
+        "--evidence-set-id",
         "first",
-        "--evidence-id",
+        "--evidence-set-id",
         "second",
       ],
     ],
     [
       "path flag used as value",
       [
-        "tracer-001-goblin-warrior-vs-skeleton",
+        "goblin-warrior-skeleton-tracer",
         "--scenario-path",
         "--setup-path",
         "scenario.setup.ts",
@@ -199,7 +209,7 @@ describe("RAW swarm runner boundaries", () => {
     [
       "path traversal outside the repository",
       [
-        "tracer-001-goblin-warrior-vs-skeleton",
+        "goblin-warrior-skeleton-tracer",
         "--scenario-path",
         "../outside/scenario.md",
       ],
@@ -207,7 +217,7 @@ describe("RAW swarm runner boundaries", () => {
     [
       "absolute output outside the repository",
       [
-        "tracer-001-goblin-warrior-vs-skeleton",
+        "goblin-warrior-skeleton-tracer",
         "--output-path",
         resolve(tmpdir(), "raw-swarm-outside"),
       ],
@@ -215,7 +225,7 @@ describe("RAW swarm runner boundaries", () => {
     [
       "benchmark context traversal outside the repository",
       [
-        "tracer-001-goblin-warrior-vs-skeleton",
+        "goblin-warrior-skeleton-tracer",
         "--benchmark-context-path",
         "../outside/context.md",
       ],
@@ -223,7 +233,7 @@ describe("RAW swarm runner boundaries", () => {
     [
       "benchmark profile without context path",
       [
-        "tracer-001-goblin-warrior-vs-skeleton",
+        "goblin-warrior-skeleton-tracer",
         "--benchmark-profile",
         "boundedCapabilityProjection",
       ],
@@ -231,7 +241,7 @@ describe("RAW swarm runner boundaries", () => {
     [
       "benchmark context path without profile",
       [
-        "tracer-001-goblin-warrior-vs-skeleton",
+        "goblin-warrior-skeleton-tracer",
         "--benchmark-context-path",
         "scripts/raw-swarm/reviews/sdk-player.prompt.txt",
       ],
@@ -256,14 +266,14 @@ describe("RAW swarm runner boundaries", () => {
     try {
       expect(() =>
         run(sdkPlayerLauncher, [
-          "tracer-001-goblin-warrior-vs-skeleton",
+          "goblin-warrior-skeleton-tracer",
           "--scenario-path",
           escapedRead,
         ]),
       ).toThrow();
       expect(() =>
         run(sdkPlayerLauncher, [
-          "tracer-001-goblin-warrior-vs-skeleton",
+          "goblin-warrior-skeleton-tracer",
           "--output-path",
           escapedOutput,
         ]),
@@ -301,7 +311,11 @@ esac
         run(
           sdkPlayerLauncher,
           [
-            "tracer-001-goblin-warrior-vs-skeleton",
+            "goblin-warrior-skeleton-tracer",
+            "--execution-id",
+            "synthetic-revision-check-execution",
+            "--evidence-set-id",
+            "synthetic-revision-check-evidence",
             "--implementation-git-sha",
             mismatchedGitSha,
           ],
@@ -321,7 +335,7 @@ esac
     const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-review-command-"));
     const contextPath = resolve(testRoot, "review-context.md");
     const promptPath = resolve(testRoot, "prompt.txt");
-    const transcriptPath = resolve(testRoot, "transcript.jsonl");
+    const transcriptPath = reviewTranscriptPath(testRoot);
     const reviewPath = resolve(testRoot, "review.json");
     const logPath = resolve(testRoot, "review.log");
     const capturePath = resolve(testRoot, "codex-input.bin");
@@ -441,7 +455,7 @@ printf '%s' '{}' > "$output"
     const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-review-command-"));
     const contextPath = resolve(testRoot, "review context;with spaces.md");
     const promptPath = resolve(testRoot, "prompt.txt");
-    const transcriptPath = resolve(testRoot, "transcript.jsonl");
+    const transcriptPath = reviewTranscriptPath(testRoot);
     const reviewPath = resolve(testRoot, "review.json");
     const logPath = resolve(testRoot, "review.log");
     const capturePath = resolve(testRoot, "codex-input.bin");
@@ -597,7 +611,7 @@ printf '%s' '{}' > "$output"
     const testRoot = mkdtempSync(resolve(repoRoot, "scripts/raw-swarm/out/"));
     const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-review-command-"));
     const promptPath = resolve(testRoot, "prompt.txt");
-    const transcriptPath = resolve(testRoot, "transcript.jsonl");
+    const transcriptPath = reviewTranscriptPath(testRoot);
     const reviewPath = resolve(testRoot, "review.json");
     const logPath = resolve(testRoot, "review.log");
     const ledgerPath = `${reviewPath.slice(0, -".json".length)}.invocations.jsonl`;

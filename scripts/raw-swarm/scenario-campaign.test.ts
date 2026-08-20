@@ -1,4 +1,14 @@
 import { createHash } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { resolve } from "node:path";
 import { Either, Schema } from "effect";
 import { describe, expect, test, vi } from "vitest";
 
@@ -7,14 +17,58 @@ import {
   codexOutputJsonSchema,
   finalScenarioDisposition,
   retentionRevisionMatches,
+  ScenarioCampaignConfigSchema,
   ScenarioRawReviewSchema,
   verifyFinalScenarioReview,
   type ScenarioCampaignAgents,
 } from "./scenario-campaign.ts";
-import { GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
+import { GitShaSchema, repoRoot, ScenarioIdSchema } from "./transcript.ts";
+import { publishScenarioAdmissionBundle } from "./generate-scenario.ts";
+
+test("rolls back every admitted path when bundle publication fails", () => {
+  const root = mkdtempSync(resolve(tmpdir(), "scenario-admission-"));
+  const staged = resolve(root, "staged");
+  const admitted = resolve(root, "admitted");
+  mkdirSync(staged);
+  mkdirSync(admitted);
+  const names = [
+    "scenario.md",
+    "review.json",
+    "facts.json",
+    "plan.json",
+    "findings.json",
+    "scenario.json",
+  ] as const;
+  for (const name of names.filter((name) => name !== "facts.json")) {
+    writeFileSync(resolve(staged, name), name);
+  }
+  const pair = (name: (typeof names)[number]) =>
+    [resolve(staged, name), resolve(admitted, name)] as const;
+  try {
+    expect(() =>
+      publishScenarioAdmissionBundle({
+        prose: pair("scenario.md"),
+        review: pair("review.json"),
+        stageFacts: pair("facts.json"),
+        stagePlan: pair("plan.json"),
+        stagePlanFindings: pair("findings.json"),
+        scenarioRecord: pair("scenario.json"),
+      }),
+    ).toThrow();
+    expect(names.some((name) => existsSync(resolve(admitted, name)))).toBe(
+      false,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
 
 const config = {
-  scenarioId: "synthetic-battle",
+  campaignId: "synthetic-battle-campaign",
+  plannedScenarioId: "synthetic-battle",
+  scenarioTitle: "Synthetic battle",
+  scenarioPurpose: "Exercise the scenario campaign in synthetic tests.",
+  evidenceSetId: "synthetic-battle-authoring-evidence",
   distributionPreference:
     "Vary battle tactics and delegated character choices.",
   contentAvailabilityIntent: "availableOnly",
@@ -51,6 +105,17 @@ const readyQuality = {
 };
 
 describe("scenario generation campaign", () => {
+  test("decodes every checked-in campaign configuration strictly", () => {
+    for (const path of [
+      "scripts/raw-swarm/scenario-campaign.example.json",
+      "scripts/raw-swarm/scenario-campaign-open-grid-wolf-skeleton-pursuit.json",
+    ]) {
+      const decoded = Schema.decodeUnknownEither(ScenarioCampaignConfigSchema, {
+        onExcessProperty: "error",
+      })(JSON.parse(readFileSync(resolve(repoRoot, path), "utf8")));
+      expect(Either.isRight(decoded), path).toBe(true);
+    }
+  });
   test("rejects an incoherent candidate before invoking whole-scenario review", async () => {
     const incoherentFacts = {
       ...stageFacts,
@@ -88,7 +153,10 @@ describe("scenario generation campaign", () => {
         expect(result.right.candidateStagePlan.outcome.tag).toBe("rejected");
         expect(result.right.candidateStagePlan.identity).toMatchObject({
           tag: "candidate",
-          scenarioId: "synthetic-battle",
+          campaignId: "synthetic-battle-campaign",
+          candidateId: expect.stringMatching(
+            /^candidate-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+          ),
           candidateScenarioSha256: createHash("sha256")
             .update("incoherent candidate\n")
             .digest("hex"),

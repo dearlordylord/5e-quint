@@ -63,21 +63,27 @@ import {
   repoRoot,
   sha256Canonical,
   type GitSha,
+  type ScenarioId,
 } from "./transcript.ts";
 import { Either, Match, Schema } from "effect";
 import { runCodexInvocation } from "./model-telemetry.ts";
 import {
-  PlayerRunStateSchema,
+  PlayerExecutionStateSchema,
   playerContinuationEvidence,
   type PlayerEvidenceState,
 } from "./player-continuation-evidence.ts";
 import {
   findingsArtifactPath,
-  projectRunFindings,
+  projectExecutionFindings,
   findingsCheckpointArtifactPath,
   writeFindingsProjection,
 } from "./findings.ts";
 import { projectTranscriptlessFindings } from "./generation-findings.ts";
+import {
+  decodeEvidenceSetId,
+  decodeExecutionId,
+} from "./raw-swarm-identities.ts";
+import { ScenarioExecutionRecordSchema } from "./scenario-catalogue.ts";
 
 const PLAYER_MODEL = "gpt-5.6-sol";
 const PLAYER_REASONING_EFFORT = "medium";
@@ -219,12 +225,12 @@ function retainRun(player: string, trusted: string, output: string): void {
   }
 }
 
-function emitRunFindings(output: string): void {
+function emitExecutionFindings(output: string): void {
   const transcriptPath = resolve(output, "evidence/sdk-calls.jsonl");
   if (!existsSync(transcriptPath)) return;
-  const projection = projectRunFindings({
+  const projection = projectExecutionFindings({
     transcriptPath,
-    runDirectory: output,
+    evidenceSetDirectory: output,
     reviewPaths: [],
     scenarioReviewPaths: [],
     generationLedgerPaths: [],
@@ -238,8 +244,8 @@ function emitRunFindings(output: string): void {
 
 function emitTranscriptlessFindings(input: {
   readonly output: string;
-  readonly runStartPath: string;
-  readonly scenarioId: string;
+  readonly executionStartPath: string;
+  readonly scenarioId: ScenarioId;
   readonly gitSha: string;
   readonly startedAt: string;
   readonly stage: "generation" | "character-authoring" | "setup-authoring";
@@ -261,11 +267,8 @@ function emitTranscriptlessFindings(input: {
   readonly pointerAuthorityRole?: string;
 }): void {
   const projection = projectTranscriptlessFindings({
-    scenarioId: input.scenarioId,
-    gitSha: input.gitSha,
-    startedAt: input.startedAt,
     authorityPaths: [
-      { role: "run", path: input.runStartPath },
+      { role: "execution", path: input.executionStartPath },
       ...(input.authorityPaths ?? []),
     ],
     stage: input.stage,
@@ -328,7 +331,7 @@ function playerEvidenceState(
     );
     if (projectionEvidence.kind === "notRecorded") {
       fail(
-        "An active SDK player run requires recorded initial turn projection evidence.",
+        "An active SDK Execution requires recorded initial turn projection evidence.",
       );
     }
     const initialObservation: unknown = JSON.parse(
@@ -357,7 +360,7 @@ function playerEvidenceState(
     );
   }
   const prefix = Schema.decodeUnknownEither(
-    Schema.Struct({ run: PlayerRunStateSchema }),
+    Schema.Struct({ run: PlayerExecutionStateSchema }),
   )(
     JSON.parse(
       readFileSync(resolve(trusted, "evidence/frozen-prefix.json"), "utf8"),
@@ -433,14 +436,24 @@ async function main(args: readonly string[]): Promise<void> {
     pathOptionIndexes.add(index);
     pathOptionIndexes.add(index + 1);
   }
-  const evidenceIdFlagIndex = options.indexOf("--evidence-id");
-  const evidenceIdInput =
-    evidenceIdFlagIndex === -1 ? scenarioId : options[evidenceIdFlagIndex + 1];
-  const decodedEvidenceId = decodeScenarioId(evidenceIdInput);
-  const evidenceIdOptionIndexes =
-    evidenceIdFlagIndex === -1
+  const executionIdFlagIndex = options.indexOf("--execution-id");
+  const executionIdInput =
+    executionIdFlagIndex === -1 ? undefined : options[executionIdFlagIndex + 1];
+  const decodedExecutionId = decodeExecutionId(executionIdInput);
+  const executionIdOptionIndexes =
+    executionIdFlagIndex === -1
       ? new Set<number>()
-      : new Set([evidenceIdFlagIndex, evidenceIdFlagIndex + 1]);
+      : new Set([executionIdFlagIndex, executionIdFlagIndex + 1]);
+  const evidenceSetIdFlagIndex = options.indexOf("--evidence-set-id");
+  const evidenceSetIdInput =
+    evidenceSetIdFlagIndex === -1
+      ? undefined
+      : options[evidenceSetIdFlagIndex + 1];
+  const decodedEvidenceSetId = decodeEvidenceSetId(evidenceSetIdInput);
+  const evidenceSetIdOptionIndexes =
+    evidenceSetIdFlagIndex === -1
+      ? new Set<number>()
+      : new Set([evidenceSetIdFlagIndex, evidenceSetIdFlagIndex + 1]);
   const implementationGitShaFlagIndex = options.indexOf(
     "--implementation-git-sha",
   );
@@ -472,14 +485,16 @@ async function main(args: readonly string[]): Promise<void> {
   );
   const acceptedOptions = options.filter(
     (_option, index) =>
-      !evidenceIdOptionIndexes.has(index) &&
+      !executionIdOptionIndexes.has(index) &&
+      !evidenceSetIdOptionIndexes.has(index) &&
       !implementationGitShaOptionIndexes.has(index) &&
       !benchmarkProfileOptionIndexes.has(index) &&
       !pathOptionIndexes.has(index),
   );
   if (
     Either.isLeft(decodedScenarioId) ||
-    Either.isLeft(decodedEvidenceId) ||
+    Either.isLeft(decodedExecutionId) ||
+    Either.isLeft(decodedEvidenceSetId) ||
     Either.isLeft(decodedImplementationGitSha) ||
     Either.isLeft(decodedBenchmarkProfile) ||
     invalidPathValue ||
@@ -492,8 +507,10 @@ async function main(args: readonly string[]): Promise<void> {
     ) ||
     options.filter((option) => option === "--instructional-isolation").length >
       1 ||
-    options.filter((option) => option === "--evidence-id").length > 1 ||
-    (evidenceIdFlagIndex !== -1 && evidenceIdFlagIndex + 1 >= options.length) ||
+    options.filter((option) => option === "--execution-id").length !== 1 ||
+    executionIdFlagIndex + 1 >= options.length ||
+    options.filter((option) => option === "--evidence-set-id").length !== 1 ||
+    evidenceSetIdFlagIndex + 1 >= options.length ||
     options.filter((option) => option === "--implementation-git-sha").length >
       1 ||
     (implementationGitShaFlagIndex !== -1 &&
@@ -507,11 +524,12 @@ async function main(args: readonly string[]): Promise<void> {
         benchmarkProfileInput.startsWith("-")))
   ) {
     fail(
-      "Usage: run-sdk-player.ts <scenario-id> [--evidence-id <evidence-id>] [--implementation-git-sha <git-sha>] [--benchmark-profile <profile>] [--instructional-isolation] [--scenario-path <path>] [--scenario-review-path <path>] [--characters-path <path>] [--setup-path <path>] [--stage-plan-path <path>] [--stage-plan-findings-path <path>] [--output-path <path>] [--benchmark-context-path <path>]",
+      "Usage: run-sdk-player.ts <scenario-id> --execution-id <execution-id> --evidence-set-id <evidence-set-id> [--implementation-git-sha <git-sha>] [--benchmark-profile <profile>] [--instructional-isolation] [--scenario-path <path>] [--scenario-review-path <path>] [--characters-path <path>] [--setup-path <path>] [--stage-plan-path <path>] [--stage-plan-findings-path <path>] [--output-path <path>] [--benchmark-context-path <path>]",
     );
   }
   const acceptedScenarioId = decodedScenarioId.right;
-  const acceptedEvidenceId = decodedEvidenceId.right;
+  const acceptedExecutionId = decodedExecutionId.right;
+  const acceptedEvidenceSetId = decodedEvidenceSetId.right;
   const requestedImplementationGitSha = decodedImplementationGitSha.right;
   const requestedBenchmarkProfile = decodedBenchmarkProfile.right;
   const pathValue = (flag: PathFlag): string | undefined =>
@@ -527,7 +545,7 @@ async function main(args: readonly string[]): Promise<void> {
   }
   const output = repositoryOutputPath(
     pathValue("--output-path") ??
-      `scripts/raw-swarm/out/${acceptedEvidenceId}-sdk-player`,
+      `scripts/raw-swarm/out/${acceptedEvidenceSetId}`,
   );
   const scenarioPath = repositoryReadPath(
     pathValue("--scenario-path") ??
@@ -630,9 +648,25 @@ async function main(args: readonly string[]): Promise<void> {
     scenarioId: acceptedScenarioId,
     scenarioPath,
     reviewPath: scenarioReviewPath,
+    recordPath: scenarioPath.replace(/\.md$/, ".scenario.json"),
   });
   if (Either.isLeft(admission)) fail(admission.left);
   mkdirSync(resolve(output, "evidence"), { recursive: true });
+  const executionRecord = Schema.decodeUnknownEither(
+    ScenarioExecutionRecordSchema,
+    { onExcessProperty: "error" },
+  )({
+    schemaVersion: 1,
+    executionId: acceptedExecutionId,
+    scenarioId: acceptedScenarioId,
+    evidenceSetId: acceptedEvidenceSetId,
+  });
+  if (Either.isLeft(executionRecord)) fail(executionRecord.left.message);
+  writeFileSync(
+    resolve(output, "execution.json"),
+    `${JSON.stringify(executionRecord.right, null, 2)}\n`,
+    { flag: "wx" },
+  );
   if (benchmarkContextEvidence !== undefined) {
     writeFileSync(
       resolve(output, "evidence/context-delivery.json"),
@@ -640,13 +674,15 @@ async function main(args: readonly string[]): Promise<void> {
       { flag: "wx" },
     );
   }
-  const runStartPath = resolve(output, "evidence/run-start.json");
+  const executionStartPath = resolve(output, "evidence/execution-start.json");
   writeFileSync(
-    runStartPath,
+    executionStartPath,
     `${JSON.stringify(
       {
-        type: "raw-swarm-player-run-start",
+        type: "raw-swarm-execution-start",
         schemaVersion: 1,
+        executionId: acceptedExecutionId,
+        evidenceSetId: acceptedEvidenceSetId,
         scenarioId: acceptedScenarioId,
         gitSha,
         startedAt,
@@ -699,7 +735,7 @@ async function main(args: readonly string[]): Promise<void> {
   if (Either.isLeft(retainedPlan)) {
     emitTranscriptlessFindings({
       output,
-      runStartPath,
+      executionStartPath,
       scenarioId: acceptedScenarioId,
       gitSha,
       startedAt,
@@ -752,7 +788,7 @@ async function main(args: readonly string[]): Promise<void> {
     );
     emitTranscriptlessFindings({
       output,
-      runStartPath,
+      executionStartPath,
       scenarioId: acceptedScenarioId,
       gitSha,
       startedAt,
@@ -796,7 +832,7 @@ async function main(args: readonly string[]): Promise<void> {
   if (!existsSync(charactersPath)) {
     emitTranscriptlessFindings({
       output,
-      runStartPath,
+      executionStartPath,
       scenarioId: acceptedScenarioId,
       gitSha,
       startedAt,
@@ -856,7 +892,7 @@ async function main(args: readonly string[]): Promise<void> {
       );
       emitTranscriptlessFindings({
         output,
-        runStartPath,
+        executionStartPath,
         scenarioId: acceptedScenarioId,
         gitSha,
         startedAt,
@@ -998,7 +1034,12 @@ async function main(args: readonly string[]): Promise<void> {
       ledgerPath: resolve(trusted, "evidence/invocations.jsonl"),
       phase: "player",
       stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.player,
-      scenarioId: acceptedScenarioId,
+      subject: {
+        tag: "execution",
+        executionId: acceptedExecutionId,
+        evidenceSetId: acceptedEvidenceSetId,
+        scenarioId: acceptedScenarioId,
+      },
       gitSha,
       fallbackInvocationId: randomUUID(),
       model: PLAYER_MODEL,
@@ -1018,7 +1059,7 @@ async function main(args: readonly string[]): Promise<void> {
     }
     if (evidenceState.tag === "obstructed") {
       console.log(
-        `Player run retained a player-protocol obstruction after ${String(evidenceState.recordedContinuations)} continuations: ${evidenceState.obstruction.message}`,
+        `Player Execution retained a player-protocol obstruction after ${String(evidenceState.recordedContinuations)} continuations: ${evidenceState.obstruction.message}`,
       );
     }
   } catch (error: unknown) {
@@ -1045,7 +1086,7 @@ async function main(args: readonly string[]): Promise<void> {
           copyFileSync(agentLogPath, resolve(scratch, "agent.log"));
         }
         retainRun(scratch, trusted, output);
-        emitRunFindings(output);
+        emitExecutionFindings(output);
         copyFileSync(
           resolve(trusted, "supervisor.mjs"),
           resolve(output, "replay-supervisor.mjs"),
@@ -1053,7 +1094,7 @@ async function main(args: readonly string[]): Promise<void> {
       } else {
         emitTranscriptlessFindings({
           output,
-          runStartPath,
+          executionStartPath,
           scenarioId: acceptedScenarioId,
           gitSha,
           startedAt,

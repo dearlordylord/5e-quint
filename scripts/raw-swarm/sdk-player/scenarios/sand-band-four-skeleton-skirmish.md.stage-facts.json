@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "sand-band-four-skeleton-skirmish",
+  "scenarioSha256": "944633366726d04ed1263a822d6f1e401ab4bd2e86cb8297962885e0d32888e5",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "characterSheetsRequired",
+      "evidence": "The scenario delegates two SRD-legal level-4 adventurer builds before initiative."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "The fixed grid, placements, and difficult-terrain band use the geometry-derived scenario boundary."
+    }
+  }
+}

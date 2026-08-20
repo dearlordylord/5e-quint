@@ -1,0 +1,15 @@
+{
+  "campaignId": "open-grid-pursuit-authoring",
+  "plannedScenarioId": "open-grid-wolf-skeleton-pursuit",
+  "scenarioTitle": "Open-grid Wolf and Skeleton pursuit",
+  "scenarioPurpose": "Explore pursuit, melee engagement, Opportunity Attacks, and turn completion through the public SDK.",
+  "evidenceSetId": "open-grid-pursuit-authoring-evidence",
+  "distributionPreference": "Favor materially different approaches to authored objectives, changing tactics, and exact versus delegated choices while keeping every revision compact enough to play through the public SDK. HARD AUTHORING CONSTRAINTS: produce exactly two combatants—no more and no fewer—with two distinct canonical stat-block identities, each used exactly once; both must be Small or Medium. Use distinct melee-only combatants and one fixed melee attack surface per combatant for the whole scenario; do not choose a stat block with an ammunition-bearing attack unless the prose explicitly states its starting ammunition stock, and do not switch weapons or hand states. State each combatant's printed average Hit Points, no Surprise, explicit Initiative scores, rolled or static stat-block damage and Critical Hit handling. Use only an open, bright, two-dimensional grid with no objects, corpse-square traversal or endpoint rules, vertical differences, unsupported table state, or encounter-wide sides. State only supported directed pairwise movement-allies and Opportunity-Attack relationships. Every candidate revision must satisfy these constraints while differing materially in tactics or objectives.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "supportedOnly",
+  "minimumIterations": 2,
+  "maximumIterations": 4,
+  "candidatesPerIteration": 4,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": true
+}

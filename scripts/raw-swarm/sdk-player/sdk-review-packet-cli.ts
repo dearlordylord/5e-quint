@@ -4,7 +4,7 @@ import { basename, relative, resolve } from "node:path";
 import { Either, Schema } from "effect";
 
 import { repoRoot } from "../transcript.ts";
-import { PlayerRunStateSchema } from "../player-continuation-evidence.ts";
+import { PlayerExecutionStateSchema } from "../player-continuation-evidence.ts";
 import { readSdkAudit } from "./sdk-audit.ts";
 import { isJsonValue } from "./json-value.ts";
 import { reprojectSdkTranscriptTurns } from "./player-turn-projection.ts";
@@ -143,15 +143,15 @@ function main(args: readonly string[]): void {
   if (!isJsonValue(retainedHeaderEvidence)) {
     fail("SDK review packet header evidence is not JSON.");
   }
-  const runDirectory = resolve(transcriptPath, "../..");
+  const evidenceSetDirectory = resolve(transcriptPath, "../..");
   const runState =
     header.setupOutcome === "ready"
       ? Schema.decodeUnknownEither(
-          Schema.Struct({ run: PlayerRunStateSchema }),
+          Schema.Struct({ run: PlayerExecutionStateSchema }),
         )(
           JSON.parse(
             readFileSync(
-              resolve(runDirectory, "evidence/frozen-prefix.json"),
+              resolve(evidenceSetDirectory, "evidence/frozen-prefix.json"),
               "utf8",
             ),
           ),
@@ -161,7 +161,7 @@ function main(args: readonly string[]): void {
     fail("SDK review packet player terminal evidence is invalid.");
   }
   const finalArtifactExists = existsSync(
-    resolve(runDirectory, SDK_REVIEW_PACKET_CONCLUSION_ARTIFACT_ROLE),
+    resolve(evidenceSetDirectory, SDK_REVIEW_PACKET_CONCLUSION_ARTIFACT_ROLE),
   );
   const readyArtifactResult =
     runState === undefined
@@ -174,12 +174,14 @@ function main(args: readonly string[]): void {
     fail(readyArtifactResult.message);
   }
   const readyArtifacts: readonly string[] = readyArtifactResult.roles;
-  const runArtifacts = [
+  const executionArtifacts = [
     ...SDK_REVIEW_PACKET_SCENARIO_ARTIFACT_ROLES,
     ...readyArtifacts,
-  ].map((path) => source(relative(repoRoot, resolve(runDirectory, path))));
+  ].map((path) =>
+    source(relative(repoRoot, resolve(evidenceSetDirectory, path))),
+  );
   const rawRoot = resolve(repoRoot, ".references/srd-5.2.1");
-  const scenarioEvidence = runArtifacts
+  const scenarioEvidence = executionArtifacts
     .map(({ numberedContent }) => numberedContent)
     .join("\n");
   const rawFiles = markdownFiles(rawRoot);
@@ -206,7 +208,7 @@ function main(args: readonly string[]): void {
     audit: verifiedAudit.audit,
     retainedHeaderEvidence,
     currentTurnProjections: projections.projections,
-    runArtifacts,
+    executionArtifacts,
     domainAuthorities: [
       source("ASSUMPTIONS.md"),
       source("UBIQUITOUS_LANGUAGE.md"),

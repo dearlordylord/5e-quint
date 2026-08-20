@@ -18,6 +18,7 @@ import {
   ScenarioIdSchema,
   type ScenarioId,
 } from "./transcript.ts";
+import type { ScenarioCandidateId } from "./raw-swarm-identities.ts";
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 
@@ -51,11 +52,11 @@ export function retainedScenarioStagePlanPath(scenarioId: ScenarioId): string {
 }
 
 export function retainedRejectedScenarioStagePlanPath(
-  scenarioId: ScenarioId,
+  candidateId: ScenarioCandidateId,
 ): string {
   return resolve(
     repoRoot,
-    `scripts/raw-swarm/out/rejected-scenarios/${scenarioId}.md.stage-plan.json`,
+    `scripts/raw-swarm/out/rejected-scenarios/${candidateId}.md.stage-plan.json`,
   );
 }
 
@@ -69,11 +70,11 @@ export function retainedScenarioStagePlanFindingsPath(
 }
 
 export function retainedRejectedScenarioStagePlanFindingsPath(
-  scenarioId: ScenarioId,
+  candidateId: ScenarioCandidateId,
 ): string {
   return resolve(
     repoRoot,
-    `scripts/raw-swarm/out/rejected-scenarios/${scenarioId}.md.stage-plan-findings.json`,
+    `scripts/raw-swarm/out/rejected-scenarios/${candidateId}.md.stage-plan-findings.json`,
   );
 }
 
@@ -209,6 +210,23 @@ export function retainAdmittedScenarioStagePlan(input: {
   readonly scenarioSha256: string;
   readonly scenarioReviewSha256: string;
 }): Either.Either<ScenarioStagePlan, string> {
+  return retainAdmittedScenarioStagePlanAtPaths({
+    ...input,
+    stagePlanPath: retainedScenarioStagePlanPath(input.scenarioId),
+    stagePlanFindingsPath: retainedScenarioStagePlanFindingsPath(
+      input.scenarioId,
+    ),
+  });
+}
+
+export function retainAdmittedScenarioStagePlanAtPaths(input: {
+  readonly scenarioId: ScenarioId;
+  readonly scenarioPath: string;
+  readonly scenarioSha256: string;
+  readonly scenarioReviewSha256: string;
+  readonly stagePlanPath: string;
+  readonly stagePlanFindingsPath: string;
+}): Either.Either<ScenarioStagePlan, string> {
   const facts = readScenarioStageFacts({
     scenarioId: input.scenarioId,
     scenarioPath: input.scenarioPath,
@@ -223,7 +241,7 @@ export function retainAdmittedScenarioStagePlan(input: {
   });
   if (Either.isLeft(planned)) return Either.left(planned.left);
   const retained = writeCanonicalOnce({
-    path: retainedScenarioStagePlanPath(input.scenarioId),
+    path: input.stagePlanPath,
     value: planned.right,
     decode: (value) => {
       return validateScenarioStagePlan(value);
@@ -231,14 +249,14 @@ export function retainAdmittedScenarioStagePlan(input: {
   });
   if (Either.isLeft(retained)) return retained;
   const findings = retainPlanFindings({
-    path: retainedScenarioStagePlanFindingsPath(input.scenarioId),
+    path: input.stagePlanFindingsPath,
     plan: retained.right,
   });
   return Either.isLeft(findings) ? Either.left(findings.left) : retained;
 }
 
 export function retainCandidateScenarioStagePlan(input: {
-  readonly scenarioId: ScenarioId;
+  readonly candidateId: ScenarioCandidateId;
   readonly candidateScenarioSha256: string;
   readonly plan: ScenarioStagePlan;
 }): Either.Either<ScenarioStagePlan, string> {
@@ -250,9 +268,9 @@ export function retainCandidateScenarioStagePlan(input: {
       "Candidate stage-plan retention requires candidate identity.",
     );
   }
-  if (plan.identity.scenarioId !== input.scenarioId) {
+  if (plan.identity.candidateId !== input.candidateId) {
     return Either.left(
-      "Candidate stage plan identity does not match scenario.",
+      "Candidate stage plan identity does not match the retained candidate.",
     );
   }
   if (plan.identity.candidateScenarioSha256 !== input.candidateScenarioSha256) {
@@ -261,7 +279,7 @@ export function retainCandidateScenarioStagePlan(input: {
     );
   }
   const retained = writeCanonicalOnce({
-    path: retainedRejectedScenarioStagePlanPath(input.scenarioId),
+    path: retainedRejectedScenarioStagePlanPath(input.candidateId),
     value: plan,
     decode: (value) => {
       return validateScenarioStagePlan(value);
@@ -269,13 +287,13 @@ export function retainCandidateScenarioStagePlan(input: {
   });
   if (Either.isLeft(retained)) return retained;
   const findings = retainPlanFindings({
-    path: retainedRejectedScenarioStagePlanFindingsPath(input.scenarioId),
+    path: retainedRejectedScenarioStagePlanFindingsPath(input.candidateId),
     plan: retained.right,
   });
   return Either.isLeft(findings) ? Either.left(findings.left) : retained;
 }
 
-/** Validate the plan/findings pair retained with a replayable admitted run. */
+/** Validate the plan/findings pair retained with a replayable Execution. */
 export function validateAdmittedScenarioStagePlanEvidence(input: {
   readonly plan: unknown;
   readonly findings: unknown;

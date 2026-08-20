@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "open-grid-wolf-skeleton-pursuit",
+  "scenarioSha256": "0a0e06e2179ed3c79d5eedb9cfa4dcce04b3ecff32687da3434faa5b45095723",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The scenario uses one canonical Wolf and one canonical Skeleton without Character Sheets."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "The open 7-by-7 grid and fixed placements use the geometry-derived scenario boundary."
+    }
+  }
+}

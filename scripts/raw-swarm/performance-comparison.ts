@@ -16,9 +16,9 @@ import {
   type BenchmarkModelInvocationPhase,
   MODEL_INVOCATION_PHASES,
   CurrentModelInvocationLedgerEntrySchema,
-  ModelInvocationIdentityFields,
   ModelInvocationLedgerEntrySchema,
   modelInvocationEvidenceFromEvents,
+  modelInvocationScenarioReference,
   parseModelInvocationLedgerEntry,
   readCodexEvents,
   type ModelInvocationLedgerEntry,
@@ -29,6 +29,8 @@ import {
 } from "./model-telemetry.ts";
 import {
   FindingsProjectionSchema,
+  findingsSdkCallCount,
+  findingsTranscriptSha256,
   validateFindingsProjection,
   type Finding,
   type FindingsProjection,
@@ -56,6 +58,7 @@ export {
 import {
   RetainedScenarioReviewInputSchema,
   RetainedScenarioReviewReasoningEffortSchema,
+  retainedScenarioReviewScenarioId,
 } from "./scenario-review-input.ts";
 import {
   finalAgentMessage,
@@ -63,7 +66,7 @@ import {
 } from "./review-invocation-binding.ts";
 import {
   playerContinuationEvidence,
-  PlayerRunStateSchema,
+  PlayerExecutionStateSchema,
 } from "./player-continuation-evidence.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { reprojectSdkTranscriptTurns } from "./sdk-player/player-turn-projection.ts";
@@ -84,6 +87,10 @@ import {
   ScenarioStageFactsSchema,
   type ScenarioStagePlan,
 } from "./scenario-stage-plan.ts";
+import {
+  EvidenceSetIdSchema,
+  ExecutionIdSchema,
+} from "./raw-swarm-identities.ts";
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 const NonNegativeIntegerSchema = Schema.Number.pipe(
@@ -91,7 +98,7 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.greaterThanOrEqualTo(0),
 );
 
-const RunDescriptorSchema = Schema.Struct({
+const ExecutionDescriptorSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   reviewInvocationEvidencePath: Schema.NonEmptyTrimmedString,
   continuationObservationPath: Schema.NonEmptyTrimmedString,
@@ -114,7 +121,7 @@ const ReportingTimingSchema = Schema.Struct({
   elapsedMilliseconds: NonNegativeIntegerSchema,
 });
 
-export const LegacyRunEvidenceSchema = Schema.Struct({
+export const LegacyExecutionEvidenceSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   scenarioId: ScenarioIdSchema,
   scenarioSha256: HashSchema,
@@ -138,9 +145,9 @@ export const LegacyRunEvidenceSchema = Schema.Struct({
   wholePathElapsedMilliseconds: NonNegativeIntegerSchema,
 });
 
-type RunDescriptor = Schema.Schema.Type<typeof RunDescriptorSchema>;
-export type LegacyRunEvidence = Schema.Schema.Type<
-  typeof LegacyRunEvidenceSchema
+type ExecutionDescriptor = Schema.Schema.Type<typeof ExecutionDescriptorSchema>;
+export type LegacyExecutionEvidence = Schema.Schema.Type<
+  typeof LegacyExecutionEvidenceSchema
 >;
 
 const UsageTotalsSchema = Schema.Struct({
@@ -199,7 +206,7 @@ const SupervisorTimingSchema = Schema.Struct({
 });
 type SupervisorTiming = Schema.Schema.Type<typeof SupervisorTimingSchema>;
 
-const ControlledRunPerformanceSchema = Schema.Struct({
+const ControlledExecutionPerformanceSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   telemetryAuthority: Schema.Literal("codex-json-events"),
   scenarioId: ScenarioIdSchema,
@@ -258,8 +265,8 @@ const ControlledRunPerformanceSchema = Schema.Struct({
   }),
 });
 
-export type ControlledRunPerformance = Schema.Schema.Type<
-  typeof ControlledRunPerformanceSchema
+export type ControlledExecutionPerformance = Schema.Schema.Type<
+  typeof ControlledExecutionPerformanceSchema
 >;
 
 function fail(message: string): never {
@@ -353,9 +360,9 @@ function phaseSummary(
   };
 }
 
-export function summarizeControlledRun(
-  input: RunDescriptor,
-): ControlledRunPerformance {
+export function summarizeControlledExecution(
+  input: ExecutionDescriptor,
+): ControlledExecutionPerformance {
   const reviewInvocationEvidence = readReviewInvocationEvidenceManifest(
     input.reviewInvocationEvidencePath,
   );
@@ -422,7 +429,7 @@ export function summarizeControlledRun(
         artifact.byteLength === reportingTimingAuthority.byteLength,
     )
   ) {
-    fail("Controlled reporting timing does not match its run artifacts.");
+    fail("Controlled reporting timing does not match its execution artifacts.");
   }
   const timingRows = readJsonLines(input.supervisorTimingPath);
   const timing = timingRows.map((value) => {
@@ -608,16 +615,16 @@ export type PerformanceComparison = {
   readonly reportedNormalizedTokens: {
     readonly baseline: {
       readonly player:
-        | ControlledRunPerformance["normalizedTokens"]["player"]
+        | ControlledExecutionPerformance["normalizedTokens"]["player"]
         | null;
       readonly postPlayReview:
-        | ControlledRunPerformance["normalizedTokens"]["postPlayReview"]
+        | ControlledExecutionPerformance["normalizedTokens"]["postPlayReview"]
         | null;
       readonly comparablePath: NormalizedTokenValues | null;
     };
     readonly fresh: {
-      readonly player: ControlledRunPerformance["normalizedTokens"]["player"];
-      readonly postPlayReview: ControlledRunPerformance["normalizedTokens"]["postPlayReview"];
+      readonly player: ControlledExecutionPerformance["normalizedTokens"]["player"];
+      readonly postPlayReview: ControlledExecutionPerformance["normalizedTokens"]["postPlayReview"];
       readonly comparablePath: NormalizedTokenValues | null;
     };
   };
@@ -712,8 +719,8 @@ const COMPARABLE_PHASES = [
 ] as const satisfies readonly ModelInvocationPhase[];
 
 function comparablePhaseIdentityMatches(
-  baseline: ControlledRunPerformance,
-  fresh: ControlledRunPerformance,
+  baseline: ControlledExecutionPerformance,
+  fresh: ControlledExecutionPerformance,
 ): boolean {
   return COMPARABLE_PHASES.every(
     (phase) =>
@@ -726,9 +733,9 @@ function comparablePhaseIdentityMatches(
   );
 }
 
-export function compareControlledRuns(
-  baseline: ControlledRunPerformance | LegacyRunEvidence,
-  fresh: ControlledRunPerformance,
+export function compareControlledExecutions(
+  baseline: ControlledExecutionPerformance | LegacyExecutionEvidence,
+  fresh: ControlledExecutionPerformance,
 ): PerformanceComparison {
   const sameScenario =
     baseline.scenarioId === fresh.scenarioId &&
@@ -739,7 +746,7 @@ export function compareControlledRuns(
   const phaseTokens = (phase: PhaseSummary): number | null =>
     phase.usage.tag === "available" ? phase.usage.totals.inputPlusOutput : null;
   const controlledComparableTokens = (
-    run: ControlledRunPerformance,
+    run: ControlledExecutionPerformance,
   ): number | null => {
     const values = COMPARABLE_PHASES.map((phase) =>
       phaseTokens(run.phases[phase]),
@@ -749,7 +756,7 @@ export function compareControlledRuns(
       : values.reduce<number>((total, value) => total + (value ?? 0), 0);
   };
   const controlledComparableNormalized = (
-    run: ControlledRunPerformance,
+    run: ControlledExecutionPerformance,
   ): NormalizedTokenValues | null => {
     const total = controlledComparableTokens(run);
     const invocations = COMPARABLE_PHASES.reduce(
@@ -847,7 +854,7 @@ export function compareControlledRuns(
   }
   const phaseIdentityMatches = comparablePhaseIdentityMatches(baseline, fresh);
   const aggregateTokens = (
-    run: ControlledRunPerformance,
+    run: ControlledExecutionPerformance,
   ): number | undefined => {
     const usage = COMPARABLE_PHASES.map((phase) => run.phases[phase].usage);
     return usage.some((entry) => entry.tag === "unavailable")
@@ -1010,8 +1017,8 @@ function decode<A, I>(schema: Schema.Schema<A, I>, path: string): A {
 
 export function readControlledPerformance(
   path: string,
-): ControlledRunPerformance {
-  const decoded = decode(ControlledRunPerformanceSchema, path);
+): ControlledExecutionPerformance {
+  const decoded = decode(ControlledExecutionPerformanceSchema, path);
   if (
     Object.keys(decoded.phases).length !== MODEL_INVOCATION_PHASES.length ||
     MODEL_INVOCATION_PHASES.some((phase) => decoded.phases[phase] === undefined)
@@ -1048,7 +1055,7 @@ export function readControlledPerformance(
   );
   const normalizedMatches = (
     phase: PhaseSummary,
-    value: ControlledRunPerformance["normalizedTokens"]["player"],
+    value: ControlledExecutionPerformance["normalizedTokens"]["player"],
   ) =>
     phase.usage.tag === "unavailable" || phase.invocationCount === 0
       ? value.tag === "unavailable"
@@ -1132,7 +1139,7 @@ export function readControlledPerformance(
     fail(
       `Controlled performance evidence ${path} has inconsistent derivations.`,
     );
-  const recomputed = summarizeControlledRun({
+  const recomputed = summarizeControlledExecution({
     schemaVersion: 1,
     reviewInvocationEvidencePath: run.sources.reviewInvocationEvidence.path,
     continuationObservationPath: run.sources.continuationObservations.path,
@@ -1276,7 +1283,8 @@ export const BENCHMARK_READINESS_AUTHORITY_ROLES = {
 export const BenchmarkReadinessInputSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   profile: Schema.Literal("documentDeclarationSet"),
-  ...ModelInvocationIdentityFields,
+  scenarioId: ScenarioIdSchema,
+  invocationId: Schema.NonEmptyString,
   model: Schema.Literal("gpt-5.6-luna"),
   reasoningEffort: Schema.Literal("max"),
   responsibility: Schema.Literal("scenarioQuality"),
@@ -1292,6 +1300,7 @@ export type BenchmarkReadinessInput = Schema.Schema.Type<
 
 export const BenchmarkScenarioBundleSchema = Schema.Struct({
   scenario: ArtifactAuthoritySchema,
+  scenarioRecord: ArtifactAuthoritySchema,
   scenarioReview: ArtifactAuthoritySchema,
   stageFacts: ArtifactAuthoritySchema,
   stagePlan: ArtifactAuthoritySchema,
@@ -1303,17 +1312,18 @@ export type BenchmarkScenarioBundle = Schema.Schema.Type<
 >;
 
 /** Retained preparation identity used to bind every later benchmark artifact. */
-export const BenchmarkRunDescriptorSchema = Schema.Struct({
+export const BenchmarkExecutionProfileDescriptorSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
-  runId: Schema.NonEmptyTrimmedString,
+  executionId: ExecutionIdSchema,
+  evidenceSetId: EvidenceSetIdSchema,
   profile: BenchmarkImplementationProfileSchema,
   scenarioId: ScenarioIdSchema,
   implementationGitSha: ImplementationGitShaSchema,
   scenarioBundle: BenchmarkScenarioBundleSchema,
   contextManifest: ArtifactAuthoritySchema,
 });
-export type BenchmarkRunDescriptor = Schema.Schema.Type<
-  typeof BenchmarkRunDescriptorSchema
+export type BenchmarkExecutionProfileDescriptor = Schema.Schema.Type<
+  typeof BenchmarkExecutionProfileDescriptorSchema
 >;
 
 const BENCHMARK_CONTEXT_SOURCE_ROLES = BENCHMARK_CONTEXT_ROLES;
@@ -1501,14 +1511,14 @@ export type CompletePathAssemblyDescriptor = Schema.Schema.Type<
 >;
 
 /**
- * Historical runs, including generated-battle-009, predate the current stage
+ * Historical executions, including open-grid-wolf-skeleton-pursuit, predate the current stage
  * plan and v2 ledger. Their absent authorities are represented explicitly;
  * no v2 stage plan, reason, result, or finding is fabricated for comparison.
  */
 const HistoricalCompletePathMeasurementSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   pathId: Schema.NonEmptyTrimmedString,
-  legacy: LegacyRunEvidenceSchema,
+  legacy: LegacyExecutionEvidenceSchema,
   stagePlan: UnavailableEvidenceSchema,
   invocations: Schema.Union(
     UnavailableEvidenceSchema,
@@ -1573,7 +1583,7 @@ const BenchmarkFrozenPrefixSchema = Schema.Struct({
   frozenByteLength: NonNegativeIntegerSchema,
   frozenSha256: HashSchema,
   continuationCount: NonNegativeIntegerSchema,
-  run: PlayerRunStateSchema,
+  run: PlayerExecutionStateSchema,
 });
 
 const BenchmarkFinalArtifactSchema = Schema.Struct({
@@ -1860,7 +1870,8 @@ export type CompletePathEquivalenceWitness =
           }>
         | Readonly<{
             readonly tag: "candidate";
-            readonly scenarioId: string;
+            readonly campaignId: string;
+            readonly candidateId: string;
             readonly candidateScenarioSha256: string;
           }>;
       readonly admissionOutcome: ScenarioStagePlan["outcome"]["tag"];
@@ -2049,7 +2060,7 @@ function currentEvidenceWitness(
   const postPlayReview = roles.some(isPostPlayReviewAuthorityRole);
   return {
     transcript:
-      findings.run.transcriptSha256 !== undefined &&
+      findingsTranscriptSha256(findings.subject) !== undefined &&
       roles.includes("transcript")
         ? "retained"
         : "missing",
@@ -2074,7 +2085,8 @@ function currentPathWitness(
         }
       : {
           tag: "candidate" as const,
-          scenarioId: identity.scenarioId,
+          campaignId: identity.campaignId,
+          candidateId: identity.candidateId,
           candidateScenarioSha256: identity.candidateScenarioSha256,
         };
   return {
@@ -2264,28 +2276,9 @@ function benchmarkPathWitness(
 ): CompletePathEquivalenceWitness {
   const identity = measurement.stagePlan.identity;
   if (identity.tag !== "admitted") {
-    return {
-      tag: "benchmark",
-      profile: measurement.profile,
-      scenario: {
-        scenarioId: identity.scenarioId,
-        scenarioSha256: identity.candidateScenarioSha256,
-        scenarioReviewSha256: measurement.scenarioBundle.scenarioReview.sha256,
-      },
-      scenarioBundle: {
-        scenarioSha256: measurement.scenarioBundle.scenario.sha256,
-        scenarioReviewSha256: measurement.scenarioBundle.scenarioReview.sha256,
-        stageFactsSha256: measurement.scenarioBundle.stageFacts.sha256,
-        stagePlanSha256: measurement.scenarioBundle.stagePlan.sha256,
-        charactersSha256: measurement.scenarioBundle.characters.sha256,
-        setupSha256: measurement.scenarioBundle.setup.sha256,
-      },
-      context: benchmarkContextIdentity(measurement),
-      reviews: benchmarkReviewIdentity(measurement),
-      admissionOutcome: measurement.stagePlan.outcome.tag,
-      outcome: measurement.outcome,
-      evidence: currentEvidenceWitness(measurement.findings),
-    };
+    return fail(
+      "A benchmark measurement cannot reference a rejected candidate.",
+    );
   }
   return {
     tag: "benchmark",
@@ -2323,16 +2316,17 @@ function historicalPathWitness(
     },
     admissionOutcome: {
       tag: "unavailable",
-      reason: "The historical run predates the retained scenario stage plan.",
+      reason:
+        "The historical execution predates the retained scenario stage plan.",
     },
     outcome: {
       tag: "unavailable",
-      reason: "The historical run predates typed complete-path outcomes.",
+      reason: "The historical execution predates typed complete-path outcomes.",
     },
     evidence: {
       tag: "unavailable",
       reason:
-        "The historical run has no hash-linked transcript/replay/findings/review witness in this envelope.",
+        "The historical execution has no hash-linked transcript/replay/findings/review witness in this envelope.",
     },
   };
 }
@@ -2341,6 +2335,10 @@ function currentStagePlanBindingIssues(
   measurement: CompletePathMeasurementWithCurrentEvidence,
 ): readonly string[] {
   const issues: string[] = [];
+  if (measurement.findings.subject.tag !== "execution") {
+    issues.push("The complete path findings subject is not an Execution.");
+    return issues;
+  }
   const planByStage = new Map(
     measurement.stagePlan.stages.map((entry) => [entry.stage, entry]),
   );
@@ -2384,19 +2382,28 @@ function currentSemanticIssues(
   }> = {},
 ): readonly string[] {
   const issues: string[] = [];
+  const findings = measurement.findings;
+  if (findings.subject.tag !== "execution") {
+    return ["Current path findings must describe an Execution."];
+  }
   if (measurement.stagePlan.identity.tag !== "admitted") {
     issues.push(
       "The current stage plan is a candidate and is not admitted for execution.",
     );
   }
-  const scenarioId = measurement.stagePlan.identity.scenarioId;
-  if (measurement.findings.run.scenarioId !== scenarioId) {
+  const scenarioIdentity = measurement.stagePlan.identity;
+  const scenarioId =
+    scenarioIdentity.tag === "admitted"
+      ? scenarioIdentity.scenarioId
+      : undefined;
+  if (scenarioId !== undefined && findings.subject.scenarioId !== scenarioId) {
     issues.push("The findings projection belongs to a different scenario.");
   }
   if (
     measurement.invocations.some(
-      ({ scenarioId: invocationScenarioId }) =>
-        invocationScenarioId !== scenarioId,
+      (invocation) =>
+        scenarioId !== undefined &&
+        modelInvocationScenarioReference(invocation) !== scenarioId,
     )
   ) {
     issues.push("An invocation ledger entry belongs to a different scenario.");
@@ -2517,7 +2524,9 @@ function currentSummary(
   return {
     evidenceVersion: "current",
     outcome: measurement.outcome,
-    sdkCallCount: pathDimension(measurement.findings.run.callCount),
+    sdkCallCount: pathDimension(
+      findingsSdkCallCount(measurement.findings.subject),
+    ),
     playerFailures: pathDimension(playerFailureCount(measurement.findings)),
     corrections: pathDimension(
       measurement.findings.findings.filter(
@@ -2552,7 +2561,9 @@ function benchmarkSummary(
   return {
     evidenceVersion: "current",
     outcome: measurement.outcome,
-    sdkCallCount: pathDimension(measurement.findings.run.callCount),
+    sdkCallCount: pathDimension(
+      findingsSdkCallCount(measurement.findings.subject),
+    ),
     playerFailures: pathDimension(playerFailureCount(measurement.findings)),
     corrections: pathDimension(
       measurement.findings.findings.filter(
@@ -2842,9 +2853,9 @@ function currentInvocationEntriesFromLedger(
           parsed.left.message,
       );
     }
-    if (parsed.right.schemaVersion !== 2) {
+    if (parsed.right.schemaVersion !== 4) {
       fail(
-        "Current complete-path assembly cannot use v1 ledger evidence: " + path,
+        "Current complete-path assembly requires v4 ledger evidence: " + path,
       );
     }
     return parsed.right;
@@ -3092,6 +3103,9 @@ function currentAuthorityContentIssues(
   findings: FindingsProjection,
 ): readonly string[] {
   const issues: string[] = [];
+  if (findings.subject.tag !== "execution") {
+    return ["Current path findings must describe an Execution."];
+  }
   const scenarioIdentity = measurement.stagePlan.identity;
   const expectedScenarioSha256 =
     scenarioIdentity.tag === "admitted"
@@ -3120,14 +3134,16 @@ function currentAuthorityContentIssues(
         issues.push(`Transcript authority is invalid: ${parsed.message}`);
       } else {
         transcriptHeader = parsed.value.header;
-        if (transcriptHeader.scenarioId !== findings.run.scenarioId) {
+        if (transcriptHeader.scenarioId !== findings.subject.scenarioId) {
           issues.push("Transcript authority belongs to a different scenario.");
         }
-        if (transcriptHeader.gitSha !== findings.run.gitSha) {
+        if (transcriptHeader.gitSha !== findings.subject.gitSha) {
           issues.push("Transcript authority belongs to a different revision.");
         }
-        if (transcriptHeader.startedAt !== findings.run.startedAt) {
-          issues.push("Transcript start time does not match the findings run.");
+        if (transcriptHeader.startedAt !== findings.subject.startedAt) {
+          issues.push(
+            "Transcript start time does not match the findings execution.",
+          );
         }
         if (transcriptHeader.scenarioSha256 !== expectedScenarioSha256) {
           issues.push(
@@ -3143,8 +3159,12 @@ function currentAuthorityContentIssues(
             "Transcript scenario-review hash does not match the admitted stage plan.",
           );
         }
-        if (parsed.value.calls.length !== findings.run.callCount) {
-          issues.push("Transcript call count does not match the findings run.");
+        if (
+          parsed.value.calls.length !== findingsSdkCallCount(findings.subject)
+        ) {
+          issues.push(
+            "Transcript call count does not match the findings execution.",
+          );
         }
       }
     }
@@ -3176,7 +3196,7 @@ function currentAuthorityContentIssues(
     decodedScenarioReviews[0]?.review.gitSha;
   for (const { authority, review } of decodedScenarioReviews) {
     if (
-      review.scenarioId !== findings.run.scenarioId ||
+      review.scenarioId !== findings.subject.scenarioId ||
       review.scenarioSha256 !== expectedScenarioSha256 ||
       (scenarioIdentity.tag === "admitted" &&
         authority.sha256 !== scenarioIdentity.scenarioReviewSha256)
@@ -3211,12 +3231,13 @@ function currentAuthorityContentIssues(
       continue;
     }
     if (
-      decoded.right.scenarioId !== findings.run.scenarioId ||
-      decoded.right.gitSha !== findings.run.gitSha ||
-      decoded.right.transcriptSha256 !== findings.run.transcriptSha256
+      decoded.right.scenarioId !== findings.subject.scenarioId ||
+      decoded.right.gitSha !== findings.subject.gitSha ||
+      decoded.right.transcriptSha256 !==
+        findingsTranscriptSha256(findings.subject)
     ) {
       issues.push(
-        `Post-play review authority ${authority.role} is not bound to the transcript run.`,
+        `Post-play review authority ${authority.role} is not bound to the transcript execution.`,
       );
     }
   }
@@ -3257,7 +3278,8 @@ function currentAuthorityContentIssues(
       { onExcessProperty: "error" },
     )(replay.result);
     if (
-      replay.scenarioId !== findings.run.scenarioId ||
+      retainedScenarioReviewScenarioId(replay) !==
+        findings.subject.scenarioId ||
       canonicalJson(replay.outputJsonSchema) !==
         canonicalJson(expectedOutputJsonSchema) ||
       Either.isLeft(currentResult)
@@ -3438,11 +3460,13 @@ function currentAuthorityContentIssues(
           "Replay-result authority cannot be bound without the replay supervisor authority.",
         );
       } else if (
-        decoded.right.scenarioId !== findings.run.scenarioId ||
-        decoded.right.transcriptSha256 !== findings.run.transcriptSha256 ||
+        decoded.right.scenarioId !== findings.subject.scenarioId ||
+        decoded.right.transcriptSha256 !==
+          findingsTranscriptSha256(findings.subject) ||
         decoded.right.replaySupervisorSha256 !==
           replaySupervisorAuthority.sha256 ||
-        decoded.right.matchedCallCount !== findings.run.callCount
+        decoded.right.matchedCallCount !==
+          findingsSdkCallCount(findings.subject)
       ) {
         issues.push(
           "Replay-result authority is not bound to the retained transcript, replay supervisor, or exact SDK call count.",
@@ -3493,6 +3517,10 @@ function currentAuthorityIssues(
     return issues;
   }
   const findings = findingsValidation.projection;
+  if (findings.subject.tag !== "execution") {
+    issues.push("Current path findings must describe an Execution.");
+    return issues;
+  }
   const evidence = currentEvidenceWitness(findings);
   for (const [responsibility, status] of Object.entries(evidence)) {
     if (status === "missing") {
@@ -3502,9 +3530,12 @@ function currentAuthorityIssues(
     }
   }
   const scenarioIdentity = measurement.stagePlan.identity;
-  if (scenarioIdentity.scenarioId !== findings.run.scenarioId) {
+  if (
+    scenarioIdentity.tag === "admitted" &&
+    scenarioIdentity.scenarioId !== findings.subject.scenarioId
+  ) {
     issues.push(
-      "Stage-plan scenario identity does not match the findings run.",
+      "Stage-plan scenario identity does not match the findings execution.",
     );
   }
   const expectedScenarioAuthority = findings.authorities.find(
@@ -3533,14 +3564,16 @@ function currentAuthorityIssues(
     );
   }
   const invocationScenarioIds = new Set(
-    measurement.invocations.map(({ scenarioId }) => String(scenarioId)),
+    measurement.invocations.map((invocation) =>
+      String(modelInvocationScenarioReference(invocation)),
+    ),
   );
   if (
     invocationScenarioIds.size !== 1 ||
-    !invocationScenarioIds.has(String(findings.run.scenarioId))
+    !invocationScenarioIds.has(String(findings.subject.scenarioId))
   ) {
     issues.push(
-      "Invocation ledger scenario identity does not match the findings run authority.",
+      "Invocation ledger scenario identity does not match the findings execution authority.",
     );
   }
   const ledgerAuthorities = new Map(
@@ -3652,9 +3685,9 @@ function currentAuthorityIssues(
       continue;
     }
     const evidence = modelInvocationEvidenceFromEvents(events.events);
-    if (evidence.tag === "invalid" || evidence.entry.schemaVersion !== 2) {
+    if (evidence.tag === "invalid" || evidence.entry.schemaVersion !== 4) {
       issues.push(
-        `Invocation ${invocation.invocationId} does not have valid current v2 event evidence.`,
+        `Invocation ${invocation.invocationId} does not have valid current v4 event evidence.`,
       );
       continue;
     }
@@ -3871,9 +3904,9 @@ function benchmarkInvocationEntriesFromAuthorities(
     for (const value of parsed.value) {
       const current = parseModelInvocationLedgerEntry(value);
       if (Either.isRight(current)) {
-        if (current.right.schemaVersion === 1) {
+        if (current.right.schemaVersion !== 4) {
           issues.push(
-            `Benchmark invocation ledger ${authority.path} cannot use historical v1 evidence.`,
+            `Benchmark invocation ledger ${authority.path} cannot use historical evidence.`,
           );
         } else {
           entries.push(current.right);
@@ -3897,7 +3930,7 @@ function canonicalBenchmarkInvocations(
   invocations: readonly BenchmarkInvocation[],
 ): readonly CurrentModelInvocationLedgerEntry[] {
   return invocations.flatMap((invocation) =>
-    invocation.schemaVersion === 2 ? [invocation] : [],
+    invocation.schemaVersion === 4 ? [invocation] : [],
   );
 }
 
@@ -4127,7 +4160,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     );
     if (
       invocation === undefined ||
-      invocation.schemaVersion !== 2 ||
+      invocation.schemaVersion !== 4 ||
       invocation.phase !== "scenarioCompositeReview" ||
       invocation.gitSha !== replay.right.sourceGitSha ||
       invocation.model !== replay.right.model ||
@@ -4139,7 +4172,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       issues.push(
         `Benchmark ${reviewStage} pre-play replay event authority does not match its retained composite-review invocation.`,
       );
-    } else if (invocation.schemaVersion === 2) {
+    } else if (invocation.schemaVersion === 4) {
       try {
         validateRetainedScenarioReviewInvocation({
           retainedInputPath: replayAuthority.path,
@@ -4353,7 +4386,7 @@ function benchmarkPlayerEvidenceIssues(input: {
     }
   }
   if (measurement.outcome.tag === "completed") {
-    if (findings.run.callCount < 1) {
+    if (findingsSdkCallCount(findings.subject) < 1) {
       issues.push(
         "A completed benchmark path requires at least one retained SDK call.",
       );
@@ -4398,10 +4431,11 @@ function benchmarkCompleteEvidenceIssues(input: {
     if (
       decoded.right.scenarioId !== measurement.scenarioId ||
       decoded.right.gitSha !== measurement.implementationGitSha ||
-      decoded.right.transcriptSha256 !== findings.run.transcriptSha256
+      decoded.right.transcriptSha256 !==
+        findingsTranscriptSha256(findings.subject)
     ) {
       issues.push(
-        `Benchmark post-play review authority ${authority.role} is not bound to the implementation revision and transcript run.`,
+        `Benchmark post-play review authority ${authority.role} is not bound to the implementation revision and transcript execution.`,
       );
     }
   }
@@ -4452,9 +4486,10 @@ function benchmarkCompleteEvidenceIssues(input: {
     }
     if (
       decoded.right.scenarioId !== measurement.scenarioId ||
-      decoded.right.transcriptSha256 !== findings.run.transcriptSha256 ||
+      decoded.right.transcriptSha256 !==
+        findingsTranscriptSha256(findings.subject) ||
       decoded.right.replaySupervisorSha256 !== supervisor.sha256 ||
-      decoded.right.matchedCallCount !== findings.run.callCount
+      decoded.right.matchedCallCount !== findingsSdkCallCount(findings.subject)
     ) {
       issues.push(
         "Benchmark replay-result authority is not bound to the retained transcript, replay supervisor, or exact SDK call count.",
@@ -4668,12 +4703,15 @@ function benchmarkAuthorityIssues(
     issues.push(`Findings authority is invalid: ${findingsValidation.message}`);
   } else {
     const findings = findingsValidation.projection;
-    if (findings.run.scenarioId !== measurement.scenarioId) {
+    if (
+      findings.subject.tag !== "execution" ||
+      findings.subject.scenarioId !== measurement.scenarioId
+    ) {
       issues.push("Benchmark findings belong to a different scenario.");
     }
-    if (findings.run.gitSha !== measurement.implementationGitSha) {
+    if (findings.subject.gitSha !== measurement.implementationGitSha) {
       issues.push(
-        "Benchmark findings run identity does not match the retained implementation revision.",
+        "Benchmark findings execution identity does not match the retained implementation revision.",
       );
     }
     const scenarioAuthority = findings.authorities.find(
@@ -4779,7 +4817,11 @@ function benchmarkAuthorityIssues(
       );
     }
     invocationIds.add(invocation.invocationId);
-    if (invocation.scenarioId !== measurement.scenarioId) {
+    const invocationScenarioId =
+      invocation.schemaVersion === 3
+        ? invocation.scenarioId
+        : modelInvocationScenarioReference(invocation);
+    if (invocationScenarioId !== measurement.scenarioId) {
       issues.push(
         `Benchmark invocation ${invocation.invocationId} belongs to a different scenario.`,
       );
@@ -4850,11 +4892,11 @@ function benchmarkAuthorityIssues(
       issues.push(events.message);
       continue;
     }
-    if (invocation.schemaVersion === 2) {
+    if (invocation.schemaVersion === 4) {
       const evidence = modelInvocationEvidenceFromEvents(events.events);
-      if (evidence.tag === "invalid" || evidence.entry.schemaVersion !== 2) {
+      if (evidence.tag === "invalid" || evidence.entry.schemaVersion !== 4) {
         issues.push(
-          `Benchmark invocation ${invocation.invocationId} does not have valid v2 event evidence.`,
+          `Benchmark invocation ${invocation.invocationId} does not have valid v4 event evidence.`,
         );
         continue;
       }
@@ -4863,7 +4905,7 @@ function benchmarkAuthorityIssues(
       );
       if (canonicalJson(evidence.entry) !== canonicalJson(withoutEventsHash)) {
         issues.push(
-          `Benchmark invocation ${invocation.invocationId} does not match its v2 event evidence.`,
+          `Benchmark invocation ${invocation.invocationId} does not match its v4 event evidence.`,
         );
       }
     } else {
@@ -4976,7 +5018,7 @@ function benchmarkSemanticIssues(
   const compositeReviewStages = benchmarkReviewPlan(measurement.profile).stages;
   const compositeReviewInvocations = measurement.invocations.filter(
     (invocation) =>
-      invocation.schemaVersion === 2 &&
+      invocation.schemaVersion === 4 &&
       invocation.phase === "scenarioCompositeReview",
   );
   if (compositeReviewInvocations.length !== compositeReviewStages.length) {
@@ -4989,7 +5031,7 @@ function benchmarkSemanticIssues(
   );
   for (const invocation of measurement.invocations) {
     if (
-      invocation.schemaVersion === 2 &&
+      invocation.schemaVersion === 4 &&
       (invocation.phase === "scenarioCompositeReview" ||
         invocation.phase === "postPlayReview") &&
       invocation.reasoningEffort !== expectedReviewReasoningEffort
@@ -5012,7 +5054,7 @@ function benchmarkSemanticIssues(
     }
     const compositeIndexes = measurement.invocations.flatMap(
       (invocation, index) =>
-        invocation.schemaVersion === 2 &&
+        invocation.schemaVersion === 4 &&
         invocation.phase === "scenarioCompositeReview"
           ? [index]
           : [],
@@ -5337,8 +5379,8 @@ function main(args: readonly string[]): void {
       fail(
         "Usage: performance-comparison.ts summarize <descriptor.json> <output.json>",
       );
-    const summary = summarizeControlledRun(
-      decode(RunDescriptorSchema, descriptorPath),
+    const summary = summarizeControlledExecution(
+      decode(ExecutionDescriptorSchema, descriptorPath),
     );
     writeFileSync(
       resolve(repoRoot, outputPath),
@@ -5358,8 +5400,8 @@ function main(args: readonly string[]): void {
       fail(
         "Usage: performance-comparison.ts compare-legacy <legacy.json> <fresh.json> <output.json>",
       );
-    const comparison = compareControlledRuns(
-      decode(LegacyRunEvidenceSchema, legacyPath),
+    const comparison = compareControlledExecutions(
+      decode(LegacyExecutionEvidenceSchema, legacyPath),
       readControlledPerformance(freshPath),
     );
     writeFileSync(
@@ -5380,7 +5422,7 @@ function main(args: readonly string[]): void {
       fail(
         "Usage: performance-comparison.ts compare <baseline.json> <fresh.json> <output.json>",
       );
-    const comparison = compareControlledRuns(
+    const comparison = compareControlledExecutions(
       readControlledPerformance(baselinePath),
       readControlledPerformance(freshPath),
     );

@@ -628,7 +628,7 @@ describe("fixed scenario benchmark boundary", () => {
     expect(Either.isLeft(parseFixedBenchmarkProfile([]))).toBe(true);
   });
 
-  test("rejects compare run-id traversal before constructing measurement paths", () => {
+  test("rejects compare benchmark-id traversal before constructing measurement paths", () => {
     expect(() =>
       execFileSync(
         "pnpm",
@@ -642,30 +642,28 @@ describe("fixed scenario benchmark boundary", () => {
         ],
         { cwd: repoRoot, stdio: "pipe" },
       ),
-    ).toThrow(/unsafe characters/);
+    ).toThrow(/benchmark id must be lowercase letters, digits, and hyphens/);
   }, 30_000);
 
-  test("rejects traversal in direct benchmark path and command helpers", () => {
-    expect(() =>
-      fixedBenchmarkProfilePaths("../outside", "boundedCapabilityProjection"),
-    ).toThrow(/unsafe characters/);
-
+  test("constructs direct paths and commands from an already decoded benchmark id", () => {
     const paths = fixedBenchmarkProfilePaths(
       "safe-run",
       "boundedCapabilityProjection",
     );
     const bundle = fixedScenarioCanonicalBundle();
-    expect(() =>
+    expect(
       benchmarkCommands({
-        runId: "../outside",
+        benchmarkId: paths.benchmarkId,
+        executionId: paths.executionId,
+        evidenceSetId: paths.evidenceSetId,
         profile: "boundedCapabilityProjection",
         implementationGitSha: Schema.decodeUnknownSync(GitShaSchema)(
           "a".repeat(40),
         ),
         paths,
         bundle,
-      }),
-    ).toThrow(/unsafe characters/);
+      }).player,
+    ).toContain("safe-run");
   });
 
   test("rejects structured reads and external tools while retaining prose-only results", () => {
@@ -726,7 +724,7 @@ describe("fixed scenario benchmark boundary", () => {
     }
   });
 
-  test("retains the exact tracked generated-battle-009 source bundle", () => {
+  test("retains the exact tracked open-grid-wolf-skeleton-pursuit source bundle", () => {
     const bundle = fixedScenarioCanonicalBundle();
 
     expect(bundle.paths.scenario).toContain(`${FIXED_SCENARIO_ID}.md`);

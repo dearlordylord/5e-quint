@@ -34,7 +34,7 @@ const FIXED_OBSERVATION_SHA256 =
   "26b7995f4bc93668071bb2a3588866b42f4f50a3816f1c8a3970cf7991cea6fb";
 const FIXED_STEP_PAYLOAD_BYTES = 38_107_978;
 const FIXED_TRANSCRIPT_PATH =
-  "scripts/raw-swarm/out/generated-battle-004-sdk-player/evidence/sdk-calls.jsonl";
+  "scripts/raw-swarm/out/orc-fighter-rogue-close-interception-sdk-player/evidence/sdk-calls.jsonl";
 const FIXED_PROGRAM_BYTES = 80_592;
 const FIXED_PROGRAM_SHA256 =
   "3934484bbb613d0ab56facb3dbd2dd726ec8667f8f4ae314c5b589862bc8e822";
@@ -72,7 +72,7 @@ type FixedBaselineRetainedProgram = {
   };
 };
 
-type FixedBaselineRunEvidencePaths = {
+type FixedBaselineExecutionEvidencePaths = {
   readonly transcriptPath: string;
   readonly observationsPath: string;
   readonly programPath: string;
@@ -80,9 +80,9 @@ type FixedBaselineRunEvidencePaths = {
   readonly finalResultPath: string;
 };
 
-export function fixedBaselineRunEvidencePaths(
+export function fixedBaselineExecutionEvidencePaths(
   transcriptInput: string,
-): FixedBaselineRunEvidencePaths {
+): FixedBaselineExecutionEvidencePaths {
   const transcriptPath = resolve(repoRoot, transcriptInput);
   if (relative(repoRoot, transcriptPath) !== FIXED_TRANSCRIPT_PATH) {
     fail("Fixed baseline measurement requires the retained run-4 transcript.");
@@ -111,7 +111,9 @@ function exactArtifact(
   return bytes;
 }
 
-function validateFixedProgramArtifacts(paths: FixedBaselineRunEvidencePaths): {
+function validateFixedProgramArtifacts(
+  paths: FixedBaselineExecutionEvidencePaths,
+): {
   readonly program: string;
   readonly frozenPrefixSha256: string;
   readonly finalResultSha256: string;
@@ -755,10 +757,12 @@ export function measureFixedBaseline(input: {
   readonly indexPath: string;
   readonly replayCacheMeasurementPath: string;
 }): FixedBaselineMeasurement {
-  const runEvidencePaths = fixedBaselineRunEvidencePaths(input.transcriptPath);
-  const transcriptPath = runEvidencePaths.transcriptPath;
+  const executionEvidencePaths = fixedBaselineExecutionEvidencePaths(
+    input.transcriptPath,
+  );
+  const transcriptPath = executionEvidencePaths.transcriptPath;
   exactArtifact(
-    runEvidencePaths.observationsPath,
+    executionEvidencePaths.observationsPath,
     FIXED_OBSERVATION_BYTES,
     FIXED_OBSERVATION_SHA256,
     "player observations",
@@ -810,7 +814,9 @@ export function measureFixedBaseline(input: {
       replayCacheEvidence.cumulativeReplayMilliseconds >= 60_000
   )
     fail("Fixed baseline replay-cache measurement is invalid.");
-  const programArtifacts = validateFixedProgramArtifacts(runEvidencePaths);
+  const programArtifacts = validateFixedProgramArtifacts(
+    executionEvidencePaths,
+  );
   const program = programArtifacts.program;
   const programAudit = retainedProgramSessionAudit(program);
   const retainedProgramAudit = fixedBaselineRetainedProgramAudit(programAudit);

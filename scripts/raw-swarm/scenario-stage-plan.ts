@@ -1,6 +1,10 @@
 import { Either, Match, Schema } from "effect";
 
 import { ScenarioIdSchema } from "./transcript.ts";
+import {
+  ScenarioCampaignIdSchema,
+  ScenarioCandidateIdSchema,
+} from "./raw-swarm-identities.ts";
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 
@@ -50,7 +54,8 @@ export type ScenarioStageFacts = Schema.Schema.Type<
 
 const CandidateIdentitySchema = Schema.Struct({
   tag: Schema.Literal("candidate"),
-  scenarioId: ScenarioIdSchema,
+  campaignId: ScenarioCampaignIdSchema,
+  candidateId: ScenarioCandidateIdSchema,
   candidateScenarioSha256: HashSchema,
 });
 const AdmittedIdentitySchema = Schema.Struct({
@@ -90,7 +95,7 @@ export const RAW_SWARM_STAGE_PLAN_REASONS = {
   player:
     "The admitted scenario stage plan requires ordinary public-SDK player execution.",
   postPlayReview:
-    "The admitted run reached its independent post-play review stage.",
+    "The admitted Execution reached its independent post-play review stage.",
 } as const satisfies Record<RawSwarmStageName, string>;
 
 const StagePlanEntryFields = {

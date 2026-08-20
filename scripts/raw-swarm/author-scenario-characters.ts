@@ -71,6 +71,7 @@ async function main(args: readonly string[]): Promise<void> {
     scenarioId: scenarioId.right,
     scenarioPath,
     reviewPath,
+    recordPath: scenarioPath.replace(/\.md$/, ".scenario.json"),
   });
   if (Either.isLeft(admission)) fail(admission.left);
 
@@ -161,7 +162,7 @@ async function main(args: readonly string[]): Promise<void> {
       ledgerPath,
       phase: "scenarioCharacterAuthoring",
       stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioCharacterAuthoring,
-      scenarioId: scenarioId.right,
+      subject: { tag: "scenario", scenarioId: scenarioId.right },
       gitSha: gitSha.right,
       fallbackInvocationId: `${scenarioId.right}-character-authoring`,
       model: "gpt-5.6-sol",

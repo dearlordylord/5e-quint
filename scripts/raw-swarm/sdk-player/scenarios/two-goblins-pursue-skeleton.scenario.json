@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "two-goblins-pursue-skeleton",
+  "title": "Two Goblins pursue a Skeleton",
+  "purpose": "Probe mixed geometry and Table-authored cover ownership during a three-combatant pursuit.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/two-goblins-pursue-skeleton.md",
+    "byteLength": 2303,
+    "sha256": "f9d0ef81285267ed94daf97457b4af1d55d21e647034d51eace267e74829ab3a"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/two-goblins-pursue-skeleton.md.scenario-review.json",
+    "byteLength": 2189,
+    "sha256": "b14538d452bb8fc2ce828f71f5856a10e859b8b5e5ddc92d46d9bae201f17077"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/two-goblins-pursue-skeleton.md.stage-facts.json",
+    "byteLength": 722,
+    "sha256": "0da6f9d6eaa5ab80d29b988942342afd9528c0af822b90c475f64146fca5cbab"
+  }
+}

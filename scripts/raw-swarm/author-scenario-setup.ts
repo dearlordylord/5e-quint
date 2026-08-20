@@ -86,7 +86,7 @@ function runSetupAuthor(input: {
         ? "scenarioSetupNeutralAuthoring"
         : "scenarioSetupControllerAuthoring",
     stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioSetupAuthoring,
-    scenarioId: input.scenarioId,
+    subject: { tag: "scenario", scenarioId: input.scenarioId },
     gitSha: input.gitSha,
     fallbackInvocationId: `${input.scenarioId}-setup-${input.role}-authoring`,
     model: "gpt-5.6-sol",
@@ -158,6 +158,7 @@ async function main(args: readonly string[]): Promise<void> {
     scenarioId: scenarioId.right,
     scenarioPath,
     reviewPath,
+    recordPath: scenarioPath.replace(/\.md$/, ".scenario.json"),
   });
   if (Either.isLeft(admission)) fail(admission.left);
 

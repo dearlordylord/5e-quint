@@ -5,7 +5,7 @@ the default all-call evidence. A deterministic review evidence packet at
 {{PACKET_PATH}} ({{PACKET_BYTES}} bytes, SHA-256 {{PACKET_SHA256}}) is included
 verbatim after these instructions. It contains that audit, retained header
 evidence without the initial session, current-turn projections, the
-reviewable run artifacts, the domain authorities, and the scenario-relevant
+reviewable execution artifacts, the domain authorities, and the scenario-relevant
 local SRD rules plus scenario-selected catalog passages with stable source line
 numbers and per-passage hashes. Catalog passages are selected only when their
 authored heading is present in the retained scenario artifacts.

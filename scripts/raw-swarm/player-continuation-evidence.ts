@@ -2,16 +2,16 @@ import { Either, Schema } from "effect";
 
 export const PLAYER_CONTINUATION_LIMIT = 128;
 
-export const PlayerRunObstructionSchema = Schema.Struct({
+export const PlayerExecutionObstructionSchema = Schema.Struct({
   kind: Schema.Literal("continuationLimit"),
   limit: Schema.Literal(PLAYER_CONTINUATION_LIMIT),
   message: Schema.NonEmptyTrimmedString,
 });
-export type PlayerRunObstruction = Schema.Schema.Type<
-  typeof PlayerRunObstructionSchema
+export type PlayerExecutionObstruction = Schema.Schema.Type<
+  typeof PlayerExecutionObstructionSchema
 >;
 
-export const PlayerRunStateSchema = Schema.Union(
+export const PlayerExecutionStateSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("active") }),
   Schema.Struct({
     kind: Schema.Literal("playerConcluded"),
@@ -19,10 +19,12 @@ export const PlayerRunStateSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("playerObstructed"),
-    obstruction: PlayerRunObstructionSchema,
+    obstruction: PlayerExecutionObstructionSchema,
   }),
 );
-export type PlayerRunState = Schema.Schema.Type<typeof PlayerRunStateSchema>;
+export type PlayerExecutionState = Schema.Schema.Type<
+  typeof PlayerExecutionStateSchema
+>;
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 
@@ -125,5 +127,5 @@ export type PlayerEvidenceState =
   | {
       readonly tag: "obstructed";
       readonly recordedContinuations: number;
-      readonly obstruction: PlayerRunObstruction;
+      readonly obstruction: PlayerExecutionObstruction;
     };

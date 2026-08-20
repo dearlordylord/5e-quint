@@ -162,7 +162,7 @@ function validatedPacketFixture() {
   });
   if (sourceResult.tag === "invalid") throw new Error(sourceResult.message);
   const source = sourceResult.source;
-  const runArtifactContents = [
+  const executionArtifactContents = [
     ["SCENARIO.md", "# Scenario\n"],
     ["SCENARIO_REVIEW.json", '{"outcome":"ready"}\n'],
     ["evidence/characters.ts", "export const characters = [];\n"],
@@ -184,22 +184,24 @@ function validatedPacketFixture() {
     ["OBSERVATION.json", '{"tag":"terminalObstruction"}\n'],
     ["evidence/agent-final.txt", "Player stopped at the limit.\n"],
   ] as const;
-  const runArtifacts = runArtifactContents.map(([path, content]) => {
-    const absolutePath = resolve(directory, path);
-    mkdirSync(dirname(absolutePath), { recursive: true });
-    writeFileSync(absolutePath, content);
-    const result = sdkReviewPacketSource({
-      path: relative(repoRoot, absolutePath),
-      content,
-    });
-    if (result.tag === "invalid") throw new Error(result.message);
-    return result.source;
-  });
+  const executionArtifacts = executionArtifactContents.map(
+    ([path, content]) => {
+      const absolutePath = resolve(directory, path);
+      mkdirSync(dirname(absolutePath), { recursive: true });
+      writeFileSync(absolutePath, content);
+      const result = sdkReviewPacketSource({
+        path: relative(repoRoot, absolutePath),
+        content,
+      });
+      if (result.tag === "invalid") throw new Error(result.message);
+      return result.source;
+    },
+  );
   const packet = encodeSdkReviewPacket({
     audit: verified.audit,
     retainedHeaderEvidence: sdkReviewPacketHeaderEvidence(parsed.value.header),
     currentTurnProjections: projections.projections,
-    runArtifacts,
+    executionArtifacts,
     domainAuthorities: [],
     rawAuthorities: [source],
   });
@@ -276,7 +278,7 @@ describe("SDK review packet", () => {
       audit,
       retainedHeaderEvidence: { characterOutcome: "ready" },
       currentTurnProjections: [],
-      runArtifacts: [],
+      executionArtifacts: [],
       domainAuthorities: [],
       rawAuthorities: [raw],
     });
@@ -284,7 +286,7 @@ describe("SDK review packet", () => {
       audit,
       retainedHeaderEvidence: { characterOutcome: "ready" },
       currentTurnProjections: [],
-      runArtifacts: [],
+      executionArtifacts: [],
       domainAuthorities: [],
       rawAuthorities: [raw],
     });
@@ -302,7 +304,7 @@ describe("SDK review packet", () => {
       audit,
       retainedHeaderEvidence: {},
       currentTurnProjections: [],
-      runArtifacts: [],
+      executionArtifacts: [],
       domainAuthorities: [],
       rawAuthorities: [large.source],
       maximumByteLength: 10,
@@ -330,7 +332,7 @@ describe("SDK review packet", () => {
         audit,
         retainedHeaderEvidence: {},
         currentTurnProjections: [],
-        runArtifacts: [
+        executionArtifacts: [
           {
             path: "",
             byteLength: 0,
@@ -365,7 +367,7 @@ describe("SDK review packet", () => {
       validateSdkReviewPacket(
         {
           ...fixture.packet,
-          runArtifacts: fixture.packet.runArtifacts.filter(
+          executionArtifacts: fixture.packet.executionArtifacts.filter(
             ({ path }) => !path.endsWith("/evidence/frozen-prefix.json"),
           ),
         },

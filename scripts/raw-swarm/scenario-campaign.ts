@@ -1,7 +1,19 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { Either, JSONSchema, Match, Schema } from "effect";
 
-import { GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
+import {
+  GitShaSchema,
+  ScenarioIdSchema,
+  type ScenarioId,
+} from "./transcript.ts";
+import {
+  decodeScenarioCandidateId,
+  EvidenceSetIdSchema,
+  ScenarioCampaignIdSchema,
+  ScenarioCandidateIdSchema,
+  type ScenarioCampaignId,
+  type ScenarioCandidateId,
+} from "./raw-swarm-identities.ts";
 import {
   planScenarioStages,
   ScenarioStageFactsSchema,
@@ -95,7 +107,7 @@ export const ContentAvailabilityIntentSchema = Schema.Literal(
 export type ContentAvailabilityIntent =
   (typeof CONTENT_AVAILABILITY_INTENTS)[number];
 
-const ScenarioContentAdmissionSchema = Schema.Union(
+export const ScenarioContentAdmissionSchema = Schema.Union(
   Schema.Struct({
     contentAvailabilityIntent: Schema.Literal("availableOnly"),
     contentReview: Schema.Union(
@@ -147,7 +159,7 @@ export const ScenarioSdkCapabilityReviewSchema = Schema.Union(
   MissingUnsupportedSdkCapabilityProbeReviewSchema,
 );
 
-const ScenarioSdkCapabilityAdmissionSchema = Schema.Union(
+export const ScenarioSdkCapabilityAdmissionSchema = Schema.Union(
   Schema.Struct({
     sdkCapabilityIntent: Schema.Literal("supportedOnly"),
     sdkCapabilityReview: Schema.Union(
@@ -261,16 +273,31 @@ const CurrentFinalScenarioReviewSchema = Schema.Struct({
   Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
 );
 
+export const RejectedScenarioCandidateReviewSchema = Schema.Struct({
+  campaignId: ScenarioCampaignIdSchema,
+  candidateId: ScenarioCandidateIdSchema,
+  candidateScenarioSha256: ScenarioSha256Schema,
+  gitSha: GitShaSchema,
+  admitReviewedUnsupported: Schema.Boolean,
+  rawReview: ScenarioRawReviewSchema,
+  policyReview: ScenarioPolicyReviewSchema,
+  reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
+  scenarioQuality: ScenarioQualityReviewSchema,
+}).pipe(
+  Schema.extend(ScenarioContentAdmissionSchema),
+  Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
+);
+
 export const FinalScenarioReviewSchema = Schema.Union(
   RawContentPolicyScenarioReviewSchema,
   RawContentSdkCapabilityPolicyScenarioReviewSchema,
   CurrentFinalScenarioReviewSchema,
 );
 
-type ScenarioContentAdmission = Schema.Schema.Type<
+export type ScenarioContentAdmission = Schema.Schema.Type<
   typeof ScenarioContentAdmissionSchema
 >;
-type ScenarioSdkCapabilityAdmission = Schema.Schema.Type<
+export type ScenarioSdkCapabilityAdmission = Schema.Schema.Type<
   typeof ScenarioSdkCapabilityAdmissionSchema
 >;
 
@@ -402,19 +429,21 @@ function sdkCapabilityDisposition(
 }
 
 export function finalScenarioDisposition(
-  review: ScenarioAdmissionReviews | ScenarioCampaignCandidateRejection,
+  review:
+    | ScenarioAdmissionReviews
+    | ScenarioCampaignResult
+    | ScenarioCampaignCandidateRejection,
 ): "admitted" | "rejected" {
   if (isCandidateCampaignRejection(review)) {
     return "rejected";
   }
-  const admittedReview: ScenarioAdmissionReviews = review;
   if (
-    "scenarioQuality" in admittedReview &&
-    admittedReview.scenarioQuality.classification === "needsRevision"
+    "scenarioQuality" in review &&
+    review.scenarioQuality.classification === "needsRevision"
   ) {
     return "rejected";
   }
-  return Match.value(admittedReview).pipe(
+  return Match.value(review).pipe(
     Match.when({ reviewScope: "rawContentPolicy" }, (scopedReview) =>
       Match.value(scopedReview.policyReview).pipe(
         Match.when({ classification: "violation" }, () => "rejected" as const),
@@ -509,7 +538,11 @@ export function retentionRevisionMatches(
 }
 
 export const ScenarioCampaignConfigSchema = Schema.Struct({
-  scenarioId: ScenarioIdSchema,
+  campaignId: ScenarioCampaignIdSchema,
+  plannedScenarioId: ScenarioIdSchema,
+  scenarioTitle: Schema.NonEmptyTrimmedString,
+  scenarioPurpose: Schema.NonEmptyTrimmedString,
+  evidenceSetId: EvidenceSetIdSchema,
   distributionPreference: Schema.NonEmptyTrimmedString,
   contentAvailabilityIntent: ContentAvailabilityIntentSchema,
   sdkCapabilityIntent: SdkCapabilityIntentSchema,
@@ -574,6 +607,10 @@ export interface ScenarioCampaignAgents {
   ) => Promise<ScenarioCandidateBatch>;
   readonly reviewScenario: (input: {
     readonly scenario: string;
+    readonly campaignId: ScenarioCampaignId;
+    readonly candidateId: ScenarioCandidateId;
+    readonly candidateScenarioSha256: string;
+    readonly plannedScenarioId: ScenarioId;
     readonly finalReview: boolean;
     readonly distributionPreference: string;
     readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
@@ -586,7 +623,11 @@ export interface ScenarioCandidateSelector {
 }
 
 type ScenarioCampaignResultBase = {
-  readonly scenarioId: ScenarioCampaignConfig["scenarioId"];
+  readonly campaignId: ScenarioCampaignConfig["campaignId"];
+  readonly candidateId: ScenarioCandidateId;
+  readonly plannedScenarioId: ScenarioCampaignConfig["plannedScenarioId"];
+  readonly scenarioTitle: string;
+  readonly scenarioPurpose: string;
   readonly scenario: string;
   readonly iterations: number;
   readonly stopReason: "ready" | "maximum";
@@ -596,11 +637,13 @@ type ScenarioCampaignResultBase = {
   readonly scenarioQuality: ScenarioQualityReview;
   readonly reviewScope: "rawContentSdkCapabilityPolicyQuality";
   readonly stageFacts: ScenarioStageFacts;
+  readonly candidateStagePlan: ScenarioStagePlan;
 };
 
 export type ScenarioCampaignCandidateRejection = {
   readonly tag: "candidateRejected";
-  readonly scenarioId: ScenarioCampaignConfig["scenarioId"];
+  readonly campaignId: ScenarioCampaignConfig["campaignId"];
+  readonly candidateId: ScenarioCandidateId;
   readonly scenario: string;
   readonly iterations: number;
   readonly stopReason: "candidateRejected";
@@ -614,8 +657,12 @@ export type ScenarioCampaignResult =
       ScenarioSdkCapabilityAdmission)
   | ScenarioCampaignCandidateRejection;
 
+function selectedCandidateId(): Either.Either<ScenarioCandidateId, string> {
+  return decodeScenarioCandidateId(`candidate-${randomUUID()}`);
+}
+
 function isCandidateCampaignRejection(
-  value: ScenarioAdmissionReviews | ScenarioCampaignCandidateRejection,
+  value: ScenarioAdmissionReviews | ScenarioCampaignResult,
 ): value is ScenarioCampaignCandidateRejection {
   return "tag" in value && value.tag === "candidateRejected";
 }
@@ -638,9 +685,11 @@ export async function runScenarioCampaign(
     | {
         readonly tag: "selected";
         readonly prose: string;
+        readonly candidateId: ScenarioCandidateId;
         readonly iteration: number;
         readonly critiques: readonly string[];
         readonly stageFacts: ScenarioStageFacts;
+        readonly candidateStagePlan: ScenarioStagePlan;
       } = { tag: "unstarted" };
 
   for (
@@ -691,11 +740,14 @@ export async function runScenarioCampaign(
     if (candidate === undefined) {
       return Either.left("Scenario selector did not select a candidate.");
     }
+    const candidateId = selectedCandidateId();
+    if (Either.isLeft(candidateId)) return Either.left(candidateId.left);
     const candidateScenarioSha256 = scenarioContentSha256(candidate.prose);
     const candidatePlan = planScenarioStages({
       identity: {
         tag: "candidate",
-        scenarioId: config.scenarioId,
+        campaignId: config.campaignId,
+        candidateId: candidateId.right,
         candidateScenarioSha256,
       },
       facts: candidate.stageFacts,
@@ -705,14 +757,17 @@ export async function runScenarioCampaign(
       const rejected = {
         tag: "selected" as const,
         prose: candidate.prose,
+        candidateId: candidateId.right,
         iteration,
         critiques: [candidatePlan.right.outcome.reason],
         stageFacts: candidate.stageFacts,
+        candidateStagePlan: candidatePlan.right,
       };
       if (iteration === config.maximumIterations) {
         return Either.right({
           tag: "candidateRejected",
-          scenarioId: config.scenarioId,
+          campaignId: config.campaignId,
+          candidateId: candidateId.right,
           scenario: rejected.prose,
           iterations: iteration,
           stopReason: "candidateRejected",
@@ -729,6 +784,10 @@ export async function runScenarioCampaign(
     if (config.reviewMilestone === iteration) {
       const review = await agents.reviewScenario({
         scenario: prose,
+        campaignId: config.campaignId,
+        candidateId: candidateId.right,
+        candidateScenarioSha256,
+        plannedScenarioId: config.plannedScenarioId,
         finalReview: false,
         distributionPreference: config.distributionPreference,
         contentAvailabilityIntent: config.contentAvailabilityIntent,
@@ -789,9 +848,11 @@ export async function runScenarioCampaign(
     draft = {
       tag: "selected",
       prose,
+      candidateId: candidateId.right,
       iteration,
       critiques,
       stageFacts: candidate.stageFacts,
+      candidateStagePlan: candidatePlan.right,
     };
     if (iteration === config.maximumIterations) {
       break;
@@ -810,6 +871,10 @@ export async function runScenarioCampaign(
   }
   const finalReview = await agents.reviewScenario({
     scenario: draft.prose,
+    campaignId: config.campaignId,
+    candidateId: draft.candidateId,
+    candidateScenarioSha256: scenarioContentSha256(draft.prose),
+    plannedScenarioId: config.plannedScenarioId,
     finalReview: true,
     distributionPreference: config.distributionPreference,
     contentAvailabilityIntent: config.contentAvailabilityIntent,
@@ -830,7 +895,11 @@ export async function runScenarioCampaign(
     return Either.left(finalSdkCapabilityAdmission.left);
   }
   const resultBase = {
-    scenarioId: config.scenarioId,
+    campaignId: config.campaignId,
+    candidateId: draft.candidateId,
+    plannedScenarioId: config.plannedScenarioId,
+    scenarioTitle: config.scenarioTitle,
+    scenarioPurpose: config.scenarioPurpose,
     scenario: draft.prose,
     iterations: draft.iteration,
     stopReason:
@@ -841,6 +910,7 @@ export async function runScenarioCampaign(
     scenarioQuality: finalReview.scenarioQuality,
     reviewScope: "rawContentSdkCapabilityPolicyQuality",
     stageFacts: draft.stageFacts,
+    candidateStagePlan: draft.candidateStagePlan,
     ...finalContentAdmission.right,
     ...finalSdkCapabilityAdmission.right,
   } as const;

@@ -25,6 +25,7 @@ describe("scenario admission boundary", () => {
             scenarioId: decodedScenarioId.right,
             scenarioPath: prosePath,
             reviewPath,
+            recordPath: resolve(directory, "example.scenario.json"),
           }),
         ),
       ).toBe(true);
@@ -34,6 +35,7 @@ describe("scenario admission boundary", () => {
             scenarioId: decodedScenarioId.right,
             scenarioPath: prosePath,
             reviewPath: resolve(directory, "missing.json"),
+            recordPath: resolve(directory, "example.scenario.json"),
           }),
         ),
       ).toBe(true);

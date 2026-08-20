@@ -8,9 +8,10 @@ import { Either, Match, Option, Schema } from "effect";
 
 import { artifactAuthorityForBytes } from "./artifact-authority.ts";
 import {
-  defaultRunDirectory,
+  defaultEvidenceSetDirectory,
   findingsArtifactPath,
-  projectRunFindings,
+  findingsTranscriptSha256,
+  projectExecutionFindings,
   readFindingsProjection,
   writeFindingsProjection,
   type FindingAuthority,
@@ -34,7 +35,18 @@ import {
   readSdkAudit,
 } from "./sdk-player/sdk-audit.ts";
 
-import { isJsonRecord, repoRoot, sha256Canonical } from "./transcript.ts";
+import {
+  GitShaSchema,
+  isJsonRecord,
+  repoRoot,
+  sha256Canonical,
+} from "./transcript.ts";
+import {
+  EvidenceSetIdSchema,
+  ExecutionIdSchema,
+  ScenarioCampaignIdSchema,
+  ScenarioIdSchema,
+} from "./raw-swarm-identities.ts";
 
 const RAW_SWARM_GITHUB_LABEL = "raw-swarm";
 const RAW_SWARM_LINK_LOCKED_ENV = "DND_RAW_SWARM_GITHUB_LINK_LOCKED";
@@ -269,8 +281,8 @@ function positiveInteger(value: string, label: string): number {
     : fail(`${label} must be a positive integer`);
 }
 
-function positiveRunId(value: string): number {
-  return positiveInteger(value, "--run");
+function positiveExecutionRowId(value: string): number {
+  return positiveInteger(value, "--execution-row");
 }
 
 function verdictClass(value: string): (typeof VERDICT_CLASSES)[number] {
@@ -282,54 +294,88 @@ function verdictClass(value: string): (typeof VERDICT_CLASSES)[number] {
   );
 }
 
-function runExists(db: DatabaseSync, runId: number): boolean {
-  const run = db.prepare("SELECT id FROM runs WHERE id = ?").get(runId);
+function executionExists(db: DatabaseSync, runId: number): boolean {
+  const run = db
+    .prepare(
+      "SELECT id FROM runs WHERE id = ? AND evidenceKind = 'currentExecution'",
+    )
+    .get(runId);
   return isJsonRecord(run) && run.id === runId;
 }
+
+const PersistedExecutionIdentitySchema = Schema.Struct({
+  id: Schema.Number,
+  executionId: ExecutionIdSchema,
+  evidenceSetId: EvidenceSetIdSchema,
+  scenarioId: ScenarioIdSchema,
+  gitSha: GitShaSchema,
+  startedAt: Schema.String,
+  transcriptSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+});
+type PersistedExecutionIdentity = Schema.Schema.Type<
+  typeof PersistedExecutionIdentitySchema
+>;
+const PersistedExecutionAuditSchema = Schema.Struct({
+  ...PersistedExecutionIdentitySchema.fields,
+  findingsPath: Schema.String,
+});
+const PersistedExecutionReviewSchema = Schema.Struct({
+  ...PersistedExecutionIdentitySchema.fields,
+  transcriptPath: Schema.String,
+});
+const PersistedCampaignAuditSchema = Schema.Struct({
+  campaignId: ScenarioCampaignIdSchema,
+  plannedScenarioId: ScenarioIdSchema,
+  evidenceSetId: EvidenceSetIdSchema,
+  gitSha: GitShaSchema,
+  startedAt: Schema.String,
+  findingsPath: Schema.String,
+});
 
 export function ingest(args: readonly string[]): void {
   const [transcriptArg, ...rest] = args;
   const transcriptPath = required(transcriptArg, "<transcript.jsonl>");
   const dbPath = required(flagValue(rest, "--db"), "--db");
-  const runId = ingestArtifactRun({ transcriptPath, dbPath });
-  console.log(`Indexed run ${runId} from ${transcriptPath} into ${dbPath}`);
+  const runId = ingestArtifactRun({
+    transcriptPath,
+    dbPath,
+  });
+  const db = openArtifactIndex(dbPath);
+  const indexed = db
+    .prepare("SELECT evidenceKind, transport FROM runs WHERE id = ?")
+    .get(runId);
+  db.close();
+  const label =
+    isJsonRecord(indexed) && indexed.evidenceKind === "currentExecution"
+      ? "Execution"
+      : `historical ${isJsonRecord(indexed) && indexed.transport === "sdk" ? "SDK" : "MCP"} observation`;
+  console.log(
+    `Indexed ${label} row ${runId} from ${transcriptPath} into ${dbPath}`,
+  );
 }
 
 function runByTranscript(
   db: DatabaseSync,
   transcriptPath: string,
-): {
-  readonly id: number;
-  readonly scenarioId: string;
-  readonly gitSha: string;
-  readonly startedAt: string;
-  readonly transcriptSha256: string;
-} {
+): PersistedExecutionIdentity {
   const transcriptSha256 = createHash("sha256")
     .update(readFileSync(resolve(repoRoot, transcriptPath)))
     .digest("hex");
   const row = db
     .prepare(
-      "SELECT id, scenarioId, gitSha, startedAt, transcriptSha256 FROM runs WHERE transcriptSha256 = ?",
+      "SELECT id, executionId, evidenceSetId, scenarioId, gitSha, startedAt, transcriptSha256 FROM runs WHERE transcriptSha256 = ? AND evidenceKind = 'currentExecution'",
     )
     .get(transcriptSha256);
+  const decoded = Schema.decodeUnknownEither(PersistedExecutionIdentitySchema, {
+    onExcessProperty: "error",
+  })(row);
   if (
-    !isJsonRecord(row) ||
-    typeof row.id !== "number" ||
-    typeof row.scenarioId !== "string" ||
-    typeof row.gitSha !== "string" ||
-    typeof row.startedAt !== "string" ||
-    row.transcriptSha256 !== transcriptSha256
+    Either.isLeft(decoded) ||
+    decoded.right.transcriptSha256 !== transcriptSha256
   ) {
     fail(`Transcript ${transcriptPath} is not indexed in the artifact index.`);
   }
-  return {
-    id: row.id,
-    scenarioId: row.scenarioId,
-    gitSha: row.gitSha,
-    startedAt: row.startedAt,
-    transcriptSha256,
-  };
+  return decoded.right;
 }
 
 function issueLinksForRun(
@@ -376,7 +422,9 @@ function reviewPathsForRun(db: DatabaseSync, runId: number): readonly string[] {
     .all(runId)
     .map((row) => {
       if (!isJsonRecord(row) || typeof row.path !== "string") {
-        fail(`Run ${String(runId)} has an invalid imported review authority.`);
+        fail(
+          `Execution row ${String(runId)} has an invalid imported review authority.`,
+        );
       }
       return row.path;
     });
@@ -399,7 +447,7 @@ function unlinkedIssueFingerprintsForRun(
     .all(runId)
     .map((row) => {
       if (!isJsonRecord(row) || typeof row.fingerprint !== "string") {
-        fail(`Run ${String(runId)} has an invalid issue-link row.`);
+        fail(`Execution row ${String(runId)} has an invalid issue-link row.`);
       }
       return row.fingerprint;
     });
@@ -420,7 +468,9 @@ function insertFindingsProjection(
         !isJsonRecord(row) || row.artifactSha256 !== findingArtifactSha256,
     )
   ) {
-    fail(`Run ${String(runId)} already has findings from another artifact.`);
+    fail(
+      `Execution row ${String(runId)} already has findings from another artifact.`,
+    );
   }
   const insert = db.prepare(
     `INSERT INTO findings(runId, findingId, stage, category, kind, summary, detail, pointer, fingerprint, githubIssueNumber, artifactSha256)
@@ -490,7 +540,7 @@ function insertFindingAuthorities(
         existing.artifactSha256 !== registered.sha256
       ) {
         fail(
-          `Run ${String(runId)} already has a different authority for role ${authority.role}.`,
+          `Execution row ${String(runId)} already has a different authority for role ${authority.role}.`,
         );
       }
       continue;
@@ -503,7 +553,7 @@ function findings(args: readonly string[]): void {
   const [transcriptArg, ...rest] = args;
   const transcriptPath = required(transcriptArg, "<transcript.jsonl>");
   const dbPath = required(flagValue(rest, "--db"), "--db");
-  const runDirectory = flagValue(rest, "--run-directory");
+  const evidenceSetDirectory = flagValue(rest, "--execution-row-directory");
   const reviewPaths = flagValues(rest, "--review");
   const scenarioReviewPaths = flagValues(rest, "--scenario-review");
   const generationLedgerPaths = flagValues(rest, "--generation-ledger");
@@ -554,7 +604,9 @@ function findings(args: readonly string[]): void {
         };
   const outputPath =
     flagValue(rest, "--output") ??
-    findingsArtifactPath(runDirectory ?? defaultRunDirectory(transcriptPath));
+    findingsArtifactPath(
+      evidenceSetDirectory ?? defaultEvidenceSetDirectory(transcriptPath),
+    );
   const renderPath = flagValue(rest, "--render");
   const db = openArtifactIndex(dbPath);
   const run = runByTranscript(db, transcriptPath);
@@ -562,7 +614,7 @@ function findings(args: readonly string[]): void {
   if (importedReviewPaths.length === 0) {
     db.close();
     fail(
-      `Run ${String(run.id)} has no imported review; final findings must follow review import.`,
+      `Execution row ${String(run.id)} has no imported review; final findings must follow review import.`,
     );
   }
   const requestedReviewPaths = new Set(
@@ -576,7 +628,7 @@ function findings(args: readonly string[]): void {
   ) {
     db.close();
     fail(
-      `Final findings must include every imported review for run ${String(run.id)}.`,
+      `Final findings must include every imported review for Execution row ${String(run.id)}.`,
     );
   }
   const unlinked = unlinkedIssueFingerprintsForRun(db, run.id);
@@ -588,22 +640,27 @@ function findings(args: readonly string[]): void {
   }
   const issueLinks = issueLinksForRun(db, run.id);
   db.close();
-  const projection = projectRunFindings({
+  const projection = projectExecutionFindings({
     transcriptPath,
-    ...(runDirectory === undefined ? {} : { runDirectory }),
+    ...(evidenceSetDirectory === undefined ? {} : { evidenceSetDirectory }),
     reviewPaths: importedReviewPaths,
     scenarioReviewPaths,
     generationLedgerPaths,
     ...(reviewReplay === undefined ? {} : { reviewReplay }),
     issueLinks,
   });
+  if (projection.subject.tag !== "execution") {
+    fail("Execution findings projection did not retain Execution identity.");
+  }
   if (
-    projection.run.scenarioId !== run.scenarioId ||
-    projection.run.gitSha !== run.gitSha ||
-    projection.run.startedAt !== run.startedAt ||
-    projection.run.transcriptSha256 !== run.transcriptSha256
+    projection.subject.executionId !== run.executionId ||
+    projection.subject.evidenceSetId !== run.evidenceSetId ||
+    projection.subject.scenarioId !== run.scenarioId ||
+    projection.subject.gitSha !== run.gitSha ||
+    projection.subject.startedAt !== run.startedAt ||
+    findingsTranscriptSha256(projection.subject) !== run.transcriptSha256
   ) {
-    fail("Findings projection identity does not match the indexed run.");
+    fail("Findings projection identity does not match the indexed Execution.");
   }
   const authority = writeFindingsProjection({
     projection,
@@ -633,7 +690,7 @@ function findings(args: readonly string[]): void {
           existingRole.artifactSha256 !== registered.sha256
         ) {
           fail(
-            `Run ${String(run.id)} already has a different findings artifact.`,
+            `Execution row ${String(run.id)} already has a different findings artifact.`,
           );
         }
       } else {
@@ -661,7 +718,7 @@ function findings(args: readonly string[]): void {
     writeFindingsAudit({ projection, path: renderPath });
   }
   console.log(
-    `Projected ${String(projection.findings.length)} finding(s) for run ${String(run.id)} into ${outputPath}`,
+    `Projected ${String(projection.findings.length)} finding(s) for Execution row ${String(run.id)} into ${outputPath}`,
   );
 }
 
@@ -669,99 +726,117 @@ function generationFindings(args: readonly string[]): void {
   const [findingsArg, ...rest] = args;
   const findingsPath = required(findingsArg, "<findings.json>");
   const dbPath = required(flagValue(rest, "--db"), "--db");
-  const runId = ingestGenerationFindings({ findingsPath, dbPath });
+  const campaignRowId = ingestGenerationFindings({ findingsPath, dbPath });
   console.log(
-    `Indexed generation findings run ${String(runId)} from ${findingsPath} into ${dbPath}`,
+    `Indexed Scenario Campaign findings row ${String(campaignRowId)} from ${findingsPath} into ${dbPath}`,
   );
 }
 
 function audit(args: readonly string[]): void {
   const dbPath = required(flagValue(args, "--db"), "--db");
-  const runId = positiveRunId(required(flagValue(args, "--run"), "--run"));
-  const outputPath = flagValue(args, "--output");
-  const db = openArtifactIndex(dbPath);
-  const row = db
-    .prepare(
-      `SELECT runs.scenarioId, runs.gitSha, runs.startedAt, runs.transcriptSha256,
-              artifacts.path AS findingsPath
-       FROM runs
-       JOIN runArtifacts ON runArtifacts.runId = runs.id AND runArtifacts.role = 'findings'
-       JOIN artifacts ON artifacts.sha256 = runArtifacts.artifactSha256
-       WHERE runs.id = ?`,
-    )
-    .get(runId);
-  db.close();
-  if (
-    !isJsonRecord(row) ||
-    typeof row.findingsPath !== "string" ||
-    typeof row.scenarioId !== "string" ||
-    typeof row.gitSha !== "string" ||
-    typeof row.startedAt !== "string" ||
-    typeof row.transcriptSha256 !== "string"
-  ) {
-    fail(`Run ${String(runId)} has no indexed findings artifact.`);
-  }
-  const projection = readFindingsProjection(row.findingsPath);
-  if (
-    projection.run.scenarioId !== row.scenarioId ||
-    projection.run.gitSha !== row.gitSha ||
-    projection.run.startedAt !== row.startedAt ||
-    projection.run.transcriptSha256 !== row.transcriptSha256
-  ) {
-    fail(`Findings artifact identity does not match run ${String(runId)}.`);
-  }
-  if (outputPath === undefined) {
-    process.stdout.write(renderFindingsAudit(projection));
-  } else {
-    writeFindingsAudit({ projection, path: outputPath });
-    console.log(`Rendered run ${String(runId)} audit into ${outputPath}`);
-  }
-}
-
-function generationAudit(args: readonly string[]): void {
-  const dbPath = required(flagValue(args, "--db"), "--db");
-  const runId = positiveRunId(
-    required(flagValue(args, "--generation-run"), "--generation-run"),
+  const runId = positiveExecutionRowId(
+    required(flagValue(args, "--execution-row"), "--execution-row"),
   );
   const outputPath = flagValue(args, "--output");
   const db = openArtifactIndex(dbPath);
   const row = db
     .prepare(
-      `SELECT generationRuns.scenarioId, generationRuns.gitSha, generationRuns.startedAt,
+      `SELECT runs.id, runs.executionId, runs.evidenceSetId, runs.scenarioId, runs.gitSha, runs.startedAt, runs.transcriptSha256,
               artifacts.path AS findingsPath
-       FROM generationRuns
-       JOIN generationRunArtifacts
-         ON generationRunArtifacts.generationRunId = generationRuns.id
-        AND generationRunArtifacts.role = 'findings'
-       JOIN artifacts ON artifacts.sha256 = generationRunArtifacts.artifactSha256
-       WHERE generationRuns.id = ?`,
+       FROM runs
+       JOIN runArtifacts ON runArtifacts.runId = runs.id AND runArtifacts.role = 'findings'
+       JOIN artifacts ON artifacts.sha256 = runArtifacts.artifactSha256
+       WHERE runs.id = ? AND runs.evidenceKind = 'currentExecution'`,
     )
     .get(runId);
   db.close();
-  if (
-    !isJsonRecord(row) ||
-    typeof row.findingsPath !== "string" ||
-    typeof row.scenarioId !== "string" ||
-    typeof row.gitSha !== "string" ||
-    typeof row.startedAt !== "string"
-  ) {
-    fail(`Generation run ${String(runId)} has no indexed findings artifact.`);
+  const decodedRow = Schema.decodeUnknownEither(PersistedExecutionAuditSchema, {
+    onExcessProperty: "error",
+  })(row);
+  if (Either.isLeft(decodedRow)) {
+    fail(`Execution row ${String(runId)} has no indexed findings artifact.`);
   }
-  const projection = readFindingsProjection(row.findingsPath);
+  const execution = decodedRow.right;
+  const projection = readFindingsProjection(execution.findingsPath);
+  if (projection.subject.tag !== "execution") {
+    fail(`Execution row ${String(runId)} has non-Execution findings.`);
+  }
   if (
-    projection.run.scenarioId !== row.scenarioId ||
-    projection.run.gitSha !== row.gitSha ||
-    projection.run.startedAt !== row.startedAt ||
-    projection.run.transcriptSha256 !== undefined
+    projection.subject.executionId !== execution.executionId ||
+    projection.subject.evidenceSetId !== execution.evidenceSetId ||
+    projection.subject.scenarioId !== execution.scenarioId ||
+    projection.subject.gitSha !== execution.gitSha ||
+    projection.subject.startedAt !== execution.startedAt ||
+    findingsTranscriptSha256(projection.subject) !== execution.transcriptSha256
   ) {
-    fail(`Generation findings identity does not match run ${String(runId)}.`);
+    fail(
+      `Findings artifact identity does not match Execution row ${String(runId)}.`,
+    );
   }
   if (outputPath === undefined) {
     process.stdout.write(renderFindingsAudit(projection));
   } else {
     writeFindingsAudit({ projection, path: outputPath });
     console.log(
-      `Rendered generation run ${String(runId)} audit into ${outputPath}`,
+      `Rendered Execution row ${String(runId)} audit into ${outputPath}`,
+    );
+  }
+}
+
+function generationAudit(args: readonly string[]): void {
+  const dbPath = required(flagValue(args, "--db"), "--db");
+  const campaignRowId = positiveInteger(
+    required(flagValue(args, "--campaign-row"), "--campaign-row"),
+    "--campaign-row",
+  );
+  const outputPath = flagValue(args, "--output");
+  const db = openArtifactIndex(dbPath);
+  const row = db
+    .prepare(
+      `SELECT scenarioCampaigns.campaignId, scenarioCampaigns.plannedScenarioId, scenarioCampaigns.evidenceSetId, scenarioCampaigns.gitSha, scenarioCampaigns.startedAt,
+              artifacts.path AS findingsPath
+       FROM scenarioCampaigns
+       JOIN scenarioCampaignArtifacts
+         ON scenarioCampaignArtifacts.scenarioCampaignRowId = scenarioCampaigns.id
+        AND scenarioCampaignArtifacts.role = 'findings'
+       JOIN artifacts ON artifacts.sha256 = scenarioCampaignArtifacts.artifactSha256
+       WHERE scenarioCampaigns.id = ?`,
+    )
+    .get(campaignRowId);
+  db.close();
+  const decodedRow = Schema.decodeUnknownEither(PersistedCampaignAuditSchema, {
+    onExcessProperty: "error",
+  })(row);
+  if (Either.isLeft(decodedRow)) {
+    fail(
+      `Scenario Campaign row ${String(campaignRowId)} has no indexed findings artifact.`,
+    );
+  }
+  const campaign = decodedRow.right;
+  const projection = readFindingsProjection(campaign.findingsPath);
+  if (projection.subject.tag !== "scenarioCampaign") {
+    fail(
+      `Scenario Campaign row ${String(campaignRowId)} has non-Campaign findings.`,
+    );
+  }
+  if (
+    projection.subject.campaignId !== campaign.campaignId ||
+    projection.subject.plannedScenarioId !== campaign.plannedScenarioId ||
+    projection.subject.evidenceSetId !== campaign.evidenceSetId ||
+    projection.subject.gitSha !== campaign.gitSha ||
+    projection.subject.startedAt !== campaign.startedAt ||
+    findingsTranscriptSha256(projection.subject) !== undefined
+  ) {
+    fail(
+      `Generation findings identity does not match Scenario Campaign row ${String(campaignRowId)}.`,
+    );
+  }
+  if (outputPath === undefined) {
+    process.stdout.write(renderFindingsAudit(projection));
+  } else {
+    writeFindingsAudit({ projection, path: outputPath });
+    console.log(
+      `Rendered Scenario Campaign row ${String(campaignRowId)} audit into ${outputPath}`,
     );
   }
 }
@@ -836,7 +911,10 @@ function controlledReporting(args: readonly string[]): void {
     fail("Refusing to overwrite controlled reporting timing evidence.");
   }
   const started = performance.now();
-  const runId = ingestArtifactRun({ transcriptPath, dbPath });
+  const runId = ingestArtifactRun({
+    transcriptPath,
+    dbPath,
+  });
   const evidenceDb = openArtifactIndex(dbPath);
   const evidenceSources = [
     {
@@ -879,19 +957,19 @@ function controlledReporting(args: readonly string[]): void {
       mediaType: "application/x-ndjson",
     })),
   ];
-  const insertRunArtifact = evidenceDb.prepare(
+  const insertExecutionArtifact = evidenceDb.prepare(
     "INSERT INTO runArtifacts(runId, role, artifactSha256) VALUES (?, ?, ?)",
   );
   for (const { role, path, mediaType } of evidenceSources) {
     const artifact = registerIndexArtifact({ db: evidenceDb, path, mediaType });
-    insertRunArtifact.run(runId, role, artifact.sha256);
+    insertExecutionArtifact.run(runId, role, artifact.sha256);
   }
   evidenceDb.close();
   review([
     reviewPath,
     "--db",
     dbPath,
-    "--run",
+    "--execution-row",
     String(runId),
     "--review-invocation-evidence",
     reviewInvocationEvidencePath,
@@ -1117,7 +1195,9 @@ function recordDrilldown(args: readonly string[]): void {
 
 function verdict(args: readonly string[]): void {
   const dbPath = required(flagValue(args, "--db"), "--db");
-  const runId = positiveRunId(required(flagValue(args, "--run"), "--run"));
+  const runId = positiveExecutionRowId(
+    required(flagValue(args, "--execution-row"), "--execution-row"),
+  );
   const parsedVerdictClass = verdictClass(
     required(flagValue(args, "--class"), "--class"),
   );
@@ -1126,9 +1206,9 @@ function verdict(args: readonly string[]): void {
   const reviewer = required(flagValue(args, "--reviewer"), "--reviewer");
 
   const db = openArtifactIndex(dbPath);
-  if (!runExists(db, runId)) {
+  if (!executionExists(db, runId)) {
     db.close();
-    fail(`Unknown run ${runId}`);
+    fail(`Unknown Execution row ${runId}`);
   }
   const createdAt = new Date().toISOString();
   const insertVerdict = db.prepare(
@@ -1160,7 +1240,7 @@ function verdict(args: readonly string[]): void {
     }
   })();
   console.log(
-    `Verdict ${Number(info.lastInsertRowid)} recorded for run ${runId}: ${parsedVerdictClass}`,
+    `Verdict ${Number(info.lastInsertRowid)} recorded for Execution row ${runId}: ${parsedVerdictClass}`,
   );
   db.close();
 }
@@ -1169,7 +1249,9 @@ export function review(args: readonly string[]): void {
   const [reviewArg, ...rest] = args;
   const reviewPath = required(reviewArg, "<review.json>");
   const dbPath = required(flagValue(rest, "--db"), "--db");
-  const runId = positiveRunId(required(flagValue(rest, "--run"), "--run"));
+  const runId = positiveExecutionRowId(
+    required(flagValue(rest, "--execution-row"), "--execution-row"),
+  );
   const invocationEvidencePath = flagValue(
     rest,
     "--review-invocation-evidence",
@@ -1191,23 +1273,23 @@ export function review(args: readonly string[]): void {
     fail(`Invalid review output: ${decoded.left.message}`);
 
   const db = openArtifactIndex(dbPath);
-  const run = db
+  const row = db
     .prepare(
-      `SELECT r.scenarioId, r.gitSha, r.transcriptSha256, a.path AS transcriptPath
+      `SELECT r.id, r.executionId, r.evidenceSetId, r.scenarioId, r.gitSha, r.startedAt, r.transcriptSha256, a.path AS transcriptPath
        FROM runs r JOIN artifacts a ON a.sha256 = r.transcriptSha256
-       WHERE r.id = ?`,
+       WHERE r.id = ? AND r.evidenceKind = 'currentExecution'`,
     )
     .get(runId);
-  if (!isJsonRecord(run)) {
+  const persisted = Schema.decodeUnknownEither(PersistedExecutionReviewSchema, {
+    onExcessProperty: "error",
+  })(row);
+  if (Either.isLeft(persisted)) {
     db.close();
-    fail(`Unknown run ${runId}`);
+    fail(`Unknown Execution row ${runId}`);
   }
-  if (typeof run.transcriptPath !== "string") {
-    db.close();
-    fail("Selected run has no transcript path");
-  }
+  const run = persisted.right;
   const finalFindingsPath = findingsArtifactPath(
-    defaultRunDirectory(run.transcriptPath),
+    defaultEvidenceSetDirectory(run.transcriptPath),
   );
   const indexedFinalFindings = db
     .prepare(
@@ -1220,14 +1302,13 @@ export function review(args: readonly string[]): void {
   ) {
     db.close();
     fail(
-      `Run ${String(runId)} already has immutable final findings; additional review import is not allowed.`,
+      `Execution row ${String(runId)} already has immutable final findings; additional review import is not allowed.`,
     );
   }
   const currentTranscriptSha256 = createHash("sha256")
     .update(readFileSync(resolve(repoRoot, run.transcriptPath)))
     .digest("hex");
   if (
-    typeof run.transcriptSha256 !== "string" ||
     run.scenarioId !== decoded.right.scenarioId ||
     run.gitSha !== decoded.right.gitSha ||
     run.transcriptSha256 !== decoded.right.transcriptSha256 ||
@@ -1314,7 +1395,7 @@ export function review(args: readonly string[]): void {
     throw error;
   }
   console.log(
-    `Imported ${decoded.right.verdicts.length} verdict(s) for run ${runId}`,
+    `Imported ${decoded.right.verdicts.length} verdict(s) for Execution row ${runId}`,
   );
   db.close();
 }
@@ -1322,30 +1403,50 @@ export function review(args: readonly string[]): void {
 function summary(args: readonly string[]): void {
   const dbPath = required(flagValue(args, "--db"), "--db");
   const db = openArtifactIndex(dbPath);
-  const rows = db
+  const evidenceCounts = db
     .prepare(
-      "SELECT class, COUNT(*) AS count FROM verdicts GROUP BY class ORDER BY class",
+      "SELECT evidenceKind, COUNT(*) AS count FROM runs GROUP BY evidenceKind",
     )
     .all();
-  const runCount = db.prepare("SELECT COUNT(*) AS count FROM runs").get();
-  if (!isJsonRecord(runCount) || typeof runCount.count !== "number") {
+  if (
+    evidenceCounts.some(
+      (row) =>
+        !isJsonRecord(row) ||
+        typeof row.evidenceKind !== "string" ||
+        typeof row.count !== "number",
+    )
+  ) {
     db.close();
-    fail("Report database returned an invalid run count");
+    fail("Report database returned invalid evidence counts");
   }
-  console.log(`runs: ${runCount.count}`);
-  if (rows.length === 0) {
-    console.log("verdicts: none");
-  }
-  for (const row of rows) {
-    if (
-      !isJsonRecord(row) ||
-      typeof row.class !== "string" ||
-      typeof row.count !== "number"
-    ) {
-      db.close();
-      fail("Report database returned an invalid verdict count");
+  const count = (kind: "currentExecution" | "historicalObservation") =>
+    evidenceCounts.find((row) => isJsonRecord(row) && row.evidenceKind === kind)
+      ?.count ?? 0;
+  console.log(`Executions: ${String(count("currentExecution"))}`);
+  console.log(
+    `Historical observations: ${String(count("historicalObservation"))}`,
+  );
+  for (const [kind, label] of [
+    ["currentExecution", "Execution verdicts"],
+    ["historicalObservation", "Historical verdicts"],
+  ] as const) {
+    const rows = db
+      .prepare(
+        "SELECT verdicts.class, COUNT(*) AS count FROM verdicts JOIN runs ON runs.id = verdicts.runId WHERE runs.evidenceKind = ? GROUP BY verdicts.class ORDER BY verdicts.class",
+      )
+      .all(kind);
+    if (rows.length === 0) console.log(`${label}: none`);
+    for (const row of rows) {
+      if (
+        !isJsonRecord(row) ||
+        typeof row.class !== "string" ||
+        typeof row.count !== "number"
+      ) {
+        db.close();
+        fail("Report database returned an invalid verdict count");
+      }
+      console.log(`${label} ${row.class}: ${row.count}`);
     }
-    console.log(`${row.class}: ${row.count}`);
   }
   db.close();
 }

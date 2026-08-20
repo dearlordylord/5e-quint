@@ -4,6 +4,14 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Either, Schema } from "effect";
 
+import {
+  decodeScenarioId,
+  ScenarioIdSchema,
+  type ScenarioId,
+} from "./raw-swarm-identities.ts";
+
+export { decodeScenarioId, ScenarioIdSchema, type ScenarioId };
+
 export const repoRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
   "../..",
@@ -52,21 +60,6 @@ export function currentGitRevision(
   };
 }
 
-export const ScenarioIdSchema = Schema.String.pipe(
-  Schema.pattern(/^[a-z0-9][a-z0-9-]*$/),
-  Schema.brand("RawSwarmScenarioId"),
-);
-export type ScenarioId = Schema.Schema.Type<typeof ScenarioIdSchema>;
-
-export function decodeScenarioId(
-  value: unknown,
-): Either.Either<ScenarioId, string> {
-  return Schema.decodeUnknownEither(ScenarioIdSchema)(value).pipe(
-    Either.mapLeft(
-      () => "scenario id must be lowercase letters, digits, and hyphens",
-    ),
-  );
-}
 export const GitShaSchema = Schema.String.pipe(
   Schema.pattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/),
   Schema.brand("RawSwarmGitSha"),

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "sand-band-four-skeleton-skirmish",
+  "title": "Sand-band four-Skeleton skirmish",
+  "purpose": "Explore delegated adventurer builds, difficult terrain, ranged pressure, and changing tactics on a fixed grid.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/sand-band-four-skeleton-skirmish.md",
+    "byteLength": 1871,
+    "sha256": "944633366726d04ed1263a822d6f1e401ab4bd2e86cb8297962885e0d32888e5"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/sand-band-four-skeleton-skirmish.md.scenario-review.json",
+    "byteLength": 2711,
+    "sha256": "dc9e49a062080e4d510effd911fb18a03773f3f9f7c01a0ece5a77aaffd61325"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/sand-band-four-skeleton-skirmish.md.stage-facts.json",
+    "byteLength": 615,
+    "sha256": "faa31db2c75b6b3c5e2229405070f884b4df59b3dcaf20508fe59ed813538077"
+  }
+}

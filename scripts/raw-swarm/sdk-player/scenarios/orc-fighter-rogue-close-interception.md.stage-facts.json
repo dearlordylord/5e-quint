@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "orc-fighter-rogue-close-interception",
+  "scenarioSha256": "2a2685f0137245058375de322443adfe9c029f5d6d9558716586f04b7c08a1a8",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "characterSheetsRequired",
+      "evidence": "The scenario delegates fresh Fighter and Rogue Character Sheets with authored build constraints."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "The close-interception setup retains placements through the geometry-derived scenario boundary."
+    }
+  }
+}

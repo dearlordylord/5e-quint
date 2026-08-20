@@ -17,8 +17,20 @@ import {
   type GitSha,
   type ScenarioId,
 } from "./transcript.ts";
+import {
+  BenchmarkIdSchema,
+  EvidenceSetIdSchema,
+  ExecutionIdSchema,
+  ScenarioCampaignIdSchema,
+  ScenarioCandidateIdSchema,
+  type BenchmarkId,
+  type EvidenceSetId,
+  type ExecutionId,
+  type ScenarioCampaignId,
+  type ScenarioCandidateId,
+} from "./raw-swarm-identities.ts";
 
-/** Current phase vocabulary. New v2 evidence cannot invent a readiness pass. */
+/** Current phase vocabulary. New evidence cannot invent a readiness pass. */
 export const MODEL_INVOCATION_PHASES = [
   "scenarioGeneration",
   "scenarioCompositeReview",
@@ -32,7 +44,7 @@ export type ModelInvocationPhase = (typeof MODEL_INVOCATION_PHASES)[number];
 
 /**
  * A benchmark can retain historical auxiliary work without making that work
- * part of the production v2 stage vocabulary.  The benchmark parser below is
+ * part of the production stage vocabulary. The benchmark parser below is
  * the only boundary that accepts these additional phases.
  */
 export const BENCHMARK_MODEL_INVOCATION_PHASES = [
@@ -120,8 +132,103 @@ const ModelInvocationExitSchema = Schema.Union(
 );
 
 /** Identity fields shared by every retained model invocation envelope. */
-export const ModelInvocationIdentityFields = {
+const HistoricalModelInvocationIdentityFields = {
   scenarioId: ScenarioIdSchema,
+  invocationId: Schema.NonEmptyString,
+  model: Schema.NonEmptyString,
+  reasoningEffort: Schema.NonEmptyString,
+} as const;
+
+export type CurrentModelInvocationSubject =
+  | Readonly<{
+      readonly tag: "scenarioCampaign";
+      readonly campaignId: ScenarioCampaignId;
+      readonly plannedScenarioId: ScenarioId;
+    }>
+  | Readonly<{
+      readonly tag: "scenarioCandidate";
+      readonly campaignId: ScenarioCampaignId;
+      readonly candidateId: ScenarioCandidateId;
+      readonly candidateScenarioSha256: string;
+      readonly plannedScenarioId: ScenarioId;
+    }>
+  | Readonly<{ readonly tag: "scenario"; readonly scenarioId: ScenarioId }>
+  | Readonly<{
+      readonly tag: "execution";
+      readonly executionId: ExecutionId;
+      readonly evidenceSetId: EvidenceSetId;
+      readonly scenarioId: ScenarioId;
+    }>
+  | Readonly<{
+      readonly tag: "benchmark";
+      readonly benchmarkId: BenchmarkId;
+      readonly profile:
+        | "documentDeclarationSet"
+        | "boundedCapabilityProjection";
+      readonly scenarioId: ScenarioId;
+    }>;
+
+const CurrentModelInvocationSubjectSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("scenarioCampaign"),
+    campaignId: ScenarioCampaignIdSchema,
+    plannedScenarioId: ScenarioIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("scenarioCandidate"),
+    campaignId: ScenarioCampaignIdSchema,
+    candidateId: ScenarioCandidateIdSchema,
+    candidateScenarioSha256: Schema.String.pipe(
+      Schema.pattern(/^[0-9a-f]{64}$/),
+    ),
+    plannedScenarioId: ScenarioIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("scenario"),
+    scenarioId: ScenarioIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("execution"),
+    executionId: ExecutionIdSchema,
+    evidenceSetId: EvidenceSetIdSchema,
+    scenarioId: ScenarioIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("benchmark"),
+    benchmarkId: BenchmarkIdSchema,
+    profile: Schema.Literal(
+      "documentDeclarationSet",
+      "boundedCapabilityProjection",
+    ),
+    scenarioId: ScenarioIdSchema,
+  }),
+);
+
+function invocationSubjectMatchesPhase(input: {
+  readonly subject: CurrentModelInvocationSubject;
+  readonly phase: ModelInvocationPhase;
+}): boolean {
+  if (input.subject.tag === "benchmark") return true;
+  if (input.phase === "scenarioGeneration") {
+    return input.subject.tag === "scenarioCampaign";
+  }
+  if (input.phase === "scenarioCompositeReview") {
+    return (
+      input.subject.tag === "scenarioCandidate" ||
+      input.subject.tag === "scenario"
+    );
+  }
+  if (
+    input.phase === "scenarioCharacterAuthoring" ||
+    input.phase === "scenarioSetupNeutralAuthoring" ||
+    input.phase === "scenarioSetupControllerAuthoring"
+  ) {
+    return input.subject.tag === "scenario";
+  }
+  return input.subject.tag === "execution";
+}
+
+const ModelInvocationOperationFields = {
   invocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
   reasoningEffort: Schema.NonEmptyString,
@@ -130,7 +237,7 @@ export const ModelInvocationIdentityFields = {
 /** Historical records retain the pre-v2 protocol without invented dimensions. */
 const ModelInvocationLedgerEntryV1Schema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
-  ...ModelInvocationIdentityFields,
+  ...HistoricalModelInvocationIdentityFields,
   gitSha: GitShaSchema,
   eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
   phase: Schema.Literal(...HISTORICAL_MODEL_INVOCATION_PHASES),
@@ -140,10 +247,10 @@ const ModelInvocationLedgerEntryV1Schema = Schema.Struct({
   usage: ModelUsageSchema,
 });
 
-/** Current v2 evidence written by the invocation runner. */
-export const CurrentModelInvocationLedgerEntrySchema = Schema.Struct({
+/** Historical v2 evidence predating lifecycle-discriminated subjects. */
+const ModelInvocationLedgerEntryV2Schema = Schema.Struct({
   schemaVersion: Schema.Literal(2),
-  ...ModelInvocationIdentityFields,
+  ...HistoricalModelInvocationIdentityFields,
   gitSha: GitShaSchema,
   eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
   phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
@@ -159,8 +266,31 @@ export const CurrentModelInvocationLedgerEntrySchema = Schema.Struct({
   }),
 );
 
+export const CurrentModelInvocationLedgerEntrySchema = Schema.Struct({
+  schemaVersion: Schema.Literal(4),
+  subject: CurrentModelInvocationSubjectSchema,
+  ...ModelInvocationOperationFields,
+  gitSha: GitShaSchema,
+  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
+  stagePlanReason: Schema.NonEmptyTrimmedString,
+  startedAt: Schema.NonEmptyString,
+  elapsedMilliseconds: NonNegativeIntegerSchema,
+  exit: ModelInvocationExitSchema,
+  result: ModelInvocationResultSchema,
+  usage: ModelUsageSchema,
+}).pipe(
+  Schema.filter(invocationSubjectMatchesPhase, {
+    message: () => "Invocation subject must match its lifecycle phase.",
+  }),
+  Schema.filter(invocationResultMatchesExit, {
+    message: () => "Invocation result must agree with its exit status.",
+  }),
+);
+
 export const ModelInvocationLedgerEntrySchema = Schema.Union(
   ModelInvocationLedgerEntryV1Schema,
+  ModelInvocationLedgerEntryV2Schema,
   CurrentModelInvocationLedgerEntrySchema,
 );
 
@@ -168,6 +298,9 @@ export type TokenCount = Schema.Schema.Type<typeof TokenCountSchema>;
 export type ModelUsage = Schema.Schema.Type<typeof ModelUsageSchema>;
 type HistoricalModelInvocationLedgerEntry = Schema.Schema.Type<
   typeof ModelInvocationLedgerEntryV1Schema
+>;
+type HistoricalModelInvocationLedgerEntryV2 = Schema.Schema.Type<
+  typeof ModelInvocationLedgerEntryV2Schema
 >;
 export type CurrentModelInvocationLedgerEntry = Schema.Schema.Type<
   typeof CurrentModelInvocationLedgerEntrySchema
@@ -180,6 +313,7 @@ type CurrentModelInvocationLedgerEntryEncoded = Schema.Schema.Encoded<
 >;
 type ModelInvocationEventEntry =
   | Omit<HistoricalModelInvocationLedgerEntry, "eventsSha256">
+  | Omit<HistoricalModelInvocationLedgerEntryV2, "eventsSha256">
   | Omit<CurrentModelInvocationLedgerEntry, "eventsSha256">;
 
 const ModelInvocationStartedEventV1Schema = Schema.Struct({
@@ -207,9 +341,27 @@ const ModelInvocationStartedEventV2Schema = Schema.Struct({
   startedAt: Schema.NonEmptyString,
 });
 
+const CurrentModelInvocationStartedEventSchema = Schema.Struct({
+  type: Schema.Literal("raw-swarm.invocation.started"),
+  schemaVersion: Schema.Literal(4),
+  subject: CurrentModelInvocationSubjectSchema,
+  gitSha: GitShaSchema,
+  phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
+  stagePlanReason: Schema.NonEmptyTrimmedString,
+  fallbackInvocationId: Schema.NonEmptyString,
+  model: Schema.NonEmptyString,
+  reasoningEffort: Schema.NonEmptyString,
+  startedAt: Schema.NonEmptyString,
+}).pipe(
+  Schema.filter(invocationSubjectMatchesPhase, {
+    message: () => "Invocation subject must match its lifecycle phase.",
+  }),
+);
+
 export const ModelInvocationStartedEventSchema = Schema.Union(
   ModelInvocationStartedEventV1Schema,
   ModelInvocationStartedEventV2Schema,
+  CurrentModelInvocationStartedEventSchema,
 );
 
 const ModelInvocationCompletedEventV1Schema = Schema.Struct({
@@ -231,15 +383,28 @@ const ModelInvocationCompletedEventV2Schema = Schema.Struct({
   }),
 );
 
+const CurrentModelInvocationCompletedEventSchema = Schema.Struct({
+  type: Schema.Literal("raw-swarm.invocation.completed"),
+  schemaVersion: Schema.Literal(4),
+  elapsedMilliseconds: NonNegativeIntegerSchema,
+  exit: ModelInvocationExitSchema,
+  result: ModelInvocationResultSchema,
+}).pipe(
+  Schema.filter(invocationResultMatchesExit, {
+    message: () => "Invocation result must agree with its exit status.",
+  }),
+);
+
 export const ModelInvocationCompletedEventSchema = Schema.Union(
   ModelInvocationCompletedEventV1Schema,
   ModelInvocationCompletedEventV2Schema,
+  CurrentModelInvocationCompletedEventSchema,
 );
 
 const BenchmarkAuxiliaryInvocationCommonFields = {
   schemaVersion: Schema.Literal(3),
   profile: Schema.Literal("documentDeclarationSet"),
-  ...ModelInvocationIdentityFields,
+  ...HistoricalModelInvocationIdentityFields,
   gitSha: GitShaSchema,
   eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
   stagePlanReason: Schema.NonEmptyTrimmedString,
@@ -329,7 +494,7 @@ type ModelInvocationCompletedEvent = Schema.Schema.Type<
 >;
 
 type ModelInvocationEventInput = {
-  readonly scenarioId: unknown;
+  readonly subject: unknown;
   readonly gitSha: unknown;
   readonly phase: unknown;
   readonly stagePlanReason: unknown;
@@ -352,6 +517,19 @@ export function parseModelInvocationLedgerEntry(
   return Schema.decodeUnknownEither(ModelInvocationLedgerEntrySchema, {
     onExcessProperty: "error",
   })(value);
+}
+
+/** Scenario reference carried by historical and lifecycle-discriminated rows. */
+export function modelInvocationScenarioReference(
+  entry: ModelInvocationLedgerEntry,
+): ScenarioId {
+  if (entry.schemaVersion === 1 || entry.schemaVersion === 2) {
+    return entry.scenarioId;
+  }
+  return entry.subject.tag === "scenarioCampaign" ||
+    entry.subject.tag === "scenarioCandidate"
+    ? entry.subject.plannedScenarioId
+    : entry.subject.scenarioId;
 }
 
 export function parseBenchmarkModelInvocationLedgerEntry(
@@ -676,7 +854,37 @@ export function modelInvocationEvidenceFromEvents(
       },
     };
   }
-  if (completion.schemaVersion !== 2) {
+  if (start.schemaVersion === 2) {
+    if (completion.schemaVersion !== 2) {
+      return {
+        tag: "invalid",
+        message:
+          "Model invocation start and completion records must use the same schema version.",
+      };
+    }
+    return {
+      tag: "valid",
+      entry: {
+        schemaVersion: 2,
+        scenarioId: start.scenarioId,
+        gitSha: start.gitSha,
+        phase: start.phase,
+        stagePlanReason: start.stagePlanReason,
+        invocationId: invocationIdFromCodexEvents(
+          events,
+          start.fallbackInvocationId,
+        ),
+        model: start.model,
+        reasoningEffort: start.reasoningEffort,
+        startedAt: start.startedAt,
+        elapsedMilliseconds: completion.elapsedMilliseconds,
+        exit: completion.exit,
+        result: completion.result,
+        usage: modelUsageFromCodexEvents(events),
+      },
+    };
+  }
+  if (completion.schemaVersion !== 4) {
     return {
       tag: "invalid",
       message:
@@ -686,8 +894,8 @@ export function modelInvocationEvidenceFromEvents(
   return {
     tag: "valid",
     entry: {
-      schemaVersion: 2,
-      scenarioId: start.scenarioId,
+      schemaVersion: 4,
+      subject: start.subject,
       gitSha: start.gitSha,
       phase: start.phase,
       stagePlanReason: start.stagePlanReason,
@@ -782,7 +990,7 @@ export function modelInvocationStartedEvent(
     onExcessProperty: "error",
   })({
     type: "raw-swarm.invocation.started",
-    schemaVersion: 2,
+    schemaVersion: 4,
     ...input,
   });
 }
@@ -821,7 +1029,7 @@ export function modelInvocationCompletedEvent(input: {
     onExcessProperty: "error",
   })({
     type: "raw-swarm.invocation.completed",
-    schemaVersion: 2,
+    schemaVersion: 4,
     ...input,
   });
 }
@@ -1020,7 +1228,7 @@ export function runCodexInvocation(input: {
   readonly ledgerPath: string;
   readonly phase: ModelInvocationPhase;
   readonly stagePlanReason: string;
-  readonly scenarioId: ScenarioId;
+  readonly subject: CurrentModelInvocationSubject;
   readonly gitSha: GitSha;
   readonly fallbackInvocationId: string;
   readonly model: string;
@@ -1029,7 +1237,7 @@ export function runCodexInvocation(input: {
   const startedAt = new Date().toISOString();
   const startedMilliseconds = Date.now();
   const startedEvent = modelInvocationStartedEvent({
-    scenarioId: input.scenarioId,
+    subject: input.subject,
     gitSha: input.gitSha,
     phase: input.phase,
     stagePlanReason: input.stagePlanReason,
@@ -1062,9 +1270,9 @@ export function runCodexInvocation(input: {
   if (parsedEvents.tag === "invalid") throw new Error(parsedEvents.message);
   const evidence = modelInvocationEvidenceFromEvents(parsedEvents.events);
   if (evidence.tag === "invalid") throw new Error(evidence.message);
-  if (evidence.entry.schemaVersion !== 2) {
+  if (evidence.entry.schemaVersion !== 4) {
     throw new Error(
-      "The current invocation runner must emit v2 model telemetry evidence.",
+      "The current invocation runner must emit v4 model telemetry evidence.",
     );
   }
   appendInvocationEvidenceLedger({
@@ -1078,7 +1286,7 @@ export function runCodexInvocation(input: {
 /**
  * Run one benchmark-only auxiliary call through the same first-party event
  * and ledger boundary as the production invocation runner.  The historical
- * profile keeps these calls visible without widening the v2 stage vocabulary.
+ * profile keeps these calls visible without widening the current stage vocabulary.
  */
 export type BenchmarkAuxiliaryInvocationKind =
   | {

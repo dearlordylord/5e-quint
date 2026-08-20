@@ -5,8 +5,8 @@ import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { Either, Match, Schema } from "effect";
 
 import {
-  PlayerRunStateSchema,
-  type PlayerRunState,
+  PlayerExecutionStateSchema,
+  type PlayerExecutionState,
 } from "../player-continuation-evidence.ts";
 import type { SdkAudit } from "./sdk-audit.ts";
 import type { JsonValue } from "./continuation-contract.ts";
@@ -52,7 +52,7 @@ export type SdkReviewPacketReadyArtifacts =
   | { readonly tag: "invalid"; readonly message: string };
 
 export function sdkReviewPacketReadyArtifacts(input: {
-  readonly run: PlayerRunState;
+  readonly run: PlayerExecutionState;
   readonly finalArtifactExists: boolean;
 }): SdkReviewPacketReadyArtifacts {
   if ((input.run.kind === "playerConcluded") !== input.finalArtifactExists) {
@@ -91,12 +91,12 @@ export function sdkReviewPacketReadyArtifacts(input: {
   );
 }
 
-function runArtifactRole(input: {
-  readonly runDirectory: string;
+function executionArtifactRole(input: {
+  readonly evidenceSetDirectory: string;
   readonly source: SdkReviewPacketSource;
 }): string | undefined {
   const role = relative(
-    input.runDirectory,
+    input.evidenceSetDirectory,
     resolve(repoRoot, input.source.path),
   );
   return role.length === 0 || role.startsWith("..") || isAbsolute(role)
@@ -104,9 +104,9 @@ function runArtifactRole(input: {
     : role;
 }
 
-function terminalRunArtifactRoles(input: {
+function terminalExecutionArtifactRoles(input: {
   readonly audit: SdkAudit;
-  readonly runArtifacts: readonly SdkReviewPacketSource[];
+  readonly executionArtifacts: readonly SdkReviewPacketSource[];
 }):
   | { readonly tag: "valid" }
   | { readonly tag: "invalid"; readonly message: string } {
@@ -114,9 +114,9 @@ function terminalRunArtifactRoles(input: {
   const expectedScenarioRoles: readonly string[] =
     SDK_REVIEW_PACKET_SCENARIO_ARTIFACT_ROLES;
   if (header.characterOutcome !== "ready" || header.setupOutcome !== "ready") {
-    const actualRoles = input.runArtifacts.map((source) =>
-      runArtifactRole({
-        runDirectory: resolve(
+    const actualRoles = input.executionArtifacts.map((source) =>
+      executionArtifactRole({
+        evidenceSetDirectory: resolve(
           repoRoot,
           dirname(dirname(header.transcriptPath)),
         ),
@@ -128,15 +128,15 @@ function terminalRunArtifactRoles(input: {
       : {
           tag: "invalid",
           message:
-            "Review evidence packet run artifacts do not match the recorded run outcome.",
+            "Review evidence packet execution artifacts do not match the recorded Execution outcome.",
         };
   }
-  const runDirectory = resolve(
+  const evidenceSetDirectory = resolve(
     repoRoot,
     dirname(dirname(header.transcriptPath)),
   );
-  const roles = input.runArtifacts.map((source) =>
-    runArtifactRole({ runDirectory, source }),
+  const roles = input.executionArtifacts.map((source) =>
+    executionArtifactRole({ evidenceSetDirectory, source }),
   );
   const prefixIndex = roles.indexOf("evidence/frozen-prefix.json");
   if (
@@ -149,7 +149,9 @@ function terminalRunArtifactRoles(input: {
         "Review evidence packet requires one canonical player terminal state.",
     };
   }
-  const prefixContent = packetSourceContent(input.runArtifacts[prefixIndex]!);
+  const prefixContent = packetSourceContent(
+    input.executionArtifacts[prefixIndex]!,
+  );
   let prefixValue: unknown;
   try {
     prefixValue =
@@ -158,7 +160,7 @@ function terminalRunArtifactRoles(input: {
     prefixValue = undefined;
   }
   const prefix = Schema.decodeUnknownEither(
-    Schema.Struct({ run: PlayerRunStateSchema }),
+    Schema.Struct({ run: PlayerExecutionStateSchema }),
   )(prefixValue);
   if (Either.isLeft(prefix)) {
     return {
@@ -179,7 +181,7 @@ function terminalRunArtifactRoles(input: {
     : {
         tag: "invalid",
         message:
-          "Review evidence packet run artifacts do not match the recorded run outcome.",
+          "Review evidence packet execution artifacts do not match the recorded Execution outcome.",
       };
 }
 
@@ -197,7 +199,7 @@ export type SdkReviewPacket = {
   readonly audit: SdkAudit;
   readonly retainedHeaderEvidence: JsonValue;
   readonly currentTurnProjections: readonly PlayerCurrentTurnProjection[];
-  readonly runArtifacts: readonly SdkReviewPacketSource[];
+  readonly executionArtifacts: readonly SdkReviewPacketSource[];
   readonly domainAuthorities: readonly SdkReviewPacketSource[];
   readonly rawAuthorities: readonly SdkReviewPacketSource[];
 };
@@ -254,7 +256,7 @@ function packetShapeIsValid(value: unknown): value is SdkReviewPacket {
         "audit",
         "retainedHeaderEvidence",
         "currentTurnProjections",
-        "runArtifacts",
+        "executionArtifacts",
         "domainAuthorities",
         "rawAuthorities",
       ]
@@ -265,8 +267,8 @@ function packetShapeIsValid(value: unknown): value is SdkReviewPacket {
     isJsonValue(value.retainedHeaderEvidence) &&
     Array.isArray(value.currentTurnProjections) &&
     value.currentTurnProjections.every((entry) => isJsonValue(entry)) &&
-    Array.isArray(value.runArtifacts) &&
-    value.runArtifacts.every(packetSourceIsValid) &&
+    Array.isArray(value.executionArtifacts) &&
+    value.executionArtifacts.every(packetSourceIsValid) &&
     Array.isArray(value.domainAuthorities) &&
     value.domainAuthorities.every(packetSourceIsValid) &&
     Array.isArray(value.rawAuthorities) &&
@@ -432,7 +434,7 @@ export function validateSdkReviewPacket(
     };
   }
   const sourceLists: readonly (readonly SdkReviewPacketSource[])[] = [
-    value.runArtifacts,
+    value.executionArtifacts,
     value.domainAuthorities,
     value.rawAuthorities,
   ];
@@ -447,11 +449,11 @@ export function validateSdkReviewPacket(
         "Review evidence packet contains a numbered source that does not match its canonical repository file.",
     };
   }
-  const runArtifacts = terminalRunArtifactRoles({
+  const executionArtifacts = terminalExecutionArtifactRoles({
     audit,
-    runArtifacts: value.runArtifacts,
+    executionArtifacts: value.executionArtifacts,
   });
-  if (runArtifacts.tag === "invalid") return runArtifacts;
+  if (executionArtifacts.tag === "invalid") return executionArtifacts;
   const transcript = exactTranscript(audit);
   if (transcript.tag === "invalid") return transcript;
   const transcriptCallIdentity = transcript.transcript.calls.map(
@@ -555,13 +557,13 @@ export function encodeSdkReviewPacket(input: {
   readonly audit: SdkAudit;
   readonly retainedHeaderEvidence: JsonValue;
   readonly currentTurnProjections: readonly PlayerCurrentTurnProjection[];
-  readonly runArtifacts: readonly SdkReviewPacketSource[];
+  readonly executionArtifacts: readonly SdkReviewPacketSource[];
   readonly domainAuthorities: readonly SdkReviewPacketSource[];
   readonly rawAuthorities: readonly SdkReviewPacketSource[];
   readonly maximumByteLength?: number;
 }): SdkReviewPacketResult {
   const sourceLists: readonly (readonly SdkReviewPacketSource[])[] = [
-    input.runArtifacts,
+    input.executionArtifacts,
     input.domainAuthorities,
     input.rawAuthorities,
   ];
@@ -578,7 +580,7 @@ export function encodeSdkReviewPacket(input: {
     audit: input.audit,
     retainedHeaderEvidence: input.retainedHeaderEvidence,
     currentTurnProjections: input.currentTurnProjections,
-    runArtifacts: input.runArtifacts,
+    executionArtifacts: input.executionArtifacts,
     domainAuthorities: input.domainAuthorities,
     rawAuthorities: input.rawAuthorities,
   };

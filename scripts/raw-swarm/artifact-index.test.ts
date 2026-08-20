@@ -51,6 +51,15 @@ function sdkTranscript(directory: string): string {
   writeFileSync(resolve(run, "evidence/characters.ts"), characters);
   writeFileSync(resolve(run, "evidence/setup.ts"), setup);
   writeFileSync(
+    resolve(run, "execution.json"),
+    `${JSON.stringify({
+      schemaVersion: 1,
+      executionId: "artifact-index-execution",
+      evidenceSetId: "artifact-index-evidence",
+      scenarioId: "artifact-index",
+    })}\n`,
+  );
+  writeFileSync(
     resolve(run, "evidence/player-invocation-0001.events.jsonl"),
     '{"type":"first"}\n',
   );
@@ -102,6 +111,53 @@ function sdkTranscript(directory: string): string {
 }
 
 describe("Raw Swarm artifact index", () => {
+  test("public ingestion rejects observations without current Execution identity", () => {
+    const directory = temporaryDirectory();
+    const sdk = sdkTranscript(directory);
+    rmSync(resolve(dirname(dirname(sdk)), "execution.json"));
+    expect(() =>
+      ingestArtifactRun({
+        transcriptPath: relative(repoRoot, sdk),
+        dbPath: relative(repoRoot, resolve(directory, "sdk.sqlite")),
+      }),
+    ).toThrow(/requires its Execution manifest/);
+
+    const mcp = resolve(directory, "historical-mcp.jsonl");
+    writeFileSync(
+      mcp,
+      `${[
+        {
+          type: "header",
+          scenarioId: "artifact-index",
+          gitSha: "a".repeat(40),
+          startedAt: "2026-08-14T00:00:00.000Z",
+        },
+        {
+          seq: 1,
+          direction: "client->server",
+          message: {
+            id: 1,
+            method: "tools/call",
+            params: { name: "observe", arguments: {} },
+          },
+        },
+        {
+          seq: 2,
+          direction: "server->client",
+          message: { id: 1, result: {} },
+        },
+      ]
+        .map(JSON.stringify)
+        .join("\n")}\n`,
+    );
+    expect(() =>
+      ingestArtifactRun({
+        transcriptPath: relative(repoRoot, mcp),
+        dbPath: relative(repoRoot, resolve(directory, "mcp.sqlite")),
+      }),
+    ).toThrow(/use legacy rebuild for Historical Observations/);
+  });
+
   test("refuses a prior compact index schema instead of mutating it in place", () => {
     const directory = temporaryDirectory();
     const dbPath = resolve(directory, "old-index.sqlite");
@@ -111,7 +167,7 @@ describe("Raw Swarm artifact index", () => {
     );
     old.close();
     expect(() => openArtifactIndex(relative(repoRoot, dbPath))).toThrow(
-      /schema is not version 2/,
+      /schema is not version 3/,
     );
   });
 
@@ -175,7 +231,7 @@ describe("Raw Swarm artifact index", () => {
     expect(readFileSync(legacyPath)).toEqual(sourceBefore);
   });
 
-  test("keeps current v2 artifact-index inventory hash-linked and read-only", () => {
+  test("keeps current v3 artifact-index inventory hash-linked and read-only", () => {
     const directory = temporaryDirectory();
     const transcript = sdkTranscript(directory);
     const dbPath = resolve(directory, "current-index.sqlite");
@@ -192,7 +248,7 @@ describe("Raw Swarm artifact index", () => {
 
     expect(result).toMatchObject({
       tag: "supported",
-      source: { tag: "artifactIndex", schemaVersion: 2 },
+      source: { tag: "artifactIndex", schemaVersion: 3 },
       inventory: [
         expect.objectContaining({
           kind: "run",
@@ -334,11 +390,46 @@ describe("Raw Swarm artifact index", () => {
     expect(() =>
       constrained
         .prepare(
-          `INSERT INTO calls(runId, seq, source, operation, outcome)
-           VALUES (1, 2, 'mcp', 'invalid', 'returned')`,
+          `INSERT INTO calls(runId, seq, source, operation, outcome, resultSha256)
+           VALUES (1, 2, 'mcp', 'observe', 'returned', ?)`,
         )
+        .run("d".repeat(64)),
+    ).toThrow(/call source does not match observation transport/);
+    expect(() =>
+      constrained
+        .prepare("UPDATE calls SET source = 'mcp' WHERE runId = 1 AND seq = 1")
         .run(),
-    ).toThrow();
+    ).toThrow(/call source does not match observation transport/);
+    const historicalSdkPath = resolve(directory, "historical-sdk.jsonl");
+    writeFileSync(historicalSdkPath, "");
+    const historicalSdkSha256 = sha256Text("");
+    constrained
+      .prepare(
+        "INSERT INTO artifacts(sha256, byteLength, mediaType, path) VALUES (?, 0, 'application/x-ndjson', ?)",
+      )
+      .run(historicalSdkSha256, relative(repoRoot, historicalSdkPath));
+    constrained
+      .prepare(
+        `INSERT INTO runs(id, evidenceKind, transport, scenarioId, gitSha, startedAt, transcriptSha256)
+         VALUES (2, 'historicalObservation', 'sdk', 'historical-sdk', ?, 'started', ?)`,
+      )
+      .run("f".repeat(40), historicalSdkSha256);
+    constrained
+      .prepare(
+        `INSERT INTO calls(runId, seq, source, continuation, operation, outcome, inputSessionSha256, outputSessionSha256, resultSha256, reviewFacts)
+         VALUES (2, 1, 'sdk', 1, 'discoverBattleActs', 'returned', ?, ?, ?, '{}')`,
+      )
+      .run("a".repeat(64), "b".repeat(64), "c".repeat(64));
+    expect(() =>
+      constrained
+        .prepare("UPDATE runs SET transport = 'mcp' WHERE id = 2")
+        .run(),
+    ).toThrow(/observation transport does not match call source/);
+    constrained.prepare("DELETE FROM calls WHERE runId = 2").run();
+    constrained.prepare("DELETE FROM runs WHERE id = 2").run();
+    constrained
+      .prepare("DELETE FROM artifacts WHERE sha256 = ?")
+      .run(historicalSdkSha256);
     expect(() =>
       constrained
         .prepare(
@@ -737,6 +828,7 @@ describe("Raw Swarm artifact index", () => {
     legacy.close();
 
     const rebuiltPath = resolve(directory, "rebuilt.sqlite");
+    rmSync(resolve(dirname(dirname(transcript)), "execution.json"));
     const rebuilt = rebuildLegacyArtifactIndex({
       legacyDbPath: relative(repoRoot, legacyPath),
       dbPath: relative(repoRoot, rebuiltPath),
@@ -767,6 +859,9 @@ describe("Raw Swarm artifact index", () => {
     ).toEqual({
       count: 1,
     });
+    expect(
+      indexed.prepare("SELECT evidenceKind, transport FROM runs").get(),
+    ).toEqual({ evidenceKind: "historicalObservation", transport: "sdk" });
     expect(
       indexed.prepare("SELECT COUNT(*) AS count FROM verdicts").get(),
     ).toEqual({

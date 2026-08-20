@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "goblin-warrior-skeleton-tracer",
+  "scenarioSha256": "d2b68e4f67e7ed80db02ced51d4d0dd9e15cd1e966c0dc429cc6fe43ada5b196",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The tracer uses canonical Goblin Warrior and Skeleton stat blocks without Character Sheets."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "The tracer's fixed arena and placements use the geometry-derived scenario boundary."
+    }
+  }
+}
