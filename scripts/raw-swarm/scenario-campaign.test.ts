@@ -24,6 +24,10 @@ import {
 } from "./scenario-campaign.ts";
 import { GitShaSchema, repoRoot, ScenarioIdSchema } from "./transcript.ts";
 import { publishScenarioAdmissionBundle } from "./generate-scenario.ts";
+import {
+  ScenarioCatalogueComparisonSchema,
+  ScenarioCatalogueProjectionSchema,
+} from "./scenario-authoring.ts";
 
 test("rolls back every admitted path when bundle publication fails", () => {
   const root = mkdtempSync(resolve(tmpdir(), "scenario-admission-"));
@@ -728,6 +732,14 @@ describe("scenario generation campaign", () => {
       ...review,
       reviewScope: "rawContentSdkCapabilityPolicyQuality" as const,
       scenarioQuality: readyQuality.scenarioQuality,
+      catalogueComparison: {
+        schemaVersion: 1 as const,
+        conclusion: "meaningfullyDistinct" as const,
+        comparedScenarioIds: [],
+        closestMatches: [],
+        materialDifferentiators: [],
+        basis: { tag: "noAdmittedScenarios" as const },
+      },
     };
     expect(
       Either.isRight(
@@ -738,6 +750,26 @@ describe("scenario generation campaign", () => {
         }),
       ),
     ).toBe(true);
+    expect(
+      Either.isLeft(
+        verifyFinalScenarioReview(currentReview, {
+          scenarioId,
+          gitSha,
+          scenarioBytes,
+          admittedScenarioIds: [scenarioId],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      finalScenarioDisposition({
+        ...currentReview,
+        catalogueComparison: {
+          ...currentReview.catalogueComparison,
+          conclusion: "purposefulOverlap",
+          materialDifferentiators: [],
+        },
+      }),
+    ).toBe("rejected");
     expect(
       Either.isLeft(
         verifyFinalScenarioReview(
@@ -953,6 +985,208 @@ describe("scenario generation campaign", () => {
     expect(Either.isRight(nowSupported)).toBe(true);
     if (Either.isRight(nowSupported)) {
       expect(finalScenarioDisposition(nowSupported.right)).toBe("rejected");
+    }
+  });
+
+  test("compares every generated Candidate and revises a redundant selection", async () => {
+    const projection = Schema.decodeUnknownSync(
+      ScenarioCatalogueProjectionSchema,
+    )({
+      scenarioId: "admitted-synthetic-scenario",
+      title: "Admitted synthetic scenario",
+      purpose: "Explore a retained synthetic tactical question.",
+      authoredSource: {
+        path: "scripts/raw-swarm/sdk-player/scenarios/admitted-synthetic-scenario.md",
+        byteLength: 128,
+        sha256: "a".repeat(64),
+      },
+      characterRequirement: "characterSheetsRequired",
+      spatialContext: "notRequired",
+      contentAvailabilityIntent: "availableOnly",
+      sdkSupportBoundary: "supportedOnly/supported",
+    });
+    const comparisons: Array<{ candidateIndex: number; scenarioId: string }> =
+      [];
+    let reviewComparison: { readonly conclusion: string } | undefined;
+    const agents: ScenarioCampaignAgents = {
+      generate: async (input) => ({
+        candidates: Array.from({ length: input.candidateCount }, (_, index) =>
+          candidate(`catalogue candidate ${input.iteration}-${index}`),
+        ),
+      }),
+      compareCandidate: async ({ candidateIndex, batch }) => {
+        comparisons.push({ candidateIndex, scenarioId: batch[0]!.scenarioId });
+        return Schema.decodeUnknownSync(ScenarioCatalogueComparisonSchema)({
+          schemaVersion: 1,
+          conclusion:
+            comparisons.length <= 3 ? "redundant" : "meaningfullyDistinct",
+          comparedScenarioIds: batch.map(({ scenarioId }) => scenarioId),
+          closestMatches:
+            comparisons.length <= 3
+              ? [
+                  {
+                    scenarioId: batch[0]!.scenarioId,
+                    reason: "The synthetic interaction sequence is repeated.",
+                  },
+                ]
+              : [],
+          materialDifferentiators: [],
+          basis: {
+            tag: "compared",
+            dimensions: {
+              exploratoryPurpose: "The candidate asks the same first question.",
+              materiallyRelevantMechanics:
+                "The candidate repeats the mechanic.",
+              encounterComposition: "The candidate keeps the encounter shape.",
+              interactionSequence: "The candidate repeats the sequence.",
+              tacticalQuestion:
+                "The candidate asks the same tactical question.",
+              sdkSupportBoundary: "The candidate uses supported operations.",
+              spatialContext: { tag: "notMaterial" },
+            },
+          },
+        });
+      },
+      reviewScenario: async ({ catalogueComparison }) => {
+        if (catalogueComparison.tag === "retained") {
+          reviewComparison = catalogueComparison.comparison;
+        }
+        return {
+          raw: { classification: "supported", evidence: "Synthetic RAW." },
+          contentAvailability: {
+            classification: "supplied",
+            evidence: "Synthetic content.",
+          },
+          sdkCapability: {
+            classification: "supported",
+            evidence: "Synthetic SDK.",
+          },
+          artifactPolicy: {
+            classification: "safe",
+            evidence: "Synthetic policy.",
+          },
+          ...readyQuality,
+        };
+      },
+    };
+    const result = await runScenarioCampaign(
+      {
+        ...config,
+        minimumIterations: 1,
+        maximumIterations: 2,
+        reviewMilestone: 1,
+      },
+      agents,
+      { select: () => 0 },
+      {
+        tag: "required",
+        batches: [[projection]],
+        expectedScenarioIds: [projection.scenarioId],
+      },
+    );
+    expect(Either.isRight(result)).toBe(true);
+    expect(comparisons).toHaveLength(6);
+    expect(reviewComparison).toMatchObject({
+      conclusion: "meaningfullyDistinct",
+    });
+    if (Either.isRight(result) && !("tag" in result.right)) {
+      expect(result.right.catalogueComparison).toMatchObject({
+        tag: "retained",
+        comparison: { conclusion: "meaningfullyDistinct" },
+      });
+      expect(finalScenarioDisposition(result.right)).toBe("admitted");
+    }
+  });
+
+  test("retains a redundant Candidate as rejected when the revision bound is exhausted", async () => {
+    const projection = Schema.decodeUnknownSync(
+      ScenarioCatalogueProjectionSchema,
+    )({
+      scenarioId: "admitted-synthetic-scenario",
+      title: "Admitted synthetic scenario",
+      purpose: "Explore a retained synthetic tactical question.",
+      authoredSource: {
+        path: "scripts/raw-swarm/sdk-player/scenarios/admitted-synthetic-scenario.md",
+        byteLength: 128,
+        sha256: "a".repeat(64),
+      },
+      characterRequirement: "characterSheetsRequired",
+      spatialContext: "notRequired",
+      contentAvailabilityIntent: "availableOnly",
+      sdkSupportBoundary: "supportedOnly/supported",
+    });
+    let reviewComparison: { readonly conclusion: string } | undefined;
+    const result = await runScenarioCampaign(
+      {
+        ...config,
+        minimumIterations: 1,
+        maximumIterations: 2,
+        reviewMilestone: 1,
+      },
+      {
+        generate: async (input) => ({
+          candidates: Array.from({ length: input.candidateCount }, (_, index) =>
+            candidate(`always redundant ${index}`),
+          ),
+        }),
+        compareCandidate: async ({ batch }) =>
+          Schema.decodeUnknownSync(ScenarioCatalogueComparisonSchema)({
+            schemaVersion: 1,
+            conclusion: "redundant",
+            comparedScenarioIds: batch.map(({ scenarioId }) => scenarioId),
+            closestMatches: [
+              {
+                scenarioId: batch[0]!.scenarioId,
+                reason: "The admitted interaction sequence is identical.",
+              },
+            ],
+            materialDifferentiators: [],
+            basis: {
+              tag: "compared",
+              dimensions: {
+                exploratoryPurpose: "Same purpose.",
+                materiallyRelevantMechanics: "Same mechanics.",
+                encounterComposition: "Same composition.",
+                interactionSequence: "Same sequence.",
+                tacticalQuestion: "Same question.",
+                sdkSupportBoundary: "Same support boundary.",
+                spatialContext: { tag: "notMaterial" },
+              },
+            },
+          }),
+        reviewScenario: async ({ catalogueComparison }) => {
+          if (catalogueComparison.tag === "retained") {
+            reviewComparison = catalogueComparison.comparison;
+          }
+          return {
+            raw: { classification: "supported", evidence: "Synthetic RAW." },
+            contentAvailability: {
+              classification: "supplied",
+              evidence: "Synthetic content.",
+            },
+            sdkCapability: {
+              classification: "supported",
+              evidence: "Synthetic SDK.",
+            },
+            artifactPolicy: {
+              classification: "safe",
+              evidence: "Synthetic policy.",
+            },
+            ...readyQuality,
+          };
+        },
+      },
+      { select: () => 0 },
+      {
+        tag: "required",
+        batches: [[projection]],
+        expectedScenarioIds: [projection.scenarioId],
+      },
+    );
+    expect(Either.isRight(result)).toBe(true);
+    expect(reviewComparison).toMatchObject({ conclusion: "redundant" });
+    if (Either.isRight(result) && !("tag" in result.right)) {
+      expect(finalScenarioDisposition(result.right)).toBe("rejected");
     }
   });
 });

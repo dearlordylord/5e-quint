@@ -25,7 +25,7 @@ SDK revision, canonical result hashes, and exact-sequence extraction path must
 remain sufficient to regenerate and challenge every derived fact. The current
 raw-swarm README now states the same boundary: the canonical transcript is
 authoritative, while reviewers receive a bounded projection first
-([README.md:368-375](../../scripts/raw-swarm/README.md#L368-L375)).
+([OPERATIONS.md:368-375](../../scripts/raw-swarm/OPERATIONS.md#L368-L375)).
 
 New generation, authoring, player, and review launches write a typed invocation
 ledger from first-party JSON events. Missing usage is explicitly unavailable,
@@ -392,7 +392,7 @@ are visible in the harness:
 
 The current continuation protocol already supplies a useful integrity seam:
 the supervisor freezes the first observable continuation and checks the
-append-only program prefix ([`README.md:282-303`](../../scripts/raw-swarm/README.md#L282-L303)).
+append-only program prefix ([`OPERATIONS.md:282-303`](../../scripts/raw-swarm/OPERATIONS.md#L282-L303)).
 That seam can support a checked replay cursor: validate the full prefix once,
 cache the verified session and next sequence inside the long-lived supervisor,
 and apply only the appended suffix on the next request. Retain periodic full
@@ -601,7 +601,7 @@ The two operations prove different things:
 
 Therefore the raw-swarm README's rule is correct: deterministic replay applies
 to the canonical SDK call stream at its recorded revision, not arbitrary agent
-source with uncontrolled inputs ([`README.md:294-303`](../../scripts/raw-swarm/README.md#L294-L303)).
+source with uncontrolled inputs ([`OPERATIONS.md:294-303`](../../scripts/raw-swarm/OPERATIONS.md#L294-L303)).
 Retain authored source and model logs for accountability and diagnosis, but
 judge RAW execution against the canonical call stream and separately audited
 random-draw records.

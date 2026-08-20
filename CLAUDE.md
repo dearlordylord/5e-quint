@@ -61,6 +61,10 @@ architecture, assumption, Cleanroom, or acceptance documentation. Keep each
 fact in one owning document and link to it elsewhere. Package-local boundaries
 belong in the owning package README or architecture document.
 
+Raw Swarm authoring, execution, and evidence-review procedures are owned by
+[`scripts/raw-swarm/README.md`](scripts/raw-swarm/README.md); follow its role
+links before reading the detailed operations reference.
+
 ## TypeScript conventions
 
 - Parse once at a boundary and pass the narrowed type forward. Boundary adapters

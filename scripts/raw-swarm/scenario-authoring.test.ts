@@ -1,0 +1,185 @@
+import { Either, Schema } from "effect";
+import { describe, expect, test } from "vitest";
+
+import {
+  aggregateScenarioCatalogueComparisons,
+  batchScenarioCatalogueProjections,
+  SCENARIO_CATALOGUE_COMPARISON_BATCH_BYTE_LIMIT,
+  ScenarioCatalogueComparisonSchema,
+  validateScenarioCatalogueComparison,
+  type ScenarioCatalogueComparison,
+  type ScenarioCatalogueProjection,
+} from "./scenario-authoring.ts";
+
+const projection = (
+  scenarioId: string,
+  purpose = "Explore a synthetic tactical question.",
+): ScenarioCatalogueProjection => ({
+  scenarioId: scenarioId as ScenarioCatalogueProjection["scenarioId"],
+  title: `Synthetic ${scenarioId}`,
+  purpose,
+  authoredSource: {
+    path: `scripts/raw-swarm/sdk-player/scenarios/${scenarioId}.md`,
+    byteLength: 128,
+    sha256: "a".repeat(64),
+  },
+  characterRequirement: "characterSheetsRequired",
+  spatialContext: "notRequired",
+  contentAvailabilityIntent: "availableOnly",
+  sdkSupportBoundary: "supportedOnly/supported",
+});
+
+const dimensions = {
+  exploratoryPurpose: "The candidate asks a different question.",
+  materiallyRelevantMechanics: "The candidate uses a different mechanic.",
+  encounterComposition: "The candidate composes a different encounter.",
+  interactionSequence: "The candidate changes the interaction sequence.",
+  tacticalQuestion: "The candidate asks a different tactical question.",
+  sdkSupportBoundary: "Both paths use the supported SDK boundary.",
+  spatialContext: { tag: "notMaterial" as const },
+};
+
+const comparison = (
+  conclusion: ScenarioCatalogueComparison["conclusion"],
+  ids: readonly string[],
+  overrides: Partial<ScenarioCatalogueComparison> = {},
+): ScenarioCatalogueComparison => ({
+  schemaVersion: 1,
+  conclusion,
+  comparedScenarioIds:
+    ids as ScenarioCatalogueComparison["comparedScenarioIds"],
+  closestMatches:
+    conclusion === "redundant"
+      ? [
+          {
+            scenarioId:
+              ids[0]! as ScenarioCatalogueComparison["comparedScenarioIds"][number],
+            reason: "The interaction sequence is the same.",
+          },
+        ]
+      : [],
+  materialDifferentiators:
+    conclusion === "purposefulOverlap"
+      ? ["The candidate changes the tactical question."]
+      : [],
+  basis: { tag: "compared", dimensions },
+  ...overrides,
+});
+
+describe("Scenario authoring catalogue comparison", () => {
+  test("splits the complete projection without truncating entries", () => {
+    const projections = [projection("one"), projection("two")];
+    const batches = batchScenarioCatalogueProjections(projections);
+    expect(Either.isRight(batches)).toBe(true);
+    if (Either.isRight(batches)) {
+      expect(batches.right.flat()).toEqual(projections);
+      expect(
+        batches.right.every(
+          (batch) =>
+            Buffer.byteLength(JSON.stringify(batch)) <=
+            SCENARIO_CATALOGUE_COMPARISON_BATCH_BYTE_LIMIT,
+        ),
+      ).toBe(true);
+    }
+  });
+
+  test("rejects a projection that cannot fit one bounded batch", () => {
+    const oversized = projection("oversized", "x".repeat(40_000));
+    const batches = batchScenarioCatalogueProjections([oversized]);
+    expect(Either.isLeft(batches)).toBe(true);
+  });
+
+  test("requires exact admitted-catalogue coverage and typed conclusions", () => {
+    const missing = validateScenarioCatalogueComparison({
+      comparison: comparison("meaningfullyDistinct", ["one"]),
+      expectedScenarioIds: [
+        "one",
+        "two",
+      ] as ScenarioCatalogueComparison["comparedScenarioIds"],
+    });
+    expect(Either.isLeft(missing)).toBe(true);
+
+    const overlapWithoutDifferentiator = validateScenarioCatalogueComparison({
+      comparison: comparison("purposefulOverlap", ["one"], {
+        materialDifferentiators: [],
+      }),
+      expectedScenarioIds: [
+        "one",
+      ] as ScenarioCatalogueComparison["comparedScenarioIds"],
+    });
+    expect(Either.isLeft(overlapWithoutDifferentiator)).toBe(true);
+
+    const redundantWithoutClosest = validateScenarioCatalogueComparison({
+      comparison: comparison("redundant", ["one"], {
+        closestMatches: [],
+      }),
+      expectedScenarioIds: [
+        "one",
+      ] as ScenarioCatalogueComparison["comparedScenarioIds"],
+    });
+    expect(Either.isLeft(redundantWithoutClosest)).toBe(true);
+
+    const overlapWithEmptyCatalogue = validateScenarioCatalogueComparison({
+      comparison: comparison("purposefulOverlap", [], {
+        basis: { tag: "noAdmittedScenarios" },
+      }),
+      expectedScenarioIds: [],
+    });
+    expect(Either.isLeft(overlapWithEmptyCatalogue)).toBe(true);
+
+    const closestMatchOutsideCatalogue = validateScenarioCatalogueComparison({
+      comparison: comparison("redundant", ["one"], {
+        closestMatches: [
+          {
+            scenarioId:
+              "not-admitted" as ScenarioCatalogueComparison["comparedScenarioIds"][number],
+            reason: "The candidate repeats this unrelated record.",
+          },
+        ],
+      }),
+      expectedScenarioIds: [
+        "one",
+      ] as ScenarioCatalogueComparison["comparedScenarioIds"],
+    });
+    expect(Either.isLeft(closestMatchOutsideCatalogue)).toBe(true);
+  });
+
+  test("aggregates batches and preserves the strongest repetition conclusion", () => {
+    const result = aggregateScenarioCatalogueComparisons({
+      comparisons: [
+        comparison("meaningfullyDistinct", ["one"]),
+        comparison("redundant", ["two"]),
+      ],
+      expectedScenarioIds: [
+        "one",
+        "two",
+      ] as ScenarioCatalogueComparison["comparedScenarioIds"],
+    });
+    expect(result).toMatchObject({
+      _tag: "Right",
+      right: {
+        conclusion: "redundant",
+        comparedScenarioIds: ["one", "two"],
+        closestMatches: [{ scenarioId: "two" }],
+      },
+    });
+  });
+
+  test("decodes only the declared comparison shape", () => {
+    const decoded = Schema.decodeUnknownEither(
+      ScenarioCatalogueComparisonSchema,
+      {
+        onExcessProperty: "error",
+      },
+    )(comparison("meaningfullyDistinct", ["one"]));
+    expect(Either.isRight(decoded)).toBe(true);
+    expect(
+      Schema.decodeUnknownEither(ScenarioCatalogueComparisonSchema, {
+        onExcessProperty: "error",
+      })({
+        ...comparison("meaningfullyDistinct", ["one"]),
+        score: 0.5,
+      }),
+    ).toMatchObject({ _tag: "Left" });
+  });
+});

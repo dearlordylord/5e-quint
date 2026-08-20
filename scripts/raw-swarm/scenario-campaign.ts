@@ -20,6 +20,14 @@ import {
   type ScenarioStagePlan,
   type ScenarioStageFacts,
 } from "./scenario-stage-plan.ts";
+import {
+  aggregateScenarioCatalogueComparisons,
+  catalogueComparisonCritique,
+  ScenarioCatalogueComparisonSchema,
+  validateScenarioCatalogueComparison,
+  type ScenarioCatalogueComparison,
+  type ScenarioCatalogueProjection,
+} from "./scenario-authoring.ts";
 
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
@@ -268,12 +276,39 @@ const CurrentFinalScenarioReviewSchema = Schema.Struct({
   ...FinalScenarioReviewBaseSchema.fields,
   reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
   scenarioQuality: ScenarioQualityReviewSchema,
+  catalogueComparison: ScenarioCatalogueComparisonSchema,
 }).pipe(
   Schema.extend(ScenarioContentAdmissionSchema),
   Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
 );
 
-export const RejectedScenarioCandidateReviewSchema = Schema.Struct({
+/** Historical current-scope reviews predate catalogue comparison evidence. */
+const HistoricalCurrentFinalScenarioReviewSchema = Schema.Struct({
+  ...FinalScenarioReviewBaseSchema.fields,
+  reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
+  scenarioQuality: ScenarioQualityReviewSchema,
+}).pipe(
+  Schema.extend(ScenarioContentAdmissionSchema),
+  Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
+);
+
+const CurrentRejectedScenarioCandidateReviewSchema = Schema.Struct({
+  campaignId: ScenarioCampaignIdSchema,
+  candidateId: ScenarioCandidateIdSchema,
+  candidateScenarioSha256: ScenarioSha256Schema,
+  gitSha: GitShaSchema,
+  admitReviewedUnsupported: Schema.Boolean,
+  rawReview: ScenarioRawReviewSchema,
+  policyReview: ScenarioPolicyReviewSchema,
+  reviewScope: Schema.Literal("rawContentSdkCapabilityPolicyQuality"),
+  scenarioQuality: ScenarioQualityReviewSchema,
+  catalogueComparison: ScenarioCatalogueComparisonSchema,
+}).pipe(
+  Schema.extend(ScenarioContentAdmissionSchema),
+  Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
+);
+
+const HistoricalRejectedScenarioCandidateReviewSchema = Schema.Struct({
   campaignId: ScenarioCampaignIdSchema,
   candidateId: ScenarioCandidateIdSchema,
   candidateScenarioSha256: ScenarioSha256Schema,
@@ -288,10 +323,16 @@ export const RejectedScenarioCandidateReviewSchema = Schema.Struct({
   Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
 );
 
+export const RejectedScenarioCandidateReviewSchema = Schema.Union(
+  CurrentRejectedScenarioCandidateReviewSchema,
+  HistoricalRejectedScenarioCandidateReviewSchema,
+);
+
 export const FinalScenarioReviewSchema = Schema.Union(
   RawContentPolicyScenarioReviewSchema,
   RawContentSdkCapabilityPolicyScenarioReviewSchema,
   CurrentFinalScenarioReviewSchema,
+  HistoricalCurrentFinalScenarioReviewSchema,
 );
 
 export type ScenarioContentAdmission = Schema.Schema.Type<
@@ -346,6 +387,24 @@ function rawDisposition(
     Match.when({ classification: "contradictory" }, () => "rejected" as const),
     Match.exhaustive,
   );
+}
+
+function catalogueComparisonDisposition(
+  comparison:
+    | ScenarioCatalogueComparison
+    | { readonly tag: "notConfigured" }
+    | undefined,
+): "admitted" | "rejected" {
+  if (comparison === undefined || !("conclusion" in comparison)) {
+    return "admitted";
+  }
+  const validated = validateScenarioCatalogueComparison({
+    comparison,
+    expectedScenarioIds: comparison.comparedScenarioIds,
+  });
+  return Either.isRight(validated) && validated.right.conclusion !== "redundant"
+    ? "admitted"
+    : "rejected";
 }
 
 function contentDisposition(
@@ -443,6 +502,18 @@ export function finalScenarioDisposition(
   ) {
     return "rejected";
   }
+  if (
+    "catalogueComparison" in review &&
+    ("conclusion" in review.catalogueComparison
+      ? catalogueComparisonDisposition(review.catalogueComparison) ===
+        "rejected"
+      : review.catalogueComparison.tag === "retained" &&
+        catalogueComparisonDisposition(
+          review.catalogueComparison.comparison,
+        ) === "rejected")
+  ) {
+    return "rejected";
+  }
   return Match.value(review).pipe(
     Match.when({ reviewScope: "rawContentPolicy" }, (scopedReview) =>
       Match.value(scopedReview.policyReview).pipe(
@@ -507,6 +578,7 @@ export function verifyFinalScenarioReview(
     readonly scenarioId: Schema.Schema.Type<typeof ScenarioIdSchema>;
     readonly gitSha: Schema.Schema.Type<typeof GitShaSchema>;
     readonly scenarioBytes: string;
+    readonly admittedScenarioIds?: readonly ScenarioId[];
   },
 ): Either.Either<Schema.Schema.Type<typeof FinalScenarioReviewSchema>, string> {
   const decoded = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
@@ -524,6 +596,18 @@ export function verifyFinalScenarioReview(
       createHash("sha256").update(expected.scenarioBytes).digest("hex")
   ) {
     return Either.left("Final scenario review identity does not match.");
+  }
+  if ("catalogueComparison" in decoded.right) {
+    const expectedScenarioIds =
+      expected.admittedScenarioIds ??
+      decoded.right.catalogueComparison.comparedScenarioIds;
+    const comparison = validateScenarioCatalogueComparison({
+      comparison: decoded.right.catalogueComparison,
+      expectedScenarioIds,
+    });
+    if (Either.isLeft(comparison)) {
+      return Either.left(`Invalid catalogue comparison: ${comparison.left}`);
+    }
   }
   return Either.right(decoded.right);
 }
@@ -601,6 +685,21 @@ export type ScenarioGenerationInput = {
   readonly candidateCount: number;
 };
 
+export type ScenarioCatalogueComparisonContext =
+  | Readonly<{ readonly tag: "notConfigured" }>
+  | Readonly<{
+      readonly tag: "required";
+      readonly batches: readonly (readonly ScenarioCatalogueProjection[])[];
+      readonly expectedScenarioIds: readonly ScenarioId[];
+    }>;
+
+export type ScenarioCatalogueComparisonEvidence =
+  | Readonly<{ readonly tag: "notConfigured" }>
+  | Readonly<{
+      readonly tag: "retained";
+      readonly comparison: ScenarioCatalogueComparison;
+    }>;
+
 export interface ScenarioCampaignAgents {
   readonly generate: (
     input: ScenarioGenerationInput,
@@ -615,7 +714,13 @@ export interface ScenarioCampaignAgents {
     readonly distributionPreference: string;
     readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
     readonly sdkCapabilityIntent: ScenarioCampaignConfig["sdkCapabilityIntent"];
+    readonly catalogueComparison: ScenarioCatalogueComparisonEvidence;
   }) => Promise<CurrentScenarioCompositeReview>;
+  readonly compareCandidate?: (input: {
+    readonly scenario: string;
+    readonly candidateIndex: number;
+    readonly batch: readonly ScenarioCatalogueProjection[];
+  }) => Promise<ScenarioCatalogueComparison>;
 }
 
 export interface ScenarioCandidateSelector {
@@ -638,6 +743,7 @@ type ScenarioCampaignResultBase = {
   readonly reviewScope: "rawContentSdkCapabilityPolicyQuality";
   readonly stageFacts: ScenarioStageFacts;
   readonly candidateStagePlan: ScenarioStagePlan;
+  readonly catalogueComparison: ScenarioCatalogueComparisonEvidence;
 };
 
 export type ScenarioCampaignCandidateRejection = {
@@ -671,6 +777,9 @@ export async function runScenarioCampaign(
   configInput: unknown,
   agents: ScenarioCampaignAgents,
   selector: ScenarioCandidateSelector,
+  comparisonContext: ScenarioCatalogueComparisonContext = {
+    tag: "notConfigured",
+  },
 ): Promise<Either.Either<ScenarioCampaignResult, string>> {
   const decoded = Schema.decodeUnknownEither(ScenarioCampaignConfigSchema, {
     onExcessProperty: "error",
@@ -679,6 +788,28 @@ export async function runScenarioCampaign(
     return Either.left(`Invalid scenario campaign: ${decoded.left.message}`);
   }
   const config = decoded.right;
+  if (comparisonContext.tag === "required") {
+    const batchScenarioIds = comparisonContext.batches.flatMap((batch) =>
+      batch.map(({ scenarioId }) => scenarioId),
+    );
+    const expectedScenarioIds = new Set(comparisonContext.expectedScenarioIds);
+    if (
+      (comparisonContext.expectedScenarioIds.length === 0 &&
+        comparisonContext.batches.length !== 0) ||
+      (comparisonContext.expectedScenarioIds.length > 0 &&
+        comparisonContext.batches.length === 0) ||
+      batchScenarioIds.length !==
+        comparisonContext.expectedScenarioIds.length ||
+      new Set(batchScenarioIds).size !== batchScenarioIds.length ||
+      batchScenarioIds.some(
+        (scenarioId) => !expectedScenarioIds.has(scenarioId),
+      )
+    ) {
+      return Either.left(
+        "Scenario Campaign requires complete, non-duplicated catalogue batches.",
+      );
+    }
+  }
   const lastReviewMilestone = config.reviewMilestone;
   let draft:
     | { readonly tag: "unstarted" }
@@ -690,6 +821,7 @@ export async function runScenarioCampaign(
         readonly critiques: readonly string[];
         readonly stageFacts: ScenarioStageFacts;
         readonly candidateStagePlan: ScenarioStagePlan;
+        readonly catalogueComparison: ScenarioCatalogueComparisonEvidence;
       } = { tag: "unstarted" };
 
   for (
@@ -726,6 +858,34 @@ export async function runScenarioCampaign(
         "Scenario generator returned an invalid candidate batch.",
       );
     }
+    const candidateComparisons: ScenarioCatalogueComparison[] = [];
+    if (comparisonContext.tag === "required") {
+      if (agents.compareCandidate === undefined) {
+        return Either.left(
+          "Scenario Campaign requires a catalogue comparison agent.",
+        );
+      }
+      for (const [
+        candidateIndex,
+        candidate,
+      ] of candidates.right.candidates.entries()) {
+        const batchComparisons: ScenarioCatalogueComparison[] = [];
+        for (const batch of comparisonContext.batches) {
+          const comparison = await agents.compareCandidate({
+            scenario: candidate.prose,
+            candidateIndex,
+            batch,
+          });
+          batchComparisons.push(comparison);
+        }
+        const aggregate = aggregateScenarioCatalogueComparisons({
+          comparisons: batchComparisons,
+          expectedScenarioIds: comparisonContext.expectedScenarioIds,
+        });
+        if (Either.isLeft(aggregate)) return Either.left(aggregate.left);
+        candidateComparisons.push(aggregate.right);
+      }
+    }
     const selected = selector.select(candidates.right.candidates.length);
     if (
       !Number.isInteger(selected) ||
@@ -740,6 +900,19 @@ export async function runScenarioCampaign(
     if (candidate === undefined) {
       return Either.left("Scenario selector did not select a candidate.");
     }
+    const selectedComparison = candidateComparisons[selected];
+    if (
+      comparisonContext.tag === "required" &&
+      selectedComparison === undefined
+    ) {
+      return Either.left(
+        "Scenario Campaign lost the selected Candidate's catalogue comparison.",
+      );
+    }
+    const selectedCatalogueComparison: ScenarioCatalogueComparisonEvidence =
+      comparisonContext.tag === "required" && selectedComparison !== undefined
+        ? { tag: "retained", comparison: selectedComparison }
+        : { tag: "notConfigured" };
     const candidateId = selectedCandidateId();
     if (Either.isLeft(candidateId)) return Either.left(candidateId.left);
     const candidateScenarioSha256 = scenarioContentSha256(candidate.prose);
@@ -762,6 +935,7 @@ export async function runScenarioCampaign(
         critiques: [candidatePlan.right.outcome.reason],
         stageFacts: candidate.stageFacts,
         candidateStagePlan: candidatePlan.right,
+        catalogueComparison: selectedCatalogueComparison,
       };
       if (iteration === config.maximumIterations) {
         return Either.right({
@@ -792,6 +966,7 @@ export async function runScenarioCampaign(
         distributionPreference: config.distributionPreference,
         contentAvailabilityIntent: config.contentAvailabilityIntent,
         sdkCapabilityIntent: config.sdkCapabilityIntent,
+        catalogueComparison: selectedCatalogueComparison,
       });
       if (review.raw.classification !== "supported") {
         critiques.push(review.raw.critique);
@@ -845,6 +1020,14 @@ export async function runScenarioCampaign(
         Match.exhaustive,
       );
     }
+    if (
+      selectedCatalogueComparison.tag === "retained" &&
+      selectedCatalogueComparison.comparison.conclusion === "redundant"
+    ) {
+      critiques.push(
+        catalogueComparisonCritique(selectedCatalogueComparison.comparison),
+      );
+    }
     draft = {
       tag: "selected",
       prose,
@@ -853,6 +1036,7 @@ export async function runScenarioCampaign(
       critiques,
       stageFacts: candidate.stageFacts,
       candidateStagePlan: candidatePlan.right,
+      catalogueComparison: selectedCatalogueComparison,
     };
     if (iteration === config.maximumIterations) {
       break;
@@ -879,6 +1063,7 @@ export async function runScenarioCampaign(
     distributionPreference: config.distributionPreference,
     contentAvailabilityIntent: config.contentAvailabilityIntent,
     sdkCapabilityIntent: config.sdkCapabilityIntent,
+    catalogueComparison: draft.catalogueComparison,
   });
   const finalContentAdmission = decodeScenarioContentAdmission({
     contentAvailabilityIntent: config.contentAvailabilityIntent,
@@ -911,6 +1096,7 @@ export async function runScenarioCampaign(
     reviewScope: "rawContentSdkCapabilityPolicyQuality",
     stageFacts: draft.stageFacts,
     candidateStagePlan: draft.candidateStagePlan,
+    catalogueComparison: draft.catalogueComparison,
     ...finalContentAdmission.right,
     ...finalSdkCapabilityAdmission.right,
   } as const;

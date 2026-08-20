@@ -2,22 +2,12 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { Schema } from "effect";
-
 import { repositoryArtifactPath } from "./artifact-index.ts";
+import type { ArtifactAuthority } from "./artifact-authority-schema.ts";
 import { repoRoot } from "./transcript.ts";
 
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
-
-export const ArtifactAuthoritySchema = Schema.Struct({
-  path: Schema.NonEmptyTrimmedString,
-  byteLength: Schema.Number.pipe(Schema.int(), Schema.nonNegative()),
-  sha256: HashSchema,
-});
-
-export type ArtifactAuthority = Schema.Schema.Type<
-  typeof ArtifactAuthoritySchema
->;
+export { ArtifactAuthoritySchema } from "./artifact-authority-schema.ts";
+export type { ArtifactAuthority } from "./artifact-authority-schema.ts";
 
 function fail(message: string): never {
   throw new Error(message);

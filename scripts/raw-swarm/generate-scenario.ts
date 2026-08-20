@@ -35,6 +35,11 @@ import {
   type ScenarioCompositeReview,
   type SdkCapabilityIntent,
 } from "./scenario-campaign.ts";
+import {
+  batchScenarioCatalogueProjections,
+  ScenarioCatalogueComparisonSchema,
+  projectScenarioCatalogueForAuthoring,
+} from "./scenario-authoring.ts";
 import type { RetainedScenarioReviewInput } from "./scenario-review-input.ts";
 import {
   retainCandidateScenarioStagePlan,
@@ -66,7 +71,10 @@ import { findingsArtifactPath, writeFindingsProjection } from "./findings.ts";
 import { projectGenerationFindings } from "./generation-findings.ts";
 import { ingestGenerationFindings } from "./artifact-index.ts";
 import { artifactAuthorityForBytes } from "./artifact-authority.ts";
-import { RejectedScenarioCandidateRecordSchema } from "./scenario-catalogue.ts";
+import {
+  readRawSwarmCatalogue,
+  RejectedScenarioCandidateRecordSchema,
+} from "./scenario-catalogue.ts";
 import { AdmittedScenarioRecordSchema } from "./scenario-admission.ts";
 import type { ScenarioCampaignId } from "./raw-swarm-identities.ts";
 
@@ -351,6 +359,7 @@ Produce exactly ${input.candidateCount} materially different candidate objects. 
       distributionPreference,
       contentAvailabilityIntent,
       sdkCapabilityIntent,
+      catalogueComparison,
     }) =>
       runCodexJson(
         `Perform one ${finalReview ? "final pre-play" : "milestone"} review invocation with five mandatory, independently scoped assessments. Do not produce an aggregate verdict and do not merge their evidence or responsibilities.
@@ -368,6 +377,16 @@ Scenario quality: independently classify the setup and encounter as ready only w
 Content-availability intent: ${contentAvailabilityIntent}
 SDK-capability intent: ${sdkCapabilityIntent}
 Campaign distribution preference: ${distributionPreference}
+
+Catalogue comparison evidence supplied by the authoring operator:
+${JSON.stringify(catalogueComparison, null, 2)}
+
+Treat the catalogue comparison as a required authoring responsibility. It must
+cover every admitted Scenario projection supplied to the comparator, distinguish
+meaningfullyDistinct, purposefulOverlap, and redundant, name a differentiator
+for purposefulOverlap, and identify the closest admitted Scenario for redundant.
+Do not use spatial context as a required difference when the other dimensions
+already establish a distinction.
 
 Available canonical stat-block identities:
 ${statBlocks.statBlocks.map(({ name }) => name).join(", ")}
@@ -391,6 +410,25 @@ ${scenario}`,
             directory: `${input.ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
             reviewStage: finalReview ? "final" : "milestone",
           },
+        },
+      ),
+    compareCandidate: async ({ scenario, candidateIndex, batch }) =>
+      runCodexJson(
+        `Compare this complete Scenario Candidate with every admitted Scenario in the supplied canonical catalogue batch. This is Candidate ${candidateIndex}; inspect the Candidate prose and each projection's referenced authored source when a concrete mechanic, composition, interaction sequence, or tactical question is needed. Read source authorities exactly; never sample, silently truncate, or infer missing catalogue entries.
+
+Return one comparison for this batch. The comparedScenarioIds array must contain exactly the scenarioId values in this batch, once each. Focus on exploratory purpose, materially relevant mechanics, encounter composition, interaction sequence, tactical question, and SDK support boundary. Spatial context is optional supporting context and is never required merely to establish difference.
+
+The conclusion must be exactly one of meaningfullyDistinct, purposefulOverlap, or redundant. A purposefulOverlap conclusion must name at least one material differentiator. A redundant conclusion must identify its closest admitted Scenario. Do not promote or reject the Candidate; the Campaign operator owns that decision after all batches are aggregated.
+
+Candidate prose:
+${scenario}
+
+Canonical catalogue batch:
+${JSON.stringify(batch, null, 2)}`,
+        ScenarioCatalogueComparisonSchema,
+        {
+          ...reviewerExecution,
+          retention: { directory: eventDirectory },
         },
       ),
   };
@@ -457,6 +495,7 @@ function verifyRetainedScenario(
   scenarioPath: string,
   reviewPath: string,
   gitSha: string,
+  admittedScenarioIds: readonly ScenarioId[],
 ): void {
   const scenarioBytes = readFileSync(scenarioPath, "utf8");
   const decodedGitSha = Schema.decodeUnknownEither(GitShaSchema)(gitSha);
@@ -465,7 +504,12 @@ function verifyRetainedScenario(
   }
   const verification = verifyFinalScenarioReview(
     JSON.parse(readFileSync(reviewPath, "utf8")),
-    { scenarioId, gitSha: decodedGitSha.right, scenarioBytes },
+    {
+      scenarioId,
+      gitSha: decodedGitSha.right,
+      scenarioBytes,
+      admittedScenarioIds,
+    },
   );
   if (Either.isLeft(verification)) {
     fail(verification.left);
@@ -513,6 +557,25 @@ async function main(args: readonly string[]): Promise<void> {
   if (Either.isLeft(decodedConfig)) {
     fail(`Invalid scenario campaign: ${decodedConfig.left.message}`);
   }
+  const catalogue = readRawSwarmCatalogue({
+    repositoryRoot: repoRoot,
+    scenarioDirectory: resolve(
+      repoRoot,
+      "scripts/raw-swarm/sdk-player/scenarios",
+    ),
+    evidenceDirectory: resolve(repoRoot, "scripts/raw-swarm/out"),
+  });
+  if (Either.isLeft(catalogue)) {
+    fail(
+      `Unable to read the complete admitted Scenario catalogue: ${JSON.stringify(catalogue.left)}`,
+    );
+  }
+  const catalogueProjections = projectScenarioCatalogueForAuthoring(
+    catalogue.right,
+  );
+  const catalogueBatches =
+    batchScenarioCatalogueProjections(catalogueProjections);
+  if (Either.isLeft(catalogueBatches)) fail(catalogueBatches.left);
   const admittedDirectory = resolve(
     repoRoot,
     "scripts/raw-swarm/sdk-player/scenarios",
@@ -742,6 +805,13 @@ async function main(args: readonly string[]): Promise<void> {
       {
         select: randomInt,
       },
+      {
+        tag: "required",
+        batches: catalogueBatches.right,
+        expectedScenarioIds: catalogueProjections.map(
+          ({ scenarioId }) => scenarioId,
+        ),
+      },
     );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -819,6 +889,9 @@ async function main(args: readonly string[]): Promise<void> {
     return;
   }
   const disposition = finalScenarioDisposition(result.right);
+  if (result.right.catalogueComparison.tag !== "retained") {
+    fail("Scenario admission requires retained catalogue comparison evidence.");
+  }
   const reviewInput = {
     ...(disposition === "admitted"
       ? { scenarioId: result.right.plannedScenarioId, scenarioSha256 }
@@ -837,6 +910,7 @@ async function main(args: readonly string[]): Promise<void> {
     sdkCapabilityReview: result.right.sdkCapabilityReview,
     policyReview: result.right.policyReview,
     scenarioQuality: result.right.scenarioQuality,
+    catalogueComparison: result.right.catalogueComparison.comparison,
   };
   const retainedReview: object = (() => {
     if (disposition === "admitted") {
@@ -1047,6 +1121,7 @@ async function main(args: readonly string[]): Promise<void> {
     outputPath,
     reviewPath,
     gitSha.right,
+    catalogueProjections.map(({ scenarioId }) => scenarioId),
   );
   console.log(
     `Generated ${outputPath} in ${result.right.iterations} iteration(s), stopped by ${result.right.stopReason}, ${disposition}.`,
