@@ -1,9 +1,10 @@
 # Raw Swarm capability context and complete-path evidence
 
-Research date: 2026-08-19. This report records the bounded capability
-projection, the retained complete-003 measurement for #292, and the paired
-coherent/rejected evidence for #293. Ignored `scripts/raw-swarm/out` artifacts
-remain the evidence authorities; this document does not copy their payloads.
+Research date: 2026-08-20. This report records the bounded capability
+projection, the retained complete-003 measurement and strict paired benchmark
+for #292, and the paired coherent/rejected evidence for #293. Ignored
+`scripts/raw-swarm/out` artifacts remain the evidence authorities; this
+document does not copy their payloads.
 
 ## Canonical capability projection
 
@@ -103,6 +104,58 @@ for the final Shove. Deterministic authored randomness is explicitly owned by
 #281 and remains a limitation/out-of-scope item here. These findings limit the
 claim about player-authored resolution fidelity; they do not invalidate the
 ordinary SDK transcript, replay, Table-decision evidence, or phase accounting.
+
+## Strict paired generated-battle-009 benchmark
+
+The final fixed-scenario run is
+`scripts/raw-swarm/out/fixed-scenario-benchmark/generated-battle-009-equivalent-023/`.
+Both profiles were prepared and executed at implementation revision
+`5dff83edf804025623fc17e0fb322420f5edffc8`. They retain the same scenario,
+scenario review, stage facts, stage plan, character source, and setup source.
+Both outcomes are completed, both deterministic replays succeeded, neither
+path retained a player failure or failed model stage, and every post-play
+verdict class is `pass`.
+
+The strict comparison is `comparison.json` (schema version 3, SHA-256
+`1c2274577a6086bf6476a7887831860eea70e7c7f288224b2fec57d3a5c8c48a`).
+Its identity is `equivalent-path`; the writer produced it only after both
+required reductions passed:
+
+| Comparable dimension               | Historical document set | Bounded projection | Reduction |
+| ---------------------------------- | ----------------------: | -----------------: | --------: |
+| Input tokens                       |               2,285,356 |            849,105 |    62.85% |
+| Model-invocation elapsed time (ms) |               1,052,602 |            230,925 |    78.06% |
+| Retained SDK calls                 |                       4 |                  2 |         — |
+| Retained player failures           |                       0 |                  0 |         — |
+| Retained failed model stages       |                       0 |                  0 |         — |
+
+Cached input remains a subset of input and is not added to either input total.
+Elapsed time is the sum of retained model-invocation elapsed fields. The paired
+measurement authorities are:
+
+- `documentDeclarationSet/measurement.json` — SHA-256
+  `d69b56f77e4a0ec2ae00880c20f81ebdd4d8cf3aa6d4067420db209eb3908eec`;
+- `boundedCapabilityProjection/measurement.json` — SHA-256
+  `c132ea821004678a5abea0365370214fe65763bbd7c2280043dfcb35ecc36a39`;
+- historical replay result — SHA-256
+  `8613f8d85112d45c73b90ae7f74696450aadb16a94cb39d0f2968e99ac224619`;
+- bounded replay result — SHA-256
+  `919ebbd31913cdc803c7ee974d5c2cb406712c2169f9d3221864a4325759b446`.
+
+Failed or rejected attempts remain immutable evidence rather than being
+rewritten into the accepted run. Run 016 retained an account-quota failure;
+017 was a diagnostic run; 018 and 020 missed the elapsed-time gate; 019 failed
+during preparation; 021 exceeded both reduction targets but retained two
+bounded pre-call player failures and a `reviewer-error`; and 022 exposed a
+safe `/bin/sh` telemetry wrapper that the read validator had not admitted.
+Run 023 is the first run that satisfies the complete strict paired gate.
+
+The comparator fix at `76a7e0a04` treats repeated rows of the same post-play
+verdict class as reviewer verbosity, while distinct classes such as
+`reviewer-error` and actionable finding fingerprints remain semantic evidence.
+This was required because run 023's independent reviewers emitted ten and
+eight `pass` rows over otherwise equivalent retained semantics. The regression
+also proves that adding a distinct `reviewer-error` class remains incomparable.
 
 ## Historical comparison and evidence boundary
 
