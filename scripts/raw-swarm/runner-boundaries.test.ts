@@ -90,12 +90,38 @@ describe("RAW swarm runner boundaries", () => {
     expect(script).not.toContain("Read every listed contiguous range");
     expect(script).toContain("client-truncated");
     expect(script).toContain("codex exec");
+    expect(script).toContain(
+      "boundedCapabilityProjection) RAW_REVIEW_REASONING_EFFORT=medium",
+    );
+    expect(script).toContain(
+      'documentDeclarationSet|"") RAW_REVIEW_REASONING_EFFORT=max',
+    );
+    expect(script).toContain(
+      '-c "model_reasoning_effort=\\"$RAW_REVIEW_REASONING_EFFORT\\""',
+    );
+    expect(script).toContain(
+      '--reasoning-effort "$RAW_REVIEW_REASONING_EFFORT"',
+    );
     expect(script.indexOf("model-telemetry-cli.ts")).toBeGreaterThan(
       script.indexOf("review-invocation-policy.ts"),
     );
     expect(prompt).toContain("{{POST_PLAY_REVIEW_ACCESS_POLICY}}");
     expect(prompt).toContain("{{POST_PLAY_REVIEW_CONTEXT_DESCRIPTION}}");
     expect(prompt).not.toContain("without commands or tools");
+  });
+
+  test("gives the SDK player the surfaced protocol facts needed before its first call", () => {
+    const script = readFileSync(sdkPlayerLauncher, "utf8");
+
+    expect(script).toContain(
+      "discoverBattleActs(context.session) returns the readonly act array directly",
+    );
+    expect(script).toContain(
+      "resolveBattleRuntimeSubject({ session, subject, fills })",
+    );
+    expect(script).toContain(
+      "Every playerConcluded submission requires a nonempty conclusion field",
+    );
   });
 
   test.each([

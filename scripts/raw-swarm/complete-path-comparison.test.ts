@@ -252,6 +252,7 @@ function findingsProjection(
   findings: readonly ReturnType<typeof finding>[],
   replayEvents: readonly ReturnType<typeof retainInvocation>[] = [],
   executionGitSha: typeof gitSha = gitSha,
+  firstCallThrows = false,
 ): CompletePathMeasurement["findings"] {
   const scenario = writeAuthority(root, "SCENARIO.md", scenarioBytes);
   const scenarioReview = writeAuthority(
@@ -326,7 +327,7 @@ function findingsProjection(
     "setup.json",
     `${JSON.stringify(setupObservation)}\n`,
   );
-  const calls = [1, 2].map((seq) => ({
+  const returnedCall = (seq: 1 | 2) => ({
     type: "sdk-call" as const,
     seq,
     continuation: seq,
@@ -339,7 +340,29 @@ function findingsProjection(
     outputSessionSha256: initialSessionSha256,
     result: [],
     resultSha256: sha256Canonical([]),
-  }));
+  });
+  const returnedCalls = [returnedCall(1), returnedCall(2)] as const;
+  const calls = firstCallThrows
+    ? [
+        {
+          type: "sdk-call" as const,
+          seq: 1,
+          continuation: 1,
+          operation: "discoverBattleActs" as const,
+          inputSession: initialSession,
+          inputSessionSha256: initialSessionSha256,
+          input: {},
+          outcome: "threw" as const,
+          rejection: "operationFailure" as const,
+          error: {
+            name: "Error",
+            message:
+              "Synthetic first-call failure recovered on continuation two.",
+          },
+        },
+        returnedCalls[1],
+      ]
+    : returnedCalls;
   const initialProjection = playerInitialTurnProjection({
     session: initialSession,
     acts: [],
@@ -736,6 +759,7 @@ function retainBenchmarkAuxiliaryInvocation(
 function measurement(
   overrides: Partial<CurrentCompletePathMeasurement> = {},
   executionGitSha: typeof gitSha = gitSha,
+  firstCallThrows = false,
 ): CurrentCompletePathMeasurement {
   const root = rawSwarmTestOutputDirectory("complete-path-test-");
   temporaryDirectories.push(root);
@@ -809,6 +833,7 @@ function measurement(
     [finding("accepted-call-verdict", 1), finding("successful-correction", 2)],
     retainedInvocations,
     executionGitSha,
+    firstCallThrows,
   );
   const findingsAuthority = writeAuthority(
     root,
@@ -942,11 +967,19 @@ function benchmarkMeasurement(
     profile === "documentDeclarationSet"
       ? historicalCompositeReview()
       : syntheticCompositeReview();
-  const benchmarkEntries = source.invocations.filter(
-    (entry) =>
-      profile === "documentDeclarationSet" ||
-      entry.invocationId !== "composite-milestone",
-  );
+  const benchmarkEntries = source.invocations
+    .filter(
+      (entry) =>
+        profile === "documentDeclarationSet" ||
+        entry.invocationId !== "composite-milestone",
+    )
+    .map((entry) =>
+      profile === "boundedCapabilityProjection" &&
+      (entry.phase === "scenarioCompositeReview" ||
+        entry.phase === "postPlayReview")
+        ? { ...entry, reasoningEffort: "medium" as const }
+        : entry,
+    );
   const readinessResultValue = {
     classification: "ready" as const,
     evidence: "Synthetic readiness review is ready.",
@@ -1044,7 +1077,7 @@ function benchmarkMeasurement(
       sourceGitSha: implementationGitSha,
       invocationId,
       model: "gpt-5.6-luna" as const,
-      reasoningEffort: "max" as const,
+      reasoningEffort: requiredComposite(reviewStage).entry.reasoningEffort,
       prompt: `Synthetic ${reviewStage} review prompt.`,
       outputJsonSchema: codexOutputJsonSchema(
         profile === "documentDeclarationSet"
@@ -1330,7 +1363,7 @@ describe("complete Raw Swarm path comparison", () => {
       equivalence: { tag: "equivalent" },
       baseline: {
         outcome: { tag: "completed" },
-        acceptedCallVerdicts: { tag: "available", count: 1 },
+        sdkCallCount: { tag: "available", count: 2 },
         corrections: { tag: "available", count: 1 },
         failedStages: { tag: "available", count: 0 },
       },
@@ -1342,6 +1375,7 @@ describe("complete Raw Swarm path comparison", () => {
       implementation: {
         phaseSequenceChanged: false,
         modelSequenceChanged: true,
+        reasoningEffortSequenceChanged: false,
       },
       modelInvocationElapsedMilliseconds: { tag: "comparable" },
       inputTokens: { tag: "comparable" },
@@ -1382,8 +1416,32 @@ describe("complete Raw Swarm path comparison", () => {
       implementation: {
         baselineProfile: "documentDeclarationSet",
         candidateProfile: "boundedCapabilityProjection",
+        reasoningEffortSequenceChanged: true,
       },
     });
+    expect(comparison.implementation.baselineReasoningEfforts).toContain("max");
+    expect(comparison.implementation.candidateReasoningEfforts).toSatisfy(
+      (efforts: readonly string[]) =>
+        efforts.length > 0 && efforts.every((effort) => effort === "medium"),
+    );
+
+    const wrongEffortCandidate = {
+      ...candidate,
+      invocations: candidate.invocations.map((invocation) =>
+        invocation.schemaVersion === 2 &&
+        invocation.phase === "scenarioCompositeReview"
+          ? { ...invocation, reasoningEffort: "max" }
+          : invocation,
+      ),
+    };
+    expect(validateCompletePathMeasurement(wrongEffortCandidate)).toMatchObject(
+      {
+        _tag: "Left",
+        left: expect.stringContaining(
+          "boundedCapabilityProjection benchmark scenarioCompositeReview invocation must use medium reasoning",
+        ),
+      },
+    );
 
     const malformedBundle = {
       ...candidate,
@@ -1650,7 +1708,7 @@ describe("complete Raw Swarm path comparison", () => {
     });
     expect(noCallComparison.identity).toBe("different-path");
     expect(noCallComparison.equivalence.reason).toContain(
-      "no accepted SDK-call finding",
+      "no retained SDK call",
     );
   }, 60_000);
 
@@ -1937,16 +1995,36 @@ describe("complete Raw Swarm path comparison", () => {
         },
       ],
     });
-    const fewerAcceptedComparison = compareCompleteEquivalentPaths({
+    const reviewerVerbosityComparison = compareCompleteEquivalentPaths({
       baseline: validated(baselineWithAdditionalAccepted),
       candidate: validated(candidate),
     });
-    expect(fewerAcceptedComparison).toMatchObject({
-      identity: "different-path",
-      equivalence: {
-        tag: "incomparable",
-        reason: expect.stringContaining("worse accepted-call verdicts"),
+    expect(reviewerVerbosityComparison).toMatchObject({
+      identity: "equivalent-path",
+      equivalence: { tag: "equivalent" },
+      baseline: { sdkCallCount: { tag: "available", count: 2 } },
+      candidate: { sdkCallCount: { tag: "available", count: 2 } },
+    });
+
+    const candidateWithoutAcceptedVerdictRows = withRetainedFindings(
+      candidate,
+      {
+        ...candidate.findings,
+        findings: candidate.findings.findings.filter(
+          ({ kind }) => kind !== "accepted-call-verdict",
+        ),
       },
+    );
+    expect(
+      compareCompleteEquivalentPaths({
+        baseline: validated(candidate),
+        candidate: validated(candidateWithoutAcceptedVerdictRows),
+      }),
+    ).toMatchObject({
+      identity: "equivalent-path",
+      equivalence: { tag: "equivalent" },
+      baseline: { sdkCallCount: { tag: "available", count: 2 } },
+      candidate: { sdkCallCount: { tag: "available", count: 2 } },
     });
 
     const failedOutcome = {
@@ -2034,6 +2112,26 @@ describe("complete Raw Swarm path comparison", () => {
       left: expect.stringContaining(
         "findings projection authority does not match the measurement",
       ),
+    });
+  });
+
+  test("counts a recovered thrown SDK attempt from transcript authority without calling it accepted", () => {
+    const recovered = validated(measurement({}, gitSha, true));
+    const comparison = compareCompleteEquivalentPaths({
+      baseline: recovered,
+      candidate: recovered,
+    });
+
+    expect(comparison).toMatchObject({
+      identity: "equivalent-path",
+      baseline: {
+        outcome: { tag: "completed" },
+        sdkCallCount: { tag: "available", count: 2 },
+      },
+      candidate: {
+        outcome: { tag: "completed" },
+        sdkCallCount: { tag: "available", count: 2 },
+      },
     });
   });
 
@@ -2632,7 +2730,7 @@ describe("complete Raw Swarm path comparison", () => {
     expect(Either.isRight(written)).toBe(true);
     const output = parseJsonRecord(readFileSync(outputPath, "utf8"));
     expect(output).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 3,
       identity: "equivalent-path",
       equivalence: { tag: "equivalent" },
       modelInvocationElapsedMilliseconds: { tag: "comparable" },
@@ -2980,7 +3078,7 @@ describe("complete Raw Swarm path comparison", () => {
       },
       baseline: {
         evidenceVersion: "historical",
-        acceptedCallVerdicts: { tag: "unavailable" },
+        sdkCallCount: { tag: "unavailable" },
         corrections: { tag: "unavailable" },
       },
       inputTokens: { tag: "incomparable" },

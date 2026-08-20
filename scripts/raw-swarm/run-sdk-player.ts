@@ -984,6 +984,7 @@ async function main(args: readonly string[]): Promise<void> {
           "Act as the player described there and continue until the SDK supervisor accepts a playerConcluded outcome or returns a terminalObstruction. Stop immediately after a terminalObstruction; it is retained evidence.",
           "For each tactical continuation, edit only attempt.ts and run `node player-client.mjs attempt.ts`. After the call, reread OBSERVATION.json before replacing the attempt body for the next continuation.",
           "At subjectSelection, discover acts and attempt a surfaced act in the same continuation. At subjectContinuation, resume the retained subject and do not discover fresh acts.",
+          "discoverBattleActs(context.session) returns the readonly act array directly; do not read an .acts property from it. Resolve a surfaced subject with resolveBattleRuntimeSubject({ session, subject, fills }). Every playerConcluded submission requires a nonempty conclusion field.",
           "Correct compilation or runtime failures that occur before the first SDK call. A returned SDK rejection is frozen evidence; use the next continuation to correct it.",
           "Inspect only the five named scratch-consumer files. Do not enumerate other files, inspect declarations, repository source, internal tests, or prior implementation knowledge.",
           "Do not edit evidence files. Preserve and report an SDK obstruction instead of fabricating support.",

@@ -799,6 +799,85 @@ describe("fixed scenario benchmark boundary", () => {
     ).toBe(true);
   });
 
+  test.each([
+    [
+      "unsupported RAW",
+      {
+        ...currentReview,
+        raw: {
+          classification: "unsupported",
+          evidence: "Synthetic unsupported evidence.",
+          critique: "Synthetic unsupported critique.",
+        },
+      },
+      "RAW review did not classify",
+    ],
+    [
+      "unavailable content",
+      {
+        ...currentReview,
+        contentAvailability: {
+          classification: "missingUnavailableProbe",
+          evidence: "Synthetic unavailable evidence.",
+          critique: "Synthetic unavailable critique.",
+        },
+      },
+      "missing unavailable-content probe",
+    ],
+    [
+      "unsupported SDK capability",
+      {
+        ...currentReview,
+        sdkCapability: {
+          classification: "unsupported",
+          evidence: "Synthetic unsupported capability evidence.",
+          critique: "Synthetic unsupported capability critique.",
+        },
+      },
+      "SDK capability review did not classify",
+    ],
+    [
+      "unsafe artifact policy",
+      {
+        ...currentReview,
+        artifactPolicy: {
+          classification: "violation",
+          evidence: "Synthetic policy evidence.",
+          critique: "Synthetic policy critique.",
+        },
+      },
+      "Artifact-policy review",
+    ],
+    [
+      "scenario needing revision",
+      {
+        ...currentReview,
+        scenarioQuality: {
+          classification: "needsRevision",
+          evidence: "Synthetic quality evidence.",
+          critique: "Synthetic quality critique.",
+        },
+      },
+      "needing revision",
+    ],
+  ])(
+    "rejects a structurally valid but non-admitted %s review",
+    (_label, result, message) => {
+      const rejected = validateBenchmarkReviewAuthority({
+        profile: "boundedCapabilityProjection",
+        reviewStage: "final",
+        result,
+        outputJsonSchema: codexOutputJsonSchema(
+          CurrentScenarioCompositeReviewSchema,
+        ),
+      });
+
+      expect(Either.isLeft(rejected)).toBe(true);
+      if (Either.isRight(rejected)) return;
+      expect(rejected.left).toContain(message);
+    },
+  );
+
   test("does not retain a bounded milestone review authority", () => {
     const currentSchema = codexOutputJsonSchema(
       CurrentScenarioCompositeReviewSchema,

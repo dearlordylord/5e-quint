@@ -166,9 +166,15 @@ become input to a later generation iteration. Final RAW, content,
 SDK-capability, policy, and scenario-quality reviews happen before play.
 
 Generation uses the Sol model at medium reasoning. The five composite-review
-responsibilities share one Luna invocation at max reasoning and remain separate
-report fields, not concurrent voters or scenario domain roles. The post-play
-adversarial review remains an independent invocation.
+responsibilities share one Luna invocation and remain separate report fields,
+not concurrent voters or scenario domain roles. The historical profile retains
+Luna at max reasoning for its composite and post-play reviews; the bounded
+profile predeclares Luna at medium reasoning for those same responsibilities.
+The model-facing review schemas, evidence packet, and independent post-play
+invocation are unchanged. Retained authorities now admit both configured
+efforts, profile admission fails closed, and every invocation records its effort
+so the implementation-sequence difference is explicit and independently
+validatable.
 
 Every model invocation retains its own raw first-party event stream beside the
 phase ledger. Generation events are retained under
@@ -548,9 +554,11 @@ SDK sequence, verdict-index, and event-line pointers are not scenario identity.
 Equivalent paths instead require the same final review classifications,
 post-play verdict classes, and actionable issue identities (domain role plus
 fingerprint). Player failures and successful corrections remain explicit
-summary dimensions; a candidate with more player failures, more failed model
-stages, or fewer accepted-call verdicts is reliability-worse and therefore
-incomparable. Correction count is diagnostic rather than monotonic: successful
+summary dimensions; a candidate with more player failures or more failed model
+stages is reliability-worse and therefore incomparable. Transcript-derived SDK
+call count is diagnostic rather than monotonic because equivalent tactics may
+use different call counts, and accepted-call review rows may vary with reviewer
+verbosity. Correction count is also diagnostic rather than monotonic: successful
 recovery is not a regression and is interpreted alongside the failure count.
 Both paths must retain independently reviewed `completed` outcomes for the same
 scenario and immutable bundle; tactical trace differences are reliability

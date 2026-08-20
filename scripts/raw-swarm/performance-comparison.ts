@@ -53,7 +53,10 @@ export {
   FinalScenarioReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
 };
-import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
+import {
+  RetainedScenarioReviewInputSchema,
+  RetainedScenarioReviewReasoningEffortSchema,
+} from "./scenario-review-input.ts";
 import {
   finalAgentMessage,
   validateRetainedScenarioReviewInvocation,
@@ -1903,7 +1906,7 @@ export type CompletePathEquivalenceWitness =
 
 type CompletePathSummaryCommon = Readonly<{
   readonly outcome: PathOutcome | UnavailableEvidence;
-  readonly acceptedCallVerdicts: EvidenceCount;
+  readonly sdkCallCount: EvidenceCount;
   readonly playerFailures: EvidenceCount;
   readonly corrections: EvidenceCount;
   readonly failedStages: EvidenceCount;
@@ -1933,7 +1936,7 @@ export type CompletePathSummary =
       }>);
 
 export type CompletePathComparison = Readonly<{
-  readonly schemaVersion: 2;
+  readonly schemaVersion: 3;
   readonly identity: "equivalent-path" | "different-path";
   readonly equivalence: Readonly<{
     readonly tag: "equivalent" | "incomparable";
@@ -1950,10 +1953,13 @@ export type CompletePathComparison = Readonly<{
       | UnavailableEvidence;
     readonly baselineModels: readonly string[] | UnavailableEvidence;
     readonly candidateModels: readonly string[] | UnavailableEvidence;
+    readonly baselineReasoningEfforts: readonly string[] | UnavailableEvidence;
+    readonly candidateReasoningEfforts: readonly string[] | UnavailableEvidence;
     readonly baselineProfile: ImplementationProfile | UnavailableEvidence;
     readonly candidateProfile: ImplementationProfile | UnavailableEvidence;
     readonly phaseSequenceChanged: boolean | UnavailableEvidence;
     readonly modelSequenceChanged: boolean | UnavailableEvidence;
+    readonly reasoningEffortSequenceChanged: boolean | UnavailableEvidence;
   }>;
   readonly baseline: CompletePathSummary;
   readonly candidate: CompletePathSummary;
@@ -1970,6 +1976,16 @@ export type CompletePathComparison = Readonly<{
 }>;
 
 export const COMPLETE_PATH_MIN_REDUCTION = 0.4;
+
+export function benchmarkReviewReasoningEffort(
+  profile: BenchmarkImplementationProfile,
+): "medium" | "max" {
+  return Match.value(profile).pipe(
+    Match.when("documentDeclarationSet", () => "max" as const),
+    Match.when("boundedCapabilityProjection", () => "medium" as const),
+    Match.exhaustive,
+  );
+}
 
 function pathDimension(value: number): EvidenceCount {
   return { tag: "available", count: value };
@@ -2501,11 +2517,7 @@ function currentSummary(
   return {
     evidenceVersion: "current",
     outcome: measurement.outcome,
-    acceptedCallVerdicts: pathDimension(
-      measurement.findings.findings.filter(
-        ({ kind }) => kind === "accepted-call-verdict",
-      ).length,
-    ),
+    sdkCallCount: pathDimension(measurement.findings.run.callCount),
     playerFailures: pathDimension(playerFailureCount(measurement.findings)),
     corrections: pathDimension(
       measurement.findings.findings.filter(
@@ -2540,11 +2552,7 @@ function benchmarkSummary(
   return {
     evidenceVersion: "current",
     outcome: measurement.outcome,
-    acceptedCallVerdicts: pathDimension(
-      measurement.findings.findings.filter(
-        ({ kind }) => kind === "accepted-call-verdict",
-      ).length,
-    ),
+    sdkCallCount: pathDimension(measurement.findings.run.callCount),
     playerFailures: pathDimension(playerFailureCount(measurement.findings)),
     corrections: pathDimension(
       measurement.findings.findings.filter(
@@ -2579,9 +2587,9 @@ function historicalSummary(
   return {
     evidenceVersion: "historical",
     outcome: measurement.outcome,
-    acceptedCallVerdicts: {
+    sdkCallCount: {
       tag: "unavailable",
-      reason: "Historical findings were not retained in this envelope.",
+      reason: "Historical transcript call cardinality was not retained.",
     },
     playerFailures: {
       tag: "unavailable",
@@ -2668,6 +2676,7 @@ function playerFailureCount(findings: FindingsProjection): number {
 function implementationForPath(measurement: CompletePathMeasurement): {
   readonly phases: readonly ImplementationPhase[] | UnavailableEvidence;
   readonly models: readonly string[] | UnavailableEvidence;
+  readonly reasoningEfforts: readonly string[] | UnavailableEvidence;
   readonly profile: ImplementationProfile | UnavailableEvidence;
 } {
   if (measurement.schemaVersion === 1) {
@@ -2677,11 +2686,17 @@ function implementationForPath(measurement: CompletePathMeasurement): {
         "Historical evidence has no canonical per-invocation phase sequence.",
     };
     if (!Array.isArray(measurement.invocations)) {
-      return { phases: unavailable, models: unavailable, profile: unavailable };
+      return {
+        phases: unavailable,
+        models: unavailable,
+        reasoningEfforts: unavailable,
+        profile: unavailable,
+      };
     }
     return {
       phases: measurement.invocations.map(({ phase }) => phase),
       models: measurement.invocations.map(({ model }) => model),
+      reasoningEfforts: unavailable,
       profile: unavailable,
     };
   }
@@ -2689,12 +2704,18 @@ function implementationForPath(measurement: CompletePathMeasurement): {
     return {
       phases: measurement.invocations.map(({ phase }) => phase),
       models: measurement.invocations.map(({ model }) => model),
+      reasoningEfforts: measurement.invocations.map(
+        ({ reasoningEffort }) => reasoningEffort,
+      ),
       profile: measurement.profile,
     };
   }
   return {
     phases: measurement.invocations.map(({ phase }) => phase),
     models: measurement.invocations.map(({ model }) => model),
+    reasoningEfforts: measurement.invocations.map(
+      ({ reasoningEffort }) => reasoningEffort,
+    ),
     profile: "production",
   };
 }
@@ -4026,7 +4047,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     sourceGitSha: GitShaSchema,
     invocationId: Schema.NonEmptyString,
     model: Schema.Literal("gpt-5.6-luna"),
-    reasoningEffort: Schema.Literal("max"),
+    reasoningEffort: RetainedScenarioReviewReasoningEffortSchema,
     prompt: Schema.NonEmptyString,
     outputJsonSchema: Schema.Unknown,
     result: expectedReviewSchema,
@@ -4334,14 +4355,7 @@ function benchmarkPlayerEvidenceIssues(input: {
   if (measurement.outcome.tag === "completed") {
     if (findings.run.callCount < 1) {
       issues.push(
-        "A completed benchmark path requires at least one accepted SDK call.",
-      );
-    }
-    if (
-      !findings.findings.some(({ kind }) => kind === "accepted-call-verdict")
-    ) {
-      issues.push(
-        "A completed benchmark path requires an accepted SDK-call finding.",
+        "A completed benchmark path requires at least one retained SDK call.",
       );
     }
   }
@@ -4970,6 +4984,21 @@ function benchmarkSemanticIssues(
       `The ${measurement.profile} benchmark profile requires exactly ${String(compositeReviewStages.length)} composite review invocation(s), received ${String(compositeReviewInvocations.length)}.`,
     );
   }
+  const expectedReviewReasoningEffort = benchmarkReviewReasoningEffort(
+    measurement.profile,
+  );
+  for (const invocation of measurement.invocations) {
+    if (
+      invocation.schemaVersion === 2 &&
+      (invocation.phase === "scenarioCompositeReview" ||
+        invocation.phase === "postPlayReview") &&
+      invocation.reasoningEffort !== expectedReviewReasoningEffort
+    ) {
+      issues.push(
+        `The ${measurement.profile} benchmark ${invocation.phase} invocation must use ${expectedReviewReasoningEffort} reasoning.`,
+      );
+    }
+  }
   if (measurement.profile === "documentDeclarationSet") {
     if (readiness.length !== 1) {
       issues.push(
@@ -5112,11 +5141,11 @@ export function compareCompleteEquivalentPaths(input: {
       );
     }
     if (
-      pathSummary.acceptedCallVerdicts.tag !== "available" ||
-      pathSummary.acceptedCallVerdicts.count < 1
+      pathSummary.sdkCallCount.tag !== "available" ||
+      pathSummary.sdkCallCount.count < 1
     ) {
       issues.push(
-        `The ${label} benchmark path has no accepted SDK-call finding and cannot pass equivalent-path comparison.`,
+        `The ${label} benchmark path has no retained SDK call and cannot pass equivalent-path comparison.`,
       );
     }
   }
@@ -5134,13 +5163,6 @@ export function compareCompleteEquivalentPaths(input: {
       candidate: candidate.failedStages,
       compare: (baselineCount: number, candidateCount: number) =>
         candidateCount > baselineCount,
-    },
-    {
-      label: "accepted-call verdicts",
-      baseline: baseline.acceptedCallVerdicts,
-      candidate: candidate.acceptedCallVerdicts,
-      compare: (baselineCount: number, candidateCount: number) =>
-        candidateCount < baselineCount,
     },
   ] as const;
   for (const dimension of reliabilityDimensions) {
@@ -5181,6 +5203,8 @@ export function compareCompleteEquivalentPaths(input: {
     candidatePhases: implementationCandidate.phases,
     baselineModels: implementationBaseline.models,
     candidateModels: implementationCandidate.models,
+    baselineReasoningEfforts: implementationBaseline.reasoningEfforts,
+    candidateReasoningEfforts: implementationCandidate.reasoningEfforts,
     baselineProfile: implementationBaseline.profile,
     candidateProfile: implementationCandidate.profile,
     phaseSequenceChanged: compareSequences(
@@ -5191,9 +5215,13 @@ export function compareCompleteEquivalentPaths(input: {
       implementationBaseline.models,
       implementationCandidate.models,
     ),
+    reasoningEffortSequenceChanged: compareSequences(
+      implementationBaseline.reasoningEfforts,
+      implementationCandidate.reasoningEfforts,
+    ),
   };
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     identity,
     equivalence: {
       tag: identity === "equivalent-path" ? "equivalent" : "incomparable",

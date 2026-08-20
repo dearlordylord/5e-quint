@@ -167,6 +167,15 @@ if [[ "$RAW_REVIEW_INITIAL_INPUT_CHARS" -gt 1048576 ]]; then
   exit 1
 fi
 
+case "${RAW_REVIEW_CONTEXT_PROFILE:-}" in
+  boundedCapabilityProjection) RAW_REVIEW_REASONING_EFFORT=medium ;;
+  documentDeclarationSet|"") RAW_REVIEW_REASONING_EFFORT=max ;;
+  *)
+    printf 'Unsupported RAW_REVIEW_CONTEXT_PROFILE: %s\n' "$RAW_REVIEW_CONTEXT_PROFILE" >&2
+    exit 1
+    ;;
+esac
+
 set +e
 codex exec \
   -C "$RAW_REVIEW_ROOT" \
@@ -174,7 +183,7 @@ codex exec \
   --ephemeral \
   --json \
   -m gpt-5.6-luna \
-  -c 'model_reasoning_effort="max"' \
+  -c "model_reasoning_effort=\"$RAW_REVIEW_REASONING_EFFORT\"" \
   --output-schema "$RAW_REVIEW_SCHEMA" \
   --output-last-message "$RAW_REVIEW_OUTPUT" \
   - \
@@ -217,7 +226,7 @@ pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/model-telemetry-cli.ts" \
   --events "$RAW_REVIEW_EVENTS" \
   --ledger "$RAW_REVIEW_LEDGER" \
   --model gpt-5.6-luna \
-  --reasoning-effort max \
+  --reasoning-effort "$RAW_REVIEW_REASONING_EFFORT" \
   --stage-plan-reason 'The admitted run reached its independent post-play review stage.' \
   --started-at "$RAW_REVIEW_STARTED_AT" \
   --elapsed-ms "$RAW_REVIEW_ELAPSED_MS" \

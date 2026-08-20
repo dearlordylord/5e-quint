@@ -35,6 +35,7 @@ import {
   FinalScenarioReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
   ScenarioQualityReviewSchema,
+  type ScenarioCompositeReview,
 } from "./scenario-campaign.ts";
 import {
   findingsArtifactPath,
@@ -55,6 +56,7 @@ import {
 } from "./model-telemetry.ts";
 import {
   BENCHMARK_IMPLEMENTATION_PROFILES,
+  benchmarkReviewReasoningEffort,
   BenchmarkReadinessInputSchema,
   BenchmarkContextSourceManifestDocumentSchema,
   BenchmarkRunDescriptorSchema,
@@ -1184,6 +1186,7 @@ function runCompositeReviewCall(input: {
   readonly prompt: string;
   readonly gitSha: GitSha;
 }): StructuredCallResult<unknown> {
+  const reasoningEffort = benchmarkReviewReasoningEffort(input.profile);
   const common = {
     profilePaths: input.profilePaths,
     preparation: input.preparation,
@@ -1193,7 +1196,7 @@ function runCompositeReviewCall(input: {
     phase: "scenarioCompositeReview" as const,
     prompt: input.prompt,
     model: "gpt-5.6-luna" as const,
-    reasoningEffort: "max" as const,
+    reasoningEffort,
     stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioCompositeReview,
     gitSha: input.gitSha,
     scenarioId: fixedScenarioId(),
@@ -1378,7 +1381,104 @@ export function validateBenchmarkReviewAuthority(input: {
       "Bounded composite review must include scenarioQuality.",
     );
   }
+  const admissionIssues = [
+    ...Match.value(parsed.right.raw).pipe(
+      Match.when({ classification: "supported" }, () => [] as const),
+      Match.when(
+        { classification: "unsupported" },
+        () =>
+          ["RAW review did not classify the scenario as supported."] as const,
+      ),
+      Match.when(
+        { classification: "contradictory" },
+        () => ["RAW review classified the scenario as contradictory."] as const,
+      ),
+      Match.exhaustive,
+    ),
+    ...Match.value(parsed.right.contentAvailability).pipe(
+      Match.when({ classification: "supplied" }, () => [] as const),
+      Match.when(
+        { classification: "explicitUnavailableProbe" },
+        () =>
+          [
+            "Content review classified the scenario as an unavailable-content probe.",
+          ] as const,
+      ),
+      Match.when(
+        { classification: "missingUnavailableProbe" },
+        () =>
+          [
+            "Content review found a missing unavailable-content probe.",
+          ] as const,
+      ),
+      Match.when(
+        { classification: "invalidUnavailableSelection" },
+        () =>
+          [
+            "Content review found an invalid unavailable-content selection.",
+          ] as const,
+      ),
+      Match.exhaustive,
+    ),
+    ...Match.value(parsed.right.sdkCapability).pipe(
+      Match.when({ classification: "supported" }, () => [] as const),
+      Match.when(
+        { classification: "unsupported" },
+        () =>
+          [
+            "SDK capability review did not classify the scenario as supported.",
+          ] as const,
+      ),
+      Match.when(
+        { classification: "explicitUnsupportedProbe" },
+        () =>
+          [
+            "SDK capability review classified the scenario as an unsupported-capability probe.",
+          ] as const,
+      ),
+      Match.when(
+        { classification: "missingUnsupportedProbe" },
+        () =>
+          [
+            "SDK capability review found a missing unsupported-capability probe.",
+          ] as const,
+      ),
+      Match.exhaustive,
+    ),
+    ...Match.value(parsed.right.artifactPolicy).pipe(
+      Match.when({ classification: "safe" }, () => [] as const),
+      Match.when(
+        { classification: "violation" },
+        () =>
+          [
+            "Artifact-policy review classified the scenario as a violation.",
+          ] as const,
+      ),
+      Match.exhaustive,
+    ),
+    ...scenarioQualityAdmissionIssues(parsed.right),
+  ];
+  if (admissionIssues.length > 0) {
+    return Either.left(admissionIssues.join(" "));
+  }
   return Either.right(undefined);
+}
+
+function scenarioQualityAdmissionIssues(
+  review: ScenarioCompositeReview,
+): readonly string[] {
+  if (!("scenarioQuality" in review)) return [];
+  return Match.value(review.scenarioQuality).pipe(
+    Match.when({ classification: "ready" }, () => [] as const),
+    Match.when(
+      { classification: "needsRevision" },
+      () =>
+        [
+          "Scenario-quality review classified the scenario as needing revision.",
+        ] as const,
+    ),
+    Match.exhaustive,
+  );
 }
 
 function reviewPrompt(
@@ -1459,8 +1559,8 @@ function retainReviewEnvelope(input: {
     scenarioId: fixedScenarioId(),
     sourceGitSha: input.entry.gitSha,
     invocationId: input.entry.invocationId,
-    model: "gpt-5.6-luna" as const,
-    reasoningEffort: "max" as const,
+    model: input.entry.model,
+    reasoningEffort: input.entry.reasoningEffort,
     prompt: input.prompt,
     outputJsonSchema,
     result: input.result,
@@ -1924,9 +2024,7 @@ async function prepareProfile(input: {
       kind: { responsibility: "scenarioQuality", phase: "scenarioReadiness" },
       schema: ScenarioQualityReviewSchema,
       prompt:
-        "Read " +
-        reviewContext +
-        " and return the separate historical scenario-quality readiness result. Do not add it to a composite review.",
+        "Read BENCHMARK_CONTEXT.md, SCENARIO.md, and SCENARIO_REVIEW.json in the supplied scratch manifest, then return the separate historical scenario-quality readiness result. Do not add it to a composite review.",
       gitSha: gitSha.right,
       scenarioId: fixedScenarioId(),
     });
@@ -1939,10 +2037,17 @@ async function prepareProfile(input: {
       result: readiness.value,
       entry: readiness.auxiliaryEntry,
       prompt:
-        "Read " +
-        reviewContext +
-        " and return the separate historical scenario-quality readiness result. Do not add it to a composite review.",
+        "Read BENCHMARK_CONTEXT.md, SCENARIO.md, and SCENARIO_REVIEW.json in the supplied scratch manifest, then return the separate historical scenario-quality readiness result. Do not add it to a composite review.",
     });
+    Match.value(readiness.value).pipe(
+      Match.when({ classification: "ready" }, () => undefined),
+      Match.when({ classification: "needsRevision" }, () =>
+        fail(
+          "Historical scenario readiness classified the scenario as needing revision.",
+        ),
+      ),
+      Match.exhaustive,
+    );
   }
   const finalOrdinal = input.profile === "documentDeclarationSet" ? 5 : 3;
   const final = runCompositeReviewCall({
@@ -2089,6 +2194,22 @@ function validateRetainedReadinessAuthority(
   ) {
     fail("Retained scenario readiness used the wrong output schema.");
   }
+  const decodedResult = Schema.decodeUnknownEither(
+    ScenarioQualityReviewSchema,
+    {
+      onExcessProperty: "error",
+    },
+  )(result);
+  if (Either.isLeft(decodedResult)) fail(decodedResult.left.message);
+  Match.value(decodedResult.right).pipe(
+    Match.when({ classification: "ready" }, () => undefined),
+    Match.when({ classification: "needsRevision" }, () =>
+      fail(
+        "Retained scenario readiness classified the scenario as needing revision.",
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function validateContextDeliveryEvidence(input: {
