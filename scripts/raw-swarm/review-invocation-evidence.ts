@@ -314,12 +314,17 @@ function deriveManifest(input: {
     const { sourceInputPath, replayInputPath } = paths;
     const sourceInput = retainedReviewInput(sourceInputPath, reviewStage);
     const replayInput = retainedReviewInput(replayInputPath, reviewStage);
+    const sourceScenarioId = retainedScenarioReviewScenarioId(sourceInput);
+    const replayScenarioId = retainedScenarioReviewScenarioId(replayInput);
+    if (Either.isLeft(sourceScenarioId) || Either.isLeft(replayScenarioId)) {
+      fail(
+        `Retained ${reviewStage} source and replay inputs must both describe an admitted Scenario review.`,
+      );
+    }
     if (
-      retainedScenarioReviewScenarioId(sourceInput) !==
-        audit.audit.header.scenarioId ||
+      sourceScenarioId.right !== audit.audit.header.scenarioId ||
       sourceInput.sourceGitSha !== scenarioReview.gitSha ||
-      retainedScenarioReviewScenarioId(replayInput) !==
-        audit.audit.header.scenarioId ||
+      replayScenarioId.right !== audit.audit.header.scenarioId ||
       replayInput.sourceGitSha !== invocationGitSha ||
       canonicalJson(sourceInput.prompt) !== canonicalJson(replayInput.prompt) ||
       canonicalJson(sourceInput.outputJsonSchema) !==

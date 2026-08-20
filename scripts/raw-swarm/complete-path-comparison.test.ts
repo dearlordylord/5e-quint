@@ -164,12 +164,14 @@ function invocation(
       ? {
           tag: "scenarioCampaign" as const,
           campaignId: "synthetic-complete-path-campaign",
+          evidenceSetId: "synthetic-complete-path-evidence",
           plannedScenarioId: scenarioId,
         }
       : values.phase === "scenarioCompositeReview"
         ? {
             tag: "scenarioCandidate" as const,
             campaignId: "synthetic-complete-path-campaign",
+            evidenceSetId: "synthetic-complete-path-evidence",
             candidateId: "synthetic-complete-path-candidate",
             candidateScenarioSha256: "a".repeat(64),
             plannedScenarioId: scenarioId,
@@ -583,6 +585,19 @@ function findingsProjection(
       callCount: calls.length,
     },
   };
+  const executionStart = writeAuthority(
+    root,
+    "execution-start.json",
+    `${JSON.stringify({
+      type: "raw-swarm-execution-start",
+      schemaVersion: 1,
+      executionId: subject.executionId,
+      evidenceSetId: subject.evidenceSetId,
+      scenarioId: subject.scenarioId,
+      gitSha: subject.gitSha,
+      startedAt: subject.startedAt,
+    })}\n`,
+  );
   return {
     type: "raw-swarm-findings",
     schemaVersion: 2,
@@ -601,6 +616,7 @@ function findingsProjection(
       { role: "observations", ...observations },
       { role: "frozenPrefix", ...frozenPrefix },
       { role: "final", ...finalArtifact },
+      { role: "executionStart", ...executionStart },
     ],
     findings,
   };

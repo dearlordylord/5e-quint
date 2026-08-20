@@ -1,9 +1,10 @@
-import { Schema } from "effect";
+import { Either, Schema } from "effect";
 
 import { ScenarioCompositeReviewSchema } from "./scenario-campaign.ts";
 import {
   ScenarioCampaignIdSchema,
   ScenarioCandidateIdSchema,
+  EvidenceSetIdSchema,
   PlannedScenarioIdSchema,
 } from "./raw-swarm-identities.ts";
 import { GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
@@ -38,6 +39,7 @@ const RetainedScenarioReviewSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("scenarioCandidate"),
     campaignId: ScenarioCampaignIdSchema,
+    evidenceSetId: EvidenceSetIdSchema,
     candidateId: ScenarioCandidateIdSchema,
     candidateScenarioSha256: Schema.String.pipe(
       Schema.pattern(/^[0-9a-f]{64}$/),
@@ -75,9 +77,22 @@ export function retainedScenarioReviewSubject(
 
 export function retainedScenarioReviewScenarioId(
   input: RetainedScenarioReviewInput,
-) {
+): Either.Either<Schema.Schema.Type<typeof ScenarioIdSchema>, string> {
   const subject = retainedScenarioReviewSubject(input);
   return subject.tag === "scenario"
-    ? subject.scenarioId
-    : subject.plannedScenarioId;
+    ? Either.right(subject.scenarioId)
+    : Either.left(
+        "A Scenario Candidate review reservation cannot satisfy an admitted Scenario identity.",
+      );
+}
+
+export function retainedScenarioReviewPlannedScenarioId(
+  input: RetainedScenarioReviewInput,
+): Either.Either<Schema.Schema.Type<typeof PlannedScenarioIdSchema>, string> {
+  const subject = retainedScenarioReviewSubject(input);
+  return subject.tag === "scenarioCandidate"
+    ? Either.right(subject.plannedScenarioId)
+    : Either.left(
+        "An admitted Scenario review does not carry a Campaign reservation identity.",
+      );
 }

@@ -344,6 +344,14 @@ export function projectGenerationFindings(
           {
             scenarioId: authoredIdentity.scenarioId,
             gitSha: authoredIdentity.gitSha,
+            ...(manifestIdentity.tag === "scenarioCampaign"
+              ? {
+                  campaign: {
+                    campaignId: manifestIdentity.campaignId,
+                    evidenceSetId: manifestIdentity.evidenceSetId,
+                  },
+                }
+              : {}),
           },
         ),
       );

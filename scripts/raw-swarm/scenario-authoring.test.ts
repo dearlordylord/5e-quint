@@ -12,6 +12,11 @@ import {
   type ScenarioCatalogueComparison,
   type ScenarioCatalogueProjection,
 } from "./scenario-authoring.ts";
+import {
+  retainedScenarioReviewPlannedScenarioId,
+  retainedScenarioReviewScenarioId,
+  type RetainedScenarioReviewInput,
+} from "./scenario-review-input.ts";
 
 const projection = (
   scenarioId: string,
@@ -79,6 +84,26 @@ const comparison = (
 });
 
 describe("Scenario authoring catalogue comparison", () => {
+  test("keeps Candidate reservations out of admitted Scenario identity checks", () => {
+    const candidateReview = {
+      schemaVersion: 3,
+      subject: {
+        tag: "scenarioCandidate",
+        campaignId: "synthetic-campaign",
+        evidenceSetId: "synthetic-evidence",
+        candidateId: "synthetic-candidate",
+        candidateScenarioSha256: "a".repeat(64),
+        plannedScenarioId: "synthetic-planned-scenario",
+      },
+    } as unknown as RetainedScenarioReviewInput;
+    expect(
+      Either.isLeft(retainedScenarioReviewScenarioId(candidateReview)),
+    ).toBe(true);
+    expect(
+      retainedScenarioReviewPlannedScenarioId(candidateReview),
+    ).toMatchObject({ _tag: "Right", right: "synthetic-planned-scenario" });
+  });
+
   test("splits the complete projection without truncating entries", () => {
     const projections = [projection("one"), projection("two")];
     const batches = batchScenarioCatalogueProjections(projections);

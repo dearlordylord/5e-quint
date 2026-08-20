@@ -82,6 +82,8 @@ import {
   sha256Text,
   type GitSha,
 } from "./transcript.ts";
+import type { ScenarioId } from "./transcript.ts";
+import { PerformancePathIdSchema } from "./raw-swarm-identities.ts";
 import {
   ScenarioStagePlanSchema,
   ScenarioStageFactsSchema,
@@ -1243,7 +1245,7 @@ function completePathOrderForPhase(phase: CompletePathPhase): number {
  * schema.
  */
 const CompletePathMeasurementCommonFields = {
-  pathId: Schema.NonEmptyTrimmedString,
+  pathId: PerformancePathIdSchema,
   stagePlan: ScenarioStagePlanSchema,
   stagePlanAuthority: ArtifactAuthoritySchema,
   invocationLedgers: Schema.NonEmptyArray(ArtifactAuthoritySchema),
@@ -1419,7 +1421,7 @@ export type BenchmarkInvocation = Schema.Schema.Type<
 >;
 
 const BenchmarkMeasurementCommonFields = {
-  pathId: Schema.NonEmptyTrimmedString,
+  pathId: PerformancePathIdSchema,
   scenarioId: ScenarioIdSchema,
   implementationGitSha: ImplementationGitShaSchema,
   scenarioBundle: BenchmarkScenarioBundleSchema,
@@ -1497,7 +1499,7 @@ const LegacyUnboundBenchmarkMeasurementSchema = Schema.Union(
  */
 export const CompletePathAssemblyDescriptorSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
-  pathId: Schema.NonEmptyTrimmedString,
+  pathId: PerformancePathIdSchema,
   stagePlanPath: Schema.NonEmptyTrimmedString,
   findingsPath: Schema.NonEmptyTrimmedString,
   invocationLedgerPaths: Schema.NonEmptyArray(Schema.NonEmptyTrimmedString),
@@ -1515,7 +1517,7 @@ export type CompletePathAssemblyDescriptor = Schema.Schema.Type<
  */
 const HistoricalCompletePathMeasurementSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
-  pathId: Schema.NonEmptyTrimmedString,
+  pathId: PerformancePathIdSchema,
   legacy: LegacyExecutionEvidenceSchema,
   stagePlan: UnavailableEvidenceSchema,
   invocations: Schema.Union(
@@ -1862,7 +1864,7 @@ export type CompletePathEquivalenceWitness =
       readonly scenario:
         | Readonly<{
             readonly tag: "admitted";
-            readonly scenarioId: string;
+            readonly scenarioId: ScenarioId;
             readonly scenarioSha256: string;
             readonly scenarioReviewSha256: string;
           }>
@@ -1880,7 +1882,7 @@ export type CompletePathEquivalenceWitness =
       readonly tag: "benchmark";
       readonly profile: BenchmarkImplementationProfile;
       readonly scenario: Readonly<{
-        readonly scenarioId: string;
+        readonly scenarioId: ScenarioId;
         readonly scenarioSha256: string;
         readonly scenarioReviewSha256: string;
       }>;
@@ -1904,7 +1906,7 @@ export type CompletePathEquivalenceWitness =
   | Readonly<{
       readonly tag: "historical";
       readonly scenario: Readonly<{
-        readonly scenarioId: string;
+        readonly scenarioId: ScenarioId;
         readonly scenarioSha256: string;
         readonly scenarioReviewSha256: string;
       }>;
@@ -3271,13 +3273,19 @@ function currentAuthorityContentIssues(
       continue;
     }
     const replay = decoded.right;
+    const replayScenarioId = retainedScenarioReviewScenarioId(replay);
+    if (Either.isLeft(replayScenarioId)) {
+      issues.push(
+        `Replay authority ${authority.role} is a Candidate review and cannot satisfy an admitted Scenario review identity.`,
+      );
+      continue;
+    }
     const currentResult = Schema.decodeUnknownEither(
       CurrentScenarioCompositeReviewSchema,
       { onExcessProperty: "error" },
     )(replay.result);
     if (
-      retainedScenarioReviewScenarioId(replay) !==
-        findings.subject.scenarioId ||
+      replayScenarioId.right !== findings.subject.scenarioId ||
       canonicalJson(replay.outputJsonSchema) !==
         canonicalJson(expectedOutputJsonSchema) ||
       Either.isLeft(currentResult)

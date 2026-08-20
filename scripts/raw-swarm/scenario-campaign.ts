@@ -608,7 +608,9 @@ export function verifyFinalScenarioReview(
     const comparison = validateScenarioCatalogueComparison({
       comparison: decoded.right.catalogueComparison,
       expectedScenarioIds,
-      expectedBatches: expected.admittedScenarioBatches,
+      ...(expected.admittedScenarioBatches === undefined
+        ? {}
+        : { expectedBatches: expected.admittedScenarioBatches }),
     });
     if (Either.isLeft(comparison)) {
       return Either.left(`Invalid catalogue comparison: ${comparison.left}`);

@@ -1,10 +1,34 @@
 # Raw Swarm
 
 Raw Swarm is an evidence-producing external-consumer workflow for finding
-gaps in the public D&D adjudicator SDK. A Scenario is an admitted, immutable
-authored input; an Execution exercises one Scenario; an Evidence Set retains
-the authoring or execution authorities. Raw Swarm does not turn catalogue
+gaps in the public D&D adjudicator SDK. Raw Swarm does not turn catalogue
 membership into a RAW-coverage or player-correctness claim.
+
+## Vocabulary
+
+These terms have one package-wide meaning:
+
+- A **Scenario Campaign** (or **Campaign**) is the bounded authoring process
+  that generates, compares, revises, reviews, and either admits or rejects
+  Candidates. Its planned Scenario identity is a reservation until admission.
+- A **Scenario Candidate** (or **Candidate**) is authored prose and typed
+  planning facts under Campaign review. A rejected Candidate never becomes a
+  Scenario.
+- A **Scenario** is one immutable, admitted authored input with a semantic
+  identity, title, purpose, retained review, and retained stage authorities.
+- An **Execution** is one externally identified attempt to exercise exactly
+  one admitted Scenario through the public SDK, whether it reaches the first
+  SDK call or is obstructed during character or setup authoring.
+- A **Benchmark** is one controlled comparison whose target Execution or
+  Execution Profile identities and context authorities are explicit.
+- An **Evidence Set** is the immutable authority collection produced by one
+  Campaign, Execution, or Benchmark. Its identifier is not a Scenario,
+  Execution, Campaign, Candidate, or Benchmark identity; its filesystem path
+  is only storage projection.
+- **Run** is not a Raw Swarm domain term. Do not use unqualified `Run` to
+  identify any of these objects. A database-local `runId` is only a row key;
+  qualify any operational run by its owning protocol or use the domain term
+  above.
 
 Start with the role protocol for the work you are doing:
 
@@ -17,10 +41,8 @@ Start with the role protocol for the work you are doing:
 
 The [Raw Swarm operations reference](OPERATIONS.md) contains the detailed
 prototype commands and existing MCP/direct-SDK evidence procedures. Read the
-role protocol first; it owns the procedure for that role. The package-local
-vocabulary above owns Scenario Campaign, Scenario Candidate, Scenario,
-Execution, Benchmark, and Evidence Set; the operations reference should not
-introduce alternate names for them.
+role protocol first; it owns the procedure for that role. Role protocols link
+back here for vocabulary and must not redefine these terms.
 
 Render the one-entry-per-admitted-Scenario catalogue before authoring:
 

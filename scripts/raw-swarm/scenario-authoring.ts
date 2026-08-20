@@ -2,6 +2,7 @@ import { Either, Match, Schema } from "effect";
 
 import { ArtifactAuthoritySchema } from "./artifact-authority-schema.ts";
 import { ScenarioIdSchema, type ScenarioId } from "./transcript.ts";
+import type { ScenarioSdkCapabilityAdmission } from "./scenario-campaign.ts";
 
 type ScenarioSourceAuthority = Schema.Schema.Type<
   typeof ArtifactAuthoritySchema
@@ -64,24 +65,7 @@ type CatalogueScenarioForProjection = Readonly<{
   }>;
   readonly sdkCapability:
     | Readonly<{ readonly tag: "notAssessed" }>
-    | Readonly<{
-        readonly tag: "assessed";
-        readonly admission:
-          | Readonly<{
-              readonly sdkCapabilityIntent: "supportedOnly";
-              readonly sdkCapabilityReview: Readonly<{
-                readonly classification: "supported" | "unsupported";
-              }>;
-            }>
-          | Readonly<{
-              readonly sdkCapabilityIntent: "probeUnsupportedCapability";
-              readonly sdkCapabilityReview: Readonly<{
-                readonly classification:
-                  | "explicitUnsupportedProbe"
-                  | "missingUnsupportedProbe";
-              }>;
-            }>;
-      }>;
+    | (Readonly<{ readonly tag: "assessed" }> & ScenarioSdkCapabilityAdmission);
 }>;
 type RawCatalogueForProjection = Readonly<{
   readonly scenarios: readonly CatalogueScenarioForProjection[];
@@ -187,8 +171,10 @@ export const SCENARIO_CATALOGUE_COMPARISON_BATCH_BYTE_LIMIT = 16 * 1024;
 /**
  * Conservative bound for the complete comparison payload sent to the model:
  * instructions, Candidate prose, batch index, and the serialized batch. UTF-8
- * bytes upper-bound token count for byte-compatible tokenizers, so this check
- * cannot silently turn a large Candidate or batch into an unbounded request.
+ * byte length is measured at this boundary; this is an explicit transport
+ * bound, not an unverified claim about any provider tokenizer's token count.
+ * The check cannot silently turn a large Candidate or batch into an unbounded
+ * request.
  */
 export const SCENARIO_CATALOGUE_COMPARISON_MODEL_INPUT_BYTE_LIMIT = 32 * 1024;
 
@@ -275,20 +261,15 @@ function sdkSupportBoundary(
 ): SdkSupportBoundary {
   return Match.value(scenario.sdkCapability).pipe(
     Match.when({ tag: "notAssessed" }, () => "notAssessed" as const),
-    Match.when({ tag: "assessed" }, ({ admission }) =>
-      Match.value(admission).pipe(
-        Match.when(
-          { sdkCapabilityIntent: "supportedOnly" },
-          ({ sdkCapabilityReview }) =>
-            `supportedOnly/${sdkCapabilityReview.classification}` as const,
-        ),
-        Match.when(
-          { sdkCapabilityIntent: "probeUnsupportedCapability" },
-          ({ sdkCapabilityReview }) =>
-            `probeUnsupportedCapability/${sdkCapabilityReview.classification}` as const,
-        ),
-        Match.exhaustive,
-      ),
+    Match.when(
+      { tag: "assessed", sdkCapabilityIntent: "supportedOnly" },
+      ({ sdkCapabilityReview }) =>
+        `supportedOnly/${sdkCapabilityReview.classification}` as const,
+    ),
+    Match.when(
+      { tag: "assessed", sdkCapabilityIntent: "probeUnsupportedCapability" },
+      ({ sdkCapabilityReview }) =>
+        `probeUnsupportedCapability/${sdkCapabilityReview.classification}` as const,
     ),
     Match.exhaustive,
   );
@@ -482,7 +463,9 @@ export function validateScenarioCatalogueComparison(input: {
       batches:
         comparison.basis.tag === "compared" ? comparison.basis.batches : [],
       expectedScenarioIds: input.expectedScenarioIds,
-      expectedBatches: input.expectedBatches,
+      ...(input.expectedBatches === undefined
+        ? {}
+        : { expectedBatches: input.expectedBatches }),
     });
     if (Either.isLeft(coverage)) return Either.left(coverage.left);
   }
@@ -564,7 +547,9 @@ export function aggregateScenarioCatalogueComparisons(input: {
   return validateScenarioCatalogueComparison({
     comparison,
     expectedScenarioIds: input.expectedScenarioIds,
-    expectedBatches: input.expectedBatches,
+    ...(input.expectedBatches === undefined
+      ? {}
+      : { expectedBatches: input.expectedBatches }),
   });
 }
 

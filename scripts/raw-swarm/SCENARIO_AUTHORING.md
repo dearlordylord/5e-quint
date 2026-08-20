@@ -1,6 +1,7 @@
 # Scenario authoring protocol
 
-This is the executable protocol for the Raw Swarm operator, generation agent,
+Use the package vocabulary in [`README.md`](README.md). This is the executable
+protocol for the Raw Swarm operator, generation agent,
 and scenario review agent. It authors one admitted Scenario through a bounded
 Scenario Campaign. The protocol is the same for a known SDK gap and for an
 open-ended exploration; the difference is only the operator's stated purpose
@@ -94,9 +95,9 @@ The operator must preserve these comparison invariants:
 2. Give the comparison reviewer the Candidate prose and one complete
    projection batch at a time. The complete UTF-8 payload (instructions,
    Candidate prose, batch index, and serialized batch) is measured against the
-   conservative 32 KiB model-input bound; UTF-8 bytes are a tokenizer-
-   independent upper bound on token units, so an over-limit payload fails
-   explicitly. When a concrete fact is needed, read the
+   conservative 32 KiB model-input byte bound. This is a measured transport
+   bound, not a claim about an unconfigured provider tokenizer; an over-limit
+   payload fails explicitly. When a concrete fact is needed, read the
    referenced authority exactly and retain its hash/length binding. A batch is
    a transport boundary, not permission to ignore an entry.
 3. Compare the Candidate and each admitted Scenario on the following material

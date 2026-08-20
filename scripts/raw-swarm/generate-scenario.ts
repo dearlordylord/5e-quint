@@ -81,6 +81,7 @@ import {
 } from "./scenario-catalogue.ts";
 import { AdmittedScenarioRecordSchema } from "./scenario-admission.ts";
 import type {
+  EvidenceSetId,
   PlannedScenarioId,
   ScenarioCampaignId,
 } from "./raw-swarm-identities.ts";
@@ -91,6 +92,31 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
+export type ScenarioAdmissionPublication = readonly (readonly [
+  staged: string,
+  admitted: string,
+])[];
+
+export function rollbackScenarioAdmissionBundle(
+  publication: ScenarioAdmissionPublication,
+): void {
+  const rollbackFailures: string[] = [];
+  for (const [source, destination] of [...publication].reverse()) {
+    try {
+      renameSync(destination, source);
+    } catch (error: unknown) {
+      rollbackFailures.push(
+        `${destination} -> ${source}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+  if (rollbackFailures.length > 0) {
+    fail(
+      `Scenario admission publication rollback failed: ${rollbackFailures.join("; ")}`,
+    );
+  }
+}
+
 export function publishScenarioAdmissionBundle(input: {
   readonly prose: readonly [staged: string, admitted: string];
   readonly review: readonly [staged: string, admitted: string];
@@ -98,7 +124,7 @@ export function publishScenarioAdmissionBundle(input: {
   readonly stagePlan: readonly [staged: string, admitted: string];
   readonly stagePlanFindings: readonly [staged: string, admitted: string];
   readonly scenarioRecord: readonly [staged: string, admitted: string];
-}): void {
+}): ScenarioAdmissionPublication {
   const publication = [
     input.prose,
     input.review,
@@ -120,24 +146,17 @@ export function publishScenarioAdmissionBundle(input: {
       published.push([source, destination]);
     }
   } catch (error: unknown) {
-    const rollbackFailures: string[] = [];
-    for (const [source, destination] of published.reverse()) {
-      try {
-        renameSync(destination, source);
-      } catch (rollbackError) {
-        rollbackFailures.push(
-          `${destination} -> ${source}: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`,
-        );
-      }
-    }
-    if (rollbackFailures.length > 0) {
+    try {
+      rollbackScenarioAdmissionBundle(published);
+    } catch (rollbackError) {
       throw new Error(
-        `Scenario admission publication failed and could not restore staged authorities: ${rollbackFailures.join("; ")}`,
+        `Scenario admission publication failed and could not restore staged authorities: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`,
         { cause: error },
       );
     }
     throw error;
   }
+  return published;
 }
 
 function isCandidateRejection(
@@ -310,6 +329,7 @@ export function scenarioCampaignAgents(input: {
   readonly ledgerPath: string;
   readonly eventDirectory: string;
   readonly campaignId: ScenarioCampaignId;
+  readonly evidenceSetId: EvidenceSetId;
   readonly plannedScenarioId: PlannedScenarioId;
   readonly gitSha: GitSha;
 }): ScenarioCampaignAgents {
@@ -326,6 +346,7 @@ export function scenarioCampaignAgents(input: {
     subject: {
       tag: "scenarioCampaign",
       campaignId: input.campaignId,
+      evidenceSetId: input.evidenceSetId,
       plannedScenarioId: input.plannedScenarioId,
     },
   } as const;
@@ -336,11 +357,6 @@ export function scenarioCampaignAgents(input: {
     stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioCompositeReview,
     ledgerPath: input.ledgerPath,
     gitSha: input.gitSha,
-    subject: {
-      tag: "scenarioCampaign",
-      campaignId: input.campaignId,
-      plannedScenarioId: input.plannedScenarioId,
-    },
   } as const;
   return {
     generate: async (input) =>
@@ -423,6 +439,7 @@ ${scenario}`,
           subject: {
             tag: "scenarioCandidate",
             campaignId,
+            evidenceSetId: input.evidenceSetId,
             candidateId,
             candidateScenarioSha256,
             plannedScenarioId,
@@ -454,6 +471,7 @@ ${scenario}`,
         subject: {
           tag: "scenarioCandidate",
           campaignId: input.campaignId,
+          evidenceSetId: input.evidenceSetId,
           candidateId,
           candidateScenarioSha256,
           plannedScenarioId: input.plannedScenarioId,
@@ -662,8 +680,8 @@ async function main(args: readonly string[]): Promise<void> {
         type: "raw-swarm-scenario-campaign",
         schemaVersion: 1,
         campaignId: decodedConfig.right.campaignId,
-        plannedScenarioId: decodedConfig.right.plannedScenarioId,
         evidenceSetId: decodedConfig.right.evidenceSetId,
+        plannedScenarioId: decodedConfig.right.plannedScenarioId,
         gitSha: gitSha.right,
         startedAt: generationStartedAt,
         configSha256: createHash("sha256")
@@ -829,6 +847,7 @@ async function main(args: readonly string[]): Promise<void> {
         ledgerPath,
         eventDirectory: resolve(campaignEvidenceDirectory, "invocation-events"),
         campaignId: decodedConfig.right.campaignId,
+        evidenceSetId: decodedConfig.right.evidenceSetId,
         plannedScenarioId: decodedConfig.right.plannedScenarioId,
         gitSha: gitSha.right,
       }),
@@ -983,6 +1002,7 @@ async function main(args: readonly string[]): Promise<void> {
   const staging = mkdtempSync(resolve(outputDirectory, ".scenario-stage-"));
   const stagedScenario = resolve(staging, "scenario.md");
   const stagedReview = resolve(staging, "scenario-review.json");
+  let publication: ScenarioAdmissionPublication | undefined;
   try {
     writeFileSync(stagedScenario, scenarioBytes, { flag: "wx" });
     writeFileSync(
@@ -1059,7 +1079,7 @@ async function main(args: readonly string[]): Promise<void> {
         `${JSON.stringify(scenarioRecord.right, null, 2)}\n`,
         { flag: "wx" },
       );
-      publishScenarioAdmissionBundle({
+      publication = publishScenarioAdmissionBundle({
         prose: [stagedScenario, outputPath],
         review: [stagedReview, reviewPath],
         stageFacts: [
@@ -1080,12 +1100,57 @@ async function main(args: readonly string[]): Promise<void> {
         ],
       });
     }
+    if (disposition === "admitted") {
+      const retainedStagePlanPath = retainedScenarioStagePlanPath(
+        admittedScenarioId.right,
+      );
+      const retainedStagePlanFindingsPath =
+        retainedScenarioStagePlanFindingsPath(admittedScenarioId.right);
+      verifyRetainedScenario(
+        admittedScenarioId.right,
+        outputPath,
+        reviewPath,
+        gitSha.right,
+        catalogueProjections.map(({ scenarioId }) => scenarioId),
+        catalogueBatches.right.map((batch, batchIndex) => ({
+          batchIndex,
+          scenarioIds: batch.map(({ scenarioId }) => scenarioId),
+        })),
+      );
+      emitGenerationFindings({
+        tag: "admittedScenario",
+        scenarioPath: outputPath,
+        scenarioReviewPath: reviewPath,
+        stageFactsPath: `${outputPath}.stage-facts.json`,
+        stagePlanPath: retainedStagePlanPath,
+        stagePlanFindingsPath: retainedStagePlanFindingsPath,
+      });
+    }
   } catch (error: unknown) {
     if (disposition === "admitted") {
-      emitGenerationFindings({
-        tag: "campaignFailure",
-        reason: `Scenario admission finalization failed: ${error instanceof Error ? error.message : String(error)}`,
-      });
+      let rollbackError: unknown;
+      if (publication !== undefined) {
+        try {
+          rollbackScenarioAdmissionBundle(publication);
+        } catch (error) {
+          rollbackError = error;
+        }
+      }
+      try {
+        emitGenerationFindings({
+          tag: "campaignFailure",
+          reason: `Scenario admission finalization failed: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      } catch {
+        // Preserve the admission failure; the authorities have already been
+        // rolled back or the rollback error below will make the failure clear.
+      }
+      if (rollbackError !== undefined) {
+        throw new Error(
+          `Scenario admission finalization failed and publication rollback was incomplete: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`,
+          { cause: error },
+        );
+      }
     }
     throw error;
   } finally {
@@ -1143,31 +1208,6 @@ async function main(args: readonly string[]): Promise<void> {
     );
     return;
   }
-  const retainedStagePlanPath = retainedScenarioStagePlanPath(
-    admittedScenarioId.right,
-  );
-  const retainedStagePlanFindingsPath = retainedScenarioStagePlanFindingsPath(
-    admittedScenarioId.right,
-  );
-  emitGenerationFindings({
-    tag: "admittedScenario",
-    scenarioPath: outputPath,
-    scenarioReviewPath: reviewPath,
-    stageFactsPath: `${outputPath}.stage-facts.json`,
-    stagePlanPath: retainedStagePlanPath,
-    stagePlanFindingsPath: retainedStagePlanFindingsPath,
-  });
-  verifyRetainedScenario(
-    admittedScenarioId.right,
-    outputPath,
-    reviewPath,
-    gitSha.right,
-    catalogueProjections.map(({ scenarioId }) => scenarioId),
-    catalogueBatches.right.map((batch, batchIndex) => ({
-      batchIndex,
-      scenarioIds: batch.map(({ scenarioId }) => scenarioId),
-    })),
-  );
   console.log(
     `Generated ${outputPath} in ${result.right.iterations} iteration(s), stopped by ${result.right.stopReason}, ${disposition}.`,
   );

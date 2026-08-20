@@ -57,8 +57,8 @@ if (args.includes("--json")) {
     const sdkCapability = Match.value(scenario.sdkCapability).pipe(
       Match.when(
         { tag: "assessed" },
-        ({ admission }) =>
-          `${admission.sdkCapabilityIntent}/${admission.sdkCapabilityReview.classification}`,
+        ({ sdkCapabilityIntent, sdkCapabilityReview }) =>
+          `${sdkCapabilityIntent}/${sdkCapabilityReview.classification}`,
       ),
       Match.when({ tag: "notAssessed" }, () => "not assessed"),
       Match.exhaustive,

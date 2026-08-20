@@ -103,6 +103,7 @@ import {
   decodeBenchmarkId,
   decodeEvidenceSetId,
   decodeExecutionId,
+  PerformancePathIdSchema,
   type BenchmarkId,
   type EvidenceSetId,
   type ExecutionId,
@@ -2195,8 +2196,10 @@ function validateRetainedReviewAuthority(
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(path, "utf8")));
   if (Either.isLeft(parsed)) fail(parsed.left.message);
+  const retainedScenarioId = retainedScenarioReviewScenarioId(parsed.right);
+  if (Either.isLeft(retainedScenarioId)) fail(retainedScenarioId.left);
   if (
-    retainedScenarioReviewScenarioId(parsed.right) !== FIXED_SCENARIO_ID ||
+    retainedScenarioId.right !== FIXED_SCENARIO_ID ||
     parsed.right.reviewStage !== stage ||
     parsed.right.sourceGitSha !== implementationGitSha
   ) {
@@ -2600,7 +2603,14 @@ function assembleProfile(
   });
   const measurementCommon = {
     schemaVersion: 5 as const,
-    pathId: benchmarkId + "-" + profile,
+    pathId: (() => {
+      const decoded = Schema.decodeUnknownEither(PerformancePathIdSchema)(
+        benchmarkId + "-" + profile,
+      );
+      return Either.isRight(decoded)
+        ? decoded.right
+        : fail(`Invalid benchmark performance path identity: ${decoded.left}`);
+    })(),
     scenarioId: fixedScenarioId(),
     implementationGitSha: executionProfileDescriptor.right.implementationGitSha,
     scenarioBundle: preparedBundle,

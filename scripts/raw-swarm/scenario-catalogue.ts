@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { Either, Match, Schema } from "effect";
@@ -28,6 +28,8 @@ import {
   type ScenarioSdkCapabilityAdmission,
 } from "./scenario-campaign.ts";
 import {
+  batchScenarioCatalogueProjections,
+  projectScenarioCatalogueForAuthoring,
   ScenarioCatalogueComparisonSchema,
   validateScenarioCatalogueComparison,
 } from "./scenario-authoring.ts";
@@ -54,10 +56,11 @@ type ScenarioCatalogueSource = AdmittedScenarioRecord &
     >["facts"]["spatialRequirement"];
     readonly contentAvailability: ScenarioContentAdmission;
     readonly sdkCapability:
-      | Readonly<{
-          readonly tag: "assessed";
-          readonly admission: ScenarioSdkCapabilityAdmission;
-        }>
+      | Readonly<
+          {
+            readonly tag: "assessed";
+          } & ScenarioSdkCapabilityAdmission
+        >
       | Readonly<{ readonly tag: "notAssessed" }>;
   }>;
 
@@ -506,19 +509,15 @@ function scenarioSdkCapability(
   return Match.value(review).pipe(
     Match.when({ sdkCapabilityIntent: "supportedOnly" }, (current) => ({
       tag: "assessed" as const,
-      admission: {
-        sdkCapabilityIntent: current.sdkCapabilityIntent,
-        sdkCapabilityReview: current.sdkCapabilityReview,
-      },
+      sdkCapabilityIntent: current.sdkCapabilityIntent,
+      sdkCapabilityReview: current.sdkCapabilityReview,
     })),
     Match.when(
       { sdkCapabilityIntent: "probeUnsupportedCapability" },
       (current) => ({
         tag: "assessed" as const,
-        admission: {
-          sdkCapabilityIntent: current.sdkCapabilityIntent,
-          sdkCapabilityReview: current.sdkCapabilityReview,
-        },
+        sdkCapabilityIntent: current.sdkCapabilityIntent,
+        sdkCapabilityReview: current.sdkCapabilityReview,
       }),
     ),
     Match.exhaustive,
@@ -533,7 +532,10 @@ type RelationshipRecordPaths = Readonly<{
   readonly issues: readonly CatalogueReadFailure[];
 }>;
 
-function relationshipRecordPaths(directory: string): RelationshipRecordPaths {
+function relationshipRecordPaths(
+  repositoryRoot: string,
+  directory: string,
+): RelationshipRecordPaths {
   if (!existsSync(directory)) {
     return {
       executions: [],
@@ -543,27 +545,54 @@ function relationshipRecordPaths(directory: string): RelationshipRecordPaths {
       issues: [],
     };
   }
+  const canonicalRoot = canonicalRepositoryReadPath(repositoryRoot, directory);
+  if (Either.isLeft(canonicalRoot)) {
+    return {
+      executions: [],
+      executionProfiles: [],
+      benchmarks: [],
+      rejections: [],
+      issues: [{ tag: "unreadableEvidenceDirectory", path: directory }],
+    };
+  }
   const executions: string[] = [];
   const executionProfiles: string[] = [];
   const benchmarks: string[] = [];
   const rejections: string[] = [];
   const issues: CatalogueReadFailure[] = [];
-  const pending = [directory];
+  const pending = [canonicalRoot.right];
+  const visitedDirectories = new Set<string>();
   while (pending.length > 0) {
     const current = pending.pop();
     if (current === undefined) break;
+    if (visitedDirectories.has(current)) continue;
+    visitedDirectories.add(current);
     try {
       for (const entry of readdirSync(current, { withFileTypes: true })) {
         const path = resolve(current, entry.name);
-        if (entry.isDirectory()) pending.push(path);
-        else if (entry.isFile() && entry.name === "execution.json")
-          executions.push(path);
-        else if (entry.isFile() && entry.name === "execution-profile.json")
-          executionProfiles.push(path);
-        else if (entry.isFile() && entry.name === "benchmark.json")
-          benchmarks.push(path);
-        else if (entry.isFile() && entry.name === "candidate-rejection.json")
-          rejections.push(path);
+        const canonicalPath = canonicalRepositoryReadPath(repositoryRoot, path);
+        if (Either.isLeft(canonicalPath)) {
+          issues.push({
+            tag: "unreadableEvidenceDirectory",
+            path,
+          });
+          continue;
+        }
+        const isDirectory = entry.isDirectory()
+          ? true
+          : entry.isSymbolicLink() &&
+            statSync(canonicalPath.right).isDirectory();
+        if (isDirectory) {
+          pending.push(canonicalPath.right);
+        } else if (entry.name === "execution.json") {
+          executions.push(canonicalPath.right);
+        } else if (entry.name === "execution-profile.json") {
+          executionProfiles.push(canonicalPath.right);
+        } else if (entry.name === "benchmark.json") {
+          benchmarks.push(canonicalPath.right);
+        } else if (entry.name === "candidate-rejection.json") {
+          rejections.push(canonicalPath.right);
+        }
       }
     } catch {
       issues.push({ tag: "unreadableEvidenceDirectory", path: current });
@@ -612,6 +641,51 @@ function readRelationshipRecords<A, I>(
     : Either.left(relationshipIssues);
 }
 
+function validateRejectedCandidateComparisons(input: {
+  readonly records: readonly RejectedScenarioCandidateRecord[];
+  readonly paths: readonly string[];
+  readonly scenarios: readonly ScenarioCatalogueSource[];
+}): readonly CatalogueReadFailure[] {
+  const currentRecords = input.records.flatMap((record, index) =>
+    "catalogueComparison" in record
+      ? [{ record, path: input.paths[index] ?? "<unknown rejection record>" }]
+      : [],
+  );
+  if (currentRecords.length === 0) return [];
+  const projections = projectScenarioCatalogueForAuthoring({
+    scenarios: input.scenarios,
+  });
+  const batches = batchScenarioCatalogueProjections(projections);
+  if (Either.isLeft(batches)) {
+    return currentRecords.map(({ path }) => ({
+      tag: "invalidRelationshipRecord" as const,
+      path,
+      message: `Canonical catalogue batching failed before rejection comparison validation: ${batches.left}`,
+    }));
+  }
+  const expectedScenarioIds = projections.map(({ scenarioId }) => scenarioId);
+  const expectedBatches = batches.right.map((batch, batchIndex) => ({
+    batchIndex,
+    scenarioIds: batch.map(({ scenarioId }) => scenarioId),
+  }));
+  return currentRecords.flatMap(({ record, path }) => {
+    const comparison = validateScenarioCatalogueComparison({
+      comparison: record.catalogueComparison,
+      expectedScenarioIds,
+      expectedBatches,
+    });
+    return Either.isLeft(comparison)
+      ? [
+          {
+            tag: "invalidRelationshipRecord" as const,
+            path,
+            message: `Catalogue comparison is incomplete: ${comparison.left}`,
+          },
+        ]
+      : [];
+  });
+}
+
 function readAuthority(
   repositoryRoot: string,
   authority: ArtifactAuthority,
@@ -656,11 +730,16 @@ function readScenarioCatalogueSource(
   ScenarioCatalogueSource,
   NonEmptyIssues<CatalogueReadFailure>
 > {
+  const canonicalRecordPath = canonicalRepositoryReadPath(repositoryRoot, path);
+  if (Either.isLeft(canonicalRecordPath)) {
+    return Either.left([{ tag: "unreadableCatalogueAuthority", path }]);
+  }
+  const recordPath = canonicalRecordPath.right;
   const input = Either.try({
-    try: (): unknown => JSON.parse(readFileSync(path, "utf8")),
+    try: (): unknown => JSON.parse(readFileSync(recordPath, "utf8")),
     catch: (): CatalogueReadFailure => ({
       tag: "unreadableCatalogueAuthority",
-      path,
+      path: recordPath,
     }),
   });
   if (Either.isLeft(input)) return Either.left([input.left]);
@@ -671,19 +750,19 @@ function readScenarioCatalogueSource(
     return Either.left([
       {
         tag: "invalidCatalogueRecord",
-        path,
+        path: recordPath,
         message: decoded.left.message,
       },
     ]);
   }
   const record = decoded.right;
   const expectedName = `${record.scenarioId}.scenario.json`;
-  if (!path.endsWith(`/${expectedName}`)) {
+  if (!recordPath.endsWith(`/${expectedName}`)) {
     return Either.left([
       {
         tag: "catalogueScenarioIdentityMismatch",
         scenarioId: record.scenarioId,
-        path,
+        path: recordPath,
       },
     ]);
   }
@@ -713,7 +792,9 @@ function readScenarioCatalogueSource(
     Either.isLeft(reviewBytes) ||
     Either.isLeft(factsBytes)
   ) {
-    return Either.left([{ tag: "unreadableCatalogueAuthority", path }]);
+    return Either.left([
+      { tag: "unreadableCatalogueAuthority", path: recordPath },
+    ]);
   }
   const review = Schema.decodeUnknownEither(
     Schema.parseJson(FinalScenarioReviewSchema),
@@ -748,7 +829,7 @@ function readScenarioCatalogueSource(
     return Either.left([
       {
         tag: "invalidCatalogueRecord",
-        path,
+        path: recordPath,
         message: "unreachable decode state",
       },
     ]);
@@ -765,7 +846,7 @@ function readScenarioCatalogueSource(
       {
         tag: "catalogueScenarioIdentityMismatch",
         scenarioId: record.scenarioId,
-        path,
+        path: recordPath,
       },
     ]);
   }
@@ -800,14 +881,41 @@ export function readRawSwarmCatalogue(
     readonly evidenceDirectory: string;
   }>,
 ): Either.Either<RawSwarmCatalogue, NonEmptyIssues<CatalogueReadFailure>> {
+  const canonicalScenarioDirectory = canonicalRepositoryReadPath(
+    input.repositoryRoot,
+    input.scenarioDirectory,
+  );
+  if (Either.isLeft(canonicalScenarioDirectory)) {
+    return Either.left([
+      {
+        tag: "unreadableCatalogueAuthority",
+        path: input.scenarioDirectory,
+      },
+    ]);
+  }
+  const recordDiscoveryIssues: CatalogueReadFailure[] = [];
   const recordPaths = Either.try({
     try: () =>
-      readdirSync(input.scenarioDirectory)
+      readdirSync(canonicalScenarioDirectory.right)
         .filter((name) => name.endsWith(".scenario.json"))
-        .map((name) => resolve(input.scenarioDirectory, name)),
+        .sort()
+        .flatMap((name) => {
+          const canonicalRecordPath = canonicalRepositoryReadPath(
+            input.repositoryRoot,
+            resolve(canonicalScenarioDirectory.right, name),
+          );
+          if (Either.isLeft(canonicalRecordPath)) {
+            recordDiscoveryIssues.push({
+              tag: "unreadableCatalogueAuthority",
+              path: resolve(canonicalScenarioDirectory.right, name),
+            });
+            return [];
+          }
+          return [canonicalRecordPath.right];
+        }),
     catch: (): CatalogueReadFailure => ({
       tag: "unreadableCatalogueAuthority",
-      path: input.scenarioDirectory,
+      path: canonicalScenarioDirectory.right,
     }),
   });
   if (Either.isLeft(recordPaths)) return Either.left([recordPaths.left]);
@@ -824,7 +932,7 @@ export function readRawSwarmCatalogue(
     }
   }
   const scenarios: ScenarioCatalogueSource[] = [];
-  const scenarioIssues: CatalogueReadFailure[] = [];
+  const scenarioIssues: CatalogueReadFailure[] = [...recordDiscoveryIssues];
   for (const path of recordPaths.right) {
     const scenario = readScenarioCatalogueSource(
       input.repositoryRoot,
@@ -834,7 +942,10 @@ export function readRawSwarmCatalogue(
     if (Either.isLeft(scenario)) scenarioIssues.push(...scenario.left);
     else scenarios.push(scenario.right);
   }
-  const relationshipPaths = relationshipRecordPaths(input.evidenceDirectory);
+  const relationshipPaths = relationshipRecordPaths(
+    input.repositoryRoot,
+    input.evidenceDirectory,
+  );
   const executions = readRelationshipRecords(
     relationshipPaths.executions,
     ScenarioExecutionRecordSchema,
@@ -866,6 +977,13 @@ export function readRawSwarmCatalogue(
   if (Either.isLeft(benchmarks)) return Either.left(benchmarks.left);
   if (Either.isLeft(rejectedCandidates))
     return Either.left(rejectedCandidates.left);
+  const rejectionComparisonIssues = validateRejectedCandidateComparisons({
+    records: rejectedCandidates.right,
+    paths: relationshipPaths.rejections,
+    scenarios,
+  });
+  const allReadIssues = nonEmptyIssues(rejectionComparisonIssues);
+  if (allReadIssues !== undefined) return Either.left(allReadIssues);
   return projectRawSwarmCatalogue({
     scenarios,
     executions: executions.right,

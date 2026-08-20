@@ -51,6 +51,14 @@ export const EvidenceSetIdSchema = SemanticIdentitySchema.pipe(
 );
 export type EvidenceSetId = Schema.Schema.Type<typeof EvidenceSetIdSchema>;
 
+/** Identity of a persisted performance comparison path. */
+export const PerformancePathIdSchema = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("RawSwarmPerformancePathId"),
+);
+export type PerformancePathId = Schema.Schema.Type<
+  typeof PerformancePathIdSchema
+>;
+
 /**
  * Identity shared by an Execution record and an immutable benchmark execution
  * profile. The profile carries additional benchmark authorities, but these

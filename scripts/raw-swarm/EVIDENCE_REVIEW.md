@@ -1,6 +1,7 @@
 # Evidence review protocol
 
-This is the executable protocol for the post-play review agent and the human
+Use the package vocabulary in [`README.md`](README.md). This is the executable
+protocol for the post-play review agent and the human
 Raw Swarm operator who imports and dispositions its result. It reviews retained
 authoring and Execution authorities; it does not author a Scenario or change
 the public SDK. The [authoring protocol](SCENARIO_AUTHORING.md) owns catalogue

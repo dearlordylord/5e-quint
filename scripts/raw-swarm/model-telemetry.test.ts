@@ -60,6 +60,7 @@ describe("Raw Swarm model invocation telemetry", () => {
         subject: {
           tag: "scenarioCampaign",
           campaignId: "synthetic-campaign",
+          evidenceSetId: "synthetic-evidence",
           plannedScenarioId: "synthetic-scenario",
         },
       }),
@@ -72,6 +73,7 @@ describe("Raw Swarm model invocation telemetry", () => {
         subject: {
           tag: "scenarioCandidate",
           campaignId: "synthetic-campaign",
+          evidenceSetId: "synthetic-evidence",
           candidateId: "synthetic-candidate",
           candidateScenarioSha256: "c".repeat(64),
           plannedScenarioId: "synthetic-scenario",
@@ -131,6 +133,7 @@ describe("Raw Swarm model invocation telemetry", () => {
       subject: {
         tag: "scenarioCampaign",
         campaignId: "synthetic-campaign",
+        evidenceSetId: "synthetic-evidence",
         plannedScenarioId: "synthetic-scenario",
       },
       gitSha: "a".repeat(40),

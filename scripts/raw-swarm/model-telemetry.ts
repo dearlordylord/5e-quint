@@ -145,11 +145,13 @@ export type CurrentModelInvocationSubject =
   | Readonly<{
       readonly tag: "scenarioCampaign";
       readonly campaignId: ScenarioCampaignId;
+      readonly evidenceSetId: EvidenceSetId;
       readonly plannedScenarioId: PlannedScenarioId;
     }>
   | Readonly<{
       readonly tag: "scenarioCandidate";
       readonly campaignId: ScenarioCampaignId;
+      readonly evidenceSetId: EvidenceSetId;
       readonly candidateId: ScenarioCandidateId;
       readonly candidateScenarioSha256: string;
       readonly plannedScenarioId: PlannedScenarioId;
@@ -174,11 +176,13 @@ const CurrentModelInvocationSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("scenarioCampaign"),
     campaignId: ScenarioCampaignIdSchema,
+    evidenceSetId: EvidenceSetIdSchema,
     plannedScenarioId: PlannedScenarioIdSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("scenarioCandidate"),
     campaignId: ScenarioCampaignIdSchema,
+    evidenceSetId: EvidenceSetIdSchema,
     candidateId: ScenarioCandidateIdSchema,
     candidateScenarioSha256: Schema.String.pipe(
       Schema.pattern(/^[0-9a-f]{64}$/),

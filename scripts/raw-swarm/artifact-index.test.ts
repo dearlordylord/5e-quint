@@ -158,6 +158,36 @@ describe("Raw Swarm artifact index", () => {
     ).toThrow(/use legacy rebuild for Historical Observations/);
   });
 
+  test("rolls back the transcript artifact when Execution validation fails", () => {
+    const directory = temporaryDirectory();
+    const sdk = sdkTranscript(directory);
+    writeFileSync(
+      resolve(dirname(dirname(sdk)), "execution.json"),
+      `${JSON.stringify({
+        schemaVersion: 1,
+        executionId: "artifact-index-execution",
+        evidenceSetId: "artifact-index-evidence",
+        scenarioId: "different-scenario",
+      })}\n`,
+    );
+    const dbPath = resolve(directory, "rollback.sqlite");
+    expect(() =>
+      ingestArtifactRun({
+        transcriptPath: relative(repoRoot, sdk),
+        dbPath: relative(repoRoot, dbPath),
+      }),
+    ).toThrow(/Execution manifest Scenario does not match/);
+
+    const db = new DatabaseSync(dbPath, { readOnly: true });
+    expect(db.prepare("SELECT COUNT(*) AS count FROM artifacts").get()).toEqual(
+      { count: 0 },
+    );
+    expect(db.prepare("SELECT COUNT(*) AS count FROM runs").get()).toEqual({
+      count: 0,
+    });
+    db.close();
+  });
+
   test("refuses a prior compact index schema instead of mutating it in place", () => {
     const directory = temporaryDirectory();
     const dbPath = resolve(directory, "old-index.sqlite");

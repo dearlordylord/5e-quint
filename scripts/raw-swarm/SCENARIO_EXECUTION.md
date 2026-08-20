@@ -1,6 +1,7 @@
 # Scenario execution protocol
 
-This is the executable hand-off after a Scenario Campaign admits a Scenario.
+Use the package vocabulary in [`README.md`](README.md). This is the executable
+hand-off after a Scenario Campaign admits a Scenario.
 It covers the player/DM agent, neutral setup author, delegated setup
 controller, and the operator supervising the public SDK. Authoring and review
 remain in [Scenario authoring](SCENARIO_AUTHORING.md) and [Evidence review](EVIDENCE_REVIEW.md).

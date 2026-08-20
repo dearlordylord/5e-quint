@@ -6,6 +6,7 @@ import {
   mkdtempSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -71,17 +72,57 @@ const projectedFacts = {
   },
   sdkCapability: {
     tag: "assessed" as const,
-    admission: {
-      sdkCapabilityIntent: "supportedOnly" as const,
-      sdkCapabilityReview: {
-        classification: "supported" as const,
-        evidence: "Synthetic supported-SDK evidence.",
-      },
+    sdkCapabilityIntent: "supportedOnly" as const,
+    sdkCapabilityReview: {
+      classification: "supported" as const,
+      evidence: "Synthetic supported-SDK evidence.",
     },
   },
 };
 
 describe("Raw Swarm scenario catalogue", () => {
+  test("rejects a scenario catalogue root symlink that escapes the repository", () => {
+    const repositoryRoot = mkdtempSync(
+      resolve(tmpdir(), "raw-swarm-catalogue-root-"),
+    );
+    const outside = mkdtempSync(resolve(tmpdir(), "raw-swarm-catalogue-out-"));
+    try {
+      symlinkSync(outside, resolve(repositoryRoot, "scenarios"));
+      const result = readRawSwarmCatalogue({
+        repositoryRoot,
+        scenarioDirectory: resolve(repositoryRoot, "scenarios"),
+        evidenceDirectory: resolve(repositoryRoot, "out"),
+      });
+      expect(Either.isLeft(result)).toBe(true);
+    } finally {
+      rmSync(repositoryRoot, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects a discovered scenario record symlink that escapes the repository", () => {
+    const repositoryRoot = mkdtempSync(
+      resolve(tmpdir(), "raw-swarm-catalogue-record-"),
+    );
+    const scenarios = resolve(repositoryRoot, "scenarios");
+    const outside = mkdtempSync(resolve(tmpdir(), "raw-swarm-catalogue-out-"));
+    try {
+      mkdirSync(scenarios);
+      const outsideRecord = resolve(outside, "escaped.scenario.json");
+      writeFileSync(outsideRecord, "{}\n");
+      symlinkSync(outsideRecord, resolve(scenarios, "escaped.scenario.json"));
+      const result = readRawSwarmCatalogue({
+        repositoryRoot,
+        scenarioDirectory: scenarios,
+        evidenceDirectory: resolve(repositoryRoot, "out"),
+      });
+      expect(Either.isLeft(result)).toBe(true);
+    } finally {
+      rmSync(repositoryRoot, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
   test("rejects an execution/profile kind mismatch instead of erasing the tag", () => {
     const record = {
       schemaVersion: 1,
@@ -745,10 +786,19 @@ describe("Raw Swarm scenario catalogue", () => {
           ],
         })}\n`,
       );
-      writeFileSync(
-        resolve(repositoryRoot, "out", "candidate-rejection.json"),
-        `${JSON.stringify({ schemaVersion: 1, candidateId: "rejected-candidate", campaignId: "rejected-campaign", evidenceSetId: "rejection-evidence", reason: "The candidate is incoherent." })}\n`,
+      const rejectionRecord = {
+        schemaVersion: 1 as const,
+        candidateId: "rejected-candidate",
+        campaignId: "rejected-campaign",
+        evidenceSetId: "rejection-evidence",
+        reason: "The candidate is incoherent.",
+      };
+      const rejectionPath = resolve(
+        repositoryRoot,
+        "out",
+        "candidate-rejection.json",
       );
+      writeFileSync(rejectionPath, `${JSON.stringify(rejectionRecord)}\n`);
 
       const profileRoot = resolve(
         repositoryRoot,
@@ -838,10 +888,8 @@ describe("Raw Swarm scenario catalogue", () => {
           },
           sdkCapability: {
             tag: "assessed",
-            admission: {
-              sdkCapabilityIntent: "supportedOnly",
-              sdkCapabilityReview: { classification: "supported" },
-            },
+            sdkCapabilityIntent: "supportedOnly",
+            sdkCapabilityReview: { classification: "supported" },
           },
           executionIds: expect.arrayContaining([
             "execution-alpha",
@@ -858,6 +906,56 @@ describe("Raw Swarm scenario catalogue", () => {
           expect.objectContaining({ candidateId: "rejected-candidate" }),
         ]);
       }
+      writeFileSync(
+        rejectionPath,
+        `${JSON.stringify({
+          ...rejectionRecord,
+          catalogueComparison: {
+            schemaVersion: 1,
+            conclusion: "meaningfullyDistinct",
+            comparedScenarioIds: ["open-grid-wolf-skeleton-pursuit"],
+            closestMatches: [],
+            materialDifferentiators: [],
+            basis: {
+              tag: "compared",
+              batches: [
+                {
+                  batchIndex: 0,
+                  comparedScenarioIds: ["open-grid-wolf-skeleton-pursuit"],
+                  dimensions: {
+                    exploratoryPurpose:
+                      "The candidate asks a distinct question.",
+                    materiallyRelevantMechanics:
+                      "The candidate uses distinct mechanics.",
+                    encounterComposition:
+                      "The candidate has a distinct composition.",
+                    interactionSequence:
+                      "The candidate has a distinct sequence.",
+                    tacticalQuestion: "The candidate asks a distinct tactic.",
+                    sdkSupportBoundary: "The candidate stays within support.",
+                    spatialContext: { tag: "notMaterial" },
+                  },
+                },
+              ],
+            },
+          },
+        })}\n`,
+      );
+      expect(
+        readRawSwarmCatalogue({
+          repositoryRoot,
+          scenarioDirectory: scenarios,
+          evidenceDirectory: resolve(repositoryRoot, "out"),
+        }),
+      ).toMatchObject({
+        left: expect.arrayContaining([
+          expect.objectContaining({
+            tag: "invalidRelationshipRecord",
+            message: expect.stringContaining("covered 1 of 2"),
+          }),
+        ]),
+      });
+      writeFileSync(rejectionPath, `${JSON.stringify(rejectionRecord)}\n`);
       const incompleteReview = write(
         "scenarios/open-grid-wolf-skeleton-pursuit.md.scenario-review.json",
         `${JSON.stringify({

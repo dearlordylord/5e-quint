@@ -23,7 +23,10 @@ import {
   type ScenarioCampaignAgents,
 } from "./scenario-campaign.ts";
 import { GitShaSchema, repoRoot, ScenarioIdSchema } from "./transcript.ts";
-import { publishScenarioAdmissionBundle } from "./generate-scenario.ts";
+import {
+  publishScenarioAdmissionBundle,
+  rollbackScenarioAdmissionBundle,
+} from "./generate-scenario.ts";
 import {
   ScenarioCatalogueComparisonSchema,
   ScenarioCatalogueProjectionSchema,
@@ -67,6 +70,45 @@ test("rolls back every admitted path when bundle publication fails", () => {
         .filter((name) => name !== "facts.json")
         .every((name) => existsSync(resolve(staged, name))),
     ).toBe(true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("retains a publication receipt for post-publication rollback", () => {
+  const root = mkdtempSync(resolve(tmpdir(), "scenario-admission-receipt-"));
+  const staged = resolve(root, "staged");
+  const admitted = resolve(root, "admitted");
+  mkdirSync(staged);
+  mkdirSync(admitted);
+  const names = [
+    "scenario.md",
+    "review.json",
+    "facts.json",
+    "plan.json",
+    "findings.json",
+    "scenario.json",
+  ] as const;
+  for (const name of names) writeFileSync(resolve(staged, name), name);
+  const pair = (name: (typeof names)[number]) =>
+    [resolve(staged, name), resolve(admitted, name)] as const;
+  try {
+    const publication = publishScenarioAdmissionBundle({
+      prose: pair("scenario.md"),
+      review: pair("review.json"),
+      stageFacts: pair("facts.json"),
+      stagePlan: pair("plan.json"),
+      stagePlanFindings: pair("findings.json"),
+      scenarioRecord: pair("scenario.json"),
+    });
+    expect(names.every((name) => existsSync(resolve(admitted, name)))).toBe(
+      true,
+    );
+    rollbackScenarioAdmissionBundle(publication);
+    expect(names.every((name) => existsSync(resolve(staged, name)))).toBe(true);
+    expect(names.some((name) => existsSync(resolve(admitted, name)))).toBe(
+      false,
+    );
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

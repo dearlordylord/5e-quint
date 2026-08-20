@@ -50,6 +50,7 @@ import {
   PlannedScenarioIdSchema,
   ScenarioCampaignIdSchema,
   ScenarioIdSchema,
+  type EvidenceSetId,
   type ScenarioCampaignId,
   type ScenarioCandidateId,
   type PlannedScenarioId,
@@ -958,6 +959,10 @@ export function findingsFromGenerationLedger(
     /** A campaign ledger still refers to its reservation, not an admitted Scenario. */
     readonly scenarioId: ScenarioId | PlannedScenarioId;
     readonly gitSha?: GitSha;
+    readonly campaign?: Readonly<{
+      readonly campaignId: ScenarioCampaignId;
+      readonly evidenceSetId: EvidenceSetId;
+    }>;
   }>,
 ): readonly Finding[] {
   const findings: Finding[] = [];
@@ -968,11 +973,20 @@ export function findingsFromGenerationLedger(
         `Generation invocation ledger ${source.path} line ${String(line)} is malformed: ${decoded.left.message}`,
       );
     }
+    const campaignMismatch =
+      expected.campaign !== undefined &&
+      decoded.right.schemaVersion === 4 &&
+      ((decoded.right.subject.tag !== "scenarioCampaign" &&
+        decoded.right.subject.tag !== "scenarioCandidate") ||
+        decoded.right.subject.campaignId !== expected.campaign.campaignId ||
+        decoded.right.subject.evidenceSetId !==
+          expected.campaign.evidenceSetId);
     if (
       String(modelInvocationScenarioReference(decoded.right)) !==
         expected.scenarioId ||
       (expected.gitSha !== undefined &&
-        String(decoded.right.gitSha) !== expected.gitSha)
+        String(decoded.right.gitSha) !== expected.gitSha) ||
+      campaignMismatch
     ) {
       fail(
         `Generation invocation ledger ${source.path} line ${String(line)} belongs to a different findings identity.`,
@@ -1070,9 +1084,14 @@ function originalCompositeReviewInputs(
     }
     const review = decoded.right;
     const reviewScenarioId = retainedScenarioReviewScenarioId(review);
-    if (reviewScenarioId !== expectedScenarioId) {
+    if (Either.isLeft(reviewScenarioId)) {
       fail(
-        `Review replay input ${canonical} belongs to scenario ${reviewScenarioId}, expected ${expectedScenarioId}.`,
+        `Review replay input ${canonical} is not an admitted Scenario review: ${reviewScenarioId.left}`,
+      );
+    }
+    if (reviewScenarioId.right !== expectedScenarioId) {
+      fail(
+        `Review replay input ${canonical} belongs to scenario ${reviewScenarioId.right}, expected ${expectedScenarioId}.`,
       );
     }
     if (review.reviewStage !== expectedStage) {
@@ -1098,7 +1117,7 @@ function originalCompositeReviewInputs(
     if (
       entry.schemaVersion !== 4 ||
       entry.phase !== "scenarioCompositeReview" ||
-      modelInvocationScenarioReference(entry) !== reviewScenarioId ||
+      modelInvocationScenarioReference(entry) !== reviewScenarioId.right ||
       entry.gitSha !== review.sourceGitSha ||
       entry.model !== review.model ||
       entry.reasoningEffort !== review.reasoningEffort
