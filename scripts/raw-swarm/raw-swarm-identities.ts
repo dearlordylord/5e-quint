@@ -43,6 +43,21 @@ export const EvidenceSetIdSchema = SemanticIdentitySchema.pipe(
 );
 export type EvidenceSetId = Schema.Schema.Type<typeof EvidenceSetIdSchema>;
 
+/**
+ * Identity shared by an Execution record and an immutable benchmark execution
+ * profile. The profile carries additional benchmark authorities, but these
+ * fields are the only relationship facts the scenario catalogue projects.
+ */
+export const ScenarioExecutionIdentitySchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  executionId: ExecutionIdSchema,
+  scenarioId: ScenarioIdSchema,
+  evidenceSetId: EvidenceSetIdSchema,
+});
+export type ScenarioExecutionIdentity = Schema.Schema.Type<
+  typeof ScenarioExecutionIdentitySchema
+>;
+
 function decodeIdentity<A, I>(
   schema: Schema.Schema<A, I>,
   role: string,

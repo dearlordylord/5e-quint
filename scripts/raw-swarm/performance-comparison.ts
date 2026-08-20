@@ -87,10 +87,7 @@ import {
   ScenarioStageFactsSchema,
   type ScenarioStagePlan,
 } from "./scenario-stage-plan.ts";
-import {
-  EvidenceSetIdSchema,
-  ExecutionIdSchema,
-} from "./raw-swarm-identities.ts";
+import { ScenarioExecutionIdentitySchema } from "./raw-swarm-identities.ts";
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 const NonNegativeIntegerSchema = Schema.Number.pipe(
@@ -1313,11 +1310,8 @@ export type BenchmarkScenarioBundle = Schema.Schema.Type<
 
 /** Retained preparation identity used to bind every later benchmark artifact. */
 export const BenchmarkExecutionProfileDescriptorSchema = Schema.Struct({
-  schemaVersion: Schema.Literal(1),
-  executionId: ExecutionIdSchema,
-  evidenceSetId: EvidenceSetIdSchema,
+  ...ScenarioExecutionIdentitySchema.fields,
   profile: BenchmarkImplementationProfileSchema,
-  scenarioId: ScenarioIdSchema,
   implementationGitSha: ImplementationGitShaSchema,
   scenarioBundle: BenchmarkScenarioBundleSchema,
   contextManifest: ArtifactAuthoritySchema,

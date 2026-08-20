@@ -2721,14 +2721,17 @@ async function main(args: readonly string[]): Promise<void> {
       schemaVersion: 1,
       benchmarkId: acceptedBenchmarkId,
       evidenceSetId: freshBenchmarkEvidenceSetId(),
-      executionIds: FIXED_BENCHMARK_PROFILES.map((profile) => {
+      comparisonTargets: FIXED_BENCHMARK_PROFILES.map((profile) => {
         const paths = fixedBenchmarkProfilePaths(acceptedBenchmarkId, profile);
         const descriptor = Schema.decodeUnknownEither(
           BenchmarkExecutionProfileDescriptorSchema,
           { onExcessProperty: "error" },
         )(JSON.parse(readFileSync(paths.executionProfileDescriptor, "utf8")));
         if (Either.isLeft(descriptor)) fail(descriptor.left.message);
-        return descriptor.right.executionId;
+        return {
+          tag: "executionProfile" as const,
+          executionId: descriptor.right.executionId,
+        };
       }),
     });
     if (Either.isLeft(benchmarkRecord)) fail(benchmarkRecord.left.message);

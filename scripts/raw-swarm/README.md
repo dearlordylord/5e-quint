@@ -635,8 +635,8 @@ measurement instead.
 
 ```sh
 mise exec -- pnpm exec tsx scripts/raw-swarm/performance-comparison.ts \
-  assemble scripts/raw-swarm/out/tracer-001-controlled-001-assembly.json \
-  scripts/raw-swarm/out/tracer-001-controlled-001-measurement.json
+  assemble scripts/raw-swarm/out/goblin-warrior-skeleton-tracer-execution-assembly.json \
+  scripts/raw-swarm/out/goblin-warrior-skeleton-tracer-execution-measurement.json
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/performance-comparison.ts \
   compare-complete scripts/raw-swarm/out/baseline-measurement.json \

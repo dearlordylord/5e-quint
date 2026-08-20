@@ -122,7 +122,10 @@ describe("Raw Swarm scenario catalogue", () => {
           schemaVersion: 1,
           benchmarkId: ids.benchmarkId,
           evidenceSetId: ids.benchmarkEvidenceSetId,
-          executionIds: [ids.executionId, ids.otherExecutionId],
+          comparisonTargets: [
+            { tag: "execution", executionId: ids.executionId },
+            { tag: "execution", executionId: ids.otherExecutionId },
+          ],
         },
       ],
       rejectedCandidates: [
@@ -262,7 +265,10 @@ describe("Raw Swarm scenario catalogue", () => {
             schemaVersion: 1,
             benchmarkId: ids.benchmarkId,
             evidenceSetId: ids.benchmarkEvidenceSetId,
-            executionIds: [ids.executionId, ids.otherExecutionId],
+            comparisonTargets: [
+              { tag: "execution", executionId: ids.executionId },
+              { tag: "execution", executionId: ids.otherExecutionId },
+            ],
           },
         ],
         rejectedCandidates: [],
@@ -339,7 +345,10 @@ describe("Raw Swarm scenario catalogue", () => {
             schemaVersion: 1,
             benchmarkId: ids.benchmarkId,
             evidenceSetId: ids.benchmarkEvidenceSetId,
-            executionIds: [ids.executionId, ids.otherExecutionId],
+            comparisonTargets: [
+              { tag: "execution", executionId: ids.executionId },
+              { tag: "execution", executionId: ids.otherExecutionId },
+            ],
           },
         ],
         rejectedCandidates: [],
@@ -365,7 +374,10 @@ describe("Raw Swarm scenario catalogue", () => {
             schemaVersion: 1,
             benchmarkId: ids.benchmarkId,
             evidenceSetId: ids.benchmarkEvidenceSetId,
-            executionIds: [ids.executionId, ids.executionId],
+            comparisonTargets: [
+              { tag: "execution", executionId: ids.executionId },
+              { tag: "execution", executionId: ids.executionId },
+            ],
           },
         ],
         rejectedCandidates: [],
@@ -492,7 +504,10 @@ describe("Raw Swarm scenario catalogue", () => {
                   evidenceSetId: decodeRight(
                     decodeEvidenceSetId(`benchmark-evidence-${benchmark}`),
                   ),
-                  executionIds: [firstExecutionId, secondExecutionId],
+                  comparisonTargets: [
+                    { tag: "execution", executionId: firstExecutionId },
+                    { tag: "execution", executionId: secondExecutionId },
+                  ],
                 },
               ],
             }),
@@ -520,7 +535,10 @@ describe("Raw Swarm scenario catalogue", () => {
                   evidenceSetId: decodeRight(
                     decodeEvidenceSetId(`duplicate-evidence-${benchmark}`),
                   ),
-                  executionIds: [firstExecutionId, firstExecutionId],
+                  comparisonTargets: [
+                    { tag: "execution", executionId: firstExecutionId },
+                    { tag: "execution", executionId: firstExecutionId },
+                  ],
                 },
               ],
             }),
@@ -631,11 +649,86 @@ describe("Raw Swarm scenario catalogue", () => {
       );
       writeFileSync(
         resolve(repositoryRoot, "out", "benchmark.json"),
-        `${JSON.stringify({ schemaVersion: 1, benchmarkId: "context-profile-comparison", evidenceSetId: "context-profile-comparison-evidence", executionIds: ["execution-alpha", "execution-beta"] })}\n`,
+        `${JSON.stringify({
+          schemaVersion: 1,
+          benchmarkId: "context-profile-comparison",
+          evidenceSetId: "context-profile-comparison-evidence",
+          comparisonTargets: [
+            { tag: "execution", executionId: "execution-alpha" },
+            { tag: "execution", executionId: "execution-beta" },
+          ],
+        })}\n`,
       );
       writeFileSync(
         resolve(repositoryRoot, "out", "candidate-rejection.json"),
         `${JSON.stringify({ schemaVersion: 1, candidateId: "rejected-candidate", campaignId: "rejected-campaign", evidenceSetId: "rejection-evidence", reason: "The candidate is incoherent." })}\n`,
+      );
+
+      const profileRoot = resolve(
+        repositoryRoot,
+        "out",
+        "fixed-scenario-benchmark",
+        "profile-benchmark",
+      );
+      const profileAuthority = (name: string) => ({
+        path: `synthetic/${name}`,
+        byteLength: 1,
+        sha256: "a".repeat(64),
+      });
+      const writeProfile = (
+        executionId: string,
+        evidenceSetId: string,
+        profile: "documentDeclarationSet" | "boundedCapabilityProjection",
+      ) => {
+        const profilePath = resolve(
+          profileRoot,
+          profile,
+          "execution-profile.json",
+        );
+        mkdirSync(resolve(profilePath, ".."), { recursive: true });
+        writeFileSync(
+          profilePath,
+          `${JSON.stringify({
+            schemaVersion: 1,
+            executionId,
+            evidenceSetId,
+            profile,
+            scenarioId: "open-grid-wolf-skeleton-pursuit",
+            implementationGitSha: "a".repeat(40),
+            scenarioBundle: {
+              scenario: profileAuthority("scenario.md"),
+              scenarioRecord: profileAuthority("scenario.scenario.json"),
+              scenarioReview: profileAuthority("scenario-review.json"),
+              stageFacts: profileAuthority("stage-facts.json"),
+              stagePlan: profileAuthority("stage-plan.json"),
+              characters: profileAuthority("characters.ts"),
+              setup: profileAuthority("setup.ts"),
+            },
+            contextManifest: profileAuthority("context-manifest.json"),
+          })}\n`,
+        );
+      };
+      writeProfile(
+        "profile-execution-alpha",
+        "profile-evidence-alpha",
+        "documentDeclarationSet",
+      );
+      writeProfile(
+        "profile-execution-beta",
+        "profile-evidence-beta",
+        "boundedCapabilityProjection",
+      );
+      writeFileSync(
+        resolve(profileRoot, "benchmark.json"),
+        `${JSON.stringify({
+          schemaVersion: 1,
+          benchmarkId: "profile-benchmark",
+          evidenceSetId: "profile-benchmark-evidence",
+          comparisonTargets: [
+            { tag: "executionProfile", executionId: "profile-execution-alpha" },
+            { tag: "executionProfile", executionId: "profile-execution-beta" },
+          ],
+        })}\n`,
       );
 
       expect(
@@ -665,8 +758,16 @@ describe("Raw Swarm scenario catalogue", () => {
                   sdkCapabilityReview: { classification: "supported" },
                 },
               },
-              executionIds: ["execution-alpha", "execution-beta"],
-              benchmarkIds: ["context-profile-comparison"],
+              executionIds: expect.arrayContaining([
+                "execution-alpha",
+                "execution-beta",
+                "profile-execution-alpha",
+                "profile-execution-beta",
+              ]),
+              benchmarkIds: expect.arrayContaining([
+                "context-profile-comparison",
+                "profile-benchmark",
+              ]),
             },
           ],
           rejectedCandidates: [{ candidateId: "rejected-candidate" }],
