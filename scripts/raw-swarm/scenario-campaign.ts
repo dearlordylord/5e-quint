@@ -11,8 +11,10 @@ import {
   EvidenceSetIdSchema,
   ScenarioCampaignIdSchema,
   ScenarioCandidateIdSchema,
+  PlannedScenarioIdSchema,
   type ScenarioCampaignId,
   type ScenarioCandidateId,
+  type PlannedScenarioId,
 } from "./raw-swarm-identities.ts";
 import {
   planScenarioStages,
@@ -25,6 +27,7 @@ import {
   catalogueComparisonCritique,
   ScenarioCatalogueComparisonSchema,
   validateScenarioCatalogueComparison,
+  type ScenarioCatalogueBatchExpectation,
   type ScenarioCatalogueComparison,
   type ScenarioCatalogueProjection,
 } from "./scenario-authoring.ts";
@@ -579,6 +582,7 @@ export function verifyFinalScenarioReview(
     readonly gitSha: Schema.Schema.Type<typeof GitShaSchema>;
     readonly scenarioBytes: string;
     readonly admittedScenarioIds?: readonly ScenarioId[];
+    readonly admittedScenarioBatches?: readonly ScenarioCatalogueBatchExpectation[];
   },
 ): Either.Either<Schema.Schema.Type<typeof FinalScenarioReviewSchema>, string> {
   const decoded = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
@@ -604,6 +608,7 @@ export function verifyFinalScenarioReview(
     const comparison = validateScenarioCatalogueComparison({
       comparison: decoded.right.catalogueComparison,
       expectedScenarioIds,
+      expectedBatches: expected.admittedScenarioBatches,
     });
     if (Either.isLeft(comparison)) {
       return Either.left(`Invalid catalogue comparison: ${comparison.left}`);
@@ -623,7 +628,7 @@ export function retentionRevisionMatches(
 
 export const ScenarioCampaignConfigSchema = Schema.Struct({
   campaignId: ScenarioCampaignIdSchema,
-  plannedScenarioId: ScenarioIdSchema,
+  plannedScenarioId: PlannedScenarioIdSchema,
   scenarioTitle: Schema.NonEmptyTrimmedString,
   scenarioPurpose: Schema.NonEmptyTrimmedString,
   evidenceSetId: EvidenceSetIdSchema,
@@ -709,7 +714,7 @@ export interface ScenarioCampaignAgents {
     readonly campaignId: ScenarioCampaignId;
     readonly candidateId: ScenarioCandidateId;
     readonly candidateScenarioSha256: string;
-    readonly plannedScenarioId: ScenarioId;
+    readonly plannedScenarioId: PlannedScenarioId;
     readonly finalReview: boolean;
     readonly distributionPreference: string;
     readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
@@ -719,6 +724,9 @@ export interface ScenarioCampaignAgents {
   readonly compareCandidate?: (input: {
     readonly scenario: string;
     readonly candidateIndex: number;
+    readonly candidateId: ScenarioCandidateId;
+    readonly candidateScenarioSha256: string;
+    readonly batchIndex: number;
     readonly batch: readonly ScenarioCatalogueProjection[];
   }) => Promise<ScenarioCatalogueComparison>;
 }
@@ -755,6 +763,7 @@ export type ScenarioCampaignCandidateRejection = {
   readonly stopReason: "candidateRejected";
   readonly stageFacts: ScenarioStageFacts;
   readonly candidateStagePlan: ScenarioStagePlan;
+  readonly catalogueComparison: ScenarioCatalogueComparisonEvidence;
 };
 
 export type ScenarioCampaignResult =
@@ -858,22 +867,45 @@ export async function runScenarioCampaign(
         "Scenario generator returned an invalid candidate batch.",
       );
     }
+    const candidateIds: ScenarioCandidateId[] = [];
+    for (const _candidate of candidates.right.candidates) {
+      const candidateId = selectedCandidateId();
+      if (Either.isLeft(candidateId)) return Either.left(candidateId.left);
+      candidateIds.push(candidateId.right);
+    }
     const candidateComparisons: ScenarioCatalogueComparison[] = [];
     if (comparisonContext.tag === "required") {
-      if (agents.compareCandidate === undefined) {
+      if (
+        comparisonContext.batches.length > 0 &&
+        agents.compareCandidate === undefined
+      ) {
         return Either.left(
           "Scenario Campaign requires a catalogue comparison agent.",
         );
       }
+      const compareCandidate = agents.compareCandidate;
       for (const [
         candidateIndex,
         candidate,
       ] of candidates.right.candidates.entries()) {
         const batchComparisons: ScenarioCatalogueComparison[] = [];
-        for (const batch of comparisonContext.batches) {
-          const comparison = await agents.compareCandidate({
+        const candidateId = candidateIds[candidateIndex];
+        if (candidateId === undefined) {
+          return Either.left("Scenario Campaign lost a Candidate identity.");
+        }
+        const candidateScenarioSha256 = scenarioContentSha256(candidate.prose);
+        for (const [batchIndex, batch] of comparisonContext.batches.entries()) {
+          if (compareCandidate === undefined) {
+            return Either.left(
+              "Scenario Campaign lost its catalogue comparison agent.",
+            );
+          }
+          const comparison = await compareCandidate({
             scenario: candidate.prose,
             candidateIndex,
+            candidateId,
+            candidateScenarioSha256,
+            batchIndex,
             batch,
           });
           batchComparisons.push(comparison);
@@ -881,6 +913,12 @@ export async function runScenarioCampaign(
         const aggregate = aggregateScenarioCatalogueComparisons({
           comparisons: batchComparisons,
           expectedScenarioIds: comparisonContext.expectedScenarioIds,
+          expectedBatches: comparisonContext.batches.map(
+            (batch, batchIndex) => ({
+              batchIndex,
+              scenarioIds: batch.map(({ scenarioId }) => scenarioId),
+            }),
+          ),
         });
         if (Either.isLeft(aggregate)) return Either.left(aggregate.left);
         candidateComparisons.push(aggregate.right);
@@ -913,14 +951,18 @@ export async function runScenarioCampaign(
       comparisonContext.tag === "required" && selectedComparison !== undefined
         ? { tag: "retained", comparison: selectedComparison }
         : { tag: "notConfigured" };
-    const candidateId = selectedCandidateId();
-    if (Either.isLeft(candidateId)) return Either.left(candidateId.left);
+    const candidateId = candidateIds[selected];
+    if (candidateId === undefined) {
+      return Either.left(
+        "Scenario Campaign lost the selected Candidate identity.",
+      );
+    }
     const candidateScenarioSha256 = scenarioContentSha256(candidate.prose);
     const candidatePlan = planScenarioStages({
       identity: {
         tag: "candidate",
         campaignId: config.campaignId,
-        candidateId: candidateId.right,
+        candidateId,
         candidateScenarioSha256,
       },
       facts: candidate.stageFacts,
@@ -930,7 +972,7 @@ export async function runScenarioCampaign(
       const rejected = {
         tag: "selected" as const,
         prose: candidate.prose,
-        candidateId: candidateId.right,
+        candidateId,
         iteration,
         critiques: [candidatePlan.right.outcome.reason],
         stageFacts: candidate.stageFacts,
@@ -941,12 +983,13 @@ export async function runScenarioCampaign(
         return Either.right({
           tag: "candidateRejected",
           campaignId: config.campaignId,
-          candidateId: candidateId.right,
+          candidateId,
           scenario: rejected.prose,
           iterations: iteration,
           stopReason: "candidateRejected",
           stageFacts: rejected.stageFacts,
           candidateStagePlan: candidatePlan.right,
+          catalogueComparison: selectedCatalogueComparison,
         });
       }
       draft = rejected;
@@ -959,7 +1002,7 @@ export async function runScenarioCampaign(
       const review = await agents.reviewScenario({
         scenario: prose,
         campaignId: config.campaignId,
-        candidateId: candidateId.right,
+        candidateId,
         candidateScenarioSha256,
         plannedScenarioId: config.plannedScenarioId,
         finalReview: false,
@@ -1031,7 +1074,7 @@ export async function runScenarioCampaign(
     draft = {
       tag: "selected",
       prose,
-      candidateId: candidateId.right,
+      candidateId,
       iteration,
       critiques,
       stageFacts: candidate.stageFacts,

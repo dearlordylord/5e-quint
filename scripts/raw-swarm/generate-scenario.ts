@@ -39,6 +39,8 @@ import {
   batchScenarioCatalogueProjections,
   ScenarioCatalogueComparisonSchema,
   projectScenarioCatalogueForAuthoring,
+  scenarioCatalogueComparisonPrompt,
+  type ScenarioCatalogueBatchExpectation,
 } from "./scenario-authoring.ts";
 import type { RetainedScenarioReviewInput } from "./scenario-review-input.ts";
 import {
@@ -57,6 +59,8 @@ import {
   currentGitRevision,
   GitShaSchema,
   repoRoot,
+  ScenarioIdSchema,
+  decodeScenarioId,
   type GitSha,
   type ScenarioId,
 } from "./transcript.ts";
@@ -76,7 +80,10 @@ import {
   RejectedScenarioCandidateRecordSchema,
 } from "./scenario-catalogue.ts";
 import { AdmittedScenarioRecordSchema } from "./scenario-admission.ts";
-import type { ScenarioCampaignId } from "./raw-swarm-identities.ts";
+import type {
+  PlannedScenarioId,
+  ScenarioCampaignId,
+} from "./raw-swarm-identities.ts";
 
 const FAILURE_LOG_TAIL_CHARACTERS = 64 * 1024;
 
@@ -106,14 +113,29 @@ export function publishScenarioAdmissionBundle(input: {
   if (occupied !== undefined) {
     fail(`Refusing to overwrite admitted Scenario authority: ${occupied[1]}`);
   }
-  const published: string[] = [];
+  const published: Array<readonly [staged: string, admitted: string]> = [];
   try {
     for (const [source, destination] of publication) {
       renameSync(source, destination);
-      published.push(destination);
+      published.push([source, destination]);
     }
   } catch (error: unknown) {
-    for (const path of published.reverse()) unlinkSync(path);
+    const rollbackFailures: string[] = [];
+    for (const [source, destination] of published.reverse()) {
+      try {
+        renameSync(destination, source);
+      } catch (rollbackError) {
+        rollbackFailures.push(
+          `${destination} -> ${source}: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`,
+        );
+      }
+    }
+    if (rollbackFailures.length > 0) {
+      throw new Error(
+        `Scenario admission publication failed and could not restore staged authorities: ${rollbackFailures.join("; ")}`,
+        { cause: error },
+      );
+    }
     throw error;
   }
 }
@@ -288,7 +310,7 @@ export function scenarioCampaignAgents(input: {
   readonly ledgerPath: string;
   readonly eventDirectory: string;
   readonly campaignId: ScenarioCampaignId;
-  readonly plannedScenarioId: ScenarioId;
+  readonly plannedScenarioId: PlannedScenarioId;
   readonly gitSha: GitSha;
 }): ScenarioCampaignAgents {
   const statBlocks = scenarioSetupStatBlocks();
@@ -412,25 +434,33 @@ ${scenario}`,
           },
         },
       ),
-    compareCandidate: async ({ scenario, candidateIndex, batch }) =>
-      runCodexJson(
-        `Compare this complete Scenario Candidate with every admitted Scenario in the supplied canonical catalogue batch. This is Candidate ${candidateIndex}; inspect the Candidate prose and each projection's referenced authored source when a concrete mechanic, composition, interaction sequence, or tactical question is needed. Read source authorities exactly; never sample, silently truncate, or infer missing catalogue entries.
-
-Return one comparison for this batch. The comparedScenarioIds array must contain exactly the scenarioId values in this batch, once each. Focus on exploratory purpose, materially relevant mechanics, encounter composition, interaction sequence, tactical question, and SDK support boundary. Spatial context is optional supporting context and is never required merely to establish difference.
-
-The conclusion must be exactly one of meaningfullyDistinct, purposefulOverlap, or redundant. A purposefulOverlap conclusion must name at least one material differentiator. A redundant conclusion must identify its closest admitted Scenario. Do not promote or reject the Candidate; the Campaign operator owns that decision after all batches are aggregated.
-
-Candidate prose:
-${scenario}
-
-Canonical catalogue batch:
-${JSON.stringify(batch, null, 2)}`,
-        ScenarioCatalogueComparisonSchema,
-        {
-          ...reviewerExecution,
-          retention: { directory: eventDirectory },
+    compareCandidate: async ({
+      scenario,
+      candidateIndex,
+      candidateId,
+      candidateScenarioSha256,
+      batchIndex,
+      batch,
+    }) => {
+      const prompt = scenarioCatalogueComparisonPrompt({
+        candidate: scenario,
+        candidateIndex,
+        batchIndex,
+        batch,
+      });
+      if (Either.isLeft(prompt)) fail(prompt.left);
+      return runCodexJson(prompt.right, ScenarioCatalogueComparisonSchema, {
+        ...reviewerExecution,
+        subject: {
+          tag: "scenarioCandidate",
+          campaignId: input.campaignId,
+          candidateId,
+          candidateScenarioSha256,
+          plannedScenarioId: input.plannedScenarioId,
         },
-      ),
+        retention: { directory: eventDirectory },
+      });
+    },
   };
 }
 
@@ -489,13 +519,12 @@ export function replayRetainedScenarioReview(input: {
 }
 
 function verifyRetainedScenario(
-  scenarioId: Schema.Schema.Type<
-    typeof ScenarioCampaignConfigSchema
-  >["plannedScenarioId"],
+  scenarioId: Schema.Schema.Type<typeof ScenarioIdSchema>,
   scenarioPath: string,
   reviewPath: string,
   gitSha: string,
   admittedScenarioIds: readonly ScenarioId[],
+  admittedScenarioBatches: readonly ScenarioCatalogueBatchExpectation[],
 ): void {
   const scenarioBytes = readFileSync(scenarioPath, "utf8");
   const decodedGitSha = Schema.decodeUnknownEither(GitShaSchema)(gitSha);
@@ -509,6 +538,7 @@ function verifyRetainedScenario(
       gitSha: decodedGitSha.right,
       scenarioBytes,
       admittedScenarioIds,
+      admittedScenarioBatches,
     },
   );
   if (Either.isLeft(verification)) {
@@ -852,6 +882,9 @@ async function main(args: readonly string[]): Promise<void> {
       result.right.candidateStagePlan.outcome.tag === "rejected"
         ? result.right.candidateStagePlan.outcome.reason
         : "Candidate stage plan was rejected.";
+    if (result.right.catalogueComparison.tag !== "retained") {
+      fail("Candidate rejection must retain catalogue comparison evidence.");
+    }
     const rejectionRecord = Schema.decodeUnknownEither(
       RejectedScenarioCandidateRecordSchema,
       { onExcessProperty: "error" },
@@ -861,6 +894,7 @@ async function main(args: readonly string[]): Promise<void> {
       campaignId: result.right.campaignId,
       evidenceSetId: decodedConfig.right.evidenceSetId,
       reason: rejectionReason,
+      catalogueComparison: result.right.catalogueComparison.comparison,
     });
     if (Either.isLeft(rejectionRecord)) fail(rejectionRecord.left.message);
     const candidateRejectionPath = resolve(
@@ -888,13 +922,19 @@ async function main(args: readonly string[]): Promise<void> {
     );
     return;
   }
+  const admittedScenarioId = decodeScenarioId(result.right.plannedScenarioId);
+  if (Either.isLeft(admittedScenarioId)) {
+    fail(
+      `Planned Scenario identity cannot become an admitted Scenario: ${admittedScenarioId.left}`,
+    );
+  }
   const disposition = finalScenarioDisposition(result.right);
   if (result.right.catalogueComparison.tag !== "retained") {
     fail("Scenario admission requires retained catalogue comparison evidence.");
   }
   const reviewInput = {
     ...(disposition === "admitted"
-      ? { scenarioId: result.right.plannedScenarioId, scenarioSha256 }
+      ? { scenarioId: admittedScenarioId.right, scenarioSha256 }
       : {
           campaignId: result.right.campaignId,
           candidateId: result.right.candidateId,
@@ -935,7 +975,7 @@ async function main(args: readonly string[]): Promise<void> {
     disposition === "admitted" ? admittedDirectory : rejectedDirectory;
   const outputIdentity =
     disposition === "admitted"
-      ? result.right.plannedScenarioId
+      ? admittedScenarioId.right
       : result.right.candidateId;
   const outputPath = resolve(outputDirectory, `${outputIdentity}.md`);
   const reviewPath = `${outputPath}.${disposition === "admitted" ? "scenario" : "candidate"}-review.json`;
@@ -968,14 +1008,14 @@ async function main(args: readonly string[]): Promise<void> {
       );
       const stagedScenarioRecord = resolve(staging, "scenario.json");
       const retainedFacts = retainScenarioStageFacts({
-        scenarioId: result.right.plannedScenarioId,
+        scenarioId: admittedScenarioId.right,
         scenarioPath: stagedScenario,
         scenarioSha256,
         facts: result.right.stageFacts,
       });
       if (Either.isLeft(retainedFacts)) fail(retainedFacts.left);
       const retainedPlan = retainAdmittedScenarioStagePlanAtPaths({
-        scenarioId: result.right.plannedScenarioId,
+        scenarioId: admittedScenarioId.right,
         scenarioPath: stagedScenario,
         scenarioSha256,
         scenarioReviewSha256: createHash("sha256")
@@ -997,7 +1037,7 @@ async function main(args: readonly string[]): Promise<void> {
         { onExcessProperty: "error" },
       )({
         schemaVersion: 1,
-        scenarioId: result.right.plannedScenarioId,
+        scenarioId: admittedScenarioId.right,
         title: result.right.scenarioTitle,
         purpose: result.right.scenarioPurpose,
         authoredSource: artifactAuthorityForBytes(
@@ -1028,11 +1068,11 @@ async function main(args: readonly string[]): Promise<void> {
         ],
         stagePlan: [
           stagedStagePlan,
-          retainedScenarioStagePlanPath(result.right.plannedScenarioId),
+          retainedScenarioStagePlanPath(admittedScenarioId.right),
         ],
         stagePlanFindings: [
           stagedStagePlanFindings,
-          retainedScenarioStagePlanFindingsPath(result.right.plannedScenarioId),
+          retainedScenarioStagePlanFindingsPath(admittedScenarioId.right),
         ],
         scenarioRecord: [
           stagedScenarioRecord,
@@ -1074,6 +1114,7 @@ async function main(args: readonly string[]): Promise<void> {
       campaignId: result.right.campaignId,
       evidenceSetId: decodedConfig.right.evidenceSetId,
       reason: rejectionReason,
+      catalogueComparison: result.right.catalogueComparison.comparison,
     });
     if (Either.isLeft(rejectionRecord)) fail(rejectionRecord.left.message);
     const candidateRejectionPath = resolve(
@@ -1103,10 +1144,10 @@ async function main(args: readonly string[]): Promise<void> {
     return;
   }
   const retainedStagePlanPath = retainedScenarioStagePlanPath(
-    result.right.plannedScenarioId,
+    admittedScenarioId.right,
   );
   const retainedStagePlanFindingsPath = retainedScenarioStagePlanFindingsPath(
-    result.right.plannedScenarioId,
+    admittedScenarioId.right,
   );
   emitGenerationFindings({
     tag: "admittedScenario",
@@ -1117,11 +1158,15 @@ async function main(args: readonly string[]): Promise<void> {
     stagePlanFindingsPath: retainedStagePlanFindingsPath,
   });
   verifyRetainedScenario(
-    result.right.plannedScenarioId,
+    admittedScenarioId.right,
     outputPath,
     reviewPath,
     gitSha.right,
     catalogueProjections.map(({ scenarioId }) => scenarioId),
+    catalogueBatches.right.map((batch, batchIndex) => ({
+      batchIndex,
+      scenarioIds: batch.map(({ scenarioId }) => scenarioId),
+    })),
   );
   console.log(
     `Generated ${outputPath} in ${result.right.iterations} iteration(s), stopped by ${result.right.stopReason}, ${disposition}.`,

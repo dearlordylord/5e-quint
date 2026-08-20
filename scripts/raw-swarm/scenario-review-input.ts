@@ -4,6 +4,7 @@ import { ScenarioCompositeReviewSchema } from "./scenario-campaign.ts";
 import {
   ScenarioCampaignIdSchema,
   ScenarioCandidateIdSchema,
+  PlannedScenarioIdSchema,
 } from "./raw-swarm-identities.ts";
 import { GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
 
@@ -41,7 +42,7 @@ const RetainedScenarioReviewSubjectSchema = Schema.Union(
     candidateScenarioSha256: Schema.String.pipe(
       Schema.pattern(/^[0-9a-f]{64}$/),
     ),
-    plannedScenarioId: ScenarioIdSchema,
+    plannedScenarioId: PlannedScenarioIdSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("scenario"),

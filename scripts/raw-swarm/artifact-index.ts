@@ -808,6 +808,11 @@ export function ingestGenerationFindings(input: {
         }
         return { role: authority.role, sha256: artifact.sha256 };
       });
+      if (!authorityArtifacts.some(({ role }) => role === "campaign")) {
+        fail(
+          "Indexed Scenario Campaign findings must retain the decoded campaign manifest authority.",
+        );
+      }
       const existing = db
         .prepare(
           "SELECT id, campaignId, plannedScenarioId, evidenceSetId, gitSha, startedAt FROM scenarioCampaigns WHERE subjectIdentity = ?",

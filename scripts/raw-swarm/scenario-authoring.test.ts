@@ -6,6 +6,8 @@ import {
   batchScenarioCatalogueProjections,
   SCENARIO_CATALOGUE_COMPARISON_BATCH_BYTE_LIMIT,
   ScenarioCatalogueComparisonSchema,
+  SCENARIO_CATALOGUE_COMPARISON_MODEL_INPUT_BYTE_LIMIT,
+  scenarioCatalogueComparisonPrompt,
   validateScenarioCatalogueComparison,
   type ScenarioCatalogueComparison,
   type ScenarioCatalogueProjection,
@@ -62,7 +64,17 @@ const comparison = (
     conclusion === "purposefulOverlap"
       ? ["The candidate changes the tactical question."]
       : [],
-  basis: { tag: "compared", dimensions },
+  basis: {
+    tag: "compared",
+    batches: [
+      {
+        batchIndex: 0,
+        comparedScenarioIds:
+          ids as ScenarioCatalogueComparison["comparedScenarioIds"],
+        dimensions,
+      },
+    ],
+  },
   ...overrides,
 });
 
@@ -87,6 +99,30 @@ describe("Scenario authoring catalogue comparison", () => {
     const oversized = projection("oversized", "x".repeat(40_000));
     const batches = batchScenarioCatalogueProjections([oversized]);
     expect(Either.isLeft(batches)).toBe(true);
+  });
+
+  test("bounds the complete comparison prompt, including Candidate prose", () => {
+    const result = scenarioCatalogueComparisonPrompt({
+      candidate: "x".repeat(
+        SCENARIO_CATALOGUE_COMPARISON_MODEL_INPUT_BYTE_LIMIT,
+      ),
+      candidateIndex: 0,
+      batchIndex: 0,
+      batch: [projection("one")],
+    });
+    expect(Either.isLeft(result)).toBe(true);
+    const bounded = scenarioCatalogueComparisonPrompt({
+      candidate: "small candidate",
+      candidateIndex: 0,
+      batchIndex: 0,
+      batch: [projection("one")],
+    });
+    expect(Either.isRight(bounded)).toBe(true);
+    if (Either.isRight(bounded)) {
+      expect(Buffer.byteLength(bounded.right, "utf8")).toBeLessThanOrEqual(
+        SCENARIO_CATALOGUE_COMPARISON_MODEL_INPUT_BYTE_LIMIT,
+      );
+    }
   });
 
   test("requires exact admitted-catalogue coverage and typed conclusions", () => {
@@ -144,16 +180,77 @@ describe("Scenario authoring catalogue comparison", () => {
     expect(Either.isLeft(closestMatchOutsideCatalogue)).toBe(true);
   });
 
-  test("aggregates batches and preserves the strongest repetition conclusion", () => {
+  test("rejects ids swapped between canonical batches", () => {
     const result = aggregateScenarioCatalogueComparisons({
       comparisons: [
-        comparison("meaningfullyDistinct", ["one"]),
-        comparison("redundant", ["two"]),
+        comparison("meaningfullyDistinct", ["two"], {
+          basis: {
+            tag: "compared",
+            batches: [
+              {
+                batchIndex: 0,
+                comparedScenarioIds: [
+                  "two",
+                ] as ScenarioCatalogueComparison["comparedScenarioIds"],
+                dimensions,
+              },
+            ],
+          },
+        }),
+        comparison("meaningfullyDistinct", ["one"], {
+          basis: {
+            tag: "compared",
+            batches: [
+              {
+                batchIndex: 1,
+                comparedScenarioIds: [
+                  "one",
+                ] as ScenarioCatalogueComparison["comparedScenarioIds"],
+                dimensions,
+              },
+            ],
+          },
+        }),
       ],
       expectedScenarioIds: [
         "one",
         "two",
       ] as ScenarioCatalogueComparison["comparedScenarioIds"],
+      expectedBatches: [
+        { batchIndex: 0, scenarioIds: ["one"] },
+        { batchIndex: 1, scenarioIds: ["two"] },
+      ],
+    });
+    expect(Either.isLeft(result)).toBe(true);
+  });
+
+  test("aggregates batches and preserves the strongest repetition conclusion", () => {
+    const result = aggregateScenarioCatalogueComparisons({
+      comparisons: [
+        comparison("meaningfullyDistinct", ["one"]),
+        comparison("redundant", ["two"], {
+          basis: {
+            tag: "compared",
+            batches: [
+              {
+                batchIndex: 1,
+                comparedScenarioIds: [
+                  "two",
+                ] as ScenarioCatalogueComparison["comparedScenarioIds"],
+                dimensions,
+              },
+            ],
+          },
+        }),
+      ],
+      expectedScenarioIds: [
+        "one",
+        "two",
+      ] as ScenarioCatalogueComparison["comparedScenarioIds"],
+      expectedBatches: [
+        { batchIndex: 0, scenarioIds: ["one"] },
+        { batchIndex: 1, scenarioIds: ["two"] },
+      ],
     });
     expect(result).toMatchObject({
       _tag: "Right",
@@ -161,8 +258,23 @@ describe("Scenario authoring catalogue comparison", () => {
         conclusion: "redundant",
         comparedScenarioIds: ["one", "two"],
         closestMatches: [{ scenarioId: "two" }],
+        basis: {
+          batches: [
+            { batchIndex: 0, comparedScenarioIds: ["one"] },
+            { batchIndex: 1, comparedScenarioIds: ["two"] },
+          ],
+        },
       },
     });
+    if (Either.isRight(result)) {
+      expect(result.right.basis).toMatchObject({
+        tag: "compared",
+        batches: [
+          { batchIndex: 0, dimensions },
+          { batchIndex: 1, dimensions },
+        ],
+      });
+    }
   });
 
   test("decodes only the declared comparison shape", () => {

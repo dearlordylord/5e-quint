@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { Either, Schema } from "effect";
 
 import {
@@ -13,6 +12,7 @@ import {
 } from "./artifact-authority.ts";
 import { ScenarioIdSchema, repoRoot } from "./transcript.ts";
 import { ScenarioStageFactsAuthoritySchema } from "./stage-plan-authority.ts";
+import { canonicalRepositoryReadPath } from "./repository-path.ts";
 
 export const AdmittedScenarioRecordSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
@@ -33,12 +33,23 @@ export type AdmittedScenarioIdentity = {
 };
 
 function authorityMatches(
+  repositoryRoot: string,
   authority: ArtifactAuthority,
   expectedPath: string,
   bytes: string,
 ): boolean {
+  const authorityPath = canonicalRepositoryReadPath(
+    repositoryRoot,
+    authority.path,
+  );
+  const expectedCanonicalPath = canonicalRepositoryReadPath(
+    repositoryRoot,
+    expectedPath,
+  );
   return (
-    resolve(repoRoot, authority.path) === resolve(expectedPath) &&
+    Either.isRight(authorityPath) &&
+    Either.isRight(expectedCanonicalPath) &&
+    authorityPath.right === expectedCanonicalPath.right &&
     authority.byteLength === Buffer.byteLength(bytes) &&
     authority.sha256 === sha256Text(bytes)
   );
@@ -50,11 +61,26 @@ export function admittedScenarioIdentity(input: {
   readonly reviewPath: string;
   readonly recordPath: string;
 }): Either.Either<AdmittedScenarioIdentity, string> {
+  const scenarioPath = canonicalRepositoryReadPath(
+    repoRoot,
+    input.scenarioPath,
+  );
+  const reviewPath = canonicalRepositoryReadPath(repoRoot, input.reviewPath);
+  const recordPath = canonicalRepositoryReadPath(repoRoot, input.recordPath);
+  if (
+    Either.isLeft(scenarioPath) ||
+    Either.isLeft(reviewPath) ||
+    Either.isLeft(recordPath)
+  ) {
+    return Either.left(
+      "Scenario authorities must remain inside the repository.",
+    );
+  }
   const files = Either.try({
     try: () => ({
-      scenarioBytes: readFileSync(input.scenarioPath, "utf8"),
-      reviewBytes: readFileSync(input.reviewPath, "utf8"),
-      recordBytes: readFileSync(input.recordPath, "utf8"),
+      scenarioBytes: readFileSync(scenarioPath.right, "utf8"),
+      reviewBytes: readFileSync(reviewPath.right, "utf8"),
+      recordBytes: readFileSync(recordPath.right, "utf8"),
     }),
     catch: () =>
       "Scenario, admitted-scenario record, and admission review must be readable.",
@@ -77,13 +103,15 @@ export function admittedScenarioIdentity(input: {
     decoded.right.scenarioSha256 !== sha256Text(scenarioBytes) ||
     record.right.scenarioId !== input.scenarioId ||
     !authorityMatches(
+      repoRoot,
       record.right.authoredSource,
-      input.scenarioPath,
+      scenarioPath.right,
       scenarioBytes,
     ) ||
     !authorityMatches(
+      repoRoot,
       record.right.admissionReview,
-      input.reviewPath,
+      reviewPath.right,
       reviewBytes,
     )
   ) {
@@ -91,7 +119,16 @@ export function admittedScenarioIdentity(input: {
       "Scenario requires the matching admitted scenario review and prose hash.",
     );
   }
-  const stageFactsPath = resolve(repoRoot, record.right.stageFacts.path);
+  const stageFactsPathResult = canonicalRepositoryReadPath(
+    repoRoot,
+    record.right.stageFacts.path,
+  );
+  if (Either.isLeft(stageFactsPathResult)) {
+    return Either.left(
+      "Scenario stage-facts authority must remain inside the repository.",
+    );
+  }
+  const stageFactsPath = stageFactsPathResult.right;
   const stageFactsBytes = Either.try({
     try: () => readFileSync(stageFactsPath, "utf8"),
     catch: () => "Scenario stage-facts authority must be readable.",
@@ -104,6 +141,7 @@ export function admittedScenarioIdentity(input: {
   if (
     Either.isLeft(stageFacts) ||
     !authorityMatches(
+      repoRoot,
       record.right.stageFacts,
       stageFactsPath,
       stageFactsBytes.right,

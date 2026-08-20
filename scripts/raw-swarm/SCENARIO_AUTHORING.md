@@ -70,6 +70,11 @@ comparison evidence into the Campaign review. Stage-plan contradictions may
 reject a Candidate before whole-scenario review, but that rejection is retained
 as Candidate evidence and never promoted to the admitted catalogue.
 
+An empty admitted catalogue is a valid first-authoring state. It produces a
+retained `noAdmittedScenarios` comparison with the required
+`meaningfullyDistinct` conclusion; the first admitted Scenario does not need a
+placeholder catalogue entry.
+
 ## 3. Compare against the complete admitted catalogue
 
 Use the canonical `projectScenarioCatalogueForAuthoring` projection produced
@@ -87,7 +92,11 @@ The operator must preserve these comparison invariants:
    record, truncate a source, or treat a client display limit as a comparison
    limit.
 2. Give the comparison reviewer the Candidate prose and one complete
-   projection batch at a time. When a concrete fact is needed, read the
+   projection batch at a time. The complete UTF-8 payload (instructions,
+   Candidate prose, batch index, and serialized batch) is measured against the
+   conservative 32 KiB model-input bound; UTF-8 bytes are a tokenizer-
+   independent upper bound on token units, so an over-limit payload fails
+   explicitly. When a concrete fact is needed, read the
    referenced authority exactly and retain its hash/length binding. A batch is
    a transport boundary, not permission to ignore an entry.
 3. Compare the Candidate and each admitted Scenario on the following material
@@ -110,10 +119,10 @@ The operator must preserve these comparison invariants:
    evidence is invalid and cannot reach admission.
 
 The canonical final review retains `catalogueComparison` with the conclusion,
-all compared Scenario ids, closest matches, differentiators, and dimension
-evidence. Later operators inspect that existing review authority through the
-admitted catalogue record; they do not consult a comparison registry or copy
-facts into one.
+all compared Scenario ids, closest matches, differentiators, and a complete
+named dimension-evidence object for every canonical batch. Later operators
+inspect that existing review authority through the admitted catalogue record;
+they do not consult a comparison registry or copy facts into one.
 
 ## 4. Revise bounded repetition
 

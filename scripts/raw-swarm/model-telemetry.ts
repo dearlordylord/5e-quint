@@ -23,11 +23,13 @@ import {
   ExecutionIdSchema,
   ScenarioCampaignIdSchema,
   ScenarioCandidateIdSchema,
+  PlannedScenarioIdSchema,
   type BenchmarkId,
   type EvidenceSetId,
   type ExecutionId,
   type ScenarioCampaignId,
   type ScenarioCandidateId,
+  type PlannedScenarioId,
 } from "./raw-swarm-identities.ts";
 
 /** Current phase vocabulary. New evidence cannot invent a readiness pass. */
@@ -143,14 +145,14 @@ export type CurrentModelInvocationSubject =
   | Readonly<{
       readonly tag: "scenarioCampaign";
       readonly campaignId: ScenarioCampaignId;
-      readonly plannedScenarioId: ScenarioId;
+      readonly plannedScenarioId: PlannedScenarioId;
     }>
   | Readonly<{
       readonly tag: "scenarioCandidate";
       readonly campaignId: ScenarioCampaignId;
       readonly candidateId: ScenarioCandidateId;
       readonly candidateScenarioSha256: string;
-      readonly plannedScenarioId: ScenarioId;
+      readonly plannedScenarioId: PlannedScenarioId;
     }>
   | Readonly<{ readonly tag: "scenario"; readonly scenarioId: ScenarioId }>
   | Readonly<{
@@ -172,7 +174,7 @@ const CurrentModelInvocationSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("scenarioCampaign"),
     campaignId: ScenarioCampaignIdSchema,
-    plannedScenarioId: ScenarioIdSchema,
+    plannedScenarioId: PlannedScenarioIdSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("scenarioCandidate"),
@@ -181,7 +183,7 @@ const CurrentModelInvocationSubjectSchema = Schema.Union(
     candidateScenarioSha256: Schema.String.pipe(
       Schema.pattern(/^[0-9a-f]{64}$/),
     ),
-    plannedScenarioId: ScenarioIdSchema,
+    plannedScenarioId: PlannedScenarioIdSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("scenario"),
@@ -522,7 +524,7 @@ export function parseModelInvocationLedgerEntry(
 /** Scenario reference carried by historical and lifecycle-discriminated rows. */
 export function modelInvocationScenarioReference(
   entry: ModelInvocationLedgerEntry,
-): ScenarioId {
+): ScenarioId | PlannedScenarioId {
   if (entry.schemaVersion === 1 || entry.schemaVersion === 2) {
     return entry.scenarioId;
   }

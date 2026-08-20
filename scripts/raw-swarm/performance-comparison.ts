@@ -87,7 +87,11 @@ import {
   ScenarioStageFactsSchema,
   type ScenarioStagePlan,
 } from "./scenario-stage-plan.ts";
-import { ScenarioExecutionIdentitySchema } from "./raw-swarm-identities.ts";
+import {
+  ScenarioExecutionIdentitySchema,
+  type ScenarioCampaignId,
+  type ScenarioCandidateId,
+} from "./raw-swarm-identities.ts";
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 const NonNegativeIntegerSchema = Schema.Number.pipe(
@@ -1864,8 +1868,8 @@ export type CompletePathEquivalenceWitness =
           }>
         | Readonly<{
             readonly tag: "candidate";
-            readonly campaignId: string;
-            readonly candidateId: string;
+            readonly campaignId: ScenarioCampaignId;
+            readonly candidateId: ScenarioCandidateId;
             readonly candidateScenarioSha256: string;
           }>;
       readonly admissionOutcome: ScenarioStagePlan["outcome"]["tag"];

@@ -33,7 +33,8 @@ findings projection:
 - for a rejection, the Candidate prose, Candidate review, and rejection record.
 
 `catalogueComparison` is the retained comparison seam. It must show the exact
-admitted Scenario ids compared, the conclusion
+admitted Scenario ids compared, each named canonical batch with its complete
+dimension evidence, the conclusion
 (`meaningfullyDistinct`/`purposefulOverlap`/`redundant`), closest matches,
 material differentiators, and dimension evidence. A purposeful overlap without
 a named differentiator or a redundant result without a closest match is

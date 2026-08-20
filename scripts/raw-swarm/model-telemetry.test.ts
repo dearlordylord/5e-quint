@@ -26,6 +26,7 @@ import {
   modelUsageFromCodexEvents,
   parseModelInvocationLedgerEntry,
   parseBenchmarkModelInvocationLedgerEntry,
+  CurrentModelInvocationLedgerEntrySchema,
 } from "./model-telemetry.ts";
 import { GitShaSchema, repoRoot, ScenarioIdSchema } from "./transcript.ts";
 
@@ -35,6 +36,50 @@ const modelTelemetryCli = resolve(
 );
 
 describe("Raw Swarm model invocation telemetry", () => {
+  test("requires a candidate authority for composite comparison ledger rows", () => {
+    const common = {
+      schemaVersion: 4 as const,
+      invocationId: "synthetic-invocation",
+      model: "gpt-5.6-luna",
+      reasoningEffort: "max",
+      gitSha: "a".repeat(40),
+      eventsSha256: "b".repeat(64),
+      phase: "scenarioCompositeReview" as const,
+      stagePlanReason: "Synthetic composite comparison.",
+      startedAt: "2026-08-19T00:00:00.000Z",
+      elapsedMilliseconds: 1,
+      exit: { tag: "exited" as const, status: 0 },
+      result: { tag: "succeeded" as const },
+      usage: { tag: "unavailable" as const, reason: "synthetic" },
+    };
+    expect(
+      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntrySchema, {
+        onExcessProperty: "error",
+      })({
+        ...common,
+        subject: {
+          tag: "scenarioCampaign",
+          campaignId: "synthetic-campaign",
+          plannedScenarioId: "synthetic-scenario",
+        },
+      }),
+    ).toMatchObject({ _tag: "Left" });
+    expect(
+      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntrySchema, {
+        onExcessProperty: "error",
+      })({
+        ...common,
+        subject: {
+          tag: "scenarioCandidate",
+          campaignId: "synthetic-campaign",
+          candidateId: "synthetic-candidate",
+          candidateScenarioSha256: "c".repeat(64),
+          plannedScenarioId: "synthetic-scenario",
+        },
+      }),
+    ).toMatchObject({ _tag: "Right" });
+  });
+
   test("retains the first-party failure reason instead of only the process status", () => {
     const failureEvents = [
       { type: "error", message: "Synthetic wrapper failure." },

@@ -28,6 +28,14 @@ export const ScenarioIdSchema = SemanticIdentitySchema.pipe(
 );
 export type ScenarioId = Schema.Schema.Type<typeof ScenarioIdSchema>;
 
+/** A campaign reservation, which is not a Scenario until admission succeeds. */
+export const PlannedScenarioIdSchema = SemanticIdentitySchema.pipe(
+  Schema.brand("RawSwarmPlannedScenarioId"),
+);
+export type PlannedScenarioId = Schema.Schema.Type<
+  typeof PlannedScenarioIdSchema
+>;
+
 export const ExecutionIdSchema = SemanticIdentitySchema.pipe(
   Schema.brand("RawSwarmExecutionId"),
 );
@@ -76,6 +84,8 @@ export const decodeScenarioCandidateId = (value: unknown) =>
   decodeIdentity(ScenarioCandidateIdSchema, "scenario candidate id", value);
 export const decodeScenarioId = (value: unknown) =>
   decodeIdentity(ScenarioIdSchema, "scenario id", value);
+export const decodePlannedScenarioId = (value: unknown) =>
+  decodeIdentity(PlannedScenarioIdSchema, "planned scenario id", value);
 export const decodeExecutionId = (value: unknown) =>
   decodeIdentity(ExecutionIdSchema, "execution id", value);
 export const decodeBenchmarkId = (value: unknown) =>

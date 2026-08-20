@@ -22,6 +22,7 @@ import {
   decodeScenarioCampaignId,
   decodeScenarioCandidateId,
   decodeScenarioId,
+  decodePlannedScenarioId,
   evidenceSetDirectory,
   ScenarioIdSchema,
 } from "./raw-swarm-identities.ts";
@@ -61,7 +62,6 @@ const projectedFacts = {
     tag: "geometryAssisted" as const,
     evidence: "An open grid supplies placement.",
   },
-  admission: "admitted" as const,
   contentAvailability: {
     contentAvailabilityIntent: "availableOnly" as const,
     contentReview: {
@@ -82,6 +82,58 @@ const projectedFacts = {
 };
 
 describe("Raw Swarm scenario catalogue", () => {
+  test("rejects an execution/profile kind mismatch instead of erasing the tag", () => {
+    const record = {
+      schemaVersion: 1,
+      scenarioId: ids.scenarioId,
+      title: "Synthetic scenario",
+      purpose: "Explore a synthetic tactical question.",
+      authoredSource: {
+        path: "scenario.md",
+        byteLength: 1,
+        sha256: "a".repeat(64),
+      },
+      admissionReview: {
+        path: "review.json",
+        byteLength: 1,
+        sha256: "b".repeat(64),
+      },
+      stageFacts: { path: "facts.json", byteLength: 1, sha256: "c".repeat(64) },
+    } satisfies AdmittedScenarioRecord;
+    const result = projectRawSwarmCatalogue({
+      scenarios: [{ ...record, ...projectedFacts }],
+      executions: [
+        {
+          schemaVersion: 1,
+          executionId: ids.executionId,
+          scenarioId: ids.scenarioId,
+          evidenceSetId: ids.evidenceSetId,
+        },
+      ],
+      benchmarks: [
+        {
+          schemaVersion: 1,
+          benchmarkId: ids.benchmarkId,
+          evidenceSetId: ids.benchmarkEvidenceSetId,
+          comparisonTargets: [
+            { tag: "executionProfile", executionId: ids.executionId },
+            { tag: "execution", executionId: ids.otherExecutionId },
+          ],
+        },
+      ],
+      rejectedCandidates: [],
+    });
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(result.left).toContainEqual(
+        expect.objectContaining({
+          tag: "benchmarkExecutionKindMismatch",
+          executionId: ids.executionId,
+        }),
+      );
+    }
+  });
+
   test("projects one admitted scenario regardless of its executions and benchmark children", () => {
     const record = {
       schemaVersion: 1,
@@ -635,6 +687,40 @@ describe("Raw Swarm scenario catalogue", () => {
       } as const;
       writeFileSync(scenarioRecordPath, `${JSON.stringify(scenarioRecord)}\n`);
 
+      const secondProse = write(
+        "scenarios/second-synthetic.md",
+        "A second synthetic scenario.\n",
+      );
+      const historicalReviewValue = reviewValue;
+      const secondReview = write(
+        "scenarios/second-synthetic.md.scenario-review.json",
+        `${JSON.stringify({
+          ...historicalReviewValue,
+          scenarioId: "second-synthetic",
+          scenarioSha256: secondProse.sha256,
+        })}\n`,
+      );
+      const secondFacts = write(
+        "scenarios/second-synthetic.md.stage-facts.json",
+        `${JSON.stringify({
+          ...factsValue,
+          scenarioId: "second-synthetic",
+          scenarioSha256: secondProse.sha256,
+        })}\n`,
+      );
+      writeFileSync(
+        resolve(scenarios, "second-synthetic.scenario.json"),
+        `${JSON.stringify({
+          ...scenarioRecord,
+          scenarioId: "second-synthetic",
+          title: "Second synthetic scenario",
+          purpose: "Explore a second synthetic question.",
+          authoredSource: secondProse,
+          admissionReview: secondReview,
+          stageFacts: secondFacts,
+        })}\n`,
+      );
+
       const evidence = resolve(repositoryRoot, "out", "evidence-alpha");
       mkdirSync(evidence, { recursive: true });
       writeFileSync(
@@ -731,6 +817,86 @@ describe("Raw Swarm scenario catalogue", () => {
         })}\n`,
       );
 
+      const initialCatalogue = readRawSwarmCatalogue({
+        repositoryRoot,
+        scenarioDirectory: scenarios,
+        evidenceDirectory: resolve(repositoryRoot, "out"),
+      });
+      expect(Either.isRight(initialCatalogue)).toBe(true);
+      if (Either.isRight(initialCatalogue)) {
+        const firstScenario = initialCatalogue.right.scenarios.find(
+          ({ scenarioId }) => scenarioId === "open-grid-wolf-skeleton-pursuit",
+        );
+        expect(firstScenario).toMatchObject({
+          purpose:
+            "Explore pursuit and melee engagement through the public SDK.",
+          characterRequirement: projectedFacts.characterRequirement,
+          spatialRequirement: projectedFacts.spatialRequirement,
+          contentAvailability: {
+            contentAvailabilityIntent: "availableOnly",
+            contentReview: { classification: "supplied" },
+          },
+          sdkCapability: {
+            tag: "assessed",
+            admission: {
+              sdkCapabilityIntent: "supportedOnly",
+              sdkCapabilityReview: { classification: "supported" },
+            },
+          },
+          executionIds: expect.arrayContaining([
+            "execution-alpha",
+            "execution-beta",
+            "profile-execution-alpha",
+            "profile-execution-beta",
+          ]),
+          benchmarkIds: expect.arrayContaining([
+            "context-profile-comparison",
+            "profile-benchmark",
+          ]),
+        });
+        expect(initialCatalogue.right.rejectedCandidates).toEqual([
+          expect.objectContaining({ candidateId: "rejected-candidate" }),
+        ]);
+      }
+      const incompleteReview = write(
+        "scenarios/open-grid-wolf-skeleton-pursuit.md.scenario-review.json",
+        `${JSON.stringify({
+          ...reviewValue,
+          catalogueComparison: {
+            schemaVersion: 1,
+            conclusion: "meaningfullyDistinct",
+            comparedScenarioIds: ["open-grid-wolf-skeleton-pursuit"],
+            closestMatches: [],
+            materialDifferentiators: [],
+            basis: {
+              tag: "compared",
+              batches: [
+                {
+                  batchIndex: 0,
+                  comparedScenarioIds: ["open-grid-wolf-skeleton-pursuit"],
+                  dimensions: {
+                    exploratoryPurpose:
+                      "The candidate asks a distinct question.",
+                    materiallyRelevantMechanics:
+                      "The candidate uses distinct mechanics.",
+                    encounterComposition:
+                      "The candidate has a distinct composition.",
+                    interactionSequence:
+                      "The candidate has a distinct sequence.",
+                    tacticalQuestion: "The candidate asks a distinct tactic.",
+                    sdkSupportBoundary: "The candidate stays within support.",
+                    spatialContext: { tag: "notMaterial" },
+                  },
+                },
+              ],
+            },
+          },
+        })}\n`,
+      );
+      writeFileSync(
+        scenarioRecordPath,
+        `${JSON.stringify({ ...scenarioRecord, admissionReview: incompleteReview })}\n`,
+      );
       expect(
         readRawSwarmCatalogue({
           repositoryRoot,
@@ -738,40 +904,12 @@ describe("Raw Swarm scenario catalogue", () => {
           evidenceDirectory: resolve(repositoryRoot, "out"),
         }),
       ).toMatchObject({
-        right: {
-          scenarios: [
-            {
-              scenarioId: "open-grid-wolf-skeleton-pursuit",
-              purpose:
-                "Explore pursuit and melee engagement through the public SDK.",
-              characterRequirement: projectedFacts.characterRequirement,
-              spatialRequirement: projectedFacts.spatialRequirement,
-              admission: "admitted",
-              contentAvailability: {
-                contentAvailabilityIntent: "availableOnly",
-                contentReview: { classification: "supplied" },
-              },
-              sdkCapability: {
-                tag: "assessed",
-                admission: {
-                  sdkCapabilityIntent: "supportedOnly",
-                  sdkCapabilityReview: { classification: "supported" },
-                },
-              },
-              executionIds: expect.arrayContaining([
-                "execution-alpha",
-                "execution-beta",
-                "profile-execution-alpha",
-                "profile-execution-beta",
-              ]),
-              benchmarkIds: expect.arrayContaining([
-                "context-profile-comparison",
-                "profile-benchmark",
-              ]),
-            },
-          ],
-          rejectedCandidates: [{ candidateId: "rejected-candidate" }],
-        },
+        left: expect.arrayContaining([
+          expect.objectContaining({
+            tag: "invalidCatalogueRecord",
+            message: expect.stringContaining("covered 1 of 2"),
+          }),
+        ]),
       });
 
       writeFileSync(
@@ -841,22 +979,20 @@ describe("Raw Swarm scenario catalogue", () => {
           stageFacts: changedFacts,
         })}\n`,
       );
-      expect(
-        readRawSwarmCatalogue({
-          repositoryRoot,
-          scenarioDirectory: scenarios,
-          evidenceDirectory: resolve(repositoryRoot, "out"),
-        }),
-      ).toMatchObject({
-        right: {
-          scenarios: [
-            {
-              scenarioId: "open-grid-wolf-skeleton-pursuit",
-              spatialRequirement: { tag: "notRequired" },
-            },
-          ],
-        },
+      const restoredCatalogue = readRawSwarmCatalogue({
+        repositoryRoot,
+        scenarioDirectory: scenarios,
+        evidenceDirectory: resolve(repositoryRoot, "out"),
       });
+      expect(Either.isRight(restoredCatalogue)).toBe(true);
+      if (Either.isRight(restoredCatalogue)) {
+        expect(
+          restoredCatalogue.right.scenarios.find(
+            ({ scenarioId }) =>
+              scenarioId === "open-grid-wolf-skeleton-pursuit",
+          )?.spatialRequirement,
+        ).toMatchObject({ tag: "notRequired" });
+      }
 
       writeFileSync(resolve(secondEvidence, "execution.json"), "not-json\n");
       expect(
@@ -915,6 +1051,9 @@ describe("Raw Swarm scenario catalogue", () => {
       expect(Either.isLeft(decode("../outside"))).toBe(true);
     }
     expect(Either.isLeft(decodeScenarioId("generated-battle-123"))).toBe(true);
+    expect(
+      Either.isRight(decodePlannedScenarioId("generated-battle-123")),
+    ).toBe(true);
     expect(
       Either.isRight(
         decodeEvidenceSetId("generated-battle-009-equivalent-023"),

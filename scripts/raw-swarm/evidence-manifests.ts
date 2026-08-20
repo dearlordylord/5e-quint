@@ -4,6 +4,7 @@ import {
   EvidenceSetIdSchema,
   ExecutionIdSchema,
   ScenarioCampaignIdSchema,
+  PlannedScenarioIdSchema,
   ScenarioIdSchema,
 } from "./raw-swarm-identities.ts";
 import { GitShaSchema, StartedAtSchema } from "./transcript.ts";
@@ -14,7 +15,7 @@ export const ScenarioCampaignManifestSchema = Schema.Struct({
   type: Schema.Literal("raw-swarm-scenario-campaign"),
   schemaVersion: Schema.Literal(1),
   campaignId: ScenarioCampaignIdSchema,
-  plannedScenarioId: ScenarioIdSchema,
+  plannedScenarioId: PlannedScenarioIdSchema,
   evidenceSetId: EvidenceSetIdSchema,
   gitSha: GitShaSchema,
   startedAt: StartedAtSchema,

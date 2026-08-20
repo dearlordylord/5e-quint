@@ -32,7 +32,13 @@ import {
   validateScenarioStagePlan,
   type ScenarioStagePlan,
 } from "./scenario-stage-plan.ts";
-import { canonicalJson, repoRoot, sha256Canonical } from "./transcript.ts";
+import {
+  canonicalJson,
+  repoRoot,
+  ScenarioIdSchema,
+  sha256Canonical,
+  type ScenarioId,
+} from "./transcript.ts";
 import { FindingsManifestSchema } from "./evidence-manifests.ts";
 import { RejectedScenarioCandidateRecordSchema } from "./scenario-catalogue.ts";
 import { RejectedScenarioCandidateReviewSchema } from "./scenario-campaign.ts";
@@ -168,6 +174,8 @@ function findingsManifestIdentity(
 function authoredScenarioIdentity(identity: FindingsManifestIdentity) {
   return Match.value(identity).pipe(
     Match.when({ tag: "scenarioCampaign" }, (campaign) => ({
+      // Generation ledgers and candidate rejection authorities refer to the
+      // campaign reservation.  It becomes a Scenario only at admission.
       scenarioId: campaign.plannedScenarioId,
       gitSha: campaign.gitSha,
     })),
@@ -177,6 +185,19 @@ function authoredScenarioIdentity(identity: FindingsManifestIdentity) {
     })),
     Match.exhaustive,
   );
+}
+
+function admittedScenarioIdentity(
+  identity: FindingsManifestIdentity,
+): ScenarioId {
+  const candidate = authoredScenarioIdentity(identity).scenarioId;
+  const decoded = Schema.decodeUnknownEither(ScenarioIdSchema)(candidate);
+  if (Either.isLeft(decoded)) {
+    fail(
+      `Completed Scenario evidence requires an admitted Scenario identity: ${decoded.left.message}`,
+    );
+  }
+  return decoded.right;
 }
 
 function makeProjection(input: {
@@ -296,7 +317,7 @@ export function projectGenerationFindings(
         );
       }
       const expectedIdentity: ScenarioReviewIdentityExpectation = {
-        scenarioId: authoredIdentity.scenarioId,
+        scenarioId: admittedScenarioIdentity(manifestIdentity),
         gitSha: authoredIdentity.gitSha,
         scenarioSha256: authorityFor(scenarioSource).sha256,
         scenarioReviewSha256: authorityFor({ role, path: canonical }).sha256,
@@ -415,7 +436,7 @@ export function projectGenerationFindings(
     scenarioSha256 !== undefined && scenarioReviewSha256 !== undefined
       ? {
           tag: "admitted",
-          scenarioId: authoredIdentity.scenarioId,
+          scenarioId: admittedScenarioIdentity(manifestIdentity),
           scenarioSha256,
           scenarioReviewSha256,
         }

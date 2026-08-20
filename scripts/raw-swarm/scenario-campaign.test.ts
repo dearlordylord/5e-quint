@@ -62,6 +62,11 @@ test("rolls back every admitted path when bundle publication fails", () => {
     expect(names.some((name) => existsSync(resolve(admitted, name)))).toBe(
       false,
     );
+    expect(
+      names
+        .filter((name) => name !== "facts.json")
+        .every((name) => existsSync(resolve(staged, name))),
+    ).toBe(true);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -1014,7 +1019,7 @@ describe("scenario generation campaign", () => {
           candidate(`catalogue candidate ${input.iteration}-${index}`),
         ),
       }),
-      compareCandidate: async ({ candidateIndex, batch }) => {
+      compareCandidate: async ({ candidateIndex, batch, batchIndex }) => {
         comparisons.push({ candidateIndex, scenarioId: batch[0]!.scenarioId });
         return Schema.decodeUnknownSync(ScenarioCatalogueComparisonSchema)({
           schemaVersion: 1,
@@ -1033,17 +1038,26 @@ describe("scenario generation campaign", () => {
           materialDifferentiators: [],
           basis: {
             tag: "compared",
-            dimensions: {
-              exploratoryPurpose: "The candidate asks the same first question.",
-              materiallyRelevantMechanics:
-                "The candidate repeats the mechanic.",
-              encounterComposition: "The candidate keeps the encounter shape.",
-              interactionSequence: "The candidate repeats the sequence.",
-              tacticalQuestion:
-                "The candidate asks the same tactical question.",
-              sdkSupportBoundary: "The candidate uses supported operations.",
-              spatialContext: { tag: "notMaterial" },
-            },
+            batches: [
+              {
+                batchIndex,
+                comparedScenarioIds: batch.map(({ scenarioId }) => scenarioId),
+                dimensions: {
+                  exploratoryPurpose:
+                    "The candidate asks the same first question.",
+                  materiallyRelevantMechanics:
+                    "The candidate repeats the mechanic.",
+                  encounterComposition:
+                    "The candidate keeps the encounter shape.",
+                  interactionSequence: "The candidate repeats the sequence.",
+                  tacticalQuestion:
+                    "The candidate asks the same tactical question.",
+                  sdkSupportBoundary:
+                    "The candidate uses supported operations.",
+                  spatialContext: { tag: "notMaterial" },
+                },
+              },
+            ],
           },
         });
       },
@@ -1098,6 +1112,54 @@ describe("scenario generation campaign", () => {
     }
   });
 
+  test("authors the first Scenario from an empty admitted catalogue", async () => {
+    let retained: unknown;
+    const result = await runScenarioCampaign(
+      {
+        ...config,
+        minimumIterations: 1,
+        maximumIterations: 2,
+        reviewMilestone: 1,
+      },
+      {
+        generate: async (input) => ({
+          candidates: Array.from({ length: input.candidateCount }, (_, index) =>
+            candidate(`first-catalogue candidate ${index}`),
+          ),
+        }),
+        reviewScenario: async ({ catalogueComparison }) => {
+          retained = catalogueComparison;
+          return {
+            raw: { classification: "supported", evidence: "Synthetic RAW." },
+            contentAvailability: {
+              classification: "supplied",
+              evidence: "Synthetic content.",
+            },
+            sdkCapability: {
+              classification: "supported",
+              evidence: "Synthetic SDK.",
+            },
+            artifactPolicy: {
+              classification: "safe",
+              evidence: "Synthetic policy.",
+            },
+            ...readyQuality,
+          };
+        },
+      },
+      { select: () => 0 },
+      { tag: "required", batches: [], expectedScenarioIds: [] },
+    );
+    expect(Either.isRight(result)).toBe(true);
+    expect(retained).toMatchObject({
+      tag: "retained",
+      comparison: {
+        conclusion: "meaningfullyDistinct",
+        basis: { tag: "noAdmittedScenarios" },
+      },
+    });
+  });
+
   test("retains a redundant Candidate as rejected when the revision bound is exhausted", async () => {
     const projection = Schema.decodeUnknownSync(
       ScenarioCatalogueProjectionSchema,
@@ -1129,7 +1191,7 @@ describe("scenario generation campaign", () => {
             candidate(`always redundant ${index}`),
           ),
         }),
-        compareCandidate: async ({ batch }) =>
+        compareCandidate: async ({ batch, batchIndex }) =>
           Schema.decodeUnknownSync(ScenarioCatalogueComparisonSchema)({
             schemaVersion: 1,
             conclusion: "redundant",
@@ -1143,15 +1205,23 @@ describe("scenario generation campaign", () => {
             materialDifferentiators: [],
             basis: {
               tag: "compared",
-              dimensions: {
-                exploratoryPurpose: "Same purpose.",
-                materiallyRelevantMechanics: "Same mechanics.",
-                encounterComposition: "Same composition.",
-                interactionSequence: "Same sequence.",
-                tacticalQuestion: "Same question.",
-                sdkSupportBoundary: "Same support boundary.",
-                spatialContext: { tag: "notMaterial" },
-              },
+              batches: [
+                {
+                  batchIndex,
+                  comparedScenarioIds: batch.map(
+                    ({ scenarioId }) => scenarioId,
+                  ),
+                  dimensions: {
+                    exploratoryPurpose: "Same purpose.",
+                    materiallyRelevantMechanics: "Same mechanics.",
+                    encounterComposition: "Same composition.",
+                    interactionSequence: "Same sequence.",
+                    tacticalQuestion: "Same question.",
+                    sdkSupportBoundary: "Same support boundary.",
+                    spatialContext: { tag: "notMaterial" },
+                  },
+                },
+              ],
             },
           }),
         reviewScenario: async ({ catalogueComparison }) => {

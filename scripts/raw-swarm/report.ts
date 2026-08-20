@@ -44,6 +44,7 @@ import {
 import {
   EvidenceSetIdSchema,
   ExecutionIdSchema,
+  PlannedScenarioIdSchema,
   ScenarioCampaignIdSchema,
   ScenarioIdSchema,
 } from "./raw-swarm-identities.ts";
@@ -325,7 +326,7 @@ const PersistedExecutionReviewSchema = Schema.Struct({
 });
 const PersistedCampaignAuditSchema = Schema.Struct({
   campaignId: ScenarioCampaignIdSchema,
-  plannedScenarioId: ScenarioIdSchema,
+  plannedScenarioId: PlannedScenarioIdSchema,
   evidenceSetId: EvidenceSetIdSchema,
   gitSha: GitShaSchema,
   startedAt: Schema.String,

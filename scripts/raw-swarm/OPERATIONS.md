@@ -32,46 +32,9 @@ regression layer for known claims. The swarm adds discovery:
 The regression preserves the discovery. It does not drive or guide later
 player agents.
 
-## Identity vocabulary and catalogue
-
-Raw Swarm separates authored inputs from attempts and retained output:
-
-- A **Scenario Campaign** is an offline authoring process that produces and
-  revises candidates.
-- A **Scenario Candidate** is authored material before admission. A rejected
-  candidate never becomes a Scenario.
-- A **Scenario** is one immutable, admitted, playable authored input with a
-  stable semantic ID, title, and exploratory purpose.
-- An **Execution** is one attempt to exercise exactly one Scenario through the
-  public SDK.
-- A **Benchmark** is one controlled comparison whose child Execution IDs are
-  explicit.
-- An **Evidence Set** is a retained artifact collection. Its ID is distinct
-  from the Scenario, Execution, Campaign, Candidate, or Benchmark that produced
-  it, and its storage path is only a projection of that ID.
-
-`Run` is not a Raw Swarm domain term. A few SQLite tables retain numeric
-`runId` columns as database-local row keys; those keys do not identify a
-Scenario, Execution, Benchmark, or Evidence Set.
-
-A Campaign may reserve a `plannedScenarioId`, but that reservation is not a
-Scenario. The identity becomes an admitted Scenario only when the campaign
-writes the canonical `.scenario.json` record after successful admission.
-
-Render the canonical admitted-scenario catalogue from the checked-in admission
-records and their referenced authorities:
-
-```sh
-pnpm raw-swarm:catalogue
-pnpm raw-swarm:catalogue -- --json
-pnpm raw-swarm:catalogue -- --rejected
-```
-
-The admitted projection lists each Scenario exactly once regardless of local
-Execution or Benchmark evidence. The rejected projection is separate. A
-catalogue entry records exploratory intent and admitted facts; membership is
-not a claim of RAW coverage, SDK completeness, player correctness, or tactical
-quality.
+The package-local vocabulary, navigation, and catalogue command live in
+[`README.md`](README.md). This reference owns the prototype commands and
+evidence operations; it does not redefine those domain terms.
 
 Run commands under mise-managed Node 24 from the worktree root:
 

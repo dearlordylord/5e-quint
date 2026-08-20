@@ -47,14 +47,19 @@ import { SdkReplayResultEvidenceSchema } from "./sdk-player/sdk-replay-result.ts
 import {
   EvidenceSetIdSchema,
   ExecutionIdSchema,
+  PlannedScenarioIdSchema,
   ScenarioCampaignIdSchema,
   ScenarioIdSchema,
   type ScenarioCampaignId,
   type ScenarioCandidateId,
+  type PlannedScenarioId,
   type ScenarioId,
 } from "./raw-swarm-identities.ts";
 import type { GitSha } from "./transcript.ts";
-import { ExecutionStartRecordSchema } from "./evidence-manifests.ts";
+import {
+  ExecutionStartRecordSchema,
+  ScenarioCampaignManifestSchema,
+} from "./evidence-manifests.ts";
 
 export const RAW_SWARM_FINDINGS_SCHEMA_VERSION = 2;
 
@@ -182,7 +187,7 @@ const FindingsSubjectSchema = Schema.Union(
     tag: Schema.Literal("scenarioCampaign"),
     campaignId: ScenarioCampaignIdSchema,
     evidenceSetId: EvidenceSetIdSchema,
-    plannedScenarioId: ScenarioIdSchema,
+    plannedScenarioId: PlannedScenarioIdSchema,
     ...FindingsSubjectCommonFields,
     sdkCalls: Schema.Struct({ tag: Schema.Literal("transcriptFree") }),
   }),
@@ -950,7 +955,8 @@ function findingsFromObservationSource(source: Source): readonly Finding[] {
 export function findingsFromGenerationLedger(
   source: Source,
   expected: Readonly<{
-    readonly scenarioId: ScenarioId;
+    /** A campaign ledger still refers to its reservation, not an admitted Scenario. */
+    readonly scenarioId: ScenarioId | PlannedScenarioId;
     readonly gitSha?: GitSha;
   }>,
 ): readonly Finding[] {
@@ -1252,6 +1258,53 @@ export function deduplicateFindings(
   );
 }
 
+function subjectAuthorityBindingError(
+  projection: FindingsProjection,
+): string | undefined {
+  const expectedRole =
+    projection.subject.tag === "scenarioCampaign"
+      ? "campaign"
+      : "executionStart";
+  const authority =
+    projection.authorities.find(({ role }) => role === expectedRole) ??
+    (projection.subject.tag === "execution"
+      ? projection.authorities.find(({ role }) => role === "execution")
+      : undefined);
+  if (authority === undefined) {
+    return `Findings subject requires its ${expectedRole} authority.`;
+  }
+  if (projection.subject.tag === "scenarioCampaign") {
+    const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+      onExcessProperty: "error",
+    })(readSourceRecord(authority.path));
+    if (Either.isLeft(decoded)) {
+      return `Campaign authority does not decode as a campaign manifest: ${authority.path}`;
+    }
+    const campaign = decoded.right;
+    return campaign.campaignId === projection.subject.campaignId &&
+      campaign.plannedScenarioId === projection.subject.plannedScenarioId &&
+      campaign.evidenceSetId === projection.subject.evidenceSetId &&
+      campaign.gitSha === projection.subject.gitSha &&
+      campaign.startedAt === projection.subject.startedAt
+      ? undefined
+      : "Findings campaign subject does not match its decoded campaign manifest.";
+  }
+  const decoded = Schema.decodeUnknownEither(ExecutionStartRecordSchema, {
+    onExcessProperty: "error",
+  })(readSourceRecord(authority.path));
+  if (Either.isLeft(decoded)) {
+    return `Execution authority does not decode as an execution-start manifest: ${authority.path}`;
+  }
+  const execution = decoded.right;
+  return execution.executionId === projection.subject.executionId &&
+    execution.evidenceSetId === projection.subject.evidenceSetId &&
+    execution.scenarioId === projection.subject.scenarioId &&
+    execution.gitSha === projection.subject.gitSha &&
+    execution.startedAt === projection.subject.startedAt
+    ? undefined
+    : "Findings execution subject does not match its decoded execution manifest.";
+}
+
 function validateDecodedProjection(
   projection: FindingsProjection,
 ): FindingsProjectionResult {
@@ -1320,6 +1373,10 @@ function validateDecodedProjection(
         message: `Finding authority is unreadable: ${authority.path}.`,
       };
     }
+  }
+  const subjectBindingError = subjectAuthorityBindingError(projection);
+  if (subjectBindingError !== undefined) {
+    return { tag: "invalid", message: subjectBindingError };
   }
   if (projection.subject.sdkCalls.tag === "transcriptFree") {
     if (roles.has("transcript")) {

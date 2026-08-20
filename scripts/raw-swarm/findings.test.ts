@@ -1114,6 +1114,22 @@ describe("Raw Swarm findings projection", () => {
     } as const;
     const projection = projectGenerationFindings(projectionInput);
     expect(projection.subject.sdkCalls).toEqual({ tag: "transcriptFree" });
+    if (projection.subject.tag !== "scenarioCampaign")
+      throw new Error("fixture subject");
+    const forgedSubject = {
+      ...projection.subject,
+      campaignId: "forged-campaign" as typeof projection.subject.campaignId,
+    };
+    expect(
+      validateFindingsProjection({
+        ...projection,
+        subject: forgedSubject,
+        subjectIdentity: sha256Canonical(forgedSubject),
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: /does not match its decoded campaign manifest/,
+    });
     expect(projection.authorities).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
