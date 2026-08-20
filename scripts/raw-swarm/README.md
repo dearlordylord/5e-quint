@@ -535,12 +535,27 @@ time at a 50% reduction, comparable-path model tokens and wall time at a 40%
 reduction, and player tokens per continuation and call at a 40% reduction.
 For the broader #292 gate, the complete-path comparison exported by
 `performance-comparison.ts` composes the canonical stage plan, v2 invocation
-ledger, and findings projection. It retains failures, corrections, stage-plan
+ledger, and findings projection. Each current projection is retained as a
+hash-linked authority and must decode to the inline typed projection; changing
+the inline reliability or actionable-finding evidence without changing its
+authority fails validation. It retains failures, corrections, stage-plan
 reasons, and every token dimension for the candidate path, while historical
 baseline authorities remain explicitly unavailable where #287 predates them.
 It marks paths incomparable when required identity/evidence or first-party
-usage is unavailable; missing usage is never zero. The current bounded-context
-size estimate and the retained `generated-battle-009` report are
+usage is unavailable; missing usage is never zero. The complete-path comparison
+keeps every finding pointer in retained evidence, but trace-local
+SDK sequence, verdict-index, and event-line pointers are not scenario identity.
+Equivalent paths instead require the same final review classifications,
+post-play verdict classes, and actionable issue identities (domain role plus
+fingerprint). Player failures and successful corrections remain explicit
+summary dimensions; a candidate with more player failures, more failed model
+stages, or fewer accepted-call verdicts is reliability-worse and therefore
+incomparable. Correction count is diagnostic rather than monotonic: successful
+recovery is not a regression and is interpreted alongside the failure count.
+Both paths must retain independently reviewed `completed` outcomes for the same
+scenario and immutable bundle; tactical trace differences are reliability
+observations, not a second spelling of scenario identity. The current
+bounded-context size estimate and the retained `generated-battle-009` report are
 documented in
 [`docs/research/raw-swarm-capability-context-and-complete-path.md`](../../docs/research/raw-swarm-capability-context-and-complete-path.md).
 The role-view byte estimate is not a live model result; a complete-path claim
@@ -556,6 +571,13 @@ invocationLedgerPaths, invocationEventPaths, and outcome fields. Populate the
 event array with every retained generation, composite-review, character,
 neutral-setup, controller-setup, player, and post-play-review event authority;
 do not use an estimate or fabricate a missing legacy stream.
+
+Hash-bound current measurements use schema version 4; fixed-scenario benchmark
+measurements use schema version 5. Previously retained versions 2 and 3 remain
+readable as legacy-unbound evidence, but cannot pass strict equivalent-path
+acceptance because their inline findings projection has no envelope-level hash
+authority. Never rewrite those immutable envelopes; produce a fresh bound
+measurement instead.
 
 ```sh
 mise exec -- pnpm exec tsx scripts/raw-swarm/performance-comparison.ts \

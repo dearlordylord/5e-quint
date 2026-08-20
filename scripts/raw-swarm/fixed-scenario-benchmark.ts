@@ -2413,12 +2413,15 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
       ...readinessAuthorities,
     ].sort((left, right) => left.role.localeCompare(right.role)),
   };
+  const findingsPath = findingsArtifactPath(
+    repoRelative(paths.playerDirectory),
+  );
   writeFindingsProjection({
     projection: findings,
-    path: findingsArtifactPath(repoRelative(paths.playerDirectory)),
+    path: findingsPath,
   });
   const measurementCommon = {
-    schemaVersion: 3 as const,
+    schemaVersion: 5 as const,
     pathId: runId + "-" + profile,
     scenarioId: fixedScenarioId(),
     implementationGitSha: runDescriptor.right.implementationGitSha,
@@ -2427,6 +2430,7 @@ function assembleProfile(runId: string, profile: FixedBenchmarkProfile): void {
     stagePlan: plan.right,
     invocationLedgers: ledgers,
     invocationEvents,
+    findingsAuthority: artifactAuthority(findingsPath),
     findings,
     outcome: derivedOutcome.right,
   };

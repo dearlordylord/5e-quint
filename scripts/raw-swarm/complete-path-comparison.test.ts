@@ -780,7 +780,7 @@ function measurement(
     }),
   ];
   const base = {
-    schemaVersion: 2,
+    schemaVersion: 4,
     pathId: `same-path-${root}`,
     stagePlan,
     invocations,
@@ -804,6 +804,17 @@ function measurement(
     "invocations.jsonl",
     `${retainedInvocations.map(({ entry }) => JSON.stringify(entry)).join("\n")}\n`,
   );
+  const findings = findingsProjection(
+    root,
+    [finding("accepted-call-verdict", 1), finding("successful-correction", 2)],
+    retainedInvocations,
+    executionGitSha,
+  );
+  const findingsAuthority = writeAuthority(
+    root,
+    "findings.json",
+    `${JSON.stringify(findings)}\n`,
+  );
   const result = {
     ...base,
     pathId: base.pathId,
@@ -811,15 +822,8 @@ function measurement(
     invocationLedgers: [invocationLedger],
     invocations: retainedInvocations.map(({ entry }) => entry),
     invocationEvents: retainedInvocations.map(({ authority }) => authority),
-    findings: findingsProjection(
-      root,
-      [
-        finding("accepted-call-verdict", 1),
-        finding("successful-correction", 2),
-      ],
-      retainedInvocations,
-      executionGitSha,
-    ),
+    findingsAuthority,
+    findings,
   } satisfies CurrentCompletePathMeasurement;
   return result;
 }
@@ -1163,8 +1167,14 @@ function benchmarkMeasurement(
         : []),
     ],
   };
+  const measurementFindings = overrides.findings ?? benchmarkFindings;
+  const findingsAuthority = writeAuthority(
+    root,
+    "benchmark-findings.json",
+    `${JSON.stringify(measurementFindings)}\n`,
+  );
   return {
-    schemaVersion: 3,
+    schemaVersion: 5,
     pathId: `benchmark-${profile}-${root}`,
     profile,
     scenarioId,
@@ -1182,10 +1192,35 @@ function benchmarkMeasurement(
     invocations: orderedRetained.map(({ entry }) => entry),
     invocationLedgers: [benchmarkLedger],
     invocationEvents: orderedRetained.map(({ authority }) => authority),
-    findings: benchmarkFindings,
+    findingsAuthority,
+    findings: measurementFindings,
     outcome: source.outcome,
     ...overrides,
   };
+}
+
+let retainedFindingsSequence = 0;
+
+function withRetainedFindings(
+  measurement: CurrentCompletePathMeasurement,
+  findings: CurrentCompletePathMeasurement["findings"],
+): CurrentCompletePathMeasurement;
+function withRetainedFindings(
+  measurement: CurrentBenchmarkMeasurement,
+  findings: CurrentCompletePathMeasurement["findings"],
+): CurrentBenchmarkMeasurement;
+function withRetainedFindings(
+  measurement: CurrentCompletePathMeasurement | CurrentBenchmarkMeasurement,
+  findings: CurrentCompletePathMeasurement["findings"],
+): CurrentCompletePathMeasurement | CurrentBenchmarkMeasurement {
+  retainedFindingsSequence += 1;
+  const root = resolve(repoRoot, measurement.findingsAuthority.path, "..");
+  const findingsAuthority = writeAuthority(
+    root,
+    `findings-override-${String(retainedFindingsSequence)}.json`,
+    `${JSON.stringify(findings)}\n`,
+  );
+  return { ...measurement, findingsAuthority, findings };
 }
 
 function validated(
@@ -1266,9 +1301,9 @@ describe("complete Raw Swarm path comparison", () => {
             : authority,
       ),
     };
-    expect(validateCompletePathMeasurement({ ...source, findings })).toEqual(
-      expect.objectContaining({ _tag: "Right" }),
-    );
+    expect(
+      validateCompletePathMeasurement(withRetainedFindings(source, findings)),
+    ).toEqual(expect.objectContaining({ _tag: "Right" }));
   });
 
   test("compares consolidated implementations when outcome and evidence semantics match", () => {
@@ -1394,13 +1429,15 @@ describe("complete Raw Swarm path comparison", () => {
         },
       })}\n`,
     );
-    const retainedObstruction = {
-      ...obstructed,
-      outcome: {
-        tag: "failed" as const,
-        reason: "Synthetic player protocol obstruction.",
+    const retainedObstruction = withRetainedFindings(
+      {
+        ...obstructed,
+        outcome: {
+          tag: "failed" as const,
+          reason: "Synthetic player protocol obstruction.",
+        },
       },
-      findings: {
+      {
         ...obstructed.findings,
         authorities: obstructed.findings.authorities.map((authority) =>
           authority.role === "frozenPrefix"
@@ -1408,7 +1445,7 @@ describe("complete Raw Swarm path comparison", () => {
             : authority,
         ),
       },
-    };
+    );
     const staleFinalValidation =
       validateCompletePathMeasurement(retainedObstruction);
     expect(staleFinalValidation).toMatchObject({
@@ -1424,44 +1461,42 @@ describe("complete Raw Swarm path comparison", () => {
     if (finalAuthority === undefined) return;
     const validatedCompletedCandidate = validated(obstructed);
     rmSync(resolve(repoRoot, finalAuthority.path), { force: true });
-    const obstructionWithoutStaleFinal = {
-      ...retainedObstruction,
-      findings: {
+    const obstructionWithoutStaleFinal = withRetainedFindings(
+      retainedObstruction,
+      {
         ...retainedObstruction.findings,
         authorities: retainedObstruction.findings.authorities.filter(
           ({ role }) => role !== "final",
         ),
       },
-    };
+    );
     const validatedObstruction = validateCompletePathMeasurement(
       obstructionWithoutStaleFinal,
     );
     expect(validatedObstruction).toMatchObject({ _tag: "Right" });
     if (Either.isLeft(validatedObstruction)) return;
-    const missingPlayerContext = validateCompletePathMeasurement({
-      ...obstructionWithoutStaleFinal,
-      findings: {
+    const missingPlayerContext = validateCompletePathMeasurement(
+      withRetainedFindings(obstructionWithoutStaleFinal, {
         ...obstructionWithoutStaleFinal.findings,
         authorities: obstructionWithoutStaleFinal.findings.authorities.filter(
           ({ role }) => role !== "playerContextDelivery",
         ),
-      },
-    });
+      }),
+    );
     expect(missingPlayerContext).toMatchObject({
       _tag: "Left",
       left: expect.stringContaining(
         "no retained player context-delivery authority",
       ),
     });
-    const missingPostPlayContext = validateCompletePathMeasurement({
-      ...obstructionWithoutStaleFinal,
-      findings: {
+    const missingPostPlayContext = validateCompletePathMeasurement(
+      withRetainedFindings(obstructionWithoutStaleFinal, {
         ...obstructionWithoutStaleFinal.findings,
         authorities: obstructionWithoutStaleFinal.findings.authorities.filter(
           ({ role }) => role !== "postPlayReviewContextDelivery",
         ),
-      },
-    });
+      }),
+    );
     expect(missingPostPlayContext).toMatchObject({
       _tag: "Left",
       left: expect.stringContaining(
@@ -1602,11 +1637,10 @@ describe("complete Raw Swarm path comparison", () => {
         ({ pointer }) => pointer.kind !== "sdkSequence",
       ),
     };
-    const noCallMeasurement = {
-      ...obstructed,
-      outcome: noCallOutcome.right,
-      findings: noCallFindings,
-    };
+    const noCallMeasurement = withRetainedFindings(
+      { ...obstructed, outcome: noCallOutcome.right },
+      noCallFindings,
+    );
     const validatedNoCall = validateCompletePathMeasurement(noCallMeasurement);
     expect(validatedNoCall).toMatchObject({ _tag: "Right" });
     if (Either.isLeft(validatedNoCall)) return;
@@ -1766,16 +1800,13 @@ describe("complete Raw Swarm path comparison", () => {
         detail,
       };
     });
-    const candidateWithIndependentWording = {
-      ...candidate,
-      findings: {
-        ...candidate.findings,
-        authorities: candidate.findings.authorities.map((authority) =>
-          authority.role === postPlay.role ? rewrittenPostPlay : authority,
-        ),
-        findings,
-      },
-    };
+    const candidateWithIndependentWording = withRetainedFindings(candidate, {
+      ...candidate.findings,
+      authorities: candidate.findings.authorities.map((authority) =>
+        authority.role === postPlay.role ? rewrittenPostPlay : authority,
+      ),
+      findings,
+    });
     const comparison = compareCompleteEquivalentPaths({
       baseline: validated(baseline),
       candidate: validated(candidateWithIndependentWording),
@@ -1783,6 +1814,261 @@ describe("complete Raw Swarm path comparison", () => {
     expect(comparison).toMatchObject({
       identity: "equivalent-path",
       equivalence: { tag: "equivalent" },
+    });
+  }, 60_000);
+
+  test("compares retained reliability observations without equating actionable issue fingerprints", () => {
+    const baseline = benchmarkMeasurement("documentDeclarationSet");
+    const candidate = benchmarkMeasurement("boundedCapabilityProjection", {
+      pathId: "reliability-observation-candidate-benchmark",
+      scenarioBundle: baseline.scenarioBundle,
+      stagePlan: baseline.stagePlan,
+    });
+    const accepted = candidate.findings.findings.find(
+      ({ kind }) => kind === "accepted-call-verdict",
+    )!;
+    if (accepted.pointer.kind !== "sdkSequence") {
+      throw new Error("Expected the benchmark accepted-call SDK pointer.");
+    }
+    const pointerDriftIdentity = {
+      stage: accepted.stage,
+      category: accepted.category,
+      kind: accepted.kind,
+      summary: accepted.summary,
+      ...(accepted.detail === undefined ? {} : { detail: accepted.detail }),
+      pointer: { ...accepted.pointer, sequence: 2 },
+    };
+    const candidateWithPointerDrift = withRetainedFindings(candidate, {
+      ...candidate.findings,
+      findings: candidate.findings.findings.map((original) =>
+        original === accepted
+          ? {
+              ...pointerDriftIdentity,
+              findingId: sha256Canonical(pointerDriftIdentity),
+            }
+          : original,
+      ),
+    });
+    expect(
+      compareCompleteEquivalentPaths({
+        baseline: validated(baseline),
+        candidate: validated(candidateWithPointerDrift),
+      }),
+    ).toMatchObject({
+      identity: "equivalent-path",
+      equivalence: { tag: "equivalent" },
+    });
+
+    const candidateWithoutCorrection = withRetainedFindings(candidate, {
+      ...candidate.findings,
+      findings: candidate.findings.findings.filter(
+        ({ kind }) => kind !== "successful-correction",
+      ),
+    });
+    const reliabilityComparison = compareCompleteEquivalentPaths({
+      baseline: validated(baseline),
+      candidate: validated(candidateWithoutCorrection),
+    });
+    expect(reliabilityComparison).toMatchObject({
+      identity: "equivalent-path",
+      equivalence: { tag: "equivalent" },
+      baseline: { corrections: { tag: "available", count: 1 } },
+      candidate: { corrections: { tag: "available", count: 0 } },
+    });
+
+    const correction = candidate.findings.findings.find(
+      ({ kind }) => kind === "successful-correction",
+    )!;
+    for (const kind of ["malformed-submission", "sdk-call-failure"] as const) {
+      const worseReliabilityIdentity = {
+        stage: correction.stage,
+        category: correction.category,
+        kind,
+        summary: `Synthetic additional candidate ${kind}.`,
+        pointer: correction.pointer,
+      };
+      const candidateWithWorseReliability = withRetainedFindings(candidate, {
+        ...candidate.findings,
+        findings: candidate.findings.findings.map((original) =>
+          original === correction
+            ? {
+                ...worseReliabilityIdentity,
+                findingId: sha256Canonical(worseReliabilityIdentity),
+              }
+            : original,
+        ),
+      });
+      const worseReliabilityComparison = compareCompleteEquivalentPaths({
+        baseline: validated(baseline),
+        candidate: validated(candidateWithWorseReliability),
+      });
+      expect(worseReliabilityComparison).toMatchObject({
+        identity: "different-path",
+        equivalence: {
+          tag: "incomparable",
+          reason: expect.stringContaining("worse player failures"),
+        },
+      });
+    }
+
+    const additionalAcceptedIdentity = {
+      ...accepted,
+      summary: "Synthetic additional accepted-call verdict.",
+    };
+    const baselineWithAdditionalAccepted = withRetainedFindings(baseline, {
+      ...baseline.findings,
+      findings: [
+        ...baseline.findings.findings,
+        {
+          ...additionalAcceptedIdentity,
+          findingId: sha256Canonical({
+            stage: additionalAcceptedIdentity.stage,
+            category: additionalAcceptedIdentity.category,
+            kind: additionalAcceptedIdentity.kind,
+            summary: additionalAcceptedIdentity.summary,
+            ...(additionalAcceptedIdentity.detail === undefined
+              ? {}
+              : { detail: additionalAcceptedIdentity.detail }),
+            pointer: additionalAcceptedIdentity.pointer,
+            ...(additionalAcceptedIdentity.fingerprint === undefined
+              ? {}
+              : { fingerprint: additionalAcceptedIdentity.fingerprint }),
+          }),
+        },
+      ],
+    });
+    const fewerAcceptedComparison = compareCompleteEquivalentPaths({
+      baseline: validated(baselineWithAdditionalAccepted),
+      candidate: validated(candidate),
+    });
+    expect(fewerAcceptedComparison).toMatchObject({
+      identity: "different-path",
+      equivalence: {
+        tag: "incomparable",
+        reason: expect.stringContaining("worse accepted-call verdicts"),
+      },
+    });
+
+    const failedOutcome = {
+      tag: "failed" as const,
+      reason: "Synthetic retained model-stage failure.",
+    };
+    const failedStageBaseline = measurement({ outcome: failedOutcome });
+    const failedStageCandidate = measurement({
+      outcome: failedOutcome,
+      invocations: measurement().invocations.map((entry) =>
+        entry.phase === "player"
+          ? {
+              ...entry,
+              exit: { tag: "exited" as const, status: 1 },
+              result: {
+                tag: "failed" as const,
+                reason: "Synthetic retained model-stage failure.",
+              },
+            }
+          : entry,
+      ),
+    });
+    const failedStageComparison = compareCompleteEquivalentPaths({
+      baseline: validated(failedStageBaseline),
+      candidate: validated(failedStageCandidate),
+    });
+    expect(failedStageComparison).toMatchObject({
+      identity: "different-path",
+      equivalence: {
+        tag: "incomparable",
+        reason: expect.stringContaining("worse failed model stages"),
+      },
+    });
+
+    const original = candidateWithoutCorrection.findings.findings[0]!;
+    const fingerprint = "f".repeat(64);
+    const actionableIdentity = {
+      stage: original.stage,
+      category: original.category,
+      kind: original.kind,
+      summary: original.summary,
+      ...(original.detail === undefined ? {} : { detail: original.detail }),
+      pointer: original.pointer,
+      fingerprint,
+    };
+    const candidateWithActionableIssue = withRetainedFindings(
+      candidateWithoutCorrection,
+      {
+        ...candidateWithoutCorrection.findings,
+        findings: [
+          {
+            ...actionableIdentity,
+            findingId: sha256Canonical(actionableIdentity),
+            githubIssueNumber: 292,
+          },
+          ...candidateWithoutCorrection.findings.findings.slice(1),
+        ],
+      },
+    );
+    const actionableComparison = compareCompleteEquivalentPaths({
+      baseline: validated(baseline),
+      candidate: validated(candidateWithActionableIssue),
+    });
+    expect(actionableComparison.identity).toBe("different-path");
+  }, 60_000);
+
+  test("rejects inline findings tampering against the retained projection authority", () => {
+    const benchmark = benchmarkMeasurement("boundedCapabilityProjection");
+    const correction = benchmark.findings.findings.find(
+      ({ kind }) => kind === "successful-correction",
+    );
+    expect(correction).toBeDefined();
+    if (correction === undefined) return;
+    const tampered = {
+      ...benchmark,
+      findings: {
+        ...benchmark.findings,
+        findings: benchmark.findings.findings.filter(
+          (candidate) => candidate !== correction,
+        ),
+      },
+    };
+    expect(validateCompletePathMeasurement(tampered)).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining(
+        "findings projection authority does not match the measurement",
+      ),
+    });
+  });
+
+  test("keeps legacy-unbound benchmark envelopes readable but ineligible for strict acceptance", () => {
+    const boundBaseline = benchmarkMeasurement("documentDeclarationSet");
+    const boundCandidate = benchmarkMeasurement("boundedCapabilityProjection", {
+      scenarioBundle: boundBaseline.scenarioBundle,
+      stagePlan: boundBaseline.stagePlan,
+    });
+    const { findingsAuthority: _baselineAuthority, ...baselineEvidence } =
+      boundBaseline;
+    const { findingsAuthority: _candidateAuthority, ...candidateEvidence } =
+      boundCandidate;
+    const baseline = validateCompletePathMeasurement({
+      ...baselineEvidence,
+      schemaVersion: 3,
+    });
+    const candidate = validateCompletePathMeasurement({
+      ...candidateEvidence,
+      schemaVersion: 3,
+    });
+    expect(baseline).toMatchObject({ _tag: "Right" });
+    expect(candidate).toMatchObject({ _tag: "Right" });
+    if (Either.isLeft(baseline) || Either.isLeft(candidate)) return;
+    expect(
+      compareCompleteEquivalentPaths({
+        baseline: baseline.right,
+        candidate: candidate.right,
+      }),
+    ).toMatchObject({
+      identity: "different-path",
+      equivalence: {
+        tag: "incomparable",
+        reason: expect.stringContaining("legacy unbound findings projection"),
+      },
     });
   }, 60_000);
 
@@ -2765,7 +3051,7 @@ describe("complete Raw Swarm path comparison", () => {
     expect(Either.isRight(assembled)).toBe(true);
     if (Either.isLeft(assembled)) return;
     expect(assembled.right).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 4,
       pathId: source.pathId,
       invocations: source.invocations,
       invocationLedgers: source.invocationLedgers,
@@ -2907,12 +3193,16 @@ describe("complete Raw Swarm path comparison", () => {
       runIdentity: sha256Canonical(findingsRun),
       authorities,
     };
-    const validation = validateCompletePathMeasurement({
-      ...source,
-      stagePlan,
-      stagePlanAuthority,
-      findings,
-    });
+    const validation = validateCompletePathMeasurement(
+      withRetainedFindings(
+        {
+          ...source,
+          stagePlan,
+          stagePlanAuthority,
+        },
+        findings,
+      ),
+    );
     expect(Either.isRight(validation)).toBe(true);
   });
 });

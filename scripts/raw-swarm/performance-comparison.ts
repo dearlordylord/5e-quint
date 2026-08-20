@@ -1231,8 +1231,7 @@ function completePathOrderForPhase(phase: CompletePathPhase): number {
  * introduce another per-invocation phase, result, elapsed-time, or usage
  * schema.
  */
-const CurrentCompletePathMeasurementSchema = Schema.Struct({
-  schemaVersion: Schema.Literal(2),
+const CompletePathMeasurementCommonFields = {
   pathId: Schema.NonEmptyTrimmedString,
   stagePlan: ScenarioStagePlanSchema,
   stagePlanAuthority: ArtifactAuthoritySchema,
@@ -1241,6 +1240,17 @@ const CurrentCompletePathMeasurementSchema = Schema.Struct({
   invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
   findings: FindingsProjectionSchema,
   outcome: PathOutcomeSchema,
+} as const;
+
+const LegacyUnboundCompletePathMeasurementSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(2),
+  ...CompletePathMeasurementCommonFields,
+});
+
+const CurrentCompletePathMeasurementSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(4),
+  ...CompletePathMeasurementCommonFields,
+  findingsAuthority: ArtifactAuthoritySchema,
 });
 
 export const BENCHMARK_IMPLEMENTATION_PROFILES = [
@@ -1398,7 +1408,6 @@ export type BenchmarkInvocation = Schema.Schema.Type<
 >;
 
 const BenchmarkMeasurementCommonFields = {
-  schemaVersion: Schema.Literal(3),
   pathId: Schema.NonEmptyTrimmedString,
   scenarioId: ScenarioIdSchema,
   implementationGitSha: ImplementationGitShaSchema,
@@ -1412,7 +1421,9 @@ const BenchmarkMeasurementCommonFields = {
 } as const;
 
 const BaselineBenchmarkMeasurementSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(5),
   ...BenchmarkMeasurementCommonFields,
+  findingsAuthority: ArtifactAuthoritySchema,
   profile: Schema.Literal("documentDeclarationSet"),
   invocations: Schema.NonEmptyArray(
     Schema.Union(
@@ -1423,7 +1434,9 @@ const BaselineBenchmarkMeasurementSchema = Schema.Struct({
 });
 
 const BoundedBenchmarkMeasurementSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(5),
   ...BenchmarkMeasurementCommonFields,
+  findingsAuthority: ArtifactAuthoritySchema,
   profile: Schema.Literal("boundedCapabilityProjection"),
   invocations: Schema.NonEmptyArray(CurrentModelInvocationLedgerEntrySchema),
 });
@@ -1440,6 +1453,30 @@ export const CurrentBenchmarkMeasurementSchema = Schema.Union(
 export type CurrentBenchmarkMeasurement = Schema.Schema.Type<
   typeof CurrentBenchmarkMeasurementSchema
 >;
+
+const LegacyUnboundBaselineBenchmarkMeasurementSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(3),
+  ...BenchmarkMeasurementCommonFields,
+  profile: Schema.Literal("documentDeclarationSet"),
+  invocations: Schema.NonEmptyArray(
+    Schema.Union(
+      CurrentModelInvocationLedgerEntrySchema,
+      BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
+    ),
+  ),
+});
+
+const LegacyUnboundBoundedBenchmarkMeasurementSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(3),
+  ...BenchmarkMeasurementCommonFields,
+  profile: Schema.Literal("boundedCapabilityProjection"),
+  invocations: Schema.NonEmptyArray(CurrentModelInvocationLedgerEntrySchema),
+});
+
+const LegacyUnboundBenchmarkMeasurementSchema = Schema.Union(
+  LegacyUnboundBaselineBenchmarkMeasurementSchema,
+  LegacyUnboundBoundedBenchmarkMeasurementSchema,
+);
 
 /**
  * Paths are assembled from retained authority files, not copied ledger rows
@@ -1482,6 +1519,8 @@ const HistoricalCompletePathMeasurementSchema = Schema.Struct({
 
 export const CompletePathMeasurementSchema = Schema.Union(
   HistoricalCompletePathMeasurementSchema,
+  LegacyUnboundCompletePathMeasurementSchema,
+  LegacyUnboundBenchmarkMeasurementSchema,
   CurrentCompletePathMeasurementSchema,
   CurrentBenchmarkMeasurementSchema,
 );
@@ -1497,6 +1536,18 @@ export type ValidatedCompletePathMeasurement = CompletePathMeasurement & {
 export type CurrentCompletePathMeasurement = Schema.Schema.Type<
   typeof CurrentCompletePathMeasurementSchema
 >;
+type LegacyUnboundCompletePathMeasurement = Schema.Schema.Type<
+  typeof LegacyUnboundCompletePathMeasurementSchema
+>;
+type CompletePathMeasurementWithCurrentEvidence =
+  | CurrentCompletePathMeasurement
+  | LegacyUnboundCompletePathMeasurement;
+type LegacyUnboundBenchmarkMeasurement = Schema.Schema.Type<
+  typeof LegacyUnboundBenchmarkMeasurementSchema
+>;
+type BenchmarkMeasurementWithCurrentEvidence =
+  | CurrentBenchmarkMeasurement
+  | LegacyUnboundBenchmarkMeasurement;
 type HistoricalCompletePathMeasurement = Schema.Schema.Type<
   typeof HistoricalCompletePathMeasurementSchema
 >;
@@ -1853,6 +1904,7 @@ export type CompletePathEquivalenceWitness =
 type CompletePathSummaryCommon = Readonly<{
   readonly outcome: PathOutcome | UnavailableEvidence;
   readonly acceptedCallVerdicts: EvidenceCount;
+  readonly playerFailures: EvidenceCount;
   readonly corrections: EvidenceCount;
   readonly failedStages: EvidenceCount;
   readonly failureReasons: EvidenceList;
@@ -1993,7 +2045,7 @@ function currentEvidenceWitness(
 }
 
 function currentPathWitness(
-  measurement: CurrentCompletePathMeasurement,
+  measurement: CompletePathMeasurementWithCurrentEvidence,
 ): CompletePathEquivalenceWitness {
   const identity = measurement.stagePlan.identity;
   const scenario =
@@ -2075,7 +2127,7 @@ function benchmarkReviewResult(
 }
 
 function benchmarkReviewIdentity(
-  measurement: CurrentBenchmarkMeasurement,
+  measurement: BenchmarkMeasurementWithCurrentEvidence,
 ): BenchmarkReviewIdentity {
   const authorityForRole = (role: string): FindingAuthority => {
     const authority = measurement.findings.authorities.find(
@@ -2168,7 +2220,7 @@ function benchmarkReviewIdentity(
 }
 
 function benchmarkContextIdentity(
-  measurement: CurrentBenchmarkMeasurement,
+  measurement: BenchmarkMeasurementWithCurrentEvidence,
 ): Readonly<{
   readonly profile: BenchmarkImplementationProfile;
   readonly roles: readonly BenchmarkContextRole[];
@@ -2192,7 +2244,7 @@ function benchmarkContextIdentity(
 }
 
 function benchmarkPathWitness(
-  measurement: CurrentBenchmarkMeasurement,
+  measurement: BenchmarkMeasurementWithCurrentEvidence,
 ): CompletePathEquivalenceWitness {
   const identity = measurement.stagePlan.identity;
   if (identity.tag !== "admitted") {
@@ -2270,7 +2322,7 @@ function historicalPathWitness(
 }
 
 function currentStagePlanBindingIssues(
-  measurement: CurrentCompletePathMeasurement,
+  measurement: CompletePathMeasurementWithCurrentEvidence,
 ): readonly string[] {
   const issues: string[] = [];
   const planByStage = new Map(
@@ -2309,7 +2361,7 @@ function currentStagePlanBindingIssues(
 }
 
 function currentSemanticIssues(
-  measurement: CurrentCompletePathMeasurement,
+  measurement: CompletePathMeasurementWithCurrentEvidence,
   options: Readonly<{
     readonly compositeReviewCount?: number;
     readonly requirePlayerInvocation?: boolean;
@@ -2441,7 +2493,7 @@ function currentSemanticIssues(
 }
 
 function currentSummary(
-  measurement: CurrentCompletePathMeasurement,
+  measurement: CompletePathMeasurementWithCurrentEvidence,
 ): CompletePathSummary {
   const failureReasons = measurement.invocations.flatMap(({ result }) =>
     result.tag === "failed" ? [result.reason] : [],
@@ -2454,6 +2506,7 @@ function currentSummary(
         ({ kind }) => kind === "accepted-call-verdict",
       ).length,
     ),
+    playerFailures: pathDimension(playerFailureCount(measurement.findings)),
     corrections: pathDimension(
       measurement.findings.findings.filter(
         ({ kind }) => kind === "successful-correction",
@@ -2479,7 +2532,7 @@ function currentSummary(
 }
 
 function benchmarkSummary(
-  measurement: CurrentBenchmarkMeasurement,
+  measurement: BenchmarkMeasurementWithCurrentEvidence,
 ): CompletePathSummary {
   const failureReasons = measurement.invocations.flatMap(({ result }) =>
     result.tag === "failed" ? [result.reason] : [],
@@ -2492,6 +2545,7 @@ function benchmarkSummary(
         ({ kind }) => kind === "accepted-call-verdict",
       ).length,
     ),
+    playerFailures: pathDimension(playerFailureCount(measurement.findings)),
     corrections: pathDimension(
       measurement.findings.findings.filter(
         ({ kind }) => kind === "successful-correction",
@@ -2529,6 +2583,11 @@ function historicalSummary(
       tag: "unavailable",
       reason: "Historical findings were not retained in this envelope.",
     },
+    playerFailures: {
+      tag: "unavailable",
+      reason:
+        "Historical player failure findings were not retained in this envelope.",
+    },
     corrections: {
       tag: "unavailable",
       reason:
@@ -2558,8 +2617,10 @@ function historicalSummary(
 }
 
 function summary(measurement: CompletePathMeasurement): CompletePathSummary {
-  if (measurement.schemaVersion === 2) return currentSummary(measurement);
-  if (measurement.schemaVersion === 3) return benchmarkSummary(measurement);
+  if (measurement.schemaVersion === 2 || measurement.schemaVersion === 4)
+    return currentSummary(measurement);
+  if (measurement.schemaVersion === 3 || measurement.schemaVersion === 5)
+    return benchmarkSummary(measurement);
   return historicalSummary(measurement);
 }
 
@@ -2581,9 +2642,27 @@ function equivalenceWitnessIdentity(
     reviews: {
       prePlay: { final: reviews.prePlay.final },
       postPlay: reviews.postPlay,
-      findings: reviews.findings,
+      actionableFindings: reviews.findings
+        .flatMap(({ stage, category, kind, fingerprint }) =>
+          fingerprint === undefined
+            ? []
+            : [{ stage, category, kind, fingerprint }],
+        )
+        .sort((left, right) =>
+          canonicalJson(left).localeCompare(canonicalJson(right)),
+        ),
     },
   };
+}
+
+function playerFailureCount(findings: FindingsProjection): number {
+  return findings.findings.filter(
+    ({ kind }) =>
+      kind === "pre-call-compilation-failure" ||
+      kind === "pre-call-runtime-failure" ||
+      kind === "malformed-submission" ||
+      kind === "sdk-call-failure",
+  ).length;
 }
 
 function implementationForPath(measurement: CompletePathMeasurement): {
@@ -2606,7 +2685,7 @@ function implementationForPath(measurement: CompletePathMeasurement): {
       profile: unavailable,
     };
   }
-  if (measurement.schemaVersion === 3) {
+  if (measurement.schemaVersion === 3 || measurement.schemaVersion === 5) {
     return {
       phases: measurement.invocations.map(({ phase }) => phase),
       models: measurement.invocations.map(({ model }) => model),
@@ -2829,13 +2908,14 @@ export function assembleCompletePathMeasurement(
       );
     }
     const measurement: CurrentCompletePathMeasurement = {
-      schemaVersion: 2,
+      schemaVersion: 4,
       pathId: descriptor.right.pathId,
       stagePlan: stagePlanDecoded.right,
       stagePlanAuthority,
       invocationLedgers: ledgerAuthorities,
       invocations,
       invocationEvents: eventAuthorities,
+      findingsAuthority,
       findings: findingsValidation.projection,
       outcome: descriptor.right.outcome,
     };
@@ -2987,7 +3067,7 @@ function readAuthorityJsonLines(
 }
 
 function currentAuthorityContentIssues(
-  measurement: CurrentCompletePathMeasurement,
+  measurement: CompletePathMeasurementWithCurrentEvidence,
   findings: FindingsProjection,
 ): readonly string[] {
   const issues: string[] = [];
@@ -3374,9 +3454,18 @@ function currentAuthorityContentIssues(
 }
 
 function currentAuthorityIssues(
-  measurement: CurrentCompletePathMeasurement,
+  measurement: CompletePathMeasurementWithCurrentEvidence,
 ): readonly string[] {
   const issues: string[] = [];
+  if (measurement.schemaVersion === 4) {
+    issues.push(
+      ...findingsProjectionAuthorityIssues({
+        authority: measurement.findingsAuthority,
+        findings: measurement.findings,
+        label: "Findings projection",
+      }),
+    );
+  }
   const findingsValidation = validateFindingsProjection(measurement.findings);
   if (findingsValidation.tag === "invalid") {
     issues.push(`Findings authority is invalid: ${findingsValidation.message}`);
@@ -3600,6 +3689,30 @@ function benchmarkAuthorityMatches(
       : [`Benchmark ${label} authority hash is not canonical.`];
   } catch {
     return [`Benchmark ${label} authority is unreadable.`];
+  }
+}
+
+function findingsProjectionAuthorityIssues(input: {
+  readonly authority: ArtifactAuthority;
+  readonly findings: FindingsProjection;
+  readonly label: string;
+}): readonly string[] {
+  try {
+    const actual = artifactAuthority(input.authority.path);
+    if (canonicalJson(actual) !== canonicalJson(input.authority)) {
+      return [`${input.label} authority hash is not canonical.`];
+    }
+    const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
+      onExcessProperty: "error",
+    })(readJsonAuthority(input.authority.path));
+    if (Either.isLeft(decoded)) {
+      return [`${input.label} authority is invalid: ${decoded.left.message}`];
+    }
+    return canonicalJson(decoded.right) === canonicalJson(input.findings)
+      ? []
+      : [`${input.label} authority does not match the measurement.`];
+  } catch {
+    return [`${input.label} authority is unreadable.`];
   }
 }
 
@@ -3866,7 +3979,7 @@ function benchmarkReadinessResultEventIssue(input: {
 }
 
 function benchmarkRetainedPrePlayReviewIssues(input: {
-  readonly measurement: CurrentBenchmarkMeasurement;
+  readonly measurement: BenchmarkMeasurementWithCurrentEvidence;
   readonly findings: FindingsProjection;
   readonly expectedReviewSchema:
     | typeof HistoricalScenarioCompositeReviewSchema
@@ -4169,7 +4282,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
 }
 
 function benchmarkPlayerEvidenceIssues(input: {
-  readonly measurement: CurrentBenchmarkMeasurement;
+  readonly measurement: BenchmarkMeasurementWithCurrentEvidence;
   readonly findings: FindingsProjection;
 }): readonly string[] {
   const { measurement, findings } = input;
@@ -4236,7 +4349,7 @@ function benchmarkPlayerEvidenceIssues(input: {
 }
 
 function benchmarkCompleteEvidenceIssues(input: {
-  readonly measurement: CurrentBenchmarkMeasurement;
+  readonly measurement: BenchmarkMeasurementWithCurrentEvidence;
   readonly findings: FindingsProjection;
 }): readonly string[] {
   const { measurement, findings } = input;
@@ -4338,7 +4451,7 @@ function benchmarkCompleteEvidenceIssues(input: {
 }
 
 function benchmarkAuthorityIssues(
-  measurement: CurrentBenchmarkMeasurement,
+  measurement: BenchmarkMeasurementWithCurrentEvidence,
 ): readonly string[] {
   const issues: string[] = [];
   const bundle = measurement.scenarioBundle;
@@ -4352,6 +4465,15 @@ function benchmarkAuthorityIssues(
   ] as const;
   for (const [label, authority] of bundleEntries) {
     issues.push(...benchmarkAuthorityMatches(authority, label));
+  }
+  if (measurement.schemaVersion === 5) {
+    issues.push(
+      ...findingsProjectionAuthorityIssues({
+        authority: measurement.findingsAuthority,
+        findings: measurement.findings,
+        label: "Benchmark findings projection",
+      }),
+    );
   }
 
   const manifestValue = benchmarkAuthorityJson(
@@ -4759,8 +4881,7 @@ function benchmarkAuthorityIssues(
   const canonicalInvocations = canonicalBenchmarkInvocations(
     measurement.invocations,
   );
-  const canonicalMeasurement: CurrentCompletePathMeasurement = {
-    schemaVersion: 2,
+  const canonicalCommon = {
     pathId: measurement.pathId,
     stagePlan: measurement.stagePlan,
     stagePlanAuthority: bundle.stagePlan,
@@ -4770,6 +4891,14 @@ function benchmarkAuthorityIssues(
     findings: measurement.findings,
     outcome: measurement.outcome,
   };
+  const canonicalMeasurement: CompletePathMeasurementWithCurrentEvidence =
+    measurement.schemaVersion === 5
+      ? {
+          ...canonicalCommon,
+          schemaVersion: 4,
+          findingsAuthority: measurement.findingsAuthority,
+        }
+      : { ...canonicalCommon, schemaVersion: 2 };
   issues.push(
     ...currentSemanticIssues(canonicalMeasurement, {
       compositeReviewCount: benchmarkReviewPlan(measurement.profile).stages
@@ -4790,13 +4919,12 @@ function benchmarkAuthorityIssues(
 }
 
 function benchmarkSemanticIssues(
-  measurement: CurrentBenchmarkMeasurement,
+  measurement: BenchmarkMeasurementWithCurrentEvidence,
 ): readonly string[] {
   const canonicalInvocations = canonicalBenchmarkInvocations(
     measurement.invocations,
   );
-  const canonicalMeasurement: CurrentCompletePathMeasurement = {
-    schemaVersion: 2,
+  const canonicalCommon = {
     pathId: measurement.pathId,
     stagePlan: measurement.stagePlan,
     stagePlanAuthority: measurement.scenarioBundle.stagePlan,
@@ -4806,6 +4934,14 @@ function benchmarkSemanticIssues(
     findings: measurement.findings,
     outcome: measurement.outcome,
   };
+  const canonicalMeasurement: CompletePathMeasurementWithCurrentEvidence =
+    measurement.schemaVersion === 5
+      ? {
+          ...canonicalCommon,
+          schemaVersion: 4,
+          findingsAuthority: measurement.findingsAuthority,
+        }
+      : { ...canonicalCommon, schemaVersion: 2 };
   const issues = [
     ...currentSemanticIssues(canonicalMeasurement, {
       compositeReviewCount: benchmarkReviewPlan(measurement.profile).stages
@@ -4898,11 +5034,11 @@ export function validateCompletePathMeasurement(
 ): Either.Either<ValidatedCompletePathMeasurement, string> {
   const parsed = parseCompletePathMeasurement(value);
   if (Either.isLeft(parsed)) return Either.left(parsed.left.message);
-  if (parsed.right.schemaVersion === 2) {
+  if (parsed.right.schemaVersion === 2 || parsed.right.schemaVersion === 4) {
     const issues = currentAuthorityIssues(parsed.right);
     if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
   }
-  if (parsed.right.schemaVersion === 3) {
+  if (parsed.right.schemaVersion === 3 || parsed.right.schemaVersion === 5) {
     const issues = benchmarkAuthorityIssues(parsed.right);
     if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
   }
@@ -4936,16 +5072,29 @@ export function compareCompleteEquivalentPaths(input: {
   const baselineWitness = baseline.evidence;
   const candidateWitness = candidate.evidence;
   const issues = [
-    ...(input.baseline.schemaVersion === 2
+    ...(input.baseline.schemaVersion === 2 || input.baseline.schemaVersion === 3
+      ? [
+          "The baseline uses a legacy unbound findings projection and cannot pass strict equivalent-path comparison.",
+        ]
+      : []),
+    ...(input.candidate.schemaVersion === 2 ||
+    input.candidate.schemaVersion === 3
+      ? [
+          "The candidate uses a legacy unbound findings projection and cannot pass strict equivalent-path comparison.",
+        ]
+      : []),
+    ...(input.baseline.schemaVersion === 2 || input.baseline.schemaVersion === 4
       ? currentSemanticIssues(input.baseline)
-      : input.baseline.schemaVersion === 3
+      : input.baseline.schemaVersion === 3 || input.baseline.schemaVersion === 5
         ? benchmarkSemanticIssues(input.baseline)
         : [
             "The baseline is historical and lacks current stage-plan, findings, and v2 invocation authorities.",
           ]),
-    ...(input.candidate.schemaVersion === 2
+    ...(input.candidate.schemaVersion === 2 ||
+    input.candidate.schemaVersion === 4
       ? currentSemanticIssues(input.candidate)
-      : input.candidate.schemaVersion === 3
+      : input.candidate.schemaVersion === 3 ||
+          input.candidate.schemaVersion === 5
         ? benchmarkSemanticIssues(input.candidate)
         : [
             "The candidate is historical and lacks current stage-plan, findings, and v2 invocation authorities.",
@@ -4955,7 +5104,8 @@ export function compareCompleteEquivalentPaths(input: {
     ["baseline", input.baseline, baseline] as const,
     ["candidate", input.candidate, candidate] as const,
   ]) {
-    if (measurement.schemaVersion !== 3) continue;
+    if (measurement.schemaVersion !== 3 && measurement.schemaVersion !== 5)
+      continue;
     if (measurement.outcome.tag !== "completed") {
       issues.push(
         `The ${label} benchmark path is ${measurement.outcome.tag} and cannot pass equivalent-path comparison.`,
@@ -4970,9 +5120,45 @@ export function compareCompleteEquivalentPaths(input: {
       );
     }
   }
+  const reliabilityDimensions = [
+    {
+      label: "player failures",
+      baseline: baseline.playerFailures,
+      candidate: candidate.playerFailures,
+      compare: (baselineCount: number, candidateCount: number) =>
+        candidateCount > baselineCount,
+    },
+    {
+      label: "failed model stages",
+      baseline: baseline.failedStages,
+      candidate: candidate.failedStages,
+      compare: (baselineCount: number, candidateCount: number) =>
+        candidateCount > baselineCount,
+    },
+    {
+      label: "accepted-call verdicts",
+      baseline: baseline.acceptedCallVerdicts,
+      candidate: candidate.acceptedCallVerdicts,
+      compare: (baselineCount: number, candidateCount: number) =>
+        candidateCount < baselineCount,
+    },
+  ] as const;
+  for (const dimension of reliabilityDimensions) {
+    if (
+      dimension.baseline.tag === "available" &&
+      dimension.candidate.tag === "available" &&
+      dimension.compare(dimension.baseline.count, dimension.candidate.count)
+    ) {
+      issues.push(
+        `The candidate retains worse ${dimension.label}: baseline ${String(dimension.baseline.count)}, candidate ${String(dimension.candidate.count)}.`,
+      );
+    }
+  }
   if (
-    input.baseline.schemaVersion === 3 &&
-    input.candidate.schemaVersion === 3 &&
+    (input.baseline.schemaVersion === 3 ||
+      input.baseline.schemaVersion === 5) &&
+    (input.candidate.schemaVersion === 3 ||
+      input.candidate.schemaVersion === 5) &&
     input.baseline.implementationGitSha !== input.candidate.implementationGitSha
   ) {
     issues.push(
