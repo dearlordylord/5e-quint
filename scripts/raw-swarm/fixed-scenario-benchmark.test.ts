@@ -278,6 +278,44 @@ describe("fixed scenario benchmark boundary", () => {
     }
   });
 
+  test("reports a first-party preparation failure without misclassifying its event type", () => {
+    const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
+    const eventPath = resolve(scratch, "events.jsonl");
+    const contextPath = resolve(scratch, "BENCHMARK_CONTEXT.md");
+    try {
+      writeFileSync(contextPath, "synthetic context\n");
+      writeFileSync(
+        eventPath,
+        [
+          {
+            type: "error",
+            message: "Synthetic wrapper failure.",
+          },
+          {
+            type: "turn.failed",
+            error: { message: "Synthetic service capacity is exhausted." },
+          },
+        ]
+          .map((event) => JSON.stringify(event))
+          .join("\n") + "\n",
+      );
+
+      expect(
+        validateBenchmarkPreparationEventStream({
+          eventPath,
+          scratch,
+          namedInputs: [contextPath],
+        }),
+      ).toEqual(
+        Either.left(
+          "Preparation model invocation failed: Synthetic service capacity is exhausted.",
+        ),
+      );
+    } finally {
+      rmSync(scratch, { recursive: true });
+    }
+  });
+
   test("rejects reading the generated output target as a preparation input", () => {
     const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-isolation-"));
     const eventPath = resolve(scratch, "events.jsonl");

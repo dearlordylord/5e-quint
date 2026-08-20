@@ -7,6 +7,7 @@ import {
   invocationEventsSha256,
   modelInvocationCompletedEvent,
   modelInvocationEvidenceFromEvents,
+  modelInvocationResultFromCodexEvents,
   modelInvocationStartedEvent,
   readCodexEvents,
   MODEL_INVOCATION_PHASES,
@@ -68,16 +69,17 @@ const start = modelInvocationStartedEvent({
   startedAt,
 });
 if (Either.isLeft(start)) fail(start.left.message);
+const codexEvents = readCodexEvents(eventsPath);
+if (codexEvents.tag === "invalid") fail(codexEvents.message);
+const invocationResult = modelInvocationResultFromCodexEvents(
+  { tag: "shellStatus", status: shellStatus },
+  codexEvents.events,
+);
+if (Either.isLeft(invocationResult)) fail(invocationResult.left);
 const completion = modelInvocationCompletedEvent({
   elapsedMilliseconds,
   exit: { tag: "shellStatus", status: shellStatus },
-  result:
-    shellStatus === 0
-      ? { tag: "succeeded" }
-      : {
-          tag: "failed",
-          reason: `Review shell exited with status ${String(shellStatus)}.`,
-        },
+  result: invocationResult.right,
 });
 if (Either.isLeft(completion)) fail(completion.left.message);
 appendInvocationEvidenceEvents({

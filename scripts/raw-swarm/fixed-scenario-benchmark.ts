@@ -14,7 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
-import { Either, Schema } from "effect";
+import { Either, Option, Schema } from "effect";
 
 import {
   artifactAuthority,
@@ -45,6 +45,7 @@ import { parseStrictReadCommand } from "./review-read-validation.ts";
 import {
   parseBenchmarkModelInvocationLedgerEntry,
   parseModelInvocationLedgerEntry,
+  firstPartyCodexFailureReason,
   readCodexEvents,
   runBenchmarkAuxiliaryInvocation,
   runCodexInvocation,
@@ -982,14 +983,16 @@ function validatePreparationEventItem(
 
 /**
  * Validate first-party preparation telemetry as an execution boundary. Model
- * prose is intentionally ignored; only structured tool items and path-bearing
- * fields can make this check fail.
+ * prose is intentionally ignored; structured tool items, path-bearing fields,
+ * and terminal first-party failure records can make this check fail.
  */
 export function validateBenchmarkPreparationEventStream(
   input: BenchmarkPreparationEventValidationInput,
 ): Either.Either<void, string> {
   const parsed = readCodexEvents(input.eventPath);
   if (parsed.tag === "invalid") return Either.left(parsed.message);
+  const invocationFailure = firstPartyCodexFailureReason(parsed.events);
+  if (Either.isLeft(invocationFailure)) return invocationFailure;
   let completedReadCount = 0;
   for (const [index, event] of parsed.events.entries()) {
     if (!isJsonRecord(event)) {
@@ -1002,6 +1005,9 @@ export function validateBenchmarkPreparationEventStream(
       return Either.left(
         `Preparation event line ${String(index + 1)} has no event type.`,
       );
+    }
+    if (eventType === "error" || eventType === "turn.failed") {
+      continue;
     }
     if (!BENCHMARK_PREPARATION_EVENT_TYPES.has(eventType)) {
       return Either.left(
@@ -1031,6 +1037,11 @@ export function validateBenchmarkPreparationEventStream(
         completedReadCount += 1;
       }
     }
+  }
+  if (Option.isSome(invocationFailure.right)) {
+    return Either.left(
+      `Preparation model invocation failed: ${invocationFailure.right.value}`,
+    );
   }
   if (completedReadCount === 0) {
     return Either.left(

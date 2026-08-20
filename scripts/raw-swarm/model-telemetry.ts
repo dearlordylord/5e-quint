@@ -8,7 +8,7 @@ import {
   writeSync,
 } from "node:fs";
 
-import { Either, ParseResult, Schema } from "effect";
+import { Either, Option, ParseResult, Schema } from "effect";
 
 import {
   GitShaSchema,
@@ -390,8 +390,83 @@ function resultFromExit(
           ? `Codex stopped by ${exit.signal}.`
           : exit.tag === "failedToStart"
             ? exit.message
-            : `Codex shell exited with status ${String(exit.status)}.`,
+            : `Invocation shell exited with status ${String(exit.status)}.`,
   };
+}
+
+function nonEmptyTrimmedString(value: unknown): Option.Option<string> {
+  if (typeof value !== "string") return Option.none();
+  const trimmed = value.trim();
+  return trimmed.length === 0 ? Option.none() : Option.some(trimmed);
+}
+
+const FirstPartyCodexErrorEventSchema = Schema.Struct({
+  type: Schema.Literal("error"),
+  message: Schema.NonEmptyTrimmedString,
+});
+const FirstPartyCodexTurnFailedEventSchema = Schema.Struct({
+  type: Schema.Literal("turn.failed"),
+  error: Schema.Struct({ message: Schema.NonEmptyTrimmedString }),
+});
+
+/** Decode the most authoritative failure message emitted by Codex itself. */
+export function firstPartyCodexFailureReason(
+  events: readonly unknown[],
+): Either.Either<Option.Option<string>, string> {
+  let wrapperFailure = Option.none<string>();
+  let terminalFailure = Option.none<string>();
+  for (const [index, event] of events.entries()) {
+    if (!isJsonRecord(event)) continue;
+    if (event.type === "error") {
+      const decoded = Schema.decodeUnknownEither(
+        FirstPartyCodexErrorEventSchema,
+      )(event);
+      if (Either.isLeft(decoded)) {
+        return Either.left(
+          `First-party Codex event line ${String(index + 1)} has a malformed error event: ${decoded.left.message}`,
+        );
+      }
+      wrapperFailure = nonEmptyTrimmedString(decoded.right.message);
+    }
+    if (event.type === "turn.failed") {
+      const decoded = Schema.decodeUnknownEither(
+        FirstPartyCodexTurnFailedEventSchema,
+      )(event);
+      if (Either.isLeft(decoded)) {
+        return Either.left(
+          `First-party Codex event line ${String(index + 1)} has a malformed turn.failed event: ${decoded.left.message}`,
+        );
+      }
+      terminalFailure = nonEmptyTrimmedString(decoded.right.error.message);
+    }
+  }
+  return Either.right(
+    Option.isSome(terminalFailure) ? terminalFailure : wrapperFailure,
+  );
+}
+
+/** Bind process outcome to first-party failure detail when Codex supplies it. */
+export function modelInvocationResultFromCodexEvents(
+  exit: Schema.Schema.Type<typeof ModelInvocationExitSchema>,
+  events: readonly unknown[],
+): Either.Either<
+  Schema.Schema.Type<typeof ModelInvocationResultSchema>,
+  string
+> {
+  const failureReason = firstPartyCodexFailureReason(events);
+  if (Either.isLeft(failureReason)) return failureReason;
+  const processResult = resultFromExit(exit);
+  if (processResult.tag === "succeeded" && Option.isSome(failureReason.right)) {
+    return Either.left(
+      "Codex emitted a terminal failure event but exited successfully.",
+    );
+  }
+  return Either.right(
+    Option.match(failureReason.right, {
+      onNone: () => processResult,
+      onSome: (reason) => ({ tag: "failed" as const, reason }),
+    }),
+  );
 }
 
 function summedCounter(
@@ -892,10 +967,20 @@ function runCodexProcess(input: {
                   tag: "failedToStart",
                   message: "Codex returned no process status.",
                 };
+      const retainedEvents = readCodexEvents(input.eventPath);
+      const invocationResult = modelInvocationResultFromCodexEvents(
+        exit,
+        retainedEvents.tag === "valid" ? retainedEvents.events : [],
+      );
+      if (Either.isLeft(invocationResult)) {
+        throw new Error(
+          `Cannot derive Codex invocation result: ${invocationResult.left}`,
+        );
+      }
       const completedEvent = input.completionEvent({
         elapsedMilliseconds: Date.now() - input.startedMilliseconds,
         exit,
-        result: resultFromExit(exit),
+        result: invocationResult.right,
       });
       if (Either.isLeft(completedEvent)) {
         throw new Error(

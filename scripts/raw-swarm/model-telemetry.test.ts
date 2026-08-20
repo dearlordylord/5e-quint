@@ -1,3 +1,14 @@
+import { spawnSync } from "node:child_process";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { resolve } from "node:path";
+
 import { describe, expect, test } from "vitest";
 
 import { Either, Schema } from "effect";
@@ -10,14 +21,174 @@ import {
   benchmarkModelInvocationStartedEvent,
   modelInvocationCompletedEvent,
   modelInvocationEvidenceFromEvents,
+  modelInvocationResultFromCodexEvents,
   modelInvocationStartedEvent,
   modelUsageFromCodexEvents,
   parseModelInvocationLedgerEntry,
   parseBenchmarkModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
-import { GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
+import { GitShaSchema, repoRoot, ScenarioIdSchema } from "./transcript.ts";
+
+const modelTelemetryCli = resolve(
+  repoRoot,
+  "scripts/raw-swarm/model-telemetry-cli.ts",
+);
 
 describe("Raw Swarm model invocation telemetry", () => {
+  test("retains the first-party failure reason instead of only the process status", () => {
+    const failureEvents = [
+      { type: "error", message: "Synthetic wrapper failure." },
+      {
+        type: "turn.failed",
+        error: { message: "Synthetic service capacity is exhausted." },
+      },
+    ] as const;
+    const result = modelInvocationResultFromCodexEvents(
+      { tag: "exited", status: 1 },
+      failureEvents,
+    );
+    expect(result).toEqual(
+      Either.right({
+        tag: "failed",
+        reason: "Synthetic service capacity is exhausted.",
+      }),
+    );
+    expect(
+      modelInvocationResultFromCodexEvents({ tag: "exited", status: 7 }, [
+        { type: "turn.started" },
+      ]),
+    ).toEqual(
+      Either.right({
+        tag: "failed",
+        reason: "Codex exited with status 7.",
+      }),
+    );
+    expect(
+      modelInvocationResultFromCodexEvents(
+        { tag: "exited", status: 0 },
+        failureEvents,
+      ),
+    ).toEqual(
+      Either.left(
+        "Codex emitted a terminal failure event but exited successfully.",
+      ),
+    );
+    expect(
+      modelInvocationResultFromCodexEvents({ tag: "exited", status: 1 }, [
+        { type: "turn.failed", error: { message: 17 } },
+      ]),
+    ).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("malformed turn.failed event"),
+    });
+
+    const started = modelInvocationStartedEvent({
+      scenarioId: "synthetic-scenario",
+      gitSha: "a".repeat(40),
+      phase: "scenarioGeneration",
+      stagePlanReason: "The admitted plan requires scenario generation.",
+      fallbackInvocationId: "synthetic-fallback",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt: "2026-08-19T00:00:00.000Z",
+    });
+    const completed = modelInvocationCompletedEvent({
+      elapsedMilliseconds: 10,
+      exit: { tag: "exited", status: 1 },
+      result: Either.getOrThrow(result),
+    });
+    expect(Either.isRight(started)).toBe(true);
+    expect(Either.isRight(completed)).toBe(true);
+    if (Either.isLeft(started) || Either.isLeft(completed)) return;
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started.right,
+        { type: "thread.started", thread_id: "synthetic-thread" },
+        ...failureEvents,
+        completed.right,
+      ]),
+    ).toMatchObject({
+      tag: "valid",
+      entry: {
+        invocationId: "synthetic-thread",
+        result: {
+          tag: "failed",
+          reason: "Synthetic service capacity is exhausted.",
+        },
+      },
+    });
+  });
+
+  test("binds the shell telemetry CLI to first-party failure semantics", () => {
+    const temporaryRoot = mkdtempSync(resolve(tmpdir(), "dnd-telemetry-cli-"));
+    const eventsPath = resolve(temporaryRoot, "events.jsonl");
+    const ledgerPath = resolve(temporaryRoot, "ledger.jsonl");
+    const args = (status: number) => [
+      "exec",
+      "tsx",
+      modelTelemetryCli,
+      "--phase",
+      "postPlayReview",
+      "--scenario-id",
+      "synthetic-scenario",
+      "--git-sha",
+      "a".repeat(40),
+      "--events",
+      eventsPath,
+      "--ledger",
+      ledgerPath,
+      "--model",
+      "gpt-5.6-luna",
+      "--reasoning-effort",
+      "max",
+      "--started-at",
+      "2026-08-19T00:00:00.000Z",
+      "--elapsed-ms",
+      "10",
+      "--shell-status",
+      String(status),
+    ];
+    try {
+      writeFileSync(
+        eventsPath,
+        `${JSON.stringify({
+          type: "turn.failed",
+          error: { message: "Synthetic service capacity is exhausted." },
+        })}\n`,
+      );
+      const failed = spawnSync("pnpm", args(1), {
+        cwd: repoRoot,
+        encoding: "utf8",
+      });
+      expect(failed.status).toBe(0);
+      expect(JSON.parse(readFileSync(ledgerPath, "utf8"))).toMatchObject({
+        exit: { tag: "shellStatus", status: 1 },
+        result: {
+          tag: "failed",
+          reason: "Synthetic service capacity is exhausted.",
+        },
+      });
+
+      rmSync(eventsPath);
+      rmSync(ledgerPath);
+      writeFileSync(
+        eventsPath,
+        `${JSON.stringify({
+          type: "turn.failed",
+          error: { message: "Synthetic contradictory failure." },
+        })}\n`,
+      );
+      const contradictory = spawnSync("pnpm", args(0), {
+        cwd: repoRoot,
+        encoding: "utf8",
+      });
+      expect(contradictory.status).not.toBe(0);
+      expect(existsSync(ledgerPath)).toBe(false);
+    } finally {
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
+  });
+
   test("enforces JSON events for every Codex invocation", () => {
     expect(codexJsonArgs(["exec", "--model", "gpt-5.6-luna"])).toEqual([
       "exec",
