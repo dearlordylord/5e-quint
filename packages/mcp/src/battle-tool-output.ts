@@ -78,6 +78,18 @@ const BattlePresentationProjectionFields = {
   presentedInterruptChoices: Schema.Array(PresentedBattleInterruptChoiceSchema),
 };
 
+export const BattleLifecycleResultSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("combatantAdded"),
+    combatantId: Schema.String,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("combatantRemoved"),
+    combatantId: Schema.String,
+    removedCombatantIds: Schema.NonEmptyArray(Schema.String),
+  }),
+);
+
 export const SelectStatBlockOutputSchema = Schema.Struct({
   selectedStatBlock: JsonObjectSchema,
   session: McpSessionSummarySchema,
@@ -97,6 +109,13 @@ export const StartBattleOutputSchema = Schema.Struct({
 
 export const BattleResolutionOutputSchema = Schema.Struct({
   result: BattleResolutionResultSchema,
+  snapshot: BattlePresentedSnapshotSchema,
+  ...BattlePresentationProjectionFields,
+  session: McpSessionSnapshotSchema,
+});
+
+export const BattleLifecycleOutputSchema = Schema.Struct({
+  result: BattleLifecycleResultSchema,
   snapshot: BattlePresentedSnapshotSchema,
   ...BattlePresentationProjectionFields,
   session: McpSessionSnapshotSchema,

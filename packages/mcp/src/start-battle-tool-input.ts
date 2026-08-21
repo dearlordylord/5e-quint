@@ -86,9 +86,12 @@ const InitialEncounterStatBlockCombatantArgsSchema = Schema.Struct({
 });
 const InitialStatBlockCombatantArgsSchema =
   InitialEncounterStatBlockCombatantArgsSchema;
-const InitialBattleCombatantArgsSchema = Schema.Union(
+export const BattleCombatantArgsSchema = Schema.Union(
   InitialCharacterSessionCombatantArgsSchema,
   InitialStatBlockCombatantArgsSchema,
+);
+export const battleCombatantInputSchema = mcpObjectJsonSchema(
+  BattleCombatantArgsSchema,
 );
 const CompanionAdmissionArgsSchema = Schema.Struct({
   ownerCharacterId: Schema.NonEmptyTrimmedString.annotations({
@@ -123,7 +126,7 @@ const StartBattleToolArgsSchema = Schema.Struct({
     description: "Caller-chosen durable battle id.",
   }),
   initialCombatants: Schema.NonEmptyArray(
-    InitialBattleCombatantArgsSchema,
+    BattleCombatantArgsSchema,
   ).annotations({
     description:
       "Non-empty initial combatant roster. Each combatant comes from a finalized character session or an ordinary SRD Stat Block.",
@@ -138,6 +141,7 @@ const StartBattleToolArgsSchema = Schema.Struct({
 });
 
 type StartBattleToolArgs = Schema.Schema.Type<typeof StartBattleToolArgsSchema>;
+type BattleCombatantArgs = Schema.Schema.Type<typeof BattleCombatantArgsSchema>;
 
 export const startBattleInputSchema = mcpObjectJsonSchema(
   StartBattleToolArgsSchema,
@@ -152,7 +156,9 @@ export type StartBattleToolInput = {
   readonly companionAdmissions: readonly CompanionAdmissionToolInput[];
 };
 
-export type InitialBattleCombatantToolInput =
+export type InitialBattleCombatantToolInput = BattleCombatantToolInput;
+
+export type BattleCombatantToolInput =
   | InitialCharacterSessionCombatantToolInput
   | InitialStatBlockCombatantToolInput;
 
@@ -222,43 +228,55 @@ export function decodeStartBattleArgs(
   });
 }
 
+export function decodeBattleCombatantArgs(
+  args: unknown,
+  toolName: string,
+): ToolInputResult<BattleCombatantToolInput> {
+  const record = decodeToolArgs(BattleCombatantArgsSchema, args, toolName);
+  return Either.map(record, decodeBattleCombatant);
+}
+
 function decodeInitialCombatants(
   value: StartBattleToolArgs["initialCombatants"],
 ): StartBattleToolInput["initialCombatants"] {
-  const decodeCombatant = (
-    combatant: StartBattleToolArgs["initialCombatants"][number],
-  ): InitialBattleCombatantToolInput => {
-    if (combatant.kind === "characterSession") {
-      return {
-        kind: "characterSession",
-        characterId: characterId(combatant.characterId),
-        combatantId: combatantId(combatant.combatantId),
-        initiative: initiativeScore(combatant.initiative),
-        ammunitionStocks: combatant.ammunitionStocks.map(
-          ({ ammunition, remaining }) =>
-            battleAmmunitionStock(ammunition, remaining),
-        ),
-      };
-    }
-    const statBlockCombatant = combatant;
+  const decodeCombatant = (combatant: BattleCombatantArgs) =>
+    decodeBattleCombatant(combatant);
+  const [first, ...rest] = value;
+  const decoded: StartBattleToolInput["initialCombatants"] = [
+    decodeCombatant(first),
+    ...rest.map(decodeCombatant),
+  ];
+  return decoded;
+}
+
+function decodeBattleCombatant(
+  combatant: BattleCombatantArgs,
+): BattleCombatantToolInput {
+  if (combatant.kind === "characterSession") {
     return {
-      kind: "statBlock",
-      statBlockId: statBlockCombatant.statBlockId,
-      combatantId: combatantId(statBlockCombatant.combatantId),
-      initiative: initiativeScore(statBlockCombatant.initiative),
-      ammunitionStocks: statBlockCombatant.ammunitionStocks.map(
+      kind: "characterSession",
+      characterId: characterId(combatant.characterId),
+      combatantId: combatantId(combatant.combatantId),
+      initiative: initiativeScore(combatant.initiative),
+      ammunitionStocks: combatant.ammunitionStocks.map(
         ({ ammunition, remaining }) =>
           battleAmmunitionStock(ammunition, remaining),
       ),
-      admissionSource: { kind: "encounterParticipant" },
-      ...(statBlockCombatant.currentHp === undefined
-        ? {}
-        : { currentHp: Hp(statBlockCombatant.currentHp) }),
-      ...(statBlockCombatant.tempHp === undefined
-        ? {}
-        : { tempHp: Hp(statBlockCombatant.tempHp) }),
     };
+  }
+  return {
+    kind: "statBlock",
+    statBlockId: combatant.statBlockId,
+    combatantId: combatantId(combatant.combatantId),
+    initiative: initiativeScore(combatant.initiative),
+    ammunitionStocks: combatant.ammunitionStocks.map(
+      ({ ammunition, remaining }) =>
+        battleAmmunitionStock(ammunition, remaining),
+    ),
+    admissionSource: { kind: "encounterParticipant" },
+    ...(combatant.currentHp === undefined
+      ? {}
+      : { currentHp: Hp(combatant.currentHp) }),
+    ...(combatant.tempHp === undefined ? {} : { tempHp: Hp(combatant.tempHp) }),
   };
-  const [first, ...rest] = value;
-  return [decodeCombatant(first), ...rest.map(decodeCombatant)];
 }

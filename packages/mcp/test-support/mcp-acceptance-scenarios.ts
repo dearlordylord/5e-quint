@@ -59,6 +59,7 @@ const expectedTools = [
   "query_character_session",
   "select_stat_block",
   "start_battle",
+  "apply_battle_lifecycle_operation",
   "read_battle_state",
   "discover_battle_acts",
   "fill_battle_hole",

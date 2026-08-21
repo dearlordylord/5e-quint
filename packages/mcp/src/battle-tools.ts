@@ -27,19 +27,20 @@ import {
   SelectStatBlockOutputSchema,
 } from "./battle-tool-output.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
+import { handleApplyBattleLifecycleOperationToolCall } from "./battle-lifecycle-tool.ts";
 import {
   battleResolutionPayload,
   battleSessionPayload,
   battleSnapshotPresentationIssueContent,
+  activeBattleWithoutPendingFills,
   noStoredBattleContent,
-  pendingBattleFillsContent,
   unknownStatBlockContent,
 } from "./battle-tool-payloads.ts";
 import type {
   BattleFillSession,
   PendingBattleFillSession,
 } from "./session-store.ts";
-import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
+import { schemaJsonContent } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
 
@@ -74,6 +75,11 @@ export function handleBattleToolCall(
     }),
     Match.when({ name: battleToolNames.startBattle }, (matched) =>
       handleStartBattleToolCall(root, matched.args),
+    ),
+    Match.when(
+      { name: battleToolNames.applyBattleLifecycleOperation },
+      (matched) =>
+        handleApplyBattleLifecycleOperationToolCall(root, matched.args),
     ),
     Match.when({ name: battleToolNames.readBattleState }, () =>
       battleSessionContent(root),
@@ -346,16 +352,4 @@ function pendingTransactionForResult({
     subject: result.subject,
     fills: isInterruptDecision ? [] : fills,
   };
-}
-
-function activeBattleWithoutPendingFills(
-  root: McpPlaySessionRoot,
-  pendingMessage: string,
-): Either.Either<BattleRuntimeSession, ToolError> {
-  const session = root.sessionStore.battleSession;
-  if (session == null) return Either.left(noStoredBattleContent());
-  const pendingFills = root.sessionStore.pendingBattleFills;
-  return pendingFills === null
-    ? Either.right(session)
-    : Either.left(pendingBattleFillsContent(pendingFills, pendingMessage));
 }

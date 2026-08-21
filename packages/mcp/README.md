@@ -161,6 +161,12 @@ The battle-session tool boundary exposes these user-facing tools:
   the initial roster. Character and Stat Block projections are validated before
   the canonical Battle Session and every included Character Session are
   committed.
+- `apply_battle_lifecycle_operation` exposes one discriminated `addCombatant` /
+  `removeCombatant` surface for the active roster. Additions use the existing
+  Character Session or Stat Block admission projections; removals delegate the
+  existing Battle runtime semantics. Character occupancy and settlement are
+  prepared with the full Battle result and committed atomically, with typed
+  retry guidance when the transition is rejected.
 - `read_battle_state` returns the canonical stored `BattleState` projection and
   current battle snapshot. Character occupancy remains visible through the
   Character Session read models while battle owns the active combat facts.

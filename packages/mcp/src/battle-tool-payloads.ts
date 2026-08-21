@@ -15,11 +15,12 @@ import { Either } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleFillSession } from "./session-store.ts";
+import { type ToolError } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 
 type BattlePayloadPresentationIssues = BattleSnapshotPresentationIssues;
 
-type BattlePresentationProjection = {
+export type BattlePresentationProjection = {
   readonly snapshot: BattlePresentedSnapshot | null;
   readonly availableActs: ReturnType<typeof discoverBattleActs>;
   readonly admittedSpellPresentations: ReturnType<
@@ -29,9 +30,10 @@ type BattlePresentationProjection = {
     typeof presentedInterruptChoices
   >;
 };
-type ActiveBattlePresentationProjection = BattlePresentationProjection & {
-  readonly snapshot: BattlePresentedSnapshot;
-};
+export type ActiveBattlePresentationProjection =
+  BattlePresentationProjection & {
+    readonly snapshot: BattlePresentedSnapshot;
+  };
 
 export function unknownStatBlockContent(statBlockId: string, error: unknown) {
   return errorContent(`Unknown Stat Block: ${statBlockId}`, {
@@ -55,6 +57,18 @@ export function pendingBattleFillsContent(
     code: "BATTLE_FILLS_PENDING",
     pendingSubject: pendingFills.subject,
   });
+}
+
+export function activeBattleWithoutPendingFills(
+  root: McpPlaySessionRoot,
+  pendingMessage: string,
+): Either.Either<BattleRuntimeSession, ToolError> {
+  const session = root.sessionStore.battleSession;
+  if (session === null) return Either.left(noStoredBattleContent());
+  const pendingFills = root.sessionStore.pendingBattleFills;
+  return pendingFills === null
+    ? Either.right(session)
+    : Either.left(pendingBattleFillsContent(pendingFills, pendingMessage));
 }
 
 export function battleSessionPayload(
@@ -103,19 +117,19 @@ function battleResultPresentationProjection(
   );
 }
 
-function battlePresentationProjection(
+export function battlePresentationProjection(
   session: BattleRuntimeSession,
 ): Either.Either<
   ActiveBattlePresentationProjection,
   BattleSnapshotPresentationIssues
 >;
-function battlePresentationProjection(
+export function battlePresentationProjection(
   session: BattleRuntimeSession | null,
 ): Either.Either<
   BattlePresentationProjection,
   BattleSnapshotPresentationIssues
 >;
-function battlePresentationProjection(
+export function battlePresentationProjection(
   session: BattleRuntimeSession | null,
 ): Either.Either<
   BattlePresentationProjection,

@@ -24,6 +24,10 @@ import {
   decodeStartBattleArgs,
   type StartBattleToolInput,
 } from "./start-battle-tool-input.ts";
+import {
+  decodeApplyBattleLifecycleOperationArgs,
+  type ApplyBattleLifecycleOperationToolInput,
+} from "./battle-lifecycle-tool-input.ts";
 import { errorContent } from "./tool-content.ts";
 
 const EmptyArgsSchema = Schema.Struct({});
@@ -91,6 +95,7 @@ export const endBattleInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 export const battleToolNames = {
   selectStatBlock: "select_stat_block",
   startBattle: "start_battle",
+  applyBattleLifecycleOperation: "apply_battle_lifecycle_operation",
   readBattleState: "read_battle_state",
   discoverBattleActs: "discover_battle_acts",
   fillBattleHole: "fill_battle_hole",
@@ -101,6 +106,7 @@ export const battleToolNames = {
 export const BATTLE_TOOL_NAMES = [
   battleToolNames.selectStatBlock,
   battleToolNames.startBattle,
+  battleToolNames.applyBattleLifecycleOperation,
   battleToolNames.readBattleState,
   battleToolNames.discoverBattleActs,
   battleToolNames.fillBattleHole,
@@ -138,6 +144,10 @@ export type BattleToolCall =
   | {
       readonly name: typeof battleToolNames.startBattle;
       readonly args: StartBattleToolInput;
+    }
+  | {
+      readonly name: typeof battleToolNames.applyBattleLifecycleOperation;
+      readonly args: ApplyBattleLifecycleOperationToolInput;
     }
   | {
       readonly name: typeof battleToolNames.readBattleState;
@@ -180,6 +190,15 @@ export function decodeBattleToolCall(input: {
         name: battleToolNames.startBattle,
         args,
       })),
+    ),
+    Match.when(battleToolNames.applyBattleLifecycleOperation, () =>
+      Either.map(
+        decodeApplyBattleLifecycleOperationArgs(input.args),
+        (args) => ({
+          name: battleToolNames.applyBattleLifecycleOperation,
+          args,
+        }),
+      ),
     ),
     Match.when(battleToolNames.readBattleState, () =>
       Either.map(

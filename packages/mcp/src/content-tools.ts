@@ -244,6 +244,7 @@ function workflowGuide() {
       "Call finalize_character only when finalization.tag is ready or after holes are complete.",
       "Call list_stat_blocks for Stat Block ids. select_stat_block can store one id for inspection, but start_battle Stat Block combatants carry their own statBlockId.",
       "Call start_battle with a non-empty initialCombatants roster. Character-session combatants use characterId from list_characters; Stat Block combatants use statBlockId from list_stat_blocks.",
+      "While a battle is active, use apply_battle_lifecycle_operation with one discriminated addCombatant or removeCombatant operation. Add only an available finalized Character Session or an installed Stat Block projection; removal uses the current Battle runtime semantics and settles character occupancy atomically.",
       "Call discover_battle_acts and copy a returned subject exactly.",
       "If an act has initialHoles, call fill_battle_hole with subjectJson=JSON.stringify(subject) and fillJson=JSON.stringify(one fill) at a time, reusing the same subject until result.tag is resolved.",
       "If an act has no holes, call resolve_battle_act with subjectJson=JSON.stringify(subject).",
@@ -293,6 +294,7 @@ function workflowGuide() {
       "On BATTLE_ACT_NOT_AVAILABLE, call discover_battle_acts and use a current subject.",
       "On BATTLE_ACT_REQUIRES_HOLES, use fill_battle_hole instead of resolve_battle_act.",
       "On pending-fill errors, continue filling session.transientBattleFills.subject until the result resolves.",
+      "If apply_battle_lifecycle_operation returns recovery.tag=battleAndCharacterSessionsUnchanged, no roster or Character Session transition was committed; correct the reported conflict and retry against the returned Battle projection.",
       "Short Rest, composed Long Rest interruption/resumption, and calendar-time Stable recovery are supported through apply_character_session_operation; unresolved calendar recovery returns result.holes for a subsequent call, while a resumed Long Rest must supply strictly increasing cumulativeRestedTicks segments and its final cumulative segment in the same call.",
     ],
     limits: [

@@ -1942,6 +1942,7 @@ describe("MCP server route", () => {
     expect(battleToolDefinitions.map((tool) => tool.name)).toEqual([
       "select_stat_block",
       "start_battle",
+      "apply_battle_lifecycle_operation",
       "read_battle_state",
       "discover_battle_acts",
       "fill_battle_hole",
@@ -3527,6 +3528,86 @@ describe("MCP server route", () => {
         },
       },
     ]);
+  });
+
+  test("apply_battle_lifecycle_operation removes a character and its present familiar dependency", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-lifecycle-dependent-removal";
+    createFinalizedWizardWithFindFamiliar(root, draftId);
+    setStoredRetainedFamiliarCompanion(root, draftId, {
+      formId: "cat",
+      currentHp: Hp(1),
+      tempHp: Hp(0),
+    });
+
+    const started = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-lifecycle-dependent-removal",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            ammunitionStocks: [],
+            characterId: testCharacterId(draftId),
+            combatantId: "lifecycle-wizard",
+            initiative: 18,
+          },
+          {
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "lifecycle-goblin",
+            initiative: 7,
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+        companionAdmissions: [
+          {
+            ownerCharacterId: testCharacterId(draftId),
+            ammunitionStocks: [],
+            companionCombatantId: "lifecycle-familiar",
+            initiative: 12,
+          },
+        ],
+      }),
+    );
+    expect(started.snapshot.companions).toMatchObject([
+      {
+        ownerId: "lifecycle-wizard",
+        companionId: "lifecycle-familiar",
+        status: "present",
+      },
+    ]);
+
+    const removed = readPayload(
+      handleToolCall(root, "apply_battle_lifecycle_operation", {
+        operation: {
+          kind: "removeCombatant",
+          combatantId: "lifecycle-wizard",
+        },
+      }),
+    );
+    expect(removed).toMatchObject({
+      result: {
+        tag: "combatantRemoved",
+        combatantId: "lifecycle-wizard",
+        removedCombatantIds: ["lifecycle-wizard", "lifecycle-familiar"],
+      },
+      snapshot: {
+        combatants: [{ combatantId: "lifecycle-goblin" }],
+        companions: [],
+      },
+    });
+    expect(
+      root.sessionStore.characters.get(testCharacterId(draftId)),
+    ).toMatchObject({
+      tag: "available",
+      companion: {
+        tag: "retainedOneAtATime",
+        companion: {
+          manifestation: { tag: "embodiedOutsideBattle" },
+        },
+      },
+    });
   });
 
   test("fills companion reappearance holes one at a time through MCP", () => {

@@ -16,9 +16,11 @@ import {
   EndBattleOutputSchema,
   SelectStatBlockOutputSchema,
   StartBattleOutputSchema,
+  BattleLifecycleOutputSchema,
 } from "./battle-tool-output.ts";
 import { mcpOutputJsonSchema } from "./schema-codec.ts";
 import { startBattleInputSchema } from "./start-battle-tool-input.ts";
+import { applyBattleLifecycleOperationInputSchema } from "./battle-lifecycle-tool-input.ts";
 
 export const battleToolDefinitions = [
   {
@@ -34,6 +36,13 @@ export const battleToolDefinitions = [
       "Start the battle session from finalized Character Builds and the selected SRD Stat Block. The caller must provide Initiative scores for every character combatant and the Stat Block combatant.",
     inputSchema: startBattleInputSchema,
     outputSchema: mcpOutputJsonSchema(StartBattleOutputSchema),
+  },
+  {
+    name: battleToolNames.applyBattleLifecycleOperation,
+    description:
+      "Atomically add one finalized Character Session or installed SRD Stat Block projection to the active Battle, or remove one current combatant using the Battle runtime's existing removal semantics. Character occupancy and settlement are committed together with the Battle roster; failures leave both unchanged and return retry guidance.",
+    inputSchema: applyBattleLifecycleOperationInputSchema,
+    outputSchema: mcpOutputJsonSchema(BattleLifecycleOutputSchema),
   },
   {
     name: battleToolNames.readBattleState,
