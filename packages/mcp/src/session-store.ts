@@ -103,6 +103,12 @@ export type McpBattleState =
       readonly session: BattleRuntimeSession;
     };
 
+export type McpBattleStateTransitionIssue = {
+  readonly tag: "invalidBattleStateTransition";
+  readonly from: McpBattleState["tag"];
+  readonly to: McpBattleState["tag"];
+};
+
 export type McpBattleStateSnapshot =
   | { readonly tag: "none" }
   | {
@@ -141,13 +147,22 @@ export type McpBattleSessionSnapshot = Extract<
 export type McpSessionStore = {
   readonly drafts: Map<CharacterDraftId, CharacterDraft>;
   readonly characters: CharacterSessionRegistry;
-  battleState: McpBattleState;
-  /**
-   * Compatibility projection for existing battle-only composition helpers.
-   * It is derived from `battleState`; assigning it can only create the active
-   * or empty workflow variants and never creates a second state owner.
-   */
-  battleSession: BattleRuntimeSession | null;
+  readonly battleState: McpBattleState;
+  /** Read-only active-session projection for battle-only composition helpers. */
+  readonly battleSession: BattleRuntimeSession | null;
+  storeActiveBattle(
+    session: BattleRuntimeSession,
+  ): Either.Either<void, McpBattleStateTransitionIssue>;
+  storeInitialInitiativeSetup(
+    setup: InitialInitiativeSetup,
+  ): Either.Either<void, McpBattleStateTransitionIssue>;
+  updateInitialInitiativeSetup(
+    setup: InitialInitiativeSetup,
+  ): Either.Either<void, McpBattleStateTransitionIssue>;
+  finalizeInitialInitiativeSetup(
+    session: BattleRuntimeSession,
+  ): Either.Either<void, McpBattleStateTransitionIssue>;
+  clearBattle(): Either.Either<void, McpBattleStateTransitionIssue>;
   pendingBattleFills: PendingBattleFillSession | null;
   clearSelectedStatBlock(): void;
   getSelectedStatBlock(): StatBlockRecord | null;
@@ -206,15 +221,49 @@ export function createMcpSessionStore(
     get battleState() {
       return battleState;
     },
-    set battleState(next: McpBattleState) {
-      battleState = next;
-    },
     get battleSession(): BattleRuntimeSession | null {
       return battleState.tag === "activeBattle" ? battleState.session : null;
     },
-    set battleSession(session: BattleRuntimeSession | null) {
-      battleState =
-        session === null ? { tag: "none" } : { tag: "activeBattle", session };
+    storeActiveBattle(session) {
+      if (battleState.tag === "initialInitiativeSetup") {
+        return invalidBattleStateTransition(battleState.tag, "activeBattle");
+      }
+      battleState = { tag: "activeBattle", session };
+      return Either.right(undefined);
+    },
+    storeInitialInitiativeSetup(setup) {
+      if (battleState.tag !== "none") {
+        return invalidBattleStateTransition(
+          battleState.tag,
+          "initialInitiativeSetup",
+        );
+      }
+      battleState = { tag: "initialInitiativeSetup", setup };
+      return Either.right(undefined);
+    },
+    updateInitialInitiativeSetup(setup) {
+      if (battleState.tag !== "initialInitiativeSetup") {
+        return invalidBattleStateTransition(
+          battleState.tag,
+          "initialInitiativeSetup",
+        );
+      }
+      battleState = { tag: "initialInitiativeSetup", setup };
+      return Either.right(undefined);
+    },
+    finalizeInitialInitiativeSetup(session) {
+      if (battleState.tag !== "initialInitiativeSetup") {
+        return invalidBattleStateTransition(battleState.tag, "activeBattle");
+      }
+      battleState = { tag: "activeBattle", session };
+      return Either.right(undefined);
+    },
+    clearBattle() {
+      if (battleState.tag !== "activeBattle") {
+        return invalidBattleStateTransition(battleState.tag, "none");
+      }
+      battleState = { tag: "none" };
+      return Either.right(undefined);
     },
     pendingBattleFills: null,
     clearSelectedStatBlock(): void {
@@ -252,6 +301,17 @@ export function createMcpSessionStore(
   } satisfies McpSessionStore;
 
   return store;
+}
+
+function invalidBattleStateTransition(
+  from: McpBattleState["tag"],
+  to: McpBattleState["tag"],
+): Either.Either<never, McpBattleStateTransitionIssue> {
+  return Either.left({
+    tag: "invalidBattleStateTransition",
+    from,
+    to,
+  });
 }
 
 function characterSessionRegistry(): CharacterSessionRegistry {

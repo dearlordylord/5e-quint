@@ -258,7 +258,13 @@ export function handleBattleToolCall(
 
       const handoff = finalizeCharacterSessionsFromBattle(root, state.right);
       if (handoff !== null) return handoff;
-      root.sessionStore.battleState = { tag: "none" };
+      const cleared = root.sessionStore.clearBattle();
+      if (Either.isLeft(cleared)) {
+        return errorContent("Battle state transition failed.", {
+          code: "BATTLE_STATE_TRANSITION_INVALID",
+          transition: cleared.left,
+        });
+      }
       root.sessionStore.pendingBattleFills = null;
       publishAdminProjectionBestEffort(root);
 
@@ -311,19 +317,15 @@ export function storeBattleResolution(
   pendingTransaction: PendingBattleFillSession | null,
 ): boolean {
   if (result.tag === "resolved") {
-    root.sessionStore.battleState = {
-      tag: "activeBattle",
-      session: result.session,
-    };
+    const stored = root.sessionStore.storeActiveBattle(result.session);
+    if (Either.isLeft(stored)) return false;
     root.sessionStore.pendingBattleFills = null;
     return true;
   }
   if (result.tag === "needsHoles") {
     if (pendingTransaction === null) return false;
-    root.sessionStore.battleState = {
-      tag: "activeBattle",
-      session: result.session,
-    };
+    const stored = root.sessionStore.storeActiveBattle(result.session);
+    if (Either.isLeft(stored)) return false;
     root.sessionStore.pendingBattleFills = pendingTransaction;
     return true;
   }

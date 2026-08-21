@@ -9,7 +9,6 @@ import {
 } from "@dnd/battle-runtime";
 import { Either, Match } from "effect";
 
-import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleLifecycleToolInput } from "./battle-lifecycle-tool-input.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
@@ -20,6 +19,7 @@ import {
 import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
+import { completeBattleStateTransition } from "./battle-state-transition.ts";
 
 export function handleBattleLifecycleToolCall(
   root: McpPlaySessionRoot,
@@ -77,16 +77,15 @@ function applySwap(
   // The runtime mutates the one opaque setup owner. Re-store that same owner
   // under the same discriminant so every subsequent MCP operation routes via
   // the lifecycle state union.
-  root.sessionStore.battleState = {
-    tag: "initialInitiativeSetup",
-    setup: result.right,
-  };
-  root.sessionStore.pendingBattleFills = null;
-  publishAdminProjectionBestEffort(root);
-  return schemaJsonContent(
-    StartBattleOutputSchema,
-    initialInitiativeSetupStartPayload(root),
-  );
+  return completeBattleStateTransition({
+    root,
+    transition: root.sessionStore.updateInitialInitiativeSetup(result.right),
+    output: () =>
+      schemaJsonContent(
+        StartBattleOutputSchema,
+        initialInitiativeSetupStartPayload(root),
+      ),
+  });
 }
 
 function finalizeSetup(
@@ -99,18 +98,17 @@ function finalizeSetup(
     return battleSnapshotPresentationIssueContent(snapshot.left);
   }
 
-  root.sessionStore.battleState = {
-    tag: "activeBattle",
-    session,
-  };
-  root.sessionStore.pendingBattleFills = null;
-  publishAdminProjectionBestEffort(root);
-  return schemaJsonContent(StartBattleOutputSchema, {
-    battleState: root.sessionStore.snapshot().battleState,
-    snapshot: snapshot.right,
-    availableActs: discoverBattleActs(session),
-    admittedSpellPresentations: battleAdmittedSpellPresentations(session),
-    presentedInterruptChoices: [],
-    session: mcpSessionSummary(root.sessionStore.snapshot()),
+  return completeBattleStateTransition({
+    root,
+    transition: root.sessionStore.finalizeInitialInitiativeSetup(session),
+    output: () =>
+      schemaJsonContent(StartBattleOutputSchema, {
+        battleState: root.sessionStore.snapshot().battleState,
+        snapshot: snapshot.right,
+        availableActs: discoverBattleActs(session),
+        admittedSpellPresentations: battleAdmittedSpellPresentations(session),
+        presentedInterruptChoices: [],
+        session: mcpSessionSummary(root.sessionStore.snapshot()),
+      }),
   });
 }

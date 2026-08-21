@@ -230,10 +230,12 @@ describe("Admin Mirror publisher", () => {
     if (session === null) {
       throw new Error("Expected an active Admin Mirror test battle.");
     }
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      state: session.state,
-      context: battleRuntimeContextForTest(session.context.characters),
-    });
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        state: session.state,
+        context: battleRuntimeContextForTest(session.context.characters),
+      }),
+    );
 
     publish.mockClear();
     expect(Either.isLeft(adminProjection(root))).toBe(true);

@@ -17,7 +17,10 @@ import {
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { Either, Match, Option } from "effect";
 
-import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
+import {
+  admitCharacterSessionsToBattle,
+  characterSessionBattleAdmissionErrorContent,
+} from "./character-session-battle-admission.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { type AvailableCharacterSession } from "./session-store.ts";
@@ -33,6 +36,7 @@ import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
 import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
+import { completeBattleStateTransition } from "./battle-state-transition.ts";
 
 export type StartableCharacterSessionCombatant = {
   readonly character: InitialCharacterSessionCombatantToolInput;
@@ -120,48 +124,28 @@ export function handleStartBattleToolCall(
     return battleSnapshotPresentationIssueContent(snapshot.left);
   }
 
-  const inBattleSessions = combatants.right.characterSessions.map(
-    ({ session }) =>
-      ({
-        tag: "inBattle",
-        sheet: session,
-        battleId: input.battleId,
-      }) as const,
-  );
-  const committed = root.sessionStore.characters.setAll(inBattleSessions);
+  const committed = admitCharacterSessionsToBattle({
+    registry: root.sessionStore.characters,
+    battleId: input.battleId,
+    sessions: combatants.right.characterSessions.map(({ session }) => session),
+  });
   if (Either.isLeft(committed)) {
-    const registryIssue = committed.left;
-    return errorContent("Battle character session admission commit failed.", {
-      code: "CHARACTER_SESSION_COMMIT_INVALID",
-      battleId: input.battleId,
-      message: `Character Session registry rejected battle admission: ${registryIssue.tag}.`,
-      registryIssue,
-      affectedCharacterIds: inBattleSessions.map(
-        (session) => session.sheet.characterId,
-      ),
-      recovery: {
-        tag: "characterSessionsUnchanged",
-        guidance:
-          "No Character Session was committed; correct the session conflict and retry start_battle.",
-      },
-    });
+    return characterSessionBattleAdmissionErrorContent(committed.left);
   }
 
-  root.sessionStore.battleState = {
-    tag: "activeBattle",
-    session: admittedSession,
-  };
-  root.sessionStore.pendingBattleFills = null;
-  publishAdminProjectionBestEffort(root);
-
-  return schemaJsonContent(StartBattleOutputSchema, {
-    battleState: root.sessionStore.snapshot().battleState,
-    snapshot: snapshot.right,
-    availableActs: discoverBattleActs(admittedSession),
-    admittedSpellPresentations:
-      battleAdmittedSpellPresentations(admittedSession),
-    presentedInterruptChoices: [],
-    session: mcpSessionSummary(root.sessionStore.snapshot()),
+  return completeBattleStateTransition({
+    root,
+    transition: root.sessionStore.storeActiveBattle(admittedSession),
+    output: () =>
+      schemaJsonContent(StartBattleOutputSchema, {
+        battleState: root.sessionStore.snapshot().battleState,
+        snapshot: snapshot.right,
+        availableActs: discoverBattleActs(admittedSession),
+        admittedSpellPresentations:
+          battleAdmittedSpellPresentations(admittedSession),
+        presentedInterruptChoices: [],
+        session: mcpSessionSummary(root.sessionStore.snapshot()),
+      }),
   });
 }
 

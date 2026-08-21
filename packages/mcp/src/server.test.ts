@@ -1109,10 +1109,12 @@ describe("MCP server route", () => {
       unitLibrary: root.unitLibrary,
     });
 
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      state,
-      context,
-    });
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        state,
+        context,
+      }),
+    );
     root.sessionStore.pendingBattleFills = null;
 
     expect(snapshotBattle(state)).toMatchObject({
@@ -2185,10 +2187,12 @@ describe("MCP server route", () => {
     if (session === null) {
       throw new Error("Expected an active test battle.");
     }
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      state: session.state,
-      context: battleRuntimeContextForTest(session.context.characters),
-    });
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        state: session.state,
+        context: battleRuntimeContextForTest(session.context.characters),
+      }),
+    );
 
     expect(
       readPayload(handleToolCall(root, "read_battle_state", {})),
@@ -3005,7 +3009,7 @@ describe("MCP server route", () => {
 
   test("replays long-range attack target facts into a Disadvantage attack-roll hole", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession =
+    root.sessionStore.storeActiveBattle(
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-long-range-attack"),
         character: {
@@ -3024,7 +3028,8 @@ describe("MCP server route", () => {
           initiative: initiativeScore(18),
         },
         unitLibrary: root.unitLibrary,
-      });
+      }),
+    );
     root.sessionStore.pendingBattleFills = null;
 
     const shortbowSubject = battleAttackSubjectForName(
@@ -3079,7 +3084,7 @@ describe("MCP server route", () => {
 
   test("rejects contradictory long-range and normal-range attack target facts", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession =
+    root.sessionStore.storeActiveBattle(
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-contradictory-range-attack"),
         character: {
@@ -3098,7 +3103,8 @@ describe("MCP server route", () => {
           initiative: initiativeScore(18),
         },
         unitLibrary: root.unitLibrary,
-      });
+      }),
+    );
     root.sessionStore.pendingBattleFills = null;
 
     const shortbowSubject = battleAttackSubjectForName(
@@ -3148,7 +3154,7 @@ describe("MCP server route", () => {
 
   test("replays visible Sneak Attack rider hole and fill shape through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession =
+    root.sessionStore.storeActiveBattle(
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-sneak-attack-rider"),
         character: {
@@ -3167,9 +3173,13 @@ describe("MCP server route", () => {
           initiative: initiativeScore(7),
         },
         unitLibrary: rogueBattleUnitLibrary(root),
-      });
+      }),
+    );
     const allyId = combatantId("sneak-attack-ally");
     const battleState = root.sessionStore.battleSession;
+    if (battleState === null) {
+      throw new Error("Expected active battle in Sneak Attack fixture.");
+    }
     const rogue = battleState.state.combatants.get(fighterId);
     if (rogue === undefined || rogue.origin.kind !== "character") {
       throw new Error("Expected rogue combatant in MCP Sneak Attack fixture.");
@@ -3179,10 +3189,12 @@ describe("MCP server route", () => {
       combatantId: allyId,
       origin: { ...rogue.origin, displayName: "Sneak Attack Ally" },
     });
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      ...battleState,
-      state: { ...battleState.state, combatants },
-    });
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        ...battleState,
+        state: { ...battleState.state, combatants },
+      }),
+    );
     root.sessionStore.pendingBattleFills = null;
 
     const afterTarget = fillBattleHoleThroughTool(root, "fighter", "Dagger", {
@@ -6440,7 +6452,7 @@ describe("MCP server route", () => {
 
   test("returns Shove push outcomes through MCP battle resolution output", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession =
+    root.sessionStore.storeActiveBattle(
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-shove-push-outcome"),
         character: {
@@ -6459,7 +6471,8 @@ describe("MCP server route", () => {
           initiative: initiativeScore(7),
         },
         unitLibrary: root.unitLibrary,
-      });
+      }),
+    );
 
     const acts = readPayload(handleToolCall(root, "discover_battle_acts", {}));
     const shove = acts.availableActs.find(
@@ -6561,27 +6574,29 @@ describe("MCP server route", () => {
     ) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      ...battleState,
-      state: {
-        ...battleState.state,
-        combatants: new Map(battleState.state.combatants).set(fighterId, {
-          ...testBattleCreatureStateWithoutKnockOut(fighter, {
-            hp: Hp(0),
-            conditions: fighter.conditions,
-          }),
-          zeroHpLifecycle: {
-            ...fighter.zeroHpLifecycle,
-            deathSaves: {
-              deathSaves: { successes: 0, failures: 0 },
-              stable: true,
-              dead: false,
-              hpRegained: false,
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        ...battleState,
+        state: {
+          ...battleState.state,
+          combatants: new Map(battleState.state.combatants).set(fighterId, {
+            ...testBattleCreatureStateWithoutKnockOut(fighter, {
+              hp: Hp(0),
+              conditions: fighter.conditions,
+            }),
+            zeroHpLifecycle: {
+              ...fighter.zeroHpLifecycle,
+              deathSaves: {
+                deathSaves: { successes: 0, failures: 0 },
+                stable: true,
+                dead: false,
+                hpRegained: false,
+              },
             },
-          },
-        }),
-      },
-    });
+          }),
+        },
+      }),
+    );
 
     const ended = readPayload(handleToolCall(root, "end_battle", {}));
 
@@ -6661,19 +6676,21 @@ describe("MCP server route", () => {
     if (battleState === null || fighter === undefined) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      ...battleState,
-      state: {
-        ...battleState.state,
-        combatants: new Map(battleState.state.combatants).set(
-          fighterId,
-          testBattleCreatureStateWithoutKnockOut(fighter, {
-            hp: Hp(3),
-            conditions: fighter.conditions,
-          }),
-        ),
-      },
-    });
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        ...battleState,
+        state: {
+          ...battleState.state,
+          combatants: new Map(battleState.state.combatants).set(
+            fighterId,
+            testBattleCreatureStateWithoutKnockOut(fighter, {
+              hp: Hp(3),
+              conditions: fighter.conditions,
+            }),
+          ),
+        },
+      }),
+    );
 
     readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
     const goblinScimitar = battleAttackSubjectForName(
@@ -6825,19 +6842,21 @@ describe("MCP server route", () => {
     if (battleState === null || fighter === undefined) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      ...battleState,
-      state: {
-        ...battleState.state,
-        combatants: new Map(battleState.state.combatants).set(
-          fighterId,
-          testBattleCreatureStateWithoutKnockOut(fighter, {
-            hp: Hp(1),
-            conditions: applyCondition(fighter.conditions, "unconscious"),
-          }),
-        ),
-      },
-    });
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        ...battleState,
+        state: {
+          ...battleState.state,
+          combatants: new Map(battleState.state.combatants).set(
+            fighterId,
+            testBattleCreatureStateWithoutKnockOut(fighter, {
+              hp: Hp(1),
+              conditions: applyCondition(fighter.conditions, "unconscious"),
+            }),
+          ),
+        },
+      }),
+    );
 
     readPayload(handleToolCall(root, "end_battle", {}));
 
@@ -7152,27 +7171,29 @@ describe("MCP server route", () => {
     ) {
       throw new Error("Expected in-battle Fighter character combatant.");
     }
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      ...battleState,
-      state: {
-        ...battleState.state,
-        combatants: new Map(battleState.state.combatants).set(fighterId, {
-          ...testBattleCreatureStateWithoutKnockOut(fighter, {
-            hp: Hp(0),
-            conditions: fighter.conditions,
-          }),
-          zeroHpLifecycle: {
-            ...fighter.zeroHpLifecycle,
-            deathSaves: {
-              deathSaves: { successes: 0, failures: 3 },
-              stable: false,
-              dead: true,
-              hpRegained: false,
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        ...battleState,
+        state: {
+          ...battleState.state,
+          combatants: new Map(battleState.state.combatants).set(fighterId, {
+            ...testBattleCreatureStateWithoutKnockOut(fighter, {
+              hp: Hp(0),
+              conditions: fighter.conditions,
+            }),
+            zeroHpLifecycle: {
+              ...fighter.zeroHpLifecycle,
+              deathSaves: {
+                deathSaves: { successes: 0, failures: 3 },
+                stable: false,
+                dead: true,
+                hpRegained: false,
+              },
             },
-          },
-        }),
-      },
-    });
+          }),
+        },
+      }),
+    );
 
     readPayload(handleToolCall(root, "end_battle", {}));
 
@@ -7630,10 +7651,12 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      state,
-      context,
-    });
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        state,
+        context,
+      }),
+    );
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
@@ -7762,10 +7785,12 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      state,
-      context,
-    });
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        state,
+        context,
+      }),
+    );
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
@@ -7950,10 +7975,12 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      state,
-      context,
-    });
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        state,
+        context,
+      }),
+    );
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
@@ -8153,30 +8180,32 @@ describe("MCP server route", () => {
     ) {
       throw new Error("Expected in-battle dying ally character combatant.");
     }
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      ...battleState,
-      state: {
-        ...battleState.state,
-        combatants: new Map(battleState.state.combatants).set(
-          combatantId("dying-ally"),
-          {
-            ...testBattleCreatureStateWithoutKnockOut(targetCombatant, {
-              hp: Hp(0),
-              conditions: targetCombatant.conditions,
-            }),
-            zeroHpLifecycle: {
-              ...targetCombatant.zeroHpLifecycle,
-              deathSaves: {
-                deathSaves: { successes: 2, failures: 1 },
-                stable: false,
-                dead: false,
-                hpRegained: false,
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        ...battleState,
+        state: {
+          ...battleState.state,
+          combatants: new Map(battleState.state.combatants).set(
+            combatantId("dying-ally"),
+            {
+              ...testBattleCreatureStateWithoutKnockOut(targetCombatant, {
+                hp: Hp(0),
+                conditions: targetCombatant.conditions,
+              }),
+              zeroHpLifecycle: {
+                ...targetCombatant.zeroHpLifecycle,
+                deathSaves: {
+                  deathSaves: { successes: 2, failures: 1 },
+                  stable: false,
+                  dead: false,
+                  hpRegained: false,
+                },
               },
             },
-          },
-        ),
-      },
-    });
+          ),
+        },
+      }),
+    );
     const discovered = readPayload(
       handleToolCall(root, "discover_battle_acts", {}),
     );
@@ -8281,10 +8310,12 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      state,
-      context,
-    });
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        state,
+        context,
+      }),
+    );
     root.sessionStore.pendingBattleFills = null;
 
     const discovered = readPayload(
@@ -8423,10 +8454,12 @@ describe("MCP server route", () => {
       },
       unitLibrary: root.unitLibrary,
     });
-    root.sessionStore.battleSession = battleRuntimeSessionForTest({
-      state,
-      context,
-    });
+    root.sessionStore.storeActiveBattle(
+      battleRuntimeSessionForTest({
+        state,
+        context,
+      }),
+    );
     root.sessionStore.pendingBattleFills = null;
 
     const rayOfFrostAct = discoverBattleActs(

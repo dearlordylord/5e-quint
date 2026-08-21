@@ -196,6 +196,15 @@ describe("MCP protocol server", () => {
       });
       expect(started.projection).not.toHaveProperty("activeBattle");
 
+      const endBeforeFinalize = await client.callTool({
+        name: "end_battle",
+        arguments: { playSessionId: modeSession },
+      });
+      expect(endBeforeFinalize.isError).toBe(true);
+      expect(endBeforeFinalize.structuredContent).toMatchObject({
+        projection: { battleState: { tag: "initialInitiativeSetup" } },
+      });
+
       const finalized = await callStructuredTool(client, {
         name: "battle_lifecycle",
         arguments: {

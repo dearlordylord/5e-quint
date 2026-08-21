@@ -72,28 +72,30 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Bardic Inspiration grant through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession = startBattleRight(root, [
-      character(root, {
-        combatantId: fighterId,
-        displayName: "Bard",
-        initiative: 20,
-        classLevels: [{ className: "bard", level: 1 }],
-        attack: null,
-        resources: [
-          {
-            unit: root.unitLibrary.requireUnit("bard_bardic_inspiration"),
-            capAbilityModifier: abilityModifier(3),
-          },
-        ],
-        characterUnitRefs: [
-          {
-            unit: root.unitLibrary.requireUnit("bard_bardic_inspiration"),
-            supportProfiles: [BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE],
-          },
-        ],
-      }),
-      statBlock(root, { combatantId: goblinId, initiative: 10 }),
-    ]);
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        character(root, {
+          combatantId: fighterId,
+          displayName: "Bard",
+          initiative: 20,
+          classLevels: [{ className: "bard", level: 1 }],
+          attack: null,
+          resources: [
+            {
+              unit: root.unitLibrary.requireUnit("bard_bardic_inspiration"),
+              capAbilityModifier: abilityModifier(3),
+            },
+          ],
+          characterUnitRefs: [
+            {
+              unit: root.unitLibrary.requireUnit("bard_bardic_inspiration"),
+              supportProfiles: [BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE],
+            },
+          ],
+        }),
+        statBlock(root, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
 
     const act = requireUnitAct(root, "bard_bardic_inspiration");
     const target = requireHole(act.initialHoles, "targetChoice");
@@ -150,30 +152,32 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Innate Sorcery activation and projected spell attack Advantage through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession = startBattleRight(root, [
-      character(root, {
-        combatantId: fighterId,
-        displayName: "Sorcerer",
-        initiative: 20,
-        classLevels: [{ className: "sorcerer", level: 1 }],
-        attack: null,
-        resources: [
-          { unit: root.unitLibrary.requireUnit("sorcerer_innate_sorcery") },
-        ],
-        characterUnitRefs: [
-          {
-            unit: root.unitLibrary.requireUnit("sorcerer_innate_sorcery"),
-            supportProfiles: [],
-          },
-        ],
-        spellcasting: spellcasting(root, {
-          sourceClassName: "sorcerer",
-          abilityModifier: 3,
-          cantrips: ["sorcerous_burst"],
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        character(root, {
+          combatantId: fighterId,
+          displayName: "Sorcerer",
+          initiative: 20,
+          classLevels: [{ className: "sorcerer", level: 1 }],
+          attack: null,
+          resources: [
+            { unit: root.unitLibrary.requireUnit("sorcerer_innate_sorcery") },
+          ],
+          characterUnitRefs: [
+            {
+              unit: root.unitLibrary.requireUnit("sorcerer_innate_sorcery"),
+              supportProfiles: [],
+            },
+          ],
+          spellcasting: spellcasting(root, {
+            sourceClassName: "sorcerer",
+            abilityModifier: 3,
+            cantrips: ["sorcerous_burst"],
+          }),
         }),
-      }),
-      statBlock(root, { combatantId: goblinId, initiative: 10 }),
-    ]);
+        statBlock(root, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
 
     const innate = requireUnitAct(root, "sorcerer_innate_sorcery");
     const afterInnate = call(root, "resolve_battle_act", {
@@ -215,29 +219,31 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Monk Martial Arts bonus Unarmed Strike through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession = startBattleRight(root, [
-      character(root, {
-        combatantId: fighterId,
-        displayName: "Monk",
-        initiative: 20,
-        classLevels: [{ className: "monk", level: 1 }],
-        attack: weaponAttack(root, "weapon_dagger", "dex", 3),
-        selectedLoadout: {
-          weapon: {
-            itemId: battleObjectId("main:weapon_dagger"),
-            unitId: authoredUnitId("weapon_dagger"),
-            grip: "one_handed",
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        character(root, {
+          combatantId: fighterId,
+          displayName: "Monk",
+          initiative: 20,
+          classLevels: [{ className: "monk", level: 1 }],
+          attack: weaponAttack(root, "weapon_dagger", "dex", 3),
+          selectedLoadout: {
+            weapon: {
+              itemId: battleObjectId("main:weapon_dagger"),
+              unitId: authoredUnitId("weapon_dagger"),
+              grip: "one_handed",
+            },
           },
-        },
-        characterUnitRefs: [
-          {
-            unit: root.unitLibrary.requireUnit("monk_martial_arts"),
-            supportProfiles: [MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE],
-          },
-        ],
-      }),
-      statBlock(root, { combatantId: goblinId, initiative: 10 }),
-    ]);
+          characterUnitRefs: [
+            {
+              unit: root.unitLibrary.requireUnit("monk_martial_arts"),
+              supportProfiles: [MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE],
+            },
+          ],
+        }),
+        statBlock(root, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
 
     const act = requireMechanicalAct(
       root,
@@ -284,20 +290,24 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Weapon Mastery Sap and Topple holes through MCP battle tools", () => {
     const sapRoot = createMcpPlaySessionRoot();
-    sapRoot.sessionStore.battleSession = startBattleRight(sapRoot, [
-      character(sapRoot, {
-        combatantId: fighterId,
-        initiative: 20,
-        characterUnitRefs: [
-          {
-            unit: sapRoot.unitLibrary.requireUnit("mastery_sap"),
-            supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
-          },
-        ],
-        weaponMasteries: [{ weaponUnitId: authoredUnitId("weapon_longsword") }],
-      }),
-      statBlock(sapRoot, { combatantId: goblinId, initiative: 10 }),
-    ]);
+    sapRoot.sessionStore.storeActiveBattle(
+      startBattleRight(sapRoot, [
+        character(sapRoot, {
+          combatantId: fighterId,
+          initiative: 20,
+          characterUnitRefs: [
+            {
+              unit: sapRoot.unitLibrary.requireUnit("mastery_sap"),
+              supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
+            },
+          ],
+          weaponMasteries: [
+            { weaponUnitId: authoredUnitId("weapon_longsword") },
+          ],
+        }),
+        statBlock(sapRoot, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
     resolveAttack(sapRoot, "Longsword", "goblin", 18, 12, [[5]]);
     call(sapRoot, "end_turn", { actorId: "fighter" });
     const goblinAttack = requireAct(sapRoot, "Attack", "Scimitar");
@@ -321,30 +331,32 @@ describe("manual MCP battle surface coverage", () => {
     });
 
     const toppleRoot = createMcpPlaySessionRoot();
-    toppleRoot.sessionStore.battleSession = startBattleRight(toppleRoot, [
-      character(toppleRoot, {
-        combatantId: fighterId,
-        initiative: 20,
-        attack: weaponAttack(toppleRoot, "weapon_quarterstaff", "str", 3),
-        selectedLoadout: {
-          weapon: {
-            itemId: battleObjectId("main:weapon_quarterstaff"),
-            unitId: authoredUnitId("weapon_quarterstaff"),
-            grip: "one_handed",
+    toppleRoot.sessionStore.storeActiveBattle(
+      startBattleRight(toppleRoot, [
+        character(toppleRoot, {
+          combatantId: fighterId,
+          initiative: 20,
+          attack: weaponAttack(toppleRoot, "weapon_quarterstaff", "str", 3),
+          selectedLoadout: {
+            weapon: {
+              itemId: battleObjectId("main:weapon_quarterstaff"),
+              unitId: authoredUnitId("weapon_quarterstaff"),
+              grip: "one_handed",
+            },
           },
-        },
-        characterUnitRefs: [
-          {
-            unit: toppleRoot.unitLibrary.requireUnit("mastery_topple"),
-            supportProfiles: [WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE],
-          },
-        ],
-        weaponMasteries: [
-          { weaponUnitId: authoredUnitId("weapon_quarterstaff") },
-        ],
-      }),
-      statBlock(toppleRoot, { combatantId: goblinId, initiative: 10 }),
-    ]);
+          characterUnitRefs: [
+            {
+              unit: toppleRoot.unitLibrary.requireUnit("mastery_topple"),
+              supportProfiles: [WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE],
+            },
+          ],
+          weaponMasteries: [
+            { weaponUnitId: authoredUnitId("weapon_quarterstaff") },
+          ],
+        }),
+        statBlock(toppleRoot, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
     const afterToppleRoll = resolveAttackThroughRoll(
       toppleRoot,
       "Quarterstaff",
@@ -360,33 +372,37 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Weapon Mastery Cleave decision through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession = startBattleRight(root, [
-      character(root, {
-        combatantId: fighterId,
-        initiative: 20,
-        attack: weaponAttack(root, "weapon_greataxe", "str", 3),
-        selectedLoadout: {
-          weapon: {
-            itemId: battleObjectId("main:weapon_greataxe"),
-            unitId: authoredUnitId("weapon_greataxe"),
-            grip: "two_handed",
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        character(root, {
+          combatantId: fighterId,
+          initiative: 20,
+          attack: weaponAttack(root, "weapon_greataxe", "str", 3),
+          selectedLoadout: {
+            weapon: {
+              itemId: battleObjectId("main:weapon_greataxe"),
+              unitId: authoredUnitId("weapon_greataxe"),
+              grip: "two_handed",
+            },
           },
-        },
-        characterUnitRefs: [
-          {
-            unit: root.unitLibrary.requireUnit("mastery_cleave"),
-            supportProfiles: [WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE],
-          },
-        ],
-        weaponMasteries: [{ weaponUnitId: authoredUnitId("weapon_greataxe") }],
-      }),
-      statBlock(root, { combatantId: goblinId, initiative: 10 }),
-      statBlock(root, {
-        combatantId: allyId,
-        displayName: "Second Goblin",
-        initiative: 9,
-      }),
-    ]);
+          characterUnitRefs: [
+            {
+              unit: root.unitLibrary.requireUnit("mastery_cleave"),
+              supportProfiles: [WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE],
+            },
+          ],
+          weaponMasteries: [
+            { weaponUnitId: authoredUnitId("weapon_greataxe") },
+          ],
+        }),
+        statBlock(root, { combatantId: goblinId, initiative: 10 }),
+        statBlock(root, {
+          combatantId: allyId,
+          displayName: "Second Goblin",
+          initiative: 9,
+        }),
+      ]),
+    );
 
     const afterDamage = resolveAttack(
       root,
@@ -443,30 +459,32 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Armor of Shadows Mage Armor through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession = startBattleRight(root, [
-      character(root, {
-        combatantId: fighterId,
-        displayName: "Warlock",
-        initiative: 20,
-        attack: null,
-        armorClass: {
-          ...defaultArmorClassState(),
-          abilityModifiers: {
-            ...defaultArmorClassState().abilityModifiers,
-            dex: armorAbilityModifier(2),
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        character(root, {
+          combatantId: fighterId,
+          displayName: "Warlock",
+          initiative: 20,
+          attack: null,
+          armorClass: {
+            ...defaultArmorClassState(),
+            abilityModifiers: {
+              ...defaultArmorClassState().abilityModifiers,
+              dex: armorAbilityModifier(2),
+            },
           },
-        },
-        spellcasting: spellcasting(root, {
-          sourceClassName: "warlock",
-          abilityModifier: 3,
-          invocationSpellAccesses: [
-            { tag: "armorOfShadowsMageArmor", spellId: "mage_armor" },
-          ],
-          slots: [{ spellLevel: 1, count: 1 }],
+          spellcasting: spellcasting(root, {
+            sourceClassName: "warlock",
+            abilityModifier: 3,
+            invocationSpellAccesses: [
+              { tag: "armorOfShadowsMageArmor", spellId: "mage_armor" },
+            ],
+            slots: [{ spellLevel: 1, count: 1 }],
+          }),
         }),
-      }),
-      statBlock(root, { combatantId: goblinId, initiative: 10 }),
-    ]);
+        statBlock(root, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
 
     const act = requireSpellAct(root, "mage_armor");
     expect(act.summary).toBe("Use Mage Armor.");
@@ -501,21 +519,23 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Shield triggered reaction through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession = startBattleRight(root, [
-      statBlock(root, { combatantId: goblinId, initiative: 20 }),
-      character(root, {
-        combatantId: fighterId,
-        displayName: "Shield Caster",
-        initiative: 10,
-        attack: null,
-        spellcasting: spellcasting(root, {
-          sourceClassName: "wizard",
-          abilityModifier: 3,
-          preparedSpells: ["shield"],
-          slots: [{ spellLevel: 1, count: 1 }],
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        statBlock(root, { combatantId: goblinId, initiative: 20 }),
+        character(root, {
+          combatantId: fighterId,
+          displayName: "Shield Caster",
+          initiative: 10,
+          attack: null,
+          spellcasting: spellcasting(root, {
+            sourceClassName: "wizard",
+            abilityModifier: 3,
+            preparedSpells: ["shield"],
+            slots: [{ spellLevel: 1, count: 1 }],
+          }),
         }),
-      }),
-    ]);
+      ]),
+    );
 
     const goblinAttack = requireAct(root, "Attack", "Scimitar");
     const afterTarget = call(root, "fill_battle_hole", {
@@ -592,24 +612,26 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Hellish Rebuke after-damage reaction through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession = startBattleRight(root, [
-      statBlock(root, { combatantId: goblinId, initiative: 20 }),
-      character(root, {
-        combatantId: fighterId,
-        displayName: "Hellish Rebuke Caster",
-        initiative: 10,
-        attack: null,
-        spellcasting: spellcasting(root, {
-          sourceClassName: "warlock",
-          abilityModifier: 3,
-          preparedSpells: ["hellish_rebuke"],
-          slots: [
-            { spellLevel: 1, count: 1 },
-            { spellLevel: 2, count: 1 },
-          ],
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        statBlock(root, { combatantId: goblinId, initiative: 20 }),
+        character(root, {
+          combatantId: fighterId,
+          displayName: "Hellish Rebuke Caster",
+          initiative: 10,
+          attack: null,
+          spellcasting: spellcasting(root, {
+            sourceClassName: "warlock",
+            abilityModifier: 3,
+            preparedSpells: ["hellish_rebuke"],
+            slots: [
+              { spellLevel: 1, count: 1 },
+              { spellLevel: 2, count: 1 },
+            ],
+          }),
         }),
-      }),
-    ]);
+      ]),
+    );
 
     const goblinAttack = requireAct(root, "Attack", "Scimitar");
     const hellishRebukeProcedureRef = spellProcedureRef(
@@ -719,25 +741,27 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Feather Fall falling-trigger reaction through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession = startBattleRight(root, [
-      character(root, {
-        combatantId: fighterId,
-        displayName: "Feather Fall Caster",
-        initiative: 20,
-        attack: null,
-        spellcasting: spellcasting(root, {
-          sourceClassName: "wizard",
-          abilityModifier: 3,
-          preparedSpells: ["feather_fall"],
-          slots: [{ spellLevel: 1, count: 1 }],
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        character(root, {
+          combatantId: fighterId,
+          displayName: "Feather Fall Caster",
+          initiative: 20,
+          attack: null,
+          spellcasting: spellcasting(root, {
+            sourceClassName: "wizard",
+            abilityModifier: 3,
+            preparedSpells: ["feather_fall"],
+            slots: [{ spellLevel: 1, count: 1 }],
+          }),
         }),
-      }),
-      statBlock(root, {
-        combatantId: allyId,
-        displayName: "Falling Ally",
-        initiative: 10,
-      }),
-    ]);
+        statBlock(root, {
+          combatantId: allyId,
+          displayName: "Falling Ally",
+          initiative: 10,
+        }),
+      ]),
+    );
 
     const featherFallProcedureRef = spellProcedureRef(
       root,
@@ -834,22 +858,24 @@ describe("manual MCP battle surface coverage", () => {
 
   test("retains Pact of the Chain and uses Pact of the Tome cantrips through MCP battle tools", () => {
     const chainRoot = createMcpPlaySessionRoot();
-    chainRoot.sessionStore.battleSession = startBattleRight(chainRoot, [
-      character(chainRoot, {
-        combatantId: fighterId,
-        displayName: "Pact of the Chain Warlock",
-        initiative: 20,
-        attack: null,
-        spellcasting: spellcasting(chainRoot, {
-          sourceClassName: "warlock",
-          abilityModifier: 3,
-          invocationSpellAccesses: [
-            { tag: "pactOfTheChainFindFamiliar", spellId: "find_familiar" },
-          ],
-          slots: [{ spellLevel: 1, count: 1 }],
+    chainRoot.sessionStore.storeActiveBattle(
+      startBattleRight(chainRoot, [
+        character(chainRoot, {
+          combatantId: fighterId,
+          displayName: "Pact of the Chain Warlock",
+          initiative: 20,
+          attack: null,
+          spellcasting: spellcasting(chainRoot, {
+            sourceClassName: "warlock",
+            abilityModifier: 3,
+            invocationSpellAccesses: [
+              { tag: "pactOfTheChainFindFamiliar", spellId: "find_familiar" },
+            ],
+            slots: [{ spellLevel: 1, count: 1 }],
+          }),
         }),
-      }),
-    ]);
+      ]),
+    );
     const chainSession = chainRoot.sessionStore.battleSession;
     const chainWarlock = chainSession?.state.combatants.get(fighterId);
     const chainSpellcasting =
@@ -871,29 +897,31 @@ describe("manual MCP battle surface coverage", () => {
     ).toBe(false);
 
     const tomeRoot = createMcpPlaySessionRoot();
-    tomeRoot.sessionStore.battleSession = startBattleRight(tomeRoot, [
-      character(tomeRoot, {
-        combatantId: fighterId,
-        displayName: "Pact of the Tome Warlock",
-        initiative: 20,
-        attack: null,
-        spellcasting: spellcasting(tomeRoot, {
-          sourceClassName: "warlock",
-          abilityModifier: 3,
-          bookOfShadowsSpellAccesses: [
-            {
-              tag: "bookOfShadows",
-              bookPresence: { tag: "onPerson" },
-              cantrips: ["fire_bolt", "chill_touch", "starry_wisp"],
-              ritualSpells: ["detect_magic", "detect_poison_and_disease"],
-              spellcastingFocus: "book_of_shadows",
-            },
-          ],
-          slots: [{ spellLevel: 1, count: 1 }],
+    tomeRoot.sessionStore.storeActiveBattle(
+      startBattleRight(tomeRoot, [
+        character(tomeRoot, {
+          combatantId: fighterId,
+          displayName: "Pact of the Tome Warlock",
+          initiative: 20,
+          attack: null,
+          spellcasting: spellcasting(tomeRoot, {
+            sourceClassName: "warlock",
+            abilityModifier: 3,
+            bookOfShadowsSpellAccesses: [
+              {
+                tag: "bookOfShadows",
+                bookPresence: { tag: "onPerson" },
+                cantrips: ["fire_bolt", "chill_touch", "starry_wisp"],
+                ritualSpells: ["detect_magic", "detect_poison_and_disease"],
+                spellcastingFocus: "book_of_shadows",
+              },
+            ],
+            slots: [{ spellLevel: 1, count: 1 }],
+          }),
         }),
-      }),
-      statBlock(tomeRoot, { combatantId: goblinId, initiative: 10 }),
-    ]);
+        statBlock(tomeRoot, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
 
     const fireBolt = requireSpellAct(tomeRoot, "fire_bolt");
     const target = requireHole(fireBolt.initialHoles, "targetChoice");
@@ -914,29 +942,31 @@ describe("manual MCP battle surface coverage", () => {
 
   test("uses Favored Enemy Hunter's Mark free cast through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
-    root.sessionStore.battleSession = startBattleRight(root, [
-      character(root, {
-        combatantId: fighterId,
-        displayName: "Ranger",
-        initiative: 20,
-        classLevels: [{ className: "ranger", level: 1 }],
-        resources: [
-          {
-            unit: root.unitLibrary.requireUnit("ranger_favored_enemy"),
-            usesRemaining: resourceCount(2),
-          },
-        ],
-        spellcasting: spellcasting(root, {
-          sourceClassName: "ranger",
-          abilityModifier: 3,
-          featurePreparedSpells: [
-            { sourceUnitId: "ranger_favored_enemy", spellId: "hunters_mark" },
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        character(root, {
+          combatantId: fighterId,
+          displayName: "Ranger",
+          initiative: 20,
+          classLevels: [{ className: "ranger", level: 1 }],
+          resources: [
+            {
+              unit: root.unitLibrary.requireUnit("ranger_favored_enemy"),
+              usesRemaining: resourceCount(2),
+            },
           ],
-          slots: [{ spellLevel: 1, count: 1 }],
+          spellcasting: spellcasting(root, {
+            sourceClassName: "ranger",
+            abilityModifier: 3,
+            featurePreparedSpells: [
+              { sourceUnitId: "ranger_favored_enemy", spellId: "hunters_mark" },
+            ],
+            slots: [{ spellLevel: 1, count: 1 }],
+          }),
         }),
-      }),
-      statBlock(root, { combatantId: goblinId, initiative: 10 }),
-    ]);
+        statBlock(root, { combatantId: goblinId, initiative: 10 }),
+      ]),
+    );
 
     const huntersMark = requireSpellActWithInvocationTag(
       root,
@@ -1031,31 +1061,33 @@ describe("manual MCP battle surface coverage", () => {
       "sleep",
       "thunderwave",
     ] as const;
-    root.sessionStore.battleSession = startBattleRight(root, [
-      character(root, {
-        combatantId: fighterId,
-        displayName: "Prepared Caster",
-        initiative: 20,
-        attack: null,
-        spellcasting: spellcasting(root, {
-          sourceClassName: "wizard",
-          abilityModifier: 3,
-          cantrips,
-          preparedSpells,
-          slots: [
-            { spellLevel: 1, count: 12 },
-            { spellLevel: 2, count: 3 },
-            { spellLevel: 3, count: 3 },
-            { spellLevel: 5, count: 2 },
-          ],
+    root.sessionStore.storeActiveBattle(
+      startBattleRight(root, [
+        character(root, {
+          combatantId: fighterId,
+          displayName: "Prepared Caster",
+          initiative: 20,
+          attack: null,
+          spellcasting: spellcasting(root, {
+            sourceClassName: "wizard",
+            abilityModifier: 3,
+            cantrips,
+            preparedSpells,
+            slots: [
+              { spellLevel: 1, count: 12 },
+              { spellLevel: 2, count: 3 },
+              { spellLevel: 3, count: 3 },
+              { spellLevel: 5, count: 2 },
+            ],
+          }),
         }),
-      }),
-      statBlock(root, {
-        combatantId: goblinId,
-        initiative: 10,
-        creatureType: "beast",
-      }),
-    ]);
+        statBlock(root, {
+          combatantId: goblinId,
+          initiative: 10,
+          creatureType: "beast",
+        }),
+      ]),
+    );
 
     const discovered = call(root, "discover_battle_acts", {});
     const discoveredSpellIds = new Set(

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
+import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { characterDraftId } from "@dnd/character-creation-runtime";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
@@ -458,9 +460,52 @@ export async function verifyToolContract(client: Client) {
   assert.match(schemaText, /statBlockId/);
   assert.doesNotMatch(schemaText, /characterCombatantId/);
   assert.doesNotMatch(schemaText, /additionalCharacters/);
-  assert.doesNotMatch(startBattleOutputSchemaText, /battleState/);
+  assert.match(startBattleOutputSchemaText, /battleState/);
+  assert.match(startBattleOutputSchemaText, /initialInitiativeSetup/);
+  assert.match(startBattleOutputSchemaText, /activeBattle/);
+  assert.match(startBattleOutputSchemaText, /none/);
   assert.match(startBattleOutputSchemaText, /snapshot/);
   assert.match(startBattleOutputSchemaText, /session/);
+
+  const validateStartBattleOutput = new AjvJsonSchemaValidator().getValidator(
+    (startBattle as { readonly outputSchema: unknown })
+      .outputSchema as JsonSchemaType,
+  );
+  const emptyStartBattleProjection = {
+    snapshot: null,
+    availableActs: [],
+    admittedSpellPresentations: [],
+    presentedInterruptChoices: [],
+    session: {
+      draftIds: [],
+      characterIds: [],
+      selectedStatBlockId: null,
+      battleState: { tag: "none" },
+    },
+  };
+  for (const battleState of [
+    { tag: "none" },
+    {
+      tag: "initialInitiativeSetup",
+      battleId: "battle:contract",
+      combatants: [],
+    },
+    {
+      tag: "activeBattle",
+      battleId: "battle:contract",
+      currentActorId: "contract-actor",
+    },
+  ] as const) {
+    assert.equal(
+      validateStartBattleOutput({
+        ...emptyStartBattleProjection,
+        battleState,
+        session: { ...emptyStartBattleProjection.session, battleState },
+      }).valid,
+      true,
+      `start_battle output must accept battleState ${battleState.tag}`,
+    );
+  }
 
   const fillCreationHoles = listed.tools.find(
     (tool) => tool.name === "fill_creation_holes",
