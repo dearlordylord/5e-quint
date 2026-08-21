@@ -1,0 +1,15 @@
+{
+  "campaignId": "day-table-save-circumstance-authoring",
+  "plannedScenarioId": "table-save-circumstance-advantage-probe",
+  "scenarioTitle": "Table saving-throw circumstance Advantage probe",
+  "scenarioPurpose": "Probe open issue #279 at its saving-throw boundary: one exact GM circumstance grants Advantage on a concrete saving throw, grounded in the local SRD 5.2.1 Playing-the-Game.md Advantage/Disadvantage passage, while the rest of the battle remains representable through the public SDK.",
+  "evidenceSetId": "day-table-save-circumstance-authoring-evidence",
+  "distributionPreference": "Generate a compact battle whose first materially relevant saving throw is produced by a supplied canonical stat-block action. Explicitly state that the GM grants circumstance Advantage on that one exact saving throw and no later test. Keep setup, targets, attacks, damage, movement, interrupts, and later tactics within the documented public SDK. Make the encounter materially distinct from the admitted attack-roll circumstance probe and from the complete admitted catalogue through its saving-throw mechanic, composition, interaction sequence, and tactical purpose; do not rely on wording or coordinates.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "probeUnsupportedCapability",
+  "minimumIterations": 2,
+  "maximumIterations": 3,
+  "candidatesPerIteration": 2,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": true
+}
