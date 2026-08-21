@@ -59,7 +59,10 @@ export function createPlaySessionRegistry(input: {
 
   return {
     create() {
-      const playSessionId = generatedPlaySessionId();
+      let playSessionId = generatedPlaySessionId();
+      while (liveSessions.has(playSessionId)) {
+        playSessionId = generatedPlaySessionId();
+      }
       const root = input.createRoot();
       liveSessions.set(playSessionId, { root, tail: Promise.resolve() });
       return {

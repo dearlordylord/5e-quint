@@ -73,7 +73,7 @@ const listCatalogUnitsOutputSchema = mcpOutputJsonSchema(
   ListCatalogUnitsOutputSchema,
 );
 
-const contentToolNames = {
+export const contentToolNames = {
   describeMcpWorkflow: "describe_mcp_workflow",
   listStatBlocks: "list_stat_blocks",
   listCatalogUnits: "list_catalog_units",

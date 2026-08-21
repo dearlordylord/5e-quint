@@ -1,6 +1,9 @@
 import { Either, Schema } from "effect";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
+import { battleToolNames } from "./battle-tool-input.ts";
+import { characterToolNames } from "./character-tool-input.ts";
+import { contentToolNames } from "./content-tools.ts";
 import {
   decodePlaySessionId,
   PLAY_SESSION_UNAVAILABLE,
@@ -169,7 +172,11 @@ function availableEnvelope(input: {
     },
     projection: mcpSessionSummary(input.projection),
     unresolvedInputs,
-    nextOperations: nextOperationsFrom(input.projection, unresolvedInputs),
+    nextOperations: nextOperationsFrom(
+      input.operationName,
+      input.projection,
+      unresolvedInputs,
+    ),
     restoration: { tag: "retained" },
   });
   return {
@@ -238,23 +245,51 @@ function collectUnresolvedInputs(
 }
 
 function nextOperationsFrom(
+  operationName: string,
   projection: McpSessionSummary,
   unresolvedInputs: readonly UnresolvedInputGroup[],
 ): readonly string[] {
   if (projection.activeBattle !== null) {
+    if (operationName === playSessionToolNames.read) {
+      return [
+        battleToolNames.discoverBattleActs,
+        battleToolNames.readBattleState,
+      ];
+    }
     return unresolvedInputs.length > 0
-      ? ["fill_battle_hole", "read_battle_state"]
-      : ["discover_battle_acts", "read_battle_state", "end_battle"];
+      ? [battleToolNames.fillBattleHole, battleToolNames.readBattleState]
+      : [
+          battleToolNames.discoverBattleActs,
+          battleToolNames.readBattleState,
+          battleToolNames.endBattle,
+        ];
   }
   if (projection.draftIds.length > 0) {
+    if (operationName === playSessionToolNames.read) {
+      return [characterToolNames.discoverCreationHoles];
+    }
     return unresolvedInputs.length > 0
-      ? ["fill_creation_holes", "discover_creation_holes"]
-      : ["finalize_character", "discover_creation_holes"];
+      ? [
+          characterToolNames.fillCreationHoles,
+          characterToolNames.discoverCreationHoles,
+        ]
+      : [
+          characterToolNames.finalizeCharacter,
+          characterToolNames.discoverCreationHoles,
+        ];
   }
   if (projection.characterIds.length > 0) {
-    return ["list_characters", "start_battle", "create_character_draft"];
+    return [
+      characterToolNames.listCharacters,
+      battleToolNames.startBattle,
+      characterToolNames.createCharacterDraft,
+    ];
   }
-  return ["create_character_draft", "list_catalog_units", "list_stat_blocks"];
+  return [
+    characterToolNames.createCharacterDraft,
+    contentToolNames.listCatalogUnits,
+    contentToolNames.listStatBlocks,
+  ];
 }
 
 function isJsonObject(

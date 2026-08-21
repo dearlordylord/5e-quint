@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 
 import { Schema } from "effect";
 
+import { BATTLE_TOOL_NAMES } from "./battle-tool-input.ts";
+import { CHARACTER_TOOL_NAMES } from "./character-tool-input.ts";
 import {
   PLAY_SESSION_RESTORATION_GUIDANCE,
   PlaySessionIdSchema,
@@ -21,6 +23,11 @@ export const PLAY_SESSION_TOOL_NAMES = [
 ] as const;
 
 export type PlaySessionToolName = (typeof PLAY_SESSION_TOOL_NAMES)[number];
+const PLAY_SESSION_OPERATION_NAMES = [
+  ...PLAY_SESSION_TOOL_NAMES,
+  ...CHARACTER_TOOL_NAMES,
+  ...BATTLE_TOOL_NAMES,
+] as const;
 
 const EmptyArgsSchema = Schema.Struct({});
 const PlaySessionArgsSchema = Schema.Struct({
@@ -28,6 +35,10 @@ const PlaySessionArgsSchema = Schema.Struct({
 });
 const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 const playSessionInputSchema = mcpObjectJsonSchema(PlaySessionArgsSchema);
+const playSessionIdInputPropertySchema = objectPropertySchema(
+  playSessionInputSchema,
+  "playSessionId",
+);
 const playSessionIdJsonSchema = mcpOutputJsonSchema(PlaySessionIdSchema);
 const sessionProjectionJsonSchema = mcpOutputJsonSchema(
   McpSessionSummarySchema,
@@ -97,7 +108,7 @@ function playSessionRoutedInputSchema(
     type: "object",
     properties: {
       ...properties,
-      playSessionId: playSessionIdJsonSchema,
+      playSessionId: playSessionIdInputPropertySchema,
     },
     required: [...new Set([...required, "playSessionId"])],
     additionalProperties: false,
@@ -247,7 +258,10 @@ function envelopeRequiredFields(): readonly string[] {
 function operationSchema(resultSchema: McpOutputSchema): McpOutputSchema {
   return {
     type: "object",
-    properties: { name: { type: "string" }, result: resultSchema },
+    properties: {
+      name: { type: "string", enum: PLAY_SESSION_OPERATION_NAMES },
+      result: resultSchema,
+    },
     required: ["name", "result"],
     additionalProperties: false,
   };
@@ -359,4 +373,16 @@ function isJsonObject(
   value: unknown,
 ): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function objectPropertySchema(
+  schema: McpObjectInputSchema,
+  propertyName: string,
+): McpOutputSchema {
+  const properties = isJsonObject(schema.properties) ? schema.properties : {};
+  const property = properties[propertyName];
+  if (!isJsonObject(property)) {
+    throw new Error(`Generated input schema omitted ${propertyName}.`);
+  }
+  return property;
 }

@@ -120,7 +120,9 @@ describe("MCP protocol server", () => {
           result: { tag: "playSessionResumed", playSessionId: first },
         },
         projection: { draftIds: ["draft:first-isolated-session"] },
+        nextOperations: ["discover_creation_holes"],
       });
+      expect(resumedFirst.nextOperations).not.toContain("finalize_character");
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
