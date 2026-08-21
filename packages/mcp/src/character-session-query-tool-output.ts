@@ -202,7 +202,7 @@ const CharacterSheetSpellAccessProjectionSchema = Schema.Array(
     source: Schema.Literal("classFeature", "magicInitiate"),
     sourceUnitId: Schema.String,
     spellId: Schema.String,
-    spellcastingAbility: Schema.String,
+    spellcastingAbility: AbilitySchema,
     preparation: Schema.Literal("alwaysPrepared", "learnedCantrip"),
   }),
 );

@@ -779,6 +779,23 @@ describe("MCP server route", () => {
       },
     });
 
+    const spellAccess = queryOutput({ kind: "spellAccess" });
+    rejects({
+      ...spellAccess,
+      query: {
+        ...spellAccess.query,
+        projection: [
+          {
+            source: "classFeature",
+            sourceUnitId: "synthetic_spell_source",
+            spellId: "synthetic_spell",
+            spellcastingAbility: "bogus",
+            preparation: "alwaysPrepared",
+          },
+        ],
+      },
+    });
+
     const armor = queryOutput({ kind: "armorClass" });
     rejects({
       ...armor,
