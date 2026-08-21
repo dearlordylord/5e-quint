@@ -737,6 +737,48 @@ describe("MCP server route", () => {
       },
     });
 
+    const ability = queryOutput({
+      kind: "abilityCheckAbility",
+      skill: "athletics",
+      defaultAbility: "str",
+      activeFeatureUnitIds: [],
+    });
+    rejects({
+      ...ability,
+      query: {
+        ...ability.query,
+        projection: { ...ability.query.projection, defaultAbility: "bogus" },
+      },
+    });
+    rejects({
+      ...proficiency,
+      query: {
+        ...proficiency.query,
+        projection: {
+          ...proficiency.query.projection,
+          proficiencyBonus: {
+            ...proficiency.query.projection.proficiencyBonus,
+            skill: "bogus",
+          },
+        },
+      },
+    });
+
+    const linkedSpeeds = queryOutput({ kind: "linkedSpeedGrants" });
+    rejects({
+      ...linkedSpeeds,
+      query: {
+        ...linkedSpeeds.query,
+        projection: [
+          {
+            sourceUnitId: "synthetic_speed_source",
+            speedKind: "fly",
+            feet: 2.5,
+          },
+        ],
+      },
+    });
+
     const armor = queryOutput({ kind: "armorClass" });
     rejects({
       ...armor,
@@ -756,6 +798,17 @@ describe("MCP server route", () => {
     const mastery = queryOutput({
       kind: "weaponMasterySelections",
       featureUnitId: "fighter_weapon_mastery",
+    });
+    rejects({
+      ...mastery,
+      query: {
+        ...mastery.query,
+        projection: {
+          ...mastery.query.projection,
+          choiceCount: 1.5,
+          longRestChangeCount: -1,
+        },
+      },
     });
     rejects({
       ...mastery,

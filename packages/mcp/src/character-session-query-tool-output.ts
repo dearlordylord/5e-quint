@@ -1,9 +1,10 @@
 import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
-import { HAND_USES } from "@dnd/shared/types";
+import { HAND_USES, MovementFeet, ResourceCount } from "@dnd/shared/types";
 import {
   AbilitySchema,
   ArmorAcFormulaSchema,
   ArmorCategorySchema,
+  SkillSchema,
 } from "@dnd/surface/surface/schema";
 import { ARMOR_TRAINING_CATEGORIES } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
@@ -15,6 +16,20 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.greaterThanOrEqualTo(1),
 );
 const IntegerSchema = Schema.Number.pipe(Schema.int());
+const MovementFeetOutputSchema = Schema.transform(MovementFeet, Schema.Number, {
+  decode: (feet) => Number(feet),
+  encode: (feet) => MovementFeet.make(feet),
+  strict: true,
+});
+const ResourceCountOutputSchema = Schema.transform(
+  ResourceCount,
+  Schema.Number,
+  {
+    decode: (count) => Number(count),
+    encode: (count) => ResourceCount.make(count),
+    strict: true,
+  },
+);
 const CharacterSheetProjectionRetainRouteSchema = Schema.Struct({
   kind: Schema.Literal("retainCharacterSheetSelectedReferences"),
   subject: Schema.Literal("selectedReferenceProjection"),
@@ -122,10 +137,10 @@ const ArmorClassStateSchema = Schema.Struct({
 });
 
 const CharacterSheetAbilityCheckAbilityProjectionSchema = Schema.Struct({
-  defaultAbility: Schema.String,
+  defaultAbility: AbilitySchema,
   optionalSubstitutions: Schema.Array(
     Schema.Struct({
-      ability: Schema.String,
+      ability: AbilitySchema,
       sourceUnitId: Schema.String,
       requiredActiveFeatureUnitId: Schema.optionalWith(Schema.String, {
         exact: true,
@@ -142,29 +157,29 @@ const CharacterSheetAbilityCheckProficiencyBonusProjectionSchema =
       }),
       Schema.Struct({
         tag: Schema.Literal("skillProficiency"),
-        skill: Schema.String,
+        skill: SkillSchema,
         bonus: Schema.Number,
       }),
       Schema.Struct({
         tag: Schema.Literal("expertise"),
-        skill: Schema.String,
+        skill: SkillSchema,
         bonus: Schema.Number,
       }),
       Schema.Struct({
         tag: Schema.Literal("jackOfAllTrades"),
         sourceUnitId: Schema.String,
-        skill: Schema.String,
+        skill: SkillSchema,
         bonus: Schema.Number,
       }),
     ),
     qRoute: Schema.Tuple(CharacterSheetAbilityCheckProjectionRouteSchema),
   });
 const CharacterSheetJumpDistanceAbilityProjectionSchema = Schema.Struct({
-  defaultAbility: Schema.String,
+  defaultAbility: AbilitySchema,
   optionalSubstitutions: Schema.Array(
     Schema.Struct({
-      ability: Schema.String,
-      replaces: Schema.String,
+      ability: AbilitySchema,
+      replaces: AbilitySchema,
       sourceUnitId: Schema.String,
     }),
   ),
@@ -173,7 +188,7 @@ const CharacterSheetLinkedSpeedGrantSchema = Schema.Struct({
   sourceUnitId: Schema.String,
   speedKind: Schema.Literal("fly", "swim", "climb", "burrow"),
   feet: Schema.Union(
-    Schema.Number,
+    MovementFeetOutputSchema,
     Schema.Struct({ kind: Schema.Literal("walk_speed") }),
   ),
 });
@@ -198,8 +213,8 @@ const CharacterSheetWeaponMasteryProjectionSchema = Schema.Struct({
   featureUnitId: Schema.String,
   classUnitId: Schema.String,
   selectedWeaponUnitIds: Schema.Array(Schema.String),
-  choiceCount: Schema.Number,
-  longRestChangeCount: Schema.Number,
+  choiceCount: ResourceCountOutputSchema,
+  longRestChangeCount: ResourceCountOutputSchema,
   eligibleWeaponUnitIds: Schema.Array(Schema.String),
   qRoute: CharacterSheetWeaponMasteryProjectionRouteSchema,
 });
