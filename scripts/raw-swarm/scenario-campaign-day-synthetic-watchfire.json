@@ -1,0 +1,15 @@
+{
+  "campaignId": "day-synthetic-watchfire-authoring",
+  "plannedScenarioId": "synthetic-watchfire-saving-throw-crossing",
+  "scenarioTitle": "Synthetic watchfire saving-throw crossing",
+  "scenarioPurpose": "Explore a supported-only battle centered on a canonical saving-throw procedure, changing movement, and serious opposing objectives, while remaining materially distinct from the complete admitted catalogue.",
+  "evidenceSetId": "day-synthetic-watchfire-authoring-evidence",
+  "distributionPreference": "Favor compact battles that exercise a canonical saving-throw procedure together with changing tactics and movement. Use only supplied SRD stat blocks or supported delegated Character Sheets. Keep every setup and play fact within the documented public SDK, avoid repeating the admitted catalogue's pursuit, Shove-cycle, beacon-defense, lantern-intercept, and per-test circumstance-probe purposes, and require material differences in mechanics, composition, interaction sequence, or tactical question rather than wording or coordinates.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "supportedOnly",
+  "minimumIterations": 2,
+  "maximumIterations": 4,
+  "candidatesPerIteration": 4,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": false
+}
