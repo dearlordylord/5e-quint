@@ -33,6 +33,7 @@ import {
   ingestPublishedScenarioAdmissionBundle,
   rollbackScenarioAdmissionBundle,
   publishScenarioRejectionBundle,
+  retainStagedGenerationFindings,
 } from "./generate-scenario.ts";
 import { openArtifactIndex } from "./artifact-index.ts";
 import {
@@ -84,6 +85,58 @@ test("rolls back every admitted path when bundle publication fails", () => {
         .filter((name) => name !== "facts.json")
         .every((name) => existsSync(resolve(staged, name))),
     ).toBe(true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("materializes staged generation findings before admission publication", () => {
+  const root = mkdtempSync(
+    resolve(repoRoot, "scripts/raw-swarm/.staged-findings-"),
+  );
+  const staged = resolve(root, "staged-findings.json");
+  const campaignPath = resolve(root, "campaign.json");
+  try {
+    const campaignValue = {
+      type: "raw-swarm-scenario-campaign" as const,
+      schemaVersion: 1 as const,
+      campaignId: "generation-campaign",
+      plannedScenarioId: "generation-example",
+      evidenceSetId: "generation-evidence",
+      gitSha: "a".repeat(40),
+      startedAt: "2026-08-18T00:00:00.000Z",
+      configSha256: "c".repeat(64),
+    } as const;
+    const campaignBytes = `${JSON.stringify(campaignValue)}\n`;
+    writeFileSync(campaignPath, campaignBytes);
+    const campaignAuthority = {
+      role: "campaign",
+      path: relative(repoRoot, campaignPath),
+      byteLength: Buffer.byteLength(campaignBytes),
+      sha256: createHash("sha256").update(campaignBytes).digest("hex"),
+    };
+    const subject = {
+      tag: "scenarioCampaign" as const,
+      campaignId: campaignValue.campaignId,
+      evidenceSetId: campaignValue.evidenceSetId,
+      plannedScenarioId: campaignValue.plannedScenarioId,
+      gitSha: campaignValue.gitSha,
+      startedAt: campaignValue.startedAt,
+      sdkCalls: { tag: "transcriptFree" as const },
+    };
+    const findings = Schema.decodeUnknownSync(FindingsProjectionSchema)({
+      type: "raw-swarm-findings",
+      schemaVersion: 2,
+      subjectIdentity: sha256Canonical(subject),
+      subject,
+      authorities: [campaignAuthority],
+      findings: [],
+    });
+
+    retainStagedGenerationFindings({ projection: findings, path: staged });
+
+    expect(existsSync(staged)).toBe(true);
+    expect(JSON.parse(readFileSync(staged, "utf8"))).toEqual(findings);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

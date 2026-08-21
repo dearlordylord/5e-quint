@@ -9,7 +9,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { relative, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Either, Match, Schema } from "effect";
 
@@ -74,6 +74,7 @@ import {
   findingsArtifactPath,
   FindingsProjectionSchema,
   writeFindingsProjection,
+  type FindingsProjection,
 } from "./findings.ts";
 import { projectGenerationFindings } from "./generation-findings.ts";
 import { ingestGenerationFindings } from "./artifact-index.ts";
@@ -185,6 +186,37 @@ export function ingestPublishedScenarioAdmissionBundle(input: {
       );
     }
     throw error;
+  }
+}
+
+/**
+ * Materialize the findings projection in the caller-owned staging directory.
+ *
+ * Admission publication is a filesystem transaction.  Keep the staged
+ * findings authority explicit and verify it before the transaction starts so
+ * a missing source cannot surface as a late, opaque rename failure.
+ */
+export function retainStagedGenerationFindings(input: {
+  readonly projection: FindingsProjection;
+  readonly path: string;
+}): void {
+  writeFindingsProjection({
+    projection: input.projection,
+    path: input.path,
+  });
+  if (!existsSync(input.path)) {
+    const absolutePath = resolve(repoRoot, input.path);
+    mkdirSync(dirname(absolutePath), { recursive: true });
+    writeFileSync(
+      absolutePath,
+      `${JSON.stringify(input.projection, null, 2)}\n`,
+      {
+        flag: "wx",
+      },
+    );
+  }
+  if (!existsSync(input.path)) {
+    fail(`Staged generation findings were not materialized: ${input.path}`);
   }
 }
 
@@ -823,7 +855,7 @@ async function main(args: readonly string[]): Promise<void> {
       readonly pathReplacements?: readonly (readonly [string, string])[];
       readonly ingest?: boolean;
     }> = {},
-  ): void => {
+  ): FindingsProjection => {
     const evidence = Match.value(input).pipe(
       Match.when({ tag: "campaignFailure" }, ({ reason }) => ({
         authorityPaths: [] as readonly {
@@ -969,7 +1001,7 @@ async function main(args: readonly string[]): Promise<void> {
     }
     const retainedFindingsPath =
       options.path ?? findingsArtifactPath(campaignEvidenceDirectory);
-    writeFindingsProjection({
+    retainStagedGenerationFindings({
       projection: retainedProjection.right,
       path: retainedFindingsPath,
     });
@@ -979,6 +1011,7 @@ async function main(args: readonly string[]): Promise<void> {
         dbPath,
       });
     }
+    return retainedProjection.right;
   };
   let result: Either.Either<ScenarioCampaignResult, string>;
   try {
