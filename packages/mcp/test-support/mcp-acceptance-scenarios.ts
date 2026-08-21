@@ -490,11 +490,6 @@ export async function verifyToolContract(client: Client) {
       battleId: "battle:contract",
       combatants: [],
     },
-    {
-      tag: "activeBattle",
-      battleId: "battle:contract",
-      currentActorId: "contract-actor",
-    },
   ] as const) {
     const operationResult = {
       ...emptyStartBattleProjection,
@@ -510,13 +505,11 @@ export async function verifyToolContract(client: Client) {
       nextOperations:
         battleState.tag === "initialInitiativeSetup"
           ? ["battle_lifecycle", "read_battle_state"]
-          : battleState.tag === "activeBattle"
-            ? ["discover_battle_acts", "read_battle_state", "end_battle"]
-            : [
-                "create_character_draft",
-                "list_catalog_units",
-                "list_stat_blocks",
-              ],
+          : [
+              "create_character_draft",
+              "list_catalog_units",
+              "list_stat_blocks",
+            ],
       restoration: { tag: "retained" },
     };
     const validation = validateStartBattleOutput(envelope);

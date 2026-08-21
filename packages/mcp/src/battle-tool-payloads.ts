@@ -157,12 +157,16 @@ export function battleResolutionPayload(
     if (battleState.tag !== "activeBattle") {
       throw new Error("Battle resolution requires an active battle state.");
     }
+    const session = root.sessionStore.snapshot();
     return {
       result: battleResolutionResultPayload(result, value.snapshot),
       ...value,
       battleState,
       snapshot: value.snapshot,
-      session: root.sessionStore.snapshot(),
+      session: {
+        ...session,
+        battleState,
+      },
     };
   });
 }

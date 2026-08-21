@@ -138,6 +138,26 @@ describe("MCP session wire projections", () => {
         session: resolutionSession({ tag: "none" }),
       }).valid,
     ).toBe(false);
+    const activeResolution = {
+      ...presentation,
+      battleState: activeState,
+      result: {},
+      snapshot: {},
+      session: resolutionSession(activeState),
+    };
+    expect(validateResolution(activeResolution).valid).toBe(false);
+    expect(
+      validateResolution({
+        ...activeResolution,
+        session: resolutionSession({ tag: "none" }),
+      }).valid,
+    ).toBe(false);
+    expect(
+      validateResolution({
+        ...activeResolution,
+        session: resolutionSession(setupState),
+      }).valid,
+    ).toBe(false);
     expect(
       validateResolution({
         ...presentation,

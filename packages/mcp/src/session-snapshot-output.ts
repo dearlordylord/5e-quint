@@ -63,7 +63,20 @@ export const McpSessionSnapshotSchema = Schema.Struct({
   ),
 });
 
+export const McpActiveSessionSnapshotSchema = Schema.Struct({
+  draftIds: Schema.Array(Schema.String),
+  characterIds: Schema.Array(Schema.String),
+  selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
+  battleState: McpActiveBattleStateSnapshotSchema,
+  transientBattleFills: Schema.Union(
+    McpTransientBattleFillsSchema,
+    Schema.Null,
+  ),
+});
+
 export type McpSessionSummary = typeof McpSessionSummarySchema.Type;
+export type McpActiveSessionSnapshot =
+  typeof McpActiveSessionSnapshotSchema.Type;
 
 export function mcpSessionSummary(
   snapshot: McpSessionSnapshot,

@@ -15,6 +15,7 @@ import { Schema } from "effect";
 
 import {
   McpActiveBattleStateSnapshotSchema,
+  McpActiveSessionSnapshotSchema,
   McpInitialInitiativeSetupSnapshotSchema,
   McpNoneBattleStateSnapshotSchema,
   McpSessionSnapshotSchema,
@@ -134,7 +135,7 @@ export const BattleResolutionOutputSchema = Schema.Struct({
   result: BattleResolutionResultSchema,
   snapshot: BattlePresentedSnapshotSchema,
   ...BattlePresentationProjectionFields,
-  session: McpSessionSnapshotSchema,
+  session: McpActiveSessionSnapshotSchema,
 });
 
 export const EndBattleOutputSchema = Schema.Struct({
