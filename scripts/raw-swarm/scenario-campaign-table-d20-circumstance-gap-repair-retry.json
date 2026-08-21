@@ -1,0 +1,15 @@
+{
+  "campaignId": "table-d20-circumstance-gap-authoring-repair-retry",
+  "plannedScenarioId": "table-d20-circumstance-advantage-probe-repair-retry",
+  "scenarioTitle": "Table circumstance D20 Test probe repair retry",
+  "scenarioPurpose": "Complete the known-gap probe for open issue #279 after repairing the admission publication boundary: per-test Table circumstance Advantage/Disadvantage across the exact D20 Test, grounded in the local RAW Playing-the-Game.md Advantage/Disadvantage passage. Keep the rest of the interaction representable through the public SDK.",
+  "evidenceSetId": "table-d20-circumstance-gap-authoring-repair-retry-evidence",
+  "distributionPreference": "Known-gap-guided repair retry for open issue #279 (per-test Table circumstance Advantage/Disadvantage across the exact D20 Test, with the local RAW Playing-the-Game.md Advantage/Disadvantage passage as the rules authority). Generate materially different compact encounters that deliberately probe only this unsupported capability while keeping stat-block availability, character choices, setup, and all other interactions representable through the current public SDK. Use synthetic objective language where needed; do not prescribe an expected result or fabricate support.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "probeUnsupportedCapability",
+  "minimumIterations": 2,
+  "maximumIterations": 4,
+  "candidatesPerIteration": 4,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": true
+}
