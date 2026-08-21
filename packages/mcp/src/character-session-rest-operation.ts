@@ -169,14 +169,31 @@ export function applyInterruptLongRestOperation(
     return characterSessionOperationFailure(input.characterId, started.left);
   }
   let rest = started.right;
+  let previousCumulativeRestedTicks = 0;
   // RAW: .references/srd-5.2.1/Rules-Glossary.md#Long-Rest (lines 694-696)
   // grants Short Rest benefits after at least 1 hour before an interruption
   // and adds 1 hour to the resumed Long Rest for every interruption.
-  for (const segment of input.operation.interruptionSegments) {
+  for (const [
+    segmentIndex,
+    segment,
+  ] of input.operation.interruptionSegments.entries()) {
+    const segmentDelta = cumulativeRestDelta({
+      boundary: "interruption",
+      boundaryIndex: segmentIndex,
+      previousCumulativeRestedTicks,
+      cumulativeRestedTicks: segment.cumulativeRestedTicks,
+    });
+    if (Either.isLeft(segmentDelta)) {
+      return characterSessionOperationFailure(
+        input.characterId,
+        segmentDelta.left.issue,
+        segmentDelta.left.context,
+      );
+    }
     const interrupted = interruptLongRest({
       rest,
       unitLibrary: root.unitLibrary,
-      restedTicks: elapsedTimeTicks(segment.restedTicks),
+      restedTicks: segmentDelta.right,
       interruption: longRestInterruptionFromTool(segment.interruption),
       ...restRecoveryFromTool(segment),
     });
@@ -187,11 +204,28 @@ export function applyInterruptLongRestOperation(
       );
     }
     rest = interrupted.right.rest;
+    previousCumulativeRestedTicks = segment.cumulativeRestedTicks;
+  }
+  const completionDelta = cumulativeRestDelta({
+    boundary: "completion",
+    previousCumulativeRestedTicks,
+    cumulativeRestedTicks: input.operation.completion.cumulativeRestedTicks,
+  });
+  if (Either.isLeft(completionDelta)) {
+    return characterSessionOperationFailure(
+      input.characterId,
+      completionDelta.left.issue,
+      completionDelta.left.context,
+    );
   }
   return completeStartedLongRestOperation(root, {
     characterId: input.characterId,
     rest,
-    completion: input.operation.completion,
+    completion: {
+      ...input.operation.completion,
+      restedTicks: input.operation.completion.cumulativeRestedTicks,
+      restedTicksDelta: completionDelta.right,
+    },
   });
 }
 
@@ -202,18 +236,23 @@ type LongRestCompletionToolInput = Omit<
   >,
   "kind" | "timing"
 >;
+type LongRestResumptionCompletionToolInput = LongRestCompletionToolInput & {
+  readonly restedTicksDelta?: ReturnType<typeof elapsedTimeTicks>;
+};
 
 function completeStartedLongRestOperation(
   root: McpPlaySessionRoot,
   input: {
     readonly characterId: string;
     readonly rest: CharacterSheetLongRestStart;
-    readonly completion: LongRestCompletionToolInput;
+    readonly completion: LongRestResumptionCompletionToolInput;
   },
 ) {
   const completion = finishLongRest({
     rest: input.rest,
-    restedTicks: elapsedTimeTicks(input.completion.restedTicks),
+    restedTicks:
+      input.completion.restedTicksDelta ??
+      elapsedTimeTicks(input.completion.restedTicks),
   });
   if (Either.isLeft(completion)) {
     return characterSessionOperationFailure(input.characterId, completion.left);
@@ -267,12 +306,36 @@ function completeStartedLongRestOperation(
 function characterSessionOperationFailure(
   characterIdValue: string,
   issue: CharacterSheetIssue | string,
+  context?: RestBoundaryContext,
 ) {
   return errorContent("Character session operation failed.", {
     code: "CHARACTER_SESSION_OPERATION_INVALID",
     characterId: characterIdValue,
     message: typeof issue === "string" ? issue : issue.message,
+    ...(context === undefined ? {} : context),
   });
+}
+
+type RestBoundaryContext = {
+  readonly boundary: "interruption" | "completion";
+  readonly boundaryIndex?: number;
+  readonly previousCumulativeRestedTicks: number;
+  readonly cumulativeRestedTicks: number;
+};
+
+function cumulativeRestDelta(input: RestBoundaryContext) {
+  if (input.cumulativeRestedTicks <= input.previousCumulativeRestedTicks) {
+    return Either.left({
+      issue:
+        "Long Rest cumulativeRestedTicks must strictly increase at every boundary.",
+      context: input,
+    });
+  }
+  return Either.right(
+    elapsedTimeTicks(
+      input.cumulativeRestedTicks - input.previousCumulativeRestedTicks,
+    ),
+  );
 }
 
 function characterSessionOperationSuccess(

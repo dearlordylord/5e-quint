@@ -283,7 +283,7 @@ function workflowGuide() {
       rolledDiceFill:
         '{"kind":"rolledDice","holeId":"copy exact damage-result hole id","value":[{"results":[5]}]}',
       characterSessionOperations:
-        "apply_character_session_operation accepts atomic completeShortRest, interruptShortRest, completeLongRest, composed interruptLongRest histories with a final resumed segment, and passCalendarTime operations.",
+        "apply_character_session_operation accepts atomic completeShortRest, interruptShortRest, completeLongRest, composed interruptLongRest histories with strictly increasing cumulativeRestedTicks boundaries and a final cumulative resumed segment, and passCalendarTime operations.",
     },
     naturalLanguagePolicy:
       "MCP does not own synonym lists for character options. Use returned Unit names/ids and current creation holes as the source of truth; ask a clarification for terms such as 'warrior' before selecting class_fighter.",
@@ -293,7 +293,7 @@ function workflowGuide() {
       "On BATTLE_ACT_NOT_AVAILABLE, call discover_battle_acts and use a current subject.",
       "On BATTLE_ACT_REQUIRES_HOLES, use fill_battle_hole instead of resolve_battle_act.",
       "On pending-fill errors, continue filling session.transientBattleFills.subject until the result resolves.",
-      "Short Rest, composed Long Rest interruption/resumption, and calendar-time Stable recovery are supported through apply_character_session_operation; unresolved calendar recovery returns result.holes for a subsequent call, while a resumed Long Rest must supply its final segment in the same call.",
+      "Short Rest, composed Long Rest interruption/resumption, and calendar-time Stable recovery are supported through apply_character_session_operation; unresolved calendar recovery returns result.holes for a subsequent call, while a resumed Long Rest must supply strictly increasing cumulativeRestedTicks segments and its final cumulative segment in the same call.",
     ],
     limits: [
       "Use discover_creation_holes, list_characters, inspect_character_session, query_character_session, list_stat_blocks, and discover_battle_acts for the currently executable workflows, projections, and acts.",

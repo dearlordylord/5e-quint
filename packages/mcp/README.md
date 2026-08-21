@@ -122,13 +122,17 @@ The character-creation tool boundary exposes these user-facing tools:
   non-empty interruption history plus the final resumed-rest segment, applies
   any permitted Short Rest benefits at each interruption, and finishes the
   composed rest in that same call; it does not expose a resumable intermediate.
+  Every segment and the final completion use `cumulativeRestedTicks`, which
+  must strictly increase. The MCP replay derives each interval from adjacent
+  boundaries, so no elapsed interval can qualify twice.
   `interruptShortRest` receives its activity fact and returns no benefit.
   `completeLongRest` passes Weapon Mastery reselections to the Character Sheet
   runtime, while `passCalendarTime` delegates Stable recovery and returns its
   resolved, unresolved-hole, or invalid outcome. Start and finish validation
   occurs inside each call, so MCP retains no branded rest intermediate or
   separate rest state machine. A resumed Long Rest's required duration includes
-  one additional hour for every interruption.
+  one additional hour for every interruption; the final cumulative boundary
+  must also provide that full required duration.
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core

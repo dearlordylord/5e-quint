@@ -329,8 +329,7 @@ const InterruptShortRestOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("interruptShortRest"),
   interruption: ShortRestInterruptionArgsSchema,
 });
-const LongRestCompletionArgsFields = {
-  restedTicks: NonNegativeIntegerSchema,
+const LongRestCompletionChoiceFields = {
   weaponMasteryReselections: Schema.optionalWith(
     Schema.NonEmptyArray(WeaponMasteryReselectionArgsSchema),
     { exact: true },
@@ -351,13 +350,21 @@ const LongRestCompletionArgsFields = {
     { exact: true },
   ),
 } as const;
+const LongRestCompletionArgsFields = {
+  restedTicks: NonNegativeIntegerSchema,
+  ...LongRestCompletionChoiceFields,
+} as const;
+const LongRestResumptionCompletionArgsFields = {
+  cumulativeRestedTicks: NonNegativeIntegerSchema,
+  ...LongRestCompletionChoiceFields,
+} as const;
 const CompleteLongRestOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("completeLongRest"),
   timing: LongRestTimingArgsSchema,
   ...LongRestCompletionArgsFields,
 });
 const LongRestInterruptionSegmentArgsSchema = Schema.Struct({
-  restedTicks: NonNegativeIntegerSchema,
+  cumulativeRestedTicks: NonNegativeIntegerSchema,
   interruption: LongRestInterruptionArgsSchema,
   ...RestRecoveryArgsFields,
 });
@@ -367,7 +374,7 @@ const InterruptLongRestOperationArgsSchema = Schema.Struct({
   interruptionSegments: Schema.NonEmptyArray(
     LongRestInterruptionSegmentArgsSchema,
   ),
-  completion: Schema.Struct(LongRestCompletionArgsFields),
+  completion: Schema.Struct(LongRestResumptionCompletionArgsFields),
 });
 const PassCalendarTimeOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("passCalendarTime"),

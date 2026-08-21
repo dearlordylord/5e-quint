@@ -1930,6 +1930,7 @@ describe("MCP server route", () => {
     expect(operationSchemaText).not.toContain('"currentHp"');
     expect(operationSchemaText).not.toContain('"tempHp"');
     expect(operationSchemaText).toContain('"interruptionSegments"');
+    expect(operationSchemaText).toContain('"cumulativeRestedTicks"');
     expect(operationSchemaText).toContain('"completion"');
   });
 
@@ -4743,13 +4744,13 @@ describe("MCP server route", () => {
           timing: { tag: "noPriorLongRest" },
           interruptionSegments: [
             {
-              restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+              cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
               interruption: "takeDamage",
               spendHitDice: [{ classUnitId: "class_fighter", roll: 4 }],
             },
           ],
           completion: {
-            restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 9,
+            cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 10,
           },
         },
       }),
@@ -4757,7 +4758,7 @@ describe("MCP server route", () => {
 
     expect(interrupted.result).toEqual({
       tag: "longRestCompleted",
-      restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 9,
+      restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 10,
     });
     expect(root.sessionStore.characters.get(characterIdValue)).toMatchObject({
       hitPoints: {
@@ -4782,12 +4783,12 @@ describe("MCP server route", () => {
           timing: { tag: "noPriorLongRest" },
           interruptionSegments: [
             {
-              restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+              cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
               interruption: "takeDamage",
             },
           ],
           completion: {
-            restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 8,
+            cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 8,
           },
         },
       }),
@@ -4798,6 +4799,74 @@ describe("MCP server route", () => {
         code: "CHARACTER_SESSION_OPERATION_INVALID",
         message:
           "Long Rest requires the full required duration before benefits can be received.",
+      },
+    });
+    expect(root.sessionStore.characters.get(characterId)).toBe(before);
+  });
+
+  test("apply_character_session_operation composes two Long Rest interruptions with cumulative timing", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-long-rest-two-interruptions";
+    createFinalizedFighterSheet(root, draftId);
+    const characterId = testCharacterId(draftId);
+    const completed = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "interruptLongRest",
+          timing: { tag: "noPriorLongRest" },
+          interruptionSegments: [
+            {
+              cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+              interruption: "takeDamage",
+            },
+            {
+              cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 2,
+              interruption: "rollInitiative",
+            },
+          ],
+          completion: {
+            cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 12,
+          },
+        },
+      }),
+    );
+    expect(completed.result).toEqual({
+      tag: "longRestCompleted",
+      restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 12,
+    });
+  });
+
+  test.each([
+    ["repeated", [1, 1]],
+    ["decreasing", [2, 1]],
+  ])("rejects %s cumulative Long Rest boundary atomically", (_label, hours) => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = `draft:mcp-long-rest-invalid-${_label}`;
+    createFinalizedFighterSheet(root, draftId);
+    const characterId = testCharacterId(draftId);
+    const before = root.sessionStore.characters.get(characterId);
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "interruptLongRest",
+          timing: { tag: "noPriorLongRest" },
+          interruptionSegments: hours.map((hour) => ({
+            cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR * hour,
+            interruption: "takeDamage" as const,
+          })),
+          completion: {
+            cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 12,
+          },
+        },
+      }),
+    );
+    expect(rejected).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_OPERATION_INVALID",
+        boundary: "interruption",
+        boundaryIndex: 1,
       },
     });
     expect(root.sessionStore.characters.get(characterId)).toBe(before);
@@ -4866,12 +4935,12 @@ describe("MCP server route", () => {
           timing: { tag: "noPriorLongRest" },
           interruptionSegments: [
             {
-              restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+              cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
               interruption: "takeDamage",
             },
           ],
           completion: {
-            restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 9,
+            cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 10,
           },
         },
       }),
@@ -4879,7 +4948,7 @@ describe("MCP server route", () => {
 
     expect(completed.result).toEqual({
       tag: "longRestCompleted",
-      restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 9,
+      restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 10,
     });
     const stored = root.sessionStore.characters.get(characterId);
     if (stored?.tag !== "available") {
