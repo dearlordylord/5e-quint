@@ -8,7 +8,7 @@
   "contentAvailabilityIntent": "availableOnly",
   "sdkCapabilityIntent": "supportedOnly",
   "minimumIterations": 2,
-  "maximumIterations": 2,
+  "maximumIterations": 3,
   "candidatesPerIteration": 2,
   "reviewMilestone": 2,
   "admitReviewedUnsupported": false
