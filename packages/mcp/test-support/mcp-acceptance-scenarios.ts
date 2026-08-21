@@ -496,14 +496,39 @@ export async function verifyToolContract(client: Client) {
       currentActorId: "contract-actor",
     },
   ] as const) {
+    const operationResult = {
+      ...emptyStartBattleProjection,
+      battleState,
+      session: { ...emptyStartBattleProjection.session, battleState },
+    };
+    const envelope = {
+      tag: "playSessionAvailable",
+      playSessionId: "play-session:00000000-0000-4000-8000-000000000000",
+      operation: { name: "start_battle", result: operationResult },
+      projection: operationResult.session,
+      unresolvedInputs: [],
+      nextOperations:
+        battleState.tag === "initialInitiativeSetup"
+          ? ["battle_lifecycle", "read_battle_state"]
+          : battleState.tag === "activeBattle"
+            ? ["discover_battle_acts", "read_battle_state", "end_battle"]
+            : [
+                "create_character_draft",
+                "list_catalog_units",
+                "list_stat_blocks",
+              ],
+      restoration: { tag: "retained" },
+    };
+    const validation = validateStartBattleOutput(envelope);
     assert.equal(
-      validateStartBattleOutput({
-        ...emptyStartBattleProjection,
-        battleState,
-        session: { ...emptyStartBattleProjection.session, battleState },
-      }).valid,
+      validation.valid,
       true,
-      `start_battle output must accept battleState ${battleState.tag}`,
+      `start_battle output must accept battleState ${battleState.tag}: ${JSON.stringify(validation)}`,
+    );
+    assert.equal(
+      validateStartBattleOutput({ ...envelope, battleState }).valid,
+      false,
+      `model-facing output must reject parallel battleState for ${battleState.tag}`,
     );
   }
 
