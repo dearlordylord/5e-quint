@@ -302,6 +302,7 @@ function nextOperationsFrom(
     return [
       characterToolNames.listCharacters,
       characterToolNames.inspectCharacterSession,
+      characterToolNames.queryCharacterSession,
       battleToolNames.startBattle,
       characterToolNames.createCharacterDraft,
     ];

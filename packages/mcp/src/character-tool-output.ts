@@ -11,6 +11,10 @@ import {
 import type { CharacterSheetRetainedCompanionManifestation } from "@dnd/character-sheet-runtime";
 import { Schema } from "effect";
 
+import {
+  CharacterSessionQueryOutputSchema,
+  type CharacterSessionQueryOutput,
+} from "./character-session-query-tool-output.ts";
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 
 const JsonObjectSchema = Schema.Record({
@@ -82,6 +86,7 @@ const CharacterSheetResourceDisplayRowSchema = Schema.Union(
   CharacterSheetUnitResourceDisplayRowSchema,
   CharacterSheetSpellAccessFreeCastDisplayRowSchema,
 );
+
 const DraftChoiceCreationHoleSourceSchema = Schema.Struct({
   tag: Schema.Literal("draft"),
   path: Schema.Literal(...CHARACTER_DRAFT_CHOICE_PATHS),
@@ -290,6 +295,9 @@ export const CharacterSessionDetailOutputSchema = Schema.Struct({
   ),
   session: McpSessionSummarySchema,
 });
+
+export { CharacterSessionQueryOutputSchema };
+export type { CharacterSessionQueryOutput };
 
 export type CharacterSessionRow = Schema.Schema.Type<
   typeof CharacterSessionRowSchema

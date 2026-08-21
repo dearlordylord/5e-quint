@@ -56,6 +56,7 @@ const expectedTools = [
   "finalize_character",
   "list_characters",
   "inspect_character_session",
+  "query_character_session",
   "select_stat_block",
   "start_battle",
   "read_battle_state",
@@ -202,6 +203,19 @@ const agentConversationScenarios = [
     executableCoverage: "createAndFinalizeFighterTwo",
     insufficiency:
       "The ambiguity is now explicit: a cold agent knows it should ask before mapping 'warrior' to Fighter.",
+  },
+  {
+    id: "query-character-sheet-facts",
+    name: "Query Character Sheet facts",
+    userSays:
+      "What ability substitutions, Armor Class, Spell Access, and ritual options does this character have?",
+    agentReads:
+      "query_character_session exposes one discriminated read surface for the existing Character Sheet projections and returns the canonical projection or a typed rejection; it is unavailable while that character is in Battle.",
+    agentDecision:
+      "It copies the characterId and query variant from the session result, presents returned facts without inventing derived state, and uses only the ritual Spell Invocation variant for out-of-Battle spell inspection.",
+    executableCoverage: "verifyToolContract and verifyBaselineVertical",
+    insufficiency:
+      "The Skill may summarize large returned projections, but MCP adds no search, pagination, indexing, recommendation, spell-ledger, or generic out-of-Battle casting layer.",
   },
   {
     id: "create-baseline-character",
@@ -464,6 +478,30 @@ export async function verifyToolContract(client: Client) {
   assert.match(battleFillSchemaText, /subjectJson/);
   assert.match(battleFillSchemaText, /fillJson/);
   assert.ok(battleFillSchemaText.length < 2048);
+
+  const characterSessionQuery = listed.tools.find(
+    (tool) => tool.name === "query_character_session",
+  );
+  assert.ok(
+    characterSessionQuery,
+    "query_character_session tool must be registered",
+  );
+  const characterSessionQuerySchemaText = JSON.stringify(
+    characterSessionQuery.inputSchema,
+  );
+  const characterSessionQueryOutputSchemaText = JSON.stringify(
+    (characterSessionQuery as { readonly outputSchema?: unknown }).outputSchema,
+  );
+  assert.match(characterSessionQuerySchemaText, /abilityCheckAbility/);
+  assert.match(characterSessionQuerySchemaText, /spellInvocation/);
+  assert.match(characterSessionQuerySchemaText, /ritual/);
+  assert.doesNotMatch(characterSessionQuerySchemaText, /nonRitual|spellLedger/);
+  assert.doesNotMatch(
+    characterSessionQuerySchemaText,
+    /search|pagination|index|recommendation/,
+  );
+  assert.match(characterSessionQueryOutputSchemaText, /abilityCheckAbility/);
+  assert.match(characterSessionQueryOutputSchemaText, /spellInvocation/);
 
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
@@ -783,6 +821,19 @@ export async function verifyBaselineVertical(client: Client) {
   assert.equal(get(inBattleDetail, "detail.sheet"), undefined);
   assert.equal(get(inBattleDetail, "detail.sheetProjection"), undefined);
 
+  const inBattleQuery = await expectToolError(
+    client,
+    "query_character_session",
+    {
+      characterId: testCharacterId(draftId),
+      query: { kind: "linkedSpeedGrants" },
+    },
+  );
+  assert.equal(
+    get(inBattleQuery, "details.code"),
+    "CHARACTER_SESSION_QUERY_IN_BATTLE",
+  );
+
   const ended = await callTool(client, "end_battle", {});
   assert.equal(get(ended, "endedBattleId"), "battle:stdio-accepted-vertical");
   assert.equal(get(ended, "session.activeBattle"), null);
@@ -805,6 +856,35 @@ export async function verifyBaselineVertical(client: Client) {
       (character) => character.displayName === "Goblin Warrior",
     ),
     false,
+  );
+
+  const abilityQuery = await callTool(client, "query_character_session", {
+    characterId: testCharacterId(draftId),
+    query: {
+      kind: "abilityCheckAbility",
+      skill: "athletics",
+      defaultAbility: "str",
+      activeFeatureUnitIds: [],
+    },
+  });
+  assert.equal(get(abilityQuery, "query.kind"), "abilityCheckAbility");
+  assert.equal(get(abilityQuery, "query.projection.defaultAbility"), "str");
+  assert.deepEqual(
+    get(abilityQuery, "query.projection.optionalSubstitutions"),
+    [],
+  );
+
+  const knownFormsQuery = await expectToolError(
+    client,
+    "query_character_session",
+    {
+      characterId: testCharacterId(draftId),
+      query: { kind: "knownForms" },
+    },
+  );
+  assert.equal(
+    get(knownFormsQuery, "details.code"),
+    "CHARACTER_SESSION_QUERY_REJECTED",
   );
 }
 
@@ -4020,7 +4100,7 @@ function parseString(value: unknown, context: string) {
 }
 
 export function verifyAgentConversationScenarios() {
-  assert.equal(agentConversationScenarios.length, 19);
+  assert.equal(agentConversationScenarios.length, 20);
   const scenarioIds = new Set<string>();
   for (const scenario of agentConversationScenarios) {
     assert.match(scenario.id, /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);

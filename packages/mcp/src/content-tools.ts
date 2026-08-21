@@ -250,6 +250,7 @@ function workflowGuide() {
       "Call end_turn only when no transientBattleFills are pending.",
       "If end_turn asks for a Death Saving Throw hole, fill that pending subject before taking other battle actions.",
       "Call end_battle only when no transientBattleFills are pending, then list_characters for durable HP, zero-HP lifecycle, and Spell Slot handoff.",
+      "Call query_character_session with one returned characterId and a discriminated query variant to inspect existing Character Sheet projections; it returns typed rejection while that character is in Battle and admits only ritual Spell Invocation inspection outside Battle.",
     ],
     resultPaths: {
       creationHoles: "holes",
@@ -289,9 +290,10 @@ function workflowGuide() {
       "On pending-fill errors, continue filling session.transientBattleFills.subject until the result resolves.",
     ],
     limits: [
-      "Use discover_creation_holes, list_characters, inspect_character_session, list_stat_blocks, and discover_battle_acts for the currently executable workflows and acts.",
+      "Use discover_creation_holes, list_characters, inspect_character_session, query_character_session, list_stat_blocks, and discover_battle_acts for the currently executable workflows, projections, and acts.",
       "Character creation exposes one draft.progression.initial fill for the selected progression profile; MCP does not expose a later level-1 class-entry fill.",
       "MCP does not roll dice. Use user-provided or external dice results.",
+      "Character Session queries do not persist derived facts, expose generic out-of-Battle casting, maintain a spell ledger, or add search, pagination, indexing, or recommendation infrastructure.",
       "Rest and revival workflows are not currently supported after typed zero-HP character closeout.",
     ],
   };
