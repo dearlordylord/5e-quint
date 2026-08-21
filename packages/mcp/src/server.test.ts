@@ -491,13 +491,30 @@ describe("MCP server route", () => {
     });
     expect(output.detail).not.toHaveProperty("sheet");
 
-    const malformedProjection = {
+    const malformedCurrentHp = {
       ...output,
       detail: {
         ...output.detail,
         sheetProjection: {
           ...output.detail.sheetProjection,
           currentHp: -1,
+        },
+      },
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(CharacterSessionDetailOutputSchema)(
+          malformedCurrentHp,
+        ),
+      ),
+    ).toBe(true);
+
+    const malformedManifestationTag = {
+      ...output,
+      detail: {
+        ...output.detail,
+        sheetProjection: {
+          ...output.detail.sheetProjection,
           companion: {
             tag: "retainedOneAtATime",
             companion: {
@@ -514,7 +531,7 @@ describe("MCP server route", () => {
     expect(
       Either.isLeft(
         Schema.decodeUnknownEither(CharacterSessionDetailOutputSchema)(
-          malformedProjection,
+          malformedManifestationTag,
         ),
       ),
     ).toBe(true);
