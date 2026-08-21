@@ -5,8 +5,11 @@ import {
   battleExecutionScopeOrdinal,
   battleId,
   battleProcedureExecutionRef,
+  battlePresentedSnapshot,
   characterId,
   combatantId,
+  snapshotBattle,
+  type BattleRuntimeResolutionResult,
 } from "@dnd/battle-runtime";
 import { DieRollResult, NonNegativeInteger } from "@dnd/shared/types";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -25,6 +28,10 @@ import {
 } from "./battle-tool-output.ts";
 import type { McpSessionSnapshot } from "./session-store.ts";
 import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
+import { createMcpPlaySessionRoot } from "./composition-root.ts";
+import { handleToolCall as handleWireToolCall } from "./server.ts";
+import { battleResolutionPayload } from "./battle-tool-payloads.ts";
+import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import {
   McpSessionSnapshotSchema,
   McpSessionSummarySchema,
@@ -138,23 +145,63 @@ describe("MCP session wire projections", () => {
         session: resolutionSession({ tag: "none" }),
       }).valid,
     ).toBe(false);
-    const activeResolution = {
-      ...presentation,
-      battleState: activeState,
-      result: {},
-      snapshot: {},
-      session: resolutionSession(activeState),
+    const root = createMcpPlaySessionRoot();
+    handleWireToolCall(
+      root,
+      "start_battle",
+      battleToolWireArgs("start_battle", {
+        battleId: "battle:resolution-contract",
+        initialCombatants: [
+          {
+            admissionSource: { kind: "encounterParticipant" },
+            combatantId: "goblin",
+            initiative: 10,
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: "stat_block_goblin_warrior",
+          },
+          {
+            admissionSource: { kind: "encounterParticipant" },
+            combatantId: "skeleton",
+            initiative: 5,
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: "stat_block_skeleton",
+          },
+        ],
+      }),
+    );
+    const activeSession = root.sessionStore.battleSession;
+    if (activeSession === null) throw new Error("Expected active battle.");
+    const presented = battlePresentedSnapshot(activeSession);
+    if (Either.isLeft(presented))
+      throw new Error("Expected presented snapshot.");
+    const result = {
+      tag: "resolved",
+      session: activeSession,
+      snapshot: snapshotBattle(activeSession.state),
+      objectDamages: [],
+    } satisfies BattleRuntimeResolutionResult;
+    const activeResolution = Either.getOrThrow(
+      battleResolutionPayload(root, result),
+    );
+    const activeResolutionFixture = {
+      ...activeResolution,
+      availableActs: [],
+      admittedSpellPresentations: [],
+      presentedInterruptChoices: [],
     };
-    expect(validateResolution(activeResolution).valid).toBe(false);
+    const activeValidation = validateResolution(activeResolutionFixture);
+    expect(activeValidation.valid, activeValidation.errorMessage).toBe(true);
     expect(
       validateResolution({
-        ...activeResolution,
+        ...activeResolutionFixture,
         session: resolutionSession({ tag: "none" }),
       }).valid,
     ).toBe(false);
     expect(
       validateResolution({
-        ...activeResolution,
+        ...activeResolutionFixture,
         session: resolutionSession(setupState),
       }).valid,
     ).toBe(false);
