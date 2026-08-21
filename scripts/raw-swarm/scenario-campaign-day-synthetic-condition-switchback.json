@@ -1,0 +1,15 @@
+{
+  "campaignId": "day-synthetic-condition-switchback-authoring",
+  "plannedScenarioId": "synthetic-condition-switchback",
+  "scenarioTitle": "Synthetic condition switchback",
+  "scenarioPurpose": "Explore a supported-only stat-block battle in which saving-throw and condition outcomes cause materially different target and movement choices, while remaining distinct from the complete admitted catalogue.",
+  "evidenceSetId": "day-synthetic-condition-switchback-authoring-evidence",
+  "distributionPreference": "Favor a compact ground-level battle using only supplied canonical stat blocks whose legal actions require no ammunition stock. Center the interaction on a surfaced saving throw and a condition consequence that can change later target, attack, movement, or End Turn choices. Keep illumination bright, terrain ordinary, geometry two-dimensional, and all setup and play facts inside the documented public SDK. Avoid Character Sheets, flying or elevated routes, scenario objects, circumstance modifiers, Shove/Grapple cycles, and repetition of admitted pursuit, threshold-escape, lantern-intercept, or beacon-defense purposes. Require material differences in mechanics, composition, interaction sequence, or tactical question rather than wording or coordinates.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "supportedOnly",
+  "minimumIterations": 2,
+  "maximumIterations": 3,
+  "candidatesPerIteration": 2,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": false
+}
