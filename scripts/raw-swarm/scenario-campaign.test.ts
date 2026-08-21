@@ -8,7 +8,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import { Either, Schema } from "effect";
 import { describe, expect, test, vi } from "vitest";
 
@@ -22,12 +22,23 @@ import {
   verifyFinalScenarioReview,
   type ScenarioCampaignAgents,
 } from "./scenario-campaign.ts";
-import { GitShaSchema, repoRoot, ScenarioIdSchema } from "./transcript.ts";
+import {
+  GitShaSchema,
+  repoRoot,
+  ScenarioIdSchema,
+  sha256Canonical,
+} from "./transcript.ts";
 import {
   publishScenarioAdmissionBundle,
+  ingestPublishedScenarioAdmissionBundle,
   rollbackScenarioAdmissionBundle,
   publishScenarioRejectionBundle,
 } from "./generate-scenario.ts";
+import { openArtifactIndex } from "./artifact-index.ts";
+import {
+  FindingsProjectionSchema,
+  writeFindingsProjection,
+} from "./findings.ts";
 import {
   ScenarioCatalogueComparisonSchema,
   ScenarioCatalogueProjectionSchema,
@@ -44,8 +55,9 @@ test("rolls back every admitted path when bundle publication fails", () => {
     "review.json",
     "facts.json",
     "plan.json",
-    "findings.json",
+    "stage-plan-findings.json",
     "scenario.json",
+    "generation-findings.json",
   ] as const;
   for (const name of names.filter((name) => name !== "facts.json")) {
     writeFileSync(resolve(staged, name), name);
@@ -59,8 +71,9 @@ test("rolls back every admitted path when bundle publication fails", () => {
         review: pair("review.json"),
         stageFacts: pair("facts.json"),
         stagePlan: pair("plan.json"),
-        stagePlanFindings: pair("findings.json"),
+        stagePlanFindings: pair("stage-plan-findings.json"),
         scenarioRecord: pair("scenario.json"),
+        findings: pair("generation-findings.json"),
       }),
     ).toThrow();
     expect(names.some((name) => existsSync(resolve(admitted, name)))).toBe(
@@ -87,8 +100,9 @@ test("retains a publication receipt for post-publication rollback", () => {
     "review.json",
     "facts.json",
     "plan.json",
-    "findings.json",
+    "stage-plan-findings.json",
     "scenario.json",
+    "generation-findings.json",
   ] as const;
   for (const name of names) writeFileSync(resolve(staged, name), name);
   const pair = (name: (typeof names)[number]) =>
@@ -99,8 +113,9 @@ test("retains a publication receipt for post-publication rollback", () => {
       review: pair("review.json"),
       stageFacts: pair("facts.json"),
       stagePlan: pair("plan.json"),
-      stagePlanFindings: pair("findings.json"),
+      stagePlanFindings: pair("stage-plan-findings.json"),
       scenarioRecord: pair("scenario.json"),
+      findings: pair("generation-findings.json"),
     });
     expect(names.every((name) => existsSync(resolve(admitted, name)))).toBe(
       true,
@@ -110,6 +125,120 @@ test("retains a publication receipt for post-publication rollback", () => {
     expect(names.some((name) => existsSync(resolve(admitted, name)))).toBe(
       false,
     );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("rolls back admitted authorities and findings when ingestion fails", () => {
+  const root = mkdtempSync(
+    resolve(repoRoot, "scripts/raw-swarm/.scenario-admission-ingestion-"),
+  );
+  const staged = resolve(root, "staged");
+  const admitted = resolve(root, "admitted");
+  mkdirSync(staged);
+  mkdirSync(admitted);
+  try {
+    const names = [
+      "scenario.md",
+      "review.json",
+      "facts.json",
+      "plan.json",
+      "stage-plan-findings.json",
+      "scenario.json",
+      "generation-findings.json",
+    ] as const;
+    for (const name of names.filter(
+      (name) => name !== "generation-findings.json",
+    ))
+      writeFileSync(resolve(staged, name), name);
+    const pair = (name: (typeof names)[number]) =>
+      [resolve(staged, name), resolve(admitted, name)] as const;
+    const publicationInput = {
+      prose: pair("scenario.md"),
+      review: pair("review.json"),
+      stageFacts: pair("facts.json"),
+      stagePlan: pair("plan.json"),
+      stagePlanFindings: pair("stage-plan-findings.json"),
+      scenarioRecord: pair("scenario.json"),
+      findings: pair("generation-findings.json"),
+    } as const;
+    const campaignPath = resolve(root, "campaign.json");
+    const campaignValue = {
+      type: "raw-swarm-scenario-campaign" as const,
+      schemaVersion: 1 as const,
+      campaignId: "generation-campaign",
+      plannedScenarioId: "generation-example",
+      evidenceSetId: "generation-evidence",
+      gitSha: "a".repeat(40),
+      startedAt: "2026-08-18T00:00:00.000Z",
+      configSha256: "c".repeat(64),
+    } as const;
+    const campaignBytes = `${JSON.stringify(campaignValue)}\n`;
+    writeFileSync(campaignPath, campaignBytes);
+    const campaignAuthority = {
+      role: "campaign",
+      path: relative(repoRoot, campaignPath),
+      byteLength: Buffer.byteLength(campaignBytes),
+      sha256: createHash("sha256").update(campaignBytes).digest("hex"),
+    };
+    const subject = {
+      tag: "scenarioCampaign" as const,
+      campaignId: campaignValue.campaignId,
+      evidenceSetId: campaignValue.evidenceSetId,
+      plannedScenarioId: campaignValue.plannedScenarioId,
+      gitSha: campaignValue.gitSha,
+      startedAt: campaignValue.startedAt,
+      sdkCalls: { tag: "transcriptFree" as const },
+    };
+    const findings = Schema.decodeUnknownSync(FindingsProjectionSchema)({
+      type: "raw-swarm-findings",
+      schemaVersion: 2,
+      subjectIdentity: sha256Canonical(subject),
+      subject,
+      authorities: [campaignAuthority],
+      findings: [],
+    });
+    writeFindingsProjection({
+      projection: findings,
+      path: resolve(staged, "generation-findings.json"),
+    });
+    const dbPath = resolve(root, "artifact-index.sqlite");
+    const db = openArtifactIndex(relative(repoRoot, dbPath));
+    db.prepare(
+      "INSERT INTO scenarioCampaigns(subjectIdentity, campaignId, plannedScenarioId, evidenceSetId, gitSha, startedAt) VALUES (?, ?, ?, ?, ?, ?)",
+    ).run(
+      findings.subjectIdentity,
+      "foreign-campaign",
+      "foreign-planned",
+      "foreign-evidence",
+      "b".repeat(40),
+      campaignValue.startedAt,
+    );
+    db.close();
+    const publication = publishScenarioAdmissionBundle(publicationInput);
+    expect(() =>
+      ingestPublishedScenarioAdmissionBundle({
+        publication,
+        findingsPath: resolve(admitted, "generation-findings.json"),
+        dbPath,
+      }),
+    ).toThrow();
+    expect(names.some((name) => existsSync(resolve(admitted, name)))).toBe(
+      false,
+    );
+    expect(names.every((name) => existsSync(resolve(staged, name)))).toBe(true);
+    const rolledBackDb = openArtifactIndex(relative(repoRoot, dbPath));
+    expect(
+      rolledBackDb.prepare("SELECT COUNT(*) AS count FROM artifacts").get(),
+    ).toEqual({ count: 0 });
+    rolledBackDb.close();
+
+    const retry = publishScenarioAdmissionBundle(publicationInput);
+    expect(names.every((name) => existsSync(resolve(admitted, name)))).toBe(
+      true,
+    );
+    rollbackScenarioAdmissionBundle(retry);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

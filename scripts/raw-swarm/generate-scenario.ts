@@ -70,7 +70,11 @@ import {
   type CurrentModelInvocationSubject,
   type ModelInvocationPhase,
 } from "./model-telemetry.ts";
-import { findingsArtifactPath, writeFindingsProjection } from "./findings.ts";
+import {
+  findingsArtifactPath,
+  FindingsProjectionSchema,
+  writeFindingsProjection,
+} from "./findings.ts";
 import { projectGenerationFindings } from "./generation-findings.ts";
 import { ingestGenerationFindings } from "./artifact-index.ts";
 import { artifactAuthorityForBytes } from "./artifact-authority.ts";
@@ -123,6 +127,7 @@ export function publishScenarioAdmissionBundle(input: {
   readonly stagePlan: readonly [staged: string, admitted: string];
   readonly stagePlanFindings: readonly [staged: string, admitted: string];
   readonly scenarioRecord: readonly [staged: string, admitted: string];
+  readonly findings: readonly [staged: string, admitted: string];
 }): ScenarioAdmissionPublication {
   const publication = [
     input.prose,
@@ -131,6 +136,7 @@ export function publishScenarioAdmissionBundle(input: {
     input.stagePlan,
     input.stagePlanFindings,
     input.scenarioRecord,
+    input.findings,
   ] as const;
   const occupied = publication.find(([, destination]) =>
     existsSync(destination),
@@ -156,6 +162,30 @@ export function publishScenarioAdmissionBundle(input: {
     throw error;
   }
   return published;
+}
+
+/** Ingest admitted findings while retaining the filesystem rollback receipt. */
+export function ingestPublishedScenarioAdmissionBundle(input: {
+  readonly publication: ScenarioAdmissionPublication;
+  readonly findingsPath: string;
+  readonly dbPath: string;
+}): void {
+  try {
+    ingestGenerationFindings({
+      findingsPath: input.findingsPath,
+      dbPath: input.dbPath,
+    });
+  } catch (error: unknown) {
+    try {
+      rollbackScenarioAdmissionBundle(input.publication);
+    } catch (rollbackError: unknown) {
+      throw new Error(
+        `Admitted Scenario findings ingestion failed and publication rollback was incomplete: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`,
+        { cause: error },
+      );
+    }
+    throw error;
+  }
 }
 
 export type ScenarioRejectionPublication = readonly (readonly [
@@ -928,11 +958,19 @@ async function main(args: readonly string[]): Promise<void> {
       }
       return value;
     };
-    const retainedProjection = replacePath(projection) as typeof projection;
+    const retainedProjection = Schema.decodeUnknownEither(
+      FindingsProjectionSchema,
+      { onExcessProperty: "error" },
+    )(replacePath(projection));
+    if (Either.isLeft(retainedProjection)) {
+      fail(
+        `Rewritten generation findings projection is invalid: ${retainedProjection.left.message}`,
+      );
+    }
     const retainedFindingsPath =
       options.path ?? findingsArtifactPath(campaignEvidenceDirectory);
     writeFindingsProjection({
-      projection: retainedProjection,
+      projection: retainedProjection.right,
       path: retainedFindingsPath,
     });
     if (options.ingest !== false) {
@@ -1170,6 +1208,13 @@ async function main(args: readonly string[]): Promise<void> {
         "stage-plan-findings.json",
       );
       const stagedScenarioRecord = resolve(staging, "scenario.json");
+      const stagedFindings = resolve(staging, "findings.json");
+      const findingsPath = findingsArtifactPath(campaignEvidenceDirectory);
+      const retainedStagePlanPath = retainedScenarioStagePlanPath(
+        admittedScenarioId.right,
+      );
+      const retainedStagePlanFindingsPath =
+        retainedScenarioStagePlanFindingsPath(admittedScenarioId.right);
       const retainedFacts = retainScenarioStageFacts({
         scenarioId: admittedScenarioId.right,
         scenarioPath: stagedScenario,
@@ -1225,37 +1270,10 @@ async function main(args: readonly string[]): Promise<void> {
         `${JSON.stringify(scenarioRecord.right, null, 2)}\n`,
         { flag: "wx" },
       );
-      publication = publishScenarioAdmissionBundle({
-        prose: [stagedScenario, outputPath],
-        review: [stagedReview, reviewPath],
-        stageFacts: [
-          `${stagedScenario}.stage-facts.json`,
-          `${outputPath}.stage-facts.json`,
-        ],
-        stagePlan: [
-          stagedStagePlan,
-          retainedScenarioStagePlanPath(admittedScenarioId.right),
-        ],
-        stagePlanFindings: [
-          stagedStagePlanFindings,
-          retainedScenarioStagePlanFindingsPath(admittedScenarioId.right),
-        ],
-        scenarioRecord: [
-          stagedScenarioRecord,
-          outputPath.replace(/\.md$/, ".scenario.json"),
-        ],
-      });
-    }
-    if (disposition === "admitted") {
-      const retainedStagePlanPath = retainedScenarioStagePlanPath(
-        admittedScenarioId.right,
-      );
-      const retainedStagePlanFindingsPath =
-        retainedScenarioStagePlanFindingsPath(admittedScenarioId.right);
       verifyRetainedScenario(
         admittedScenarioId.right,
-        outputPath,
-        reviewPath,
+        stagedScenario,
+        stagedReview,
         gitSha.right,
         (() => {
           if (catalogueProjections.length === 0) {
@@ -1282,14 +1300,60 @@ async function main(args: readonly string[]): Promise<void> {
           };
         })(),
       );
-      emitGenerationFindings({
-        tag: "admittedScenario",
-        scenarioPath: outputPath,
-        scenarioReviewPath: reviewPath,
-        stageFactsPath: `${outputPath}.stage-facts.json`,
-        stagePlanPath: retainedStagePlanPath,
-        stagePlanFindingsPath: retainedStagePlanFindingsPath,
+      emitGenerationFindings(
+        {
+          tag: "admittedScenario",
+          scenarioPath: stagedScenario,
+          scenarioReviewPath: stagedReview,
+          stageFactsPath: `${stagedScenario}.stage-facts.json`,
+          stagePlanPath: stagedStagePlan,
+          stagePlanFindingsPath: stagedStagePlanFindings,
+        },
+        {
+          path: stagedFindings,
+          ingest: false,
+          pathReplacements: [
+            [stagedScenario, outputPath],
+            [stagedReview, reviewPath],
+            [
+              `${stagedScenario}.stage-facts.json`,
+              `${outputPath}.stage-facts.json`,
+            ],
+            [stagedStagePlan, retainedStagePlanPath],
+            [stagedStagePlanFindings, retainedStagePlanFindingsPath],
+            [stagedFindings, findingsPath],
+          ],
+        },
+      );
+      publication = publishScenarioAdmissionBundle({
+        prose: [stagedScenario, outputPath],
+        review: [stagedReview, reviewPath],
+        stageFacts: [
+          `${stagedScenario}.stage-facts.json`,
+          `${outputPath}.stage-facts.json`,
+        ],
+        stagePlan: [stagedStagePlan, retainedStagePlanPath],
+        stagePlanFindings: [
+          stagedStagePlanFindings,
+          retainedStagePlanFindingsPath,
+        ],
+        scenarioRecord: [
+          stagedScenarioRecord,
+          outputPath.replace(/\.md$/, ".scenario.json"),
+        ],
+        findings: [stagedFindings, findingsPath],
       });
+      try {
+        ingestPublishedScenarioAdmissionBundle({
+          publication,
+          findingsPath,
+          dbPath,
+        });
+      } catch (error: unknown) {
+        publication = undefined;
+        throw error;
+      }
+      publication = undefined;
     }
   } catch (error: unknown) {
     if (disposition === "admitted") {
