@@ -1,0 +1,104 @@
+{
+  "scenarioId": "lantern-intercept-pairwise-control",
+  "scenarioSha256": "931337797a67a7b2e370ba5167f84de4d8ede61351518f151fe46c48ded0740b",
+  "gitSha": "a1e3e22937599f620a7b888ac9d2927fd7a1ae5e",
+  "admitReviewedUnsupported": true,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "The local SRD supplies Hawk, Wolf, and Skeleton stat blocks plus movement, flying, attacks, cover, dim light, darkvision, damage, incapacitation, and opportunity-attack rules. ASSUMPTIONS.md A2 resolves turn completion. No additional RAW-ambiguous Table Decision is required."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The scenario uses SRD identities and generic independently authored setting prose. It exposes no PHB+ identity, protected expression, private mapping, or prohibited crosswalk."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicyQuality",
+  "scenarioQuality": {
+    "classification": "ready",
+    "evidence": "The traversal, target-triage, cover, visibility, route, and attack-versus-progress choices are mechanically meaningful. Hawk, Skeleton, and Wolf each pursue a distinct authored objective, with tactical choices delegated consistently with open-ended exploration. The supplied comparison covers all 11 admitted projections in one complete batch, includes the required dimensions, and concludes meaningfullyDistinct with material differentiators."
+  },
+  "catalogueComparison": {
+    "schemaVersion": 1,
+    "conclusion": "meaningfullyDistinct",
+    "comparedScenarioIds": [
+      "four-way-crank-control-cycle",
+      "goblin-warrior-skeleton-tracer",
+      "mounted-dispatch-through-flooded-orchard",
+      "open-grid-wolf-skeleton-pursuit",
+      "orc-fighter-rogue-close-interception",
+      "sand-band-four-skeleton-skirmish",
+      "synthetic-beacon-eight-round-defense",
+      "table-authored-shove-then-grapple",
+      "table-authored-three-shove-cycle",
+      "table-d20-circumstance-advantage-probe-repair-retry",
+      "two-goblins-pursue-skeleton"
+    ],
+    "closestMatches": [
+      {
+        "scenarioId": "two-goblins-pursue-skeleton",
+        "reason": "It is the closest overall admitted three-combatant pursuit, with changing ranged/melee engagement, bounded routes, and a cover boundary. The Candidate instead creates an asymmetric Wolf/Skeleton/Hawk encounter with a round-trip traversal objective and pillar-derived visibility and cover."
+      },
+      {
+        "scenarioId": "open-grid-wolf-skeleton-pursuit",
+        "reason": "It shares the Wolf-versus-Skeleton pursuit and movement-to-melee core, but the Candidate adds the Hawk, competing target priorities, pillar screening, changing visibility and cover, and an interruption-sensitive traversal."
+      },
+      {
+        "scenarioId": "mounted-dispatch-through-flooded-orchard",
+        "reason": "Both use adaptive route selection around a completion-dependent traversal objective and hostile interception. The admitted Scenario centers on mounted carriage, object transfer, elevation, and difficult terrain; the Candidate centers on three-way combat and target triage."
+      },
+      {
+        "scenarioId": "four-way-crank-control-cycle",
+        "reason": "It shares multiple stat-block combatants, separate hostile objectives, and controller target selection. The admitted interaction is a fixed no-movement Shove/Grapple cycle at Table-authored reach, unlike the Candidate’s geometry-driven movement, attacks, and traversal conflict."
+      }
+    ],
+    "materialDifferentiators": [
+      "The Hawk must complete a north-wall-to-south-wall traversal while deciding whether an attack is worth interrupting direct progress; the Skeleton must stop that traversal while also reprioritizing against the Wolf.",
+      "The asymmetric hostility graph creates a genuine three-way target-priority problem: Wolf and Hawk are indifferent to one another, while the Skeleton is hostile to both.",
+      "Four central pillars make visibility, distance, cover, route selection, and screened versus clear approaches mechanically consequential and geometry-derived rather than fixed reach or Table-only answers.",
+      "Each controller has a distinct adaptive policy: Hawk route-versus-attack, Skeleton Hawk-versus-Wolf target triage or pillar repositioning, and Wolf direct-versus-screened pursuit.",
+      "The combination of traversal interruption, target switching, changing cover and visibility, and surfaced movement/attack/roll/damage/interrupt/End Turn continuation is not repeated by any admitted Scenario."
+    ],
+    "basis": {
+      "tag": "compared",
+      "batches": [
+        {
+          "batchIndex": 0,
+          "comparedScenarioIds": [
+            "four-way-crank-control-cycle",
+            "goblin-warrior-skeleton-tracer",
+            "mounted-dispatch-through-flooded-orchard",
+            "open-grid-wolf-skeleton-pursuit",
+            "orc-fighter-rogue-close-interception",
+            "sand-band-four-skeleton-skirmish",
+            "synthetic-beacon-eight-round-defense",
+            "table-authored-shove-then-grapple",
+            "table-authored-three-shove-cycle",
+            "table-d20-circumstance-advantage-probe-repair-retry",
+            "two-goblins-pursue-skeleton"
+          ],
+          "dimensions": {
+            "exploratoryPurpose": "The Candidate explores whether a completion-dependent out-and-back traversal can coexist with a three-way, asymmetric target-priority battle: the Hawk advances and returns, the Skeleton triages the Hawk and Wolf, and the Wolf pursues the Skeleton through changing cover. This differs from four-way-crank-control-cycle’s fixed Shove/Grapple crank contest; goblin-warrior-skeleton-tracer’s minimal direct battle; mounted-dispatch-through-flooded-orchard’s mounted dispatch and object-transfer probe; open-grid-wolf-skeleton-pursuit’s two-creature endpoint pursuit; orc-fighter-rogue-close-interception’s Character Sheet and prism interception; sand-band-four-skeleton-skirmish’s difficult-terrain ranged skirmish; synthetic-beacon-eight-round-defense’s eight-round beacon defense; table-authored-shove-then-grapple’s fixed branch-specific control sequence; table-authored-three-shove-cycle’s fixed three-Shove cycle; table-d20-circumstance-advantage-probe-repair-retry’s Horse/Wolf circumstance probe; and two-goblins-pursue-skeleton’s two-Goblin containment of an escaping Skeleton.",
+            "materiallyRelevantMechanics": "The Candidate materially requires geometry-derived placement and movement, pairwise visibility and distance, pillar-derived cover, target selection, attacks, rolls, damage, traversal interruption, and End Turn continuation. The Shove, Grapple, Prone, and grappled mechanics dominate four-way-crank-control-cycle, table-authored-shove-then-grapple, and table-authored-three-shove-cycle; goblin-warrior-skeleton-tracer emphasizes the minimal direct attack path and controller-authored roll totals; open-grid-wolf-skeleton-pursuit emphasizes Bite, Shortsword, lane changes, and Opportunity Attacks without cover; two-goblins-pursue-skeleton uses ranged-to-melee pursuit and Table-owned Three-Quarters Cover; mounted-dispatch-through-flooded-orchard adds mounting, dismounting, object transfer, elevation, Difficult Terrain, and Invisibility; orc-fighter-rogue-close-interception, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense add Character Sheets, ranged pressure, terrain or cover, and object objectives; table-d20-circumstance-advantage-probe-repair-retry isolates one exact first-Bite Disadvantage decision, absent from the Candidate.",
+            "encounterComposition": "The Candidate has three creature combatants—Wolf, Skeleton, and Hawk—with Wolf/Skeleton and Hawk/Skeleton hostility but Wolf/Hawk indifference. This differs from four-way-crank-control-cycle’s two Goblin Warriors, Skeleton, and Wolf; goblin-warrior-skeleton-tracer’s Goblin/Skeleton pair; mounted-dispatch-through-flooded-orchard’s mounted Goblin, Riding Horse, Imp, two additional Goblins, Wolf, cylinder, and gate; open-grid-wolf-skeleton-pursuit’s Wolf/Skeleton pair; orc-fighter-rogue-close-interception’s two Character Sheets, two Wolves, Goblin, and prism; sand-band-four-skeleton-skirmish’s two adventurers and four Skeletons; synthetic-beacon-eight-round-defense’s four adventurers, four Goblins, two Wolves, and beacon; table-authored-shove-then-grapple’s Skeleton, Goblin, and dispatch case; table-authored-three-shove-cycle’s Goblin, Skeleton, and Wolf; table-d20-circumstance-advantage-probe-repair-retry’s Riding Horse/Wolf pair; and two-goblins-pursue-skeleton’s two Goblins and Skeleton.",
+            "interactionSequence": "The Hawk selects a route toward the northern wall and back south, optionally attacks, and must weigh that attack against progress. The Skeleton attacks the Hawk, repositions around a pillar for a clearer target, or responds to the Wolf; the Wolf chooses direct or pillar-screened pursuit. Every concrete target, movement, attack, roll, damage, interrupt, and End Turn continuation is surfaced. This is materially different from four-way-crank-control-cycle’s fixed Brine/Rivet/Soot/Tangle turns, table-authored-shove-then-grapple’s fixed Shove-then-Grapple branches, table-authored-three-shove-cycle’s exactly three stationary Shoves, goblin-warrior-skeleton-tracer’s open-ended minimal battle, open-grid-wolf-skeleton-pursuit’s prescribed lane-redirection pursuit, mounted-dispatch-through-flooded-orchard’s carrier route and cylinder transfer, orc-fighter-rogue-close-interception’s prism-defense termination, sand-band-four-skeleton-skirmish’s adaptive adventurer-versus-Skeleton skirmish, synthetic-beacon-eight-round-defense’s bounded breach, table-d20-circumstance-advantage-probe-repair-retry’s Horse/Wolf chase, and two-goblins-pursue-skeleton’s portcullis escape sequence.",
+            "tacticalQuestion": "Can a controller balance traversal completion against attacking, while the Skeleton decides whether the Hawk or Wolf is the more immediate threat and uses pillar positioning to regain a clear target, and the Wolf adapts its approach to the Skeleton’s screening? The admitted tactical questions instead concern crank-area control, basic direct battle execution, mounted cylinder delivery, reaching or denying a Wolf endpoint, close interception and object defense, difficult-sand ranged pressure, eight-round beacon defense, fixed Shove/Grapple or three-Shove resolution, a single Horse/Wolf circumstance test, or containing a Skeleton’s portcullis escape.",
+            "sdkSupportBoundary": "The Candidate requests one surfaced setup-and-Battle flow for geometry-derived placement, movement, visibility, distance, cover, attacks, rolls, damage, interrupts, and End Turn continuation, without stating Character Sheet authoring, mounted carriage, object transfer, elevation, or a per-test circumstance probe. This overlaps the supportedOnly/supported entries four-way-crank-control-cycle, open-grid-wolf-skeleton-pursuit, orc-fighter-rogue-close-interception, table-authored-shove-then-grapple, table-authored-three-shove-cycle, and two-goblins-pursue-skeleton, but combines capabilities that those sources separately constrain: fixed Table reach, no cover, Table-owned cover, or Character Sheet/object boundaries. It is unlike the explicitUnsupportedProbe boundaries of mounted-dispatch-through-flooded-orchard and table-d20-circumstance-advantage-probe-repair-retry. The notAssessed entries goblin-warrior-skeleton-tracer, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense do not establish support for this exact combination.",
+            "spatialContext": {
+              "tag": "supporting",
+              "evidence": "The 60-by-50-foot crypt, wall-relative starts, 25-foot separations, dim lighting, and four central pillars determine the Candidate’s route choices, pairwise visibility, distances, and cover, so spatial context supports the mechanics rather than serving as a square-by-square novelty alone. This contrasts with the open no-cover spaces of goblin-warrior-skeleton-tracer and open-grid-wolf-skeleton-pursuit; the Table-authored fixed spatial fingerprints of four-way-crank-control-cycle, table-authored-shove-then-grapple, and table-authored-three-shove-cycle; the Table-owned portcullis cover of two-goblins-pursue-skeleton; and the distinct orchard, racks/prism, sand band, barricades/beacon, and horse lane used by the remaining geometry or table scenarios."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "Hawk, Skeleton, and Wolf all appear in the supplied canonical availability list, matching the availableOnly intent."
+  },
+  "sdkCapabilityIntent": "supportedOnly",
+  "sdkCapabilityReview": {
+    "classification": "supported",
+    "evidence": "The required setup facts match the public setup surface, and movement, typed targets, attacks, rolls, damage, interrupts, and End Turn continuations match the public Battle play surface. No unsupported setup or play capability is requested."
+  }
+}

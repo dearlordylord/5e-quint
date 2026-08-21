@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "lantern-intercept-pairwise-control",
+  "scenarioSha256": "931337797a67a7b2e370ba5167f84de4d8ede61351518f151fe46c48ded0740b",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The Wolf, Skeleton, and Hawk are canonical stat blocks, and the scenario needs no character-specific build choices beyond their available Battle acts."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "Three placements and changing pairwise distances, visibility, routes, and pillar cover require spatial witnessing within a geometry-derived arena."
+    }
+  }
+}

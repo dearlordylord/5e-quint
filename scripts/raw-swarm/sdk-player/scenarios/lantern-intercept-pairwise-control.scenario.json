@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 2,
+  "scenarioId": "lantern-intercept-pairwise-control",
+  "title": "Lantern intercept pairwise control",
+  "purpose": "Explore a materially distinct supported SDK interaction from the complete admitted catalogue through bounded open-ended variation, without treating randomness as evidence of diversity.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/lantern-intercept-pairwise-control.md",
+    "byteLength": 1473,
+    "sha256": "931337797a67a7b2e370ba5167f84de4d8ede61351518f151fe46c48ded0740b"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/lantern-intercept-pairwise-control.md.scenario-review.json",
+    "byteLength": 13254,
+    "sha256": "1281184062745e6e9eb0ff29f5e93d55263960d116e239f008d7c55558e593ba"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/lantern-intercept-pairwise-control.md.stage-facts.json",
+    "byteLength": 725,
+    "sha256": "27ebf89d463ee1a5f6e19b4392cfd18cf0b96082e2473933e58a8295c3cfd69a"
+  },
+  "predecessorScenarioIds": [
+    "four-way-crank-control-cycle",
+    "goblin-warrior-skeleton-tracer",
+    "mounted-dispatch-through-flooded-orchard",
+    "open-grid-wolf-skeleton-pursuit",
+    "orc-fighter-rogue-close-interception",
+    "sand-band-four-skeleton-skirmish",
+    "synthetic-beacon-eight-round-defense",
+    "table-authored-shove-then-grapple",
+    "table-authored-three-shove-cycle",
+    "table-d20-circumstance-advantage-probe-repair-retry",
+    "two-goblins-pursue-skeleton"
+  ]
+}
