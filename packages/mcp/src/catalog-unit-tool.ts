@@ -1,4 +1,6 @@
 import { Option, Schema } from "effect";
+import { UnitId } from "@dnd/shared/game-facts";
+import { SrdUnitRecordSchema } from "@dnd/surface/surface/schema";
 import { isSrd521Unit } from "@dnd/surface/surface/unit-catalog";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
@@ -12,33 +14,11 @@ import { errorContent } from "./tool-content.ts";
 export const inspectCatalogUnitToolName = "inspect_catalog_unit";
 
 export const InspectCatalogUnitInputSchema = Schema.Struct({
-  unitId: Schema.String,
-});
-
-const CatalogUnitDetailSchema = Schema.Unknown.annotations({
-  jsonSchema: {
-    type: "object",
-    description:
-      "The complete canonical installed SRD Unit record. Record-kind-specific authored fields remain present on the returned object.",
-    required: ["id", "kind", "name", "provenance"],
-    properties: {
-      id: { type: "string" },
-      kind: { type: "string" },
-      name: { type: "string" },
-      provenance: {
-        type: "object",
-        required: ["kind", "section"],
-        properties: {
-          kind: { type: "string", enum: ["srd-5.2.1"] },
-          section: { type: "string" },
-        },
-      },
-    },
-  },
+  unitId: UnitId,
 });
 
 const InspectCatalogUnitOutputSchema = Schema.Struct({
-  unit: CatalogUnitDetailSchema,
+  unit: SrdUnitRecordSchema,
 });
 
 export const inspectCatalogUnitToolDefinition = {

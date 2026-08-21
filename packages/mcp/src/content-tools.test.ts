@@ -121,6 +121,15 @@ describe("MCP installed SRD catalog tools", () => {
     expect(
       payload(
         handleToolCall(root, "inspect_catalog_unit", {
+          unitId: "   ",
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "INVALID_ARGUMENTS" },
+    });
+    expect(
+      payload(
+        handleToolCall(root, "inspect_catalog_unit", {
           unitId: "cloudkill",
         }),
       ),
