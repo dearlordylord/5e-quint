@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Either, Option, Schema } from "effect";
+import { Either, Option } from "effect";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -67,7 +67,6 @@ import {
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
-import { CharacterSessionDetailOutputSchema } from "./character-tool-output.ts";
 import {
   characterBattleSupportProjection,
   characterBattleRuntimeIssueMessage,
@@ -462,7 +461,7 @@ describe("MCP server route", () => {
     expect(inspected.detail).not.toHaveProperty("sheetProjection");
   });
 
-  test("enforces the canonical Character Sheet at the inspect output boundary", () => {
+  test("publishes only the narrow canonical Character Sheet projection", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const characterId = testCharacterId("inspect-sheet-schema");
@@ -480,26 +479,16 @@ describe("MCP server route", () => {
     const output = readPayload(
       handleToolCall(root, "inspect_character_session", { characterId }),
     );
-    expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(CharacterSessionDetailOutputSchema)(output),
-      ),
-    ).toBe(true);
-
-    const malformed = {
-      ...output,
-      detail: {
-        ...output.detail,
-        sheet: { pluginOnly: true },
+    expect(output.detail).toMatchObject({
+      tag: "available",
+      characterId,
+      build: expect.any(Object),
+      sheetProjection: {
+        hitDice: expect.any(Array),
+        resources: expect.any(Array),
       },
-    };
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(CharacterSessionDetailOutputSchema)(
-          malformed,
-        ),
-      ),
-    ).toBe(true);
+    });
+    expect(output.detail).not.toHaveProperty("sheet");
   });
 
   test("reports an unknown selected Character Session without guessing an id", () => {

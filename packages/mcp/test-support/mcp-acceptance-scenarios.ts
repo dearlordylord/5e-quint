@@ -795,7 +795,7 @@ export async function verifyBaselineVertical(client: Client) {
   const continuedDetail = await callTool(client, "inspect_character_session", {
     characterId: testCharacterId(draftId),
   });
-  assert.equal(get(continuedDetail, "detail.sheet.hitPoints.currentHp"), 5);
+  assert.equal(get(continuedDetail, "detail.sheetProjection.currentHp"), 5);
   assert.equal(
     get(continuedDetail, "detail.sheetProjection.hitPointMaximum"),
     12,
@@ -1118,7 +1118,7 @@ export async function verifyWidthVertical(client: Client) {
   assert.equal(
     get(
       retainedDetail,
-      "detail.sheet.companion.companion.manifestation.resolvedStatBlockId",
+      "detail.sheetProjection.companion.companion.manifestation.resolvedStatBlockId",
     ),
     "stat_block_cat",
   );

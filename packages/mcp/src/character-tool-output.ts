@@ -8,7 +8,6 @@ import {
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
 } from "@dnd/character-creation-runtime";
-import { CharacterSheetMcpProjectionSchema } from "@dnd/character-sheet-runtime";
 import { Schema } from "effect";
 
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
@@ -234,6 +233,20 @@ export const CharacterSessionOperationOutputSchema = Schema.Struct({
 });
 
 const CharacterSessionSheetProjectionSchema = Schema.Struct({
+  currentHp: Schema.Number,
+  companion: Schema.Union(
+    Schema.Struct({ tag: Schema.Literal("none") }),
+    Schema.Struct({
+      tag: Schema.Literal("retainedOneAtATime"),
+      companion: Schema.Struct({
+        companionId: Schema.String,
+        manifestation: Schema.Struct({
+          tag: Schema.String,
+          resolvedStatBlockId: Schema.String,
+        }),
+      }),
+    }),
+  ),
   hitPointMaximum: NonNegativeIntegerSchema,
   hitDice: Schema.Array(CharacterSheetHitDieDisplayRowSchema),
   spellSlots: Schema.optionalWith(
@@ -252,7 +265,7 @@ export const CharacterSessionDetailOutputSchema = Schema.Struct({
       tag: Schema.Literal("available"),
       characterId: Schema.String,
       displayName: Schema.String,
-      sheet: CharacterSheetMcpProjectionSchema,
+      build: JsonObjectSchema,
       sheetProjection: CharacterSessionSheetProjectionSchema,
     }),
     Schema.Struct({

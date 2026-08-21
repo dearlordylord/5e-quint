@@ -255,7 +255,16 @@ export function handleCharacterToolCall(
           );
         }
         return schemaJsonContent(CharacterSessionDetailOutputSchema, {
-          detail: detail.right,
+          detail:
+            detail.right.tag === "available"
+              ? {
+                  tag: detail.right.tag,
+                  characterId: detail.right.characterId,
+                  displayName: detail.right.displayName,
+                  build: detail.right.sheet.build,
+                  sheetProjection: detail.right.sheetProjection,
+                }
+              : detail.right,
           session: mcpSessionSummary(root.sessionStore.snapshot()),
         });
       },

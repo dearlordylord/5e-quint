@@ -5,10 +5,6 @@ export {
   rebuildCharacterSheet,
 } from "./sheet-lifecycle.ts";
 export {
-  CharacterSheetMcpProjectionSchema,
-  type CharacterSheetMcpProjection,
-} from "./mcp-projection.ts";
-export {
   FreshCharacterSheetProjectionSchema,
   CharacterSheetConstructionIssueSchema,
   CharacterSheetConstructionIssuesSchema,

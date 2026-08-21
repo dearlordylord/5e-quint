@@ -59,6 +59,19 @@ type CharacterSessionDetailIssue =
     };
 
 type CharacterSessionSheetProjection = {
+  readonly currentHp: Hp;
+  readonly companion:
+    | { readonly tag: "none" }
+    | {
+        readonly tag: "retainedOneAtATime";
+        readonly companion: {
+          readonly companionId: string;
+          readonly manifestation: {
+            readonly tag: string;
+            readonly resolvedStatBlockId: string;
+          };
+        };
+      };
   readonly hitPointMaximum: Hp;
   readonly hitDice: readonly CharacterSheetHitDieState[];
   readonly spellSlots?: readonly CharacterSheetSpellSlotState[];
@@ -156,6 +169,8 @@ function availableCharacterSessionDetail(
     displayName: characterBuildDisplayName(root.unitLibrary, sheet.build),
     sheet,
     sheetProjection: {
+      currentHp: characterSessionCurrentHp(sheet),
+      companion: characterSheetCompanionProjection(sheet),
       hitPointMaximum: hitPointMaximum.right,
       hitDice: hitDice.right,
       ...(spellSlots === undefined ? {} : { spellSlots }),
@@ -163,6 +178,23 @@ function availableCharacterSessionDetail(
       resources: resources.right.map(characterSheetResourceDisplayRow),
     },
   });
+}
+
+function characterSheetCompanionProjection(
+  sheet: AvailableCharacterSession,
+): CharacterSessionSheetProjection["companion"] {
+  if (sheet.companion.tag === "none") return { tag: "none" };
+  return {
+    tag: sheet.companion.tag,
+    companion: {
+      companionId: sheet.companion.companion.companionId,
+      manifestation: {
+        tag: sheet.companion.companion.manifestation.tag,
+        resolvedStatBlockId:
+          sheet.companion.companion.manifestation.resolvedStatBlockId,
+      },
+    },
+  };
 }
 
 function availableCharacterListRow(
