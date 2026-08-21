@@ -49,7 +49,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       "stat_block_goblin_warrior",
     ),
     initiative: sdk.initiativeScore(10),
-    ammunitionStocks: [],
+    ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
   });
   if (sdk.isLeft(goblinInit)) {
     return {
