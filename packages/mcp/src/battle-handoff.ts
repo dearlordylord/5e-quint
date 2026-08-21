@@ -31,6 +31,17 @@ export function finalizeCharacterSessionsFromBattle(
         characterId,
       });
     }
+    if (session.battleId !== state.battleId) {
+      return errorContent(
+        "Battle character session belongs to another battle.",
+        {
+          code: "CHARACTER_SESSION_BATTLE_OWNERSHIP_CONFLICT",
+          characterId,
+          expectedBattleId: state.battleId,
+          actualBattleId: session.battleId,
+        },
+      );
+    }
     const settledSession = settleCharacterSheetFromBattle({
       combatant,
       state,
@@ -51,9 +62,11 @@ export function finalizeCharacterSessionsFromBattle(
 
   const committed = root.sessionStore.characters.setAll(settledSessions);
   if (Either.isLeft(committed)) {
+    const registryIssue = committed.left;
     return errorContent("Battle character session handoff commit failed.", {
       code: "CHARACTER_SESSION_COMMIT_INVALID",
-      message: `Character Session registry rejected the battle handoff: ${committed.left.tag}.`,
+      message: `Character Session registry rejected the battle handoff: ${registryIssue.tag}.`,
+      registryIssue,
       affectedCharacterIds: settledSessions.map(
         (session) => session.characterId,
       ),

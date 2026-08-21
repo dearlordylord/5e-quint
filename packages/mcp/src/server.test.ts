@@ -3719,6 +3719,29 @@ describe("MCP server route", () => {
     });
     expect(available.root.sessionStore.battleSession).not.toBeNull();
 
+    const wrongBattle = startCharacterBattle("draft:handoff-wrong-battle");
+    const wrongSession = wrongBattle.root.sessionStore.characters.get(
+      wrongBattle.characterId,
+    );
+    if (wrongSession?.tag !== "inBattle") {
+      throw new Error("Expected an in-battle session for ownership test.");
+    }
+    wrongBattle.root.sessionStore.characters.set({
+      ...wrongSession,
+      battleId: battleId("battle:other-active-battle"),
+    });
+    expect(
+      readPayload(handleToolCall(wrongBattle.root, "end_battle", {})),
+    ).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_BATTLE_OWNERSHIP_CONFLICT",
+        characterId: wrongBattle.characterId,
+        expectedBattleId: "battle:draft:handoff-wrong-battle",
+        actualBattleId: "battle:other-active-battle",
+      },
+    });
+    expect(wrongBattle.root.sessionStore.battleSession).not.toBeNull();
+
     const invalid = startCharacterBattle("draft:handoff-invalid-catalog");
     const emptyCatalog = buildUnitCatalog({
       collections: [defineSrdUnitCollection({ units: [] })],
@@ -3922,6 +3945,10 @@ describe("MCP server route", () => {
     ).toMatchObject({
       details: {
         code: "CHARACTER_SESSION_COMMIT_INVALID",
+        registryIssue: {
+          tag: "unknownCharacterSession",
+          characterId: firstCharacterId,
+        },
         affectedCharacterIds: [firstCharacterId, secondCharacterId],
         recovery: { tag: "characterSessionsUnchanged" },
       },
@@ -3937,6 +3964,106 @@ describe("MCP server route", () => {
 
     expect(readPayload(handleToolCall(root, "end_battle", {}))).toMatchObject({
       session: { activeBattle: null },
+    });
+  });
+
+  test("start_battle leaves every session and projection unchanged when admission commit fails", () => {
+    const root = createMcpPlaySessionRoot();
+    const firstDraftId = "draft:gh324-start-atomic-first";
+    const secondDraftId = "draft:gh324-start-atomic-second";
+    createFinalizedFighterSheet(root, firstDraftId);
+    createFinalizedFighterSheet(root, secondDraftId);
+    const firstCharacterId = testCharacterId(firstDraftId);
+    const secondCharacterId = testCharacterId(secondDraftId);
+    const firstBefore = root.sessionStore.characters.get(firstCharacterId);
+    const secondBefore = root.sessionStore.characters.get(secondCharacterId);
+    if (firstBefore === undefined || secondBefore === undefined) {
+      throw new Error("Expected both available Character Sessions.");
+    }
+    const projectionBefore = JSON.stringify(root.sessionStore.snapshot());
+    const failingRoot = {
+      ...root,
+      sessionStore: {
+        ...root.sessionStore,
+        characters: {
+          ...root.sessionStore.characters,
+          setAll: () =>
+            Either.left({
+              tag: "unknownCharacterSession" as const,
+              characterId: firstCharacterId,
+            }),
+        },
+      },
+    };
+    expect(
+      readPayload(
+        handleToolCall(failingRoot, "start_battle", {
+          battleId: "battle:gh324-start-atomic",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              characterId: firstCharacterId,
+              combatantId: "start-atomic-first",
+              initiative: 18,
+              ammunitionStocks: [],
+            },
+            {
+              kind: "characterSession",
+              characterId: secondCharacterId,
+              combatantId: "start-atomic-second",
+              initiative: 12,
+              ammunitionStocks: [],
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_COMMIT_INVALID",
+        registryIssue: {
+          tag: "unknownCharacterSession",
+          characterId: firstCharacterId,
+        },
+        recovery: { tag: "characterSessionsUnchanged" },
+      },
+    });
+    expect(root.sessionStore.battleSession).toBeNull();
+    expect(root.sessionStore.characters.get(firstCharacterId)).toBe(
+      firstBefore,
+    );
+    expect(root.sessionStore.characters.get(secondCharacterId)).toBe(
+      secondBefore,
+    );
+    expect(JSON.stringify(root.sessionStore.snapshot())).toBe(projectionBefore);
+
+    expect(
+      readPayload(
+        handleToolCall(root, "start_battle", {
+          battleId: "battle:gh324-start-atomic",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              characterId: firstCharacterId,
+              combatantId: "start-atomic-first",
+              initiative: 18,
+              ammunitionStocks: [],
+            },
+            {
+              kind: "characterSession",
+              characterId: secondCharacterId,
+              combatantId: "start-atomic-second",
+              initiative: 12,
+              ammunitionStocks: [],
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      session: {
+        activeBattle: {
+          battleId: "battle:gh324-start-atomic",
+        },
+      },
     });
   });
 

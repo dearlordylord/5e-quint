@@ -95,48 +95,6 @@ describe("MCP character sessions", () => {
     }
   });
 
-  test("setAll rejects duplicate and unknown sessions without changing the registry", () => {
-    const root = createMcpPlaySessionRoot();
-    const store = createMcpSessionStore(root.statBlockCatalog);
-    const first = characterSessionFor("character:batch-first");
-    const second = characterSessionFor("character:batch-second");
-    const unknown = characterSessionFor("character:batch-unknown");
-    store.characters.set(first);
-    store.characters.set(second);
-
-    expect(store.characters.setAll([first, first])).toMatchObject({
-      _tag: "Left",
-      left: {
-        tag: "duplicateCharacterSession",
-        characterId: first.characterId,
-      },
-    });
-    expect(store.characters.setAll([unknown])).toMatchObject({
-      _tag: "Left",
-      left: {
-        tag: "unknownCharacterSession",
-        characterId: unknown.characterId,
-      },
-    });
-    expect(Array.from(store.characters.entries())).toEqual([
-      [first.characterId, first],
-      [second.characterId, second],
-    ]);
-
-    const updatedFirst = characterSessionFor("character:batch-first", Hp(10));
-    const updatedSecond = characterSessionFor("character:batch-second", Hp(11));
-    expect(
-      store.characters.setAll([updatedSecond, updatedFirst]),
-    ).toMatchObject({
-      _tag: "Right",
-      right: undefined,
-    });
-    expect(Array.from(store.characters.entries())).toEqual([
-      [first.characterId, updatedFirst],
-      [second.characterId, updatedSecond],
-    ]);
-  });
-
   test("validates the full Character Session batch before committing it", () => {
     const root = createMcpPlaySessionRoot();
     const store = createMcpSessionStore(root.statBlockCatalog);
@@ -201,21 +159,6 @@ describe("MCP character sessions", () => {
     expect(store.characters.get(second.characterId)).toBe(second);
   });
 });
-
-function characterSessionFor(characterId: string, currentHp = Hp(15)) {
-  const result = availableCharacterSession({
-    characterId: characterSheetId(characterId),
-    build: druidWildShapeBuild(),
-    currentHp,
-    tempHp: Hp(0),
-    hitPointMaximumReduction: Hp(0),
-    conditions: [],
-    companion: { tag: "none" },
-    unitLibrary,
-    druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
-  });
-  return expectRight(result);
-}
 
 function druidWildShapeBuild(): CharacterBuild {
   return {

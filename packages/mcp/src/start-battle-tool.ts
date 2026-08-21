@@ -114,10 +114,12 @@ export function handleStartBattleToolCall(
   );
   const committed = root.sessionStore.characters.setAll(inBattleSessions);
   if (Either.isLeft(committed)) {
+    const registryIssue = committed.left;
     return errorContent("Battle character session admission commit failed.", {
       code: "CHARACTER_SESSION_COMMIT_INVALID",
       battleId: input.battleId,
-      message: `Character Session registry rejected battle admission: ${committed.left.tag}.`,
+      message: `Character Session registry rejected battle admission: ${registryIssue.tag}.`,
+      registryIssue,
       affectedCharacterIds: inBattleSessions.map(
         (session) => session.sheet.characterId,
       ),

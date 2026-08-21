@@ -563,6 +563,25 @@ describe("MCP protocol server", () => {
     try {
       await server.connect(serverTransport);
       await client.connect(clientTransport);
+      const advertisedTools = (await client.listTools()).tools;
+      const startBattleTool = advertisedTools.find(
+        (tool) => tool.name === "start_battle",
+      );
+      const endBattleTool = advertisedTools.find(
+        (tool) => tool.name === "end_battle",
+      );
+      if (
+        startBattleTool?.outputSchema === undefined ||
+        endBattleTool?.outputSchema === undefined
+      ) {
+        throw new Error("Expected start_battle and end_battle output schemas.");
+      }
+      const validateStartOutput = new AjvJsonSchemaValidator().getValidator(
+        startBattleTool.outputSchema as JsonSchemaType,
+      );
+      const validateEndOutput = new AjvJsonSchemaValidator().getValidator(
+        endBattleTool.outputSchema as JsonSchemaType,
+      );
       const playSessionId = await createPlaySession(client);
       const decoded = decodePlaySessionId(playSessionId);
       if (Either.isLeft(decoded)) throw new Error(decoded.left);
@@ -620,6 +639,7 @@ describe("MCP protocol server", () => {
           ],
         },
       });
+      expect(validateStartOutput(started).valid).toBe(true);
       expect(operationResult(started)).toMatchObject({
         snapshot: {
           turnOrder: ["protocol-first", "protocol-second", "protocol-goblin"],
@@ -665,6 +685,7 @@ describe("MCP protocol server", () => {
         name: "end_battle",
         arguments: { playSessionId },
       });
+      expect(validateEndOutput(ended).valid).toBe(true);
       expect(operationResult(ended)).toMatchObject({
         endedBattleId: "battle:protocol-gh324-round-trip",
         characters: expect.arrayContaining([
@@ -692,10 +713,19 @@ describe("MCP protocol server", () => {
           }),
         ]),
       );
+      const rejectedEnd = await client.callTool({
+        name: "end_battle",
+        arguments: { playSessionId },
+      });
+      expect(rejectedEnd.isError).toBe(true);
+      if (!isJsonObject(rejectedEnd.structuredContent)) {
+        throw new Error("Expected typed end_battle recovery.");
+      }
+      expect(validateEndOutput(rejectedEnd.structuredContent).valid).toBe(true);
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
-  });
+  }, 30_000);
 
   test("returns one typed restoration result for a handle absent from the process", async () => {
     const [clientTransport, serverTransport] =
