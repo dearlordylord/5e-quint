@@ -21,7 +21,9 @@ All model-generated Scenarios, characters, setup, and player attempts were
 created by the canonical scripts. No Scenario result was hand-authored to force
 admission. Both player runs used instructional isolation, unique Execution and
 Evidence Set IDs, and the same admitted Scenario ID. No GitHub issue state was
-changed and no follow-up issue was published.
+changed during evidence production. The confirmed runner identity defect was
+subsequently published as follow-up issue #315 after a focused regression and
+repair were available.
 
 ## Campaign dispositions
 
@@ -148,6 +150,13 @@ the `finally` sequence did not reach replay-supervisor retention. This is
 reported as a terminal runner obstruction, not as evidence that the #279 setup
 capability is supported.
 
+The four historical Evidence Sets remain immutable and obstructed. The boundary
+was repaired after the trial in commit `a62b9cde8`: the runner now validates one
+timestamp and passes it through supervisor initialization. A real CLI/handoff
+regression proves execution-start/transcript identity equality, findings
+checkpoint creation, replay-supervisor retention, and malformed timestamp
+rejection. Follow-up issue #315 links the confirmed defect to issue #297.
+
 ### Open-ended Scenario
 
 Scenario `lantern-intercept-pairwise-control` was admitted with
@@ -173,15 +182,18 @@ diversity.
 - The #279 per-test Table circumstance Advantage/Disadvantage capability remains
   honestly unsupported by the public setup surface. The known-gap Scenario is
   useful as a diagnostic probe, not as a supported-only result.
-- Open-ended setup construction is representable, but the player evidence
-  exposed a separate dim-light Opportunity Attack route-projection limitation.
+- Open-ended setup construction is representable. Execution A observed a
+  dim-light Opportunity Attack route-projection limitation, but post-play
+  review could not run; this remains an ambiguous observation rather than a
+  promoted SDK defect.
 - Both independent model players reached canonical terminal conclusions and
   preserved their accepted SDK traces. Post-play review/replay/index could not
   be completed because runner identity finalization failed before supervisor
   retention; no finding was fabricated to conceal that obstruction.
-- No external issue was created and no GitHub state was mutated. The runner
-  timestamp mismatch and dim-light route limitation are proposed follow-up
-  defects only; publication authority was not requested.
+- Confirmed publication and runner-identity defects have focused deterministic
+  regressions. Runner identity follow-up issue #315 is linked to #297. The
+  dim-light observation is not promoted without the independent review that the
+  historical identity obstruction prevented.
 
 ## Retained ignored evidence inventory
 
