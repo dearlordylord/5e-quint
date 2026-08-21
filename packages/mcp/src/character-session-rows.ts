@@ -15,7 +15,10 @@ import { Either, Match } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
-import type { CharacterSessionRow } from "./character-tool-output.ts";
+import {
+  type CharacterSessionCompanionManifestationTag,
+  type CharacterSessionRow,
+} from "./character-tool-output.ts";
 import {
   characterBattleSpellSlots,
   characterSessionCurrentHp,
@@ -67,7 +70,7 @@ type CharacterSessionSheetProjection = {
         readonly companion: {
           readonly companionId: string;
           readonly manifestation: {
-            readonly tag: string;
+            readonly tag: CharacterSessionCompanionManifestationTag;
             readonly resolvedStatBlockId: string;
           };
         };

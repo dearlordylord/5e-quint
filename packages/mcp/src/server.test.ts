@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Either, Option } from "effect";
+import { Either, Option, Schema } from "effect";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -67,6 +67,7 @@ import {
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
+import { CharacterSessionDetailOutputSchema } from "./character-tool-output.ts";
 import {
   characterBattleSupportProjection,
   characterBattleRuntimeIssueMessage,
@@ -489,6 +490,34 @@ describe("MCP server route", () => {
       },
     });
     expect(output.detail).not.toHaveProperty("sheet");
+
+    const malformedProjection = {
+      ...output,
+      detail: {
+        ...output.detail,
+        sheetProjection: {
+          ...output.detail.sheetProjection,
+          currentHp: -1,
+          companion: {
+            tag: "retainedOneAtATime",
+            companion: {
+              companionId: "synthetic-companion",
+              manifestation: {
+                tag: "pluginOnly",
+                resolvedStatBlockId: "synthetic-stat-block",
+              },
+            },
+          },
+        },
+      },
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(CharacterSessionDetailOutputSchema)(
+          malformedProjection,
+        ),
+      ),
+    ).toBe(true);
   });
 
   test("reports an unknown selected Character Session without guessing an id", () => {

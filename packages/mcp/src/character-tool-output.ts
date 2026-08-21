@@ -8,6 +8,7 @@ import {
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
 } from "@dnd/character-creation-runtime";
+import type { CharacterSheetRetainedCompanionManifestation } from "@dnd/character-sheet-runtime";
 import { Schema } from "effect";
 
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
@@ -25,6 +26,15 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
 );
+export const CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS = [
+  "embodiedOutsideBattle",
+  "temporarilyDismissed",
+  "disappearedAtZeroHitPoints",
+] as const satisfies ReadonlyArray<
+  CharacterSheetRetainedCompanionManifestation["tag"]
+>;
+export type CharacterSessionCompanionManifestationTag =
+  (typeof CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS)[number];
 const CharacterSheetSpellSlotDisplayRowSchema = Schema.Struct({
   spellLevel: PositiveIntegerSchema,
   count: NonNegativeIntegerSchema,
@@ -233,7 +243,7 @@ export const CharacterSessionOperationOutputSchema = Schema.Struct({
 });
 
 const CharacterSessionSheetProjectionSchema = Schema.Struct({
-  currentHp: Schema.Number,
+  currentHp: NonNegativeIntegerSchema,
   companion: Schema.Union(
     Schema.Struct({ tag: Schema.Literal("none") }),
     Schema.Struct({
@@ -241,7 +251,9 @@ const CharacterSessionSheetProjectionSchema = Schema.Struct({
       companion: Schema.Struct({
         companionId: Schema.String,
         manifestation: Schema.Struct({
-          tag: Schema.String,
+          tag: Schema.Literal(
+            ...CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS,
+          ),
           resolvedStatBlockId: Schema.String,
         }),
       }),
