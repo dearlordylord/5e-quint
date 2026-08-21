@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
+import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { characterDraftId } from "@dnd/character-creation-runtime";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
@@ -59,6 +61,7 @@ const expectedTools = [
   "query_character_session",
   "select_stat_block",
   "start_battle",
+  "battle_lifecycle",
   "read_battle_state",
   "discover_battle_acts",
   "fill_battle_hole",
@@ -457,9 +460,77 @@ export async function verifyToolContract(client: Client) {
   assert.match(schemaText, /statBlockId/);
   assert.doesNotMatch(schemaText, /characterCombatantId/);
   assert.doesNotMatch(schemaText, /additionalCharacters/);
-  assert.doesNotMatch(startBattleOutputSchemaText, /battleState/);
+  assert.match(startBattleOutputSchemaText, /battleState/);
+  assert.match(startBattleOutputSchemaText, /initialInitiativeSetup/);
+  assert.match(startBattleOutputSchemaText, /activeBattle/);
+  assert.match(startBattleOutputSchemaText, /none/);
   assert.match(startBattleOutputSchemaText, /snapshot/);
   assert.match(startBattleOutputSchemaText, /session/);
+
+  const validateStartBattleOutput = new AjvJsonSchemaValidator().getValidator(
+    (startBattle as { readonly outputSchema: unknown })
+      .outputSchema as JsonSchemaType,
+  );
+  const emptyStartBattleProjection = {
+    snapshot: null,
+    availableActs: [],
+    admittedSpellPresentations: [],
+    presentedInterruptChoices: [],
+    session: {
+      draftIds: [],
+      characterIds: [],
+      selectedStatBlockId: null,
+      battleState: { tag: "none" },
+    },
+  };
+  for (const battleState of [
+    { tag: "none" },
+    {
+      tag: "initialInitiativeSetup",
+      battleId: "battle:contract",
+      combatants: [],
+    },
+    {
+      tag: "activeBattle",
+      battleId: "battle:contract",
+      currentActorId: "contract-actor",
+    },
+  ] as const) {
+    const operationResult = {
+      ...emptyStartBattleProjection,
+      battleState,
+      session: { ...emptyStartBattleProjection.session, battleState },
+    };
+    const envelope = {
+      tag: "playSessionAvailable",
+      playSessionId: "play-session:00000000-0000-4000-8000-000000000000",
+      operation: { name: "start_battle", result: operationResult },
+      projection: operationResult.session,
+      unresolvedInputs: [],
+      nextOperations:
+        battleState.tag === "initialInitiativeSetup"
+          ? ["battle_lifecycle", "read_battle_state"]
+          : battleState.tag === "activeBattle"
+            ? ["discover_battle_acts", "read_battle_state", "end_battle"]
+            : [
+                "create_character_draft",
+                "list_catalog_units",
+                "list_stat_blocks",
+              ],
+      restoration: { tag: "retained" },
+    };
+    const validation = validateStartBattleOutput(envelope);
+    assert.equal(
+      validation.valid,
+      true,
+      `start_battle output must accept battleState ${battleState.tag}: ${JSON.stringify(validation)}`,
+    );
+    assert.equal(
+      validateStartBattleOutput({ ...envelope, battleState }).valid,
+      false,
+      `model-facing output must reject parallel battleState for ${battleState.tag}`,
+    );
+  }
 
   const fillCreationHoles = listed.tools.find(
     (tool) => tool.name === "fill_creation_holes",
@@ -836,7 +907,7 @@ export async function verifyBaselineVertical(client: Client) {
 
   const ended = await callTool(client, "end_battle", {});
   assert.equal(get(ended, "endedBattleId"), "battle:stdio-accepted-vertical");
-  assert.equal(get(ended, "session.activeBattle"), null);
+  assert.deepEqual(get(ended, "session.battleState"), { tag: "none" });
 
   const listed = await callTool(client, "list_characters", {});
   assert.equal(get(listed, "characters.0.status"), "available");

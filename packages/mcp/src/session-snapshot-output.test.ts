@@ -85,7 +85,8 @@ describe("MCP session wire projections", () => {
       draftIds: [],
       characterIds: [characterId("character:projection-test")],
       selectedStatBlockId: null,
-      activeBattle: {
+      battleState: {
+        tag: "activeBattle",
         battleId: battleId("battle-projection-test"),
         currentActorId: combatantId("combatant:projection-test"),
       },
@@ -116,7 +117,8 @@ describe("MCP session wire projections", () => {
         draftIds: [],
         characterIds: ["character:projection-test"],
         selectedStatBlockId: null,
-        activeBattle: {
+        battleState: {
+          tag: "activeBattle",
           battleId: "battle-projection-test",
           currentActorId: "combatant:projection-test",
         },
@@ -146,7 +148,7 @@ describe("MCP session wire projections", () => {
           draftIds: [],
           characterIds: [],
           selectedStatBlockId: null,
-          activeBattle: null,
+          battleState: { tag: "none" },
           transientBattleFills: {
             subject: {
               tag: "action",
@@ -185,7 +187,7 @@ describe("MCP session wire projections", () => {
           draftIds: [],
           characterIds: [],
           selectedStatBlockId: null,
-          activeBattle: null,
+          battleState: { tag: "none" },
           transientBattleFills: {
             subject: {
               tag: "actionSpell",
@@ -222,7 +224,7 @@ describe("MCP session wire projections", () => {
           draftIds: [],
           characterIds: [],
           selectedStatBlockId: null,
-          activeBattle: null,
+          battleState: { tag: "none" },
           transientBattleFills: {
             subject: {
               tag: "unitFeature",

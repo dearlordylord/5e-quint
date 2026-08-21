@@ -15,6 +15,7 @@ import { Either } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleFillSession } from "./session-store.ts";
+import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
 
 type BattlePayloadPresentationIssues = BattleSnapshotPresentationIssues;
@@ -64,8 +65,33 @@ export function battleSessionPayload(
   const presentation = battlePresentationProjection(session);
   return Either.map(presentation, (value) => ({
     ...value,
+    battleState: root.sessionStore.snapshot().battleState,
     session: root.sessionStore.snapshot(),
   }));
+}
+
+export function initialInitiativeSetupPayload(root: McpPlaySessionRoot) {
+  const session = root.sessionStore.snapshot();
+  return {
+    battleState: session.battleState,
+    snapshot: null,
+    availableActs: [],
+    admittedSpellPresentations: [],
+    presentedInterruptChoices: [],
+    session,
+  };
+}
+
+export function initialInitiativeSetupStartPayload(root: McpPlaySessionRoot) {
+  const session = root.sessionStore.snapshot();
+  return {
+    battleState: session.battleState,
+    snapshot: null,
+    availableActs: [],
+    admittedSpellPresentations: [],
+    presentedInterruptChoices: [],
+    session: mcpSessionSummary(session),
+  };
 }
 
 export function battleResolutionPayload(
@@ -76,6 +102,7 @@ export function battleResolutionPayload(
   return Either.map(presentation, (value) => ({
     result: battleResolutionResultPayload(result, value.snapshot),
     ...value,
+    battleState: root.sessionStore.snapshot().battleState,
     snapshot: value.snapshot,
     session: root.sessionStore.snapshot(),
   }));

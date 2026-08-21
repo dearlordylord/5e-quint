@@ -27,10 +27,12 @@ import {
   SelectStatBlockOutputSchema,
 } from "./battle-tool-output.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
+import { handleBattleLifecycleToolCall } from "./battle-lifecycle-tool.ts";
 import {
   battleResolutionPayload,
   battleSessionPayload,
   battleSnapshotPresentationIssueContent,
+  initialInitiativeSetupPayload,
   noStoredBattleContent,
   pendingBattleFillsContent,
   unknownStatBlockContent,
@@ -75,6 +77,9 @@ export function handleBattleToolCall(
     Match.when({ name: battleToolNames.startBattle }, (matched) =>
       handleStartBattleToolCall(root, matched.args),
     ),
+    Match.when({ name: battleToolNames.battleLifecycle }, (matched) =>
+      handleBattleLifecycleToolCall(root, matched.args),
+    ),
     Match.when({ name: battleToolNames.readBattleState }, () =>
       battleSessionContent(root),
     ),
@@ -82,8 +87,8 @@ export function handleBattleToolCall(
       battleSessionContent(root),
     ),
     Match.when({ name: battleToolNames.fillBattleHole }, (matched) => {
-      const visibleSession = root.sessionStore.battleSession;
-      if (visibleSession == null) return noStoredBattleContent();
+      const visibleSession = activeBattleForTool(root);
+      if (Either.isLeft(visibleSession)) return visibleSession.left;
 
       const subject = matched.args.subject;
       const previous = root.sessionStore.pendingBattleFills;
@@ -94,8 +99,8 @@ export function handleBattleToolCall(
           requestedSubject: subject,
         });
       }
-      const discoveredAct = discoverBattleActs(visibleSession).find((act) =>
-        sameBattleSubject(act.subject, subject),
+      const discoveredAct = discoverBattleActs(visibleSession.right).find(
+        (act) => sameBattleSubject(act.subject, subject),
       );
       if (previous === null && discoveredAct === undefined) {
         return errorContent("Battle act is not currently available.", {
@@ -108,8 +113,8 @@ export function handleBattleToolCall(
       const isInterruptDecision =
         matched.args.fill.kind === "interruptDecision";
       const replaySession = isInterruptDecision
-        ? visibleSession
-        : (previous?.baseSession ?? visibleSession);
+        ? visibleSession.right
+        : (previous?.baseSession ?? visibleSession.right);
       const result = isInterruptDecision
         ? resolveBattleRuntimeInterrupt({
             session: replaySession,
@@ -253,7 +258,13 @@ export function handleBattleToolCall(
 
       const handoff = finalizeCharacterSessionsFromBattle(root, state.right);
       if (handoff !== null) return handoff;
-      root.sessionStore.battleSession = null;
+      const cleared = root.sessionStore.clearBattle();
+      if (Either.isLeft(cleared)) {
+        return errorContent("Battle state transition failed.", {
+          code: "BATTLE_STATE_TRANSITION_INVALID",
+          transition: cleared.left,
+        });
+      }
       root.sessionStore.pendingBattleFills = null;
       publishAdminProjectionBestEffort(root);
 
@@ -274,7 +285,17 @@ export function handleBattleToolCall(
 }
 
 function battleSessionContent(root: McpPlaySessionRoot): BattleToolResult {
-  const payload = battleSessionPayload(root, root.sessionStore.battleSession);
+  const state = root.sessionStore.battleState;
+  if (state.tag === "initialInitiativeSetup") {
+    return schemaJsonContent(
+      BattleSessionOutputSchema,
+      initialInitiativeSetupPayload(root),
+    );
+  }
+  const payload = battleSessionPayload(
+    root,
+    state.tag === "activeBattle" ? state.session : null,
+  );
   return Either.isLeft(payload)
     ? battleSnapshotPresentationIssueContent(payload.left)
     : schemaJsonContent(BattleSessionOutputSchema, payload.right);
@@ -296,13 +317,15 @@ export function storeBattleResolution(
   pendingTransaction: PendingBattleFillSession | null,
 ): boolean {
   if (result.tag === "resolved") {
-    root.sessionStore.battleSession = result.session;
+    const stored = root.sessionStore.storeActiveBattle(result.session);
+    if (Either.isLeft(stored)) return false;
     root.sessionStore.pendingBattleFills = null;
     return true;
   }
   if (result.tag === "needsHoles") {
     if (pendingTransaction === null) return false;
-    root.sessionStore.battleSession = result.session;
+    const stored = root.sessionStore.storeActiveBattle(result.session);
+    if (Either.isLeft(stored)) return false;
     root.sessionStore.pendingBattleFills = pendingTransaction;
     return true;
   }
@@ -352,10 +375,25 @@ function activeBattleWithoutPendingFills(
   root: McpPlaySessionRoot,
   pendingMessage: string,
 ): Either.Either<BattleRuntimeSession, ToolError> {
-  const session = root.sessionStore.battleSession;
-  if (session == null) return Either.left(noStoredBattleContent());
+  const session = activeBattleForTool(root);
+  if (Either.isLeft(session)) return session;
   const pendingFills = root.sessionStore.pendingBattleFills;
   return pendingFills === null
-    ? Either.right(session)
+    ? Either.right(session.right)
     : Either.left(pendingBattleFillsContent(pendingFills, pendingMessage));
+}
+
+function activeBattleForTool(
+  root: McpPlaySessionRoot,
+): Either.Either<BattleRuntimeSession, ToolError> {
+  const state = root.sessionStore.battleState;
+  if (state.tag === "none") return Either.left(noStoredBattleContent());
+  if (state.tag === "initialInitiativeSetup") {
+    return Either.left(
+      errorContent("Initial Initiative setup is not finalized.", {
+        code: "INITIAL_INITIATIVE_SETUP_NOT_FINALIZED",
+      }),
+    );
+  }
+  return Either.right(state.session);
 }

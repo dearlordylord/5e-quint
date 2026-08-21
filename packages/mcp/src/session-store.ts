@@ -8,8 +8,10 @@ import type {
   BattleRuntimeSession,
   BattleState,
   BattleSubject,
+  InitialInitiativeSetup,
 } from "@dnd/battle-runtime";
 import { snapshotBattle } from "@dnd/battle-runtime";
+import { requiredInitiativeRollModeForCombatant } from "@dnd/battle-runtime";
 import {
   characterSheetCurrentHp,
   characterSheetSpellSlots,
@@ -29,7 +31,7 @@ import type {
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export type AvailableCharacterSession = CharacterSheet;
@@ -86,23 +88,81 @@ export type PendingBattleFillSession = BattleFillSession & {
   readonly baseSession: BattleRuntimeSession;
 };
 
+/**
+ * The Play Session owns one Battle workflow slot. Runtime setup and active
+ * sessions are opaque SDK-owned values; MCP only chooses which one is stored.
+ */
+export type McpBattleState =
+  | { readonly tag: "none" }
+  | {
+      readonly tag: "initialInitiativeSetup";
+      readonly setup: InitialInitiativeSetup;
+    }
+  | {
+      readonly tag: "activeBattle";
+      readonly session: BattleRuntimeSession;
+    };
+
+export type McpBattleStateTransitionIssue = {
+  readonly tag: "invalidBattleStateTransition";
+  readonly from: McpBattleState["tag"];
+  readonly to: McpBattleState["tag"];
+};
+
+export type McpBattleStateSnapshot =
+  | { readonly tag: "none" }
+  | {
+      readonly tag: "initialInitiativeSetup";
+      readonly battleId: BattleId;
+      readonly combatants: readonly McpInitialInitiativeCombatantSnapshot[];
+    }
+  | {
+      readonly tag: "activeBattle";
+      readonly battleId: BattleId;
+      readonly currentActorId: ReturnType<
+        typeof snapshotBattle
+      >["currentActorId"];
+    };
+
+export type McpInitialInitiativeCombatantSnapshot = {
+  readonly combatantId: ReturnType<typeof snapshotBattle>["turnOrder"][number];
+  readonly initiative: number;
+  readonly rollMode: "normal" | "advantage" | "disadvantage";
+};
+
 export type McpSessionSnapshot = {
   readonly draftIds: readonly CharacterDraftId[];
   readonly characterIds: readonly CharacterId[];
   readonly selectedStatBlockId: StatBlockId | null;
-  readonly activeBattle: McpBattleSessionSnapshot | null;
+  readonly battleState: McpBattleStateSnapshot;
   readonly transientBattleFills: BattleFillSession | null;
 };
 
-export type McpBattleSessionSnapshot = {
-  readonly battleId: BattleId;
-  readonly currentActorId: ReturnType<typeof snapshotBattle>["currentActorId"];
-};
+/** The active-session projection retained for callers that only need it. */
+export type McpBattleSessionSnapshot = Extract<
+  McpBattleStateSnapshot,
+  { readonly tag: "activeBattle" }
+>;
 
 export type McpSessionStore = {
   readonly drafts: Map<CharacterDraftId, CharacterDraft>;
   readonly characters: CharacterSessionRegistry;
-  battleSession: BattleRuntimeSession | null;
+  readonly battleState: McpBattleState;
+  /** Read-only active-session projection for battle-only composition helpers. */
+  readonly battleSession: BattleRuntimeSession | null;
+  storeActiveBattle(
+    session: BattleRuntimeSession,
+  ): Either.Either<void, McpBattleStateTransitionIssue>;
+  storeInitialInitiativeSetup(
+    setup: InitialInitiativeSetup,
+  ): Either.Either<void, McpBattleStateTransitionIssue>;
+  updateInitialInitiativeSetup(
+    setup: InitialInitiativeSetup,
+  ): Either.Either<void, McpBattleStateTransitionIssue>;
+  finalizeInitialInitiativeSetup(
+    session: BattleRuntimeSession,
+  ): Either.Either<void, McpBattleStateTransitionIssue>;
+  clearBattle(): Either.Either<void, McpBattleStateTransitionIssue>;
   pendingBattleFills: PendingBattleFillSession | null;
   clearSelectedStatBlock(): void;
   getSelectedStatBlock(): StatBlockRecord | null;
@@ -154,10 +214,57 @@ export function createMcpSessionStore(
   const drafts = new Map<CharacterDraftId, CharacterDraft>();
   const characters = characterSessionRegistry();
   let selectedStatBlockId: StatBlockId | null = null;
+  let battleState: McpBattleState = { tag: "none" };
   const store: McpSessionStore = {
     drafts,
     characters,
-    battleSession: null,
+    get battleState() {
+      return battleState;
+    },
+    get battleSession(): BattleRuntimeSession | null {
+      return battleState.tag === "activeBattle" ? battleState.session : null;
+    },
+    storeActiveBattle(session) {
+      if (battleState.tag === "initialInitiativeSetup") {
+        return invalidBattleStateTransition(battleState.tag, "activeBattle");
+      }
+      battleState = { tag: "activeBattle", session };
+      return Either.right(undefined);
+    },
+    storeInitialInitiativeSetup(setup) {
+      if (battleState.tag !== "none") {
+        return invalidBattleStateTransition(
+          battleState.tag,
+          "initialInitiativeSetup",
+        );
+      }
+      battleState = { tag: "initialInitiativeSetup", setup };
+      return Either.right(undefined);
+    },
+    updateInitialInitiativeSetup(setup) {
+      if (battleState.tag !== "initialInitiativeSetup") {
+        return invalidBattleStateTransition(
+          battleState.tag,
+          "initialInitiativeSetup",
+        );
+      }
+      battleState = { tag: "initialInitiativeSetup", setup };
+      return Either.right(undefined);
+    },
+    finalizeInitialInitiativeSetup(session) {
+      if (battleState.tag !== "initialInitiativeSetup") {
+        return invalidBattleStateTransition(battleState.tag, "activeBattle");
+      }
+      battleState = { tag: "activeBattle", session };
+      return Either.right(undefined);
+    },
+    clearBattle() {
+      if (battleState.tag !== "activeBattle") {
+        return invalidBattleStateTransition(battleState.tag, "none");
+      }
+      battleState = { tag: "none" };
+      return Either.right(undefined);
+    },
     pendingBattleFills: null,
     clearSelectedStatBlock(): void {
       selectedStatBlockId = null;
@@ -181,10 +288,7 @@ export function createMcpSessionStore(
         draftIds: Array.from(drafts.keys()),
         characterIds,
         selectedStatBlockId,
-        activeBattle:
-          store.battleSession === null
-            ? null
-            : battleSessionSnapshot(store.battleSession.state),
+        battleState: battleStateSnapshot(store.battleState),
         transientBattleFills:
           store.pendingBattleFills === null
             ? null
@@ -197,6 +301,17 @@ export function createMcpSessionStore(
   } satisfies McpSessionStore;
 
   return store;
+}
+
+function invalidBattleStateTransition(
+  from: McpBattleState["tag"],
+  to: McpBattleState["tag"],
+): Either.Either<never, McpBattleStateTransitionIssue> {
+  return Either.left({
+    tag: "invalidBattleStateTransition",
+    from,
+    to,
+  });
 }
 
 function characterSessionRegistry(): CharacterSessionRegistry {
@@ -256,7 +371,39 @@ function characterSessionId(session: CharacterSession): CharacterId {
 
 function battleSessionSnapshot(state: BattleState): McpBattleSessionSnapshot {
   return {
+    tag: "activeBattle",
     battleId: state.battleId,
     currentActorId: snapshotBattle(state).currentActorId,
   };
+}
+
+function battleStateSnapshot(state: McpBattleState): McpBattleStateSnapshot {
+  return Match.value(state).pipe(
+    Match.when({ tag: "none" }, (matched) => matched),
+    Match.when({ tag: "activeBattle" }, (matched) =>
+      battleSessionSnapshot(matched.session.state),
+    ),
+    Match.when({ tag: "initialInitiativeSetup" }, (matched) => {
+      const battle = matched.setup.state;
+      const snapshot = snapshotBattle(battle);
+      return {
+        tag: "initialInitiativeSetup" as const,
+        battleId: battle.battleId,
+        combatants: snapshot.turnOrder.flatMap((combatantId) => {
+          const combatant = battle.combatants.get(combatantId);
+          if (combatant === undefined) return [];
+          return [
+            {
+              combatantId,
+              initiative: combatant.initiative,
+              rollMode:
+                requiredInitiativeRollModeForCombatant(battle, combatantId) ??
+                "normal",
+            },
+          ];
+        }),
+      };
+    }),
+    Match.exhaustive,
+  );
 }

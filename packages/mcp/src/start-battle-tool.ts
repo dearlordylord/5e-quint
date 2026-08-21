@@ -17,7 +17,10 @@ import {
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { Either, Match, Option } from "effect";
 
-import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
+import {
+  admitCharacterSessionsToBattle,
+  characterSessionBattleAdmissionErrorContent,
+} from "./character-session-battle-admission.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { type AvailableCharacterSession } from "./session-store.ts";
@@ -32,13 +35,15 @@ import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
+import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
+import { completeBattleStateTransition } from "./battle-state-transition.ts";
 
-type StartableCharacterSessionCombatant = {
+export type StartableCharacterSessionCombatant = {
   readonly character: InitialCharacterSessionCombatantToolInput;
   readonly session: AvailableCharacterSession;
 };
 
-type StartableBattleCombatants = {
+export type StartableBattleCombatants = {
   readonly creatureInits: readonly BattleCreatureInit[];
   readonly characterSessions: readonly StartableCharacterSessionCombatant[];
 };
@@ -58,13 +63,24 @@ export function handleStartBattleToolCall(
   root: McpPlaySessionRoot,
   input: StartBattleToolInput,
 ) {
-  const activeBattle = root.sessionStore.battleSession;
-  if (activeBattle !== null) {
-    return errorContent("A battle session is already active.", {
-      code: "BATTLE_SESSION_ALREADY_ACTIVE",
-      battleId: activeBattle.state.battleId,
-    });
-  }
+  const battleState = root.sessionStore.battleState;
+  const activeBattleError = Match.value(battleState).pipe(
+    Match.when({ tag: "none" }, () => null),
+    Match.when({ tag: "initialInitiativeSetup" }, (matched) =>
+      errorContent("A battle session is already active.", {
+        code: "BATTLE_SESSION_ALREADY_ACTIVE",
+        battleId: matched.setup.state.battleId,
+      }),
+    ),
+    Match.when({ tag: "activeBattle" }, (matched) =>
+      errorContent("A battle session is already active.", {
+        code: "BATTLE_SESSION_ALREADY_ACTIVE",
+        battleId: matched.session.state.battleId,
+      }),
+    ),
+    Match.exhaustive,
+  );
+  if (activeBattleError !== null) return activeBattleError;
 
   const duplicateInput = duplicateStartBattleInputContent(
     input.initialCombatants,
@@ -78,6 +94,10 @@ export function handleStartBattleToolCall(
     initialCombatants: input.initialCombatants,
   });
   if (Either.isLeft(combatants)) return combatants.left;
+
+  if (input.initiativeMode === "initialSetup") {
+    return startInitialInitiativeSetup(root, input, combatants.right);
+  }
 
   const session = startBattle({
     battleId: input.battleId,
@@ -104,44 +124,28 @@ export function handleStartBattleToolCall(
     return battleSnapshotPresentationIssueContent(snapshot.left);
   }
 
-  const inBattleSessions = combatants.right.characterSessions.map(
-    ({ session }) =>
-      ({
-        tag: "inBattle",
-        sheet: session,
-        battleId: input.battleId,
-      }) as const,
-  );
-  const committed = root.sessionStore.characters.setAll(inBattleSessions);
+  const committed = admitCharacterSessionsToBattle({
+    registry: root.sessionStore.characters,
+    battleId: input.battleId,
+    sessions: combatants.right.characterSessions.map(({ session }) => session),
+  });
   if (Either.isLeft(committed)) {
-    const registryIssue = committed.left;
-    return errorContent("Battle character session admission commit failed.", {
-      code: "CHARACTER_SESSION_COMMIT_INVALID",
-      battleId: input.battleId,
-      message: `Character Session registry rejected battle admission: ${registryIssue.tag}.`,
-      registryIssue,
-      affectedCharacterIds: inBattleSessions.map(
-        (session) => session.sheet.characterId,
-      ),
-      recovery: {
-        tag: "characterSessionsUnchanged",
-        guidance:
-          "No Character Session was committed; correct the session conflict and retry start_battle.",
-      },
-    });
+    return characterSessionBattleAdmissionErrorContent(committed.left);
   }
 
-  root.sessionStore.battleSession = admittedSession;
-  root.sessionStore.pendingBattleFills = null;
-  publishAdminProjectionBestEffort(root);
-
-  return schemaJsonContent(StartBattleOutputSchema, {
-    snapshot: snapshot.right,
-    availableActs: discoverBattleActs(admittedSession),
-    admittedSpellPresentations:
-      battleAdmittedSpellPresentations(admittedSession),
-    presentedInterruptChoices: [],
-    session: mcpSessionSummary(root.sessionStore.snapshot()),
+  return completeBattleStateTransition({
+    root,
+    transition: root.sessionStore.storeActiveBattle(admittedSession),
+    output: () =>
+      schemaJsonContent(StartBattleOutputSchema, {
+        battleState: root.sessionStore.snapshot().battleState,
+        snapshot: snapshot.right,
+        availableActs: discoverBattleActs(admittedSession),
+        admittedSpellPresentations:
+          battleAdmittedSpellPresentations(admittedSession),
+        presentedInterruptChoices: [],
+        session: mcpSessionSummary(root.sessionStore.snapshot()),
+      }),
   });
 }
 

@@ -125,9 +125,11 @@ export function adminProjection(
 > {
   const characters = characterListRows(root);
   if (Either.isLeft(characters)) return Either.left(characters.left);
-  const battle = root.sessionStore.battleSession;
+  const battleState = root.sessionStore.battleState;
   const presentedBattle =
-    battle === null ? Either.right(null) : battlePresentedSnapshot(battle);
+    battleState.tag !== "activeBattle"
+      ? Either.right(null)
+      : battlePresentedSnapshot(battleState.session);
   if (Either.isLeft(presentedBattle)) {
     return Either.left(presentedBattle.left);
   }
@@ -142,7 +144,7 @@ function adminMirrorSessionSummary(
   snapshot: McpSessionSnapshot,
 ): AdminMirrorSessionSummary {
   return {
-    activeBattle: snapshot.activeBattle,
+    battleState: snapshot.battleState,
     draftIds: snapshot.draftIds,
     selectedStatBlockId: snapshot.selectedStatBlockId,
     transientBattleFills: snapshot.transientBattleFills,

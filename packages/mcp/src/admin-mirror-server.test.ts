@@ -208,7 +208,7 @@ function envelope(
       battle: null,
       characters: [],
       session: {
-        activeBattle: null,
+        battleState: { tag: "none" },
         draftIds: [],
         selectedStatBlockId: null,
         transientBattleFills: null,
