@@ -23,6 +23,11 @@ import {
   decodeFillCreationHolesArgs,
   type FillCreationHolesToolInput,
 } from "./character-creation-fill-tool-input.ts";
+import {
+  CHARACTER_SESSION_QUERY_TOOL_NAME,
+  decodeQueryCharacterSessionArgs,
+  type QueryCharacterSessionToolInput,
+} from "./character-session-query-tool-input.ts";
 
 const EmptyArgsSchema = Schema.Struct({});
 
@@ -70,6 +75,7 @@ export const characterToolNames = {
   applyCharacterSessionOperation: "apply_character_session_operation",
   listCharacters: "list_characters",
   inspectCharacterSession: "inspect_character_session",
+  queryCharacterSession: CHARACTER_SESSION_QUERY_TOOL_NAME,
 } as const;
 export const CHARACTER_TOOL_NAMES = [
   characterToolNames.createCharacterDraft,
@@ -79,6 +85,7 @@ export const CHARACTER_TOOL_NAMES = [
   characterToolNames.applyCharacterSessionOperation,
   characterToolNames.listCharacters,
   characterToolNames.inspectCharacterSession,
+  characterToolNames.queryCharacterSession,
 ] as const;
 export type CharacterToolName = (typeof CHARACTER_TOOL_NAMES)[number];
 
@@ -124,6 +131,10 @@ export type CharacterToolCall =
   | {
       readonly name: typeof characterToolNames.inspectCharacterSession;
       readonly args: CharacterSessionIdToolInput;
+    }
+  | {
+      readonly name: typeof characterToolNames.queryCharacterSession;
+      readonly args: QueryCharacterSessionToolInput;
     };
 
 export const draftIdInputSchema = mcpObjectJsonSchema(DraftIdArgsSchema);
@@ -209,6 +220,12 @@ export function decodeCharacterToolCall(input: {
           args: { characterId: characterId(args.characterId) },
         }),
       ),
+    ),
+    Match.when(characterToolNames.queryCharacterSession, () =>
+      Either.map(decodeQueryCharacterSessionArgs(input.args), (args) => ({
+        name: characterToolNames.queryCharacterSession,
+        args,
+      })),
     ),
     Match.exhaustive,
   );

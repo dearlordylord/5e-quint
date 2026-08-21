@@ -537,6 +537,162 @@ describe("MCP server route", () => {
     ).toBe(true);
   });
 
+  test("routes Character Session queries to canonical projections without storing them", () => {
+    const root = createMcpPlaySessionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const characterId = testCharacterId("query-fighter");
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        build,
+        characterId,
+        currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+        hitPointMaximumReduction: Hp(0),
+        tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+    const before = root.sessionStore.snapshot();
+
+    const queries = [
+      {
+        kind: "abilityCheckAbility",
+        skill: "athletics",
+        defaultAbility: "str",
+        activeFeatureUnitIds: [],
+      },
+      {
+        kind: "abilityCheckProficiencyBonus",
+        skill: "athletics",
+        otherProficiencyBonus: { tag: "noOtherProficiencyBonus" },
+      },
+      { kind: "jumpDistanceAbility", defaultAbility: "str" },
+      { kind: "linkedSpeedGrants" },
+      { kind: "armorClass" },
+      { kind: "spellAccess" },
+      {
+        kind: "weaponMasterySelections",
+        featureUnitId: "fighter_weapon_mastery",
+      },
+      { kind: "spellbookRitualAccesses" },
+      {
+        kind: "spellInvocation",
+        spellId: "detect_magic",
+        invocation: { kind: "ritual" },
+      },
+    ] as const;
+
+    for (const query of queries) {
+      const payload = readPayload(
+        handleToolCall(root, "query_character_session", {
+          characterId,
+          query,
+        }),
+      );
+      expect(payload).toMatchObject({
+        characterId,
+        query: { kind: query.kind },
+        session: { characterIds: [characterId] },
+      });
+    }
+
+    const rejectedKnownForms = readPayload(
+      handleToolCall(root, "query_character_session", {
+        characterId,
+        query: { kind: "knownForms" },
+      }),
+    );
+    expect(rejectedKnownForms).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_QUERY_REJECTED",
+        queryKind: "knownForms",
+      },
+    });
+
+    const rejectedNonRitual = readPayload(
+      handleToolCall(root, "query_character_session", {
+        characterId,
+        query: {
+          kind: "spellInvocation",
+          spellId: "detect_magic",
+          invocation: { kind: "nonRitual" },
+        } as unknown,
+      }),
+    );
+    expect(rejectedNonRitual).toMatchObject({
+      details: { code: "INVALID_ARGUMENTS" },
+    });
+    expect(root.sessionStore.snapshot()).toEqual(before);
+  });
+
+  test("returns the existing ritual access and invocation projections", () => {
+    const root = createMcpPlaySessionRoot();
+    const fighter = fighterCharacterBuild(root.unitLibrary);
+    const build = {
+      ...fighter,
+      progression: wizardProgression(root),
+      spellcasting: testWizardSpellcasting({
+        cantrips: [],
+        spellbook: ["detect_magic"],
+        preparedSpells: ["detect_magic"],
+        spellSlots: [{ spellLevel: 1, count: 2 }],
+      }),
+    };
+    const characterId = testCharacterId("query-wizard-ritual");
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        build,
+        characterId,
+        currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+        hitPointMaximumReduction: Hp(0),
+        tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+
+    const accesses = readPayload(
+      handleToolCall(root, "query_character_session", {
+        characterId,
+        query: { kind: "spellbookRitualAccesses" },
+      }),
+    );
+    expect(accesses).toMatchObject({
+      query: {
+        kind: "spellbookRitualAccesses",
+        projection: [
+          {
+            tag: "spellbookRitual",
+            spell: { id: "detect_magic" },
+            spellcastingSourceUnitId: "class_wizard",
+          },
+        ],
+      },
+    });
+
+    const invocation = readPayload(
+      handleToolCall(root, "query_character_session", {
+        characterId,
+        query: {
+          kind: "spellInvocation",
+          spellId: "detect_magic",
+          invocation: { kind: "ritual" },
+        },
+      }),
+    );
+    expect(invocation).toMatchObject({
+      query: {
+        kind: "spellInvocation",
+        projection: {
+          tag: "accepted",
+          invocation: {
+            tag: "spellbookRitual",
+            spellId: "detect_magic",
+            requiredSpellAccess: "spellbook",
+          },
+        },
+      },
+    });
+  });
+
   test("reports an unknown selected Character Session without guessing an id", () => {
     const root = createMcpPlaySessionRoot();
 
@@ -1515,6 +1671,7 @@ describe("MCP server route", () => {
       "apply_character_session_operation",
       "list_characters",
       "inspect_character_session",
+      "query_character_session",
     ]);
   });
 
