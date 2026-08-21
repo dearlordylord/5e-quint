@@ -1,0 +1,15 @@
+{
+  "campaignId": "day-synthetic-wake-interruption-authoring",
+  "plannedScenarioId": "synthetic-wake-interruption",
+  "scenarioTitle": "Synthetic wake interruption",
+  "scenarioPurpose": "Explore a supported-only stat-block battle in which a Pseudodragon Sting can make one allied opponent Unconscious and the other must choose between waking that creature and maintaining pressure, grounded in the local SRD Pseudodragon Sting passage.",
+  "evidenceSetId": "day-synthetic-wake-interruption-authoring-evidence",
+  "distributionPreference": "Generate one compact ground-level battle using one canonical Pseudodragon and two canonical allied melee stat-block opponents with no ammunition. Require the Pseudodragon to attempt Sting against one opponent and, if the failure-by-5-or-more Unconscious branch occurs, let the conscious ally choose through surfaced acts between taking the wake action and continuing immediate pressure. Keep bright illumination, ordinary terrain, two-dimensional geometry, no flying route, no objects, no circumstance modifier, and no Character Sheets. Keep all setup and play facts within the documented public SDK. Make the interaction materially distinct from every admitted pursuit, Shove/Grapple, threshold, lantern, defense, and circumstance-probe Scenario through its Sting, conditional Unconscious, ally wake-action, and pressure-allocation sequence rather than wording or coordinates.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "supportedOnly",
+  "minimumIterations": 2,
+  "maximumIterations": 2,
+  "candidatesPerIteration": 1,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": false
+}
