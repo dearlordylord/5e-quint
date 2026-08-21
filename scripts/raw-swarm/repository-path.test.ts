@@ -10,6 +10,7 @@ import { resolve } from "node:path";
 import { Either } from "effect";
 import { expect, test } from "vitest";
 
+import { readRunnerOwnedJsonLines } from "./artifact-authority.ts";
 import {
   canonicalRepositoryOutputPath,
   canonicalRepositoryReadPath,
@@ -56,6 +57,29 @@ test("rejects an external prospective output and an escaping output symlink", ()
     ).toBe(true);
   } finally {
     rmSync(root, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
+  }
+});
+
+test("reads runner-owned JSONL outside the repository without admitting an escaping symlink", () => {
+  const runnerRoot = mkdtempSync(resolve(tmpdir(), "raw-swarm-runner-owned-"));
+  const outside = mkdtempSync(resolve(tmpdir(), "raw-swarm-runner-outside-"));
+  try {
+    const evidence = resolve(runnerRoot, "evidence.jsonl");
+    const outsideEvidence = resolve(outside, "outside.jsonl");
+    const linkedEvidence = resolve(runnerRoot, "linked.jsonl");
+    writeFileSync(evidence, '{"type":"retained"}\n');
+    writeFileSync(outsideEvidence, '{"type":"outside"}\n');
+    symlinkSync(outsideEvidence, linkedEvidence);
+
+    expect(readRunnerOwnedJsonLines(runnerRoot, evidence)).toEqual([
+      { type: "retained" },
+    ]);
+    expect(() => readRunnerOwnedJsonLines(runnerRoot, linkedEvidence)).toThrow(
+      /Runner-owned authority symlink escapes its owner root/,
+    );
+  } finally {
+    rmSync(runnerRoot, { recursive: true, force: true });
     rmSync(outside, { recursive: true, force: true });
   }
 });

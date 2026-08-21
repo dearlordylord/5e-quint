@@ -38,7 +38,7 @@ import {
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import {
   artifactAuthorityForBytes,
-  readJsonLines,
+  readRunnerOwnedJsonLines,
 } from "./artifact-authority.ts";
 import {
   retainAdmittedScenarioStagePlan,
@@ -239,12 +239,17 @@ function playerEvidenceState(
   player: string,
 ): PlayerEvidenceState {
   const transcriptPath = resolve(trusted, "evidence/sdk-calls.jsonl");
-  const transcript = parseSdkTranscript(readJsonLines(transcriptPath));
+  const transcript = parseSdkTranscript(
+    readRunnerOwnedJsonLines(trusted, transcriptPath),
+  );
   if (transcript.tag === "invalid") fail(transcript.message);
   const continuationEvidence = playerContinuationEvidence({
     transcriptHeaderSha256: sha256Canonical(transcript.value.header),
     observations: existsSync(resolve(trusted, "evidence/observations.jsonl"))
-      ? readJsonLines(resolve(trusted, "evidence/observations.jsonl"))
+      ? readRunnerOwnedJsonLines(
+          trusted,
+          resolve(trusted, "evidence/observations.jsonl"),
+        )
       : [],
     callContinuations: transcript.value.calls.map(
       ({ continuation }) => continuation,

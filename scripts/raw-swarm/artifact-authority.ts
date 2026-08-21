@@ -4,7 +4,10 @@ import { relative } from "node:path";
 import { Either } from "effect";
 
 import type { ArtifactAuthority } from "./artifact-authority-schema.ts";
-import { canonicalRepositoryReadPath } from "./repository-path.ts";
+import {
+  canonicalRepositoryReadPath,
+  canonicalRunnerOwnedReadPath,
+} from "./repository-path.ts";
 import { repoRoot } from "./transcript.ts";
 
 export { ArtifactAuthoritySchema } from "./artifact-authority-schema.ts";
@@ -40,13 +43,15 @@ export function artifactAuthorityForBytes(
   };
 }
 
-export function readJsonLines(path: string): readonly unknown[] {
-  const absolutePath = repositoryReadPath(path);
+function readJsonLinesAtPath(
+  absolutePath: string,
+  reportedPath: string,
+): readonly unknown[] {
   const text = (() => {
     try {
       return readFileSync(absolutePath, "utf8");
     } catch {
-      return fail(`Artifact is unreadable or missing: ${path}`);
+      return fail(`Artifact is unreadable or missing: ${reportedPath}`);
     }
   })();
   return text
@@ -56,7 +61,22 @@ export function readJsonLines(path: string): readonly unknown[] {
       try {
         return JSON.parse(line);
       } catch {
-        return fail(`${path}:${index + 1} is malformed JSONL.`);
+        return fail(`${reportedPath}:${index + 1} is malformed JSONL.`);
       }
     });
+}
+
+export function readJsonLines(path: string): readonly unknown[] {
+  return readJsonLinesAtPath(repositoryReadPath(path), path);
+}
+
+export function readRunnerOwnedJsonLines(
+  runnerRoot: string,
+  path: string,
+): readonly unknown[] {
+  const canonical = canonicalRunnerOwnedReadPath(runnerRoot, path);
+  if (Either.isLeft(canonical)) {
+    return fail(`Artifact is not runner-owned: ${path}: ${canonical.left}`);
+  }
+  return readJsonLinesAtPath(canonical.right, path);
 }
