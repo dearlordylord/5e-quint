@@ -1,6 +1,14 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { relative, resolve } from "node:path";
 
 import { afterEach, describe, expect, test } from "vitest";
@@ -1460,5 +1468,27 @@ describe("Raw Swarm findings projection", () => {
         issueLinks: [],
       }),
     ).toThrow(/SDK transcript is malformed/);
+  });
+
+  test("rejects an external transcript reached through an in-repository symlink", () => {
+    const input = fixture();
+    const outside = mkdtempSync(
+      resolve(tmpdir(), "raw-swarm-findings-outside-"),
+    );
+    directories.push(outside);
+    const linkedTranscript = resolve(input.run, "evidence/linked.jsonl");
+    const outsideTranscript = resolve(outside, "transcript.jsonl");
+    writeFileSync(outsideTranscript, readFileSync(input.transcriptPath));
+    symlinkSync(outsideTranscript, linkedTranscript);
+    expect(() =>
+      projectExecutionFindings({
+        transcriptPath: relative(repoRoot, linkedTranscript),
+        evidenceSetDirectory: input.runRelative,
+        reviewPaths: [],
+        scenarioReviewPaths: [],
+        generationLedgerPaths: [],
+        issueLinks: [],
+      }),
+    ).toThrow(/Finding source is not repository-owned/);
   });
 });

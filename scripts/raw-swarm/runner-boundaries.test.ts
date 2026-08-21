@@ -1,6 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -281,6 +282,32 @@ describe("RAW swarm runner boundaries", () => {
     } finally {
       rmSync(boundaryRoot, { recursive: true, force: true });
       rmSync(outside, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("validates paired stage-plan flags before publishing an execution authority", () => {
+    const outputRoot = mkdtempSync(
+      resolve(repoRoot, "scripts/raw-swarm/out/runner-stage-plan-pair-"),
+    );
+    const output = resolve(outputRoot, "execution");
+    try {
+      expect(() =>
+        run(sdkPlayerLauncher, [
+          "goblin-warrior-skeleton-tracer",
+          "--execution-id",
+          "stage-plan-pair-execution",
+          "--evidence-set-id",
+          "stage-plan-pair-evidence",
+          "--output-path",
+          relative(repoRoot, output),
+          "--stage-plan-path",
+          "scripts/raw-swarm/README.md",
+        ]),
+      ).toThrow(/stage-plan-path and --stage-plan-findings-path/);
+      expect(existsSync(output)).toBe(false);
+      expect(existsSync(resolve(output, "execution.json"))).toBe(false);
+    } finally {
+      rmSync(outputRoot, { recursive: true, force: true });
     }
   }, 30_000);
 

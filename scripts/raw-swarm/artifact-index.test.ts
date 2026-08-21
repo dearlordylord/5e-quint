@@ -200,6 +200,29 @@ describe("Raw Swarm artifact index", () => {
     db.close();
   });
 
+  test("preserves the registration diagnostic when artifact registration fails", () => {
+    const directory = temporaryDirectory();
+    const transcript = sdkTranscript(directory);
+    const dbPath = resolve(directory, "registration.sqlite");
+    const db = openArtifactIndex(relative(repoRoot, dbPath));
+    db.prepare(
+      "INSERT INTO artifacts(sha256, byteLength, mediaType, path) VALUES (?, ?, ?, ?)",
+    ).run(
+      "f".repeat(64),
+      readFileSync(transcript).byteLength,
+      "application/x-ndjson",
+      relative(repoRoot, transcript),
+    );
+    db.close();
+
+    expect(() =>
+      ingestArtifactRun({
+        transcriptPath: relative(repoRoot, transcript),
+        dbPath: relative(repoRoot, dbPath),
+      }),
+    ).toThrow(/Indexed artifact changed at/);
+  });
+
   test("cross-binds the Execution manifest to its Execution start authority", () => {
     const directory = temporaryDirectory();
     const sdk = sdkTranscript(directory);

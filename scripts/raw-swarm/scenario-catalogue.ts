@@ -255,6 +255,20 @@ export type RawSwarmCatalogue = Readonly<{
   readonly rejectedCandidates: readonly RejectedScenarioCandidateRecord[];
 }>;
 
+export function findAdmittedScenarioInCatalogue(input: {
+  readonly catalogue: RawSwarmCatalogue;
+  readonly scenarioId: ScenarioId;
+}): Either.Either<RawSwarmCatalogue["scenarios"][number], string> {
+  const scenario = input.catalogue.scenarios.find(
+    ({ scenarioId }) => scenarioId === input.scenarioId,
+  );
+  return scenario === undefined
+    ? Either.left(
+        `Scenario ${input.scenarioId} is not present in the canonically validated admitted catalogue.`,
+      )
+    : Either.right(scenario);
+}
+
 const duplicates = <A>(values: readonly A[]): readonly A[] => {
   const seen = new Set<A>();
   const found = new Set<A>();

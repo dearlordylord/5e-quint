@@ -11,9 +11,27 @@ import { basename, dirname, resolve } from "node:path";
 
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { repoRoot, sha256Text } from "./transcript.ts";
+import {
+  canonicalRepositoryOutputPath,
+  canonicalRepositoryReadPath,
+} from "./repository-path.ts";
 
 function fail(message: string): never {
   throw new Error(message);
+}
+
+function repositoryReadPath(path: string): string {
+  const result = canonicalRepositoryReadPath(repoRoot, path);
+  return result._tag === "Right"
+    ? result.right
+    : fail(`Replay authority is not repository-owned: ${path}: ${result.left}`);
+}
+
+function repositoryOutputPath(path: string): string {
+  const result = canonicalRepositoryOutputPath(repoRoot, path);
+  return result._tag === "Right"
+    ? result.right
+    : fail(`Replay output is not repository-owned: ${path}: ${result.left}`);
 }
 
 export type ReplayCacheMeasurement = {
@@ -33,10 +51,9 @@ export type ReplayCacheMeasurement = {
 export function measurePrefixReplay(input: {
   readonly evidenceSetDirectory: string;
 }): ReplayCacheMeasurement {
-  const evidenceSetDirectory = resolve(repoRoot, input.evidenceSetDirectory);
-  const transcriptPath = resolve(
-    evidenceSetDirectory,
-    "evidence/sdk-calls.jsonl",
+  const evidenceSetDirectory = repositoryReadPath(input.evidenceSetDirectory);
+  const transcriptPath = repositoryReadPath(
+    resolve(evidenceSetDirectory, "evidence/sdk-calls.jsonl"),
   );
   const transcriptText = readFileSync(transcriptPath, "utf8");
   const lines = transcriptText
@@ -52,13 +69,15 @@ export function measurePrefixReplay(input: {
   );
   try {
     cpSync(
-      resolve(evidenceSetDirectory, "replay-supervisor.mjs"),
+      repositoryReadPath(
+        resolve(evidenceSetDirectory, "replay-supervisor.mjs"),
+      ),
       resolve(temporaryDirectory, "replay-supervisor.mjs"),
     );
     mkdirSync(resolve(temporaryDirectory, "evidence"), { recursive: true });
     for (const name of ["characters.ts", "setup.ts", "program.ts"])
       cpSync(
-        resolve(evidenceSetDirectory, "evidence", name),
+        repositoryReadPath(resolve(evidenceSetDirectory, "evidence", name)),
         resolve(temporaryDirectory, "evidence", name),
       );
     const groups = parsed.value.calls.reduce((byContinuation, call) => {
@@ -123,8 +142,8 @@ function main(args: readonly string[]): void {
     fail(
       `Usage: ${basename(import.meta.filename)} <evidence-set-directory> <output.json>`,
     );
+  const destination = repositoryOutputPath(resolve(repoRoot, outputPath));
   const measurement = measurePrefixReplay({ evidenceSetDirectory });
-  const destination = resolve(repoRoot, outputPath);
   mkdirSync(dirname(destination), { recursive: true });
   writeFileSync(destination, `${JSON.stringify(measurement, null, 2)}\n`, {
     flag: "wx",

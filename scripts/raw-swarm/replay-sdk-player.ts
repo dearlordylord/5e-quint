@@ -12,9 +12,27 @@ import {
 } from "./sdk-player/sdk-replay-result.ts";
 import { validateAdmittedScenarioStagePlanEvidence } from "./stage-plan-authority.ts";
 import { currentGitRevision, repoRoot, sha256Text } from "./transcript.ts";
+import {
+  canonicalRepositoryOutputPath,
+  canonicalRepositoryReadPath,
+} from "./repository-path.ts";
 
 function fail(message: string): never {
   throw new Error(message);
+}
+
+function repositoryReadPath(path: string): string {
+  const result = canonicalRepositoryReadPath(repoRoot, path);
+  return Either.isRight(result)
+    ? result.right
+    : fail(`Replay authority is not repository-owned: ${path}: ${result.left}`);
+}
+
+function repositoryOutputPath(path: string): string {
+  const result = canonicalRepositoryOutputPath(repoRoot, path);
+  return Either.isRight(result)
+    ? result.right
+    : fail(`Replay output is not repository-owned: ${path}: ${result.left}`);
 }
 
 export function matchedCallCountFromReplayOutput(
@@ -48,9 +66,10 @@ export function retainReplayResultEvidence(input: {
   readonly path: string;
   readonly evidence: SdkReplayResultEvidence;
 }): void {
+  const path = repositoryOutputPath(input.path);
   const encoded = `${JSON.stringify(input.evidence, null, 2)}\n`;
-  if (existsSync(input.path)) {
-    const existing = readFileSync(input.path, "utf8");
+  if (existsSync(path)) {
+    const existing = readFileSync(path, "utf8");
     if (existing !== encoded) {
       fail(
         "Refusing to overwrite a different immutable replay-result authority.",
@@ -58,7 +77,7 @@ export function retainReplayResultEvidence(input: {
     }
     return;
   }
-  writeFileSync(input.path, encoded, { flag: "wx" });
+  writeFileSync(path, encoded, { flag: "wx" });
 }
 
 function main(args: readonly string[]): void {
@@ -66,8 +85,10 @@ function main(args: readonly string[]): void {
   if (evidenceSetPathInput === undefined || unexpected.length > 0) {
     fail("Usage: replay-sdk-player.ts <evidence-set-directory>");
   }
-  const evidenceSetPath = resolve(repoRoot, evidenceSetPathInput);
-  const transcriptPath = resolve(evidenceSetPath, "evidence/sdk-calls.jsonl");
+  const evidenceSetPath = repositoryReadPath(evidenceSetPathInput);
+  const transcriptPath = repositoryReadPath(
+    resolve(evidenceSetPath, "evidence/sdk-calls.jsonl"),
+  );
   const transcriptBytes = readFileSync(transcriptPath);
   const parsed = parseSdkTranscript(
     transcriptBytes
@@ -86,18 +107,25 @@ function main(args: readonly string[]): void {
   }
   if (
     sha256Text(
-      readFileSync(resolve(evidenceSetPath, "SCENARIO.md"), "utf8"),
+      readFileSync(
+        repositoryReadPath(resolve(evidenceSetPath, "SCENARIO.md")),
+        "utf8",
+      ),
     ) !== parsed.value.header.scenarioSha256 ||
     sha256Text(
-      readFileSync(resolve(evidenceSetPath, "SCENARIO_REVIEW.json"), "utf8"),
+      readFileSync(
+        repositoryReadPath(resolve(evidenceSetPath, "SCENARIO_REVIEW.json")),
+        "utf8",
+      ),
     ) !== parsed.value.header.scenarioReviewSha256
   ) {
     fail("Retained scenario or admission review diverged from the recording.");
   }
-  const stagePlanPath = resolve(evidenceSetPath, "evidence/stage-plan.json");
-  const stagePlanFindingsPath = resolve(
-    evidenceSetPath,
-    "evidence/stage-plan-findings.json",
+  const stagePlanPath = repositoryReadPath(
+    resolve(evidenceSetPath, "evidence/stage-plan.json"),
+  );
+  const stagePlanFindingsPath = repositoryReadPath(
+    resolve(evidenceSetPath, "evidence/stage-plan-findings.json"),
   );
   let stagePlan: unknown;
   let stagePlanFindings: unknown;
@@ -115,7 +143,9 @@ function main(args: readonly string[]): void {
     scenarioReviewSha256: parsed.value.header.scenarioReviewSha256,
   });
   if (Either.isLeft(stagePlanEvidence)) fail(stagePlanEvidence.left);
-  const replaySupervisor = resolve(evidenceSetPath, "replay-supervisor.mjs");
+  const replaySupervisor = repositoryReadPath(
+    resolve(evidenceSetPath, "replay-supervisor.mjs"),
+  );
   const replaySupervisorSha256 = createHash("sha256")
     .update(readFileSync(replaySupervisor))
     .digest("hex");
@@ -152,7 +182,9 @@ function main(args: readonly string[]): void {
     );
   }
   retainReplayResultEvidence({
-    path: resolve(evidenceSetPath, "evidence/replay-result.json"),
+    path: repositoryOutputPath(
+      resolve(evidenceSetPath, "evidence/replay-result.json"),
+    ),
     evidence: decodedReplayResult.right,
   });
   process.stdout.write(result.stdout);

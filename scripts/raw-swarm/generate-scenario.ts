@@ -486,6 +486,11 @@ export function replayRetainedScenarioReview(input: {
   readonly ledgerPath: string;
   readonly gitSha: GitSha;
 }): ScenarioCompositeReview {
+  if (input.retainedInput.schemaVersion === 2) {
+    fail(
+      "Historical Scenario review input is readable evidence but is not a current executable review subject.",
+    );
+  }
   const currentOutputSchema = codexOutputJsonSchema(
     CurrentScenarioCompositeReviewSchema,
   );
@@ -508,13 +513,7 @@ export function replayRetainedScenarioReview(input: {
     reasoningEffort: input.retainedInput.reasoningEffort,
     phase: input.retainedInput.phase,
     ledgerPath: input.ledgerPath,
-    subject:
-      input.retainedInput.schemaVersion === 2
-        ? {
-            tag: "scenario" as const,
-            scenarioId: input.retainedInput.scenarioId,
-          }
-        : input.retainedInput.subject,
+    subject: input.retainedInput.subject,
     gitSha: input.gitSha,
     stagePlanReason: RAW_SWARM_STAGE_PLAN_REASONS.scenarioCompositeReview,
     retention: {

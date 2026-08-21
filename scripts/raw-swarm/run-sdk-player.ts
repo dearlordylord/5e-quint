@@ -5,17 +5,15 @@ import {
   copyFileSync,
   cpSync,
   existsSync,
-  lstatSync,
   mkdirSync,
   mkdtempSync,
   openSync,
   readFileSync,
-  realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { relative, resolve } from "node:path";
 
 import {
   benchmarkContextDeliveryForRole,
@@ -83,86 +81,35 @@ import {
   decodeEvidenceSetId,
   decodeExecutionId,
 } from "./raw-swarm-identities.ts";
-import { ScenarioExecutionRecordSchema } from "./scenario-catalogue.ts";
+import {
+  findAdmittedScenarioInCatalogue,
+  readRawSwarmCatalogue,
+  ScenarioExecutionRecordSchema,
+} from "./scenario-catalogue.ts";
+import {
+  canonicalRepositoryOutputPath,
+  canonicalRepositoryReadPath,
+} from "./repository-path.ts";
 
 const PLAYER_MODEL = "gpt-5.6-sol";
 const PLAYER_REASONING_EFFORT = "medium";
 
-type RepositoryPathKind = "read" | "prospectiveOutput";
-
-function pathExists(path: string): boolean {
-  try {
-    lstatSync(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function pathIsContained(root: string, candidate: string): boolean {
-  const pathFromRoot = relative(root, candidate);
-  return (
-    pathFromRoot !== ".." &&
-    !pathFromRoot.startsWith(`..${sep}`) &&
-    !isAbsolute(pathFromRoot)
-  );
-}
-
-function canonicalPath(path: string, value: string): string {
-  try {
-    return realpathSync(path);
-  } catch {
-    fail(`Repository path could not be canonicalized: ${value}`);
-  }
-}
-
-function repositoryPath(value: string, kind: RepositoryPathKind): string {
-  if (value.includes("\u0000")) {
-    fail("Repository path values cannot contain NUL bytes.");
-  }
-  const repository = canonicalPath(repoRoot, repoRoot);
-  const absolute = resolve(repoRoot, value);
-  if (!pathIsContained(repository, absolute)) {
-    fail(
-      `${kind === "read" ? "Read" : "Output"} path must remain inside the repository root: ${value}`,
-    );
-  }
-
-  // A read path may be absent (setup and character sources are optional), and
-  // an output path is intentionally prospective. Check the nearest existing
-  // component in either case so a symlink anywhere in the path cannot escape.
-  let nearestExisting = absolute;
-  while (!pathExists(nearestExisting)) {
-    const parent = dirname(nearestExisting);
-    if (parent === nearestExisting) {
-      fail(`Repository path has no existing ancestor: ${value}`);
-    }
-    nearestExisting = parent;
-  }
-  const canonicalNearest = canonicalPath(nearestExisting, value);
-  if (!pathIsContained(repository, canonicalNearest)) {
-    fail(`Repository path escapes through a symlink: ${value}`);
-  }
-
-  if (pathExists(absolute)) {
-    const canonical = canonicalPath(absolute, value);
-    if (!pathIsContained(repository, canonical)) {
-      fail(`Repository path escapes through a symlink: ${value}`);
-    }
-    // Read authorities should follow an in-repository symlink to the canonical
-    // source; prospective output paths retain their lexical destination so a
-    // missing leaf can be created beneath an in-repository directory link.
-    return kind === "read" ? canonical : absolute;
-  }
-  return absolute;
-}
-
 function repositoryReadPath(value: string): string {
-  return repositoryPath(value, "read");
+  const result = canonicalRepositoryReadPath(repoRoot, value);
+  if (Either.isRight(result)) return result.right;
+  const prospective = canonicalRepositoryOutputPath(repoRoot, value);
+  return Either.isRight(prospective)
+    ? prospective.right
+    : fail(`Read path is not a repository authority: ${value}: ${result.left}`);
 }
 
 function repositoryOutputPath(value: string): string {
-  return repositoryPath(value, "prospectiveOutput");
+  const result = canonicalRepositoryOutputPath(repoRoot, value);
+  return Either.isRight(result)
+    ? result.right
+    : fail(
+        `Output path is not a repository destination: ${value}: ${result.left}`,
+      );
 }
 
 function fail(message: string): never {
@@ -579,6 +526,33 @@ async function main(args: readonly string[]): Promise<void> {
     customStagePlanFindingsPathInput === undefined
       ? undefined
       : repositoryReadPath(customStagePlanFindingsPathInput);
+  if (
+    (customStagePlanPath === undefined) !==
+    (customStagePlanFindingsPath === undefined)
+  ) {
+    fail(
+      "--stage-plan-path and --stage-plan-findings-path must be supplied together.",
+    );
+  }
+  const catalogue = readRawSwarmCatalogue({
+    repositoryRoot: repoRoot,
+    scenarioDirectory: resolve(
+      repoRoot,
+      "scripts/raw-swarm/sdk-player/scenarios",
+    ),
+    evidenceDirectory: resolve(repoRoot, "scripts/raw-swarm/out"),
+  });
+  if (Either.isLeft(catalogue)) {
+    fail(
+      `Scenario admission catalogue is invalid: ${JSON.stringify(catalogue.left)}`,
+    );
+  }
+  const admittedCatalogueScenario = findAdmittedScenarioInCatalogue({
+    catalogue: catalogue.right,
+    scenarioId: acceptedScenarioId,
+  });
+  if (Either.isLeft(admittedCatalogueScenario))
+    fail(admittedCatalogueScenario.left);
   const revision = currentGitRevision();
   if (revision.tag === "dirty") {
     fail("SDK player recording requires a clean Git worktree.");
@@ -692,14 +666,6 @@ async function main(args: readonly string[]): Promise<void> {
     )}\n`,
     { flag: "wx" },
   );
-  if (
-    (customStagePlanPath === undefined) !==
-    (customStagePlanFindingsPath === undefined)
-  ) {
-    fail(
-      "--stage-plan-path and --stage-plan-findings-path must be supplied together.",
-    );
-  }
   const retainedPlan =
     customStagePlanPath === undefined ||
     customStagePlanFindingsPath === undefined

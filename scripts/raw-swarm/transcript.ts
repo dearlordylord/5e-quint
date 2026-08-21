@@ -6,11 +6,21 @@ import { Either, Schema } from "effect";
 
 import {
   decodeScenarioId,
+  decodeHistoricalScenarioId,
+  HistoricalScenarioIdSchema,
   ScenarioIdSchema,
+  type HistoricalScenarioId,
   type ScenarioId,
 } from "./raw-swarm-identities.ts";
 
-export { decodeScenarioId, ScenarioIdSchema, type ScenarioId };
+export {
+  decodeHistoricalScenarioId,
+  decodeScenarioId,
+  HistoricalScenarioIdSchema,
+  ScenarioIdSchema,
+  type HistoricalScenarioId,
+  type ScenarioId,
+};
 
 export const repoRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),

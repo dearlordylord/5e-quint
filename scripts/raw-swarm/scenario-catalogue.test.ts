@@ -28,6 +28,7 @@ import {
   ScenarioIdSchema,
 } from "./raw-swarm-identities.ts";
 import {
+  findAdmittedScenarioInCatalogue,
   projectRawSwarmCatalogue,
   readRawSwarmCatalogue,
   type AdmittedScenarioRecord,
@@ -284,7 +285,69 @@ describe("Raw Swarm scenario catalogue", () => {
         expect(
           result.right.scenarios.map(({ scenarioId }) => scenarioId),
         ).toEqual(["first-synthetic", "second-synthetic"]);
+        expect(
+          findAdmittedScenarioInCatalogue({
+            catalogue: result.right,
+            scenarioId: decodeRight(decodeScenarioId("second-synthetic")),
+          }),
+        ).toMatchObject({ _tag: "Right" });
       }
+
+      writeScenario(
+        "second-synthetic",
+        ["missing-synthetic"],
+        comparison(["missing-synthetic"]),
+      );
+      expect(
+        readRawSwarmCatalogue({
+          repositoryRoot,
+          scenarioDirectory: scenarios,
+          evidenceDirectory: resolve(repositoryRoot, "out"),
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining("predecessor absent"),
+          }),
+        ]),
+      });
+
+      writeScenario(
+        "second-synthetic",
+        ["second-synthetic"],
+        comparison(["second-synthetic"]),
+      );
+      expect(
+        readRawSwarmCatalogue({
+          repositoryRoot,
+          scenarioDirectory: scenarios,
+          evidenceDirectory: resolve(repositoryRoot, "out"),
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining("cannot include the Scenario"),
+          }),
+        ]),
+      });
+
+      writeScenario("second-synthetic", ["first-synthetic"], comparison([]));
+      expect(
+        readRawSwarmCatalogue({
+          repositoryRoot,
+          scenarioDirectory: scenarios,
+          evidenceDirectory: resolve(repositoryRoot, "out"),
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: expect.arrayContaining([
+          expect.objectContaining({
+            message: expect.stringContaining("comparison is incomplete"),
+          }),
+        ]),
+      });
     } finally {
       rmSync(repositoryRoot, { recursive: true, force: true });
     }

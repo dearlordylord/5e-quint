@@ -6,6 +6,8 @@ import {
   ScenarioCandidateIdSchema,
   EvidenceSetIdSchema,
   PlannedScenarioIdSchema,
+  HistoricalScenarioIdSchema,
+  type HistoricalScenarioId,
 } from "./raw-swarm-identities.ts";
 import { GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
 
@@ -32,7 +34,7 @@ const RetainedScenarioReviewCommonFields = {
 const HistoricalRetainedScenarioReviewInputSchema = Schema.Struct({
   schemaVersion: Schema.Literal(2),
   ...RetainedScenarioReviewCommonFields,
-  scenarioId: ScenarioIdSchema,
+  scenarioId: HistoricalScenarioIdSchema,
 });
 
 const RetainedScenarioReviewSubjectSchema = Schema.Union(
@@ -51,6 +53,13 @@ const RetainedScenarioReviewSubjectSchema = Schema.Union(
     scenarioId: ScenarioIdSchema,
   }),
 );
+type RetainedScenarioReviewSubject = Schema.Schema.Type<
+  typeof RetainedScenarioReviewSubjectSchema
+>;
+type HistoricalRetainedScenarioReviewSubject = Readonly<{
+  readonly tag: "scenario";
+  readonly scenarioId: HistoricalScenarioId;
+}>;
 
 const CurrentRetainedScenarioReviewInputSchema = Schema.Struct({
   schemaVersion: Schema.Literal(3),
@@ -69,7 +78,7 @@ export type RetainedScenarioReviewInput = Schema.Schema.Type<
 
 export function retainedScenarioReviewSubject(
   input: RetainedScenarioReviewInput,
-): Schema.Schema.Type<typeof RetainedScenarioReviewSubjectSchema> {
+): RetainedScenarioReviewSubject | HistoricalRetainedScenarioReviewSubject {
   return input.schemaVersion === 2
     ? { tag: "scenario", scenarioId: input.scenarioId }
     : input.subject;
@@ -77,7 +86,10 @@ export function retainedScenarioReviewSubject(
 
 export function retainedScenarioReviewScenarioId(
   input: RetainedScenarioReviewInput,
-): Either.Either<Schema.Schema.Type<typeof ScenarioIdSchema>, string> {
+): Either.Either<
+  Schema.Schema.Type<typeof ScenarioIdSchema> | HistoricalScenarioId,
+  string
+> {
   const subject = retainedScenarioReviewSubject(input);
   return subject.tag === "scenario"
     ? Either.right(subject.scenarioId)

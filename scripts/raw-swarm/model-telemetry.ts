@@ -21,6 +21,7 @@ import {
   BenchmarkIdSchema,
   EvidenceSetIdSchema,
   ExecutionIdSchema,
+  HistoricalScenarioIdSchema,
   ScenarioCampaignIdSchema,
   ScenarioCandidateIdSchema,
   PlannedScenarioIdSchema,
@@ -30,6 +31,7 @@ import {
   type ScenarioCampaignId,
   type ScenarioCandidateId,
   type PlannedScenarioId,
+  type HistoricalScenarioId,
 } from "./raw-swarm-identities.ts";
 
 /** Current phase vocabulary. New evidence cannot invent a readiness pass. */
@@ -135,7 +137,7 @@ const ModelInvocationExitSchema = Schema.Union(
 
 /** Identity fields shared by every retained model invocation envelope. */
 const HistoricalModelInvocationIdentityFields = {
-  scenarioId: ScenarioIdSchema,
+  scenarioId: HistoricalScenarioIdSchema,
   invocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
   reasoningEffort: Schema.NonEmptyString,
@@ -335,7 +337,7 @@ type ModelInvocationEventEntry =
 const ModelInvocationStartedEventV1Schema = Schema.Struct({
   type: Schema.Literal("raw-swarm.invocation.started"),
   schemaVersion: Schema.Literal(1),
-  scenarioId: ScenarioIdSchema,
+  scenarioId: HistoricalScenarioIdSchema,
   gitSha: GitShaSchema,
   phase: Schema.Literal(...HISTORICAL_MODEL_INVOCATION_PHASES),
   fallbackInvocationId: Schema.NonEmptyString,
@@ -347,7 +349,7 @@ const ModelInvocationStartedEventV1Schema = Schema.Struct({
 const ModelInvocationStartedEventV2Schema = Schema.Struct({
   type: Schema.Literal("raw-swarm.invocation.started"),
   schemaVersion: Schema.Literal(2),
-  scenarioId: ScenarioIdSchema,
+  scenarioId: HistoricalScenarioIdSchema,
   gitSha: GitShaSchema,
   phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
   stagePlanReason: Schema.NonEmptyTrimmedString,
@@ -461,7 +463,7 @@ const BenchmarkAuxiliaryInvocationStartedEventCommonFields = {
   type: Schema.Literal("raw-swarm.invocation.started"),
   schemaVersion: Schema.Literal(3),
   profile: Schema.Literal("documentDeclarationSet"),
-  scenarioId: ScenarioIdSchema,
+  scenarioId: HistoricalScenarioIdSchema,
   gitSha: GitShaSchema,
   stagePlanReason: Schema.NonEmptyTrimmedString,
   fallbackInvocationId: Schema.NonEmptyString,
@@ -538,7 +540,7 @@ export function parseModelInvocationLedgerEntry(
 /** Scenario reference carried by historical and lifecycle-discriminated rows. */
 export function modelInvocationScenarioReference(
   entry: ModelInvocationLedgerEntry,
-): ScenarioId | PlannedScenarioId {
+): ScenarioId | HistoricalScenarioId | PlannedScenarioId {
   if (entry.schemaVersion === 1 || entry.schemaVersion === 2) {
     return entry.scenarioId;
   }

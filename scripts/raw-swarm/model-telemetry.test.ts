@@ -28,7 +28,13 @@ import {
   parseBenchmarkModelInvocationLedgerEntry,
   CurrentModelInvocationLedgerEntrySchema,
 } from "./model-telemetry.ts";
-import { GitShaSchema, repoRoot, ScenarioIdSchema } from "./transcript.ts";
+import {
+  decodeHistoricalScenarioId,
+  decodeScenarioId,
+  GitShaSchema,
+  repoRoot,
+  ScenarioIdSchema,
+} from "./transcript.ts";
 
 const modelTelemetryCli = resolve(
   repoRoot,
@@ -408,6 +414,47 @@ describe("Raw Swarm model invocation telemetry", () => {
           elapsedMilliseconds: entry.elapsedMilliseconds,
           exit: entry.exit,
           usage: entry.usage,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("keeps generated sequence identities readable only as historical v1/v2 evidence", () => {
+    const historicalScenarioId = decodeHistoricalScenarioId(
+      "generated-battle-123",
+    );
+    expect(Either.isRight(historicalScenarioId)).toBe(true);
+    expect(Either.isLeft(decodeScenarioId("generated-battle-123"))).toBe(true);
+    const common = {
+      scenarioId: "generated-battle-123",
+      gitSha: "a".repeat(40),
+      eventsSha256: "b".repeat(64),
+      invocationId: "historical-invocation",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt: "2026-08-14T00:00:00.000Z",
+      elapsedMilliseconds: 1,
+      exit: { tag: "exited" as const, status: 0 },
+      usage: { tag: "unavailable" as const, reason: "historical fixture" },
+    };
+    expect(
+      Either.isRight(
+        parseModelInvocationLedgerEntry({
+          schemaVersion: 1,
+          ...common,
+          phase: "scenarioReadiness",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isRight(
+        parseModelInvocationLedgerEntry({
+          schemaVersion: 2,
+          ...common,
+          phase: "scenarioCompositeReview",
+          stagePlanReason:
+            "Historical fixture retained before lifecycle subjects.",
+          result: { tag: "succeeded" },
         }),
       ),
     ).toBe(true);

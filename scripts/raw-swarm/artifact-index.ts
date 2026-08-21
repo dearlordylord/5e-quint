@@ -502,33 +502,28 @@ function ingestArtifactRunWithDisposition(input: {
   try {
     db.exec("BEGIN");
     const artifact = (() => {
-      try {
-        const registered = registerArtifact(
-          db,
-          input.indexedTranscriptPath ?? absoluteTranscript,
-          "application/x-ndjson",
+      const registered = registerArtifact(
+        db,
+        input.indexedTranscriptPath ?? absoluteTranscript,
+        "application/x-ndjson",
+      );
+      const sourceBytes = readFileSync(absoluteTranscript);
+      if (
+        registered.sha256 !== sha256(sourceBytes) ||
+        registered.byteLength !== sourceBytes.byteLength
+      ) {
+        fail(
+          "Indexed transcript bytes do not match the parsed transcript source.",
         );
-        const sourceBytes = readFileSync(absoluteTranscript);
-        if (
-          registered.sha256 !== sha256(sourceBytes) ||
-          registered.byteLength !== sourceBytes.byteLength
-        ) {
-          fail(
-            "Indexed transcript bytes do not match the parsed transcript source.",
-          );
-        }
-        if (
-          db
-            .prepare("SELECT id FROM runs WHERE transcriptSha256 = ?")
-            .get(registered.sha256) !== undefined
-        ) {
-          fail(`Transcript ${registered.sha256} is already indexed.`);
-        }
-        return registered;
-      } catch (error) {
-        db.exec("ROLLBACK");
-        throw error;
       }
+      if (
+        db
+          .prepare("SELECT id FROM runs WHERE transcriptSha256 = ?")
+          .get(registered.sha256) !== undefined
+      ) {
+        fail(`Transcript ${registered.sha256} is already indexed.`);
+      }
+      return registered;
     })();
     try {
       const identity = (() => {

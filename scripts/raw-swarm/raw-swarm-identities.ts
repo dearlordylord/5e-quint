@@ -28,6 +28,17 @@ export const ScenarioIdSchema = SemanticIdentitySchema.pipe(
 );
 export type ScenarioId = Schema.Schema.Type<typeof ScenarioIdSchema>;
 
+/**
+ * Legacy evidence may identify a generated battle sequence. That identity is
+ * readable historical evidence, not an admitted current Scenario.
+ */
+export const HistoricalScenarioIdSchema = SemanticIdentitySchema.pipe(
+  Schema.brand("RawSwarmHistoricalScenarioId"),
+);
+export type HistoricalScenarioId = Schema.Schema.Type<
+  typeof HistoricalScenarioIdSchema
+>;
+
 /** A campaign reservation, which is not a Scenario until admission succeeds. */
 export const PlannedScenarioIdSchema = SemanticIdentitySchema.pipe(
   Schema.brand("RawSwarmPlannedScenarioId"),
@@ -92,6 +103,8 @@ export const decodeScenarioCandidateId = (value: unknown) =>
   decodeIdentity(ScenarioCandidateIdSchema, "scenario candidate id", value);
 export const decodeScenarioId = (value: unknown) =>
   decodeIdentity(ScenarioIdSchema, "scenario id", value);
+export const decodeHistoricalScenarioId = (value: unknown) =>
+  decodeIdentity(HistoricalScenarioIdSchema, "historical scenario id", value);
 export const decodePlannedScenarioId = (value: unknown) =>
   decodeIdentity(PlannedScenarioIdSchema, "planned scenario id", value);
 export const decodeExecutionId = (value: unknown) =>

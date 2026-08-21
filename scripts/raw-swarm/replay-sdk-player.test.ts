@@ -1,4 +1,5 @@
-import { readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
 import { afterEach, describe, expect, test } from "vitest";
@@ -61,5 +62,16 @@ describe("SDK replay result authority", () => {
       }),
     ).toThrow(/immutable replay-result authority/);
     expect(JSON.parse(first)).toEqual(evidence);
+  });
+
+  test("rejects a replay-result authority outside the repository", () => {
+    const outside = mkdtempSync(resolve(tmpdir(), "raw-swarm-replay-outside-"));
+    directories.push(outside);
+    expect(() =>
+      retainReplayResultEvidence({
+        path: resolve(outside, "replay-result.json"),
+        evidence,
+      }),
+    ).toThrow(/Replay output is not repository-owned/);
   });
 });

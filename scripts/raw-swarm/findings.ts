@@ -4,10 +4,9 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
-  realpathSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, relative, resolve, sep } from "node:path";
+import { basename, dirname, relative, resolve } from "node:path";
 import { Either, Match, Schema } from "effect";
 
 import {
@@ -47,6 +46,7 @@ import { SdkReplayResultEvidenceSchema } from "./sdk-player/sdk-replay-result.ts
 import {
   EvidenceSetIdSchema,
   ExecutionIdSchema,
+  type HistoricalScenarioId,
   PlannedScenarioIdSchema,
   ScenarioCampaignIdSchema,
   ScenarioIdSchema,
@@ -61,6 +61,10 @@ import {
   ExecutionStartRecordSchema,
   ScenarioCampaignManifestSchema,
 } from "./evidence-manifests.ts";
+import {
+  canonicalRepositoryOutputPath,
+  canonicalRepositoryReadPath,
+} from "./repository-path.ts";
 
 export const RAW_SWARM_FINDINGS_SCHEMA_VERSION = 2;
 
@@ -339,15 +343,12 @@ function boundedText(value: string): string {
 }
 
 export function authorityFor(source: Source): FindingAuthority {
-  const absolute = resolve(repoRoot, source.path);
-  if (!existsSync(absolute))
-    fail(`Finding authority is missing: ${source.path}`);
-  const real = realpathSync(absolute);
-  const canonical = relative(repoRoot, real);
-  if (canonical === ".." || canonical.startsWith(`..${sep}`)) {
-    fail(`Finding authority escapes the repository root: ${source.path}`);
+  const canonical = sourcePath(source.path);
+  const authorityPath = canonicalRepositoryReadPath(repoRoot, canonical);
+  if (Either.isLeft(authorityPath)) {
+    fail(`Finding authority is unreadable: ${source.path}`);
   }
-  const bytes = readFileSync(real);
+  const bytes = readFileSync(authorityPath.right);
   return {
     role: source.role,
     path: canonical,
@@ -357,16 +358,18 @@ export function authorityFor(source: Source): FindingAuthority {
 }
 
 export function sourcePath(path: string): string {
-  const absolute = resolve(repoRoot, path);
-  const canonical = relative(repoRoot, absolute);
-  if (
-    canonical.length === 0 ||
-    canonical === ".." ||
-    canonical.startsWith(`..${sep}`)
-  ) {
-    fail(`Finding source escapes the repository root: ${path}`);
-  }
-  return canonical;
+  const relativePath = (absolute: string): string => {
+    const value = relative(repoRoot, absolute);
+    if (value.length === 0) {
+      fail(`Finding source must identify a repository file: ${path}`);
+    }
+    return value;
+  };
+  const read = canonicalRepositoryReadPath(repoRoot, path);
+  if (Either.isRight(read)) return relativePath(read.right);
+  const output = canonicalRepositoryOutputPath(repoRoot, path);
+  if (Either.isRight(output)) return relativePath(output.right);
+  fail(`Finding source is not repository-owned: ${path}: ${read.left}`);
 }
 
 type JsonLineRecord = {
@@ -376,7 +379,8 @@ type JsonLineRecord = {
 };
 
 function readJsonLineRecords(path: string): readonly JsonLineRecord[] {
-  return readFileSync(resolve(repoRoot, path), "utf8")
+  const canonical = sourcePath(path);
+  return readFileSync(resolve(repoRoot, canonical), "utf8")
     .split("\n")
     .flatMap((line, index) => {
       if (line.trim().length === 0) return [];
@@ -425,8 +429,9 @@ export function addSource(
 }
 
 export function readSourceRecord(path: string): unknown {
+  const canonical = sourcePath(path);
   try {
-    return JSON.parse(readFileSync(resolve(repoRoot, path), "utf8"));
+    return JSON.parse(readFileSync(resolve(repoRoot, canonical), "utf8"));
   } catch {
     return undefined;
   }
@@ -957,7 +962,7 @@ export function findingsFromGenerationLedger(
   source: Source,
   expected: Readonly<{
     /** A campaign ledger still refers to its reservation, not an admitted Scenario. */
-    readonly scenarioId: ScenarioId | PlannedScenarioId;
+    readonly scenarioId: ScenarioId | HistoricalScenarioId | PlannedScenarioId;
     readonly gitSha?: GitSha;
     readonly campaign?: Readonly<{
       readonly campaignId: ScenarioCampaignId;
@@ -1368,15 +1373,24 @@ function validateDecodedProjection(
         message: `Finding authority path is not repository-relative: ${authority.path}.`,
       };
     }
+    const canonicalAuthority = canonicalRepositoryReadPath(
+      repoRoot,
+      authority.path,
+    );
+    if (Either.isLeft(canonicalAuthority)) {
+      return {
+        tag: "invalid",
+        message: `Finding authority is not a canonical repository path: ${authority.path}.`,
+      };
+    }
     try {
-      const real = realpathSync(resolve(repoRoot, authority.path));
-      if (relative(repoRoot, real) !== authority.path) {
+      if (relative(repoRoot, canonicalAuthority.right) !== authority.path) {
         return {
           tag: "invalid",
           message: `Finding authority is not a canonical repository path: ${authority.path}.`,
         };
       }
-      const bytes = readFileSync(real);
+      const bytes = readFileSync(canonicalAuthority.right);
       if (
         bytes.byteLength !== authority.byteLength ||
         createHash("sha256").update(bytes).digest("hex") !== authority.sha256
