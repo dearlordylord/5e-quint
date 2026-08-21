@@ -97,6 +97,15 @@ The character-creation tool boundary exposes these user-facing tools:
   character is in Battle, the exact `inBattle` variant contains only the stable
   Character Build and Battle ownership identifiers; it never serializes the
   pre-Battle sheet's mutable Hit Points, conditions, or expenditures as current.
+- `apply_character_session_operation` also composes atomic rest and calendar
+  operations. `completeShortRest` and `completeLongRest` receive the caller's
+  elapsed-rest facts and recovery selections; their interruption variants
+  receive the activity facts and apply any permitted Short Rest benefits.
+  `completeLongRest` passes Weapon Mastery reselections to the Character Sheet
+  runtime, while `passCalendarTime` delegates Stable recovery and returns its
+  resolved, unresolved-hole, or invalid outcome. Start and finish validation
+  occurs inside each call, so MCP retains no branded rest intermediate or
+  separate rest state machine.
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
@@ -192,8 +201,7 @@ Zero-HP handoff:
 
 Deferred workflow gates:
 
-- broader rest/revival workflows remain deferred beyond the typed closeout
-  state;
+- revival workflows remain deferred beyond the typed closeout state;
 - broader character choices, monster spellcasting, Multiattack, reactions,
   casting spells with higher-level Spell Slots, persistent spell effects such as
   Mage Armor, and post-turn lifecycle subjects remain outside this workflow.

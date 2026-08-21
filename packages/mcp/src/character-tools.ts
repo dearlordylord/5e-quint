@@ -77,7 +77,7 @@ export const characterToolDefinitions = [
   {
     name: characterToolNames.applyCharacterSessionOperation,
     description:
-      "Apply a supported durable character-session operation. Retained one-at-a-time companion creation delegates source, form, and cost validation to runtime support facts; MCP does not own companion eligibility.",
+      "Apply a supported durable character-session operation. Companion creation, atomic Short/Long Rest completion or interruption, and calendar-time Stable recovery delegate validation and state transitions to the Character Sheet runtime; MCP retains no rest intermediate state.",
     inputSchema: applyCharacterSessionOperationInputSchema,
     outputSchema: mcpOutputJsonSchema(CharacterSessionOperationOutputSchema),
   },
