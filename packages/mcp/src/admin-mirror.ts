@@ -2,6 +2,7 @@ import { battlePresentedSnapshot } from "@dnd/battle-runtime";
 import { Effect, Either, Schema } from "effect";
 
 import { characterListRows } from "./character-session-rows.ts";
+import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import {
   AdminMirrorProjectionEnvelopeSchema,
@@ -10,10 +11,8 @@ import {
   type AdminMirrorPublisherInstanceId,
   type AdminMirrorSequence,
   type AdminMirrorSessionId,
-  type AdminMirrorSessionSummary,
   type AdminSessionProjection,
 } from "./admin-mirror-contract.ts";
-import type { McpSessionSnapshot } from "./session-store.ts";
 
 export type AdminMirrorPublisher = {
   readonly publish: (
@@ -126,6 +125,12 @@ export function adminProjection(
   const characters = characterListRows(root);
   if (Either.isLeft(characters)) return Either.left(characters.left);
   const battleState = root.sessionStore.battleState;
+  const snapshot = root.sessionStore.snapshot();
+  const sessionSummary = {
+    draftIds: snapshot.draftIds,
+    selectedStatBlockId: snapshot.selectedStatBlockId,
+    transientBattleFills: snapshot.transientBattleFills,
+  };
   const presentedBattle =
     battleState.tag !== "activeBattle"
       ? Either.right(null)
@@ -133,22 +138,31 @@ export function adminProjection(
   if (Either.isLeft(presentedBattle)) {
     return Either.left(presentedBattle.left);
   }
+  const projectedBattleState = battleStateSnapshot(
+    root.sessionStore.battleState,
+  );
+  if (projectedBattleState.tag === "activeBattle") {
+    if (presentedBattle.right === null) {
+      return Either.left("Active Battle projection is missing its snapshot.");
+    }
+    return Either.right({
+      battle: presentedBattle.right,
+      characters: characters.right,
+      session: { ...sessionSummary, battleState: projectedBattleState },
+    });
+  }
+  if (projectedBattleState.tag === "none") {
+    return Either.right({
+      battle: null,
+      characters: characters.right,
+      session: { ...sessionSummary, battleState: projectedBattleState },
+    });
+  }
   return Either.right({
-    battle: presentedBattle.right,
+    battle: null,
     characters: characters.right,
-    session: adminMirrorSessionSummary(root.sessionStore.snapshot()),
+    session: { ...sessionSummary, battleState: projectedBattleState },
   });
-}
-
-function adminMirrorSessionSummary(
-  snapshot: McpSessionSnapshot,
-): AdminMirrorSessionSummary {
-  return {
-    battleState: snapshot.battleState,
-    draftIds: snapshot.draftIds,
-    selectedStatBlockId: snapshot.selectedStatBlockId,
-    transientBattleFills: snapshot.transientBattleFills,
-  };
 }
 
 function publishAdminProjection(root: McpPlaySessionRoot): Effect.Effect<void> {

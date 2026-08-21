@@ -113,7 +113,14 @@ describe("Admin Mirror MCP tool publishing", () => {
     }
     const beforeStart: AdminMirrorProjectionEnvelope = {
       ...startedEnvelope,
-      projection: { ...startedEnvelope.projection, battle: null },
+      projection: {
+        ...startedEnvelope.projection,
+        battle: null,
+        session: {
+          ...startedEnvelope.projection.session,
+          battleState: { tag: "none" },
+        },
+      },
       sequence: adminMirrorSequence(0),
     };
     const startedEntry = createAdminMirrorPresentationTimelineEntry(

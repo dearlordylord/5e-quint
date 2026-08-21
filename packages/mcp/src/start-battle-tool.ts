@@ -24,6 +24,7 @@ import {
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { type AvailableCharacterSession } from "./session-store.ts";
+import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import {
   type InitialBattleCombatantToolInput,
   type InitialCharacterSessionCombatantToolInput,
@@ -136,16 +137,22 @@ export function handleStartBattleToolCall(
   return completeBattleStateTransition({
     root,
     transition: root.sessionStore.storeActiveBattle(admittedSession),
-    output: () =>
-      schemaJsonContent(StartBattleOutputSchema, {
-        battleState: root.sessionStore.snapshot().battleState,
+    output: () => {
+      const session = root.sessionStore.snapshot();
+      const battleState = battleStateSnapshot(root.sessionStore.battleState);
+      if (battleState.tag !== "activeBattle") {
+        throw new Error("Battle start payload requires owned active state.");
+      }
+      return schemaJsonContent(StartBattleOutputSchema, {
+        battleState,
         snapshot: snapshot.right,
         availableActs: discoverBattleActs(admittedSession),
         admittedSpellPresentations:
           battleAdmittedSpellPresentations(admittedSession),
         presentedInterruptChoices: [],
-        session: mcpSessionSummary(root.sessionStore.snapshot()),
-      }),
+        session: { ...mcpSessionSummary(session), battleState },
+      });
+    },
   });
 }
 

@@ -5,6 +5,15 @@ import {
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
+  battleCreatureInitFromStatBlock,
+  battleAmmunitionStock,
+  battleId,
+  combatantId,
+  initiativeScore,
+  startBattle,
+  startBattleWithInitialInitiativeSetup,
+} from "@dnd/battle-runtime";
+import {
   characterSheetDruidWildShapeKnownForms,
   characterSheetId,
 } from "@dnd/character-sheet-runtime";
@@ -157,6 +166,78 @@ describe("MCP character sessions", () => {
     );
     expect(store.characters.get(first.characterId)).toBe(first);
     expect(store.characters.get(second.characterId)).toBe(second);
+  });
+
+  test("keeps owned battle setup transitions atomic across owners", () => {
+    const root = createMcpPlaySessionRoot();
+    const store = createMcpSessionStore(root.statBlockCatalog);
+    const goblin = root.statBlockCatalog.requireStatBlock(
+      "stat_block_goblin_warrior",
+    );
+    const combatant = expectRight(
+      battleCreatureInitFromStatBlock({
+        combatantId: combatantId("store-transition-goblin"),
+        statBlock: goblin,
+        initiative: initiativeScore(10),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      }),
+    );
+    const ownedSetup = expectRight(
+      startBattleWithInitialInitiativeSetup({
+        battleId: battleId("battle:store-transition-owned"),
+        combatants: [combatant],
+      }),
+    );
+    expect(store.storeInitialInitiativeSetup(ownedSetup)).toEqual(
+      Either.right(undefined),
+    );
+    const before = store.battleState;
+    const foreignSetup = expectRight(
+      startBattleWithInitialInitiativeSetup({
+        battleId: battleId("battle:store-transition-foreign"),
+        combatants: [combatant],
+      }),
+    );
+
+    expect(
+      store.transformInitialInitiativeSetup(() => Either.right(foreignSetup)),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateBattleOwnershipConflict",
+        expectedBattleId: "battle:store-transition-owned",
+        actualBattleId: "battle:store-transition-foreign",
+      }),
+    );
+    expect(store.battleState).toBe(before);
+    expect(
+      store.transformInitialInitiativeSetup(() =>
+        Either.left("caller callback rejected"),
+      ),
+    ).toEqual(
+      Either.left({
+        tag: "initialInitiativeSetupTransformRejected",
+        message: "caller callback rejected",
+      }),
+    );
+    expect(store.battleState).toBe(before);
+
+    const active = expectRight(store.finalizeInitialInitiativeSetup());
+    const foreignActive = expectRight(
+      startBattle({
+        battleId: battleId("battle:store-transition-foreign-active"),
+        combatants: [combatant],
+      }),
+    );
+    expect(store.storeActiveBattle(foreignActive)).toEqual(
+      Either.left({
+        tag: "battleStateBattleOwnershipConflict",
+        expectedBattleId: active.state.battleId,
+        actualBattleId: foreignActive.state.battleId,
+      }),
+    );
+    expect(store.battleSession).toBe(active);
   });
 });
 

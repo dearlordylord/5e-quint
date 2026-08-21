@@ -19,6 +19,7 @@ import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { completeBattleStateTransition } from "./battle-state-transition.ts";
+import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 
 export function handleBattleLifecycleToolCall(
   root: McpPlaySessionRoot,
@@ -119,15 +120,19 @@ function finalizeSetup(
       if (Either.isLeft(snapshot)) {
         return battleSnapshotPresentationIssueContent(snapshot.left);
       }
+      const battleState = battleStateSnapshot(state);
       return schemaJsonContent(StartBattleOutputSchema, {
-        battleState: root.sessionStore.snapshot().battleState,
+        battleState,
         snapshot: snapshot.right,
         availableActs: discoverBattleActs(state.session),
         admittedSpellPresentations: battleAdmittedSpellPresentations(
           state.session,
         ),
         presentedInterruptChoices: [],
-        session: mcpSessionSummary(root.sessionStore.snapshot()),
+        session: {
+          ...mcpSessionSummary(root.sessionStore.snapshot()),
+          battleState,
+        },
       });
     },
   });

@@ -10,9 +10,6 @@ import {
   BattleShovePushOutcomeSchema,
   BattlePresentedSnapshotSchema,
   BattleSubjectSchema,
-  discoverBattleActs,
-  battleAdmittedSpellPresentations,
-  type BattlePresentedSnapshot,
 } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
@@ -24,7 +21,6 @@ import {
   McpSessionSnapshotSchema,
   McpSessionSummarySchema,
 } from "./session-snapshot-output.ts";
-import type { McpBattleStateSnapshot } from "./session-store.ts";
 
 const JsonObjectSchema = Schema.Record({
   key: Schema.String,
@@ -101,24 +97,7 @@ const BattlePresentationBranches = {
   },
 } as const;
 
-type BattlePresentationProjection = {
-  readonly availableActs: ReturnType<typeof discoverBattleActs>;
-  readonly admittedSpellPresentations: ReturnType<
-    typeof battleAdmittedSpellPresentations
-  >;
-  readonly presentedInterruptChoices: readonly unknown[];
-};
-type BattlePresentationOutput<Session> = BattlePresentationProjection & {
-  readonly battleState: McpBattleStateSnapshot;
-  readonly snapshot: BattlePresentedSnapshot | null;
-  readonly session: Session;
-};
-
-function battlePresentationOutputSchema<
-  SessionSchema extends Schema.Schema.AnyNoContext,
->(
-  session: SessionSchema,
-): Schema.Schema<BattlePresentationOutput<SessionSchema["Type"]>, any, never> {
+function battlePresentationOutputSchema(session: Schema.Schema.AnyNoContext) {
   return Schema.Union(
     Schema.Struct({
       ...BattlePresentationBranches.none,
@@ -135,11 +114,7 @@ function battlePresentationOutputSchema<
       ...BattlePresentationProjectionFields,
       session,
     }),
-  ) as unknown as Schema.Schema<
-    BattlePresentationOutput<SessionSchema["Type"]>,
-    any,
-    never
-  >;
+  );
 }
 
 export const SelectStatBlockOutputSchema = Schema.Struct({

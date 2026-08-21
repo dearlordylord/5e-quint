@@ -292,10 +292,13 @@ function battleSessionContent(root: McpPlaySessionRoot): BattleToolResult {
       initialInitiativeSetupPayload(root),
     );
   }
-  const payload = battleSessionPayload(
-    root,
-    state.tag === "activeBattle" ? state.session : null,
-  );
+  if (state.tag === "activeBattle") {
+    const payload = battleSessionPayload(root, state.session);
+    return Either.isLeft(payload)
+      ? battleSnapshotPresentationIssueContent(payload.left)
+      : schemaJsonContent(BattleSessionOutputSchema, payload.right);
+  }
+  const payload = battleSessionPayload(root, null);
   return Either.isLeft(payload)
     ? battleSnapshotPresentationIssueContent(payload.left)
     : schemaJsonContent(BattleSessionOutputSchema, payload.right);

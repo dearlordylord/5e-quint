@@ -6,15 +6,11 @@ import type {
   BattleFill,
   BattleId,
   BattleRuntimeSession,
-  BattleState,
   BattleSubject,
   InitialInitiativeSetup,
 } from "@dnd/battle-runtime";
-import {
-  finishInitialInitiativeSetup,
-  snapshotBattle,
-} from "@dnd/battle-runtime";
-import { requiredInitiativeRollModeForCombatant } from "@dnd/battle-runtime";
+import { finishInitialInitiativeSetup } from "@dnd/battle-runtime";
+import type { snapshotBattle } from "@dnd/battle-runtime";
 import {
   characterSheetCurrentHp,
   characterSheetSpellSlots,
@@ -34,9 +30,9 @@ import type {
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import { Either, Match, Option } from "effect";
+import { Either, Option } from "effect";
+import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export type AvailableCharacterSession = CharacterSheet;
 export type AvailableCharacterSessionInput = CharacterSheetRebuildInput;
 export type CharacterSessionIssue = {
@@ -91,10 +87,6 @@ export type PendingBattleFillSession = BattleFillSession & {
   readonly baseSession: BattleRuntimeSession;
 };
 
-/**
- * The Play Session owns one Battle workflow slot. Runtime setup and active
- * sessions are opaque SDK-owned values; MCP only chooses which one is stored.
- */
 export type McpBattleState =
   | { readonly tag: "none" }
   | {
@@ -151,7 +143,6 @@ export type McpSessionSnapshot = {
   readonly transientBattleFills: BattleFillSession | null;
 };
 
-/** The active-session projection retained for callers that only need it. */
 export type McpBattleSessionSnapshot = Extract<
   McpBattleStateSnapshot,
   { readonly tag: "activeBattle" }
@@ -218,8 +209,6 @@ export function characterBattleSpellSlots(
   return characterSheetSpellSlots(session);
 }
 
-// MCP creates deterministic character handles from draft ids because character
-// creation currently has no independent naming/id fill.
 export function characterIdFromDraftId(draftId: CharacterDraftId): CharacterId {
   return characterSheetId(`character:${encodeURIComponent(String(draftId))}`);
 }
@@ -417,43 +406,4 @@ function characterSessionId(session: CharacterSession): CharacterId {
   return session.tag === "inBattle"
     ? session.sheet.characterId
     : session.characterId;
-}
-
-function battleSessionSnapshot(state: BattleState): McpBattleSessionSnapshot {
-  return {
-    tag: "activeBattle",
-    battleId: state.battleId,
-    currentActorId: snapshotBattle(state).currentActorId,
-  };
-}
-
-function battleStateSnapshot(state: McpBattleState): McpBattleStateSnapshot {
-  return Match.value(state).pipe(
-    Match.when({ tag: "none" }, (matched) => matched),
-    Match.when({ tag: "activeBattle" }, (matched) =>
-      battleSessionSnapshot(matched.session.state),
-    ),
-    Match.when({ tag: "initialInitiativeSetup" }, (matched) => {
-      const battle = matched.setup.state;
-      const snapshot = snapshotBattle(battle);
-      return {
-        tag: "initialInitiativeSetup" as const,
-        battleId: battle.battleId,
-        combatants: snapshot.turnOrder.flatMap((combatantId) => {
-          const combatant = battle.combatants.get(combatantId);
-          if (combatant === undefined) return [];
-          return [
-            {
-              combatantId,
-              initiative: combatant.initiative,
-              rollMode:
-                requiredInitiativeRollModeForCombatant(battle, combatantId) ??
-                "normal",
-            },
-          ];
-        }),
-      };
-    }),
-    Match.exhaustive,
-  );
 }

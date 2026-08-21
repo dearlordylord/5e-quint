@@ -15,7 +15,9 @@ import { Either } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleFillSession } from "./session-store.ts";
+import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
+import type { BattleSessionOutputSchema } from "./battle-tool-output.ts";
 import { errorContent } from "./tool-content.ts";
 
 type BattlePayloadPresentationIssues = BattleSnapshotPresentationIssues;
@@ -58,39 +60,90 @@ export function pendingBattleFillsContent(
   });
 }
 
+type BattleSessionPayload = typeof BattleSessionOutputSchema.Type;
+type ActiveBattleSessionPayload = Extract<
+  BattleSessionPayload,
+  { readonly battleState: { readonly tag: "activeBattle" } }
+>;
+type EmptyBattleSessionPayload = Extract<
+  BattleSessionPayload,
+  { readonly battleState: { readonly tag: "none" } }
+>;
+
+export function battleSessionPayload(
+  root: McpPlaySessionRoot,
+  session: BattleRuntimeSession,
+): Either.Either<ActiveBattleSessionPayload, BattleSnapshotPresentationIssues>;
+export function battleSessionPayload(
+  root: McpPlaySessionRoot,
+  session: null,
+): Either.Either<EmptyBattleSessionPayload, BattleSnapshotPresentationIssues>;
 export function battleSessionPayload(
   root: McpPlaySessionRoot,
   session: BattleRuntimeSession | null,
-) {
+): Either.Either<
+  ActiveBattleSessionPayload | EmptyBattleSessionPayload,
+  BattleSnapshotPresentationIssues
+> {
+  if (session === null) {
+    const snapshot = root.sessionStore.snapshot();
+    const battleState = battleStateSnapshot(root.sessionStore.battleState);
+    if (battleState.tag !== "none") {
+      throw new Error(
+        "Empty battle presentation requires an owned empty state.",
+      );
+    }
+    return Either.right({
+      battleState,
+      snapshot: null,
+      availableActs: [],
+      admittedSpellPresentations: [],
+      presentedInterruptChoices: [],
+      session: snapshot,
+    });
+  }
   const presentation = battlePresentationProjection(session);
-  return Either.map(presentation, (value) => ({
-    ...value,
-    battleState: root.sessionStore.snapshot().battleState,
-    session: root.sessionStore.snapshot(),
-  }));
+  return Either.map(presentation, (value) => {
+    const snapshot = root.sessionStore.snapshot();
+    const battleState = battleStateSnapshot(root.sessionStore.battleState);
+    if (battleState.tag !== "activeBattle") {
+      throw new Error(
+        "Active battle presentation requires an owned active state.",
+      );
+    }
+    return { ...value, battleState, session: snapshot };
+  });
 }
 
 export function initialInitiativeSetupPayload(root: McpPlaySessionRoot) {
   const session = root.sessionStore.snapshot();
+  const battleState = battleStateSnapshot(root.sessionStore.battleState);
+  if (battleState.tag !== "initialInitiativeSetup") {
+    throw new Error("Initial Initiative payload requires owned setup state.");
+  }
   return {
-    battleState: session.battleState,
+    battleState,
     snapshot: null,
     availableActs: [],
     admittedSpellPresentations: [],
     presentedInterruptChoices: [],
-    session,
+    session: { ...session, battleState },
   };
 }
 
 export function initialInitiativeSetupStartPayload(root: McpPlaySessionRoot) {
   const session = root.sessionStore.snapshot();
+  const battleState = battleStateSnapshot(root.sessionStore.battleState);
+  if (battleState.tag !== "initialInitiativeSetup") {
+    throw new Error("Initial Initiative payload requires owned setup state.");
+  }
   return {
-    battleState: session.battleState,
+    battleState,
     snapshot: null,
     availableActs: [],
     admittedSpellPresentations: [],
     presentedInterruptChoices: [],
-    session: mcpSessionSummary(session),
+    session: { ...mcpSessionSummary(session), battleState },
   };
 }
 

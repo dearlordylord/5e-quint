@@ -47,13 +47,7 @@ export const AdminMirrorSessionSummarySchema = Schema.Struct({
 export type AdminMirrorSessionSummary =
   typeof AdminMirrorSessionSummarySchema.Type;
 
-export type AdminSessionProjection = {
-  readonly session: AdminMirrorSessionSummary;
-  readonly battle: typeof BattlePresentedSnapshotSchema.Type | null;
-  readonly characters: readonly (typeof CharacterSessionRowSchema.Type)[];
-};
-
-const ExactAdminSessionProjectionSchema = Schema.Union(
+export const AdminSessionProjectionSchema = Schema.Union(
   Schema.Struct({
     session: Schema.Struct({
       ...AdminMirrorSessionSummaryFields,
@@ -79,12 +73,7 @@ const ExactAdminSessionProjectionSchema = Schema.Union(
     characters: Schema.Array(CharacterSessionRowSchema),
   }),
 );
-export const AdminSessionProjectionSchema =
-  ExactAdminSessionProjectionSchema as unknown as Schema.Schema<
-    AdminSessionProjection,
-    any,
-    never
-  >;
+export type AdminSessionProjection = typeof AdminSessionProjectionSchema.Type;
 
 export const AdminMirrorBattleHpChangeSchema = Schema.Struct({
   combatantId: Schema.String,
