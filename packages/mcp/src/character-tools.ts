@@ -11,8 +11,11 @@ import { Either, Match } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import { applyCharacterSessionOperation } from "./character-session-operation-tool.ts";
-import { characterListRows } from "./character-session-rows.ts";
-import { characterSessionDetail } from "./character-session-rows.ts";
+import {
+  characterListRows,
+  characterSessionDetail,
+  characterSessionDetailOutput,
+} from "./character-session-rows.ts";
 import {
   queryCharacterSession,
   type CharacterSessionQueryIssue,
@@ -94,7 +97,7 @@ export const characterToolDefinitions = [
   {
     name: characterToolNames.applyCharacterSessionOperation,
     description:
-      "Apply a supported durable character-session operation. Companion creation, atomic Short/Long Rest completion or interruption, and calendar-time Stable recovery delegate validation and state transitions to the Character Sheet runtime; MCP retains no rest intermediate state.",
+      "Apply a supported durable character-session operation. Class-level advancement and Druid known-form replacement delegate existing level-gain and Wild Shape support facts to the runtime; companion creation, atomic Short/Long Rest completion or interruption, and calendar-time Stable recovery delegate validation and state transitions to the Character Sheet runtime; MCP retains no rest intermediate state.",
     inputSchema: applyCharacterSessionOperationInputSchema,
     outputSchema: mcpOutputJsonSchema(CharacterSessionOperationOutputSchema),
   },
@@ -279,16 +282,7 @@ export function handleCharacterToolCall(
           );
         }
         return schemaJsonContent(CharacterSessionDetailOutputSchema, {
-          detail:
-            detail.right.tag === "available"
-              ? {
-                  tag: detail.right.tag,
-                  characterId: detail.right.characterId,
-                  displayName: detail.right.displayName,
-                  build: detail.right.sheet.build,
-                  sheetProjection: detail.right.sheetProjection,
-                }
-              : detail.right,
+          detail: characterSessionDetailOutput(detail.right),
           session: mcpSessionSummary(root.sessionStore.snapshot()),
         });
       },

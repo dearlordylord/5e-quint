@@ -3,8 +3,10 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { describe, expect, test } from "vitest";
+import { characterDraftId } from "@dnd/character-creation-runtime";
 
 import {
+  acceptancePlaySessionId,
   verifyAgentConversationScenarios,
   verifyBaselineVertical,
   verifyLevelFiveWizardFireballBattleHandoff,
@@ -18,6 +20,7 @@ import {
 import { createMcpApplicationServices } from "./composition-root.ts";
 import { contentToolDefinitions } from "./content-tools.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
+import { characterIdFromDraftId } from "./session-store.ts";
 import {
   PLAY_SESSION_OPERATION_NAMES,
   PLAY_SESSION_OUTPUT_SCHEMA_BYTE_BUDGET,
@@ -236,6 +239,121 @@ describe("MCP protocol server", () => {
     },
     FULL_ACCEPTANCE_TEST_TIMEOUT_MS,
   );
+
+  test("routes finalized character-session mutations through the Play Session protocol", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const { server } = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "character-session-operation-protocol-client",
+      version: "0.1.0",
+    });
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+      await verifyBaselineVertical(client);
+
+      const playSessionId = await acceptancePlaySessionId(client);
+      const characterId = characterIdFromDraftId(
+        characterDraftId("draft:stdio-accepted-orc-soldier-fighter"),
+      );
+      const applyOperationTool = (await client.listTools()).tools.find(
+        (tool) => tool.name === "apply_character_session_operation",
+      );
+      if (applyOperationTool?.outputSchema === undefined) {
+        throw new Error(
+          "apply_character_session_operation omitted its output schema.",
+        );
+      }
+      const validateOutput = new AjvJsonSchemaValidator().getValidator(
+        applyOperationTool.outputSchema as JsonSchemaType,
+      );
+
+      const accepted = await client.callTool({
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId,
+          operation: {
+            kind: "advanceClassLevel",
+            levelGain: {
+              tag: "classLevelGain",
+              classUnitId: "class_fighter",
+              hitPointRule: { tag: "fixedHigherLevelGain" },
+            },
+          },
+        },
+      });
+      expect(accepted.isError).not.toBe(true);
+      expect(accepted.structuredContent).toBeDefined();
+      if (!isJsonObject(accepted.structuredContent)) {
+        throw new Error("Accepted operation omitted structured content.");
+      }
+      expect(validateOutput(accepted.structuredContent).valid).toBe(true);
+      expect(accepted.structuredContent).toMatchObject({
+        tag: "playSessionAvailable",
+        playSessionId,
+        operation: {
+          name: "apply_character_session_operation",
+          result: {
+            detail: { tag: "available", characterId },
+          },
+        },
+        projection: { characterIds: [characterId] },
+        restoration: { tag: "retained" },
+      });
+      expect(accepted.structuredContent.nextOperations).toEqual(
+        expect.arrayContaining([
+          "list_characters",
+          "inspect_character_session",
+          "start_battle",
+        ]),
+      );
+
+      const rejected = await client.callTool({
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId,
+          operation: {
+            kind: "replaceDruidWildShapeKnownForm",
+            replacement: {
+              replaceStatBlockId: "stat_block_rat",
+              selectedStatBlockId: "stat_block_cat",
+            },
+          },
+        },
+      });
+      expect(rejected.isError).toBe(true);
+      expect(rejected.structuredContent).toBeDefined();
+      if (!isJsonObject(rejected.structuredContent)) {
+        throw new Error("Rejected operation omitted structured content.");
+      }
+      expect(validateOutput(rejected.structuredContent).valid).toBe(true);
+      expect(rejected.structuredContent).toMatchObject({
+        tag: "playSessionAvailable",
+        playSessionId,
+        operation: {
+          name: "apply_character_session_operation",
+          result: {
+            details: { code: "CHARACTER_SESSION_OPERATION_INVALID" },
+          },
+        },
+        projection: { characterIds: [characterId] },
+        restoration: { tag: "retained" },
+      });
+      expect(rejected.structuredContent.nextOperations).toEqual(
+        expect.arrayContaining([
+          "list_characters",
+          "inspect_character_session",
+          "start_battle",
+        ]),
+      );
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  }, 90_000);
 
   test("returns one typed restoration result for a handle absent from the process", async () => {
     const [clientTransport, serverTransport] =

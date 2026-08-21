@@ -294,14 +294,6 @@ export const CharacterSessionOperationResultSchema = Schema.Union(
     message: Schema.String,
   }),
 );
-export const CharacterSessionOperationOutputSchema = Schema.Struct({
-  character: JsonObjectSchema,
-  result: Schema.optionalWith(CharacterSessionOperationResultSchema, {
-    exact: true,
-  }),
-  session: McpSessionSummarySchema,
-});
-
 const CharacterSessionSheetProjectionSchema = Schema.Struct({
   currentHp: NonNegativeIntegerSchema,
   companion: Schema.Union(
@@ -331,23 +323,39 @@ const CharacterSessionSheetProjectionSchema = Schema.Struct({
   resources: Schema.Array(CharacterSheetResourceDisplayRowSchema),
 });
 
+const CharacterSessionDetailSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("available"),
+    characterId: Schema.String,
+    displayName: Schema.String,
+    build: JsonObjectSchema,
+    sheetProjection: CharacterSessionSheetProjectionSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("inBattle"),
+    characterId: Schema.String,
+    displayName: Schema.String,
+    battleId: Schema.String,
+    build: JsonObjectSchema,
+  }),
+);
+
+export const CharacterSessionOperationOutputSchema = Schema.Union(
+  Schema.Struct({
+    character: JsonObjectSchema,
+    result: Schema.optionalWith(CharacterSessionOperationResultSchema, {
+      exact: true,
+    }),
+    session: McpSessionSummarySchema,
+  }),
+  Schema.Struct({
+    detail: CharacterSessionDetailSchema,
+    session: McpSessionSummarySchema,
+  }),
+);
+
 export const CharacterSessionDetailOutputSchema = Schema.Struct({
-  detail: Schema.Union(
-    Schema.Struct({
-      tag: Schema.Literal("available"),
-      characterId: Schema.String,
-      displayName: Schema.String,
-      build: JsonObjectSchema,
-      sheetProjection: CharacterSessionSheetProjectionSchema,
-    }),
-    Schema.Struct({
-      tag: Schema.Literal("inBattle"),
-      characterId: Schema.String,
-      displayName: Schema.String,
-      battleId: Schema.String,
-      build: JsonObjectSchema,
-    }),
-  ),
+  detail: CharacterSessionDetailSchema,
   session: McpSessionSummarySchema,
 });
 

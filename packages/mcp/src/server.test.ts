@@ -1916,6 +1916,8 @@ describe("MCP server route", () => {
     const operationSchemaText = JSON.stringify(operationSchema);
     for (const operationKind of [
       "retainOneAtATimeCompanion",
+      "advanceClassLevel",
+      "replaceDruidWildShapeKnownForm",
       "completeShortRest",
       "interruptShortRest",
       "completeLongRest",
@@ -4252,6 +4254,269 @@ describe("MCP server route", () => {
       },
       spellSlotExpenditures: [{ spellLevel: 1, expended: 1 }],
     });
+  });
+
+  test("apply_character_session_operation advances a finalized class level", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-advance-class-level";
+    const before = createFinalizedFighterSheet(root, draftId);
+    const characterId = testCharacterId(draftId);
+
+    const advanced = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "advanceClassLevel",
+          levelGain: {
+            tag: "classLevelGain",
+            classUnitId: "class_fighter",
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        },
+      }),
+    );
+
+    expect(advanced).toMatchObject({
+      detail: {
+        tag: "available",
+        characterId,
+        build: {
+          progression: {
+            advancements: [
+              {
+                classUnitId: "class_fighter",
+                hitPointRule: { tag: "fixedHigherLevelGain" },
+              },
+            ],
+          },
+        },
+      },
+    });
+    const stored = root.sessionStore.characters.get(characterId);
+    if (stored?.tag !== "available") {
+      throw new Error("Expected the advanced character session.");
+    }
+    expect(stored.build).not.toBe(before);
+    expect(stored.build.progression.advancements).toHaveLength(1);
+    expect(stored.hitPoints).toMatchObject({ tag: "positive" });
+  });
+
+  test("apply_character_session_operation rejects an unsupported class-level fact atomically", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-advance-class-level-rejected";
+    createFinalizedFighterSheet(root, draftId);
+    const characterId = testCharacterId(draftId);
+    const beforeSession = root.sessionStore.characters.get(characterId);
+
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "advanceClassLevel",
+          levelGain: {
+            tag: "classLevelGain",
+            classUnitId: "class_synthetic_missing",
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        },
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: { code: "CHARACTER_SESSION_OPERATION_INVALID" },
+    });
+    expect(root.sessionStore.characters.get(characterId)).toBe(beforeSession);
+  });
+
+  test("routes existing specialized class-level gain shapes through runtime support facts", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-specialized-class-level-gains";
+    createFinalizedFighterSheet(root, draftId);
+    const characterId = testCharacterId(draftId);
+    const beforeSession = root.sessionStore.characters.get(characterId);
+    const levelGains = [
+      {
+        tag: "classLevelGainWithListPreparedSpellcasting",
+        classUnitId: "class_fighter",
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        preparedSpellcasting: { gainedPreparedSpells: [] },
+      },
+      {
+        tag: "fighterLevelGainWithFightingStyleReplacement",
+        classUnitId: "class_fighter",
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        replacement: { selectedFeatUnitId: "synthetic_missing_feat" },
+      },
+      {
+        tag: "classLevelGainWithFightingStyleCantripReplacement",
+        classUnitId: "class_fighter",
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        replacement: {
+          replaceCantripId: "synthetic_missing_cantrip",
+          selectedCantripId: "synthetic_missing_cantrip",
+        },
+        preparedSpellcasting: { gainedPreparedSpells: [] },
+      },
+      {
+        tag: "classLevelGainWithWeaponMasterySelection",
+        classUnitId: "class_fighter",
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        weaponMastery: {
+          featureUnitId: "synthetic_missing_weapon_mastery",
+          selectedWeaponUnitIds: [],
+        },
+      },
+      {
+        tag: "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement",
+        classUnitId: "class_fighter",
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        weaponMastery: {
+          featureUnitId: "synthetic_missing_weapon_mastery",
+          selectedWeaponUnitIds: [],
+        },
+        fightingStyleReplacement: {
+          selectedFeatUnitId: "synthetic_missing_feat",
+        },
+      },
+      {
+        tag: "sorcererLevelGain",
+        classUnitId: "class_fighter",
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        metamagic: { gainedOptions: [] },
+      },
+      {
+        tag: "warlockLevelGain",
+        classUnitId: "class_fighter",
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        pactMagic: {
+          gainedCantrips: [],
+          gainedPreparedSpells: [],
+        },
+        eldritchInvocations: { gainedInvocations: [] },
+      },
+    ] as const;
+
+    for (const levelGain of levelGains) {
+      expect(
+        readPayload(
+          handleToolCall(root, "apply_character_session_operation", {
+            characterId,
+            operation: { kind: "advanceClassLevel", levelGain },
+          }),
+        ),
+      ).toMatchObject({
+        details: { code: "CHARACTER_SESSION_OPERATION_INVALID" },
+      });
+    }
+    expect(root.sessionStore.characters.get(characterId)).toBe(beforeSession);
+  });
+
+  test("rebuilds class advancement while preserving canonical HP lifecycle state", () => {
+    for (const state of ["knockedOut", "zero"] as const) {
+      const root = createMcpPlaySessionRoot();
+      const draftId = `draft:mcp-advance-class-level-${state}`;
+      const build = fighterCharacterBuild(root.unitLibrary);
+      const characterId = testCharacterId(draftId);
+      root.sessionStore.characters.set(
+        availableCharacterSessionRight({
+          build,
+          characterId,
+          currentHp: state === "knockedOut" ? Hp(1) : Hp(0),
+          ...(state === "knockedOut"
+            ? { positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS }
+            : {
+                zeroHpLifecycle: {
+                  tag: "unstable" as const,
+                  deathSaves: { successes: 0, failures: 0 },
+                },
+              }),
+          hitPointMaximumReduction: Hp(0),
+          tempHp: Hp(0),
+          unitLibrary: root.unitLibrary,
+        }),
+      );
+
+      expect(
+        readPayload(
+          handleToolCall(root, "apply_character_session_operation", {
+            characterId,
+            operation: {
+              kind: "advanceClassLevel",
+              levelGain: {
+                tag: "classLevelGain",
+                classUnitId: "class_fighter",
+                hitPointRule: { tag: "fixedHigherLevelGain" },
+              },
+            },
+          }),
+        ),
+      ).toMatchObject({ detail: { tag: "available", characterId } });
+      const stored = root.sessionStore.characters.get(characterId);
+      if (stored?.tag !== "available") {
+        throw new Error("Expected the advanced character session.");
+      }
+      expect(stored.hitPoints.tag).toBe(state);
+    }
+  });
+
+  test("apply_character_session_operation replaces one admitted Druid known form", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-replace-druid-known-form";
+    createFinalizedDruidSheet(root, draftId);
+    const characterId = testCharacterId(draftId);
+
+    const replaced = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "replaceDruidWildShapeKnownForm",
+          replacement: {
+            replaceStatBlockId: "stat_block_rat",
+            selectedStatBlockId: "stat_block_cat",
+          },
+        },
+      }),
+    );
+
+    expect(replaced).toMatchObject({
+      detail: { tag: "available", characterId },
+    });
+    const stored = root.sessionStore.characters.get(characterId);
+    if (stored?.tag !== "available") {
+      throw new Error("Expected the replaced Druid character session.");
+    }
+    expect(stored.druidWildShapeKnownForms?.statBlockIds).toEqual([
+      "stat_block_cat",
+      "stat_block_riding_horse",
+      "stat_block_spider",
+      "stat_block_wolf",
+    ]);
+  });
+
+  test("apply_character_session_operation rejects an invalid Druid known-form replacement atomically", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-replace-druid-known-form-rejected";
+    createFinalizedDruidSheet(root, draftId);
+    const characterId = testCharacterId(draftId);
+    const before = root.sessionStore.characters.get(characterId);
+
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "replaceDruidWildShapeKnownForm",
+          replacement: {
+            replaceStatBlockId: "stat_block_rat",
+            selectedStatBlockId: "stat_block_rat",
+          },
+        },
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: { code: "CHARACTER_SESSION_OPERATION_INVALID" },
+    });
+    expect(root.sessionStore.characters.get(characterId)).toBe(before);
   });
 
   test("apply_character_session_operation completes a Short Rest atomically", () => {
@@ -7948,6 +8213,50 @@ function createFinalizedFighterSheet(
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       unitLibrary: root.unitLibrary,
+    }),
+  );
+  return build;
+}
+
+function createFinalizedDruidSheet(
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
+  draftId: string,
+): CharacterBuild {
+  const druid = root.unitLibrary.requireUnit("class_druid");
+  if (druid.kind !== "class") {
+    throw new Error("Expected the Druid class Unit.");
+  }
+  const build = {
+    ...characterBuildForClassProgression({
+      base: fighterCharacterBuild(root.unitLibrary),
+      classUnit: druid,
+      keepClassChoices: false,
+      level: 2,
+    }),
+    background: unitId("background_sage"),
+    magicInitiateSpellAccesses: [
+      {
+        featUnitId: unitId("feat_magic_initiate_wizard"),
+        spellcastingAbility: "int" as const,
+        cantrips: [unitId("fire_bolt"), unitId("light")] as const,
+        levelOneSpell: unitId("burning_hands"),
+      },
+    ],
+  };
+  root.sessionStore.characters.set(
+    availableCharacterSessionRight({
+      characterId: testCharacterId(draftId),
+      build,
+      currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      unitLibrary: root.unitLibrary,
+      druidWildShapeKnownFormStatBlockIds: [
+        statBlockId("stat_block_rat"),
+        statBlockId("stat_block_riding_horse"),
+        statBlockId("stat_block_spider"),
+        statBlockId("stat_block_wolf"),
+      ],
     }),
   );
   return build;

@@ -3523,6 +3523,10 @@ function playSessionId(client: Client): Promise<string> {
   return created;
 }
 
+export function acceptancePlaySessionId(client: Client): Promise<string> {
+  return playSessionId(client);
+}
+
 async function createPlaySession(client: Client): Promise<string> {
   const result = await client.callTool({
     name: "create_play_session",
