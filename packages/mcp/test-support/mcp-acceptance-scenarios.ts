@@ -30,6 +30,8 @@ function testCharacterId(draftId: string) {
 }
 
 const expectedTools = [
+  "create_play_session",
+  "read_play_session",
   "describe_mcp_workflow",
   "list_stat_blocks",
   "list_catalog_units",
@@ -48,6 +50,14 @@ const expectedTools = [
   "end_turn",
   "end_battle",
 ] as const;
+
+const statelessToolNames = new Set([
+  "create_play_session",
+  "describe_mcp_workflow",
+  "list_catalog_units",
+  "list_stat_blocks",
+]);
+const playSessionIdByClient = new WeakMap<Client, Promise<string>>();
 
 const levelFourWizardProgressionOptionId =
   "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_4:fixed_hp_gain";
@@ -3286,9 +3296,10 @@ async function fillBaseCharacter(
 }
 
 async function callTool(client: Client, name: string, args: JsonObject) {
+  const routedArgs = await playSessionRoutedArgs(client, name, args);
   const result = await client.callTool({
     name,
-    arguments: battleToolWireArgs(name, args),
+    arguments: battleToolWireArgs(name, routedArgs),
   });
   if (result.isError === true) {
     throw new Error(`${name} returned error: ${JSON.stringify(result)}`);
@@ -3298,16 +3309,68 @@ async function callTool(client: Client, name: string, args: JsonObject) {
     undefined,
     `${name} success result must include structuredContent`,
   );
-  return parseToolPayload(result, name);
+  return operationPayload(parseToolPayload(result, name), name);
 }
 
 async function expectToolError(client: Client, name: string, args: JsonObject) {
+  const routedArgs = await playSessionRoutedArgs(client, name, args);
   const result = await client.callTool({
     name,
-    arguments: battleToolWireArgs(name, args),
+    arguments: battleToolWireArgs(name, routedArgs),
   });
   assert.equal(result.isError, true, `${name} should return a tool error`);
-  return parseToolPayload(result, name);
+  return operationPayload(parseToolPayload(result, name), name);
+}
+
+async function playSessionRoutedArgs(
+  client: Client,
+  name: string,
+  args: JsonObject,
+): Promise<JsonObject> {
+  if (statelessToolNames.has(name)) return args;
+  return { ...args, playSessionId: await playSessionId(client) };
+}
+
+function playSessionId(client: Client): Promise<string> {
+  const retained = playSessionIdByClient.get(client);
+  if (retained !== undefined) return retained;
+  const created = createPlaySession(client);
+  playSessionIdByClient.set(client, created);
+  return created;
+}
+
+async function createPlaySession(client: Client): Promise<string> {
+  const result = await client.callTool({
+    name: "create_play_session",
+    arguments: {},
+  });
+  assert.notEqual(result.isError, true, "create_play_session must succeed");
+  const payload = parseToolPayload(result, "create_play_session");
+  if (!isJsonObject(payload)) {
+    throw new Error("create_play_session did not return an object payload");
+  }
+  const playSessionId = payload.playSessionId;
+  if (typeof playSessionId !== "string") {
+    throw new Error("create_play_session did not return a string handle");
+  }
+  return playSessionId;
+}
+
+function operationPayload(payload: unknown, name: string): JsonObject {
+  if (!isJsonObject(payload)) {
+    throw new Error(`${name} did not return an object payload`);
+  }
+  if (statelessToolNames.has(name)) return payload;
+  assert.equal(payload.tag, "playSessionAvailable");
+  const operation = payload.operation;
+  if (!isJsonObject(operation)) {
+    throw new Error(`${name} did not return an operation object`);
+  }
+  assert.equal(operation.name, name);
+  if (!isJsonObject(operation.result)) {
+    throw new Error(`${name} did not return an object operation result`);
+  }
+  return operation.result;
 }
 
 function parseToolPayload(result: unknown, name: string) {

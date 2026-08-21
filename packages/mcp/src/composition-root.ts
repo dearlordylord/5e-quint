@@ -22,6 +22,7 @@ import {
 import {
   adminMirrorPublisherInstanceId,
   adminMirrorSessionId,
+  type AdminMirrorSessionId,
 } from "./admin-mirror-contract.ts";
 import {
   createMcpSessionStore,
@@ -33,6 +34,9 @@ export type McpCompositionRoot = {
   readonly statBlockCatalog: StatBlockCatalog;
   readonly sessionStore: McpSessionStore;
   readonly adminMirrorPublication: AdminMirrorPublication;
+  readonly createAdminMirrorPublication: (
+    mirrorSessionId: AdminMirrorSessionId,
+  ) => AdminMirrorPublication;
   readonly characterCreationSupportProfile: CharacterCreationSupportProfile;
 };
 
@@ -63,34 +67,73 @@ export function createMcpCompositionRoot(
     );
   }
 
+  const adminMirror = adminMirrorConfigurationFromEnv();
   return {
     unitLibrary: unitCatalog.catalog,
     statBlockCatalog: statBlockCatalog.catalog,
     sessionStore: createMcpSessionStore(statBlockCatalog.catalog),
-    adminMirrorPublication: createAdminMirrorPublicationFromEnv(),
+    adminMirrorPublication: adminMirror.create(adminMirror.sessionId),
+    createAdminMirrorPublication: adminMirror.create,
     characterCreationSupportProfile:
       input.characterCreationSupportProfile ??
       CHARACTER_CREATION_SUPPORT_PROFILE,
   };
 }
 
-function createAdminMirrorPublicationFromEnv(): AdminMirrorPublication {
+export function createPlaySessionCompositionRoot(
+  applicationRoot: McpCompositionRoot,
+  mirrorSessionId: AdminMirrorSessionId,
+): McpCompositionRoot {
+  return {
+    unitLibrary: applicationRoot.unitLibrary,
+    statBlockCatalog: applicationRoot.statBlockCatalog,
+    sessionStore: createMcpSessionStore(applicationRoot.statBlockCatalog),
+    adminMirrorPublication:
+      applicationRoot.createAdminMirrorPublication(mirrorSessionId),
+    createAdminMirrorPublication: applicationRoot.createAdminMirrorPublication,
+    characterCreationSupportProfile:
+      applicationRoot.characterCreationSupportProfile,
+  };
+}
+
+function adminMirrorConfigurationFromEnv(): {
+  readonly sessionId: AdminMirrorSessionId;
+  readonly create: (
+    mirrorSessionId: AdminMirrorSessionId,
+  ) => AdminMirrorPublication;
+} {
   const endpoint = process.env.DND_ADMIN_MIRROR_URL;
   const sessionId = process.env.DND_ADMIN_MIRROR_SESSION_ID;
   if (endpoint === undefined || sessionId === undefined) {
-    return disabledAdminMirrorPublication();
+    return disabledAdminMirrorConfiguration();
   }
   try {
-    return enabledAdminMirrorPublication({
-      mirrorSessionId: adminMirrorSessionId(sessionId),
-      publisher: createHttpAdminMirrorPublisher({
-        endpoint: new URL(endpoint),
-      }),
-      publisherInstanceId: adminMirrorPublisherInstanceId(
-        `${process.pid}:${Date.now()}`,
-      ),
-    });
+    const publicationEndpoint = new URL(endpoint);
+    return {
+      sessionId: adminMirrorSessionId(sessionId),
+      create: (mirrorSessionId) =>
+        enabledAdminMirrorPublication({
+          mirrorSessionId,
+          publisher: createHttpAdminMirrorPublisher({
+            endpoint: publicationEndpoint,
+          }),
+          publisherInstanceId: adminMirrorPublisherInstanceId(
+            `${process.pid}:${randomUUID()}`,
+          ),
+        }),
+    };
   } catch {
-    return disabledAdminMirrorPublication();
+    return disabledAdminMirrorConfiguration();
   }
 }
+
+function disabledAdminMirrorConfiguration(): {
+  readonly sessionId: AdminMirrorSessionId;
+  readonly create: () => AdminMirrorPublication;
+} {
+  return {
+    sessionId: adminMirrorSessionId("disabled"),
+    create: disabledAdminMirrorPublication,
+  };
+}
+import { randomUUID } from "node:crypto";

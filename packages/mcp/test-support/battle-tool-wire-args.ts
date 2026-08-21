@@ -10,12 +10,18 @@ export function battleToolWireArgs(name: string, args: unknown): unknown {
   if (!isJsonRecord(args)) return args;
   if (name === "fill_battle_hole" && "subject" in args && "fill" in args) {
     return {
+      ...(args.playSessionId === undefined
+        ? {}
+        : { playSessionId: args.playSessionId }),
       subjectJson: JSON.stringify(args.subject),
       fillJson: JSON.stringify(args.fill),
     };
   }
   if (name === "resolve_battle_act" && "subject" in args) {
     return {
+      ...(args.playSessionId === undefined
+        ? {}
+        : { playSessionId: args.playSessionId }),
       subjectJson: JSON.stringify(args.subject),
       ...(args.reactionSpellTargetFacts === undefined
         ? {}
