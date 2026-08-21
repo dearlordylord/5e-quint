@@ -67,6 +67,8 @@ import {
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
+import { handlePlaySessionOperation } from "./play-session-protocol.ts";
+import type { PlaySessionRegistry } from "./play-session.ts";
 import { CharacterSessionDetailOutputSchema } from "./character-tool-output.ts";
 import {
   characterBattleSupportProjection,
@@ -4153,7 +4155,7 @@ describe("MCP server route", () => {
     ).toBe(before[2]);
   });
 
-  test("apply_character_session_operation leaves every session unchanged when the batch commit rejects", () => {
+  test("apply_character_session_operation leaves every session unchanged when the batch commit rejects", async () => {
     const root = createMcpPlaySessionRoot();
     const casterDraftId = "draft:mcp-healing-commit-failure-caster";
     const recipientDraftId = "draft:mcp-healing-commit-failure-recipient";
@@ -4183,8 +4185,18 @@ describe("MCP server route", () => {
       },
     };
 
-    const rejected = readPayload(
-      handleToolCall(failingRoot, "apply_character_session_operation", {
+    const routed = await handlePlaySessionOperation({
+      registry: {
+        run: async (
+          _playSessionId: never,
+          operation: (
+            root: ReturnType<typeof createMcpPlaySessionRoot>,
+          ) => unknown | Promise<unknown>,
+        ) => Either.right(await operation(failingRoot)),
+      } as unknown as PlaySessionRegistry,
+      operationName: "apply_character_session_operation",
+      args: {
+        playSessionId: "play-session:00000000-0000-4000-8000-000000000001",
         characterId: testCharacterId(casterDraftId),
         operation: {
           kind: "applySpellRestBenefit",
@@ -4198,8 +4210,12 @@ describe("MCP server route", () => {
             },
           ],
         },
-      }),
-    );
+      },
+      handle: (root, args) =>
+        handleToolCall(root, "apply_character_session_operation", args),
+    });
+    const rejected = JSON.parse(routed.content[0]?.text ?? "null").operation
+      .result;
 
     expect(rejected).toMatchObject({
       details: {
