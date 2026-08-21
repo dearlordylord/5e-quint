@@ -26,6 +26,20 @@ export const McpBattleStateSnapshotSchema = Schema.Union(
   }),
 );
 
+export const McpNoneBattleStateSnapshotSchema = Schema.Struct({
+  tag: Schema.Literal("none"),
+});
+export const McpInitialInitiativeSetupSnapshotSchema = Schema.Struct({
+  tag: Schema.Literal("initialInitiativeSetup"),
+  battleId: Schema.String,
+  combatants: Schema.Array(McpInitialInitiativeCombatantSnapshotSchema),
+});
+export const McpActiveBattleStateSnapshotSchema = Schema.Struct({
+  tag: Schema.Literal("activeBattle"),
+  battleId: Schema.String,
+  currentActorId: CombatantId,
+});
+
 const McpSessionSummaryFields = {
   draftIds: Schema.Array(Schema.String),
   characterIds: Schema.Array(Schema.String),

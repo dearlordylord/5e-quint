@@ -4,7 +4,6 @@ import {
   battlePresentedSnapshot,
   battleStateInitIssueMessage,
   discoverBattleActs,
-  finishInitialInitiativeSetup,
   type InitialInitiativeSetup,
 } from "@dnd/battle-runtime";
 import { Either, Match } from "effect";
@@ -55,31 +54,39 @@ export function handleBattleLifecycleToolCall(
 
 function applySwap(
   root: McpPlaySessionRoot,
-  setup: InitialInitiativeSetup,
+  _setup: InitialInitiativeSetup,
   operation: Extract<
     BattleLifecycleToolInput["operation"],
     { readonly kind: "applyInitiativeSwap" }
   >,
 ) {
-  const result = applyInitiativeSwap({
-    setup,
-    sourceId: operation.sourceId,
-    candidateId: operation.candidateId,
-    candidateWitness: operation.candidateWitness,
-  });
-  if (Either.isLeft(result)) {
+  // The registry owns the setup. The transform receives that owned value and
+  // may only replace it after the store verifies the battle identity.
+  const transition = root.sessionStore.transformInitialInitiativeSetup(
+    (setup) => {
+      const result = applyInitiativeSwap({
+        setup,
+        sourceId: operation.sourceId,
+        candidateId: operation.candidateId,
+        candidateWitness: operation.candidateWitness,
+      });
+      return Either.mapLeft(result, (issue) =>
+        battleStateInitIssueMessage(issue),
+      );
+    },
+  );
+  if (
+    Either.isLeft(transition) &&
+    transition.left.tag === "initialInitiativeSetupTransformRejected"
+  ) {
     return errorContent("Initiative Swap was rejected.", {
       code: "INITIAL_INITIATIVE_SWAP_REJECTED",
-      message: battleStateInitIssueMessage(result.left),
+      message: transition.left.message,
     });
   }
-
-  // The runtime mutates the one opaque setup owner. Re-store that same owner
-  // under the same discriminant so every subsequent MCP operation routes via
-  // the lifecycle state union.
   return completeBattleStateTransition({
     root,
-    transition: root.sessionStore.updateInitialInitiativeSetup(result.right),
+    transition,
     output: () =>
       schemaJsonContent(
         StartBattleOutputSchema,
@@ -90,25 +97,38 @@ function applySwap(
 
 function finalizeSetup(
   root: McpPlaySessionRoot,
-  setup: InitialInitiativeSetup,
+  _setup: InitialInitiativeSetup,
 ) {
-  const session = finishInitialInitiativeSetup(setup);
-  const snapshot = battlePresentedSnapshot(session);
-  if (Either.isLeft(snapshot)) {
-    return battleSnapshotPresentationIssueContent(snapshot.left);
-  }
-
   return completeBattleStateTransition({
     root,
-    transition: root.sessionStore.finalizeInitialInitiativeSetup(session),
-    output: () =>
-      schemaJsonContent(StartBattleOutputSchema, {
+    transition: Either.map(
+      root.sessionStore.finalizeInitialInitiativeSetup(),
+      () => undefined,
+    ),
+    output: () => {
+      const state = root.sessionStore.battleState;
+      if (state.tag !== "activeBattle") {
+        return errorContent(
+          "Battle finalization did not produce an active session.",
+          {
+            code: "BATTLE_FINALIZATION_STATE_INVALID",
+          },
+        );
+      }
+      const snapshot = battlePresentedSnapshot(state.session);
+      if (Either.isLeft(snapshot)) {
+        return battleSnapshotPresentationIssueContent(snapshot.left);
+      }
+      return schemaJsonContent(StartBattleOutputSchema, {
         battleState: root.sessionStore.snapshot().battleState,
         snapshot: snapshot.right,
-        availableActs: discoverBattleActs(session),
-        admittedSpellPresentations: battleAdmittedSpellPresentations(session),
+        availableActs: discoverBattleActs(state.session),
+        admittedSpellPresentations: battleAdmittedSpellPresentations(
+          state.session,
+        ),
         presentedInterruptChoices: [],
         session: mcpSessionSummary(root.sessionStore.snapshot()),
-      }),
+      });
+    },
   });
 }

@@ -10,14 +10,21 @@ import {
   BattleShovePushOutcomeSchema,
   BattlePresentedSnapshotSchema,
   BattleSubjectSchema,
+  discoverBattleActs,
+  battleAdmittedSpellPresentations,
+  type BattlePresentedSnapshot,
 } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
 import {
+  McpActiveBattleStateSnapshotSchema,
   McpBattleStateSnapshotSchema,
+  McpInitialInitiativeSetupSnapshotSchema,
+  McpNoneBattleStateSnapshotSchema,
   McpSessionSnapshotSchema,
   McpSessionSummarySchema,
 } from "./session-snapshot-output.ts";
+import type { McpBattleStateSnapshot } from "./session-store.ts";
 
 const JsonObjectSchema = Schema.Record({
   key: Schema.String,
@@ -79,24 +86,74 @@ const BattlePresentationProjectionFields = {
   presentedInterruptChoices: Schema.Array(PresentedBattleInterruptChoiceSchema),
 };
 
+const BattlePresentationBranches = {
+  none: {
+    battleState: McpNoneBattleStateSnapshotSchema,
+    snapshot: Schema.Null,
+  },
+  initialInitiativeSetup: {
+    battleState: McpInitialInitiativeSetupSnapshotSchema,
+    snapshot: Schema.Null,
+  },
+  activeBattle: {
+    battleState: McpActiveBattleStateSnapshotSchema,
+    snapshot: BattlePresentedSnapshotSchema,
+  },
+} as const;
+
+type BattlePresentationProjection = {
+  readonly availableActs: ReturnType<typeof discoverBattleActs>;
+  readonly admittedSpellPresentations: ReturnType<
+    typeof battleAdmittedSpellPresentations
+  >;
+  readonly presentedInterruptChoices: readonly unknown[];
+};
+type BattlePresentationOutput<Session> = BattlePresentationProjection & {
+  readonly battleState: McpBattleStateSnapshot;
+  readonly snapshot: BattlePresentedSnapshot | null;
+  readonly session: Session;
+};
+
+function battlePresentationOutputSchema<
+  SessionSchema extends Schema.Schema.AnyNoContext,
+>(
+  session: SessionSchema,
+): Schema.Schema<BattlePresentationOutput<SessionSchema["Type"]>, any, never> {
+  return Schema.Union(
+    Schema.Struct({
+      ...BattlePresentationBranches.none,
+      ...BattlePresentationProjectionFields,
+      session,
+    }),
+    Schema.Struct({
+      ...BattlePresentationBranches.initialInitiativeSetup,
+      ...BattlePresentationProjectionFields,
+      session,
+    }),
+    Schema.Struct({
+      ...BattlePresentationBranches.activeBattle,
+      ...BattlePresentationProjectionFields,
+      session,
+    }),
+  ) as unknown as Schema.Schema<
+    BattlePresentationOutput<SessionSchema["Type"]>,
+    any,
+    never
+  >;
+}
+
 export const SelectStatBlockOutputSchema = Schema.Struct({
   selectedStatBlock: JsonObjectSchema,
   session: McpSessionSummarySchema,
 });
 
-export const BattleSessionOutputSchema = Schema.Struct({
-  battleState: McpBattleStateSnapshotSchema,
-  snapshot: Schema.Union(BattlePresentedSnapshotSchema, Schema.Null),
-  ...BattlePresentationProjectionFields,
-  session: McpSessionSnapshotSchema,
-});
+export const BattleSessionOutputSchema = battlePresentationOutputSchema(
+  McpSessionSnapshotSchema,
+);
 
-export const StartBattleOutputSchema = Schema.Struct({
-  battleState: McpBattleStateSnapshotSchema,
-  snapshot: Schema.Union(BattlePresentedSnapshotSchema, Schema.Null),
-  ...BattlePresentationProjectionFields,
-  session: McpSessionSummarySchema,
-});
+export const StartBattleOutputSchema = battlePresentationOutputSchema(
+  McpSessionSummarySchema,
+);
 
 export const BattleResolutionOutputSchema = Schema.Struct({
   battleState: McpBattleStateSnapshotSchema,

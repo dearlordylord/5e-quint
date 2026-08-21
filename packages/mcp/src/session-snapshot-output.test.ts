@@ -12,8 +12,10 @@ import { DieRollResult, NonNegativeInteger } from "@dnd/shared/types";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
+import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 
 import { ListCharactersOutputSchema } from "./character-tool-output.ts";
+import { AdminSessionProjectionSchema } from "./admin-mirror-contract.ts";
 import {
   BattleResolutionOutputSchema,
   BattleSessionOutputSchema,
@@ -56,29 +58,78 @@ describe("MCP session wire projections", () => {
 
   test("uses the summary only where the result does not report battle fill progression", () => {
     for (const schema of SESSION_SUMMARY_OUTPUT_SCHEMAS) {
-      expect(outputJsonSchema(schema)).toMatchObject({
-        properties: {
-          session: {
-            properties: expect.not.objectContaining({
-              transientBattleFills: expect.anything(),
-            }),
-          },
-        },
-      });
+      expect(JSON.stringify(outputJsonSchema(schema))).not.toContain(
+        "transientBattleFills",
+      );
     }
 
     for (const schema of SESSION_SNAPSHOT_OUTPUT_SCHEMAS) {
-      expect(outputJsonSchema(schema)).toMatchObject({
-        properties: {
-          session: {
-            properties: expect.objectContaining({
-              transientBattleFills: expect.anything(),
-            }),
-          },
-        },
-      });
+      expect(JSON.stringify(outputJsonSchema(schema))).toContain(
+        "transientBattleFills",
+      );
     }
   });
+
+  test("rejects battle output and admin projections with contradictory snapshots", () => {
+    const validateStart = new AjvJsonSchemaValidator().getValidator(
+      mcpOutputJsonSchema(StartBattleOutputSchema),
+    );
+    const setupState = {
+      tag: "initialInitiativeSetup",
+      battleId: "battle:projection-contract",
+      combatants: [],
+    } as const;
+    const activeState = {
+      tag: "activeBattle",
+      battleId: "battle:projection-contract",
+      currentActorId: "combatant:projection-contract",
+    } as const;
+    const session = (battleState: typeof setupState | typeof activeState) => ({
+      draftIds: [],
+      characterIds: [],
+      selectedStatBlockId: null,
+      battleState,
+    });
+    const presentation = {
+      availableActs: [],
+      admittedSpellPresentations: [],
+      presentedInterruptChoices: [],
+    };
+    expect(
+      validateStart({
+        ...presentation,
+        battleState: setupState,
+        snapshot: {},
+        session: session(setupState),
+      }).valid,
+    ).toBe(false);
+    expect(
+      validateStart({
+        ...presentation,
+        battleState: activeState,
+        snapshot: null,
+        session: session(activeState),
+      }).valid,
+    ).toBe(false);
+
+    const validateAdmin = new AjvJsonSchemaValidator().getValidator(
+      mcpOutputJsonSchema(AdminSessionProjectionSchema),
+    );
+    expect(
+      validateAdmin({
+        session: session(setupState),
+        battle: {},
+        characters: [],
+      }).valid,
+    ).toBe(false);
+    expect(
+      validateAdmin({
+        session: session(activeState),
+        battle: null,
+        characters: [],
+      }).valid,
+    ).toBe(false);
+  }, 30_000);
 
   test("derives the session summary from the canonical snapshot", () => {
     const snapshot = {

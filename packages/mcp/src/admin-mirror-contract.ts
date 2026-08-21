@@ -2,7 +2,12 @@ import { BattlePresentedSnapshotSchema } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
 import { CharacterSessionRowSchema } from "./character-tool-output.ts";
-import { McpSessionSnapshotSchema } from "./session-snapshot-output.ts";
+import {
+  McpActiveBattleStateSnapshotSchema,
+  McpInitialInitiativeSetupSnapshotSchema,
+  McpNoneBattleStateSnapshotSchema,
+  McpSessionSnapshotSchema,
+} from "./session-snapshot-output.ts";
 
 export const AdminMirrorSessionIdSchema = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("AdminMirrorSessionId"),
@@ -30,21 +35,56 @@ export type AdminMirrorSequence = typeof AdminMirrorSequenceSchema.Type;
 export const adminMirrorSequence: (value: number) => AdminMirrorSequence =
   AdminMirrorSequenceSchema.make;
 
-export const AdminMirrorSessionSummarySchema = Schema.Struct({
-  battleState: McpSessionSnapshotSchema.fields.battleState,
+const AdminMirrorSessionSummaryFields = {
   draftIds: McpSessionSnapshotSchema.fields.draftIds,
   selectedStatBlockId: McpSessionSnapshotSchema.fields.selectedStatBlockId,
   transientBattleFills: McpSessionSnapshotSchema.fields.transientBattleFills,
+};
+export const AdminMirrorSessionSummarySchema = Schema.Struct({
+  ...AdminMirrorSessionSummaryFields,
+  battleState: McpSessionSnapshotSchema.fields.battleState,
 });
 export type AdminMirrorSessionSummary =
   typeof AdminMirrorSessionSummarySchema.Type;
 
-export const AdminSessionProjectionSchema = Schema.Struct({
-  session: AdminMirrorSessionSummarySchema,
-  battle: Schema.Union(BattlePresentedSnapshotSchema, Schema.Null),
-  characters: Schema.Array(CharacterSessionRowSchema),
-});
-export type AdminSessionProjection = typeof AdminSessionProjectionSchema.Type;
+export type AdminSessionProjection = {
+  readonly session: AdminMirrorSessionSummary;
+  readonly battle: typeof BattlePresentedSnapshotSchema.Type | null;
+  readonly characters: readonly (typeof CharacterSessionRowSchema.Type)[];
+};
+
+const ExactAdminSessionProjectionSchema = Schema.Union(
+  Schema.Struct({
+    session: Schema.Struct({
+      ...AdminMirrorSessionSummaryFields,
+      battleState: McpNoneBattleStateSnapshotSchema,
+    }),
+    battle: Schema.Null,
+    characters: Schema.Array(CharacterSessionRowSchema),
+  }),
+  Schema.Struct({
+    session: Schema.Struct({
+      ...AdminMirrorSessionSummaryFields,
+      battleState: McpInitialInitiativeSetupSnapshotSchema,
+    }),
+    battle: Schema.Null,
+    characters: Schema.Array(CharacterSessionRowSchema),
+  }),
+  Schema.Struct({
+    session: Schema.Struct({
+      ...AdminMirrorSessionSummaryFields,
+      battleState: McpActiveBattleStateSnapshotSchema,
+    }),
+    battle: BattlePresentedSnapshotSchema,
+    characters: Schema.Array(CharacterSessionRowSchema),
+  }),
+);
+export const AdminSessionProjectionSchema =
+  ExactAdminSessionProjectionSchema as unknown as Schema.Schema<
+    AdminSessionProjection,
+    any,
+    never
+  >;
 
 export const AdminMirrorBattleHpChangeSchema = Schema.Struct({
   combatantId: Schema.String,
