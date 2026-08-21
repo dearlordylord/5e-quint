@@ -1965,6 +1965,20 @@ export async function verifyLevelNineRangerExpertiseSheetScenario(
   );
 }
 
+export async function createProtocolRangerFreeCastCharacter(client: Client) {
+  const routedPlaySessionId = await playSessionId(client);
+  const finalized = await createAndFinalizeOrcRangerNineWithExpertise(
+    client,
+    "draft:protocol-ranger-resource",
+  );
+  assert.equal(get(finalized, "finalization.tag"), "ready");
+  return {
+    playSessionId: routedPlaySessionId,
+    characterId: testCharacterId("draft:protocol-ranger-resource"),
+    spellAccessSpellId: "hunters_mark",
+  };
+}
+
 export async function verifyLevelNineRangerExpertiseBattleHandoff(
   client: Client,
 ) {

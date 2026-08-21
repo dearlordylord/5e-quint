@@ -14,6 +14,7 @@ import {
   verifyToolContract,
   verifyWidthVertical,
   verifyWizardIceKnifeBattleHandoff,
+  createProtocolRangerFreeCastCharacter,
 } from "../test-support/mcp-acceptance-scenarios.ts";
 import { createMcpApplicationServices } from "./composition-root.ts";
 import { contentToolDefinitions } from "./content-tools.ts";
@@ -236,6 +237,241 @@ describe("MCP protocol server", () => {
     },
     FULL_ACCEPTANCE_TEST_TIMEOUT_MS,
   );
+
+  test("routes Character Sheet resource operations through the MCP protocol", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const { server } = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "character-resource-protocol-client",
+      version: "0.1.0",
+    });
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+
+      const tools = (await client.listTools()).tools;
+      const operationTool = tools.find(
+        (tool) => tool.name === "apply_character_session_operation",
+      );
+      expect(operationTool?.outputSchema).toBeDefined();
+      if (operationTool?.outputSchema === undefined) {
+        throw new Error(
+          "apply_character_session_operation omitted its output schema.",
+        );
+      }
+      const validateOperationOutput = new AjvJsonSchemaValidator().getValidator(
+        operationTool.outputSchema as JsonSchemaType,
+      );
+
+      const ranger = await createProtocolRangerFreeCastCharacter(client);
+      const playSessionId = ranger.playSessionId;
+      const secondPlaySessionId = await createPlaySession(client);
+      const monk = await createProtocolCharacter(client, {
+        playSessionId,
+        classUnitId: "class_monk",
+        level: 2,
+        draftId: "draft:protocol-monk-resource",
+      });
+      const sorcerer = await createProtocolCharacter(client, {
+        playSessionId,
+        classUnitId: "class_sorcerer",
+        level: 3,
+        draftId: "draft:protocol-sorcerer-resource",
+      });
+
+      const spellAccessResult = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: ranger.characterId,
+          operation: {
+            kind: "spendSpellAccessFreeCast",
+            sourceUnitId: "ranger_favored_enemy",
+            spellId: ranger.spellAccessSpellId,
+          },
+        },
+      });
+      expect(validateOperationOutput(spellAccessResult).valid).toBe(true);
+      expect(spellAccessResult).toMatchObject({
+        playSessionId,
+        operation: {
+          name: "apply_character_session_operation",
+          result: {
+            result: {
+              tag: "spellAccessFreeCastSpent",
+              sourceUnitId: "ranger_favored_enemy",
+              spellId: ranger.spellAccessSpellId,
+            },
+          },
+        },
+        projection: {
+          characterIds: expect.arrayContaining([ranger.characterId]),
+        },
+        nextOperations: expect.arrayContaining([
+          "list_characters",
+          "inspect_character_session",
+        ]),
+      });
+
+      const inspected = await callStructuredTool(client, {
+        name: "inspect_character_session",
+        arguments: {
+          playSessionId,
+          characterId: ranger.characterId,
+        },
+      });
+      expect(inspected).toMatchObject({
+        playSessionId,
+        operation: {
+          result: {
+            detail: {
+              sheetProjection: {
+                resources: [
+                  expect.objectContaining({
+                    tag: "spellAccessFreeCast",
+                    sourceUnitId: "ranger_favored_enemy",
+                    spellId: ranger.spellAccessSpellId,
+                    expended: 1,
+                  }),
+                ],
+              },
+            },
+          },
+        },
+      });
+
+      const secondSessionCharacters = await callStructuredTool(client, {
+        name: "list_characters",
+        arguments: { playSessionId: secondPlaySessionId },
+      });
+      expect(
+        arrayField(operationResult(secondSessionCharacters), "characters"),
+      ).toEqual([]);
+
+      const monkResult = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: monk.characterId,
+          operation: {
+            kind: "useMonkUncannyMetabolismWhenRollingInitiative",
+            martialArtsRoll: 4,
+          },
+        },
+      });
+      expect(validateOperationOutput(monkResult).valid).toBe(true);
+      expect(monkResult).toMatchObject({
+        playSessionId,
+        operation: {
+          result: {
+            result: {
+              tag: "monkUncannyMetabolismUsed",
+              martialArtsRoll: 4,
+            },
+          },
+        },
+      });
+
+      const pointsToSlotResult = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: sorcerer.characterId,
+          operation: {
+            kind: "convertFontOfMagicSorceryPointsToSpellSlot",
+            spellLevel: 1,
+          },
+        },
+      });
+      expect(validateOperationOutput(pointsToSlotResult).valid).toBe(true);
+      expect(pointsToSlotResult).toMatchObject({
+        playSessionId,
+        operation: {
+          result: {
+            result: {
+              tag: "fontOfMagicSorceryPointsConvertedToSpellSlot",
+              spellLevel: 1,
+            },
+          },
+        },
+      });
+
+      const slotToPointsResult = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: sorcerer.characterId,
+          operation: {
+            kind: "convertFontOfMagicSpellSlotToSorceryPoints",
+            spellLevel: 1,
+            spellSlotSource: "ordinary",
+          },
+        },
+      });
+      expect(validateOperationOutput(slotToPointsResult).valid).toBe(true);
+      expect(slotToPointsResult).toMatchObject({
+        playSessionId,
+        operation: {
+          result: {
+            result: {
+              tag: "fontOfMagicSpellSlotConvertedToSorceryPoints",
+              spellLevel: 1,
+            },
+          },
+        },
+      });
+
+      const secondSpellAccessSpend = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: ranger.characterId,
+          operation: {
+            kind: "spendSpellAccessFreeCast",
+            sourceUnitId: "ranger_favored_enemy",
+            spellId: ranger.spellAccessSpellId,
+          },
+        },
+      });
+      expect(validateOperationOutput(secondSpellAccessSpend).valid).toBe(true);
+
+      const rejected = await client.callTool({
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: ranger.characterId,
+          operation: {
+            kind: "spendSpellAccessFreeCast",
+            sourceUnitId: "ranger_favored_enemy",
+            spellId: ranger.spellAccessSpellId,
+          },
+        },
+      });
+      expect(rejected.structuredContent).toBeDefined();
+      if (!isJsonObject(rejected.structuredContent)) {
+        throw new Error("Expected a typed rejected operation envelope.");
+      }
+      expect(validateOperationOutput(rejected.structuredContent).valid).toBe(
+        true,
+      );
+      expect(rejected.structuredContent).toMatchObject({
+        playSessionId,
+        operation: {
+          result: {
+            details: {
+              code: "CHARACTER_SESSION_OPERATION_INVALID",
+              operationKind: "spendSpellAccessFreeCast",
+              message: "Spell Access free cast is exhausted.",
+            },
+          },
+        },
+      });
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  }, 60_000);
 
   test("returns one typed restoration result for a handle absent from the process", async () => {
     const [clientTransport, serverTransport] =
@@ -566,6 +802,260 @@ async function createPlaySession(client: Client): Promise<string> {
     throw new Error("create_play_session did not return a string handle.");
   }
   return created.playSessionId;
+}
+
+type ProtocolCharacterSpec = {
+  readonly playSessionId: string;
+  readonly classUnitId: "class_monk" | "class_sorcerer";
+  readonly level: number;
+  readonly draftId: string;
+};
+
+type ProtocolCharacter = {
+  readonly characterId: string;
+};
+
+async function createProtocolCharacter(
+  client: Client,
+  spec: ProtocolCharacterSpec,
+): Promise<ProtocolCharacter> {
+  const created = await callStructuredTool(client, {
+    name: "create_character_draft",
+    arguments: { playSessionId: spec.playSessionId, draftId: spec.draftId },
+  });
+  const initialHoles = arrayField(operationResult(created), "holes");
+  const progressionOption = firstOptionId(
+    initialHoles,
+    "cc:draft:draft.progression.initial",
+    (optionId) =>
+      optionId.includes(spec.classUnitId) &&
+      (spec.level === 1
+        ? !optionId.includes("level_")
+        : optionId.includes(`level_${spec.level}`)) &&
+      (spec.classUnitId === "class_monk"
+        ? optionId.startsWith("10:class_monk")
+        : true),
+  );
+  const baseFilled = await callStructuredTool(client, {
+    name: "fill_creation_holes",
+    arguments: {
+      playSessionId: spec.playSessionId,
+      draftId: spec.draftId,
+      expectedRevision: 0,
+      fills: [
+        {
+          kind: "choice",
+          holeId: "cc:draft:draft.progression.initial",
+          optionIds: [progressionOption],
+        },
+        {
+          kind: "choice",
+          holeId: "cc:draft:draft.background",
+          optionIds: ["background_soldier"],
+        },
+        {
+          kind: "choice",
+          holeId: "cc:draft:draft.species",
+          optionIds: ["species_orc"],
+        },
+        {
+          kind: "abilityScores",
+          holeId: "cc:draft:draft.abilityScoreGeneration",
+          method: "standardArray",
+          value: { str: 15, dex: 14, con: 13, int: 10, wis: 8, cha: 12 },
+        },
+        {
+          kind: "choice",
+          holeId: "cc:draft:draft.languages",
+          optionIds: ["Dwarvish", "Goblin"],
+        },
+        {
+          kind: "choice",
+          holeId: "cc:draft:draft.alignment",
+          optionIds: ["lawful_good"],
+        },
+      ],
+    },
+  });
+  let revision = draftRevision(baseFilled);
+  const selectedCreationOptions: Array<{
+    readonly holeId: string;
+    readonly optionIds: readonly string[];
+  }> = [];
+  const selectedWizardSpellbookIds = new Set<string>();
+
+  for (let iteration = 0; iteration < 32; iteration += 1) {
+    const discovered = await callStructuredTool(client, {
+      name: "discover_creation_holes",
+      arguments: {
+        playSessionId: spec.playSessionId,
+        draftId: spec.draftId,
+      },
+    });
+    const holes = arrayField(operationResult(discovered), "holes");
+    if (holes.length === 0) break;
+    const hole = holes[0];
+    if (!isJsonObject(hole)) throw new Error("Expected a creation hole.");
+    const fill = protocolCreationFill(hole, selectedWizardSpellbookIds);
+    if (fill.kind === "choice") {
+      selectedCreationOptions.push({
+        holeId: fill.holeId,
+        optionIds: fill.optionIds,
+      });
+      if (fill.holeId.includes("wizard_spellbook_choices")) {
+        for (const optionId of fill.optionIds) {
+          selectedWizardSpellbookIds.add(optionId);
+        }
+      }
+    }
+    const filled = await callStructuredTool(client, {
+      name: "fill_creation_holes",
+      arguments: {
+        playSessionId: spec.playSessionId,
+        draftId: spec.draftId,
+        expectedRevision: revision,
+        fills: [fill],
+      },
+    });
+    const fillResult = objectField(operationResult(filled), "result");
+    if (fillResult.tag !== "accepted") {
+      throw new Error(
+        `Expected accepted ${spec.classUnitId} fill: ${JSON.stringify(operationResult(filled))}`,
+      );
+    }
+    revision = draftRevision(filled);
+  }
+
+  const finalized = await callStructuredTool(client, {
+    name: "finalize_character",
+    arguments: { playSessionId: spec.playSessionId, draftId: spec.draftId },
+  });
+  const finalization = objectField(operationResult(finalized), "finalization");
+  if (finalization.tag !== "ready") {
+    throw new Error(
+      `Expected ${spec.classUnitId} finalization: ${JSON.stringify(operationResult(finalized))}`,
+    );
+  }
+  const finalizedSession = objectField(operationResult(finalized), "session");
+  const characterIds = arrayField(finalizedSession, "characterIds");
+  const characterId = characterIds[characterIds.length - 1];
+  if (typeof characterId !== "string") {
+    throw new Error(
+      `Expected a finalized character id: ${JSON.stringify({ result: operationResult(finalized), selectedCreationOptions })}`,
+    );
+  }
+  const listed = await callStructuredTool(client, {
+    name: "list_characters",
+    arguments: { playSessionId: spec.playSessionId },
+  });
+  const characters = arrayField(operationResult(listed), "characters");
+  const character = characters.find(
+    (candidate) =>
+      isJsonObject(candidate) && candidate.characterId === characterId,
+  );
+  if (!isJsonObject(character)) {
+    throw new Error(`Expected finalized character ${characterId}.`);
+  }
+  return { characterId };
+}
+
+function draftRevision(payload: Readonly<Record<string, unknown>>): number {
+  const result = operationResult(payload);
+  const storedDraft = objectField(result, "storedDraft");
+  const revision = storedDraft.revision;
+  if (typeof revision !== "number") {
+    throw new Error("Expected the returned draft revision.");
+  }
+  return revision;
+}
+
+function firstOptionId(
+  holes: readonly unknown[],
+  holeId: string,
+  predicate: (optionId: string) => boolean,
+): string {
+  const hole = holes.find(
+    (candidate) => isJsonObject(candidate) && candidate.holeId === holeId,
+  );
+  if (!isJsonObject(hole)) throw new Error(`Expected creation hole ${holeId}.`);
+  const options = arrayField(hole, "options");
+  const option = options.find(
+    (candidate) =>
+      isJsonObject(candidate) &&
+      typeof candidate.optionId === "string" &&
+      predicate(candidate.optionId),
+  );
+  if (!isJsonObject(option) || typeof option.optionId !== "string") {
+    throw new Error(`Expected a matching option in ${holeId}.`);
+  }
+  return option.optionId;
+}
+
+function protocolCreationFill(
+  hole: Readonly<Record<string, unknown>>,
+  selectedWizardSpellbookIds: ReadonlySet<string>,
+) {
+  const holeId = hole.holeId;
+  if (typeof holeId !== "string") throw new Error("Creation hole lacks id.");
+  if (hole.kind === "abilityScores") {
+    return {
+      kind: "abilityScores" as const,
+      holeId,
+      method: "standardArray" as const,
+      value: { str: 15, dex: 14, con: 13, int: 10, wis: 8, cha: 12 },
+    };
+  }
+  if (hole.kind !== "choice") {
+    throw new Error(`Unsupported creation hole: ${String(hole.kind)}`);
+  }
+  const cardinality = objectField(hole, "cardinality");
+  const minimum =
+    cardinality.tag === "exactly" ? cardinality.count : cardinality.min;
+  if (typeof minimum !== "number") {
+    throw new Error(`Creation hole ${holeId} lacks cardinality.`);
+  }
+  const options = arrayField(hole, "options").flatMap((candidate) => {
+    if (!isJsonObject(candidate) || typeof candidate.optionId !== "string") {
+      return [];
+    }
+    return [candidate.optionId];
+  });
+  const availableOptions = holeId.includes("wizard_spellbook_choices")
+    ? options.filter(
+        (optionId) =>
+          optionId !== "burning_hands" &&
+          !selectedWizardSpellbookIds.has(optionId),
+      )
+    : holeId.includes("wizard_prepared_spell_choices")
+      ? options.filter((optionId) => selectedWizardSpellbookIds.has(optionId))
+      : options;
+  const stableChoices = holeId.includes("class_skill_proficiency_choice")
+    ? ["perception", "survival"]
+    : holeId.includes("class_tool_proficiency_choice") &&
+        holeId.includes("class_monk")
+      ? ["tool:tool_lute"]
+      : holeId.includes("fighter_weapon_mastery")
+        ? ["weapon_longsword", "weapon_spear", "weapon_flail"]
+        : holeId.includes("fighter_fighting_style")
+          ? ["defense"]
+          : holeId.includes("class_monk") &&
+              holeId.endsWith("class_equipment_choice")
+            ? ["option_b"]
+            : holeId.endsWith("class_equipment_choice")
+              ? ["option_c"]
+              : [];
+  const preferred =
+    stableChoices.length > 0
+      ? stableChoices.filter((optionId) => availableOptions.includes(optionId))
+      : [];
+  const selected = [
+    ...preferred,
+    ...availableOptions.filter((id) => !preferred.includes(id)),
+  ].slice(0, minimum);
+  if (selected.length !== minimum) {
+    throw new Error(`Creation hole ${holeId} lacks enough options.`);
+  }
+  return { kind: "choice" as const, holeId, optionIds: selected };
 }
 
 async function callStructuredTool(
