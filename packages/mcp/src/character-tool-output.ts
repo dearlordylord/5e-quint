@@ -8,6 +8,7 @@ import {
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
 } from "@dnd/character-creation-runtime";
+import { CharacterSheetMcpProjectionSchema } from "@dnd/character-sheet-runtime";
 import { Schema } from "effect";
 
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
@@ -251,7 +252,7 @@ export const CharacterSessionDetailOutputSchema = Schema.Struct({
       tag: Schema.Literal("available"),
       characterId: Schema.String,
       displayName: Schema.String,
-      sheet: JsonObjectSchema,
+      sheet: CharacterSheetMcpProjectionSchema,
       sheetProjection: CharacterSessionSheetProjectionSchema,
     }),
     Schema.Struct({

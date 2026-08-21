@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Either, Option } from "effect";
+import { Either, Option, Schema } from "effect";
 
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
@@ -67,6 +67,7 @@ import {
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
+import { CharacterSessionDetailOutputSchema } from "./character-tool-output.ts";
 import {
   characterBattleSupportProjection,
   characterBattleRuntimeIssueMessage,
@@ -459,6 +460,46 @@ describe("MCP server route", () => {
     );
     expect(inspected.detail).not.toHaveProperty("sheet");
     expect(inspected.detail).not.toHaveProperty("sheetProjection");
+  });
+
+  test("enforces the canonical Character Sheet at the inspect output boundary", () => {
+    const root = createMcpPlaySessionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const characterId = testCharacterId("inspect-sheet-schema");
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        build,
+        characterId,
+        currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+        hitPointMaximumReduction: Hp(0),
+        tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+
+    const output = readPayload(
+      handleToolCall(root, "inspect_character_session", { characterId }),
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(CharacterSessionDetailOutputSchema)(output),
+      ),
+    ).toBe(true);
+
+    const malformed = {
+      ...output,
+      detail: {
+        ...output.detail,
+        sheet: { pluginOnly: true },
+      },
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(CharacterSessionDetailOutputSchema)(
+          malformed,
+        ),
+      ),
+    ).toBe(true);
   });
 
   test("reports an unknown selected Character Session without guessing an id", () => {
