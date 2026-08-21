@@ -43,7 +43,7 @@ export function applyHealingCharacterSessionOperation(
   const source = availableHealingSourceSession(root, {
     operationKind: input.operation.kind,
     sourceCharacterId: input.characterId,
-    affectedCharacterIds:
+    affectedCharacterIds: uniqueCharacterIds(
       input.operation.kind === "applyLayOnHands"
         ? [input.characterId, input.operation.targetCharacterId]
         : [
@@ -52,6 +52,7 @@ export function applyHealingCharacterSessionOperation(
               (recipient) => recipient.characterId,
             ),
           ],
+    ),
   });
   if (Either.isLeft(source)) return source.left;
   return Match.value(input.operation).pipe(

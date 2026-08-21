@@ -682,6 +682,15 @@ describe("MCP protocol server", () => {
       await host.server.connect(serverTransport);
       await client.connect(clientTransport);
       const playSessionId = await createPlaySession(client);
+      const applyTool = (await client.listTools()).tools.find(
+        (tool) => tool.name === "apply_character_session_operation",
+      );
+      if (applyTool?.outputSchema === undefined) {
+        throw new Error("Expected healing operation output schema.");
+      }
+      const validateOutput = new AjvJsonSchemaValidator().getValidator(
+        applyTool.outputSchema as JsonSchemaType,
+      );
       await installHealingSessions(host, playSessionId, {
         source: {
           characterId: "character:lay-source",
@@ -707,6 +716,7 @@ describe("MCP protocol server", () => {
           },
         },
       });
+      expect(validateOutput(applied).valid).toBe(true);
       expect(applied).toMatchObject({
         operation: { result: { result: { tag: "layOnHandsApplied" } } },
         nextOperations: expect.arrayContaining([
@@ -735,6 +745,15 @@ describe("MCP protocol server", () => {
       await host.server.connect(serverTransport);
       await client.connect(clientTransport);
       const playSessionId = await createPlaySession(client);
+      const applyTool = (await client.listTools()).tools.find(
+        (tool) => tool.name === "apply_character_session_operation",
+      );
+      if (applyTool?.outputSchema === undefined) {
+        throw new Error("Expected healing operation output schema.");
+      }
+      const validateOutput = new AjvJsonSchemaValidator().getValidator(
+        applyTool.outputSchema as JsonSchemaType,
+      );
       await installHealingSessions(host, playSessionId, {
         source: {
           characterId: "character:rest-source",
@@ -776,6 +795,10 @@ describe("MCP protocol server", () => {
         },
       });
       expect(rejected.isError).toBe(true);
+      if (!isJsonObject(rejected.structuredContent)) {
+        throw new Error("Expected typed healing recovery content.");
+      }
+      expect(validateOutput(rejected.structuredContent).valid).toBe(true);
       expect(rejected.structuredContent).toMatchObject({
         operation: {
           result: {
@@ -786,10 +809,15 @@ describe("MCP protocol server", () => {
           },
         },
       });
+      const source = await callStructuredTool(client, {
+        name: "inspect_character_session",
+        arguments: { playSessionId, characterId: "character:rest-source" },
+      });
       const target = await callStructuredTool(client, {
         name: "inspect_character_session",
         arguments: { playSessionId, characterId: "character:rest-target" },
       });
+      expect(JSON.stringify(source)).toContain('"expended":0');
       expect(JSON.stringify(target)).toContain('"currentHp":1');
     } finally {
       await Promise.allSettled([client.close(), host.server.close()]);
@@ -815,7 +843,7 @@ describe("MCP protocol server", () => {
           characterId: "character:missing-source",
           operation: {
             kind: "applyLayOnHands",
-            targetCharacterId: "character:missing-target",
+            targetCharacterId: "character:missing-source",
             restoreHp: 1,
             removePoisoned: false,
           },
@@ -828,7 +856,10 @@ describe("MCP protocol server", () => {
             details: {
               operationKind: "applyLayOnHands",
               code: "UNKNOWN_CHARACTER_SESSION",
-              recovery: { tag: "characterSessionsUnchanged" },
+              recovery: {
+                tag: "characterSessionsUnchanged",
+                affectedCharacterIds: ["character:missing-source"],
+              },
             },
           },
         },
