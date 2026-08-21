@@ -41,7 +41,7 @@ import {
 } from "./transcript.ts";
 import {
   RetainedScenarioReviewInputSchema,
-  retainedScenarioReviewScenarioId,
+  retainedScenarioReviewMatchesAdmission,
 } from "./scenario-review-input.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
 import { SdkReplayResultEvidenceSchema } from "./sdk-player/sdk-replay-result.ts";
@@ -1024,7 +1024,10 @@ function originalCompositeReviewInputs(
   sources: Source[],
   selection: CompositeReviewReplaySelection | undefined,
   generationLedgerPaths: readonly string[],
-  expectedScenarioId: string,
+  expectedScenario: Readonly<{
+    readonly scenarioId: ScenarioId;
+    readonly scenarioSha256: string;
+  }>,
 ): void {
   if (selection === undefined) return;
   const replayContract = Match.value(selection).pipe(
@@ -1090,15 +1093,13 @@ function originalCompositeReviewInputs(
       );
     }
     const review = decoded.right;
-    const reviewScenarioId = retainedScenarioReviewScenarioId(review);
-    if (Either.isLeft(reviewScenarioId)) {
+    const reviewAdmission = retainedScenarioReviewMatchesAdmission(
+      review,
+      expectedScenario,
+    );
+    if (Either.isLeft(reviewAdmission)) {
       fail(
-        `Review replay input ${canonical} is not an admitted Scenario review: ${reviewScenarioId.left}`,
-      );
-    }
-    if (reviewScenarioId.right !== expectedScenarioId) {
-      fail(
-        `Review replay input ${canonical} belongs to scenario ${reviewScenarioId.right}, expected ${expectedScenarioId}.`,
+        `Review replay input ${canonical} does not bind to the admitted Scenario: ${reviewAdmission.left}`,
       );
     }
     if (review.reviewStage !== expectedStage) {
@@ -1121,10 +1122,16 @@ function originalCompositeReviewInputs(
       );
     }
     const entry = matches[0]!;
+    const subjectMatches =
+      review.schemaVersion === 2
+        ? modelInvocationScenarioReference(entry) ===
+          expectedScenario.scenarioId
+        : entry.schemaVersion === 4 &&
+          canonicalJson(entry.subject) === canonicalJson(review.subject);
     if (
       entry.schemaVersion !== 4 ||
       entry.phase !== "scenarioCompositeReview" ||
-      modelInvocationScenarioReference(entry) !== reviewScenarioId.right ||
+      !subjectMatches ||
       entry.gitSha !== review.sourceGitSha ||
       entry.model !== review.model ||
       entry.reasoningEffort !== review.reasoningEffort
@@ -1962,12 +1969,22 @@ export function projectExecutionFindings(
       ),
     );
   }
-  originalCompositeReviewInputs(
-    sources,
-    input.reviewReplay,
-    input.generationLedgerPaths,
-    parsed.scenarioId,
-  );
+  if (input.reviewReplay !== undefined) {
+    if (parsed.scenarioSha256 === undefined) {
+      fail(
+        "Review replay inputs require a current transcript with an admitted Scenario source hash.",
+      );
+    }
+    originalCompositeReviewInputs(
+      sources,
+      input.reviewReplay,
+      input.generationLedgerPaths,
+      {
+        scenarioId: parsed.scenarioId,
+        scenarioSha256: parsed.scenarioSha256,
+      },
+    );
+  }
 
   if (existsSync(resolve(repoRoot, evidenceSetDirectory, "evidence"))) {
     for (const name of readdirSync(

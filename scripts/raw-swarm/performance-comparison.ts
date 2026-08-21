@@ -58,7 +58,7 @@ export {
 import {
   RetainedScenarioReviewInputSchema,
   RetainedScenarioReviewReasoningEffortSchema,
-  retainedScenarioReviewScenarioId,
+  retainedScenarioReviewMatchesAdmission,
 } from "./scenario-review-input.ts";
 import {
   finalAgentMessage,
@@ -3312,10 +3312,13 @@ function currentAuthorityContentIssues(
       continue;
     }
     const replay = decoded.right;
-    const replayScenarioId = retainedScenarioReviewScenarioId(replay);
-    if (Either.isLeft(replayScenarioId)) {
+    const replayAdmission = retainedScenarioReviewMatchesAdmission(replay, {
+      scenarioId: findings.subject.scenarioId,
+      scenarioSha256: expectedScenarioSha256,
+    });
+    if (Either.isLeft(replayAdmission)) {
       issues.push(
-        `Replay authority ${authority.role} is a Candidate review and cannot satisfy an admitted Scenario review identity.`,
+        `Replay authority ${authority.role} is not bound to the admitted Scenario identity: ${replayAdmission.left}`,
       );
       continue;
     }
@@ -3324,7 +3327,6 @@ function currentAuthorityContentIssues(
       { onExcessProperty: "error" },
     )(replay.result);
     if (
-      replayScenarioId.right !== findings.subject.scenarioId ||
       canonicalJson(replay.outputJsonSchema) !==
         canonicalJson(expectedOutputJsonSchema) ||
       Either.isLeft(currentResult)
@@ -3336,9 +3338,17 @@ function currentAuthorityContentIssues(
     const invocation = measurement.invocations.find(
       ({ invocationId }) => invocationId === replay.invocationId,
     );
+    const invocationSubjectMatches =
+      replay.schemaVersion === 2
+        ? invocation !== undefined &&
+          modelInvocationScenarioReference(invocation) ===
+            findings.subject.scenarioId
+        : invocation?.schemaVersion === 4 &&
+          canonicalJson(invocation.subject) === canonicalJson(replay.subject);
     if (
       invocation === undefined ||
       invocation.phase !== "scenarioCompositeReview" ||
+      !invocationSubjectMatches ||
       replay.sourceGitSha !== invocation.gitSha ||
       invocation.model !== replay.model ||
       invocation.reasoningEffort !== replay.reasoningEffort

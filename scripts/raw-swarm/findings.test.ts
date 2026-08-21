@@ -242,6 +242,7 @@ function fixture() {
     runStartRelative: relative(repoRoot, executionStartPath),
     reviewRelative: relative(repoRoot, reviewPath),
     runRelative: relative(repoRoot, run),
+    scenarioSha256,
     claim,
   };
 }
@@ -308,7 +309,46 @@ function retainedCompositeReviewInput(input: {
   };
 }
 
-function retainedGenerationReviewLedger(root: string): string {
+type CompositeReviewFixtureSubject =
+  | Readonly<{
+      readonly tag: "scenario";
+      readonly scenarioId: "findings-example";
+    }>
+  | Readonly<{
+      readonly tag: "scenarioCandidate";
+      readonly campaignId: "findings-campaign";
+      readonly evidenceSetId: "findings-campaign-evidence";
+      readonly candidateId: "findings-candidate";
+      readonly candidateScenarioSha256: string;
+      readonly plannedScenarioId: "findings-example";
+    }>;
+
+const FINDINGS_REVIEW_SUBJECT = {
+  tag: "scenario",
+  scenarioId: "findings-example",
+} as const satisfies CompositeReviewFixtureSubject;
+
+function retainedCandidateCompositeReviewInput(input: {
+  readonly reviewStage: "milestone" | "final";
+  readonly invocationId: string;
+  readonly subject: Extract<
+    CompositeReviewFixtureSubject,
+    { readonly tag: "scenarioCandidate" }
+  >;
+}) {
+  const historical = retainedCompositeReviewInput(input);
+  const { scenarioId: _scenarioId, ...common } = historical;
+  return {
+    ...common,
+    schemaVersion: 3 as const,
+    subject: input.subject,
+  };
+}
+
+function retainedGenerationReviewLedger(
+  root: string,
+  subject: CompositeReviewFixtureSubject = FINDINGS_REVIEW_SUBJECT,
+): string {
   const path = resolve(root, "generation-invocations.jsonl");
   const reviewResult = (invocationId: string) =>
     retainedCompositeReviewInput({
@@ -321,7 +361,7 @@ function retainedGenerationReviewLedger(root: string): string {
       {
         type: "raw-swarm.invocation.started",
         schemaVersion: 4,
-        subject: { tag: "scenario", scenarioId: "findings-example" },
+        subject,
         gitSha: "a".repeat(40),
         phase: "scenarioCompositeReview",
         stagePlanReason: "The campaign requires a composite review.",
@@ -358,7 +398,7 @@ function retainedGenerationReviewLedger(root: string): string {
   }
   const entry = (invocationId: string) => ({
     schemaVersion: 4,
-    subject: { tag: "scenario", scenarioId: "findings-example" },
+    subject,
     gitSha: "a".repeat(40),
     eventsSha256: createHash("sha256")
       .update(readFileSync(eventPath(invocationId)))
@@ -510,6 +550,83 @@ describe("Raw Swarm findings projection", () => {
     ).toThrow(/result does not match its invocation event output/);
   });
 
+  test("binds Candidate review reservations to the exact admitted Scenario source", () => {
+    const input = fixture();
+    const subject = {
+      tag: "scenarioCandidate",
+      campaignId: "findings-campaign",
+      evidenceSetId: "findings-campaign-evidence",
+      candidateId: "findings-candidate",
+      candidateScenarioSha256: input.scenarioSha256,
+      plannedScenarioId: "findings-example",
+    } as const satisfies CompositeReviewFixtureSubject;
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      subject,
+    );
+    const milestonePath = resolve(input.root, "original-milestone.json");
+    const finalPath = resolve(input.root, "original-final.json");
+    writeFileSync(
+      milestonePath,
+      `${JSON.stringify(
+        retainedCandidateCompositeReviewInput({
+          reviewStage: "milestone",
+          invocationId: "original-milestone",
+          subject,
+        }),
+      )}\n`,
+    );
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCandidateCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "original-final",
+          subject,
+        }),
+      )}\n`,
+    );
+    const common = {
+      transcriptPath: input.transcriptRelative,
+      evidenceSetDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [generationLedgerRelative],
+      issueLinks: [],
+    } as const;
+    const reviewReplay = {
+      tag: "milestoneAndFinal" as const,
+      milestonePath: relative(repoRoot, milestonePath),
+      finalPath: relative(repoRoot, finalPath),
+    };
+
+    const projection = projectExecutionFindings({ ...common, reviewReplay });
+    expect(projection.authorities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ role: "replay-milestone" }),
+        expect.objectContaining({ role: "replay-final" }),
+      ]),
+    );
+
+    const mismatchedSubject = {
+      ...subject,
+      candidateScenarioSha256: "f".repeat(64),
+    };
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCandidateCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "original-final",
+          subject: mismatchedSubject,
+        }),
+      )}\n`,
+    );
+    expect(() => projectExecutionFindings({ ...common, reviewReplay })).toThrow(
+      /Candidate source hash does not match admitted scenario/,
+    );
+  });
+
   test("retains the bounded final-only composite-review envelope", () => {
     const input = fixture();
     const generationLedgerRelative = retainedGenerationReviewLedger(input.root);
@@ -633,7 +750,7 @@ describe("Raw Swarm findings projection", () => {
           finalPath: relative(repoRoot, finalPath),
         },
       }),
-    ).toThrow(/belongs to scenario foreign-scenario/);
+    ).toThrow(/foreign-scenario does not match admitted scenario/);
     writeFileSync(
       finalPath,
       `${JSON.stringify(

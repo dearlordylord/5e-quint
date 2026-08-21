@@ -56,6 +56,10 @@ const RetainedScenarioReviewSubjectSchema = Schema.Union(
 type RetainedScenarioReviewSubject = Schema.Schema.Type<
   typeof RetainedScenarioReviewSubjectSchema
 >;
+type ScenarioReviewSourceSha256 = Extract<
+  RetainedScenarioReviewSubject,
+  { readonly tag: "scenarioCandidate" }
+>["candidateScenarioSha256"];
 type HistoricalRetainedScenarioReviewSubject = Readonly<{
   readonly tag: "scenario";
   readonly scenarioId: HistoricalScenarioId;
@@ -95,6 +99,33 @@ export function retainedScenarioReviewScenarioId(
     ? Either.right(subject.scenarioId)
     : Either.left(
         "A Scenario Candidate review reservation cannot satisfy an admitted Scenario identity.",
+      );
+}
+
+export function retainedScenarioReviewMatchesAdmission(
+  input: RetainedScenarioReviewInput,
+  admission: Readonly<{
+    readonly scenarioId: Schema.Schema.Type<typeof ScenarioIdSchema>;
+    readonly scenarioSha256: ScenarioReviewSourceSha256;
+  }>,
+): Either.Either<ReturnType<typeof retainedScenarioReviewSubject>, string> {
+  const subject = retainedScenarioReviewSubject(input);
+  if (subject.tag === "scenario") {
+    return subject.scenarioId === admission.scenarioId
+      ? Either.right(subject)
+      : Either.left(
+          `Review scenario ${subject.scenarioId} does not match admitted scenario ${admission.scenarioId}.`,
+        );
+  }
+  if (String(subject.plannedScenarioId) !== String(admission.scenarioId)) {
+    return Either.left(
+      `Review Candidate plans scenario ${subject.plannedScenarioId}, not admitted scenario ${admission.scenarioId}.`,
+    );
+  }
+  return subject.candidateScenarioSha256 === admission.scenarioSha256
+    ? Either.right(subject)
+    : Either.left(
+        `Review Candidate source hash does not match admitted scenario ${admission.scenarioId}.`,
       );
 }
 
