@@ -765,6 +765,7 @@ describe("scenario generation campaign", () => {
       },
       policyReview: { classification: "safe", evidence: "Local policy." },
     };
+    const noAdmittedScenarios = { tag: "noAdmittedScenarios" } as const;
 
     expect(
       Either.isRight(
@@ -772,6 +773,7 @@ describe("scenario generation campaign", () => {
           scenarioId,
           gitSha,
           scenarioBytes,
+          catalogue: noAdmittedScenarios,
         }),
       ),
     ).toBe(true);
@@ -794,7 +796,43 @@ describe("scenario generation campaign", () => {
           scenarioId,
           gitSha,
           scenarioBytes,
+          catalogue: noAdmittedScenarios,
         }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        verifyFinalScenarioReview(
+          {
+            ...currentReview,
+            catalogueComparison: {
+              schemaVersion: 1,
+              conclusion: "meaningfullyDistinct",
+              comparedScenarioIds: [scenarioId],
+              closestMatches: [],
+              materialDifferentiators: [],
+              basis: {
+                tag: "compared",
+                batches: [
+                  {
+                    batchIndex: 0,
+                    comparedScenarioIds: [scenarioId],
+                    dimensions: {
+                      exploratoryPurpose: "Self-authored evidence.",
+                      materiallyRelevantMechanics: "Self-authored evidence.",
+                      encounterComposition: "Self-authored evidence.",
+                      interactionSequence: "Self-authored evidence.",
+                      tacticalQuestion: "Self-authored evidence.",
+                      sdkSupportBoundary: "Self-authored evidence.",
+                      spatialContext: { tag: "notMaterial" },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+          { scenarioId, gitSha, scenarioBytes, catalogue: noAdmittedScenarios },
+        ),
       ),
     ).toBe(true);
     expect(
@@ -803,7 +841,11 @@ describe("scenario generation campaign", () => {
           scenarioId,
           gitSha,
           scenarioBytes,
-          admittedScenarioIds: [scenarioId],
+          catalogue: {
+            tag: "admittedScenarios",
+            scenarioIds: [scenarioId],
+            batches: [{ batchIndex: 0, scenarioIds: [scenarioId] }],
+          },
         }),
       ),
     ).toBe(true);
@@ -821,7 +863,7 @@ describe("scenario generation campaign", () => {
       Either.isLeft(
         verifyFinalScenarioReview(
           { ...currentReview, scenarioQuality: undefined },
-          { scenarioId, gitSha, scenarioBytes },
+          { scenarioId, gitSha, scenarioBytes, catalogue: noAdmittedScenarios },
         ),
       ),
     ).toBe(true);
@@ -835,7 +877,7 @@ describe("scenario generation campaign", () => {
               evidence: "Mismatched intent.",
             },
           },
-          { scenarioId, gitSha, scenarioBytes },
+          { scenarioId, gitSha, scenarioBytes, catalogue: noAdmittedScenarios },
         ),
       ),
     ).toBe(true);
@@ -846,7 +888,7 @@ describe("scenario generation campaign", () => {
             ...review,
             contentAvailabilityIntent: "probeUnavailableContent",
           },
-          { scenarioId, gitSha, scenarioBytes },
+          { scenarioId, gitSha, scenarioBytes, catalogue: noAdmittedScenarios },
         ),
       ),
     ).toBe(true);
@@ -857,7 +899,7 @@ describe("scenario generation campaign", () => {
             ...review,
             contentReview: { classification: "invalid-spelling" },
           },
-          { scenarioId, gitSha, scenarioBytes },
+          { scenarioId, gitSha, scenarioBytes, catalogue: noAdmittedScenarios },
         ),
       ),
     ).toBe(true);
@@ -867,6 +909,7 @@ describe("scenario generation campaign", () => {
           scenarioId,
           gitSha: Schema.decodeUnknownSync(GitShaSchema)("b".repeat(40)),
           scenarioBytes,
+          catalogue: noAdmittedScenarios,
         }),
       ),
     ).toBe(true);
@@ -881,7 +924,7 @@ describe("scenario generation campaign", () => {
               critique: "Reject",
             },
           },
-          { scenarioId, gitSha, scenarioBytes },
+          { scenarioId, gitSha, scenarioBytes, catalogue: noAdmittedScenarios },
         ),
       ),
     ).toBe(true);
@@ -889,7 +932,7 @@ describe("scenario generation campaign", () => {
       Either.isLeft(
         verifyFinalScenarioReview(
           { ...review, disposition: "admitted" },
-          { scenarioId, gitSha, scenarioBytes },
+          { scenarioId, gitSha, scenarioBytes, catalogue: noAdmittedScenarios },
         ),
       ),
     ).toBe(true);

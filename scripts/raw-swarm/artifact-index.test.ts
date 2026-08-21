@@ -92,6 +92,18 @@ function sdkTranscript(directory: string): string {
     initialTurnProjection: {},
     initialTurnProjectionSha256: sha256Canonical({}),
   };
+  writeFileSync(
+    resolve(run, "evidence/execution-start.json"),
+    `${JSON.stringify({
+      type: "raw-swarm-execution-start",
+      schemaVersion: 1,
+      executionId: "artifact-index-execution",
+      evidenceSetId: "artifact-index-evidence",
+      scenarioId: "artifact-index",
+      gitSha: header.gitSha,
+      startedAt: header.startedAt,
+    })}\n`,
+  );
   const call = {
     type: "sdk-call",
     seq: 1,
@@ -186,6 +198,29 @@ describe("Raw Swarm artifact index", () => {
       count: 0,
     });
     db.close();
+  });
+
+  test("cross-binds the Execution manifest to its Execution start authority", () => {
+    const directory = temporaryDirectory();
+    const sdk = sdkTranscript(directory);
+    writeFileSync(
+      resolve(dirname(dirname(sdk)), "evidence/execution-start.json"),
+      `${JSON.stringify({
+        type: "raw-swarm-execution-start",
+        schemaVersion: 1,
+        executionId: "artifact-index-other-execution",
+        evidenceSetId: "artifact-index-evidence",
+        scenarioId: "artifact-index",
+        gitSha: "a".repeat(40),
+        startedAt: "2026-08-14T00:00:00.000Z",
+      })}\n`,
+    );
+    expect(() =>
+      ingestArtifactRun({
+        transcriptPath: relative(repoRoot, sdk),
+        dbPath: relative(repoRoot, resolve(directory, "authority.sqlite")),
+      }),
+    ).toThrow(/does not match its Execution start authority/);
   });
 
   test("refuses a prior compact index schema instead of mutating it in place", () => {
@@ -603,7 +638,7 @@ describe("Raw Swarm artifact index", () => {
       dbPath: relative(repoRoot, dbPath),
       destination,
     });
-    expect(manifest.artifacts).toHaveLength(10);
+    expect(manifest.artifacts).toHaveLength(11);
     expect(
       readFileSync(resolve(destination, "manifest.json"), "utf8"),
     ).toContain(manifest.artifacts[0]?.sha256);

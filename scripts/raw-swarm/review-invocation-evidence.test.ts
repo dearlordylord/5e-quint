@@ -105,6 +105,46 @@ describe("review invocation evidence", () => {
     ).toThrow(/Retained milestone source and replay inputs/);
   });
 
+  test("rejects equal but noncanonical retained review output schemas", () => {
+    const directory = rawSwarmTestOutputDirectory(
+      "review-schema-boundary-test-",
+    );
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    for (const path of [
+      fixture.sourcePrePlayReviewInputPaths[0],
+      fixture.replayPrePlayReviewInputPaths[0],
+    ]) {
+      const input = parseJsonRecord(readFileSync(path, "utf8"));
+      input.outputJsonSchema = { type: "object", properties: {} };
+      writeFileSync(path, `${JSON.stringify(input)}\n`);
+    }
+    expect(() =>
+      readReviewInvocationEvidenceManifest(fixture.manifestPath),
+    ).toThrow(/canonical composite-review schema/);
+  });
+
   test("rejects an unrelated ledger and enforces current tracer commandless policy", () => {
     const ledgerDirectory = rawSwarmTestOutputDirectory(
       "review-ledger-identity-test-",

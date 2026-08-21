@@ -40,6 +40,11 @@ not a voter or an admission subsystem.
 
    The admitted projection is derived from `.scenario.json` records and their
    referenced authored source, final review, and stage-facts authorities.
+   Current admission records also retain the exact predecessor Scenario ids
+   observed at that admission boundary; catalogue rendering validates their
+   retained comparison against that boundary rather than against the newly
+   admitted record itself. Historical records remain readable as historical
+   evidence and cannot authorize a current comparison.
    Rejected Candidates are diagnostic evidence and are not comparison targets.
    If the command fails, stop and repair the authority read; do not proceed
    with a partial, sampled, cached, or hand-written catalogue.

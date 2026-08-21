@@ -28,7 +28,10 @@ import {
 import { reviewInvocationPolicy } from "./review-invocation-policy.ts";
 import { retainedScenarioReviewScenarioId } from "./scenario-review-input.ts";
 import {
+  codexOutputJsonSchema,
+  CurrentScenarioCompositeReviewSchema,
   FinalScenarioReviewSchema,
+  HistoricalScenarioCompositeReviewSchema,
   ScenarioCompositeReviewSchema,
 } from "./scenario-campaign.ts";
 import {
@@ -321,11 +324,24 @@ function deriveManifest(input: {
         `Retained ${reviewStage} source and replay inputs must both describe an admitted Scenario review.`,
       );
     }
+    const expectedOutputJsonSchema =
+      sourceInput.schemaVersion === 2
+        ? codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema)
+        : codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema);
+    if (
+      canonicalJson(sourceInput.outputJsonSchema) !==
+      canonicalJson(expectedOutputJsonSchema)
+    ) {
+      fail(
+        `Retained ${reviewStage} source input does not use the canonical composite-review schema.`,
+      );
+    }
     if (
       sourceScenarioId.right !== audit.audit.header.scenarioId ||
       sourceInput.sourceGitSha !== scenarioReview.gitSha ||
       replayScenarioId.right !== audit.audit.header.scenarioId ||
       replayInput.sourceGitSha !== invocationGitSha ||
+      sourceInput.schemaVersion !== replayInput.schemaVersion ||
       canonicalJson(sourceInput.prompt) !== canonicalJson(replayInput.prompt) ||
       canonicalJson(sourceInput.outputJsonSchema) !==
         canonicalJson(replayInput.outputJsonSchema)

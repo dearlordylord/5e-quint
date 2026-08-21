@@ -317,7 +317,15 @@ function comparisonBatchEvidence(
       "Each model comparison must retain exactly one named catalogue batch.",
     );
   }
-  return Either.right(comparison.basis.batches[0]!);
+  const batch = comparison.basis.batches[0]!;
+  if (
+    !sameScenarioIds(comparison.comparedScenarioIds, batch.comparedScenarioIds)
+  ) {
+    return Either.left(
+      "A model comparison must retain the exact top-level Scenario ids for its named batch.",
+    );
+  }
+  return Either.right(batch);
 }
 
 function validateBatchCoverage(input: {
@@ -507,7 +515,7 @@ export function aggregateScenarioCatalogueComparisons(input: {
     if (Either.isLeft(evidence)) return Either.left(evidence.left);
     batches.push(evidence.right);
   }
-  const comparedScenarioIds = batches.flatMap(
+  const comparedScenarioIds = input.comparisons.flatMap(
     ({ comparedScenarioIds: ids }) => ids,
   );
   const conclusion = input.comparisons.some(

@@ -249,6 +249,22 @@ describe("Scenario authoring catalogue comparison", () => {
     expect(Either.isLeft(result)).toBe(true);
   });
 
+  test("rejects omitted, wrong, or duplicate model-retained top-level ids", () => {
+    for (const comparedScenarioIds of [[], ["two"], ["one", "one"]] as const) {
+      const result = aggregateScenarioCatalogueComparisons({
+        comparisons: [
+          comparison("meaningfullyDistinct", ["one"], {
+            comparedScenarioIds:
+              comparedScenarioIds as ScenarioCatalogueComparison["comparedScenarioIds"],
+          }),
+        ],
+        expectedScenarioIds: ["one"],
+        expectedBatches: [{ batchIndex: 0, scenarioIds: ["one"] }],
+      });
+      expect(Either.isLeft(result)).toBe(true);
+    }
+  });
+
   test("aggregates batches and preserves the strongest repetition conclusion", () => {
     const result = aggregateScenarioCatalogueComparisons({
       comparisons: [

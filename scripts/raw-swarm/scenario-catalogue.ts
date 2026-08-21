@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { Either, Match, Schema } from "effect";
@@ -32,10 +32,13 @@ import {
   projectScenarioCatalogueForAuthoring,
   ScenarioCatalogueComparisonSchema,
   validateScenarioCatalogueComparison,
+  type ScenarioCatalogueComparison,
+  type ScenarioCatalogueProjection,
 } from "./scenario-authoring.ts";
 import { ScenarioStageFactsAuthoritySchema } from "./stage-plan-authority.ts";
 import {
   AdmittedScenarioRecordSchema,
+  isCurrentAdmittedScenarioRecord,
   type AdmittedScenarioRecord,
 } from "./scenario-admission.ts";
 import {
@@ -63,6 +66,19 @@ type ScenarioCatalogueSource = AdmittedScenarioRecord &
         >
       | Readonly<{ readonly tag: "notAssessed" }>;
   }>;
+
+type ScenarioCatalogueAdmissionComparison =
+  | Readonly<{ readonly tag: "historical" }>
+  | Readonly<{
+      readonly tag: "current";
+      readonly comparison: ScenarioCatalogueComparison;
+    }>;
+
+type ScenarioCatalogueReadSource = Readonly<{
+  readonly path: string;
+  readonly source: ScenarioCatalogueSource;
+  readonly admissionComparison: ScenarioCatalogueAdmissionComparison;
+}>;
 
 export type ScenarioExecutionRecord = Readonly<{
   readonly schemaVersion: 1;
@@ -536,13 +552,29 @@ function relationshipRecordPaths(
   repositoryRoot: string,
   directory: string,
 ): RelationshipRecordPaths {
-  if (!existsSync(directory)) {
+  try {
+    lstatSync(directory);
+  } catch (error: unknown) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      return {
+        executions: [],
+        executionProfiles: [],
+        benchmarks: [],
+        rejections: [],
+        issues: [],
+      };
+    }
     return {
       executions: [],
       executionProfiles: [],
       benchmarks: [],
       rejections: [],
-      issues: [],
+      issues: [{ tag: "unreadableEvidenceDirectory", path: directory }],
     };
   }
   const canonicalRoot = canonicalRepositoryReadPath(repositoryRoot, directory);
@@ -686,6 +718,94 @@ function validateRejectedCandidateComparisons(input: {
   });
 }
 
+function validateCurrentAdmissionComparisons(input: {
+  readonly reads: readonly ScenarioCatalogueReadSource[];
+  readonly scenarios: readonly ScenarioCatalogueSource[];
+}): readonly CatalogueReadFailure[] {
+  const projections = projectScenarioCatalogueForAuthoring({
+    scenarios: input.scenarios,
+  });
+  const projectionById = new Map(
+    projections.map((projection) => [projection.scenarioId, projection]),
+  );
+  return input.reads.flatMap(({ path, source, admissionComparison }) => {
+    if (admissionComparison.tag === "historical") {
+      return isCurrentAdmittedScenarioRecord(source)
+        ? [
+            {
+              tag: "invalidCatalogueRecord" as const,
+              path,
+              message:
+                "A current admitted Scenario record must retain its current catalogue comparison.",
+            },
+          ]
+        : [];
+    }
+    if (!isCurrentAdmittedScenarioRecord(source)) {
+      return [
+        {
+          tag: "invalidCatalogueRecord" as const,
+          path,
+          message:
+            "A current catalogue comparison requires a current admitted Scenario record with its predecessor boundary.",
+        },
+      ];
+    }
+    if (source.predecessorScenarioIds.includes(source.scenarioId)) {
+      return [
+        {
+          tag: "invalidCatalogueRecord" as const,
+          path,
+          message:
+            "An admitted Scenario comparison cannot include the Scenario being admitted.",
+        },
+      ];
+    }
+    const predecessorProjections: ScenarioCatalogueProjection[] = [];
+    for (const scenarioId of source.predecessorScenarioIds) {
+      const projection = projectionById.get(scenarioId);
+      if (projection === undefined) {
+        return [
+          {
+            tag: "invalidCatalogueRecord" as const,
+            path,
+            message:
+              "An admitted Scenario comparison names a predecessor absent from the canonical catalogue.",
+          },
+        ];
+      }
+      predecessorProjections.push(projection);
+    }
+    const batches = batchScenarioCatalogueProjections(predecessorProjections);
+    if (Either.isLeft(batches)) {
+      return [
+        {
+          tag: "invalidCatalogueRecord" as const,
+          path,
+          message: `Canonical predecessor batching failed: ${batches.left}`,
+        },
+      ];
+    }
+    const comparison = validateScenarioCatalogueComparison({
+      comparison: admissionComparison.comparison,
+      expectedScenarioIds: source.predecessorScenarioIds,
+      expectedBatches: batches.right.map((batch, batchIndex) => ({
+        batchIndex,
+        scenarioIds: batch.map(({ scenarioId }) => scenarioId),
+      })),
+    });
+    return Either.isLeft(comparison)
+      ? [
+          {
+            tag: "invalidCatalogueRecord" as const,
+            path,
+            message: `Catalogue comparison is incomplete at its admission boundary: ${comparison.left}`,
+          },
+        ]
+      : [];
+  });
+}
+
 function readAuthority(
   repositoryRoot: string,
   authority: ArtifactAuthority,
@@ -725,9 +845,8 @@ function readAuthority(
 function readScenarioCatalogueSource(
   repositoryRoot: string,
   path: string,
-  expectedScenarioIds: readonly ScenarioId[],
 ): Either.Either<
-  ScenarioCatalogueSource,
+  ScenarioCatalogueReadSource,
   NonEmptyIssues<CatalogueReadFailure>
 > {
   const canonicalRecordPath = canonicalRepositoryReadPath(repositoryRoot, path);
@@ -850,27 +969,19 @@ function readScenarioCatalogueSource(
       },
     ]);
   }
-  if ("catalogueComparison" in review.right) {
-    const comparison = validateScenarioCatalogueComparison({
-      comparison: review.right.catalogueComparison,
-      expectedScenarioIds,
-    });
-    if (Either.isLeft(comparison)) {
-      return Either.left([
-        {
-          tag: "invalidCatalogueRecord",
-          path: record.admissionReview.path,
-          message: `Catalogue comparison is incomplete: ${comparison.left}`,
-        },
-      ]);
-    }
-  }
   return Either.right({
-    ...record,
-    characterRequirement: facts.right.facts.characterRequirement,
-    spatialRequirement: facts.right.facts.spatialRequirement,
-    contentAvailability: scenarioContentAdmission(review.right),
-    sdkCapability: scenarioSdkCapability(review.right),
+    path,
+    source: {
+      ...record,
+      characterRequirement: facts.right.facts.characterRequirement,
+      spatialRequirement: facts.right.facts.spatialRequirement,
+      contentAvailability: scenarioContentAdmission(review.right),
+      sdkCapability: scenarioSdkCapability(review.right),
+    },
+    admissionComparison:
+      "catalogueComparison" in review.right
+        ? { tag: "current", comparison: review.right.catalogueComparison }
+        : { tag: "historical" },
   });
 }
 
@@ -919,29 +1030,14 @@ export function readRawSwarmCatalogue(
     }),
   });
   if (Either.isLeft(recordPaths)) return Either.left([recordPaths.left]);
-  const canonicalScenarioIds: ScenarioId[] = [];
-  for (const path of recordPaths.right) {
-    try {
-      const decoded = Schema.decodeUnknownEither(AdmittedScenarioRecordSchema, {
-        onExcessProperty: "error",
-      })(JSON.parse(readFileSync(path, "utf8")));
-      if (Either.isRight(decoded))
-        canonicalScenarioIds.push(decoded.right.scenarioId);
-    } catch {
-      // The source reader below retains the detailed record failure.
-    }
-  }
-  const scenarios: ScenarioCatalogueSource[] = [];
+  const scenarioReads: ScenarioCatalogueReadSource[] = [];
   const scenarioIssues: CatalogueReadFailure[] = [...recordDiscoveryIssues];
   for (const path of recordPaths.right) {
-    const scenario = readScenarioCatalogueSource(
-      input.repositoryRoot,
-      path,
-      canonicalScenarioIds,
-    );
+    const scenario = readScenarioCatalogueSource(input.repositoryRoot, path);
     if (Either.isLeft(scenario)) scenarioIssues.push(...scenario.left);
-    else scenarios.push(scenario.right);
+    else scenarioReads.push(scenario.right);
   }
+  const scenarios = scenarioReads.map(({ source }) => source);
   const relationshipPaths = relationshipRecordPaths(
     input.repositoryRoot,
     input.evidenceDirectory,
@@ -982,7 +1078,14 @@ export function readRawSwarmCatalogue(
     paths: relationshipPaths.rejections,
     scenarios,
   });
-  const allReadIssues = nonEmptyIssues(rejectionComparisonIssues);
+  const admissionComparisonIssues = validateCurrentAdmissionComparisons({
+    reads: scenarioReads,
+    scenarios,
+  });
+  const allReadIssues = nonEmptyIssues([
+    ...rejectionComparisonIssues,
+    ...admissionComparisonIssues,
+  ]);
   if (allReadIssues !== undefined) return Either.left(allReadIssues);
   return projectRawSwarmCatalogue({
     scenarios,

@@ -13,6 +13,7 @@ import { DatabaseSync } from "node:sqlite";
 import { Either, Schema } from "effect";
 
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
+import { ExecutionStartRecordSchema } from "./evidence-manifests.ts";
 import { readFindingsProjection } from "./findings.ts";
 import { playerInvocationNumberFromEventsArtifact } from "./player-continuation-evidence.ts";
 import { preflightSdkTranscript } from "./sdk-player/sdk-audit.ts";
@@ -561,6 +562,45 @@ function ingestArtifactRunWithDisposition(input: {
               if (decoded.right.scenarioId !== identity.scenarioId) {
                 return fail(
                   "Execution manifest Scenario does not match its transcript.",
+                );
+              }
+              const executionStartPath = resolve(
+                dirname(dirname(absoluteTranscript)),
+                "evidence/execution-start.json",
+              );
+              if (!existsSync(executionStartPath)) {
+                return fail(
+                  `Current SDK transcript requires its Execution start authority: ${relative(repoRoot, executionStartPath)}`,
+                );
+              }
+              const executionStart = Schema.decodeUnknownEither(
+                ExecutionStartRecordSchema,
+                { onExcessProperty: "error" },
+              )(JSON.parse(readFileSync(executionStartPath, "utf8")));
+              if (Either.isLeft(executionStart)) {
+                return fail(
+                  `Invalid Execution start authority: ${executionStart.left.message}`,
+                );
+              }
+              if (
+                decoded.right.executionId !==
+                  executionStart.right.executionId ||
+                decoded.right.evidenceSetId !==
+                  executionStart.right.evidenceSetId ||
+                decoded.right.scenarioId !== executionStart.right.scenarioId
+              ) {
+                return fail(
+                  "Execution manifest does not match its Execution start authority.",
+                );
+              }
+              if (
+                decoded.right.scenarioId !== identity.scenarioId ||
+                executionStart.right.scenarioId !== identity.scenarioId ||
+                executionStart.right.gitSha !== identity.gitSha ||
+                executionStart.right.startedAt !== identity.startedAt
+              ) {
+                return fail(
+                  "Execution identity authority does not match its transcript.",
                 );
               }
               return decoded.right;

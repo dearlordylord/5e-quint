@@ -14,18 +14,53 @@ import { ScenarioIdSchema, repoRoot } from "./transcript.ts";
 import { ScenarioStageFactsAuthoritySchema } from "./stage-plan-authority.ts";
 import { canonicalRepositoryReadPath } from "./repository-path.ts";
 
-export const AdmittedScenarioRecordSchema = Schema.Struct({
-  schemaVersion: Schema.Literal(1),
+const AdmittedScenarioRecordCommonFields = {
   scenarioId: ScenarioIdSchema,
   title: Schema.NonEmptyTrimmedString,
   purpose: Schema.NonEmptyTrimmedString,
   authoredSource: ArtifactAuthoritySchema,
   admissionReview: ArtifactAuthoritySchema,
   stageFacts: ArtifactAuthoritySchema,
+} as const;
+
+const HistoricalAdmittedScenarioRecordSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  ...AdmittedScenarioRecordCommonFields,
 });
+
+const CurrentAdmittedScenarioRecordSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(2),
+  ...AdmittedScenarioRecordCommonFields,
+  predecessorScenarioIds: Schema.Array(ScenarioIdSchema).pipe(
+    Schema.filter(
+      (scenarioIds) => new Set(scenarioIds).size === scenarioIds.length,
+      {
+        message: () =>
+          "an admitted Scenario record cannot repeat a predecessor Scenario",
+      },
+    ),
+  ),
+});
+
+export const AdmittedScenarioRecordSchema = Schema.Union(
+  CurrentAdmittedScenarioRecordSchema,
+  HistoricalAdmittedScenarioRecordSchema,
+);
+export type CurrentAdmittedScenarioRecord = Schema.Schema.Type<
+  typeof CurrentAdmittedScenarioRecordSchema
+>;
+export type HistoricalAdmittedScenarioRecord = Schema.Schema.Type<
+  typeof HistoricalAdmittedScenarioRecordSchema
+>;
 export type AdmittedScenarioRecord = Schema.Schema.Type<
   typeof AdmittedScenarioRecordSchema
 >;
+
+export function isCurrentAdmittedScenarioRecord(
+  record: AdmittedScenarioRecord,
+): record is CurrentAdmittedScenarioRecord {
+  return record.schemaVersion === 2;
+}
 
 export type AdmittedScenarioIdentity = {
   readonly scenarioSha256: string;

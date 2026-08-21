@@ -32,6 +32,7 @@ import {
   type ScenarioCampaignCandidateRejection,
   type ScenarioCampaignAgents,
   type ScenarioCampaignResult,
+  type ScenarioCatalogueAdmissionContext,
   type ScenarioCompositeReview,
   type SdkCapabilityIntent,
 } from "./scenario-campaign.ts";
@@ -40,7 +41,6 @@ import {
   ScenarioCatalogueComparisonSchema,
   projectScenarioCatalogueForAuthoring,
   scenarioCatalogueComparisonPrompt,
-  type ScenarioCatalogueBatchExpectation,
 } from "./scenario-authoring.ts";
 import type { RetainedScenarioReviewInput } from "./scenario-review-input.ts";
 import {
@@ -62,7 +62,6 @@ import {
   ScenarioIdSchema,
   decodeScenarioId,
   type GitSha,
-  type ScenarioId,
 } from "./transcript.ts";
 import {
   invocationIdFromCodexEvents,
@@ -541,8 +540,7 @@ function verifyRetainedScenario(
   scenarioPath: string,
   reviewPath: string,
   gitSha: string,
-  admittedScenarioIds: readonly ScenarioId[],
-  admittedScenarioBatches: readonly ScenarioCatalogueBatchExpectation[],
+  catalogue: ScenarioCatalogueAdmissionContext,
 ): void {
   const scenarioBytes = readFileSync(scenarioPath, "utf8");
   const decodedGitSha = Schema.decodeUnknownEither(GitShaSchema)(gitSha);
@@ -555,8 +553,7 @@ function verifyRetainedScenario(
       scenarioId,
       gitSha: decodedGitSha.right,
       scenarioBytes,
-      admittedScenarioIds,
-      admittedScenarioBatches,
+      catalogue,
     },
   );
   if (Either.isLeft(verification)) {
@@ -1056,10 +1053,13 @@ async function main(args: readonly string[]): Promise<void> {
         AdmittedScenarioRecordSchema,
         { onExcessProperty: "error" },
       )({
-        schemaVersion: 1,
+        schemaVersion: 2,
         scenarioId: admittedScenarioId.right,
         title: result.right.scenarioTitle,
         purpose: result.right.scenarioPurpose,
+        predecessorScenarioIds: catalogueProjections.map(
+          ({ scenarioId }) => scenarioId,
+        ),
         authoredSource: artifactAuthorityForBytes(
           relative(repoRoot, outputPath),
           readFileSync(stagedScenario),
@@ -1111,11 +1111,30 @@ async function main(args: readonly string[]): Promise<void> {
         outputPath,
         reviewPath,
         gitSha.right,
-        catalogueProjections.map(({ scenarioId }) => scenarioId),
-        catalogueBatches.right.map((batch, batchIndex) => ({
-          batchIndex,
-          scenarioIds: batch.map(({ scenarioId }) => scenarioId),
-        })),
+        (() => {
+          if (catalogueProjections.length === 0) {
+            return { tag: "noAdmittedScenarios" as const };
+          }
+          const scenarioIds = catalogueProjections.map(
+            ({ scenarioId }) => scenarioId,
+          );
+          const batches = catalogueBatches.right.map((batch, batchIndex) => ({
+            batchIndex,
+            scenarioIds: batch.map(({ scenarioId }) => scenarioId),
+          }));
+          const [firstScenarioId, ...remainingScenarioIds] = scenarioIds;
+          const [firstBatch, ...remainingBatches] = batches;
+          if (firstScenarioId === undefined || firstBatch === undefined) {
+            fail(
+              "A nonempty admitted catalogue must retain at least one Scenario and one comparison batch.",
+            );
+          }
+          return {
+            tag: "admittedScenarios" as const,
+            scenarioIds: [firstScenarioId, ...remainingScenarioIds],
+            batches: [firstBatch, ...remainingBatches],
+          };
+        })(),
       );
       emitGenerationFindings({
         tag: "admittedScenario",

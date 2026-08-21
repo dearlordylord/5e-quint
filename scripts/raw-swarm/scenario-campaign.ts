@@ -581,8 +581,7 @@ export function verifyFinalScenarioReview(
     readonly scenarioId: Schema.Schema.Type<typeof ScenarioIdSchema>;
     readonly gitSha: Schema.Schema.Type<typeof GitShaSchema>;
     readonly scenarioBytes: string;
-    readonly admittedScenarioIds?: readonly ScenarioId[];
-    readonly admittedScenarioBatches?: readonly ScenarioCatalogueBatchExpectation[];
+    readonly catalogue: ScenarioCatalogueAdmissionContext;
   },
 ): Either.Either<Schema.Schema.Type<typeof FinalScenarioReviewSchema>, string> {
   const decoded = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
@@ -601,16 +600,26 @@ export function verifyFinalScenarioReview(
   ) {
     return Either.left("Final scenario review identity does not match.");
   }
+  if (
+    expected.catalogue.tag === "admittedScenarios" &&
+    (expected.catalogue.scenarioIds.length === 0 ||
+      expected.catalogue.batches.length === 0)
+  ) {
+    return Either.left(
+      "A nonempty admitted catalogue must retain canonical Scenario ids and batches.",
+    );
+  }
   if ("catalogueComparison" in decoded.right) {
     const expectedScenarioIds =
-      expected.admittedScenarioIds ??
-      decoded.right.catalogueComparison.comparedScenarioIds;
+      expected.catalogue.tag === "noAdmittedScenarios"
+        ? []
+        : expected.catalogue.scenarioIds;
     const comparison = validateScenarioCatalogueComparison({
       comparison: decoded.right.catalogueComparison,
       expectedScenarioIds,
-      ...(expected.admittedScenarioBatches === undefined
+      ...(expected.catalogue.tag === "noAdmittedScenarios"
         ? {}
-        : { expectedBatches: expected.admittedScenarioBatches }),
+        : { expectedBatches: expected.catalogue.batches }),
     });
     if (Either.isLeft(comparison)) {
       return Either.left(`Invalid catalogue comparison: ${comparison.left}`);
@@ -698,6 +707,17 @@ export type ScenarioCatalogueComparisonContext =
       readonly tag: "required";
       readonly batches: readonly (readonly ScenarioCatalogueProjection[])[];
       readonly expectedScenarioIds: readonly ScenarioId[];
+    }>;
+
+export type ScenarioCatalogueAdmissionContext =
+  | Readonly<{ readonly tag: "noAdmittedScenarios" }>
+  | Readonly<{
+      readonly tag: "admittedScenarios";
+      readonly scenarioIds: readonly [ScenarioId, ...ScenarioId[]];
+      readonly batches: readonly [
+        ScenarioCatalogueBatchExpectation,
+        ...ScenarioCatalogueBatchExpectation[],
+      ];
     }>;
 
 export type ScenarioCatalogueComparisonEvidence =

@@ -8,7 +8,7 @@ import {
   writeSync,
 } from "node:fs";
 
-import { Either, Option, ParseResult, Schema } from "effect";
+import { Either, Match, Option, ParseResult, Schema } from "effect";
 
 import {
   GitShaSchema,
@@ -215,23 +215,33 @@ function invocationSubjectMatchesPhase(input: {
   readonly phase: ModelInvocationPhase;
 }): boolean {
   if (input.subject.tag === "benchmark") return true;
-  if (input.phase === "scenarioGeneration") {
-    return input.subject.tag === "scenarioCampaign";
-  }
-  if (input.phase === "scenarioCompositeReview") {
-    return (
-      input.subject.tag === "scenarioCandidate" ||
-      input.subject.tag === "scenario"
-    );
-  }
-  if (
-    input.phase === "scenarioCharacterAuthoring" ||
-    input.phase === "scenarioSetupNeutralAuthoring" ||
-    input.phase === "scenarioSetupControllerAuthoring"
-  ) {
-    return input.subject.tag === "scenario";
-  }
-  return input.subject.tag === "execution";
+  return Match.value(input.phase).pipe(
+    Match.when(
+      "scenarioGeneration",
+      () => input.subject.tag === "scenarioCampaign",
+    ),
+    Match.when(
+      "scenarioCompositeReview",
+      () =>
+        input.subject.tag === "scenarioCandidate" ||
+        input.subject.tag === "scenario",
+    ),
+    Match.when(
+      "scenarioCharacterAuthoring",
+      () => input.subject.tag === "scenario",
+    ),
+    Match.when(
+      "scenarioSetupNeutralAuthoring",
+      () => input.subject.tag === "scenario",
+    ),
+    Match.when(
+      "scenarioSetupControllerAuthoring",
+      () => input.subject.tag === "scenario",
+    ),
+    Match.when("player", () => input.subject.tag === "execution"),
+    Match.when("postPlayReview", () => input.subject.tag === "execution"),
+    Match.exhaustive,
+  );
 }
 
 const ModelInvocationOperationFields = {

@@ -123,6 +123,173 @@ describe("Raw Swarm scenario catalogue", () => {
     }
   });
 
+  test("rejects a dangling evidence-root symlink instead of treating it as absent", () => {
+    const repositoryRoot = mkdtempSync(
+      resolve(tmpdir(), "raw-swarm-catalogue-evidence-root-"),
+    );
+    const scenarios = resolve(repositoryRoot, "scenarios");
+    const evidenceDirectory = resolve(repositoryRoot, "out");
+    try {
+      mkdirSync(scenarios);
+      symlinkSync(
+        resolve(repositoryRoot, "missing-evidence"),
+        evidenceDirectory,
+      );
+      const result = readRawSwarmCatalogue({
+        repositoryRoot,
+        scenarioDirectory: scenarios,
+        evidenceDirectory,
+      });
+      expect(result).toMatchObject({
+        _tag: "Left",
+        left: [
+          expect.objectContaining({
+            tag: "unreadableEvidenceDirectory",
+            path: evidenceDirectory,
+          }),
+        ],
+      });
+    } finally {
+      rmSync(repositoryRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("renders a new current admission against its retained predecessor catalogue", () => {
+    const repositoryRoot = mkdtempSync(
+      resolve(tmpdir(), "raw-swarm-catalogue-predecessors-"),
+    );
+    const scenarios = resolve(repositoryRoot, "scenarios");
+    mkdirSync(scenarios);
+    const writeAuthority = (relativePath: string, value: unknown) => {
+      const path = resolve(repositoryRoot, relativePath);
+      const bytes = `${JSON.stringify(value)}\n`;
+      writeFileSync(path, bytes);
+      return {
+        path: relativePath,
+        byteLength: Buffer.byteLength(bytes),
+        sha256: createHash("sha256").update(bytes).digest("hex"),
+      };
+    };
+    const writeScenario = (
+      scenarioId: string,
+      predecessorScenarioIds: readonly string[],
+      catalogueComparison: unknown,
+    ) => {
+      const prosePath = `scenarios/${scenarioId}.md`;
+      const prose = `${scenarioId} asks a synthetic tactical question.\n`;
+      writeFileSync(resolve(repositoryRoot, prosePath), prose);
+      const proseAuthority = {
+        path: prosePath,
+        byteLength: Buffer.byteLength(prose),
+        sha256: createHash("sha256").update(prose).digest("hex"),
+      };
+      const review = writeAuthority(`${prosePath}.scenario-review.json`, {
+        scenarioId,
+        scenarioSha256: proseAuthority.sha256,
+        gitSha: "a".repeat(40),
+        admitReviewedUnsupported: false,
+        rawReview: { classification: "supported", evidence: "Synthetic RAW." },
+        policyReview: { classification: "safe", evidence: "Synthetic policy." },
+        reviewScope: "rawContentSdkCapabilityPolicyQuality",
+        scenarioQuality: {
+          classification: "ready",
+          evidence: "Synthetic quality evidence.",
+        },
+        contentAvailabilityIntent: "availableOnly",
+        contentReview: {
+          classification: "supplied",
+          evidence: "Synthetic content.",
+        },
+        sdkCapabilityIntent: "supportedOnly",
+        sdkCapabilityReview: {
+          classification: "supported",
+          evidence: "Synthetic SDK.",
+        },
+        catalogueComparison,
+      });
+      const facts = writeAuthority(`${prosePath}.stage-facts.json`, {
+        schemaVersion: 1,
+        scenarioId,
+        scenarioSha256: proseAuthority.sha256,
+        source: "scenarioGenerationCandidate",
+        facts: {
+          schemaVersion: 1,
+          characterRequirement: projectedFacts.characterRequirement,
+          spatialRequirement: projectedFacts.spatialRequirement,
+        },
+      });
+      writeFileSync(
+        resolve(scenarios, `${scenarioId}.scenario.json`),
+        `${JSON.stringify({
+          schemaVersion: 2,
+          scenarioId,
+          title: `Synthetic ${scenarioId}`,
+          purpose: `Explore ${scenarioId}.`,
+          predecessorScenarioIds,
+          authoredSource: proseAuthority,
+          admissionReview: review,
+          stageFacts: facts,
+        })}\n`,
+      );
+    };
+    const comparison = (ids: readonly string[]) =>
+      ids.length === 0
+        ? {
+            schemaVersion: 1,
+            conclusion: "meaningfullyDistinct",
+            comparedScenarioIds: [],
+            closestMatches: [],
+            materialDifferentiators: [],
+            basis: { tag: "noAdmittedScenarios" },
+          }
+        : {
+            schemaVersion: 1,
+            conclusion: "meaningfullyDistinct",
+            comparedScenarioIds: ids,
+            closestMatches: [],
+            materialDifferentiators: [],
+            basis: {
+              tag: "compared",
+              batches: [
+                {
+                  batchIndex: 0,
+                  comparedScenarioIds: ids,
+                  dimensions: {
+                    exploratoryPurpose: "Distinct purpose.",
+                    materiallyRelevantMechanics: "Distinct mechanics.",
+                    encounterComposition: "Distinct composition.",
+                    interactionSequence: "Distinct sequence.",
+                    tacticalQuestion: "Distinct question.",
+                    sdkSupportBoundary: "Supported boundary.",
+                    spatialContext: { tag: "notMaterial" },
+                  },
+                },
+              ],
+            },
+          };
+    try {
+      writeScenario("first-synthetic", [], comparison([]));
+      writeScenario(
+        "second-synthetic",
+        ["first-synthetic"],
+        comparison(["first-synthetic"]),
+      );
+      const result = readRawSwarmCatalogue({
+        repositoryRoot,
+        scenarioDirectory: scenarios,
+        evidenceDirectory: resolve(repositoryRoot, "out"),
+      });
+      expect(Either.isRight(result)).toBe(true);
+      if (Either.isRight(result)) {
+        expect(
+          result.right.scenarios.map(({ scenarioId }) => scenarioId),
+        ).toEqual(["first-synthetic", "second-synthetic"]);
+      }
+    } finally {
+      rmSync(repositoryRoot, { recursive: true, force: true });
+    }
+  });
+
   test("rejects an execution/profile kind mismatch instead of erasing the tag", () => {
     const record = {
       schemaVersion: 1,
@@ -1005,7 +1172,9 @@ describe("Raw Swarm scenario catalogue", () => {
         left: expect.arrayContaining([
           expect.objectContaining({
             tag: "invalidCatalogueRecord",
-            message: expect.stringContaining("covered 1 of 2"),
+            message: expect.stringContaining(
+              "current admitted Scenario record",
+            ),
           }),
         ]),
       });

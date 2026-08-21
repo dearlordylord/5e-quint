@@ -35,6 +35,10 @@ import {
   validateBenchmarkReviewAuthority,
 } from "./fixed-scenario-benchmark.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
+import {
+  decodeEvidenceSetId,
+  decodeExecutionId,
+} from "./raw-swarm-identities.ts";
 import { GitShaSchema, repoRoot } from "./transcript.ts";
 
 const fixedBenchmarkCli = resolve(
@@ -651,19 +655,25 @@ describe("fixed scenario benchmark boundary", () => {
       "boundedCapabilityProjection",
     );
     const bundle = fixedScenarioCanonicalBundle();
-    expect(
-      benchmarkCommands({
-        benchmarkId: paths.benchmarkId,
-        executionId: paths.executionId,
-        evidenceSetId: paths.evidenceSetId,
-        profile: "boundedCapabilityProjection",
-        implementationGitSha: Schema.decodeUnknownSync(GitShaSchema)(
-          "a".repeat(40),
-        ),
-        paths,
-        bundle,
-      }).player,
-    ).toContain("safe-run");
+    const executionId = decodeExecutionId("synthetic-execution");
+    const evidenceSetId = decodeEvidenceSetId("synthetic-evidence");
+    if (Either.isLeft(executionId) || Either.isLeft(evidenceSetId)) {
+      throw new Error("Synthetic benchmark identities must decode.");
+    }
+    const commands = benchmarkCommands({
+      benchmarkId: paths.benchmarkId,
+      executionId: executionId.right,
+      evidenceSetId: evidenceSetId.right,
+      profile: "boundedCapabilityProjection",
+      implementationGitSha: Schema.decodeUnknownSync(GitShaSchema)(
+        "a".repeat(40),
+      ),
+      paths,
+      bundle,
+    });
+    expect(commands.player).toContain("safe-run");
+    expect(commands.player).toContain("synthetic-execution");
+    expect(commands.player).toContain("synthetic-evidence");
   });
 
   test("rejects structured reads and external tools while retaining prose-only results", () => {
