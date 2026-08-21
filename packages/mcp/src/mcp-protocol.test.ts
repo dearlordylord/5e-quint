@@ -453,6 +453,7 @@ describe("MCP protocol server", () => {
       if (!isJsonObject(rejected.structuredContent)) {
         throw new Error("Expected a typed rejected operation envelope.");
       }
+      expect(rejected.isError).toBe(true);
       expect(validateOperationOutput(rejected.structuredContent).valid).toBe(
         true,
       );
