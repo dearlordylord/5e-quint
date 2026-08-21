@@ -90,12 +90,9 @@ export const BattleId = Schema.NonEmptyTrimmedString.pipe(
 export type BattleId = typeof BattleId.Type;
 export const battleId: (value: string) => BattleId = BattleId.make;
 
-export const CharacterIdSchema = Schema.NonEmptyTrimmedString.pipe(
-  Schema.brand("CharacterId"),
-);
-export type CharacterId = typeof CharacterIdSchema.Type;
-export const characterId: (value: string) => CharacterId =
-  CharacterIdSchema.make;
+export type CharacterId = string & Brand.Brand<"CharacterId">;
+const CharacterId = Brand.nominal<CharacterId>();
+export const characterId: (value: string) => CharacterId = CharacterId;
 
 export type InitiativeScore = Initiative & Brand.Brand<"InitiativeScore">;
 const InitiativeScore = Brand.all(Initiative, Brand.nominal<InitiativeScore>());

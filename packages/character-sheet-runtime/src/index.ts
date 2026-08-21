@@ -23,6 +23,7 @@ export {
   CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
   CHARACTER_SHEET_SHORT_REST_TICKS,
   FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES,
+  CharacterSheetIdSchema,
   CharacterSheetRetainedCompanionId,
   characterSheetIssue,
   characterSheetId,

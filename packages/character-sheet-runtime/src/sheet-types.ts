@@ -204,12 +204,13 @@ export const FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES = [
 export type CharacterSheetFontOfMagicSpellSlotSource =
   (typeof FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES)[number];
 
-export type CharacterSheetId = string & Brand.Brand<"CharacterId">;
-const CharacterSheetId = Brand.nominal<CharacterSheetId>();
+export const CharacterSheetIdSchema = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("CharacterId"),
+);
+export type CharacterSheetId = typeof CharacterSheetIdSchema.Type;
 
-export function characterSheetId(value: string): CharacterSheetId {
-  return CharacterSheetId(value);
-}
+export const characterSheetId: (value: string) => CharacterSheetId =
+  CharacterSheetIdSchema.make;
 
 export const CharacterSheetRetainedCompanionId =
   Schema.NonEmptyTrimmedString.pipe(

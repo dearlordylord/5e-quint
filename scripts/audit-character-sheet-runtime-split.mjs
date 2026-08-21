@@ -63,6 +63,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetHitDieState",
   "CharacterSheetHitPointMaximumProjection",
   "CharacterSheetHitPointMaximumProjectionRoute",
+  "CharacterSheetIdSchema",
   "CharacterSheetHitPoints",
   "CharacterSheetHitPointsInput",
   "CharacterSheetHeroicInspiration",
@@ -249,6 +250,11 @@ const EXPECTED_MOVED_FUNCTIONS = [
   },
 ];
 const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
+  {
+    name: "CharacterSheetIdSchema",
+    reason:
+      "Character Sheet owns the durable Character Session identity boundary; exporting its parser keeps MCP session identifiers on the canonical sheet brand rather than the battle identity surface.",
+  },
   {
     name: "FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES",
     reason:

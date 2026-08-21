@@ -3,7 +3,14 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { describe, expect, test } from "vitest";
+import { Either } from "effect";
+import { characterId } from "@dnd/battle-runtime";
 import { characterDraftId } from "@dnd/character-creation-runtime";
+import { Hp } from "@dnd/shared/types";
+import {
+  armorClassBuild,
+  prayerOfHealingClericBuild,
+} from "../../character-sheet-runtime/src/test-support.test-support.ts";
 
 import {
   acceptancePlaySessionId,
@@ -18,9 +25,11 @@ import {
   verifyWizardIceKnifeBattleHandoff,
 } from "../test-support/mcp-acceptance-scenarios.ts";
 import { createMcpApplicationServices } from "./composition-root.ts";
+import { availableCharacterSession } from "./session-store.ts";
 import { contentToolDefinitions } from "./content-tools.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
+import { decodePlaySessionId } from "./play-session.ts";
 import {
   PLAY_SESSION_OPERATION_NAMES,
   PLAY_SESSION_OUTPUT_SCHEMA_BYTE_BUDGET,
@@ -660,7 +669,212 @@ describe("MCP protocol server", () => {
       await Promise.allSettled([client.close(), server.close()]);
     }
   }, 30_000);
+
+  test("routes Lay On Hands through the real MCP client and returns its envelope", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const host = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "lay-on-hands-client",
+      version: "0.1.0",
+    });
+    try {
+      await host.server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const playSessionId = await createPlaySession(client);
+      await installHealingSessions(host, playSessionId, {
+        source: {
+          characterId: "character:lay-source",
+          build: armorClassBuild({ startingClass: "class_paladin" }),
+          currentHp: Hp(10),
+        },
+        target: {
+          characterId: "character:lay-target",
+          build: armorClassBuild({ startingClass: "class_fighter" }),
+          currentHp: Hp(1),
+        },
+      });
+      const applied = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:lay-source",
+          operation: {
+            kind: "applyLayOnHands",
+            targetCharacterId: "character:lay-target",
+            restoreHp: 3,
+            removePoisoned: false,
+          },
+        },
+      });
+      expect(applied).toMatchObject({
+        operation: { result: { result: { tag: "layOnHandsApplied" } } },
+        nextOperations: expect.arrayContaining([
+          "apply_character_session_operation",
+        ]),
+      });
+      const detail = await callStructuredTool(client, {
+        name: "inspect_character_session",
+        arguments: { playSessionId, characterId: "character:lay-target" },
+      });
+      expect(JSON.stringify(detail)).toContain('"currentHp":4');
+    } finally {
+      await Promise.allSettled([client.close(), host.server.close()]);
+    }
+  }, 30_000);
+
+  test("returns atomic recovery when a routed spell-rest batch commit fails", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const host = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "spell-rest-benefit-client",
+      version: "0.1.0",
+    });
+    try {
+      await host.server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const playSessionId = await createPlaySession(client);
+      await installHealingSessions(host, playSessionId, {
+        source: {
+          characterId: "character:rest-source",
+          build: prayerOfHealingClericBuild(),
+          currentHp: Hp(10),
+        },
+        target: {
+          characterId: "character:rest-target",
+          build: armorClassBuild({ startingClass: "class_fighter" }),
+          currentHp: Hp(1),
+        },
+      });
+      const decoded = decodePlaySessionId(playSessionId);
+      if (decoded._tag === "Left") throw new Error(decoded.left);
+      await host.playSessions.run(decoded.right, (root) => {
+        root.sessionStore.characters.setAll = () =>
+          Either.left({
+            tag: "unknownCharacterSession",
+            characterId: characterId("character:injected"),
+          });
+      });
+      const rejected = await client.callTool({
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:rest-source",
+          operation: {
+            kind: "applySpellRestBenefit",
+            spellId: "prayer_of_healing",
+            castLevel: 2,
+            recipients: [
+              {
+                characterId: "character:rest-target",
+                eligibility: { remainedWithinRangeForEntireCasting: true },
+                healingRolls: [4, 4],
+              },
+            ],
+          },
+        },
+      });
+      expect(rejected.isError).toBe(true);
+      expect(rejected.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            details: {
+              code: "CHARACTER_SESSION_COMMIT_INVALID",
+              recovery: { tag: "characterSessionsUnchanged" },
+            },
+          },
+        },
+      });
+      const target = await callStructuredTool(client, {
+        name: "inspect_character_session",
+        arguments: { playSessionId, characterId: "character:rest-target" },
+      });
+      expect(JSON.stringify(target)).toContain('"currentHp":1');
+    } finally {
+      await Promise.allSettled([client.close(), host.server.close()]);
+    }
+  }, 30_000);
+
+  test("routes unknown healing sources through operation-aware recovery", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const { server } = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "healing-source-guard-client",
+      version: "0.1.0",
+    });
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const playSessionId = await createPlaySession(client);
+      const rejected = await client.callTool({
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:missing-source",
+          operation: {
+            kind: "applyLayOnHands",
+            targetCharacterId: "character:missing-target",
+            restoreHp: 1,
+            removePoisoned: false,
+          },
+        },
+      });
+      expect(rejected.isError).toBe(true);
+      expect(rejected.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            details: {
+              operationKind: "applyLayOnHands",
+              code: "UNKNOWN_CHARACTER_SESSION",
+              recovery: { tag: "characterSessionsUnchanged" },
+            },
+          },
+        },
+      });
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  }, 30_000);
 });
+
+async function installHealingSessions(
+  host: ReturnType<typeof createDndMcpProtocolServer>,
+  playSessionId: string,
+  fixtures: {
+    readonly source: {
+      readonly characterId: string;
+      readonly build: Parameters<typeof availableCharacterSession>[0]["build"];
+      readonly currentHp: ReturnType<typeof Hp>;
+    };
+    readonly target: {
+      readonly characterId: string;
+      readonly build: Parameters<typeof availableCharacterSession>[0]["build"];
+      readonly currentHp: ReturnType<typeof Hp>;
+    };
+  },
+) {
+  const decoded = decodePlaySessionId(playSessionId);
+  if (decoded._tag === "Left") throw new Error(decoded.left);
+  const result = await host.playSessions.run(decoded.right, (root) => {
+    for (const fixture of [fixtures.source, fixtures.target]) {
+      const session = availableCharacterSession({
+        characterId: characterId(fixture.characterId),
+        build: fixture.build,
+        currentHp: fixture.currentHp,
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary: root.unitLibrary,
+      });
+      if (Either.isLeft(session)) throw new Error(session.left.message);
+      root.sessionStore.characters.set(session.right);
+    }
+  });
+  if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
+}
 
 async function createPlaySession(client: Client): Promise<string> {
   const created = await callStructuredTool(client, {

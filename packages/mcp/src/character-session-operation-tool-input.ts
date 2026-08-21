@@ -1,9 +1,10 @@
 import {
   CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
+  CharacterSheetIdSchema,
   CharacterSheetRetainedCompanionId,
   FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES,
 } from "@dnd/character-sheet-runtime";
-import { CharacterIdSchema, type CharacterId } from "@dnd/battle-runtime";
+import type { CharacterSheetId } from "@dnd/character-sheet-runtime";
 import { CharacterBuildClassLevelGainSchema } from "@dnd/character-creation-runtime";
 import { TIME_SPAN_UNITS } from "@dnd/shared/elapsed-time";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
@@ -55,12 +56,12 @@ const RestRecoveryArgsFields = {
 
 const LayOnHandsOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("applyLayOnHands"),
-  targetCharacterId: CharacterIdSchema,
+  targetCharacterId: CharacterSheetIdSchema,
   restoreHp: NonNegativeIntegerSchema,
   removePoisoned: Schema.Boolean,
 });
 const SpellRestBenefitRecipientArgsSchema = Schema.Struct({
-  characterId: CharacterIdSchema,
+  characterId: CharacterSheetIdSchema,
   eligibility: Schema.Struct({
     remainedWithinRangeForEntireCasting: Schema.Literal(true),
   }),
@@ -279,7 +280,7 @@ const CharacterSessionOperationArgsSchema = Schema.Union(
 );
 
 export const ApplyCharacterSessionOperationArgsSchema = Schema.Struct({
-  characterId: CharacterIdSchema,
+  characterId: CharacterSheetIdSchema,
   operation: CharacterSessionOperationArgsSchema,
 });
 
@@ -290,6 +291,6 @@ type CharacterSessionOperationArgs =
   ApplyCharacterSessionOperationArgs["operation"];
 
 export type ApplyCharacterSessionOperationToolInput = {
-  readonly characterId: CharacterId;
+  readonly characterId: CharacterSheetId;
   readonly operation: CharacterSessionOperationArgs;
 };

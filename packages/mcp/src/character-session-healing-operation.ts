@@ -11,7 +11,7 @@ import {
   resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Either, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
@@ -29,6 +29,49 @@ type SpellRestBenefitOperation = Extract<
   ApplyCharacterSessionOperationToolInput["operation"],
   { readonly kind: "applySpellRestBenefit" }
 >;
+
+export function applyHealingCharacterSessionOperation(
+  root: McpPlaySessionRoot,
+  input: {
+    readonly characterId: ApplyCharacterSessionOperationToolInput["characterId"];
+    readonly operation: Extract<
+      ApplyCharacterSessionOperationToolInput["operation"],
+      { readonly kind: "applyLayOnHands" | "applySpellRestBenefit" }
+    >;
+  },
+) {
+  const source = availableHealingSourceSession(root, {
+    operationKind: input.operation.kind,
+    sourceCharacterId: input.characterId,
+    affectedCharacterIds:
+      input.operation.kind === "applyLayOnHands"
+        ? [input.characterId, input.operation.targetCharacterId]
+        : [
+            input.characterId,
+            ...input.operation.recipients.map(
+              (recipient) => recipient.characterId,
+            ),
+          ],
+  });
+  if (Either.isLeft(source)) return source.left;
+  return Match.value(input.operation).pipe(
+    Match.when({ kind: "applyLayOnHands" }, (operation) =>
+      applyLayOnHandsOperation(root, {
+        characterId: input.characterId,
+        session: source.right,
+        operation,
+      }),
+    ),
+    Match.when({ kind: "applySpellRestBenefit" }, (operation) =>
+      applySpellRestBenefitOperation(root, {
+        characterId: input.characterId,
+        session: source.right,
+        operation,
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
 
 export function availableHealingSourceSession(
   root: McpPlaySessionRoot,

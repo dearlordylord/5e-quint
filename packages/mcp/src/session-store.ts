@@ -8,20 +8,22 @@ import type {
   BattleRuntimeSession,
   BattleState,
   BattleSubject,
-  CharacterId,
 } from "@dnd/battle-runtime";
-import { characterId, snapshotBattle } from "@dnd/battle-runtime";
+import { snapshotBattle } from "@dnd/battle-runtime";
 import {
   characterSheetCurrentHp,
   characterSheetSpellSlots,
   rebuildCharacterSheet,
+  characterSheetId,
   type CharacterSheet,
+  type CharacterSheetId,
   type CharacterSheetHitPoints,
   type CharacterSheetRebuildInput,
   type CharacterSheetPositiveHpUnconscious,
   type CharacterSheetZeroHpLifecycle,
   type CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
+type CharacterId = CharacterSheetId;
 import type {
   StatBlockCatalog,
   StatBlockId,
@@ -143,7 +145,7 @@ export function characterBattleSpellSlots(
 // MCP creates deterministic character handles from draft ids because character
 // creation currently has no independent naming/id fill.
 export function characterIdFromDraftId(draftId: CharacterDraftId): CharacterId {
-  return characterId(`character:${encodeURIComponent(String(draftId))}`);
+  return characterSheetId(`character:${encodeURIComponent(String(draftId))}`);
 }
 
 export function createMcpSessionStore(
