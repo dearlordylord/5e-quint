@@ -195,6 +195,71 @@ diversity.
   dim-light observation is not promoted without the independent review that the
   historical identity obstruction prevented.
 
+## 2026-08-21 day campaign continuation
+
+The continuation ran serially from the clean branch
+`codex/raw-swarm-day-campaign-20260821`, based on `master` revision
+`58a69b01b73e812dd66314cc3c0dd1dd6bc3b90f`. It reused the preserved
+schema-v3 issue-297 index explicitly; the checkout's unrelated schema-v2
+`player-swarm.db` was not overwritten. Ignored Evidence Sets remain local-only.
+
+### Scenario Campaign dispositions
+
+| Campaign                                            | Planned Scenario                            | Disposition                                                                                                                                                                                        |
+| --------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `day-synthetic-watchfire-authoring`                 | `synthetic-watchfire-saving-throw-crossing` | Rejection publication reached the wrong schema-v2 index and rolled back. The 17 invocation authorities remain; no Scenario or rejection bundle was published.                                      |
+| `day-table-save-circumstance-authoring`             | `table-save-circumstance-advantage-probe`   | Admitted as an explicit unsupported-capability probe for #279; its setup later stopped first on missing Goblin arrow stock.                                                                        |
+| `day-synthetic-condition-switchback-authoring`      | `synthetic-condition-switchback`            | Failed during final catalogue comparison because the model result did not retain exactly one named catalogue batch. No Scenario was admitted.                                                      |
+| `day-synthetic-wake-interruption-authoring`         | `synthetic-wake-interruption`               | Admitted after three iterations. Two Executions retained deterministic evidence; review rejected the supported-only admission for its Large-reactor movement requirement.                          |
+| `day-synthetic-vulnerability-exchange-authoring`    | `synthetic-vulnerability-exchange`          | Rejected: the generated Octopus could breathe only underwater, leaving sustained dry-ground suffocation/exhaustion unresolved.                                                                     |
+| `day-synthetic-club-blade-vulnerability-authoring`  | `synthetic-club-blade-vulnerability`        | Rejected: Commoner exists in local RAW but is absent from the available-only shipped stat-block catalogue.                                                                                         |
+| `day-synthetic-club-bearer-vulnerability-authoring` | `synthetic-club-bearer-vulnerability`       | Failed during catalogue comparison after a model child produced no new event for over an hour. Termination exposed contradictory success telemetry and a missing-output `ENOENT`, tracked by #331. |
+
+The admitted catalogue grew from 12 to 14 Scenarios. The two new entries are
+`table-save-circumstance-advantage-probe` and
+`synthetic-wake-interruption`; rejected Candidates and failed Campaigns do not
+appear in the playable catalogue.
+
+### Execution ledger
+
+The continuation added six schema-v3 index rows and 62 deterministically
+replayed SDK calls. Each imported review and final findings projection is owned
+by its Evidence Set; this table is only the compact operator ledger.
+
+| Row | Execution                                             | Calls | Replay                          |               Review | Final findings | Terminal observation                                                                                                                            |
+| --: | ----------------------------------------------------- | ----: | ------------------------------- | -------------------: | -------------: | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+|   2 | `table-save-circumstance-advantage-probe-execution-a` |     0 | deterministic setup obstruction |           6 verdicts |              8 | Missing explicit Goblin arrow stock stopped setup before the intended #279 saving-throw probe.                                                  |
+|   3 | `synthetic-wake-interruption-execution-a`             |    18 | matched                         |          12 verdicts |             24 | Player skipped the required Sting, submitted invalid routes, and encountered the geometry target-frontier recurrence linked to #329.            |
+|   4 | `synthetic-wake-interruption-execution-b`             |     8 | matched                         |           9 verdicts |             15 | The required movement was rejected because Opportunity Attack route projection does not support the Large Riding Horse reactor.                 |
+|   5 | `table-authored-three-shove-cycle-day-execution-a`    |    16 | matched                         |           7 verdicts |             24 | Three Shoves resolved in order; review found that the player preselected all three save outcomes rather than leaving them to normal resolution. |
+|   6 | `table-authored-shove-then-grapple-day-execution-a`   |     0 | deterministic setup obstruction |           8 verdicts |             10 | Setup cannot register separate Table-authored Grapple reach witnesses for alternative future post-Shove fingerprints.                           |
+|   7 | `four-way-crank-control-cycle-day-execution-a`        |    20 | matched                         | 8 verdicts, all pass |             20 | The required Shove, Grapple, Shove, Shove sequence completed with valid Table witnesses, turn order, DCs, conditions, and completion boundary.  |
+
+The six reviews contributed 50 verdicts. The index after row 7 contains seven
+Executions total, with verdict totals: 2 `adapter-defect`, 2
+`corpus-ambiguity`, 39 `pass`, 6 `player-invalid`, 3 `reviewer-error`, 2
+`scenario-invalid`, and 5 `unsupported-capability`.
+
+### Promoted and deduplicated findings
+
+- Execution row 3 reproduced the geometry-derived melee target-frontier
+  defect already tracked by #329. Its new fingerprint was linked to that issue
+  rather than opening a duplicate.
+- #330 records that final findings cannot retain a genuine milestone replay
+  envelope when later generation revises the Candidate before admission. The
+  complete Executions remain trustworthy without those optional replay
+  authorities.
+- #331 records the stalled-model termination boundary: the ledger labeled an
+  output-less terminated invocation successful while the Campaign failed on
+  the absent last-message file.
+- No other review produced an unlinked bug or adapter-defect fingerprint.
+
+The strongest supported-path evidence is row 7: deterministic replay and all
+eight independent verdicts passed. Rows 2, 4, and 6 preserve unsupported or
+invalid admission boundaries without fabrication. Rows 3 and 5 additionally
+show that an accepted player conclusion is not proof of scenario-faithful
+play.
+
 ## Retained ignored evidence inventory
 
 The following ignored authorities are retained under `scripts/raw-swarm/out`.
