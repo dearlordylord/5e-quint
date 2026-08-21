@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "table-d20-circumstance-advantage-probe-repair-retry",
+  "scenarioSha256": "98b16ef0db6e340c6e179fcdcf19abb5562c4cf741bf1becbd6f138122079a52",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The encounter requires only the canonical Riding Horse and Wolf stat blocks, with no Character Sheets."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "The unobstructed level lane permits geometry-assisted resolution of changing distance, pursuit routes, movement, and melee reach."
+    }
+  }
+}

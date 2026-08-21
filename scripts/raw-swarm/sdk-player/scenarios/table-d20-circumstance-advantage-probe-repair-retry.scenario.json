@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 2,
+  "scenarioId": "table-d20-circumstance-advantage-probe-repair-retry",
+  "title": "Table circumstance D20 Test probe repair retry",
+  "purpose": "Complete the known-gap probe for open issue #279 after repairing the admission publication boundary: per-test Table circumstance Advantage/Disadvantage across the exact D20 Test, grounded in the local RAW Playing-the-Game.md Advantage/Disadvantage passage. Keep the rest of the interaction representable through the public SDK.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/table-d20-circumstance-advantage-probe-repair-retry.md",
+    "byteLength": 1921,
+    "sha256": "98b16ef0db6e340c6e179fcdcf19abb5562c4cf741bf1becbd6f138122079a52"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/table-d20-circumstance-advantage-probe-repair-retry.md.scenario-review.json",
+    "byteLength": 10467,
+    "sha256": "a5183035a71018dd547dde0aab41bba1a9d9a23504f00b9cc3cc63366bc40e03"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/table-d20-circumstance-advantage-probe-repair-retry.md.stage-facts.json",
+    "byteLength": 677,
+    "sha256": "5898423bca493147c244a0f3dcd5420c0736d6cc24eaba44d322ca05a98714e9"
+  },
+  "predecessorScenarioIds": [
+    "four-way-crank-control-cycle",
+    "goblin-warrior-skeleton-tracer",
+    "mounted-dispatch-through-flooded-orchard",
+    "open-grid-wolf-skeleton-pursuit",
+    "orc-fighter-rogue-close-interception",
+    "sand-band-four-skeleton-skirmish",
+    "synthetic-beacon-eight-round-defense",
+    "table-authored-shove-then-grapple",
+    "table-authored-three-shove-cycle",
+    "two-goblins-pursue-skeleton"
+  ]
+}

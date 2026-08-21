@@ -1,0 +1,88 @@
+{
+  "scenarioId": "table-d20-circumstance-advantage-probe-repair-retry",
+  "scenarioSha256": "98b16ef0db6e340c6e179fcdcf19abb5562c4cf741bf1becbd6f138122079a52",
+  "gitSha": "2f8ad14f784feca319f4cb8fae97d2d5923820ad",
+  "admitReviewedUnsupported": true,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "Playing-the-Game.md permits circumstance Disadvantage on a D20 Test, and its combat rules permit the stated movement and melee attacks. The Riding Horse and Wolf stat blocks provide legal speeds and Hooves/Bite attacks. The first Bite ruling is bound to an exact test; no missing RAW Table Decision appears."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The scenario uses SRD identities and standard rules terminology with synthetic herb-cloud context. It exposes no PHB+ identity, expression, provenance claim, or source-to-Mushroom crosswalk."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicyQuality",
+  "scenarioQuality": {
+    "classification": "ready",
+    "evidence": "The Horse and Wolf each pursue an authored strategy-bearing objective, and the encounter presents meaningful delegated separation-versus-attack choices. The comparison covers all ten admitted projections, identifies purposeful overlap with open-grid-wolf-skeleton-pursuit, and states material differentiators."
+  },
+  "catalogueComparison": {
+    "schemaVersion": 1,
+    "conclusion": "purposefulOverlap",
+    "comparedScenarioIds": [
+      "four-way-crank-control-cycle",
+      "goblin-warrior-skeleton-tracer",
+      "mounted-dispatch-through-flooded-orchard",
+      "open-grid-wolf-skeleton-pursuit",
+      "orc-fighter-rogue-close-interception",
+      "sand-band-four-skeleton-skirmish",
+      "synthetic-beacon-eight-round-defense",
+      "table-authored-shove-then-grapple",
+      "table-authored-three-shove-cycle",
+      "two-goblins-pursue-skeleton"
+    ],
+    "closestMatches": [
+      {
+        "scenarioId": "open-grid-wolf-skeleton-pursuit",
+        "reason": "Both are geometry-assisted two-combatant pursuits centered on changing distance, melee engagement, and turn-by-turn movement choices. The Candidate materially adds a Riding Horse counterattacking with Hooves and a single Table-imposed Disadvantage on the Wolf’s first Bite test."
+      }
+    ],
+    "materialDifferentiators": [
+      "The Candidate’s primary experiment is issue #279: applying a Table circumstance Disadvantage decision to one exact RAW-defined D20 Test, unlike the closest admitted pursuit’s Opportunity-Attack and route-redirection focus.",
+      "The Candidate uses a two-combatant Riding Horse/Wolf chase with separation-versus-attack decisions, reversal, passing, and movement-plus-attack choices; the other scenarios center on Shove/Grapple cycles, cover, ranged pressure, objectives, mounted object transfer, or Character Sheet construction.",
+      "The unsupported boundary is narrowly isolated to the per-test circumstance decision; pursuit movement, Bite and Hooves targeting, ordinary attack and damage resolution, and later turns remain intended to use surfaced SDK operations."
+    ],
+    "basis": {
+      "tag": "compared",
+      "batches": [
+        {
+          "batchIndex": 0,
+          "comparedScenarioIds": [
+            "four-way-crank-control-cycle",
+            "goblin-warrior-skeleton-tracer",
+            "mounted-dispatch-through-flooded-orchard",
+            "open-grid-wolf-skeleton-pursuit",
+            "orc-fighter-rogue-close-interception",
+            "sand-band-four-skeleton-skirmish",
+            "synthetic-beacon-eight-round-defense",
+            "table-authored-shove-then-grapple",
+            "table-authored-three-shove-cycle",
+            "two-goblins-pursue-skeleton"
+          ],
+          "dimensions": {
+            "exploratoryPurpose": "The Candidate probes issue #279 during a Horse/Wolf pursuit. It purposefully overlaps open-grid-wolf-skeleton-pursuit and, more generally, two-goblins-pursue-skeleton’s pursuit behavior, but not four-way-crank-control-cycle, table-authored-shove-then-grapple, or table-authored-three-shove-cycle’s fixed control and Shove/Grapple purposes. It also differs from mounted-dispatch-through-flooded-orchard, orc-fighter-rogue-close-interception, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense, which explore carrier, interception, skirmish, or defense objectives; goblin-warrior-skeleton-tracer is only a generic minimal battle path.",
+            "materiallyRelevantMechanics": "The Candidate combines changing separation, surfaced movement, Bite, Hooves, legal movement-plus-attack choices, and one exact first-Bite Disadvantage decision. open-grid-wolf-skeleton-pursuit instead uses Wolf Bite, Skeleton Shortsword, route changes, and directed Opportunity Attacks; two-goblins-pursue-skeleton uses ranged-to-melee pursuit and Table-owned Three-Quarters Cover. four-way-crank-control-cycle, table-authored-shove-then-grapple, and table-authored-three-shove-cycle use Shove, Grapple, Prone, or grappled outcomes. mounted-dispatch-through-flooded-orchard adds mounting, dismounting, object transfer, elevation, Difficult Terrain, cover, and Invisibility; orc-fighter-rogue-close-interception, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense add Character Sheets, ranged pressure, cover or terrain, and objectives. goblin-warrior-skeleton-tracer lacks the Candidate’s exact circumstance mechanic.",
+            "encounterComposition": "The Candidate has one hostile Riding Horse and one hostile Wolf, with no rider, carried object, allies, objective, or additional combatants. This differs from four-way-crank-control-cycle’s four stat-block combatants; goblin-warrior-skeleton-tracer’s Goblin/Skeleton pair; mounted-dispatch-through-flooded-orchard’s mounted Goblin, Imp, two Goblins, Wolf, and dispatch cylinder; open-grid-wolf-skeleton-pursuit’s Wolf/Skeleton pair; orc-fighter-rogue-close-interception’s two Character Sheets, two Wolves, Goblin, and prism; sand-band-four-skeleton-skirmish’s two adventurers and four Skeletons; synthetic-beacon-eight-round-defense’s four adventurers, four enemies, and beacon; table-authored-shove-then-grapple’s Skeleton/Goblin and case; table-authored-three-shove-cycle’s three stat blocks; and two-goblins-pursue-skeleton’s two Goblins and Skeleton.",
+            "interactionSequence": "The Candidate is an adaptive chase: the Horse trades westward separation against Hooves, the Wolf chooses pursuit movement and Bite timing, and either combatant may reverse or pass. The herb-cloud ruling applies only to the Wolf’s first Bite D20 Test. This differs from four-way-crank-control-cycle’s four fixed turns, table-authored-shove-then-grapple’s branch-specific second turn, table-authored-three-shove-cycle’s exactly three fixed Shoves, mounted-dispatch-through-flooded-orchard’s carrier-and-cylinder route, orc-fighter-rogue-close-interception’s prism defense, sand-band-four-skeleton-skirmish’s adaptive ranged/melee skirmish, and synthetic-beacon-eight-round-defense’s eight-round breach. open-grid-wolf-skeleton-pursuit has a prescribed Wolf destination and lane redirection, while two-goblins-pursue-skeleton has an escape pursuit through a portcullis and cover transition; goblin-warrior-skeleton-tracer leaves tactics comparatively open but has no exact first-test circumstance.",
+            "tacticalQuestion": "Can the public SDK represent a meaningful two-way Horse/Wolf pursuit in which players continually trade separation against melee attacks while a Table applies Disadvantage to exactly the Wolf’s first Bite roll? The admitted scenarios instead ask about crank control, a minimal Goblin/Skeleton battle, mounted cylinder delivery, Wolf/Skeleton route pursuit and Opportunity Attacks, close interception of a prism, sand-crossing ranged pressure, beacon defense, Shove/Grapple branching, a three-Shove cycle, or portcullis-mediated Goblin/Skeleton escape.",
+            "sdkSupportBoundary": "The Candidate is an explicit unsupported-capability probe for one per-test Table Disadvantage decision, with the surrounding chase intended to remain supported. This is materially narrower than mounted-dispatch-through-flooded-orchard’s unsupported mounted-carrier, transfer, elevation, and objective-state probe. It differs from the supported-only boundaries of four-way-crank-control-cycle, open-grid-wolf-skeleton-pursuit, orc-fighter-rogue-close-interception, table-authored-shove-then-grapple, table-authored-three-shove-cycle, and two-goblins-pursue-skeleton. goblin-warrior-skeleton-tracer, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense are not assessed, which does not establish support for the Candidate’s circumstance mechanic.",
+            "spatialContext": {
+              "tag": "supporting",
+              "evidence": "The Candidate uses a bright, level 80-by-20-foot packed-earth lane with geometry-assisted placement and no cover, obstacles, objects, or Difficult Terrain. This overlaps open-grid-wolf-skeleton-pursuit’s open geometry and goblin-warrior-skeleton-tracer’s open ground, but differs from orc-fighter-rogue-close-interception’s racks and prism, sand-band-four-skeleton-skirmish’s difficult sand, synthetic-beacon-eight-round-defense’s walls, doorways, barricades, and beacon, mounted-dispatch-through-flooded-orchard’s flooded orchard and detours, two-goblins-pursue-skeleton’s Table-owned portcullis cover, and the fully table-authored reach boundaries of four-way-crank-control-cycle, table-authored-shove-then-grapple, and table-authored-three-shove-cycle."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "The selected canonical identities, Riding Horse and Wolf, both appear in the supplied availability list for the availableOnly intent."
+  },
+  "sdkCapabilityIntent": "probeUnsupportedCapability",
+  "sdkCapabilityReview": {
+    "classification": "explicitUnsupportedProbe",
+    "evidence": "The supplied public projection supports setup, geometry-assisted movement and reach, typed targets, ordinary rolls and damage, and turn continuation, but not a per-test Table circumstance Advantage/Disadvantage decision. The scenario explicitly isolates the first Wolf Bite roll as the issue #279 probe."
+  }
+}
