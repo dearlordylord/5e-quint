@@ -83,6 +83,16 @@ The character-creation tool boundary exposes these user-facing tools:
   Maximum, Hit Dice capacity, ordinary Spell Slot capacity, Pact Slot
   level/count, and feature-resource capacity are derived from the stored build
   when MCP needs display rows or battle handoff projections.
+- `apply_character_session_operation` is the shared durable mutation surface
+  for finalized Character Sessions. Its class-level advancement variant accepts
+  the existing Character Build level-gain shapes and delegates advancement to
+  `@dnd/character-creation-runtime`; its Druid known-form replacement variant
+  delegates Wild Shape admission and replacement to the existing runtime facts.
+  Accepted progression and replacement mutations rebuild one canonical
+  Character Sheet, compute the updated detail before committing it, and return
+  that detail. Routed Play Session responses add the current `nextOperations`
+  projection; rejected or unsupported facts are typed operation failures and
+  leave the stored session unchanged.
 - `list_characters` lists durable character-session rows. It reads only the
   character-session store, so selected or battled Stat Blocks do not appear as
   characters. Its rows are display projections: Hit Point Maximum, Hit Dice

@@ -51,7 +51,7 @@ export function characterListRows(
   return Either.right(rows);
 }
 
-type CharacterSessionDetailIssue =
+export type CharacterSessionDetailIssue =
   | {
       readonly tag: "unknownCharacterSession";
       readonly characterId: CharacterId;
@@ -84,7 +84,7 @@ type CharacterSessionSheetProjection = {
   >[];
 };
 
-type CharacterSessionDetail =
+export type CharacterSessionDetail =
   | {
       readonly tag: "available";
       readonly characterId: CharacterId;
@@ -127,6 +127,33 @@ export function characterSessionDetail(
     });
   }
   return availableCharacterSessionDetail(root, session);
+}
+
+export function characterSessionDetailForAvailableSheet(
+  root: McpPlaySessionRoot,
+  sheet: AvailableCharacterSession,
+): Either.Either<
+  Extract<CharacterSessionDetail, { readonly tag: "available" }>,
+  Extract<
+    CharacterSessionDetailIssue,
+    { readonly tag: "characterSessionDetailInvalid" }
+  >
+> {
+  return availableCharacterSessionDetail(root, sheet);
+}
+
+export function characterSessionDetailOutput(detail: CharacterSessionDetail) {
+  return Match.value(detail).pipe(
+    Match.when({ tag: "available" }, (available) => ({
+      tag: available.tag,
+      characterId: available.characterId,
+      displayName: available.displayName,
+      build: available.sheet.build,
+      sheetProjection: available.sheetProjection,
+    })),
+    Match.when({ tag: "inBattle" }, (inBattle) => inBattle),
+    Match.exhaustive,
+  );
 }
 
 function availableCharacterSessionDetail(

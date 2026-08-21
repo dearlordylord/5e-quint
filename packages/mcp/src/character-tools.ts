@@ -11,8 +11,11 @@ import { Either, Match } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import { applyCharacterSessionOperation } from "./character-session-operation-tool.ts";
-import { characterListRows } from "./character-session-rows.ts";
-import { characterSessionDetail } from "./character-session-rows.ts";
+import {
+  characterListRows,
+  characterSessionDetail,
+  characterSessionDetailOutput,
+} from "./character-session-rows.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
@@ -77,7 +80,7 @@ export const characterToolDefinitions = [
   {
     name: characterToolNames.applyCharacterSessionOperation,
     description:
-      "Apply a supported durable character-session operation. Retained one-at-a-time companion creation delegates source, form, and cost validation to runtime support facts; MCP does not own companion eligibility.",
+      "Apply a supported durable character-session operation. Class-level advancement and Druid known-form replacement delegate existing level-gain and Wild Shape support facts to the runtime; retained one-at-a-time companion creation delegates source, form, and cost validation to runtime support facts. MCP does not own rule eligibility.",
     inputSchema: applyCharacterSessionOperationInputSchema,
     outputSchema: mcpOutputJsonSchema(CharacterSessionOperationOutputSchema),
   },
@@ -255,16 +258,7 @@ export function handleCharacterToolCall(
           );
         }
         return schemaJsonContent(CharacterSessionDetailOutputSchema, {
-          detail:
-            detail.right.tag === "available"
-              ? {
-                  tag: detail.right.tag,
-                  characterId: detail.right.characterId,
-                  displayName: detail.right.displayName,
-                  build: detail.right.sheet.build,
-                  sheetProjection: detail.right.sheetProjection,
-                }
-              : detail.right,
+          detail: characterSessionDetailOutput(detail.right),
           session: mcpSessionSummary(root.sessionStore.snapshot()),
         });
       },

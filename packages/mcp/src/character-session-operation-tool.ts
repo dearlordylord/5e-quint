@@ -1,11 +1,17 @@
 import { characterId, type CharacterId } from "@dnd/battle-runtime";
 import {
+  advanceCharacterBuildClassLevel,
+  characterBuildDruidWildShapeFacts,
+  replaceDruidWildShapeKnownForm,
+} from "@dnd/character-creation-runtime";
+import {
   characterSheetCompanion,
   createRetainedFamiliarLikeCompanion,
   type CharacterSheetCompanionFormSelection,
   type CharacterSheetRetainedCompanionCreationSource,
   type CharacterSheetRetainedCompanionId,
 } from "@dnd/character-sheet-runtime";
+import type { StatBlockId } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
 import { Either, Match } from "effect";
@@ -14,6 +20,15 @@ import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { AvailableCharacterSession } from "./session-store.ts";
 import { CharacterSessionOperationOutputSchema } from "./character-tool-output.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
+import {
+  characterBuildClassLevelGainFromTool,
+  runtimeIssueMessage,
+} from "./character-session-class-level-gain.ts";
+import { rebuildCharacterSheetForOperation } from "./character-session-sheet-rebuild.ts";
+import {
+  characterSessionDetailForAvailableSheet,
+  characterSessionDetailOutput,
+} from "./character-session-rows.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
@@ -48,8 +63,158 @@ export function applyCharacterSessionOperation(
         operation,
       }),
     ),
+    Match.when({ kind: "advanceClassLevel" }, (operation) =>
+      applyAdvanceClassLevelOperation(root, {
+        characterId: input.characterId,
+        session,
+        operation,
+      }),
+    ),
+    Match.when({ kind: "replaceDruidWildShapeKnownForm" }, (operation) =>
+      applyReplaceDruidWildShapeKnownFormOperation(root, {
+        characterId: input.characterId,
+        session,
+        operation,
+      }),
+    ),
     Match.exhaustive,
   );
+}
+
+function applyAdvanceClassLevelOperation(
+  root: McpPlaySessionRoot,
+  input: {
+    readonly characterId: string;
+    readonly session: AvailableCharacterSession;
+    readonly operation: Extract<
+      ApplyCharacterSessionOperationToolInput["operation"],
+      { readonly kind: "advanceClassLevel" }
+    >;
+  },
+) {
+  const levelGain = characterBuildClassLevelGainFromTool(root, {
+    levelGain: input.operation.levelGain,
+  });
+  if (Either.isLeft(levelGain)) {
+    return characterSessionOperationInvalid(input.characterId, levelGain.left);
+  }
+  const build = advanceCharacterBuildClassLevel({
+    build: input.session.build,
+    unitLibrary: root.unitLibrary,
+    levelGain: levelGain.right,
+  });
+  if (Either.isLeft(build)) {
+    return characterSessionOperationInvalid(
+      input.characterId,
+      runtimeIssueMessage(build.left),
+    );
+  }
+  return commitAvailableCharacterSheetOperation(root, {
+    characterId: input.characterId,
+    sheet: input.session,
+    build: build.right,
+  });
+}
+
+function applyReplaceDruidWildShapeKnownFormOperation(
+  root: McpPlaySessionRoot,
+  input: {
+    readonly characterId: string;
+    readonly session: AvailableCharacterSession;
+    readonly operation: Extract<
+      ApplyCharacterSessionOperationToolInput["operation"],
+      { readonly kind: "replaceDruidWildShapeKnownForm" }
+    >;
+  },
+) {
+  const currentKnownForms = input.session.druidWildShapeKnownForms;
+  if (currentKnownForms === undefined) {
+    return characterSessionOperationInvalid(
+      input.characterId,
+      "Druid Wild Shape replacement requires current known forms.",
+    );
+  }
+  const facts = characterBuildDruidWildShapeFacts({
+    build: input.session.build,
+    unitLibrary: root.unitLibrary,
+  });
+  if (Either.isLeft(facts)) {
+    return characterSessionOperationInvalid(
+      input.characterId,
+      runtimeIssueMessage(facts.left),
+    );
+  }
+  if (facts.right === undefined) {
+    return characterSessionOperationInvalid(
+      input.characterId,
+      "Druid Wild Shape replacement requires the Druid Wild Shape feature.",
+    );
+  }
+  const replaced = replaceDruidWildShapeKnownForm({
+    facts: facts.right,
+    currentKnownFormStatBlockIds: currentKnownForms.statBlockIds,
+    replacement: input.operation.replacement,
+    statBlockCatalog: root.statBlockCatalog,
+  });
+  if (Either.isLeft(replaced)) {
+    return characterSessionOperationInvalid(
+      input.characterId,
+      runtimeIssueMessage(replaced.left),
+    );
+  }
+  return commitAvailableCharacterSheetOperation(root, {
+    characterId: input.characterId,
+    sheet: input.session,
+    build: input.session.build,
+    druidWildShapeKnownFormStatBlockIds: replaced.right,
+  });
+}
+
+function commitAvailableCharacterSheetOperation(
+  root: McpPlaySessionRoot,
+  input: {
+    readonly characterId: string;
+    readonly sheet: AvailableCharacterSession;
+    readonly build: AvailableCharacterSession["build"];
+    readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
+  },
+) {
+  const rebuilt = rebuildCharacterSheetForOperation(root, {
+    sheet: input.sheet,
+    build: input.build,
+    ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+      ? {}
+      : {
+          druidWildShapeKnownFormStatBlockIds:
+            input.druidWildShapeKnownFormStatBlockIds,
+        }),
+  });
+  if (Either.isLeft(rebuilt)) {
+    return characterSessionOperationInvalid(input.characterId, rebuilt.left);
+  }
+  const detail = characterSessionDetailForAvailableSheet(root, rebuilt.right);
+  if (Either.isLeft(detail)) {
+    return characterSessionOperationInvalid(
+      input.characterId,
+      detail.left.message,
+    );
+  }
+  root.sessionStore.characters.set(rebuilt.right);
+  return schemaJsonContent(CharacterSessionOperationOutputSchema, {
+    detail: characterSessionDetailOutput(detail.right),
+    session: mcpSessionSummary(root.sessionStore.snapshot()),
+  });
+}
+
+function characterSessionOperationInvalid(
+  characterId: string,
+  message: string,
+) {
+  return errorContent("Character session operation failed.", {
+    code: "CHARACTER_SESSION_OPERATION_INVALID",
+    characterId,
+    message,
+  });
 }
 
 function applyRetainOneAtATimeCompanionOperation(
