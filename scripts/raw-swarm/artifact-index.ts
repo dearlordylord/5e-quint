@@ -44,6 +44,11 @@ type ExecutionArtifactCandidate = readonly [
   expectedSha256: string | undefined,
 ];
 
+type CurrentExecutionAuthorityPaths = {
+  readonly executionManifestPath: string;
+  readonly executionStartPath: string;
+};
+
 export type LegacyArtifactDisposition =
   | "artifactBacked"
   | "databaseOnly"
@@ -133,6 +138,42 @@ function fail(message: string): never {
 
 function sha256(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
+}
+
+function requiredCurrentExecutionAuthorityPath(
+  evidenceSetDirectory: string,
+  path: string,
+  label: string,
+): string {
+  const candidate = resolve(evidenceSetDirectory, path);
+  const canonical = canonicalRepositoryReadPath(repoRoot, candidate);
+  if (Either.isRight(canonical)) return canonical.right;
+  if (canonical.left.includes("ENOENT")) {
+    return fail(
+      `Current SDK transcript requires its ${label}: ${relative(repoRoot, candidate)}`,
+    );
+  }
+  return fail(
+    `Current SDK transcript ${label} is not repository-owned: ${relative(repoRoot, candidate)}: ${canonical.left}`,
+  );
+}
+
+function currentExecutionAuthorityPaths(
+  absoluteTranscript: string,
+): CurrentExecutionAuthorityPaths {
+  const evidenceSetDirectory = dirname(dirname(absoluteTranscript));
+  return {
+    executionManifestPath: requiredCurrentExecutionAuthorityPath(
+      evidenceSetDirectory,
+      "execution.json",
+      "Execution manifest",
+    ),
+    executionStartPath: requiredCurrentExecutionAuthorityPath(
+      evidenceSetDirectory,
+      "evidence/execution-start.json",
+      "Execution start authority",
+    ),
+  };
 }
 
 export function repositoryArtifactPath(path: string): string {
@@ -511,6 +552,10 @@ function ingestArtifactRunWithDisposition(input: {
       "Current evidence ingestion requires an SDK transcript with an Execution manifest; use legacy rebuild for Historical Observations.",
     );
   }
+  const currentAuthorities =
+    sdk.tag === "valid" && input.ingestion === "currentEvidence"
+      ? currentExecutionAuthorityPaths(absoluteTranscript)
+      : undefined;
   const db = openArtifactIndex(input.dbPath);
   try {
     db.exec("BEGIN");
@@ -547,21 +592,19 @@ function ingestArtifactRunWithDisposition(input: {
       const isolation =
         sdk.tag === "valid" ? sdk.value.header.consumerIsolation : null;
       const executionIdentity =
-        sdk.tag === "valid" && input.ingestion === "currentEvidence"
+        currentAuthorities !== undefined
           ? (() => {
-              const manifestPath = resolve(
-                dirname(dirname(absoluteTranscript)),
-                "execution.json",
-              );
-              if (!existsSync(manifestPath)) {
-                return fail(
-                  `Current SDK transcript requires its Execution manifest: ${relative(repoRoot, manifestPath)}`,
-                );
-              }
               const decoded = Schema.decodeUnknownEither(
                 IndexedExecutionRecordSchema,
                 { onExcessProperty: "error" },
-              )(JSON.parse(readFileSync(manifestPath, "utf8")));
+              )(
+                JSON.parse(
+                  readFileSync(
+                    currentAuthorities.executionManifestPath,
+                    "utf8",
+                  ),
+                ),
+              );
               if (Either.isLeft(decoded)) {
                 return fail(
                   `Invalid Execution manifest: ${decoded.left.message}`,
@@ -572,19 +615,14 @@ function ingestArtifactRunWithDisposition(input: {
                   "Execution manifest Scenario does not match its transcript.",
                 );
               }
-              const executionStartPath = resolve(
-                dirname(dirname(absoluteTranscript)),
-                "evidence/execution-start.json",
-              );
-              if (!existsSync(executionStartPath)) {
-                return fail(
-                  `Current SDK transcript requires its Execution start authority: ${relative(repoRoot, executionStartPath)}`,
-                );
-              }
               const executionStart = Schema.decodeUnknownEither(
                 ExecutionStartRecordSchema,
                 { onExcessProperty: "error" },
-              )(JSON.parse(readFileSync(executionStartPath, "utf8")));
+              )(
+                JSON.parse(
+                  readFileSync(currentAuthorities.executionStartPath, "utf8"),
+                ),
+              );
               if (Either.isLeft(executionStart)) {
                 return fail(
                   `Invalid Execution start authority: ${executionStart.left.message}`,
@@ -635,6 +673,17 @@ function ingestArtifactRunWithDisposition(input: {
       if (sdk.tag === "valid") {
         const header = sdk.value.header;
         const evidenceSetDirectory = dirname(dirname(absoluteTranscript));
+        const executionManifestCandidate:
+          | ExecutionArtifactCandidate
+          | undefined =
+          currentAuthorities === undefined
+            ? undefined
+            : [
+                "executionManifest",
+                currentAuthorities.executionManifestPath,
+                "application/json",
+                undefined,
+              ];
         const candidates: readonly ExecutionArtifactCandidate[] = [
           [
             "scenario",
@@ -648,6 +697,9 @@ function ingestArtifactRunWithDisposition(input: {
             "application/json",
             header.scenarioReviewSha256,
           ],
+          ...(executionManifestCandidate === undefined
+            ? []
+            : [executionManifestCandidate]),
           [
             "replaySupervisor",
             resolve(evidenceSetDirectory, "replay-supervisor.mjs"),
@@ -676,7 +728,8 @@ function ingestArtifactRunWithDisposition(input: {
           ],
           [
             "executionStart",
-            resolve(evidenceSetDirectory, "evidence/execution-start.json"),
+            currentAuthorities?.executionStartPath ??
+              resolve(evidenceSetDirectory, "evidence/execution-start.json"),
             "application/json",
             undefined,
           ],

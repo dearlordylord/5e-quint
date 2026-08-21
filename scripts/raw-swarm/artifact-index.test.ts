@@ -188,6 +188,57 @@ describe("Raw Swarm artifact index", () => {
     db.close();
   });
 
+  test("rejects an escaping current Execution manifest before opening the index", () => {
+    const directory = temporaryDirectory();
+    const sdk = sdkTranscript(directory);
+    const executionDirectory = dirname(dirname(sdk));
+    const outside = mkdtempSync(
+      resolve(tmpdir(), "raw-swarm-execution-manifest-outside-"),
+    );
+    temporaryExternalDirectories.push(outside);
+    const linkedManifest = resolve(executionDirectory, "execution.json");
+    const outsideManifest = resolve(outside, "execution.json");
+    writeFileSync(outsideManifest, "not-json\n");
+    rmSync(linkedManifest);
+    symlinkSync(outsideManifest, linkedManifest);
+    const dbPath = resolve(directory, "manifest.sqlite");
+
+    expect(() =>
+      ingestArtifactRun({
+        transcriptPath: relative(repoRoot, sdk),
+        dbPath: relative(repoRoot, dbPath),
+      }),
+    ).toThrow(/Repository authority symlink escapes the repository/);
+    expect(existsSync(dbPath)).toBe(false);
+  });
+
+  test("rejects an escaping current Execution start authority before opening the index", () => {
+    const directory = temporaryDirectory();
+    const sdk = sdkTranscript(directory);
+    const executionDirectory = dirname(dirname(sdk));
+    const outside = mkdtempSync(
+      resolve(tmpdir(), "raw-swarm-execution-start-outside-"),
+    );
+    temporaryExternalDirectories.push(outside);
+    const linkedStart = resolve(
+      executionDirectory,
+      "evidence/execution-start.json",
+    );
+    const outsideStart = resolve(outside, "execution-start.json");
+    writeFileSync(outsideStart, "not-json\n");
+    rmSync(linkedStart);
+    symlinkSync(outsideStart, linkedStart);
+    const dbPath = resolve(directory, "execution-start.sqlite");
+
+    expect(() =>
+      ingestArtifactRun({
+        transcriptPath: relative(repoRoot, sdk),
+        dbPath: relative(repoRoot, dbPath),
+      }),
+    ).toThrow(/Repository authority symlink escapes the repository/);
+    expect(existsSync(dbPath)).toBe(false);
+  });
+
   test("public ingestion rejects observations without current Execution identity", () => {
     const directory = temporaryDirectory();
     const sdk = sdkTranscript(directory);
@@ -522,6 +573,23 @@ describe("Raw Swarm artifact index", () => {
       { role: "playerInvocationEvents-1" },
       { role: "playerInvocationEvents-2" },
     ]);
+    const executionManifestPath = resolve(
+      dirname(dirname(transcript)),
+      "execution.json",
+    );
+    expect(
+      db
+        .prepare(
+          `SELECT artifacts.path AS path, artifacts.sha256 AS sha256
+           FROM runArtifacts
+           JOIN artifacts ON artifacts.sha256 = runArtifacts.artifactSha256
+           WHERE runArtifacts.runId = 1 AND runArtifacts.role = 'executionManifest'`,
+        )
+        .get(),
+    ).toEqual({
+      path: relative(repoRoot, executionManifestPath),
+      sha256: sha256Text(readFileSync(executionManifestPath, "utf8")),
+    });
     db.close();
     const constrained = new DatabaseSync(dbPath);
     expect(() =>
@@ -726,7 +794,7 @@ describe("Raw Swarm artifact index", () => {
       dbPath: relative(repoRoot, dbPath),
       destination,
     });
-    expect(manifest.artifacts).toHaveLength(11);
+    expect(manifest.artifacts).toHaveLength(12);
     expect(
       readFileSync(resolve(destination, "manifest.json"), "utf8"),
     ).toContain(manifest.artifacts[0]?.sha256);
