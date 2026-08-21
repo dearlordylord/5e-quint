@@ -32,9 +32,9 @@ const AmmunitionStockArgsSchema = Schema.Struct({
   ammunition: AmmunitionKindSchema,
   remaining: NonNegativeIntegerSchema,
 });
-const InitialCharacterSessionCombatantArgsSchema = Schema.Struct({
+const CharacterSessionCombatantArgsSchema = Schema.Struct({
   kind: Schema.Literal("characterSession").annotations({
-    description: "Initial combatant source: finalized character session.",
+    description: "Battle combatant source: finalized character session.",
   }),
   characterId: Schema.NonEmptyTrimmedString.annotations({
     description:
@@ -52,9 +52,9 @@ const InitialCharacterSessionCombatantArgsSchema = Schema.Struct({
       "Explicit carried ammunition stock. Use an empty array when the character carries none.",
   }),
 });
-const InitialEncounterStatBlockCombatantArgsSchema = Schema.Struct({
+const StatBlockCombatantArgsSchema = Schema.Struct({
   kind: Schema.Literal("statBlock").annotations({
-    description: "Initial combatant source: SRD Stat Block catalog record.",
+    description: "Battle combatant source: SRD Stat Block catalog record.",
   }),
   statBlockId: StatBlockId.annotations({
     description: "SRD Stat Block id from list_stat_blocks.",
@@ -84,14 +84,9 @@ const InitialEncounterStatBlockCombatantArgsSchema = Schema.Struct({
     description: "Optional non-negative Temporary Hit Points.",
   }),
 });
-const InitialStatBlockCombatantArgsSchema =
-  InitialEncounterStatBlockCombatantArgsSchema;
 export const BattleCombatantArgsSchema = Schema.Union(
-  InitialCharacterSessionCombatantArgsSchema,
-  InitialStatBlockCombatantArgsSchema,
-);
-export const battleCombatantInputSchema = mcpObjectJsonSchema(
-  BattleCombatantArgsSchema,
+  CharacterSessionCombatantArgsSchema,
+  StatBlockCombatantArgsSchema,
 );
 const CompanionAdmissionArgsSchema = Schema.Struct({
   ownerCharacterId: Schema.NonEmptyTrimmedString.annotations({
@@ -150,19 +145,17 @@ export const startBattleInputSchema = mcpObjectJsonSchema(
 export type StartBattleToolInput = {
   readonly battleId: BattleId;
   readonly initialCombatants: readonly [
-    InitialBattleCombatantToolInput,
-    ...InitialBattleCombatantToolInput[],
+    BattleCombatantToolInput,
+    ...BattleCombatantToolInput[],
   ];
   readonly companionAdmissions: readonly CompanionAdmissionToolInput[];
 };
 
-export type InitialBattleCombatantToolInput = BattleCombatantToolInput;
-
 export type BattleCombatantToolInput =
-  | InitialCharacterSessionCombatantToolInput
-  | InitialStatBlockCombatantToolInput;
+  | CharacterSessionCombatantToolInput
+  | StatBlockCombatantToolInput;
 
-export type InitialCharacterSessionCombatantToolInput = {
+export type CharacterSessionCombatantToolInput = {
   readonly kind: "characterSession";
   readonly characterId: CharacterId;
   readonly combatantId: CombatantId;
@@ -170,10 +163,7 @@ export type InitialCharacterSessionCombatantToolInput = {
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
 };
 
-export type InitialStatBlockCombatantToolInput =
-  InitialEncounterStatBlockCombatantToolInput;
-
-export type InitialEncounterStatBlockCombatantToolInput = {
+export type StatBlockCombatantToolInput = {
   readonly kind: "statBlock";
   readonly combatantId: CombatantId;
   readonly initiative: InitiativeScore;
@@ -204,7 +194,7 @@ export function decodeStartBattleArgs(
 
   return Either.right({
     battleId: record.right.battleId,
-    initialCombatants: decodeInitialCombatants(record.right.initialCombatants),
+    initialCombatants: decodeBattleCombatants(record.right.initialCombatants),
     companionAdmissions: (record.right.companionAdmissions ?? []).map(
       (admission) => ({
         ownerCharacterId: characterId(admission.ownerCharacterId),
@@ -236,7 +226,7 @@ export function decodeBattleCombatantArgs(
   return Either.map(record, decodeBattleCombatant);
 }
 
-function decodeInitialCombatants(
+function decodeBattleCombatants(
   value: StartBattleToolArgs["initialCombatants"],
 ): StartBattleToolInput["initialCombatants"] {
   const decodeCombatant = (combatant: BattleCombatantArgs) =>

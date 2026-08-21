@@ -22,8 +22,8 @@ import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { type AvailableCharacterSession } from "./session-store.ts";
 import {
-  type InitialBattleCombatantToolInput,
-  type InitialCharacterSessionCombatantToolInput,
+  type BattleCombatantToolInput,
+  type CharacterSessionCombatantToolInput,
   type CompanionAdmissionToolInput,
   type StartBattleToolInput,
 } from "./start-battle-tool-input.ts";
@@ -34,7 +34,7 @@ import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
 
 export type ProjectedCharacterSessionCombatant = {
-  readonly character: InitialCharacterSessionCombatantToolInput;
+  readonly character: CharacterSessionCombatantToolInput;
   readonly session: AvailableCharacterSession;
 };
 
@@ -146,7 +146,7 @@ export function handleStartBattleToolCall(
 }
 
 function duplicateStartBattleInputContent(
-  initialCombatants: readonly InitialBattleCombatantToolInput[],
+  initialCombatants: readonly BattleCombatantToolInput[],
   companionAdmissions: readonly CompanionAdmissionToolInput[],
 ) {
   const characters = initialCombatants.filter(isCharacterSessionCombatant);
@@ -190,7 +190,7 @@ function duplicateStartBattleInputContent(
 
 function startableBattleCombatants(input: {
   readonly root: McpPlaySessionRoot;
-  readonly initialCombatants: readonly InitialBattleCombatantToolInput[];
+  readonly initialCombatants: readonly BattleCombatantToolInput[];
 }): Either.Either<ProjectedBattleCombatants, ReturnType<typeof errorContent>> {
   const combatants = traverseValidation(input.initialCombatants, (combatant) =>
     projectBattleCombatant({
@@ -212,7 +212,7 @@ function startableBattleCombatants(input: {
 
 export function projectBattleCombatant(input: {
   readonly root: McpPlaySessionRoot;
-  readonly combatant: InitialBattleCombatantToolInput;
+  readonly combatant: BattleCombatantToolInput;
 }): Either.Either<ProjectedBattleCombatant, ToolError> {
   const { root, combatant } = input;
   return Match.value(combatant).pipe(
@@ -385,8 +385,8 @@ function invalidBattleCombatantsContent(issues: readonly ToolError[]) {
 }
 
 function isCharacterSessionCombatant(
-  combatant: InitialBattleCombatantToolInput,
-): combatant is InitialCharacterSessionCombatantToolInput {
+  combatant: BattleCombatantToolInput,
+): combatant is CharacterSessionCombatantToolInput {
   return combatant.kind === "characterSession";
 }
 
