@@ -118,9 +118,16 @@ const CompanionAdmissionArgsSchema = Schema.Struct({
       "Optional caller/table position id for the unoccupied space where the retained companion starts.",
   }),
 });
+const InitiativeStartModeSchema = Schema.Literal("direct", "initialSetup");
 const StartBattleToolArgsSchema = Schema.Struct({
   battleId: BattleIdSchema.annotations({
     description: "Caller-chosen durable battle id.",
+  }),
+  initiativeMode: Schema.optionalWith(InitiativeStartModeSchema, {
+    exact: true,
+  }).annotations({
+    description:
+      "Use direct for an already supplied Initiative score or initialSetup to retain the SDK-owned setup for supported swaps and finalization.",
   }),
   initialCombatants: Schema.NonEmptyArray(
     InitialBattleCombatantArgsSchema,
@@ -145,6 +152,7 @@ export const startBattleInputSchema = mcpObjectJsonSchema(
 
 export type StartBattleToolInput = {
   readonly battleId: BattleId;
+  readonly initiativeMode: "direct" | "initialSetup";
   readonly initialCombatants: readonly [
     InitialBattleCombatantToolInput,
     ...InitialBattleCombatantToolInput[],
@@ -198,6 +206,7 @@ export function decodeStartBattleArgs(
 
   return Either.right({
     battleId: record.right.battleId,
+    initiativeMode: record.right.initiativeMode ?? "direct",
     initialCombatants: decodeInitialCombatants(record.right.initialCombatants),
     companionAdmissions: (record.right.companionAdmissions ?? []).map(
       (admission) => ({

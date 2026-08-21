@@ -18,6 +18,7 @@ import {
   StartBattleOutputSchema,
 } from "./battle-tool-output.ts";
 import { mcpOutputJsonSchema } from "./schema-codec.ts";
+import { battleLifecycleInputSchema } from "./battle-lifecycle-tool-input.ts";
 import { startBattleInputSchema } from "./start-battle-tool-input.ts";
 
 export const battleToolDefinitions = [
@@ -31,8 +32,15 @@ export const battleToolDefinitions = [
   {
     name: battleToolNames.startBattle,
     description:
-      "Start the battle session from finalized Character Builds and the selected SRD Stat Block. The caller must provide Initiative scores for every character combatant and the Stat Block combatant.",
+      "Start a battle session from finalized Character Builds and the selected SRD Stat Block. The caller must provide Initiative scores for every combatant; choose initialSetup to keep the SDK-owned Initiative setup open for the battle_lifecycle surface.",
     inputSchema: startBattleInputSchema,
+    outputSchema: mcpOutputJsonSchema(StartBattleOutputSchema),
+  },
+  {
+    name: battleToolNames.battleLifecycle,
+    description:
+      "Apply one supported initial-Initiative setup operation: swap Initiative with a willing ally or finalize setup into the active Battle.",
+    inputSchema: battleLifecycleInputSchema,
     outputSchema: mcpOutputJsonSchema(StartBattleOutputSchema),
   },
   {

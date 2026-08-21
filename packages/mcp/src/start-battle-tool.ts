@@ -32,13 +32,14 @@ import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
+import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
 
-type StartableCharacterSessionCombatant = {
+export type StartableCharacterSessionCombatant = {
   readonly character: InitialCharacterSessionCombatantToolInput;
   readonly session: AvailableCharacterSession;
 };
 
-type StartableBattleCombatants = {
+export type StartableBattleCombatants = {
   readonly creatureInits: readonly BattleCreatureInit[];
   readonly characterSessions: readonly StartableCharacterSessionCombatant[];
 };
@@ -58,13 +59,24 @@ export function handleStartBattleToolCall(
   root: McpPlaySessionRoot,
   input: StartBattleToolInput,
 ) {
-  const activeBattle = root.sessionStore.battleSession;
-  if (activeBattle !== null) {
-    return errorContent("A battle session is already active.", {
-      code: "BATTLE_SESSION_ALREADY_ACTIVE",
-      battleId: activeBattle.state.battleId,
-    });
-  }
+  const battleState = root.sessionStore.battleState;
+  const activeBattleError = Match.value(battleState).pipe(
+    Match.when({ tag: "none" }, () => null),
+    Match.when({ tag: "initialInitiativeSetup" }, (matched) =>
+      errorContent("A battle session is already active.", {
+        code: "BATTLE_SESSION_ALREADY_ACTIVE",
+        battleId: matched.setup.state.battleId,
+      }),
+    ),
+    Match.when({ tag: "activeBattle" }, (matched) =>
+      errorContent("A battle session is already active.", {
+        code: "BATTLE_SESSION_ALREADY_ACTIVE",
+        battleId: matched.session.state.battleId,
+      }),
+    ),
+    Match.exhaustive,
+  );
+  if (activeBattleError !== null) return activeBattleError;
 
   const duplicateInput = duplicateStartBattleInputContent(
     input.initialCombatants,
@@ -78,6 +90,10 @@ export function handleStartBattleToolCall(
     initialCombatants: input.initialCombatants,
   });
   if (Either.isLeft(combatants)) return combatants.left;
+
+  if (input.initiativeMode === "initialSetup") {
+    return startInitialInitiativeSetup(root, input, combatants.right);
+  }
 
   const session = startBattle({
     battleId: input.battleId,
@@ -131,11 +147,15 @@ export function handleStartBattleToolCall(
     });
   }
 
-  root.sessionStore.battleSession = admittedSession;
+  root.sessionStore.battleState = {
+    tag: "activeBattle",
+    session: admittedSession,
+  };
   root.sessionStore.pendingBattleFills = null;
   publishAdminProjectionBestEffort(root);
 
   return schemaJsonContent(StartBattleOutputSchema, {
+    battleState: root.sessionStore.snapshot().battleState,
     snapshot: snapshot.right,
     availableActs: discoverBattleActs(admittedSession),
     admittedSpellPresentations:

@@ -158,12 +158,26 @@ The battle-session tool boundary exposes these user-facing tools:
   roster. A combatant can currently come from an available finalized character
   session or from an SRD Stat Block id. The caller supplies the final Initiative
   score for every combatant, including retained companions admitted alongside
-  the initial roster. Character and Stat Block projections are validated before
-  the canonical Battle Session and every included Character Session are
-  committed.
+  the initial roster. Set `initiativeMode` to `initialSetup` to retain the
+  SDK-owned initial-Initiative setup instead of immediately creating an active
+  Battle. Initial setup currently excludes retained companion admissions because
+  the SDK exposes no setup-time companion admission operation; use the direct
+  final-Initiative path when retained companions are required. Character and
+  Stat Block projections are validated before the canonical Battle workflow and
+  every included Character Session are committed.
+- `battle_lifecycle` is one discriminated Battle-lifecycle surface for the
+  existing initial-Initiative setup operations. Its `applyInitiativeSwap`
+  variant accepts the SDK's willing-ally witness and returns the updated setup;
+  its `finalizeInitialInitiativeSetup` variant replaces setup with one active
+  Battle. MCP reports each combatant's SDK-required roll mode and forwards
+  caller-supplied Initiative facts (or future generic-roller raw faces) through
+  existing SDK contracts; it performs no Initiative arithmetic or roll-mode
+  interpretation.
 - `read_battle_state` returns the canonical stored `BattleState` projection and
-  current battle snapshot. Character occupancy remains visible through the
-  Character Session read models while battle owns the active combat facts.
+  current battle snapshot. The Play Session projection has exactly one Battle
+  workflow state: `none`, `initialInitiativeSetup`, or `activeBattle`.
+  Character occupancy remains visible through the Character Session read models
+  while the SDK setup object or active Battle owns the combat facts.
 - `discover_battle_acts` returns the current actor's battle acts. The battle
   runtime is the source of truth for which acts are currently available.
 - `fill_battle_hole` submits one fill at a time for a selected battle act
@@ -327,4 +341,5 @@ tools.
 
 `start_battle` must receive caller-supplied Initiative scores for every
 combatant in `initialCombatants`. MCP must not derive Initiative as
-`10 + modifier`.
+`10 + modifier`; raw dice faces belong to the separate generic roller and can
+only enter a battle through a canonical SDK fill/initialization contract.

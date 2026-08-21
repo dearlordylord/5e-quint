@@ -59,6 +59,7 @@ const expectedTools = [
   "query_character_session",
   "select_stat_block",
   "start_battle",
+  "battle_lifecycle",
   "read_battle_state",
   "discover_battle_acts",
   "fill_battle_hole",
@@ -836,7 +837,7 @@ export async function verifyBaselineVertical(client: Client) {
 
   const ended = await callTool(client, "end_battle", {});
   assert.equal(get(ended, "endedBattleId"), "battle:stdio-accepted-vertical");
-  assert.equal(get(ended, "session.activeBattle"), null);
+  assert.deepEqual(get(ended, "session.battleState"), { tag: "none" });
 
   const listed = await callTool(client, "list_characters", {});
   assert.equal(get(listed, "characters.0.status"), "available");

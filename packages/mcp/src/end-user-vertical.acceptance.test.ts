@@ -274,7 +274,7 @@ describe("end-user MCP vertical", () => {
         roundReached: 1,
         activeTurnActorId: "goblin",
       },
-      session: { activeBattle: null },
+      session: { battleState: { tag: "none" } },
     });
 
     const listed = callTool(root, "list_characters", {});
@@ -744,7 +744,7 @@ describe("end-user MCP vertical", () => {
 
     const ended = callTool(root, "end_battle", {});
     expect(ended.session).toMatchObject({
-      activeBattle: null,
+      battleState: { tag: "none" },
       characterIds: [
         testCharacterId(fighterDraftId),
         testCharacterId(wizardDraftId),

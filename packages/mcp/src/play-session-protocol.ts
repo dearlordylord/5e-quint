@@ -280,7 +280,10 @@ function nextOperationsFrom(
   unresolvedInputs: readonly UnresolvedInputGroup[],
   hasAvailableCharacterSession: boolean,
 ): readonly PlaySessionNextOperationName[] {
-  if (projection.activeBattle !== null) {
+  if (projection.battleState.tag === "initialInitiativeSetup") {
+    return [battleToolNames.battleLifecycle, battleToolNames.readBattleState];
+  }
+  if (projection.battleState.tag === "activeBattle") {
     if (operationName === playSessionToolNames.read) {
       return [
         battleToolNames.discoverBattleActs,

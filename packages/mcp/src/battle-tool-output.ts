@@ -14,6 +14,7 @@ import {
 import { Schema } from "effect";
 
 import {
+  McpBattleStateSnapshotSchema,
   McpSessionSnapshotSchema,
   McpSessionSummarySchema,
 } from "./session-snapshot-output.ts";
@@ -84,18 +85,21 @@ export const SelectStatBlockOutputSchema = Schema.Struct({
 });
 
 export const BattleSessionOutputSchema = Schema.Struct({
+  battleState: McpBattleStateSnapshotSchema,
   snapshot: Schema.Union(BattlePresentedSnapshotSchema, Schema.Null),
   ...BattlePresentationProjectionFields,
   session: McpSessionSnapshotSchema,
 });
 
 export const StartBattleOutputSchema = Schema.Struct({
-  snapshot: BattlePresentedSnapshotSchema,
+  battleState: McpBattleStateSnapshotSchema,
+  snapshot: Schema.Union(BattlePresentedSnapshotSchema, Schema.Null),
   ...BattlePresentationProjectionFields,
   session: McpSessionSummarySchema,
 });
 
 export const BattleResolutionOutputSchema = Schema.Struct({
+  battleState: McpBattleStateSnapshotSchema,
   result: BattleResolutionResultSchema,
   snapshot: BattlePresentedSnapshotSchema,
   ...BattlePresentationProjectionFields,

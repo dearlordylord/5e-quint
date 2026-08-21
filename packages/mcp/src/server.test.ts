@@ -1074,7 +1074,7 @@ describe("MCP server route", () => {
     expect(root.sessionStore.snapshot()).toMatchObject({
       draftIds: [],
       selectedStatBlockId: "stat_block_goblin_warrior",
-      activeBattle: null,
+      battleState: { tag: "none" },
       transientBattleFills: null,
     });
     expect(root.sessionStore.getSelectedStatBlock()?.id).toBe(
@@ -1138,7 +1138,8 @@ describe("MCP server route", () => {
     );
     expect(state.combatants.get(fighterId)?.initiative).toBe(12);
     expect(state.combatants.get(goblinId)?.initiative).toBe(11);
-    expect(root.sessionStore.snapshot().activeBattle).toEqual({
+    expect(root.sessionStore.snapshot().battleState).toEqual({
+      tag: "activeBattle",
       battleId: "battle-root",
       currentActorId: fighterId,
     });
@@ -1942,6 +1943,7 @@ describe("MCP server route", () => {
     expect(battleToolDefinitions.map((tool) => tool.name)).toEqual([
       "select_stat_block",
       "start_battle",
+      "battle_lifecycle",
       "read_battle_state",
       "discover_battle_acts",
       "fill_battle_hole",
@@ -2289,7 +2291,8 @@ describe("MCP server route", () => {
       },
       session: {
         selectedStatBlockId: "stat_block_goblin_warrior",
-        activeBattle: {
+        battleState: {
+          tag: "activeBattle",
           battleId: "battle:mcp-shell",
           currentActorId: "fighter",
         },
@@ -2556,7 +2559,8 @@ describe("MCP server route", () => {
     });
     expect(root.sessionStore.snapshot()).toMatchObject({
       selectedStatBlockId: null,
-      activeBattle: {
+      battleState: {
+        tag: "activeBattle",
         battleId: "battle:mcp-character-roster",
         currentActorId: "second-fighter",
       },
@@ -2647,6 +2651,48 @@ describe("MCP server route", () => {
     ).toMatchObject({
       tag: "available",
       hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
+    });
+  });
+
+  test("initial Initiative setup reports retained companion exclusion", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:initial-initiative-companion-exclusion";
+    createFinalizedFighterSheet(root, draftId);
+    const characterId = testCharacterId(draftId);
+
+    expect(
+      readPayload(
+        handleToolCall(root, "start_battle", {
+          battleId: "battle:initial-initiative-companion-exclusion",
+          initiativeMode: "initialSetup",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              characterId,
+              combatantId: "initial-initiative-owner",
+              initiative: 10,
+              ammunitionStocks: [],
+            },
+          ],
+          companionAdmissions: [
+            {
+              ownerCharacterId: characterId,
+              ammunitionStocks: [],
+            },
+          ],
+        }),
+      ),
+    ).toMatchObject({
+      error: "Initial Initiative setup does not support companion admissions.",
+      details: {
+        code: "INITIAL_INITIATIVE_SETUP_COMPANIONS_UNSUPPORTED",
+      },
+    });
+    expect(root.sessionStore.snapshot().battleState).toEqual({
+      tag: "none",
+    });
+    expect(root.sessionStore.characters.get(characterId)).toMatchObject({
+      tag: "available",
     });
   });
 
@@ -3425,7 +3471,8 @@ describe("MCP server route", () => {
     });
     expect(root.sessionStore.snapshot()).toMatchObject({
       selectedStatBlockId: null,
-      activeBattle: {
+      battleState: {
+        tag: "activeBattle",
         battleId: "battle:mcp-stat-block-roster",
         currentActorId: "first-goblin",
       },
@@ -3844,7 +3891,12 @@ describe("MCP server route", () => {
         battleId: "battle:gh324-round-trip",
         currentActorId: "gh324-wizard",
       },
-      session: { activeBattle: { battleId: "battle:gh324-round-trip" } },
+      session: {
+        battleState: {
+          tag: "activeBattle",
+          battleId: "battle:gh324-round-trip",
+        },
+      },
     });
     expect(
       readPayload(handleToolCall(root, "list_characters", {})).characters,
@@ -3865,7 +3917,7 @@ describe("MCP server route", () => {
     expect(ended).toMatchObject({
       endedBattleId: "battle:gh324-round-trip",
       session: {
-        activeBattle: null,
+        battleState: { tag: "none" },
         characterIds: [
           testCharacterId(wizardDraftId),
           testCharacterId(fighterDraftId),
@@ -3963,7 +4015,7 @@ describe("MCP server route", () => {
     );
 
     expect(readPayload(handleToolCall(root, "end_battle", {}))).toMatchObject({
-      session: { activeBattle: null },
+      session: { battleState: { tag: "none" } },
     });
   });
 
@@ -4060,7 +4112,8 @@ describe("MCP server route", () => {
       ),
     ).toMatchObject({
       session: {
-        activeBattle: {
+        battleState: {
+          tag: "activeBattle",
           battleId: "battle:gh324-start-atomic",
         },
       },
@@ -6051,7 +6104,7 @@ describe("MCP server route", () => {
     expect(root.sessionStore.snapshot()).toMatchObject({
       draftIds: [],
       characterIds: [testCharacterId(draftId)],
-      activeBattle: null,
+      battleState: { tag: "none" },
       transientBattleFills: null,
     });
 
@@ -6317,7 +6370,7 @@ describe("MCP server route", () => {
     expect(ended).toMatchObject({
       endedBattleId: "battle:mcp-full-vertical",
       session: {
-        activeBattle: null,
+        battleState: { tag: "none" },
         characterIds: [testCharacterId(draftId)],
       },
     });
@@ -6533,7 +6586,7 @@ describe("MCP server route", () => {
     const ended = readPayload(handleToolCall(root, "end_battle", {}));
 
     expect(ended.session).toMatchObject({
-      activeBattle: null,
+      battleState: { tag: "none" },
     });
     expect(root.sessionStore.characters.get(testCharacterId(draftId))).toEqual(
       expect.objectContaining({

@@ -31,7 +31,7 @@ export const adminMirrorSequence: (value: number) => AdminMirrorSequence =
   AdminMirrorSequenceSchema.make;
 
 export const AdminMirrorSessionSummarySchema = Schema.Struct({
-  activeBattle: McpSessionSnapshotSchema.fields.activeBattle,
+  battleState: McpSessionSnapshotSchema.fields.battleState,
   draftIds: McpSessionSnapshotSchema.fields.draftIds,
   selectedStatBlockId: McpSessionSnapshotSchema.fields.selectedStatBlockId,
   transientBattleFills: McpSessionSnapshotSchema.fields.transientBattleFills,

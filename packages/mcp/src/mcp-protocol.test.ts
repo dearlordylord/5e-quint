@@ -92,6 +92,332 @@ describe("MCP protocol server", () => {
     }
   });
 
+  test("routes initial Initiative setup modes, swaps, finalization, and invalid transitions through MCP", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const host = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "initial-initiative-protocol-client",
+      version: "0.1.0",
+    });
+
+    try {
+      await host.server.connect(serverTransport);
+      await client.connect(clientTransport);
+
+      const advertisedTools = (await client.listTools()).tools;
+      const startBattleTool = advertisedTools.find(
+        (tool) => tool.name === "start_battle",
+      );
+      const battleLifecycleTool = advertisedTools.find(
+        (tool) => tool.name === "battle_lifecycle",
+      );
+      if (
+        startBattleTool?.outputSchema === undefined ||
+        battleLifecycleTool?.outputSchema === undefined
+      ) {
+        throw new Error(
+          "Expected start_battle and battle_lifecycle output schemas.",
+        );
+      }
+      const validateStartOutput = new AjvJsonSchemaValidator().getValidator(
+        startBattleTool.outputSchema as JsonSchemaType,
+      );
+      const validateLifecycleOutput = new AjvJsonSchemaValidator().getValidator(
+        battleLifecycleTool.outputSchema as JsonSchemaType,
+      );
+
+      const modeSession = await createPlaySession(client);
+      await installInitiativeSession(host, modeSession, {
+        characterId: "character:initiative-advantage",
+        build: armorClassBuild({
+          startingClass: "class_fighter",
+          advancements: ["class_fighter", "class_fighter"],
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: unitId("subclass_fighter_champion"),
+              unitId: unitId("fighter_remarkable_athlete"),
+            },
+          ],
+        }),
+      });
+
+      const started = await callStructuredTool(client, {
+        name: "start_battle",
+        arguments: {
+          playSessionId: modeSession,
+          battleId: "battle:initiative-modes",
+          initiativeMode: "initialSetup",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              characterId: "character:initiative-advantage",
+              combatantId: "initiative-advantage-source",
+              // Caller supplies the final Initiative fact; MCP does not
+              // derive it from a raw face or an ability modifier.
+              initiative: 10,
+              ammunitionStocks: [],
+            },
+            {
+              kind: "statBlock",
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId: "initiative-normal-foe",
+              initiative: 8,
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+        },
+      });
+      expect(validateStartOutput(started).valid).toBe(true);
+      const startedResult = operationResult(started);
+      expect(startedResult).toMatchObject({
+        snapshot: null,
+        battleState: {
+          tag: "initialInitiativeSetup",
+          battleId: "battle:initiative-modes",
+          combatants: [
+            {
+              combatantId: "initiative-advantage-source",
+              initiative: 10,
+              rollMode: "advantage",
+            },
+            {
+              combatantId: "initiative-normal-foe",
+              initiative: 8,
+              rollMode: "normal",
+            },
+          ],
+        },
+      });
+      expect(started.projection).toMatchObject({
+        battleState: { tag: "initialInitiativeSetup" },
+      });
+      expect(started.projection).not.toHaveProperty("activeBattle");
+
+      const finalized = await callStructuredTool(client, {
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId: modeSession,
+          operation: { kind: "finalizeInitialInitiativeSetup" },
+        },
+      });
+      expect(validateLifecycleOutput(finalized).valid).toBe(true);
+      expect(operationResult(finalized)).toMatchObject({
+        battleState: {
+          tag: "activeBattle",
+          battleId: "battle:initiative-modes",
+        },
+        snapshot: {
+          battleId: "battle:initiative-modes",
+        },
+      });
+      expect(finalized.projection).toMatchObject({
+        battleState: {
+          tag: "activeBattle",
+          battleId: "battle:initiative-modes",
+        },
+      });
+      expect(finalized.projection).not.toHaveProperty("initialInitiativeSetup");
+
+      const activeLifecycle = await client.callTool({
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId: modeSession,
+          operation: { kind: "finalizeInitialInitiativeSetup" },
+        },
+      });
+      expect(activeLifecycle.isError).toBe(true);
+      if (!isJsonObject(activeLifecycle.structuredContent)) {
+        throw new Error("Expected typed active-lifecycle rejection.");
+      }
+      expect(
+        validateLifecycleOutput(activeLifecycle.structuredContent).valid,
+      ).toBe(true);
+      expect(activeLifecycle.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            details: {
+              code: "INITIAL_INITIATIVE_SETUP_ALREADY_FINALIZED",
+            },
+          },
+        },
+        projection: {
+          battleState: { tag: "activeBattle" },
+        },
+      });
+
+      const swapSession = await createPlaySession(client);
+      await installInitiativeSession(host, swapSession, {
+        characterId: "character:initiative-swap",
+        build: {
+          ...armorClassBuild({ startingClass: "class_fighter" }),
+          background: unitId("background_criminal"),
+        },
+      });
+
+      const swapStart = await callStructuredTool(client, {
+        name: "start_battle",
+        arguments: {
+          playSessionId: swapSession,
+          battleId: "battle:initiative-swap",
+          initiativeMode: "initialSetup",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              characterId: "character:initiative-swap",
+              combatantId: "initiative-swap-source",
+              initiative: 10,
+              ammunitionStocks: [],
+            },
+            {
+              kind: "statBlock",
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId: "initiative-swap-ally",
+              initiative: 8,
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+        },
+      });
+      expect(operationResult(swapStart).battleState).toMatchObject({
+        tag: "initialInitiativeSetup",
+        combatants: [
+          { combatantId: "initiative-swap-source", initiative: 10 },
+          { combatantId: "initiative-swap-ally", initiative: 8 },
+        ],
+      });
+
+      const invalidWitness = await client.callTool({
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId: swapSession,
+          operation: {
+            kind: "applyInitiativeSwap",
+            sourceId: "initiative-swap-source",
+            candidateId: "initiative-swap-ally",
+            candidateWitness: { tag: "notAlly" },
+          },
+        },
+      });
+      expect(invalidWitness.isError).toBe(true);
+      if (!isJsonObject(invalidWitness.structuredContent)) {
+        throw new Error("Expected typed invalid-swap rejection.");
+      }
+      expect(
+        validateLifecycleOutput(invalidWitness.structuredContent).valid,
+      ).toBe(true);
+      expect(invalidWitness.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            details: { code: "INITIAL_INITIATIVE_SWAP_REJECTED" },
+          },
+        },
+        projection: {
+          battleState: {
+            tag: "initialInitiativeSetup",
+            combatants: [
+              { combatantId: "initiative-swap-source", initiative: 10 },
+              { combatantId: "initiative-swap-ally", initiative: 8 },
+            ],
+          },
+        },
+      });
+
+      const swapped = await callStructuredTool(client, {
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId: swapSession,
+          operation: {
+            kind: "applyInitiativeSwap",
+            sourceId: "initiative-swap-source",
+            candidateId: "initiative-swap-ally",
+            candidateWitness: { tag: "willingAlly" },
+          },
+        },
+      });
+      expect(validateLifecycleOutput(swapped).valid).toBe(true);
+      expect(operationResult(swapped).battleState).toMatchObject({
+        tag: "initialInitiativeSetup",
+        combatants: [
+          { combatantId: "initiative-swap-ally", initiative: 10 },
+          { combatantId: "initiative-swap-source", initiative: 8 },
+        ],
+      });
+      expect(swapped.projection).toMatchObject({
+        battleState: { tag: "initialInitiativeSetup" },
+      });
+
+      const repeatedSwap = await client.callTool({
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId: swapSession,
+          operation: {
+            kind: "applyInitiativeSwap",
+            sourceId: "initiative-swap-source",
+            candidateId: "initiative-swap-ally",
+            candidateWitness: { tag: "willingAlly" },
+          },
+        },
+      });
+      expect(repeatedSwap.isError).toBe(true);
+      if (!isJsonObject(repeatedSwap.structuredContent)) {
+        throw new Error("Expected typed repeated-swap rejection.");
+      }
+      expect(
+        validateLifecycleOutput(repeatedSwap.structuredContent).valid,
+      ).toBe(true);
+      expect(repeatedSwap.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            details: { code: "INITIAL_INITIATIVE_SWAP_REJECTED" },
+          },
+        },
+        projection: {
+          battleState: { tag: "initialInitiativeSetup" },
+        },
+      });
+
+      const swapFinalized = await callStructuredTool(client, {
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId: swapSession,
+          operation: { kind: "finalizeInitialInitiativeSetup" },
+        },
+      });
+      expect(operationResult(swapFinalized).battleState).toMatchObject({
+        tag: "activeBattle",
+        battleId: "battle:initiative-swap",
+      });
+
+      const noBattleSession = await createPlaySession(client);
+      const noBattleLifecycle = await client.callTool({
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId: noBattleSession,
+          operation: { kind: "finalizeInitialInitiativeSetup" },
+        },
+      });
+      expect(noBattleLifecycle.isError).toBe(true);
+      if (!isJsonObject(noBattleLifecycle.structuredContent)) {
+        throw new Error("Expected typed no-battle lifecycle rejection.");
+      }
+      expect(
+        validateLifecycleOutput(noBattleLifecycle.structuredContent).valid,
+      ).toBe(true);
+      expect(noBattleLifecycle.structuredContent).toMatchObject({
+        operation: {
+          result: { details: { code: "BATTLE_LIFECYCLE_NOT_OPEN" } },
+        },
+        projection: { battleState: { tag: "none" } },
+      });
+    } finally {
+      await Promise.allSettled([client.close(), host.server.close()]);
+    }
+  }, 30_000);
+
   test(
     "creates, resumes, and independently mutates isolated Play Sessions",
     async () => {
@@ -647,7 +973,8 @@ describe("MCP protocol server", () => {
       });
       expect(started.projection).toMatchObject({
         characterIds: [firstCharacterId, secondCharacterId],
-        activeBattle: {
+        battleState: {
+          tag: "activeBattle",
           battleId: "battle:protocol-gh324-round-trip",
           currentActorId: "protocol-first",
         },
@@ -726,9 +1053,11 @@ describe("MCP protocol server", () => {
           expect.objectContaining({ characterId: firstCharacterId }),
           expect.objectContaining({ characterId: secondCharacterId }),
         ]),
-        session: { activeBattle: null },
+        session: { battleState: { tag: "none" } },
       });
-      expect(ended.projection).toMatchObject({ activeBattle: null });
+      expect(ended.projection).toMatchObject({
+        battleState: { tag: "none" },
+      });
       const available = operationResult(
         await callStructuredTool(client, {
           name: "list_characters",
@@ -1321,6 +1650,33 @@ async function installHealingSessions(
   if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
 }
 
+async function installInitiativeSession(
+  host: ReturnType<typeof createDndMcpProtocolServer>,
+  playSessionId: string,
+  input: {
+    readonly characterId: string;
+    readonly build: Parameters<typeof availableCharacterSession>[0]["build"];
+  },
+) {
+  const decoded = decodePlaySessionId(playSessionId);
+  if (Either.isLeft(decoded)) throw new Error(decoded.left);
+  const result = await host.playSessions.run(decoded.right, (root) => {
+    const session = availableCharacterSession({
+      characterId: characterId(input.characterId),
+      build: input.build,
+      currentHp: Hp(1),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      companion: { tag: "none" },
+      unitLibrary: root.unitLibrary,
+    });
+    if (Either.isLeft(session)) throw new Error(session.left.message);
+    root.sessionStore.characters.set(session.right);
+  });
+  if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
+}
+
 async function createPlaySession(client: Client): Promise<string> {
   const created = await callStructuredTool(client, {
     name: "create_play_session",
@@ -1336,7 +1692,7 @@ async function createPlaySession(client: Client): Promise<string> {
       draftIds: [],
       characterIds: [],
       selectedStatBlockId: null,
-      activeBattle: null,
+      battleState: { tag: "none" },
     },
   });
   if (typeof created.playSessionId !== "string") {
