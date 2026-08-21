@@ -7,6 +7,8 @@ import {
   CHARACTER_TOOL_NAMES,
   type CharacterToolName,
 } from "./character-tool-input.ts";
+import { CONTENT_TOOL_NAMES } from "./content-tools.ts";
+import { shareRepeatedSchemas } from "./json-schema-sharing.ts";
 import {
   PLAY_SESSION_RESTORATION_GUIDANCE,
   PlaySessionIdSchema,
@@ -32,9 +34,14 @@ export const PLAY_SESSION_OPERATION_NAMES = [
   ...BATTLE_TOOL_NAMES,
 ] as const;
 export type PlaySessionOperationName =
-  | PlaySessionToolName
-  | CharacterToolName
-  | BattleToolName;
+  (typeof PLAY_SESSION_OPERATION_NAMES)[number];
+export const PLAY_SESSION_NEXT_OPERATION_NAMES = [
+  ...PLAY_SESSION_OPERATION_NAMES,
+  ...CONTENT_TOOL_NAMES,
+] as const;
+export type PlaySessionNextOperationName =
+  (typeof PLAY_SESSION_NEXT_OPERATION_NAMES)[number];
+export const PLAY_SESSION_OUTPUT_SCHEMA_BYTE_BUDGET = 700_000;
 
 const EmptyArgsSchema = Schema.Struct({});
 const PlaySessionArgsSchema = Schema.Struct({
@@ -50,9 +57,9 @@ const playSessionIdJsonSchema = mcpOutputJsonSchema(PlaySessionIdSchema);
 const sessionProjectionJsonSchema = mcpOutputJsonSchema(
   McpSessionSummarySchema,
 );
-const routedOutputSchemaByOperationResult = new WeakMap<
-  object,
-  McpOutputSchema
+const routedOutputSchemas = new Map<
+  PlaySessionOperationName,
+  WeakMap<object, McpOutputSchema>
 >();
 
 export const playSessionToolDefinitions = [
@@ -61,14 +68,20 @@ export const playSessionToolDefinitions = [
     description:
       "Create an isolated process-lifetime Play Session and return the handle required by every stateful operation.",
     inputSchema: emptyInputSchema,
-    outputSchema: playSessionLifecycleOutputSchema("playSessionCreated"),
+    outputSchema: playSessionLifecycleOutputSchema(
+      playSessionToolNames.create,
+      "playSessionCreated",
+    ),
   },
   {
     name: playSessionToolNames.read,
     description:
       "Resume a live Play Session by returning its current projection, unresolved inputs, and relevant next operations.",
     inputSchema: playSessionInputSchema,
-    outputSchema: playSessionLifecycleOutputSchema("playSessionResumed"),
+    outputSchema: playSessionLifecycleOutputSchema(
+      playSessionToolNames.read,
+      "playSessionResumed",
+    ),
   },
 ] as const;
 
@@ -79,7 +92,7 @@ export function statefulPlaySessionToolDefinition<
     readonly inputSchema: McpObjectInputSchema;
     readonly outputSchema?: McpOutputSchema;
   },
->(definition: Definition) {
+>(definition: Definition, operationName: CharacterToolName | BattleToolName) {
   return {
     ...definition,
     inputSchema: playSessionRoutedInputSchema(definition.inputSchema),
@@ -87,6 +100,7 @@ export function statefulPlaySessionToolDefinition<
       ? {}
       : {
           outputSchema: playSessionOperationOutputSchema(
+            operationName,
             definition.outputSchema,
           ),
         }),
@@ -123,9 +137,10 @@ function playSessionRoutedInputSchema(
 }
 
 function playSessionLifecycleOutputSchema(
+  operationName: PlaySessionToolName,
   resultTag: "playSessionCreated" | "playSessionResumed",
 ): McpOutputSchema {
-  return playSessionOperationOutputSchema({
+  return playSessionOperationOutputSchema(operationName, {
     type: "object",
     properties: {
       tag: { const: resultTag },
@@ -137,9 +152,11 @@ function playSessionLifecycleOutputSchema(
 }
 
 function playSessionOperationOutputSchema(
+  operationName: PlaySessionOperationName,
   operationResultSchema: McpOutputSchema,
 ): McpOutputSchema {
-  const cached = routedOutputSchemaByOperationResult.get(operationResultSchema);
+  const operationCache = routedOutputSchemas.get(operationName);
+  const cached = operationCache?.get(operationResultSchema);
   if (cached !== undefined) return cached;
   const embeddedPlaySessionId = embeddedSchema(
     playSessionIdJsonSchema,
@@ -150,7 +167,7 @@ function playSessionOperationOutputSchema(
     "SessionProjection",
   );
   const embeddedOperationResult = embeddedSchema(
-    operationResultSchema,
+    shareRepeatedSchemas(operationResultSchema),
     "OperationResult",
   );
   const operationErrorSchema = {
@@ -177,6 +194,7 @@ function playSessionOperationOutputSchema(
     },
     anyOf: [
       availableResultSchema({
+        operationName,
         playSessionId: embeddedPlaySessionId.schema,
         operationResult: {
           anyOf: [embeddedOperationResult.schema, operationErrorSchema],
@@ -184,6 +202,7 @@ function playSessionOperationOutputSchema(
         projection: embeddedSessionProjection.schema,
       }),
       unavailableEnvelopeSchema({
+        operationName,
         playSessionId: embeddedPlaySessionId.schema,
         operationResult: unavailableResultSchema,
       }),
@@ -195,11 +214,14 @@ function playSessionOperationOutputSchema(
       .digest("hex")}`,
     ...schema,
   } satisfies McpOutputSchema;
-  routedOutputSchemaByOperationResult.set(operationResultSchema, identified);
+  const cache = operationCache ?? new WeakMap<object, McpOutputSchema>();
+  cache.set(operationResultSchema, identified);
+  routedOutputSchemas.set(operationName, cache);
   return identified;
 }
 
 function availableResultSchema(input: {
+  readonly operationName: PlaySessionOperationName;
   readonly playSessionId: McpOutputSchema;
   readonly operationResult: McpOutputSchema;
   readonly projection: McpOutputSchema;
@@ -209,10 +231,13 @@ function availableResultSchema(input: {
     properties: {
       tag: { const: "playSessionAvailable" },
       playSessionId: input.playSessionId,
-      operation: operationSchema(input.operationResult),
+      operation: operationSchema(input.operationName, input.operationResult),
       projection: input.projection,
       unresolvedInputs: unresolvedInputsSchema(),
-      nextOperations: { type: "array", items: { type: "string" } },
+      nextOperations: {
+        type: "array",
+        items: { enum: PLAY_SESSION_NEXT_OPERATION_NAMES },
+      },
       restoration: {
         type: "object",
         properties: { tag: { const: "retained" } },
@@ -226,6 +251,7 @@ function availableResultSchema(input: {
 }
 
 function unavailableEnvelopeSchema(input: {
+  readonly operationName: PlaySessionOperationName;
   readonly playSessionId: McpOutputSchema;
   readonly operationResult: McpOutputSchema;
 }): McpOutputSchema {
@@ -234,12 +260,12 @@ function unavailableEnvelopeSchema(input: {
     properties: {
       tag: { const: "playSessionUnavailable" },
       playSessionId: input.playSessionId,
-      operation: operationSchema(input.operationResult),
+      operation: operationSchema(input.operationName, input.operationResult),
       projection: { type: "null" },
       unresolvedInputs: { type: "array", maxItems: 0 },
       nextOperations: {
         type: "array",
-        prefixItems: [{ const: playSessionToolNames.create }],
+        items: { const: playSessionToolNames.create },
         minItems: 1,
         maxItems: 1,
       },
@@ -262,11 +288,14 @@ function envelopeRequiredFields(): readonly string[] {
   ];
 }
 
-function operationSchema(resultSchema: McpOutputSchema): McpOutputSchema {
+function operationSchema(
+  operationName: PlaySessionOperationName,
+  resultSchema: McpOutputSchema,
+): McpOutputSchema {
   return {
     type: "object",
     properties: {
-      name: { type: "string", enum: PLAY_SESSION_OPERATION_NAMES },
+      name: { const: operationName },
       result: resultSchema,
     },
     required: ["name", "result"],

@@ -18,6 +18,10 @@ import {
 import { createMcpCompositionRoot } from "./composition-root.ts";
 import { contentToolDefinitions } from "./content-tools.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
+import {
+  PLAY_SESSION_OPERATION_NAMES,
+  PLAY_SESSION_OUTPUT_SCHEMA_BYTE_BUDGET,
+} from "./play-session-tool-contract.ts";
 
 const FULL_ACCEPTANCE_TEST_TIMEOUT_MS = 60_000;
 
@@ -146,7 +150,8 @@ describe("MCP protocol server", () => {
           name: "list_characters",
           arguments: { playSessionId: first },
         });
-        const listCharactersDefinition = (await client.listTools()).tools.find(
+        const listedTools = (await client.listTools()).tools;
+        const listCharactersDefinition = listedTools.find(
           (tool) => tool.name === "list_characters",
         );
         expect(listCharactersDefinition?.outputSchema).toBeDefined();
@@ -172,6 +177,48 @@ describe("MCP protocol server", () => {
           },
         };
         expect(validateOutput(malformedOutput).valid).toBe(false);
+        expect(
+          validateOutput({
+            ...listedCharacters,
+            operation: {
+              ...listedOperation,
+              name: "create_play_session",
+            },
+          }).valid,
+        ).toBe(false);
+        expect(
+          validateOutput({
+            ...listedCharacters,
+            nextOperations: ["not_an_mcp_operation"],
+          }).valid,
+        ).toBe(false);
+
+        const absentResult = await client.callTool({
+          name: "list_characters",
+          arguments: {
+            playSessionId: "play-session:00000000-0000-4000-8000-000000000000",
+          },
+        });
+        if (!isJsonObject(absentResult.structuredContent)) {
+          throw new Error("Expected unavailable structured content.");
+        }
+        expect(
+          validateOutput({
+            ...absentResult.structuredContent,
+            nextOperations: ["list_characters"],
+          }).valid,
+        ).toBe(false);
+
+        const playSessionOperations = new Set<string>(
+          PLAY_SESSION_OPERATION_NAMES,
+        );
+        for (const tool of listedTools) {
+          if (!playSessionOperations.has(tool.name)) continue;
+          expect(
+            JSON.stringify(tool.outputSchema).length,
+            tool.name,
+          ).toBeLessThan(PLAY_SESSION_OUTPUT_SCHEMA_BYTE_BUDGET);
+        }
       } finally {
         await Promise.allSettled([client.close(), server.close()]);
       }

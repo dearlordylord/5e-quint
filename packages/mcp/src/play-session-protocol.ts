@@ -6,7 +6,7 @@ import {
   characterToolNames,
   type CharacterToolName,
 } from "./character-tool-input.ts";
-import { contentToolNames, type ContentToolName } from "./content-tools.ts";
+import { contentToolNames } from "./content-tools.ts";
 import {
   decodePlaySessionId,
   PLAY_SESSION_UNAVAILABLE,
@@ -26,6 +26,7 @@ import {
 } from "./tool-content.ts";
 import {
   playSessionToolNames,
+  type PlaySessionNextOperationName,
   type PlaySessionOperationName,
 } from "./play-session-tool-contract.ts";
 
@@ -267,7 +268,7 @@ function nextOperationsFrom(
   operationName: PlaySessionOperationName,
   projection: McpSessionSummary,
   unresolvedInputs: readonly UnresolvedInputGroup[],
-): readonly NextPlaySessionOperationName[] {
+): readonly PlaySessionNextOperationName[] {
   if (projection.activeBattle !== null) {
     if (operationName === playSessionToolNames.read) {
       return [
@@ -310,8 +311,6 @@ function nextOperationsFrom(
     contentToolNames.listStatBlocks,
   ];
 }
-
-type NextPlaySessionOperationName = PlaySessionOperationName | ContentToolName;
 
 function isJsonObject(
   value: unknown,

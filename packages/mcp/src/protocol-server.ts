@@ -45,7 +45,7 @@ export function createDndMcpProtocolServer(
     ...playSessionToolDefinitions,
     ...definitions.map((definition) =>
       isStatefulToolName(definition.name)
-        ? statefulPlaySessionToolDefinition(definition)
+        ? statefulPlaySessionToolDefinition(definition, definition.name)
         : definition,
     ),
   ];

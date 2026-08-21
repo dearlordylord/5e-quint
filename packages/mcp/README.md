@@ -225,6 +225,12 @@ structured-output validation, or replace typed runtime facts with generic JSON.
 Measure that work against cold default-client `listTools()` schema-compilation
 time as well as the normal MCP acceptance suite.
 
+Play Session envelopes content-address repeated generated subtrees into local
+`$defs` while preserving exact nested validation. The largest routed schema is
+kept below the named 700,000-byte cold-discovery budget and protocol tests guard
+that limit alongside malformed operation-name, result, and next-operation
+rejection.
+
 Character-session input/store schemas are mutable state and selections only.
 They may carry current HP, Temporary Hit Points, Hit Point Maximum reduction,
 zero-HP lifecycle, conditions, spent Hit Dice, ordinary Spell Slot
