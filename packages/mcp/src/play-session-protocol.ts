@@ -69,7 +69,7 @@ export async function handleReadPlaySession(
     projection: root.sessionStore.snapshot(),
     hasAvailableCharacterSession: Array.from(
       root.sessionStore.characters.entries(),
-    ).some(([, session]) => session.tag === "available"),
+    ).some(([, session]) => session.tag !== "inBattle"),
   }));
   return Either.isLeft(result)
     ? unavailableEnvelope(routed.right.playSessionId, playSessionToolNames.read)
@@ -104,7 +104,7 @@ export async function handlePlaySessionOperation(input: {
       projection: root.sessionStore.snapshot(),
       hasAvailableCharacterSession: Array.from(
         root.sessionStore.characters.entries(),
-      ).some(([, session]) => session.tag === "available"),
+      ).some(([, session]) => session.tag !== "inBattle"),
     }),
   );
   if (Either.isLeft(result)) {
@@ -126,6 +126,7 @@ export async function handlePlaySessionOperation(input: {
         ? operationContent.structuredContent
         : jsonContentPayload(operationContent),
     projection: result.right.projection,
+    hasAvailableCharacterSession: result.right.hasAvailableCharacterSession,
     isError: operationContent.isError === true,
   });
 }
