@@ -5,14 +5,21 @@ import {
   mcpObjectJsonSchema,
   type ToolInputResult,
 } from "./schema-codec.ts";
+import { errorContent } from "./tool-content.ts";
 
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.positive(),
 );
 export const MAX_DIE_SIZE = 100;
-const DiceCountSchema = PositiveIntegerSchema.annotations({
-  description: "Number of dice in this group; it must be a positive integer.",
+/** MCP work budgets; these are transport-safety limits, not D&D rules. */
+export const MAX_DICE_PER_GROUP = 1_000;
+export const MAX_TOTAL_DICE = 10_000;
+const DiceCountSchema = PositiveIntegerSchema.pipe(
+  Schema.lessThanOrEqualTo(MAX_DICE_PER_GROUP),
+).annotations({
+  description:
+    "Number of dice in this group; it must be a positive integer no greater than 1000 (an MCP work budget).",
 });
 const DieSizeSchema = PositiveIntegerSchema.pipe(
   Schema.lessThanOrEqualTo(MAX_DIE_SIZE),
@@ -58,16 +65,38 @@ export function decodeDiceToolCall(input: {
 }): ToolInputResult<DiceToolCall> {
   return Match.value(input.name).pipe(
     Match.when(diceToolNames.rollDice, () =>
-      Either.map(
+      Either.flatMap(
         decodeToolArgs(RollDiceArgsSchema, input.args, diceToolNames.rollDice),
-        (args) => ({
-          name: diceToolNames.rollDice,
-          args,
-        }),
+        (args) =>
+          Either.map(validateDiceRollBudget(args), (validatedArgs) => ({
+            name: diceToolNames.rollDice,
+            args: validatedArgs,
+          })),
       ),
     ),
     Match.exhaustive,
   );
+}
+
+function validateDiceRollBudget(
+  request: RollDiceRequest,
+): ToolInputResult<RollDiceRequest> {
+  let totalDice = 0;
+  for (const group of request.groups) {
+    // Subtract before adding so even an unusual future numeric representation
+    // cannot overflow the accumulator before the budget rejection.
+    if (group.dice > MAX_TOTAL_DICE - totalDice) {
+      return Either.left(
+        errorContent("roll_dice exceeds the MCP total dice work budget.", {
+          code: "DICE_ROLL_BUDGET_EXCEEDED",
+          maxTotalDice: MAX_TOTAL_DICE,
+          requestedTotalDice: totalDice + group.dice,
+        }),
+      );
+    }
+    totalDice += group.dice;
+  }
+  return Either.right(request);
 }
 
 export function isDiceToolName(name: string): name is DiceToolName {

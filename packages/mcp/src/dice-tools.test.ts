@@ -9,7 +9,13 @@ import {
   createMcpApplicationServices,
   createMcpPlaySessionRoot,
 } from "./composition-root.ts";
-import { decodeDiceToolCall, RollDiceArgsSchema } from "./dice-tool-input.ts";
+import {
+  decodeDiceToolCall,
+  MAX_DICE_PER_GROUP,
+  MAX_TOTAL_DICE,
+  RollDiceArgsSchema,
+  rollDiceInputSchema,
+} from "./dice-tool-input.ts";
 import { RollDiceOutputSchema } from "./dice-tool-output.ts";
 import { handleDiceToolCall, rollDice } from "./dice-tools.ts";
 import { mcpOutputJsonSchema } from "./schema-codec.ts";
@@ -36,6 +42,57 @@ describe("structured MCP bulk dice roller", () => {
       args: { ...request, correlationId: "caller-supplied" },
     });
     expect(Either.isLeft(decoded)).toBe(true);
+  });
+
+  test("enforces bounded per-group and aggregate work before allocation", () => {
+    const validateInput = new AjvJsonSchemaValidator().getValidator(
+      rollDiceInputSchema as JsonSchemaType,
+    );
+    const tooManyInOneGroup = {
+      groups: [{ dice: MAX_DICE_PER_GROUP + 1, dieSize: 6 }],
+    };
+    expect(validateInput(tooManyInOneGroup).valid).toBe(false);
+    expect(
+      Either.isLeft(
+        decodeDiceToolCall({ name: "roll_dice", args: tooManyInOneGroup }),
+      ),
+    ).toBe(true);
+
+    const atPerGroupBoundary = {
+      groups: [{ dice: MAX_DICE_PER_GROUP, dieSize: 6 }],
+    };
+    expect(validateInput(atPerGroupBoundary).valid).toBe(true);
+    expect(
+      Either.isRight(
+        decodeDiceToolCall({ name: "roll_dice", args: atPerGroupBoundary }),
+      ),
+    ).toBe(true);
+
+    const atAggregateBoundary = {
+      groups: Array.from({ length: 10 }, () => ({
+        dice: MAX_DICE_PER_GROUP,
+        dieSize: 6,
+      })),
+    };
+    expect(
+      Either.isRight(
+        decodeDiceToolCall({ name: "roll_dice", args: atAggregateBoundary }),
+      ),
+    ).toBe(true);
+    const overAggregateBoundary = {
+      groups: [
+        ...Array.from({ length: MAX_TOTAL_DICE / MAX_DICE_PER_GROUP }, () => ({
+          dice: MAX_DICE_PER_GROUP,
+          dieSize: 6,
+        })),
+        { dice: 1, dieSize: 6 },
+      ],
+    };
+    expect(
+      Either.isLeft(
+        decodeDiceToolCall({ name: "roll_dice", args: overAggregateBoundary }),
+      ),
+    ).toBe(true);
   });
 
   test("returns ordered visible faces in each requested group", () => {
@@ -173,6 +230,7 @@ describe("structured MCP bulk dice roller", () => {
         [{ dice: 1.5, dieSize: 6 }],
         [{ dice: 1, dieSize: "six" }],
         [{ dice: 1, dieSize: 101 }],
+        [{ dice: MAX_DICE_PER_GROUP + 1, dieSize: 6 }],
       ]) {
         const invalid = await client.callTool({
           name: "roll_dice",
@@ -180,6 +238,26 @@ describe("structured MCP bulk dice roller", () => {
         });
         expect(invalid.isError).toBe(true);
       }
+
+      const aggregateBudget = await client.callTool({
+        name: "roll_dice",
+        arguments: {
+          playSessionId,
+          groups: [
+            ...Array.from(
+              { length: MAX_TOTAL_DICE / MAX_DICE_PER_GROUP },
+              () => ({ dice: MAX_DICE_PER_GROUP, dieSize: 6 }),
+            ),
+            { dice: 1, dieSize: 6 },
+          ],
+        },
+      });
+      expect(aggregateBudget.isError).toBe(true);
+      expect(aggregateBudget.structuredContent).toMatchObject({
+        operation: {
+          result: { details: { code: "DICE_ROLL_BUDGET_EXCEEDED" } },
+        },
+      });
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
