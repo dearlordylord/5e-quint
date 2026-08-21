@@ -1,0 +1,107 @@
+{
+  "scenarioId": "synthetic-wake-interruption",
+  "scenarioSha256": "ce0b7e9e7c81fff35c9f6c8510caafbaf84a6273ce5882b525d0e105c0b4e85f",
+  "gitSha": "9a23cb0562cacced1dd519656bc5cb374df2ed2b",
+  "admitReviewedUnsupported": false,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "SRD 5.2.1 supplies the Sting save and conditional effects, Quasit’s Poison and Poisoned immunities, canonical melee attacks, grid movement, reach, Opportunity Attacks, and one-action-per-turn sequencing. Immunity suppresses the Poisoned prerequisite, so the Unconscious/wake branch is unreachable for this target; no relevant ASSUMPTIONS.md entry changes these rules, and no additional RAW Table Decision is missing."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The public scenario uses permitted canonical SRD identities and independently authored scenario expression. It exposes no PHB+ identity, protected prose, source id, slug, or crosswalk."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicyQuality",
+  "scenarioQuality": {
+    "classification": "ready",
+    "evidence": "The setup is mechanically meaningful through the forced Sting/immunity interaction, reachable melee spacing, and two-opponent pressure allocation. Each combatant has an authored objective; fixed setup facts and delegated route, endpoint, target, attack, movement, interrupt, and continuation choices fit the campaign preference. The supplied catalogue comparison covers all 13 admitted ids exactly once, names the required dimensions, states meaningfullyDistinct, and gives non-spatial differentiators."
+  },
+  "catalogueComparison": {
+    "schemaVersion": 1,
+    "conclusion": "meaningfullyDistinct",
+    "comparedScenarioIds": [
+      "four-way-crank-control-cycle",
+      "goblin-warrior-skeleton-tracer",
+      "lantern-intercept-pairwise-control",
+      "mounted-dispatch-through-flooded-orchard",
+      "open-grid-wolf-skeleton-pursuit",
+      "orc-fighter-rogue-close-interception",
+      "sand-band-four-skeleton-skirmish",
+      "synthetic-beacon-eight-round-defense",
+      "table-authored-shove-then-grapple",
+      "table-authored-three-shove-cycle",
+      "table-d20-circumstance-advantage-probe-repair-retry",
+      "table-save-circumstance-advantage-probe",
+      "two-goblins-pursue-skeleton"
+    ],
+    "closestMatches": [
+      {
+        "scenarioId": "table-save-circumstance-advantage-probe",
+        "reason": "Both use three stat-block creatures, an allied pair opposed to one creature, Quasit-related mechanics, geometry-assisted movement, and adaptive pressure. The Candidate instead centers on Sting against Poison immunity and has no unsupported circumstance modifier or threshold escape."
+      },
+      {
+        "scenarioId": "table-d20-circumstance-advantage-probe-repair-retry",
+        "reason": "Both use a Riding Horse, bright open ground, pursuit movement, melee attacks, and movement decisions. The Candidate adds a third combatant, asymmetric alliance, and immunity-mediated Sting resolution; the admitted Scenario probes one unsupported Bite-roll modifier."
+      },
+      {
+        "scenarioId": "open-grid-wolf-skeleton-pursuit",
+        "reason": "Both are bright, unobstructed, two-dimensional, stat-block-only melee pursuits using movement, reach interrupts, and End Turn continuation. The Candidate adds a third combatant, two-versus-one pressure allocation, and the required Sting/immunity interaction."
+      },
+      {
+        "scenarioId": "lantern-intercept-pairwise-control",
+        "reason": "Both use three combatants, pairwise relationships, adaptive movement, and target-selection decisions. The admitted Scenario's material mechanics are pillars, visibility, and cover, whereas the Candidate's are Sting effect suppression and flat melee redirection."
+      }
+    ],
+    "materialDifferentiators": [
+      "The Candidate mandates a first-action Pseudodragon Sting against a Poison-immune Quasit, suppressing the Poisoned and failure-by-5-or-more Unconscious outcomes and therefore deliberately avoiding an unsupported wake action; no admitted Scenario contains this effect-immunity interaction.",
+      "Its composition is a distinct one-versus-two topology: Riding Horse and Quasit are allied, both oppose the Pseudodragon, and the Pseudodragon shifts pressure from the adjacent Quasit to the distant Horse while the Horse chooses a route and endpoint that affect that redirection.",
+      "The interaction is a state- and reach-sensitive melee sequence with a forced opening act, possible movement interrupt on leaving reach, and coordinated pressure, rather than the admitted Shove/Grapple cycles, ranged or cover pursuits, objective defenses, mounted transfer, Character Sheet construction, or circumstance probes.",
+      "The Candidate remains stat-block-only and claims a supported-only surfaced-Battle-act boundary, excluding Character Sheets, objects, mounts, elevation, difficult terrain, cover, ranged pressure, and Table-authored modifiers."
+    ],
+    "basis": {
+      "tag": "compared",
+      "batches": [
+        {
+          "batchIndex": 0,
+          "comparedScenarioIds": [
+            "four-way-crank-control-cycle",
+            "goblin-warrior-skeleton-tracer",
+            "lantern-intercept-pairwise-control",
+            "mounted-dispatch-through-flooded-orchard",
+            "open-grid-wolf-skeleton-pursuit",
+            "orc-fighter-rogue-close-interception",
+            "sand-band-four-skeleton-skirmish",
+            "synthetic-beacon-eight-round-defense",
+            "table-authored-shove-then-grapple",
+            "table-authored-three-shove-cycle",
+            "table-d20-circumstance-advantage-probe-repair-retry",
+            "table-save-circumstance-advantage-probe",
+            "two-goblins-pursue-skeleton"
+          ],
+          "dimensions": {
+            "exploratoryPurpose": "The Candidate explores a supported-only three-combatant melee sequence in which a mandatory Sting is resolved against an immune adjacent target, then pressure and reach are reallocated. This differs from four-way-crank-control-cycle's crank-control Shove/Grapple turns, goblin-warrior-skeleton-tracer's minimal Goblin/Skeleton path, lantern-intercept-pairwise-control's pillar traversal and target triage, mounted-dispatch-through-flooded-orchard's mounted dispatch probe, open-grid-wolf-skeleton-pursuit's Wolf/Skeleton pursuit, orc-fighter-rogue-close-interception's Character Sheet prism defense, sand-band-four-skeleton-skirmish's delegated ranged skirmish, synthetic-beacon-eight-round-defense's bounded beacon defense, table-authored-shove-then-grapple's branch-specific Shove/Grapple, table-authored-three-shove-cycle's fixed Shove cycle, the two circumstance probes' exact modifier tests, and two-goblins-pursue-skeleton's portcullis pursuit.",
+            "materiallyRelevantMechanics": "The material combination is Pseudodragon Sting, its saving-throw effect branch being suppressed by Quasit Poison immunity, canonical melee, ground movement, leaving-reach interrupts, damage, and End Turn continuation. The admitted mechanics instead center on Shove/Grapple and Prone, direct tracer attacks, pillar visibility and cover, mounts and object transfer, Bite/Shortsword Opportunity Attacks, Character Sheets and resources, difficult terrain and ranged pressure, beacon or prism objects, portcullis cover, or one-off attack/save circumstance modifiers. None combines the Candidate's Sting-immunity resolution with its two-versus-one pressure sequence.",
+            "encounterComposition": "The Candidate has exactly one Pseudodragon opposed by allied Riding Horse and Quasit, with no Character Sheets, object, objective, or extra combatant. The closest three-creature structures are lantern-intercept-pairwise-control's Wolf/Skeleton/Hawk, table-save-circumstance-advantage-probe's Quasit/Wolf/Goblin Warrior, table-authored-three-shove-cycle's all-hostile trio, and two-goblins-pursue-skeleton's allied Goblins against a Skeleton; all have materially different rosters, relationships, objectives, or spatial mechanics. The remaining entries use two combatants, four or more combatants, Character Sheets, mounted groups, or encounter objects.",
+            "interactionSequence": "The Pseudodragon must Sting the adjacent Quasit first; the immunity prevents the Poisoned and Unconscious outcomes, after which it shifts toward the Horse and resolves any surfaced interrupt from leaving the Quasit's reach. The Horse chooses how to close and limit redirection, while conscious Horse and Quasit use melee attacks. This is distinct from the fixed four-way turns, exact Shove/Grapple branches, three-Shove order, linear Wolf/Skeleton lane pursuit, pillar and threshold routes, mounted cylinder route, Character Sheet defenses, eight-round breach, portcullis transition, and the two exact circumstance-modifier sequences.",
+            "tacticalQuestion": "The Candidate asks whether a two-opponent melee team can maintain pressure while the Pseudodragon's forced Sting against an immune target changes its target allocation, and whether the Horse's reachable endpoint can constrain a later redirect toward the Quasit. The admitted questions instead concern crank control, generic direct battle, pillar or portcullis interception, dispatch transfer, lane denial, prism or beacon defense, difficult-terrain ranged tactics, fixed Shove/Grapple outcomes, or exact attack/save circumstance probes.",
+            "sdkSupportBoundary": "The Candidate states a stat-block-only supportedOnly/supported boundary and requires all setup and play through surfaced Battle acts, including applicable saves, immunity-sensitive effects, movement, interrupts, damage, and End Turn. This aligns with four-way-crank-control-cycle, lantern-intercept-pairwise-control, open-grid-wolf-skeleton-pursuit, table-authored-shove-then-grapple, table-authored-three-shove-cycle, and two-goblins-pursue-skeleton; orc-fighter-rogue-close-interception is also supported-only but requires Character Sheets. It differs from mounted-dispatch-through-flooded-orchard and both circumstance-probe entries, which explicitly probe unsupported boundaries; goblin-warrior-skeleton-tracer, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense are not assessed. The Candidate's boundary is not itself novel, but the claimed supported immunity interaction is.",
+            "spatialContext": {
+              "tag": "supporting",
+              "evidence": "The Candidate uses a bright, level 45-by-25-foot 5-foot grid with exact placements, ground-only two-dimensional routes, and no objects, cover, hazards, difficult terrain, or modifiers. This overlaps the open-grid and Horse/Wolf flat-field contexts and ordinary geometry-assisted portions of lantern-intercept-pairwise-control, the Character Sheet scenarios, and table-save-circumstance-advantage-probe, while omitting their pillars, racks, prism, sand, beacon, basin, orchard, or threshold structures. It also differs from the Table-authored boundaries and theater-of-the-mind tracer, but these spatial differences support rather than establish the material distinction."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "The selected identities—Riding Horse, Pseudodragon, and Quasit—are all present in the supplied availability list. No unavailable identity is selected, so availableOnly creates no product obligation."
+  },
+  "sdkCapabilityIntent": "supportedOnly",
+  "sdkCapabilityReview": {
+    "classification": "supported",
+    "evidence": "The documented public surfaces cover canonical stat-block setup, illumination and environment, pairwise relationships, one geometry-derived spatial source, surfaced Battle acts, typed targets and rolls, damage, movement, interrupts, and End Turn continuation. The selected Quasit immunity makes the wake action unnecessary, so no controller-added unsupported action is required."
+  }
+}

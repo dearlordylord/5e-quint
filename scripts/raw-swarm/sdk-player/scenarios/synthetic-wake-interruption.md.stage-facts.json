@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "synthetic-wake-interruption",
+  "scenarioSha256": "ce0b7e9e7c81fff35c9f6c8510caafbaf84a6273ce5882b525d0e105c0b4e85f",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The encounter uses only canonical Pseudodragon, Quasit, and Riding Horse stat blocks and explicitly excludes Character Sheets."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "Exact placements, distances, reach, and changing ground routes occur on one unobstructed two-dimensional rectangular field supported by geometry assistance."
+    }
+  }
+}

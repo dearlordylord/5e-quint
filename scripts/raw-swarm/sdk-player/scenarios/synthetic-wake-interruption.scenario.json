@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "scenarioId": "synthetic-wake-interruption",
+  "title": "Synthetic wake interruption",
+  "purpose": "Explore a supported-only stat-block battle in which a Pseudodragon Sting can make one allied opponent Unconscious and the other must choose between waking that creature and maintaining pressure, grounded in the local SRD Pseudodragon Sting passage.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/synthetic-wake-interruption.md",
+    "byteLength": 2085,
+    "sha256": "ce0b7e9e7c81fff35c9f6c8510caafbaf84a6273ce5882b525d0e105c0b4e85f"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/synthetic-wake-interruption.md.scenario-review.json",
+    "byteLength": 12085,
+    "sha256": "2621cf6b1a68024c08b1b04f6f4f09b935669d17c6839901f9e8b7ce522d58b5"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/synthetic-wake-interruption.md.stage-facts.json",
+    "byteLength": 704,
+    "sha256": "43d14cad82749a914337e4ffb0e1822bb66ed84407e1c7acaefd30470743a03f"
+  },
+  "predecessorScenarioIds": [
+    "four-way-crank-control-cycle",
+    "goblin-warrior-skeleton-tracer",
+    "lantern-intercept-pairwise-control",
+    "mounted-dispatch-through-flooded-orchard",
+    "open-grid-wolf-skeleton-pursuit",
+    "orc-fighter-rogue-close-interception",
+    "sand-band-four-skeleton-skirmish",
+    "synthetic-beacon-eight-round-defense",
+    "table-authored-shove-then-grapple",
+    "table-authored-three-shove-cycle",
+    "table-d20-circumstance-advantage-probe-repair-retry",
+    "table-save-circumstance-advantage-probe",
+    "two-goblins-pursue-skeleton"
+  ]
+}
