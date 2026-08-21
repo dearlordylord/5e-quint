@@ -22,7 +22,7 @@ import { errorContent } from "./tool-content.ts";
 
 type BattlePayloadPresentationIssues = BattleSnapshotPresentationIssues;
 
-type BattlePresentationProjection = {
+export type BattlePresentationProjection = {
   readonly snapshot: BattlePresentedSnapshot | null;
   readonly availableActs: ReturnType<typeof discoverBattleActs>;
   readonly admittedSpellPresentations: ReturnType<
@@ -32,9 +32,10 @@ type BattlePresentationProjection = {
     typeof presentedInterruptChoices
   >;
 };
-type ActiveBattlePresentationProjection = BattlePresentationProjection & {
-  readonly snapshot: BattlePresentedSnapshot;
-};
+export type ActiveBattlePresentationProjection =
+  BattlePresentationProjection & {
+    readonly snapshot: BattlePresentedSnapshot;
+  };
 
 export function unknownStatBlockContent(statBlockId: string, error: unknown) {
   return errorContent(`Unknown Stat Block: ${statBlockId}`, {
@@ -193,19 +194,19 @@ function battleResultPresentationProjection(
   );
 }
 
-function battlePresentationProjection(
+export function battlePresentationProjection(
   session: BattleRuntimeSession,
 ): Either.Either<
   ActiveBattlePresentationProjection,
   BattleSnapshotPresentationIssues
 >;
-function battlePresentationProjection(
+export function battlePresentationProjection(
   session: BattleRuntimeSession | null,
 ): Either.Either<
   BattlePresentationProjection,
   BattleSnapshotPresentationIssues
 >;
-function battlePresentationProjection(
+export function battlePresentationProjection(
   session: BattleRuntimeSession | null,
 ): Either.Either<
   BattlePresentationProjection,

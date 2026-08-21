@@ -165,14 +165,16 @@ The battle-session tool boundary exposes these user-facing tools:
   final-Initiative path when retained companions are required. Character and
   Stat Block projections are validated before the canonical Battle workflow and
   every included Character Session are committed.
-- `battle_lifecycle` is one discriminated Battle-lifecycle surface for the
-  existing initial-Initiative setup operations. Its `applyInitiativeSwap`
-  variant accepts the SDK's willing-ally witness and returns the updated setup;
-  its `finalizeInitialInitiativeSetup` variant replaces setup with one active
-  Battle. MCP reports each combatant's SDK-required roll mode and forwards
-  caller-supplied Initiative facts (or future generic-roller raw faces) through
-  existing SDK contracts; it performs no Initiative arithmetic or roll-mode
-  interpretation.
+- `battle_lifecycle` is one discriminated Battle-lifecycle surface. Its
+  `applyInitiativeSwap` and `finalizeInitialInitiativeSetup` variants operate
+  on the SDK-owned initial-Initiative setup. Its active-Battle-only
+  `addCombatant` and `removeCombatant` variants use the existing Character
+  Session or SRD Stat Block admission projections and Battle removal semantics;
+  Character occupancy and settlement are computed with the prospective Battle
+  result and committed atomically with typed retry guidance on failure. MCP
+  reports each combatant's SDK-required roll mode and forwards caller-supplied
+  Initiative facts through existing SDK contracts; it performs no Initiative
+  arithmetic or roll-mode interpretation.
 - `read_battle_state` returns the canonical stored `BattleState` projection and
   current battle snapshot. The Play Session projection has exactly one Battle
   workflow state: `none`, `initialInitiativeSetup`, or `activeBattle`.

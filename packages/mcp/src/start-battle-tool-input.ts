@@ -32,9 +32,9 @@ const AmmunitionStockArgsSchema = Schema.Struct({
   ammunition: AmmunitionKindSchema,
   remaining: NonNegativeIntegerSchema,
 });
-const InitialCharacterSessionCombatantArgsSchema = Schema.Struct({
+const CharacterSessionCombatantArgsSchema = Schema.Struct({
   kind: Schema.Literal("characterSession").annotations({
-    description: "Initial combatant source: finalized character session.",
+    description: "Battle combatant source: finalized character session.",
   }),
   characterId: Schema.NonEmptyTrimmedString.annotations({
     description:
@@ -52,9 +52,9 @@ const InitialCharacterSessionCombatantArgsSchema = Schema.Struct({
       "Explicit carried ammunition stock. Use an empty array when the character carries none.",
   }),
 });
-const InitialEncounterStatBlockCombatantArgsSchema = Schema.Struct({
+const StatBlockCombatantArgsSchema = Schema.Struct({
   kind: Schema.Literal("statBlock").annotations({
-    description: "Initial combatant source: SRD Stat Block catalog record.",
+    description: "Battle combatant source: SRD Stat Block catalog record.",
   }),
   statBlockId: StatBlockId.annotations({
     description: "SRD Stat Block id from list_stat_blocks.",
@@ -84,11 +84,9 @@ const InitialEncounterStatBlockCombatantArgsSchema = Schema.Struct({
     description: "Optional non-negative Temporary Hit Points.",
   }),
 });
-const InitialStatBlockCombatantArgsSchema =
-  InitialEncounterStatBlockCombatantArgsSchema;
-const InitialBattleCombatantArgsSchema = Schema.Union(
-  InitialCharacterSessionCombatantArgsSchema,
-  InitialStatBlockCombatantArgsSchema,
+export const BattleCombatantArgsSchema = Schema.Union(
+  CharacterSessionCombatantArgsSchema,
+  StatBlockCombatantArgsSchema,
 );
 const CompanionAdmissionArgsSchema = Schema.Struct({
   ownerCharacterId: Schema.NonEmptyTrimmedString.annotations({
@@ -130,7 +128,7 @@ const StartBattleToolArgsSchema = Schema.Struct({
       "Use direct for an already supplied Initiative score or initialSetup to retain the SDK-owned setup for supported swaps and finalization.",
   }),
   initialCombatants: Schema.NonEmptyArray(
-    InitialBattleCombatantArgsSchema,
+    BattleCombatantArgsSchema,
   ).annotations({
     description:
       "Non-empty initial combatant roster. Each combatant comes from a finalized character session or an ordinary SRD Stat Block.",
@@ -145,6 +143,9 @@ const StartBattleToolArgsSchema = Schema.Struct({
 });
 
 type StartBattleToolArgs = Schema.Schema.Type<typeof StartBattleToolArgsSchema>;
+export type BattleCombatantArgs = Schema.Schema.Type<
+  typeof BattleCombatantArgsSchema
+>;
 
 export const startBattleInputSchema = mcpObjectJsonSchema(
   StartBattleToolArgsSchema,
@@ -154,17 +155,17 @@ export type StartBattleToolInput = {
   readonly battleId: BattleId;
   readonly initiativeMode: "direct" | "initialSetup";
   readonly initialCombatants: readonly [
-    InitialBattleCombatantToolInput,
-    ...InitialBattleCombatantToolInput[],
+    BattleCombatantToolInput,
+    ...BattleCombatantToolInput[],
   ];
   readonly companionAdmissions: readonly CompanionAdmissionToolInput[];
 };
 
-export type InitialBattleCombatantToolInput =
-  | InitialCharacterSessionCombatantToolInput
-  | InitialStatBlockCombatantToolInput;
+export type BattleCombatantToolInput =
+  | CharacterSessionCombatantToolInput
+  | StatBlockCombatantToolInput;
 
-export type InitialCharacterSessionCombatantToolInput = {
+export type CharacterSessionCombatantToolInput = {
   readonly kind: "characterSession";
   readonly characterId: CharacterId;
   readonly combatantId: CombatantId;
@@ -172,10 +173,7 @@ export type InitialCharacterSessionCombatantToolInput = {
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
 };
 
-export type InitialStatBlockCombatantToolInput =
-  InitialEncounterStatBlockCombatantToolInput;
-
-export type InitialEncounterStatBlockCombatantToolInput = {
+export type StatBlockCombatantToolInput = {
   readonly kind: "statBlock";
   readonly combatantId: CombatantId;
   readonly initiative: InitiativeScore;
@@ -207,7 +205,7 @@ export function decodeStartBattleArgs(
   return Either.right({
     battleId: record.right.battleId,
     initiativeMode: record.right.initiativeMode ?? "direct",
-    initialCombatants: decodeInitialCombatants(record.right.initialCombatants),
+    initialCombatants: decodeBattleCombatants(record.right.initialCombatants),
     companionAdmissions: (record.right.companionAdmissions ?? []).map(
       (admission) => ({
         ownerCharacterId: characterId(admission.ownerCharacterId),
@@ -231,43 +229,51 @@ export function decodeStartBattleArgs(
   });
 }
 
-function decodeInitialCombatants(
+export function decodeBattleCombatantArgs(
+  args: unknown,
+  toolName: string,
+): ToolInputResult<BattleCombatantToolInput> {
+  const record = decodeToolArgs(BattleCombatantArgsSchema, args, toolName);
+  return Either.map(record, decodeBattleCombatant);
+}
+
+function decodeBattleCombatants(
   value: StartBattleToolArgs["initialCombatants"],
 ): StartBattleToolInput["initialCombatants"] {
-  const decodeCombatant = (
-    combatant: StartBattleToolArgs["initialCombatants"][number],
-  ): InitialBattleCombatantToolInput => {
-    if (combatant.kind === "characterSession") {
-      return {
-        kind: "characterSession",
-        characterId: characterId(combatant.characterId),
-        combatantId: combatantId(combatant.combatantId),
-        initiative: initiativeScore(combatant.initiative),
-        ammunitionStocks: combatant.ammunitionStocks.map(
-          ({ ammunition, remaining }) =>
-            battleAmmunitionStock(ammunition, remaining),
-        ),
-      };
-    }
-    const statBlockCombatant = combatant;
+  const decodeCombatant = (combatant: BattleCombatantArgs) =>
+    decodeBattleCombatant(combatant);
+  const [first, ...rest] = value;
+  return [decodeCombatant(first), ...rest.map(decodeCombatant)];
+}
+
+export function decodeBattleCombatant(
+  combatant: BattleCombatantArgs,
+): BattleCombatantToolInput {
+  if (combatant.kind === "characterSession") {
     return {
-      kind: "statBlock",
-      statBlockId: statBlockCombatant.statBlockId,
-      combatantId: combatantId(statBlockCombatant.combatantId),
-      initiative: initiativeScore(statBlockCombatant.initiative),
-      ammunitionStocks: statBlockCombatant.ammunitionStocks.map(
+      kind: "characterSession",
+      characterId: characterId(combatant.characterId),
+      combatantId: combatantId(combatant.combatantId),
+      initiative: initiativeScore(combatant.initiative),
+      ammunitionStocks: combatant.ammunitionStocks.map(
         ({ ammunition, remaining }) =>
           battleAmmunitionStock(ammunition, remaining),
       ),
-      admissionSource: { kind: "encounterParticipant" },
-      ...(statBlockCombatant.currentHp === undefined
-        ? {}
-        : { currentHp: Hp(statBlockCombatant.currentHp) }),
-      ...(statBlockCombatant.tempHp === undefined
-        ? {}
-        : { tempHp: Hp(statBlockCombatant.tempHp) }),
     };
+  }
+  return {
+    kind: "statBlock",
+    statBlockId: combatant.statBlockId,
+    combatantId: combatantId(combatant.combatantId),
+    initiative: initiativeScore(combatant.initiative),
+    ammunitionStocks: combatant.ammunitionStocks.map(
+      ({ ammunition, remaining }) =>
+        battleAmmunitionStock(ammunition, remaining),
+    ),
+    admissionSource: { kind: "encounterParticipant" },
+    ...(combatant.currentHp === undefined
+      ? {}
+      : { currentHp: Hp(combatant.currentHp) }),
+    ...(combatant.tempHp === undefined ? {} : { tempHp: Hp(combatant.tempHp) }),
   };
-  const [first, ...rest] = value;
-  return [decodeCombatant(first), ...rest.map(decodeCombatant)];
 }

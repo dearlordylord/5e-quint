@@ -97,6 +97,18 @@ const BattlePresentationBranches = {
   },
 } as const;
 
+const BattleLifecycleResultSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("combatantAdded"),
+    combatantId: Schema.String,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("combatantRemoved"),
+    combatantId: Schema.String,
+    removedCombatantIds: Schema.NonEmptyArray(Schema.String),
+  }),
+);
+
 function battlePresentationOutputSchema(session: Schema.Schema.AnyNoContext) {
   return Schema.Union(
     Schema.Struct({
@@ -128,6 +140,19 @@ export const BattleSessionOutputSchema = battlePresentationOutputSchema(
 
 export const StartBattleOutputSchema = battlePresentationOutputSchema(
   McpSessionSummarySchema,
+);
+
+const BattleLifecycleActiveOutputSchema = Schema.Struct({
+  battleState: McpActiveBattleStateSnapshotSchema,
+  result: BattleLifecycleResultSchema,
+  snapshot: BattlePresentedSnapshotSchema,
+  ...BattlePresentationProjectionFields,
+  session: McpActiveSessionSnapshotSchema,
+});
+
+export const BattleLifecycleOutputSchema = Schema.Union(
+  BattleLifecycleActiveOutputSchema,
+  StartBattleOutputSchema,
 );
 
 export const BattleResolutionOutputSchema = Schema.Struct({

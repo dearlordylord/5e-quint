@@ -288,6 +288,7 @@ function nextOperationsFrom(
       return [
         battleToolNames.discoverBattleActs,
         battleToolNames.readBattleState,
+        battleToolNames.battleLifecycle,
       ];
     }
     return unresolvedInputs.length > 0
@@ -295,6 +296,7 @@ function nextOperationsFrom(
       : [
           battleToolNames.discoverBattleActs,
           battleToolNames.readBattleState,
+          battleToolNames.battleLifecycle,
           battleToolNames.endBattle,
         ];
   }

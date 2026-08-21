@@ -1,6 +1,11 @@
 import { combatantId, type CombatantId } from "@dnd/battle-runtime";
-import { Either, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 
+import {
+  BattleCombatantArgsSchema,
+  decodeBattleCombatant,
+  type BattleCombatantToolInput,
+} from "./start-battle-tool-input.ts";
 import {
   decodeToolArgs,
   mcpObjectJsonSchema,
@@ -28,16 +33,29 @@ const FinalizeInitialInitiativeSetupOperationSchema = Schema.Struct({
   kind: Schema.Literal("finalizeInitialInitiativeSetup"),
 });
 
+const AddCombatantOperationSchema = Schema.Struct({
+  kind: Schema.Literal("addCombatant"),
+  combatant: BattleCombatantArgsSchema.annotations({
+    description:
+      "A finalized Character Session or installed SRD Stat Block projection admitted by the existing Battle owners.",
+  }),
+});
+
+const RemoveCombatantOperationSchema = Schema.Struct({
+  kind: Schema.Literal("removeCombatant"),
+  combatantId: CombatantIdTextSchema,
+});
+
 const BattleLifecycleOperationSchema = Schema.Union(
   ApplyInitiativeSwapOperationSchema,
   FinalizeInitialInitiativeSetupOperationSchema,
+  AddCombatantOperationSchema,
+  RemoveCombatantOperationSchema,
 );
 
 const BattleLifecycleArgsSchema = Schema.Struct({
   operation: BattleLifecycleOperationSchema,
 });
-
-type BattleLifecycleArgs = Schema.Schema.Type<typeof BattleLifecycleArgsSchema>;
 
 export const battleLifecycleInputSchema = mcpObjectJsonSchema(
   BattleLifecycleArgsSchema,
@@ -54,7 +72,15 @@ export type BattleLifecycleToolInput = {
           | { readonly tag: "unwillingAlly" }
           | { readonly tag: "willingAlly" };
       }
-    | { readonly kind: "finalizeInitialInitiativeSetup" };
+    | { readonly kind: "finalizeInitialInitiativeSetup" }
+    | {
+        readonly kind: "addCombatant";
+        readonly combatant: BattleCombatantToolInput;
+      }
+    | {
+        readonly kind: "removeCombatant";
+        readonly combatantId: CombatantId;
+      };
 };
 
 export function decodeBattleLifecycleArgs(
@@ -65,21 +91,40 @@ export function decodeBattleLifecycleArgs(
     args,
     "battle_lifecycle",
   );
-  return Either.map(decoded, ({ operation }) => ({
-    operation: decodeBattleLifecycleOperation(operation),
-  }));
-}
+  if (Either.isLeft(decoded)) return Either.left(decoded.left);
 
-function decodeBattleLifecycleOperation(
-  operation: BattleLifecycleArgs["operation"],
-): BattleLifecycleToolInput["operation"] {
-  if (operation.kind === "finalizeInitialInitiativeSetup") {
-    return operation;
-  }
-  return {
-    kind: operation.kind,
-    sourceId: combatantId(operation.sourceId),
-    candidateId: combatantId(operation.candidateId),
-    candidateWitness: operation.candidateWitness,
-  };
+  return Match.value(decoded.right.operation).pipe(
+    Match.when({ kind: "applyInitiativeSwap" }, (operation) =>
+      Either.right({
+        operation: {
+          kind: "applyInitiativeSwap" as const,
+          sourceId: combatantId(operation.sourceId),
+          candidateId: combatantId(operation.candidateId),
+          candidateWitness: operation.candidateWitness,
+        },
+      }),
+    ),
+    Match.when({ kind: "finalizeInitialInitiativeSetup" }, () =>
+      Either.right({
+        operation: { kind: "finalizeInitialInitiativeSetup" as const },
+      }),
+    ),
+    Match.when({ kind: "addCombatant" }, (operation) =>
+      Either.right({
+        operation: {
+          kind: "addCombatant" as const,
+          combatant: decodeBattleCombatant(operation.combatant),
+        },
+      }),
+    ),
+    Match.when({ kind: "removeCombatant" }, (operation) =>
+      Either.right({
+        operation: {
+          kind: "removeCombatant" as const,
+          combatantId: combatantId(operation.combatantId),
+        },
+      }),
+    ),
+    Match.exhaustive,
+  );
 }

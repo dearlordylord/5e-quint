@@ -12,6 +12,7 @@ import {
 } from "./battle-tool-input.ts";
 import {
   BattleResolutionOutputSchema,
+  BattleLifecycleOutputSchema,
   BattleSessionOutputSchema,
   EndBattleOutputSchema,
   SelectStatBlockOutputSchema,
@@ -39,9 +40,9 @@ export const battleToolDefinitions = [
   {
     name: battleToolNames.battleLifecycle,
     description:
-      "Apply one supported initial-Initiative setup operation: swap Initiative with a willing ally or finalize setup into the active Battle.",
+      "Apply one Battle lifecycle operation: swap Initiative with a willing ally or finalize initial setup, or atomically add/remove a supported Character Session or installed Stat Block combatant while the Battle is active.",
     inputSchema: battleLifecycleInputSchema,
-    outputSchema: mcpOutputJsonSchema(StartBattleOutputSchema),
+    outputSchema: mcpOutputJsonSchema(BattleLifecycleOutputSchema),
   },
   {
     name: battleToolNames.readBattleState,

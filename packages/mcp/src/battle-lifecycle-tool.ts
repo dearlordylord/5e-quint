@@ -8,14 +8,17 @@ import { Either, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleLifecycleToolInput } from "./battle-lifecycle-tool-input.ts";
-import { StartBattleOutputSchema } from "./battle-tool-output.ts";
+import {
+  battleLifecycleError,
+  handleActiveBattleRosterOperation,
+} from "./battle-roster-lifecycle.ts";
 import {
   battleSnapshotPresentationIssueContent,
   initialInitiativeSetupStartPayload,
 } from "./battle-tool-payloads.ts";
+import { StartBattleOutputSchema } from "./battle-tool-output.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
-import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { completeBattleStateTransition } from "./battle-state-transition.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 
@@ -23,17 +26,10 @@ export function handleBattleLifecycleToolCall(
   root: McpPlaySessionRoot,
   input: BattleLifecycleToolInput,
 ) {
-  const state = root.sessionStore.battleState;
-  return Match.value(state).pipe(
+  return Match.value(root.sessionStore.battleState).pipe(
     Match.when({ tag: "none" }, () =>
       errorContent("No Battle lifecycle is open.", {
         code: "BATTLE_LIFECYCLE_NOT_OPEN",
-      }),
-    ),
-    Match.when({ tag: "activeBattle" }, (matched) =>
-      errorContent("Initial Initiative setup is already finalized.", {
-        code: "INITIAL_INITIATIVE_SETUP_ALREADY_FINALIZED",
-        battleId: matched.session.state.battleId,
       }),
     ),
     Match.when({ tag: "initialInitiativeSetup" }, (matched) =>
@@ -43,6 +39,35 @@ export function handleBattleLifecycleToolCall(
         ),
         Match.when({ kind: "finalizeInitialInitiativeSetup" }, () =>
           finalizeSetup(root, matched.setup),
+        ),
+        Match.when({ kind: "addCombatant" }, () =>
+          activeBattleOnlyOperationError("addCombatant"),
+        ),
+        Match.when({ kind: "removeCombatant" }, () =>
+          activeBattleOnlyOperationError("removeCombatant"),
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.when({ tag: "activeBattle" }, (matched) =>
+      Match.value(input.operation).pipe(
+        Match.when({ kind: "applyInitiativeSwap" }, () =>
+          errorContent("Initial Initiative setup is already finalized.", {
+            code: "INITIAL_INITIATIVE_SETUP_ALREADY_FINALIZED",
+            battleId: matched.session.state.battleId,
+          }),
+        ),
+        Match.when({ kind: "finalizeInitialInitiativeSetup" }, () =>
+          errorContent("Initial Initiative setup is already finalized.", {
+            code: "INITIAL_INITIATIVE_SETUP_ALREADY_FINALIZED",
+            battleId: matched.session.state.battleId,
+          }),
+        ),
+        Match.when({ kind: "addCombatant" }, (operation) =>
+          handleActiveBattleRosterOperation(root, matched.session, operation),
+        ),
+        Match.when({ kind: "removeCombatant" }, (operation) =>
+          handleActiveBattleRosterOperation(root, matched.session, operation),
         ),
         Match.exhaustive,
       ),
@@ -99,9 +124,7 @@ function finalizeSetup(
       if (state.tag !== "activeBattle") {
         return errorContent(
           "Battle finalization did not produce an active session.",
-          {
-            code: "BATTLE_FINALIZATION_STATE_INVALID",
-          },
+          { code: "BATTLE_FINALIZATION_STATE_INVALID" },
         );
       }
       const snapshot = battlePresentedSnapshot(state.session);
@@ -118,10 +141,19 @@ function finalizeSetup(
         ),
         presentedInterruptChoices: [],
         session: {
-          ...mcpSessionSummary(root.sessionStore.snapshot()),
+          ...root.sessionStore.snapshot(),
           battleState,
         },
       });
     },
   });
+}
+
+function activeBattleOnlyOperationError(
+  operation: "addCombatant" | "removeCombatant",
+) {
+  return battleLifecycleError(
+    `The ${operation} operation requires an active Battle.`,
+    { code: "BATTLE_LIFECYCLE_ACTIVE_BATTLE_REQUIRED", operation },
+  );
 }

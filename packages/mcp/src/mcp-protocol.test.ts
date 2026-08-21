@@ -1099,6 +1099,265 @@ describe("MCP protocol server", () => {
     }
   }, 30_000);
 
+  test("adds and removes Battle combatants through the unified atomic lifecycle surface", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const host = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "battle-lifecycle-protocol-client",
+      version: "0.1.0",
+    });
+    const firstCharacterId = characterId("character:lifecycle-first");
+    const secondCharacterId = characterId("character:lifecycle-second");
+
+    try {
+      await host.server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const playSessionId = await createPlaySession(client);
+      const decoded = decodePlaySessionId(playSessionId);
+      if (Either.isLeft(decoded)) throw new Error(decoded.left);
+      const installed = await host.playSessions.run(decoded.right, (root) => {
+        for (const character of [firstCharacterId, secondCharacterId]) {
+          const session = availableCharacterSession({
+            characterId: character,
+            build: armorClassBuild({
+              startingClass: "class_fighter",
+              armor: "armor_chain_mail",
+              shield: true,
+              weapon: "weapon_longsword",
+            }),
+            currentHp: Hp(10),
+            tempHp: Hp(0),
+            hitPointMaximumReduction: Hp(0),
+            conditions: [],
+            companion: { tag: "none" },
+            unitLibrary: root.unitLibrary,
+          });
+          if (Either.isLeft(session)) throw new Error(session.left.message);
+          root.sessionStore.characters.set(session.right);
+        }
+      });
+      if (Either.isLeft(installed))
+        throw new Error(installed.left.restoration.guidance);
+
+      await callStructuredTool(client, {
+        name: "start_battle",
+        arguments: {
+          playSessionId,
+          battleId: "battle:lifecycle-protocol",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              ammunitionStocks: [],
+              characterId: firstCharacterId,
+              combatantId: "lifecycle-first",
+              initiative: 18,
+            },
+            {
+              kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId: "lifecycle-goblin",
+              initiative: 8,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+        },
+      });
+
+      const lifecycleTool = (await client.listTools()).tools.find(
+        (tool) => tool.name === "battle_lifecycle",
+      );
+      if (lifecycleTool?.outputSchema === undefined) {
+        throw new Error("Expected Battle lifecycle output schema.");
+      }
+      const validateOutput = new AjvJsonSchemaValidator().getValidator(
+        lifecycleTool.outputSchema as JsonSchemaType,
+      );
+
+      const addedStatBlock = await callStructuredTool(client, {
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId,
+          operation: {
+            kind: "addCombatant",
+            combatant: {
+              kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              statBlockId: "stat_block_skeleton",
+              combatantId: "lifecycle-skeleton",
+              initiative: 4,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          },
+        },
+      });
+      expect(validateOutput(addedStatBlock).valid).toBe(true);
+      expect(operationResult(addedStatBlock)).toMatchObject({
+        result: {
+          tag: "combatantAdded",
+          combatantId: "lifecycle-skeleton",
+        },
+      });
+
+      const removedStatBlock = await callStructuredTool(client, {
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId,
+          operation: {
+            kind: "removeCombatant",
+            combatantId: "lifecycle-skeleton",
+          },
+        },
+      });
+      expect(validateOutput(removedStatBlock).valid).toBe(true);
+      expect(operationResult(removedStatBlock)).toMatchObject({
+        result: {
+          tag: "combatantRemoved",
+          combatantId: "lifecycle-skeleton",
+          removedCombatantIds: ["lifecycle-skeleton"],
+        },
+      });
+
+      const added = await callStructuredTool(client, {
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId,
+          operation: {
+            kind: "addCombatant",
+            combatant: {
+              kind: "characterSession",
+              ammunitionStocks: [],
+              characterId: secondCharacterId,
+              combatantId: "lifecycle-second",
+              initiative: 5,
+            },
+          },
+        },
+      });
+      expect(validateOutput(added).valid).toBe(true);
+      expect(operationResult(added)).toMatchObject({
+        result: {
+          tag: "combatantAdded",
+          combatantId: "lifecycle-second",
+        },
+      });
+      const occupied = await callStructuredTool(client, {
+        name: "inspect_character_session",
+        arguments: { playSessionId, characterId: secondCharacterId },
+      });
+      expect(JSON.stringify(occupied)).toContain('"tag":"inBattle"');
+      expect(occupied.nextOperations).toContain("battle_lifecycle");
+
+      const conflict = await client.callTool({
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId,
+          operation: {
+            kind: "addCombatant",
+            combatant: {
+              kind: "characterSession",
+              ammunitionStocks: [],
+              characterId: secondCharacterId,
+              combatantId: "lifecycle-second-again",
+              initiative: 4,
+            },
+          },
+        },
+      });
+      expect(conflict.isError).toBe(true);
+      if (!isJsonObject(conflict.structuredContent)) {
+        throw new Error("Expected typed Battle occupancy conflict.");
+      }
+      expect(validateOutput(conflict.structuredContent).valid).toBe(true);
+      expect(conflict.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            details: {
+              code: "CHARACTER_ALREADY_IN_BATTLE",
+              recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+            },
+          },
+        },
+      });
+
+      const removed = await callStructuredTool(client, {
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId,
+          operation: {
+            kind: "removeCombatant",
+            combatantId: "lifecycle-first",
+          },
+        },
+      });
+      expect(validateOutput(removed).valid).toBe(true);
+      expect(operationResult(removed)).toMatchObject({
+        result: {
+          tag: "combatantRemoved",
+          combatantId: "lifecycle-first",
+          removedCombatantIds: ["lifecycle-first"],
+        },
+      });
+      const settled = await callStructuredTool(client, {
+        name: "inspect_character_session",
+        arguments: { playSessionId, characterId: firstCharacterId },
+      });
+      expect(JSON.stringify(settled)).toContain('"tag":"available"');
+
+      const battleBeforeFailure = await callStructuredTool(client, {
+        name: "read_battle_state",
+        arguments: { playSessionId },
+      });
+      await host.playSessions.run(decoded.right, (root) => {
+        root.sessionStore.characters.setAll = () =>
+          Either.left({
+            tag: "unknownCharacterSession",
+            characterId: characterId("character:injected"),
+          });
+      });
+      const rejected = await client.callTool({
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId,
+          operation: {
+            kind: "removeCombatant",
+            combatantId: "lifecycle-second",
+          },
+        },
+      });
+      expect(rejected.isError).toBe(true);
+      if (!isJsonObject(rejected.structuredContent)) {
+        throw new Error("Expected typed Battle lifecycle recovery.");
+      }
+      expect(validateOutput(rejected.structuredContent).valid).toBe(true);
+      expect(rejected.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            details: {
+              code: "CHARACTER_SESSION_COMMIT_INVALID",
+              recovery: { tag: "battleAndCharacterSessionsUnchanged" },
+            },
+          },
+        },
+      });
+      const battleAfterFailure = await callStructuredTool(client, {
+        name: "read_battle_state",
+        arguments: { playSessionId },
+      });
+      expect(operationResult(battleAfterFailure).snapshot).toEqual(
+        operationResult(battleBeforeFailure).snapshot,
+      );
+      const stillOccupied = await callStructuredTool(client, {
+        name: "inspect_character_session",
+        arguments: { playSessionId, characterId: secondCharacterId },
+      });
+      expect(JSON.stringify(stillOccupied)).toContain('"tag":"inBattle"');
+    } finally {
+      await Promise.allSettled([client.close(), host.server.close()]);
+    }
+  }, 30_000);
+
   test("returns one typed restoration result for a handle absent from the process", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();

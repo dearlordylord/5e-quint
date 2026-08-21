@@ -30,6 +30,7 @@ import {
   type BattleRuntimeContext,
   type BattleRuntimeSession,
   type CharacterBattleRuntimeContext,
+  type BattleStatBlockPresentationSource,
 } from "../battle-runtime-context.ts";
 
 import {
@@ -590,6 +591,7 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
   {
     readonly state: BattleState;
     readonly characterContext?: CharacterBattleRuntimeContext;
+    readonly statBlockPresentation?: BattleStatBlockPresentationSource;
   },
   BattleStateInitIssue
 > {
@@ -672,6 +674,9 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
     ...(characterSpellAdmission === undefined
       ? {}
       : { characterContext: characterSpellAdmission.runtimeContext }),
+    ...("statBlockPresentation" in admission
+      ? { statBlockPresentation: admission.statBlockPresentation }
+      : {}),
   });
 }
 
@@ -700,9 +705,16 @@ export function addBattleRuntimeCombatant(input: {
       if (admission.characterContext !== undefined) {
         characters.set(input.combatant.combatantId, admission.characterContext);
       }
+      const statBlocks = new Map(input.session.context.statBlocks);
+      if (admission.statBlockPresentation !== undefined) {
+        statBlocks.set(
+          input.combatant.combatantId,
+          admission.statBlockPresentation,
+        );
+      }
       return battleRuntimeSessionFromAdmittedContext(
         admission.state,
-        battleRuntimeContextFromCharacterAdmission(characters),
+        battleRuntimeContextFromCharacterAdmission(characters, statBlocks),
       );
     },
   );
@@ -723,6 +735,11 @@ export function removeBattleRuntimeCombatants(input: {
         battleRuntimeContextFromCharacterAdmission(
           new Map(
             [...input.session.context.characters].filter(([combatantId]) =>
+              state.combatants.has(combatantId),
+            ),
+          ),
+          new Map(
+            [...input.session.context.statBlocks].filter(([combatantId]) =>
               state.combatants.has(combatantId),
             ),
           ),

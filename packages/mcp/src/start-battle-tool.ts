@@ -26,8 +26,8 @@ import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { type AvailableCharacterSession } from "./session-store.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import {
-  type InitialBattleCombatantToolInput,
-  type InitialCharacterSessionCombatantToolInput,
+  type BattleCombatantToolInput,
+  type CharacterSessionCombatantToolInput,
   type CompanionAdmissionToolInput,
   type StartBattleToolInput,
 } from "./start-battle-tool-input.ts";
@@ -40,7 +40,7 @@ import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts
 import { completeBattleStateTransition } from "./battle-state-transition.ts";
 
 export type StartableCharacterSessionCombatant = {
-  readonly character: InitialCharacterSessionCombatantToolInput;
+  readonly character: CharacterSessionCombatantToolInput;
   readonly session: AvailableCharacterSession;
 };
 
@@ -49,7 +49,7 @@ export type StartableBattleCombatants = {
   readonly characterSessions: readonly StartableCharacterSessionCombatant[];
 };
 
-type StartableBattleCombatant =
+export type ProjectedBattleCombatant =
   | {
       readonly tag: "characterSession";
       readonly creatureInit: BattleCreatureInit;
@@ -157,7 +157,7 @@ export function handleStartBattleToolCall(
 }
 
 function duplicateStartBattleInputContent(
-  initialCombatants: readonly InitialBattleCombatantToolInput[],
+  initialCombatants: readonly BattleCombatantToolInput[],
   companionAdmissions: readonly CompanionAdmissionToolInput[],
 ) {
   const characters = initialCombatants.filter(isCharacterSessionCombatant);
@@ -201,10 +201,10 @@ function duplicateStartBattleInputContent(
 
 function startableBattleCombatants(input: {
   readonly root: McpPlaySessionRoot;
-  readonly initialCombatants: readonly InitialBattleCombatantToolInput[];
+  readonly initialCombatants: readonly BattleCombatantToolInput[];
 }): Either.Either<StartableBattleCombatants, ReturnType<typeof errorContent>> {
   const combatants = traverseValidation(input.initialCombatants, (combatant) =>
-    startableBattleCombatant({
+    projectBattleCombatant({
       root: input.root,
       combatant,
     }),
@@ -221,10 +221,10 @@ function startableBattleCombatants(input: {
   });
 }
 
-function startableBattleCombatant(input: {
+export function projectBattleCombatant(input: {
   readonly root: McpPlaySessionRoot;
-  readonly combatant: InitialBattleCombatantToolInput;
-}): Either.Either<StartableBattleCombatant, ToolError> {
+  readonly combatant: BattleCombatantToolInput;
+}): Either.Either<ProjectedBattleCombatant, ToolError> {
   const { root, combatant } = input;
   return Match.value(combatant).pipe(
     Match.when({ kind: "characterSession" }, (character) => {
@@ -396,8 +396,8 @@ function invalidBattleCombatantsContent(issues: readonly ToolError[]) {
 }
 
 function isCharacterSessionCombatant(
-  combatant: InitialBattleCombatantToolInput,
-): combatant is InitialCharacterSessionCombatantToolInput {
+  combatant: BattleCombatantToolInput,
+): combatant is CharacterSessionCombatantToolInput {
   return combatant.kind === "characterSession";
 }
 

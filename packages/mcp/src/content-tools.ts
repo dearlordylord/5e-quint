@@ -244,6 +244,7 @@ function workflowGuide() {
       "Call finalize_character only when finalization.tag is ready or after holes are complete.",
       "Call list_stat_blocks for Stat Block ids. select_stat_block can store one id for inspection, but start_battle Stat Block combatants carry their own statBlockId.",
       "Call start_battle with a non-empty initialCombatants roster. Character-session combatants use characterId from list_characters; Stat Block combatants use statBlockId from list_stat_blocks.",
+      "Use battle_lifecycle with applyInitiativeSwap or finalizeInitialInitiativeSetup during initial setup; while a Battle is active, use addCombatant or removeCombatant to change the roster. Add only an available Character Session or an installed Stat Block projection, and retry typed recovery with battleAndCharacterSessionsUnchanged when a transition is rejected.",
       "Call discover_battle_acts and copy a returned subject exactly.",
       "If an act has initialHoles, call fill_battle_hole with subjectJson=JSON.stringify(subject) and fillJson=JSON.stringify(one fill) at a time, reusing the same subject until result.tag is resolved.",
       "If an act has no holes, call resolve_battle_act with subjectJson=JSON.stringify(subject).",

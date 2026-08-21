@@ -114,6 +114,11 @@ export type McpBattleStateTransitionIssue =
       readonly tag: "battleStateBattleOwnershipConflict";
       readonly expectedBattleId: BattleId;
       readonly actualBattleId: BattleId;
+    }
+  | {
+      readonly tag: "battleStateCharacterSessionRegistryConflict";
+      readonly registryIssue: CharacterSessionRegistryIssue;
+      readonly affectedCharacterIds: readonly CharacterId[];
     };
 
 export type McpBattleStateSnapshot =
@@ -159,6 +164,11 @@ export type McpSessionStore = {
   storeActiveBattle(
     session: BattleRuntimeSession,
   ): Either.Either<void, McpBattleStateTransitionIssue>;
+  storeActiveBattleRosterTransition(input: {
+    readonly expectedBattleId: BattleId;
+    readonly nextBattle: BattleRuntimeSession;
+    readonly characterSessions: readonly CharacterSession[];
+  }): Either.Either<void, McpBattleStateTransitionIssue>;
   storeInitialInitiativeSetup(
     setup: InitialInitiativeSetup,
   ): Either.Either<void, McpBattleStateTransitionIssue>;
@@ -248,6 +258,35 @@ export function createMcpSessionStore(
         });
       }
       battleState = { tag: "activeBattle", session };
+      return Either.right(undefined);
+    },
+    storeActiveBattleRosterTransition(input) {
+      if (battleState.tag !== "activeBattle") {
+        return invalidBattleStateTransition(battleState.tag, "activeBattle");
+      }
+      const actualBattleId = battleState.session.state.battleId;
+      if (
+        actualBattleId !== input.expectedBattleId ||
+        input.nextBattle.state.battleId !== actualBattleId
+      ) {
+        return Either.left({
+          tag: "battleStateBattleOwnershipConflict",
+          expectedBattleId: actualBattleId,
+          actualBattleId:
+            input.nextBattle.state.battleId === actualBattleId
+              ? input.expectedBattleId
+              : input.nextBattle.state.battleId,
+        });
+      }
+      const committed = characters.setAll(input.characterSessions);
+      if (Either.isLeft(committed)) {
+        return Either.left({
+          tag: "battleStateCharacterSessionRegistryConflict",
+          registryIssue: committed.left,
+          affectedCharacterIds: input.characterSessions.map(characterSessionId),
+        });
+      }
+      battleState = { tag: "activeBattle", session: input.nextBattle };
       return Either.right(undefined);
     },
     storeInitialInitiativeSetup(setup) {
