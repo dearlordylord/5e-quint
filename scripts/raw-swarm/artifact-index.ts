@@ -5,10 +5,9 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
-  realpathSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, extname, relative, resolve, sep } from "node:path";
+import { dirname, extname, relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { Either, Schema } from "effect";
 
@@ -24,6 +23,10 @@ import {
   ExecutionIdSchema,
   ScenarioIdSchema,
 } from "./raw-swarm-identities.ts";
+import {
+  canonicalRepositoryReadPath,
+  canonicalRepositoryReadRelativePath,
+} from "./repository-path.ts";
 
 const INDEX_SCHEMA_VERSION = 3;
 
@@ -133,18 +136,14 @@ function sha256(bytes: Uint8Array): string {
 }
 
 export function repositoryArtifactPath(path: string): string {
-  const absolute = (() => {
-    try {
-      return realpathSync(resolve(repoRoot, path));
-    } catch {
-      return fail(`Artifact is unreadable or missing: ${path}`);
-    }
-  })();
-  const relativePath = relative(repoRoot, absolute);
-  if (relativePath.startsWith(`..${sep}`) || relativePath === "..") {
-    fail(`Artifact escapes the repository root: ${path}`);
+  const canonical = canonicalRepositoryReadRelativePath(repoRoot, path);
+  if (Either.isLeft(canonical)) {
+    const prefix = canonical.left.includes("escapes")
+      ? "Artifact escapes the repository root"
+      : "Artifact is unreadable or missing";
+    fail(`${prefix}: ${path}: ${canonical.left}`);
   }
-  return relativePath;
+  return canonical.right;
 }
 
 function jsonLines(path: string): readonly unknown[] {
@@ -490,7 +489,16 @@ function ingestArtifactRunWithDisposition(input: {
     readonly mediaType: string;
   }[];
 }): number {
-  const absoluteTranscript = resolve(repoRoot, input.transcriptPath);
+  const canonicalTranscriptPath = canonicalRepositoryReadPath(
+    repoRoot,
+    input.transcriptPath,
+  );
+  if (Either.isLeft(canonicalTranscriptPath)) {
+    fail(
+      `Artifact transcript is not repository-owned: ${input.transcriptPath}: ${canonicalTranscriptPath.left}`,
+    );
+  }
+  const absoluteTranscript = canonicalTranscriptPath.right;
   const records = jsonLines(absoluteTranscript);
   const sdk = parseSdkTranscript(records);
   const mcp =
@@ -1988,7 +1996,7 @@ export function exportArtifactIndex(input: {
       fail("Artifact index contains an invalid reference.");
     }
     const containedPath = repositoryArtifactPath(row.path);
-    const sourcePath = realpathSync(resolve(repoRoot, containedPath));
+    const sourcePath = resolve(repoRoot, containedPath);
     const bytes = readFileSync(sourcePath);
     if (bytes.byteLength !== row.byteLength || sha256(bytes) !== row.sha256) {
       fail(`Artifact changed before export: ${row.path}`);

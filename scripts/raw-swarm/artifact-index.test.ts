@@ -1,6 +1,15 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, relative, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { DatabaseSync } from "node:sqlite";
 
 import { afterEach, describe, expect, test } from "vitest";
@@ -14,6 +23,7 @@ import {
   rebuildLegacyArtifactIndex,
   registerIndexArtifact,
 } from "./artifact-index.ts";
+import { artifactAuthority, readJsonLines } from "./artifact-authority.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 import {
   extractSdkTranscriptSequences,
@@ -24,6 +34,7 @@ import {
 import { repoRoot, sha256Canonical, sha256Text } from "./transcript.ts";
 
 const temporaryDirectories: string[] = [];
+const temporaryExternalDirectories: string[] = [];
 
 function temporaryDirectory(): string {
   const directory = rawSwarmTestOutputDirectory("index-test-");
@@ -33,6 +44,9 @@ function temporaryDirectory(): string {
 
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
+    rmSync(directory, { recursive: true, force: true });
+  }
+  for (const directory of temporaryExternalDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
   }
 });
@@ -124,6 +138,56 @@ function sdkTranscript(directory: string): string {
 }
 
 describe("Raw Swarm artifact index", () => {
+  test("rejects an escaping transcript symlink before parsing or opening the index", () => {
+    const directory = temporaryDirectory();
+    const outside = mkdtempSync(resolve(tmpdir(), "raw-swarm-index-outside-"));
+    temporaryExternalDirectories.push(outside);
+    const outsideTranscript = resolve(outside, "transcript.jsonl");
+    const linkedTranscript = resolve(directory, "linked-transcript.jsonl");
+    writeFileSync(outsideTranscript, "not-json\n");
+    symlinkSync(outsideTranscript, linkedTranscript);
+    const dbPath = resolve(directory, "index.sqlite");
+    const linkedPath = relative(repoRoot, linkedTranscript);
+
+    expect(() => readJsonLines(linkedPath)).toThrow(
+      /Repository authority symlink escapes the repository/,
+    );
+    expect(() => artifactAuthority(linkedPath)).toThrow(
+      /Repository authority symlink escapes the repository/,
+    );
+    expect(() =>
+      ingestArtifactRun({
+        transcriptPath: linkedPath,
+        dbPath: relative(repoRoot, dbPath),
+      }),
+    ).toThrow(/Repository authority symlink escapes the repository/);
+    expect(existsSync(dbPath)).toBe(false);
+  });
+
+  test("rejects an escaping artifact symlink before reading or indexing it", () => {
+    const directory = temporaryDirectory();
+    const outside = mkdtempSync(resolve(tmpdir(), "raw-swarm-index-outside-"));
+    temporaryExternalDirectories.push(outside);
+    const outsideArtifact = resolve(outside, "artifact.json");
+    const linkedArtifact = resolve(directory, "linked-artifact.json");
+    writeFileSync(outsideArtifact, "outside\n");
+    symlinkSync(outsideArtifact, linkedArtifact);
+    const dbPath = resolve(directory, "index.sqlite");
+    const db = openArtifactIndex(relative(repoRoot, dbPath));
+
+    expect(() =>
+      registerIndexArtifact({
+        db,
+        path: relative(repoRoot, linkedArtifact),
+        mediaType: "application/json",
+      }),
+    ).toThrow(/Repository authority symlink escapes the repository/);
+    expect(db.prepare("SELECT COUNT(*) AS count FROM artifacts").get()).toEqual(
+      { count: 0 },
+    );
+    db.close();
+  });
+
   test("public ingestion rejects observations without current Execution identity", () => {
     const directory = temporaryDirectory();
     const sdk = sdkTranscript(directory);

@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { relative } from "node:path";
+import { Either } from "effect";
 
-import { repositoryArtifactPath } from "./artifact-index.ts";
 import type { ArtifactAuthority } from "./artifact-authority-schema.ts";
+import { canonicalRepositoryReadPath } from "./repository-path.ts";
 import { repoRoot } from "./transcript.ts";
 
 export { ArtifactAuthoritySchema } from "./artifact-authority-schema.ts";
@@ -13,9 +14,18 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
+function repositoryReadPath(path: string): string {
+  const canonical = canonicalRepositoryReadPath(repoRoot, path);
+  if (Either.isLeft(canonical)) {
+    fail(`Artifact is not repository-owned: ${path}: ${canonical.left}`);
+  }
+  return canonical.right;
+}
+
 export function artifactAuthority(path: string): ArtifactAuthority {
-  const repositoryPath = repositoryArtifactPath(path);
-  const bytes = readFileSync(resolve(repoRoot, repositoryPath));
+  const absolutePath = repositoryReadPath(path);
+  const repositoryPath = relative(repoRoot, absolutePath);
+  const bytes = readFileSync(absolutePath);
   return artifactAuthorityForBytes(repositoryPath, bytes);
 }
 
@@ -31,9 +41,10 @@ export function artifactAuthorityForBytes(
 }
 
 export function readJsonLines(path: string): readonly unknown[] {
+  const absolutePath = repositoryReadPath(path);
   const text = (() => {
     try {
-      return readFileSync(resolve(repoRoot, path), "utf8");
+      return readFileSync(absolutePath, "utf8");
     } catch {
       return fail(`Artifact is unreadable or missing: ${path}`);
     }

@@ -46,6 +46,28 @@ export function canonicalRepositoryReadPath(
 }
 
 /**
+ * Return the repository-relative spelling of a canonical read path. The
+ * containment decision is made by canonicalRepositoryReadPath; this helper
+ * only projects its accepted absolute path into the persisted authority form.
+ */
+export function canonicalRepositoryReadRelativePath(
+  repositoryRoot: string,
+  candidatePath: string,
+): Either.Either<string, string> {
+  const canonical = canonicalRepositoryReadPath(repositoryRoot, candidatePath);
+  if (Either.isLeft(canonical)) return canonical;
+  try {
+    return Either.right(
+      relative(realpathSync(repositoryRoot), canonical.right),
+    );
+  } catch (error) {
+    return Either.left(
+      `Repository authority path is unreadable: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+/**
  * Resolve a repository-owned destination before creating or publishing it.
  * The destination itself may not exist yet, so containment is checked against
  * its nearest existing ancestor as well as an existing leaf.
