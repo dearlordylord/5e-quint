@@ -1,3 +1,11 @@
+import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
+import { HAND_USES } from "@dnd/shared/types";
+import {
+  AbilitySchema,
+  ArmorAcFormulaSchema,
+  ArmorCategorySchema,
+} from "@dnd/surface/surface/schema";
+import { ARMOR_TRAINING_CATEGORIES } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
@@ -6,6 +14,112 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
 );
+const IntegerSchema = Schema.Number.pipe(Schema.int());
+const CharacterSheetProjectionRetainRouteSchema = Schema.Struct({
+  kind: Schema.Literal("retainCharacterSheetSelectedReferences"),
+  subject: Schema.Literal("selectedReferenceProjection"),
+  owner: Schema.Literal("selectedReference"),
+});
+const CharacterSheetFactsProjectionRouteSchema = Schema.Struct({
+  kind: Schema.Literal("projectCharacterSheetFacts"),
+  subject: Schema.Literal("buildFactsProjection"),
+  owner: Schema.Literal("buildProjection"),
+});
+const CharacterSheetAbilityCheckProjectionRouteSchema = Schema.Struct({
+  kind: Schema.Literal("projectCharacterSheetFacts"),
+  subject: Schema.Literal("abilityCheckProjection"),
+  owner: Schema.Literal("buildProjection"),
+});
+const CharacterSheetArmorClassProjectionRouteSchema = Schema.Tuple(
+  CharacterSheetProjectionRetainRouteSchema,
+  Schema.Struct({
+    kind: Schema.Literal("projectCharacterSheetFacts"),
+    subject: Schema.Literal("armorClassProjection"),
+    owner: Schema.Literal("buildProjection"),
+  }),
+);
+const CharacterSheetWeaponMasteryProjectionRouteSchema = Schema.Tuple(
+  CharacterSheetProjectionRetainRouteSchema,
+  CharacterSheetFactsProjectionRouteSchema,
+);
+const ArmorClassBaseSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("stat_block"),
+    ac: ArmorClassSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("ability_sum"),
+    base: ArmorClassSchema,
+    abilityModifiers: Schema.NonEmptyArray(AbilitySchema),
+    source: Schema.Literal("default_unarmored"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("ability_sum"),
+    base: ArmorClassSchema,
+    abilityModifiers: Schema.NonEmptyArray(AbilitySchema),
+    source: Schema.Literal(
+      "unarmored_defense",
+      "class_feature_base_plus_ability",
+    ),
+    sourceUnitId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("ability_sum"),
+    base: ArmorClassSchema,
+    abilityModifiers: Schema.NonEmptyArray(AbilitySchema),
+    source: Schema.Literal("spell_base_plus_ability"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("armor"),
+    formula: ArmorAcFormulaSchema,
+    category: ArmorCategorySchema,
+  }),
+);
+const ArmorClassBonusSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("flat"),
+    bonus: IntegerSchema,
+    sourceUnitId: Schema.optionalWith(Schema.String, { exact: true }),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("shield"),
+    bonus: IntegerSchema,
+    handUse: Schema.Literal("shield"),
+    trainingRequired: Schema.Literal("shield"),
+    sourceUnitId: Schema.optionalWith(Schema.String, { exact: true }),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("unarmored_no_shield"),
+    bonus: IntegerSchema,
+    sourceUnitId: Schema.optionalWith(Schema.String, { exact: true }),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("wearing_armor"),
+    bonus: IntegerSchema,
+    categories: Schema.Array(ArmorCategorySchema),
+    sourceUnitId: Schema.optionalWith(Schema.String, { exact: true }),
+  }),
+);
+const ArmorClassFloorSchema = Schema.Struct({
+  floor: ArmorClassSchema,
+  sourceUnitId: Schema.optionalWith(Schema.String, { exact: true }),
+});
+const ArmorClassStateSchema = Schema.Struct({
+  abilityModifiers: Schema.Struct({
+    str: IntegerSchema,
+    dex: IntegerSchema,
+    con: IntegerSchema,
+    int: IntegerSchema,
+    wis: IntegerSchema,
+    cha: IntegerSchema,
+  }),
+  base: ArmorClassBaseSchema,
+  bonuses: Schema.Array(ArmorClassBonusSchema),
+  floors: Schema.Array(ArmorClassFloorSchema),
+  armorTraining: Schema.Array(Schema.Literal(...ARMOR_TRAINING_CATEGORIES)),
+  leftHandUse: Schema.Literal(...HAND_USES),
+  rightHandUse: Schema.Literal(...HAND_USES),
+});
 
 const CharacterSheetAbilityCheckAbilityProjectionSchema = Schema.Struct({
   defaultAbility: Schema.String,
@@ -43,7 +157,7 @@ const CharacterSheetAbilityCheckProficiencyBonusProjectionSchema =
         bonus: Schema.Number,
       }),
     ),
-    qRoute: Schema.Array(Schema.Any),
+    qRoute: Schema.Tuple(CharacterSheetAbilityCheckProjectionRouteSchema),
   });
 const CharacterSheetJumpDistanceAbilityProjectionSchema = Schema.Struct({
   defaultAbility: Schema.String,
@@ -64,20 +178,9 @@ const CharacterSheetLinkedSpeedGrantSchema = Schema.Struct({
   ),
 });
 const CharacterSheetArmorClassProjectionSchema = Schema.Struct({
-  state: Schema.Struct({
-    abilityModifiers: Schema.Record({
-      key: Schema.String,
-      value: Schema.Number,
-    }),
-    base: Schema.Any,
-    bonuses: Schema.Array(Schema.Any),
-    floors: Schema.Array(Schema.Any),
-    armorTraining: Schema.Array(Schema.String),
-    leftHandUse: Schema.String,
-    rightHandUse: Schema.String,
-  }),
-  armorClass: Schema.Number,
-  qRoute: Schema.Array(Schema.Any),
+  state: ArmorClassStateSchema,
+  armorClass: ArmorClassSchema,
+  qRoute: CharacterSheetArmorClassProjectionRouteSchema,
 });
 const CharacterSheetSpellAccessProjectionSchema = Schema.Array(
   Schema.Struct({
@@ -98,7 +201,17 @@ const CharacterSheetWeaponMasteryProjectionSchema = Schema.Struct({
   choiceCount: Schema.Number,
   longRestChangeCount: Schema.Number,
   eligibleWeaponUnitIds: Schema.Array(Schema.String),
-  qRoute: Schema.Array(Schema.Any),
+  qRoute: CharacterSheetWeaponMasteryProjectionRouteSchema,
+});
+const CharacterSheetSpellbookRitualAccessSpellSchema = Schema.Struct({
+  id: Schema.String,
+  mechanics: Schema.Struct({ level: PositiveIntegerSchema }),
+});
+const CharacterSheetSpellbookRitualAccessSchema = Schema.Struct({
+  tag: Schema.Literal("spellbookRitual"),
+  spell: CharacterSheetSpellbookRitualAccessSpellSchema,
+  spellcastingSourceUnitId: Schema.String,
+  featureUnitId: Schema.String,
 });
 const CharacterSheetSpellbookRitualInvocationSchema = Schema.Struct({
   tag: Schema.Literal("spellbookRitual"),
@@ -190,11 +303,11 @@ const CharacterSessionQueryProjectionSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("spellbookRitualAccesses"),
-    projection: Schema.Array(Schema.Any),
+    projection: Schema.Array(CharacterSheetSpellbookRitualAccessSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("spellbookRitualAccess"),
-    projection: Schema.Any,
+    projection: CharacterSheetSpellbookRitualAccessSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("spellInvocation"),

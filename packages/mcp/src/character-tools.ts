@@ -52,6 +52,15 @@ import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
 
+type CharacterSessionRitualAccess = Extract<
+  CharacterSessionQueryProjection,
+  { readonly kind: "spellbookRitualAccess" }
+>["projection"];
+type CharacterSessionRitualAccessOutput = Extract<
+  CharacterSessionQueryOutput["query"],
+  { readonly kind: "spellbookRitualAccess" }
+>["projection"];
+
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export const characterToolDefinitions = [
   {
@@ -357,11 +366,31 @@ function characterSessionQueryProjectionForOutput(
     Match.when({ kind: "spellAccess" }, (value) => value),
     Match.when({ kind: "knownForms" }, (value) => value),
     Match.when({ kind: "weaponMasterySelections" }, (value) => value),
-    Match.when({ kind: "spellbookRitualAccesses" }, (value) => value),
-    Match.when({ kind: "spellbookRitualAccess" }, (value) => value),
+    Match.when({ kind: "spellbookRitualAccesses" }, ({ kind, projection }) => ({
+      kind,
+      projection: projection.map(characterSessionRitualAccessForOutput),
+    })),
+    Match.when({ kind: "spellbookRitualAccess" }, ({ kind, projection }) => ({
+      kind,
+      projection: characterSessionRitualAccessForOutput(projection),
+    })),
     Match.when({ kind: "spellInvocation" }, (value) => value),
     Match.exhaustive,
   );
+}
+
+function characterSessionRitualAccessForOutput(
+  access: CharacterSessionRitualAccess,
+): CharacterSessionRitualAccessOutput {
+  return {
+    tag: access.tag,
+    spell: {
+      id: access.spell.id,
+      mechanics: { level: access.spell.mechanics.level },
+    },
+    spellcastingSourceUnitId: access.spellcastingSourceUnitId,
+    featureUnitId: access.featureUnitId,
+  };
 }
 
 function unknownDraftContent(draftId: CharacterDraftId) {

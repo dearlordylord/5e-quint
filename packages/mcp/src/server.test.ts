@@ -67,7 +67,10 @@ import {
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
-import { CharacterSessionDetailOutputSchema } from "./character-tool-output.ts";
+import {
+  CharacterSessionDetailOutputSchema,
+  CharacterSessionQueryOutputSchema,
+} from "./character-tool-output.ts";
 import {
   characterBattleSupportProjection,
   characterBattleRuntimeIssueMessage,
@@ -689,6 +692,101 @@ describe("MCP server route", () => {
             requiredSpellAccess: "spellbook",
           },
         },
+      },
+    });
+  });
+
+  test("rejects malformed nested Character Session query projections", () => {
+    const root = createMcpPlaySessionRoot();
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const characterId = testCharacterId("query-schema");
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        build,
+        characterId,
+        currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+        hitPointMaximumReduction: Hp(0),
+        tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+    const queryOutput = (query: unknown) =>
+      readPayload(
+        handleToolCall(root, "query_character_session", {
+          characterId,
+          query,
+        }),
+      );
+    const rejects = (value: unknown) =>
+      expect(
+        Either.isLeft(
+          Schema.decodeUnknownEither(CharacterSessionQueryOutputSchema)(value),
+        ),
+      ).toBe(true);
+
+    const proficiency = queryOutput({
+      kind: "abilityCheckProficiencyBonus",
+      skill: "athletics",
+      otherProficiencyBonus: { tag: "noOtherProficiencyBonus" },
+    });
+    rejects({
+      ...proficiency,
+      query: {
+        ...proficiency.query,
+        projection: { ...proficiency.query.projection, qRoute: [{}] },
+      },
+    });
+
+    const armor = queryOutput({ kind: "armorClass" });
+    rejects({
+      ...armor,
+      query: {
+        ...armor.query,
+        projection: {
+          ...armor.query.projection,
+          state: { ...armor.query.projection.state, bonuses: [{}] },
+          qRoute: [
+            { ...armor.query.projection.qRoute[0], kind: "unexpected" },
+            armor.query.projection.qRoute[1],
+          ],
+        },
+      },
+    });
+
+    const mastery = queryOutput({
+      kind: "weaponMasterySelections",
+      featureUnitId: "fighter_weapon_mastery",
+    });
+    rejects({
+      ...mastery,
+      query: {
+        ...mastery.query,
+        projection: {
+          ...mastery.query.projection,
+          qRoute: [
+            mastery.query.projection.qRoute[0],
+            { ...mastery.query.projection.qRoute[1], subject: "unexpected" },
+          ],
+        },
+      },
+    });
+
+    const ritual = queryOutput({ kind: "spellbookRitualAccesses" });
+    rejects({
+      ...ritual,
+      query: {
+        ...ritual.query,
+        projection: [
+          {
+            tag: "spellbookRitual",
+            spell: {
+              id: "detect_magic",
+              mechanics: { level: "not-a-level" },
+            },
+            spellcastingSourceUnitId: "class_wizard",
+            featureUnitId: "wizard_ritual_adept",
+          },
+        ],
       },
     });
   });
