@@ -9,7 +9,7 @@
   "sdkCapabilityIntent": "supportedOnly",
   "minimumIterations": 2,
   "maximumIterations": 2,
-  "candidatesPerIteration": 1,
+  "candidatesPerIteration": 2,
   "reviewMilestone": 2,
   "admitReviewedUnsupported": false
 }
