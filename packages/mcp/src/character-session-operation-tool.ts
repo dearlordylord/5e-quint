@@ -10,7 +10,7 @@ import { spellSlotLevel } from "@dnd/shared/types";
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
 import { Either, Match } from "effect";
 
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { AvailableCharacterSession } from "./session-store.ts";
 import { CharacterSessionOperationOutputSchema } from "./character-tool-output.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
@@ -19,7 +19,7 @@ import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
 
 export function applyCharacterSessionOperation(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   input: ApplyCharacterSessionOperationToolInput,
 ) {
   const id = characterId(input.characterId);
@@ -53,7 +53,7 @@ export function applyCharacterSessionOperation(
 }
 
 function applyRetainOneAtATimeCompanionOperation(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   input: {
     readonly characterId: string;
     readonly session: AvailableCharacterSession;
@@ -116,7 +116,7 @@ function applyRetainOneAtATimeCompanionOperation(
 }
 
 function retainedCompanionIdUsedByAnotherCharacter(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   input: {
     readonly characterId: CharacterId;
     readonly companionId: CharacterSheetRetainedCompanionId;

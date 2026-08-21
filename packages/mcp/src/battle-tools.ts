@@ -13,7 +13,7 @@ import {
 import { Either, Match } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { battleToolNames, type BattleToolCall } from "./battle-tool-input.ts";
 export {
   battleToolDefinitions,
@@ -48,7 +48,7 @@ export type BattleToolResult =
   | ReturnType<typeof errorContent>;
 
 export function handleBattleToolCall(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   call: BattleToolCall,
 ): BattleToolResult {
   return Match.value(call).pipe(
@@ -273,7 +273,7 @@ export function handleBattleToolCall(
   );
 }
 
-function battleSessionContent(root: McpCompositionRoot): BattleToolResult {
+function battleSessionContent(root: McpPlaySessionRoot): BattleToolResult {
   const payload = battleSessionPayload(root, root.sessionStore.battleSession);
   return Either.isLeft(payload)
     ? battleSnapshotPresentationIssueContent(payload.left)
@@ -281,7 +281,7 @@ function battleSessionContent(root: McpCompositionRoot): BattleToolResult {
 }
 
 function battleResolutionContent(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   result: BattleRuntimeResolutionResult,
 ): BattleToolResult {
   const payload = battleResolutionPayload(root, result);
@@ -291,7 +291,7 @@ function battleResolutionContent(
 }
 
 export function storeBattleResolution(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   result: BattleRuntimeResolutionResult,
   pendingTransaction: PendingBattleFillSession | null,
 ): boolean {
@@ -349,7 +349,7 @@ function pendingTransactionForResult({
 }
 
 function activeBattleWithoutPendingFills(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   pendingMessage: string,
 ): Either.Either<BattleRuntimeSession, ToolError> {
   const session = root.sessionStore.battleSession;

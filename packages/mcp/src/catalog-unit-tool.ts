@@ -3,7 +3,7 @@ import { UnitId } from "@dnd/shared/game-facts";
 import { SrdUnitRecordSchema } from "@dnd/surface/surface/schema";
 import { isSrd521Unit } from "@dnd/surface/surface/unit-catalog";
 
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpApplicationServices } from "./composition-root.ts";
 import {
   mcpObjectJsonSchema,
   mcpOutputJsonSchema,
@@ -34,11 +34,11 @@ export type InspectCatalogUnitArgs = Schema.Schema.Type<
 >;
 
 export function handleInspectCatalogUnit(
-  root: McpCompositionRoot,
+  services: McpApplicationServices,
   args: InspectCatalogUnitArgs,
 ) {
   const unit = Option.filter(
-    root.unitLibrary.getUnit(args.unitId),
+    services.unitLibrary.getUnit(args.unitId),
     isSrd521Unit,
   );
   return Option.isSome(unit)

@@ -71,7 +71,7 @@ vi.mock("@dnd/surface/surface/stat-block-catalog", () => {
 });
 
 vi.resetModules();
-const { createMcpCompositionRoot } = await import("./composition-root.ts");
+const { createMcpApplicationServices } = await import("./composition-root.ts");
 
 afterAll(() => {
   vi.doUnmock("@dnd/surface/surface/unit-catalog");
@@ -83,16 +83,16 @@ describe("MCP canonical catalog composition failures", () => {
   test("reports an invalid canonical Unit catalog", () => {
     catalogFailure.invalidCatalog = "unit";
 
-    expect(() => createMcpCompositionRoot()).toThrow(
-      "Invalid SRD Unit catalog for MCP root",
+    expect(() => createMcpApplicationServices()).toThrow(
+      "Invalid SRD Unit catalog for MCP application services",
     );
   });
 
   test("reports an invalid canonical Stat Block catalog", () => {
     catalogFailure.invalidCatalog = "statBlock";
 
-    expect(() => createMcpCompositionRoot()).toThrow(
-      "Invalid SRD Stat Block catalog for MCP root",
+    expect(() => createMcpApplicationServices()).toThrow(
+      "Invalid SRD Stat Block catalog for MCP application services",
     );
   });
 });

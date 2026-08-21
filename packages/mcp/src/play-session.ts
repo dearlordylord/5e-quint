@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { Either, Schema } from "effect";
 
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { McpSessionSnapshot } from "./session-store.ts";
 
 export const PLAY_SESSION_RESTORATION_GUIDANCE =
@@ -43,17 +43,17 @@ export type PlaySessionRegistry = {
   };
   run<A>(
     playSessionId: PlaySessionId,
-    operation: (root: McpCompositionRoot) => A | Promise<A>,
+    operation: (root: McpPlaySessionRoot) => A | Promise<A>,
   ): Promise<Either.Either<A, PlaySessionUnavailable>>;
 };
 
 type LivePlaySession = {
-  readonly root: McpCompositionRoot;
+  readonly root: McpPlaySessionRoot;
   tail: Promise<void>;
 };
 
 export function createPlaySessionRegistry(input: {
-  readonly createRoot: (playSessionId: PlaySessionId) => McpCompositionRoot;
+  readonly createRoot: (playSessionId: PlaySessionId) => McpPlaySessionRoot;
 }): PlaySessionRegistry {
   const liveSessions = new Map<PlaySessionId, LivePlaySession>();
 

@@ -15,7 +15,7 @@ import {
   verifyWidthVertical,
   verifyWizardIceKnifeBattleHandoff,
 } from "../test-support/mcp-acceptance-scenarios.ts";
-import { createMcpCompositionRoot } from "./composition-root.ts";
+import { createMcpApplicationServices } from "./composition-root.ts";
 import { contentToolDefinitions } from "./content-tools.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import {
@@ -26,12 +26,23 @@ import {
 const FULL_ACCEPTANCE_TEST_TIMEOUT_MS = 90_000;
 
 describe("MCP protocol server", () => {
+  test("retains no mutable session root outside the Play Session registry", () => {
+    const host = createDndMcpProtocolServer();
+
+    expect(host).not.toHaveProperty("root");
+    expect(host.applicationServices).not.toHaveProperty("sessionStore");
+    expect(host.applicationServices).not.toHaveProperty(
+      "adminMirrorPublication",
+    );
+  });
+
   test("rejects calls outside the advertised tool definitions", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
-    const { server } = createDndMcpProtocolServer(createMcpCompositionRoot(), [
-      contentToolDefinitions[0],
-    ]);
+    const { server } = createDndMcpProtocolServer(
+      createMcpApplicationServices(),
+      [contentToolDefinitions[0]],
+    );
     const client = new Client({ name: "scoped-client", version: "0.1.0" });
 
     try {

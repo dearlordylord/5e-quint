@@ -9,7 +9,7 @@ import {
   type AdminMirrorProjectionEnvelope,
 } from "./admin-mirror-contract.ts";
 import { createAdminMirrorPresentationTimelineEntry } from "./admin-mirror-presentation-timeline.ts";
-import { createMcpCompositionRoot } from "./composition-root.ts";
+import { createMcpPlaySessionRoot } from "./composition-root.ts";
 import { handleToolCall } from "./server.ts";
 
 describe("Admin Mirror MCP tool publishing", () => {
@@ -173,7 +173,7 @@ describe("Admin Mirror MCP tool publishing", () => {
 function rootWithMirrorPublisher() {
   const published: AdminMirrorProjectionEnvelope[] = [];
   const root = {
-    ...createMcpCompositionRoot(),
+    ...createMcpPlaySessionRoot(),
     adminMirrorPublication: enabledAdminMirrorPublication({
       mirrorSessionId: adminMirrorSessionId("tool-test"),
       publisher: {

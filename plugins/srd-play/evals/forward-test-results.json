@@ -1,0 +1,51 @@
+{
+  "kind": "independentStaticForwardTest",
+  "evaluator": "gpt-5.6-luna",
+  "installedChatGptEvidence": false,
+  "cases": [
+    {
+      "id": "skill-direct",
+      "activation": "activate",
+      "toolIntents": ["list_catalog_units"],
+      "result": "safeWithCatalogPresenceDistinction"
+    },
+    {
+      "id": "skill-natural",
+      "activation": "activate",
+      "toolIntents": [
+        "list_catalog_units",
+        "create_play_session",
+        "create_character_draft"
+      ],
+      "result": "clarifyBrowsingVersusLegalDraftChoices"
+    },
+    {
+      "id": "skill-continuation",
+      "activation": "activate",
+      "toolIntents": ["read_play_session", "discover_creation_holes"],
+      "result": "safeWithExactRetainedHandleAndUnavailableGuidance"
+    },
+    {
+      "id": "skill-unrelated-dnd",
+      "activation": "doNotActivate",
+      "toolIntents": [],
+      "result": "generalDiscussionOutsideSkill"
+    },
+    {
+      "id": "skill-authoring-boundary",
+      "activation": "activate",
+      "toolIntents": ["describe_mcp_workflow"],
+      "result": "reportInstalledCatalogBoundaryWithoutInventingAdmission"
+    }
+  ],
+  "findingsApplied": [
+    "Constrain what-can-happen-next activation to an existing SRD Play journey.",
+    "Distinguish installed catalog browsing from legal character-creation holes.",
+    "Read the Play Session before discovering detailed remaining character choices.",
+    "State the installed-catalog boundary for user-authored executable records."
+  ],
+  "externalEvidenceStillRequired": {
+    "issue": 328,
+    "scope": "Installed ChatGPT developer-mode activation, connection, and complete workflow evidence."
+  }
+}

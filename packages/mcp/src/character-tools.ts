@@ -12,7 +12,7 @@ import { Either, Match } from "effect";
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import { applyCharacterSessionOperation } from "./character-session-operation-tool.ts";
 import { characterListRows } from "./character-session-rows.ts";
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
   characterSheetConstructionIssuesSummary,
@@ -96,7 +96,7 @@ export function isCharacterToolName(name: string): name is CharacterToolName {
 }
 
 export function handleCharacterToolCall(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   call: CharacterToolCall,
 ): CharacterToolResult {
   return Match.value(call).pipe(
@@ -241,7 +241,7 @@ function duplicateDraftIdContent(
   });
 }
 
-function creationDraftPayload(root: McpCompositionRoot, draft: CharacterDraft) {
+function creationDraftPayload(root: McpPlaySessionRoot, draft: CharacterDraft) {
   return {
     draft,
     holes: discoverCreationHoles({

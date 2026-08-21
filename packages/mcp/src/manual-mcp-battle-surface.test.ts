@@ -37,7 +37,7 @@ import {
   abilityModifier as armorAbilityModifier,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
-import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
+import { createMcpPlaySessionRoot, handleToolCall } from "./server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import {
   BattleResolutionOutputSchema,
@@ -50,7 +50,7 @@ const allyId = combatantId("ally");
 
 describe("manual MCP battle surface coverage", () => {
   test("rejects a weapon attack without its authored presentation source", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const result = startBattle({
       battleId: battleId("battle-missing-weapon-presentation"),
       combatants: [
@@ -71,7 +71,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("uses Bardic Inspiration grant through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
@@ -149,7 +149,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("uses Innate Sorcery activation and projected spell attack Advantage through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
@@ -214,7 +214,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("uses Monk Martial Arts bonus Unarmed Strike through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
@@ -283,7 +283,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("uses Weapon Mastery Sap and Topple holes through MCP battle tools", () => {
-    const sapRoot = createMcpCompositionRoot();
+    const sapRoot = createMcpPlaySessionRoot();
     sapRoot.sessionStore.battleSession = startBattleRight(sapRoot, [
       character(sapRoot, {
         combatantId: fighterId,
@@ -320,7 +320,7 @@ describe("manual MCP battle surface coverage", () => {
       ],
     });
 
-    const toppleRoot = createMcpCompositionRoot();
+    const toppleRoot = createMcpPlaySessionRoot();
     toppleRoot.sessionStore.battleSession = startBattleRight(toppleRoot, [
       character(toppleRoot, {
         combatantId: fighterId,
@@ -359,7 +359,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("uses Weapon Mastery Cleave decision through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
@@ -442,7 +442,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("uses Armor of Shadows Mage Armor through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
@@ -500,7 +500,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("uses Shield triggered reaction through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession = startBattleRight(root, [
       statBlock(root, { combatantId: goblinId, initiative: 20 }),
       character(root, {
@@ -591,7 +591,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("uses Hellish Rebuke after-damage reaction through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession = startBattleRight(root, [
       statBlock(root, { combatantId: goblinId, initiative: 20 }),
       character(root, {
@@ -718,7 +718,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("uses Feather Fall falling-trigger reaction through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
@@ -833,7 +833,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("retains Pact of the Chain and uses Pact of the Tome cantrips through MCP battle tools", () => {
-    const chainRoot = createMcpCompositionRoot();
+    const chainRoot = createMcpPlaySessionRoot();
     chainRoot.sessionStore.battleSession = startBattleRight(chainRoot, [
       character(chainRoot, {
         combatantId: fighterId,
@@ -870,7 +870,7 @@ describe("manual MCP battle surface coverage", () => {
       ),
     ).toBe(false);
 
-    const tomeRoot = createMcpCompositionRoot();
+    const tomeRoot = createMcpPlaySessionRoot();
     tomeRoot.sessionStore.battleSession = startBattleRight(tomeRoot, [
       character(tomeRoot, {
         combatantId: fighterId,
@@ -913,7 +913,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("uses Favored Enemy Hunter's Mark free cast through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession = startBattleRight(root, [
       character(root, {
         combatantId: fighterId,
@@ -987,7 +987,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 
   test("discovers promoted action-time spell procedures through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const cantrips = [
       "acid_splash",
       "chill_touch",
@@ -1074,7 +1074,7 @@ describe("manual MCP battle surface coverage", () => {
   });
 });
 
-type Root = ReturnType<typeof createMcpCompositionRoot>;
+type Root = ReturnType<typeof createMcpPlaySessionRoot>;
 type CharacterCreatureInit = Extract<
   BattleCreatureInit["creatureInit"],
   { readonly kind: "character" }

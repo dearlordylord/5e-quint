@@ -21,7 +21,7 @@ import {
   availableCharacterSession,
   createMcpSessionStore,
 } from "./session-store.ts";
-import { createMcpCompositionRoot } from "./composition-root.ts";
+import { createMcpPlaySessionRoot } from "./composition-root.ts";
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
 const unitCatalogResult = buildUnitCatalog({
@@ -40,7 +40,7 @@ const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
 
 describe("MCP character sessions", () => {
   test("drops a selected Stat Block projection after catalog drift", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const selected = root.statBlockCatalog.requireStatBlock(
       "stat_block_goblin_warrior",
     );

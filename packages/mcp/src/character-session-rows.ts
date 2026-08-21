@@ -11,7 +11,7 @@ import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Match } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { CharacterSessionRow } from "./character-tool-output.ts";
 import {
   characterBattleSpellSlots,
@@ -20,7 +20,7 @@ import {
 } from "./session-store.ts";
 
 export function characterListRows(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
 ): Either.Either<readonly CharacterSessionRow[], string> {
   const rows: CharacterSessionRow[] = [];
   for (const [characterId, session] of root.sessionStore.characters.entries()) {

@@ -16,7 +16,10 @@ import {
   handleContentToolCall,
   isContentToolName,
 } from "./content-tools.ts";
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type {
+  McpApplicationServices,
+  McpPlaySessionRoot,
+} from "./composition-root.ts";
 import { errorContent } from "./tool-content.ts";
 import { Either } from "effect";
 
@@ -44,9 +47,10 @@ export {
   type ContentToolResult,
 } from "./content-tools.ts";
 export {
-  createMcpCompositionRoot,
-  createPlaySessionCompositionRoot,
-  type McpCompositionRoot,
+  createMcpApplicationServices,
+  createMcpPlaySessionRoot,
+  type McpApplicationServices,
+  type McpPlaySessionRoot,
 } from "./composition-root.ts";
 export {
   createPlaySessionRegistry,
@@ -73,7 +77,7 @@ export const toolDefinitions = [
 ];
 
 export function handleToolCall(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   name: string,
   args: unknown,
 ) {
@@ -85,10 +89,7 @@ export function handleToolCall(
   }
 
   if (isContentToolName(name)) {
-    const decoded = decodeContentToolCall({ name, args });
-    return Either.isLeft(decoded)
-      ? decoded.left
-      : handleContentToolCall(root, decoded.right);
+    return handleApplicationToolCall(root, name, args);
   }
 
   if (isBattleToolName(name)) {
@@ -99,4 +100,19 @@ export function handleToolCall(
   }
 
   return errorContent(`Unknown MCP tool: ${name}`);
+}
+
+export function handleApplicationToolCall(
+  services: McpApplicationServices,
+  name: string,
+  args: unknown,
+) {
+  if (isContentToolName(name)) {
+    const decoded = decodeContentToolCall({ name, args });
+    return Either.isLeft(decoded)
+      ? decoded.left
+      : handleContentToolCall(services, decoded.right);
+  }
+
+  return errorContent(`Unknown MCP application tool: ${name}`);
 }

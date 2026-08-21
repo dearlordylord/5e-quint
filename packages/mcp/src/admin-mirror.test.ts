@@ -29,7 +29,7 @@ import {
   type AdminMirrorProjectionEnvelope,
 } from "./admin-mirror-contract.ts";
 import { createAdminMirrorPresentationTimelineEntry } from "./admin-mirror-presentation-timeline.ts";
-import { createMcpCompositionRoot } from "./composition-root.ts";
+import { createMcpPlaySessionRoot } from "./composition-root.ts";
 import { handleToolCall } from "./server.ts";
 
 describe("Admin Mirror publisher", () => {
@@ -204,7 +204,7 @@ describe("Admin Mirror publisher", () => {
   test("skips projections when an active battle lacks presentation context", () => {
     const publish = vi.fn(() => Effect.void);
     const root = {
-      ...createMcpCompositionRoot(),
+      ...createMcpPlaySessionRoot(),
       adminMirrorPublication: enabledAdminMirrorPublication({
         mirrorSessionId: adminMirrorSessionId("invalid-projection"),
         publisher: { publish },

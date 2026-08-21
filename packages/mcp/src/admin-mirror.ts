@@ -2,7 +2,7 @@ import { battlePresentedSnapshot } from "@dnd/battle-runtime";
 import { Effect, Either, Schema } from "effect";
 
 import { characterListRows } from "./character-session-rows.ts";
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
 import {
   AdminMirrorProjectionEnvelopeSchema,
   adminMirrorSequence,
@@ -118,7 +118,7 @@ export function enabledAdminMirrorPublication(input: {
 }
 
 export function adminProjection(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
 ): Either.Either<
   AdminSessionProjection,
   string | import("@dnd/battle-runtime").BattleSnapshotPresentationIssues
@@ -149,7 +149,7 @@ function adminMirrorSessionSummary(
   };
 }
 
-function publishAdminProjection(root: McpCompositionRoot): Effect.Effect<void> {
+function publishAdminProjection(root: McpPlaySessionRoot): Effect.Effect<void> {
   const publication = root.adminMirrorPublication;
   if (publication.tag === "disabled") return Effect.void;
   const projection = adminProjection(root);
@@ -164,7 +164,7 @@ function publishAdminProjection(root: McpCompositionRoot): Effect.Effect<void> {
 }
 
 export function publishAdminProjectionBestEffort(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
 ): void {
   Effect.runFork(publishAdminProjection(root));
 }

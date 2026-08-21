@@ -373,8 +373,10 @@ registry to compensate for a missing runtime or Surface shape.
 `@dnd/mcp` is the tool-facing composition package and the sole owner of live
 Play Session routing. The protocol host creates isolated process-lifetime
 session stores behind branded handles, serializes calls per handle, and shares
-the installed application catalogs across sessions. Plugin Skills orchestrate
-these operations but own no application or rules state.
+one immutable application-services value across sessions. Only registry-owned
+Play Session roots contain mutable stores and Admin Mirror publications; the
+protocol host retains no anonymous session root. Plugin Skills orchestrate these
+operations but own no application or rules state.
 
 The MCP runtime path composes:
 

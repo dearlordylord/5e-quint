@@ -1,7 +1,7 @@
 import { Either, Match, Schema } from "effect";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpApplicationServices } from "./composition-root.ts";
 import {
   handleInspectCatalogUnit,
   inspectCatalogUnitToolDefinition,
@@ -205,7 +205,7 @@ export function decodeContentToolCall(input: {
 }
 
 export function handleContentToolCall(
-  root: McpCompositionRoot,
+  services: McpApplicationServices,
   call: ContentToolCall,
 ): ContentToolResult {
   return Match.value(call).pipe(
@@ -214,7 +214,7 @@ export function handleContentToolCall(
     ),
     Match.when({ name: contentToolNames.listStatBlocks }, () =>
       schemaJsonContent(ListStatBlocksOutputSchema, {
-        statBlocks: root.statBlockCatalog
+        statBlocks: services.statBlockCatalog
           .listStatBlocks()
           .map((record) => statBlockSummary(record)),
         next: "Use these statBlockId values in start_battle statBlock combatants, or call select_stat_block to inspect one record.",
@@ -222,14 +222,14 @@ export function handleContentToolCall(
     ),
     Match.when({ name: contentToolNames.listCatalogUnits }, () =>
       schemaJsonContent(ListCatalogUnitsOutputSchema, {
-        unitsByKind: groupUnitsByKind(root.unitLibrary.listUnits()),
+        unitsByKind: groupUnitsByKind(services.unitLibrary.listUnits()),
         naturalLanguagePolicy:
           "Map user wording to returned Unit names and ids only when the intent is unambiguous. If a user says 'warrior', ask whether they mean Fighter before filling class_fighter.",
         next: "Use create_character_draft and discover_creation_holes for the authoritative holeId, optionId, and cardinality values before filling a draft.",
       }),
     ),
     Match.when({ name: contentToolNames.inspectCatalogUnit }, ({ args }) =>
-      handleInspectCatalogUnit(root, args),
+      handleInspectCatalogUnit(services, args),
     ),
     Match.exhaustive,
   );

@@ -13,7 +13,7 @@ import {
 } from "@dnd/battle-runtime";
 import { Either } from "effect";
 
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleFillSession } from "./session-store.ts";
 import { errorContent } from "./tool-content.ts";
 
@@ -58,7 +58,7 @@ export function pendingBattleFillsContent(
 }
 
 export function battleSessionPayload(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   session: BattleRuntimeSession | null,
 ) {
   const presentation = battlePresentationProjection(session);
@@ -69,7 +69,7 @@ export function battleSessionPayload(
 }
 
 export function battleResolutionPayload(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   result: BattleRuntimeResolutionResult,
 ) {
   const presentation = battleResultPresentationProjection(result);

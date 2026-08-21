@@ -15,20 +15,26 @@ change the owning lower package and its tests instead of adding MCP-private
 runtime registries, duplicate executable content, or shadow reducer state.
 
 The normal MCP server route imports Surface authored content boundaries plus
-the character-creation and battle runtimes. Its composition root builds:
+the character-creation and battle runtimes. Its immutable application services
+build:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
 - `srdStatBlockCollection` through `buildStatBlockCatalog`;
-- an in-memory session store for character drafts, finalized Character Builds,
-  durable post-battle character state, selected Stat Block identity, durable
-  battle state, and transient battle fills.
+- the Character Creation support profile and Admin Mirror publication factory.
+
+Each registry-owned Play Session root then creates one in-memory store for
+character drafts, finalized Character Builds, durable post-battle character
+state, selected Stat Block identity, durable battle state, and transient battle
+fills, plus its own Admin Mirror publication.
 
 The protocol host keeps those mutable facts in isolated process-lifetime **Play
 Sessions**. `create_play_session` returns a branded `playSessionId`,
 `read_play_session` resumes a live session, and every character or battle tool
 requires the handle. Calls for one handle are serialized; different handles
-have independent stores and queues while sharing the application root's
-installed catalogs and support profile. A valid handle not present in the live
+have independent stores and queues while sharing the application services'
+installed catalogs and support profile. The protocol host retains only those
+immutable application services, never a mutable anonymous session. A valid
+handle not present in the live
 process returns the single typed `playSessionUnavailable` result with guidance
 to create and rebuild a new session. It intentionally does not infer whether
 the handle expired, was evicted, came from another process, or was otherwise
@@ -189,7 +195,10 @@ Normal package tests cover the MCP server route.
 The developer-mode `plugins/srd-play` package connects this application to one
 focused conversation Skill. The Skill retains returned handles and sequences
 canonical MCP facts; it contains no catalog, rules inventory, executable
-choices, or shadow session state.
+choices, or shadow session state. Its repo-owned evaluation inventory separates
+automated local MCP startup/inspection evidence from installed-ChatGPT Skill
+activation evidence. The latter requires developer-mode execution and is owned
+by #328; local tests must not claim that UI evidence.
 
 `BattleResolutionResult` may include display-facing result details for tool
 responses, but `BattleState` remains authoritative. Optional display logs must

@@ -1,6 +1,6 @@
 import { Either } from "effect";
 
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { battleToolNames, type BattleToolName } from "./battle-tool-input.ts";
 import {
   characterToolNames,
@@ -86,7 +86,7 @@ export async function handlePlaySessionOperation(input: {
   readonly operationName: CharacterToolName | BattleToolName;
   readonly args: unknown;
   readonly handle: (
-    root: McpCompositionRoot,
+    root: McpPlaySessionRoot,
     args: unknown,
   ) => unknown | Promise<unknown>;
 }): Promise<PlaySessionProtocolResult | ReturnType<typeof errorContent>> {

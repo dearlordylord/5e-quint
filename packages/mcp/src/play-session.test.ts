@@ -2,9 +2,10 @@ import { Effect, Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
-  createMcpCompositionRoot,
-  createPlaySessionCompositionRoot,
-  type McpCompositionRoot,
+  createMcpApplicationServices,
+  createMcpPlaySessionRoot,
+  type McpApplicationServices,
+  type McpPlaySessionRoot,
 } from "./composition-root.ts";
 import { enabledAdminMirrorPublication } from "./admin-mirror.ts";
 import {
@@ -15,11 +16,11 @@ import { createPlaySessionRegistry } from "./play-session.ts";
 
 describe("Play Session operation scheduling", () => {
   test("serializes calls within one session without coupling another session", async () => {
-    const applicationRoot = createMcpCompositionRoot();
+    const applicationServices = createMcpApplicationServices();
     const registry = createPlaySessionRegistry({
       createRoot: (playSessionId) =>
-        createPlaySessionCompositionRoot(
-          applicationRoot,
+        createMcpPlaySessionRoot(
+          applicationServices,
           adminMirrorSessionId(playSessionId),
         ),
     });
@@ -69,10 +70,10 @@ describe("Play Session operation scheduling", () => {
   });
 
   test("creates independent enabled Admin Mirror publishers for each session", () => {
-    const roots: McpCompositionRoot[] = [];
+    const roots: McpPlaySessionRoot[] = [];
     let publisherIndex = 0;
-    const applicationRoot: McpCompositionRoot = {
-      ...createMcpCompositionRoot(),
+    const applicationServices: McpApplicationServices = {
+      ...createMcpApplicationServices(),
       createAdminMirrorPublication: (mirrorSessionId) => {
         const publisherInstanceId = adminMirrorPublisherInstanceId(
           `play-session-publisher:${publisherIndex++}`,
@@ -86,8 +87,8 @@ describe("Play Session operation scheduling", () => {
     };
     const registry = createPlaySessionRegistry({
       createRoot: (playSessionId) => {
-        const root = createPlaySessionCompositionRoot(
-          applicationRoot,
+        const root = createMcpPlaySessionRoot(
+          applicationServices,
           adminMirrorSessionId(playSessionId),
         );
         roots.push(root);

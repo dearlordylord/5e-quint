@@ -1,17 +1,32 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { createMcpCompositionRoot } from "./composition-root.ts";
+import {
+  createMcpApplicationServices,
+  createMcpPlaySessionRoot,
+} from "./composition-root.ts";
 
 afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("MCP composition root Admin Mirror configuration", () => {
+describe("MCP application services and Play Session roots", () => {
+  test("keeps mutable session state out of application services", () => {
+    const services = createMcpApplicationServices();
+    const first = createMcpPlaySessionRoot(services);
+    const second = createMcpPlaySessionRoot(services);
+
+    expect(services).not.toHaveProperty("sessionStore");
+    expect(services).not.toHaveProperty("adminMirrorPublication");
+    expect(first.sessionStore).not.toBe(second.sessionStore);
+    expect(first.unitLibrary).toBe(services.unitLibrary);
+    expect(second.statBlockCatalog).toBe(services.statBlockCatalog);
+  });
+
   test("enables publication only when both endpoint and session id are valid", () => {
     vi.stubEnv("DND_ADMIN_MIRROR_URL", "http://mirror.local/base");
     vi.stubEnv("DND_ADMIN_MIRROR_SESSION_ID", "composition-session");
 
-    expect(createMcpCompositionRoot().adminMirrorPublication).toMatchObject({
+    expect(createMcpPlaySessionRoot().adminMirrorPublication).toMatchObject({
       tag: "enabled",
       mirrorSessionId: "composition-session",
     });
@@ -34,7 +49,7 @@ describe("MCP composition root Admin Mirror configuration", () => {
       vi.stubEnv("DND_ADMIN_MIRROR_URL", endpoint);
       vi.stubEnv("DND_ADMIN_MIRROR_SESSION_ID", sessionId);
 
-      expect(createMcpCompositionRoot().adminMirrorPublication.tag).toBe(
+      expect(createMcpPlaySessionRoot().adminMirrorPublication.tag).toBe(
         "disabled",
       );
     },
@@ -44,7 +59,7 @@ describe("MCP composition root Admin Mirror configuration", () => {
     vi.stubEnv("DND_ADMIN_MIRROR_URL", "not a URL");
     vi.stubEnv("DND_ADMIN_MIRROR_SESSION_ID", "composition-session");
 
-    expect(createMcpCompositionRoot().adminMirrorPublication.tag).toBe(
+    expect(createMcpPlaySessionRoot().adminMirrorPublication.tag).toBe(
       "disabled",
     );
   });

@@ -25,12 +25,12 @@ import {
   unknownStatBlockContent,
 } from "./battle-tool-payloads.ts";
 import { storeBattleResolution } from "./battle-tools.ts";
-import { createMcpCompositionRoot } from "./composition-root.ts";
+import { createMcpPlaySessionRoot } from "./composition-root.ts";
 import { handleToolCall as handleWireToolCall } from "./server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 
 function handleToolCall(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   name: string,
   args: unknown,
 ) {
@@ -39,7 +39,7 @@ function handleToolCall(
 
 describe("battle tool payload boundaries", () => {
   test("projects the explicit no-session state", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     expect(battleSessionPayload(root, null)).toMatchObject({
       _tag: "Right",
       right: {
@@ -200,7 +200,7 @@ describe("battle tool payload boundaries", () => {
 });
 
 function startedStatBlockBattle() {
-  const root = createMcpCompositionRoot();
+  const root = createMcpPlaySessionRoot();
   handleToolCall(root, "start_battle", {
     battleId: "battle:payload-boundaries",
     initialCombatants: [

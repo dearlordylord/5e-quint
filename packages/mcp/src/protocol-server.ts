@@ -5,11 +5,12 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 import {
-  createMcpCompositionRoot,
-  createPlaySessionCompositionRoot,
+  createMcpApplicationServices,
+  createMcpPlaySessionRoot,
+  handleApplicationToolCall,
   handleToolCall,
   toolDefinitions,
-  type McpCompositionRoot,
+  type McpApplicationServices,
 } from "./server.ts";
 import { adminMirrorSessionId } from "./admin-mirror-contract.ts";
 import type { McpObjectInputSchema, McpOutputSchema } from "./schema-codec.ts";
@@ -38,7 +39,7 @@ type ProtocolToolDefinition = {
 };
 
 export function createDndMcpProtocolServer(
-  applicationRoot: McpCompositionRoot = createMcpCompositionRoot(),
+  applicationServices: McpApplicationServices = createMcpApplicationServices(),
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
 ) {
   const protocolDefinitions = [
@@ -54,8 +55,8 @@ export function createDndMcpProtocolServer(
   );
   const playSessions = createPlaySessionRegistry({
     createRoot: (playSessionId) =>
-      createPlaySessionCompositionRoot(
-        applicationRoot,
+      createMcpPlaySessionRoot(
+        applicationServices,
         adminMirrorSessionId(playSessionId),
       ),
   });
@@ -90,10 +91,14 @@ export function createDndMcpProtocolServer(
         handle: (root, args) => handleToolCall(root, name, args),
       });
     }
-    return handleToolCall(applicationRoot, name, request.params.arguments);
+    return handleApplicationToolCall(
+      applicationServices,
+      name,
+      request.params.arguments,
+    );
   });
 
-  return { root: applicationRoot, playSessions, server };
+  return { applicationServices, playSessions, server };
 }
 
 function isStatefulToolName(

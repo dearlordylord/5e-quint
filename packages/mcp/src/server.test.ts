@@ -59,7 +59,7 @@ import {
   battleToolDefinitions,
   characterToolDefinitions,
   contentToolDefinitions,
-  createMcpCompositionRoot,
+  createMcpPlaySessionRoot,
   createMcpSessionStore,
   handleToolCall as handleWireToolCall,
   startBattleFromCharacterBuildAndStatBlock,
@@ -93,7 +93,7 @@ import {
 } from "../test-support/creation-hole-ids.ts";
 
 function handleToolCall(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   name: string,
   args: unknown,
 ) {
@@ -220,13 +220,13 @@ function testWizardSpellcasting(input: {
 
 function characterBuildMaximumHp(
   build: CharacterBuild,
-  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
 ) {
   return expectRight(characterBuildHitPoints(build, unitLibrary)).maximum;
 }
 
 function wizardProgression(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   level = 1,
 ): CharacterBuild["progression"] {
   const wizard = root.unitLibrary.requireUnit("class_wizard");
@@ -332,7 +332,7 @@ const goblinId = combatantId("goblin");
 
 describe("MCP server route", () => {
   test("falls back to canonical ids when optional authored display records are absent", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const syntheticClassId = classUnitId(unitId("class_synthetic_missing"));
     const displayName = characterBuildDisplayName(root.unitLibrary, {
@@ -354,7 +354,7 @@ describe("MCP server route", () => {
   });
 
   test("lists projected resource rows and in-battle character ownership", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:list-resource-and-battle-status";
     const druid = root.unitLibrary.requireUnit("class_druid");
     if (druid.kind !== "class") {
@@ -443,7 +443,7 @@ describe("MCP server route", () => {
   });
 
   test("reports character-list projection failures from the supplied catalog boundary", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:list-invalid-catalog";
     createFinalizedFighterSheet(root, draftId);
     const emptyCatalog = buildUnitCatalog({
@@ -487,7 +487,7 @@ describe("MCP server route", () => {
   });
 
   test("reports a supplied catalog whose supported resource id has incompatible mechanics", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:list-incompatible-resource-catalog";
     const druid = root.unitLibrary.requireUnit("class_druid");
     if (druid.kind !== "class") {
@@ -550,7 +550,7 @@ describe("MCP server route", () => {
   });
 
   test("lists Pact Magic slots for an available Warlock", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:list-warlock-pact-slots";
     const warlock = root.unitLibrary.requireUnit("class_warlock");
     if (warlock.kind !== "class") {
@@ -604,7 +604,7 @@ describe("MCP server route", () => {
   });
 
   test("builds SRD catalogs and keeps selected Stat Block state identity-only", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const selected = root.sessionStore.selectStatBlock(
       statBlockId("stat_block_goblin_warrior"),
     );
@@ -639,7 +639,7 @@ describe("MCP server route", () => {
   });
 
   test("starts battle from Character Build at the MCP composition boundary", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root"),
       character: {
@@ -707,7 +707,7 @@ describe("MCP server route", () => {
   });
 
   test("projects all progression class levels at the battle boundary", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const wizard = root.unitLibrary.requireUnit("class_wizard");
     if (wizard.kind !== "class") {
@@ -761,7 +761,7 @@ describe("MCP server route", () => {
   });
 
   test("derives base Unarmed Strike when no weapon is selected", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-unarmed"),
@@ -820,7 +820,7 @@ describe("MCP server route", () => {
   });
 
   test("admits only supported authored critical-range Unit hooks at the battle support boundary", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const improvedCriticalUnit = root.unitLibrary.requireUnit(
       "fighter_improved_critical",
     );
@@ -914,7 +914,7 @@ describe("MCP server route", () => {
   });
 
   test("admits attack-damage rider Unit hooks through their owning class feature", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const rogueBuild = rogueCharacterBuild(root.unitLibrary);
     const supportedLibrary = rogueBattleUnitLibrary(root);
     const { context } = startBattleFromCharacterBuildAndStatBlockRight({
@@ -958,7 +958,7 @@ describe("MCP server route", () => {
   });
 
   test("admits Cunning Action alternate action cost through the retained feature Unit", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 2,
     });
@@ -1002,7 +1002,7 @@ describe("MCP server route", () => {
   });
 
   test("does not infer Cunning Action support from Rogue class name or level", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const { context: rogueOneContext } =
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle-rogue-one-no-cunning-action"),
@@ -1065,7 +1065,7 @@ describe("MCP server route", () => {
   });
 
   test("admits only save-damage replacement Unit hooks with Evasion-style mechanics", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const evasionBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 7,
     });
@@ -1139,7 +1139,7 @@ describe("MCP server route", () => {
   });
 
   test("admits reaction roll or damage reduction Unit hooks through support profiles", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 5,
     });
@@ -1229,7 +1229,7 @@ describe("MCP server route", () => {
   });
 
   test("reports every missing Character Build Unit ref at the battle support boundary", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const result = characterBattleSupportProjection(
       {
@@ -1260,7 +1260,7 @@ describe("MCP server route", () => {
   });
 
   test("carries finalized Fighter 2 Action Surge resources into battle discovery", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-fighter-two"),
       character: {
@@ -1301,7 +1301,7 @@ describe("MCP server route", () => {
   });
 
   test("discovers Stat Block Multiattack and Bonus Action subjects through battle runtime", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const { state: fighterTurn, context } =
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle-root-stat-block-procedures"),
@@ -1348,7 +1348,7 @@ describe("MCP server route", () => {
   });
 
   test("starts battle from a CharacterBuild with two Light weapons for the off-hand runtime path", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-off-hand"),
       character: {
@@ -1502,7 +1502,7 @@ describe("MCP server route", () => {
   });
 
   test("describes MCP workflow and lists discoverable catalogs through tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const workflow = readPayload(
       handleToolCall(root, "describe_mcp_workflow", {}),
     );
@@ -1578,7 +1578,7 @@ describe("MCP server route", () => {
   });
 
   test("accepts omitted arguments for no-arg and optional-arg tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
 
     expect(
       readPayload(handleToolCall(root, "describe_mcp_workflow", undefined)),
@@ -1613,7 +1613,7 @@ describe("MCP server route", () => {
   });
 
   test("routes typed decode failures and no-battle operation failures", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
 
     expect(
       readPayload(handleToolCall(root, "list_stat_blocks", null)),
@@ -1682,7 +1682,7 @@ describe("MCP server route", () => {
   });
 
   test("returns typed errors when an active Stat Block loses presentation context", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:missing-presentation-context",
@@ -1735,7 +1735,7 @@ describe("MCP server route", () => {
   });
 
   test("selects Goblin Warrior and starts a stored partial battle shell through tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-battle-shell";
     createFinalizedFighterSheet(root, draftId);
 
@@ -1873,7 +1873,7 @@ describe("MCP server route", () => {
   });
 
   test("discovers Stat Block Multiattack dispatch and Movement continuations through MCP tools", () => {
-    const baseRoot = createMcpCompositionRoot();
+    const baseRoot = createMcpPlaySessionRoot();
     const multiattackStatBlock = goblinWarriorMultiattackStatBlock(baseRoot);
     const catalogResult = buildStatBlockCatalog({
       collections: [
@@ -1986,7 +1986,7 @@ describe("MCP server route", () => {
   });
 
   test("fills a battle movement hole through MCP", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-battle-movement";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
@@ -2041,7 +2041,7 @@ describe("MCP server route", () => {
   });
 
   test("starts battle from a character-only initial combatant roster", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const firstDraftId = "draft:mcp-character-roster-first";
     const secondDraftId = "draft:mcp-character-roster-second";
     createFinalizedFighterSheet(root, firstDraftId);
@@ -2089,7 +2089,7 @@ describe("MCP server route", () => {
   });
 
   test("start_battle rejects a second battle while the single battle slot is active", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const firstDraftId = "draft:mcp-active-battle-first";
     const secondDraftId = "draft:mcp-active-battle-second";
     createFinalizedFighterSheet(root, firstDraftId);
@@ -2170,7 +2170,7 @@ describe("MCP server route", () => {
   });
 
   test("discovers and resolves Fighter Attack fills, then ends the Fighter turn", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-fighter-battle-flow";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
@@ -2477,7 +2477,7 @@ describe("MCP server route", () => {
   });
 
   test("replays long-range attack target facts into a Disadvantage attack-roll hole", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession =
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-long-range-attack"),
@@ -2551,7 +2551,7 @@ describe("MCP server route", () => {
   });
 
   test("rejects contradictory long-range and normal-range attack target facts", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession =
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-contradictory-range-attack"),
@@ -2620,7 +2620,7 @@ describe("MCP server route", () => {
   });
 
   test("replays visible Sneak Attack rider hole and fill shape through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession =
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-sneak-attack-rider"),
@@ -2728,7 +2728,7 @@ describe("MCP server route", () => {
   });
 
   test("start_battle rejects missing caller-supplied Initiative scores", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-battle-shell-missing-initiative";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
@@ -2768,7 +2768,7 @@ describe("MCP server route", () => {
   });
 
   test("start_battle rejects empty or over-wide character inputs", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-start-exact-character-input";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
@@ -2827,7 +2827,7 @@ describe("MCP server route", () => {
   });
 
   test("start_battle reports missing finalized character sessions before runtime start", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-missing-additional-primary";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
@@ -2902,7 +2902,7 @@ describe("MCP server route", () => {
   });
 
   test("starts battle from multiple Stat Block combatants", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
 
     const started = readPayload(
       handleToolCall(root, "start_battle", {
@@ -2952,7 +2952,7 @@ describe("MCP server route", () => {
   });
 
   test("start_battle admits a retained companion from Character Sheet state", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-admission";
     createFinalizedWizardWithFindFamiliar(root, draftId);
     setStoredRetainedFamiliarCompanion(root, draftId, {
@@ -3049,7 +3049,7 @@ describe("MCP server route", () => {
   });
 
   test("fills companion reappearance holes one at a time through MCP", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-reappearance-fills";
     createFinalizedWizardWithFindFamiliar(root, draftId);
     setRetainedFamiliarCompanion(root, draftId);
@@ -3182,7 +3182,7 @@ describe("MCP server route", () => {
 
   test("end_battle preserves the active battle when character handoff ownership is invalid", () => {
     const startCharacterBattle = (draftId: string) => {
-      const root = createMcpCompositionRoot();
+      const root = createMcpPlaySessionRoot();
       createFinalizedFighterSheet(root, draftId);
       const characterId = testCharacterId(draftId);
       const available = root.sessionStore.characters.get(characterId);
@@ -3257,7 +3257,7 @@ describe("MCP server route", () => {
   });
 
   test("start_battle reports duplicate companion owners and unavailable roster sources", () => {
-    const duplicateOwnerRoot = createMcpCompositionRoot();
+    const duplicateOwnerRoot = createMcpPlaySessionRoot();
     expect(
       readPayload(
         handleToolCall(duplicateOwnerRoot, "start_battle", {
@@ -3290,7 +3290,7 @@ describe("MCP server route", () => {
       details: { code: "DUPLICATE_BATTLE_COMPANION_OWNER" },
     });
 
-    const unknownStatBlockRoot = createMcpCompositionRoot();
+    const unknownStatBlockRoot = createMcpPlaySessionRoot();
     expect(
       readPayload(
         handleToolCall(unknownStatBlockRoot, "start_battle", {
@@ -3314,7 +3314,7 @@ describe("MCP server route", () => {
       },
     });
 
-    const inBattleRoot = createMcpCompositionRoot();
+    const inBattleRoot = createMcpPlaySessionRoot();
     const draftId = "draft:start-already-in-battle";
     createFinalizedFighterSheet(inBattleRoot, draftId);
     const id = testCharacterId(draftId);
@@ -3351,7 +3351,7 @@ describe("MCP server route", () => {
   });
 
   test("start_battle delegates companion admission and Stat Block HP initialization", () => {
-    const companionRoot = createMcpCompositionRoot();
+    const companionRoot = createMcpPlaySessionRoot();
     const draftId = "draft:start-without-retained-companion";
     createFinalizedWizardWithFindFamiliar(companionRoot, draftId);
     expect(
@@ -3381,7 +3381,7 @@ describe("MCP server route", () => {
       details: { code: "COMPANION_ADMISSION_FAILED" },
     });
 
-    const defaultCompanionIdRoot = createMcpCompositionRoot();
+    const defaultCompanionIdRoot = createMcpPlaySessionRoot();
     createFinalizedWizardWithFindFamiliar(
       defaultCompanionIdRoot,
       "draft:start-without-retained-companion-default-id",
@@ -3421,7 +3421,7 @@ describe("MCP server route", () => {
       },
     });
 
-    const hpRoot = createMcpCompositionRoot();
+    const hpRoot = createMcpPlaySessionRoot();
     const started = readPayload(
       handleToolCall(hpRoot, "start_battle", {
         battleId: "battle:stat-block-temp-hp",
@@ -3443,7 +3443,7 @@ describe("MCP server route", () => {
       expect.objectContaining({ combatantId: "goblin", hp: 3, tempHp: 4 }),
     ]);
 
-    const invalidHpRoot = createMcpCompositionRoot();
+    const invalidHpRoot = createMcpPlaySessionRoot();
     expect(
       readPayload(
         handleToolCall(invalidHpRoot, "start_battle", {
@@ -3481,7 +3481,7 @@ describe("MCP server route", () => {
       },
     } satisfies StatBlockRecord;
     const invalidMechanicsRoot = {
-      ...createMcpCompositionRoot(),
+      ...createMcpPlaySessionRoot(),
       statBlockCatalog: {
         ...invalidHpRoot.statBlockCatalog,
         getStatBlock: () => Option.some(invalidMechanicsRecord),
@@ -3517,7 +3517,7 @@ describe("MCP server route", () => {
       statBlock: { ...base.statBlock, displayName: "" },
     } satisfies StatBlockRecord;
     const invalidDisplayRoot = {
-      ...createMcpCompositionRoot(),
+      ...createMcpPlaySessionRoot(),
       statBlockCatalog: {
         ...invalidHpRoot.statBlockCatalog,
         getStatBlock: () => Option.some(invalidDisplayRecord),
@@ -3545,7 +3545,7 @@ describe("MCP server route", () => {
   });
 
   test("fills familiar touch spell delivery holes one at a time through MCP", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-touch-delivery-fills";
     createFinalizedWizardWithFindFamiliar(root, draftId, {
       preparedSpells: ["find_familiar", "cure_wounds"],
@@ -3699,7 +3699,7 @@ describe("MCP server route", () => {
   });
 
   test("start_battle admits a retained companion without prepared Find Familiar", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-spellbook-ritual-admission";
     createFinalizedWizardWithFindFamiliar(root, draftId, {
       preparedSpells: [],
@@ -3746,7 +3746,7 @@ describe("MCP server route", () => {
   });
 
   test("apply_character_session_operation retains a companion from ordinary Spell Slot casting", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-spell-slot-retain";
     createFinalizedWizardWithFindFamiliar(root, draftId);
 
@@ -3784,7 +3784,7 @@ describe("MCP server route", () => {
   });
 
   test("apply_character_session_operation rejects a durable companion id used by another character", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const firstDraftId = "draft:mcp-duplicate-durable-familiar-first";
     const secondDraftId = "draft:mcp-duplicate-durable-familiar-second";
     createFinalizedWizardWithFindFamiliar(root, firstDraftId);
@@ -3839,7 +3839,7 @@ describe("MCP server route", () => {
   });
 
   test("apply_character_session_operation rejects caller-minted companion HP", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-hp-input-rejected";
     createFinalizedWizardWithFindFamiliar(root, draftId);
 
@@ -3867,7 +3867,7 @@ describe("MCP server route", () => {
   });
 
   test("apply_character_session_operation rejects unknown and in-battle character sessions", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const operation = {
       kind: "retainOneAtATimeCompanion",
       companionId: "unavailable-familiar",
@@ -3908,7 +3908,7 @@ describe("MCP server route", () => {
   });
 
   test("apply_character_session_operation rejects an unknown special form", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-unknown-special-form";
     createFinalizedWizardWithFindFamiliar(root, draftId);
 
@@ -3936,7 +3936,7 @@ describe("MCP server route", () => {
   });
 
   test("delegates a catalogued special-form selection to runtime admission", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-catalogued-special-form";
     createFinalizedWizardWithFindFamiliar(root, draftId);
     const specialForm = PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS[0];
@@ -3992,7 +3992,7 @@ describe("MCP server route", () => {
       },
     },
   ])("delegates $label companion-source admission", ({ source }) => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = `draft:mcp-source-${source.tag}`;
     createFinalizedWizardWithFindFamiliar(root, draftId);
 
@@ -4014,7 +4014,7 @@ describe("MCP server route", () => {
   });
 
   test("start_battle orders retained companion ties after the initial owner roster", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-tie-order";
     createFinalizedWizardWithFindFamiliar(root, draftId);
     setRetainedFamiliarCompanion(root, draftId, {
@@ -4051,7 +4051,7 @@ describe("MCP server route", () => {
   });
 
   test("end_battle clears a retained companion permanently dismissed in battle", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-permanent-dismiss-handoff";
     createFinalizedWizardWithFindFamiliar(root, draftId);
     setRetainedFamiliarCompanion(root, draftId, {
@@ -4119,7 +4119,7 @@ describe("MCP server route", () => {
   });
 
   test("end_battle leaves a retained companion untouched when it was never admitted", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-never-admitted-handoff";
     createFinalizedWizardWithFindFamiliar(root, draftId);
     setRetainedFamiliarCompanion(root, draftId, { formId: "owl" });
@@ -4162,7 +4162,7 @@ describe("MCP server route", () => {
   });
 
   test("start_battle rejects retained companion admission with a missing owner", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const rejected = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-find-familiar-missing-owner",
@@ -4196,7 +4196,7 @@ describe("MCP server route", () => {
     });
     expect(root.sessionStore.battleSession).toBeNull();
 
-    const withoutExplicitCompanionId = createMcpCompositionRoot();
+    const withoutExplicitCompanionId = createMcpPlaySessionRoot();
     expect(
       readPayload(
         handleToolCall(withoutExplicitCompanionId, "start_battle", {
@@ -4225,7 +4225,7 @@ describe("MCP server route", () => {
   });
 
   test("Character Sheet rejects invalid retained companion HP before MCP admission", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-invalid-form";
     createFinalizedWizardWithFindFamiliar(root, draftId);
     const session = root.sessionStore.characters.get(testCharacterId(draftId));
@@ -4253,7 +4253,7 @@ describe("MCP server route", () => {
   });
 
   test("battle act tools reject contradictory subjects and no-hole misuse", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-battle-subject-boundary";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
@@ -4378,7 +4378,7 @@ describe("MCP server route", () => {
   });
 
   test("start_battle rejects duplicate character and combatant ids", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const firstDraftId = "draft:mcp-duplicate-first";
     const secondDraftId = "draft:mcp-duplicate-second";
     createFinalizedFighterSheet(root, firstDraftId);
@@ -4453,7 +4453,7 @@ describe("MCP server route", () => {
   });
 
   test("creates and finalizes the supported Fighter through stored creation holes", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-tool-complete-fighter";
 
     const created = readPayload(
@@ -4524,7 +4524,7 @@ describe("MCP server route", () => {
   });
 
   test("runs the full Orc Soldier Fighter vs Goblin Warrior vertical through MCP tools only", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-full-vertical";
 
     const finalized = createAndFinalizeManifestFighterThroughTools(
@@ -4844,7 +4844,7 @@ describe("MCP server route", () => {
   });
 
   test("lists effective Character Sheet Hit Point maximum after reduction", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-reduced-maximum-list";
     const build = createFinalizedFighterSheet(root, draftId);
     root.sessionStore.characters.set(
@@ -4877,7 +4877,7 @@ describe("MCP server route", () => {
   });
 
   test("returns Shove push outcomes through MCP battle resolution output", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     root.sessionStore.battleSession =
       startBattleFromCharacterBuildAndStatBlockRight({
         battleId: battleId("battle:mcp-shove-push-outcome"),
@@ -4965,7 +4965,7 @@ describe("MCP server route", () => {
   });
 
   test("ends battle with a Stable zero-HP character session lifecycle", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-stable-zero-hp-closeout";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
@@ -5069,7 +5069,7 @@ describe("MCP server route", () => {
   });
 
   test("ends battle with a Knocked Out positive-HP character session state", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-knocked-out-closeout";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
@@ -5233,7 +5233,7 @@ describe("MCP server route", () => {
   });
 
   test("ends battle without inferring Knocked Out state from positive-HP Unconscious", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-positive-unconscious-closeout";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
@@ -5288,7 +5288,7 @@ describe("MCP server route", () => {
   });
 
   test("starts battle with Knocked Out state from positive-HP character session state", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-knocked-out-start";
     const build = createFinalizedFighterSheet(root, draftId);
     root.sessionStore.characters.set(
@@ -5344,7 +5344,7 @@ describe("MCP server route", () => {
   });
 
   test("rejects Knocked Out character session state above 1 HP", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-invalid-knocked-out-hp";
     const build = createFinalizedFighterSheet(root, draftId);
 
@@ -5370,7 +5370,7 @@ describe("MCP server route", () => {
   });
 
   test("starts battle from a Stable zero-HP character session without resetting death saves", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-stable-zero-hp-start";
     const build = createFinalizedFighterSheet(root, draftId);
     root.sessionStore.characters.set(
@@ -5437,7 +5437,7 @@ describe("MCP server route", () => {
   });
 
   test("starts battle from a dead zero-HP character session without reviving it", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-dead-zero-hp-start";
     const build = createFinalizedFighterSheet(root, draftId);
     root.sessionStore.characters.set(
@@ -5509,7 +5509,7 @@ describe("MCP server route", () => {
   });
 
   test("rejects non-canonical zero-HP character session lifecycles", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const sessionInput = {
       characterId: characterId("character:zero-hp-boundary"),
@@ -5556,7 +5556,7 @@ describe("MCP server route", () => {
   });
 
   test("ends battle with a dead zero-HP character session lifecycle", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-dead-zero-hp-closeout";
     createFinalizedFighterSheet(root, draftId);
     readPayload(
@@ -5630,7 +5630,7 @@ describe("MCP server route", () => {
   });
 
   test("discovers creation holes through the explicit tool path", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-tool-discover-holes";
     readPayload(
       handleToolCall(root, "create_character_draft", {
@@ -5659,7 +5659,7 @@ describe("MCP server route", () => {
   });
 
   test("character draft operations report unknown durable draft ids", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-missing-draft";
 
     for (const [name, args] of [
@@ -5674,7 +5674,7 @@ describe("MCP server route", () => {
   });
 
   test("rejected creation fill leaves the stored draft unchanged", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-tool-rejected-fill";
     readPayload(
       handleToolCall(root, "create_character_draft", {
@@ -5712,7 +5712,7 @@ describe("MCP server route", () => {
   });
 
   test("fill_creation_holes reports every malformed fill input", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-tool-malformed-fills";
     readPayload(handleToolCall(root, "create_character_draft", { draftId }));
     const before = root.sessionStore.drafts.get(characterDraftId(draftId));
@@ -5769,7 +5769,7 @@ describe("MCP server route", () => {
   });
 
   test("finalization stores no build until the draft is ready", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-tool-incomplete-finalize";
     readPayload(
       handleToolCall(root, "create_character_draft", {
@@ -5790,7 +5790,7 @@ describe("MCP server route", () => {
   });
 
   test("finalization reports Character Sheet construction failures", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draft = completeManifestDraft(root.unitLibrary);
     root.sessionStore.drafts.set(draft.draftId, draft);
 
@@ -5808,7 +5808,7 @@ describe("MCP server route", () => {
   });
 
   test("rejects reused draft ids for active drafts and finalized character sessions", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const activeDraftId = "draft:mcp-tool-duplicate-active";
     readPayload(
       handleToolCall(root, "create_character_draft", {
@@ -5878,7 +5878,7 @@ describe("MCP server route", () => {
   });
 
   test("does not apply Defense Fighting Style when no armor is worn", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const { state } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-unarmored"),
@@ -5925,7 +5925,7 @@ describe("MCP server route", () => {
   });
 
   test("keeps spell slots but suppresses action-time spell acts when armor training blocks casting", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-armored-spellcaster"),
@@ -5977,7 +5977,7 @@ describe("MCP server route", () => {
   });
 
   test("keeps spell acts when only shield training is missing", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-shield-spellcaster"),
@@ -6030,7 +6030,7 @@ describe("MCP server route", () => {
   });
 
   test("replays Acid Splash save-gate damage through MCP battle fills", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-acid-splash"),
@@ -6162,7 +6162,7 @@ describe("MCP server route", () => {
   });
 
   test("returns Fire Bolt object damage and ignition through MCP battle fills", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-fire-bolt-object"),
@@ -6319,7 +6319,7 @@ describe("MCP server route", () => {
   });
 
   test("replays Sorcerous Burst damage-type and exploding damage through MCP battle fills", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const sorcerer = root.unitLibrary.requireUnit("class_sorcerer");
     if (sorcerer.kind !== "class") {
@@ -6521,7 +6521,7 @@ describe("MCP server route", () => {
   });
 
   test("replays Spare the Dying stable lifecycle through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const casterBuild = {
       ...fighterCharacterBuild(root.unitLibrary),
       progression: wizardProgression(root),
@@ -6681,7 +6681,7 @@ describe("MCP server route", () => {
   });
 
   test("returns Starry Wisp object damage through MCP battle fills", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-starry-wisp-object"),
@@ -6823,7 +6823,7 @@ describe("MCP server route", () => {
   });
 
   test("preserves pending reaction state while MCP replays a readied spell procedure", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
       battleId: battleId("battle-root-reaction-replay"),
@@ -7027,7 +7027,7 @@ describe("MCP server route", () => {
   });
 
   test("rejects available character sessions with non-canonical Spell Slot state", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
     const spellcastingBuild = {
       ...build,
@@ -7090,7 +7090,7 @@ describe("MCP server route", () => {
   });
 
   test("rejects character battle init when current HP exceeds build max HP", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
 
     expect(() =>
       startBattleFromCharacterBuildAndStatBlockRight({
@@ -7118,7 +7118,7 @@ describe("MCP server route", () => {
 });
 
 function fighterCharacterBuild(
-  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
 ): CharacterBuild {
   const result = finalizeCharacterDraft({
     draft: completeManifestDraft(unitLibrary),
@@ -7132,7 +7132,7 @@ function fighterCharacterBuild(
 }
 
 function goblinWarriorMultiattackStatBlock(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
 ): StatBlockRecord {
   const base = root.statBlockCatalog.requireStatBlock(
     "stat_block_goblin_warrior",
@@ -7162,7 +7162,7 @@ function goblinWarriorMultiattackStatBlock(
 }
 
 function fighterTwoCharacterBuild(
-  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
 ): CharacterBuild {
   const draft = createTestDraft("draft:mcp-complete-fighter-two");
   const afterInitial = requireAcceptedBatch(
@@ -7222,7 +7222,7 @@ function characterUnitRef(
 }
 
 function fighterTwoLightWeaponBuild(
-  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
 ): CharacterBuild {
   const fighter = fighterCharacterBuild(unitLibrary);
   return {
@@ -7253,7 +7253,7 @@ function fighterTwoLightWeaponBuild(
 }
 
 function createFinalizedFighterSheet(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
 ): CharacterBuild {
   const build = fighterCharacterBuild(root.unitLibrary);
@@ -7271,7 +7271,7 @@ function createFinalizedFighterSheet(
 }
 
 function createFinalizedWizardWithFindFamiliar(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
   input: {
     readonly preparedSpells?: readonly string[];
@@ -7316,7 +7316,7 @@ function createFinalizedWizardWithFindFamiliar(
 }
 
 function setRetainedFamiliarCompanion(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
   input: {
     readonly formId?: string;
@@ -7349,7 +7349,7 @@ function setRetainedFamiliarCompanion(
 }
 
 function setStoredRetainedFamiliarCompanion(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
   input: {
     readonly formId?: string;
@@ -7408,7 +7408,7 @@ function createTestDraft(draftId: string): CharacterDraft {
 }
 
 function completeManifestDraft(
-  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
 ): CharacterDraft {
   const draft = createTestDraft("draft:mcp-complete-manifest");
   const afterInitial = requireAcceptedBatch(
@@ -7556,7 +7556,7 @@ function manifestLoadoutFills(): readonly CreationFill[] {
 }
 
 function fillThroughTool(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
   expectedRevision: number,
   fills: readonly CreationFill[],
@@ -7571,7 +7571,7 @@ function fillThroughTool(
 }
 
 function createAndFinalizeManifestFighterThroughTools(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
 ) {
   const created = readPayload(
@@ -7602,7 +7602,7 @@ function createAndFinalizeManifestFighterThroughTools(
 }
 
 function fillBattleHoleThroughTool(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   actorId: string,
   attackName: string,
   fill: {
@@ -7668,7 +7668,7 @@ function fillBattleHoleThroughTool(
 }
 
 function battleAttackSubjectForName(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   actorId: string,
   attackName: string,
 ): Extract<
@@ -7722,7 +7722,7 @@ function battleAttackSelection(subject: BattleSubject, attackName: string) {
 }
 
 function battleActionSubject(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   actorId: string,
   action: Extract<BattleSubject, { readonly tag: "action" }>["action"],
 ): BattleSubject {
@@ -7749,9 +7749,9 @@ function initialClassHoleIds(): readonly CreationHoleIdText[] {
 }
 
 function fighterUnitLibraryWithClassFeatureGrant(
-  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
   featureUnit: Extract<UnitRecord, { readonly kind: "class_feature" }>,
-): ReturnType<typeof createMcpCompositionRoot>["unitLibrary"] {
+): ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"] {
   const fighter = unitLibrary.requireUnit("class_fighter");
   if (fighter.kind !== "class") {
     throw new Error("Expected Fighter class Unit.");
@@ -7774,7 +7774,7 @@ function fighterUnitLibraryWithClassFeatureGrant(
 }
 
 function fighterCharacterBuildAtLevel(
-  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
   level: number,
 ): CharacterBuild {
   const classUnit = unitLibrary.requireUnit("class_fighter");
@@ -7791,7 +7791,7 @@ function fighterCharacterBuildAtLevel(
 }
 
 function rogueCharacterBuild(
-  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
   input: {
     readonly level?: number;
   } = {},
@@ -7824,14 +7824,14 @@ function rogueCharacterBuild(
 }
 
 function rogueBattleUnitLibrary(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   overrides?: {
     readonly cunningActionUnit?: UnitRecord;
     readonly sneakAttackUnit?: UnitRecord;
     readonly evasionUnit?: UnitRecord;
     readonly uncannyDodgeUnit?: UnitRecord;
   },
-): ReturnType<typeof createMcpCompositionRoot>["unitLibrary"] {
+): ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"] {
   const rogueClass = rogueClassUnit(root.unitLibrary);
   const overriddenUnits = [
     rogueClass,
@@ -7850,7 +7850,7 @@ function rogueBattleUnitLibrary(
 }
 
 function rogueClassUnit(
-  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
 ): Extract<UnitRecord, { readonly kind: "class" }> {
   const fighter = unitLibrary.requireUnit("class_fighter");
   if (fighter.kind !== "class") {
@@ -7901,9 +7901,9 @@ function characterBuildForClassProgression(input: {
 }
 
 function unitLibraryWithOverrides(
-  unitLibrary: ReturnType<typeof createMcpCompositionRoot>["unitLibrary"],
+  unitLibrary: ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"],
   overrides: readonly UnitRecord[],
-): ReturnType<typeof createMcpCompositionRoot>["unitLibrary"] {
+): ReturnType<typeof createMcpPlaySessionRoot>["unitLibrary"] {
   const unitById = new Map(
     unitLibrary.listUnits().map((unit) => [unit.id, unit]),
   );

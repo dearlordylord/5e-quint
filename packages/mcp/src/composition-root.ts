@@ -29,28 +29,32 @@ import {
   type McpSessionStore,
 } from "./session-store.ts";
 
-export type McpCompositionRoot = {
+export type McpApplicationServices = {
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog: StatBlockCatalog;
-  readonly sessionStore: McpSessionStore;
-  readonly adminMirrorPublication: AdminMirrorPublication;
   readonly createAdminMirrorPublication: (
     mirrorSessionId: AdminMirrorSessionId,
   ) => AdminMirrorPublication;
+  readonly configuredAdminMirrorSessionId: AdminMirrorSessionId;
   readonly characterCreationSupportProfile: CharacterCreationSupportProfile;
 };
 
-export function createMcpCompositionRoot(
+export type McpPlaySessionRoot = McpApplicationServices & {
+  readonly sessionStore: McpSessionStore;
+  readonly adminMirrorPublication: AdminMirrorPublication;
+};
+
+export function createMcpApplicationServices(
   input: {
     readonly characterCreationSupportProfile?: CharacterCreationSupportProfile;
   } = {},
-): McpCompositionRoot {
+): McpApplicationServices {
   const unitCatalog = buildUnitCatalog({
     collections: [srdUnitCollection],
   });
   if (unitCatalog.tag === "invalid") {
     throw new Error(
-      `Invalid SRD Unit catalog for MCP root: ${JSON.stringify(
+      `Invalid SRD Unit catalog for MCP application services: ${JSON.stringify(
         unitCatalog.issues,
       )}`,
     );
@@ -61,7 +65,7 @@ export function createMcpCompositionRoot(
   });
   if (statBlockCatalog.tag === "invalid") {
     throw new Error(
-      `Invalid SRD Stat Block catalog for MCP root: ${JSON.stringify(
+      `Invalid SRD Stat Block catalog for MCP application services: ${JSON.stringify(
         statBlockCatalog.issues,
       )}`,
     );
@@ -71,28 +75,23 @@ export function createMcpCompositionRoot(
   return {
     unitLibrary: unitCatalog.catalog,
     statBlockCatalog: statBlockCatalog.catalog,
-    sessionStore: createMcpSessionStore(statBlockCatalog.catalog),
-    adminMirrorPublication: adminMirror.create(adminMirror.sessionId),
     createAdminMirrorPublication: adminMirror.create,
+    configuredAdminMirrorSessionId: adminMirror.sessionId,
     characterCreationSupportProfile:
       input.characterCreationSupportProfile ??
       CHARACTER_CREATION_SUPPORT_PROFILE,
   };
 }
 
-export function createPlaySessionCompositionRoot(
-  applicationRoot: McpCompositionRoot,
-  mirrorSessionId: AdminMirrorSessionId,
-): McpCompositionRoot {
+export function createMcpPlaySessionRoot(
+  applicationServices: McpApplicationServices = createMcpApplicationServices(),
+  mirrorSessionId: AdminMirrorSessionId = applicationServices.configuredAdminMirrorSessionId,
+): McpPlaySessionRoot {
   return {
-    unitLibrary: applicationRoot.unitLibrary,
-    statBlockCatalog: applicationRoot.statBlockCatalog,
-    sessionStore: createMcpSessionStore(applicationRoot.statBlockCatalog),
+    ...applicationServices,
+    sessionStore: createMcpSessionStore(applicationServices.statBlockCatalog),
     adminMirrorPublication:
-      applicationRoot.createAdminMirrorPublication(mirrorSessionId),
-    createAdminMirrorPublication: applicationRoot.createAdminMirrorPublication,
-    characterCreationSupportProfile:
-      applicationRoot.characterCreationSupportProfile,
+      applicationServices.createAdminMirrorPublication(mirrorSessionId),
   };
 }
 

@@ -1,0 +1,78 @@
+{
+  "officialGuidance": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
+  "evidenceOwners": {
+    "localMcp": {
+      "kind": "automatedTest",
+      "testPath": "packages/mcp/src/plugin-local-connection.test.ts"
+    },
+    "skillForwardTest": {
+      "kind": "independentStaticForwardTest",
+      "resultPath": "plugins/srd-play/evals/forward-test-results.json"
+    },
+    "installedChatGpt": {
+      "kind": "requiredExternalEvidence",
+      "issue": 328,
+      "reason": "Developer-mode connection, automatic activation, and installed-plugin behavior require an authorized ChatGPT installation and cannot be inferred from local protocol tests."
+    }
+  },
+  "mcpToolSelection": [
+    {
+      "id": "mcp-direct-catalog",
+      "kind": "direct",
+      "prompt": "List the installed redistributable SRD character options.",
+      "expectedToolNames": ["list_catalog_units"]
+    },
+    {
+      "id": "mcp-indirect-catalog",
+      "kind": "indirect",
+      "prompt": "What rules-backed character choices can I browse here?",
+      "expectedToolNames": ["list_catalog_units"]
+    },
+    {
+      "id": "mcp-follow-up-detail",
+      "kind": "followUp",
+      "after": "mcp-direct-catalog",
+      "prompt": "Show me the full installed record for the option I just selected.",
+      "expectedToolNames": ["inspect_catalog_unit"]
+    },
+    {
+      "id": "mcp-unsupported-history",
+      "kind": "unsupported",
+      "prompt": "Give me a spoiler-free overview of the history of D&D as a hobby.",
+      "expectedToolNames": []
+    }
+  ],
+  "skillActivation": [
+    {
+      "id": "skill-direct",
+      "kind": "direct",
+      "prompt": "Use SRD Play to show me the installed character options.",
+      "expectedActivation": "activate"
+    },
+    {
+      "id": "skill-natural",
+      "kind": "indirect",
+      "prompt": "I want to make a rules-supported SRD character. What choices are available?",
+      "expectedActivation": "activate"
+    },
+    {
+      "id": "skill-continuation",
+      "kind": "followUp",
+      "after": "skill-natural",
+      "prompt": "Continue with the same character and show me what I still need to choose.",
+      "expectedActivation": "activate"
+    },
+    {
+      "id": "skill-unrelated-dnd",
+      "kind": "negative",
+      "prompt": "Give me a spoiler-free overview of the history of D&D as a hobby.",
+      "expectedActivation": "doNotActivate"
+    },
+    {
+      "id": "skill-authoring-boundary",
+      "kind": "boundary",
+      "prompt": "Can this SRD engine accept a custom executable monster I wrote and use it in battle?",
+      "expectedActivation": "activate"
+    }
+  ]
+}

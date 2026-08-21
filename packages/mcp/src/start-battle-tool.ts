@@ -19,7 +19,7 @@ import { Either, Match, Option } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { type AvailableCharacterSession } from "./session-store.ts";
 import {
   type InitialBattleCombatantToolInput,
@@ -55,7 +55,7 @@ type StartableBattleCombatant =
     };
 
 export function handleStartBattleToolCall(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   input: StartBattleToolInput,
 ) {
   const activeBattle = root.sessionStore.battleSession;
@@ -168,7 +168,7 @@ function duplicateStartBattleInputContent(
 }
 
 function startableBattleCombatants(input: {
-  readonly root: McpCompositionRoot;
+  readonly root: McpPlaySessionRoot;
   readonly initialCombatants: readonly InitialBattleCombatantToolInput[];
 }): Either.Either<StartableBattleCombatants, ReturnType<typeof errorContent>> {
   const combatants = traverseValidation(input.initialCombatants, (combatant) =>
@@ -190,7 +190,7 @@ function startableBattleCombatants(input: {
 }
 
 function startableBattleCombatant(input: {
-  readonly root: McpCompositionRoot;
+  readonly root: McpPlaySessionRoot;
   readonly combatant: InitialBattleCombatantToolInput;
 }): Either.Either<StartableBattleCombatant, ToolError> {
   const { root, combatant } = input;
@@ -280,7 +280,7 @@ function startableBattleCombatant(input: {
 }
 
 function admitCompanionAdmissions(input: {
-  readonly root: McpCompositionRoot;
+  readonly root: McpPlaySessionRoot;
   readonly session: BattleRuntimeSession;
   readonly admissions: readonly CompanionAdmissionToolInput[];
   readonly characterSessions: readonly StartableCharacterSessionCombatant[];

@@ -2,11 +2,11 @@ import type { BattleRuntimeSession } from "@dnd/battle-runtime";
 import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
 import { Either } from "effect";
 
-import type { McpCompositionRoot } from "./composition-root.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { errorContent } from "./tool-content.ts";
 
 export function finalizeCharacterSessionsFromBattle(
-  root: McpCompositionRoot,
+  root: McpPlaySessionRoot,
   battleSession: BattleRuntimeSession,
 ): ReturnType<typeof errorContent> | null {
   const state = battleSession.state;

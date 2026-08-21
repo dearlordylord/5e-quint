@@ -4,7 +4,7 @@ import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { createMcpCompositionRoot } from "./composition-root.ts";
+import { createMcpPlaySessionRoot } from "./composition-root.ts";
 import { contentToolDefinitions, statBlockSummary } from "./content-tools.ts";
 import { handleToolCall } from "./server.ts";
 import { jsonContentPayload } from "./tool-content.ts";
@@ -35,7 +35,7 @@ function unitDetailPayload(response: ReturnType<typeof handleToolCall>) {
 
 describe("MCP Stat Block summaries", () => {
   test("projects cast-time choices and nonliteral execution values", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const base = root.statBlockCatalog.requireStatBlock(
       "stat_block_goblin_warrior",
     );
@@ -101,7 +101,7 @@ describe("MCP installed SRD catalog tools", () => {
   });
 
   test("lists every canonical installed SRD Unit and Stat Block", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const units = Schema.decodeUnknownSync(CatalogUnitListSchema)(
       payload(handleToolCall(root, "list_catalog_units", {})),
     );
@@ -121,7 +121,7 @@ describe("MCP installed SRD catalog tools", () => {
   });
 
   test("inspects one canonical installed Unit without claiming executability", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const installed = srdUnitCollection.units.find(
       (unit) => unit.id === "cloudkill",
     );

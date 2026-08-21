@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
+import { createMcpPlaySessionRoot, handleToolCall } from "./server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import { characterDraftId } from "@dnd/character-creation-runtime";
 import { combatantId, type BattleActPresentation } from "@dnd/battle-runtime";
@@ -20,7 +20,7 @@ const BATTLE_DEMO_VERTICAL_TEST_TIMEOUT_MS = 10_000;
 
 describe("end-user MCP vertical", () => {
   test("creates an Orc Soldier Fighter, runs battle, ends battle, and lists reduced HP", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const draftId = "draft:accepted-orc-soldier-fighter";
 
     const created = callTool(root, "create_character_draft", { draftId });
@@ -299,7 +299,7 @@ describe("end-user MCP vertical", () => {
   });
 
   test("creates Fighter 2 and Elf Wizard 2, then runs the widened Skeleton workflow", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const fighterDraftId = "draft:post5-orc-soldier-fighter-two";
     const wizardDraftId = "draft:post5-elf-soldier-wizard-two";
 
@@ -769,7 +769,7 @@ describe("end-user MCP vertical", () => {
 
   // prettier-ignore
   test("starts the battle demo through MCP character creation and start_battle", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const fighterDraftId = "draft:demo-fighter-two";
     const wizardDraftId = "draft:demo-wizard-one";
     const bardDraftId = "draft:demo-bard-one";
@@ -1061,7 +1061,7 @@ describe("end-user MCP vertical", () => {
   }, BATTLE_DEMO_VERTICAL_TEST_TIMEOUT_MS);
 
   test("threads selected Light identity from MCP character creation into battle output", () => {
-    const root = createMcpCompositionRoot();
+    const root = createMcpPlaySessionRoot();
     const wizardDraftId = "draft:mcp-selected-light-wizard-one";
     const wizardCombatantId = "wizard";
     const goblinCombatantId = "goblin";
@@ -1190,7 +1190,7 @@ function abilityScoresFillFromHole(
 }
 
 function callTool(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   name: string,
   args: unknown,
 ) {
@@ -1271,7 +1271,7 @@ function actionLabels(payload: {
 }
 
 function createAndFinalizeFighterTwo(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
 ) {
   const initial = callTool(root, "create_character_draft", { draftId });
@@ -1401,7 +1401,7 @@ function createAndFinalizeFighterTwo(
 }
 
 function createAndFinalizeElfWizardTwo(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
 ) {
   const initial = callTool(root, "create_character_draft", { draftId });
@@ -1553,7 +1553,7 @@ function createAndFinalizeElfWizardTwo(
 }
 
 function createAndFinalizeWizardOne(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
 ) {
   const initial = callTool(root, "create_character_draft", { draftId });
@@ -1691,7 +1691,7 @@ function createAndFinalizeWizardOne(
 }
 
 function createAndFinalizeBardOne(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   draftId: string,
 ) {
   const initial = callTool(root, "create_character_draft", { draftId });
@@ -1840,7 +1840,7 @@ function characterCombatant(
 }
 
 function combatant(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   combatantId: string,
 ) {
   const found = callTool(
@@ -1898,7 +1898,7 @@ type BattleHoleView = {
 };
 
 function requireBattleAct(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   predicate: (act: BattleActView) => boolean,
   label: string,
 ): BattleActView {
@@ -1910,7 +1910,7 @@ function requireBattleAct(
 }
 
 function requireAttackAct(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   actorId: string,
   attackName: string,
 ): BattleActView {
@@ -1936,7 +1936,7 @@ function requireAttackAct(
 }
 
 function requireUnitFeatureAct(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   actorId: string,
   unitId: string,
 ): BattleActView & {
@@ -1961,7 +1961,7 @@ function requireUnitFeatureAct(
 }
 
 function requireSpellAct(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   actorId: string,
   spellId: string,
 ): BattleActView & {
@@ -2028,7 +2028,7 @@ function requireTriggeredSpellChoice(
 }
 
 function resolveAttackWithShieldReaction(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
 ) {
   const act = requireAttackAct(root, "goblin-a", "Scimitar");
   const target = fillBattleSubject(root, act.subject, {
@@ -2075,7 +2075,7 @@ function resolveAttackWithShieldReaction(
 }
 
 function resolveUnitFeatureAct(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   actorId: string,
   unitId: string,
 ) {
@@ -2084,7 +2084,7 @@ function resolveUnitFeatureAct(
 }
 
 function resourcePoolRefForUnit(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   combatantIdText: string,
   unitId: string,
 ): string {
@@ -2117,7 +2117,7 @@ function resourcePoolRefForUnit(
 }
 
 function grantBardicInspiration(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
 ) {
   const act = requireUnitFeatureAct(root, "bard", "bard_bardic_inspiration");
   const target = requireHole(act.initialHoles, "targetChoice");
@@ -2141,7 +2141,7 @@ function grantBardicInspiration(
 }
 
 function resolveSecondWind(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   actorId: string,
   healingResults: readonly number[],
 ) {
@@ -2155,7 +2155,7 @@ function resolveSecondWind(
 }
 
 function resolveWeaponAttack(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   input: {
     readonly actorId: string;
     readonly attackName: string;
@@ -2212,7 +2212,7 @@ function resolveWeaponAttack(
 }
 
 function castMagicMissile(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   actorId: string,
   allocations: readonly { readonly targetId: string; readonly count: number }[],
   damageResults: readonly number[],
@@ -2242,7 +2242,7 @@ function castMagicMissile(
 }
 
 function resolveSpellAttack(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   input: {
     readonly actorId: string;
     readonly spellId: string;
@@ -2293,7 +2293,7 @@ function resolveSpellAttack(
 }
 
 function endTurn(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   actorId: string,
   deathSaveRoll?: number,
 ) {
@@ -2345,7 +2345,7 @@ type UnitFeatureSubject = {
 };
 
 function fillBattleSubject(
-  root: ReturnType<typeof createMcpCompositionRoot>,
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
   subject:
     | BoundAttackSubjectView
     | CantripSubject

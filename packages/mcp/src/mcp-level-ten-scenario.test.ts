@@ -7,7 +7,7 @@ import {
   verifyLevelTenFighterChampionBattleHandoff,
   verifyLevelTenFighterChampionSheetScenario,
 } from "../test-support/mcp-acceptance-scenarios.ts";
-import { createMcpCompositionRoot } from "./composition-root.ts";
+import { createMcpApplicationServices } from "./composition-root.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
 describe("MCP level 10 Fighter Champion scenario", () => {
@@ -15,7 +15,7 @@ describe("MCP level 10 Fighter Champion scenario", () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer(
-      createMcpCompositionRoot({
+      createMcpApplicationServices({
         characterCreationSupportProfile:
           LEVEL_TEN_FIGHTER_CHARACTER_CREATION_SUPPORT_PROFILE,
       }),
@@ -39,7 +39,7 @@ describe("MCP level 10 Fighter Champion scenario", () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer(
-      createMcpCompositionRoot({
+      createMcpApplicationServices({
         characterCreationSupportProfile:
           LEVEL_TEN_FIGHTER_CHARACTER_CREATION_SUPPORT_PROFILE,
       }),
