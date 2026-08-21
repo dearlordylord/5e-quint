@@ -652,6 +652,40 @@ describe("MCP protocol server", () => {
           currentActorId: "protocol-first",
         },
       });
+      const rejectedStart = await client.callTool({
+        name: "start_battle",
+        arguments: {
+          playSessionId,
+          battleId: "battle:protocol-gh324-second",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              ammunitionStocks: [],
+              characterId: firstCharacterId,
+              combatantId: "protocol-second-start",
+              initiative: 10,
+            },
+          ],
+        },
+      });
+      expect(rejectedStart.isError).toBe(true);
+      if (!isJsonObject(rejectedStart.structuredContent)) {
+        throw new Error("Expected typed active-battle start rejection.");
+      }
+      expect(validateStartOutput(rejectedStart.structuredContent).valid).toBe(
+        true,
+      );
+      expect(rejectedStart.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            error: "A battle session is already active.",
+            details: {
+              code: "BATTLE_SESSION_ALREADY_ACTIVE",
+              battleId: "battle:protocol-gh324-round-trip",
+            },
+          },
+        },
+      });
       const read = await callStructuredTool(client, {
         name: "read_battle_state",
         arguments: { playSessionId },
