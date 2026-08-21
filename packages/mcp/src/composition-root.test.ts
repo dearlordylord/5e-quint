@@ -18,6 +18,7 @@ describe("MCP application services and Play Session roots", () => {
     expect(services).not.toHaveProperty("sessionStore");
     expect(services).not.toHaveProperty("adminMirrorPublication");
     expect(first.sessionStore).not.toBe(second.sessionStore);
+    expect(first.random).not.toBe(second.random);
     expect(first.unitLibrary).toBe(services.unitLibrary);
     expect(second.statBlockCatalog).toBe(services.statBlockCatalog);
   });

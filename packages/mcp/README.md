@@ -170,6 +170,11 @@ The battle-session tool boundary exposes these user-facing tools:
   subject. MCP stores transient target, spell target allocation, attack-roll,
   damage-result, and feature-roll fills until `@dnd/battle-runtime` resolves the
   act, then stores the returned `BattleState` and clears the transient fills.
+- `roll_dice` independently rolls an ordered, non-empty batch of structured
+  dice groups and returns visible raw faces with a server-generated per-call
+  correlation value. It never reads Runtime Holes, derives outcomes, or fills a
+  Battle act; callers may copy its faces into an ordinary typed fill when the
+  current Hole supplies the required facts.
 - `resolve_battle_act` resolves selected battle act subjects that need no
   holes, such as Fighter 2 Action Surge.
 - `end_turn` resolves the End Turn runtime command for the current actor, stores

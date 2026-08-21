@@ -1,32 +1,11 @@
 type JsonRecord = Readonly<Record<string, unknown>>;
 
-function isJsonRecord(value: unknown): value is JsonRecord {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 export function battleToolWireArgs(name: string, args: JsonRecord): JsonRecord;
 export function battleToolWireArgs(name: string, args: unknown): unknown;
 export function battleToolWireArgs(name: string, args: unknown): unknown {
-  if (!isJsonRecord(args)) return args;
-  if (name === "fill_battle_hole" && "subject" in args && "fill" in args) {
-    return {
-      ...(args.playSessionId === undefined
-        ? {}
-        : { playSessionId: args.playSessionId }),
-      subjectJson: JSON.stringify(args.subject),
-      fillJson: JSON.stringify(args.fill),
-    };
-  }
-  if (name === "resolve_battle_act" && "subject" in args) {
-    return {
-      ...(args.playSessionId === undefined
-        ? {}
-        : { playSessionId: args.playSessionId }),
-      subjectJson: JSON.stringify(args.subject),
-      ...(args.reactionSpellTargetFacts === undefined
-        ? {}
-        : { reactionSpellTargetFacts: args.reactionSpellTargetFacts }),
-    };
-  }
+  // Battle subjects and fills are already structured values at the MCP
+  // boundary. Keep this helper as a pass-through for ordinary typed callers;
+  // it exists only so acceptance scenarios can share call plumbing.
+  void name;
   return args;
 }

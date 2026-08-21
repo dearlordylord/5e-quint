@@ -1951,20 +1951,16 @@ describe("MCP server route", () => {
     ]);
   });
 
-  test("publishes a cold-client-compatible JSON-text fill_battle_hole contract", () => {
+  test("publishes the canonical typed fill_battle_hole contract", () => {
     const tool = battleToolDefinitions.find(
       (candidate) => candidate.name === "fill_battle_hole",
     );
     const inputSchema = jsonSchemaObject(tool?.inputSchema);
 
-    const schemaText = JSON.stringify(inputSchema);
-    expect(inputSchema?.properties?.subjectJson).toMatchObject({
-      description: expect.stringContaining("JSON.stringify(subject)"),
-    });
-    expect(inputSchema?.properties?.fillJson).toMatchObject({
-      description: expect.stringContaining("JSON.stringify(fill)"),
-    });
-    expect(schemaText.length).toBeLessThan(2_048);
+    expect(inputSchema?.properties?.subject).toBeDefined();
+    expect(inputSchema?.properties?.fill).toBeDefined();
+    expect(inputSchema?.properties).not.toHaveProperty("subjectJson");
+    expect(inputSchema?.properties).not.toHaveProperty("fillJson");
   });
 
   test("describes MCP workflow and lists discoverable catalogs through tools", () => {
@@ -2111,7 +2107,7 @@ describe("MCP server route", () => {
     for (const [name, args] of [
       ["fill_battle_hole", {}],
       ["resolve_battle_act", {}],
-      ["resolve_battle_act", { subjectJson: "not-json" }],
+      ["resolve_battle_act", { subject: "not-an-object" }],
     ] as const) {
       expect(readPayload(handleWireToolCall(root, name, args))).toMatchObject({
         details: { code: "INVALID_ARGUMENTS" },

@@ -1,3 +1,5 @@
+import { randomBytes, randomUUID } from "node:crypto";
+
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -12,6 +14,7 @@ import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   type CharacterCreationSupportProfile,
 } from "@dnd/character-creation-runtime";
+import { Random } from "effect";
 
 import {
   createHttpAdminMirrorPublisher,
@@ -42,6 +45,8 @@ export type McpApplicationServices = {
 export type McpPlaySessionRoot = McpApplicationServices & {
   readonly sessionStore: McpSessionStore;
   readonly adminMirrorPublication: AdminMirrorPublication;
+  /** The sole random stream for this Play Session. */
+  readonly random: Random.Random;
 };
 
 export function createMcpApplicationServices(
@@ -86,13 +91,24 @@ export function createMcpApplicationServices(
 export function createMcpPlaySessionRoot(
   applicationServices: McpApplicationServices = createMcpApplicationServices(),
   mirrorSessionId: AdminMirrorSessionId = applicationServices.configuredAdminMirrorSessionId,
+  random: Random.Random = createLivePlaySessionRandom(),
 ): McpPlaySessionRoot {
   return {
     ...applicationServices,
     sessionStore: createMcpSessionStore(applicationServices.statBlockCatalog),
     adminMirrorPublication:
       applicationServices.createAdminMirrorPublication(mirrorSessionId),
+    random,
   };
+}
+
+/**
+ * Construct the live per-session stream. The seed is never persisted or
+ * exposed; tests may inject `Random.make` or `Random.fixed` through the root
+ * factory instead.
+ */
+export function createLivePlaySessionRandom(): Random.Random {
+  return Random.make(randomBytes(32).toString("hex"));
 }
 
 function adminMirrorConfigurationFromEnv(): {
@@ -135,4 +151,3 @@ function disabledAdminMirrorConfiguration(): {
     create: disabledAdminMirrorPublication,
   };
 }
-import { randomUUID } from "node:crypto";
