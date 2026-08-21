@@ -1,4 +1,7 @@
-import { CharacterSheetRetainedCompanionId } from "@dnd/character-sheet-runtime";
+import {
+  CharacterSheetRetainedCompanionId,
+  FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES,
+} from "@dnd/character-sheet-runtime";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
 
@@ -69,8 +72,43 @@ const RetainOneAtATimeCompanionOperationArgsSchema = Schema.Struct({
     },
   ),
 });
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+);
+const SpellSlotLevelSchema = PositiveIntegerSchema.pipe(
+  Schema.lessThanOrEqualTo(9),
+);
+const SpendSpellAccessFreeCastOperationArgsSchema = Schema.Struct({
+  kind: Schema.Literal("spendSpellAccessFreeCast"),
+  sourceUnitId: UnitId,
+  spellId: UnitId,
+});
+const UseMonkUncannyMetabolismWhenRollingInitiativeOperationArgsSchema =
+  Schema.Struct({
+    kind: Schema.Literal("useMonkUncannyMetabolismWhenRollingInitiative"),
+    martialArtsRoll: PositiveIntegerSchema,
+  });
+const ConvertFontOfMagicSpellSlotToSorceryPointsOperationArgsSchema =
+  Schema.Struct({
+    kind: Schema.Literal("convertFontOfMagicSpellSlotToSorceryPoints"),
+    spellLevel: SpellSlotLevelSchema,
+    spellSlotSource: Schema.optionalWith(
+      Schema.Literal(...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
+      { exact: true },
+    ),
+  });
+const ConvertFontOfMagicSorceryPointsToSpellSlotOperationArgsSchema =
+  Schema.Struct({
+    kind: Schema.Literal("convertFontOfMagicSorceryPointsToSpellSlot"),
+    spellLevel: SpellSlotLevelSchema,
+  });
 const CharacterSessionOperationArgsSchema = Schema.Union(
   RetainOneAtATimeCompanionOperationArgsSchema,
+  SpendSpellAccessFreeCastOperationArgsSchema,
+  UseMonkUncannyMetabolismWhenRollingInitiativeOperationArgsSchema,
+  ConvertFontOfMagicSpellSlotToSorceryPointsOperationArgsSchema,
+  ConvertFontOfMagicSorceryPointsToSpellSlotOperationArgsSchema,
 );
 
 export const ApplyCharacterSessionOperationArgsSchema = Schema.Struct({

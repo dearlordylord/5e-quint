@@ -40,8 +40,10 @@ import {
   creationHoleId,
   fillCreationHoles,
   finalizeCharacterDraft,
+  MONK_MONKS_FOCUS_UNIT_ID,
   sorcererMetamagicOptionId,
   SORCERER_METAMAGIC_UNIT_ID,
+  SORCERER_FONT_OF_MAGIC_UNIT_ID,
   type CharacterDraft,
   type CharacterBuild,
   type CreationFill,
@@ -1586,12 +1588,23 @@ describe("MCP server route", () => {
       | undefined;
     const operationSchema = inputSchema?.properties?.operation;
 
-    expect(operationSchema?.properties?.kind).toEqual({
-      type: "string",
-      enum: ["retainOneAtATimeCompanion"],
-    });
-    expect(operationSchema?.properties).not.toHaveProperty("currentHp");
-    expect(operationSchema?.properties).not.toHaveProperty("tempHp");
+    expect(JSON.stringify(operationSchema)).toContain(
+      "retainOneAtATimeCompanion",
+    );
+    expect(JSON.stringify(operationSchema)).toContain(
+      "spendSpellAccessFreeCast",
+    );
+    expect(JSON.stringify(operationSchema)).toContain(
+      "useMonkUncannyMetabolismWhenRollingInitiative",
+    );
+    expect(JSON.stringify(operationSchema)).toContain(
+      "convertFontOfMagicSpellSlotToSorceryPoints",
+    );
+    expect(JSON.stringify(operationSchema)).toContain(
+      "convertFontOfMagicSorceryPointsToSpellSlot",
+    );
+    expect(JSON.stringify(operationSchema)).not.toContain("currentHp");
+    expect(JSON.stringify(operationSchema)).not.toContain("tempHp");
   });
 
   test("registers battle tool names", () => {
@@ -3903,6 +3916,252 @@ describe("MCP server route", () => {
       },
       spellSlotExpenditures: [{ spellLevel: 1, expended: 1 }],
     });
+  });
+
+  test("apply_character_session_operation spends a Spell Access free cast atomically", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-spell-access-free-cast";
+    const spellAccessSourceUnitId = unitId("feat_magic_initiate_wizard");
+    const spellId = unitId("burning_hands");
+    const build = {
+      ...fighterCharacterBuild(root.unitLibrary),
+      magicInitiateSpellAccesses: [
+        {
+          featUnitId: spellAccessSourceUnitId,
+          spellcastingAbility: "int" as const,
+          cantrips: [unitId("fire_bolt"), unitId("light")] as const,
+          levelOneSpell: spellId,
+        },
+      ],
+    };
+    const session = availableCharacterSessionRight({
+      characterId: testCharacterId(draftId),
+      build,
+      currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      unitLibrary: root.unitLibrary,
+    });
+    root.sessionStore.characters.set(session);
+
+    const spent = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(draftId),
+        operation: {
+          kind: "spendSpellAccessFreeCast",
+          sourceUnitId: spellAccessSourceUnitId,
+          spellId,
+        },
+      }),
+    );
+    expect(spent.character).toMatchObject({
+      resourceExpenditures: [
+        {
+          tag: "spellAccessFreeCast",
+          sourceUnitId: spellAccessSourceUnitId,
+          spellId,
+          expended: 1,
+        },
+      ],
+    });
+    const unchangedAfterSuccess = root.sessionStore.characters.get(
+      testCharacterId(draftId),
+    );
+
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(draftId),
+        operation: {
+          kind: "spendSpellAccessFreeCast",
+          sourceUnitId: spellAccessSourceUnitId,
+          spellId,
+        },
+      }),
+    );
+    expect(rejected).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_OPERATION_INVALID",
+        operationKind: "spendSpellAccessFreeCast",
+        message: "Spell Access free cast is exhausted.",
+      },
+    });
+    expect(root.sessionStore.characters.get(testCharacterId(draftId))).toBe(
+      unchangedAfterSuccess,
+    );
+  });
+
+  test("apply_character_session_operation uses Uncanny Metabolism with a supplied die face", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-uncanny-metabolism";
+    const build = resourceClassBuild(root, "class_monk", 2);
+    const session = availableCharacterSessionRight({
+      characterId: testCharacterId(draftId),
+      build,
+      currentHp: Hp(1),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      unitLibrary: root.unitLibrary,
+      resourceExpenditures: [
+        {
+          tag: "useCountResource",
+          unitId: MONK_MONKS_FOCUS_UNIT_ID,
+          expended: resourceCount(2),
+        },
+      ],
+    });
+    root.sessionStore.characters.set(session);
+
+    const recovered = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(draftId),
+        operation: {
+          kind: "useMonkUncannyMetabolismWhenRollingInitiative",
+          martialArtsRoll: 4,
+        },
+      }),
+    );
+    expect(recovered.character).toMatchObject({
+      resourceExpenditures: [],
+      restFeatureUses: [{ tag: "uncannyMetabolism", usedSinceLongRest: true }],
+    });
+    expect(recovered.character.hitPoints.currentHp).toBe(7);
+
+    const unchangedAfterSuccess = root.sessionStore.characters.get(
+      testCharacterId(draftId),
+    );
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(draftId),
+        operation: {
+          kind: "useMonkUncannyMetabolismWhenRollingInitiative",
+          martialArtsRoll: 4,
+        },
+      }),
+    );
+    expect(rejected).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_OPERATION_INVALID",
+        operationKind: "useMonkUncannyMetabolismWhenRollingInitiative",
+        message: "Uncanny Metabolism cannot be used again until a Long Rest.",
+      },
+    });
+    expect(root.sessionStore.characters.get(testCharacterId(draftId))).toBe(
+      unchangedAfterSuccess,
+    );
+  });
+
+  test("apply_character_session_operation exposes both Font of Magic conversion directions", () => {
+    const root = createMcpPlaySessionRoot();
+    const slotToPointsDraftId = "draft:mcp-font-slot-to-points";
+    const slotToPointsBuild = sorcererResourceBuild(root, 3);
+    const slotToPointsSession = availableCharacterSessionRight({
+      characterId: testCharacterId(slotToPointsDraftId),
+      build: slotToPointsBuild,
+      currentHp: Hp(
+        characterBuildMaximumHp(slotToPointsBuild, root.unitLibrary),
+      ),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      unitLibrary: root.unitLibrary,
+      resourceExpenditures: [
+        {
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          expended: resourceCount(3),
+        },
+      ],
+    });
+    root.sessionStore.characters.set(slotToPointsSession);
+
+    const convertedToPoints = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(slotToPointsDraftId),
+        operation: {
+          kind: "convertFontOfMagicSpellSlotToSorceryPoints",
+          spellLevel: 1,
+        },
+      }),
+    );
+    expect(convertedToPoints.character).toMatchObject({
+      spellSlotExpenditures: [{ spellLevel: 1, expended: 1 }],
+      resourceExpenditures: [
+        {
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          expended: 2,
+        },
+      ],
+    });
+
+    const pointsToSlotDraftId = "draft:mcp-font-points-to-slot";
+    const pointsToSlotBuild = sorcererResourceBuild(root, 2);
+    const pointsToSlotSession = availableCharacterSessionRight({
+      characterId: testCharacterId(pointsToSlotDraftId),
+      build: pointsToSlotBuild,
+      currentHp: Hp(
+        characterBuildMaximumHp(pointsToSlotBuild, root.unitLibrary),
+      ),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      unitLibrary: root.unitLibrary,
+    });
+    root.sessionStore.characters.set(pointsToSlotSession);
+
+    const convertedToSlot = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(pointsToSlotDraftId),
+        operation: {
+          kind: "convertFontOfMagicSorceryPointsToSpellSlot",
+          spellLevel: 1,
+        },
+      }),
+    );
+    expect(convertedToSlot.character).toMatchObject({
+      createdSpellSlots: [{ spellLevel: 1, count: 1, expended: 0 }],
+      resourceExpenditures: [
+        {
+          tag: "pointPoolResource",
+          unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+          expended: 2,
+        },
+      ],
+    });
+  });
+
+  test("resource operation rejection leaves an available Character Session unchanged", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-resource-rejection";
+    const build = fighterCharacterBuild(root.unitLibrary);
+    const session = availableCharacterSessionRight({
+      characterId: testCharacterId(draftId),
+      build,
+      currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      unitLibrary: root.unitLibrary,
+    });
+    root.sessionStore.characters.set(session);
+
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(draftId),
+        operation: {
+          kind: "convertFontOfMagicSorceryPointsToSpellSlot",
+          spellLevel: 1,
+        },
+      }),
+    );
+    expect(rejected).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_OPERATION_INVALID",
+        operationKind: "convertFontOfMagicSorceryPointsToSpellSlot",
+        message:
+          "Font of Magic Spell Slot creation requires the Sorcerer Font of Magic feature.",
+      },
+    });
+    expect(root.sessionStore.characters.get(testCharacterId(draftId))).toBe(
+      session,
+    );
   });
 
   test("apply_character_session_operation rejects a durable companion id used by another character", () => {
@@ -8019,6 +8278,51 @@ function characterBuildForClassProgression(input: {
           input.keepClassChoices || feature.kind !== "selectedClassChoice",
       ),
     ],
+  };
+}
+
+function resourceClassBuild(
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
+  classUnitIdText: "class_monk" | "class_sorcerer",
+  level: number,
+): CharacterBuild {
+  const classUnit = root.unitLibrary.requireUnit(classUnitIdText);
+  if (classUnit.kind !== "class") {
+    throw new Error(`Expected class Unit: ${classUnitIdText}`);
+  }
+  return characterBuildForClassProgression({
+    base: fighterCharacterBuild(root.unitLibrary),
+    classUnit,
+    level,
+    keepClassChoices: false,
+  });
+}
+
+function sorcererResourceBuild(
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
+  level: number,
+): CharacterBuild {
+  const build = resourceClassBuild(root, "class_sorcerer", level);
+  return {
+    ...build,
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: unitId("class_sorcerer"),
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 3 }],
+        },
+      },
+    },
   };
 }
 

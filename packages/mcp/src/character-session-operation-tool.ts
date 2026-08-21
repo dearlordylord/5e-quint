@@ -14,6 +14,12 @@ import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { AvailableCharacterSession } from "./session-store.ts";
 import { CharacterSessionOperationOutputSchema } from "./character-tool-output.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
+import {
+  convertFontOfMagicSorceryPointsToSpellSlotOperation,
+  convertFontOfMagicSpellSlotToSorceryPointsOperation,
+  spendSpellAccessFreeCastOperation,
+  useMonkUncannyMetabolismWhenRollingInitiativeOperation,
+} from "./character-session-resource-operation.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
@@ -47,6 +53,40 @@ export function applyCharacterSessionOperation(
         session,
         operation,
       }),
+    ),
+    Match.when({ kind: "spendSpellAccessFreeCast" }, (operation) =>
+      spendSpellAccessFreeCastOperation(root, {
+        characterId: input.characterId,
+        session,
+        operation,
+      }),
+    ),
+    Match.when(
+      { kind: "useMonkUncannyMetabolismWhenRollingInitiative" },
+      (operation) =>
+        useMonkUncannyMetabolismWhenRollingInitiativeOperation(root, {
+          characterId: input.characterId,
+          session,
+          operation,
+        }),
+    ),
+    Match.when(
+      { kind: "convertFontOfMagicSpellSlotToSorceryPoints" },
+      (operation) =>
+        convertFontOfMagicSpellSlotToSorceryPointsOperation(root, {
+          characterId: input.characterId,
+          session,
+          operation,
+        }),
+    ),
+    Match.when(
+      { kind: "convertFontOfMagicSorceryPointsToSpellSlot" },
+      (operation) =>
+        convertFontOfMagicSorceryPointsToSpellSlotOperation(root, {
+          characterId: input.characterId,
+          session,
+          operation,
+        }),
     ),
     Match.exhaustive,
   );

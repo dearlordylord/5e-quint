@@ -8,7 +8,10 @@ import {
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
 } from "@dnd/character-creation-runtime";
-import type { CharacterSheetRetainedCompanionManifestation } from "@dnd/character-sheet-runtime";
+import {
+  FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES,
+  type CharacterSheetRetainedCompanionManifestation,
+} from "@dnd/character-sheet-runtime";
 import { Schema } from "effect";
 
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
@@ -237,8 +240,37 @@ export const ListCharactersOutputSchema = Schema.Struct({
   characters: Schema.Array(CharacterSessionRowSchema),
   session: McpSessionSummarySchema,
 });
+const CharacterSessionResourceOperationResultSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("spellAccessFreeCastSpent"),
+    sourceUnitId: Schema.String,
+    spellId: Schema.String,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("monkUncannyMetabolismUsed"),
+    martialArtsRoll: PositiveIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("fontOfMagicSpellSlotConvertedToSorceryPoints"),
+    spellLevel: PositiveIntegerSchema,
+    spellSlotSource: Schema.optionalWith(
+      Schema.Literal(...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
+      { exact: true },
+    ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("fontOfMagicSorceryPointsConvertedToSpellSlot"),
+    spellLevel: PositiveIntegerSchema,
+  }),
+);
+export type CharacterSessionResourceOperationResult = Schema.Schema.Type<
+  typeof CharacterSessionResourceOperationResultSchema
+>;
 export const CharacterSessionOperationOutputSchema = Schema.Struct({
   character: JsonObjectSchema,
+  result: Schema.optionalWith(CharacterSessionResourceOperationResultSchema, {
+    exact: true,
+  }),
   session: McpSessionSummarySchema,
 });
 

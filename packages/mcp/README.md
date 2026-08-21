@@ -97,6 +97,13 @@ The character-creation tool boundary exposes these user-facing tools:
   character is in Battle, the exact `inBattle` variant contains only the stable
   Character Build and Battle ownership identifiers; it never serializes the
   pre-Battle sheet's mutable Hit Points, conditions, or expenditures as current.
+- `apply_character_session_operation` exposes one discriminated mutation surface
+  for supported out-of-Battle Character Sheet operations. It can spend a
+  Spell Access free cast, use Monk Uncanny Metabolism with a caller- or
+  roller-supplied Martial Arts die face, and convert Font of Magic Spell Slots
+  and Sorcery Points in either direction. Each variant accepts only the facts
+  required by its canonical runtime operation; MCP does not calculate a feature
+  result, add a generic resource engine, or store a second resource balance.
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
