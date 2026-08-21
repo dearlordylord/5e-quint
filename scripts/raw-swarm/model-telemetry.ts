@@ -14,6 +14,7 @@ import {
   GitShaSchema,
   isJsonRecord,
   ScenarioIdSchema,
+  StartedAtSchema,
   type GitSha,
   type ScenarioId,
 } from "./transcript.ts";
@@ -292,7 +293,7 @@ export const CurrentModelInvocationLedgerEntrySchema = Schema.Struct({
   eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
   phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
   stagePlanReason: Schema.NonEmptyTrimmedString,
-  startedAt: Schema.NonEmptyString,
+  startedAt: StartedAtSchema,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: ModelInvocationExitSchema,
   result: ModelInvocationResultSchema,
@@ -369,7 +370,7 @@ const CurrentModelInvocationStartedEventSchema = Schema.Struct({
   fallbackInvocationId: Schema.NonEmptyString,
   model: Schema.NonEmptyString,
   reasoningEffort: Schema.NonEmptyString,
-  startedAt: Schema.NonEmptyString,
+  startedAt: StartedAtSchema,
 }).pipe(
   Schema.filter(invocationSubjectMatchesPhase, {
     message: () => "Invocation subject must match its lifecycle phase.",

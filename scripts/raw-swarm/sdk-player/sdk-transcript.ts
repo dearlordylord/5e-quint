@@ -51,7 +51,7 @@ const ReadyCharacterFields = {
   setupSha256: HashSchema,
   setupObservation: Schema.Unknown,
 } as const;
-const HeaderSchema = Schema.Union(
+export const SdkPlayerTranscriptHeaderSchema = Schema.Union(
   Schema.Struct({
     ...ReadyCharacterFields,
     setupOutcome: Schema.Literal("ready"),
@@ -110,7 +110,9 @@ const CallSchema = Schema.Union(
   }),
 );
 
-type SdkTranscriptHeader = Schema.Schema.Type<typeof HeaderSchema>;
+type SdkTranscriptHeader = Schema.Schema.Type<
+  typeof SdkPlayerTranscriptHeaderSchema
+>;
 export type SdkCallRecord = Schema.Schema.Type<typeof CallSchema>;
 
 export type ReadySdkTranscriptHeader = Omit<
@@ -267,7 +269,7 @@ export function parseSdkTranscript(
   records: readonly unknown[],
 ): ParseResult<ParsedSdkTranscript> {
   const [headerInput, ...callInputs] = records;
-  const header = Schema.decodeUnknownEither(HeaderSchema, {
+  const header = Schema.decodeUnknownEither(SdkPlayerTranscriptHeaderSchema, {
     onExcessProperty: "error",
   })(headerInput);
   if (Either.isLeft(header)) {

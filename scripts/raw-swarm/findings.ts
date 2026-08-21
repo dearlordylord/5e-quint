@@ -36,6 +36,8 @@ import {
   isJsonRecord,
   repoRoot,
   sha256Canonical,
+  StartedAtSchema,
+  type StartedAt,
 } from "./transcript.ts";
 import {
   RetainedScenarioReviewInputSchema,
@@ -167,7 +169,7 @@ export type Finding = Schema.Schema.Type<typeof FindingSchema>;
 
 const FindingsSubjectCommonFields = {
   gitSha: GitShaSchema,
-  startedAt: Schema.NonEmptyTrimmedString,
+  startedAt: StartedAtSchema,
 } as const;
 
 const FindingsSdkCallsSchema = Schema.Union(
@@ -264,7 +266,7 @@ export type Source = {
 type ParsedRun = {
   readonly scenarioId: ScenarioId;
   readonly gitSha: GitSha;
-  readonly startedAt: string;
+  readonly startedAt: StartedAt;
   readonly scenarioSha256?: string;
   readonly scenarioReviewSha256?: string;
   readonly transcriptSha256: string;

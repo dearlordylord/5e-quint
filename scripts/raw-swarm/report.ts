@@ -41,6 +41,7 @@ import {
   isJsonRecord,
   repoRoot,
   sha256Canonical,
+  StartedAtSchema,
 } from "./transcript.ts";
 import {
   EvidenceSetIdSchema,
@@ -311,7 +312,7 @@ const PersistedExecutionIdentitySchema = Schema.Struct({
   evidenceSetId: EvidenceSetIdSchema,
   scenarioId: ScenarioIdSchema,
   gitSha: GitShaSchema,
-  startedAt: Schema.String,
+  startedAt: StartedAtSchema,
   transcriptSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
 });
 type PersistedExecutionIdentity = Schema.Schema.Type<
@@ -330,7 +331,7 @@ const PersistedCampaignAuditSchema = Schema.Struct({
   plannedScenarioId: PlannedScenarioIdSchema,
   evidenceSetId: EvidenceSetIdSchema,
   gitSha: GitShaSchema,
-  startedAt: Schema.String,
+  startedAt: StartedAtSchema,
   findingsPath: Schema.String,
 });
 

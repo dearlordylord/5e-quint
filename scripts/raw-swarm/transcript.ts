@@ -85,6 +85,7 @@ export const StartedAtSchema = Schema.String.pipe(
   ),
   Schema.brand("RawSwarmStartedAt"),
 );
+export type StartedAt = Schema.Schema.Type<typeof StartedAtSchema>;
 
 const TranscriptHeaderSchema = Schema.Struct({
   type: Schema.Literal("header"),

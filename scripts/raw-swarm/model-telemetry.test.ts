@@ -88,6 +88,48 @@ describe("Raw Swarm model invocation telemetry", () => {
     ).toMatchObject({ _tag: "Right" });
   });
 
+  test("requires canonical startedAt values for current v4 telemetry", () => {
+    const startedAt = "2026-08-19";
+    const common = {
+      schemaVersion: 4 as const,
+      invocationId: "synthetic-invocation",
+      model: "gpt-5.6-luna",
+      reasoningEffort: "max",
+      gitSha: "a".repeat(40),
+      eventsSha256: "b".repeat(64),
+      phase: "scenarioGeneration" as const,
+      stagePlanReason: "The campaign requires scenario generation.",
+      startedAt,
+      elapsedMilliseconds: 1,
+      exit: { tag: "exited" as const, status: 0 },
+      result: { tag: "succeeded" as const },
+      usage: { tag: "unavailable" as const, reason: "synthetic" },
+      subject: {
+        tag: "scenarioCampaign" as const,
+        campaignId: "synthetic-campaign",
+        evidenceSetId: "synthetic-evidence",
+        plannedScenarioId: "synthetic-scenario",
+      },
+    };
+    expect(
+      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntrySchema, {
+        onExcessProperty: "error",
+      })(common),
+    ).toMatchObject({ _tag: "Left" });
+    expect(
+      modelInvocationStartedEvent({
+        subject: common.subject,
+        gitSha: common.gitSha,
+        phase: common.phase,
+        stagePlanReason: common.stagePlanReason,
+        fallbackInvocationId: "synthetic-fallback",
+        model: common.model,
+        reasoningEffort: common.reasoningEffort,
+        startedAt,
+      }),
+    ).toMatchObject({ _tag: "Left" });
+  });
+
   test("retains the first-party failure reason instead of only the process status", () => {
     const failureEvents = [
       { type: "error", message: "Synthetic wrapper failure." },
@@ -181,7 +223,12 @@ describe("Raw Swarm model invocation telemetry", () => {
     const temporaryRoot = mkdtempSync(resolve(tmpdir(), "dnd-telemetry-cli-"));
     const eventsPath = resolve(temporaryRoot, "events.jsonl");
     const ledgerPath = resolve(temporaryRoot, "ledger.jsonl");
-    const args = (status: number) => [
+    const args = (
+      status: number,
+      startedAt = "2026-08-19T00:00:00.000Z",
+      eventFile = eventsPath,
+      ledgerFile = ledgerPath,
+    ) => [
       "exec",
       "tsx",
       modelTelemetryCli,
@@ -196,15 +243,15 @@ describe("Raw Swarm model invocation telemetry", () => {
       "--git-sha",
       "a".repeat(40),
       "--events",
-      eventsPath,
+      eventFile,
       "--ledger",
-      ledgerPath,
+      ledgerFile,
       "--model",
       "gpt-5.6-luna",
       "--reasoning-effort",
       "max",
       "--started-at",
-      "2026-08-19T00:00:00.000Z",
+      startedAt,
       "--elapsed-ms",
       "10",
       "--shell-status",
@@ -230,6 +277,29 @@ describe("Raw Swarm model invocation telemetry", () => {
           reason: "Synthetic service capacity is exhausted.",
         },
       });
+
+      const invalidEventsPath = resolve(temporaryRoot, "invalid-events.jsonl");
+      const invalidLedgerPath = resolve(temporaryRoot, "invalid-ledger.jsonl");
+      writeFileSync(
+        invalidEventsPath,
+        `${JSON.stringify({
+          type: "turn.failed",
+          error: { message: "Synthetic malformed timestamp input." },
+        })}\n`,
+      );
+      const invalidStartedAt = spawnSync(
+        "pnpm",
+        args(1, "2026-08-19", invalidEventsPath, invalidLedgerPath),
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+        },
+      );
+      expect(invalidStartedAt.status).not.toBe(0);
+      expect(`${invalidStartedAt.stdout}${invalidStartedAt.stderr}`).toContain(
+        "startedAt must be a canonical ISO timestamp",
+      );
+      expect(existsSync(invalidLedgerPath)).toBe(false);
 
       rmSync(eventsPath);
       rmSync(ledgerPath);

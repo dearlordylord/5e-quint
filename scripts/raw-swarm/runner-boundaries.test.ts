@@ -12,9 +12,12 @@ import {
 import { relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, test } from "vitest";
+import { Either, Schema } from "effect";
 
+import { ExecutionStartRecordSchema } from "./evidence-manifests.ts";
 import { repoRoot } from "./transcript.ts";
 import { PLAYER_CONTINUATION_PROTOCOL_REMINDER } from "./sdk-player/continuation-contract.ts";
+import { SdkPlayerTranscriptHeaderSchema } from "./sdk-player/sdk-transcript.ts";
 
 const recorder = resolve(repoRoot, "scripts/raw-swarm/mcp-recording-shim.ts");
 const launcher = resolve(repoRoot, "scripts/raw-swarm/run-freeplay.ts");
@@ -355,15 +358,37 @@ esac
           PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
         },
       );
-      const executionStart = JSON.parse(
+      const executionStartInput: unknown = JSON.parse(
         readFileSync(resolve(output, "evidence/execution-start.json"), "utf8"),
-      ) as { readonly startedAt: string };
-      const transcriptHeader = JSON.parse(
+      );
+      const executionStart = Schema.decodeUnknownEither(
+        ExecutionStartRecordSchema,
+        { onExcessProperty: "error" },
+      )(executionStartInput);
+      expect(Either.isRight(executionStart)).toBe(true);
+      if (Either.isLeft(executionStart)) {
+        throw new Error(
+          `Invalid execution-start evidence: ${executionStart.left.message}`,
+        );
+      }
+      const transcriptHeaderInput: unknown = JSON.parse(
         readFileSync(resolve(output, "evidence/sdk-calls.jsonl"), "utf8")
           .trim()
           .split("\n")[0]!,
-      ) as { readonly startedAt: string };
-      expect(transcriptHeader.startedAt).toBe(executionStart.startedAt);
+      );
+      const transcriptHeader = Schema.decodeUnknownEither(
+        SdkPlayerTranscriptHeaderSchema,
+        { onExcessProperty: "error" },
+      )(transcriptHeaderInput);
+      expect(Either.isRight(transcriptHeader)).toBe(true);
+      if (Either.isLeft(transcriptHeader)) {
+        throw new Error(
+          `Invalid SDK transcript header: ${transcriptHeader.left.message}`,
+        );
+      }
+      expect(transcriptHeader.right.startedAt).toBe(
+        executionStart.right.startedAt,
+      );
       expect(existsSync(resolve(output, "replay-supervisor.mjs"))).toBe(true);
       expect(
         existsSync(resolve(output, "evidence/findings-checkpoint.json")),

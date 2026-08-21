@@ -13,7 +13,11 @@ import {
   MODEL_INVOCATION_PHASES,
   type ModelInvocationPhase,
 } from "./model-telemetry.ts";
-import { decodeScenarioId, GitShaSchema } from "./transcript.ts";
+import {
+  decodeScenarioId,
+  GitShaSchema,
+  StartedAtSchema,
+} from "./transcript.ts";
 import {
   decodeEvidenceSetId,
   decodeExecutionId,
@@ -52,19 +56,18 @@ const reasoningEffort = flag(args, "--reasoning-effort");
 const stagePlanReason = args.includes("--stage-plan-reason")
   ? flag(args, "--stage-plan-reason")
   : `The ${phase} stage was recorded by the model telemetry boundary.`;
-const startedAt = flag(args, "--started-at");
+const startedAt = Schema.decodeUnknownEither(StartedAtSchema)(
+  flag(args, "--started-at"),
+);
+if (Either.isLeft(startedAt)) fail(startedAt.left.message);
 const elapsedMilliseconds = Number(flag(args, "--elapsed-ms"));
 const shellStatus = Number(flag(args, "--shell-status"));
 if (!Number.isInteger(elapsedMilliseconds) || elapsedMilliseconds < 0) {
   fail("--elapsed-ms must be a nonnegative integer.");
 }
 if (!Number.isInteger(shellStatus)) fail("--shell-status must be an integer.");
-if (
-  model.trim().length === 0 ||
-  reasoningEffort.trim().length === 0 ||
-  !Number.isFinite(Date.parse(startedAt))
-) {
-  fail("Model, reasoning effort, and ISO start time are required.");
+if (model.trim().length === 0 || reasoningEffort.trim().length === 0) {
+  fail("Model and reasoning effort are required.");
 }
 const start = modelInvocationStartedEvent({
   subject: {
@@ -79,7 +82,7 @@ const start = modelInvocationStartedEvent({
   fallbackInvocationId: randomUUID(),
   model,
   reasoningEffort,
-  startedAt,
+  startedAt: startedAt.right,
 });
 if (Either.isLeft(start)) fail(start.left.message);
 const codexEvents = readCodexEvents(eventsPath);
