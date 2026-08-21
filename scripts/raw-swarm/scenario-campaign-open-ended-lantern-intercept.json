@@ -1,0 +1,15 @@
+{
+  "campaignId": "open-ended-lantern-intercept-authoring",
+  "plannedScenarioId": "lantern-intercept-pairwise-control",
+  "scenarioTitle": "Lantern intercept pairwise control",
+  "scenarioPurpose": "Explore a materially distinct supported SDK interaction from the complete admitted catalogue through bounded open-ended variation, without treating randomness as evidence of diversity.",
+  "evidenceSetId": "open-ended-lantern-intercept-authoring-evidence",
+  "distributionPreference": "Open-ended exploration against the complete admitted catalogue. Produce materially distinct, compact, supported-only interactions by varying objective, encounter composition, interaction sequence, and tactical question rather than wording or spatial decoration. Keep every canonical stat block available, all setup and play representable through the current public SDK, and every combatant serious about its own objective. Bounded variation is required; randomness may select among complete candidates but does not prove diversity. Do not prescribe an expected result or add unsupported mechanics.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "supportedOnly",
+  "minimumIterations": 2,
+  "maximumIterations": 4,
+  "candidatesPerIteration": 4,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": true
+}
