@@ -32,8 +32,8 @@ import {
   publishScenarioAdmissionBundle,
   ingestPublishedScenarioAdmissionBundle,
   rollbackScenarioAdmissionBundle,
+  rollbackScenarioRejectionBundle,
   publishScenarioRejectionBundle,
-  retainStagedGenerationFindings,
 } from "./generate-scenario.ts";
 import { openArtifactIndex } from "./artifact-index.ts";
 import {
@@ -90,53 +90,87 @@ test("rolls back every admitted path when bundle publication fails", () => {
   }
 });
 
-test("materializes staged generation findings before admission publication", () => {
+test("creates absent admission destination parents before publication", () => {
   const root = mkdtempSync(
-    resolve(repoRoot, "scripts/raw-swarm/.staged-findings-"),
+    resolve(repoRoot, "scripts/raw-swarm/.admission-destination-parent-"),
   );
-  const staged = resolve(root, "staged-findings.json");
-  const campaignPath = resolve(root, "campaign.json");
+  const staged = resolve(root, "staged");
+  const admitted = resolve(root, "admitted");
+  const admittedEvidence = resolve(admitted, "evidence");
+  mkdirSync(staged);
+  mkdirSync(admitted);
+  const names = [
+    "scenario.md",
+    "review.json",
+    "facts.json",
+    "plan.json",
+    "stage-plan-findings.json",
+    "scenario.json",
+    "findings.json",
+  ] as const;
+  for (const name of names) writeFileSync(resolve(staged, name), name);
+  const pair = (name: (typeof names)[number]) =>
+    [
+      resolve(staged, name),
+      name === "findings.json"
+        ? resolve(admittedEvidence, name)
+        : resolve(admitted, name),
+    ] as const;
   try {
-    const campaignValue = {
-      type: "raw-swarm-scenario-campaign" as const,
-      schemaVersion: 1 as const,
-      campaignId: "generation-campaign",
-      plannedScenarioId: "generation-example",
-      evidenceSetId: "generation-evidence",
-      gitSha: "a".repeat(40),
-      startedAt: "2026-08-18T00:00:00.000Z",
-      configSha256: "c".repeat(64),
-    } as const;
-    const campaignBytes = `${JSON.stringify(campaignValue)}\n`;
-    writeFileSync(campaignPath, campaignBytes);
-    const campaignAuthority = {
-      role: "campaign",
-      path: relative(repoRoot, campaignPath),
-      byteLength: Buffer.byteLength(campaignBytes),
-      sha256: createHash("sha256").update(campaignBytes).digest("hex"),
-    };
-    const subject = {
-      tag: "scenarioCampaign" as const,
-      campaignId: campaignValue.campaignId,
-      evidenceSetId: campaignValue.evidenceSetId,
-      plannedScenarioId: campaignValue.plannedScenarioId,
-      gitSha: campaignValue.gitSha,
-      startedAt: campaignValue.startedAt,
-      sdkCalls: { tag: "transcriptFree" as const },
-    };
-    const findings = Schema.decodeUnknownSync(FindingsProjectionSchema)({
-      type: "raw-swarm-findings",
-      schemaVersion: 2,
-      subjectIdentity: sha256Canonical(subject),
-      subject,
-      authorities: [campaignAuthority],
-      findings: [],
+    const publication = publishScenarioAdmissionBundle({
+      prose: pair("scenario.md"),
+      review: pair("review.json"),
+      stageFacts: pair("facts.json"),
+      stagePlan: pair("plan.json"),
+      stagePlanFindings: pair("stage-plan-findings.json"),
+      scenarioRecord: pair("scenario.json"),
+      findings: pair("findings.json"),
     });
+    expect(names.every((name) => existsSync(pair(name)[1]))).toBe(true);
+    rollbackScenarioAdmissionBundle(publication);
+    expect(names.every((name) => existsSync(pair(name)[0]))).toBe(true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
 
-    retainStagedGenerationFindings({ projection: findings, path: staged });
-
-    expect(existsSync(staged)).toBe(true);
-    expect(JSON.parse(readFileSync(staged, "utf8"))).toEqual(findings);
+test("creates absent rejection destination parents before publication", () => {
+  const root = mkdtempSync(
+    resolve(repoRoot, "scripts/raw-swarm/.rejection-destination-parent-"),
+  );
+  const staged = resolve(root, "staged");
+  const rejected = resolve(root, "rejected");
+  const rejectedEvidence = resolve(rejected, "evidence");
+  mkdirSync(staged);
+  mkdirSync(rejected);
+  const names = [
+    "scenario.md",
+    "candidate-review.json",
+    "stage-plan.json",
+    "stage-plan-findings.json",
+    "candidate-rejection.json",
+    "findings.json",
+  ] as const;
+  for (const name of names) writeFileSync(resolve(staged, name), name);
+  const pair = (name: (typeof names)[number]) =>
+    [
+      resolve(staged, name),
+      name === "findings.json"
+        ? resolve(rejectedEvidence, name)
+        : resolve(rejected, name),
+    ] as const;
+  try {
+    const publication = publishScenarioRejectionBundle({
+      prose: pair("scenario.md"),
+      review: pair("candidate-review.json"),
+      stagePlan: pair("stage-plan.json"),
+      stagePlanFindings: pair("stage-plan-findings.json"),
+      candidateRejection: pair("candidate-rejection.json"),
+      findings: pair("findings.json"),
+    });
+    expect(names.every((name) => existsSync(pair(name)[1]))).toBe(true);
+    rollbackScenarioRejectionBundle(publication);
+    expect(names.every((name) => existsSync(pair(name)[0]))).toBe(true);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
