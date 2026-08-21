@@ -381,6 +381,7 @@ export {
 } from "./character-progression-types.ts";
 export {
   advanceCharacterBuildClassLevel,
+  CHARACTER_BUILD_CLASS_LEVEL_GAIN_TAGS,
   applyCharacterBuildWarlockLevelGainWithRoute,
   advanceCharacterBuildFightingStyleReplacementWithRoute,
   classLevelGainWithFightingStyleCantripReplacement,

@@ -5,7 +5,9 @@ import {
   sorcererLevelGain,
   weaponMasteryLevelGain,
   warlockLevelGain,
+  type CharacterBuildAdvancementIssue,
   type CharacterBuildClassLevelGain,
+  type ClassUnitNameIssue,
 } from "@dnd/character-creation-runtime";
 import type { UnitId } from "@dnd/shared/game-facts";
 import { Either, Match } from "effect";
@@ -147,16 +149,10 @@ export function characterBuildClassLevelGainFromTool(
   );
 }
 
-export function runtimeIssueMessage(issue: unknown): string {
-  if (
-    typeof issue === "object" &&
-    issue !== null &&
-    "message" in issue &&
-    typeof issue.message === "string"
-  ) {
-    return issue.message;
-  }
-  return "Character session operation is unsupported by the existing runtime facts.";
+export function runtimeIssueMessage(issue: {
+  readonly message: string;
+}): string {
+  return issue.message;
 }
 
 function parsedClassLevelGain(
@@ -182,12 +178,27 @@ function parsedClassUnitId(root: McpPlaySessionRoot, classUnitId: UnitId) {
     classUnitId,
   });
   return Either.isLeft(parsed)
-    ? Either.left(runtimeIssueMessage(parsed.left))
+    ? Either.left(classUnitIdIssueMessage(parsed.left))
     : Either.right(parsed.right);
 }
 
+function classUnitIdIssueMessage(issue: ClassUnitNameIssue): string {
+  return Match.value(issue).pipe(
+    Match.when(
+      { code: "unknownUnitId" },
+      ({ unitId }) => `Unknown Unit id ${unitId}.`,
+    ),
+    Match.when(
+      { code: "nonClassUnit" },
+      ({ unitId, unitKind }) =>
+        `${unitId} is a ${unitKind} Unit, not a class Unit.`,
+    ),
+    Match.exhaustive,
+  );
+}
+
 function mapRuntimeGain<T>(
-  result: Either.Either<T, unknown>,
+  result: Either.Either<T, CharacterBuildAdvancementIssue>,
 ): Either.Either<T, string> {
   return Either.isLeft(result)
     ? Either.left(runtimeIssueMessage(result.left))

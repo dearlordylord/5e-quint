@@ -2,6 +2,7 @@ import {
   CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
   CharacterSheetRetainedCompanionId,
 } from "@dnd/character-sheet-runtime";
+import { CHARACTER_BUILD_CLASS_LEVEL_GAIN_TAGS } from "@dnd/character-creation-runtime";
 import { TIME_SPAN_UNITS } from "@dnd/shared/elapsed-time";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import { DAMAGE_TYPES } from "@dnd/shared/types";
@@ -229,6 +230,19 @@ const CharacterBuildClassLevelGainSchema = Schema.Union(
   CharacterBuildSorcererMetamagicLevelGainSchema,
   CharacterBuildWarlockLevelGainSchema,
 );
+type CanonicalClassLevelGainTag =
+  (typeof CHARACTER_BUILD_CLASS_LEVEL_GAIN_TAGS)[number];
+type ToolClassLevelGainTag = Schema.Schema.Type<
+  typeof CharacterBuildClassLevelGainSchema
+>["tag"];
+type ClassLevelGainTagSetsMatch = [
+  Exclude<CanonicalClassLevelGainTag, ToolClassLevelGainTag>,
+] extends [never]
+  ? [Exclude<ToolClassLevelGainTag, CanonicalClassLevelGainTag>] extends [never]
+    ? true
+    : false
+  : false;
+void (true satisfies ClassLevelGainTagSetsMatch);
 const AdvanceClassLevelOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("advanceClassLevel"),
   levelGain: CharacterBuildClassLevelGainSchema,

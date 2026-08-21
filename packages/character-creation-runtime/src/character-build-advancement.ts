@@ -244,8 +244,20 @@ export type CharacterBuildClassLevelGain =
   | CharacterBuildFighterFightingStyleReplacementLevelGain
   | CharacterBuildFightingStyleCantripReplacementLevelGain
   | CharacterBuildWeaponMasteryLevelGain
+  | CharacterBuildFighterWeaponMasteryAndFightingStyleReplacementLevelGain
   | CharacterBuildSorcererMetamagicLevelGain
   | CharacterBuildWarlockLevelGain;
+
+export const CHARACTER_BUILD_CLASS_LEVEL_GAIN_TAGS = [
+  "classLevelGain",
+  "classLevelGainWithListPreparedSpellcasting",
+  "fighterLevelGainWithFightingStyleReplacement",
+  "classLevelGainWithFightingStyleCantripReplacement",
+  "classLevelGainWithWeaponMasterySelection",
+  "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement",
+  "sorcererLevelGain",
+  "warlockLevelGain",
+] as const satisfies readonly CharacterBuildClassLevelGain["tag"][];
 
 export type CharacterBuildAdvancementIssue =
   | {
