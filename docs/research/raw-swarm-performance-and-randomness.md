@@ -296,8 +296,8 @@ history.
 
 ### Latest direct-SDK run
 
-The files below are retained under
-[`generated-battle-004-sdk-player`](../../scripts/raw-swarm/out/generated-battle-004-sdk-player/).
+The files below are retained under the ignored evidence path
+`scripts/raw-swarm/out/generated-battle-004-sdk-player/`.
 
 | Artifact                   |                                                                                 Measured value | Interpretation                                                                                             |
 | -------------------------- | ---------------------------------------------------------------------------------------------: | ---------------------------------------------------------------------------------------------------------- |
@@ -337,8 +337,8 @@ inputs.
 
 ### SQLite report store
 
-The retained pre-rebuild database is
-[`player-swarm-legacy.db`](../../scripts/raw-swarm/out/player-swarm-legacy.db).
+The retained pre-rebuild database is the ignored evidence file
+`scripts/raw-swarm/out/player-swarm-legacy.db`.
 Read-only inspection found:
 
 | Fact                                             |                                          Value |
