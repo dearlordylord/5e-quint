@@ -1,8 +1,6 @@
 import {
-  applyInitiativeSwap,
   battleAdmittedSpellPresentations,
   battlePresentedSnapshot,
-  battleStateInitIssueMessage,
   discoverBattleActs,
   type InitialInitiativeSetup,
 } from "@dnd/battle-runtime";
@@ -61,24 +59,14 @@ function applySwap(
     { readonly kind: "applyInitiativeSwap" }
   >,
 ) {
-  // The registry owns the setup. The transform receives that owned value and
-  // may only replace it after the store verifies the battle identity.
-  const transition = root.sessionStore.transformInitialInitiativeSetup(
-    (setup) => {
-      const result = applyInitiativeSwap({
-        setup,
-        sourceId: operation.sourceId,
-        candidateId: operation.candidateId,
-        candidateWitness: operation.candidateWitness,
-      });
-      return Either.mapLeft(result, (issue) =>
-        battleStateInitIssueMessage(issue),
-      );
-    },
-  );
+  const transition = root.sessionStore.applyInitialInitiativeSwap({
+    sourceId: operation.sourceId,
+    candidateId: operation.candidateId,
+    candidateWitness: operation.candidateWitness,
+  });
   if (
     Either.isLeft(transition) &&
-    transition.left.tag === "initialInitiativeSetupTransformRejected"
+    transition.left.tag === "initialInitiativeSwapRejected"
   ) {
     return errorContent("Initiative Swap was rejected.", {
       code: "INITIAL_INITIATIVE_SWAP_REJECTED",

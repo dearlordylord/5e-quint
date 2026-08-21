@@ -152,13 +152,19 @@ export function battleResolutionPayload(
   result: BattleRuntimeResolutionResult,
 ) {
   const presentation = battleResultPresentationProjection(result);
-  return Either.map(presentation, (value) => ({
-    result: battleResolutionResultPayload(result, value.snapshot),
-    ...value,
-    battleState: root.sessionStore.snapshot().battleState,
-    snapshot: value.snapshot,
-    session: root.sessionStore.snapshot(),
-  }));
+  return Either.map(presentation, (value) => {
+    const battleState = battleStateSnapshot(root.sessionStore.battleState);
+    if (battleState.tag !== "activeBattle") {
+      throw new Error("Battle resolution requires an active battle state.");
+    }
+    return {
+      result: battleResolutionResultPayload(result, value.snapshot),
+      ...value,
+      battleState,
+      snapshot: value.snapshot,
+      session: root.sessionStore.snapshot(),
+    };
+  });
 }
 
 function battleResultPresentationProjection(

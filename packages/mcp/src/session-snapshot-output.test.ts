@@ -84,7 +84,12 @@ describe("MCP session wire projections", () => {
       battleId: "battle:projection-contract",
       currentActorId: "combatant:projection-contract",
     } as const;
-    const session = (battleState: typeof setupState | typeof activeState) => ({
+    const session = (
+      battleState:
+        | typeof setupState
+        | typeof activeState
+        | { readonly tag: "none" },
+    ) => ({
       draftIds: [],
       characterIds: [],
       selectedStatBlockId: null,
@@ -109,6 +114,37 @@ describe("MCP session wire projections", () => {
         battleState: activeState,
         snapshot: null,
         session: session(activeState),
+      }).valid,
+    ).toBe(false);
+
+    const validateResolution = new AjvJsonSchemaValidator().getValidator(
+      mcpOutputJsonSchema(BattleResolutionOutputSchema),
+    );
+    const resolutionSession = (
+      battleState:
+        | typeof setupState
+        | typeof activeState
+        | { readonly tag: "none" },
+    ) => ({
+      ...session(battleState),
+      transientBattleFills: null,
+    });
+    expect(
+      validateResolution({
+        ...presentation,
+        battleState: { tag: "none" },
+        result: {},
+        snapshot: {},
+        session: resolutionSession({ tag: "none" }),
+      }).valid,
+    ).toBe(false);
+    expect(
+      validateResolution({
+        ...presentation,
+        battleState: setupState,
+        result: {},
+        snapshot: {},
+        session: resolutionSession(setupState),
       }).valid,
     ).toBe(false);
 

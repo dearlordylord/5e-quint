@@ -404,7 +404,7 @@ export function applyInitiativeSwap(input: {
   readonly sourceId: CombatantId;
   readonly candidateId: CombatantId;
   readonly candidateWitness: InitiativeSwapCandidateWitness;
-}): Either.Either<InitialInitiativeSetup, BattleStateInitIssue> {
+}): Either.Either<void, BattleStateInitIssue> {
   const state = input.setup.state;
   if (!input.setup[InitialInitiativeSetupOpen]) {
     return battleStateInitIssue(
@@ -492,7 +492,7 @@ export function applyInitiativeSwap(input: {
     combatants,
     initiative: initiative.value,
   });
-  return Either.right(input.setup);
+  return Either.right(undefined);
 }
 
 function combatantHasInitiativeProficiencyAndSwap(

@@ -230,7 +230,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
     if (Either.isLeft(result)) {
       throw new Error(battleStateInitIssueMessage(result.left));
     }
-    const state = finishInitialInitiativeSetup(result.right);
+    const state = finishInitialInitiativeSetup(setup);
     expect(initiativeOrder(state.state)).toEqual([
       alertSourceId,
       alertEnemyId,
@@ -272,13 +272,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
     });
 
     expect(Either.isRight(firstSwap)).toBe(true);
-    if (Either.isLeft(firstSwap)) {
-      throw new Error(battleStateInitIssueMessage(firstSwap.left));
-    }
-    expect(firstSwap.right).toBe(setup);
-    expect(
-      firstSwap.right.state.combatants.get(alertSourceId)?.initiative,
-    ).toBe(18);
+    expect(setup.state.combatants.get(alertSourceId)?.initiative).toBe(18);
     const secondSwapFromStaleSetup = applyInitiativeSwap({
       setup,
       sourceId: alertSourceId,
@@ -288,7 +282,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
     expect(Either.isLeft(secondSwapFromStaleSetup)).toBe(true);
 
     const secondSwap = applyInitiativeSwap({
-      setup: firstSwap.right,
+      setup,
       sourceId: alertSourceId,
       candidateId: alertSecondAllyId,
       candidateWitness: { tag: "willingAlly" },

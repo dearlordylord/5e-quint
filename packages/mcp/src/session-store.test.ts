@@ -193,35 +193,20 @@ describe("MCP character sessions", () => {
     expect(store.storeInitialInitiativeSetup(ownedSetup)).toEqual(
       Either.right(undefined),
     );
-    const before = store.battleState;
-    const foreignSetup = expectRight(
-      startBattleWithInitialInitiativeSetup({
-        battleId: battleId("battle:store-transition-foreign"),
-        combatants: [combatant],
-      }),
-    );
-
+    const before = store.snapshot();
     expect(
-      store.transformInitialInitiativeSetup(() => Either.right(foreignSetup)),
+      store.applyInitialInitiativeSwap({
+        sourceId: combatant.combatantId,
+        candidateId: combatant.combatantId,
+        candidateWitness: { tag: "willingAlly" },
+      }),
     ).toEqual(
       Either.left({
-        tag: "battleStateBattleOwnershipConflict",
-        expectedBattleId: "battle:store-transition-owned",
-        actualBattleId: "battle:store-transition-foreign",
+        tag: "initialInitiativeSwapRejected",
+        message: "Initiative Swap requires a distinct willing ally.",
       }),
     );
-    expect(store.battleState).toBe(before);
-    expect(
-      store.transformInitialInitiativeSetup(() =>
-        Either.left("caller callback rejected"),
-      ),
-    ).toEqual(
-      Either.left({
-        tag: "initialInitiativeSetupTransformRejected",
-        message: "caller callback rejected",
-      }),
-    );
-    expect(store.battleState).toBe(before);
+    expect(store.snapshot()).toEqual(before);
 
     const active = expectRight(store.finalizeInitialInitiativeSetup());
     const foreignActive = expectRight(

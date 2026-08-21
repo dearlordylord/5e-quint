@@ -8,8 +8,13 @@ import type {
   BattleRuntimeSession,
   BattleSubject,
   InitialInitiativeSetup,
+  InitiativeSwapCandidateWitness,
 } from "@dnd/battle-runtime";
-import { finishInitialInitiativeSetup } from "@dnd/battle-runtime";
+import {
+  applyInitiativeSwap,
+  battleStateInitIssueMessage,
+  finishInitialInitiativeSetup,
+} from "@dnd/battle-runtime";
 import type { snapshotBattle } from "@dnd/battle-runtime";
 import {
   characterSheetCurrentHp,
@@ -104,10 +109,7 @@ export type McpBattleStateTransitionIssue =
       readonly from: McpBattleState["tag"];
       readonly to: McpBattleState["tag"];
     }
-  | {
-      readonly tag: "initialInitiativeSetupTransformRejected";
-      readonly message: string;
-    }
+  | { readonly tag: "initialInitiativeSwapRejected"; readonly message: string }
   | {
       readonly tag: "battleStateBattleOwnershipConflict";
       readonly expectedBattleId: BattleId;
@@ -160,11 +162,13 @@ export type McpSessionStore = {
   storeInitialInitiativeSetup(
     setup: InitialInitiativeSetup,
   ): Either.Either<void, McpBattleStateTransitionIssue>;
-  transformInitialInitiativeSetup(
-    transform: (
-      setup: InitialInitiativeSetup,
-    ) => Either.Either<InitialInitiativeSetup, string>,
-  ): Either.Either<void, McpBattleStateTransitionIssue>;
+  applyInitialInitiativeSwap(input: {
+    readonly sourceId: Parameters<typeof applyInitiativeSwap>[0]["sourceId"];
+    readonly candidateId: Parameters<
+      typeof applyInitiativeSwap
+    >[0]["candidateId"];
+    readonly candidateWitness: InitiativeSwapCandidateWitness;
+  }): Either.Either<void, McpBattleStateTransitionIssue>;
   finalizeInitialInitiativeSetup(): Either.Either<
     BattleRuntimeSession,
     McpBattleStateTransitionIssue
@@ -256,30 +260,23 @@ export function createMcpSessionStore(
       battleState = { tag: "initialInitiativeSetup", setup };
       return Either.right(undefined);
     },
-    transformInitialInitiativeSetup(transform) {
+    applyInitialInitiativeSwap(input) {
       if (battleState.tag !== "initialInitiativeSetup") {
         return invalidBattleStateTransition(
           battleState.tag,
           "initialInitiativeSetup",
         );
       }
-      const transformed = transform(battleState.setup);
-      if (Either.isLeft(transformed)) {
+      const swapped = applyInitiativeSwap({
+        setup: battleState.setup,
+        ...input,
+      });
+      if (Either.isLeft(swapped)) {
         return Either.left({
-          tag: "initialInitiativeSetupTransformRejected",
-          message: transformed.left,
+          tag: "initialInitiativeSwapRejected",
+          message: battleStateInitIssueMessage(swapped.left),
         });
       }
-      const expectedBattleId = battleState.setup.state.battleId;
-      const actualBattleId = transformed.right.state.battleId;
-      if (actualBattleId !== expectedBattleId) {
-        return Either.left({
-          tag: "battleStateBattleOwnershipConflict",
-          expectedBattleId,
-          actualBattleId,
-        });
-      }
-      battleState = { tag: "initialInitiativeSetup", setup: transformed.right };
       return Either.right(undefined);
     },
     finalizeInitialInitiativeSetup() {
@@ -287,13 +284,6 @@ export function createMcpSessionStore(
         return invalidBattleStateTransition(battleState.tag, "activeBattle");
       }
       const session = finishInitialInitiativeSetup(battleState.setup);
-      if (session.state.battleId !== battleState.setup.state.battleId) {
-        return Either.left({
-          tag: "battleStateBattleOwnershipConflict",
-          expectedBattleId: battleState.setup.state.battleId,
-          actualBattleId: session.state.battleId,
-        });
-      }
       battleState = { tag: "activeBattle", session };
       return Either.right(session);
     },
