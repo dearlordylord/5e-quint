@@ -25,14 +25,26 @@ export const setupScenario: ScenarioSetup = (context) => {
     ammunitionStocks: [],
   });
 
-  for (const combatant of [ridingHorse, pseudodragon, quasit]) {
-    if (sdk.isLeft(combatant)) {
-      return {
-        kind: "obstructed",
-        obstruction: sdk.battleStateInitIssueMessage(combatant.left),
-        observation: { code: "stat-block-battle-init-rejected" },
-      };
-    }
+  if (sdk.isLeft(ridingHorse)) {
+    return {
+      kind: "obstructed",
+      obstruction: sdk.battleStateInitIssueMessage(ridingHorse.left),
+      observation: { code: "stat-block-battle-init-rejected" },
+    };
+  }
+  if (sdk.isLeft(pseudodragon)) {
+    return {
+      kind: "obstructed",
+      obstruction: sdk.battleStateInitIssueMessage(pseudodragon.left),
+      observation: { code: "stat-block-battle-init-rejected" },
+    };
+  }
+  if (sdk.isLeft(quasit)) {
+    return {
+      kind: "obstructed",
+      obstruction: sdk.battleStateInitIssueMessage(quasit.left),
+      observation: { code: "stat-block-battle-init-rejected" },
+    };
   }
 
   const battle = sdk.startBattle({
