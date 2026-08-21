@@ -53,11 +53,24 @@ export type CharacterSession =
   | AvailableCharacterSession
   | InBattleCharacterSession;
 
+export type CharacterSessionRegistryIssue =
+  | {
+      readonly tag: "duplicateCharacterSession";
+      readonly characterId: CharacterId;
+    }
+  | {
+      readonly tag: "unknownCharacterSession";
+      readonly characterId: CharacterId;
+    };
+
 export type CharacterSessionRegistry = {
   readonly size: number;
   get(characterId: CharacterId): CharacterSession | undefined;
   has(characterId: CharacterId): boolean;
   set(session: CharacterSession): void;
+  setAll(
+    sessions: readonly CharacterSession[],
+  ): Either.Either<void, CharacterSessionRegistryIssue>;
   entries(): IterableIterator<readonly [CharacterId, CharacterSession]>;
   keys(): IterableIterator<CharacterId>;
 };
@@ -185,7 +198,7 @@ export function createMcpSessionStore(
 }
 
 function characterSessionRegistry(): CharacterSessionRegistry {
-  const sessions = new Map<CharacterId, CharacterSession>();
+  let sessions = new Map<CharacterId, CharacterSession>();
   return {
     get size() {
       return sessions.size;
@@ -198,6 +211,31 @@ function characterSessionRegistry(): CharacterSessionRegistry {
     },
     set(session: CharacterSession): void {
       sessions.set(characterSessionId(session), session);
+    },
+    setAll(nextSessions: readonly CharacterSession[]) {
+      const nextIds = new Set<CharacterId>();
+      for (const session of nextSessions) {
+        const id = characterSessionId(session);
+        if (nextIds.has(id)) {
+          return Either.left({
+            tag: "duplicateCharacterSession",
+            characterId: id,
+          } satisfies CharacterSessionRegistryIssue);
+        }
+        if (!sessions.has(id)) {
+          return Either.left({
+            tag: "unknownCharacterSession",
+            characterId: id,
+          } satisfies CharacterSessionRegistryIssue);
+        }
+        nextIds.add(id);
+      }
+      const next = new Map(sessions);
+      for (const session of nextSessions) {
+        next.set(characterSessionId(session), session);
+      }
+      sessions = next;
+      return Either.right(undefined);
     },
     entries(): IterableIterator<readonly [CharacterId, CharacterSession]> {
       return sessions.entries();

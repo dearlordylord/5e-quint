@@ -1,7 +1,9 @@
 import {
   CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
   CharacterSheetRetainedCompanionId,
+  FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES,
 } from "@dnd/character-sheet-runtime";
+import { CharacterIdSchema, type CharacterId } from "@dnd/battle-runtime";
 import { CharacterBuildClassLevelGainSchema } from "@dnd/character-creation-runtime";
 import { TIME_SPAN_UNITS } from "@dnd/shared/elapsed-time";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
@@ -17,6 +19,64 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
 );
+
+const RestRecoveryArgsFields = {
+  spendHitDice: Schema.optionalWith(
+    Schema.Array(
+      Schema.Struct({
+        classUnitId: UnitId,
+        roll: PositiveIntegerSchema,
+      }),
+    ),
+    { exact: true },
+  ),
+  arcaneRecovery: Schema.optionalWith(
+    Schema.Struct({
+      refundSpellSlots: Schema.Array(
+        Schema.Struct({
+          spellLevel: Schema.Number.pipe(
+            Schema.int(),
+            Schema.greaterThanOrEqualTo(1),
+            Schema.lessThanOrEqualTo(9),
+          ),
+          count: NonNegativeIntegerSchema,
+        }),
+      ),
+    }),
+    { exact: true },
+  ),
+  sorcerousRestoration: Schema.optionalWith(
+    Schema.Struct({
+      recoverSorceryPoints: NonNegativeIntegerSchema,
+    }),
+    { exact: true },
+  ),
+} as const;
+
+const LayOnHandsOperationArgsSchema = Schema.Struct({
+  kind: Schema.Literal("applyLayOnHands"),
+  targetCharacterId: CharacterIdSchema,
+  restoreHp: NonNegativeIntegerSchema,
+  removePoisoned: Schema.Boolean,
+});
+const SpellRestBenefitRecipientArgsSchema = Schema.Struct({
+  characterId: CharacterIdSchema,
+  eligibility: Schema.Struct({
+    remainedWithinRangeForEntireCasting: Schema.Literal(true),
+  }),
+  healingRolls: Schema.Array(PositiveIntegerSchema),
+  ...RestRecoveryArgsFields,
+});
+const SpellRestBenefitOperationArgsSchema = Schema.Struct({
+  kind: Schema.Literal("applySpellRestBenefit"),
+  spellId: UnitId,
+  castLevel: PositiveIntegerSchema.pipe(Schema.lessThanOrEqualTo(9)),
+  spellSlotSource: Schema.optionalWith(
+    Schema.Literal(...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
+    { exact: true },
+  ),
+  recipients: Schema.NonEmptyArray(SpellRestBenefitRecipientArgsSchema),
+});
 
 const RetainedCompanionNormalFormSelectionArgsSchema = Schema.Struct({
   tag: Schema.Literal("normalNamedForm"),
@@ -97,39 +157,6 @@ const ReplaceDruidWildShapeKnownFormOperationArgsSchema = Schema.Struct({
     selectedStatBlockId: StatBlockId,
   }),
 });
-
-const RestRecoveryArgsFields = {
-  spendHitDice: Schema.optionalWith(
-    Schema.Array(
-      Schema.Struct({
-        classUnitId: UnitId,
-        roll: PositiveIntegerSchema,
-      }),
-    ),
-    { exact: true },
-  ),
-  arcaneRecovery: Schema.optionalWith(
-    Schema.Struct({
-      refundSpellSlots: Schema.Array(
-        Schema.Struct({
-          spellLevel: Schema.Number.pipe(
-            Schema.int(),
-            Schema.greaterThanOrEqualTo(1),
-            Schema.lessThanOrEqualTo(9),
-          ),
-          count: NonNegativeIntegerSchema,
-        }),
-      ),
-    }),
-    { exact: true },
-  ),
-  sorcerousRestoration: Schema.optionalWith(
-    Schema.Struct({
-      recoverSorceryPoints: NonNegativeIntegerSchema,
-    }),
-    { exact: true },
-  ),
-} as const;
 
 const LongRestTimingArgsSchema = Schema.Union(
   Schema.Struct({
@@ -240,6 +267,8 @@ const PassCalendarTimeOperationArgsSchema = Schema.Struct({
 });
 const CharacterSessionOperationArgsSchema = Schema.Union(
   RetainOneAtATimeCompanionOperationArgsSchema,
+  LayOnHandsOperationArgsSchema,
+  SpellRestBenefitOperationArgsSchema,
   AdvanceClassLevelOperationArgsSchema,
   ReplaceDruidWildShapeKnownFormOperationArgsSchema,
   CompleteShortRestOperationArgsSchema,
@@ -250,7 +279,7 @@ const CharacterSessionOperationArgsSchema = Schema.Union(
 );
 
 export const ApplyCharacterSessionOperationArgsSchema = Schema.Struct({
-  characterId: Schema.String,
+  characterId: CharacterIdSchema,
   operation: CharacterSessionOperationArgsSchema,
 });
 
@@ -261,6 +290,6 @@ type CharacterSessionOperationArgs =
   ApplyCharacterSessionOperationArgs["operation"];
 
 export type ApplyCharacterSessionOperationToolInput = {
-  readonly characterId: string;
+  readonly characterId: CharacterId;
   readonly operation: CharacterSessionOperationArgs;
 };

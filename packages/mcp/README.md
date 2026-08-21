@@ -133,6 +133,9 @@ The character-creation tool boundary exposes these user-facing tools:
   separate rest state machine. A resumed Long Rest's required duration includes
   one additional hour for every interruption; the final cumulative boundary
   must also provide that full required duration.
+  The same atomic operation surface routes Lay On Hands and supported spell
+  rest benefits across available Character Sessions; multi-recipient healing
+  validates every affected session before committing any of them.
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core

@@ -26,6 +26,10 @@ import {
   applyInterruptLongRestOperation,
   applyInterruptShortRestOperation,
 } from "./character-session-rest-operation.ts";
+import {
+  applyLayOnHandsOperation,
+  applySpellRestBenefitOperation,
+} from "./character-session-healing-operation.ts";
 import { applyPassCalendarTimeOperation } from "./character-session-calendar-operation.ts";
 import {
   characterBuildClassLevelGainFromTool,
@@ -65,6 +69,20 @@ export function applyCharacterSessionOperation(
   return Match.value(input.operation).pipe(
     Match.when({ kind: "retainOneAtATimeCompanion" }, (operation) =>
       applyRetainOneAtATimeCompanionOperation(root, {
+        characterId: input.characterId,
+        session,
+        operation,
+      }),
+    ),
+    Match.when({ kind: "applyLayOnHands" }, (operation) =>
+      applyLayOnHandsOperation(root, {
+        characterId: input.characterId,
+        session,
+        operation,
+      }),
+    ),
+    Match.when({ kind: "applySpellRestBenefit" }, (operation) =>
+      applySpellRestBenefitOperation(root, {
         characterId: input.characterId,
         session,
         operation,

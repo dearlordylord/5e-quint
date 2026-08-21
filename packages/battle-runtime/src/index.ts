@@ -30,6 +30,7 @@ export {
   battleReplayStackDepth,
   battleSpellEffectOccurrenceId,
   battleTablePositionId,
+  CharacterIdSchema,
   characterId,
   combatantId,
   initiativeScore,

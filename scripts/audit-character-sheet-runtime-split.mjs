@@ -22,6 +22,7 @@ const EXPECTED_EXPORTS = [
   "CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES",
   "CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES",
   "CHARACTER_SHEET_SHORT_REST_TICKS",
+  "FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES",
   "CharacterPactSlotExpenditure",
   "CharacterSheet",
   "CharacterSheetAbilityCheckAbility",
@@ -248,6 +249,11 @@ const EXPECTED_MOVED_FUNCTIONS = [
   },
 ];
 const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
+  {
+    name: "FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES",
+    reason:
+      "Character Sheet owns the fixed Font of Magic spell-slot source vocabulary; exporting its canonical values lets MCP validate healing inputs without a parallel registry.",
+  },
   {
     name: "CharacterSheetWithSpellSlots",
     reason:

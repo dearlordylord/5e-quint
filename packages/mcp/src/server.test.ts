@@ -3695,6 +3695,7 @@ describe("MCP server route", () => {
           has: () => false,
           keys: function* () {},
           set: () => {},
+          setAll: () => Either.right(undefined),
         },
       },
     };

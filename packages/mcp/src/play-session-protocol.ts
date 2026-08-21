@@ -67,6 +67,9 @@ export async function handleReadPlaySession(
 
   const result = await registry.run(routed.right.playSessionId, (root) => ({
     projection: root.sessionStore.snapshot(),
+    hasAvailableCharacterSession: Array.from(
+      root.sessionStore.characters.entries(),
+    ).some(([, session]) => session.tag !== "inBattle"),
   }));
   return Either.isLeft(result)
     ? unavailableEnvelope(routed.right.playSessionId, playSessionToolNames.read)
@@ -78,6 +81,7 @@ export async function handleReadPlaySession(
           playSessionId: routed.right.playSessionId,
         },
         projection: result.right.projection,
+        hasAvailableCharacterSession: result.right.hasAvailableCharacterSession,
       });
 }
 
@@ -98,6 +102,9 @@ export async function handlePlaySessionOperation(input: {
     async (root) => ({
       operationContent: await input.handle(root, routed.right.operationArgs),
       projection: root.sessionStore.snapshot(),
+      hasAvailableCharacterSession: Array.from(
+        root.sessionStore.characters.entries(),
+      ).some(([, session]) => session.tag !== "inBattle"),
     }),
   );
   if (Either.isLeft(result)) {
@@ -119,6 +126,7 @@ export async function handlePlaySessionOperation(input: {
         ? operationContent.structuredContent
         : jsonContentPayload(operationContent),
     projection: result.right.projection,
+    hasAvailableCharacterSession: result.right.hasAvailableCharacterSession,
     isError: operationContent.isError === true,
   });
 }
@@ -180,6 +188,7 @@ function availableEnvelope(input: {
   readonly operationName: PlaySessionOperationName;
   readonly operationResult: unknown;
   readonly projection: McpSessionSnapshot;
+  readonly hasAvailableCharacterSession?: boolean;
   readonly isError?: boolean;
 }): PlaySessionProtocolResult {
   const unresolvedInputs = unresolvedInputsFrom(input.operationResult);
@@ -196,6 +205,7 @@ function availableEnvelope(input: {
       input.operationName,
       input.projection,
       unresolvedInputs,
+      input.hasAvailableCharacterSession === true,
     ),
     restoration: { tag: "retained" },
   });
@@ -268,6 +278,7 @@ function nextOperationsFrom(
   operationName: PlaySessionOperationName,
   projection: McpSessionSummary,
   unresolvedInputs: readonly UnresolvedInputGroup[],
+  hasAvailableCharacterSession: boolean,
 ): readonly PlaySessionNextOperationName[] {
   if (projection.activeBattle !== null) {
     if (operationName === playSessionToolNames.read) {
@@ -304,6 +315,9 @@ function nextOperationsFrom(
       characterToolNames.inspectCharacterSession,
       characterToolNames.queryCharacterSession,
       battleToolNames.startBattle,
+      ...(hasAvailableCharacterSession
+        ? [characterToolNames.applyCharacterSessionOperation]
+        : []),
       characterToolNames.createCharacterDraft,
     ];
   }

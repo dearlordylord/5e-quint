@@ -276,6 +276,18 @@ export const CharacterSessionOperationResultSchema = Schema.Union(
     reason: Schema.Literal("invalidFill"),
     message: Schema.String,
   }),
+  Schema.Struct({
+    tag: Schema.Literal("layOnHandsApplied"),
+    sourceCharacterId: Schema.String,
+    targetCharacterId: Schema.String,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("spellRestBenefitApplied"),
+    casterCharacterId: Schema.String,
+    spellId: Schema.String,
+    castLevel: PositiveIntegerSchema,
+    recipientCharacterIds: Schema.NonEmptyArray(Schema.String),
+  }),
 );
 const CharacterSessionSheetProjectionSchema = Schema.Struct({
   currentHp: NonNegativeIntegerSchema,
