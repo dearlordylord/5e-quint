@@ -244,7 +244,6 @@ export type CharacterBuildClassLevelGain =
   | CharacterBuildFighterFightingStyleReplacementLevelGain
   | CharacterBuildFightingStyleCantripReplacementLevelGain
   | CharacterBuildWeaponMasteryLevelGain
-  | CharacterBuildFighterWeaponMasteryAndFightingStyleReplacementLevelGain
   | CharacterBuildSorcererMetamagicLevelGain
   | CharacterBuildWarlockLevelGain;
 
