@@ -5,6 +5,8 @@ const SemanticIdentitySchema = Schema.String.pipe(
   Schema.pattern(/^[a-z0-9][a-z0-9-]*$/),
 );
 
+const HISTORICAL_GENERATED_BATTLE_PREFIX = "generated-battle";
+
 export const ScenarioCampaignIdSchema = SemanticIdentitySchema.pipe(
   Schema.brand("RawSwarmScenarioCampaignId"),
 );
@@ -20,10 +22,13 @@ export type ScenarioCandidateId = Schema.Schema.Type<
 >;
 
 export const ScenarioIdSchema = SemanticIdentitySchema.pipe(
-  Schema.filter((value) => !/^generated-battle-[0-9]+$/.test(value), {
-    message: () =>
-      "scenario id must be semantic; generated-battle sequence ids are evidence history, not scenario identity",
-  }),
+  Schema.filter(
+    (value) => !value.startsWith(HISTORICAL_GENERATED_BATTLE_PREFIX),
+    {
+      message: () =>
+        "scenario id must be semantic; generated-battle-prefixed ids are evidence history, not scenario identity",
+    },
+  ),
   Schema.brand("RawSwarmScenarioId"),
 );
 export type ScenarioId = Schema.Schema.Type<typeof ScenarioIdSchema>;

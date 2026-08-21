@@ -24,6 +24,7 @@ import {
   decodeScenarioCampaignId,
   decodeScenarioCandidateId,
   decodeScenarioId,
+  decodeHistoricalScenarioId,
   decodePlannedScenarioId,
   evidenceSetDirectory,
   ScenarioIdSchema,
@@ -1412,7 +1413,20 @@ describe("Raw Swarm scenario catalogue", () => {
     ]) {
       expect(Either.isLeft(decode("../outside"))).toBe(true);
     }
-    expect(Either.isLeft(decodeScenarioId("generated-battle-123"))).toBe(true);
+    for (const generatedBattleId of [
+      "generated-battle",
+      "generated-battle-123",
+      "generated-battle-123-suffix",
+      "generated-battleground",
+    ]) {
+      expect(Either.isLeft(decodeScenarioId(generatedBattleId))).toBe(true);
+      expect(
+        Either.isRight(decodeHistoricalScenarioId(generatedBattleId)),
+      ).toBe(true);
+    }
+    expect(
+      Either.isRight(decodeScenarioId("prefix-generated-battle-123")),
+    ).toBe(true);
     expect(
       Either.isRight(decodePlannedScenarioId("generated-battle-123")),
     ).toBe(true);
