@@ -10,6 +10,7 @@ import {
   characterDraftId,
 } from "@dnd/character-creation-runtime";
 import { Hp, resourceCount } from "@dnd/shared/types";
+import { unitId } from "@dnd/shared/game-facts";
 import {
   armorClassBuild,
   prayerOfHealingClericBuild,
@@ -21,6 +22,7 @@ import {
   verifyBaselineVertical,
   verifyLevelFiveWizardFireballBattleHandoff,
   verifyLevelFourWizardVertical,
+  verifyLevelNineRangerExpertiseSheetScenario,
   verifyLevelSixRogueSteadyAimBattleHandoff,
   verifyLevelThreeWizardVertical,
   verifyToolContract,
@@ -378,11 +380,12 @@ describe("MCP protocol server", () => {
     try {
       await host.server.connect(serverTransport);
       await client.connect(clientTransport);
-      const playSessionId = await createPlaySession(client);
+      const playSessionId = await acceptancePlaySessionId(client);
+      const secondPlaySessionId = await createPlaySession(client);
       const decoded = decodePlaySessionId(playSessionId);
       if (decoded._tag === "Left") throw new Error(decoded.left);
       await host.playSessions.run(decoded.right, (root) => {
-        const session = availableCharacterSession({
+        const monk = availableCharacterSession({
           characterId: characterId("character:resource-monk"),
           build: armorClassBuild({
             startingClass: "class_monk",
@@ -402,8 +405,43 @@ describe("MCP protocol server", () => {
           ],
           unitLibrary: root.unitLibrary,
         });
-        if (Either.isLeft(session)) throw new Error(session.left.message);
-        root.sessionStore.characters.set(session.right);
+        const sorcerer = availableCharacterSession({
+          characterId: characterId("character:resource-sorcerer"),
+          build: {
+            ...armorClassBuild({
+              startingClass: "class_sorcerer",
+              advancements: ["class_sorcerer", "class_sorcerer"],
+            }),
+            spellcasting: {
+              sources: [
+                {
+                  sourceUnitId: unitId("class_sorcerer"),
+                  spellcastingAbility: "cha" as const,
+                  cantrips: [],
+                  spellbook: [],
+                  preparedSpells: [],
+                  spellcastingFocuses: ["arcane_focus"] as const,
+                },
+              ],
+              slotPools: {
+                spellcasting: {
+                  kind: "spellcasting" as const,
+                  slots: [{ spellLevel: 1, count: 3 }],
+                },
+              },
+            },
+          },
+          currentHp: Hp(1),
+          tempHp: Hp(0),
+          hitPointMaximumReduction: Hp(0),
+          conditions: [],
+          companion: { tag: "none" },
+          unitLibrary: root.unitLibrary,
+        });
+        for (const session of [monk, sorcerer]) {
+          if (Either.isLeft(session)) throw new Error(session.left.message);
+          root.sessionStore.characters.set(session.right);
+        }
       });
       const operationTool = (await client.listTools()).tools.find(
         (tool) => tool.name === "apply_character_session_operation",
@@ -413,6 +451,10 @@ describe("MCP protocol server", () => {
       }
       const validateOutput = new AjvJsonSchemaValidator().getValidator(
         operationTool.outputSchema as JsonSchemaType,
+      );
+      await verifyLevelNineRangerExpertiseSheetScenario(client);
+      const rangerCharacterId = characterIdFromDraftId(
+        characterDraftId("draft:stdio-level-nine-orc-soldier-ranger-expertise"),
       );
       const applied = await callStructuredTool(client, {
         name: "apply_character_session_operation",
@@ -427,12 +469,82 @@ describe("MCP protocol server", () => {
       });
       expect(validateOutput(applied).valid).toBe(true);
       expect(applied).toMatchObject({
+        nextOperations: expect.arrayContaining([
+          "list_characters",
+          "inspect_character_session",
+        ]),
         operation: {
           result: {
             result: { tag: "monkUncannyMetabolismUsed", martialArtsRoll: 4 },
           },
         },
       });
+      const inspected = await callStructuredTool(client, {
+        name: "inspect_character_session",
+        arguments: { playSessionId, characterId: "character:resource-monk" },
+      });
+      expect(inspected).toMatchObject({
+        operation: {
+          result: { detail: { sheetProjection: { currentHp: 7 } } },
+        },
+      });
+      const isolated = await callStructuredTool(client, {
+        name: "list_characters",
+        arguments: { playSessionId: secondPlaySessionId },
+      });
+      expect(operationResult(isolated).characters).toEqual([]);
+
+      for (const operation of [
+        { kind: "convertFontOfMagicSorceryPointsToSpellSlot", spellLevel: 1 },
+        {
+          kind: "convertFontOfMagicSpellSlotToSorceryPoints",
+          spellLevel: 1,
+          spellSlotSource: "ordinary",
+        },
+      ]) {
+        const converted = await callStructuredTool(client, {
+          name: "apply_character_session_operation",
+          arguments: {
+            playSessionId,
+            characterId: "character:resource-sorcerer",
+            operation,
+          },
+        });
+        expect(validateOutput(converted).valid).toBe(true);
+      }
+      for (let spend = 0; spend < 3; spend += 1) {
+        const result = await client.callTool({
+          name: "apply_character_session_operation",
+          arguments: {
+            playSessionId,
+            characterId: rangerCharacterId,
+            operation: {
+              kind: "spendSpellAccessFreeCast",
+              sourceUnitId: "ranger_favored_enemy",
+              spellId: "hunters_mark",
+            },
+          },
+        });
+        expect(result.structuredContent).toBeDefined();
+        if (!isJsonObject(result.structuredContent))
+          throw new Error("Expected typed resource result.");
+        expect(validateOutput(result.structuredContent).valid).toBe(true);
+        if (spend === 2) {
+          expect(result.isError).toBe(true);
+          expect(result.structuredContent).toMatchObject({
+            operation: {
+              result: {
+                details: {
+                  operationKind: "spendSpellAccessFreeCast",
+                  message: "Spell Access free cast is exhausted.",
+                },
+              },
+            },
+          });
+        } else {
+          expect(result.isError).not.toBe(true);
+        }
+      }
     } finally {
       await Promise.allSettled([client.close(), host.server.close()]);
     }

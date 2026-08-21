@@ -13,6 +13,7 @@ import {
   FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES,
   type CharacterSheetRetainedCompanionManifestation,
 } from "@dnd/character-sheet-runtime";
+import { UnitId } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
 
 import {
@@ -34,6 +35,9 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(1),
 );
+const SpellSlotLevelSchema = PositiveIntegerSchema.pipe(
+  Schema.lessThanOrEqualTo(9),
+);
 export const CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS = [
   "embodiedOutsideBattle",
   "temporarilyDismissed",
@@ -43,6 +47,32 @@ export const CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS = [
 >;
 export type CharacterSessionCompanionManifestationTag =
   (typeof CHARACTER_SESSION_COMPANION_MANIFESTATION_TAGS)[number];
+const CharacterSessionResourceOperationResultSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("spellAccessFreeCastSpent"),
+    sourceUnitId: UnitId,
+    spellId: UnitId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("monkUncannyMetabolismUsed"),
+    martialArtsRoll: PositiveIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("fontOfMagicSpellSlotConvertedToSorceryPoints"),
+    spellLevel: SpellSlotLevelSchema,
+    spellSlotSource: Schema.optionalWith(
+      Schema.Literal(...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
+      { exact: true },
+    ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("fontOfMagicSorceryPointsConvertedToSpellSlot"),
+    spellLevel: SpellSlotLevelSchema,
+  }),
+);
+export type CharacterSessionResourceOperationResult = Schema.Schema.Type<
+  typeof CharacterSessionResourceOperationResultSchema
+>;
 const CharacterSheetSpellSlotDisplayRowSchema = Schema.Struct({
   spellLevel: PositiveIntegerSchema,
   count: NonNegativeIntegerSchema,
@@ -289,31 +319,8 @@ export const CharacterSessionOperationResultSchema = Schema.Union(
     castLevel: PositiveIntegerSchema,
     recipientCharacterIds: Schema.NonEmptyArray(Schema.String),
   }),
-  Schema.Struct({
-    tag: Schema.Literal("spellAccessFreeCastSpent"),
-    sourceUnitId: Schema.String,
-    spellId: Schema.String,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("monkUncannyMetabolismUsed"),
-    martialArtsRoll: PositiveIntegerSchema,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("fontOfMagicSpellSlotConvertedToSorceryPoints"),
-    spellLevel: PositiveIntegerSchema,
-    spellSlotSource: Schema.optionalWith(
-      Schema.Literal(...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
-      { exact: true },
-    ),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("fontOfMagicSorceryPointsConvertedToSpellSlot"),
-    spellLevel: PositiveIntegerSchema,
-  }),
+  CharacterSessionResourceOperationResultSchema,
 );
-export type CharacterSessionResourceOperationResult = Schema.Schema.Type<
-  typeof CharacterSessionOperationResultSchema
->;
 const CharacterSessionSheetProjectionSchema = Schema.Struct({
   currentHp: NonNegativeIntegerSchema,
   companion: Schema.Union(
