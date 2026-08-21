@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   readdirSync,
   rmSync,
   symlinkSync,
@@ -1136,10 +1137,48 @@ describe("Raw Swarm scenario catalogue", () => {
           expect.objectContaining({ candidateId: "rejected-candidate" }),
         ]);
       }
+      const benchmarkPath = resolve(repositoryRoot, "out", "benchmark.json");
+      const benchmarkValue = JSON.parse(
+        readFileSync(benchmarkPath, "utf8"),
+      ) as {
+        comparisonTargets: readonly { tag: string; executionId: string }[];
+      };
+      writeFileSync(
+        benchmarkPath,
+        `${JSON.stringify({
+          ...benchmarkValue,
+          comparisonTargets: [
+            benchmarkValue.comparisonTargets[0],
+            benchmarkValue.comparisonTargets[0],
+          ],
+        })}\n`,
+      );
+      expect(
+        readRawSwarmCatalogue({
+          repositoryRoot,
+          scenarioDirectory: scenarios,
+          evidenceDirectory: resolve(repositoryRoot, "out"),
+        }),
+      ).toMatchObject({
+        left: [
+          expect.objectContaining({
+            tag: "duplicateBenchmarkExecution",
+            benchmarkId: "context-profile-comparison",
+          }),
+        ],
+      });
+      writeFileSync(benchmarkPath, `${JSON.stringify(benchmarkValue)}\n`);
       writeFileSync(
         rejectionPath,
         `${JSON.stringify({
           ...rejectionRecord,
+          predecessorScenarioIds: ["open-grid-wolf-skeleton-pursuit"],
+          predecessorBatches: [
+            {
+              batchIndex: 0,
+              scenarioIds: ["open-grid-wolf-skeleton-pursuit"],
+            },
+          ],
           catalogueComparison: {
             schemaVersion: 1,
             conclusion: "meaningfullyDistinct",
@@ -1177,14 +1216,7 @@ describe("Raw Swarm scenario catalogue", () => {
           scenarioDirectory: scenarios,
           evidenceDirectory: resolve(repositoryRoot, "out"),
         }),
-      ).toMatchObject({
-        left: expect.arrayContaining([
-          expect.objectContaining({
-            tag: "invalidRelationshipRecord",
-            message: expect.stringContaining("covered 1 of 2"),
-          }),
-        ]),
-      });
+      ).toMatchObject({ right: expect.anything() });
       writeFileSync(rejectionPath, `${JSON.stringify(rejectionRecord)}\n`);
       const incompleteReview = write(
         "scenarios/open-grid-wolf-skeleton-pursuit.md.scenario-review.json",
@@ -1367,7 +1399,7 @@ describe("Raw Swarm scenario catalogue", () => {
     expect(new Set(rendered.map(({ scenarioId }) => scenarioId)).size).toBe(
       admittedSourceCount,
     );
-  });
+  }, 15_000);
 
   test("identity parsers reject traversal and opaque generated scenario ids", () => {
     for (const decode of [

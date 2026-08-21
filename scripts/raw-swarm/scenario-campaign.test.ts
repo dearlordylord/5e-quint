@@ -26,6 +26,7 @@ import { GitShaSchema, repoRoot, ScenarioIdSchema } from "./transcript.ts";
 import {
   publishScenarioAdmissionBundle,
   rollbackScenarioAdmissionBundle,
+  publishScenarioRejectionBundle,
 } from "./generate-scenario.ts";
 import {
   ScenarioCatalogueComparisonSchema,
@@ -109,6 +110,49 @@ test("retains a publication receipt for post-publication rollback", () => {
     expect(names.some((name) => existsSync(resolve(admitted, name)))).toBe(
       false,
     );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("rolls back every rejected-candidate authority when publication fails", () => {
+  const root = mkdtempSync(resolve(tmpdir(), "scenario-rejection-"));
+  const staged = resolve(root, "staged");
+  const rejected = resolve(root, "rejected");
+  mkdirSync(staged);
+  mkdirSync(rejected);
+  const names = [
+    "scenario.md",
+    "candidate-review.json",
+    "stage-plan.json",
+    "stage-plan-findings.json",
+    "candidate-rejection.json",
+    "findings.json",
+  ] as const;
+  for (const name of names.filter((name) => name !== "stage-plan.json")) {
+    writeFileSync(resolve(staged, name), name);
+  }
+  const pair = (name: (typeof names)[number]) =>
+    [resolve(staged, name), resolve(rejected, name)] as const;
+  try {
+    expect(() =>
+      publishScenarioRejectionBundle({
+        prose: pair("scenario.md"),
+        review: pair("candidate-review.json"),
+        stagePlan: pair("stage-plan.json"),
+        stagePlanFindings: pair("stage-plan-findings.json"),
+        candidateRejection: pair("candidate-rejection.json"),
+        findings: pair("findings.json"),
+      }),
+    ).toThrow();
+    expect(names.some((name) => existsSync(resolve(rejected, name)))).toBe(
+      false,
+    );
+    expect(
+      names
+        .filter((name) => name !== "stage-plan.json")
+        .every((name) => existsSync(resolve(staged, name))),
+    ).toBe(true);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -1004,6 +1048,111 @@ describe("scenario generation campaign", () => {
     if (Either.isRight(result)) {
       expect(finalScenarioDisposition(result.right)).toBe("rejected");
     }
+  });
+
+  test("retains redundancy critique alongside stage-plan rejection guidance", async () => {
+    const generationInputs: Array<{
+      readonly priorRevision?: { readonly critiques: readonly string[] };
+    }> = [];
+    const incoherentFacts = {
+      ...stageFacts,
+      spatialRequirement: {
+        tag: "outsideExperimentEnvelope" as const,
+        resolution: "incoherent" as const,
+        evidence: "The candidate contradicts its own spatial objective.",
+      },
+    };
+    const result = await runScenarioCampaign(
+      {
+        ...config,
+        minimumIterations: 1,
+        maximumIterations: 2,
+        reviewMilestone: 1,
+      },
+      {
+        generate: async (input) => {
+          generationInputs.push(input);
+          return {
+            candidates: Array.from(
+              { length: input.candidateCount },
+              (_, index) =>
+                candidate(
+                  `redundant incoherent ${input.iteration}-${index}`,
+                  incoherentFacts,
+                ),
+            ),
+          };
+        },
+        compareCandidate: async ({ batch, batchIndex }) =>
+          Schema.decodeUnknownSync(ScenarioCatalogueComparisonSchema)({
+            schemaVersion: 1,
+            conclusion: "redundant",
+            comparedScenarioIds: batch.map(({ scenarioId }) => scenarioId),
+            closestMatches: [
+              {
+                scenarioId: batch[0]!.scenarioId,
+                reason: "The admitted interaction sequence is repeated.",
+              },
+            ],
+            materialDifferentiators: [],
+            basis: {
+              tag: "compared",
+              batches: [
+                {
+                  batchIndex,
+                  comparedScenarioIds: batch.map(
+                    ({ scenarioId }) => scenarioId,
+                  ),
+                  dimensions: {
+                    exploratoryPurpose: "Repeated purpose.",
+                    materiallyRelevantMechanics: "Repeated mechanics.",
+                    encounterComposition: "Repeated composition.",
+                    interactionSequence: "Repeated sequence.",
+                    tacticalQuestion: "Repeated question.",
+                    sdkSupportBoundary: "Same support boundary.",
+                    spatialContext: { tag: "notMaterial" },
+                  },
+                },
+              ],
+            },
+          }),
+        reviewScenario: async () => {
+          throw new Error(
+            "Stage-plan rejection must not invoke whole-scenario review.",
+          );
+        },
+      },
+      { select: () => 0 },
+      {
+        tag: "required",
+        batches: [
+          [
+            Schema.decodeUnknownSync(ScenarioCatalogueProjectionSchema)({
+              scenarioId: "admitted-synthetic-scenario",
+              title: "Admitted synthetic scenario",
+              purpose: "Explore a retained synthetic tactical question.",
+              authoredSource: {
+                path: "scripts/raw-swarm/sdk-player/scenarios/admitted-synthetic-scenario.md",
+                byteLength: 128,
+                sha256: "a".repeat(64),
+              },
+              characterRequirement: "characterSheetsRequired",
+              spatialContext: "notRequired",
+              contentAvailabilityIntent: "availableOnly",
+              sdkSupportBoundary: "supportedOnly/supported",
+            }),
+          ],
+        ],
+        expectedScenarioIds: ["admitted-synthetic-scenario"],
+      },
+    );
+    expect(Either.isRight(result)).toBe(true);
+    expect(generationInputs[1]?.priorRevision?.critiques).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("outside the geometry experiment envelope"),
+        expect.stringContaining("redundant with admitted Scenario"),
+      ]),
+    );
   });
 
   test("admits only an explicit unsupported SDK probe for probe intent", async () => {

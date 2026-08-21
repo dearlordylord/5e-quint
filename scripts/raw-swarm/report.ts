@@ -24,6 +24,7 @@ import { readReviewInvocationEvidenceManifest } from "./review-invocation-eviden
 import {
   exportArtifactIndex,
   ingestArtifactRun,
+  ingestArtifactRunWithArtifacts,
   ingestGenerationFindings,
   inventoryLegacyDatabase,
   openArtifactIndex,
@@ -912,11 +913,6 @@ function controlledReporting(args: readonly string[]): void {
     fail("Refusing to overwrite controlled reporting timing evidence.");
   }
   const started = performance.now();
-  const runId = ingestArtifactRun({
-    transcriptPath,
-    dbPath,
-  });
-  const evidenceDb = openArtifactIndex(dbPath);
   const evidenceSources = [
     {
       role: "reviewInvocationEvidence",
@@ -958,14 +954,11 @@ function controlledReporting(args: readonly string[]): void {
       mediaType: "application/x-ndjson",
     })),
   ];
-  const insertExecutionArtifact = evidenceDb.prepare(
-    "INSERT INTO runArtifacts(runId, role, artifactSha256) VALUES (?, ?, ?)",
-  );
-  for (const { role, path, mediaType } of evidenceSources) {
-    const artifact = registerIndexArtifact({ db: evidenceDb, path, mediaType });
-    insertExecutionArtifact.run(runId, role, artifact.sha256);
-  }
-  evidenceDb.close();
+  const runId = ingestArtifactRunWithArtifacts({
+    transcriptPath,
+    dbPath,
+    additionalArtifacts: evidenceSources,
+  });
   review([
     reviewPath,
     "--db",

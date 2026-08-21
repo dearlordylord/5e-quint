@@ -6,6 +6,11 @@ for #292, and the paired coherent/rejected evidence for #293. Ignored
 `scripts/raw-swarm/out` artifacts remain the evidence authorities; this
 document does not copy their payloads.
 
+Identity note: every `generated-battle-*` label below names a retained
+historical artifact set, not a current `Scenario` id, admitted Scenario, or
+current `Execution`/Run identity. The labels are preserved solely for
+traceability to the historical authorities cited here.
+
 ## Canonical capability projection
 
 `scripts/raw-swarm/capability-projection.ts` is the sole owner of the v1

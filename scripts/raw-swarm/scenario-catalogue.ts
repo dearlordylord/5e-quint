@@ -9,6 +9,7 @@ import {
   BenchmarkIdSchema,
   EvidenceSetIdSchema,
   ExecutionIdSchema,
+  ScenarioIdSchema,
   ScenarioExecutionIdentitySchema,
   ScenarioCampaignIdSchema,
   ScenarioCandidateIdSchema,
@@ -31,6 +32,7 @@ import {
   batchScenarioCatalogueProjections,
   projectScenarioCatalogueForAuthoring,
   ScenarioCatalogueComparisonSchema,
+  type ScenarioCatalogueBatchExpectation,
   validateScenarioCatalogueComparison,
   type ScenarioCatalogueComparison,
   type ScenarioCatalogueProjection,
@@ -116,6 +118,9 @@ type HistoricalRejectedScenarioCandidateRecord = Readonly<{
 type CurrentRejectedScenarioCandidateRecord =
   HistoricalRejectedScenarioCandidateRecord &
     Readonly<{
+      /** The complete predecessor boundary used for this rejection. */
+      readonly predecessorScenarioIds: readonly ScenarioId[];
+      readonly predecessorBatches: readonly ScenarioCatalogueBatchExpectation[];
       readonly catalogueComparison: Schema.Schema.Type<
         typeof ScenarioCatalogueComparisonSchema
       >;
@@ -191,7 +196,28 @@ const HistoricalRejectedScenarioCandidateRecordSchema = Schema.Struct({
 
 const CurrentRejectedScenarioCandidateRecordSchema = Schema.Struct({
   ...HistoricalRejectedScenarioCandidateRecordSchema.fields,
+  predecessorScenarioIds: Schema.Array(ScenarioIdSchema),
+  predecessorBatches: Schema.Array(
+    Schema.Struct({
+      batchIndex: Schema.Number.pipe(
+        Schema.int(),
+        Schema.greaterThanOrEqualTo(0),
+      ),
+      scenarioIds: Schema.Array(ScenarioIdSchema),
+    }),
+  ),
   catalogueComparison: ScenarioCatalogueComparisonSchema,
+});
+
+/** Persistence decoding must let projection report duplicate target ids. */
+const BenchmarkRecordPersistenceSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  benchmarkId: BenchmarkIdSchema,
+  evidenceSetId: EvidenceSetIdSchema,
+  comparisonTargets: Schema.Tuple(
+    [BenchmarkComparisonTargetSchema, BenchmarkComparisonTargetSchema],
+    BenchmarkComparisonTargetSchema,
+  ),
 });
 
 export const RejectedScenarioCandidateRecordSchema = Schema.Union(
@@ -701,24 +727,50 @@ function validateRejectedCandidateComparisons(input: {
   const projections = projectScenarioCatalogueForAuthoring({
     scenarios: input.scenarios,
   });
-  const batches = batchScenarioCatalogueProjections(projections);
-  if (Either.isLeft(batches)) {
-    return currentRecords.map(({ path }) => ({
-      tag: "invalidRelationshipRecord" as const,
-      path,
-      message: `Canonical catalogue batching failed before rejection comparison validation: ${batches.left}`,
-    }));
-  }
-  const expectedScenarioIds = projections.map(({ scenarioId }) => scenarioId);
-  const expectedBatches = batches.right.map((batch, batchIndex) => ({
-    batchIndex,
-    scenarioIds: batch.map(({ scenarioId }) => scenarioId),
-  }));
+  const projectionIds = new Set(
+    projections.map(({ scenarioId }) => scenarioId),
+  );
   return currentRecords.flatMap(({ record, path }) => {
+    const missingPredecessor = record.predecessorScenarioIds.find(
+      (scenarioId) => !projectionIds.has(scenarioId),
+    );
+    if (missingPredecessor !== undefined) {
+      return [
+        {
+          tag: "invalidRelationshipRecord" as const,
+          path,
+          message: `Rejected Candidate comparison names predecessor ${missingPredecessor}, which is absent from the canonical admitted catalogue.`,
+        },
+      ];
+    }
+    const predecessorIdsFromBatches = record.predecessorBatches.flatMap(
+      ({ scenarioIds }) => scenarioIds,
+    );
+    if (
+      record.predecessorBatches.some(
+        ({ batchIndex }, position) => batchIndex !== position,
+      ) ||
+      predecessorIdsFromBatches.length !==
+        record.predecessorScenarioIds.length ||
+      new Set(predecessorIdsFromBatches).size !==
+        predecessorIdsFromBatches.length ||
+      !predecessorIdsFromBatches.every((scenarioId) =>
+        record.predecessorScenarioIds.includes(scenarioId),
+      )
+    ) {
+      return [
+        {
+          tag: "invalidRelationshipRecord" as const,
+          path,
+          message:
+            "Rejected Candidate comparison retained a predecessor boundary whose ids and batches disagree.",
+        },
+      ];
+    }
     const comparison = validateScenarioCatalogueComparison({
       comparison: record.catalogueComparison,
-      expectedScenarioIds,
-      expectedBatches,
+      expectedScenarioIds: record.predecessorScenarioIds,
+      expectedBatches: record.predecessorBatches,
     });
     return Either.isLeft(comparison)
       ? [
@@ -1066,7 +1118,7 @@ export function readRawSwarmCatalogue(
   );
   const benchmarks = readRelationshipRecords(
     relationshipPaths.benchmarks,
-    BenchmarkRecordSchema,
+    BenchmarkRecordPersistenceSchema,
   );
   const rejectedCandidates = readRelationshipRecords(
     relationshipPaths.rejections,

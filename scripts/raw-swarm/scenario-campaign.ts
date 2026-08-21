@@ -991,12 +991,21 @@ export async function runScenarioCampaign(
     });
     if (Either.isLeft(candidatePlan)) return Either.left(candidatePlan.left);
     if (candidatePlan.right.outcome.tag === "rejected") {
+      const catalogueCritiques =
+        selectedCatalogueComparison.tag === "retained" &&
+        selectedCatalogueComparison.comparison.conclusion === "redundant"
+          ? [
+              catalogueComparisonCritique(
+                selectedCatalogueComparison.comparison,
+              ),
+            ]
+          : [];
       const rejected = {
         tag: "selected" as const,
         prose: candidate.prose,
         candidateId,
         iteration,
-        critiques: [candidatePlan.right.outcome.reason],
+        critiques: [candidatePlan.right.outcome.reason, ...catalogueCritiques],
         stageFacts: candidate.stageFacts,
         candidateStagePlan: candidatePlan.right,
         catalogueComparison: selectedCatalogueComparison,

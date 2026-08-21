@@ -6,6 +6,11 @@ hypotheses. The representative execution is
 `7dd52785b947159092ed2cdd7895e5b428000ee4` and whose exact transcript hash is
 `69f30fb4f34155aa95845c141f303e65c78743a4814a5623700950cc2d1a9bad`.
 
+Identity note: every `generated-battle-*` label in this historical report is
+the identity of a retained historical artifact set. It is not a current
+`Scenario` id, an admitted Scenario, or a current `Execution`/Run identity;
+the labels remain only to preserve traceability to the cited evidence.
+
 ## Conclusion
 
 The dominant structural cost was carrying and repeatedly presenting large

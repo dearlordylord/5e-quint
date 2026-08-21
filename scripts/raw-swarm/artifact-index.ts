@@ -484,6 +484,11 @@ function ingestArtifactRunWithDisposition(input: {
   readonly dbPath: string;
   readonly indexedTranscriptPath?: string;
   readonly ingestion: "currentEvidence" | "historicalRebuild";
+  readonly additionalArtifacts?: readonly {
+    readonly role: string;
+    readonly path: string;
+    readonly mediaType: string;
+  }[];
 }): number {
   const absoluteTranscript = resolve(repoRoot, input.transcriptPath);
   const records = jsonLines(absoluteTranscript);
@@ -751,6 +756,15 @@ function ingestArtifactRunWithDisposition(input: {
           insertArtifact.run(runId, role, registered.sha256);
         }
       }
+      if (input.additionalArtifacts !== undefined) {
+        const insertAdditionalArtifact = db.prepare(
+          "INSERT INTO runArtifacts(runId, role, artifactSha256) VALUES (?, ?, ?)",
+        );
+        for (const { role, path, mediaType } of input.additionalArtifacts) {
+          const registered = registerArtifact(db, path, mediaType);
+          insertAdditionalArtifact.run(runId, role, registered.sha256);
+        }
+      }
       const insert = db.prepare(
         `INSERT INTO calls(runId, seq, source, continuation, operation, outcome, inputSessionSha256, outputSessionSha256, resultSha256, rejection, reviewFacts)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -808,6 +822,22 @@ export function ingestArtifactRun(input: {
   readonly transcriptPath: string;
   readonly dbPath: string;
   readonly indexedTranscriptPath?: string;
+}): number {
+  return ingestArtifactRunWithDisposition({
+    ...input,
+    ingestion: "currentEvidence",
+  });
+}
+
+/** Ingest a transcript and its controlled review authorities atomically. */
+export function ingestArtifactRunWithArtifacts(input: {
+  readonly transcriptPath: string;
+  readonly dbPath: string;
+  readonly additionalArtifacts: readonly {
+    readonly role: string;
+    readonly path: string;
+    readonly mediaType: string;
+  }[];
 }): number {
   return ingestArtifactRunWithDisposition({
     ...input,

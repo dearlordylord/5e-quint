@@ -2594,6 +2594,17 @@ function assembleProfile(
       ...readinessAuthorities,
     ].sort((left, right) => left.role.localeCompare(right.role)),
   };
+  if (
+    findings.subject.tag !== "execution" ||
+    findings.subject.executionId !==
+      executionProfileDescriptor.right.executionId ||
+    findings.subject.evidenceSetId !==
+      executionProfileDescriptor.right.evidenceSetId
+  ) {
+    fail(
+      "Fixed benchmark descriptor execution identity does not match the retained player Execution findings subject.",
+    );
+  }
   const findingsPath = findingsArtifactPath(
     repoRelative(paths.playerDirectory),
   );
@@ -2612,6 +2623,8 @@ function assembleProfile(
         : fail(`Invalid benchmark performance path identity: ${decoded.left}`);
     })(),
     scenarioId: fixedScenarioId(),
+    executionId: executionProfileDescriptor.right.executionId,
+    evidenceSetId: executionProfileDescriptor.right.evidenceSetId,
     implementationGitSha: executionProfileDescriptor.right.implementationGitSha,
     scenarioBundle: preparedBundle,
     contextSourceManifest: contextManifestAuthority,

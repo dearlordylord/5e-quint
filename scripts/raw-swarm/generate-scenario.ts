@@ -6,7 +6,6 @@ import {
   readFileSync,
   renameSync,
   rmSync,
-  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -40,11 +39,12 @@ import {
   batchScenarioCatalogueProjections,
   ScenarioCatalogueComparisonSchema,
   projectScenarioCatalogueForAuthoring,
+  scenarioCatalogueComparisonBoundary,
   scenarioCatalogueComparisonPrompt,
 } from "./scenario-authoring.ts";
 import type { RetainedScenarioReviewInput } from "./scenario-review-input.ts";
 import {
-  retainCandidateScenarioStagePlan,
+  retainCandidateScenarioStagePlanAtPaths,
   retainAdmittedScenarioStagePlanAtPaths,
   retainedRejectedScenarioStagePlanFindingsPath,
   retainedRejectedScenarioStagePlanPath,
@@ -150,6 +150,74 @@ export function publishScenarioAdmissionBundle(input: {
     } catch (rollbackError) {
       throw new Error(
         `Scenario admission publication failed and could not restore staged authorities: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`,
+        { cause: error },
+      );
+    }
+    throw error;
+  }
+  return published;
+}
+
+export type ScenarioRejectionPublication = readonly (readonly [
+  staged: string,
+  rejected: string,
+])[];
+
+export function rollbackScenarioRejectionBundle(
+  publication: ScenarioRejectionPublication,
+): void {
+  const rollbackFailures: string[] = [];
+  for (const [source, destination] of [...publication].reverse()) {
+    try {
+      renameSync(destination, source);
+    } catch (error: unknown) {
+      rollbackFailures.push(
+        `${destination} -> ${source}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+  if (rollbackFailures.length > 0) {
+    fail(
+      `Scenario rejection publication rollback failed: ${rollbackFailures.join("; ")}`,
+    );
+  }
+}
+
+/** Publish every rejected-candidate authority as one recoverable bundle. */
+export function publishScenarioRejectionBundle(input: {
+  readonly prose: readonly [staged: string, rejected: string];
+  readonly review?: readonly [staged: string, rejected: string];
+  readonly stagePlan: readonly [staged: string, rejected: string];
+  readonly stagePlanFindings: readonly [staged: string, rejected: string];
+  readonly candidateRejection: readonly [staged: string, rejected: string];
+  readonly findings: readonly [staged: string, rejected: string];
+}): ScenarioRejectionPublication {
+  const publication = [
+    input.prose,
+    ...(input.review === undefined ? [] : [input.review]),
+    input.stagePlan,
+    input.stagePlanFindings,
+    input.candidateRejection,
+    input.findings,
+  ] as const;
+  const occupied = publication.find(([, destination]) =>
+    existsSync(destination),
+  );
+  if (occupied !== undefined) {
+    fail(`Refusing to overwrite rejected Scenario authority: ${occupied[1]}`);
+  }
+  const published: Array<readonly [string, string]> = [];
+  try {
+    for (const [source, destination] of publication) {
+      renameSync(source, destination);
+      published.push([source, destination]);
+    }
+  } catch (error: unknown) {
+    try {
+      rollbackScenarioRejectionBundle(published);
+    } catch (rollbackError) {
+      throw new Error(
+        `Scenario rejection publication failed and could not restore staged authorities: ${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`,
         { cause: error },
       );
     }
@@ -620,6 +688,10 @@ async function main(args: readonly string[]): Promise<void> {
   const catalogueBatches =
     batchScenarioCatalogueProjections(catalogueProjections);
   if (Either.isLeft(catalogueBatches)) fail(catalogueBatches.left);
+  const catalogueBoundary = scenarioCatalogueComparisonBoundary({
+    projections: catalogueProjections,
+    batches: catalogueBatches.right,
+  });
   const admittedDirectory = resolve(
     repoRoot,
     "scripts/raw-swarm/sdk-player/scenarios",
@@ -714,7 +786,14 @@ async function main(args: readonly string[]): Promise<void> {
         readonly stagePlanPath: string;
         readonly stagePlanFindingsPath: string;
       };
-  const emitGenerationFindings = (input: GenerationEvidence): void => {
+  const emitGenerationFindings = (
+    input: GenerationEvidence,
+    options: Readonly<{
+      readonly path?: string;
+      readonly pathReplacements?: readonly (readonly [string, string])[];
+      readonly ingest?: boolean;
+    }> = {},
+  ): void => {
     const evidence = Match.value(input).pipe(
       Match.when({ tag: "campaignFailure" }, ({ reason }) => ({
         authorityPaths: [] as readonly {
@@ -826,14 +905,42 @@ async function main(args: readonly string[]): Promise<void> {
       ),
       Match.exhaustive,
     );
+    const pathReplacements =
+      options.pathReplacements?.flatMap(([from, to]) => [
+        [from, to] as const,
+        [
+          relative(repoRoot, resolve(from)),
+          relative(repoRoot, resolve(to)),
+        ] as const,
+      ]) ?? [];
+    const replacePath = (value: unknown): unknown => {
+      if (typeof value === "string") {
+        return pathReplacements.find(([from]) => from === value)?.[1] ?? value;
+      }
+      if (Array.isArray(value)) return value.map(replacePath);
+      if (typeof value === "object" && value !== null) {
+        return Object.fromEntries(
+          Object.entries(value).map(([key, child]) => [
+            key,
+            replacePath(child),
+          ]),
+        );
+      }
+      return value;
+    };
+    const retainedProjection = replacePath(projection) as typeof projection;
+    const retainedFindingsPath =
+      options.path ?? findingsArtifactPath(campaignEvidenceDirectory);
     writeFindingsProjection({
-      projection,
-      path: findingsArtifactPath(campaignEvidenceDirectory),
+      projection: retainedProjection,
+      path: retainedFindingsPath,
     });
-    ingestGenerationFindings({
-      findingsPath: findingsArtifactPath(campaignEvidenceDirectory),
-      dbPath,
-    });
+    if (options.ingest !== false) {
+      ingestGenerationFindings({
+        findingsPath: retainedFindingsPath,
+        dbPath,
+      });
+    }
   };
   let result: Either.Either<ScenarioCampaignResult, string>;
   try {
@@ -886,13 +993,6 @@ async function main(args: readonly string[]): Promise<void> {
       `${result.right.candidateId}.md`,
     );
     mkdirSync(outputDirectory, { recursive: true });
-    writeFileSync(outputPath, scenarioBytes, { flag: "wx" });
-    const retainedPlan = retainCandidateScenarioStagePlan({
-      candidateId: result.right.candidateId,
-      candidateScenarioSha256: scenarioSha256,
-      plan: result.right.candidateStagePlan,
-    });
-    if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
     const rejectionReason =
       result.right.candidateStagePlan.outcome.tag === "rejected"
         ? result.right.candidateStagePlan.outcome.reason
@@ -909,6 +1009,7 @@ async function main(args: readonly string[]): Promise<void> {
       campaignId: result.right.campaignId,
       evidenceSetId: decodedConfig.right.evidenceSetId,
       reason: rejectionReason,
+      ...catalogueBoundary,
       catalogueComparison: result.right.catalogueComparison.comparison,
     });
     if (Either.isLeft(rejectionRecord)) fail(rejectionRecord.left.message);
@@ -916,22 +1017,73 @@ async function main(args: readonly string[]): Promise<void> {
       campaignEvidenceDirectory,
       "candidate-rejection.json",
     );
-    writeFileSync(
-      candidateRejectionPath,
-      `${JSON.stringify(rejectionRecord.right, null, 2)}\n`,
-      { flag: "wx" },
+    const staging = mkdtempSync(resolve(outputDirectory, ".rejection-stage-"));
+    const stagedScenario = resolve(staging, "scenario.md");
+    const stagedStagePlan = resolve(staging, "stage-plan.json");
+    const stagedStagePlanFindings = resolve(
+      staging,
+      "stage-plan-findings.json",
     );
-    emitGenerationFindings({
-      tag: "candidateStagePlanRejection",
-      candidateProsePath: outputPath,
-      stagePlanPath: retainedRejectedScenarioStagePlanPath(
-        result.right.candidateId,
-      ),
-      stagePlanFindingsPath: retainedRejectedScenarioStagePlanFindingsPath(
-        result.right.candidateId,
-      ),
-      candidateRejectionPath,
-    });
+    const stagedRejection = resolve(staging, "candidate-rejection.json");
+    const stagedFindings = resolve(staging, "findings.json");
+    const findingsPath = findingsArtifactPath(campaignEvidenceDirectory);
+    const stagePlanPath = retainedRejectedScenarioStagePlanPath(
+      result.right.candidateId,
+    );
+    const stagePlanFindingsPath = retainedRejectedScenarioStagePlanFindingsPath(
+      result.right.candidateId,
+    );
+    let publication: ScenarioRejectionPublication | undefined;
+    try {
+      writeFileSync(stagedScenario, scenarioBytes, { flag: "wx" });
+      const retainedPlan = retainCandidateScenarioStagePlanAtPaths({
+        candidateId: result.right.candidateId,
+        candidateScenarioSha256: scenarioSha256,
+        plan: result.right.candidateStagePlan,
+        stagePlanPath: stagedStagePlan,
+        stagePlanFindingsPath: stagedStagePlanFindings,
+      });
+      if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
+      writeFileSync(
+        stagedRejection,
+        `${JSON.stringify(rejectionRecord.right, null, 2)}\n`,
+        { flag: "wx" },
+      );
+      emitGenerationFindings(
+        {
+          tag: "candidateStagePlanRejection",
+          candidateProsePath: stagedScenario,
+          stagePlanPath: stagedStagePlan,
+          stagePlanFindingsPath: stagedStagePlanFindings,
+          candidateRejectionPath: stagedRejection,
+        },
+        {
+          path: stagedFindings,
+          ingest: false,
+          pathReplacements: [
+            [stagedScenario, outputPath],
+            [stagedStagePlan, stagePlanPath],
+            [stagedStagePlanFindings, stagePlanFindingsPath],
+            [stagedRejection, candidateRejectionPath],
+            [stagedFindings, findingsPath],
+          ],
+        },
+      );
+      publication = publishScenarioRejectionBundle({
+        prose: [stagedScenario, outputPath],
+        stagePlan: [stagedStagePlan, stagePlanPath],
+        stagePlanFindings: [stagedStagePlanFindings, stagePlanFindingsPath],
+        candidateRejection: [stagedRejection, candidateRejectionPath],
+        findings: [stagedFindings, findingsPath],
+      });
+      ingestGenerationFindings({ findingsPath, dbPath });
+    } catch (error: unknown) {
+      if (publication !== undefined)
+        rollbackScenarioRejectionBundle(publication);
+      throw error;
+    } finally {
+      rmSync(staging, { recursive: true, force: true });
+    }
     console.log(
       `Rejected ${outputPath} before whole-scenario review after ${result.right.iterations} iteration(s): ${result.right.candidateStagePlan.outcome.tag === "rejected" ? result.right.candidateStagePlan.outcome.reason : "candidate stage plan rejection"}.`,
     );
@@ -1009,13 +1161,8 @@ async function main(args: readonly string[]): Promise<void> {
       },
     );
     if (disposition === "rejected") {
-      renameSync(stagedReview, reviewPath);
-      try {
-        renameSync(stagedScenario, outputPath);
-      } catch (error: unknown) {
-        unlinkSync(reviewPath);
-        throw error;
-      }
+      // Rejected authorities are published together below, after the stage
+      // plan, rejection record, and findings projection have all been staged.
     } else {
       const stagedStagePlan = resolve(staging, "stage-plan.json");
       const stagedStagePlanFindings = resolve(
@@ -1175,12 +1322,6 @@ async function main(args: readonly string[]): Promise<void> {
     rmSync(staging, { recursive: true, force: true });
   }
   if (disposition === "rejected") {
-    const retainedPlan = retainCandidateScenarioStagePlan({
-      candidateId: result.right.candidateId,
-      candidateScenarioSha256: scenarioSha256,
-      plan: result.right.candidateStagePlan,
-    });
-    if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
     const rejectionReason = [
       `RAW=${result.right.rawReview.classification}`,
       `content=${result.right.contentReview.classification}`,
@@ -1197,6 +1338,7 @@ async function main(args: readonly string[]): Promise<void> {
       campaignId: result.right.campaignId,
       evidenceSetId: decodedConfig.right.evidenceSetId,
       reason: rejectionReason,
+      ...catalogueBoundary,
       catalogueComparison: result.right.catalogueComparison.comparison,
     });
     if (Either.isLeft(rejectionRecord)) fail(rejectionRecord.left.message);
@@ -1204,23 +1346,84 @@ async function main(args: readonly string[]): Promise<void> {
       campaignEvidenceDirectory,
       "candidate-rejection.json",
     );
-    writeFileSync(
-      candidateRejectionPath,
-      `${JSON.stringify(rejectionRecord.right, null, 2)}\n`,
-      { flag: "wx" },
+    const staging = mkdtempSync(
+      resolve(rejectedDirectory, ".rejection-stage-"),
     );
-    emitGenerationFindings({
-      tag: "reviewedCandidateRejection",
-      candidateProsePath: outputPath,
-      stagePlanPath: retainedRejectedScenarioStagePlanPath(
-        result.right.candidateId,
-      ),
-      stagePlanFindingsPath: retainedRejectedScenarioStagePlanFindingsPath(
-        result.right.candidateId,
-      ),
-      candidateRejectionPath,
-      candidateReviewPath: reviewPath,
-    });
+    const stagedScenario = resolve(staging, "scenario.md");
+    const stagedReview = resolve(staging, "candidate-review.json");
+    const stagedStagePlan = resolve(staging, "stage-plan.json");
+    const stagedStagePlanFindings = resolve(
+      staging,
+      "stage-plan-findings.json",
+    );
+    const stagedRejection = resolve(staging, "candidate-rejection.json");
+    const stagedFindings = resolve(staging, "findings.json");
+    const findingsPath = findingsArtifactPath(campaignEvidenceDirectory);
+    const stagePlanPath = retainedRejectedScenarioStagePlanPath(
+      result.right.candidateId,
+    );
+    const stagePlanFindingsPath = retainedRejectedScenarioStagePlanFindingsPath(
+      result.right.candidateId,
+    );
+    let publication: ScenarioRejectionPublication | undefined;
+    try {
+      writeFileSync(stagedScenario, scenarioBytes, { flag: "wx" });
+      writeFileSync(
+        stagedReview,
+        `${JSON.stringify(retainedReview, null, 2)}\n`,
+        { flag: "wx" },
+      );
+      const retainedPlan = retainCandidateScenarioStagePlanAtPaths({
+        candidateId: result.right.candidateId,
+        candidateScenarioSha256: scenarioSha256,
+        plan: result.right.candidateStagePlan,
+        stagePlanPath: stagedStagePlan,
+        stagePlanFindingsPath: stagedStagePlanFindings,
+      });
+      if (Either.isLeft(retainedPlan)) fail(retainedPlan.left);
+      writeFileSync(
+        stagedRejection,
+        `${JSON.stringify(rejectionRecord.right, null, 2)}\n`,
+        { flag: "wx" },
+      );
+      emitGenerationFindings(
+        {
+          tag: "reviewedCandidateRejection",
+          candidateProsePath: stagedScenario,
+          candidateReviewPath: stagedReview,
+          stagePlanPath: stagedStagePlan,
+          stagePlanFindingsPath: stagedStagePlanFindings,
+          candidateRejectionPath: stagedRejection,
+        },
+        {
+          path: stagedFindings,
+          ingest: false,
+          pathReplacements: [
+            [stagedScenario, outputPath],
+            [stagedReview, reviewPath],
+            [stagedStagePlan, stagePlanPath],
+            [stagedStagePlanFindings, stagePlanFindingsPath],
+            [stagedRejection, candidateRejectionPath],
+            [stagedFindings, findingsPath],
+          ],
+        },
+      );
+      publication = publishScenarioRejectionBundle({
+        prose: [stagedScenario, outputPath],
+        review: [stagedReview, reviewPath],
+        stagePlan: [stagedStagePlan, stagePlanPath],
+        stagePlanFindings: [stagedStagePlanFindings, stagePlanFindingsPath],
+        candidateRejection: [stagedRejection, candidateRejectionPath],
+        findings: [stagedFindings, findingsPath],
+      });
+      ingestGenerationFindings({ findingsPath, dbPath });
+    } catch (error: unknown) {
+      if (publication !== undefined)
+        rollbackScenarioRejectionBundle(publication);
+      throw error;
+    } finally {
+      rmSync(staging, { recursive: true, force: true });
+    }
     console.log(
       `Rejected Candidate ${result.right.candidateId}; no Scenario was admitted.`,
     );

@@ -260,6 +260,23 @@ export function retainCandidateScenarioStagePlan(input: {
   readonly candidateScenarioSha256: string;
   readonly plan: ScenarioStagePlan;
 }): Either.Either<ScenarioStagePlan, string> {
+  return retainCandidateScenarioStagePlanAtPaths({
+    ...input,
+    stagePlanPath: retainedRejectedScenarioStagePlanPath(input.candidateId),
+    stagePlanFindingsPath: retainedRejectedScenarioStagePlanFindingsPath(
+      input.candidateId,
+    ),
+  });
+}
+
+/** Retain a candidate plan in a caller-owned staging directory. */
+export function retainCandidateScenarioStagePlanAtPaths(input: {
+  readonly candidateId: ScenarioCandidateId;
+  readonly candidateScenarioSha256: string;
+  readonly plan: ScenarioStagePlan;
+  readonly stagePlanPath: string;
+  readonly stagePlanFindingsPath: string;
+}): Either.Either<ScenarioStagePlan, string> {
   const validated = validateScenarioStagePlan(input.plan);
   if (Either.isLeft(validated)) return Either.left(validated.left);
   const plan = validated.right;
@@ -279,7 +296,7 @@ export function retainCandidateScenarioStagePlan(input: {
     );
   }
   const retained = writeCanonicalOnce({
-    path: retainedRejectedScenarioStagePlanPath(input.candidateId),
+    path: input.stagePlanPath,
     value: plan,
     decode: (value) => {
       return validateScenarioStagePlan(value);
@@ -287,7 +304,7 @@ export function retainCandidateScenarioStagePlan(input: {
   });
   if (Either.isLeft(retained)) return retained;
   const findings = retainPlanFindings({
-    path: retainedRejectedScenarioStagePlanFindingsPath(input.candidateId),
+    path: input.stagePlanFindingsPath,
     plan: retained.right,
   });
   return Either.isLeft(findings) ? Either.left(findings.left) : retained;

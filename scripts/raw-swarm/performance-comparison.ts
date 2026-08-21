@@ -83,7 +83,11 @@ import {
   type GitSha,
 } from "./transcript.ts";
 import type { ScenarioId } from "./transcript.ts";
-import { PerformancePathIdSchema } from "./raw-swarm-identities.ts";
+import {
+  EvidenceSetIdSchema,
+  ExecutionIdSchema,
+  PerformancePathIdSchema,
+} from "./raw-swarm-identities.ts";
 import {
   ScenarioStagePlanSchema,
   ScenarioStageFactsSchema,
@@ -1423,6 +1427,9 @@ export type BenchmarkInvocation = Schema.Schema.Type<
 const BenchmarkMeasurementCommonFields = {
   pathId: PerformancePathIdSchema,
   scenarioId: ScenarioIdSchema,
+  /** Exact Execution authority retained by the fixed benchmark descriptor. */
+  executionId: ExecutionIdSchema,
+  evidenceSetId: EvidenceSetIdSchema,
   implementationGitSha: ImplementationGitShaSchema,
   scenarioBundle: BenchmarkScenarioBundleSchema,
   contextSourceManifest: ArtifactAuthoritySchema,
@@ -1469,7 +1476,16 @@ export type CurrentBenchmarkMeasurement = Schema.Schema.Type<
 
 const LegacyUnboundBaselineBenchmarkMeasurementSchema = Schema.Struct({
   schemaVersion: Schema.Literal(3),
-  ...BenchmarkMeasurementCommonFields,
+  pathId: PerformancePathIdSchema,
+  scenarioId: ScenarioIdSchema,
+  implementationGitSha: ImplementationGitShaSchema,
+  scenarioBundle: BenchmarkScenarioBundleSchema,
+  contextSourceManifest: ArtifactAuthoritySchema,
+  stagePlan: ScenarioStagePlanSchema,
+  invocationLedgers: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+  invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+  findings: FindingsProjectionSchema,
+  outcome: PathOutcomeSchema,
   profile: Schema.Literal("documentDeclarationSet"),
   invocations: Schema.NonEmptyArray(
     Schema.Union(
@@ -1481,7 +1497,16 @@ const LegacyUnboundBaselineBenchmarkMeasurementSchema = Schema.Struct({
 
 const LegacyUnboundBoundedBenchmarkMeasurementSchema = Schema.Struct({
   schemaVersion: Schema.Literal(3),
-  ...BenchmarkMeasurementCommonFields,
+  pathId: PerformancePathIdSchema,
+  scenarioId: ScenarioIdSchema,
+  implementationGitSha: ImplementationGitShaSchema,
+  scenarioBundle: BenchmarkScenarioBundleSchema,
+  contextSourceManifest: ArtifactAuthoritySchema,
+  stagePlan: ScenarioStagePlanSchema,
+  invocationLedgers: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+  invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+  findings: FindingsProjectionSchema,
+  outcome: PathOutcomeSchema,
   profile: Schema.Literal("boundedCapabilityProjection"),
   invocations: Schema.NonEmptyArray(CurrentModelInvocationLedgerEntrySchema),
 });
@@ -2428,6 +2453,20 @@ function currentSemanticIssues(
   const invocationIds = new Set<string>();
   let previousPhaseOrder = -1;
   for (const invocation of measurement.invocations) {
+    if (
+      invocation.schemaVersion === 4 &&
+      (invocation.phase === "player" || invocation.phase === "postPlayReview")
+    ) {
+      if (
+        invocation.subject.tag !== "execution" ||
+        invocation.subject.executionId !== findings.subject.executionId ||
+        invocation.subject.evidenceSetId !== findings.subject.evidenceSetId
+      ) {
+        issues.push(
+          `Invocation ${invocation.invocationId} is not bound to the exact Execution and Evidence Set of the player findings subject.`,
+        );
+      }
+    }
     if (invocationIds.has(invocation.invocationId)) {
       issues.push(
         `Invocation ${invocation.invocationId} appears more than once in the complete-path ledger.`,
@@ -4983,6 +5022,28 @@ function benchmarkAuthorityIssues(
 function benchmarkSemanticIssues(
   measurement: BenchmarkMeasurementWithCurrentEvidence,
 ): readonly string[] {
+  const identityIssues: string[] = [];
+  if (measurement.schemaVersion !== 5) {
+    // Historical benchmark envelopes predate exact Execution/Evidence Set
+    // binding and are validated by their separate legacy branch.
+  } else if (measurement.findings.subject.tag !== "execution") {
+    identityIssues.push(
+      "A current benchmark measurement must retain Execution findings.",
+    );
+  } else {
+    if (measurement.executionId !== measurement.findings.subject.executionId) {
+      identityIssues.push(
+        "Benchmark executionId does not match the retained player Execution findings subject.",
+      );
+    }
+    if (
+      measurement.evidenceSetId !== measurement.findings.subject.evidenceSetId
+    ) {
+      identityIssues.push(
+        "Benchmark evidenceSetId does not match the retained player Execution findings subject.",
+      );
+    }
+  }
   const canonicalInvocations = canonicalBenchmarkInvocations(
     measurement.invocations,
   );
@@ -5005,6 +5066,7 @@ function benchmarkSemanticIssues(
         }
       : { ...canonicalCommon, schemaVersion: 2 };
   const issues = [
+    ...identityIssues,
     ...currentSemanticIssues(canonicalMeasurement, {
       compositeReviewCount: benchmarkReviewPlan(measurement.profile).stages
         .length,

@@ -1264,6 +1264,8 @@ function benchmarkMeasurement(
     pathId: `benchmark-${profile}-${root}`,
     profile,
     scenarioId,
+    executionId: "synthetic-complete-path-execution",
+    evidenceSetId: "synthetic-complete-path-evidence",
     implementationGitSha,
     scenarioBundle: {
       scenario: scenarioAuthority,
@@ -2258,10 +2260,18 @@ describe("complete Raw Swarm path comparison", () => {
       scenarioBundle: boundBaseline.scenarioBundle,
       stagePlan: boundBaseline.stagePlan,
     });
-    const { findingsAuthority: _baselineAuthority, ...baselineEvidence } =
-      boundBaseline;
-    const { findingsAuthority: _candidateAuthority, ...candidateEvidence } =
-      boundCandidate;
+    const {
+      findingsAuthority: _baselineAuthority,
+      executionId: _baselineExecutionId,
+      evidenceSetId: _baselineEvidenceSetId,
+      ...baselineEvidence
+    } = boundBaseline;
+    const {
+      findingsAuthority: _candidateAuthority,
+      executionId: _candidateExecutionId,
+      evidenceSetId: _candidateEvidenceSetId,
+      ...candidateEvidence
+    } = boundCandidate;
     const baseline = validateCompletePathMeasurement({
       ...baselineEvidence,
       schemaVersion: 3,
@@ -2299,6 +2309,53 @@ describe("complete Raw Swarm path comparison", () => {
       _tag: "Left",
       left: expect.stringContaining("different implementation revision"),
     });
+  });
+
+  test("binds current player and post-play invocation subjects to one Execution and Evidence Set", () => {
+    const source = benchmarkMeasurement("boundedCapabilityProjection");
+    const player = source.invocations.find(({ phase }) => phase === "player");
+    expect(player).toBeDefined();
+    if (player === undefined || player.subject.tag !== "execution") return;
+    const tampered = {
+      ...source,
+      invocations: source.invocations.map((invocation) =>
+        invocation.invocationId === player.invocationId
+          ? {
+              ...invocation,
+              subject: {
+                ...invocation.subject,
+                evidenceSetId: "swapped-benchmark-evidence",
+              },
+            }
+          : invocation,
+      ),
+    };
+    const parsed = parseBenchmarkMeasurement(tampered);
+    expect(Either.isRight(parsed)).toBe(true);
+    if (Either.isRight(parsed)) {
+      expect(validateCompletePathMeasurement(parsed.right)).toMatchObject({
+        _tag: "Left",
+      });
+    }
+  });
+
+  test("rejects a fixed benchmark measurement whose descriptor identity is swapped", () => {
+    const source = benchmarkMeasurement("boundedCapabilityProjection");
+    const tampered = {
+      ...source,
+      executionId: "swapped-benchmark-execution",
+      evidenceSetId: "swapped-benchmark-evidence",
+    };
+    const parsed = parseBenchmarkMeasurement(tampered);
+    expect(Either.isRight(parsed)).toBe(true);
+    if (Either.isRight(parsed)) {
+      expect(validateCompletePathMeasurement(parsed.right)).toMatchObject({
+        _tag: "Left",
+        left: expect.stringContaining(
+          "does not match the retained player Execution",
+        ),
+      });
+    }
   });
 
   test("rejects a tampered or role-swapped benchmark context authority", () => {

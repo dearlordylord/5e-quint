@@ -8,6 +8,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
   exportArtifactIndex,
   ingestArtifactRun,
+  ingestArtifactRunWithArtifacts,
   inventoryLegacyDatabase,
   openArtifactIndex,
   rebuildLegacyArtifactIndex,
@@ -783,6 +784,59 @@ describe("Raw Swarm artifact index", () => {
         dbPath: relative(repoRoot, resolve(directory, "index.sqlite")),
       }),
     ).toThrow("do not match the parsed transcript source");
+  });
+
+  test("registers controlled attachments in the transcript transaction", () => {
+    const directory = temporaryDirectory();
+    const transcript = sdkTranscript(directory);
+    const attachment = resolve(directory, "review-invocation-evidence.json");
+    writeFileSync(attachment, '{"schemaVersion":1}\n');
+    const dbPath = resolve(directory, "controlled.sqlite");
+    expect(
+      ingestArtifactRunWithArtifacts({
+        transcriptPath: relative(repoRoot, transcript),
+        dbPath: relative(repoRoot, dbPath),
+        additionalArtifacts: [
+          {
+            role: "reviewInvocationEvidence",
+            path: relative(repoRoot, attachment),
+            mediaType: "application/json",
+          },
+        ],
+      }),
+    ).toBe(1);
+    const db = new DatabaseSync(dbPath, { readOnly: true });
+    expect(
+      db
+        .prepare(
+          "SELECT role FROM runArtifacts WHERE runId = 1 AND role = 'reviewInvocationEvidence'",
+        )
+        .get(),
+    ).toEqual({ role: "reviewInvocationEvidence" });
+    db.close();
+
+    const failedDbPath = resolve(directory, "controlled-rollback.sqlite");
+    expect(() =>
+      ingestArtifactRunWithArtifacts({
+        transcriptPath: relative(repoRoot, transcript),
+        dbPath: relative(repoRoot, failedDbPath),
+        additionalArtifacts: [
+          {
+            role: "missingControlledAttachment",
+            path: relative(repoRoot, resolve(directory, "missing.json")),
+            mediaType: "application/json",
+          },
+        ],
+      }),
+    ).toThrow();
+    const rolledBack = new DatabaseSync(failedDbPath, { readOnly: true });
+    expect(
+      rolledBack.prepare("SELECT COUNT(*) AS count FROM runs").get(),
+    ).toEqual({ count: 0 });
+    expect(
+      rolledBack.prepare("SELECT COUNT(*) AS count FROM runArtifacts").get(),
+    ).toEqual({ count: 0 });
+    rolledBack.close();
   });
 
   test("classifies overwritten legacy paths and locates the exact immutable artifact", () => {

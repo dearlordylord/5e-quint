@@ -136,6 +136,31 @@ export type ScenarioCatalogueBatchExpectation = Readonly<{
   readonly scenarioIds: readonly ScenarioId[];
 }>;
 
+/**
+ * The exact catalogue boundary supplied to one authoring/rejection decision.
+ * This is derived from the canonical projection and retained with the
+ * decision; it is not a second catalogue or a mutable lookup registry.
+ */
+export type ScenarioCatalogueComparisonBoundary = Readonly<{
+  readonly predecessorScenarioIds: readonly ScenarioId[];
+  readonly predecessorBatches: readonly ScenarioCatalogueBatchExpectation[];
+}>;
+
+export function scenarioCatalogueComparisonBoundary(input: {
+  readonly projections: readonly ScenarioCatalogueProjection[];
+  readonly batches: readonly (readonly ScenarioCatalogueProjection[])[];
+}): ScenarioCatalogueComparisonBoundary {
+  return {
+    predecessorScenarioIds: input.projections.map(
+      ({ scenarioId }) => scenarioId,
+    ),
+    predecessorBatches: input.batches.map((batch, batchIndex) => ({
+      batchIndex,
+      scenarioIds: batch.map(({ scenarioId }) => scenarioId),
+    })),
+  };
+}
+
 const ComparisonBasisSchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("noAdmittedScenarios") }),
   Schema.Struct({
@@ -515,9 +540,17 @@ export function aggregateScenarioCatalogueComparisons(input: {
     if (Either.isLeft(evidence)) return Either.left(evidence.left);
     batches.push(evidence.right);
   }
-  const comparedScenarioIds = input.comparisons.flatMap(
+  const retainedComparedScenarioIds = input.comparisons.flatMap(
     ({ comparedScenarioIds: ids }) => ids,
   );
+  if (
+    !sameScenarioIds(retainedComparedScenarioIds, input.expectedScenarioIds)
+  ) {
+    return Either.left(
+      "Aggregated catalogue comparison must retain the exact complete top-level Scenario id set.",
+    );
+  }
+  const comparedScenarioIds = [...retainedComparedScenarioIds];
   const conclusion = input.comparisons.some(
     ({ conclusion: candidate }) => candidate === "redundant",
   )
