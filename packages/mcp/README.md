@@ -23,6 +23,23 @@ the character-creation and battle runtimes. Its composition root builds:
   durable post-battle character state, selected Stat Block identity, durable
   battle state, and transient battle fills.
 
+The protocol host keeps those mutable facts in isolated process-lifetime **Play
+Sessions**. `create_play_session` returns a branded `playSessionId`,
+`read_play_session` resumes a live session, and every character or battle tool
+requires the handle. Calls for one handle are serialized; different handles
+have independent stores and queues while sharing the application root's
+installed catalogs and support profile. A valid handle not present in the live
+process returns the single typed `playSessionUnavailable` result with guidance
+to create and rebuild a new session. It intentionally does not infer whether
+the handle expired, was evicted, came from another process, or was otherwise
+lost.
+
+Stateful protocol results use one contextual envelope derived from the
+operation result and canonical session snapshot. It reports the typed operation
+result, current projection, unresolved inputs, relevant next operations, and
+restoration status. The envelope stores no workflow state and does not become a
+second rules or session owner.
+
 The character-creation tool boundary exposes these user-facing tools:
 
 - `describe_mcp_workflow` returns the agent-facing lifecycle, accepted fill
@@ -162,6 +179,11 @@ Deferred workflow gates:
   Mage Armor, and post-turn lifecycle subjects remain outside this workflow.
 
 Normal package tests cover the MCP server route.
+
+The developer-mode `plugins/srd-play` package connects this application to one
+focused conversation Skill. The Skill retains returned handles and sequences
+canonical MCP facts; it contains no catalog, rules inventory, executable
+choices, or shadow session state.
 
 `BattleResolutionResult` may include display-facing result details for tool
 responses, but `BattleState` remains authoritative. Optional display logs must

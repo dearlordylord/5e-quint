@@ -33,7 +33,7 @@ describe("MCP protocol server", () => {
       await client.connect(clientTransport);
 
       expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(
-        ["describe_mcp_workflow"],
+        ["create_play_session", "read_play_session", "describe_mcp_workflow"],
       );
       const hiddenCall = await client.callTool({
         name: "create_character_draft",
@@ -53,6 +53,124 @@ describe("MCP protocol server", () => {
           ),
         },
       ]);
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  });
+
+  test("creates, resumes, and independently mutates isolated Play Sessions", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const { server } = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "play-session-protocol-client",
+      version: "0.1.0",
+    });
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+
+      const first = await createPlaySession(client);
+      const second = await createPlaySession(client);
+      expect(first).not.toBe(second);
+
+      const firstMutation = await callStructuredTool(client, {
+        name: "create_character_draft",
+        arguments: {
+          playSessionId: first,
+          draftId: "draft:first-isolated-session",
+        },
+      });
+      expect(firstMutation).toMatchObject({
+        tag: "playSessionAvailable",
+        playSessionId: first,
+        operation: {
+          name: "create_character_draft",
+          result: {
+            draft: { draftId: "draft:first-isolated-session" },
+          },
+        },
+        projection: { draftIds: ["draft:first-isolated-session"] },
+        restoration: { tag: "retained" },
+      });
+      expect(Array.isArray(firstMutation.unresolvedInputs)).toBe(true);
+      expect(firstMutation.unresolvedInputs).not.toEqual([]);
+      expect(firstMutation.nextOperations).toContain("fill_creation_holes");
+
+      const secondMutation = await callStructuredTool(client, {
+        name: "create_character_draft",
+        arguments: {
+          playSessionId: second,
+          draftId: "draft:second-isolated-session",
+        },
+      });
+      expect(secondMutation.projection).toMatchObject({
+        draftIds: ["draft:second-isolated-session"],
+      });
+
+      const resumedFirst = await callStructuredTool(client, {
+        name: "read_play_session",
+        arguments: { playSessionId: first },
+      });
+      expect(resumedFirst).toMatchObject({
+        tag: "playSessionAvailable",
+        operation: {
+          name: "read_play_session",
+          result: { tag: "playSessionResumed", playSessionId: first },
+        },
+        projection: { draftIds: ["draft:first-isolated-session"] },
+      });
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  });
+
+  test("returns one typed restoration result for a handle absent from the process", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const { server } = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "unavailable-play-session-client",
+      version: "0.1.0",
+    });
+    const absentHandle = "play-session:00000000-0000-4000-8000-000000000000";
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+
+      const result = await client.callTool({
+        name: "list_characters",
+        arguments: { playSessionId: absentHandle },
+      });
+      expect(result.isError).toBe(true);
+      expect(result.structuredContent).toEqual({
+        tag: "playSessionUnavailable",
+        playSessionId: absentHandle,
+        operation: {
+          name: "list_characters",
+          result: {
+            tag: "playSessionUnavailable",
+            restoration: {
+              tag: "newSessionRequired",
+              guidance:
+                "Create a new Play Session, then rebuild the desired state from model-visible or user-provided facts. The unavailable handle cannot be restored.",
+            },
+          },
+        },
+        projection: null,
+        unresolvedInputs: [],
+        nextOperations: ["create_play_session"],
+        restoration: {
+          tag: "newSessionRequired",
+          guidance:
+            "Create a new Play Session, then rebuild the desired state from model-visible or user-provided facts. The unavailable handle cannot be restored.",
+        },
+      });
+      expect(JSON.stringify(result.structuredContent)).not.toMatch(
+        /expired|restart|evict|deleted/i,
+      );
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
@@ -146,3 +264,49 @@ describe("MCP protocol server", () => {
     }
   }, 30_000);
 });
+
+async function createPlaySession(client: Client): Promise<string> {
+  const created = await callStructuredTool(client, {
+    name: "create_play_session",
+    arguments: {},
+  });
+  expect(created).toMatchObject({
+    tag: "playSessionAvailable",
+    operation: {
+      name: "create_play_session",
+      result: { tag: "playSessionCreated" },
+    },
+    projection: {
+      draftIds: [],
+      characterIds: [],
+      selectedStatBlockId: null,
+      activeBattle: null,
+    },
+  });
+  if (typeof created.playSessionId !== "string") {
+    throw new Error("create_play_session did not return a string handle.");
+  }
+  return created.playSessionId;
+}
+
+async function callStructuredTool(
+  client: Client,
+  input: {
+    readonly name: string;
+    readonly arguments: Record<string, unknown>;
+  },
+): Promise<Readonly<Record<string, unknown>>> {
+  const result = await client.callTool(input);
+  expect(result.isError).not.toBe(true);
+  expect(result.structuredContent).toBeDefined();
+  if (!isJsonObject(result.structuredContent)) {
+    throw new Error(`${input.name} did not return an object payload.`);
+  }
+  return result.structuredContent;
+}
+
+function isJsonObject(
+  value: unknown,
+): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}

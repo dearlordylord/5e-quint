@@ -370,7 +370,11 @@ registry to compensate for a missing runtime or Surface shape.
 
 ## MCP Composition
 
-`@dnd/mcp` is the tool-facing composition package.
+`@dnd/mcp` is the tool-facing composition package and the sole owner of live
+Play Session routing. The protocol host creates isolated process-lifetime
+session stores behind branded handles, serializes calls per handle, and shares
+the installed application catalogs across sessions. Plugin Skills orchestrate
+these operations but own no application or rules state.
 
 The MCP runtime path composes:
 

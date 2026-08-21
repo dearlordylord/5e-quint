@@ -1,0 +1,4 @@
+interface:
+  display_name: "Play the SRD"
+  short_description: "Create characters and play battles with the SRD runtime."
+  default_prompt: "Help me create an SRD character and start a battle."

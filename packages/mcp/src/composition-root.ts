@@ -74,6 +74,19 @@ export function createMcpCompositionRoot(
   };
 }
 
+export function createPlaySessionCompositionRoot(
+  applicationRoot: McpCompositionRoot,
+): McpCompositionRoot {
+  return {
+    unitLibrary: applicationRoot.unitLibrary,
+    statBlockCatalog: applicationRoot.statBlockCatalog,
+    sessionStore: createMcpSessionStore(applicationRoot.statBlockCatalog),
+    adminMirrorPublication: applicationRoot.adminMirrorPublication,
+    characterCreationSupportProfile:
+      applicationRoot.characterCreationSupportProfile,
+  };
+}
+
 function createAdminMirrorPublicationFromEnv(): AdminMirrorPublication {
   const endpoint = process.env.DND_ADMIN_MIRROR_URL;
   const sessionId = process.env.DND_ADMIN_MIRROR_SESSION_ID;

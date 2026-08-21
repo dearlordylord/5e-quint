@@ -45,8 +45,17 @@ export {
 } from "./content-tools.ts";
 export {
   createMcpCompositionRoot,
+  createPlaySessionCompositionRoot,
   type McpCompositionRoot,
 } from "./composition-root.ts";
+export {
+  createPlaySessionRegistry,
+  decodePlaySessionId,
+  PlaySessionIdSchema,
+  type PlaySessionId,
+  type PlaySessionRegistry,
+  type PlaySessionUnavailable,
+} from "./play-session.ts";
 export {
   createMcpSessionStore,
   type AvailableCharacterSession,

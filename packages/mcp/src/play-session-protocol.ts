@@ -1,0 +1,274 @@
+import { Either, Schema } from "effect";
+
+import type { McpCompositionRoot } from "./composition-root.ts";
+import {
+  decodePlaySessionId,
+  PLAY_SESSION_UNAVAILABLE,
+  type PlaySessionId,
+  type PlaySessionRegistry,
+} from "./play-session.ts";
+import {
+  mcpSessionSummary,
+  type McpSessionSummary,
+} from "./session-snapshot-output.ts";
+import type { McpSessionSnapshot } from "./session-store.ts";
+import {
+  errorContent,
+  jsonContent,
+  jsonContentPayload,
+  jsonSerializablePayload,
+} from "./tool-content.ts";
+import { playSessionToolNames } from "./play-session-tool-contract.ts";
+
+const EmptyArgsSchema = Schema.Struct({});
+
+export type PlaySessionProtocolResult = ReturnType<typeof jsonContent> & {
+  readonly structuredContent: unknown;
+  readonly isError?: true;
+};
+
+export function handleCreatePlaySession(
+  registry: PlaySessionRegistry,
+  args: unknown,
+): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
+  const decoded = Schema.decodeUnknownEither(EmptyArgsSchema, {
+    onExcessProperty: "error",
+  })(args === undefined ? {} : args);
+  if (Either.isLeft(decoded)) {
+    return errorContent("create_play_session expects valid arguments.", {
+      code: "INVALID_ARGUMENTS",
+      message: decoded.left.message,
+    });
+  }
+  const created = registry.create();
+  return availableEnvelope({
+    playSessionId: created.playSessionId,
+    operationName: playSessionToolNames.create,
+    operationResult: {
+      tag: "playSessionCreated",
+      playSessionId: created.playSessionId,
+    },
+    projection: created.projection,
+  });
+}
+
+export async function handleReadPlaySession(
+  registry: PlaySessionRegistry,
+  args: unknown,
+): Promise<PlaySessionProtocolResult | ReturnType<typeof errorContent>> {
+  const routed = decodePlaySessionRoutedArgs(args, playSessionToolNames.read);
+  if (Either.isLeft(routed)) return routed.left;
+
+  const result = await registry.run(routed.right.playSessionId, (root) => ({
+    projection: root.sessionStore.snapshot(),
+  }));
+  return Either.isLeft(result)
+    ? unavailableEnvelope(routed.right.playSessionId, playSessionToolNames.read)
+    : availableEnvelope({
+        playSessionId: routed.right.playSessionId,
+        operationName: playSessionToolNames.read,
+        operationResult: {
+          tag: "playSessionResumed",
+          playSessionId: routed.right.playSessionId,
+        },
+        projection: result.right.projection,
+      });
+}
+
+export async function handlePlaySessionOperation(input: {
+  readonly registry: PlaySessionRegistry;
+  readonly operationName: string;
+  readonly args: unknown;
+  readonly handle: (
+    root: McpCompositionRoot,
+    args: unknown,
+  ) => unknown | Promise<unknown>;
+}): Promise<PlaySessionProtocolResult | ReturnType<typeof errorContent>> {
+  const routed = decodePlaySessionRoutedArgs(input.args, input.operationName);
+  if (Either.isLeft(routed)) return routed.left;
+
+  const result = await input.registry.run(
+    routed.right.playSessionId,
+    async (root) => ({
+      operationContent: await input.handle(root, routed.right.operationArgs),
+      projection: root.sessionStore.snapshot(),
+    }),
+  );
+  if (Either.isLeft(result)) {
+    return unavailableEnvelope(routed.right.playSessionId, input.operationName);
+  }
+
+  const operationContent = result.right.operationContent;
+  if (!isToolContent(operationContent)) {
+    return errorContent("MCP operation returned invalid tool content.", {
+      code: "INVALID_OPERATION_CONTENT",
+      operationName: input.operationName,
+    });
+  }
+  return availableEnvelope({
+    playSessionId: routed.right.playSessionId,
+    operationName: input.operationName,
+    operationResult:
+      "structuredContent" in operationContent
+        ? operationContent.structuredContent
+        : jsonContentPayload(operationContent),
+    projection: result.right.projection,
+    isError: operationContent.isError === true,
+  });
+}
+
+type RoutedArgs = {
+  readonly playSessionId: PlaySessionId;
+  readonly operationArgs: Readonly<Record<string, unknown>>;
+};
+
+function decodePlaySessionRoutedArgs(
+  args: unknown,
+  operationName: string,
+): Either.Either<RoutedArgs, ReturnType<typeof errorContent>> {
+  if (!isJsonObject(args)) {
+    return Either.left(
+      errorContent(`${operationName} expects valid arguments.`, {
+        code: "INVALID_ARGUMENTS",
+        message: "Expected an object containing playSessionId.",
+      }),
+    );
+  }
+  const decodedId = decodePlaySessionId(args.playSessionId);
+  if (Either.isLeft(decodedId)) {
+    return Either.left(
+      errorContent(`${operationName} expects valid arguments.`, {
+        code: "INVALID_ARGUMENTS",
+        message: decodedId.left,
+      }),
+    );
+  }
+  const operationArgs = Object.fromEntries(
+    Object.entries(args).filter(([key]) => key !== "playSessionId"),
+  );
+  return Either.right({
+    playSessionId: decodedId.right,
+    operationArgs,
+  });
+}
+
+function availableEnvelope(input: {
+  readonly playSessionId: PlaySessionId;
+  readonly operationName: string;
+  readonly operationResult: unknown;
+  readonly projection: McpSessionSnapshot;
+  readonly isError?: boolean;
+}): PlaySessionProtocolResult {
+  const unresolvedInputs = unresolvedInputsFrom(input.operationResult);
+  const payload = jsonSerializablePayload({
+    tag: "playSessionAvailable",
+    playSessionId: input.playSessionId,
+    operation: {
+      name: input.operationName,
+      result: input.operationResult,
+    },
+    projection: mcpSessionSummary(input.projection),
+    unresolvedInputs,
+    nextOperations: nextOperationsFrom(input.projection, unresolvedInputs),
+    restoration: { tag: "retained" },
+  });
+  return {
+    ...jsonContent(payload),
+    structuredContent: payload,
+    ...(input.isError === true ? { isError: true as const } : {}),
+  };
+}
+
+function unavailableEnvelope(
+  playSessionId: PlaySessionId,
+  operationName: string,
+): PlaySessionProtocolResult {
+  const payload = jsonSerializablePayload({
+    tag: PLAY_SESSION_UNAVAILABLE.tag,
+    playSessionId,
+    operation: {
+      name: operationName,
+      result: PLAY_SESSION_UNAVAILABLE,
+    },
+    projection: null,
+    unresolvedInputs: [],
+    nextOperations: [playSessionToolNames.create],
+    restoration: PLAY_SESSION_UNAVAILABLE.restoration,
+  });
+  return {
+    ...jsonContent(payload),
+    structuredContent: payload,
+    isError: true,
+  };
+}
+
+type UnresolvedInputGroup = {
+  readonly sourcePath: string;
+  readonly inputs: readonly unknown[];
+};
+
+function unresolvedInputsFrom(value: unknown): readonly UnresolvedInputGroup[] {
+  const groups: UnresolvedInputGroup[] = [];
+  collectUnresolvedInputs(value, "$", groups);
+  return groups;
+}
+
+function collectUnresolvedInputs(
+  value: unknown,
+  path: string,
+  groups: UnresolvedInputGroup[],
+): void {
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) =>
+      collectUnresolvedInputs(entry, `${path}[${index}]`, groups),
+    );
+    return;
+  }
+  if (!isJsonObject(value)) return;
+
+  for (const [key, entry] of Object.entries(value)) {
+    const entryPath = `${path}.${key}`;
+    if ((key === "holes" || key === "initialHoles") && Array.isArray(entry)) {
+      if (entry.length > 0)
+        groups.push({ sourcePath: entryPath, inputs: entry });
+      continue;
+    }
+    collectUnresolvedInputs(entry, entryPath, groups);
+  }
+}
+
+function nextOperationsFrom(
+  projection: McpSessionSummary,
+  unresolvedInputs: readonly UnresolvedInputGroup[],
+): readonly string[] {
+  if (projection.activeBattle !== null) {
+    return unresolvedInputs.length > 0
+      ? ["fill_battle_hole", "read_battle_state"]
+      : ["discover_battle_acts", "read_battle_state", "end_battle"];
+  }
+  if (projection.draftIds.length > 0) {
+    return unresolvedInputs.length > 0
+      ? ["fill_creation_holes", "discover_creation_holes"]
+      : ["finalize_character", "discover_creation_holes"];
+  }
+  if (projection.characterIds.length > 0) {
+    return ["list_characters", "start_battle", "create_character_draft"];
+  }
+  return ["create_character_draft", "list_catalog_units", "list_stat_blocks"];
+}
+
+function isJsonObject(
+  value: unknown,
+): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isToolContent(value: unknown): value is {
+  readonly content: readonly [{ readonly text: string }];
+  readonly structuredContent?: unknown;
+  readonly isError?: boolean;
+} {
+  if (!isJsonObject(value) || !Array.isArray(value.content)) return false;
+  const first = value.content[0];
+  return isJsonObject(first) && typeof first.text === "string";
+}

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "srd-play": {
+      "command": "pnpm",
+      "args": ["--filter", "@dnd/mcp", "dev"],
+      "cwd": "../.."
+    }
+  }
+}
