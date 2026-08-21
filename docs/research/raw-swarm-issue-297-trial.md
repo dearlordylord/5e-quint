@@ -226,7 +226,7 @@ entry would make those immutable relationship records invalid.
 
 ### Execution ledger
 
-The continuation added seven schema-v3 index rows and 62 deterministically
+The continuation added eight schema-v3 index rows and 62 deterministically
 replayed SDK calls. Each imported review and final findings projection is owned
 by its Evidence Set; this table is only the compact operator ledger.
 
@@ -239,11 +239,12 @@ by its Evidence Set; this table is only the compact operator ledger.
 |   6 | `table-authored-shove-then-grapple-day-execution-a`   |     0 | deterministic setup obstruction |           8 verdicts |             10 | Setup cannot register separate Table-authored Grapple reach witnesses for alternative future post-Shove fingerprints.                             |
 |   7 | `four-way-crank-control-cycle-day-execution-a`        |    20 | matched                         | 8 verdicts, all pass |             20 | The required Shove, Grapple, Shove, Shove sequence completed with valid Table witnesses, turn order, DCs, conditions, and completion boundary.    |
 |   8 | `table-save-circumstance-advantage-probe-execution-b` |     0 | deterministic setup obstruction |           5 verdicts |              7 | After supplying the required Goblin arrow stock, setup reached the intended #279 gap: no public witness can scope Advantage to the one Wolf save. |
+|   9 | `two-goblins-pursue-skeleton-day-execution-a`         |     0 | deterministic setup obstruction |           4 verdicts |              6 | Setup cannot combine geometry-owned arena and placements with the Scenario's Table-owned Three-Quarters Cover ruling at the portcullis.           |
 
-The seven reviews contributed 55 verdicts and 108 final findings. The index
-after row 8 contains eight Executions total, with verdict totals: 2
-`adapter-defect`, 2 `corpus-ambiguity`, 43 `pass`, 6 `player-invalid`, 3
-`reviewer-error`, 2 `scenario-invalid`, and 6 `unsupported-capability`.
+The eight reviews contributed 59 verdicts and 114 final findings. The index
+after row 9 contains nine Executions total, with verdict totals: 2
+`adapter-defect`, 2 `corpus-ambiguity`, 46 `pass`, 6 `player-invalid`, 3
+`reviewer-error`, 2 `scenario-invalid`, and 7 `unsupported-capability`.
 
 ### Promoted and deduplicated findings
 
@@ -260,8 +261,8 @@ after row 8 contains eight Executions total, with verdict totals: 2
 - No other review produced an unlinked bug or adapter-defect fingerprint.
 
 The strongest supported-path evidence is row 7: deterministic replay and all
-eight independent verdicts passed. Rows 2, 4, and 6 preserve unsupported or
-invalid admission boundaries without fabrication. Rows 3 and 5 additionally
+eight independent verdicts passed. Rows 2, 4, 6, 8, and 9 preserve unsupported
+or invalid admission boundaries without fabrication. Rows 3 and 5 additionally
 show that an accepted player conclusion is not proof of scenario-faithful
 play.
 
