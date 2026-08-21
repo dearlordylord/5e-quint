@@ -3,6 +3,13 @@ import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
 import {
+  handleInspectCatalogUnit,
+  inspectCatalogUnitToolDefinition,
+  inspectCatalogUnitToolName,
+  InspectCatalogUnitInputSchema,
+  type InspectCatalogUnitArgs,
+} from "./catalog-unit-tool.ts";
+import {
   decodeToolArgs,
   mcpObjectJsonSchema,
   mcpOutputJsonSchema,
@@ -77,19 +84,27 @@ const contentToolNames = {
   describeMcpWorkflow: "describe_mcp_workflow",
   listStatBlocks: "list_stat_blocks",
   listCatalogUnits: "list_catalog_units",
+  inspectCatalogUnit: inspectCatalogUnitToolName,
 } as const;
 const CONTENT_TOOL_NAMES = [
   contentToolNames.describeMcpWorkflow,
   contentToolNames.listStatBlocks,
   contentToolNames.listCatalogUnits,
+  contentToolNames.inspectCatalogUnit,
 ] as const;
 type ContentToolName = (typeof CONTENT_TOOL_NAMES)[number];
-type ContentToolCall = {
-  readonly [Name in ContentToolName]: {
-    readonly name: Name;
-    readonly args: Record<string, never>;
-  };
-}[ContentToolName];
+type ContentToolCall =
+  | {
+      readonly name:
+        | typeof contentToolNames.describeMcpWorkflow
+        | typeof contentToolNames.listStatBlocks
+        | typeof contentToolNames.listCatalogUnits;
+      readonly args: Record<string, never>;
+    }
+  | {
+      readonly name: typeof contentToolNames.inspectCatalogUnit;
+      readonly args: InspectCatalogUnitArgs;
+    };
 
 export const contentToolDefinitions = [
   {
@@ -102,17 +117,18 @@ export const contentToolDefinitions = [
   {
     name: contentToolNames.listStatBlocks,
     description:
-      "List selectable SRD Stat Blocks with ids, display names, attacks, defenses, and damage modifiers for select_stat_block.",
+      "List every installed redistributable SRD Stat Block with ids, display names, attacks, defenses, and damage modifiers. Catalog presence does not imply that every source is executable in every workflow.",
     inputSchema: emptyInputSchema,
     outputSchema: listStatBlocksOutputSchema,
   },
   {
     name: contentToolNames.listCatalogUnits,
     description:
-      "List installed Unit ids grouped by kind. This is catalog discovery only; legal choices still come from creation holes and battle acts.",
+      "List every installed redistributable SRD Unit id grouped by kind. This reports catalog presence only; legal and executable sources still come from the consuming workflow's canonical discovery result.",
     inputSchema: emptyInputSchema,
     outputSchema: listCatalogUnitsOutputSchema,
   },
+  inspectCatalogUnitToolDefinition,
 ] as const;
 
 type StatBlockAttack = NonNullable<
@@ -171,6 +187,19 @@ export function decodeContentToolCall(input: {
         }),
       ),
     ),
+    Match.when(contentToolNames.inspectCatalogUnit, () =>
+      Either.map(
+        decodeToolArgs(
+          InspectCatalogUnitInputSchema,
+          input.args,
+          contentToolNames.inspectCatalogUnit,
+        ),
+        (args) => ({
+          name: contentToolNames.inspectCatalogUnit,
+          args,
+        }),
+      ),
+    ),
     Match.exhaustive,
   );
 }
@@ -198,6 +227,9 @@ export function handleContentToolCall(
           "Map user wording to returned Unit names and ids only when the intent is unambiguous. If a user says 'warrior', ask whether they mean Fighter before filling class_fighter.",
         next: "Use create_character_draft and discover_creation_holes for the authoritative holeId, optionId, and cardinality values before filling a draft.",
       }),
+    ),
+    Match.when({ name: contentToolNames.inspectCatalogUnit }, ({ args }) =>
+      handleInspectCatalogUnit(root, args),
     ),
     Match.exhaustive,
   );

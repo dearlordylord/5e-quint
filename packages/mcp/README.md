@@ -33,6 +33,11 @@ The character-creation tool boundary exposes these user-facing tools:
   character choices still come from `discover_creation_holes`.
 - `list_stat_blocks` lists selectable SRD Stat Block ids, display names,
   attacks, defenses, damage modifiers, and provenance for `select_stat_block`.
+- `inspect_catalog_unit` returns the canonical installed SRD Unit record for a
+  Unit id returned by `list_catalog_units`. The three catalog calls are
+  stateless and require no Play Session handle. Presence in these results does
+  not claim Source-Executable support; each consuming workflow remains the
+  authority for its contextual support and legal choices.
 
 - `create_character_draft` creates and stores a new character draft, then
   returns the current creation holes.

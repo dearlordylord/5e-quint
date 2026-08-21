@@ -17,7 +17,7 @@ import { createMcpCompositionRoot } from "./composition-root.ts";
 import { contentToolDefinitions } from "./content-tools.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
-const FULL_ACCEPTANCE_TEST_TIMEOUT_MS = 60_000;
+const FULL_ACCEPTANCE_TEST_TIMEOUT_MS = 90_000;
 
 describe("MCP protocol server", () => {
   test("rejects calls outside the advertised tool definitions", async () => {

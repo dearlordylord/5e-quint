@@ -33,6 +33,7 @@ const expectedTools = [
   "describe_mcp_workflow",
   "list_stat_blocks",
   "list_catalog_units",
+  "inspect_catalog_unit",
   "create_character_draft",
   "apply_character_session_operation",
   "discover_creation_holes",
@@ -465,6 +466,15 @@ export async function verifyToolContract(client: Client) {
   assert.ok(
     unitSummaries(units, "spell").some((unit) => unit.id === "magic_missile"),
   );
+
+  const unitDetail = await callTool(client, "inspect_catalog_unit", {
+    unitId: "magic_missile",
+  });
+  assert.equal(get(unitDetail, "unit.id"), "magic_missile");
+  assert.equal(get(unitDetail, "unit.name"), "Magic Missile");
+  assert.equal(get(unitDetail, "unit.kind"), "spell");
+  assert.equal(get(unitDetail, "unit.provenance.kind"), "srd-5.2.1");
+  assert.equal(get(unitDetail, "unit.executable"), undefined);
 
   const statBlocks = await callTool(client, "list_stat_blocks", {});
   const statBlockIds = (
