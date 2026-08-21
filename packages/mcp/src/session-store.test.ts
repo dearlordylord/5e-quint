@@ -94,6 +94,70 @@ describe("MCP character sessions", () => {
       ).toEqual(DRUID_WILD_SHAPE_KNOWN_FORM_IDS);
     }
   });
+
+  test("validates the full Character Session batch before committing it", () => {
+    const root = createMcpPlaySessionRoot();
+    const store = createMcpSessionStore(root.statBlockCatalog);
+    const first = expectRight(
+      availableCharacterSession({
+        characterId: characterSheetId("character:mcp-batch-first"),
+        build: druidWildShapeBuild(),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary,
+        druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      }),
+    );
+    const second = expectRight(
+      availableCharacterSession({
+        characterId: characterSheetId("character:mcp-batch-second"),
+        build: druidWildShapeBuild(),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary,
+        druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      }),
+    );
+    store.characters.set(first);
+    store.characters.set(second);
+
+    expect(store.characters.setAll([first, first])).toEqual(
+      Either.left({
+        tag: "duplicateCharacterSession",
+        characterId: first.characterId,
+      }),
+    );
+    expect(store.characters.get(first.characterId)).toBe(first);
+    expect(store.characters.get(second.characterId)).toBe(second);
+
+    const unknown = expectRight(
+      availableCharacterSession({
+        characterId: characterSheetId("character:mcp-batch-unknown"),
+        build: druidWildShapeBuild(),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary,
+        druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      }),
+    );
+    expect(store.characters.setAll([first, unknown])).toEqual(
+      Either.left({
+        tag: "unknownCharacterSession",
+        characterId: unknown.characterId,
+      }),
+    );
+    expect(store.characters.get(first.characterId)).toBe(first);
+    expect(store.characters.get(second.characterId)).toBe(second);
+  });
 });
 
 function druidWildShapeBuild(): CharacterBuild {

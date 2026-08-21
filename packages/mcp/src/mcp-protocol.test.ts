@@ -2,6 +2,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
+import { characterId } from "@dnd/battle-runtime";
+import { Hp } from "@dnd/shared/types";
+import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -18,10 +21,13 @@ import {
 import { createMcpApplicationServices } from "./composition-root.ts";
 import { contentToolDefinitions } from "./content-tools.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
+import { decodePlaySessionId } from "./play-session.ts";
+import { availableCharacterSession } from "./session-store.ts";
 import {
   PLAY_SESSION_OPERATION_NAMES,
   PLAY_SESSION_OUTPUT_SCHEMA_BYTE_BUDGET,
 } from "./play-session-tool-contract.ts";
+import { armorClassBuild } from "../../character-sheet-runtime/src/test-support.test-support.ts";
 
 const FULL_ACCEPTANCE_TEST_TIMEOUT_MS = 90_000;
 
@@ -236,6 +242,168 @@ describe("MCP protocol server", () => {
     },
     FULL_ACCEPTANCE_TEST_TIMEOUT_MS,
   );
+
+  test("round-trips a mixed character and Stat Block roster through MCP", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const { playSessions, server } = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "battle-round-trip-protocol-client",
+      version: "0.1.0",
+    });
+    const firstCharacterId = characterId("character:protocol-gh324-first");
+    const secondCharacterId = characterId("character:protocol-gh324-second");
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+
+      const playSessionId = await createPlaySession(client);
+      const decoded = decodePlaySessionId(playSessionId);
+      if (Either.isLeft(decoded)) {
+        throw new Error(decoded.left);
+      }
+      const installed = await playSessions.run(decoded.right, (root) => {
+        for (const id of [firstCharacterId, secondCharacterId]) {
+          const session = availableCharacterSession({
+            characterId: id,
+            build: armorClassBuild({
+              startingClass: "class_fighter",
+              armor: "armor_chain_mail",
+              shield: true,
+              weapon: "weapon_longsword",
+            }),
+            currentHp: Hp(10),
+            tempHp: Hp(0),
+            hitPointMaximumReduction: Hp(0),
+            conditions: [],
+            companion: { tag: "none" },
+            unitLibrary: root.unitLibrary,
+          });
+          if (Either.isLeft(session)) {
+            throw new Error(session.left.message);
+          }
+          root.sessionStore.characters.set(session.right);
+        }
+      });
+      if (Either.isLeft(installed)) {
+        throw new Error(installed.left.restoration.guidance);
+      }
+
+      const started = await callStructuredTool(client, {
+        name: "start_battle",
+        arguments: {
+          playSessionId,
+          battleId: "battle:protocol-gh324-round-trip",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              ammunitionStocks: [],
+              characterId: firstCharacterId,
+              combatantId: "protocol-first",
+              initiative: 18,
+            },
+            {
+              kind: "characterSession",
+              ammunitionStocks: [],
+              characterId: secondCharacterId,
+              combatantId: "protocol-second",
+              initiative: 12,
+            },
+            {
+              kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId: "protocol-goblin",
+              initiative: 7,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+        },
+      });
+      expect(operationResult(started)).toMatchObject({
+        snapshot: {
+          turnOrder: ["protocol-first", "protocol-second", "protocol-goblin"],
+          combatants: [
+            { combatantId: "protocol-first", initiative: 18 },
+            { combatantId: "protocol-second", initiative: 12 },
+            { combatantId: "protocol-goblin", initiative: 7 },
+          ],
+        },
+      });
+      expect(started.projection).toMatchObject({
+        characterIds: [firstCharacterId, secondCharacterId],
+        activeBattle: {
+          battleId: "battle:protocol-gh324-round-trip",
+          currentActorId: "protocol-first",
+        },
+      });
+
+      const read = await callStructuredTool(client, {
+        name: "read_battle_state",
+        arguments: { playSessionId },
+      });
+      expect(operationResult(read)).toMatchObject({
+        snapshot: {
+          turnOrder: ["protocol-first", "protocol-second", "protocol-goblin"],
+        },
+      });
+      const inBattle = operationResult(
+        await callStructuredTool(client, {
+          name: "list_characters",
+          arguments: { playSessionId },
+        }),
+      );
+      expect(inBattle.characters).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            characterId: firstCharacterId,
+            status: "inBattle",
+            battleId: "battle:protocol-gh324-round-trip",
+          }),
+          expect.objectContaining({
+            characterId: secondCharacterId,
+            status: "inBattle",
+            battleId: "battle:protocol-gh324-round-trip",
+          }),
+        ]),
+      );
+
+      const ended = await callStructuredTool(client, {
+        name: "end_battle",
+        arguments: { playSessionId },
+      });
+      expect(operationResult(ended)).toMatchObject({
+        endedBattleId: "battle:protocol-gh324-round-trip",
+        characters: expect.arrayContaining([
+          expect.objectContaining({ characterId: firstCharacterId }),
+          expect.objectContaining({ characterId: secondCharacterId }),
+        ]),
+        session: { activeBattle: null },
+      });
+      expect(ended.projection).toMatchObject({ activeBattle: null });
+      const available = operationResult(
+        await callStructuredTool(client, {
+          name: "list_characters",
+          arguments: { playSessionId },
+        }),
+      );
+      expect(available.characters).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            characterId: firstCharacterId,
+            status: "available",
+          }),
+          expect.objectContaining({
+            characterId: secondCharacterId,
+            status: "available",
+          }),
+        ]),
+      );
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  });
 
   test("returns one typed restoration result for a handle absent from the process", async () => {
     const [clientTransport, serverTransport] =
