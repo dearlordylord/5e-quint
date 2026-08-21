@@ -1642,11 +1642,16 @@ describe("MCP server route", () => {
         creationHoles: "holes",
         battleActs: "availableActs",
         followUpBattleHoles: "result.holes",
+        characterSessionOperation: "result",
+        calendarTimeResult: "result",
+        calendarTimeRecoveryHoles: "result.holes",
       },
       acceptedInputs: {
         progressionFill: expect.stringContaining("draft.progression.initial"),
         choiceFill: expect.stringContaining('"kind":"choice"'),
         attackRollFill: expect.stringContaining('"kind":"attackRoll"'),
+        characterSessionOperations:
+          expect.stringContaining("completeShortRest"),
       },
     });
     expect(workflow.lifecycle).toEqual(
@@ -1659,6 +1664,16 @@ describe("MCP server route", () => {
     expect(workflow.limits).toEqual(
       expect.arrayContaining([
         expect.stringContaining("does not expose a later level-1 class-entry"),
+      ]),
+    );
+    expect(workflow.recovery).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("calendar-time Stable recovery"),
+      ]),
+    );
+    expect(workflow.limits).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("Revival workflows beyond"),
       ]),
     );
 

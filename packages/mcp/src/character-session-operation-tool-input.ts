@@ -1,14 +1,12 @@
-import { CharacterSheetRetainedCompanionId } from "@dnd/character-sheet-runtime";
+import {
+  CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
+  CharacterSheetRetainedCompanionId,
+} from "@dnd/character-sheet-runtime";
 import { TIME_SPAN_UNITS } from "@dnd/shared/elapsed-time";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import { DAMAGE_TYPES } from "@dnd/shared/types";
 import { DRUID_CIRCLE_LAND_CHOICES } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
-
-import {
-  CHARACTER_SESSION_PHYSICAL_EXERTION_TAG_VALUES,
-  CHARACTER_SESSION_REST_ACTIVITY_INTERRUPTION_VALUES,
-} from "./character-session-rest-contract.ts";
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
@@ -131,12 +129,12 @@ const LongRestTimingArgsSchema = Schema.Union(
 );
 
 const ShortRestInterruptionArgsSchema = Schema.Literal(
-  ...CHARACTER_SESSION_REST_ACTIVITY_INTERRUPTION_VALUES,
+  ...CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
 );
 const LongRestInterruptionArgsSchema = Schema.Union(
   ShortRestInterruptionArgsSchema,
   Schema.Struct({
-    tag: Schema.Literal(...CHARACTER_SESSION_PHYSICAL_EXERTION_TAG_VALUES),
+    tag: Schema.Literal("physicalExertion"),
     durationTicks: NonNegativeIntegerSchema,
   }),
 );

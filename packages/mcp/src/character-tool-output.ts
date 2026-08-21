@@ -8,13 +8,12 @@ import {
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
 } from "@dnd/character-creation-runtime";
-import type { CharacterSheetRetainedCompanionManifestation } from "@dnd/character-sheet-runtime";
+import {
+  CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
+  type CharacterSheetRetainedCompanionManifestation,
+} from "@dnd/character-sheet-runtime";
 import { Schema } from "effect";
 
-import {
-  CHARACTER_SESSION_PHYSICAL_EXERTION_TAG_VALUES,
-  CHARACTER_SESSION_REST_ACTIVITY_INTERRUPTION_VALUES,
-} from "./character-session-rest-contract.ts";
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 
 const JsonObjectSchema = Schema.Record({
@@ -242,12 +241,12 @@ export const ListCharactersOutputSchema = Schema.Struct({
   session: McpSessionSummarySchema,
 });
 const ShortRestInterruptionResultSchema = Schema.Literal(
-  ...CHARACTER_SESSION_REST_ACTIVITY_INTERRUPTION_VALUES,
+  ...CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
 );
 const LongRestInterruptionResultSchema = Schema.Union(
   ShortRestInterruptionResultSchema,
   Schema.Struct({
-    tag: Schema.Literal(...CHARACTER_SESSION_PHYSICAL_EXERTION_TAG_VALUES),
+    tag: Schema.Literal("physicalExertion"),
     durationTicks: NonNegativeIntegerSchema,
   }),
 );
