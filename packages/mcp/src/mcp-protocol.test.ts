@@ -23,7 +23,7 @@ import {
   PLAY_SESSION_OUTPUT_SCHEMA_BYTE_BUDGET,
 } from "./play-session-tool-contract.ts";
 
-const FULL_ACCEPTANCE_TEST_TIMEOUT_MS = 60_000;
+const FULL_ACCEPTANCE_TEST_TIMEOUT_MS = 90_000;
 
 describe("MCP protocol server", () => {
   test("rejects calls outside the advertised tool definitions", async () => {

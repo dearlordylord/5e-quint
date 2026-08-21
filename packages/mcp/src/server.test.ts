@@ -1381,6 +1381,7 @@ describe("MCP server route", () => {
       "describe_mcp_workflow",
       "list_stat_blocks",
       "list_catalog_units",
+      "inspect_catalog_unit",
     ]);
   });
 
@@ -1541,6 +1542,14 @@ describe("MCP server route", () => {
       expect.arrayContaining([
         expect.objectContaining({ id: "magic_missile", name: "Magic Missile" }),
       ]),
+    );
+    const unitDetail = readPayload(
+      handleToolCall(root, "inspect_catalog_unit", {
+        unitId: "magic_missile",
+      }),
+    );
+    expect(JSON.parse(unitDetail.unitRecordJson)).toEqual(
+      root.unitLibrary.requireUnit("magic_missile"),
     );
 
     const statBlocks = readPayload(

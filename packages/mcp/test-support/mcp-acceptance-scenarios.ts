@@ -10,8 +10,10 @@ import {
   type CharacterProgression,
   type CharacterCreationSupportProfile,
 } from "@dnd/character-creation-runtime";
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 import { unitId, type Skill } from "@dnd/shared/game-facts";
+import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
+import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import { characterIdFromDraftId } from "../src/session-store.ts";
 import { characterProgressionEntry } from "../../character-creation-runtime/src/character-progression-types.ts";
 
@@ -25,6 +27,16 @@ import { battleToolWireArgs } from "./battle-tool-wire-args.ts";
 
 type JsonObject = Record<string, unknown>;
 
+const CatalogUnitListProtocolSchema = Schema.Struct({
+  unitsByKind: Schema.Record({
+    key: Schema.String,
+    value: Schema.Array(Schema.Struct({ id: Schema.String })),
+  }),
+});
+const CatalogUnitDetailProtocolSchema = Schema.Struct({
+  unitRecordJson: Schema.String,
+});
+
 function testCharacterId(draftId: string) {
   return characterIdFromDraftId(characterDraftId(draftId));
 }
@@ -35,6 +47,7 @@ const expectedTools = [
   "describe_mcp_workflow",
   "list_stat_blocks",
   "list_catalog_units",
+  "inspect_catalog_unit",
   "create_character_draft",
   "apply_character_session_operation",
   "discover_creation_holes",
@@ -469,11 +482,38 @@ export async function verifyToolContract(client: Client) {
   assert.equal(get(workflow, "resultPaths.battleActs"), "availableActs");
 
   const units = await callTool(client, "list_catalog_units", {});
+  const unitGroups = Schema.decodeUnknownSync(CatalogUnitListProtocolSchema)(
+    units,
+  ).unitsByKind;
+  assert.deepEqual(
+    Object.values(unitGroups)
+      .flat()
+      .map(({ id }) => id)
+      .sort(),
+    srdUnitCollection.units.map(({ id }) => id).sort(),
+  );
   assert.ok(
     unitSummaries(units, "class").some((unit) => unit.id === "class_fighter"),
   );
   assert.ok(
     unitSummaries(units, "spell").some((unit) => unit.id === "magic_missile"),
+  );
+
+  const unitDetail = await callTool(client, "inspect_catalog_unit", {
+    unitId: "magic_missile",
+  });
+  const unitRecord = JSON.parse(
+    Schema.decodeUnknownSync(CatalogUnitDetailProtocolSchema)(unitDetail)
+      .unitRecordJson,
+  );
+  assert.equal(get(unitRecord, "id"), "magic_missile");
+  assert.equal(get(unitRecord, "name"), "Magic Missile");
+  assert.equal(get(unitRecord, "kind"), "spell");
+  assert.equal(get(unitRecord, "provenance.kind"), "srd-5.2.1");
+  assert.equal(get(unitRecord, "executable"), undefined);
+  assert.deepEqual(
+    unitRecord,
+    srdUnitCollection.units.find(({ id }) => id === "magic_missile"),
   );
 
   const statBlocks = await callTool(client, "list_stat_blocks", {});
@@ -482,6 +522,10 @@ export async function verifyToolContract(client: Client) {
   ).map((statBlock) => statBlock.statBlockId);
   assert.ok(statBlockIds.includes("stat_block_goblin_warrior"));
   assert.ok(statBlockIds.includes("stat_block_skeleton"));
+  assert.deepEqual(
+    statBlockIds.sort(),
+    srdStatBlockCollection.statBlocks.map(({ id }) => id).sort(),
+  );
 }
 
 export async function verifyBaselineVertical(client: Client) {
