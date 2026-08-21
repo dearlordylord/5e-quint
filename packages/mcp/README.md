@@ -97,6 +97,12 @@ The character-creation tool boundary exposes these user-facing tools:
   character is in Battle, the exact `inBattle` variant contains only the stable
   Character Build and Battle ownership identifiers; it never serializes the
   pre-Battle sheet's mutable Hit Points, conditions, or expenditures as current.
+- `apply_character_session_operation` applies supported out-of-battle healing
+  and rest-benefit variants through the owning Character Sheet SDK, including
+  Lay On Hands and spell-defined rest benefits. For a multi-recipient result,
+  the MCP boundary computes every recipient result before atomically committing
+  the affected Character Sessions; a rejected operation leaves them unchanged
+  and returns the affected ids with retry guidance.
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core

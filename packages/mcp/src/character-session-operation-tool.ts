@@ -14,6 +14,10 @@ import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { AvailableCharacterSession } from "./session-store.ts";
 import { CharacterSessionOperationOutputSchema } from "./character-tool-output.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
+import {
+  applyLayOnHandsOperation,
+  applySpellRestBenefitOperation,
+} from "./character-session-healing-operation.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
@@ -43,6 +47,20 @@ export function applyCharacterSessionOperation(
   return Match.value(input.operation).pipe(
     Match.when({ kind: "retainOneAtATimeCompanion" }, (operation) =>
       applyRetainOneAtATimeCompanionOperation(root, {
+        characterId: input.characterId,
+        session,
+        operation,
+      }),
+    ),
+    Match.when({ kind: "applyLayOnHands" }, (operation) =>
+      applyLayOnHandsOperation(root, {
+        characterId: input.characterId,
+        session,
+        operation,
+      }),
+    ),
+    Match.when({ kind: "applySpellRestBenefit" }, (operation) =>
+      applySpellRestBenefitOperation(root, {
         characterId: input.characterId,
         session,
         operation,

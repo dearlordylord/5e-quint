@@ -1,6 +1,74 @@
-import { CharacterSheetRetainedCompanionId } from "@dnd/character-sheet-runtime";
+import {
+  CharacterSheetRetainedCompanionId,
+  FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES,
+} from "@dnd/character-sheet-runtime";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
+
+const NonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+);
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(1),
+);
+
+const RestBenefitRecoveryFields = {
+  spendHitDice: Schema.optionalWith(
+    Schema.Array(
+      Schema.Struct({
+        classUnitId: UnitId,
+        roll: PositiveIntegerSchema,
+      }),
+    ),
+    { exact: true },
+  ),
+  arcaneRecovery: Schema.optionalWith(
+    Schema.Struct({
+      refundSpellSlots: Schema.Array(
+        Schema.Struct({
+          spellLevel: PositiveIntegerSchema.pipe(Schema.lessThanOrEqualTo(9)),
+          count: NonNegativeIntegerSchema,
+        }),
+      ),
+    }),
+    { exact: true },
+  ),
+  sorcerousRestoration: Schema.optionalWith(
+    Schema.Struct({
+      recoverSorceryPoints: NonNegativeIntegerSchema,
+    }),
+    { exact: true },
+  ),
+} as const;
+
+const LayOnHandsOperationArgsSchema = Schema.Struct({
+  kind: Schema.Literal("applyLayOnHands"),
+  targetCharacterId: Schema.String,
+  restoreHp: NonNegativeIntegerSchema,
+  removePoisoned: Schema.Boolean,
+});
+
+const SpellRestBenefitRecipientArgsSchema = Schema.Struct({
+  characterId: Schema.String,
+  eligibility: Schema.Struct({
+    remainedWithinRangeForEntireCasting: Schema.Literal(true),
+  }),
+  healingRolls: Schema.Array(PositiveIntegerSchema),
+  ...RestBenefitRecoveryFields,
+});
+
+const SpellRestBenefitOperationArgsSchema = Schema.Struct({
+  kind: Schema.Literal("applySpellRestBenefit"),
+  spellId: UnitId,
+  castLevel: PositiveIntegerSchema.pipe(Schema.lessThanOrEqualTo(9)),
+  spellSlotSource: Schema.optionalWith(
+    Schema.Literal(...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
+    { exact: true },
+  ),
+  recipients: Schema.NonEmptyArray(SpellRestBenefitRecipientArgsSchema),
+});
 
 const RetainedCompanionNormalFormSelectionArgsSchema = Schema.Struct({
   tag: Schema.Literal("normalNamedForm"),
@@ -71,6 +139,8 @@ const RetainOneAtATimeCompanionOperationArgsSchema = Schema.Struct({
 });
 const CharacterSessionOperationArgsSchema = Schema.Union(
   RetainOneAtATimeCompanionOperationArgsSchema,
+  LayOnHandsOperationArgsSchema,
+  SpellRestBenefitOperationArgsSchema,
 );
 
 export const ApplyCharacterSessionOperationArgsSchema = Schema.Struct({

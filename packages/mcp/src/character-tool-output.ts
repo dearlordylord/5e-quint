@@ -237,8 +237,25 @@ export const ListCharactersOutputSchema = Schema.Struct({
   characters: Schema.Array(CharacterSessionRowSchema),
   session: McpSessionSummarySchema,
 });
+export const CharacterSessionHealingOperationResultSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("layOnHandsApplied"),
+    sourceCharacterId: Schema.String,
+    targetCharacterId: Schema.String,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("spellRestBenefitApplied"),
+    casterCharacterId: Schema.String,
+    spellId: Schema.String,
+    castLevel: PositiveIntegerSchema,
+    recipientCharacterIds: Schema.NonEmptyArray(Schema.String),
+  }),
+);
 export const CharacterSessionOperationOutputSchema = Schema.Struct({
   character: JsonObjectSchema,
+  result: Schema.optionalWith(CharacterSessionHealingOperationResultSchema, {
+    exact: true,
+  }),
   session: McpSessionSummarySchema,
 });
 

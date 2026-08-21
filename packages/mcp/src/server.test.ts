@@ -195,7 +195,10 @@ function testWizardSpellcasting(input: {
   readonly cantrips: readonly string[];
   readonly spellbook?: readonly string[];
   readonly preparedSpells: readonly string[];
-  readonly spellSlots: readonly { readonly spellLevel: 1; readonly count: 2 }[];
+  readonly spellSlots: readonly {
+    readonly spellLevel: 1 | 2;
+    readonly count: 2 | 4;
+  }[];
   readonly sourceUnitId?: string;
   readonly spellcastingAbility?: CharacterBuildSpellcasting["sources"][number]["spellcastingAbility"];
 }): CharacterBuildSpellcasting {
@@ -1586,12 +1589,13 @@ describe("MCP server route", () => {
       | undefined;
     const operationSchema = inputSchema?.properties?.operation;
 
-    expect(operationSchema?.properties?.kind).toEqual({
-      type: "string",
-      enum: ["retainOneAtATimeCompanion"],
-    });
-    expect(operationSchema?.properties).not.toHaveProperty("currentHp");
-    expect(operationSchema?.properties).not.toHaveProperty("tempHp");
+    expect(JSON.stringify(operationSchema)).toContain(
+      "retainOneAtATimeCompanion",
+    );
+    expect(JSON.stringify(operationSchema)).toContain("applyLayOnHands");
+    expect(JSON.stringify(operationSchema)).toContain("applySpellRestBenefit");
+    expect(JSON.stringify(operationSchema)).not.toContain("currentHp");
+    expect(JSON.stringify(operationSchema)).not.toContain("tempHp");
   });
 
   test("registers battle tool names", () => {
@@ -3340,6 +3344,7 @@ describe("MCP server route", () => {
           has: () => false,
           keys: function* () {},
           set: () => {},
+          setAll: () => {},
         },
       },
     };
@@ -3903,6 +3908,176 @@ describe("MCP server route", () => {
       },
       spellSlotExpenditures: [{ spellLevel: 1, expended: 1 }],
     });
+  });
+
+  test("apply_character_session_operation applies a spell rest benefit to one recipient", () => {
+    const root = createMcpPlaySessionRoot();
+    const casterDraftId = "draft:mcp-healing-single-caster";
+    const recipientDraftId = "draft:mcp-healing-single-recipient";
+    createFinalizedWizardWithFindFamiliar(root, casterDraftId, {
+      level: 3,
+      preparedSpells: ["prayer_of_healing"],
+    });
+    createFinalizedWizardWithFindFamiliar(root, recipientDraftId, {
+      level: 3,
+      preparedSpells: ["prayer_of_healing"],
+    });
+
+    const result = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(casterDraftId),
+        operation: {
+          kind: "applySpellRestBenefit",
+          spellId: "prayer_of_healing",
+          castLevel: 2,
+          recipients: [
+            {
+              characterId: testCharacterId(recipientDraftId),
+              eligibility: { remainedWithinRangeForEntireCasting: true },
+              healingRolls: [4, 4],
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(result.result).toEqual({
+      tag: "spellRestBenefitApplied",
+      casterCharacterId: testCharacterId(casterDraftId),
+      spellId: "prayer_of_healing",
+      castLevel: 2,
+      recipientCharacterIds: [testCharacterId(recipientDraftId)],
+    });
+    expect(result.character.spellSlotExpenditures).toEqual([
+      { spellLevel: 2, expended: 1 },
+    ]);
+  });
+
+  test("apply_character_session_operation commits every spell rest benefit recipient atomically", () => {
+    const root = createMcpPlaySessionRoot();
+    const casterDraftId = "draft:mcp-healing-multi-caster";
+    const firstRecipientDraftId = "draft:mcp-healing-multi-first";
+    const secondRecipientDraftId = "draft:mcp-healing-multi-second";
+    for (const draftId of [
+      casterDraftId,
+      firstRecipientDraftId,
+      secondRecipientDraftId,
+    ]) {
+      createFinalizedWizardWithFindFamiliar(root, draftId, {
+        level: 3,
+        preparedSpells: ["prayer_of_healing"],
+      });
+    }
+    const before = [
+      root.sessionStore.characters.get(testCharacterId(casterDraftId)),
+      root.sessionStore.characters.get(testCharacterId(firstRecipientDraftId)),
+      root.sessionStore.characters.get(testCharacterId(secondRecipientDraftId)),
+    ];
+
+    const result = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(casterDraftId),
+        operation: {
+          kind: "applySpellRestBenefit",
+          spellId: "prayer_of_healing",
+          castLevel: 2,
+          recipients: [
+            {
+              characterId: testCharacterId(firstRecipientDraftId),
+              eligibility: { remainedWithinRangeForEntireCasting: true },
+              healingRolls: [4, 4],
+            },
+            {
+              characterId: testCharacterId(secondRecipientDraftId),
+              eligibility: { remainedWithinRangeForEntireCasting: true },
+              healingRolls: [4, 4],
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(result.result.recipientCharacterIds).toEqual([
+      testCharacterId(firstRecipientDraftId),
+      testCharacterId(secondRecipientDraftId),
+    ]);
+    expect(
+      root.sessionStore.characters.get(testCharacterId(casterDraftId)),
+    ).not.toBe(before[0]);
+    expect(
+      root.sessionStore.characters.get(testCharacterId(firstRecipientDraftId)),
+    ).not.toBe(before[1]);
+    expect(
+      root.sessionStore.characters.get(testCharacterId(secondRecipientDraftId)),
+    ).not.toBe(before[2]);
+  });
+
+  test("apply_character_session_operation leaves every session unchanged when a recipient fails", () => {
+    const root = createMcpPlaySessionRoot();
+    const casterDraftId = "draft:mcp-healing-failure-caster";
+    const firstRecipientDraftId = "draft:mcp-healing-failure-first";
+    const secondRecipientDraftId = "draft:mcp-healing-failure-second";
+    for (const draftId of [
+      casterDraftId,
+      firstRecipientDraftId,
+      secondRecipientDraftId,
+    ]) {
+      createFinalizedWizardWithFindFamiliar(root, draftId, {
+        level: 3,
+        preparedSpells: ["prayer_of_healing"],
+      });
+    }
+    const before = [
+      root.sessionStore.characters.get(testCharacterId(casterDraftId)),
+      root.sessionStore.characters.get(testCharacterId(firstRecipientDraftId)),
+      root.sessionStore.characters.get(testCharacterId(secondRecipientDraftId)),
+    ];
+
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(casterDraftId),
+        operation: {
+          kind: "applySpellRestBenefit",
+          spellId: "prayer_of_healing",
+          castLevel: 2,
+          recipients: [
+            {
+              characterId: testCharacterId(firstRecipientDraftId),
+              eligibility: { remainedWithinRangeForEntireCasting: true },
+              healingRolls: [4, 4],
+            },
+            {
+              characterId: testCharacterId(secondRecipientDraftId),
+              eligibility: { remainedWithinRangeForEntireCasting: true },
+              healingRolls: [1],
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_OPERATION_INVALID",
+        recovery: {
+          tag: "characterSessionsUnchanged",
+          affectedCharacterIds: [
+            testCharacterId(casterDraftId),
+            testCharacterId(firstRecipientDraftId),
+            testCharacterId(secondRecipientDraftId),
+          ],
+        },
+      },
+    });
+    expect(
+      root.sessionStore.characters.get(testCharacterId(casterDraftId)),
+    ).toBe(before[0]);
+    expect(
+      root.sessionStore.characters.get(testCharacterId(firstRecipientDraftId)),
+    ).toBe(before[1]);
+    expect(
+      root.sessionStore.characters.get(testCharacterId(secondRecipientDraftId)),
+    ).toBe(before[2]);
   });
 
   test("apply_character_session_operation rejects a durable companion id used by another character", () => {
@@ -7398,12 +7573,13 @@ function createFinalizedWizardWithFindFamiliar(
   input: {
     readonly preparedSpells?: readonly string[];
     readonly spellcastingSafeLoadout?: boolean;
+    readonly level?: 1 | 3;
   } = {},
 ): CharacterBuild {
   const fighter = fighterCharacterBuild(root.unitLibrary);
   const build = {
     ...fighter,
-    progression: wizardProgression(root),
+    progression: wizardProgression(root, input.level ?? 1),
     ...(input.spellcastingSafeLoadout === true
       ? {
           equipment: {
@@ -7421,7 +7597,13 @@ function createFinalizedWizardWithFindFamiliar(
       cantrips: [],
       spellbook: ["find_familiar"],
       preparedSpells: input.preparedSpells ?? ["find_familiar"],
-      spellSlots: [{ spellLevel: 1, count: 2 }],
+      spellSlots:
+        input.level === 3
+          ? [
+              { spellLevel: 1, count: 4 },
+              { spellLevel: 2, count: 2 },
+            ]
+          : [{ spellLevel: 1, count: 2 }],
     }),
   };
   root.sessionStore.characters.set(

@@ -58,6 +58,7 @@ export type CharacterSessionRegistry = {
   get(characterId: CharacterId): CharacterSession | undefined;
   has(characterId: CharacterId): boolean;
   set(session: CharacterSession): void;
+  setAll(sessions: readonly CharacterSession[]): void;
   entries(): IterableIterator<readonly [CharacterId, CharacterSession]>;
   keys(): IterableIterator<CharacterId>;
 };
@@ -185,7 +186,7 @@ export function createMcpSessionStore(
 }
 
 function characterSessionRegistry(): CharacterSessionRegistry {
-  const sessions = new Map<CharacterId, CharacterSession>();
+  let sessions = new Map<CharacterId, CharacterSession>();
   return {
     get size() {
       return sessions.size;
@@ -198,6 +199,13 @@ function characterSessionRegistry(): CharacterSessionRegistry {
     },
     set(session: CharacterSession): void {
       sessions.set(characterSessionId(session), session);
+    },
+    setAll(nextSessions: readonly CharacterSession[]): void {
+      const next = new Map(sessions);
+      for (const session of nextSessions) {
+        next.set(characterSessionId(session), session);
+      }
+      sessions = next;
     },
     entries(): IterableIterator<readonly [CharacterId, CharacterSession]> {
       return sessions.entries();
