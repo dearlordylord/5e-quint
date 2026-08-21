@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "scenarioId": "table-save-circumstance-advantage-probe",
+  "title": "Table saving-throw circumstance Advantage probe",
+  "purpose": "Probe open issue #279 at its saving-throw boundary: one exact GM circumstance grants Advantage on a concrete saving throw, grounded in the local SRD 5.2.1 Playing-the-Game.md Advantage/Disadvantage passage, while the rest of the battle remains representable through the public SDK.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/table-save-circumstance-advantage-probe.md",
+    "byteLength": 3081,
+    "sha256": "d408e44b482fc24718532b1720f428246d21b48f3670971861815bc56a0735a4"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/table-save-circumstance-advantage-probe.md.scenario-review.json",
+    "byteLength": 9949,
+    "sha256": "306c52c4614d34313c4730ca54c01a851bc310f8c8f546772d5789b4bbc7cad9"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/table-save-circumstance-advantage-probe.md.stage-facts.json",
+    "byteLength": 778,
+    "sha256": "83638aa4a95375bf073a20084a4827c125303e7d658fd8a5784ab74f5560edb2"
+  },
+  "predecessorScenarioIds": [
+    "four-way-crank-control-cycle",
+    "goblin-warrior-skeleton-tracer",
+    "lantern-intercept-pairwise-control",
+    "mounted-dispatch-through-flooded-orchard",
+    "open-grid-wolf-skeleton-pursuit",
+    "orc-fighter-rogue-close-interception",
+    "sand-band-four-skeleton-skirmish",
+    "synthetic-beacon-eight-round-defense",
+    "table-authored-shove-then-grapple",
+    "table-authored-three-shove-cycle",
+    "table-d20-circumstance-advantage-probe-repair-retry",
+    "two-goblins-pursue-skeleton"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "table-save-circumstance-advantage-probe",
+  "scenarioSha256": "d408e44b482fc24718532b1720f428246d21b48f3670971861815bc56a0735a4",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The encounter requires only the canonical Quasit, Wolf, and Goblin Warrior stat blocks and introduces no Character Sheets or build-dependent features."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "The shrine court, placements, central basin, routes around or above the obstacle, attack distances, and eastern threshold are coherent arena geometry that the optional helper can own completely."
+    }
+  }
+}
