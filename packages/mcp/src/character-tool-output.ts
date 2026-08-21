@@ -8,7 +8,10 @@ import {
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
 } from "@dnd/character-creation-runtime";
-import type { CharacterSheetRetainedCompanionManifestation } from "@dnd/character-sheet-runtime";
+import {
+  CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
+  type CharacterSheetRetainedCompanionManifestation,
+} from "@dnd/character-sheet-runtime";
 import { Schema } from "effect";
 
 import {
@@ -242,8 +245,60 @@ export const ListCharactersOutputSchema = Schema.Struct({
   characters: Schema.Array(CharacterSessionRowSchema),
   session: McpSessionSummarySchema,
 });
+const ShortRestInterruptionResultSchema = Schema.Literal(
+  ...CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
+);
+const LongRestInterruptionResultSchema = Schema.Union(
+  ShortRestInterruptionResultSchema,
+  Schema.Struct({
+    tag: Schema.Literal("physicalExertion"),
+    durationTicks: NonNegativeIntegerSchema,
+  }),
+);
+export const CharacterSessionOperationResultSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("shortRestCompleted"),
+    restedTicks: NonNegativeIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("shortRestInterruptedNoBenefit"),
+    interruption: ShortRestInterruptionResultSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("longRestCompleted"),
+    restedTicks: NonNegativeIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("longRestInterruptedNoBenefit"),
+    interruption: LongRestInterruptionResultSchema,
+    requiredLongRestTicks: NonNegativeIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("longRestInterruptedWithShortRestBenefits"),
+    interruption: LongRestInterruptionResultSchema,
+    requiredLongRestTicks: NonNegativeIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("resolved"),
+    elapsedTicks: NonNegativeIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("needsHoles"),
+    holes: Schema.NonEmptyArray(JsonObjectSchema),
+    elapsedTicks: NonNegativeIntegerSchema,
+    remainingTicks: PositiveIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("invalid"),
+    reason: Schema.Literal("invalidFill"),
+    message: Schema.String,
+  }),
+);
 export const CharacterSessionOperationOutputSchema = Schema.Struct({
   character: JsonObjectSchema,
+  result: Schema.optionalWith(CharacterSessionOperationResultSchema, {
+    exact: true,
+  }),
   session: McpSessionSummarySchema,
 });
 

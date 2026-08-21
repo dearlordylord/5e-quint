@@ -261,6 +261,9 @@ function workflowGuide() {
       followUpBattleHoles: "result.holes",
       pendingBattleFills: "session.transientBattleFills",
       battleCombatants: "snapshot.combatants",
+      characterSessionOperation: "result",
+      calendarTimeResult: "result",
+      calendarTimeRecoveryHoles: "result.holes",
     },
     acceptedInputs: {
       choiceFill:
@@ -279,6 +282,8 @@ function workflowGuide() {
         '{"kind":"savingThrowOutcome","holeId":"copy from result.holes[] or initialHoles[]","value":{"area":{"originAnchorId":"table-supplied origin combatantId","affectedTargetIds":["table-supplied affected combatantId"]},"outcomes":[{"targetId":"same affected combatantId","succeeded":false}]}}',
       rolledDiceFill:
         '{"kind":"rolledDice","holeId":"copy exact damage-result hole id","value":[{"results":[5]}]}',
+      characterSessionOperations:
+        "apply_character_session_operation accepts atomic completeShortRest, interruptShortRest, completeLongRest, interruptLongRest, and passCalendarTime operations.",
     },
     naturalLanguagePolicy:
       "MCP does not own synonym lists for character options. Use returned Unit names/ids and current creation holes as the source of truth; ask a clarification for terms such as 'warrior' before selecting class_fighter.",
@@ -288,13 +293,14 @@ function workflowGuide() {
       "On BATTLE_ACT_NOT_AVAILABLE, call discover_battle_acts and use a current subject.",
       "On BATTLE_ACT_REQUIRES_HOLES, use fill_battle_hole instead of resolve_battle_act.",
       "On pending-fill errors, continue filling session.transientBattleFills.subject until the result resolves.",
+      "Short Rest and Long Rest completion/interruption plus calendar-time Stable recovery are supported through apply_character_session_operation; unresolved recovery returns result.holes for a subsequent call.",
     ],
     limits: [
       "Use discover_creation_holes, list_characters, inspect_character_session, query_character_session, list_stat_blocks, and discover_battle_acts for the currently executable workflows, projections, and acts.",
       "Character creation exposes one draft.progression.initial fill for the selected progression profile; MCP does not expose a later level-1 class-entry fill.",
       "MCP does not roll dice. Use user-provided or external dice results.",
       "Character Session queries do not persist derived facts, expose generic out-of-Battle casting, maintain a spell ledger, or add search, pagination, indexing, or recommendation infrastructure.",
-      "Rest and revival workflows are not currently supported after typed zero-HP character closeout.",
+      "Revival workflows beyond the typed zero-HP character closeout remain unsupported.",
     ],
   };
 }

@@ -50,7 +50,10 @@ import {
   type CharacterEquipmentItemSlot,
   type CharacterBuildSpellcasting,
 } from "@dnd/character-creation-runtime";
-import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
+import {
+  ELAPSED_TIME_TICKS_PER_HOUR,
+  elapsedTimeTicks,
+} from "@dnd/shared/elapsed-time";
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
 import type { AbilityScoreAssignment as RawAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
@@ -1910,13 +1913,19 @@ describe("MCP server route", () => {
         }
       | undefined;
     const operationSchema = inputSchema?.properties?.operation;
-
-    expect(operationSchema?.properties?.kind).toEqual({
-      type: "string",
-      enum: ["retainOneAtATimeCompanion"],
-    });
-    expect(operationSchema?.properties).not.toHaveProperty("currentHp");
-    expect(operationSchema?.properties).not.toHaveProperty("tempHp");
+    const operationSchemaText = JSON.stringify(operationSchema);
+    for (const operationKind of [
+      "retainOneAtATimeCompanion",
+      "completeShortRest",
+      "interruptShortRest",
+      "completeLongRest",
+      "interruptLongRest",
+      "passCalendarTime",
+    ]) {
+      expect(operationSchemaText).toContain(operationKind);
+    }
+    expect(operationSchemaText).not.toContain('"currentHp"');
+    expect(operationSchemaText).not.toContain('"tempHp"');
   });
 
   test("registers battle tool names", () => {
@@ -1958,11 +1967,16 @@ describe("MCP server route", () => {
         creationHoles: "holes",
         battleActs: "availableActs",
         followUpBattleHoles: "result.holes",
+        characterSessionOperation: "result",
+        calendarTimeResult: "result",
+        calendarTimeRecoveryHoles: "result.holes",
       },
       acceptedInputs: {
         progressionFill: expect.stringContaining("draft.progression.initial"),
         choiceFill: expect.stringContaining('"kind":"choice"'),
         attackRollFill: expect.stringContaining('"kind":"attackRoll"'),
+        characterSessionOperations:
+          expect.stringContaining("completeShortRest"),
       },
     });
     expect(workflow.lifecycle).toEqual(
@@ -1975,6 +1989,16 @@ describe("MCP server route", () => {
     expect(workflow.limits).toEqual(
       expect.arrayContaining([
         expect.stringContaining("does not expose a later level-1 class-entry"),
+      ]),
+    );
+    expect(workflow.recovery).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("calendar-time Stable recovery"),
+      ]),
+    );
+    expect(workflow.limits).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("Revival workflows beyond"),
       ]),
     );
 
@@ -4227,6 +4251,218 @@ describe("MCP server route", () => {
         },
       },
       spellSlotExpenditures: [{ spellLevel: 1, expended: 1 }],
+    });
+  });
+
+  test("apply_character_session_operation completes a Short Rest atomically", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-short-rest-complete";
+    createFinalizedFighterSheet(root, draftId);
+    const characterIdValue = testCharacterId(draftId);
+
+    const completed = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: characterIdValue,
+        operation: {
+          kind: "completeShortRest",
+          restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+        },
+      }),
+    );
+
+    expect(completed.result).toEqual({
+      tag: "shortRestCompleted",
+      restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+    });
+    expect(completed.character).toMatchObject({
+      tag: "available",
+      characterId: characterIdValue,
+    });
+    expect(root.sessionStore.characters.get(characterIdValue)).toMatchObject({
+      tag: "available",
+      characterId: characterIdValue,
+    });
+  });
+
+  test("apply_character_session_operation exposes Short Rest interruption without retaining a rest intermediate", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-short-rest-interrupt";
+    createFinalizedFighterSheet(root, draftId);
+    const characterIdValue = testCharacterId(draftId);
+    const before = root.sessionStore.characters.get(characterIdValue);
+
+    const interrupted = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: characterIdValue,
+        operation: {
+          kind: "interruptShortRest",
+          interruption: "takeDamage",
+        },
+      }),
+    );
+
+    expect(interrupted.result).toEqual({
+      tag: "shortRestInterruptedNoBenefit",
+      interruption: "takeDamage",
+    });
+    expect(root.sessionStore.characters.get(characterIdValue)).toBe(before);
+  });
+
+  test("apply_character_session_operation returns Stable recovery holes without partial calendar mutation", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-calendar-time-needs-stable-roll";
+    const build = createFinalizedFighterSheet(root, draftId);
+    const characterIdValue = testCharacterId(draftId);
+    const stable = availableCharacterSessionRight({
+      characterId: characterIdValue,
+      build,
+      currentHp: Hp(0),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      zeroHpLifecycle: {
+        tag: "stable",
+        recovery: {
+          kind: "regains1HpAfter1d4Hours",
+          elapsedBeforeRecoveryRoll: elapsedTimeTicks(0),
+        },
+      },
+      unitLibrary: root.unitLibrary,
+    });
+    root.sessionStore.characters.set(stable);
+    const before = root.sessionStore.characters.get(characterIdValue);
+
+    const open = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: characterIdValue,
+        operation: {
+          kind: "passCalendarTime",
+          duration: { kind: "timeSpan", unit: "hour", amount: 1 },
+          fills: [],
+        },
+      }),
+    );
+
+    expect(open.result).toMatchObject({
+      tag: "needsHoles",
+      elapsedTicks: 0,
+      remainingTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+      holes: [expect.objectContaining({ kind: "rolledDice" })],
+    });
+    expect(root.sessionStore.characters.get(characterIdValue)).toBe(before);
+
+    const invalid = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: characterIdValue,
+        operation: {
+          kind: "passCalendarTime",
+          duration: { kind: "timeSpan", unit: "hour", amount: 1 },
+          fills: [
+            {
+              kind: "rolledDice",
+              holeId: `character-sheet:${characterIdValue}:stable-recovery-roll`,
+              value: [{ results: [1, 2] }],
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(invalid.result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+    expect(root.sessionStore.characters.get(characterIdValue)).toBe(before);
+  });
+
+  test("apply_character_session_operation reports typed rest failure without partial mutation", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-short-rest-too-short";
+    createFinalizedFighterSheet(root, draftId);
+    const characterIdValue = testCharacterId(draftId);
+    const before = root.sessionStore.characters.get(characterIdValue);
+
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: characterIdValue,
+        operation: {
+          kind: "completeShortRest",
+          restedTicks: ELAPSED_TIME_TICKS_PER_HOUR - 1,
+        },
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_OPERATION_INVALID",
+        message: "Short Rest requires 1 hour before benefits can be received.",
+      },
+    });
+    expect(root.sessionStore.characters.get(characterIdValue)).toBe(before);
+  });
+
+  test("apply_character_session_operation composes Long Rest timing and completion", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-long-rest-complete";
+    createFinalizedFighterSheet(root, draftId);
+    const characterIdValue = testCharacterId(draftId);
+
+    const completed = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: characterIdValue,
+        operation: {
+          kind: "completeLongRest",
+          timing: { tag: "noPriorLongRest" },
+          restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 8,
+        },
+      }),
+    );
+
+    expect(completed.result).toEqual({
+      tag: "longRestCompleted",
+      restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 8,
+    });
+    expect(root.sessionStore.characters.get(characterIdValue)).toMatchObject({
+      tag: "available",
+      characterId: characterIdValue,
+    });
+  });
+
+  test("apply_character_session_operation applies Short Rest benefits when a Long Rest is interrupted", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-long-rest-interruption-benefits";
+    const build = createFinalizedFighterSheet(root, draftId);
+    const characterIdValue = testCharacterId(draftId);
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        characterId: characterIdValue,
+        build,
+        currentHp: Hp(5),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+
+    const interrupted = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: characterIdValue,
+        operation: {
+          kind: "interruptLongRest",
+          timing: { tag: "noPriorLongRest" },
+          restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+          interruption: "takeDamage",
+          spendHitDice: [{ classUnitId: "class_fighter", roll: 4 }],
+        },
+      }),
+    );
+
+    expect(interrupted.result).toMatchObject({
+      tag: "longRestInterruptedWithShortRestBenefits",
+      interruption: "takeDamage",
+    });
+    expect(root.sessionStore.characters.get(characterIdValue)).toMatchObject({
+      hitPoints: { currentHp: 11 },
+      spentHitDice: [{ classUnitId: "class_fighter", spent: 1 }],
     });
   });
 
