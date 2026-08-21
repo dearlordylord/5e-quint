@@ -217,8 +217,12 @@ schema-v3 issue-297 index explicitly; the checkout's unrelated schema-v2
 
 The admitted catalogue grew from 12 to 14 Scenarios. The two new entries are
 `table-save-circumstance-advantage-probe` and
-`synthetic-wake-interruption`; rejected Candidates and failed Campaigns do not
-appear in the playable catalogue.
+`synthetic-wake-interruption`. Their later independent verdicts must accompany
+selection: catalogue membership is not proof that setup reaches the intended
+probe, that a supported-only admission was correct, or that an Execution was
+scenario-faithful. Reviewer-loop demotion was rejected because retained later
+Candidate comparisons bind to this exact predecessor catalogue; deleting an
+entry would make those immutable relationship records invalid.
 
 ### Execution ledger
 
