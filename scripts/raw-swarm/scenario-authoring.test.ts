@@ -95,7 +95,7 @@ describe("Scenario authoring catalogue comparison", () => {
         candidateScenarioSha256: "a".repeat(64),
         plannedScenarioId: "synthetic-planned-scenario",
       },
-    } as unknown as RetainedScenarioReviewInput;
+    } as RetainedScenarioReviewInput;
     expect(
       Either.isLeft(retainedScenarioReviewScenarioId(candidateReview)),
     ).toBe(true);

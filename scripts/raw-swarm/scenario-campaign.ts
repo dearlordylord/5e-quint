@@ -890,7 +890,11 @@ export async function runScenarioCampaign(
       );
     }
     const candidateIds: ScenarioCandidateId[] = [];
-    for (const _candidate of candidates.right.candidates) {
+    for (
+      let candidateIndex = 0;
+      candidateIndex < candidates.right.candidates.length;
+      candidateIndex += 1
+    ) {
       const candidateId = selectedCandidateId();
       if (Either.isLeft(candidateId)) return Either.left(candidateId.left);
       candidateIds.push(candidateId.right);
