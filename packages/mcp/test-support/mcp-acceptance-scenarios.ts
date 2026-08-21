@@ -33,6 +33,9 @@ const CatalogUnitListProtocolSchema = Schema.Struct({
     value: Schema.Array(Schema.Struct({ id: Schema.String })),
   }),
 });
+const CatalogUnitDetailProtocolSchema = Schema.Struct({
+  unitRecordJson: Schema.String,
+});
 
 function testCharacterId(draftId: string) {
   return characterIdFromDraftId(characterDraftId(draftId));
@@ -489,13 +492,17 @@ export async function verifyToolContract(client: Client) {
   const unitDetail = await callTool(client, "inspect_catalog_unit", {
     unitId: "magic_missile",
   });
-  assert.equal(get(unitDetail, "unit.id"), "magic_missile");
-  assert.equal(get(unitDetail, "unit.name"), "Magic Missile");
-  assert.equal(get(unitDetail, "unit.kind"), "spell");
-  assert.equal(get(unitDetail, "unit.provenance.kind"), "srd-5.2.1");
-  assert.equal(get(unitDetail, "unit.executable"), undefined);
+  const unitRecord = JSON.parse(
+    Schema.decodeUnknownSync(CatalogUnitDetailProtocolSchema)(unitDetail)
+      .unitRecordJson,
+  );
+  assert.equal(get(unitRecord, "id"), "magic_missile");
+  assert.equal(get(unitRecord, "name"), "Magic Missile");
+  assert.equal(get(unitRecord, "kind"), "spell");
+  assert.equal(get(unitRecord, "provenance.kind"), "srd-5.2.1");
+  assert.equal(get(unitRecord, "executable"), undefined);
   assert.deepEqual(
-    get(unitDetail, "unit"),
+    unitRecord,
     srdUnitCollection.units.find(({ id }) => id === "magic_missile"),
   );
 

@@ -24,6 +24,15 @@ function payload(response: ReturnType<typeof handleToolCall>): unknown {
   return jsonContentPayload(response);
 }
 
+const UnitDetailOutputSchema = Schema.Struct({
+  unitRecordJson: Schema.parseJson(Schema.Unknown),
+});
+
+function unitDetailPayload(response: ReturnType<typeof handleToolCall>) {
+  return Schema.decodeUnknownSync(UnitDetailOutputSchema)(payload(response))
+    .unitRecordJson;
+}
+
 describe("MCP Stat Block summaries", () => {
   test("projects cast-time choices and nonliteral execution values", () => {
     const root = createMcpCompositionRoot();
@@ -128,12 +137,12 @@ describe("MCP installed SRD catalog tools", () => {
       details: { code: "INVALID_ARGUMENTS" },
     });
     expect(
-      payload(
+      unitDetailPayload(
         handleToolCall(root, "inspect_catalog_unit", {
           unitId: "cloudkill",
         }),
       ),
-    ).toEqual({ unit: installed });
+    ).toEqual(installed);
     expect(
       payload(
         handleToolCall(root, "inspect_catalog_unit", {

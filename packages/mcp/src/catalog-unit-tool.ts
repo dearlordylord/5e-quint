@@ -18,13 +18,13 @@ export const InspectCatalogUnitInputSchema = Schema.Struct({
 });
 
 const InspectCatalogUnitOutputSchema = Schema.Struct({
-  unit: SrdUnitRecordSchema,
+  unitRecordJson: Schema.parseJson(SrdUnitRecordSchema),
 });
 
 export const inspectCatalogUnitToolDefinition = {
   name: inspectCatalogUnitToolName,
   description:
-    "Return the canonical installed redistributable SRD Unit record for one catalog id. The authored record is catalog detail, not a claim of source executability in any particular workflow.",
+    "Return the canonical installed redistributable SRD Unit record as unitRecordJson for one catalog id. Parse that JSON for the complete authored detail; catalog detail is not a claim of source executability in any particular workflow.",
   inputSchema: mcpObjectJsonSchema(InspectCatalogUnitInputSchema),
   outputSchema: mcpOutputJsonSchema(InspectCatalogUnitOutputSchema),
 } as const;
@@ -42,7 +42,9 @@ export function handleInspectCatalogUnit(
     isSrd521Unit,
   );
   return Option.isSome(unit)
-    ? schemaJsonContent(InspectCatalogUnitOutputSchema, { unit: unit.value })
+    ? schemaJsonContent(InspectCatalogUnitOutputSchema, {
+        unitRecordJson: unit.value,
+      })
     : errorContent(`Unknown installed SRD Unit: ${args.unitId}`, {
         code: "UNKNOWN_CATALOG_UNIT",
         unitId: args.unitId,
