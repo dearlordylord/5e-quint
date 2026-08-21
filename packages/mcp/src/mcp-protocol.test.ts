@@ -16,10 +16,88 @@ import {
 import { createMcpCompositionRoot } from "./composition-root.ts";
 import { contentToolDefinitions } from "./content-tools.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
+import {
+  SRD_PLAY_WIDGET_MIME_TYPE,
+  srdPlayWidgetResourceUris,
+} from "./prototype-srd-play-widgets.ts";
 
 const FULL_ACCEPTANCE_TEST_TIMEOUT_MS = 60_000;
 
 describe("MCP protocol server", () => {
+  test("advertises the throwaway read-only widget resources", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const { server } = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "dnd-widget-prototype-client",
+      version: "0.1.0",
+    });
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+
+      const tools = await client.listTools();
+      expect(
+        tools.tools.find((tool) => tool.name === "list_characters"),
+      ).toMatchObject({
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          openWorldHint: false,
+        },
+        _meta: {
+          ui: { resourceUri: srdPlayWidgetResourceUris.characterList },
+        },
+      });
+      expect(
+        tools.tools.find((tool) => tool.name === "read_battle_state"),
+      ).toMatchObject({
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          openWorldHint: false,
+        },
+        _meta: {
+          ui: { resourceUri: srdPlayWidgetResourceUris.battleState },
+        },
+      });
+
+      const resources = await client.listResources();
+      expect(resources.resources).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            uri: srdPlayWidgetResourceUris.characterList,
+            mimeType: SRD_PLAY_WIDGET_MIME_TYPE,
+          }),
+          expect.objectContaining({
+            uri: srdPlayWidgetResourceUris.battleState,
+            mimeType: SRD_PLAY_WIDGET_MIME_TYPE,
+          }),
+        ]),
+      );
+
+      for (const uri of Object.values(srdPlayWidgetResourceUris)) {
+        const resource = await client.readResource({ uri });
+        expect(resource.contents).toEqual([
+          expect.objectContaining({
+            uri,
+            mimeType: SRD_PLAY_WIDGET_MIME_TYPE,
+            text: expect.stringContaining("ui/notifications/tool-result"),
+            _meta: {
+              ui: {
+                prefersBorder: true,
+                csp: { connectDomains: [], resourceDomains: [] },
+              },
+            },
+          }),
+        ]);
+      }
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  }, 30_000);
+
   test("rejects calls outside the advertised tool definitions", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
