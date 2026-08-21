@@ -75,9 +75,11 @@ import {
 import {
   availableCharacterSession,
   characterIdFromDraftId,
+  type CharacterSessionRegistryIssue,
 } from "./session-store.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import {
+  characterSheetCurrentHp,
   parseCharacterSheet,
   parseCharacterSheetRetainedCompanionId,
   replaceCharacterSheetCompanion,
@@ -3344,7 +3346,7 @@ describe("MCP server route", () => {
           has: () => false,
           keys: function* () {},
           set: () => {},
-          setAll: () => {},
+          setAll: () => Either.right(undefined),
         },
       },
     };
@@ -3940,7 +3942,6 @@ describe("MCP server route", () => {
         },
       }),
     );
-
     expect(result.result).toEqual({
       tag: "spellRestBenefitApplied",
       casterCharacterId: testCharacterId(casterDraftId),
@@ -3951,6 +3952,78 @@ describe("MCP server route", () => {
     expect(result.character.spellSlotExpenditures).toEqual([
       { spellLevel: 2, expended: 1 },
     ]);
+  });
+
+  test("apply_character_session_operation applies Lay On Hands through the SDK", () => {
+    const root = createMcpPlaySessionRoot();
+    const sourceDraftId = "draft:mcp-healing-lay-source";
+    const targetDraftId = "draft:mcp-healing-lay-target";
+    const paladinBuild = fighterCharacterBuild(root.unitLibrary);
+    const paladinClass = root.unitLibrary.requireUnit("class_paladin");
+    if (paladinClass.kind !== "class") {
+      throw new Error("Expected Paladin class fixture.");
+    }
+    const sourceBuild = {
+      ...paladinBuild,
+      progression: {
+        ...paladinBuild.progression,
+        startingClass: expectRight(classUnitIdFromClassUnit(paladinClass)),
+      },
+    };
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        characterId: testCharacterId(sourceDraftId),
+        build: sourceBuild,
+        currentHp: Hp(characterBuildMaximumHp(sourceBuild, root.unitLibrary)),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+    createFinalizedFighterSheet(root, targetDraftId);
+    const targetSession = root.sessionStore.characters.get(
+      testCharacterId(targetDraftId),
+    );
+    if (targetSession?.tag !== "available") {
+      throw new Error("Expected an available Lay On Hands target.");
+    }
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        characterId: targetSession.characterId,
+        build: targetSession.build,
+        currentHp: Hp(1),
+        tempHp: targetSession.hitPoints.tempHp,
+        hitPointMaximumReduction: targetSession.hitPointMaximumReduction,
+        conditions: targetSession.conditions,
+        companion: targetSession.companion,
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+
+    const result = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId: testCharacterId(sourceDraftId),
+        operation: {
+          kind: "applyLayOnHands",
+          targetCharacterId: testCharacterId(targetDraftId),
+          restoreHp: 3,
+          removePoisoned: false,
+        },
+      }),
+    );
+
+    expect(result.result).toEqual({
+      tag: "layOnHandsApplied",
+      sourceCharacterId: testCharacterId(sourceDraftId),
+      targetCharacterId: testCharacterId(targetDraftId),
+    });
+    const updatedTarget = root.sessionStore.characters.get(
+      testCharacterId(targetDraftId),
+    );
+    if (updatedTarget?.tag !== "available") {
+      throw new Error("Expected an updated Lay On Hands target.");
+    }
+    expect(characterSheetCurrentHp(updatedTarget)).toBe(Hp(4));
   });
 
   test("apply_character_session_operation commits every spell rest benefit recipient atomically", () => {
@@ -4080,6 +4153,76 @@ describe("MCP server route", () => {
     ).toBe(before[2]);
   });
 
+  test("apply_character_session_operation leaves every session unchanged when the batch commit rejects", () => {
+    const root = createMcpPlaySessionRoot();
+    const casterDraftId = "draft:mcp-healing-commit-failure-caster";
+    const recipientDraftId = "draft:mcp-healing-commit-failure-recipient";
+    for (const draftId of [casterDraftId, recipientDraftId]) {
+      createFinalizedWizardWithFindFamiliar(root, draftId, {
+        level: 3,
+        preparedSpells: ["prayer_of_healing"],
+      });
+    }
+    const before = [
+      root.sessionStore.characters.get(testCharacterId(casterDraftId)),
+      root.sessionStore.characters.get(testCharacterId(recipientDraftId)),
+    ];
+    const registry = root.sessionStore.characters;
+    const failingRoot = {
+      ...root,
+      sessionStore: {
+        ...root.sessionStore,
+        characters: {
+          ...registry,
+          setAll: () =>
+            Either.left({
+              tag: "unknownCharacterSession",
+              characterId: testCharacterId("draft:mcp-injected-commit-failure"),
+            } satisfies CharacterSessionRegistryIssue),
+        },
+      },
+    };
+
+    const rejected = readPayload(
+      handleToolCall(failingRoot, "apply_character_session_operation", {
+        characterId: testCharacterId(casterDraftId),
+        operation: {
+          kind: "applySpellRestBenefit",
+          spellId: "prayer_of_healing",
+          castLevel: 2,
+          recipients: [
+            {
+              characterId: testCharacterId(recipientDraftId),
+              eligibility: { remainedWithinRangeForEntireCasting: true },
+              healingRolls: [4, 4],
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_COMMIT_INVALID",
+        recovery: {
+          tag: "characterSessionsUnchanged",
+          affectedCharacterIds: [
+            testCharacterId(casterDraftId),
+            testCharacterId(recipientDraftId),
+          ],
+        },
+      },
+    });
+    expect(
+      failingRoot.sessionStore.characters.get(testCharacterId(casterDraftId)),
+    ).toBe(before[0]);
+    expect(
+      failingRoot.sessionStore.characters.get(
+        testCharacterId(recipientDraftId),
+      ),
+    ).toBe(before[1]);
+  });
+
   test("apply_character_session_operation rejects a durable companion id used by another character", () => {
     const root = createMcpPlaySessionRoot();
     const firstDraftId = "draft:mcp-duplicate-durable-familiar-first";
@@ -4171,6 +4314,12 @@ describe("MCP server route", () => {
       source: { tag: "ritualSpell", spellId: "find_familiar" },
       selectedForm: { tag: "normalNamedForm", formId: "cat" },
     };
+    const healingOperation = {
+      kind: "applyLayOnHands",
+      targetCharacterId: "character:healing-target",
+      restoreHp: 1,
+      removePoisoned: false,
+    };
 
     expect(
       readPayload(
@@ -4180,6 +4329,26 @@ describe("MCP server route", () => {
         }),
       ),
     ).toMatchObject({ details: { code: "UNKNOWN_CHARACTER_SESSION" } });
+    expect(
+      readPayload(
+        handleToolCall(root, "apply_character_session_operation", {
+          characterId: "character:missing",
+          operation: healingOperation,
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "UNKNOWN_CHARACTER_SESSION",
+        operationKind: "applyLayOnHands",
+        recovery: {
+          tag: "characterSessionsUnchanged",
+          affectedCharacterIds: [
+            "character:missing",
+            "character:healing-target",
+          ],
+        },
+      },
+    });
 
     const draftId = "draft:mcp-in-battle-operation";
     createFinalizedWizardWithFindFamiliar(root, draftId);
@@ -4202,6 +4371,53 @@ describe("MCP server route", () => {
         }),
       ),
     ).toMatchObject({ details: { code: "CHARACTER_SESSION_IN_BATTLE" } });
+    expect(
+      readPayload(
+        handleToolCall(root, "apply_character_session_operation", {
+          characterId: id,
+          operation: healingOperation,
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_IN_BATTLE",
+        operationKind: "applyLayOnHands",
+        recovery: {
+          tag: "characterSessionsUnchanged",
+          affectedCharacterIds: [id, healingOperation.targetCharacterId],
+        },
+      },
+    });
+  });
+
+  test("apply_character_session_operation rejects empty or whitespace Character Session ids at the boundary", () => {
+    const root = createMcpPlaySessionRoot();
+    expect(
+      readPayload(
+        handleToolCall(root, "apply_character_session_operation", {
+          characterId: " ",
+          operation: {
+            kind: "applyLayOnHands",
+            targetCharacterId: "character:target",
+            restoreHp: 1,
+            removePoisoned: false,
+          },
+        }),
+      ),
+    ).toMatchObject({ details: { code: "INVALID_ARGUMENTS" } });
+    expect(
+      readPayload(
+        handleToolCall(root, "apply_character_session_operation", {
+          characterId: "character:source",
+          operation: {
+            kind: "applyLayOnHands",
+            targetCharacterId: "  ",
+            restoreHp: 1,
+            removePoisoned: false,
+          },
+        }),
+      ),
+    ).toMatchObject({ details: { code: "INVALID_ARGUMENTS" } });
   });
 
   test("apply_character_session_operation rejects an unknown special form", () => {

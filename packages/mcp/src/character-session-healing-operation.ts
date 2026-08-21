@@ -4,7 +4,7 @@ import {
   type CharacterSheetIssue,
   type CharacterSheetSpellRestBenefitRecipient,
 } from "@dnd/character-sheet-runtime";
-import { characterId } from "@dnd/battle-runtime";
+import type { CharacterId } from "@dnd/battle-runtime";
 import {
   DieRollResult,
   Hp,
@@ -30,10 +30,41 @@ type SpellRestBenefitOperation = Extract<
   { readonly kind: "applySpellRestBenefit" }
 >;
 
+export function availableHealingSourceSession(
+  root: McpPlaySessionRoot,
+  input: {
+    readonly operationKind: "applyLayOnHands" | "applySpellRestBenefit";
+    readonly sourceCharacterId: CharacterId;
+    readonly affectedCharacterIds: readonly CharacterId[];
+  },
+): Either.Either<AvailableCharacterSession, ReturnType<typeof errorContent>> {
+  const session = root.sessionStore.characters.get(input.sourceCharacterId);
+  if (session === undefined) {
+    return Either.left(
+      healingOperationFailure({
+        ...input,
+        issue: `Unknown source Character Session: ${input.sourceCharacterId}.`,
+        code: "UNKNOWN_CHARACTER_SESSION",
+      }),
+    );
+  }
+  if (session.tag === "inBattle") {
+    return Either.left(
+      healingOperationFailure({
+        ...input,
+        issue:
+          "Healing operation requires every affected Character Session to be available.",
+        code: "CHARACTER_SESSION_IN_BATTLE",
+      }),
+    );
+  }
+  return Either.right(session);
+}
+
 export function applyLayOnHandsOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterId;
     readonly session: AvailableCharacterSession;
     readonly operation: LayOnHandsOperation;
   },
@@ -68,7 +99,15 @@ export function applyLayOnHandsOperation(
     result.right.source.characterId === result.right.target.characterId
       ? [result.right.source]
       : [result.right.source, result.right.target];
-  root.sessionStore.characters.setAll(changedSessions);
+  const committed = commitCharacterSessions(root, changedSessions, {
+    operationKind: input.operation.kind,
+    sourceCharacterId: input.characterId,
+    affectedCharacterIds: [
+      input.characterId,
+      input.operation.targetCharacterId,
+    ],
+  });
+  if (Either.isLeft(committed)) return committed.left;
   return schemaJsonContent(CharacterSessionOperationOutputSchema, {
     character: result.right.source,
     result: {
@@ -83,7 +122,7 @@ export function applyLayOnHandsOperation(
 export function applySpellRestBenefitOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterId;
     readonly session: AvailableCharacterSession;
     readonly operation: SpellRestBenefitOperation;
   },
@@ -92,7 +131,10 @@ export function applySpellRestBenefitOperation(
     input.operation.recipients,
     (recipient) => recipient.characterId,
   );
-  const affectedCharacterIds = [input.characterId, ...recipientIds];
+  const affectedCharacterIds = uniqueCharacterIds([
+    input.characterId,
+    ...recipientIds,
+  ]);
   const recipientSheets: AvailableCharacterSession[] = [];
   for (const [index, recipient] of input.operation.recipients.entries()) {
     const session = availableTargetSession(root, {
@@ -133,10 +175,16 @@ export function applySpellRestBenefitOperation(
     });
   }
 
-  root.sessionStore.characters.setAll([
-    result.right.caster,
-    ...result.right.recipients,
-  ]);
+  const committed = commitCharacterSessions(
+    root,
+    uniqueSpellRestBenefitSessions(result.right),
+    {
+      operationKind: input.operation.kind,
+      sourceCharacterId: input.characterId,
+      affectedCharacterIds,
+    },
+  );
+  if (Either.isLeft(committed)) return committed.left;
   return schemaJsonContent(CharacterSessionOperationOutputSchema, {
     character: result.right.caster,
     result: {
@@ -195,15 +243,13 @@ function availableTargetSession(
   root: McpPlaySessionRoot,
   input: {
     readonly operationKind: "applyLayOnHands" | "applySpellRestBenefit";
-    readonly sourceCharacterId: string;
-    readonly targetCharacterId: string;
+    readonly sourceCharacterId: CharacterId;
+    readonly targetCharacterId: CharacterId;
     readonly recipientIndex?: number;
-    readonly affectedCharacterIds?: readonly string[];
+    readonly affectedCharacterIds?: readonly CharacterId[];
   },
 ): Either.Either<AvailableCharacterSession, ReturnType<typeof errorContent>> {
-  const session = root.sessionStore.characters.get(
-    characterId(input.targetCharacterId),
-  );
+  const session = root.sessionStore.characters.get(input.targetCharacterId);
   const affectedCharacterIds = input.affectedCharacterIds ?? [
     input.sourceCharacterId,
     input.targetCharacterId,
@@ -244,12 +290,15 @@ function availableTargetSession(
 
 function healingOperationFailure(input: {
   readonly operationKind: "applyLayOnHands" | "applySpellRestBenefit";
-  readonly sourceCharacterId: string;
-  readonly affectedCharacterIds: readonly string[];
-  readonly targetCharacterId?: string;
+  readonly sourceCharacterId: CharacterId;
+  readonly affectedCharacterIds: readonly CharacterId[];
+  readonly targetCharacterId?: CharacterId;
   readonly recipientIndex?: number;
   readonly issue: CharacterSheetIssue | string;
-  readonly code?: "UNKNOWN_CHARACTER_SESSION" | "CHARACTER_SESSION_IN_BATTLE";
+  readonly code?:
+    | "UNKNOWN_CHARACTER_SESSION"
+    | "CHARACTER_SESSION_IN_BATTLE"
+    | "CHARACTER_SESSION_COMMIT_INVALID";
 }) {
   const message =
     typeof input.issue === "string" ? input.issue : input.issue.message;
@@ -273,10 +322,50 @@ function healingOperationFailure(input: {
   });
 }
 
+function uniqueSpellRestBenefitSessions(result: {
+  readonly caster: AvailableCharacterSession;
+  readonly recipients: readonly AvailableCharacterSession[];
+}): readonly AvailableCharacterSession[] {
+  const sessions = [result.caster, ...result.recipients];
+  const seen = new Set<string>();
+  return sessions.filter((session) => {
+    if (seen.has(session.characterId)) return false;
+    seen.add(session.characterId);
+    return true;
+  });
+}
+
+function commitCharacterSessions(
+  root: McpPlaySessionRoot,
+  sessions: readonly AvailableCharacterSession[],
+  context: {
+    readonly operationKind: "applyLayOnHands" | "applySpellRestBenefit";
+    readonly sourceCharacterId: CharacterId;
+    readonly affectedCharacterIds: readonly CharacterId[];
+  },
+) {
+  const committed = root.sessionStore.characters.setAll(sessions);
+  return Either.isLeft(committed)
+    ? Either.left(
+        healingOperationFailure({
+          ...context,
+          issue: `Character Session commit rejected: ${committed.left.tag}.`,
+          code: "CHARACTER_SESSION_COMMIT_INVALID",
+        }),
+      )
+    : Either.right(undefined);
+}
+
 function mapNonEmpty<A, B>(
   values: readonly [A, ...A[]],
   map: (value: A, index: number) => B,
 ): readonly [B, ...B[]] {
   const [first, ...rest] = values;
   return [map(first, 0), ...rest.map((value, index) => map(value, index + 1))];
+}
+
+function uniqueCharacterIds(
+  ids: readonly CharacterId[],
+): readonly CharacterId[] {
+  return Array.from(new Set(ids));
 }

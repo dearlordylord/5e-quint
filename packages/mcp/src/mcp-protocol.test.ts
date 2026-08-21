@@ -16,8 +16,10 @@ import {
   verifyWizardIceKnifeBattleHandoff,
 } from "../test-support/mcp-acceptance-scenarios.ts";
 import { createMcpApplicationServices } from "./composition-root.ts";
+import type { AvailableCharacterSession } from "./session-store.ts";
 import { contentToolDefinitions } from "./content-tools.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
+import { decodePlaySessionId } from "./play-session.ts";
 import {
   PLAY_SESSION_OPERATION_NAMES,
   PLAY_SESSION_OUTPUT_SCHEMA_BYTE_BUDGET,
@@ -236,6 +238,46 @@ describe("MCP protocol server", () => {
     },
     FULL_ACCEPTANCE_TEST_TIMEOUT_MS,
   );
+
+  test("routes the character-session mutation next operation from available occupancy", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const host = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "available-session-next-operation-client",
+      version: "0.1.0",
+    });
+
+    try {
+      await host.server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const playSessionId = await createPlaySession(client);
+      const decodedPlaySessionId = decodePlaySessionId(playSessionId);
+      if (decodedPlaySessionId._tag === "Left") {
+        throw new Error(decodedPlaySessionId.left);
+      }
+      const injected = await host.playSessions.run(
+        decodedPlaySessionId.right,
+        (root) => {
+          root.sessionStore.characters.set({
+            tag: "available",
+            characterId: "character:available-for-mutation",
+          } as unknown as AvailableCharacterSession);
+        },
+      );
+      expect(injected._tag).toBe("Right");
+
+      const resumed = await callStructuredTool(client, {
+        name: "read_play_session",
+        arguments: { playSessionId },
+      });
+      expect(resumed.nextOperations).toContain(
+        "apply_character_session_operation",
+      );
+    } finally {
+      await Promise.allSettled([client.close(), host.server.close()]);
+    }
+  });
 
   test("returns one typed restoration result for a handle absent from the process", async () => {
     const [clientTransport, serverTransport] =

@@ -15,6 +15,7 @@ import type { AvailableCharacterSession } from "./session-store.ts";
 import { CharacterSessionOperationOutputSchema } from "./character-tool-output.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
 import {
+  availableHealingSourceSession,
   applyLayOnHandsOperation,
   applySpellRestBenefitOperation,
 } from "./character-session-healing-operation.ts";
@@ -26,54 +27,78 @@ export function applyCharacterSessionOperation(
   root: McpPlaySessionRoot,
   input: ApplyCharacterSessionOperationToolInput,
 ) {
-  const id = characterId(input.characterId);
+  const id = input.characterId;
   const session = root.sessionStore.characters.get(id);
-  if (session === undefined) {
-    return errorContent(`Unknown character session: ${input.characterId}`, {
-      code: "UNKNOWN_CHARACTER_SESSION",
-      characterId: input.characterId,
-    });
-  }
-  if (session.tag === "inBattle") {
-    return errorContent(
-      "Character session operation requires an available character.",
-      {
-        code: "CHARACTER_SESSION_IN_BATTLE",
-        characterId: input.characterId,
-      },
-    );
-  }
 
   return Match.value(input.operation).pipe(
-    Match.when({ kind: "retainOneAtATimeCompanion" }, (operation) =>
-      applyRetainOneAtATimeCompanionOperation(root, {
+    Match.when({ kind: "retainOneAtATimeCompanion" }, (operation) => {
+      if (session === undefined) {
+        return errorContent(`Unknown character session: ${input.characterId}`, {
+          code: "UNKNOWN_CHARACTER_SESSION",
+          characterId: input.characterId,
+        });
+      }
+      if (session.tag === "inBattle") {
+        return errorContent(
+          "Character session operation requires an available character.",
+          {
+            code: "CHARACTER_SESSION_IN_BATTLE",
+            characterId: input.characterId,
+          },
+        );
+      }
+      return applyRetainOneAtATimeCompanionOperation(root, {
         characterId: input.characterId,
         session,
         operation,
-      }),
-    ),
-    Match.when({ kind: "applyLayOnHands" }, (operation) =>
-      applyLayOnHandsOperation(root, {
+      });
+    }),
+    Match.when({ kind: "applyLayOnHands" }, (operation) => {
+      const source = availableHealingSourceSession(root, {
+        operationKind: operation.kind,
+        sourceCharacterId: input.characterId,
+        affectedCharacterIds: uniqueCharacterIds([
+          input.characterId,
+          operation.targetCharacterId,
+        ]),
+      });
+      if (Either.isLeft(source)) return source.left;
+      return applyLayOnHandsOperation(root, {
         characterId: input.characterId,
-        session,
+        session: source.right,
         operation,
-      }),
-    ),
-    Match.when({ kind: "applySpellRestBenefit" }, (operation) =>
-      applySpellRestBenefitOperation(root, {
+      });
+    }),
+    Match.when({ kind: "applySpellRestBenefit" }, (operation) => {
+      const source = availableHealingSourceSession(root, {
+        operationKind: operation.kind,
+        sourceCharacterId: input.characterId,
+        affectedCharacterIds: uniqueCharacterIds([
+          input.characterId,
+          ...operation.recipients.map((recipient) => recipient.characterId),
+        ]),
+      });
+      if (Either.isLeft(source)) return source.left;
+      return applySpellRestBenefitOperation(root, {
         characterId: input.characterId,
-        session,
+        session: source.right,
         operation,
-      }),
-    ),
+      });
+    }),
     Match.exhaustive,
   );
+}
+
+function uniqueCharacterIds(
+  ids: readonly CharacterId[],
+): readonly CharacterId[] {
+  return Array.from(new Set(ids));
 }
 
 function applyRetainOneAtATimeCompanionOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterId;
     readonly session: AvailableCharacterSession;
     readonly operation: Extract<
       ApplyCharacterSessionOperationToolInput["operation"],

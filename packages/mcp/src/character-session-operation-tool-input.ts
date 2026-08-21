@@ -2,6 +2,7 @@ import {
   CharacterSheetRetainedCompanionId,
   FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES,
 } from "@dnd/character-sheet-runtime";
+import { CharacterIdSchema, type CharacterId } from "@dnd/battle-runtime";
 import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
 
@@ -45,13 +46,13 @@ const RestBenefitRecoveryFields = {
 
 const LayOnHandsOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("applyLayOnHands"),
-  targetCharacterId: Schema.String,
+  targetCharacterId: CharacterIdSchema,
   restoreHp: NonNegativeIntegerSchema,
   removePoisoned: Schema.Boolean,
 });
 
 const SpellRestBenefitRecipientArgsSchema = Schema.Struct({
-  characterId: Schema.String,
+  characterId: CharacterIdSchema,
   eligibility: Schema.Struct({
     remainedWithinRangeForEntireCasting: Schema.Literal(true),
   }),
@@ -144,7 +145,7 @@ const CharacterSessionOperationArgsSchema = Schema.Union(
 );
 
 export const ApplyCharacterSessionOperationArgsSchema = Schema.Struct({
-  characterId: Schema.String,
+  characterId: CharacterIdSchema,
   operation: CharacterSessionOperationArgsSchema,
 });
 
@@ -155,6 +156,6 @@ type CharacterSessionOperationArgs =
   ApplyCharacterSessionOperationArgs["operation"];
 
 export type ApplyCharacterSessionOperationToolInput = {
-  readonly characterId: string;
+  readonly characterId: CharacterId;
   readonly operation: CharacterSessionOperationArgs;
 };
