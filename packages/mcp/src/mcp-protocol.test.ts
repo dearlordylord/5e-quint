@@ -287,6 +287,174 @@ describe("MCP protocol server", () => {
     }
   });
 
+  test("returns the current creation frontier after ambiguous and stale fills", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const { server } = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "creation-restoration-client",
+      version: "0.1.0",
+    });
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const playSessionId = await createPlaySession(client);
+      const draftId = "draft:protocol-current-frontier";
+      const created = await callStructuredTool(client, {
+        name: "create_character_draft",
+        arguments: { playSessionId, draftId },
+      });
+      const creationResult = operationResult(created);
+      const holes = arrayField(creationResult, "holes");
+      const progressionHole = holes.find(
+        (hole) =>
+          isJsonObject(hole) &&
+          hole.holeId === "cc:draft:draft.progression.initial",
+      );
+      if (!isJsonObject(progressionHole)) {
+        throw new Error("Expected the current progression hole.");
+      }
+      const options = arrayField(progressionHole, "options");
+      const optionIds = options.slice(0, 2).map((option) => {
+        if (!isJsonObject(option) || typeof option.optionId !== "string") {
+          throw new Error("Expected current progression option ids.");
+        }
+        return option.optionId;
+      });
+      expect(optionIds).toHaveLength(2);
+      const progressionOptionId = optionIds[0];
+      if (progressionOptionId === undefined) {
+        throw new Error("Expected a current progression option id.");
+      }
+
+      const ambiguous = await callStructuredTool(client, {
+        name: "fill_creation_holes",
+        arguments: {
+          playSessionId,
+          draftId,
+          expectedRevision: 0,
+          fills: [
+            {
+              kind: "choice",
+              holeId: progressionHole.holeId,
+              optionIds,
+            },
+          ],
+        },
+      });
+      expect(ambiguous).toMatchObject({
+        operation: {
+          result: {
+            result: {
+              tag: "rejected",
+              issues: [{ tag: "illegalFill", code: "tooManyChoices" }],
+            },
+            storedDraft: { revision: 0 },
+          },
+        },
+        restoration: { tag: "retained" },
+      });
+      expect(ambiguous.unresolvedInputs).not.toEqual([]);
+      expect(ambiguous.nextOperations).toEqual(
+        expect.arrayContaining([
+          "fill_creation_holes",
+          "discover_creation_holes",
+        ]),
+      );
+
+      const progressed = await callStructuredTool(client, {
+        name: "fill_creation_holes",
+        arguments: {
+          playSessionId,
+          draftId,
+          expectedRevision: 0,
+          fills: [
+            {
+              kind: "choice",
+              holeId: progressionHole.holeId,
+              optionIds: [progressionOptionId],
+            },
+          ],
+        },
+      });
+      expect(progressed).toMatchObject({
+        operation: { result: { storedDraft: { revision: 1 } } },
+      });
+      const discovered = await callStructuredTool(client, {
+        name: "discover_creation_holes",
+        arguments: { playSessionId, draftId },
+      });
+      const currentHoles = arrayField(operationResult(discovered), "holes");
+      const currentSingleChoiceHole = currentHoles.find((hole) => {
+        if (!isJsonObject(hole) || hole.kind !== "choice") return false;
+        if (!isJsonObject(hole.cardinality)) return false;
+        return (
+          hole.cardinality.tag === "exactly" && hole.cardinality.count === 1
+        );
+      });
+      if (!isJsonObject(currentSingleChoiceHole)) {
+        throw new Error("Expected a current single-choice creation hole.");
+      }
+      const currentOptions = arrayField(currentSingleChoiceHole, "options");
+      const currentOption = currentOptions[0];
+      if (
+        !isJsonObject(currentOption) ||
+        typeof currentOption.optionId !== "string"
+      ) {
+        throw new Error("Expected a current single-choice option id.");
+      }
+      const currentFill = {
+        kind: "choice",
+        holeId: currentSingleChoiceHole.holeId,
+        optionIds: [currentOption.optionId],
+      };
+      const stale = await callStructuredTool(client, {
+        name: "fill_creation_holes",
+        arguments: {
+          playSessionId,
+          draftId,
+          expectedRevision: 0,
+          fills: [currentFill],
+        },
+      });
+      expect(stale).toMatchObject({
+        operation: {
+          result: {
+            result: {
+              tag: "rejected",
+              issues: [{ tag: "illegalBatch", code: "staleRevision" }],
+            },
+            storedDraft: { revision: 1 },
+          },
+        },
+        restoration: { tag: "retained" },
+      });
+      expect(stale.unresolvedInputs).not.toEqual([]);
+      const staleFillResult = objectField(operationResult(stale), "result");
+      expect(arrayField(staleFillResult, "holes")).toEqual(currentHoles);
+      const retried = await callStructuredTool(client, {
+        name: "fill_creation_holes",
+        arguments: {
+          playSessionId,
+          draftId,
+          expectedRevision: 1,
+          fills: [currentFill],
+        },
+      });
+      expect(retried).toMatchObject({
+        operation: {
+          result: {
+            result: { tag: "accepted" },
+            storedDraft: { revision: 2 },
+          },
+        },
+      });
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  });
+
   test("keeps the LLM drivability scenarios documented", () => {
     verifyAgentConversationScenarios();
   });
@@ -420,4 +588,34 @@ function isJsonObject(
   value: unknown,
 ): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function operationResult(
+  envelope: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> {
+  if (!isJsonObject(envelope.operation)) {
+    throw new Error("Expected a Play Session operation.");
+  }
+  if (!isJsonObject(envelope.operation.result)) {
+    throw new Error("Expected a Play Session operation result.");
+  }
+  return envelope.operation.result;
+}
+
+function arrayField(
+  value: Readonly<Record<string, unknown>>,
+  field: string,
+): readonly unknown[] {
+  const result = value[field];
+  if (!Array.isArray(result)) throw new Error(`Expected ${field} array.`);
+  return result;
+}
+
+function objectField(
+  value: Readonly<Record<string, unknown>>,
+  field: string,
+): Readonly<Record<string, unknown>> {
+  const result = value[field];
+  if (!isJsonObject(result)) throw new Error(`Expected ${field} object.`);
+  return result;
 }

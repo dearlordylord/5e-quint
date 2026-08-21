@@ -55,6 +55,7 @@ const expectedTools = [
   "fill_creation_holes",
   "finalize_character",
   "list_characters",
+  "inspect_character_session",
   "select_stat_block",
   "start_battle",
   "read_battle_state",
@@ -371,9 +372,9 @@ const agentConversationScenarios = [
     name: "Finish battle and inspect durable character state",
     userSays: "End the battle and show the updated character list.",
     agentReads:
-      "end_battle takes empty args and returns endedBattleId, the closedAt SDK-derived Initiative position, character sessions, and session snapshot. list_characters returns available characters with current HP and spellSlots.",
+      "end_battle takes empty args and returns endedBattleId, the closedAt SDK-derived Initiative position, character sessions, and session snapshot. list_characters returns available rows; inspect_character_session returns one selected canonical stored session and its core build-derived facts.",
     agentDecision:
-      "It calls end_battle only when no transient fills are pending, then list_characters to show durable HP and Spell Slot expenditure handoff.",
+      "It calls end_battle only when no transient fills are pending, lists the durable sessions, and inspects the selected character to continue from its current HP and Spell Slot expenditure handoff.",
     executableCoverage: "verifyBaselineVertical and verifyWidthVertical",
     insufficiency:
       "Post-battle handoff currently rejects 0 HP characters; the first vertical cannot finish a battle where a character is at 0 HP.",
@@ -383,12 +384,13 @@ const agentConversationScenarios = [
     name: "Recover from invalid or stale actions",
     userSays: "Do the thing from earlier.",
     agentReads:
-      "MCP rejects stale/unavailable subjects, different-subject fills while pending fills exist, empty character starts, unknown draft ids, duplicate ids, and end_turn/end_battle during pending fills.",
+      "MCP rejects stale or ambiguous creation fills with typed issue codes while returning the current stored draft, Creation Holes, unresolvedInputs, and nextOperations; other stale or unavailable session operations retain the current Play Session projection.",
     agentDecision:
-      "It reads the error code, rediscovers current holes or battle acts, then retries with the current revision/subject instead of replaying stale input.",
-    executableCoverage: "verifyToolContract and verifyBaselineVertical",
+      "It reads the typed issue and current frontier, presents the returned options when clarification is needed, then retries with the current revision or subject instead of replaying stale input or inventing an id.",
+    executableCoverage:
+      "mcp-protocol current-frontier restoration test, verifyToolContract, and verifyBaselineVertical",
     insufficiency:
-      "Errors are structured enough to recover, but there is no single 'what should I do next?' field in every response.",
+      "Recovery remains deliberately state-based: the envelope names relevant next operations but does not choose an option or manufacture a replacement identifier.",
   },
   {
     id: "navigate-result-payloads",
@@ -640,6 +642,23 @@ export async function verifyBaselineVertical(client: Client) {
 
   const listedBeforeBattle = await callTool(client, "list_characters", {});
   assert.equal(get(listedBeforeBattle, "characters.0.hitPoints.current"), 12);
+  const detailBeforeBattle = await callTool(
+    client,
+    "inspect_character_session",
+    { characterId: testCharacterId(draftId) },
+  );
+  assert.equal(
+    get(detailBeforeBattle, "detail.characterId"),
+    testCharacterId(draftId),
+  );
+  assert.equal(get(detailBeforeBattle, "detail.tag"), "available");
+  assert.equal(
+    get(detailBeforeBattle, "detail.sheetProjection.hitPointMaximum"),
+    12,
+  );
+  assert.deepEqual(get(detailBeforeBattle, "detail.sheetProjection.hitDice"), [
+    { classUnitId: "class_fighter", dieSize: 10, total: 1, spent: 0 },
+  ]);
 
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
@@ -753,6 +772,16 @@ export async function verifyBaselineVertical(client: Client) {
     fill: rolledDiceFill("battle:attack:damage-result:1d6+2-slashing", [[5]]),
   });
   assert.equal(combatantHp(goblinDamage, "fighter"), 5);
+  const inBattleDetail = await callTool(client, "inspect_character_session", {
+    characterId: testCharacterId(draftId),
+  });
+  assert.equal(get(inBattleDetail, "detail.tag"), "inBattle");
+  assert.equal(
+    get(inBattleDetail, "detail.battleId"),
+    "battle:stdio-accepted-vertical",
+  );
+  assert.equal(get(inBattleDetail, "detail.sheet"), undefined);
+  assert.equal(get(inBattleDetail, "detail.sheetProjection"), undefined);
 
   const ended = await callTool(client, "end_battle", {});
   assert.equal(get(ended, "endedBattleId"), "battle:stdio-accepted-vertical");
@@ -763,6 +792,14 @@ export async function verifyBaselineVertical(client: Client) {
   assert.equal(get(listed, "characters.0.displayName"), "Orc Soldier Fighter");
   assert.equal(get(listed, "characters.0.hitPoints.current"), 5);
   assert.equal(get(listed, "characters.0.hitPoints.maximum"), 12);
+  const continuedDetail = await callTool(client, "inspect_character_session", {
+    characterId: testCharacterId(draftId),
+  });
+  assert.equal(get(continuedDetail, "detail.sheet.hitPoints.currentHp"), 5);
+  assert.equal(
+    get(continuedDetail, "detail.sheetProjection.hitPointMaximum"),
+    12,
+  );
   assert.equal(
     (get(listed, "characters") as JsonObject[]).some(
       (character) => character.displayName === "Goblin Warrior",
@@ -1061,6 +1098,30 @@ export async function verifyWidthVertical(client: Client) {
   assert.deepEqual(get(wizard, "spellSlots"), [
     { count: 3, expended: 1, spellLevel: 1 },
   ]);
+  const retained = await callTool(client, "apply_character_session_operation", {
+    characterId: testCharacterId(wizardDraftId),
+    operation: {
+      kind: "retainOneAtATimeCompanion",
+      companionId: "protocol-retained-familiar",
+      source: { tag: "ritualSpell", spellId: "find_familiar" },
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      creatureTypeOverrideChoiceId: "fey",
+    },
+  });
+  assert.equal(
+    get(retained, "character.companion.companion.companionId"),
+    "protocol-retained-familiar",
+  );
+  const retainedDetail = await callTool(client, "inspect_character_session", {
+    characterId: testCharacterId(wizardDraftId),
+  });
+  assert.equal(
+    get(
+      retainedDetail,
+      "detail.sheet.companion.companion.manifestation.resolvedStatBlockId",
+    ),
+    "stat_block_cat",
+  );
 }
 
 export async function verifyLevelThreeWizardVertical(client: Client) {
@@ -2222,7 +2283,7 @@ async function createAndFinalizeElfWizardTwoWithSpells(
   } = {},
 ) {
   const spellbook = spells.spellbook ?? [
-    "detect_magic",
+    "find_familiar",
     "mage_armor",
     "magic_missile",
     "shield",

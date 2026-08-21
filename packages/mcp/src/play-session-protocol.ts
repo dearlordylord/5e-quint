@@ -301,6 +301,7 @@ function nextOperationsFrom(
   if (projection.characterIds.length > 0) {
     return [
       characterToolNames.listCharacters,
+      characterToolNames.inspectCharacterSession,
       battleToolNames.startBattle,
       characterToolNames.createCharacterDraft,
     ];

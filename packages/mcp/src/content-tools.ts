@@ -289,7 +289,7 @@ function workflowGuide() {
       "On pending-fill errors, continue filling session.transientBattleFills.subject until the result resolves.",
     ],
     limits: [
-      "Use discover_creation_holes, list_characters, list_stat_blocks, and discover_battle_acts for the currently executable workflows and acts.",
+      "Use discover_creation_holes, list_characters, inspect_character_session, list_stat_blocks, and discover_battle_acts for the currently executable workflows and acts.",
       "Character creation exposes one draft.progression.initial fill for the selected progression profile; MCP does not expose a later level-1 class-entry fill.",
       "MCP does not roll dice. Use user-provided or external dice results.",
       "Rest and revival workflows are not currently supported after typed zero-HP character closeout.",
