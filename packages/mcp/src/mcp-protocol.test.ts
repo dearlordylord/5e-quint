@@ -768,6 +768,10 @@ describe("MCP protocol server", () => {
       });
       const decoded = decodePlaySessionId(playSessionId);
       if (decoded._tag === "Left") throw new Error(decoded.left);
+      const sourceBefore = await callStructuredTool(client, {
+        name: "inspect_character_session",
+        arguments: { playSessionId, characterId: "character:rest-source" },
+      });
       await host.playSessions.run(decoded.right, (root) => {
         root.sessionStore.characters.setAll = () =>
           Either.left({
@@ -809,7 +813,7 @@ describe("MCP protocol server", () => {
           },
         },
       });
-      const source = await callStructuredTool(client, {
+      const sourceAfter = await callStructuredTool(client, {
         name: "inspect_character_session",
         arguments: { playSessionId, characterId: "character:rest-source" },
       });
@@ -817,7 +821,20 @@ describe("MCP protocol server", () => {
         name: "inspect_character_session",
         arguments: { playSessionId, characterId: "character:rest-target" },
       });
-      expect(JSON.stringify(source)).toContain('"expended":0');
+      expect(sourceAfter).toEqual(sourceBefore);
+      expect(sourceAfter).toMatchObject({
+        operation: {
+          result: {
+            detail: {
+              sheetProjection: {
+                spellSlots: expect.arrayContaining([
+                  { spellLevel: 2, count: 2, expended: 0 },
+                ]),
+              },
+            },
+          },
+        },
+      });
       expect(JSON.stringify(target)).toContain('"currentHp":1');
     } finally {
       await Promise.allSettled([client.close(), host.server.close()]);
