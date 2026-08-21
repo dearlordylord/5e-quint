@@ -258,6 +258,13 @@ export const CHARACTER_BUILD_CLASS_LEVEL_GAIN_TAGS = [
   "sorcererLevelGain",
   "warlockLevelGain",
 ] as const satisfies readonly CharacterBuildClassLevelGain["tag"][];
+type MissingClassLevelGainTags = Exclude<
+  CharacterBuildClassLevelGain["tag"],
+  (typeof CHARACTER_BUILD_CLASS_LEVEL_GAIN_TAGS)[number]
+>;
+void (true satisfies [MissingClassLevelGainTags] extends [never]
+  ? true
+  : false);
 
 export type CharacterBuildAdvancementIssue =
   | {

@@ -429,6 +429,10 @@ export {
   type WarlockClassUnitId,
 } from "./character-build-advancement.ts";
 export {
+  CharacterBuildClassLevelGainSchema,
+  type CharacterBuildClassLevelGainSchemaInput,
+} from "./character-build-class-level-gain-schema.ts";
+export {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   BACKGROUND_EQUIPMENT_CHOICE_KEY,
   BACKGROUND_TOOL_CHOICE_KEY,
