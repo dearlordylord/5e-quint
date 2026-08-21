@@ -15,6 +15,7 @@ import { unitId, type Skill } from "@dnd/shared/game-facts";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import { characterIdFromDraftId } from "../src/session-store.ts";
+import { CONTENT_TOOL_NAMES } from "../src/content-tools.ts";
 import { characterProgressionEntry } from "../../character-creation-runtime/src/character-progression-types.ts";
 
 import {
@@ -66,9 +67,7 @@ const expectedTools = [
 
 const statelessToolNames = new Set([
   "create_play_session",
-  "describe_mcp_workflow",
-  "list_catalog_units",
-  "list_stat_blocks",
+  ...CONTENT_TOOL_NAMES,
 ]);
 const playSessionIdByClient = new WeakMap<Client, Promise<string>>();
 
