@@ -248,13 +248,6 @@ export const ListCharactersOutputSchema = Schema.Struct({
 const ShortRestInterruptionResultSchema = Schema.Literal(
   ...CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
 );
-const LongRestInterruptionResultSchema = Schema.Union(
-  ShortRestInterruptionResultSchema,
-  Schema.Struct({
-    tag: Schema.Literal("physicalExertion"),
-    durationTicks: NonNegativeIntegerSchema,
-  }),
-);
 export const CharacterSessionOperationResultSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("shortRestCompleted"),
@@ -267,16 +260,6 @@ export const CharacterSessionOperationResultSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("longRestCompleted"),
     restedTicks: NonNegativeIntegerSchema,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("longRestInterruptedNoBenefit"),
-    interruption: LongRestInterruptionResultSchema,
-    requiredLongRestTicks: NonNegativeIntegerSchema,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("longRestInterruptedWithShortRestBenefits"),
-    interruption: LongRestInterruptionResultSchema,
-    requiredLongRestTicks: NonNegativeIntegerSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("resolved"),

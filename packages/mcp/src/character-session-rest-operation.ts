@@ -9,6 +9,7 @@ import {
   startShortRest,
   type CharacterSheetIssue,
   type CharacterSheetLongRestInterruption,
+  type CharacterSheetLongRestStart,
   type CharacterSheetLongRestStartTiming,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -142,56 +143,10 @@ export function applyCompleteLongRestOperation(
   if (Either.isLeft(started)) {
     return characterSessionOperationFailure(input.characterId, started.left);
   }
-  const completion = finishLongRest({
+  return completeStartedLongRestOperation(root, {
+    characterId: input.characterId,
     rest: started.right,
-    restedTicks: elapsedTimeTicks(input.operation.restedTicks),
-  });
-  if (Either.isLeft(completion)) {
-    return characterSessionOperationFailure(input.characterId, completion.left);
-  }
-  const completed = completeLongRest({
-    completion: completion.right,
-    unitLibrary: root.unitLibrary,
-    ...(input.operation.weaponMasteryReselections === undefined
-      ? {}
-      : {
-          weaponMasteryReselections: mapNonEmpty(
-            input.operation.weaponMasteryReselections,
-            (reselection) => ({
-              featureUnitId: reselection.featureUnitId,
-              selectedWeaponUnitIds: reselection.selectedWeaponUnitIds,
-            }),
-          ),
-        }),
-    ...(input.operation.druidWildShapeKnownFormReplacement === undefined
-      ? {}
-      : {
-          druidWildShapeKnownFormReplacement:
-            input.operation.druidWildShapeKnownFormReplacement,
-        }),
-    ...(input.operation.druidCircleLandChoice === undefined
-      ? {}
-      : {
-          druidCircleLandChoice: input.operation.druidCircleLandChoice,
-        }),
-    ...(input.operation.fiendishResilienceDamageType === undefined
-      ? {}
-      : {
-          fiendishResilienceDamageType:
-            input.operation.fiendishResilienceDamageType,
-        }),
-    statBlockCatalog: root.statBlockCatalog,
-  });
-  if (Either.isLeft(completed)) {
-    return characterSessionOperationFailure(input.characterId, completed.left);
-  }
-  root.sessionStore.characters.set(completed.right);
-  return characterSessionOperationSuccess(root, {
-    character: completed.right,
-    result: {
-      tag: "longRestCompleted",
-      restedTicks: input.operation.restedTicks,
-    },
+    completion: input.operation,
   });
 }
 
@@ -213,33 +168,98 @@ export function applyInterruptLongRestOperation(
   if (Either.isLeft(started)) {
     return characterSessionOperationFailure(input.characterId, started.left);
   }
-  const interrupted = interruptLongRest({
-    rest: started.right,
-    unitLibrary: root.unitLibrary,
-    restedTicks: elapsedTimeTicks(input.operation.restedTicks),
-    interruption: longRestInterruptionFromTool(input.operation.interruption),
-    ...restRecoveryFromTool(input.operation),
+  let rest = started.right;
+  // RAW: .references/srd-5.2.1/Rules-Glossary.md#Long-Rest (lines 694-696)
+  // grants Short Rest benefits after at least 1 hour before an interruption
+  // and adds 1 hour to the resumed Long Rest for every interruption.
+  for (const segment of input.operation.interruptionSegments) {
+    const interrupted = interruptLongRest({
+      rest,
+      unitLibrary: root.unitLibrary,
+      restedTicks: elapsedTimeTicks(segment.restedTicks),
+      interruption: longRestInterruptionFromTool(segment.interruption),
+      ...restRecoveryFromTool(segment),
+    });
+    if (Either.isLeft(interrupted)) {
+      return characterSessionOperationFailure(
+        input.characterId,
+        interrupted.left,
+      );
+    }
+    rest = interrupted.right.rest;
+  }
+  return completeStartedLongRestOperation(root, {
+    characterId: input.characterId,
+    rest,
+    completion: input.operation.completion,
   });
-  if (Either.isLeft(interrupted)) {
-    return characterSessionOperationFailure(
-      input.characterId,
-      interrupted.left,
-    );
+}
+
+type LongRestCompletionToolInput = Omit<
+  Extract<
+    ApplyCharacterSessionOperationToolInput["operation"],
+    { readonly kind: "completeLongRest" }
+  >,
+  "kind" | "timing"
+>;
+
+function completeStartedLongRestOperation(
+  root: McpPlaySessionRoot,
+  input: {
+    readonly characterId: string;
+    readonly rest: CharacterSheetLongRestStart;
+    readonly completion: LongRestCompletionToolInput;
+  },
+) {
+  const completion = finishLongRest({
+    rest: input.rest,
+    restedTicks: elapsedTimeTicks(input.completion.restedTicks),
+  });
+  if (Either.isLeft(completion)) {
+    return characterSessionOperationFailure(input.characterId, completion.left);
   }
-  const result = interrupted.right;
-  const character =
-    result.tag === "longRestInterruptedWithShortRestBenefits"
-      ? result.rest.sheet
-      : input.session;
-  if (result.tag === "longRestInterruptedWithShortRestBenefits") {
-    root.sessionStore.characters.set(character);
+  const completed = completeLongRest({
+    completion: completion.right,
+    unitLibrary: root.unitLibrary,
+    ...(input.completion.weaponMasteryReselections === undefined
+      ? {}
+      : {
+          weaponMasteryReselections: mapNonEmpty(
+            input.completion.weaponMasteryReselections,
+            (reselection) => ({
+              featureUnitId: reselection.featureUnitId,
+              selectedWeaponUnitIds: reselection.selectedWeaponUnitIds,
+            }),
+          ),
+        }),
+    ...(input.completion.druidWildShapeKnownFormReplacement === undefined
+      ? {}
+      : {
+          druidWildShapeKnownFormReplacement:
+            input.completion.druidWildShapeKnownFormReplacement,
+        }),
+    ...(input.completion.druidCircleLandChoice === undefined
+      ? {}
+      : {
+          druidCircleLandChoice: input.completion.druidCircleLandChoice,
+        }),
+    ...(input.completion.fiendishResilienceDamageType === undefined
+      ? {}
+      : {
+          fiendishResilienceDamageType:
+            input.completion.fiendishResilienceDamageType,
+        }),
+    statBlockCatalog: root.statBlockCatalog,
+  });
+  if (Either.isLeft(completed)) {
+    return characterSessionOperationFailure(input.characterId, completed.left);
   }
+  root.sessionStore.characters.set(completed.right);
   return characterSessionOperationSuccess(root, {
-    character,
+    character: completed.right,
     result: {
-      tag: result.tag,
-      interruption: result.interruption,
-      requiredLongRestTicks: Number(result.requiredLongRestTicks),
+      tag: "longRestCompleted",
+      restedTicks: input.completion.restedTicks,
     },
   });
 }

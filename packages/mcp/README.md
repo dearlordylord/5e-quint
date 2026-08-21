@@ -118,13 +118,17 @@ The character-creation tool boundary exposes these user-facing tools:
   ledger, or internal cast helpers.
 - `apply_character_session_operation` also composes atomic rest and calendar
   operations. `completeShortRest` and `completeLongRest` receive the caller's
-  elapsed-rest facts and recovery selections; their interruption variants
-  receive the activity facts and apply any permitted Short Rest benefits.
+  elapsed-rest facts and recovery selections. `interruptLongRest` receives a
+  non-empty interruption history plus the final resumed-rest segment, applies
+  any permitted Short Rest benefits at each interruption, and finishes the
+  composed rest in that same call; it does not expose a resumable intermediate.
+  `interruptShortRest` receives its activity fact and returns no benefit.
   `completeLongRest` passes Weapon Mastery reselections to the Character Sheet
   runtime, while `passCalendarTime` delegates Stable recovery and returns its
   resolved, unresolved-hole, or invalid outcome. Start and finish validation
   occurs inside each call, so MCP retains no branded rest intermediate or
-  separate rest state machine.
+  separate rest state machine. A resumed Long Rest's required duration includes
+  one additional hour for every interruption.
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core

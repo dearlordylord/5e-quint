@@ -84,6 +84,7 @@ import {
 } from "./session-store.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import {
+  completeMagicalCunningRite,
   parseCharacterSheet,
   parseCharacterSheetRetainedCompanionId,
   replaceCharacterSheetCompanion,
@@ -1928,6 +1929,8 @@ describe("MCP server route", () => {
     }
     expect(operationSchemaText).not.toContain('"currentHp"');
     expect(operationSchemaText).not.toContain('"tempHp"');
+    expect(operationSchemaText).toContain('"interruptionSegments"');
+    expect(operationSchemaText).toContain('"completion"');
   });
 
   test("registers battle tool names", () => {
@@ -4639,6 +4642,30 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.get(characterIdValue)).toBe(before);
   });
 
+  test("apply_character_session_operation returns a resolved calendar-time outcome", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-calendar-time-resolved";
+    createFinalizedFighterSheet(root, draftId);
+    const characterId = testCharacterId(draftId);
+
+    const resolved = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "passCalendarTime",
+          duration: { kind: "timeSpan", unit: "hour", amount: 1 },
+          fills: [],
+        },
+      }),
+    );
+
+    expect(resolved.result).toEqual({
+      tag: "resolved",
+      elapsedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+    });
+    expect(root.sessionStore.characters.get(characterId)).toBeDefined();
+  });
+
   test("apply_character_session_operation reports typed rest failure without partial mutation", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-short-rest-too-short";
@@ -4692,7 +4719,7 @@ describe("MCP server route", () => {
     });
   });
 
-  test("apply_character_session_operation applies Short Rest benefits when a Long Rest is interrupted", () => {
+  test("apply_character_session_operation resumes an interrupted Long Rest with Short Rest benefits", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-long-rest-interruption-benefits";
     const build = createFinalizedFighterSheet(root, draftId);
@@ -4714,21 +4741,152 @@ describe("MCP server route", () => {
         operation: {
           kind: "interruptLongRest",
           timing: { tag: "noPriorLongRest" },
-          restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
-          interruption: "takeDamage",
-          spendHitDice: [{ classUnitId: "class_fighter", roll: 4 }],
+          interruptionSegments: [
+            {
+              restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+              interruption: "takeDamage",
+              spendHitDice: [{ classUnitId: "class_fighter", roll: 4 }],
+            },
+          ],
+          completion: {
+            restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 9,
+          },
         },
       }),
     );
 
-    expect(interrupted.result).toMatchObject({
-      tag: "longRestInterruptedWithShortRestBenefits",
-      interruption: "takeDamage",
+    expect(interrupted.result).toEqual({
+      tag: "longRestCompleted",
+      restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 9,
     });
     expect(root.sessionStore.characters.get(characterIdValue)).toMatchObject({
-      hitPoints: { currentHp: 11 },
-      spentHitDice: [{ classUnitId: "class_fighter", spent: 1 }],
+      hitPoints: {
+        currentHp: characterBuildMaximumHp(build, root.unitLibrary),
+      },
+      spentHitDice: [],
     });
+  });
+
+  test("apply_character_session_operation rejects an under-rested resumed Long Rest atomically", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-long-rest-resume-too-short";
+    createFinalizedFighterSheet(root, draftId);
+    const characterId = testCharacterId(draftId);
+    const before = root.sessionStore.characters.get(characterId);
+
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "interruptLongRest",
+          timing: { tag: "noPriorLongRest" },
+          interruptionSegments: [
+            {
+              restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+              interruption: "takeDamage",
+            },
+          ],
+          completion: {
+            restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 8,
+          },
+        },
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_OPERATION_INVALID",
+        message:
+          "Long Rest requires the full required duration before benefits can be received.",
+      },
+    });
+    expect(root.sessionStore.characters.get(characterId)).toBe(before);
+  });
+
+  test("apply_character_session_operation preserves Magical Cunning recovery through resumed Long Rest completion", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-long-rest-magical-cunning";
+    const warlock = root.unitLibrary.requireUnit("class_warlock");
+    if (warlock.kind !== "class") {
+      throw new Error("Expected the Warlock class Unit.");
+    }
+    const build: CharacterBuild = {
+      ...characterBuildForClassProgression({
+        base: fighterCharacterBuild(root.unitLibrary),
+        classUnit: warlock,
+        keepClassChoices: false,
+        level: 2,
+      }),
+      spellcasting: {
+        slotPools: {
+          pactMagic: { kind: "pactMagic", slotLevel: 1, count: 2 },
+        },
+        sources: [
+          {
+            cantrips: [unitId("eldritch_blast"), unitId("mage_hand")],
+            preparedSpells: [unitId("charm_person"), unitId("hellish_rebuke")],
+            sourceUnitId: unitId("class_warlock"),
+            spellbook: [],
+            spellcastingAbility: "cha",
+            spellcastingFocuses: ["arcane_focus"],
+          },
+        ],
+      },
+    };
+    const characterId = testCharacterId(draftId);
+    const sheet = availableCharacterSessionRight({
+      build,
+      characterId,
+      currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+      hitPointMaximumReduction: Hp(0),
+      tempHp: Hp(0),
+      pactSlots: { expended: resourceCount(2) },
+      unitLibrary: root.unitLibrary,
+    });
+    const magicalCunning = completeMagicalCunningRite({
+      sheet,
+      unitLibrary: root.unitLibrary,
+    });
+    if (Either.isLeft(magicalCunning)) {
+      throw new Error(magicalCunning.left.message);
+    }
+    expect(magicalCunning.right.pactSlotExpenditure).toEqual({
+      expended: resourceCount(1),
+    });
+    expect(magicalCunning.right.restFeatureUses).toEqual([
+      { tag: "magicalCunning", usedSinceLongRest: true },
+    ]);
+    root.sessionStore.characters.set(magicalCunning.right);
+
+    const completed = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "interruptLongRest",
+          timing: { tag: "noPriorLongRest" },
+          interruptionSegments: [
+            {
+              restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+              interruption: "takeDamage",
+            },
+          ],
+          completion: {
+            restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 9,
+          },
+        },
+      }),
+    );
+
+    expect(completed.result).toEqual({
+      tag: "longRestCompleted",
+      restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 9,
+    });
+    const stored = root.sessionStore.characters.get(characterId);
+    if (stored?.tag !== "available") {
+      throw new Error("Expected the completed Warlock Character Sheet.");
+    }
+    expect(stored.pactSlotExpenditure).toBeUndefined();
+    expect(stored.restFeatureUses).toEqual([]);
   });
 
   test("apply_character_session_operation rejects a durable companion id used by another character", () => {
