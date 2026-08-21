@@ -53,7 +53,7 @@ type LivePlaySession = {
 };
 
 export function createPlaySessionRegistry(input: {
-  readonly createRoot: () => McpCompositionRoot;
+  readonly createRoot: (playSessionId: PlaySessionId) => McpCompositionRoot;
 }): PlaySessionRegistry {
   const liveSessions = new Map<PlaySessionId, LivePlaySession>();
 
@@ -63,7 +63,7 @@ export function createPlaySessionRegistry(input: {
       while (liveSessions.has(playSessionId)) {
         playSessionId = generatedPlaySessionId();
       }
-      const root = input.createRoot();
+      const root = input.createRoot(playSessionId);
       liveSessions.set(playSessionId, { root, tail: Promise.resolve() });
       return {
         playSessionId,

@@ -2,8 +2,11 @@ import { createHash } from "node:crypto";
 
 import { Schema } from "effect";
 
-import { BATTLE_TOOL_NAMES } from "./battle-tool-input.ts";
-import { CHARACTER_TOOL_NAMES } from "./character-tool-input.ts";
+import { BATTLE_TOOL_NAMES, type BattleToolName } from "./battle-tool-input.ts";
+import {
+  CHARACTER_TOOL_NAMES,
+  type CharacterToolName,
+} from "./character-tool-input.ts";
 import {
   PLAY_SESSION_RESTORATION_GUIDANCE,
   PlaySessionIdSchema,
@@ -23,11 +26,15 @@ export const PLAY_SESSION_TOOL_NAMES = [
 ] as const;
 
 export type PlaySessionToolName = (typeof PLAY_SESSION_TOOL_NAMES)[number];
-const PLAY_SESSION_OPERATION_NAMES = [
+export const PLAY_SESSION_OPERATION_NAMES = [
   ...PLAY_SESSION_TOOL_NAMES,
   ...CHARACTER_TOOL_NAMES,
   ...BATTLE_TOOL_NAMES,
 ] as const;
+export type PlaySessionOperationName =
+  | PlaySessionToolName
+  | CharacterToolName
+  | BattleToolName;
 
 const EmptyArgsSchema = Schema.Struct({});
 const PlaySessionArgsSchema = Schema.Struct({
@@ -143,7 +150,7 @@ function playSessionOperationOutputSchema(
     "SessionProjection",
   );
   const embeddedOperationResult = embeddedSchema(
-    operationResultEnvelopeSchema(operationResultSchema),
+    operationResultSchema,
     "OperationResult",
   );
   const operationErrorSchema = {
@@ -290,27 +297,6 @@ function restorationRequiredSchema(): McpOutputSchema {
       guidance: { const: PLAY_SESSION_RESTORATION_GUIDANCE },
     },
     required: ["tag", "guidance"],
-    additionalProperties: false,
-  };
-}
-
-function operationResultEnvelopeSchema(
-  operationResultSchema: McpOutputSchema,
-): McpOutputSchema {
-  const properties = isJsonObject(operationResultSchema.properties)
-    ? Object.fromEntries(
-        Object.keys(operationResultSchema.properties).map((key) => [key, {}]),
-      )
-    : {};
-  const required = Array.isArray(operationResultSchema.required)
-    ? operationResultSchema.required.filter(
-        (entry): entry is string => typeof entry === "string",
-      )
-    : [];
-  return {
-    type: "object",
-    properties,
-    required,
     additionalProperties: false,
   };
 }

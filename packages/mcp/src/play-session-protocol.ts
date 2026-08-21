@@ -1,9 +1,12 @@
-import { Either, Schema } from "effect";
+import { Either } from "effect";
 
 import type { McpCompositionRoot } from "./composition-root.ts";
-import { battleToolNames } from "./battle-tool-input.ts";
-import { characterToolNames } from "./character-tool-input.ts";
-import { contentToolNames } from "./content-tools.ts";
+import { battleToolNames, type BattleToolName } from "./battle-tool-input.ts";
+import {
+  characterToolNames,
+  type CharacterToolName,
+} from "./character-tool-input.ts";
+import { contentToolNames, type ContentToolName } from "./content-tools.ts";
 import {
   decodePlaySessionId,
   PLAY_SESSION_UNAVAILABLE,
@@ -21,9 +24,10 @@ import {
   jsonContentPayload,
   jsonSerializablePayload,
 } from "./tool-content.ts";
-import { playSessionToolNames } from "./play-session-tool-contract.ts";
-
-const EmptyArgsSchema = Schema.Struct({});
+import {
+  playSessionToolNames,
+  type PlaySessionOperationName,
+} from "./play-session-tool-contract.ts";
 
 export type PlaySessionProtocolResult = ReturnType<typeof jsonContent> & {
   readonly structuredContent: unknown;
@@ -34,15 +38,8 @@ export function handleCreatePlaySession(
   registry: PlaySessionRegistry,
   args: unknown,
 ): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
-  const decoded = Schema.decodeUnknownEither(EmptyArgsSchema, {
-    onExcessProperty: "error",
-  })(args === undefined ? {} : args);
-  if (Either.isLeft(decoded)) {
-    return errorContent("create_play_session expects valid arguments.", {
-      code: "INVALID_ARGUMENTS",
-      message: decoded.left.message,
-    });
-  }
+  const invalidArgs = noArgumentsError(args, playSessionToolNames.create, true);
+  if (invalidArgs !== null) return invalidArgs;
   const created = registry.create();
   return availableEnvelope({
     playSessionId: created.playSessionId,
@@ -61,6 +58,11 @@ export async function handleReadPlaySession(
 ): Promise<PlaySessionProtocolResult | ReturnType<typeof errorContent>> {
   const routed = decodePlaySessionRoutedArgs(args, playSessionToolNames.read);
   if (Either.isLeft(routed)) return routed.left;
+  const invalidArgs = noArgumentsError(
+    routed.right.operationArgs,
+    playSessionToolNames.read,
+  );
+  if (invalidArgs !== null) return invalidArgs;
 
   const result = await registry.run(routed.right.playSessionId, (root) => ({
     projection: root.sessionStore.snapshot(),
@@ -80,7 +82,7 @@ export async function handleReadPlaySession(
 
 export async function handlePlaySessionOperation(input: {
   readonly registry: PlaySessionRegistry;
-  readonly operationName: string;
+  readonly operationName: CharacterToolName | BattleToolName;
   readonly args: unknown;
   readonly handle: (
     root: McpCompositionRoot,
@@ -125,9 +127,26 @@ type RoutedArgs = {
   readonly operationArgs: Readonly<Record<string, unknown>>;
 };
 
+function noArgumentsError(
+  args: unknown,
+  operationName: PlaySessionOperationName,
+  acceptUndefined = false,
+): ReturnType<typeof errorContent> | null {
+  if (
+    (acceptUndefined && args === undefined) ||
+    (isJsonObject(args) && Object.keys(args).length === 0)
+  ) {
+    return null;
+  }
+  return errorContent(`${operationName} expects valid arguments.`, {
+    code: "INVALID_ARGUMENTS",
+    message: "Expected an object with no additional properties.",
+  });
+}
+
 function decodePlaySessionRoutedArgs(
   args: unknown,
-  operationName: string,
+  operationName: PlaySessionOperationName,
 ): Either.Either<RoutedArgs, ReturnType<typeof errorContent>> {
   if (!isJsonObject(args)) {
     return Either.left(
@@ -157,7 +176,7 @@ function decodePlaySessionRoutedArgs(
 
 function availableEnvelope(input: {
   readonly playSessionId: PlaySessionId;
-  readonly operationName: string;
+  readonly operationName: PlaySessionOperationName;
   readonly operationResult: unknown;
   readonly projection: McpSessionSnapshot;
   readonly isError?: boolean;
@@ -188,7 +207,7 @@ function availableEnvelope(input: {
 
 function unavailableEnvelope(
   playSessionId: PlaySessionId,
-  operationName: string,
+  operationName: PlaySessionOperationName,
 ): PlaySessionProtocolResult {
   const payload = jsonSerializablePayload({
     tag: PLAY_SESSION_UNAVAILABLE.tag,
@@ -245,10 +264,10 @@ function collectUnresolvedInputs(
 }
 
 function nextOperationsFrom(
-  operationName: string,
+  operationName: PlaySessionOperationName,
   projection: McpSessionSummary,
   unresolvedInputs: readonly UnresolvedInputGroup[],
-): readonly string[] {
+): readonly NextPlaySessionOperationName[] {
   if (projection.activeBattle !== null) {
     if (operationName === playSessionToolNames.read) {
       return [
@@ -291,6 +310,8 @@ function nextOperationsFrom(
     contentToolNames.listStatBlocks,
   ];
 }
+
+type NextPlaySessionOperationName = PlaySessionOperationName | ContentToolName;
 
 function isJsonObject(
   value: unknown,

@@ -11,6 +11,7 @@ import {
   toolDefinitions,
   type McpCompositionRoot,
 } from "./server.ts";
+import { adminMirrorSessionId } from "./admin-mirror-contract.ts";
 import type { McpObjectInputSchema, McpOutputSchema } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 import {
@@ -26,6 +27,8 @@ import {
 import { createPlaySessionRegistry } from "./play-session.ts";
 import { isBattleToolName } from "./battle-tools.ts";
 import { isCharacterToolName } from "./character-tools.ts";
+import type { BattleToolName } from "./battle-tool-input.ts";
+import type { CharacterToolName } from "./character-tool-input.ts";
 
 type ProtocolToolDefinition = {
   readonly name: string;
@@ -50,7 +53,11 @@ export function createDndMcpProtocolServer(
     protocolDefinitions.map((definition) => definition.name),
   );
   const playSessions = createPlaySessionRegistry({
-    createRoot: () => createPlaySessionCompositionRoot(applicationRoot),
+    createRoot: (playSessionId) =>
+      createPlaySessionCompositionRoot(
+        applicationRoot,
+        adminMirrorSessionId(playSessionId),
+      ),
   });
   const server = new Server(
     { name: "dnd-surface-runtime", version: "0.1.0" },
@@ -89,6 +96,8 @@ export function createDndMcpProtocolServer(
   return { root: applicationRoot, playSessions, server };
 }
 
-function isStatefulToolName(name: string): boolean {
+function isStatefulToolName(
+  name: string,
+): name is BattleToolName | CharacterToolName {
   return isCharacterToolName(name) || isBattleToolName(name);
 }

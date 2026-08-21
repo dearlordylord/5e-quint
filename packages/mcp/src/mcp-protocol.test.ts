@@ -1,5 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
+import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -58,75 +60,124 @@ describe("MCP protocol server", () => {
     }
   });
 
-  test("creates, resumes, and independently mutates isolated Play Sessions", async () => {
-    const [clientTransport, serverTransport] =
-      InMemoryTransport.createLinkedPair();
-    const { server } = createDndMcpProtocolServer();
-    const client = new Client({
-      name: "play-session-protocol-client",
-      version: "0.1.0",
-    });
-
-    try {
-      await server.connect(serverTransport);
-      await client.connect(clientTransport);
-
-      const first = await createPlaySession(client);
-      const second = await createPlaySession(client);
-      expect(first).not.toBe(second);
-
-      const firstMutation = await callStructuredTool(client, {
-        name: "create_character_draft",
-        arguments: {
-          playSessionId: first,
-          draftId: "draft:first-isolated-session",
-        },
+  test(
+    "creates, resumes, and independently mutates isolated Play Sessions",
+    async () => {
+      const [clientTransport, serverTransport] =
+        InMemoryTransport.createLinkedPair();
+      const { server } = createDndMcpProtocolServer();
+      const client = new Client({
+        name: "play-session-protocol-client",
+        version: "0.1.0",
       });
-      expect(firstMutation).toMatchObject({
-        tag: "playSessionAvailable",
-        playSessionId: first,
-        operation: {
+
+      try {
+        await server.connect(serverTransport);
+        await client.connect(clientTransport);
+
+        const first = await createPlaySession(client);
+        const second = await createPlaySession(client);
+        expect(first).not.toBe(second);
+
+        const firstMutation = await callStructuredTool(client, {
           name: "create_character_draft",
-          result: {
-            draft: { draftId: "draft:first-isolated-session" },
+          arguments: {
+            playSessionId: first,
+            draftId: "draft:first-isolated-session",
           },
-        },
-        projection: { draftIds: ["draft:first-isolated-session"] },
-        restoration: { tag: "retained" },
-      });
-      expect(Array.isArray(firstMutation.unresolvedInputs)).toBe(true);
-      expect(firstMutation.unresolvedInputs).not.toEqual([]);
-      expect(firstMutation.nextOperations).toContain("fill_creation_holes");
+        });
+        expect(firstMutation).toMatchObject({
+          tag: "playSessionAvailable",
+          playSessionId: first,
+          operation: {
+            name: "create_character_draft",
+            result: {
+              draft: { draftId: "draft:first-isolated-session" },
+            },
+          },
+          projection: { draftIds: ["draft:first-isolated-session"] },
+          restoration: { tag: "retained" },
+        });
+        expect(Array.isArray(firstMutation.unresolvedInputs)).toBe(true);
+        expect(firstMutation.unresolvedInputs).not.toEqual([]);
+        expect(firstMutation.nextOperations).toContain("fill_creation_holes");
 
-      const secondMutation = await callStructuredTool(client, {
-        name: "create_character_draft",
-        arguments: {
-          playSessionId: second,
-          draftId: "draft:second-isolated-session",
-        },
-      });
-      expect(secondMutation.projection).toMatchObject({
-        draftIds: ["draft:second-isolated-session"],
-      });
+        const secondMutation = await callStructuredTool(client, {
+          name: "create_character_draft",
+          arguments: {
+            playSessionId: second,
+            draftId: "draft:second-isolated-session",
+          },
+        });
+        expect(secondMutation.projection).toMatchObject({
+          draftIds: ["draft:second-isolated-session"],
+        });
 
-      const resumedFirst = await callStructuredTool(client, {
-        name: "read_play_session",
-        arguments: { playSessionId: first },
-      });
-      expect(resumedFirst).toMatchObject({
-        tag: "playSessionAvailable",
-        operation: {
+        const resumedFirst = await callStructuredTool(client, {
           name: "read_play_session",
-          result: { tag: "playSessionResumed", playSessionId: first },
-        },
-        projection: { draftIds: ["draft:first-isolated-session"] },
-        nextOperations: ["discover_creation_holes"],
-      });
-      expect(resumedFirst.nextOperations).not.toContain("finalize_character");
-    } finally {
-      await Promise.allSettled([client.close(), server.close()]);
-    }
-  });
+          arguments: { playSessionId: first },
+        });
+        expect(resumedFirst).toMatchObject({
+          tag: "playSessionAvailable",
+          operation: {
+            name: "read_play_session",
+            result: { tag: "playSessionResumed", playSessionId: first },
+          },
+          projection: { draftIds: ["draft:first-isolated-session"] },
+          nextOperations: ["discover_creation_holes"],
+        });
+        expect(resumedFirst.nextOperations).not.toContain("finalize_character");
+
+        const malformedRead = await client.callTool({
+          name: "read_play_session",
+          arguments: { playSessionId: first, bogus: true },
+        });
+        expect(malformedRead.isError).toBe(true);
+        expect(malformedRead.content).toEqual([
+          {
+            type: "text",
+            text: expect.stringContaining(
+              "read_play_session expects valid arguments.",
+            ),
+          },
+        ]);
+
+        const listedCharacters = await callStructuredTool(client, {
+          name: "list_characters",
+          arguments: { playSessionId: first },
+        });
+        const listCharactersDefinition = (await client.listTools()).tools.find(
+          (tool) => tool.name === "list_characters",
+        );
+        expect(listCharactersDefinition?.outputSchema).toBeDefined();
+        if (listCharactersDefinition?.outputSchema === undefined) {
+          throw new Error("list_characters omitted its output schema.");
+        }
+        const validateOutput = new AjvJsonSchemaValidator().getValidator(
+          listCharactersDefinition.outputSchema as JsonSchemaType,
+        );
+        const listedOperation = listedCharacters.operation;
+        if (!isJsonObject(listedOperation)) {
+          throw new Error("Expected a typed list_characters operation.");
+        }
+        const listedResult = listedOperation.result;
+        if (!isJsonObject(listedResult)) {
+          throw new Error("Expected a typed list_characters result.");
+        }
+        const malformedOutput = {
+          ...listedCharacters,
+          operation: {
+            ...listedOperation,
+            result: { ...listedResult, characters: "not-a-character-list" },
+          },
+        };
+        expect(validateOutput(malformedOutput).valid).toBe(false);
+      } finally {
+        await Promise.allSettled([client.close(), server.close()]);
+      }
+    },
+    FULL_ACCEPTANCE_TEST_TIMEOUT_MS,
+  );
 
   test("returns one typed restoration result for a handle absent from the process", async () => {
     const [clientTransport, serverTransport] =
