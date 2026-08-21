@@ -5,8 +5,11 @@ import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { describe, expect, test } from "vitest";
 import { Either } from "effect";
 import { characterId } from "@dnd/battle-runtime";
-import { characterDraftId } from "@dnd/character-creation-runtime";
-import { Hp } from "@dnd/shared/types";
+import {
+  MONK_MONKS_FOCUS_UNIT_ID,
+  characterDraftId,
+} from "@dnd/character-creation-runtime";
+import { Hp, resourceCount } from "@dnd/shared/types";
 import {
   armorClassBuild,
   prayerOfHealingClericBuild,
@@ -363,6 +366,77 @@ describe("MCP protocol server", () => {
       await Promise.allSettled([client.close(), server.close()]);
     }
   }, 90_000);
+
+  test("routes a Character Sheet resource operation through the real MCP client", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const host = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "character-resource-protocol-client",
+      version: "0.1.0",
+    });
+    try {
+      await host.server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const playSessionId = await createPlaySession(client);
+      const decoded = decodePlaySessionId(playSessionId);
+      if (decoded._tag === "Left") throw new Error(decoded.left);
+      await host.playSessions.run(decoded.right, (root) => {
+        const session = availableCharacterSession({
+          characterId: characterId("character:resource-monk"),
+          build: armorClassBuild({
+            startingClass: "class_monk",
+            advancements: ["class_monk"],
+          }),
+          currentHp: Hp(1),
+          tempHp: Hp(0),
+          hitPointMaximumReduction: Hp(0),
+          conditions: [],
+          companion: { tag: "none" },
+          resourceExpenditures: [
+            {
+              tag: "useCountResource",
+              unitId: MONK_MONKS_FOCUS_UNIT_ID,
+              expended: resourceCount(2),
+            },
+          ],
+          unitLibrary: root.unitLibrary,
+        });
+        if (Either.isLeft(session)) throw new Error(session.left.message);
+        root.sessionStore.characters.set(session.right);
+      });
+      const operationTool = (await client.listTools()).tools.find(
+        (tool) => tool.name === "apply_character_session_operation",
+      );
+      if (operationTool?.outputSchema === undefined) {
+        throw new Error("Expected resource operation output schema.");
+      }
+      const validateOutput = new AjvJsonSchemaValidator().getValidator(
+        operationTool.outputSchema as JsonSchemaType,
+      );
+      const applied = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:resource-monk",
+          operation: {
+            kind: "useMonkUncannyMetabolismWhenRollingInitiative",
+            martialArtsRoll: 4,
+          },
+        },
+      });
+      expect(validateOutput(applied).valid).toBe(true);
+      expect(applied).toMatchObject({
+        operation: {
+          result: {
+            result: { tag: "monkUncannyMetabolismUsed", martialArtsRoll: 4 },
+          },
+        },
+      });
+    } finally {
+      await Promise.allSettled([client.close(), host.server.close()]);
+    }
+  }, 30_000);
 
   test("returns one typed restoration result for a handle absent from the process", async () => {
     const [clientTransport, serverTransport] =

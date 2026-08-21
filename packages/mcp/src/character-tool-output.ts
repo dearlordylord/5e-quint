@@ -10,6 +10,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   CHARACTER_SHEET_REST_ACTIVITY_INTERRUPTION_VALUES,
+  FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES,
   type CharacterSheetRetainedCompanionManifestation,
 } from "@dnd/character-sheet-runtime";
 import { Schema } from "effect";
@@ -288,7 +289,31 @@ export const CharacterSessionOperationResultSchema = Schema.Union(
     castLevel: PositiveIntegerSchema,
     recipientCharacterIds: Schema.NonEmptyArray(Schema.String),
   }),
+  Schema.Struct({
+    tag: Schema.Literal("spellAccessFreeCastSpent"),
+    sourceUnitId: Schema.String,
+    spellId: Schema.String,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("monkUncannyMetabolismUsed"),
+    martialArtsRoll: PositiveIntegerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("fontOfMagicSpellSlotConvertedToSorceryPoints"),
+    spellLevel: PositiveIntegerSchema,
+    spellSlotSource: Schema.optionalWith(
+      Schema.Literal(...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
+      { exact: true },
+    ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("fontOfMagicSorceryPointsConvertedToSpellSlot"),
+    spellLevel: PositiveIntegerSchema,
+  }),
 );
+export type CharacterSessionResourceOperationResult = Schema.Schema.Type<
+  typeof CharacterSessionOperationResultSchema
+>;
 const CharacterSessionSheetProjectionSchema = Schema.Struct({
   currentHp: NonNegativeIntegerSchema,
   companion: Schema.Union(

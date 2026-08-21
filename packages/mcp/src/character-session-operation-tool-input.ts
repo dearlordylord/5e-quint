@@ -146,7 +146,6 @@ const RetainOneAtATimeCompanionOperationArgsSchema = Schema.Struct({
     },
   ),
 });
-
 const AdvanceClassLevelOperationArgsSchema = Schema.Struct({
   kind: Schema.Literal("advanceClassLevel"),
   levelGain: CharacterBuildClassLevelGainSchema,
@@ -266,6 +265,33 @@ const PassCalendarTimeOperationArgsSchema = Schema.Struct({
   duration: CalendarTimeDurationArgsSchema,
   fills: Schema.Array(StableRecoveryFillArgsSchema),
 });
+const SpellSlotLevelSchema = PositiveIntegerSchema.pipe(
+  Schema.lessThanOrEqualTo(9),
+);
+const SpendSpellAccessFreeCastOperationArgsSchema = Schema.Struct({
+  kind: Schema.Literal("spendSpellAccessFreeCast"),
+  sourceUnitId: UnitId,
+  spellId: UnitId,
+});
+const UseMonkUncannyMetabolismWhenRollingInitiativeOperationArgsSchema =
+  Schema.Struct({
+    kind: Schema.Literal("useMonkUncannyMetabolismWhenRollingInitiative"),
+    martialArtsRoll: PositiveIntegerSchema,
+  });
+const ConvertFontOfMagicSpellSlotToSorceryPointsOperationArgsSchema =
+  Schema.Struct({
+    kind: Schema.Literal("convertFontOfMagicSpellSlotToSorceryPoints"),
+    spellLevel: SpellSlotLevelSchema,
+    spellSlotSource: Schema.optionalWith(
+      Schema.Literal(...FONT_OF_MAGIC_SPELL_SLOT_SOURCE_VALUES),
+      { exact: true },
+    ),
+  });
+const ConvertFontOfMagicSorceryPointsToSpellSlotOperationArgsSchema =
+  Schema.Struct({
+    kind: Schema.Literal("convertFontOfMagicSorceryPointsToSpellSlot"),
+    spellLevel: SpellSlotLevelSchema,
+  });
 const CharacterSessionOperationArgsSchema = Schema.Union(
   RetainOneAtATimeCompanionOperationArgsSchema,
   LayOnHandsOperationArgsSchema,
@@ -277,6 +303,10 @@ const CharacterSessionOperationArgsSchema = Schema.Union(
   CompleteLongRestOperationArgsSchema,
   InterruptLongRestOperationArgsSchema,
   PassCalendarTimeOperationArgsSchema,
+  SpendSpellAccessFreeCastOperationArgsSchema,
+  UseMonkUncannyMetabolismWhenRollingInitiativeOperationArgsSchema,
+  ConvertFontOfMagicSpellSlotToSorceryPointsOperationArgsSchema,
+  ConvertFontOfMagicSorceryPointsToSpellSlotOperationArgsSchema,
 );
 
 export const ApplyCharacterSessionOperationArgsSchema = Schema.Struct({

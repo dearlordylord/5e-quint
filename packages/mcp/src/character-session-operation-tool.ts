@@ -29,6 +29,10 @@ import {
 import { applyHealingCharacterSessionOperation } from "./character-session-healing-operation.ts";
 import { applyPassCalendarTimeOperation } from "./character-session-calendar-operation.ts";
 import {
+  applyCharacterSessionResourceOperation,
+  isCharacterSessionResourceOperation,
+} from "./character-session-resource-operation.ts";
+import {
   characterBuildClassLevelGainFromTool,
   runtimeIssueMessage,
 } from "./character-session-class-level-gain.ts";
@@ -124,6 +128,13 @@ export function applyCharacterSessionOperation(
     ),
     Match.when({ kind: "passCalendarTime" }, (operation) =>
       applyPassCalendarTimeOperation(root, {
+        characterId: input.characterId,
+        session,
+        operation,
+      }),
+    ),
+    Match.when(isCharacterSessionResourceOperation, (operation) =>
+      applyCharacterSessionResourceOperation(root, {
         characterId: input.characterId,
         session,
         operation,

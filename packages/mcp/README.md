@@ -136,6 +136,9 @@ The character-creation tool boundary exposes these user-facing tools:
   The same atomic operation surface routes Lay On Hands and supported spell
   rest benefits across available Character Sessions; multi-recipient healing
   validates every affected session before committing any of them.
+  It also routes Spell Access free-cast expenditure, Monk Uncanny Metabolism,
+  and both Font of Magic conversion directions through the Character Sheet
+  resource reducers without duplicating resource state in MCP.
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
