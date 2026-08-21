@@ -1,20 +1,56 @@
 import { Schema } from "effect";
 
+import { MAX_DIE_SIZE } from "./dice-tool-input.ts";
+
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.positive(),
 );
+const DieSizeSchema = PositiveIntegerSchema.pipe(
+  Schema.lessThanOrEqualTo(MAX_DIE_SIZE),
+);
 const DieRollResultSchema = PositiveIntegerSchema.annotations({
   description: "A visible raw face in the inclusive range 1..dieSize.",
 });
-
-export const DiceRollGroupOutputSchema = Schema.Struct({
-  dice: PositiveIntegerSchema,
-  dieSize: PositiveIntegerSchema,
+const DiceRollGroupOutputBaseSchema = Schema.Struct({
+  dieSize: DieSizeSchema,
   results: Schema.NonEmptyArray(DieRollResultSchema),
-}).annotations({
+});
+
+const dieSizeBranches = Array.from({ length: MAX_DIE_SIZE }, (_, index) => {
+  const dieSize = index + 1;
+  return {
+    type: "object",
+    properties: {
+      dieSize: { const: dieSize },
+      results: {
+        type: "array",
+        items: {
+          type: "integer",
+          minimum: 1,
+          maximum: dieSize,
+        },
+        minItems: 1,
+      },
+    },
+    required: ["dieSize", "results"],
+    additionalProperties: false,
+  } as const;
+});
+
+export const DiceRollGroupOutputSchema = DiceRollGroupOutputBaseSchema.pipe(
+  Schema.filter(
+    (group) =>
+      group.results.every((result) => result >= 1 && result <= group.dieSize),
+    {
+      description:
+        "an ordered non-empty group whose visible faces are within dieSize",
+      jsonSchema: { oneOf: dieSizeBranches },
+    },
+  ),
+).annotations({
   description:
-    "One ordered dice group and its visible raw faces. Results are not interpreted.",
+    "One ordered dice group and its visible raw faces. The result count is the number of returned faces, so no duplicate count can disagree with it.",
 });
 
 export const RollDiceOutputSchema = Schema.Struct({

@@ -2,6 +2,7 @@ import { Either } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { battleToolNames, type BattleToolName } from "./battle-tool-input.ts";
+import type { DiceToolName } from "./dice-tool-input.ts";
 import {
   characterToolNames,
   type CharacterToolName,
@@ -87,7 +88,7 @@ export async function handleReadPlaySession(
 
 export async function handlePlaySessionOperation(input: {
   readonly registry: PlaySessionRegistry;
-  readonly operationName: CharacterToolName | BattleToolName;
+  readonly operationName: CharacterToolName | BattleToolName | DiceToolName;
   readonly args: unknown;
   readonly handle: (
     root: McpPlaySessionRoot,

@@ -65,6 +65,7 @@ const expectedTools = [
   "resolve_battle_act",
   "end_turn",
   "end_battle",
+  "roll_dice",
 ] as const;
 
 const statelessToolNames = new Set([

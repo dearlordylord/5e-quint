@@ -10,11 +10,15 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.positive(),
 );
+export const MAX_DIE_SIZE = 100;
 const DiceCountSchema = PositiveIntegerSchema.annotations({
   description: "Number of dice in this group; it must be a positive integer.",
 });
-const DieSizeSchema = PositiveIntegerSchema.annotations({
-  description: "Number of faces on each die; it must be a positive integer.",
+const DieSizeSchema = PositiveIntegerSchema.pipe(
+  Schema.lessThanOrEqualTo(MAX_DIE_SIZE),
+).annotations({
+  description:
+    "Number of faces on each die; it must be a positive integer no greater than 100.",
 });
 
 export const DiceRollGroupSchema = Schema.Struct({

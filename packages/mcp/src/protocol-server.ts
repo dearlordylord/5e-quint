@@ -28,7 +28,9 @@ import {
 import { createPlaySessionRegistry } from "./play-session.ts";
 import { isBattleToolName } from "./battle-tools.ts";
 import { isCharacterToolName } from "./character-tools.ts";
+import { isDiceToolName } from "./dice-tool-input.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
+import type { DiceToolName } from "./dice-tool-input.ts";
 import type { CharacterToolName } from "./character-tool-input.ts";
 
 type ProtocolToolDefinition = {
@@ -103,6 +105,8 @@ export function createDndMcpProtocolServer(
 
 function isStatefulToolName(
   name: string,
-): name is BattleToolName | CharacterToolName {
-  return isCharacterToolName(name) || isBattleToolName(name);
+): name is BattleToolName | CharacterToolName | DiceToolName {
+  return (
+    isCharacterToolName(name) || isBattleToolName(name) || isDiceToolName(name)
+  );
 }

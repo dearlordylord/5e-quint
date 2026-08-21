@@ -46,7 +46,6 @@ export function rollDice(
   return {
     correlationId: randomUUID(),
     groups: mapNonEmpty(request.groups, (group) => ({
-      dice: group.dice,
       dieSize: group.dieSize,
       results: mapNonEmpty(drawGroup(group, random), (result) =>
         DieRollResult(result),

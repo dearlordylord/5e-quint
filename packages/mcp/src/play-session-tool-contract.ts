@@ -8,6 +8,7 @@ import {
   type CharacterToolName,
 } from "./character-tool-input.ts";
 import { CONTENT_TOOL_NAMES } from "./content-tools.ts";
+import { DICE_TOOL_NAMES, type DiceToolName } from "./dice-tool-input.ts";
 import { shareRepeatedSchemas } from "./json-schema-sharing.ts";
 import {
   PLAY_SESSION_RESTORATION_GUIDANCE,
@@ -32,6 +33,7 @@ export const PLAY_SESSION_OPERATION_NAMES = [
   ...PLAY_SESSION_TOOL_NAMES,
   ...CHARACTER_TOOL_NAMES,
   ...BATTLE_TOOL_NAMES,
+  ...DICE_TOOL_NAMES,
 ] as const;
 export type PlaySessionOperationName =
   (typeof PLAY_SESSION_OPERATION_NAMES)[number];
@@ -92,7 +94,10 @@ export function statefulPlaySessionToolDefinition<
     readonly inputSchema: McpObjectInputSchema;
     readonly outputSchema?: McpOutputSchema;
   },
->(definition: Definition, operationName: CharacterToolName | BattleToolName) {
+>(
+  definition: Definition,
+  operationName: CharacterToolName | BattleToolName | DiceToolName,
+) {
   return {
     ...definition,
     inputSchema: playSessionRoutedInputSchema(definition.inputSchema),
