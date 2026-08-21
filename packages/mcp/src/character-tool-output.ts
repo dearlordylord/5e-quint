@@ -1,6 +1,8 @@
 import {
   ABILITY_SCORE_GENERATION_DRAFT_PATH,
   CHARACTER_DRAFT_CHOICE_PATHS,
+  CREATION_BATCH_ISSUE_CODES,
+  CREATION_FILL_ISSUE_CODES,
   CreationFinalizationIssueSchema,
   LOADOUT_SLOTS,
   SUPPORTED_ABILITY_SCORE_METHODS,
@@ -184,7 +186,22 @@ const CreationFillResultSchema = Schema.Union(
     tag: Schema.Literal("rejected"),
     draft: JsonObjectSchema,
     holes: Schema.Array(CreationHoleSchema),
-    issues: Schema.NonEmptyArray(JsonObjectSchema),
+    issues: Schema.NonEmptyArray(
+      Schema.Union(
+        Schema.Struct({
+          tag: Schema.Literal("illegalFill"),
+          holeId: Schema.String,
+          fillIndex: NonNegativeIntegerSchema,
+          code: Schema.Literal(...CREATION_FILL_ISSUE_CODES),
+          message: Schema.String,
+        }),
+        Schema.Struct({
+          tag: Schema.Literal("illegalBatch"),
+          code: Schema.Literal(...CREATION_BATCH_ISSUE_CODES),
+          message: Schema.String,
+        }),
+      ),
+    ),
     finalization: CreationFinalizationSchema,
   }),
 );
@@ -212,6 +229,39 @@ export const ListCharactersOutputSchema = Schema.Struct({
 });
 export const CharacterSessionOperationOutputSchema = Schema.Struct({
   character: JsonObjectSchema,
+  session: McpSessionSummarySchema,
+});
+
+const CharacterSessionSheetProjectionSchema = Schema.Struct({
+  hitPointMaximum: NonNegativeIntegerSchema,
+  hitDice: Schema.Array(CharacterSheetHitDieDisplayRowSchema),
+  spellSlots: Schema.optionalWith(
+    Schema.Array(CharacterSheetSpellSlotDisplayRowSchema),
+    { exact: true },
+  ),
+  pactSlots: Schema.optionalWith(CharacterSheetPactSlotDisplayRowSchema, {
+    exact: true,
+  }),
+  resources: Schema.Array(CharacterSheetResourceDisplayRowSchema),
+});
+
+export const CharacterSessionDetailOutputSchema = Schema.Struct({
+  detail: Schema.Union(
+    Schema.Struct({
+      tag: Schema.Literal("available"),
+      characterId: Schema.String,
+      displayName: Schema.String,
+      sheet: JsonObjectSchema,
+      sheetProjection: CharacterSessionSheetProjectionSchema,
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("inBattle"),
+      characterId: Schema.String,
+      displayName: Schema.String,
+      battleId: Schema.String,
+      build: JsonObjectSchema,
+    }),
+  ),
   session: McpSessionSummarySchema,
 });
 

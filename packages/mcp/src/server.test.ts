@@ -440,6 +440,42 @@ describe("MCP server route", () => {
         status: "inBattle",
       }),
     ]);
+
+    expect(
+      readPayload(
+        handleToolCall(root, "inspect_character_session", { characterId }),
+      ),
+    ).toMatchObject({
+      detail: {
+        tag: "inBattle",
+        characterId,
+        displayName: expect.any(String),
+        battleId: "battle:list-in-battle",
+        build: expect.any(Object),
+      },
+    });
+    const inspected = readPayload(
+      handleToolCall(root, "inspect_character_session", { characterId }),
+    );
+    expect(inspected.detail).not.toHaveProperty("sheet");
+    expect(inspected.detail).not.toHaveProperty("sheetProjection");
+  });
+
+  test("reports an unknown selected Character Session without guessing an id", () => {
+    const root = createMcpPlaySessionRoot();
+
+    expect(
+      readPayload(
+        handleToolCall(root, "inspect_character_session", {
+          characterId: "character:not-present",
+        }),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "UNKNOWN_CHARACTER_SESSION",
+        characterId: "character:not-present",
+      },
+    });
   });
 
   test("reports character-list projection failures from the supplied catalog boundary", () => {
@@ -462,6 +498,15 @@ describe("MCP server route", () => {
       readPayload(handleToolCall(invalidCatalogRoot, "list_characters", {})),
     ).toMatchObject({
       details: { code: "CHARACTER_LIST_INVALID" },
+    });
+    expect(
+      readPayload(
+        handleToolCall(invalidCatalogRoot, "inspect_character_session", {
+          characterId: testCharacterId(draftId),
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "CHARACTER_SESSION_DETAIL_INVALID" },
     });
     expect(
       readPayload(
@@ -1393,6 +1438,7 @@ describe("MCP server route", () => {
       "finalize_character",
       "apply_character_session_operation",
       "list_characters",
+      "inspect_character_session",
     ]);
   });
 

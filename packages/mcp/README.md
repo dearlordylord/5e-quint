@@ -90,6 +90,13 @@ The character-creation tool boundary exposes these user-facing tools:
   count are derived from the stored Character Build and installed Unit facts,
   then paired with mutable sheet state such as current HP, spent Hit Dice, and
   expenditures.
+- `inspect_character_session` reads one selected Character Session without
+  copying it into another store. The result contains the canonical stored
+  available Character Sheet and one `sheetProjection` for Hit Point Maximum,
+  Hit Dice, ordinary Spell Slots, Pact Slots, and supported resources. While a
+  character is in Battle, the exact `inBattle` variant contains only the stable
+  Character Build and Battle ownership identifiers; it never serializes the
+  pre-Battle sheet's mutable Hit Points, conditions, or expenditures as current.
 
 These tools operate on real creation holes. MCP does not offer character
 presets, does not patch draft selections directly, and does not import Core
@@ -162,7 +169,8 @@ The supported Wizard creation choices in this workflow are catalog-backed SRD
 Spell Definitions; battle start fails at the MCP boundary rather than dropping
 selected spell or feature Unit refs that are not in the Surface catalog.
 
-`list_characters` is the supported post-battle read model for this vertical.
+`list_characters` and `inspect_character_session` are the supported list and
+selected-detail read models for this vertical.
 After `end_battle`, it reads the durable character session directly. Character
 current HP is handed back from the battle-owned character combatant to that
 session during closeout; Goblin Warrior remains a closed battle combatant and

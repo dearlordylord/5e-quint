@@ -2,6 +2,7 @@ import {
   characterDraftId,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
+import { characterId, type CharacterId } from "@dnd/battle-runtime";
 import {
   StatBlockId,
   type StatBlockId as StatBlockIdType,
@@ -28,6 +29,13 @@ const EmptyArgsSchema = Schema.Struct({});
 const DraftIdArgsSchema = Schema.Struct({
   draftId: Schema.String.annotations({
     description: "Character Draft id returned by create_character_draft.",
+  }),
+});
+
+const CharacterSessionIdArgsSchema = Schema.Struct({
+  characterId: Schema.String.annotations({
+    description:
+      "Character Session id returned by finalize_character or list_characters.",
   }),
 });
 
@@ -61,6 +69,7 @@ export const characterToolNames = {
   finalizeCharacter: "finalize_character",
   applyCharacterSessionOperation: "apply_character_session_operation",
   listCharacters: "list_characters",
+  inspectCharacterSession: "inspect_character_session",
 } as const;
 export const CHARACTER_TOOL_NAMES = [
   characterToolNames.createCharacterDraft,
@@ -69,6 +78,7 @@ export const CHARACTER_TOOL_NAMES = [
   characterToolNames.finalizeCharacter,
   characterToolNames.applyCharacterSessionOperation,
   characterToolNames.listCharacters,
+  characterToolNames.inspectCharacterSession,
 ] as const;
 export type CharacterToolName = (typeof CHARACTER_TOOL_NAMES)[number];
 
@@ -83,6 +93,9 @@ type FinalizeCharacterToolInput = {
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockIdType[];
 };
 type EmptyToolInput = Record<string, never>;
+type CharacterSessionIdToolInput = {
+  readonly characterId: CharacterId;
+};
 export type CharacterToolCall =
   | {
       readonly name: typeof characterToolNames.createCharacterDraft;
@@ -107,6 +120,10 @@ export type CharacterToolCall =
   | {
       readonly name: typeof characterToolNames.listCharacters;
       readonly args: EmptyToolInput;
+    }
+  | {
+      readonly name: typeof characterToolNames.inspectCharacterSession;
+      readonly args: CharacterSessionIdToolInput;
     };
 
 export const draftIdInputSchema = mcpObjectJsonSchema(DraftIdArgsSchema);
@@ -123,6 +140,9 @@ export const applyCharacterSessionOperationInputSchema = mcpObjectJsonSchema(
   ApplyCharacterSessionOperationArgsSchema,
 );
 export const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
+export const characterSessionIdInputSchema = mcpObjectJsonSchema(
+  CharacterSessionIdArgsSchema,
+);
 
 export function decodeCharacterToolCall(input: {
   readonly name: CharacterToolName;
@@ -176,6 +196,19 @@ export function decodeCharacterToolCall(input: {
         name: characterToolNames.listCharacters,
         args,
       })),
+    ),
+    Match.when(characterToolNames.inspectCharacterSession, () =>
+      Either.map(
+        decodeToolArgs(
+          CharacterSessionIdArgsSchema,
+          input.args,
+          characterToolNames.inspectCharacterSession,
+        ),
+        (args) => ({
+          name: characterToolNames.inspectCharacterSession,
+          args: { characterId: characterId(args.characterId) },
+        }),
+      ),
     ),
     Match.exhaustive,
   );

@@ -12,6 +12,7 @@ import { Either, Match } from "effect";
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import { applyCharacterSessionOperation } from "./character-session-operation-tool.ts";
 import { characterListRows } from "./character-session-rows.ts";
+import { characterSessionDetail } from "./character-session-rows.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
 import {
@@ -24,6 +25,7 @@ import {
   createCharacterDraftInputSchema,
   draftIdInputSchema,
   emptyInputSchema,
+  characterSessionIdInputSchema,
   finalizeCharacterInputSchema,
   fillCreationHolesInputSchema,
   applyCharacterSessionOperationInputSchema,
@@ -32,6 +34,7 @@ import {
 } from "./character-tool-input.ts";
 import {
   CharacterSessionOperationOutputSchema,
+  CharacterSessionDetailOutputSchema,
   CreationDraftOutputSchema,
   FillCreationHolesOutputSchema,
   FinalizeCharacterOutputSchema,
@@ -84,6 +87,13 @@ export const characterToolDefinitions = [
       "List durable character-session display rows. Rows include build-derived HP, Hit Dice, Spell Slot, Pact Slot, and resource capacities plus mutable sheet state.",
     inputSchema: emptyInputSchema,
     outputSchema: mcpOutputJsonSchema(ListCharactersOutputSchema),
+  },
+  {
+    name: characterToolNames.inspectCharacterSession,
+    description:
+      "Inspect one selected Character Session as its canonical stored session plus core build-derived Hit Point, Hit Dice, Spell Slot, Pact Slot, and resource facts.",
+    inputSchema: characterSessionIdInputSchema,
+    outputSchema: mcpOutputJsonSchema(CharacterSessionDetailOutputSchema),
   },
 ] as const;
 
@@ -219,6 +229,37 @@ export function handleCharacterToolCall(
         session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
     }),
+    Match.when(
+      { name: characterToolNames.inspectCharacterSession },
+      (matched) => {
+        const detail = characterSessionDetail(root, matched.args.characterId);
+        if (Either.isLeft(detail)) {
+          return Match.value(detail.left).pipe(
+            Match.when({ tag: "unknownCharacterSession" }, () =>
+              errorContent(
+                `Unknown character session: ${matched.args.characterId}`,
+                {
+                  code: "UNKNOWN_CHARACTER_SESSION",
+                  characterId: matched.args.characterId,
+                },
+              ),
+            ),
+            Match.when({ tag: "characterSessionDetailInvalid" }, (issue) =>
+              errorContent("Character Session detail projection failed.", {
+                code: "CHARACTER_SESSION_DETAIL_INVALID",
+                characterId: matched.args.characterId,
+                message: issue.message,
+              }),
+            ),
+            Match.exhaustive,
+          );
+        }
+        return schemaJsonContent(CharacterSessionDetailOutputSchema, {
+          detail: detail.right,
+          session: mcpSessionSummary(root.sessionStore.snapshot()),
+        });
+      },
+    ),
     Match.exhaustive,
   );
 }
