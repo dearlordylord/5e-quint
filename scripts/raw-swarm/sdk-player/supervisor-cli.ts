@@ -69,7 +69,12 @@ import {
   type SdkCallRecord,
   type SdkPlayerOperation,
 } from "./sdk-transcript.ts";
-import { canonicalJson, sha256Canonical, sha256Text } from "../transcript.ts";
+import {
+  StartedAtSchema,
+  canonicalJson,
+  sha256Canonical,
+  sha256Text,
+} from "../transcript.ts";
 import {
   PlayerExecutionStateSchema,
   playerContinuationAdmission,
@@ -222,6 +227,7 @@ async function initialize(
   scenarioId: string,
   gitSha: string,
   consumerIsolation: string,
+  startedAt: Schema.Schema.Type<typeof StartedAtSchema>,
   replaySupervisorSha256: string,
   scenarioSha256: string,
   scenarioReviewSha256: string,
@@ -254,7 +260,7 @@ async function initialize(
     type: "sdk-player-header",
     scenarioId,
     gitSha,
-    startedAt: new Date().toISOString(),
+    startedAt,
     consumerIsolation,
     replaySupervisorSha256,
     charactersSha256: sha256Text(readFileSync(charactersPath, "utf8")),
@@ -1322,6 +1328,7 @@ async function main(args: readonly string[]): Promise<void> {
       scenarioId,
       gitSha,
       consumerIsolation,
+      startedAtInput,
       replaySupervisorSha256,
       scenarioSha256,
       scenarioReviewSha256,
@@ -1332,6 +1339,7 @@ async function main(args: readonly string[]): Promise<void> {
       gitSha === undefined ||
       (consumerIsolation !== "permissionProfile" &&
         consumerIsolation !== "instructionalFallback") ||
+      startedAtInput === undefined ||
       replaySupervisorSha256 === undefined ||
       !/^[0-9a-f]{64}$/.test(replaySupervisorSha256) ||
       scenarioSha256 === undefined ||
@@ -1341,13 +1349,19 @@ async function main(args: readonly string[]): Promise<void> {
       unexpected.length > 0
     ) {
       fail(
-        "Usage: supervisor.mjs init <scenario-id> <git-sha> <permissionProfile|instructionalFallback> <replay-supervisor-sha256> <scenario-sha256> <scenario-review-sha256>",
+        "Usage: supervisor.mjs init <scenario-id> <git-sha> <permissionProfile|instructionalFallback> <started-at> <replay-supervisor-sha256> <scenario-sha256> <scenario-review-sha256>",
       );
+    }
+    const startedAt =
+      Schema.decodeUnknownEither(StartedAtSchema)(startedAtInput);
+    if (Either.isLeft(startedAt)) {
+      fail(`Invalid started-at authority: ${startedAt.left.message}`);
     }
     await initialize(
       scenarioId,
       gitSha,
       consumerIsolation,
+      startedAt.right,
       replaySupervisorSha256,
       scenarioSha256,
       scenarioReviewSha256,

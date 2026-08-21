@@ -33,6 +33,7 @@ import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 
 const CONSUMER_SCENARIO_ID = "ready-mixed-consumer";
+const SUPERVISOR_HANDOFF_STARTED_AT = "2026-08-21T08:00:00.000Z";
 const CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS = 10 * 60 * 1_000;
 const execFileAsync = promisify(execFile);
 
@@ -263,6 +264,7 @@ describe("SDK player consumer distribution", () => {
           "ready-mixed-scenario",
           "a".repeat(40),
           "instructionalFallback",
+          SUPERVISOR_HANDOFF_STARTED_AT,
           "b".repeat(64),
           "c".repeat(64),
           "d".repeat(64),
@@ -274,6 +276,9 @@ describe("SDK player consumer distribution", () => {
         "utf8",
       );
       expect(readyTranscript).toContain('"characterOutcome":"ready"');
+      expect(readyTranscript).toContain(
+        `"startedAt":"${SUPERVISOR_HANDOFF_STARTED_AT}"`,
+      );
       expect(readyTranscript).toContain('"raw-swarm:external-fighter"');
       expect(readyTranscript).toContain('"setupOutcome":"ready"');
       expect(
@@ -314,6 +319,7 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
           "obstructed-scenario",
           "a".repeat(40),
           "instructionalFallback",
+          SUPERVISOR_HANDOFF_STARTED_AT,
           "b".repeat(64),
           "c".repeat(64),
           "d".repeat(64),
@@ -467,6 +473,7 @@ export const continueBattle: PlayerContinuation = (context) => {
           CONSUMER_SCENARIO_ID,
           "a".repeat(40),
           "instructionalFallback",
+          SUPERVISOR_HANDOFF_STARTED_AT,
           "b".repeat(64),
           "c".repeat(64),
           "d".repeat(64),
@@ -1064,6 +1071,7 @@ export const continueBattle: PlayerContinuation = (context) => {
             "table-authored-movement-transcript",
             "a".repeat(40),
             "instructionalFallback",
+            SUPERVISOR_HANDOFF_STARTED_AT,
             "b".repeat(64),
             "c".repeat(64),
             "d".repeat(64),

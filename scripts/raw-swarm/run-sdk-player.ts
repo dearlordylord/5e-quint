@@ -60,6 +60,7 @@ import {
   isJsonRecord,
   repoRoot,
   sha256Canonical,
+  StartedAtSchema,
   type GitSha,
   type ScenarioId,
 } from "./transcript.ts";
@@ -568,7 +569,11 @@ async function main(args: readonly string[]): Promise<void> {
     );
   }
   const gitSha = requestedImplementationGitSha ?? currentGitSha.right;
-  const startedAt = new Date().toISOString();
+  const startedAtResult = Schema.decodeUnknownEither(StartedAtSchema)(
+    new Date().toISOString(),
+  );
+  if (Either.isLeft(startedAtResult)) fail(startedAtResult.left.message);
+  const startedAt = startedAtResult.right;
   if (existsSync(output)) {
     fail(`Refusing to overwrite SDK player evidence: ${output}`);
   }
@@ -927,6 +932,7 @@ async function main(args: readonly string[]): Promise<void> {
         acceptedScenarioId,
         revision.sha,
         consumerIsolation,
+        startedAt,
         createHash("sha256")
           .update(readFileSync(resolve(trusted, "supervisor.mjs")))
           .digest("hex"),

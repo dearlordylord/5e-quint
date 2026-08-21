@@ -317,6 +317,82 @@ describe("RAW swarm runner boundaries", () => {
     );
   }, 30_000);
 
+  test("retains one runner-owned startedAt across execution and supervisor handoff", () => {
+    const outputRoot = mkdtempSync(
+      resolve(repoRoot, "scripts/raw-swarm/out/runner-started-at-"),
+    );
+    const output = resolve(outputRoot, "execution");
+    const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-runner-git-"));
+    const fakeGit = resolve(commandRoot, "git");
+    writeFileSync(
+      fakeGit,
+      String.raw`#!/bin/sh
+set -eu
+case "$*" in
+  *show-toplevel*) printf '%s\n' '${repoRoot}' ;;
+  *rev-parse\ HEAD*) printf '%s\n' '${currentGitSha}' ;;
+  *status*) exit 0 ;;
+  *) exit 0 ;;
+esac
+`,
+    );
+    chmodSync(fakeGit, 0o755);
+    try {
+      run(
+        sdkPlayerLauncher,
+        [
+          "table-d20-circumstance-advantage-probe-repair-retry",
+          "--execution-id",
+          "runner-started-at-execution",
+          "--evidence-set-id",
+          "runner-started-at-evidence",
+          "--output-path",
+          relative(repoRoot, output),
+          "--instructional-isolation",
+        ],
+        {
+          ...process.env,
+          PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
+        },
+      );
+      const executionStart = JSON.parse(
+        readFileSync(resolve(output, "evidence/execution-start.json"), "utf8"),
+      ) as { readonly startedAt: string };
+      const transcriptHeader = JSON.parse(
+        readFileSync(resolve(output, "evidence/sdk-calls.jsonl"), "utf8")
+          .trim()
+          .split("\n")[0]!,
+      ) as { readonly startedAt: string };
+      expect(transcriptHeader.startedAt).toBe(executionStart.startedAt);
+      expect(existsSync(resolve(output, "replay-supervisor.mjs"))).toBe(true);
+      expect(
+        existsSync(resolve(output, "evidence/findings-checkpoint.json")),
+      ).toBe(true);
+      const invalidStartedAt = spawnSync(
+        process.execPath,
+        [
+          resolve(output, "replay-supervisor.mjs"),
+          "init",
+          "table-d20-circumstance-advantage-probe-repair-retry",
+          "a".repeat(40),
+          "instructionalFallback",
+          "not-a-canonical-timestamp",
+          "b".repeat(64),
+          "c".repeat(64),
+          "d".repeat(64),
+        ],
+        { cwd: output, encoding: "utf8" },
+      );
+      expect(invalidStartedAt.status).toBe(1);
+      expect(`${invalidStartedAt.stdout}${invalidStartedAt.stderr}`).toContain(
+        "Invalid started-at authority",
+      );
+    } finally {
+      rmSync(outputRoot, { recursive: true, force: true });
+      rmSync(commandRoot, { recursive: true, force: true });
+    }
+  }, 120_000);
+
   test("rejects an implementation revision that is not the current clean revision", () => {
     const mismatchedGitSha = `${currentGitSha[0] === "a" ? "b" : "a"}${currentGitSha.slice(1)}`;
     const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-player-command-"));
