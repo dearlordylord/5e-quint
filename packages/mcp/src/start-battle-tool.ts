@@ -99,21 +99,40 @@ export function handleStartBattleToolCall(
   if (Either.isLeft(admittedState)) return admittedState.left;
 
   const admittedSession = admittedState.right;
-  root.sessionStore.battleSession = admittedSession;
-  root.sessionStore.pendingBattleFills = null;
-  for (const { session } of combatants.right.characterSessions) {
-    root.sessionStore.characters.set({
-      tag: "inBattle",
-      sheet: session,
-      battleId: input.battleId,
-    });
-  }
-  publishAdminProjectionBestEffort(root);
-
   const snapshot = battlePresentedSnapshot(admittedSession);
   if (Either.isLeft(snapshot)) {
     return battleSnapshotPresentationIssueContent(snapshot.left);
   }
+
+  const inBattleSessions = combatants.right.characterSessions.map(
+    ({ session }) =>
+      ({
+        tag: "inBattle",
+        sheet: session,
+        battleId: input.battleId,
+      }) as const,
+  );
+  const committed = root.sessionStore.characters.setAll(inBattleSessions);
+  if (Either.isLeft(committed)) {
+    return errorContent("Battle character session admission commit failed.", {
+      code: "CHARACTER_SESSION_COMMIT_INVALID",
+      battleId: input.battleId,
+      message: `Character Session registry rejected battle admission: ${committed.left.tag}.`,
+      affectedCharacterIds: inBattleSessions.map(
+        (session) => session.sheet.characterId,
+      ),
+      recovery: {
+        tag: "characterSessionsUnchanged",
+        guidance:
+          "No Character Session was committed; correct the session conflict and retry start_battle.",
+      },
+    });
+  }
+
+  root.sessionStore.battleSession = admittedSession;
+  root.sessionStore.pendingBattleFills = null;
+  publishAdminProjectionBestEffort(root);
+
   return schemaJsonContent(StartBattleOutputSchema, {
     snapshot: snapshot.right,
     availableActs: discoverBattleActs(admittedSession),

@@ -3738,6 +3738,208 @@ describe("MCP server route", () => {
     expect(invalidRoot.sessionStore.battleSession).not.toBeNull();
   });
 
+  test("round-trips a mixed Character Session, retained companion, and Stat Block roster", () => {
+    const root = createMcpPlaySessionRoot();
+    const wizardDraftId = "draft:gh324-round-trip-wizard";
+    const fighterDraftId = "draft:gh324-round-trip-fighter";
+    createFinalizedWizardWithFindFamiliar(root, wizardDraftId);
+    setRetainedFamiliarCompanion(root, wizardDraftId);
+    createFinalizedFighterSheet(root, fighterDraftId);
+
+    const started = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:gh324-round-trip",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(wizardDraftId),
+            combatantId: "gh324-wizard",
+            initiative: 18,
+            ammunitionStocks: [],
+          },
+          {
+            kind: "characterSession",
+            characterId: testCharacterId(fighterDraftId),
+            combatantId: "gh324-fighter",
+            initiative: 14,
+            ammunitionStocks: [],
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "gh324-goblin",
+            initiative: 7,
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+        companionAdmissions: [
+          {
+            ownerCharacterId: testCharacterId(wizardDraftId),
+            companionCombatantId: "gh324-familiar",
+            initiative: 12,
+            ammunitionStocks: [],
+          },
+        ],
+      }),
+    );
+    expect(started.snapshot).toMatchObject({
+      battleId: "battle:gh324-round-trip",
+      turnOrder: [
+        "gh324-wizard",
+        "gh324-fighter",
+        "gh324-familiar",
+        "gh324-goblin",
+      ],
+      combatants: [
+        {
+          combatantId: "gh324-wizard",
+          origin: { kind: "character" },
+          initiative: 18,
+        },
+        {
+          combatantId: "gh324-fighter",
+          origin: { kind: "character" },
+          initiative: 14,
+        },
+        {
+          combatantId: "gh324-familiar",
+          origin: { kind: "statBlock" },
+          initiative: 12,
+        },
+        {
+          combatantId: "gh324-goblin",
+          origin: { kind: "statBlock" },
+          initiative: 7,
+        },
+      ],
+    });
+    expect(
+      readPayload(handleToolCall(root, "read_battle_state", {})),
+    ).toMatchObject({
+      snapshot: {
+        battleId: "battle:gh324-round-trip",
+        currentActorId: "gh324-wizard",
+      },
+      session: { activeBattle: { battleId: "battle:gh324-round-trip" } },
+    });
+    expect(
+      readPayload(handleToolCall(root, "list_characters", {})).characters,
+    ).toEqual([
+      expect.objectContaining({
+        characterId: testCharacterId(wizardDraftId),
+        status: "inBattle",
+        battleId: "battle:gh324-round-trip",
+      }),
+      expect.objectContaining({
+        characterId: testCharacterId(fighterDraftId),
+        status: "inBattle",
+        battleId: "battle:gh324-round-trip",
+      }),
+    ]);
+
+    const ended = readPayload(handleToolCall(root, "end_battle", {}));
+    expect(ended).toMatchObject({
+      endedBattleId: "battle:gh324-round-trip",
+      session: {
+        activeBattle: null,
+        characterIds: [
+          testCharacterId(wizardDraftId),
+          testCharacterId(fighterDraftId),
+        ],
+      },
+    });
+    expect(ended.characters).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          characterId: testCharacterId(wizardDraftId),
+          session: expect.objectContaining({ tag: "available" }),
+        }),
+        expect.objectContaining({
+          characterId: testCharacterId(fighterDraftId),
+          session: expect.objectContaining({ tag: "available" }),
+        }),
+      ]),
+    );
+  });
+
+  test("end_battle leaves every Character Session and Battle unchanged when its atomic commit fails", () => {
+    const root = createMcpPlaySessionRoot();
+    const firstDraftId = "draft:gh324-atomic-first";
+    const secondDraftId = "draft:gh324-atomic-second";
+    createFinalizedFighterSheet(root, firstDraftId);
+    createFinalizedFighterSheet(root, secondDraftId);
+    const firstCharacterId = testCharacterId(firstDraftId);
+    const secondCharacterId = testCharacterId(secondDraftId);
+    readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:gh324-atomic",
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: firstCharacterId,
+            combatantId: "gh324-atomic-first",
+            initiative: 18,
+            ammunitionStocks: [],
+          },
+          {
+            kind: "characterSession",
+            characterId: secondCharacterId,
+            combatantId: "gh324-atomic-second",
+            initiative: 12,
+            ammunitionStocks: [],
+          },
+        ],
+      }),
+    );
+
+    const battleBefore = root.sessionStore.battleSession;
+    const firstBefore = root.sessionStore.characters.get(firstCharacterId);
+    const secondBefore = root.sessionStore.characters.get(secondCharacterId);
+    if (battleBefore === null || firstBefore === undefined) {
+      throw new Error("Expected an active battle and first Character Session.");
+    }
+    if (secondBefore === undefined) {
+      throw new Error("Expected second Character Session.");
+    }
+    const failingRoot = {
+      ...root,
+      sessionStore: {
+        ...root.sessionStore,
+        characters: {
+          ...root.sessionStore.characters,
+          setAll: () =>
+            Either.left({
+              tag: "unknownCharacterSession" as const,
+              characterId: firstCharacterId,
+            }),
+        },
+      },
+    };
+
+    expect(
+      readPayload(handleToolCall(failingRoot, "end_battle", {})),
+    ).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_COMMIT_INVALID",
+        affectedCharacterIds: [firstCharacterId, secondCharacterId],
+        recovery: { tag: "characterSessionsUnchanged" },
+      },
+    });
+    expect(failingRoot.sessionStore.battleSession).toBe(battleBefore);
+    expect(root.sessionStore.battleSession).toBe(battleBefore);
+    expect(root.sessionStore.characters.get(firstCharacterId)).toBe(
+      firstBefore,
+    );
+    expect(root.sessionStore.characters.get(secondCharacterId)).toBe(
+      secondBefore,
+    );
+
+    expect(readPayload(handleToolCall(root, "end_battle", {}))).toMatchObject({
+      session: { activeBattle: null },
+    });
+  });
+
   test("start_battle reports duplicate companion owners and unavailable roster sources", () => {
     const duplicateOwnerRoot = createMcpPlaySessionRoot();
     expect(

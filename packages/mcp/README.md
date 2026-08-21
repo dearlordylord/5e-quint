@@ -156,12 +156,14 @@ The battle-session tool boundary exposes these user-facing tools:
   catalog and stores only that Stat Block id in the session.
 - `start_battle` starts a battle session from a non-empty initial combatant
   roster. A combatant can currently come from an available finalized character
-  session or from an SRD Stat Block id. The caller supplies the Initiative score
-  for every combatant. Starting battle moves each included character session
-  into an in-battle variant that has no current HP field; the stored
-  `BattleState` owns HP until battle closeout.
-- `read_battle_state` returns the stored `BattleState` projection and current
-  battle snapshot.
+  session or from an SRD Stat Block id. The caller supplies the final Initiative
+  score for every combatant, including retained companions admitted alongside
+  the initial roster. Character and Stat Block projections are validated before
+  the canonical Battle Session and every included Character Session are
+  committed.
+- `read_battle_state` returns the canonical stored `BattleState` projection and
+  current battle snapshot. Character occupancy remains visible through the
+  Character Session read models while battle owns the active combat facts.
 - `discover_battle_acts` returns the current actor's battle acts. The battle
   runtime is the source of truth for which acts are currently available.
 - `fill_battle_hole` submits one fill at a time for a selected battle act
@@ -172,11 +174,13 @@ The battle-session tool boundary exposes these user-facing tools:
   holes, such as Fighter 2 Action Surge.
 - `end_turn` resolves the End Turn runtime command for the current actor, stores
   the returned `BattleState`, and clears transient battle fills.
-- `end_battle` finalizes the stored battle session, projects positive current
-  HP from character-origin battle combatants back into the durable character
-  session, returns the SDK-derived Initiative position at closure, clears battle
-  state, and leaves monster combatants behind in the closed battle. The closure
-  projection does not infer elapsed seconds or assert a RAW ending condition.
+- `end_battle` computes every character-origin settlement first, then commits
+  the whole Character Session roster in one atomic registry operation. On
+  success it returns the complete Character Session list, the SDK-derived
+  Initiative position at closure, and clears battle state; monster combatants
+  never become Character Session rows. A rejected settlement leaves both the
+  Battle Session and every Character Session unchanged. The closure projection
+  does not infer elapsed seconds or assert a RAW ending condition.
 
 The accepted first end-user MCP vertical is Orc Soldier Fighter
 versus Goblin Warrior, entirely through MCP tools:
