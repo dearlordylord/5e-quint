@@ -15,6 +15,8 @@ export const MAX_DIE_SIZE = 100;
 /** MCP work budgets; these are transport-safety limits, not D&D rules. */
 export const MAX_DICE_PER_GROUP = 1_000;
 export const MAX_TOTAL_DICE = 10_000;
+/** Maximum number of groups accepted before aggregate dice work is evaluated. */
+export const MAX_DICE_GROUPS_PER_CALL = MAX_TOTAL_DICE;
 const DiceCountSchema = PositiveIntegerSchema.pipe(
   Schema.lessThanOrEqualTo(MAX_DICE_PER_GROUP),
 ).annotations({
@@ -37,10 +39,11 @@ export const DiceRollGroupSchema = Schema.Struct({
 });
 
 export const RollDiceArgsSchema = Schema.Struct({
-  groups: Schema.NonEmptyArray(DiceRollGroupSchema),
+  groups: Schema.NonEmptyArray(DiceRollGroupSchema).pipe(
+    Schema.maxItems(MAX_DICE_GROUPS_PER_CALL),
+  ),
 }).annotations({
-  description:
-    "An ordered, non-empty list of independent structured dice groups.",
+  description: `An ordered, non-empty list of independent structured dice groups (at most ${MAX_DICE_GROUPS_PER_CALL} groups per call).`,
 });
 
 export const rollDiceInputSchema = mcpObjectJsonSchema(RollDiceArgsSchema);

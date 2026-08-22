@@ -12,6 +12,7 @@ import {
 import {
   decodeDiceToolCall,
   MAX_DICE_PER_GROUP,
+  MAX_DICE_GROUPS_PER_CALL,
   MAX_TOTAL_DICE,
   RollDiceArgsSchema,
   rollDiceInputSchema,
@@ -91,6 +92,18 @@ describe("structured MCP bulk dice roller", () => {
     expect(
       Either.isLeft(
         decodeDiceToolCall({ name: "roll_dice", args: overAggregateBoundary }),
+      ),
+    ).toBe(true);
+    const tooManyGroups = {
+      groups: Array.from({ length: MAX_DICE_GROUPS_PER_CALL + 1 }, () => ({
+        dice: 1,
+        dieSize: 1,
+      })),
+    };
+    expect(validateInput(tooManyGroups).valid).toBe(false);
+    expect(
+      Either.isLeft(
+        decodeDiceToolCall({ name: "roll_dice", args: tooManyGroups }),
       ),
     ).toBe(true);
   });
@@ -258,6 +271,17 @@ describe("structured MCP bulk dice roller", () => {
           result: { details: { code: "DICE_ROLL_BUDGET_EXCEEDED" } },
         },
       });
+      const groupBudget = await client.callTool({
+        name: "roll_dice",
+        arguments: {
+          playSessionId,
+          groups: Array.from({ length: MAX_DICE_GROUPS_PER_CALL + 1 }, () => ({
+            dice: 1,
+            dieSize: 1,
+          })),
+        },
+      });
+      expect(groupBudget.isError).toBe(true);
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }

@@ -1955,20 +1955,16 @@ describe("MCP server route", () => {
     ]);
   });
 
-  test("publishes a cold-client-compatible JSON-text fill_battle_hole contract", () => {
+  test("publishes the typed fill_battle_hole contract", () => {
     const tool = battleToolDefinitions.find(
       (candidate) => candidate.name === "fill_battle_hole",
     );
     const inputSchema = jsonSchemaObject(tool?.inputSchema);
 
-    const schemaText = JSON.stringify(inputSchema);
-    expect(inputSchema?.properties?.subjectJson).toMatchObject({
-      description: expect.stringContaining("JSON.stringify(subject)"),
-    });
-    expect(inputSchema?.properties?.fillJson).toMatchObject({
-      description: expect.stringContaining("JSON.stringify(fill)"),
-    });
-    expect(schemaText.length).toBeLessThan(2_048);
+    expect(inputSchema?.properties?.subject).toBeDefined();
+    expect(inputSchema?.properties?.fill).toBeDefined();
+    expect(inputSchema?.properties?.subjectJson).toBeUndefined();
+    expect(inputSchema?.properties?.fillJson).toBeUndefined();
   });
 
   test("describes MCP workflow and lists discoverable catalogs through tools", () => {
