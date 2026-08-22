@@ -1,5 +1,6 @@
 import {
   timePassed,
+  type CharacterSheetId,
   type CharacterSheetElapsedTimeResult,
 } from "@dnd/character-sheet-runtime";
 import { timeSpanDuration } from "@dnd/shared/elapsed-time";
@@ -8,7 +9,7 @@ import {
   type FilledHoleValue,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { DieRollResult } from "@dnd/shared/types";
-import { Either, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
@@ -28,7 +29,7 @@ type CharacterSessionOperationResult = Schema.Schema.Type<
 export function applyPassCalendarTimeOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: Extract<
       ApplyCharacterSessionOperationToolInput["operation"],
@@ -89,24 +90,34 @@ function filledHoleValuesFromTool(
 function calendarTimeResultFromRuntime(
   result: CharacterSheetElapsedTimeResult,
 ): CharacterSessionOperationResult {
-  switch (result.tag) {
-    case "resolved":
-      return {
-        tag: "resolved",
-        elapsedTicks: Number(result.elapsedTicks),
-      };
-    case "needsHoles":
-      return {
-        tag: "needsHoles",
-        holes: result.holes,
-        elapsedTicks: Number(result.elapsedTicks),
-        remainingTicks: Number(result.remainingTicks),
-      };
-    case "invalid":
-      return {
-        tag: "invalid",
-        reason: "invalidFill",
-        message: result.message,
-      };
-  }
+  return Match.value(result).pipe(
+    Match.when(
+      { tag: "resolved" },
+      (resolved) =>
+        ({
+          tag: "resolved",
+          elapsedTicks: Number(resolved.elapsedTicks),
+        }) as const,
+    ),
+    Match.when(
+      { tag: "needsHoles" },
+      (needsHoles) =>
+        ({
+          tag: "needsHoles",
+          holes: needsHoles.holes,
+          elapsedTicks: Number(needsHoles.elapsedTicks),
+          remainingTicks: Number(needsHoles.remainingTicks),
+        }) as const,
+    ),
+    Match.when(
+      { tag: "invalid" },
+      (invalid) =>
+        ({
+          tag: "invalid",
+          reason: "invalidFill",
+          message: invalid.message,
+        }) as const,
+    ),
+    Match.exhaustive,
+  );
 }

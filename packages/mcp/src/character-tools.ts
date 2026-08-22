@@ -6,6 +6,10 @@ import {
   type CharacterDraft,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
+import {
+  characterSheetConstructionIssuesSummary,
+  createFreshCharacterSheet,
+} from "@dnd/character-sheet-runtime";
 import { Hp } from "@dnd/shared/types";
 import { Either, Match } from "effect";
 
@@ -21,12 +25,9 @@ import {
   type CharacterSessionQueryIssue,
   type CharacterSessionQueryProjection,
 } from "./character-session-query.ts";
+import { characterSessionArmorClassProjectionForOutput } from "./character-session-query-output.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
-import {
-  characterSheetConstructionIssuesSummary,
-  createFreshCharacterSheet,
-} from "@dnd/character-sheet-runtime";
 import {
   CHARACTER_TOOL_NAMES,
   characterToolNames,
@@ -349,13 +350,7 @@ function characterSessionQueryProjectionForOutput(
     Match.when({ kind: "linkedSpeedGrants" }, (value) => value),
     Match.when({ kind: "armorClass" }, ({ kind, projection }) => ({
       kind,
-      projection: {
-        ...projection,
-        state: {
-          ...projection.state,
-          armorTraining: Array.from(projection.state.armorTraining),
-        },
-      },
+      projection: characterSessionArmorClassProjectionForOutput(projection),
     })),
     Match.when({ kind: "spellAccess" }, (value) => value),
     Match.when({ kind: "knownForms" }, (value) => value),

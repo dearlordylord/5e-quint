@@ -11,9 +11,9 @@ import {
   type CharacterSheetLongRestInterruption,
   type CharacterSheetLongRestStart,
   type CharacterSheetLongRestStartTiming,
+  type CharacterSheetId,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
-import type { UnitId as UnitIdType } from "@dnd/shared/game-facts";
 import {
   DieRollResult,
   resourceCount,
@@ -35,26 +35,18 @@ import { errorContent } from "./tool-content.ts";
 type CharacterSessionOperationResult = Schema.Schema.Type<
   typeof CharacterSessionOperationResultSchema
 >;
-type RestRecoveryToolInput = {
-  readonly spendHitDice?: readonly {
-    readonly classUnitId: UnitIdType;
-    readonly roll: number;
-  }[];
-  readonly arcaneRecovery?: {
-    readonly refundSpellSlots: readonly {
-      readonly spellLevel: number;
-      readonly count: number;
-    }[];
-  };
-  readonly sorcerousRestoration?: {
-    readonly recoverSorceryPoints: number;
-  };
-};
+type RestRecoveryToolInput = Pick<
+  Extract<
+    ApplyCharacterSessionOperationToolInput["operation"],
+    { readonly kind: "completeShortRest" }
+  >,
+  "spendHitDice" | "arcaneRecovery" | "sorcerousRestoration"
+>;
 
 export function applyCompleteShortRestOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: Extract<
       ApplyCharacterSessionOperationToolInput["operation"],
@@ -100,7 +92,7 @@ export function applyCompleteShortRestOperation(
 export function applyInterruptShortRestOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: Extract<
       ApplyCharacterSessionOperationToolInput["operation"],
@@ -128,7 +120,7 @@ export function applyInterruptShortRestOperation(
 export function applyCompleteLongRestOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: Extract<
       ApplyCharacterSessionOperationToolInput["operation"],
@@ -153,7 +145,7 @@ export function applyCompleteLongRestOperation(
 export function applyInterruptLongRestOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: Extract<
       ApplyCharacterSessionOperationToolInput["operation"],
@@ -243,7 +235,7 @@ type LongRestResumptionCompletionToolInput = LongRestCompletionToolInput & {
 function completeStartedLongRestOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly rest: CharacterSheetLongRestStart;
     readonly completion: LongRestResumptionCompletionToolInput;
   },
@@ -304,7 +296,7 @@ function completeStartedLongRestOperation(
 }
 
 function characterSessionOperationFailure(
-  characterIdValue: string,
+  characterIdValue: CharacterSheetId,
   issue: CharacterSheetIssue | string,
   context?: RestBoundaryContext,
 ) {

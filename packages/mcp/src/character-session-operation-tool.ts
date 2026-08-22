@@ -8,6 +8,7 @@ import {
   characterSheetCompanion,
   createRetainedFamiliarLikeCompanion,
   type CharacterSheetCompanionFormSelection,
+  type CharacterSheetId,
   type CharacterSheetRetainedCompanionCreationSource,
   type CharacterSheetRetainedCompanionId,
 } from "@dnd/character-sheet-runtime";
@@ -147,7 +148,7 @@ export function applyCharacterSessionOperation(
 function applyAdvanceClassLevelOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: Extract<
       ApplyCharacterSessionOperationToolInput["operation"],
@@ -182,7 +183,7 @@ function applyAdvanceClassLevelOperation(
 function applyReplaceDruidWildShapeKnownFormOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: Extract<
       ApplyCharacterSessionOperationToolInput["operation"],
@@ -236,7 +237,7 @@ function applyReplaceDruidWildShapeKnownFormOperation(
 function commitAvailableCharacterSheetOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly sheet: AvailableCharacterSession;
     readonly build: AvailableCharacterSession["build"];
     readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
@@ -270,7 +271,7 @@ function commitAvailableCharacterSheetOperation(
 }
 
 function characterSessionOperationInvalid(
-  characterId: string,
+  characterId: CharacterSheetId,
   message: string,
 ) {
   return errorContent("Character session operation failed.", {
@@ -283,7 +284,7 @@ function characterSessionOperationInvalid(
 function applyRetainOneAtATimeCompanionOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: Extract<
       ApplyCharacterSessionOperationToolInput["operation"],

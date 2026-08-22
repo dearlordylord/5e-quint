@@ -1,3 +1,5 @@
+import { CharacterSheetIdSchema } from "@dnd/character-sheet-runtime";
+import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import { ArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
 import { HAND_USES, MovementFeet, ResourceCount } from "@dnd/shared/types";
 import {
@@ -76,7 +78,7 @@ const ArmorClassBaseSchema = Schema.Union(
       "unarmored_defense",
       "class_feature_base_plus_ability",
     ),
-    sourceUnitId: Schema.String,
+    sourceUnitId: UnitId,
   }),
   Schema.Struct({
     kind: Schema.Literal("ability_sum"),
@@ -94,30 +96,30 @@ const ArmorClassBonusSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("flat"),
     bonus: IntegerSchema,
-    sourceUnitId: Schema.optionalWith(Schema.String, { exact: true }),
+    sourceUnitId: Schema.optionalWith(UnitId, { exact: true }),
   }),
   Schema.Struct({
     kind: Schema.Literal("shield"),
     bonus: IntegerSchema,
     handUse: Schema.Literal("shield"),
     trainingRequired: Schema.Literal("shield"),
-    sourceUnitId: Schema.optionalWith(Schema.String, { exact: true }),
+    sourceUnitId: Schema.optionalWith(UnitId, { exact: true }),
   }),
   Schema.Struct({
     kind: Schema.Literal("unarmored_no_shield"),
     bonus: IntegerSchema,
-    sourceUnitId: Schema.optionalWith(Schema.String, { exact: true }),
+    sourceUnitId: Schema.optionalWith(UnitId, { exact: true }),
   }),
   Schema.Struct({
     kind: Schema.Literal("wearing_armor"),
     bonus: IntegerSchema,
     categories: Schema.Array(ArmorCategorySchema),
-    sourceUnitId: Schema.optionalWith(Schema.String, { exact: true }),
+    sourceUnitId: Schema.optionalWith(UnitId, { exact: true }),
   }),
 );
 const ArmorClassFloorSchema = Schema.Struct({
   floor: ArmorClassSchema,
-  sourceUnitId: Schema.optionalWith(Schema.String, { exact: true }),
+  sourceUnitId: Schema.optionalWith(UnitId, { exact: true }),
 });
 const ArmorClassStateSchema = Schema.Struct({
   abilityModifiers: Schema.Struct({
@@ -141,8 +143,8 @@ const CharacterSheetAbilityCheckAbilityProjectionSchema = Schema.Struct({
   optionalSubstitutions: Schema.Array(
     Schema.Struct({
       ability: AbilitySchema,
-      sourceUnitId: Schema.String,
-      requiredActiveFeatureUnitId: Schema.optionalWith(Schema.String, {
+      sourceUnitId: UnitId,
+      requiredActiveFeatureUnitId: Schema.optionalWith(UnitId, {
         exact: true,
       }),
     }),
@@ -167,7 +169,7 @@ const CharacterSheetAbilityCheckProficiencyBonusProjectionSchema =
       }),
       Schema.Struct({
         tag: Schema.Literal("jackOfAllTrades"),
-        sourceUnitId: Schema.String,
+        sourceUnitId: UnitId,
         skill: SkillSchema,
         bonus: Schema.Number,
       }),
@@ -180,12 +182,12 @@ const CharacterSheetJumpDistanceAbilityProjectionSchema = Schema.Struct({
     Schema.Struct({
       ability: AbilitySchema,
       replaces: AbilitySchema,
-      sourceUnitId: Schema.String,
+      sourceUnitId: UnitId,
     }),
   ),
 });
 const CharacterSheetLinkedSpeedGrantSchema = Schema.Struct({
-  sourceUnitId: Schema.String,
+  sourceUnitId: UnitId,
   speedKind: Schema.Literal("fly", "swim", "climb", "burrow"),
   feet: Schema.Union(
     MovementFeetOutputSchema,
@@ -200,40 +202,40 @@ const CharacterSheetArmorClassProjectionSchema = Schema.Struct({
 const CharacterSheetSpellAccessProjectionSchema = Schema.Array(
   Schema.Struct({
     source: Schema.Literal("classFeature", "magicInitiate"),
-    sourceUnitId: Schema.String,
-    spellId: Schema.String,
+    sourceUnitId: UnitId,
+    spellId: UnitId,
     spellcastingAbility: AbilitySchema,
     preparation: Schema.Literal("alwaysPrepared", "learnedCantrip"),
   }),
 );
 const CharacterSheetKnownFormsProjectionSchema = Schema.Struct({
-  statBlockIds: Schema.Array(Schema.String),
+  statBlockIds: Schema.Array(StatBlockId),
 });
 const CharacterSheetWeaponMasteryProjectionSchema = Schema.Struct({
-  featureUnitId: Schema.String,
-  classUnitId: Schema.String,
-  selectedWeaponUnitIds: Schema.Array(Schema.String),
+  featureUnitId: UnitId,
+  classUnitId: UnitId,
+  selectedWeaponUnitIds: Schema.Array(UnitId),
   choiceCount: ResourceCountOutputSchema,
   longRestChangeCount: ResourceCountOutputSchema,
-  eligibleWeaponUnitIds: Schema.Array(Schema.String),
+  eligibleWeaponUnitIds: Schema.Array(UnitId),
   qRoute: CharacterSheetWeaponMasteryProjectionRouteSchema,
 });
 const CharacterSheetSpellbookRitualAccessSpellSchema = Schema.Struct({
-  id: Schema.String,
+  id: UnitId,
   mechanics: Schema.Struct({ level: PositiveIntegerSchema }),
 });
 const CharacterSheetSpellbookRitualAccessSchema = Schema.Struct({
   tag: Schema.Literal("spellbookRitual"),
   spell: CharacterSheetSpellbookRitualAccessSpellSchema,
-  spellcastingSourceUnitId: Schema.String,
-  featureUnitId: Schema.String,
+  spellcastingSourceUnitId: UnitId,
+  featureUnitId: UnitId,
 });
 const CharacterSheetSpellbookRitualInvocationSchema = Schema.Struct({
   tag: Schema.Literal("spellbookRitual"),
-  spellId: Schema.String,
+  spellId: UnitId,
   spellLevel: PositiveIntegerSchema,
-  spellcastingSourceUnitId: Schema.String,
-  featureUnitId: Schema.String,
+  spellcastingSourceUnitId: UnitId,
+  featureUnitId: UnitId,
   spellSlotCost: Schema.Struct({ kind: Schema.Literal("none") }),
   preparationRequirement: Schema.Literal("not_required"),
   requiredSpellAccess: Schema.Literal("spellbook"),
@@ -331,7 +333,7 @@ const CharacterSessionQueryProjectionSchema = Schema.Union(
 );
 
 export const CharacterSessionQueryOutputSchema = Schema.Struct({
-  characterId: Schema.String,
+  characterId: CharacterSheetIdSchema,
   query: CharacterSessionQueryProjectionSchema,
   session: McpSessionSummarySchema,
 });
