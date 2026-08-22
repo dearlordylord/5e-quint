@@ -4,6 +4,9 @@ import {
   isBattleToolName,
 } from "./battle-tools.ts";
 import { decodeBattleToolCall } from "./battle-tool-input.ts";
+import { diceToolDefinitions } from "./dice-tool-definitions.ts";
+import { decodeDiceToolCall, isDiceToolName } from "./dice-tool-input.ts";
+import { handleDiceToolCall } from "./dice-tools.ts";
 import {
   characterToolDefinitions,
   handleCharacterToolCall,
@@ -74,6 +77,7 @@ export const toolDefinitions = [
   ...contentToolDefinitions,
   ...characterToolDefinitions,
   ...battleToolDefinitions,
+  ...diceToolDefinitions,
 ];
 
 export function handleToolCall(
@@ -97,6 +101,13 @@ export function handleToolCall(
     return Either.isLeft(decoded)
       ? decoded.left
       : handleBattleToolCall(root, decoded.right);
+  }
+
+  if (isDiceToolName(name)) {
+    const decoded = decodeDiceToolCall({ name, args });
+    return Either.isLeft(decoded)
+      ? decoded.left
+      : handleDiceToolCall(root, decoded.right);
   }
 
   return errorContent(`Unknown MCP tool: ${name}`);

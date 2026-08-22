@@ -7,6 +7,7 @@ import {
   type CharacterToolName,
 } from "./character-tool-input.ts";
 import { contentToolNames } from "./content-tools.ts";
+import type { DiceToolName } from "./dice-tool-input.ts";
 import {
   decodePlaySessionId,
   PLAY_SESSION_UNAVAILABLE,
@@ -87,7 +88,7 @@ export async function handleReadPlaySession(
 
 export async function handlePlaySessionOperation(input: {
   readonly registry: PlaySessionRegistry;
-  readonly operationName: CharacterToolName | BattleToolName;
+  readonly operationName: CharacterToolName | BattleToolName | DiceToolName;
   readonly args: unknown;
   readonly handle: (
     root: McpPlaySessionRoot,

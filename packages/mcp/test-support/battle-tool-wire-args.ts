@@ -13,8 +13,8 @@ export function battleToolWireArgs(name: string, args: unknown): unknown {
       ...(args.playSessionId === undefined
         ? {}
         : { playSessionId: args.playSessionId }),
-      subjectJson: JSON.stringify(args.subject),
-      fillJson: JSON.stringify(args.fill),
+      subject: args.subject,
+      fill: args.fill,
     };
   }
   if (name === "resolve_battle_act" && "subject" in args) {
@@ -22,7 +22,7 @@ export function battleToolWireArgs(name: string, args: unknown): unknown {
       ...(args.playSessionId === undefined
         ? {}
         : { playSessionId: args.playSessionId }),
-      subjectJson: JSON.stringify(args.subject),
+      subject: args.subject,
       ...(args.reactionSpellTargetFacts === undefined
         ? {}
         : { reactionSpellTargetFacts: args.reactionSpellTargetFacts }),

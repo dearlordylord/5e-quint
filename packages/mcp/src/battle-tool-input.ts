@@ -28,7 +28,6 @@ import {
   decodeBattleLifecycleArgs,
   type BattleLifecycleToolInput,
 } from "./battle-lifecycle-tool-input.ts";
-import { errorContent } from "./tool-content.ts";
 
 const EmptyArgsSchema = Schema.Struct({});
 const CombatantIdTextSchema = Schema.NonEmptyTrimmedString.annotations({
@@ -39,24 +38,12 @@ const SelectStatBlockArgsSchema = Schema.Struct({
     description: "SRD Stat Block id from list_stat_blocks.",
   }),
 });
-const BattleSubjectJsonSchema = Schema.String.pipe(
-  Schema.minLength(2),
-).annotations({
-  description:
-    "JSON.stringify(subject) for the exact subject returned by discover_battle_acts.",
-});
-const BattleFillJsonSchema = Schema.String.pipe(
-  Schema.minLength(2),
-).annotations({
-  description:
-    "JSON.stringify(fill) for one BattleFill matching the next returned hole.",
-});
 const FillBattleHoleArgsSchema = Schema.Struct({
-  subjectJson: BattleSubjectJsonSchema,
-  fillJson: BattleFillJsonSchema,
+  subject: BattleSubjectSchema,
+  fill: BattleFillSchema,
 });
 const ResolveBattleActArgsSchema = Schema.Struct({
-  subjectJson: BattleSubjectJsonSchema,
+  subject: BattleSubjectSchema,
   reactionSpellTargetFacts: Schema.optionalWith(
     Schema.Array(
       Schema.Struct({
@@ -269,22 +256,7 @@ function decodeFillBattleHoleArgs(
   );
   if (Either.isLeft(record)) return Either.left(record.left);
 
-  const subject = decodeJsonFact(
-    BattleSubjectSchema,
-    record.right.subjectJson,
-    battleToolNames.fillBattleHole,
-    "subjectJson",
-  );
-  if (Either.isLeft(subject)) return Either.left(subject.left);
-  return Either.map(
-    decodeJsonFact(
-      BattleFillSchema,
-      record.right.fillJson,
-      battleToolNames.fillBattleHole,
-      "fillJson",
-    ),
-    (fill) => ({ subject: subject.right, fill }),
-  );
+  return Either.right(record.right);
 }
 
 function decodeResolveBattleActArgs(
@@ -296,15 +268,8 @@ function decodeResolveBattleActArgs(
     battleToolNames.resolveBattleAct,
   );
   if (Either.isLeft(record)) return Either.left(record.left);
-  const subject = decodeJsonFact(
-    BattleSubjectSchema,
-    record.right.subjectJson,
-    battleToolNames.resolveBattleAct,
-    "subjectJson",
-  );
-  if (Either.isLeft(subject)) return Either.left(subject.left);
   return Either.right({
-    subject: subject.right,
+    subject: record.right.subject,
     reactionSpellTargetFacts: (record.right.reactionSpellTargetFacts ?? []).map(
       (fact) => ({
         kind: fact.kind,
@@ -315,24 +280,6 @@ function decodeResolveBattleActArgs(
       }),
     ),
   });
-}
-
-function decodeJsonFact<A, I>(
-  schema: Schema.Schema<A, I, never>,
-  json: string,
-  toolName: BattleToolName,
-  field: string,
-): ToolInputResult<A> {
-  return Either.mapLeft(
-    Schema.decodeUnknownEither(Schema.parseJson(schema), {
-      onExcessProperty: "error",
-    })(json),
-    (issue) =>
-      errorContent(`${toolName} expects valid ${field} JSON.`, {
-        code: "INVALID_ARGUMENTS",
-        message: issue.message,
-      }),
-  );
 }
 
 function decodeEndTurnArgs(

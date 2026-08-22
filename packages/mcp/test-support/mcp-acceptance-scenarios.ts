@@ -539,8 +539,8 @@ export async function verifyToolContract(client: Client) {
   );
   assert.ok(fillBattleHole, "fill_battle_hole tool must be registered");
   const battleFillSchemaText = JSON.stringify(fillBattleHole.inputSchema);
-  assert.match(battleFillSchemaText, /subjectJson/);
-  assert.match(battleFillSchemaText, /fillJson/);
+  assert.match(battleFillSchemaText, /subject/);
+  assert.match(battleFillSchemaText, /fill/);
   assert.ok(battleFillSchemaText.length < 2048);
 
   const characterSessionQuery = listed.tools.find(
