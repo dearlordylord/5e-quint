@@ -37,7 +37,7 @@
     },
     {
       "id": "mcp-unsupported-history",
-      "kind": "unsupported",
+      "kind": "negative",
       "prompt": "Give me a spoiler-free overview of the history of D&D as a hobby.",
       "expectedToolNames": []
     }

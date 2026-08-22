@@ -4,10 +4,8 @@ import { resolve } from "node:path";
 
 import { describe, expect, test } from "vitest";
 
-import {
-  mcpAcceptanceScenarioIds,
-  verifyAgentConversationScenarios,
-} from "../test-support/mcp-acceptance-scenarios.ts";
+import { decodeCapabilityMatrix } from "../test-support/capability-matrix.ts";
+import { sourceDefinesVitestScenario } from "../test-support/mcp-scenario-executable.ts";
 
 type McpRequiredFlow = {
   readonly flowId: string;
@@ -50,6 +48,10 @@ const manifestPath = resolve(
   repoRoot,
   "plans/unit-profile-coverage/mcp-scenario-evidence.json",
 );
+const capabilityMatrixPath = resolve(
+  repoRoot,
+  "plugins/srd-play/evals/capability-matrix.json",
+);
 const packageJsonPath = resolve(repoRoot, "packages/mcp/package.json");
 const taskIdPattern =
   /^(?:C\d+|L13UG-A\d+|L14G-\d+|L5UG|L6UG|L18GATE|L19GATE|L110F-\d+)-[A-Z0-9-]+$/;
@@ -66,16 +68,24 @@ function readJson<T>(path: string): T {
 }
 
 describe("MCP scenario evidence manifest", () => {
-  test("matches the executable MCP scenario registry", () => {
-    verifyAgentConversationScenarios();
-
+  test("validates matrix-backed executable MCP scenarios", () => {
     const manifest = readJson<McpScenarioEvidenceManifest>(manifestPath);
+    const capabilityMatrix = decodeCapabilityMatrix(capabilityMatrixPath);
     const packageJson = readJson<{ readonly scripts: Record<string, string> }>(
       packageJsonPath,
     );
-    const scenarioIds = new Set<string>(mcpAcceptanceScenarioIds());
     const requiredFlowIds = new Set(
       manifest.requiredFlows.map((flow) => flow.flowId),
+    );
+    const executableEvidenceKeys = new Set(
+      capabilityMatrix.rows.flatMap((row) =>
+        row.mcpEvidence.status === "observed"
+          ? row.mcpEvidence.refs.map(
+              (ref) =>
+                `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}`,
+            )
+          : [],
+      ),
     );
 
     expect(validateMcpScenarioEvidence(manifest, { root: repoRoot })).toEqual(
@@ -106,11 +116,96 @@ describe("MCP scenario evidence manifest", () => {
       expect(row.kind).toBe("mcp-scenario");
       expect(requiredFlowIds.has(row.flowId)).toBe(true);
       expect(row.scopeIds.length).toBeGreaterThan(0);
-      expect(scenarioIds.has(row.scenarioId)).toBe(true);
+      const evidenceKey = `${row.scenarioId}\u0000${row.flowId}\u0000${row.taskId}`;
+      if (executableEvidenceKeys.has(evidenceKey)) {
+        const testSource = readFileSync(
+          resolve(repoRoot, row.testPath),
+          "utf8",
+        );
+        expect(
+          sourceDefinesVitestScenario(testSource, row.scenarioId),
+          `${row.scenarioId} must identify an executable non-skipped Vitest case in ${row.testPath}`,
+        ).toBe(true);
+      }
       expect(existsSync(resolve(repoRoot, row.ownerPath))).toBe(true);
       expect(existsSync(resolve(repoRoot, row.testPath))).toBe(true);
       expect(row.taskId).toMatch(taskIdPattern);
       expect(row.summary.trim()).not.toBe("");
     }
+  });
+
+  test("couples ids to non-skipped test declarations, not comments or skipped cases", () => {
+    expect(
+      sourceDefinesVitestScenario(
+        'test("real-scenario", () => {});',
+        "real-scenario",
+      ),
+    ).toBe(true);
+    expect(
+      sourceDefinesVitestScenario(
+        '// test("comment-scenario", () => {});',
+        "comment-scenario",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'test.skip("skipped-scenario", () => {});',
+        "skipped-scenario",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'describe.skip("skipped-suite", () => { test("nested-skipped", () => {}); });',
+        "nested-skipped",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'suite.skip("skipped-suite", () => { it("nested-skipped-it", () => {}); });',
+        "nested-skipped-it",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'describe.skipIf(true)("skipped-suite", () => { test("nested-skipped-if", () => {}); });',
+        "nested-skipped-if",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'suite.runIf(false)("skipped-suite", () => { it("nested-run-if", () => {}); });',
+        "nested-run-if",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'describe.skipIf(false)("live-suite", () => { test("nested-live-if", () => {}); });',
+        "nested-live-if",
+      ),
+    ).toBe(true);
+    expect(
+      sourceDefinesVitestScenario(
+        'suite.runIf(true)("live-suite", () => { it("nested-live-run-if", () => {}); });',
+        "nested-live-run-if",
+      ),
+    ).toBe(true);
+    expect(
+      sourceDefinesVitestScenario(
+        'describe.skipIf(flag)("conditional-suite", () => { test("unknown-condition", () => {}); });',
+        "unknown-condition",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'describe("live-suite", () => { test("nested-live", () => {}); });',
+        "nested-live",
+      ),
+    ).toBe(true);
+    expect(
+      sourceDefinesVitestScenario(
+        'test("other-scenario", () => {});',
+        "missing-scenario",
+      ),
+    ).toBe(false);
   });
 });

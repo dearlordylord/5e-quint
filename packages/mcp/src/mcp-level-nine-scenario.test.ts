@@ -9,7 +9,7 @@ import {
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
 describe("MCP level 9 Ranger Expertise scenario", () => {
-  test("creates a Ranger 9 character and verifies the durable Expertise sheet projection", async () => {
+  test("create-level-nine-ranger-expertise-and-battle-handoff", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer();

@@ -1,0 +1,837 @@
+{
+  "schema": "dnd.srd-play.capability-matrix.v2",
+  "status": "frozen",
+  "owner": "plugins/srd-play/evals",
+  "canonicalMcpEvidence": {
+    "manifestPath": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
+    "evidenceKind": "mcpScenario",
+    "status": "observed"
+  },
+  "representativeHeadlessJourney": {
+    "scenarioId": "complete-newcomer-journey",
+    "testPath": "packages/mcp/src/plugin-newcomer-journey.test.ts",
+    "supportPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+    "coverage": "representativeCrossLeafOnly"
+  },
+  "installedChatGptEvidence": {
+    "artifactPath": "plugins/srd-play/evals/installed-chatgpt-evidence.json",
+    "evidenceKind": "installedSkillActivation"
+  },
+  "rows": [
+    {
+      "id": "character-creation-draft-finalization",
+      "capability": "Create a draft, inspect Creation Holes, atomically fill the current frontier, and finalize into a fresh Character Sheet",
+      "leafIssue": 318,
+      "mcpSurface": [
+        "create_character_draft",
+        "discover_creation_holes",
+        "fill_creation_holes",
+        "finalize_character"
+      ],
+      "modelVisibleProjection": [
+        {
+          "toolName": "discover_creation_holes",
+          "pathSegments": ["operation", "result", "holes"]
+        },
+        {
+          "toolName": "create_character_draft",
+          "pathSegments": ["operation", "result", "draft"]
+        },
+        {
+          "toolName": "finalize_character",
+          "pathSegments": ["operation", "result", "finalization"]
+        },
+        {
+          "toolName": "create_character_draft",
+          "pathSegments": ["restoration"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "character-creation-protocol",
+            "flowId": "character-creation",
+            "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "Creation choices and identifiers are live SDK-owned holes; the Skill owns no presets or parallel Character Sheet shape."
+    },
+    {
+      "id": "character-progression-class-level",
+      "capability": "Advance a finalized Character Build by one supported class level, including existing level-gain choices",
+      "leafIssue": 320,
+      "mcpSurface": ["apply_character_session_operation"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["projection", "characterIds"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["nextOperations"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "character-class-level-advancement-protocol",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Only SDK-supported level-gain facts are accepted; the mutation returns canonical detail and next operations rather than storing progression beside the Character Sheet."
+    },
+    {
+      "id": "character-progression-druid-known-form",
+      "capability": "Replace one supported Druid Wild Shape known form",
+      "leafIssue": 320,
+      "mcpSurface": ["apply_character_session_operation"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "character-row-coverage-druid-known-form",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-ROW-DRUID-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Known-form replacement uses existing admission facts and returns typed rejection for unsupported or invalid replacements; no identity-specific MCP tool exists."
+    },
+    {
+      "id": "character-session-list-detail",
+      "capability": "List Character Sessions and inspect core stored/build-derived state",
+      "leafIssue": 318,
+      "mcpSurface": ["list_characters", "inspect_character_session"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "list_characters",
+          "pathSegments": ["operation", "result", "characters"]
+        },
+        {
+          "toolName": "inspect_character_session",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "inspect_character_session",
+          "pathSegments": ["operation", "result", "detail", "sheetProjection"]
+        },
+        {
+          "toolName": "inspect_character_session",
+          "pathSegments": ["projection"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "battle-roundtrip-protocol",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "The selected detail is derived from the canonical Character Sheet/session owner; no Plugin-only character record is persisted."
+    },
+    {
+      "id": "character-sheet-derived-queries",
+      "capability": "Query existing derived Character Sheet rules facts",
+      "leafIssue": 319,
+      "mcpSurface": ["query_character_session"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["operation", "result", "query", "kind"]
+        },
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["operation", "result", "query", "projection"]
+        },
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["restoration"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "character-row-coverage-ritual-query",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-ROW-RITUAL-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Queries expose existing SDK projections, including ritual-only invocation, and do not add a spell ledger, search layer, or generic non-ritual casting."
+    },
+    {
+      "id": "character-companion-retention",
+      "capability": "Retain one supported familiar-like companion",
+      "leafIssue": 318,
+      "mcpSurface": ["apply_character_session_operation"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["projection"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "character-row-coverage-companion-retention",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-ROW-COMPANION-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Companion identity, admission, and derived state remain Character Sheet-owned; the shared mutation surface returns typed ownership and conflict recovery."
+    },
+    {
+      "id": "character-rest-lifecycles",
+      "capability": "Perform existing Short Rest and Long Rest lifecycles",
+      "leafIssue": 321,
+      "mcpSurface": ["apply_character_session_operation"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["unresolvedInputs"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "character-row-coverage-rest-lifecycle",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-ROW-REST-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Rest timing, recovery choices, interruptions, and calendar gates remain one atomic SDK-composed intent; no rest intermediate is retained."
+    },
+    {
+      "id": "character-healing-rest-benefits",
+      "capability": "Apply existing healing/rest-benefit behavior, including Lay On Hands and supported spell rest benefits",
+      "leafIssue": 322,
+      "mcpSurface": ["apply_character_session_operation"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail", "sheetProjection"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "character-row-coverage-spell-rest-benefit",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-ROW-SPELL-REST-MCP-EVIDENCE"
+          },
+          {
+            "scenarioId": "character-healing-lay-on-hands-protocol",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-HEALING-LAY-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Healing admission and multi-recipient atomic commit are SDK-owned; unsupported sources return typed recovery instead of an invented capability."
+    },
+    {
+      "id": "character-feature-resources",
+      "capability": "Use existing out-of-Battle feature resources: Spell Access free cast and Monk Uncanny Metabolism on Initiative",
+      "leafIssue": 323,
+      "mcpSurface": ["apply_character_session_operation", "roll_dice"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "roll_dice",
+          "pathSegments": ["operation", "result", "groups"]
+        },
+        {
+          "toolName": "roll_dice",
+          "pathSegments": ["operation", "result", "correlationId"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "character-resource-operation-protocol",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-RESOURCE-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Raw faces are independent visible facts; existing Character Sheet resource operations perform all feature arithmetic and accept only their typed inputs."
+    },
+    {
+      "id": "character-font-of-magic-conversion",
+      "capability": "Convert Font of Magic Spell Slots and Sorcery Points in either supported direction",
+      "leafIssue": 323,
+      "mcpSurface": ["apply_character_session_operation"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail", "sheetProjection"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "character-font-of-magic-protocol",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-FONT-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Both conversion directions commit only canonical Character Sheet resource state; no generic resource engine or duplicate expenditure state is introduced."
+    },
+    {
+      "id": "character-ritual-invocation",
+      "capability": "Project the existing ritual-only Character Sheet Spell Invocation",
+      "leafIssue": 319,
+      "mcpSurface": ["query_character_session"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["operation", "result", "query", "projection"]
+        },
+        {
+          "toolName": "query_character_session",
+          "pathSegments": [
+            "operation",
+            "result",
+            "query",
+            "projection",
+            "invocation"
+          ]
+        },
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["operation", "result"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "character-row-coverage-ritual-query",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-ROW-RITUAL-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Only the existing ritual invocation projection is exposed; generic out-of-Battle non-ritual casting remains excluded by the parent specification."
+    },
+    {
+      "id": "character-calendar-time",
+      "capability": "Pass calendar time through the existing Stable-recovery workflow",
+      "leafIssue": 321,
+      "mcpSurface": ["apply_character_session_operation"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["unresolvedInputs"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "character-row-coverage-calendar-time",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-ROW-CALENDAR-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Calendar time preserves the SDK resolved/open/invalid outcomes and caller fills; it is not a durable MCP-owned clock workflow."
+    },
+    {
+      "id": "battle-mixed-roster-start",
+      "capability": "Compose a non-empty mixed roster from available Character Sessions, retained companions, and installed SRD Stat Blocks; mark admitted characters in Battle",
+      "leafIssue": 324,
+      "mcpSurface": ["start_battle"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "battleState"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "snapshot"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "session", "characterIds"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["restoration"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "battle-row-coverage-mixed-companion-roster",
+            "flowId": "battle",
+            "taskId": "C11-BATTLE-MIXED-COMPANION-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "Battle admission composes existing Character Session and SRD Stat Block owners; it creates no parallel roster or creature model."
+    },
+    {
+      "id": "battle-character-settlement",
+      "capability": "Settle every character-origin combatant back to Character Sheets and return the character list",
+      "leafIssue": 324,
+      "mcpSurface": ["end_battle", "list_characters"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "end_battle",
+          "pathSegments": ["operation", "result", "endedBattleId"]
+        },
+        {
+          "toolName": "end_battle",
+          "pathSegments": ["operation", "result", "session", "characterIds"]
+        },
+        {
+          "toolName": "list_characters",
+          "pathSegments": ["operation", "result", "characters"]
+        },
+        {
+          "toolName": "end_battle",
+          "pathSegments": ["operation", "result", "session", "battleState"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "battle-roundtrip-protocol",
+            "flowId": "battle",
+            "taskId": "C11-BATTLE-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "Closeout computes the existing character settlements before one Play Session commit; Stat Blocks do not become Character Session rows."
+    },
+    {
+      "id": "battle-direct-initiative",
+      "capability": "Start Battle from already supplied Initiative scores",
+      "leafIssue": 324,
+      "mcpSurface": ["start_battle"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "snapshot", "turnOrder"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "battleState"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "battle-roundtrip-protocol",
+            "flowId": "battle",
+            "taskId": "C11-BATTLE-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "The caller supplies final Initiative facts; MCP performs no Initiative calculation or alternate roster ownership."
+    },
+    {
+      "id": "battle-initial-initiative-setup",
+      "capability": "Run existing initial Initiative setup: report roll mode, retain setup, apply supported swaps, and finish setup",
+      "leafIssue": 325,
+      "mcpSurface": ["start_battle", "battle_lifecycle"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "battleState", "tag"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "battleState", "combatants"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["nextOperations"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "snapshot"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "battle-initial-initiative-setup-protocol",
+            "flowId": "battle",
+            "taskId": "C11-BATTLE-INITIAL-SETUP-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "Setup remains the sole SDK-owned Battle state until finalization; roll mode and swaps are returned facts, not MCP-derived mechanics."
+    },
+    {
+      "id": "battle-roster-lifecycle",
+      "capability": "Add and remove combatants through the supported Battle lifecycle, including Character Session occupancy/settlement for character origins",
+      "leafIssue": 326,
+      "mcpSurface": ["battle_lifecycle", "read_battle_state"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "battle_lifecycle",
+          "pathSegments": ["operation", "result", "result", "tag"]
+        },
+        {
+          "toolName": "battle_lifecycle",
+          "pathSegments": ["operation", "result", "result", "combatantId"]
+        },
+        {
+          "toolName": "read_battle_state",
+          "pathSegments": ["operation", "result", "snapshot", "combatants"]
+        },
+        {
+          "toolName": "battle_lifecycle",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "battle_lifecycle",
+          "pathSegments": ["restoration"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "battle-roster-lifecycle-protocol",
+            "flowId": "battle",
+            "taskId": "C11-BATTLE-ROSTER-LIFECYCLE-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "Roster transitions use current admission, occupancy, settlement, and atomic recovery semantics; no death, victory, encounter, or narrative rule is inferred."
+    },
+    {
+      "id": "battle-snapshot-read",
+      "capability": "Read the canonical Battle snapshot/current state",
+      "leafIssue": 324,
+      "mcpSurface": ["read_battle_state"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "read_battle_state",
+          "pathSegments": ["operation", "result", "snapshot"]
+        },
+        {
+          "toolName": "read_battle_state",
+          "pathSegments": ["operation", "result", "availableActs"]
+        },
+        {
+          "toolName": "read_battle_state",
+          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+        },
+        {
+          "toolName": "read_battle_state",
+          "pathSegments": ["operation", "result", "session"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "battle-roundtrip-protocol",
+            "flowId": "battle",
+            "taskId": "C11-BATTLE-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "BattleState and its canonical snapshot remain authoritative; no display log or hidden widget metadata owns correctness."
+    },
+    {
+      "id": "battle-act-discovery",
+      "capability": "Discover currently available Acts and initial Runtime Holes",
+      "leafIssue": 327,
+      "mcpSurface": ["discover_battle_acts", "fill_battle_hole"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": ["operation", "result", "availableActs"]
+        },
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": [
+            "operation",
+            "result",
+            "availableActs",
+            "[]",
+            "subject"
+          ]
+        },
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": [
+            "operation",
+            "result",
+            "availableActs",
+            "[]",
+            "initialHoles"
+          ]
+        },
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "battle-act-protocol",
+            "flowId": "battle",
+            "taskId": "C11-BATTLE-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "Acts, subjects, and holes are read from live Battle state; the Skill never invents an executable action or stale fill."
+    },
+    {
+      "id": "battle-act-resolution",
+      "capability": "Resolve a current Act with no Holes or replay it through ordinary typed fills, including existing interrupts and runtime commands",
+      "leafIssue": 327,
+      "mcpSurface": ["resolve_battle_act", "fill_battle_hole"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "resolve_battle_act",
+          "pathSegments": ["operation", "result", "result", "tag"]
+        },
+        {
+          "toolName": "resolve_battle_act",
+          "pathSegments": ["operation", "result", "result", "holes"]
+        },
+        {
+          "toolName": "resolve_battle_act",
+          "pathSegments": [
+            "operation",
+            "result",
+            "session",
+            "transientBattleFills"
+          ]
+        },
+        {
+          "toolName": "resolve_battle_act",
+          "pathSegments": ["operation", "result", "snapshot"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "battle-act-resolution-protocol",
+            "flowId": "battle",
+            "taskId": "C11-BATTLE-ACT-RESOLUTION-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "No-hole Acts use resolve_battle_act; Acts with holes use ordinary typed fills, and pending-fill discipline remains runtime-owned."
+    },
+    {
+      "id": "battle-turn-end",
+      "capability": "End the current turn through the existing runtime command",
+      "leafIssue": 327,
+      "mcpSurface": ["end_turn"],
+      "modelVisibleProjection": [
+        {
+          "toolName": "end_turn",
+          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+        },
+        {
+          "toolName": "end_turn",
+          "pathSegments": ["operation", "result", "snapshot", "turnOrder"]
+        },
+        {
+          "toolName": "end_turn",
+          "pathSegments": ["nextOperations"]
+        },
+        {
+          "toolName": "end_turn",
+          "pathSegments": ["restoration"]
+        }
+      ],
+      "mcpEvidence": {
+        "status": "observed",
+        "refs": [
+          {
+            "scenarioId": "battle-act-protocol",
+            "flowId": "battle",
+            "taskId": "C11-BATTLE-MCP-EVIDENCE"
+          }
+        ]
+      },
+      "installedChatGptEvidence": {
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "Turn end remains a runtime command and is rejected while required Runtime Holes are pending; no automatic result or victory inference is added."
+    }
+  ]
+}

@@ -15,6 +15,17 @@ For a character-creation continuation, use `read_play_session` first. If its sum
 
 Treat returned catalog records, character-creation holes and options, battle acts, runtime holes, projections, and operation results as authoritative. Copy their identifiers and typed inputs exactly. Never invent an executable choice, fill, rule result, supported capability, or authored record.
 
+For Battle setup, follow the returned `battleState` variant. If the result is
+`initialInitiativeSetup`, use `battle_lifecycle` for the returned setup
+operations before asking for or presenting active Battle Acts. For an active
+Battle, use `battle_lifecycle` for supported roster changes and keep the
+returned occupancy and settlement projections authoritative.
+
+`roll_dice` is an optional independent raw-face request. It has no Battle Hole
+or modifier context and does not fill anything automatically. Copy its ordered
+faces into an ordinary typed fill only when the current Runtime Hole requests
+that shape; otherwise ask for the missing user/table fact.
+
 Present relevant returned rules facts faithfully. Ask only for an unresolved user decision or requested roll. Synthetic names, situations, and narration may frame play, but must not create mechanics or reproduce non-SRD official content.
 
 After every operation, report the envelope's typed operation result, relevant projection, unresolved inputs, next operations, and restoration status. Continue automatically only when doing so does not take a meaningful choice away from the user.
