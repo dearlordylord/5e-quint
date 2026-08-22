@@ -2,7 +2,6 @@ import {
   battleAdmittedSpellPresentations,
   battlePresentedSnapshot,
   discoverBattleActs,
-  type InitialInitiativeSetup,
 } from "@dnd/battle-runtime";
 import { Either, Match } from "effect";
 
@@ -33,13 +32,13 @@ export function handleBattleLifecycleToolCall(
         code: "BATTLE_LIFECYCLE_NOT_OPEN",
       }),
     ),
-    Match.when({ tag: "initialInitiativeSetup" }, (matched) =>
+    Match.when({ tag: "initialInitiativeSetup" }, () =>
       Match.value(input.operation).pipe(
         Match.when({ kind: "applyInitiativeSwap" }, (operation) =>
-          applySwap(root, matched.setup, operation),
+          applySwap(root, operation),
         ),
         Match.when({ kind: "finalizeInitialInitiativeSetup" }, () =>
-          finalizeSetup(root, matched.setup),
+          finalizeSetup(root),
         ),
         Match.when({ kind: "addCombatant" }, () =>
           activeBattleOnlyOperationError("addCombatant"),
@@ -79,7 +78,6 @@ export function handleBattleLifecycleToolCall(
 
 function applySwap(
   root: McpPlaySessionRoot,
-  _setup: InitialInitiativeSetup,
   operation: Extract<
     BattleLifecycleToolInput["operation"],
     { readonly kind: "applyInitiativeSwap" }
@@ -110,10 +108,7 @@ function applySwap(
   });
 }
 
-function finalizeSetup(
-  root: McpPlaySessionRoot,
-  _setup: InitialInitiativeSetup,
-) {
+function finalizeSetup(root: McpPlaySessionRoot) {
   return completeBattleStateTransition({
     root,
     transition: Either.map(
