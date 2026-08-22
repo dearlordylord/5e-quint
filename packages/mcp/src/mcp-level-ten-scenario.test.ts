@@ -11,7 +11,7 @@ import { createMcpApplicationServices } from "./composition-root.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
 describe("MCP level 10 Fighter Champion scenario", () => {
-  test("creates a Fighter 10 Champion character and verifies the durable sheet projection", async () => {
+  test("create-level-ten-fighter-champion-and-battle-handoff", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer(

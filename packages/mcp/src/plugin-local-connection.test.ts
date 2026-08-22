@@ -54,7 +54,7 @@ describe("local SRD Play plugin evaluation seams", () => {
     );
 
     expect(new Set(inventory.mcpToolSelection.map(({ kind }) => kind))).toEqual(
-      new Set(["direct", "indirect", "followUp", "unsupported"]),
+      new Set(["direct", "indirect", "followUp", "negative"]),
     );
     expect(new Set(inventory.skillActivation.map(({ kind }) => kind))).toEqual(
       new Set(["direct", "indirect", "followUp", "negative", "boundary"]),

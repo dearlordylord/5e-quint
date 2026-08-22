@@ -4393,7 +4393,3 @@ export function verifyAgentConversationScenarios() {
     assert.notEqual(scenario.insufficiency.trim(), "");
   }
 }
-
-export function mcpAcceptanceScenarioIds() {
-  return agentConversationScenarios.map((scenario) => scenario.id);
-}

@@ -50,7 +50,7 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "create-baseline-character",
+            "scenarioId": "character-creation-protocol",
             "flowId": "character-creation",
             "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE"
           }
@@ -84,7 +84,7 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "create-warrior-second-level",
+            "scenarioId": "character-class-level-advancement-protocol",
             "flowId": "character-sheet",
             "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
           }
@@ -156,7 +156,7 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "finish-battle-and-inspect-character-state",
+            "scenarioId": "battle-roundtrip-protocol",
             "flowId": "character-sheet",
             "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
           }
@@ -539,7 +539,7 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "finish-battle-and-inspect-character-state",
+            "scenarioId": "battle-roundtrip-protocol",
             "flowId": "battle",
             "taskId": "C11-BATTLE-MCP-EVIDENCE"
           }
@@ -573,7 +573,7 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "start-battle-with-initiative",
+            "scenarioId": "battle-roundtrip-protocol",
             "flowId": "battle",
             "taskId": "C11-BATTLE-MCP-EVIDENCE"
           }
@@ -691,7 +691,7 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "start-battle-with-initiative",
+            "scenarioId": "battle-roundtrip-protocol",
             "flowId": "battle",
             "taskId": "C11-BATTLE-MCP-EVIDENCE"
           }
@@ -741,7 +741,7 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "take-turns-and-resolve-attacks",
+            "scenarioId": "battle-act-protocol",
             "flowId": "battle",
             "taskId": "C11-BATTLE-MCP-EVIDENCE"
           }
@@ -784,14 +784,14 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "use-action-surge",
+            "scenarioId": "battle-act-protocol",
             "flowId": "battle",
             "taskId": "C11-BATTLE-MCP-EVIDENCE"
           },
           {
-            "scenarioId": "battle-row-coverage-interrupt-resolution",
+            "scenarioId": "battle-act-protocol",
             "flowId": "battle",
-            "taskId": "C11-BATTLE-INTERRUPT-MCP-EVIDENCE"
+            "taskId": "C11-BATTLE-MCP-EVIDENCE"
           }
         ]
       },
@@ -827,7 +827,7 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "recover-from-invalid-or-stale-actions",
+            "scenarioId": "battle-act-protocol",
             "flowId": "battle",
             "taskId": "C11-BATTLE-MCP-EVIDENCE"
           }

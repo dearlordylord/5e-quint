@@ -9,7 +9,7 @@ import {
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
 describe("MCP level 6 Rogue Expertise scenario", () => {
-  test("creates a Rogue 6 character and verifies the durable Expertise sheet projection", async () => {
+  test("create-level-six-rogue-expertise-and-steady-aim-battle-handoff", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer();

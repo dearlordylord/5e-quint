@@ -619,7 +619,7 @@ describe("MCP protocol server", () => {
     FULL_ACCEPTANCE_TEST_TIMEOUT_MS,
   );
 
-  test("routes finalized character-session mutations through the Play Session protocol", async () => {
+  test("character-class-level-advancement-protocol", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer();
@@ -1298,7 +1298,7 @@ describe("MCP protocol server", () => {
     );
   }, 60_000);
 
-  test("battle-row-coverage-interrupt-resolution", async () => {
+  test("battle-act-protocol", async () => {
     await withCharacterRowCoverage(
       "battle-row-coverage-interrupt-resolution",
       async ({ client, playSessionId }) => {
@@ -1474,11 +1474,21 @@ describe("MCP protocol server", () => {
         expect(operationResult(resolvedInterrupt)).toMatchObject({
           result: { tag: "resolved" },
         });
+        const endedTurn = await callStructuredTool(client, {
+          name: "end_turn",
+          arguments: {
+            playSessionId,
+            actorId: "row-shield-goblin",
+          },
+        });
+        expect(operationResult(endedTurn)).toMatchObject({
+          snapshot: { currentActorId: "row-shield-wizard" },
+        });
       },
     );
   }, 60_000);
 
-  test("round-trips a mixed character and Stat Block roster through MCP", async () => {
+  test("battle-roundtrip-protocol", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { playSessions, server } = createDndMcpProtocolServer();
@@ -2339,7 +2349,7 @@ describe("MCP protocol server", () => {
   });
 
   test(
-    "runs the full acceptance client over in-memory MCP",
+    "character-creation-protocol",
     async () => {
       const [clientTransport, serverTransport] =
         InMemoryTransport.createLinkedPair();
@@ -2365,7 +2375,7 @@ describe("MCP protocol server", () => {
     FULL_ACCEPTANCE_TEST_TIMEOUT_MS,
   );
 
-  test("runs the level 5 Wizard Fireball acceptance client over in-memory MCP", async () => {
+  test("create-level-five-wizard-fireball-and-battle-handoff", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer();
@@ -2384,7 +2394,7 @@ describe("MCP protocol server", () => {
     }
   }, 30_000);
 
-  test("runs the level 6 Rogue Steady Aim acceptance client over in-memory MCP", async () => {
+  test("create-level-six-rogue-expertise-and-steady-aim-battle-handoff", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer();

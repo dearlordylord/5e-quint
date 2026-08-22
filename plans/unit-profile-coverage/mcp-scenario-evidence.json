@@ -184,8 +184,8 @@
       "kind": "mcp-scenario",
       "flowId": "character-creation",
       "scopeIds": ["level-1", "level-1-2"],
-      "scenarioId": "create-baseline-character",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "scenarioId": "character-creation-protocol",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
       "summary": "The protocol acceptance scenario creates and finalizes the supported level-1 Orc Soldier Fighter through create, discover, fill, and finalize tools while using returned hole ids, option ids, and draft revisions."
@@ -264,8 +264,8 @@
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
-      "scenarioId": "finish-battle-and-inspect-character-state",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "scenarioId": "battle-roundtrip-protocol",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
       "summary": "The protocol acceptance scenario ends battle and inspects list_characters plus the session snapshot to prove durable Character Sheet Hit Points and Spell Slot expenditure remain visible to MCP callers."
@@ -354,8 +354,8 @@
       "kind": "mcp-scenario",
       "flowId": "battle",
       "scopeIds": ["level-1", "level-1-2"],
-      "scenarioId": "start-battle-with-initiative",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "scenarioId": "battle-roundtrip-protocol",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C11-BATTLE-MCP-EVIDENCE",
       "summary": "The protocol acceptance scenario starts SRD battles from finalized Character Sheets and Stat Blocks, verifies the Initiative-derived turn order, and reads the current actor from the battle snapshot."
@@ -364,8 +364,8 @@
       "kind": "mcp-scenario",
       "flowId": "battle",
       "scopeIds": ["level-1", "level-1-2"],
-      "scenarioId": "take-turns-and-resolve-attacks",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "scenarioId": "battle-act-protocol",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C11-BATTLE-MCP-EVIDENCE",
       "summary": "The protocol acceptance scenario discovers battle acts, fills targetChoice, attackRoll, and rolledDice battle holes for weapon attacks, verifies Hit Point changes, and advances turns in Initiative order."
@@ -494,8 +494,8 @@
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
-      "scenarioId": "create-warrior-second-level",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "scenarioId": "character-class-level-advancement-protocol",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
       "summary": "The real MCP protocol test routes finalized Character Session mutations through the shared operation surface, including supported class-level advancement and typed selection-replacement recovery, while preserving the canonical detail projection."
@@ -505,7 +505,7 @@
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "character-row-coverage-ritual-query",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-ROW-RITUAL-MCP-EVIDENCE",
       "summary": "The real MCP row-coverage client calls query_character_session for both spellbookRitualAccesses and ritual spellInvocation, validates the returned ritual projections, and keeps query facts derived from the stored Character Sheet."
@@ -515,7 +515,7 @@
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "character-row-coverage-companion-retention",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-ROW-COMPANION-MCP-EVIDENCE",
       "summary": "The real MCP row-coverage client calls retainOneAtATimeCompanion with the returned Character Session id and validates the retained companion projection before Battle admission."
@@ -525,7 +525,7 @@
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "character-row-coverage-rest-lifecycle",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-ROW-REST-MCP-EVIDENCE",
       "summary": "The real MCP row-coverage client calls completeShortRest, completeLongRest, and an interrupted Long Rest with returned typed results through apply_character_session_operation."
@@ -535,7 +535,7 @@
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "character-font-of-magic-protocol",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-FONT-MCP-EVIDENCE",
       "summary": "The real MCP resource client calls both Font of Magic conversion directions and validates each typed Character Session result through apply_character_session_operation."
@@ -545,7 +545,7 @@
       "flowId": "battle",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "battle-initial-initiative-setup-protocol",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C11-BATTLE-INITIAL-SETUP-MCP-EVIDENCE",
       "summary": "The real MCP initial-setup client calls start_battle in initialSetup mode, applies and rejects Initiative swaps, finalizes setup, and validates the returned setup and active Battle projections."
@@ -555,7 +555,7 @@
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "character-row-coverage-druid-known-form",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-ROW-DRUID-MCP-EVIDENCE",
       "summary": "The real MCP row-coverage client calls replaceDruidWildShapeKnownForm on an admitted Druid Character Session and validates the canonical returned available detail."
@@ -565,7 +565,7 @@
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "character-row-coverage-calendar-time",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-ROW-CALENDAR-MCP-EVIDENCE",
       "summary": "The real MCP row-coverage client calls passCalendarTime for a resolved character and for a Stable character, copies the returned rolled-dice hole id, and validates the resolved fill outcome."
@@ -575,7 +575,7 @@
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "character-row-coverage-spell-rest-benefit",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-ROW-SPELL-REST-MCP-EVIDENCE",
       "summary": "The real MCP row-coverage client successfully applies Prayer of Healing rest benefits to a returned recipient and validates the typed spell-rest result."
@@ -585,7 +585,7 @@
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "character-healing-lay-on-hands-protocol",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-HEALING-LAY-MCP-EVIDENCE",
       "summary": "The real MCP Lay On Hands client calls applyLayOnHands and validates the returned healing result and follow-up operation envelope."
@@ -595,7 +595,7 @@
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "character-resource-operation-protocol",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C10-CHARACTER-RESOURCE-MCP-EVIDENCE",
       "summary": "The real MCP resource client calls roll_dice for independent raw faces, then routes Uncanny Metabolism and Spell Access free-cast operations through the shared Character Session surface and validates their typed resource results."
@@ -605,7 +605,7 @@
       "flowId": "battle",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "battle-row-coverage-mixed-companion-roster",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C11-BATTLE-MIXED-COMPANION-MCP-EVIDENCE",
       "summary": "The real MCP row-coverage client starts and ends a mixed Battle roster containing the returned Character Session, its retained companion admission, and an SRD Stat Block, validating companion and settlement projections."
@@ -615,7 +615,7 @@
       "flowId": "battle",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "battle-roster-lifecycle-protocol",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C11-BATTLE-ROSTER-LIFECYCLE-MCP-EVIDENCE",
       "summary": "The real MCP roster-lifecycle client calls battle_lifecycle addCombatant and removeCombatant for Stat Block and Character Session origins and validates occupancy and settlement recovery."

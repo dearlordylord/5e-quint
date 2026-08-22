@@ -2,21 +2,64 @@ import { readFileSync } from "node:fs";
 
 import { Schema } from "effect";
 
-export const McpEvaluationCaseSchema = Schema.Struct({
+const McpEvaluationCaseBase = {
   id: Schema.String,
-  kind: Schema.String,
   prompt: Schema.String,
-  after: Schema.optionalWith(Schema.String, { exact: true }),
-  expectedToolNames: Schema.Array(Schema.String),
-});
+};
 
-export const SkillEvaluationCaseSchema = Schema.Struct({
+export const McpEvaluationCaseSchema = Schema.Union(
+  Schema.Struct({
+    ...McpEvaluationCaseBase,
+    kind: Schema.Literal("direct"),
+    expectedToolNames: Schema.NonEmptyArray(Schema.String),
+  }),
+  Schema.Struct({
+    ...McpEvaluationCaseBase,
+    kind: Schema.Literal("indirect"),
+    expectedToolNames: Schema.NonEmptyArray(Schema.String),
+  }),
+  Schema.Struct({
+    ...McpEvaluationCaseBase,
+    kind: Schema.Literal("followUp"),
+    after: Schema.String,
+    expectedToolNames: Schema.NonEmptyArray(Schema.String),
+  }),
+  Schema.Struct({
+    ...McpEvaluationCaseBase,
+    kind: Schema.Literal("negative"),
+    expectedToolNames: Schema.Array(Schema.String),
+  }),
+);
+
+const SkillEvaluationCaseBase = {
   id: Schema.String,
-  kind: Schema.String,
   prompt: Schema.String,
-  after: Schema.optionalWith(Schema.String, { exact: true }),
   expectedActivation: Schema.Literal("activate", "doNotActivate"),
-});
+};
+
+export const SkillEvaluationCaseSchema = Schema.Union(
+  Schema.Struct({
+    ...SkillEvaluationCaseBase,
+    kind: Schema.Literal("direct"),
+  }),
+  Schema.Struct({
+    ...SkillEvaluationCaseBase,
+    kind: Schema.Literal("indirect"),
+  }),
+  Schema.Struct({
+    ...SkillEvaluationCaseBase,
+    kind: Schema.Literal("followUp"),
+    after: Schema.String,
+  }),
+  Schema.Struct({
+    ...SkillEvaluationCaseBase,
+    kind: Schema.Literal("negative"),
+  }),
+  Schema.Struct({
+    ...SkillEvaluationCaseBase,
+    kind: Schema.Literal("boundary"),
+  }),
+);
 
 export const EvaluationInventorySchema = Schema.Struct({
   officialGuidance: Schema.Literal(
@@ -48,7 +91,7 @@ export const EvaluationInventorySchema = Schema.Struct({
 export type EvaluationInventory = typeof EvaluationInventorySchema.Type;
 
 export function decodeEvaluationInventory(path: string): EvaluationInventory {
-  return Schema.decodeUnknownSync(EvaluationInventorySchema)(
-    JSON.parse(readFileSync(path, "utf8")),
-  );
+  return Schema.decodeUnknownSync(EvaluationInventorySchema, {
+    onExcessProperty: "error",
+  })(JSON.parse(readFileSync(path, "utf8")));
 }

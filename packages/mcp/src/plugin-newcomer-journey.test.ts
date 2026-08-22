@@ -9,7 +9,7 @@ const COMPLETE_NEWCOMER_JOURNEY_TIMEOUT_MS = 150_000;
 
 describe("SRD Play headless newcomer journey", () => {
   test(
-    "discovers SRD content, creates a character, and returns from Battle",
+    "complete-newcomer-journey",
     async () => {
       const [clientTransport, serverTransport] =
         InMemoryTransport.createLinkedPair();

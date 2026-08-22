@@ -10,7 +10,6 @@ import {
   decodeEvaluationInventory,
   type EvaluationInventory,
 } from "../test-support/evaluation-inventory.ts";
-import { mcpAcceptanceScenarioIds } from "../test-support/mcp-acceptance-scenarios.ts";
 import { sourceDefinesVitestScenario } from "../test-support/mcp-scenario-executable.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
@@ -100,33 +99,19 @@ const ConnectionOperatorStepSchema = Schema.Struct({
   step: Schema.Literal("mcp-connection"),
   evidenceKind: Schema.Literal("connectionAndToolSelection"),
   instructions: Schema.String,
-  requiredCases: Schema.Tuple(
-    Schema.Literal("mcp-direct-catalog"),
-    Schema.Literal("mcp-indirect-catalog"),
-    Schema.Literal("mcp-follow-up-detail"),
-    Schema.Literal("mcp-unsupported-history"),
-  ),
+  requiredCases: Schema.NonEmptyArray(Schema.String),
 });
 const SkillActivationOperatorStepSchema = Schema.Struct({
   step: Schema.Literal("complete-plugin"),
   evidenceKind: Schema.Literal("installedSkillActivation"),
   instructions: Schema.String,
-  requiredCases: Schema.Tuple(
-    Schema.Literal("skill-direct"),
-    Schema.Literal("skill-natural"),
-    Schema.Literal("skill-continuation"),
-    Schema.Literal("skill-unrelated-dnd"),
-    Schema.Literal("skill-authoring-boundary"),
-  ),
+  requiredCases: Schema.NonEmptyArray(Schema.String),
 });
 const CompleteWorkflowOperatorStepSchema = Schema.Struct({
   step: Schema.Literal("newcomer-journey"),
   evidenceKind: Schema.Literal("installedCompleteWorkflow"),
   instructions: Schema.String,
-  requiredCases: Schema.Tuple(
-    Schema.Literal("skill-natural"),
-    Schema.Literal("skill-continuation"),
-  ),
+  requiredCases: Schema.NonEmptyArray(Schema.String),
 });
 const PendingConnectionCaseResultSchema = Schema.Struct({
   caseId: Schema.String,
@@ -148,33 +133,42 @@ const PendingCaseResultSchema = Schema.Union(
   PendingSkillActivationCaseResultSchema,
   PendingWorkflowCaseResultSchema,
 );
+const ConfirmationBehaviorSchema = Schema.Union(
+  Schema.Struct({ tag: Schema.Literal("notRequested") }),
+  Schema.Struct({
+    tag: Schema.Literal("requested"),
+    outcome: Schema.Literal("accepted", "declined"),
+  }),
+);
+const ConnectionObservationSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("toolSelected"),
+    selectedTool: Schema.String,
+    arguments: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    outcome: Schema.Union(
+      Schema.Struct({
+        tag: Schema.Literal("success"),
+        result: Schema.Any,
+        confirmation: ConfirmationBehaviorSchema,
+      }),
+      Schema.Struct({
+        tag: Schema.Literal("error"),
+        details: Schema.NonEmptyArray(Schema.String),
+        confirmation: ConfirmationBehaviorSchema,
+      }),
+    ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("noToolSelected"),
+    reason: Schema.String,
+    confirmation: ConfirmationBehaviorSchema,
+  }),
+);
 const ObservedConnectionCaseResultSchema = Schema.Struct({
   caseId: Schema.String,
   evidenceKind: Schema.Literal("connectionAndToolSelection"),
   status: Schema.Literal("observed"),
-  selectedTool: Schema.String,
-  arguments: Schema.Record({ key: Schema.String, value: Schema.Any }),
-  result: Schema.Union(
-    Schema.Struct({ tag: Schema.Literal("returned"), value: Schema.Any }),
-    Schema.Struct({
-      tag: Schema.Literal("error"),
-      message: Schema.String,
-    }),
-  ),
-  errors: Schema.Union(
-    Schema.Struct({ tag: Schema.Literal("none") }),
-    Schema.Struct({
-      tag: Schema.Literal("reported"),
-      messages: Schema.NonEmptyArray(Schema.String),
-    }),
-  ),
-  confirmationBehavior: Schema.Union(
-    Schema.Struct({ tag: Schema.Literal("notRequested") }),
-    Schema.Struct({
-      tag: Schema.Literal("requested"),
-      outcome: Schema.Literal("accepted", "declined"),
-    }),
-  ),
+  observation: ConnectionObservationSchema,
   promptRef: Schema.String,
   observedAt: Schema.String,
   resultSummary: Schema.String,
@@ -250,10 +244,48 @@ const InstalledEvidenceSchema = Schema.Union(
 );
 type InstalledEvidence = typeof InstalledEvidenceSchema.Type;
 
+const evaluationInventory = decodeEvaluationInventory(
+  resolve(evalRoot, "evaluation-inventory.json"),
+);
+
+type InstalledEvidenceKind =
+  | "connectionAndToolSelection"
+  | "installedSkillActivation"
+  | "installedCompleteWorkflow";
+
+function expectedInstalledCaseIds(
+  inventory: EvaluationInventory,
+  evidenceKind: InstalledEvidenceKind,
+): ReadonlySet<string> {
+  switch (evidenceKind) {
+    case "connectionAndToolSelection":
+      return new Set(inventory.mcpToolSelection.map(({ id }) => id));
+    case "installedSkillActivation":
+      return new Set(inventory.skillActivation.map(({ id }) => id));
+    case "installedCompleteWorkflow":
+      return new Set(
+        inventory.skillActivation
+          .filter(({ kind }) => kind === "indirect" || kind === "followUp")
+          .map(({ id }) => id),
+      );
+  }
+}
+
+function hasSameCaseIds(
+  actual: ReadonlyArray<string>,
+  expected: ReadonlySet<string>,
+): boolean {
+  return (
+    actual.length === expected.size &&
+    new Set(actual).size === expected.size &&
+    actual.every((caseId) => expected.has(caseId))
+  );
+}
+
 function hasCompleteInstalledCaseCoverage(evidence: {
   readonly operatorProtocol: ReadonlyArray<{
     readonly requiredCases: ReadonlyArray<string>;
-    readonly evidenceKind: string;
+    readonly evidenceKind: InstalledEvidenceKind;
   }>;
   readonly caseResults: ReadonlyArray<{
     readonly caseId: string;
@@ -267,11 +299,43 @@ function hasCompleteInstalledCaseCoverage(evidence: {
   const actualCaseKeys = evidence.caseResults.map(
     ({ caseId, evidenceKind }) => `${caseId}:${evidenceKind}`,
   );
-  return (
-    actualCaseKeys.length === requiredCaseKeys.length &&
-    new Set(actualCaseKeys).size === requiredCaseKeys.length &&
-    requiredCaseKeys.every((key) => actualCaseKeys.includes(key))
-  );
+  if (
+    !(
+      actualCaseKeys.length === requiredCaseKeys.length &&
+      new Set(actualCaseKeys).size === requiredCaseKeys.length &&
+      requiredCaseKeys.every((key) => actualCaseKeys.includes(key))
+    )
+  ) {
+    return false;
+  }
+  for (const step of evidence.operatorProtocol) {
+    if (
+      !hasSameCaseIds(
+        step.requiredCases,
+        expectedInstalledCaseIds(evaluationInventory, step.evidenceKind),
+      )
+    ) {
+      return false;
+    }
+  }
+  for (const evidenceKind of [
+    "connectionAndToolSelection",
+    "installedSkillActivation",
+    "installedCompleteWorkflow",
+  ] as const) {
+    const actualCaseIds = evidence.caseResults
+      .filter((result) => result.evidenceKind === evidenceKind)
+      .map(({ caseId }) => caseId);
+    if (
+      !hasSameCaseIds(
+        actualCaseIds,
+        expectedInstalledCaseIds(evaluationInventory, evidenceKind),
+      )
+    ) {
+      return false;
+    }
+  }
+  return true;
 }
 
 const expectedRowIds = [
@@ -335,9 +399,16 @@ describe("SRD Play evaluation artifacts", () => {
       ),
     );
     expect(installedEvidence.status).toBe("pending");
-    expect(mcpAcceptanceScenarioIds()).toContain(
-      matrix.representativeHeadlessJourney.scenarioId,
+    const journeySource = readFileSync(
+      resolve(repoRoot, matrix.representativeHeadlessJourney.testPath),
+      "utf8",
     );
+    expect(
+      sourceDefinesVitestScenario(
+        journeySource,
+        matrix.representativeHeadlessJourney.scenarioId,
+      ),
+    ).toBe(true);
     for (const row of matrix.rows) {
       expect(row.capability.trim(), row.id).not.toBe("");
       expect(row.boundary.trim(), row.id).not.toBe("");
@@ -359,7 +430,6 @@ describe("SRD Play evaluation artifacts", () => {
         row,
       ]),
     );
-    const acceptanceScenarioIds = new Set<string>(mcpAcceptanceScenarioIds());
     const skillCaseIds = new Set(inventory.skillActivation.map(({ id }) => id));
     for (const row of matrix.rows) {
       if (row.mcpEvidence.status === "observed") {
@@ -379,8 +449,7 @@ describe("SRD Play evaluation artifacts", () => {
             "utf8",
           );
           expect(
-            acceptanceScenarioIds.has(ref.scenarioId) ||
-              sourceDefinesVitestScenario(testSource, ref.scenarioId),
+            sourceDefinesVitestScenario(testSource, ref.scenarioId),
             `${row.id}: ${ref.scenarioId} must identify an executable scenario`,
           ).toBe(true);
         }
@@ -401,24 +470,20 @@ describe("SRD Play evaluation artifacts", () => {
       await server.connect(serverTransport);
       await client.connect(clientTransport);
       const tools = await client.listTools();
-      const toolByName = new Map(tools.tools.map((tool) => [tool.name, tool]));
+      const toolByName = new Map(
+        tools.tools.map((tool) => [
+          tool.name,
+          { name: tool.name, outputSchema: tool.outputSchema },
+        ]),
+      );
       const missingProjections: string[] = [];
       for (const row of matrix.rows) {
         for (const projection of row.modelVisibleProjection) {
-          expect(
-            row.mcpSurface,
-            `${row.id}: projection tool ${projection.toolName}`,
-          ).toContain(projection.toolName);
-          const tool = toolByName.get(projection.toolName);
-          expect(tool, `${row.id}: ${projection.toolName}`).toBeDefined();
-          expect(
-            tool?.outputSchema,
-            `${row.id}: ${projection.toolName} outputSchema`,
-          ).toBeDefined();
           if (
-            !schemaHasProjectionPath(
-              tool?.outputSchema,
-              projection.pathSegments,
+            !validateModelVisibleProjection(
+              projection,
+              row.mcpSurface,
+              toolByName,
             )
           ) {
             missingProjections.push(
@@ -428,21 +493,28 @@ describe("SRD Play evaluation artifacts", () => {
         }
       }
       expect(missingProjections).toEqual([]);
-      const readBattleStateSchema =
-        toolByName.get("read_battle_state")?.outputSchema;
       expect(
-        schemaHasProjectionPath(readBattleStateSchema, ["snapshot", "notReal"]),
+        validateModelVisibleProjection(
+          {
+            toolName: "read_battle_state",
+            pathSegments: ["snapshot", "notReal"],
+          },
+          ["read_battle_state"],
+          toolByName,
+        ),
       ).toBe(false);
       expect(
-        schemaHasProjectionPath(readBattleStateSchema, [
-          "operation",
-          "snapshot",
-        ]),
+        validateModelVisibleProjection(
+          { toolName: "read_battle_state", pathSegments: ["currentActorId"] },
+          ["read_battle_state"],
+          toolByName,
+        ),
       ).toBe(false);
       expect(
-        rowProjectionMatchesSurface(
+        validateModelVisibleProjection(
           { toolName: "start_battle", pathSegments: ["snapshot"] },
           ["read_battle_state"],
+          toolByName,
         ),
       ).toBe(false);
     } finally {
@@ -481,26 +553,6 @@ describe("SRD Play evaluation artifacts", () => {
       "complete-plugin",
       "newcomer-journey",
     ]);
-    const mcpCaseIds = new Set(inventory.mcpToolSelection.map(({ id }) => id));
-    const skillCaseIds = new Set(inventory.skillActivation.map(({ id }) => id));
-    for (const step of evidence.operatorProtocol) {
-      const expectedCaseIds =
-        step.evidenceKind === "connectionAndToolSelection"
-          ? mcpCaseIds
-          : skillCaseIds;
-      for (const caseId of step.requiredCases) {
-        expect(expectedCaseIds.has(caseId), `${step.step}: ${caseId}`).toBe(
-          true,
-        );
-      }
-    }
-    for (const result of evidence.caseResults) {
-      const caseIds =
-        result.evidenceKind === "connectionAndToolSelection"
-          ? mcpCaseIds
-          : skillCaseIds;
-      expect(caseIds.has(result.caseId)).toBe(true);
-    }
   });
 
   test("accepts typed passed and failed installed observations only in observed state", () => {
@@ -530,14 +582,31 @@ describe("SRD Play evaluation artifacts", () => {
               caseId,
               evidenceKind,
               status: "observed" as const,
-              selectedTool: "list_catalog_units",
-              arguments: {},
-              result:
-                index === 1
-                  ? { tag: "error" as const, message: "Observed failure." }
-                  : { tag: "returned" as const, value: { tag: "ok" } },
-              errors: { tag: "none" as const },
-              confirmationBehavior: { tag: "notRequested" as const },
+              observation:
+                caseId === "mcp-unsupported-history"
+                  ? {
+                      tag: "noToolSelected" as const,
+                      reason:
+                        "The request is unrelated to the installed MCP surface.",
+                      confirmation: { tag: "notRequested" as const },
+                    }
+                  : {
+                      tag: "toolSelected" as const,
+                      selectedTool: "list_catalog_units",
+                      arguments: {},
+                      outcome:
+                        index === 1
+                          ? {
+                              tag: "error" as const,
+                              details: ["Observed failure."],
+                              confirmation: { tag: "notRequested" as const },
+                            }
+                          : {
+                              tag: "success" as const,
+                              result: { tag: "ok" },
+                              confirmation: { tag: "notRequested" as const },
+                            },
+                    },
               promptRef: caseId,
               observedAt: `2026-08-21T00:${String(index).padStart(2, "0")}:00Z`,
               resultSummary:
@@ -590,26 +659,52 @@ function expectInstalledCaseCoverage(
     ({ caseId, evidenceKind }) => `${caseId}:${evidenceKind}`,
   );
   expect([...actualKeys].sort()).toEqual([...expectedKeys].sort());
-  const mcpCaseIds = new Set(inventory.mcpToolSelection.map(({ id }) => id));
-  const skillCaseIds = new Set(inventory.skillActivation.map(({ id }) => id));
   for (const step of evidence.operatorProtocol) {
-    const inventoryCaseIds =
-      step.evidenceKind === "connectionAndToolSelection"
-        ? mcpCaseIds
-        : skillCaseIds;
-    for (const caseId of step.requiredCases) {
-      expect(inventoryCaseIds.has(caseId), `${step.step}: ${caseId}`).toBe(
-        true,
-      );
-    }
+    expect(
+      hasSameCaseIds(
+        step.requiredCases,
+        expectedInstalledCaseIds(inventory, step.evidenceKind),
+      ),
+      `${step.step}: required cases must equal its inventory group`,
+    ).toBe(true);
   }
-  for (const result of evidence.caseResults) {
-    const inventoryCaseIds =
-      result.evidenceKind === "connectionAndToolSelection"
-        ? mcpCaseIds
-        : skillCaseIds;
-    expect(inventoryCaseIds.has(result.caseId), result.caseId).toBe(true);
+  for (const evidenceKind of [
+    "connectionAndToolSelection",
+    "installedSkillActivation",
+    "installedCompleteWorkflow",
+  ] as const) {
+    const actualCaseIds = evidence.caseResults
+      .filter((result) => result.evidenceKind === evidenceKind)
+      .map(({ caseId }) => caseId);
+    expect(
+      hasSameCaseIds(
+        actualCaseIds,
+        expectedInstalledCaseIds(inventory, evidenceKind),
+      ),
+      `${evidenceKind}: case results must equal its inventory group`,
+    ).toBe(true);
   }
+}
+
+function validateModelVisibleProjection(
+  projection: {
+    readonly toolName: string;
+    readonly pathSegments: readonly string[];
+  },
+  mcpSurface: readonly string[],
+  toolByName: ReadonlyMap<
+    string,
+    { readonly name: string; readonly outputSchema?: unknown }
+  >,
+): boolean {
+  if (!mcpSurface.includes(projection.toolName)) return false;
+  const tool = toolByName.get(projection.toolName);
+  return (
+    tool !== undefined &&
+    tool.name === projection.toolName &&
+    tool.outputSchema !== undefined &&
+    schemaHasProjectionPath(tool.outputSchema, projection.pathSegments)
+  );
 }
 
 function schemaHasProjectionPath(
@@ -678,16 +773,6 @@ function schemaContainsPath(
   return property === undefined
     ? false
     : schemaContainsPath(property, remaining, root, visited, depth + 1);
-}
-
-function rowProjectionMatchesSurface(
-  projection: {
-    readonly toolName: string;
-    readonly pathSegments: readonly string[];
-  },
-  mcpSurface: readonly string[],
-): boolean {
-  return mcpSurface.includes(projection.toolName);
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

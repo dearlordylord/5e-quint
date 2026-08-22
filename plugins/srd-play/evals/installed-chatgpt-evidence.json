@@ -2,7 +2,7 @@
   "schema": "dnd.srd-play.installed-chatgpt-evidence.v2",
   "status": "pending",
   "recordedAt": "2026-08-21",
-  "scope": "Installed ChatGPT developer-mode Skill activation and complete-plugin newcomer journey",
+  "scope": "Installed ChatGPT developer-mode MCP connection and tool selection, Skill activation, and complete-plugin newcomer journey",
   "environment": { "tag": "notObserved" },
   "pendingReason": "This repository environment has no authorized ChatGPT developer-mode installation or account/workspace policy context. Local protocol and static forward tests cannot establish installed-plugin activation or UI behavior.",
   "promptOwner": "plugins/srd-play/evals/evaluation-inventory.json",
@@ -17,7 +17,7 @@
     {
       "step": "mcp-connection",
       "evidenceKind": "connectionAndToolSelection",
-      "instructions": "In ChatGPT developer mode, connect the MCP server through a public HTTPS endpoint or Secure MCP Tunnel, review discovered tool metadata, and run the mcpToolSelection prompts from the evaluation inventory. Record selected tool, arguments, result, errors, and confirmation behavior in these installed-evidence case results; keep this account/workspace observation separate from the local MCP protocol manifest.",
+      "instructions": "In ChatGPT developer mode, connect the MCP server through a public HTTPS endpoint or Secure MCP Tunnel, review discovered tool metadata, and run the mcpToolSelection prompts from the evaluation inventory. Record a toolSelected success result or error details with confirmation, or a noToolSelected reason with confirmation, in these installed-evidence case results; keep this account/workspace observation separate from the local MCP protocol manifest.",
       "requiredCases": [
         "mcp-direct-catalog",
         "mcp-indirect-catalog",
