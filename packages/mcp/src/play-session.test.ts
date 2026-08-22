@@ -12,7 +12,12 @@ import {
   adminMirrorPublisherInstanceId,
   adminMirrorSessionId,
 } from "./admin-mirror-contract.ts";
-import { createPlaySessionRegistry } from "./play-session.ts";
+import {
+  createPlaySessionRegistry,
+  decodePlaySessionId,
+  type PlaySessionCreation,
+  type PlaySessionRegistry,
+} from "./play-session.ts";
 
 describe("Play Session operation scheduling", () => {
   test("serializes calls within one session without coupling another session", async () => {
@@ -24,8 +29,8 @@ describe("Play Session operation scheduling", () => {
           adminMirrorSessionId(playSessionId),
         ),
     });
-    const first = registry.create().playSessionId;
-    const second = registry.create().playSessionId;
+    const first = createdPlaySession(registry).playSessionId;
+    const second = createdPlaySession(registry).playSessionId;
     const events: string[] = [];
     let releaseFirst: (() => void) | undefined;
     const firstMayFinish = new Promise<void>((resolve) => {
@@ -96,8 +101,8 @@ describe("Play Session operation scheduling", () => {
       },
     });
 
-    const first = registry.create().playSessionId;
-    const second = registry.create().playSessionId;
+    const first = createdPlaySession(registry).playSessionId;
+    const second = createdPlaySession(registry).playSessionId;
     const [firstPublication, secondPublication] = roots.map(
       (root) => root.adminMirrorPublication,
     );
@@ -121,4 +126,38 @@ describe("Play Session operation scheduling", () => {
     expect(firstPublication.nextSequence()).toBe(0);
     expect(secondPublication.nextSequence()).toBe(0);
   });
+
+  test("returns a typed failure when an injected ID keeps colliding", () => {
+    const decoded = decodePlaySessionId(
+      "play-session:00000000-0000-4000-8000-000000000000",
+    );
+    if (Either.isLeft(decoded)) throw new Error(decoded.left);
+    const applicationServices = createMcpApplicationServices();
+    const registry = createPlaySessionRegistry({
+      createRoot: (playSessionId) =>
+        createMcpPlaySessionRoot(
+          applicationServices,
+          adminMirrorSessionId(playSessionId),
+        ),
+      playSessionIdFactory: () => decoded.right,
+    });
+
+    expect(Either.isRight(registry.create())).toBe(true);
+    const collision = registry.create();
+
+    expect(Either.isLeft(collision)).toBe(true);
+    if (Either.isRight(collision)) return;
+    expect(collision.left).toMatchObject({
+      tag: "playSessionCreationFailed",
+      reason: "playSessionIdCollision",
+    });
+  });
 });
+
+function createdPlaySession(
+  registry: PlaySessionRegistry,
+): PlaySessionCreation {
+  const created = registry.create();
+  if (Either.isLeft(created)) throw new Error(created.left.message);
+  return created.right;
+}

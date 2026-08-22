@@ -8,7 +8,10 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Either } from "effect";
 
 import { createDndMcpProtocolServer } from "../../packages/mcp/src/protocol-server.ts";
-import { decodePlaySessionId } from "../../packages/mcp/src/play-session.ts";
+import {
+  decodePlaySessionId,
+  type PlaySessionId,
+} from "../../packages/mcp/src/play-session.ts";
 
 import {
   currentGitRevision,
@@ -26,9 +29,7 @@ function fail(message: string): never {
 export async function replayMcpExchanges(
   exchanges: readonly McpToolExchange[],
 ): Promise<number> {
-  const recordedPlaySessionIds = exchanges
-    .filter(({ tool }) => tool === "create_play_session")
-    .map(recordedPlaySessionId);
+  const recordedPlaySessionIds = successfulRecordedPlaySessionIds(exchanges);
   let nextPlaySessionId = 0;
   const { server } = createDndMcpProtocolServer(undefined, undefined, {
     playSessionIdFactory: () => {
@@ -75,11 +76,32 @@ export async function replayMcpExchanges(
   }
 }
 
-function recordedPlaySessionId(exchange: McpToolExchange) {
-  if (!isJsonRecord(exchange.response)) {
-    fail(
-      `Replay requires create_play_session at transcript seq ${exchange.seq} to return a structured response.`,
-    );
+function successfulRecordedPlaySessionIds(
+  exchanges: readonly McpToolExchange[],
+): readonly PlaySessionId[] {
+  const recordedPlaySessionIds: PlaySessionId[] = [];
+  const seen = new Set<PlaySessionId>();
+  for (const exchange of exchanges) {
+    if (exchange.tool !== "create_play_session") continue;
+    const recordedPlaySessionId = successfulRecordedPlaySessionId(exchange);
+    if (recordedPlaySessionId === undefined) continue;
+    if (seen.has(recordedPlaySessionId)) {
+      fail(
+        `Replay cannot allocate duplicate successful Play Session handle ${recordedPlaySessionId} at transcript seq ${exchange.seq}.`,
+      );
+    }
+    seen.add(recordedPlaySessionId);
+    recordedPlaySessionIds.push(recordedPlaySessionId);
+  }
+  return recordedPlaySessionIds;
+}
+
+function successfulRecordedPlaySessionId(
+  exchange: McpToolExchange,
+): PlaySessionId | undefined {
+  if (!isJsonRecord(exchange.response)) return undefined;
+  if (exchange.response.isError === true || "error" in exchange.response) {
+    return undefined;
   }
   const structuredContent = exchange.response.structuredContent;
   if (!isJsonRecord(structuredContent)) {

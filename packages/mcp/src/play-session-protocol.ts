@@ -43,14 +43,20 @@ export function handleCreatePlaySession(
   const invalidArgs = noArgumentsError(args, playSessionToolNames.create, true);
   if (invalidArgs !== null) return invalidArgs;
   const created = registry.create();
+  if (Either.isLeft(created)) {
+    return errorContent("Unable to create a Play Session.", {
+      code: "PLAY_SESSION_CREATION_FAILED",
+      message: created.left.message,
+    });
+  }
   return availableEnvelope({
-    playSessionId: created.playSessionId,
+    playSessionId: created.right.playSessionId,
     operationName: playSessionToolNames.create,
     operationResult: {
       tag: "playSessionCreated",
-      playSessionId: created.playSessionId,
+      playSessionId: created.right.playSessionId,
     },
-    projection: created.projection,
+    projection: created.right.projection,
   });
 }
 
