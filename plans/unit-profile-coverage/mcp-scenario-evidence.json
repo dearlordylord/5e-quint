@@ -378,7 +378,7 @@
       "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C11-BATTLE-ACT-RESOLUTION-MCP-EVIDENCE",
-      "summary": "The protocol acceptance scenario creates a finalized Fighter and Wizard roster, resolves a no-hole Action Surge through resolve_battle_act, replays a returned attack subject through typed target, attack-roll, and rolled-dice fills, and asserts the resulting Hit Point projections."
+      "summary": "The protocol acceptance scenario creates a finalized Fighter and Wizard roster, resolves a no-hole Action Surge through resolve_battle_act, then reuses the returned attack subject to supply target and attack-roll fills for a miss after the initial path includes rolled damage, and verifies the unchanged Hit Point projection."
     },
     {
       "kind": "mcp-scenario",

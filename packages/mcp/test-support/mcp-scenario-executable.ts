@@ -7,14 +7,46 @@ function isScenarioTestCall(node: ts.CallExpression): boolean {
   );
 }
 
-function isSkippedSuiteCall(node: ts.CallExpression): boolean {
-  return (
-    ts.isPropertyAccessExpression(node.expression) &&
-    ts.isIdentifier(node.expression.expression) &&
-    (node.expression.expression.text === "describe" ||
-      node.expression.expression.text === "suite") &&
-    node.expression.name.text === "skip"
-  );
+type SuiteExecution = "active" | "skipped";
+
+function staticBoolean(node: ts.Expression | undefined): boolean | undefined {
+  if (node === undefined) return undefined;
+  if (node.kind === ts.SyntaxKind.TrueKeyword) return true;
+  if (node.kind === ts.SyntaxKind.FalseKeyword) return false;
+  return undefined;
+}
+
+function suiteExecution(node: ts.CallExpression): SuiteExecution | undefined {
+  const modifierCall = ts.isCallExpression(node.expression)
+    ? node.expression
+    : node;
+  const modifier = modifierCall.expression;
+  if (
+    !ts.isPropertyAccessExpression(modifier) ||
+    !ts.isIdentifier(modifier.expression) ||
+    (modifier.expression.text !== "describe" &&
+      modifier.expression.text !== "suite")
+  ) {
+    return undefined;
+  }
+  if (modifier.name.text === "skip") return "skipped";
+  if (modifier.name.text === "skipIf") {
+    const condition = staticBoolean(modifierCall.arguments[0]);
+    return condition === undefined
+      ? "skipped"
+      : condition
+        ? "skipped"
+        : "active";
+  }
+  if (modifier.name.text === "runIf") {
+    const condition = staticBoolean(modifierCall.arguments[0]);
+    return condition === undefined
+      ? "skipped"
+      : condition
+        ? "active"
+        : "skipped";
+  }
+  return undefined;
 }
 
 export function sourceDefinesVitestScenario(
@@ -31,9 +63,13 @@ export function sourceDefinesVitestScenario(
   let found = false;
   const visit = (node: ts.Node, skippedSuiteAncestor: boolean): void => {
     if (found) return;
-    if (ts.isCallExpression(node) && isSkippedSuiteCall(node)) {
-      ts.forEachChild(node, (child) => visit(child, true));
-      return;
+    if (ts.isCallExpression(node)) {
+      const execution = suiteExecution(node);
+      if (execution !== undefined) {
+        const skipped = skippedSuiteAncestor || execution === "skipped";
+        ts.forEachChild(node, (child) => visit(child, skipped));
+        return;
+      }
     }
     if (
       ts.isCallExpression(node) &&

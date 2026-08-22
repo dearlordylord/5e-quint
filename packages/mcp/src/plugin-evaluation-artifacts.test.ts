@@ -10,6 +10,7 @@ import {
   decodeEvaluationInventory,
   type EvaluationInventory,
 } from "../test-support/evaluation-inventory.ts";
+import { decodeCapabilityMatrix } from "../test-support/capability-matrix.ts";
 import { sourceDefinesVitestScenario } from "../test-support/mcp-scenario-executable.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
@@ -20,67 +21,6 @@ const manifestPath = resolve(
   "plans/unit-profile-coverage/mcp-scenario-evidence.json",
 );
 
-const EvidenceRefSchema = Schema.Struct({
-  scenarioId: Schema.String,
-  flowId: Schema.String,
-  taskId: Schema.String,
-});
-const ProjectionPathSchema = Schema.Struct({
-  toolName: Schema.String,
-  pathSegments: Schema.NonEmptyArray(Schema.String),
-});
-const McpEvidenceSchema = Schema.Union(
-  Schema.Struct({
-    status: Schema.Literal("observed"),
-    refs: Schema.NonEmptyArray(EvidenceRefSchema),
-  }),
-  Schema.Struct({
-    status: Schema.Literal("excluded"),
-    reason: Schema.String,
-  }),
-);
-const InstalledRowEvidenceSchema = Schema.Struct({
-  caseIds: Schema.NonEmptyArray(Schema.String),
-});
-const CapabilityRowSchema = Schema.Struct({
-  id: Schema.String,
-  capability: Schema.String,
-  leafIssue: Schema.Number,
-  mcpSurface: Schema.NonEmptyArray(Schema.String),
-  modelVisibleProjection: Schema.NonEmptyArray(ProjectionPathSchema),
-  mcpEvidence: McpEvidenceSchema,
-  installedChatGptEvidence: InstalledRowEvidenceSchema,
-  boundary: Schema.String,
-});
-const CapabilityMatrixSchema = Schema.Struct({
-  schema: Schema.Literal("dnd.srd-play.capability-matrix.v2"),
-  status: Schema.Literal("frozen"),
-  owner: Schema.Literal("plugins/srd-play/evals"),
-  canonicalMcpEvidence: Schema.Struct({
-    manifestPath: Schema.Literal(
-      "plans/unit-profile-coverage/mcp-scenario-evidence.json",
-    ),
-    evidenceKind: Schema.Literal("mcpScenario"),
-    status: Schema.Literal("observed"),
-  }),
-  representativeHeadlessJourney: Schema.Struct({
-    scenarioId: Schema.Literal("complete-newcomer-journey"),
-    testPath: Schema.Literal(
-      "packages/mcp/src/plugin-newcomer-journey.test.ts",
-    ),
-    supportPath: Schema.Literal(
-      "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
-    ),
-    coverage: Schema.Literal("representativeCrossLeafOnly"),
-  }),
-  installedChatGptEvidence: Schema.Struct({
-    artifactPath: Schema.Literal(
-      "plugins/srd-play/evals/installed-chatgpt-evidence.json",
-    ),
-    evidenceKind: Schema.Literal("installedSkillActivation"),
-  }),
-  rows: Schema.NonEmptyArray(CapabilityRowSchema),
-});
 const McpManifestRowSchema = Schema.Struct({
   kind: Schema.Literal("mcp-scenario"),
   flowId: Schema.String,
@@ -238,7 +178,7 @@ const InstalledEvidenceSchema = Schema.Union(
   PendingInstalledEvidenceSchema,
   ObservedInstalledEvidenceSchema,
 ).pipe(
-  Schema.filter(hasCompleteInstalledCaseCoverage, {
+  Schema.filter(installedEvidenceHasCompleteCoverage, {
     description:
       "installed evidence with every connection, activation, and workflow case",
   }),
@@ -291,8 +231,9 @@ function caseSetEquals(
   );
 }
 
-function hasCompleteInstalledCaseCoverage(evidence: {
+type InstalledCoverageInput = {
   readonly operatorProtocol: ReadonlyArray<{
+    readonly step: string;
     readonly requiredCases: ReadonlyArray<string>;
     readonly evidenceKind: InstalledEvidenceKind;
   }>;
@@ -301,7 +242,24 @@ function hasCompleteInstalledCaseCoverage(evidence: {
     readonly evidenceKind: string;
     readonly observation?: unknown;
   }>;
-}): boolean {
+};
+
+type InstalledCoverageResult =
+  | { readonly tag: "valid" }
+  | { readonly tag: "invalid"; readonly reason: string };
+
+function installedEvidenceHasCompleteCoverage(
+  evidence: InstalledCoverageInput,
+): boolean {
+  return (
+    validateInstalledCaseCoverage(evidence, evaluationInventory).tag === "valid"
+  );
+}
+
+function validateInstalledCaseCoverage(
+  evidence: InstalledCoverageInput,
+  inventory: EvaluationInventory,
+): InstalledCoverageResult {
   const requiredCaseKeys = evidence.operatorProtocol.flatMap(
     ({ requiredCases, evidenceKind }) =>
       requiredCases.map((caseId) => `${caseId}:${evidenceKind}`),
@@ -310,16 +268,22 @@ function hasCompleteInstalledCaseCoverage(evidence: {
     ({ caseId, evidenceKind }) => `${caseId}:${evidenceKind}`,
   );
   if (!caseSetEquals(actualCaseKeys, new Set(requiredCaseKeys))) {
-    return false;
+    return {
+      tag: "invalid",
+      reason: "caseResults must exactly equal operatorProtocol cases",
+    };
   }
   for (const step of evidence.operatorProtocol) {
     if (
       !caseSetEquals(
         step.requiredCases,
-        expectedInstalledCaseIds(evaluationInventory, step.evidenceKind),
+        expectedInstalledCaseIds(inventory, step.evidenceKind),
       )
     ) {
-      return false;
+      return {
+        tag: "invalid",
+        reason: `${step.step} must exactly equal its inventory group`,
+      };
     }
   }
   for (const evidenceKind of [
@@ -333,10 +297,13 @@ function hasCompleteInstalledCaseCoverage(evidence: {
     if (
       !caseSetEquals(
         actualCaseIds,
-        expectedInstalledCaseIds(evaluationInventory, evidenceKind),
+        expectedInstalledCaseIds(inventory, evidenceKind),
       )
     ) {
-      return false;
+      return {
+        tag: "invalid",
+        reason: `${evidenceKind} results must exactly equal its inventory group`,
+      };
     }
   }
   for (const result of evidence.caseResults) {
@@ -344,21 +311,26 @@ function hasCompleteInstalledCaseCoverage(evidence: {
       result.evidenceKind === "connectionAndToolSelection" &&
       result.observation !== undefined &&
       !hasInventoryCompatibleConnectionObservation(
+        inventory,
         result.caseId,
         result.observation,
       )
     ) {
-      return false;
+      return {
+        tag: "invalid",
+        reason: `${result.caseId} selected an MCP tool outside its inventory expectation`,
+      };
     }
   }
-  return true;
+  return { tag: "valid" };
 }
 
 function hasInventoryCompatibleConnectionObservation(
+  inventory: EvaluationInventory,
   caseId: string,
   observation: unknown,
-): observation is ConnectionObservation {
-  const inventoryCase = evaluationInventory.mcpToolSelection.find(
+): boolean {
+  const inventoryCase = inventory.mcpToolSelection.find(
     ({ id }) => id === caseId,
   );
   if (inventoryCase === undefined || !isRecord(observation)) return false;
@@ -444,7 +416,9 @@ const expectedLeafIssues = [
 
 describe("SRD Play evaluation artifacts", () => {
   test("keeps exactly the normative #314 capability rows", () => {
-    const matrix = decodeJson(CapabilityMatrixSchema, "capability-matrix.json");
+    const matrix = decodeCapabilityMatrix(
+      resolve(evalRoot, "capability-matrix.json"),
+    );
     expect(matrix.rows.map((row) => row.id)).toEqual(expectedRowIds);
     expect(matrix.rows.map((row) => row.leafIssue)).toEqual(expectedLeafIssues);
     expect(new Set(matrix.rows.map((row) => row.id)).size).toBe(21);
@@ -495,7 +469,9 @@ describe("SRD Play evaluation artifacts", () => {
   });
 
   test("cross-validates MCP refs, inventory cases, scenario ids, and projection contracts", async () => {
-    const matrix = decodeJson(CapabilityMatrixSchema, "capability-matrix.json");
+    const matrix = decodeCapabilityMatrix(
+      resolve(evalRoot, "capability-matrix.json"),
+    );
     const manifest = decodeFile(McpManifestSchema, manifestPath);
     const inventory: EvaluationInventory = decodeEvaluationInventory(
       resolve(evalRoot, "evaluation-inventory.json"),
@@ -629,7 +605,9 @@ describe("SRD Play evaluation artifacts", () => {
     const inventory: EvaluationInventory = decodeEvaluationInventory(
       resolve(evalRoot, "evaluation-inventory.json"),
     );
-    expectInstalledCaseCoverage(evidence, inventory);
+    expect(validateInstalledCaseCoverage(evidence, inventory)).toEqual({
+      tag: "valid",
+    });
     expect(evidence.operatorProtocol.map(({ step }) => step)).toEqual([
       "mcp-connection",
       "complete-plugin",
@@ -700,32 +678,48 @@ describe("SRD Play evaluation artifacts", () => {
 
   test("couples observed MCP selections to inventory expectations", () => {
     expect(
-      hasInventoryCompatibleConnectionObservation("mcp-direct-catalog", {
-        tag: "toolSelected",
-        selectedTool: "list_catalog_units",
-      }),
+      hasInventoryCompatibleConnectionObservation(
+        evaluationInventory,
+        "mcp-direct-catalog",
+        {
+          tag: "toolSelected",
+          selectedTool: "list_catalog_units",
+        },
+      ),
     ).toBe(true);
     expect(
-      hasInventoryCompatibleConnectionObservation("mcp-follow-up-detail", {
-        tag: "toolSelected",
-        selectedTool: "list_catalog_units",
-      }),
+      hasInventoryCompatibleConnectionObservation(
+        evaluationInventory,
+        "mcp-follow-up-detail",
+        {
+          tag: "toolSelected",
+          selectedTool: "list_catalog_units",
+        },
+      ),
     ).toBe(false);
     expect(
-      hasInventoryCompatibleConnectionObservation("mcp-follow-up-detail", {
-        tag: "toolSelected",
-        selectedTool: "inspect_catalog_unit",
-      }),
+      hasInventoryCompatibleConnectionObservation(
+        evaluationInventory,
+        "mcp-follow-up-detail",
+        {
+          tag: "toolSelected",
+          selectedTool: "inspect_catalog_unit",
+        },
+      ),
     ).toBe(true);
     expect(
-      hasInventoryCompatibleConnectionObservation("mcp-direct-catalog", {
-        tag: "noToolSelected",
-      }),
+      hasInventoryCompatibleConnectionObservation(
+        evaluationInventory,
+        "mcp-direct-catalog",
+        { tag: "noToolSelected" },
+      ),
     ).toBe(false);
     expect(
-      hasInventoryCompatibleConnectionObservation("mcp-unsupported-history", {
-        tag: "noToolSelected",
-      }),
+      hasInventoryCompatibleConnectionObservation(
+        evaluationInventory,
+        "mcp-unsupported-history",
+        { tag: "noToolSelected" },
+      ),
     ).toBe(true);
   });
 });
@@ -734,45 +728,6 @@ function decodeInstalledEvidence(value: unknown): InstalledEvidence {
   return Schema.decodeUnknownSync(InstalledEvidenceSchema, {
     onExcessProperty: "error",
   })(value);
-}
-
-function expectInstalledCaseCoverage(
-  evidence: InstalledEvidence,
-  inventory: EvaluationInventory,
-): void {
-  const expectedKeys = evidence.operatorProtocol.flatMap(
-    ({ requiredCases, evidenceKind }) =>
-      requiredCases.map((caseId) => `${caseId}:${evidenceKind}`),
-  );
-  const actualKeys = evidence.caseResults.map(
-    ({ caseId, evidenceKind }) => `${caseId}:${evidenceKind}`,
-  );
-  expect(caseSetEquals(actualKeys, new Set(expectedKeys))).toBe(true);
-  for (const step of evidence.operatorProtocol) {
-    expect(
-      caseSetEquals(
-        step.requiredCases,
-        expectedInstalledCaseIds(inventory, step.evidenceKind),
-      ),
-      `${step.step}: required cases must equal its inventory group`,
-    ).toBe(true);
-  }
-  for (const evidenceKind of [
-    "connectionAndToolSelection",
-    "installedSkillActivation",
-    "installedCompleteWorkflow",
-  ] as const) {
-    const actualCaseIds = evidence.caseResults
-      .filter((result) => result.evidenceKind === evidenceKind)
-      .map(({ caseId }) => caseId);
-    expect(
-      caseSetEquals(
-        actualCaseIds,
-        expectedInstalledCaseIds(inventory, evidenceKind),
-      ),
-      `${evidenceKind}: case results must equal its inventory group`,
-    ).toBe(true);
-  }
 }
 
 function validateModelVisibleProjection(
@@ -866,15 +821,6 @@ function schemaContainsPath(
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function decodeJson<S extends Schema.Schema.AnyNoContext>(
-  schema: S,
-  name: string,
-): Schema.Schema.Type<S> {
-  return Schema.decodeUnknownSync(schema)(
-    JSON.parse(readFileSync(resolve(evalRoot, name), "utf8")),
-  );
 }
 
 function decodeFile<S extends Schema.Schema.AnyNoContext>(

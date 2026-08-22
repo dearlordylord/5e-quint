@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 
 import { describe, expect, test } from "vitest";
 
+import { decodeCapabilityMatrix } from "../test-support/capability-matrix.ts";
 import { sourceDefinesVitestScenario } from "../test-support/mcp-scenario-executable.ts";
 
 type McpRequiredFlow = {
@@ -33,21 +34,6 @@ type McpScenarioEvidenceManifest = {
   };
   readonly requiredFlows: readonly McpRequiredFlow[];
   readonly evidence: readonly McpScenarioEvidenceRow[];
-};
-
-type CapabilityMatrix = {
-  readonly rows: ReadonlyArray<{
-    readonly mcpEvidence:
-      | {
-          readonly status: "observed";
-          readonly refs: ReadonlyArray<{
-            readonly scenarioId: string;
-            readonly flowId: string;
-            readonly taskId: string;
-          }>;
-        }
-      | { readonly status: "excluded" };
-  }>;
 };
 
 type UltraGoldenGateModule = {
@@ -84,7 +70,7 @@ function readJson<T>(path: string): T {
 describe("MCP scenario evidence manifest", () => {
   test("validates matrix-backed executable MCP scenarios", () => {
     const manifest = readJson<McpScenarioEvidenceManifest>(manifestPath);
-    const capabilityMatrix = readJson<CapabilityMatrix>(capabilityMatrixPath);
+    const capabilityMatrix = decodeCapabilityMatrix(capabilityMatrixPath);
     const packageJson = readJson<{ readonly scripts: Record<string, string> }>(
       packageJsonPath,
     );
@@ -177,6 +163,36 @@ describe("MCP scenario evidence manifest", () => {
       sourceDefinesVitestScenario(
         'suite.skip("skipped-suite", () => { it("nested-skipped-it", () => {}); });',
         "nested-skipped-it",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'describe.skipIf(true)("skipped-suite", () => { test("nested-skipped-if", () => {}); });',
+        "nested-skipped-if",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'suite.runIf(false)("skipped-suite", () => { it("nested-run-if", () => {}); });',
+        "nested-run-if",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'describe.skipIf(false)("live-suite", () => { test("nested-live-if", () => {}); });',
+        "nested-live-if",
+      ),
+    ).toBe(true);
+    expect(
+      sourceDefinesVitestScenario(
+        'suite.runIf(true)("live-suite", () => { it("nested-live-run-if", () => {}); });',
+        "nested-live-run-if",
+      ),
+    ).toBe(true);
+    expect(
+      sourceDefinesVitestScenario(
+        'describe.skipIf(flag)("conditional-suite", () => { test("unknown-condition", () => {}); });',
+        "unknown-condition",
       ),
     ).toBe(false);
     expect(
