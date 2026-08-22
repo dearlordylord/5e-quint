@@ -15,10 +15,6 @@ export default defineConfig({
     isolate: false,
     maxConcurrency: 1,
     pool: "forks",
-    poolOptions: {
-      forks: {
-        maxForks: 1,
-      },
-    },
+    maxWorkers: 1,
   },
 });
