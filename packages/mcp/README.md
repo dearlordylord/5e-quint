@@ -27,8 +27,8 @@ character drafts, finalized Character Builds, durable post-battle character
 state, selected Stat Block identity, durable battle state, and transient battle
 fills, plus its own Admin Mirror publication.
 
-The protocol host keeps those mutable facts in isolated process-lifetime **Play
-Sessions**. `create_play_session` returns a branded `playSessionId`,
+The protocol host keeps those mutable facts in isolated live-application **Play
+Sessions**; they are not durable across process restart. `create_play_session` returns a branded `playSessionId`,
 `read_play_session` resumes a live session, and every character or battle tool
 requires the handle. Calls for one handle are serialized; different handles
 have independent stores and queues while sharing the application services'
@@ -275,13 +275,15 @@ activation evidence. The latter requires developer-mode execution and is owned
 by #328; local tests must not claim that UI evidence.
 
 Issue #328's headless newcomer journey is the single protocol-client scenario
-at `packages/mcp/src/plugin-newcomer-journey.test.ts`. Its frozen capability
-matrix is `plugins/srd-play/evals/capability-matrix.json`; each row points to
-the model-visible MCP surface and projection, the shared journey evidence, and
-the separately statused installed-ChatGPT artifact. The latter is deliberately
-`unavailable` until an authorized developer-mode installation is exercised;
-the reproducible operator protocol is stored beside that artifact. The matrix
-does not duplicate runtime state or the MCP scenario registry.
+at `packages/mcp/src/plugin-newcomer-journey.test.ts`; it is representative
+cross-leaf coverage, not a replacement for the row-level canonical MCP
+scenario evidence. The frozen 21-row #314 capability matrix is
+`plugins/srd-play/evals/capability-matrix.json`; each row separately identifies
+its leaf attribution, model-visible MCP surface/projection, and reference into
+the canonical MCP scenario manifest. Installed ChatGPT evidence is a separate
+typed artifact and remains `pending` until an authorized developer-mode
+installation is exercised. The matrix does not duplicate runtime state or the
+MCP scenario registry.
 
 `BattleResolutionResult` may include display-facing result details for tool
 responses, but `BattleState` remains authoritative. Optional display logs must

@@ -123,11 +123,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "mcp-workflow-discovery",
-      "scopeIds": [
-        "level-1",
-        "level-1-2",
-        "level-1-3"
-      ],
+      "scopeIds": ["level-1", "level-1-2", "level-1-3"],
       "scenarioId": "discover-mcp-surface",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -137,9 +133,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "mcp-workflow-discovery",
-      "scopeIds": [
-        "level-1-4"
-      ],
+      "scopeIds": ["level-1-4"],
       "scenarioId": "create-level-four-wizard-asi-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -149,9 +143,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "mcp-workflow-discovery",
-      "scopeIds": [
-        "level-1-5"
-      ],
+      "scopeIds": ["level-1-5"],
       "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -161,9 +153,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-creation",
-      "scopeIds": [
-        "level-1-3"
-      ],
+      "scopeIds": ["level-1-3"],
       "scenarioId": "create-level-three-wizard-and-cast-scorching-ray",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -173,9 +163,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-creation",
-      "scopeIds": [
-        "level-1-4"
-      ],
+      "scopeIds": ["level-1-4"],
       "scenarioId": "create-level-four-wizard-asi-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -185,9 +173,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-creation",
-      "scopeIds": [
-        "level-1-5"
-      ],
+      "scopeIds": ["level-1-5"],
       "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -197,10 +183,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-creation",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "create-baseline-character",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -210,10 +193,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-creation",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "create-warrior-second-level",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -223,10 +203,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-creation",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "create-wizard-with-spells",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -236,9 +213,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
-      "scopeIds": [
-        "level-1-3"
-      ],
+      "scopeIds": ["level-1-3"],
       "scenarioId": "create-level-three-wizard-and-cast-scorching-ray",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -248,9 +223,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
-      "scopeIds": [
-        "level-1-4"
-      ],
+      "scopeIds": ["level-1-4"],
       "scenarioId": "create-level-four-wizard-asi-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -260,9 +233,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
-      "scopeIds": [
-        "level-1-5"
-      ],
+      "scopeIds": ["level-1-5"],
       "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -272,10 +243,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "create-baseline-character",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -285,10 +253,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "create-wizard-with-spells",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -298,10 +263,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "finish-battle-and-inspect-character-state",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -311,9 +273,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1-3"
-      ],
+      "scopeIds": ["level-1-3"],
       "scenarioId": "create-level-three-wizard-and-cast-scorching-ray",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -323,9 +283,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1-4"
-      ],
+      "scopeIds": ["level-1-4"],
       "scenarioId": "create-level-four-wizard-asi-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -335,9 +293,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1-5"
-      ],
+      "scopeIds": ["level-1-5"],
       "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -347,11 +303,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "mcp-workflow-discovery",
-      "scopeIds": [
-        "level-1-6",
-        "level-1-7",
-        "level-1-8"
-      ],
+      "scopeIds": ["level-1-6", "level-1-7", "level-1-8"],
       "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
@@ -361,11 +313,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-creation",
-      "scopeIds": [
-        "level-1-6",
-        "level-1-7",
-        "level-1-8"
-      ],
+      "scopeIds": ["level-1-6", "level-1-7", "level-1-8"],
       "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
@@ -375,11 +323,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
-      "scopeIds": [
-        "level-1-6",
-        "level-1-7",
-        "level-1-8"
-      ],
+      "scopeIds": ["level-1-6", "level-1-7", "level-1-8"],
       "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
@@ -389,11 +333,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1-6",
-        "level-1-7",
-        "level-1-8"
-      ],
+      "scopeIds": ["level-1-6", "level-1-7", "level-1-8"],
       "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -403,10 +343,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "select-monsters",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -416,10 +353,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "start-battle-with-initiative",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -429,10 +363,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "take-turns-and-resolve-attacks",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -442,10 +373,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "use-action-surge",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -455,10 +383,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "cast-cantrips-and-slotted-spells",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -468,10 +393,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "finish-battle-and-inspect-character-state",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -481,10 +403,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1",
-        "level-1-2"
-      ],
+      "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "recover-from-invalid-or-stale-actions",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
@@ -494,9 +413,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "mcp-workflow-discovery",
-      "scopeIds": [
-        "level-1-9"
-      ],
+      "scopeIds": ["level-1-9"],
       "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-nine-scenario.test.ts",
@@ -506,9 +423,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-creation",
-      "scopeIds": [
-        "level-1-9"
-      ],
+      "scopeIds": ["level-1-9"],
       "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-nine-scenario.test.ts",
@@ -518,9 +433,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
-      "scopeIds": [
-        "level-1-9"
-      ],
+      "scopeIds": ["level-1-9"],
       "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-nine-scenario.test.ts",
@@ -530,9 +443,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1-9"
-      ],
+      "scopeIds": ["level-1-9"],
       "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-nine-scenario.test.ts",
@@ -542,9 +453,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "mcp-workflow-discovery",
-      "scopeIds": [
-        "level-1-10"
-      ],
+      "scopeIds": ["level-1-10"],
       "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts",
@@ -554,9 +463,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-creation",
-      "scopeIds": [
-        "level-1-10"
-      ],
+      "scopeIds": ["level-1-10"],
       "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts",
@@ -566,9 +473,7 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
-      "scopeIds": [
-        "level-1-10"
-      ],
+      "scopeIds": ["level-1-10"],
       "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts",
@@ -578,14 +483,72 @@
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": [
-        "level-1-10"
-      ],
+      "scopeIds": ["level-1-10"],
       "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts",
       "taskId": "L110F-03-MCP-LEVEL10-BATTLE-HANDOFF",
       "summary": "The level-10 Fighter Champion scenario starts battle from the returned Character Sheet id, verifies the returned battle id and turn order, discovers returned Fighter battle acts, and records the remaining blocker: Heroic Warrior is a passive turn-start runtime behavior with no returned MCP battle act or hole yet."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "create-warrior-second-level",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "summary": "The real MCP protocol test routes finalized Character Session mutations through the shared operation surface, including supported class-level advancement and typed selection-replacement recovery, while preserving the canonical detail projection."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "query-character-sheet-facts",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "summary": "The real MCP protocol contract and baseline vertical expose the discriminated Character Session query surface, structured projections, and typed rejection paths without storing derived facts."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "summary": "The real MCP protocol resource and companion operation tests route Character Session feature-resource and retained-companion mutations through one shared surface and validate the returned canonical detail."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "summary": "The real MCP protocol operation tests route Short Rest, Long Rest, Stable calendar time, healing/rest-benefit, and atomic recovery intents through the shared Character Session surface."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+      "summary": "The real MCP protocol resource tests route Font of Magic conversion and Spell Access free-cast operations through the shared Character Session surface and validate typed results."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MCP-EVIDENCE",
+      "summary": "The real MCP protocol tests route initial-Initiative setup, lifecycle add/remove, occupancy and settlement, and canonical snapshot reads through the Battle surfaces with typed recovery."
     }
   ],
   "scopeAuditDecisions": [

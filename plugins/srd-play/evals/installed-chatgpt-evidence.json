@@ -1,24 +1,23 @@
 {
-  "schema": "dnd.srd-play.installed-chatgpt-evidence.v1",
-  "status": "unavailable",
+  "schema": "dnd.srd-play.installed-chatgpt-evidence.v2",
+  "status": "pending",
   "recordedAt": "2026-08-21",
-  "scope": "Installed ChatGPT developer-mode connection, Skill activation, and complete-plugin newcomer journey",
-  "environment": {
-    "developerMode": "not-observed",
-    "mcpConnection": "not-observed",
-    "installedPlugin": "not-observed",
-    "skillActivation": "not-observed",
-    "completeJourney": "not-observed"
-  },
-  "reason": "This repository environment has no authorized ChatGPT developer-mode installation or account/workspace policy context. Local protocol and static forward tests cannot establish installed-plugin activation or UI behavior.",
+  "scope": "Installed ChatGPT developer-mode Skill activation and complete-plugin newcomer journey",
+  "environment": { "tag": "notObserved" },
+  "pendingReason": "This repository environment has no authorized ChatGPT developer-mode installation or account/workspace policy context. Local protocol and static forward tests cannot establish installed-plugin activation or UI behavior.",
   "promptOwner": "plugins/srd-play/evals/evaluation-inventory.json",
   "capabilityMatrix": "plugins/srd-play/evals/capability-matrix.json",
+  "canonicalMcpEvidence": {
+    "manifestPath": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
+    "status": "observed",
+    "evidenceKind": "mcpScenario"
+  },
   "officialGuidance": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
   "operatorProtocol": [
     {
       "step": "mcp-connection",
       "evidenceKind": "connectionAndToolSelection",
-      "instructions": "In ChatGPT developer mode, connect the MCP server through a public HTTPS endpoint or Secure MCP Tunnel, review the discovered tool metadata, and run the mcpToolSelection prompts from the evaluation inventory. Record selected tool, arguments, result, errors, and confirmation behavior.",
+      "instructions": "In ChatGPT developer mode, connect the MCP server through a public HTTPS endpoint or Secure MCP Tunnel, review discovered tool metadata, and run the mcpToolSelection prompts from the evaluation inventory. Record selected tool, arguments, result, errors, and confirmation behavior in the canonical MCP evidence layer.",
       "requiredCases": [
         "mcp-direct-catalog",
         "mcp-indirect-catalog",
@@ -29,7 +28,7 @@
     {
       "step": "complete-plugin",
       "evidenceKind": "installedSkillActivation",
-      "instructions": "Package and install the complete plugin from a local source, start a new conversation with it enabled, and run the skillActivation prompts from the evaluation inventory. Record activation, tool calls, returned handles, meaningful-choice stops, and final results separately from MCP connection evidence.",
+      "instructions": "Package and install the complete plugin from a local source, start a new conversation with it enabled, and run the skillActivation prompts from the evaluation inventory. Record activation, tool calls, returned handles, meaningful-choice stops, and final results as installed Skill observations.",
       "requiredCases": [
         "skill-direct",
         "skill-natural",
@@ -41,9 +40,45 @@
     {
       "step": "newcomer-journey",
       "evidenceKind": "installedCompleteWorkflow",
-      "instructions": "Using the installed plugin, request one SRD discovery-to-character-to-battle journey. Preserve the Play Session handle, choose only returned Creation Hole options, stop for meaningful choices, use returned Battle Acts/Holes and optional raw dice, end the Battle, and record the resulting Character Session list.",
+      "instructions": "Using the installed plugin, request one SRD discovery-to-character-to-battle journey. Preserve the Play Session handle, choose only returned Creation Hole options, stop for meaningful choices, use returned Battle Acts/Holes and optional raw dice, end the Battle, and record the resulting Character Session list as installed workflow observations.",
       "requiredCases": ["skill-natural", "skill-continuation"]
     }
   ],
-  "observations": []
+  "caseResults": [
+    {
+      "caseId": "skill-direct",
+      "evidenceKind": "installedSkillActivation",
+      "status": "pending"
+    },
+    {
+      "caseId": "skill-natural",
+      "evidenceKind": "installedSkillActivation",
+      "status": "pending"
+    },
+    {
+      "caseId": "skill-continuation",
+      "evidenceKind": "installedSkillActivation",
+      "status": "pending"
+    },
+    {
+      "caseId": "skill-unrelated-dnd",
+      "evidenceKind": "installedSkillActivation",
+      "status": "pending"
+    },
+    {
+      "caseId": "skill-authoring-boundary",
+      "evidenceKind": "installedSkillActivation",
+      "status": "pending"
+    },
+    {
+      "caseId": "skill-natural",
+      "evidenceKind": "installedCompleteWorkflow",
+      "status": "pending"
+    },
+    {
+      "caseId": "skill-continuation",
+      "evidenceKind": "installedCompleteWorkflow",
+      "status": "pending"
+    }
+  ]
 }
