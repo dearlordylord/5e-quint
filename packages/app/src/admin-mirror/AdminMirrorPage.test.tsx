@@ -297,7 +297,7 @@ function rawSessionState(input: { readonly mirrorSessionId?: string; readonly se
         battle: null,
         characters: [],
         session: {
-          activeBattle: null,
+          battleState: { tag: "none" },
           draftIds: [],
           selectedStatBlockId: null,
           transientBattleFills: null
@@ -349,7 +349,15 @@ function rawDetailedSessionState() {
             displayName: null,
             status: "inBattle"
           }
-        ]
+        ],
+        session: {
+          ...base.envelope.projection.session,
+          battleState: {
+            tag: "activeBattle",
+            battleId: battle.battleId,
+            currentActorId: battle.currentActorId
+          }
+        }
       }
     },
     multiSource: true,
