@@ -3,6 +3,7 @@ import {
   convertFontOfMagicSpellSlotToSorceryPoints,
   spendCharacterSheetSpellAccessFreeCast,
   useMonkUncannyMetabolismWhenRollingInitiative,
+  type CharacterSheetId,
   type CharacterSheetIssue,
 } from "@dnd/character-sheet-runtime";
 import { DieRollResult, spellSlotLevel } from "@dnd/shared/types";
@@ -59,7 +60,7 @@ export function isCharacterSessionResourceOperation(
 export function applyCharacterSessionResourceOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: CharacterSessionResourceOperation;
   },
@@ -99,7 +100,7 @@ export function applyCharacterSessionResourceOperation(
 export function spendSpellAccessFreeCastOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: SpendSpellAccessFreeCastOperation;
   },
@@ -129,7 +130,7 @@ export function spendSpellAccessFreeCastOperation(
 export function useMonkUncannyMetabolismWhenRollingInitiativeOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: UseMonkUncannyMetabolismWhenRollingInitiativeOperation;
   },
@@ -155,7 +156,7 @@ export function useMonkUncannyMetabolismWhenRollingInitiativeOperation(
 export function convertFontOfMagicSpellSlotToSorceryPointsOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: ConvertFontOfMagicSpellSlotToSorceryPointsOperation;
   },
@@ -187,7 +188,7 @@ export function convertFontOfMagicSpellSlotToSorceryPointsOperation(
 export function convertFontOfMagicSorceryPointsToSpellSlotOperation(
   root: McpPlaySessionRoot,
   input: {
-    readonly characterId: string;
+    readonly characterId: CharacterSheetId;
     readonly session: AvailableCharacterSession;
     readonly operation: ConvertFontOfMagicSorceryPointsToSpellSlotOperation;
   },
@@ -224,7 +225,7 @@ function commitResourceOperation(
 }
 
 function resourceOperationFailure(input: {
-  readonly characterId: string;
+  readonly characterId: CharacterSheetId;
   readonly operationKind: CharacterSessionResourceOperationKind;
   readonly issue: CharacterSheetIssue;
 }) {

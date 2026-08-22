@@ -799,6 +799,25 @@ describe("MCP server route", () => {
         ],
       },
     });
+    rejects({
+      ...spellAccess,
+      characterId: "",
+    });
+    rejects({
+      ...spellAccess,
+      query: {
+        ...spellAccess.query,
+        projection: [
+          {
+            source: "classFeature",
+            sourceUnitId: "",
+            spellId: "synthetic_spell",
+            spellcastingAbility: "int",
+            preparation: "alwaysPrepared",
+          },
+        ],
+      },
+    });
 
     const armor = queryOutput({ kind: "armorClass" });
     rejects({
@@ -861,6 +880,44 @@ describe("MCP server route", () => {
             featureUnitId: "wizard_ritual_adept",
           },
         ],
+      },
+    });
+    rejects({
+      ...ritual,
+      query: {
+        ...ritual.query,
+        projection: [
+          {
+            tag: "spellbookRitual",
+            spell: {
+              id: "",
+              mechanics: { level: 1 },
+            },
+            spellcastingSourceUnitId: "class_wizard",
+            featureUnitId: "wizard_ritual_adept",
+          },
+        ],
+      },
+    });
+
+    const druidRoot = createMcpPlaySessionRoot();
+    const druidDraftId = "draft:query-schema-known-forms";
+    createFinalizedDruidSheet(druidRoot, druidDraftId);
+    const druidCharacterId = testCharacterId(druidDraftId);
+    const knownForms = readPayload(
+      handleToolCall(druidRoot, "query_character_session", {
+        characterId: druidCharacterId,
+        query: { kind: "knownForms" },
+      }),
+    );
+    rejects({
+      ...knownForms,
+      query: {
+        ...knownForms.query,
+        projection: {
+          ...knownForms.query.projection,
+          statBlockIds: [""],
+        },
       },
     });
   });
@@ -4949,6 +5006,49 @@ describe("MCP server route", () => {
       tag: "available",
       characterId: characterIdValue,
     });
+  });
+
+  test("rejects empty and zero Short Rest recovery selections at the tool boundary", () => {
+    const root = createMcpPlaySessionRoot();
+    const characterIdValue = testCharacterId("mcp-short-rest-input-validation");
+    const invalidOperations = [
+      {
+        kind: "completeShortRest",
+        restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+        spendHitDice: [],
+      },
+      {
+        kind: "completeShortRest",
+        restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+        arcaneRecovery: { refundSpellSlots: [] },
+      },
+      {
+        kind: "completeShortRest",
+        restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+        arcaneRecovery: {
+          refundSpellSlots: [{ spellLevel: 1, count: 0 }],
+        },
+      },
+      {
+        kind: "completeShortRest",
+        restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+        sorcerousRestoration: { recoverSorceryPoints: 0 },
+      },
+    ] as const;
+
+    for (const operation of invalidOperations) {
+      expect(
+        readPayload(
+          handleToolCall(root, "apply_character_session_operation", {
+            characterId: characterIdValue,
+            operation,
+          }),
+        ),
+      ).toMatchObject({
+        error: "apply_character_session_operation expects valid arguments.",
+        details: { code: "INVALID_ARGUMENTS" },
+      });
+    }
   });
 
   test("apply_character_session_operation exposes Short Rest interruption without retaining a rest intermediate", () => {

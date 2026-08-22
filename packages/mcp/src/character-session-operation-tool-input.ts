@@ -23,7 +23,7 @@ const PositiveIntegerSchema = Schema.Number.pipe(
 
 const RestRecoveryArgsFields = {
   spendHitDice: Schema.optionalWith(
-    Schema.Array(
+    Schema.NonEmptyArray(
       Schema.Struct({
         classUnitId: UnitId,
         roll: PositiveIntegerSchema,
@@ -33,14 +33,14 @@ const RestRecoveryArgsFields = {
   ),
   arcaneRecovery: Schema.optionalWith(
     Schema.Struct({
-      refundSpellSlots: Schema.Array(
+      refundSpellSlots: Schema.NonEmptyArray(
         Schema.Struct({
           spellLevel: Schema.Number.pipe(
             Schema.int(),
             Schema.greaterThanOrEqualTo(1),
             Schema.lessThanOrEqualTo(9),
           ),
-          count: NonNegativeIntegerSchema,
+          count: PositiveIntegerSchema,
         }),
       ),
     }),
@@ -48,7 +48,7 @@ const RestRecoveryArgsFields = {
   ),
   sorcerousRestoration: Schema.optionalWith(
     Schema.Struct({
-      recoverSorceryPoints: NonNegativeIntegerSchema,
+      recoverSorceryPoints: PositiveIntegerSchema,
     }),
     { exact: true },
   ),

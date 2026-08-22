@@ -28,7 +28,7 @@
     {
       "step": "complete-plugin",
       "evidenceKind": "installedSkillActivation",
-      "instructions": "Package and install the complete plugin from a local source, start a new conversation with it enabled, and run the skillActivation prompts from the evaluation inventory. Record activation, tool calls, returned handles, meaningful-choice stops, and final results as installed Skill observations.",
+      "instructions": "With the separately created developer-mode MCP connection available, package and install the Skill-only plugin from a local source, start a new conversation with both enabled, and run the skillActivation prompts from the evaluation inventory. Record activation, tool calls, returned handles, meaningful-choice stops, and final results as installed Skill observations.",
       "requiredCases": [
         "skill-direct",
         "skill-natural",
@@ -40,7 +40,7 @@
     {
       "step": "newcomer-journey",
       "evidenceKind": "installedCompleteWorkflow",
-      "instructions": "Using the installed plugin, request one SRD discovery-to-character-to-battle journey. Preserve the Play Session handle, choose only returned Creation Hole options, stop for meaningful choices, use returned Battle Acts/Holes and optional raw dice, end the Battle, and record the resulting Character Session list as installed workflow observations.",
+      "instructions": "Using the installed Skill and separately created developer-mode MCP connection, request one SRD discovery-to-character-to-battle journey. Preserve the Play Session handle, choose only returned Creation Hole options, stop for meaningful choices, use returned Battle Acts/Holes and optional raw dice, end the Battle, and record the resulting Character Session list as installed workflow observations.",
       "requiredCases": ["skill-natural", "skill-continuation"]
     }
   ],

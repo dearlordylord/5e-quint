@@ -266,24 +266,12 @@ Deferred workflow gates:
 
 Normal package tests cover the MCP server route.
 
-The developer-mode `plugins/srd-play` package connects this application to one
-focused conversation Skill. The Skill retains returned handles and sequences
-canonical MCP facts; it contains no catalog, rules inventory, executable
-choices, or shadow session state. Its repo-owned evaluation inventory separates
-automated local MCP startup/inspection evidence from installed-ChatGPT Skill
-activation evidence. The latter requires developer-mode execution and is owned
-by #328; local tests must not claim that UI evidence.
-
-Issue #328's headless newcomer journey is the single protocol-client scenario
-at `packages/mcp/src/plugin-newcomer-journey.test.ts`; it is representative
-cross-leaf coverage, not a replacement for the row-level canonical MCP
-scenario evidence. The frozen 21-row #314 capability matrix is
-`plugins/srd-play/evals/capability-matrix.json`; each row separately identifies
-its leaf attribution, model-visible MCP surface/projection, and reference into
-the canonical MCP scenario manifest. Installed ChatGPT evidence is a separate
-typed artifact and remains `pending` until an authorized developer-mode
-installation is exercised. The matrix does not duplicate runtime state or the
-MCP scenario registry.
+The developer-mode `plugins/srd-play` connection, local installation, and
+Secure MCP Tunnel runbook lives in [`plugins/srd-play/README.md`](../../plugins/srd-play/README.md).
+The plugin retains returned handles and sequences canonical MCP facts; it
+contains no catalog, rules inventory, executable choices, or shadow session
+state. Its evaluation artifacts record external observations separately from
+the automated MCP protocol evidence.
 
 `BattleResolutionResult` may include display-facing result details for tool
 responses, but `BattleState` remains authoritative. Optional display logs must
