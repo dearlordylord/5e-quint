@@ -4,6 +4,29 @@ import { Schema } from "effect";
 
 import { CharacterSessionQueryKindsSchema } from "../src/character-session-query-tool-input.ts";
 
+export const NON_DERIVED_CAPABILITY_ROW_ID_VALUES = [
+  "character-creation-draft-finalization",
+  "character-progression-class-level",
+  "character-progression-druid-known-form",
+  "character-session-list-detail",
+  "character-companion-retention",
+  "character-rest-lifecycles",
+  "character-healing-rest-benefits",
+  "character-feature-resources",
+  "character-font-of-magic-conversion",
+  "character-ritual-invocation",
+  "character-calendar-time",
+  "battle-mixed-roster-start",
+  "battle-character-settlement",
+  "battle-direct-initiative",
+  "battle-initial-initiative-setup",
+  "battle-roster-lifecycle",
+  "battle-snapshot-read",
+  "battle-act-discovery",
+  "battle-act-resolution",
+  "battle-turn-end",
+] as const;
+
 const EvidenceRefSchema = Schema.Struct({
   scenarioId: Schema.String,
   flowId: Schema.String,
@@ -48,12 +71,7 @@ const DerivedQueryCapabilityRowSchema = Schema.Struct({
 
 const NonDerivedCapabilityRowSchema = Schema.Struct({
   ...CapabilityRowCommonFields,
-  id: Schema.String.pipe(
-    Schema.filter((id) => id !== "character-sheet-derived-queries", {
-      description:
-        "non-derived capability rows cannot use the derived-query discriminator",
-    }),
-  ),
+  id: Schema.Literal(...NON_DERIVED_CAPABILITY_ROW_ID_VALUES),
 });
 
 const CapabilityRowSchema = Schema.Union(

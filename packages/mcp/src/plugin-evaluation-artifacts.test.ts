@@ -13,6 +13,7 @@ import {
 import {
   decodeCapabilityMatrix,
   CapabilityMatrixSchema,
+  NON_DERIVED_CAPABILITY_ROW_ID_VALUES,
   type CapabilityMatrix,
 } from "../test-support/capability-matrix.ts";
 import {
@@ -42,6 +43,11 @@ const McpManifestRowCommonFields = {
 
 type EvidenceRefKey = `${string}\u0000${string}\u0000${string}`;
 
+declare const NonQueryCoverageScenarioIdBrand: unique symbol;
+type NonQueryCoverageScenarioId = string & {
+  readonly [NonQueryCoverageScenarioIdBrand]: true;
+};
+
 function evidenceRefKey(ref: {
   readonly scenarioId: string;
   readonly flowId: string;
@@ -59,6 +65,9 @@ function mcpManifestSchemaFor(matrix: CapabilityMatrix) {
   const derivedQueryEvidenceKeys = new Set<EvidenceRefKey>(
     derivedQueryEvidenceRefs.map(evidenceRefKey),
   );
+  const derivedQueryScenarioIds = new Set(
+    derivedQueryEvidenceRefs.map(({ scenarioId }) => scenarioId),
+  );
   const derivedRowSchemas = derivedQueryEvidenceRefs.map((ref) =>
     Schema.Struct({
       ...McpManifestRowCommonFields,
@@ -69,7 +78,20 @@ function mcpManifestSchemaFor(matrix: CapabilityMatrix) {
     }),
   );
   const derivedRowSchema = Schema.Union(...derivedRowSchemas, Schema.Never);
-  const nonDerivedRowSchema = Schema.Struct(McpManifestRowCommonFields).pipe(
+  const NonQueryCoverageScenarioIdSchema = Schema.String.pipe(
+    Schema.filter(
+      (scenarioId): scenarioId is NonQueryCoverageScenarioId =>
+        !derivedQueryScenarioIds.has(scenarioId),
+      {
+        description:
+          "ordinary manifest rows cannot use a canonical derived-query scenario id",
+      },
+    ),
+  );
+  const nonDerivedRowSchema = Schema.Struct({
+    ...McpManifestRowCommonFields,
+    scenarioId: NonQueryCoverageScenarioIdSchema,
+  }).pipe(
     Schema.filter((row) => !derivedQueryEvidenceKeys.has(evidenceRefKey(row)), {
       description:
         "ordinary manifest rows cannot use a canonical derived-query evidence key",
@@ -450,27 +472,9 @@ function observedConnectionObservation(
 }
 
 const expectedRowIds = [
-  "character-creation-draft-finalization",
-  "character-progression-class-level",
-  "character-progression-druid-known-form",
-  "character-session-list-detail",
+  ...NON_DERIVED_CAPABILITY_ROW_ID_VALUES.slice(0, 4),
   "character-sheet-derived-queries",
-  "character-companion-retention",
-  "character-rest-lifecycles",
-  "character-healing-rest-benefits",
-  "character-feature-resources",
-  "character-font-of-magic-conversion",
-  "character-ritual-invocation",
-  "character-calendar-time",
-  "battle-mixed-roster-start",
-  "battle-character-settlement",
-  "battle-direct-initiative",
-  "battle-initial-initiative-setup",
-  "battle-roster-lifecycle",
-  "battle-snapshot-read",
-  "battle-act-discovery",
-  "battle-act-resolution",
-  "battle-turn-end",
+  ...NON_DERIVED_CAPABILITY_ROW_ID_VALUES.slice(4),
 ] as const;
 const expectedLeafIssues = [
   318, 320, 320, 318, 319, 318, 321, 322, 323, 323, 319, 321, 324, 324, 324,
@@ -504,6 +508,30 @@ describe("SRD Play evaluation artifacts", () => {
         Schema.decodeUnknownEither(CapabilityMatrixSchema, {
           onExcessProperty: "error",
         })(matrixWithUnrelatedKinds),
+      ),
+    ).toBe(true);
+    const matrixWithDerivedIdentityAsOrdinary = {
+      ...rawMatrix,
+      rows: rawMatrix.rows.map(
+        (row: {
+          readonly id: string;
+          readonly requiredQueryKinds?: readonly string[];
+        }) => {
+          if (row.id !== "character-sheet-derived-queries") return row;
+          const {
+            requiredQueryKinds: _requiredQueryKinds,
+            ...withoutRequiredQueryKinds
+          } = row;
+          void _requiredQueryKinds;
+          return withoutRequiredQueryKinds;
+        },
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(CapabilityMatrixSchema, {
+          onExcessProperty: "error",
+        })(matrixWithDerivedIdentityAsOrdinary),
       ),
     ).toBe(true);
 
@@ -562,6 +590,18 @@ describe("SRD Play evaluation artifacts", () => {
         })(manifestWithoutCoverageKinds),
       ),
     ).toBe(true);
+
+    const decodedManifest = decodeFile(
+      mcpManifestSchemaFor(matrix),
+      manifestPath,
+    );
+    for (const row of decodedManifest.evidence) {
+      if ("queryKinds" in row) {
+        expect(row.scenarioId).toBe(coverageRow.scenarioId);
+      } else {
+        expect(row.scenarioId).not.toBe(coverageRow.scenarioId);
+      }
+    }
   });
 
   test("keeps exactly the normative #314 capability rows", () => {
@@ -579,6 +619,15 @@ describe("SRD Play evaluation artifacts", () => {
         ? derivedQueries.requiredQueryKinds
         : undefined,
     ).toEqual([...CHARACTER_SESSION_QUERY_KIND_VALUES]);
+    for (const row of matrix.rows) {
+      if (row.id === "character-sheet-derived-queries") {
+        expect(row.requiredQueryKinds).toEqual(
+          CHARACTER_SESSION_QUERY_KIND_VALUES,
+        );
+      } else {
+        expect("requiredQueryKinds" in row).toBe(false);
+      }
+    }
     expect(
       existsSync(
         resolve(repoRoot, matrix.representativeHeadlessJourney.testPath),

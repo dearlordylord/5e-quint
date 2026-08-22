@@ -54,47 +54,23 @@ const ArmorClassBaseChoiceSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("class_feature"), unitId: UnitId }),
 );
 
-type CharacterSessionQuerySchemaEntry = {
-  readonly kind: CharacterSessionQueryKind;
-  readonly schema: Schema.Schema.AnyNoContext;
-};
-
-function querySchemaEntry<
+function querySchemaFor<
   const Kind extends CharacterSessionQueryKind,
   const Fields extends Schema.Struct.Fields,
 >(kind: Kind, fields: Fields) {
-  return {
-    kind,
-    schema: Schema.Struct({
-      kind: Schema.Literal(kind),
-      ...fields,
-    }),
-  };
+  return Schema.Struct({
+    kind: Schema.Literal(kind),
+    ...fields,
+  });
 }
 
-function querySchemaEntries<
-  const Entries extends readonly CharacterSessionQuerySchemaEntry[],
->(
-  entries: Entries &
-    (Exclude<CharacterSessionQueryKind, Entries[number]["kind"]> extends never
-      ? unknown
-      : {
-          readonly missingQueryKinds: Exclude<
-            CharacterSessionQueryKind,
-            Entries[number]["kind"]
-          >;
-        }),
-): Entries {
-  return entries;
-}
-
-const CharacterSessionQuerySchemaEntries = querySchemaEntries([
-  querySchemaEntry("abilityCheckAbility", {
+const CharacterSessionQuerySchemaByKind = {
+  abilityCheckAbility: querySchemaFor("abilityCheckAbility", {
     skill: SurfaceSkillSchema,
     defaultAbility: AbilitySchema,
     activeFeatureUnitIds: UnitIdArraySchema,
   }),
-  querySchemaEntry("abilityCheckProficiencyBonus", {
+  abilityCheckProficiencyBonus: querySchemaFor("abilityCheckProficiencyBonus", {
     skill: SurfaceSkillSchema,
     otherProficiencyBonus: Schema.Union(
       Schema.Struct({
@@ -105,46 +81,52 @@ const CharacterSessionQuerySchemaEntries = querySchemaEntries([
       }),
     ),
   }),
-  querySchemaEntry("jumpDistanceAbility", {
+  jumpDistanceAbility: querySchemaFor("jumpDistanceAbility", {
     defaultAbility: AbilitySchema,
   }),
-  querySchemaEntry("linkedSpeedGrants", {}),
-  querySchemaEntry("armorClass", {
+  linkedSpeedGrants: querySchemaFor("linkedSpeedGrants", {}),
+  armorClass: querySchemaFor("armorClass", {
     baseChoice: Schema.optionalWith(ArmorClassBaseChoiceSchema, {
       exact: true,
     }),
   }),
-  querySchemaEntry("spellAccess", {}),
-  querySchemaEntry("knownForms", {}),
-  querySchemaEntry("weaponMasterySelections", {
+  spellAccess: querySchemaFor("spellAccess", {}),
+  knownForms: querySchemaFor("knownForms", {}),
+  weaponMasterySelections: querySchemaFor("weaponMasterySelections", {
     featureUnitId: UnitId,
   }),
-  querySchemaEntry("spellbookRitualAccesses", {}),
-  querySchemaEntry("spellbookRitualAccess", {
+  spellbookRitualAccesses: querySchemaFor("spellbookRitualAccesses", {}),
+  spellbookRitualAccess: querySchemaFor("spellbookRitualAccess", {
     spellId: UnitId,
   }),
-  querySchemaEntry("spellInvocation", {
+  spellInvocation: querySchemaFor("spellInvocation", {
     spellId: UnitId,
     invocation: Schema.Struct({
       kind: Schema.Literal("ritual"),
     }),
   }),
-]);
+} as const satisfies Record<
+  CharacterSessionQueryKind,
+  Schema.Schema.AnyNoContext
+>;
 
 function unionQuerySchemas<
-  const Entries extends readonly CharacterSessionQuerySchemaEntry[],
+  const Members extends Record<
+    CharacterSessionQueryKind,
+    Schema.Schema.AnyNoContext
+  >,
 >(
-  entries: Entries,
+  members: Members,
 ): Schema.Schema<
-  Schema.Schema.Type<Entries[number]["schema"]>,
-  Schema.Schema.Encoded<Entries[number]["schema"]>,
-  Schema.Schema.Context<Entries[number]["schema"]>
+  Schema.Schema.Type<Members[keyof Members]>,
+  Schema.Schema.Encoded<Members[keyof Members]>,
+  Schema.Schema.Context<Members[keyof Members]>
 > {
-  return Schema.Union(...entries.map(({ schema }) => schema));
+  return Schema.Union(...Object.values(members));
 }
 
 export const CharacterSessionQuerySchema = unionQuerySchemas(
-  CharacterSessionQuerySchemaEntries,
+  CharacterSessionQuerySchemaByKind,
 );
 
 export const QueryCharacterSessionArgsSchema = Schema.Struct({
