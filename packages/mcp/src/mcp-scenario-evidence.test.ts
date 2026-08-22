@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
 import { decodeCapabilityMatrix } from "../test-support/capability-matrix.ts";
+import { CHARACTER_SHEET_DERIVED_QUERY_KINDS } from "../test-support/character-sheet-query-evidence.ts";
 import { sourceDefinesVitestScenario } from "../test-support/mcp-scenario-executable.ts";
 
 type McpRequiredFlow = {
@@ -23,6 +24,7 @@ type McpScenarioEvidenceRow = {
   readonly testPath: string;
   readonly taskId: string;
   readonly summary: string;
+  readonly queryKinds?: readonly string[];
 };
 
 type McpScenarioEvidenceManifest = {
@@ -117,6 +119,18 @@ describe("MCP scenario evidence manifest", () => {
       expect(requiredFlowIds.has(row.flowId)).toBe(true);
       expect(row.scopeIds.length).toBeGreaterThan(0);
       const evidenceKey = `${row.scenarioId}\u0000${row.flowId}\u0000${row.taskId}`;
+      const matrixRow = capabilityMatrix.rows.find(
+        (candidate) =>
+          candidate.mcpEvidence.status === "observed" &&
+          candidate.mcpEvidence.refs.some(
+            (ref) =>
+              `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}` ===
+              evidenceKey,
+          ),
+      );
+      if (matrixRow?.requiredQueryKinds !== undefined) {
+        expect(row.queryKinds).toEqual(matrixRow.requiredQueryKinds);
+      }
       if (executableEvidenceKeys.has(evidenceKey)) {
         const testSource = readFileSync(
           resolve(repoRoot, row.testPath),
@@ -132,6 +146,12 @@ describe("MCP scenario evidence manifest", () => {
       expect(row.taskId).toMatch(taskIdPattern);
       expect(row.summary.trim()).not.toBe("");
     }
+    const derivedQueryRow = capabilityMatrix.rows.find(
+      (row) => row.id === "character-sheet-derived-queries",
+    );
+    expect(derivedQueryRow?.requiredQueryKinds).toEqual([
+      ...CHARACTER_SHEET_DERIVED_QUERY_KINDS,
+    ]);
   });
 
   test("couples ids to non-skipped test declarations, not comments or skipped cases", () => {

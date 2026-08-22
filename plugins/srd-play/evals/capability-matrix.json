@@ -194,16 +194,29 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "character-row-coverage-ritual-query",
+            "scenarioId": "character-sheet-derived-queries-protocol",
             "flowId": "character-sheet",
-            "taskId": "C10-CHARACTER-ROW-RITUAL-MCP-EVIDENCE"
+            "taskId": "C10-CHARACTER-DERIVED-QUERIES-MCP-EVIDENCE"
           }
         ]
       },
+      "requiredQueryKinds": [
+        "abilityCheckAbility",
+        "abilityCheckProficiencyBonus",
+        "jumpDistanceAbility",
+        "linkedSpeedGrants",
+        "armorClass",
+        "spellAccess",
+        "knownForms",
+        "weaponMasterySelections",
+        "spellbookRitualAccesses",
+        "spellbookRitualAccess",
+        "spellInvocation"
+      ],
       "installedChatGptEvidence": {
         "caseIds": ["skill-continuation"]
       },
-      "boundary": "Queries expose existing SDK projections, including ritual-only invocation, and do not add a spell ledger, search layer, or generic non-ritual casting."
+      "boundary": "Queries expose the existing SDK projections for ability and proficiency substitutions, jump ability, linked Speed grants, Armor Class choices/calculation, Spell Access, known forms, Weapon Mastery selections, and ritual-only access/invocation; they do not add a spell ledger, search layer, or generic non-ritual casting."
     },
     {
       "id": "character-companion-retention",

@@ -35,6 +35,9 @@ const CapabilityRowSchema = Schema.Struct({
   mcpSurface: Schema.NonEmptyArray(Schema.String),
   modelVisibleProjection: Schema.NonEmptyArray(ProjectionPathSchema),
   mcpEvidence: McpEvidenceSchema,
+  requiredQueryKinds: Schema.optionalWith(Schema.NonEmptyArray(Schema.String), {
+    exact: true,
+  }),
   installedChatGptEvidence: InstalledRowEvidenceSchema,
   boundary: Schema.String,
 });

@@ -152,6 +152,7 @@ const mcpEvidenceRowFields = new Set([
   "testPath",
   "taskId",
   "summary",
+  "queryKinds",
 ]);
 const mcpScopeAuditDecisionFields = new Set([
   "scopeId",
@@ -607,6 +608,14 @@ function validateMcpScenarioEvidence(manifest, { root }) {
             );
           }
         }
+      }
+      if (row.queryKinds !== undefined) {
+        issues.push(
+          ...validateNonEmptyStringArray(
+            row.queryKinds,
+            `${rowContext}.queryKinds`,
+          ),
+        );
       }
       const rowKey = `${row.flowId}\u0000${row.scenarioId}\u0000${row.testPath}`;
       if (seenEvidenceRows.has(rowKey)) {

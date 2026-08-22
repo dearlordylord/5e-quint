@@ -11,6 +11,7 @@ import {
   type EvaluationInventory,
 } from "../test-support/evaluation-inventory.ts";
 import { decodeCapabilityMatrix } from "../test-support/capability-matrix.ts";
+import { CHARACTER_SHEET_DERIVED_QUERY_KINDS } from "../test-support/character-sheet-query-evidence.ts";
 import { sourceDefinesVitestScenario } from "../test-support/mcp-scenario-executable.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
@@ -30,6 +31,9 @@ const McpManifestRowSchema = Schema.Struct({
   testPath: Schema.String,
   taskId: Schema.String,
   summary: Schema.String,
+  queryKinds: Schema.optionalWith(Schema.NonEmptyArray(Schema.String), {
+    exact: true,
+  }),
 });
 const McpManifestSchema = Schema.Struct({
   schema: Schema.Literal("dnd.mcp-scenario-evidence.v1"),
@@ -422,6 +426,12 @@ describe("SRD Play evaluation artifacts", () => {
     expect(matrix.rows.map((row) => row.id)).toEqual(expectedRowIds);
     expect(matrix.rows.map((row) => row.leafIssue)).toEqual(expectedLeafIssues);
     expect(new Set(matrix.rows.map((row) => row.id)).size).toBe(21);
+    const derivedQueries = matrix.rows.find(
+      (row) => row.id === "character-sheet-derived-queries",
+    );
+    expect(derivedQueries?.requiredQueryKinds).toEqual([
+      ...CHARACTER_SHEET_DERIVED_QUERY_KINDS,
+    ]);
     expect(
       existsSync(
         resolve(repoRoot, matrix.representativeHeadlessJourney.testPath),
@@ -496,6 +506,11 @@ describe("SRD Play evaluation artifacts", () => {
           rowRefKeys.add(refKey);
           const manifestRow = manifestByKey.get(refKey);
           expect(manifestRow, row.id).toBeDefined();
+          if (row.requiredQueryKinds !== undefined) {
+            expect(manifestRow?.queryKinds, row.id).toEqual(
+              row.requiredQueryKinds,
+            );
+          }
           expect(
             existsSync(resolve(repoRoot, manifestRow?.ownerPath ?? "")),
           ).toBe(true);
