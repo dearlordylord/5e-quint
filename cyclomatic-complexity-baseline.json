@@ -70,7 +70,7 @@
       "module/binding:resolveBrutalStrikeForcefulBlowMovement": 16,
       "module/binding:resolveGrapplerPunchAndGrabAfterHit": 12,
       "module/binding:resolveHuntersPreyHordeBreakerAfterPrimaryDamage": 21,
-      "module/binding:resolveSelectedAttackProcedure": 220,
+      "module/binding:resolveSelectedAttackProcedure": 218,
       "module/binding:resolveWeaponMasteryCleaveAfterPrimaryDamage": 20
     },
     "packages/battle-runtime/src/battle-reducer/attack-offhand.ts": {
