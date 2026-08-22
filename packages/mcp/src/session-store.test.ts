@@ -55,8 +55,11 @@ describe("MCP character sessions", () => {
     );
     let retained = true;
     const store = createMcpSessionStore({
-      ...root.statBlockCatalog,
-      getStatBlock: () => (retained ? Option.some(selected) : Option.none()),
+      statBlockCatalog: {
+        ...root.statBlockCatalog,
+        getStatBlock: () => (retained ? Option.some(selected) : Option.none()),
+      },
+      unitLibrary: root.unitLibrary,
     });
 
     expect(store.selectStatBlock(selected.id)).toMatchObject({ _tag: "Right" });
@@ -106,7 +109,10 @@ describe("MCP character sessions", () => {
 
   test("validates the full Character Session batch before committing it", () => {
     const root = createMcpPlaySessionRoot();
-    const store = createMcpSessionStore(root.statBlockCatalog);
+    const store = createMcpSessionStore({
+      statBlockCatalog: root.statBlockCatalog,
+      unitLibrary: root.unitLibrary,
+    });
     const first = expectRight(
       availableCharacterSession({
         characterId: characterSheetId("character:mcp-batch-first"),
@@ -170,7 +176,10 @@ describe("MCP character sessions", () => {
 
   test("keeps owned battle setup transitions atomic across owners", () => {
     const root = createMcpPlaySessionRoot();
-    const store = createMcpSessionStore(root.statBlockCatalog);
+    const store = createMcpSessionStore({
+      statBlockCatalog: root.statBlockCatalog,
+      unitLibrary: root.unitLibrary,
+    });
     const goblin = root.statBlockCatalog.requireStatBlock(
       "stat_block_goblin_warrior",
     );
@@ -224,7 +233,122 @@ describe("MCP character sessions", () => {
     );
     expect(store.battleSession).toBe(active);
   });
+
+  test("rejects stale and foreign roster plans without changing owned state", () => {
+    const root = createMcpPlaySessionRoot();
+    const store = createMcpSessionStore({
+      statBlockCatalog: root.statBlockCatalog,
+      unitLibrary: root.unitLibrary,
+    });
+    const goblin = root.statBlockCatalog.requireStatBlock(
+      "stat_block_goblin_warrior",
+    );
+    const skeleton = root.statBlockCatalog.requireStatBlock(
+      "stat_block_skeleton",
+    );
+    const wolf = root.statBlockCatalog.requireStatBlock("stat_block_wolf");
+    const initial = expectRight(
+      battleCreatureInitFromStatBlock({
+        combatantId: combatantId("store-plan-initial"),
+        statBlock: goblin,
+        initiative: initiativeScore(10),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      }),
+    );
+    const staleCombatant = expectRight(
+      battleCreatureInitFromStatBlock({
+        combatantId: combatantId("store-plan-stale"),
+        statBlock: skeleton,
+        initiative: initiativeScore(8),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      }),
+    );
+    const interveningCombatant = expectRight(
+      battleCreatureInitFromStatBlock({
+        combatantId: combatantId("store-plan-intervening"),
+        statBlock: wolf,
+        initiative: initiativeScore(6),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      }),
+    );
+    const foreignCombatant = expectRight(
+      battleCreatureInitFromStatBlock({
+        combatantId: combatantId("store-plan-foreign"),
+        statBlock: skeleton,
+        initiative: initiativeScore(4),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      }),
+    );
+    const active = expectRight(
+      startBattle({
+        battleId: battleId("battle:store-plan-owned"),
+        combatants: [initial],
+      }),
+    );
+    expect(store.storeActiveBattle(active)).toEqual(Either.right(undefined));
+
+    const stale = expectRight(
+      store.planActiveBattleRosterTransition({
+        kind: "addStatBlock",
+        combatant: staleCombatant,
+      }),
+    );
+    const intervening = expectRight(
+      store.planActiveBattleRosterTransition({
+        kind: "addStatBlock",
+        combatant: interveningCombatant,
+      }),
+    );
+    expect(store.commitActiveBattleRosterTransition(intervening.plan)).toEqual(
+      Either.right(intervening.prospectiveBattle),
+    );
+    const afterIntervening = deepStoreState(store);
+
+    expect(store.commitActiveBattleRosterTransition(stale.plan)).toEqual(
+      Either.left({
+        tag: "battleRosterPlanBattleChanged",
+        battleId: active.state.battleId,
+      }),
+    );
+    expect(deepStoreState(store)).toEqual(afterIntervening);
+
+    const foreignStore = createMcpSessionStore({
+      statBlockCatalog: root.statBlockCatalog,
+      unitLibrary: root.unitLibrary,
+    });
+    expect(foreignStore.storeActiveBattle(active)).toEqual(
+      Either.right(undefined),
+    );
+    const foreignPlan = expectRight(
+      foreignStore.planActiveBattleRosterTransition({
+        kind: "addStatBlock",
+        combatant: foreignCombatant,
+      }),
+    );
+    expect(store.commitActiveBattleRosterTransition(foreignPlan.plan)).toEqual(
+      Either.left({ tag: "battleRosterUnknownPlan" }),
+    );
+    expect(deepStoreState(store)).toEqual(afterIntervening);
+  });
 });
+
+function deepStoreState(store: ReturnType<typeof createMcpSessionStore>) {
+  return {
+    snapshot: store.snapshot(),
+    battleState: store.battleState,
+    battleSession: store.battleSession,
+    characters: Array.from(store.characters.entries()),
+    pendingBattleFills: store.pendingBattleFills,
+  };
+}
 
 function druidWildShapeBuild(): CharacterBuild {
   return {

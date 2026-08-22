@@ -2376,7 +2376,10 @@ describe("MCP server route", () => {
     const root = {
       ...baseRoot,
       statBlockCatalog: catalogResult.catalog,
-      sessionStore: createMcpSessionStore(catalogResult.catalog),
+      sessionStore: createMcpSessionStore({
+        statBlockCatalog: catalogResult.catalog,
+        unitLibrary: baseRoot.unitLibrary,
+      }),
     };
     const draftId = "draft:mcp-multiattack-continuation";
     createFinalizedFighterSheet(root, draftId);

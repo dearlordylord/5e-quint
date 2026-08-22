@@ -31,6 +31,7 @@ import {
 } from "../test-support/mcp-acceptance-scenarios.ts";
 import { createMcpApplicationServices } from "./composition-root.ts";
 import { availableCharacterSession } from "./session-store.ts";
+import { adminProjection } from "./admin-mirror.ts";
 import { contentToolDefinitions } from "./content-tools.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
@@ -1309,6 +1310,29 @@ describe("MCP protocol server", () => {
         name: "read_battle_state",
         arguments: { playSessionId },
       });
+      const captureDeepProjection = () =>
+        host.playSessions.run(decoded.right, (root) => {
+          const projection = adminProjection(root);
+          if (Either.isLeft(projection)) {
+            throw new Error(
+              `Expected a complete Play Session projection: ${projection.left}`,
+            );
+          }
+          return {
+            projection: projection.right,
+            sessionSnapshot: root.sessionStore.snapshot(),
+            characterSessions: Array.from(
+              root.sessionStore.characters.entries(),
+            ),
+            battleState: root.sessionStore.battleState,
+            battleSession: root.sessionStore.battleSession,
+            transientBattleFills: root.sessionStore.pendingBattleFills,
+          };
+        });
+      const deepBeforeFailure = await captureDeepProjection();
+      if (Either.isLeft(deepBeforeFailure)) {
+        throw new Error(deepBeforeFailure.left.restoration.guidance);
+      }
       await host.playSessions.run(decoded.right, (root) => {
         root.sessionStore.characters.setAll = () =>
           Either.left({
@@ -1341,6 +1365,11 @@ describe("MCP protocol server", () => {
           },
         },
       });
+      const deepAfterFailure = await captureDeepProjection();
+      if (Either.isLeft(deepAfterFailure)) {
+        throw new Error(deepAfterFailure.left.restoration.guidance);
+      }
+      expect(deepAfterFailure.right).toEqual(deepBeforeFailure.right);
       const battleAfterFailure = await callStructuredTool(client, {
         name: "read_battle_state",
         arguments: { playSessionId },

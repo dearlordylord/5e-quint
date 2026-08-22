@@ -64,10 +64,10 @@ export function handleBattleLifecycleToolCall(
           }),
         ),
         Match.when({ kind: "addCombatant" }, (operation) =>
-          handleActiveBattleRosterOperation(root, matched.session, operation),
+          handleActiveBattleRosterOperation(root, operation),
         ),
         Match.when({ kind: "removeCombatant" }, (operation) =>
-          handleActiveBattleRosterOperation(root, matched.session, operation),
+          handleActiveBattleRosterOperation(root, operation),
         ),
         Match.exhaustive,
       ),

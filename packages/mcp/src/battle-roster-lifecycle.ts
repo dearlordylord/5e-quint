@@ -1,28 +1,22 @@
-import {
-  addBattleRuntimeCombatant,
-  battleStateInitIssueMessage,
-  removeBattleRuntimeCombatants,
-  type BattleCreatureState,
-  type BattleRuntimeSession,
-  type CombatantId,
-} from "@dnd/battle-runtime";
-import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
 import { Either, Match } from "effect";
-
-import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
-import type { McpPlaySessionRoot } from "./composition-root.ts";
+import type { BattleRuntimeSession } from "@dnd/battle-runtime";
 import type { BattleLifecycleToolInput } from "./battle-lifecycle-tool-input.ts";
 import {
   battlePresentationProjection,
   battleSnapshotPresentationIssueContent,
-  type ActiveBattlePresentationProjection,
 } from "./battle-tool-payloads.ts";
 import { BattleLifecycleOutputSchema } from "./battle-tool-output.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
+import {
+  type ActiveBattleRosterTransitionPreview,
+  type McpBattleRosterOperation,
+  type McpBattleRosterTransitionIssue,
+} from "./session-store.ts";
 import { projectBattleCombatant } from "./start-battle-tool.ts";
-import type { CharacterSession } from "./session-store.ts";
 import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
-import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
+import { errorContent, jsonContentPayload } from "./tool-content.ts";
+import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 
 export const BATTLE_LIFECYCLE_RECOVERY = {
   tag: "battleAndCharacterSessionsUnchanged",
@@ -42,28 +36,17 @@ export function battleLifecycleError(
 
 export function handleActiveBattleRosterOperation(
   root: McpPlaySessionRoot,
-  activeBattle: BattleRuntimeSession,
   operation: Extract<
     BattleLifecycleToolInput["operation"],
     { readonly kind: "addCombatant" | "removeCombatant" }
   >,
 ) {
-  if (root.sessionStore.pendingBattleFills !== null) {
-    return battleLifecycleError(
-      "Cannot change the roster with pending battle fills.",
-      {
-        code: "BATTLE_FILLS_PENDING",
-        pendingSubject: root.sessionStore.pendingBattleFills.subject,
-      },
-    );
-  }
-
   return Match.value(operation).pipe(
     Match.when({ kind: "addCombatant" }, (matched) =>
-      addCombatant(root, activeBattle, matched.combatant),
+      addCombatant(root, matched.combatant),
     ),
     Match.when({ kind: "removeCombatant" }, (matched) =>
-      removeCombatant(root, activeBattle, matched.combatantId),
+      removeCombatant(root, matched.combatantId),
     ),
     Match.exhaustive,
   );
@@ -71,7 +54,6 @@ export function handleActiveBattleRosterOperation(
 
 function addCombatant(
   root: McpPlaySessionRoot,
-  activeBattle: BattleRuntimeSession,
   combatant: Extract<
     BattleLifecycleToolInput["operation"],
     { readonly kind: "addCombatant" }
@@ -82,249 +64,236 @@ function addCombatant(
     return lifecycleFailureFromToolError(projection.left);
   }
 
-  const nextBattle = addBattleRuntimeCombatant({
-    session: activeBattle,
-    combatant: projection.right.creatureInit,
-  });
-  if (Either.isLeft(nextBattle)) {
-    return battleLifecycleError("Battle combatant admission failed.", {
-      code: "BATTLE_COMBATANT_ADMISSION_FAILED",
-      combatantId: combatant.combatantId,
-      message: battleStateInitIssueMessage(nextBattle.left),
-    });
-  }
-
-  const nextCharacterSessions =
+  const operation: Extract<
+    McpBattleRosterOperation,
+    { readonly kind: "addCharacter" | "addStatBlock" }
+  > =
     projection.right.tag === "characterSession"
-      ? [
-          {
-            tag: "inBattle" as const,
-            sheet: projection.right.characterSession.session,
-            battleId: activeBattle.state.battleId,
-          },
-        ]
-      : [];
-  const presentation = battlePresentationForCommit(nextBattle.right);
-  if (Either.isLeft(presentation)) return presentation.left;
+      ? { kind: "addCharacter", combatant: projection.right.creatureInit }
+      : { kind: "addStatBlock", combatant: projection.right.creatureInit };
+  const planned = root.sessionStore.planActiveBattleRosterTransition(operation);
+  if (Either.isLeft(planned)) return rosterTransitionFailure(planned.left);
 
   return commitBattleLifecycleTransition({
     root,
-    expectedBattleId: activeBattle.state.battleId,
-    nextBattle: nextBattle.right,
-    nextCharacterSessions,
+    transition: planned.right,
     result: {
       tag: "combatantAdded",
       combatantId: combatant.combatantId,
     },
-    presentation: presentation.right,
   });
 }
 
 function removeCombatant(
   root: McpPlaySessionRoot,
-  activeBattle: BattleRuntimeSession,
-  combatantId: CombatantId,
+  combatantId: Extract<
+    BattleLifecycleToolInput["operation"],
+    { readonly kind: "removeCombatant" }
+  >["combatantId"],
 ) {
-  const combatant = activeBattle.state.combatants.get(combatantId);
-  if (combatant === undefined) {
-    return battleLifecycleError(
-      "Battle combatant is not in the current battle.",
-      {
-        code: "BATTLE_COMBATANT_NOT_FOUND",
-        combatantId,
-      },
-    );
-  }
-
-  const settledCharacterSessions = settleRemovedCharacterSession(
-    root,
-    activeBattle,
-    combatant,
-  );
-  if (Either.isLeft(settledCharacterSessions)) {
-    return settledCharacterSessions.left;
-  }
-
-  const nextBattle = removeBattleRuntimeCombatants({
-    session: activeBattle,
-    combatantIds: [combatantId],
+  const planned = root.sessionStore.planActiveBattleRosterTransition({
+    kind: "remove",
+    combatantId,
   });
-  if (Either.isLeft(nextBattle)) {
-    return battleLifecycleError("Battle combatant removal failed.", {
-      code: "BATTLE_COMBATANT_REMOVAL_FAILED",
-      combatantId,
-      message: battleStateInitIssueMessage(nextBattle.left),
+  if (Either.isLeft(planned)) return rosterTransitionFailure(planned.left);
+  if (planned.right.kind !== "remove") {
+    return rosterTransitionFailure({
+      tag: "battleRosterOperationInvalid",
+      message: "Battle roster removal did not produce a removal transition.",
     });
   }
 
-  const removedCombatantIds = [...activeBattle.state.combatants.keys()].filter(
-    (id) => !nextBattle.right.state.combatants.has(id),
-  );
-  const nonEmptyRemovedCombatantIds = nonEmptyCombatantIds(removedCombatantIds);
-  if (nonEmptyRemovedCombatantIds === undefined) {
-    return battleLifecycleError(
-      "Battle combatant removal produced no roster change.",
-      {
-        code: "BATTLE_COMBATANT_REMOVAL_EMPTY",
-        combatantId,
-      },
-    );
-  }
-
-  const presentation = battlePresentationForCommit(nextBattle.right);
-  if (Either.isLeft(presentation)) return presentation.left;
-
   return commitBattleLifecycleTransition({
     root,
-    expectedBattleId: activeBattle.state.battleId,
-    nextBattle: nextBattle.right,
-    nextCharacterSessions: settledCharacterSessions.right,
+    transition: planned.right,
     result: {
       tag: "combatantRemoved",
       combatantId,
-      removedCombatantIds: nonEmptyRemovedCombatantIds,
+      removedCombatantIds: planned.right.removedCombatantIds,
     },
-    presentation: presentation.right,
   });
 }
 
-function settleRemovedCharacterSession(
-  root: McpPlaySessionRoot,
-  activeBattle: BattleRuntimeSession,
-  combatant: BattleCreatureState,
-): Either.Either<readonly CharacterSession[], ToolError> {
-  if (combatant.origin.kind !== "character") return Either.right([]);
+function commitBattleLifecycleTransition(input: {
+  readonly root: McpPlaySessionRoot;
+  readonly transition: ActiveBattleRosterTransitionPreview;
+  readonly result:
+    | {
+        readonly tag: "combatantAdded";
+        readonly combatantId: string;
+      }
+    | {
+        readonly tag: "combatantRemoved";
+        readonly combatantId: string;
+        readonly removedCombatantIds: readonly [string, ...string[]];
+      };
+}) {
+  const presentation = battlePresentationForCommit(
+    input.transition.prospectiveBattle,
+  );
+  if (Either.isLeft(presentation)) return presentation.left;
 
-  const characterId = combatant.origin.characterId;
-  const session = root.sessionStore.characters.get(characterId);
-  if (session === undefined) {
-    return Either.left(
-      battleLifecycleError("Battle character has no matching session record.", {
-        code: "UNKNOWN_BATTLE_CHARACTER_SESSION",
-        combatantId: combatant.combatantId,
-        characterId,
-      }),
-    );
-  }
-  if (session.tag !== "inBattle") {
-    return Either.left(
-      battleLifecycleError("Battle character session is not in battle.", {
-        code: "CHARACTER_SESSION_NOT_IN_BATTLE",
-        characterId,
-      }),
-    );
-  }
-  if (session.battleId !== activeBattle.state.battleId) {
-    return Either.left(
-      battleLifecycleError(
-        "Battle character session belongs to another battle.",
-        {
-          code: "CHARACTER_SESSION_BATTLE_OWNERSHIP_CONFLICT",
-          characterId,
-          expectedBattleId: activeBattle.state.battleId,
-          actualBattleId: session.battleId,
-        },
-      ),
-    );
-  }
+  const committed = input.root.sessionStore.commitActiveBattleRosterTransition(
+    input.transition.plan,
+  );
+  if (Either.isLeft(committed)) return rosterTransitionFailure(committed.left);
 
-  const settledSession = settleCharacterSheetFromBattle({
-    combatant,
-    state: activeBattle.state,
-    context: activeBattle.context,
-    sheet: session.sheet,
-    unitLibrary: root.unitLibrary,
-    statBlockCatalog: root.statBlockCatalog,
+  input.root.sessionStore.pendingBattleFills = null;
+  publishAdminProjectionBestEffort(input.root);
+
+  const battleState = battleStateSnapshot({
+    tag: "activeBattle",
+    session: committed.right,
   });
-  if (Either.isLeft(settledSession)) {
-    return Either.left(
-      battleLifecycleError("Battle character session settlement failed.", {
-        code: "CHARACTER_SESSION_SETTLEMENT_INVALID",
-        characterId,
-        message: settledSession.left.message,
-      }),
-    );
-  }
-  return Either.right([settledSession.right]);
+  return schemaJsonContent(BattleLifecycleOutputSchema, {
+    battleState,
+    result: input.result,
+    snapshot: presentation.right.snapshot,
+    availableActs: presentation.right.availableActs,
+    admittedSpellPresentations: presentation.right.admittedSpellPresentations,
+    presentedInterruptChoices: presentation.right.presentedInterruptChoices,
+    session: { ...input.root.sessionStore.snapshot(), battleState },
+  });
 }
 
-function battlePresentationForCommit(
-  nextBattle: BattleRuntimeSession,
-): Either.Either<
-  ActiveBattlePresentationProjection,
-  ReturnType<typeof battleSnapshotPresentationIssueContent>
-> {
+function battlePresentationForCommit(nextBattle: BattleRuntimeSession) {
   return Either.mapLeft(
     battlePresentationProjection(nextBattle),
     battleSnapshotPresentationIssueContent,
   );
 }
 
-function commitBattleLifecycleTransition(input: {
-  readonly root: McpPlaySessionRoot;
-  readonly expectedBattleId: BattleRuntimeSession["state"]["battleId"];
-  readonly nextBattle: BattleRuntimeSession;
-  readonly nextCharacterSessions: readonly CharacterSession[];
-  readonly result:
-    | {
-        readonly tag: "combatantAdded";
-        readonly combatantId: CombatantId;
-      }
-    | {
-        readonly tag: "combatantRemoved";
-        readonly combatantId: CombatantId;
-        readonly removedCombatantIds: readonly [CombatantId, ...CombatantId[]];
-      };
-  readonly presentation: ActiveBattlePresentationProjection;
-}) {
-  const transition = input.root.sessionStore.storeActiveBattleRosterTransition({
-    expectedBattleId: input.expectedBattleId,
-    nextBattle: input.nextBattle,
-    characterSessions: input.nextCharacterSessions,
-  });
-  if (Either.isLeft(transition)) {
-    if (transition.left.tag === "battleStateCharacterSessionRegistryConflict") {
-      return battleLifecycleError("Battle lifecycle commit failed.", {
+function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleRosterPendingBattleFills" }, (matched) =>
+      battleLifecycleError(
+        "Cannot change the roster with pending battle fills.",
+        {
+          code: "BATTLE_FILLS_PENDING",
+          pendingSubject: matched.pendingSubject,
+        },
+      ),
+    ),
+    Match.when({ tag: "battleRosterCombatantAdmissionFailed" }, (matched) =>
+      battleLifecycleError("Battle combatant admission failed.", {
+        code: "BATTLE_COMBATANT_ADMISSION_FAILED",
+        combatantId: matched.combatantId,
+        message: matched.message,
+      }),
+    ),
+    Match.when({ tag: "battleRosterCombatantNotFound" }, (matched) =>
+      battleLifecycleError("Battle combatant is not in the current battle.", {
+        code: "BATTLE_COMBATANT_NOT_FOUND",
+        combatantId: matched.combatantId,
+      }),
+    ),
+    Match.when({ tag: "battleRosterRemovalEmpty" }, (matched) =>
+      battleLifecycleError(
+        "Battle combatant removal produced no roster change.",
+        {
+          code: "BATTLE_COMBATANT_REMOVAL_EMPTY",
+          combatantId: matched.combatantId,
+        },
+      ),
+    ),
+    Match.when({ tag: "battleRosterCharacterSessionMissing" }, (matched) =>
+      battleLifecycleError("Battle character has no matching session record.", {
+        code: "UNKNOWN_BATTLE_CHARACTER_SESSION",
+        combatantId: matched.combatantId,
+        characterId: matched.characterId,
+      }),
+    ),
+    Match.when({ tag: "battleRosterCharacterSessionNotInBattle" }, (matched) =>
+      battleLifecycleError("Battle character session is not in battle.", {
+        code: "CHARACTER_SESSION_NOT_IN_BATTLE",
+        characterId: matched.characterId,
+      }),
+    ),
+    Match.when(
+      { tag: "battleRosterCharacterBattleOwnershipConflict" },
+      (matched) =>
+        battleLifecycleError(
+          "Battle character session belongs to another battle.",
+          {
+            code: "CHARACTER_SESSION_BATTLE_OWNERSHIP_CONFLICT",
+            characterId: matched.characterId,
+            expectedBattleId: matched.expectedBattleId,
+            actualBattleId: matched.actualBattleId,
+          },
+        ),
+    ),
+    Match.when({ tag: "battleRosterCharacterAlreadyInBattle" }, (matched) =>
+      battleLifecycleError("Character is already assigned to a battle.", {
+        code: "CHARACTER_ALREADY_IN_BATTLE",
+        characterId: matched.characterId,
+        battleId: matched.battleId,
+      }),
+    ),
+    Match.when({ tag: "battleRosterSettlementInvalid" }, (matched) =>
+      battleLifecycleError("Battle character session settlement failed.", {
+        code: "CHARACTER_SESSION_SETTLEMENT_INVALID",
+        characterId: matched.characterId,
+        message: matched.message,
+      }),
+    ),
+    Match.when({ tag: "battleRosterOperationInvalid" }, (matched) =>
+      battleLifecycleError("Battle lifecycle operation is invalid.", {
+        code: "BATTLE_LIFECYCLE_OPERATION_INVALID",
+        message: matched.message,
+      }),
+    ),
+    Match.when({ tag: "battleRosterUnknownPlan" }, () =>
+      battleLifecycleError("Battle lifecycle commit failed.", {
+        code: "BATTLE_STATE_TRANSITION_INVALID",
+        transition: { tag: "unknownRosterPlan" },
+      }),
+    ),
+    Match.when({ tag: "battleRosterPlanBattleChanged" }, (matched) =>
+      battleLifecycleError("Battle lifecycle commit failed.", {
+        code: "BATTLE_STATE_TRANSITION_INVALID",
+        transition: matched,
+      }),
+    ),
+    Match.when({ tag: "battleRosterPlanCharacterChanged" }, (matched) =>
+      battleLifecycleError("Battle lifecycle commit failed.", {
         code: "CHARACTER_SESSION_COMMIT_INVALID",
-        message: `Character Session registry rejected the Battle lifecycle commit: ${transition.left.registryIssue.tag}.`,
-        registryIssue: transition.left.registryIssue,
-        affectedCharacterIds: transition.left.affectedCharacterIds,
-      });
-    }
-    return battleLifecycleError("Battle lifecycle commit failed.", {
-      code: "BATTLE_STATE_TRANSITION_INVALID",
-      transition: transition.left,
-    });
-  }
-
-  input.root.sessionStore.pendingBattleFills = null;
-  publishAdminProjectionBestEffort(input.root);
-
-  const state = input.root.sessionStore.battleState;
-  if (state.tag !== "activeBattle") {
-    return battleLifecycleError(
-      "Battle lifecycle commit produced invalid state.",
-      { code: "BATTLE_LIFECYCLE_STATE_INVALID" },
-    );
-  }
-  const battleState = battleStateSnapshot(state);
-  const session = input.root.sessionStore.snapshot();
-  return schemaJsonContent(BattleLifecycleOutputSchema, {
-    battleState,
-    result: input.result,
-    snapshot: input.presentation.snapshot,
-    availableActs: input.presentation.availableActs,
-    admittedSpellPresentations: input.presentation.admittedSpellPresentations,
-    presentedInterruptChoices: input.presentation.presentedInterruptChoices,
-    session: { ...session, battleState },
-  });
-}
-
-function nonEmptyCombatantIds(
-  ids: readonly CombatantId[],
-): readonly [CombatantId, ...CombatantId[]] | undefined {
-  const first = ids[0];
-  return first === undefined ? undefined : [first, ...ids.slice(1)];
+        transition: matched,
+      }),
+    ),
+    Match.when({ tag: "battleRosterPlanFillsChanged" }, (matched) =>
+      battleLifecycleError("Battle lifecycle commit failed.", {
+        code: "BATTLE_STATE_TRANSITION_INVALID",
+        transition: matched,
+      }),
+    ),
+    Match.when({ tag: "invalidBattleStateTransition" }, (matched) =>
+      battleLifecycleError("Battle state transition failed.", {
+        code: "BATTLE_STATE_TRANSITION_INVALID",
+        transition: matched,
+      }),
+    ),
+    Match.when({ tag: "battleStateBattleOwnershipConflict" }, (matched) =>
+      battleLifecycleError("Battle state transition failed.", {
+        code: "BATTLE_STATE_TRANSITION_INVALID",
+        transition: matched,
+      }),
+    ),
+    Match.when(
+      { tag: "battleStateCharacterSessionRegistryConflict" },
+      (matched) =>
+        battleLifecycleError("Battle lifecycle commit failed.", {
+          code: "CHARACTER_SESSION_COMMIT_INVALID",
+          transition: matched,
+        }),
+    ),
+    Match.when({ tag: "initialInitiativeSwapRejected" }, (matched) =>
+      battleLifecycleError("Battle lifecycle commit failed.", {
+        code: "BATTLE_STATE_TRANSITION_INVALID",
+        transition: matched,
+      }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function lifecycleFailureFromToolError(failure: ToolError) {

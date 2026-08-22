@@ -229,14 +229,6 @@ export function decodeStartBattleArgs(
   });
 }
 
-export function decodeBattleCombatantArgs(
-  args: unknown,
-  toolName: string,
-): ToolInputResult<BattleCombatantToolInput> {
-  const record = decodeToolArgs(BattleCombatantArgsSchema, args, toolName);
-  return Either.map(record, decodeBattleCombatant);
-}
-
 function decodeBattleCombatants(
   value: StartBattleToolArgs["initialCombatants"],
 ): StartBattleToolInput["initialCombatants"] {

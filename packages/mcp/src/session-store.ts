@@ -34,9 +34,25 @@ import type {
   StatBlockCatalog,
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
+import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
+import { createBattleRosterTransitionPlanner } from "./battle-roster-session-store.ts";
+import type {
+  ActiveBattleRosterTransitionPlan,
+  ActiveBattleRosterTransitionPreview,
+  McpBattleRosterOperation,
+  McpBattleRosterTransitionIssue,
+} from "./battle-roster-session-types.ts";
+import { createCharacterSessionRegistry } from "./character-session-registry.ts";
+
+export type {
+  ActiveBattleRosterTransitionPlan,
+  ActiveBattleRosterTransitionPreview,
+  McpBattleRosterOperation,
+  McpBattleRosterTransitionIssue,
+} from "./battle-roster-session-types.ts";
 
 export type AvailableCharacterSession = CharacterSheet;
 export type AvailableCharacterSessionInput = CharacterSheetRebuildInput;
@@ -164,11 +180,15 @@ export type McpSessionStore = {
   storeActiveBattle(
     session: BattleRuntimeSession,
   ): Either.Either<void, McpBattleStateTransitionIssue>;
-  storeActiveBattleRosterTransition(input: {
-    readonly expectedBattleId: BattleId;
-    readonly nextBattle: BattleRuntimeSession;
-    readonly characterSessions: readonly CharacterSession[];
-  }): Either.Either<void, McpBattleStateTransitionIssue>;
+  planActiveBattleRosterTransition(
+    operation: McpBattleRosterOperation,
+  ): Either.Either<
+    ActiveBattleRosterTransitionPreview,
+    McpBattleRosterTransitionIssue
+  >;
+  commitActiveBattleRosterTransition(
+    plan: ActiveBattleRosterTransitionPlan,
+  ): Either.Either<BattleRuntimeSession, McpBattleRosterTransitionIssue>;
   storeInitialInitiativeSetup(
     setup: InitialInitiativeSetup,
   ): Either.Either<void, McpBattleStateTransitionIssue>;
@@ -227,12 +247,22 @@ export function characterIdFromDraftId(draftId: CharacterDraftId): CharacterId {
   return characterSheetId(`character:${encodeURIComponent(String(draftId))}`);
 }
 
-export function createMcpSessionStore(
-  statBlockCatalog: StatBlockCatalog,
-): McpSessionStore {
+export function createMcpSessionStore(input: {
+  readonly statBlockCatalog: StatBlockCatalog;
+  readonly unitLibrary: UnitCatalog;
+}): McpSessionStore {
+  const { statBlockCatalog, unitLibrary } = input;
   const drafts = new Map<CharacterDraftId, CharacterDraft>();
-  const characters = characterSessionRegistry();
+  const characters = createCharacterSessionRegistry();
+  const storeIdentity = {};
+  const battleRosterPlanner = createBattleRosterTransitionPlanner({
+    characters,
+    statBlockCatalog,
+    unitLibrary,
+    storeIdentity,
+  });
   let selectedStatBlockId: StatBlockId | null = null;
+  let pendingBattleFills: PendingBattleFillSession | null = null;
   let battleState: McpBattleState = { tag: "none" };
   const store: McpSessionStore = {
     drafts,
@@ -260,34 +290,28 @@ export function createMcpSessionStore(
       battleState = { tag: "activeBattle", session };
       return Either.right(undefined);
     },
-    storeActiveBattleRosterTransition(input) {
+    planActiveBattleRosterTransition(operation) {
       if (battleState.tag !== "activeBattle") {
         return invalidBattleStateTransition(battleState.tag, "activeBattle");
       }
-      const actualBattleId = battleState.session.state.battleId;
-      if (
-        actualBattleId !== input.expectedBattleId ||
-        input.nextBattle.state.battleId !== actualBattleId
-      ) {
-        return Either.left({
-          tag: "battleStateBattleOwnershipConflict",
-          expectedBattleId: actualBattleId,
-          actualBattleId:
-            input.nextBattle.state.battleId === actualBattleId
-              ? input.expectedBattleId
-              : input.nextBattle.state.battleId,
-        });
+      return battleRosterPlanner.plan(
+        operation,
+        battleState.session,
+        pendingBattleFills,
+      );
+    },
+    commitActiveBattleRosterTransition(plan) {
+      if (battleState.tag !== "activeBattle") {
+        return invalidBattleStateTransition(battleState.tag, "activeBattle");
       }
-      const committed = characters.setAll(input.characterSessions);
-      if (Either.isLeft(committed)) {
-        return Either.left({
-          tag: "battleStateCharacterSessionRegistryConflict",
-          registryIssue: committed.left,
-          affectedCharacterIds: input.characterSessions.map(characterSessionId),
-        });
-      }
-      battleState = { tag: "activeBattle", session: input.nextBattle };
-      return Either.right(undefined);
+      const committed = battleRosterPlanner.commit(
+        plan,
+        battleState.session,
+        pendingBattleFills,
+      );
+      if (Either.isLeft(committed)) return Either.left(committed.left);
+      battleState = { tag: "activeBattle", session: committed.right };
+      return committed;
     },
     storeInitialInitiativeSetup(setup) {
       if (battleState.tag !== "none") {
@@ -333,7 +357,12 @@ export function createMcpSessionStore(
       battleState = { tag: "none" };
       return Either.right(undefined);
     },
-    pendingBattleFills: null,
+    get pendingBattleFills(): PendingBattleFillSession | null {
+      return pendingBattleFills;
+    },
+    set pendingBattleFills(value: PendingBattleFillSession | null) {
+      pendingBattleFills = value;
+    },
     clearSelectedStatBlock(): void {
       selectedStatBlockId = null;
     },
@@ -380,59 +409,4 @@ function invalidBattleStateTransition(
     from,
     to,
   });
-}
-
-function characterSessionRegistry(): CharacterSessionRegistry {
-  let sessions = new Map<CharacterId, CharacterSession>();
-  return {
-    get size() {
-      return sessions.size;
-    },
-    get(characterId: CharacterId): CharacterSession | undefined {
-      return sessions.get(characterId);
-    },
-    has(characterId: CharacterId): boolean {
-      return sessions.has(characterId);
-    },
-    set(session: CharacterSession): void {
-      sessions.set(characterSessionId(session), session);
-    },
-    setAll(nextSessions: readonly CharacterSession[]) {
-      const nextIds = new Set<CharacterId>();
-      for (const session of nextSessions) {
-        const id = characterSessionId(session);
-        if (nextIds.has(id)) {
-          return Either.left({
-            tag: "duplicateCharacterSession",
-            characterId: id,
-          } satisfies CharacterSessionRegistryIssue);
-        }
-        if (!sessions.has(id)) {
-          return Either.left({
-            tag: "unknownCharacterSession",
-            characterId: id,
-          } satisfies CharacterSessionRegistryIssue);
-        }
-        nextIds.add(id);
-      }
-      const next = new Map(sessions);
-      for (const session of nextSessions) {
-        next.set(characterSessionId(session), session);
-      }
-      sessions = next;
-      return Either.right(undefined);
-    },
-    entries(): IterableIterator<readonly [CharacterId, CharacterSession]> {
-      return sessions.entries();
-    },
-    keys(): IterableIterator<CharacterId> {
-      return sessions.keys();
-    },
-  };
-}
-
-function characterSessionId(session: CharacterSession): CharacterId {
-  return session.tag === "inBattle"
-    ? session.sheet.characterId
-    : session.characterId;
 }

@@ -89,7 +89,10 @@ export function createMcpPlaySessionRoot(
 ): McpPlaySessionRoot {
   return {
     ...applicationServices,
-    sessionStore: createMcpSessionStore(applicationServices.statBlockCatalog),
+    sessionStore: createMcpSessionStore({
+      statBlockCatalog: applicationServices.statBlockCatalog,
+      unitLibrary: applicationServices.unitLibrary,
+    }),
     adminMirrorPublication:
       applicationServices.createAdminMirrorPublication(mirrorSessionId),
   };
