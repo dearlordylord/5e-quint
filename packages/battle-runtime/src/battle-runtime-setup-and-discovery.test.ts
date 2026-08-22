@@ -45,8 +45,10 @@ import { battleCreaturePresentationDisplayName } from "./stat-block-presentation
 import {
   battlePresentedSnapshot,
   BattlePresentedSnapshotSchema,
+  battleRuntimeSessionFollows,
   isBattleRuntimeSession,
 } from "./index.ts";
+import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
 import {
   battleRuntimeContextForTest,
   battleRuntimeSessionForTest,
@@ -71,6 +73,28 @@ describe("battle runtime: setup and discovery", () => {
     expect(isBattleRuntimeSession(session)).toBe(true);
     expect(isBattleRuntimeSession(session.state)).toBe(false);
     expect(isBattleRuntimeSession(null)).toBe(false);
+  });
+
+  test("recognizes only identity and direct runtime session successors", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-runtime-session-lineage"),
+      combatants: [characterSeed({ initiative: 10 })],
+    });
+    const successor = battleRuntimeSessionWithState(session, session.state);
+    const laterSuccessor = battleRuntimeSessionWithState(
+      successor,
+      successor.state,
+    );
+    const unrelated = battleRuntimeSessionForTest({
+      state: session.state,
+      context: session.context,
+    });
+
+    expect(battleRuntimeSessionFollows(session, session)).toBe(true);
+    expect(battleRuntimeSessionFollows(successor, session)).toBe(true);
+    expect(battleRuntimeSessionFollows(session, successor)).toBe(false);
+    expect(battleRuntimeSessionFollows(laterSuccessor, session)).toBe(false);
+    expect(battleRuntimeSessionFollows(unrelated, session)).toBe(false);
   });
 
   test("battle ids must be non-empty trimmed strings", () => {
