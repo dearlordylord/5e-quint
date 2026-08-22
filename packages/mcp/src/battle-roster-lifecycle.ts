@@ -1,5 +1,5 @@
 import { Either, Match } from "effect";
-import type { BattleRuntimeSession } from "@dnd/battle-runtime";
+import type { BattleRuntimeSession, CombatantId } from "@dnd/battle-runtime";
 import type { BattleLifecycleToolInput } from "./battle-lifecycle-tool-input.ts";
 import {
   battlePresentationProjection,
@@ -114,12 +114,12 @@ function commitBattleLifecycleTransition(input: {
   readonly result:
     | {
         readonly tag: "combatantAdded";
-        readonly combatantId: string;
+        readonly combatantId: CombatantId;
       }
     | {
         readonly tag: "combatantRemoved";
-        readonly combatantId: string;
-        readonly removedCombatantIds: readonly [string, ...string[]];
+        readonly combatantId: CombatantId;
+        readonly removedCombatantIds: readonly [CombatantId, ...CombatantId[]];
       };
 }) {
   const presentation = battlePresentationForCommit(

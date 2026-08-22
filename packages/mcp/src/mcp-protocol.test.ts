@@ -424,6 +424,27 @@ describe("MCP protocol server", () => {
         },
         projection: { battleState: { tag: "none" } },
       });
+
+      const noBattleSuccessEnvelope = {
+        ...noBattleLifecycle.structuredContent,
+        operation: {
+          name: "battle_lifecycle",
+          result: {
+            battleState: { tag: "none" },
+            snapshot: null,
+            availableActs: [],
+            admittedSpellPresentations: [],
+            presentedInterruptChoices: [],
+            session: objectField(
+              noBattleLifecycle.structuredContent,
+              "projection",
+            ),
+          },
+        },
+      };
+      expect(validateLifecycleOutput(noBattleSuccessEnvelope).valid).toBe(
+        false,
+      );
     } finally {
       await Promise.allSettled([client.close(), host.server.close()]);
     }

@@ -20,6 +20,7 @@ import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv
 import { ListCharactersOutputSchema } from "./character-tool-output.ts";
 import { AdminSessionProjectionSchema } from "./admin-mirror-contract.ts";
 import {
+  BattleLifecycleOutputSchema,
   BattleResolutionOutputSchema,
   BattleSessionOutputSchema,
   EndBattleOutputSchema,
@@ -191,6 +192,52 @@ describe("MCP session wire projections", () => {
       admittedSpellPresentations: [],
       presentedInterruptChoices: [],
     };
+
+    const validateLifecycle = new AjvJsonSchemaValidator().getValidator(
+      mcpOutputJsonSchema(BattleLifecycleOutputSchema),
+    );
+    const setupOutput = {
+      ...presentation,
+      battleState: setupState,
+      snapshot: null,
+      session: session(setupState),
+    };
+    const activeRosterOutput = {
+      ...activeResolutionFixture,
+      result: {
+        tag: "combatantAdded" as const,
+        combatantId: "combatant:projection-contract",
+      },
+    };
+    const noBattleSuccessOutput = {
+      ...presentation,
+      battleState: { tag: "none" as const },
+      snapshot: null,
+      session: session({ tag: "none" }),
+    };
+
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(setupOutput),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(
+          activeRosterOutput,
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(
+          noBattleSuccessOutput,
+        ),
+      ),
+    ).toBe(true);
+    expect(validateLifecycle(setupOutput).valid).toBe(true);
+    expect(validateLifecycle(noBattleSuccessOutput).valid).toBe(false);
+
     const activeValidation = validateResolution(activeResolutionFixture);
     expect(activeValidation.valid, activeValidation.errorMessage).toBe(true);
     expect(

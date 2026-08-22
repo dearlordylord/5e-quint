@@ -16,11 +16,12 @@ import {
   battleSnapshotPresentationIssueContent,
   initialInitiativeSetupStartPayload,
 } from "./battle-tool-payloads.ts";
-import { StartBattleOutputSchema } from "./battle-tool-output.ts";
+import { BattleLifecycleOutputSchema } from "./battle-tool-output.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 import { completeBattleStateTransition } from "./battle-state-transition.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
+import { mcpSessionSummary } from "./session-snapshot-output.ts";
 
 export function handleBattleLifecycleToolCall(
   root: McpPlaySessionRoot,
@@ -103,7 +104,7 @@ function applySwap(
     transition,
     output: () =>
       schemaJsonContent(
-        StartBattleOutputSchema,
+        BattleLifecycleOutputSchema,
         initialInitiativeSetupStartPayload(root),
       ),
   });
@@ -132,7 +133,7 @@ function finalizeSetup(
         return battleSnapshotPresentationIssueContent(snapshot.left);
       }
       const battleState = battleStateSnapshot(state);
-      return schemaJsonContent(StartBattleOutputSchema, {
+      return schemaJsonContent(BattleLifecycleOutputSchema, {
         battleState,
         snapshot: snapshot.right,
         availableActs: discoverBattleActs(state.session),
@@ -141,7 +142,7 @@ function finalizeSetup(
         ),
         presentedInterruptChoices: [],
         session: {
-          ...root.sessionStore.snapshot(),
+          ...mcpSessionSummary(root.sessionStore.snapshot()),
           battleState,
         },
       });

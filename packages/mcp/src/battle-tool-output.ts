@@ -2,6 +2,7 @@ import {
   BattleActPresentationSchema,
   BattleInitiativePositionSchema,
   BattleInterruptProcedureChoiceSchema,
+  CombatantId,
   BattleSpellPresentationSchema,
   BattleDroppedObjectOutcomeSchema,
   BattleHoleSchema,
@@ -100,12 +101,12 @@ const BattlePresentationBranches = {
 const BattleLifecycleResultSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("combatantAdded"),
-    combatantId: Schema.String,
+    combatantId: CombatantId,
   }),
   Schema.Struct({
     tag: Schema.Literal("combatantRemoved"),
-    combatantId: Schema.String,
-    removedCombatantIds: Schema.NonEmptyArray(Schema.String),
+    combatantId: CombatantId,
+    removedCombatantIds: Schema.NonEmptyArray(CombatantId),
   }),
 );
 
@@ -142,6 +143,18 @@ export const StartBattleOutputSchema = battlePresentationOutputSchema(
   McpSessionSummarySchema,
 );
 
+const BattleLifecycleInitialInitiativeSetupOutputSchema = Schema.Struct({
+  ...BattlePresentationBranches.initialInitiativeSetup,
+  ...BattlePresentationProjectionFields,
+  session: McpSessionSummarySchema,
+});
+
+const BattleLifecycleActiveSetupOutputSchema = Schema.Struct({
+  ...BattlePresentationBranches.activeBattle,
+  ...BattlePresentationProjectionFields,
+  session: McpSessionSummarySchema,
+});
+
 const BattleLifecycleActiveOutputSchema = Schema.Struct({
   battleState: McpActiveBattleStateSnapshotSchema,
   result: BattleLifecycleResultSchema,
@@ -152,7 +165,8 @@ const BattleLifecycleActiveOutputSchema = Schema.Struct({
 
 export const BattleLifecycleOutputSchema = Schema.Union(
   BattleLifecycleActiveOutputSchema,
-  StartBattleOutputSchema,
+  BattleLifecycleInitialInitiativeSetupOutputSchema,
+  BattleLifecycleActiveSetupOutputSchema,
 );
 
 export const BattleResolutionOutputSchema = Schema.Struct({
