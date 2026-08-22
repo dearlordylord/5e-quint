@@ -1,0 +1,49 @@
+{
+  "schema": "dnd.srd-play.installed-chatgpt-evidence.v1",
+  "status": "unavailable",
+  "recordedAt": "2026-08-21",
+  "scope": "Installed ChatGPT developer-mode connection, Skill activation, and complete-plugin newcomer journey",
+  "environment": {
+    "developerMode": "not-observed",
+    "mcpConnection": "not-observed",
+    "installedPlugin": "not-observed",
+    "skillActivation": "not-observed",
+    "completeJourney": "not-observed"
+  },
+  "reason": "This repository environment has no authorized ChatGPT developer-mode installation or account/workspace policy context. Local protocol and static forward tests cannot establish installed-plugin activation or UI behavior.",
+  "promptOwner": "plugins/srd-play/evals/evaluation-inventory.json",
+  "capabilityMatrix": "plugins/srd-play/evals/capability-matrix.json",
+  "officialGuidance": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
+  "operatorProtocol": [
+    {
+      "step": "mcp-connection",
+      "evidenceKind": "connectionAndToolSelection",
+      "instructions": "In ChatGPT developer mode, connect the MCP server through a public HTTPS endpoint or Secure MCP Tunnel, review the discovered tool metadata, and run the mcpToolSelection prompts from the evaluation inventory. Record selected tool, arguments, result, errors, and confirmation behavior.",
+      "requiredCases": [
+        "mcp-direct-catalog",
+        "mcp-indirect-catalog",
+        "mcp-follow-up-detail",
+        "mcp-unsupported-history"
+      ]
+    },
+    {
+      "step": "complete-plugin",
+      "evidenceKind": "installedSkillActivation",
+      "instructions": "Package and install the complete plugin from a local source, start a new conversation with it enabled, and run the skillActivation prompts from the evaluation inventory. Record activation, tool calls, returned handles, meaningful-choice stops, and final results separately from MCP connection evidence.",
+      "requiredCases": [
+        "skill-direct",
+        "skill-natural",
+        "skill-continuation",
+        "skill-unrelated-dnd",
+        "skill-authoring-boundary"
+      ]
+    },
+    {
+      "step": "newcomer-journey",
+      "evidenceKind": "installedCompleteWorkflow",
+      "instructions": "Using the installed plugin, request one SRD discovery-to-character-to-battle journey. Preserve the Play Session handle, choose only returned Creation Hole options, stop for meaningful choices, use returned Battle Acts/Holes and optional raw dice, end the Battle, and record the resulting Character Session list.",
+      "requiredCases": ["skill-natural", "skill-continuation"]
+    }
+  ],
+  "observations": []
+}

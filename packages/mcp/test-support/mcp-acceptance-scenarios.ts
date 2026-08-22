@@ -13,6 +13,7 @@ import {
   type CharacterCreationSupportProfile,
 } from "@dnd/character-creation-runtime";
 import { Either, Schema } from "effect";
+import { ELAPSED_TIME_TICKS_PER_HOUR } from "@dnd/shared/elapsed-time";
 import { unitId, type Skill } from "@dnd/shared/game-facts";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
@@ -195,6 +196,19 @@ const agentConversationScenarios = [
     executableCoverage: "verifyToolContract",
     insufficiency:
       "This is now discoverable through MCP. Every tool exposes codec-derived inputSchema and outputSchema, and responses include structuredContent.",
+  },
+  {
+    id: "complete-newcomer-journey",
+    name: "Complete the SRD newcomer journey",
+    userSays:
+      "Show me the installed SRD choices, help me create a character, and run a short battle before showing my character list.",
+    agentReads:
+      "The live Play Session envelope, Creation Holes, Character Session projections, Battle lifecycle state, Battle Acts, Runtime Holes, and typed operation results are the only workflow facts.",
+    agentDecision:
+      "It retains the returned Play Session handle, stops for unresolved meaningful choices, copies returned ids and subjects exactly, optionally requests raw dice without deriving outcomes, and returns to list_characters after end_battle.",
+    executableCoverage: "verifyCompleteNewcomerJourney",
+    insufficiency:
+      "The repository proves this headless MCP journey. Installed ChatGPT Skill activation and complete-plugin behavior require the separately statused external evidence artifact.",
   },
   {
     id: "create-warrior-second-level",
@@ -950,6 +964,171 @@ export async function verifyBaselineVertical(client: Client) {
   assert.equal(
     get(knownFormsQuery, "details.code"),
     "CHARACTER_SESSION_QUERY_REJECTED",
+  );
+}
+
+/**
+ * Runs one model-facing newcomer path over the real MCP protocol. The path
+ * deliberately keeps all facts returned by the preceding operation and then
+ * exercises the shared Character Session and Battle lifecycle surfaces before
+ * returning to the durable Character Session list.
+ */
+export async function verifyCompleteNewcomerJourney(client: Client) {
+  await verifyToolContract(client);
+  await verifyBaselineVertical(client);
+
+  const characterId = testCharacterId(
+    "draft:stdio-accepted-orc-soldier-fighter",
+  );
+
+  const queried = await callTool(client, "query_character_session", {
+    characterId,
+    query: {
+      kind: "abilityCheckAbility",
+      skill: "athletics",
+      defaultAbility: "str",
+      activeFeatureUnitIds: [],
+    },
+  });
+  assert.equal(get(queried, "query.projection.defaultAbility"), "str");
+
+  const advanced = await callTool(client, "apply_character_session_operation", {
+    characterId,
+    operation: {
+      kind: "advanceClassLevel",
+      levelGain: {
+        tag: "classLevelGain",
+        classUnitId: "class_fighter",
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+      },
+    },
+  });
+  assert.equal(get(advanced, "detail.tag"), "available");
+
+  const rested = await callTool(client, "apply_character_session_operation", {
+    characterId,
+    operation: {
+      kind: "completeShortRest",
+      restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+    },
+  });
+  assert.equal(get(rested, "result.tag"), "shortRestCompleted");
+
+  // This boundary is intentionally exercised as a typed exclusion: the
+  // baseline Fighter does not own Lay On Hands, so the caller must not invent
+  // a healing capability merely because the operation is advertised.
+  await expectToolError(client, "apply_character_session_operation", {
+    characterId,
+    operation: {
+      kind: "applyLayOnHands",
+      targetCharacterId: characterId,
+      restoreHp: 1,
+      removePoisoned: false,
+    },
+  });
+
+  const dice = await callTool(client, "roll_dice", {
+    groups: [
+      { dice: 1, dieSize: 20 },
+      { dice: 2, dieSize: 6 },
+    ],
+  });
+  assert.equal(typeof get(dice, "correlationId"), "string");
+  assert.deepEqual(
+    (get(dice, "groups") as JsonObject[]).map((group) => group.dieSize),
+    [20, 6],
+  );
+
+  // This existing level-9 creation path keeps the resource spend in the same
+  // Play Session while still making the chosen character through real holes.
+  await verifyLevelNineRangerExpertiseSheetScenario(client);
+  const rangerId = testCharacterId(
+    "draft:stdio-level-nine-orc-soldier-ranger-expertise",
+  );
+  const freeCast = await callTool(client, "apply_character_session_operation", {
+    characterId: rangerId,
+    operation: {
+      kind: "spendSpellAccessFreeCast",
+      sourceUnitId: "ranger_favored_enemy",
+      spellId: "hunters_mark",
+    },
+  });
+  assert.equal(get(freeCast, "result.tag"), "spellAccessFreeCastSpent");
+
+  const setup = await callTool(client, "start_battle", {
+    battleId: "battle:stdio-complete-newcomer-setup",
+    initiativeMode: "initialSetup",
+    initialCombatants: [
+      {
+        kind: "characterSession",
+        ammunitionStocks: [],
+        characterId,
+        combatantId: "newcomer-fighter",
+        initiative: 18,
+      },
+      {
+        kind: "statBlock",
+        ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+        statBlockId: "stat_block_goblin_warrior",
+        combatantId: "newcomer-goblin",
+        initiative: 7,
+        admissionSource: { kind: "encounterParticipant" },
+      },
+    ],
+  });
+  assert.equal(get(setup, "battleState.tag"), "initialInitiativeSetup");
+
+  const active = await callTool(client, "battle_lifecycle", {
+    operation: { kind: "finalizeInitialInitiativeSetup" },
+  });
+  assert.equal(get(active, "battleState.tag"), "activeBattle");
+
+  const added = await callTool(client, "battle_lifecycle", {
+    operation: {
+      kind: "addCombatant",
+      combatant: {
+        kind: "statBlock",
+        ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+        statBlockId: "stat_block_skeleton",
+        combatantId: "newcomer-skeleton",
+        initiative: 4,
+        admissionSource: { kind: "encounterParticipant" },
+      },
+    },
+  });
+  assert.equal(get(added, "result.tag"), "combatantAdded");
+
+  const removed = await callTool(client, "battle_lifecycle", {
+    operation: {
+      kind: "removeCombatant",
+      combatantId: "newcomer-skeleton",
+    },
+  });
+  assert.equal(get(removed, "result.tag"), "combatantRemoved");
+
+  const endedFighterTurn = await callTool(client, "end_turn", {
+    actorId: "newcomer-fighter",
+  });
+  assert.equal(
+    get(endedFighterTurn, "snapshot.currentActorId"),
+    "newcomer-goblin",
+  );
+  await callTool(client, "end_turn", { actorId: "newcomer-goblin" });
+
+  const ended = await callTool(client, "end_battle", {});
+  assert.equal(get(ended, "session.battleState.tag"), "none");
+
+  const listed = await callTool(client, "list_characters", {});
+  const characterRows = get(listed, "characters") as JsonObject[];
+  assert.ok(
+    characterRows.some(
+      (row) => row.characterId === characterId && row.status === "available",
+    ),
+  );
+  assert.ok(
+    characterRows.some(
+      (row) => row.characterId === rangerId && row.status === "available",
+    ),
   );
 }
 
@@ -4169,7 +4348,7 @@ function parseString(value: unknown, context: string) {
 }
 
 export function verifyAgentConversationScenarios() {
-  assert.equal(agentConversationScenarios.length, 20);
+  assert.equal(agentConversationScenarios.length, 21);
   const scenarioIds = new Set<string>();
   for (const scenario of agentConversationScenarios) {
     assert.match(scenario.id, /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);

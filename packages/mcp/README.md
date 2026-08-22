@@ -274,6 +274,15 @@ automated local MCP startup/inspection evidence from installed-ChatGPT Skill
 activation evidence. The latter requires developer-mode execution and is owned
 by #328; local tests must not claim that UI evidence.
 
+Issue #328's headless newcomer journey is the single protocol-client scenario
+at `packages/mcp/src/plugin-newcomer-journey.test.ts`. Its frozen capability
+matrix is `plugins/srd-play/evals/capability-matrix.json`; each row points to
+the model-visible MCP surface and projection, the shared journey evidence, and
+the separately statused installed-ChatGPT artifact. The latter is deliberately
+`unavailable` until an authorized developer-mode installation is exercised;
+the reproducible operator protocol is stored beside that artifact. The matrix
+does not duplicate runtime state or the MCP scenario registry.
+
 `BattleResolutionResult` may include display-facing result details for tool
 responses, but `BattleState` remains authoritative. Optional display logs must
 not become the source of combat truth.

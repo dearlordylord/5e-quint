@@ -1,0 +1,232 @@
+{
+  "schema": "dnd.srd-play.capability-matrix.v1",
+  "status": "frozen",
+  "owner": "plugins/srd-play/evals",
+  "headlessJourney": {
+    "scenarioId": "complete-newcomer-journey",
+    "testPath": "packages/mcp/src/plugin-newcomer-journey.test.ts",
+    "supportPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts"
+  },
+  "externalEvidence": {
+    "artifactPath": "plugins/srd-play/evals/installed-chatgpt-evidence.json",
+    "status": "unavailable",
+    "reason": "Installed ChatGPT developer-mode connection, Skill activation, and complete-plugin behavior require an authorized external ChatGPT installation; local MCP protocol tests cannot prove them."
+  },
+  "rows": [
+    {
+      "id": "play-session-routing",
+      "issue": 316,
+      "mcpSurface": ["create_play_session", "read_play_session"],
+      "modelVisibleProjection": ["playSessionId", "projection", "restoration"],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "Application Play Session handles are process-lifetime development state; installed ChatGPT persistence is not inferred."
+    },
+    {
+      "id": "srd-catalog-discovery",
+      "issue": 317,
+      "mcpSurface": [
+        "list_catalog_units",
+        "inspect_catalog_unit",
+        "list_stat_blocks",
+        "select_stat_block"
+      ],
+      "modelVisibleProjection": [
+        "unitsByKind",
+        "unitRecordJson",
+        "statBlocks",
+        "selectedStatBlock"
+      ],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": [
+          "mcp-direct-catalog",
+          "mcp-indirect-catalog",
+          "mcp-follow-up-detail"
+        ]
+      },
+      "boundary": "Catalog presence is not Source-Executable support; only installed SRD records are admitted."
+    },
+    {
+      "id": "character-session-creation",
+      "issue": 318,
+      "mcpSurface": [
+        "create_character_draft",
+        "discover_creation_holes",
+        "fill_creation_holes",
+        "finalize_character",
+        "list_characters",
+        "inspect_character_session"
+      ],
+      "modelVisibleProjection": [
+        "holes",
+        "draft.revision",
+        "finalization",
+        "characters",
+        "detail"
+      ],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "Choices and identifiers come from live Creation Holes and catalog records; the Skill does not own presets or a parallel character shape."
+    },
+    {
+      "id": "character-sheet-queries",
+      "issue": 319,
+      "mcpSurface": ["query_character_session"],
+      "modelVisibleProjection": ["query.projection", "details.code"],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "The query surface exposes existing SDK projections and does not add generic non-ritual casting or a spell ledger."
+    },
+    {
+      "id": "character-progression-mutation",
+      "issue": 320,
+      "mcpSurface": ["apply_character_session_operation"],
+      "modelVisibleProjection": ["operation.result.detail", "nextOperations"],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Progression and supported selection replacement remain discriminated operations over the canonical Character Build."
+    },
+    {
+      "id": "character-rest-and-calendar",
+      "issue": 321,
+      "mcpSurface": ["apply_character_session_operation"],
+      "modelVisibleProjection": [
+        "operation.result",
+        "operation.result.detail",
+        "unresolvedInputs"
+      ],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Rest timing, recovery facts, and calendar fills are caller inputs to one atomic operation; no rest intermediate is retained."
+    },
+    {
+      "id": "character-healing-benefits",
+      "issue": 322,
+      "mcpSurface": ["apply_character_session_operation"],
+      "modelVisibleProjection": [
+        "operation.result",
+        "details.recovery",
+        "characters"
+      ],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Healing admission stays SDK-owned; an unsupported source returns typed recovery rather than an invented capability."
+    },
+    {
+      "id": "character-resource-operations",
+      "issue": 323,
+      "mcpSurface": ["apply_character_session_operation", "roll_dice"],
+      "modelVisibleProjection": [
+        "operation.result",
+        "operation.result.detail",
+        "groups"
+      ],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": ["skill-continuation"]
+      },
+      "boundary": "Raw faces are visible facts only; resource arithmetic remains in existing Character Sheet operations."
+    },
+    {
+      "id": "battle-character-round-trip",
+      "issue": 324,
+      "mcpSurface": [
+        "start_battle",
+        "read_battle_state",
+        "end_battle",
+        "list_characters"
+      ],
+      "modelVisibleProjection": [
+        "battleState",
+        "snapshot",
+        "characters",
+        "session"
+      ],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "Battle closeout settles existing Character Sessions atomically; Stat Blocks never become Character Session rows."
+    },
+    {
+      "id": "initial-initiative-setup",
+      "issue": 325,
+      "mcpSurface": ["start_battle", "battle_lifecycle"],
+      "modelVisibleProjection": [
+        "battleState.tag",
+        "battleState.combatants",
+        "snapshot"
+      ],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "The setup path reports SDK roll-mode facts and excludes setup-time companion admission because that semantic operation is absent."
+    },
+    {
+      "id": "battle-roster-lifecycle",
+      "issue": 326,
+      "mcpSurface": ["battle_lifecycle", "read_battle_state"],
+      "modelVisibleProjection": [
+        "result.tag",
+        "combatantId",
+        "snapshot.combatants",
+        "detail.tag"
+      ],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "Add/remove uses existing admission, occupancy, and settlement semantics; it does not infer death, victory, encounter, or narrative state."
+    },
+    {
+      "id": "battle-act-hole-and-roll-protocol",
+      "issue": 327,
+      "mcpSurface": [
+        "discover_battle_acts",
+        "fill_battle_hole",
+        "resolve_battle_act",
+        "end_turn",
+        "roll_dice"
+      ],
+      "modelVisibleProjection": [
+        "availableActs",
+        "result.holes",
+        "result.tag",
+        "snapshot.currentActorId",
+        "correlationId",
+        "groups"
+      ],
+      "headlessEvidence": "complete-newcomer-journey",
+      "externalBehaviorEvidence": {
+        "status": "unavailable",
+        "caseIds": ["skill-natural", "skill-continuation"]
+      },
+      "boundary": "The generic roller returns ordered raw faces only; it never reads holes, derives outcomes, or fills a battle act."
+    }
+  ]
+}
