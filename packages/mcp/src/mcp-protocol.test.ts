@@ -1306,6 +1306,75 @@ describe("MCP protocol server", () => {
       });
       expect(JSON.stringify(settled)).toContain('"tag":"available"');
 
+      const removedLastGoblin = await callStructuredTool(client, {
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId,
+          operation: {
+            kind: "removeCombatant",
+            combatantId: "lifecycle-goblin",
+          },
+        },
+      });
+      expect(validateOutput(removedLastGoblin).valid).toBe(true);
+      expect(operationResult(removedLastGoblin)).toMatchObject({
+        result: {
+          tag: "combatantRemoved",
+          combatantId: "lifecycle-goblin",
+        },
+      });
+      const rejectedLastRemoval = await client.callTool({
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId,
+          operation: {
+            kind: "removeCombatant",
+            combatantId: "lifecycle-second",
+          },
+        },
+      });
+      expect(rejectedLastRemoval.isError).toBe(true);
+      if (!isJsonObject(rejectedLastRemoval.structuredContent)) {
+        throw new Error("Expected typed last-combatant removal failure.");
+      }
+      expect(validateOutput(rejectedLastRemoval.structuredContent).valid).toBe(
+        true,
+      );
+      expect(rejectedLastRemoval.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            details: {
+              code: "BATTLE_COMBATANT_REMOVAL_FAILED",
+              combatantId: "lifecycle-second",
+              message: expect.stringContaining("every combatant"),
+            },
+          },
+        },
+      });
+      const restoredGoblin = await callStructuredTool(client, {
+        name: "battle_lifecycle",
+        arguments: {
+          playSessionId,
+          operation: {
+            kind: "addCombatant",
+            combatant: {
+              kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId: "lifecycle-goblin",
+              initiative: 8,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          },
+        },
+      });
+      expect(operationResult(restoredGoblin)).toMatchObject({
+        result: {
+          tag: "combatantAdded",
+          combatantId: "lifecycle-goblin",
+        },
+      });
+
       const battleBeforeFailure = await callStructuredTool(client, {
         name: "read_battle_state",
         arguments: { playSessionId },
@@ -1318,7 +1387,7 @@ describe("MCP protocol server", () => {
               `Expected a complete Play Session projection: ${projection.left}`,
             );
           }
-          return {
+          return structuredClone({
             projection: projection.right,
             sessionSnapshot: root.sessionStore.snapshot(),
             characterSessions: Array.from(
@@ -1327,7 +1396,7 @@ describe("MCP protocol server", () => {
             battleState: root.sessionStore.battleState,
             battleSession: root.sessionStore.battleSession,
             transientBattleFills: root.sessionStore.pendingBattleFills,
-          };
+          });
         });
       const deepBeforeFailure = await captureDeepProjection();
       if (Either.isLeft(deepBeforeFailure)) {

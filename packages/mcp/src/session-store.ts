@@ -181,9 +181,15 @@ export type McpSessionStore = {
     session: BattleRuntimeSession,
   ): Either.Either<void, McpBattleStateTransitionIssue>;
   planActiveBattleRosterTransition(
-    operation: McpBattleRosterOperation,
+    operation: Extract<McpBattleRosterOperation, { readonly kind: "remove" }>,
   ): Either.Either<
-    ActiveBattleRosterTransitionPreview,
+    Extract<ActiveBattleRosterTransitionPreview, { readonly kind: "remove" }>,
+    McpBattleRosterTransitionIssue
+  >;
+  planActiveBattleRosterTransition(
+    operation: Exclude<McpBattleRosterOperation, { readonly kind: "remove" }>,
+  ): Either.Either<
+    Extract<ActiveBattleRosterTransitionPreview, { readonly kind: "add" }>,
     McpBattleRosterTransitionIssue
   >;
   commitActiveBattleRosterTransition(
@@ -264,6 +270,35 @@ export function createMcpSessionStore(input: {
   let selectedStatBlockId: StatBlockId | null = null;
   let pendingBattleFills: PendingBattleFillSession | null = null;
   let battleState: McpBattleState = { tag: "none" };
+
+  function planActiveBattleRosterTransition(
+    operation: Extract<McpBattleRosterOperation, { readonly kind: "remove" }>,
+  ): Either.Either<
+    Extract<ActiveBattleRosterTransitionPreview, { readonly kind: "remove" }>,
+    McpBattleRosterTransitionIssue
+  >;
+  function planActiveBattleRosterTransition(
+    operation: Exclude<McpBattleRosterOperation, { readonly kind: "remove" }>,
+  ): Either.Either<
+    Extract<ActiveBattleRosterTransitionPreview, { readonly kind: "add" }>,
+    McpBattleRosterTransitionIssue
+  >;
+  function planActiveBattleRosterTransition(
+    operation: McpBattleRosterOperation,
+  ): Either.Either<
+    ActiveBattleRosterTransitionPreview,
+    McpBattleRosterTransitionIssue
+  > {
+    if (battleState.tag !== "activeBattle") {
+      return invalidBattleStateTransition(battleState.tag, "activeBattle");
+    }
+    return battleRosterPlanner.plan(
+      operation,
+      battleState.session,
+      pendingBattleFills,
+    );
+  }
+
   const store: McpSessionStore = {
     drafts,
     characters,
@@ -290,16 +325,7 @@ export function createMcpSessionStore(input: {
       battleState = { tag: "activeBattle", session };
       return Either.right(undefined);
     },
-    planActiveBattleRosterTransition(operation) {
-      if (battleState.tag !== "activeBattle") {
-        return invalidBattleStateTransition(battleState.tag, "activeBattle");
-      }
-      return battleRosterPlanner.plan(
-        operation,
-        battleState.session,
-        pendingBattleFills,
-      );
-    },
+    planActiveBattleRosterTransition,
     commitActiveBattleRosterTransition(plan) {
       if (battleState.tag !== "activeBattle") {
         return invalidBattleStateTransition(battleState.tag, "activeBattle");

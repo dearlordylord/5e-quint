@@ -15,14 +15,37 @@ import type {
 
 type CharacterId = CharacterSheetId;
 
+type CharacterBattleCreatureInit = Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>;
+type StatBlockBattleCreatureInit = Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "statBlock" }
+>;
+
+export type CharacterBattleRosterCombatant = Omit<
+  BattleCreatureInit,
+  "creatureInit"
+> & {
+  readonly creatureInit: CharacterBattleCreatureInit;
+};
+
+export type StatBlockBattleRosterCombatant = Omit<
+  BattleCreatureInit,
+  "creatureInit"
+> & {
+  readonly creatureInit: StatBlockBattleCreatureInit;
+};
+
 export type McpBattleRosterOperation =
   | {
       readonly kind: "addCharacter";
-      readonly combatant: BattleCreatureInit;
+      readonly combatant: CharacterBattleRosterCombatant;
     }
   | {
       readonly kind: "addStatBlock";
-      readonly combatant: BattleCreatureInit;
+      readonly combatant: StatBlockBattleRosterCombatant;
     }
   | {
       readonly kind: "remove";
@@ -86,11 +109,12 @@ export type McpBattleRosterTransitionIssue =
       readonly pendingSubject: BattleSubject;
     }
   | {
-      readonly tag: "battleRosterOperationInvalid";
+      readonly tag: "battleRosterCombatantAdmissionFailed";
+      readonly combatantId: CombatantId;
       readonly message: string;
     }
   | {
-      readonly tag: "battleRosterCombatantAdmissionFailed";
+      readonly tag: "battleRosterCombatantRemovalFailed";
       readonly combatantId: CombatantId;
       readonly message: string;
     }

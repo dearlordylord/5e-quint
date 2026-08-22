@@ -9,10 +9,12 @@ import {
   battleAmmunitionStock,
   battleId,
   combatantId,
+  discoverBattleActs,
   initiativeScore,
   startBattle,
   startBattleWithInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
+import { characterSheetBattleInit } from "@dnd/character-battle-runtime";
 import {
   characterSheetDruidWildShapeKnownForms,
   characterSheetId,
@@ -30,6 +32,7 @@ import {
   availableCharacterSession,
   createMcpSessionStore,
 } from "./session-store.ts";
+import type { StatBlockBattleRosterCombatant } from "./battle-roster-session-types.ts";
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
@@ -257,35 +260,41 @@ describe("MCP character sessions", () => {
         ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       }),
     );
-    const staleCombatant = expectRight(
-      battleCreatureInitFromStatBlock({
-        combatantId: combatantId("store-plan-stale"),
-        statBlock: skeleton,
-        initiative: initiativeScore(8),
-        currentHp: Hp(10),
-        tempHp: Hp(0),
-        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      }),
+    const staleCombatant = expectStatBlockCombatant(
+      expectRight(
+        battleCreatureInitFromStatBlock({
+          combatantId: combatantId("store-plan-stale"),
+          statBlock: skeleton,
+          initiative: initiativeScore(8),
+          currentHp: Hp(10),
+          tempHp: Hp(0),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        }),
+      ),
     );
-    const interveningCombatant = expectRight(
-      battleCreatureInitFromStatBlock({
-        combatantId: combatantId("store-plan-intervening"),
-        statBlock: wolf,
-        initiative: initiativeScore(6),
-        currentHp: Hp(10),
-        tempHp: Hp(0),
-        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      }),
+    const interveningCombatant = expectStatBlockCombatant(
+      expectRight(
+        battleCreatureInitFromStatBlock({
+          combatantId: combatantId("store-plan-intervening"),
+          statBlock: wolf,
+          initiative: initiativeScore(6),
+          currentHp: Hp(10),
+          tempHp: Hp(0),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        }),
+      ),
     );
-    const foreignCombatant = expectRight(
-      battleCreatureInitFromStatBlock({
-        combatantId: combatantId("store-plan-foreign"),
-        statBlock: skeleton,
-        initiative: initiativeScore(4),
-        currentHp: Hp(10),
-        tempHp: Hp(0),
-        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      }),
+    const foreignCombatant = expectStatBlockCombatant(
+      expectRight(
+        battleCreatureInitFromStatBlock({
+          combatantId: combatantId("store-plan-foreign"),
+          statBlock: skeleton,
+          initiative: initiativeScore(4),
+          currentHp: Hp(10),
+          tempHp: Hp(0),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        }),
+      ),
     );
     const active = expectRight(
       startBattle({
@@ -338,16 +347,164 @@ describe("MCP character sessions", () => {
     );
     expect(deepStoreState(store)).toEqual(afterIntervening);
   });
+
+  test("rejects a roster plan after an affected Character Session identity changes", () => {
+    const root = createMcpPlaySessionRoot();
+    const store = createMcpSessionStore({
+      statBlockCatalog: root.statBlockCatalog,
+      unitLibrary: root.unitLibrary,
+    });
+    const character = expectRight(
+      availableCharacterSession({
+        characterId: characterSheetId("character:mcp-roster-stale-character"),
+        build: druidWildShapeBuild(),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary,
+        druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      }),
+    );
+    const characterInit = expectRight(
+      characterSheetBattleInit({
+        combatantId: combatantId("store-plan-character"),
+        displayName: "Stale Character",
+        sheet: character,
+        initiative: initiativeScore(12),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        unitLibrary,
+        statBlockCatalog: root.statBlockCatalog,
+      }),
+    );
+    const goblin = expectRight(
+      battleCreatureInitFromStatBlock({
+        combatantId: combatantId("store-plan-character-goblin"),
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(8),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      }),
+    );
+    const active = expectRight(
+      startBattle({
+        battleId: battleId("battle:store-plan-character-stale"),
+        combatants: [characterInit, goblin],
+      }),
+    );
+    expect(store.storeActiveBattle(active)).toEqual(Either.right(undefined));
+    store.characters.set({
+      tag: "inBattle",
+      sheet: character,
+      battleId: active.state.battleId,
+    });
+
+    const planned = expectRight(
+      store.planActiveBattleRosterTransition({
+        kind: "remove",
+        combatantId: characterInit.combatantId,
+      }),
+    );
+    const replacement = expectRight(
+      availableCharacterSession({
+        characterId: character.characterId,
+        build: druidWildShapeBuild(),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary,
+        druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      }),
+    );
+    store.characters.set(replacement);
+    const beforeCommit = deepStoreState(store);
+
+    expect(store.commitActiveBattleRosterTransition(planned.plan)).toEqual(
+      Either.left({
+        tag: "battleRosterPlanCharacterChanged",
+        characterIds: [character.characterId],
+      }),
+    );
+    expect(deepStoreState(store)).toEqual(beforeCommit);
+  });
+
+  test("rejects a roster plan after pending-fill session identity changes", () => {
+    const root = createMcpPlaySessionRoot();
+    const store = createMcpSessionStore({
+      statBlockCatalog: root.statBlockCatalog,
+      unitLibrary: root.unitLibrary,
+    });
+    const goblin = expectRight(
+      battleCreatureInitFromStatBlock({
+        combatantId: combatantId("store-plan-fills-goblin"),
+        statBlock: root.statBlockCatalog.requireStatBlock(
+          "stat_block_goblin_warrior",
+        ),
+        initiative: initiativeScore(10),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      }),
+    );
+    const skeleton = expectStatBlockCombatant(
+      expectRight(
+        battleCreatureInitFromStatBlock({
+          combatantId: combatantId("store-plan-fills-skeleton"),
+          statBlock: root.statBlockCatalog.requireStatBlock(
+            "stat_block_skeleton",
+          ),
+          initiative: initiativeScore(6),
+          currentHp: Hp(10),
+          tempHp: Hp(0),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        }),
+      ),
+    );
+    const active = expectRight(
+      startBattle({
+        battleId: battleId("battle:store-plan-fills-stale"),
+        combatants: [goblin],
+      }),
+    );
+    expect(store.storeActiveBattle(active)).toEqual(Either.right(undefined));
+    const planned = expectRight(
+      store.planActiveBattleRosterTransition({
+        kind: "addStatBlock",
+        combatant: skeleton,
+      }),
+    );
+    const subject = discoverBattleActs(active)[0]?.subject;
+    if (subject === undefined) {
+      throw new Error("Expected an active battle subject for pending fills.");
+    }
+    store.pendingBattleFills = {
+      subject,
+      fills: [],
+      baseSession: active,
+    };
+    const beforeCommit = deepStoreState(store);
+
+    expect(store.commitActiveBattleRosterTransition(planned.plan)).toEqual(
+      Either.left({ tag: "battleRosterPlanFillsChanged" }),
+    );
+    expect(deepStoreState(store)).toEqual(beforeCommit);
+  });
 });
 
 function deepStoreState(store: ReturnType<typeof createMcpSessionStore>) {
-  return {
+  return structuredClone({
     snapshot: store.snapshot(),
     battleState: store.battleState,
     battleSession: store.battleSession,
     characters: Array.from(store.characters.entries()),
     pendingBattleFills: store.pendingBattleFills,
-  };
+  });
 }
 
 function druidWildShapeBuild(): CharacterBuild {
@@ -410,4 +567,16 @@ function expectRight<T, E>(value: Either.Either<T, E>): T {
     throw new Error(`Expected right: ${JSON.stringify(value.left)}`);
   }
   return value.right;
+}
+
+function expectStatBlockCombatant(
+  combatant: import("@dnd/battle-runtime").BattleCreatureInit,
+): StatBlockBattleRosterCombatant {
+  if (combatant.creatureInit.kind !== "statBlock") {
+    throw new Error("Expected a Stat Block combatant.");
+  }
+  return {
+    ...combatant,
+    creatureInit: combatant.creatureInit,
+  };
 }

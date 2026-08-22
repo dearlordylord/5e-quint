@@ -27,6 +27,7 @@ import {
   type McpBattleRosterOperation,
   type McpBattleRosterTransitionIssue,
 } from "./battle-roster-session-types.ts";
+import { projectCharacterSessionInBattle } from "./character-session-occupancy.ts";
 
 type CharacterId = CharacterSheetId;
 
@@ -151,12 +152,6 @@ function planAddCharacterBattleCombatant(input: {
   McpBattleRosterTransitionIssue
 > {
   const { operation } = input;
-  if (operation.combatant.creatureInit.kind !== "character") {
-    return Either.left({
-      tag: "battleRosterOperationInvalid",
-      message: "Character admission requires a character Battle Creature Init.",
-    });
-  }
   const characterId = operation.combatant.creatureInit.characterId;
   const currentSession = input.characters.get(characterId);
   if (currentSession === undefined) {
@@ -189,11 +184,10 @@ function planAddCharacterBattleCombatant(input: {
       storeIdentity: input.storeIdentity,
       activeBattle: input.activeBattle,
       nextCharacterSessions: [
-        {
-          tag: "inBattle",
-          sheet: currentSession,
+        projectCharacterSessionInBattle({
+          session: currentSession,
           battleId: input.activeBattle.state.battleId,
-        },
+        }),
       ],
       affectedCharacterSessions: [{ characterId, session: currentSession }],
       pendingBattleFills: null,
@@ -213,13 +207,6 @@ function planAddStatBlockBattleCombatant(input: {
   ActiveBattleRosterTransitionPreview,
   McpBattleRosterTransitionIssue
 > {
-  if (input.operation.combatant.creatureInit.kind !== "statBlock") {
-    return Either.left({
-      tag: "battleRosterOperationInvalid",
-      message:
-        "Stat Block admission requires a Stat Block Battle Creature Init.",
-    });
-  }
   const admitted = addBattleRuntimeCombatant({
     session: input.activeBattle,
     combatant: input.operation.combatant,
@@ -277,7 +264,7 @@ function planRemoveBattleCombatant(input: {
   });
   if (Either.isLeft(removed)) {
     return Either.left({
-      tag: "battleRosterCombatantAdmissionFailed",
+      tag: "battleRosterCombatantRemovalFailed",
       combatantId: input.operation.combatantId,
       message: battleStateInitIssueMessage(removed.left),
     });

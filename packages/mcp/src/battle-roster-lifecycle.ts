@@ -96,12 +96,6 @@ function removeCombatant(
     combatantId,
   });
   if (Either.isLeft(planned)) return rosterTransitionFailure(planned.left);
-  if (planned.right.kind !== "remove") {
-    return rosterTransitionFailure({
-      tag: "battleRosterOperationInvalid",
-      message: "Battle roster removal did not produce a removal transition.",
-    });
-  }
 
   return commitBattleLifecycleTransition({
     root,
@@ -181,6 +175,13 @@ function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
         message: matched.message,
       }),
     ),
+    Match.when({ tag: "battleRosterCombatantRemovalFailed" }, (matched) =>
+      battleLifecycleError("Battle combatant removal failed.", {
+        code: "BATTLE_COMBATANT_REMOVAL_FAILED",
+        combatantId: matched.combatantId,
+        message: matched.message,
+      }),
+    ),
     Match.when({ tag: "battleRosterCombatantNotFound" }, (matched) =>
       battleLifecycleError("Battle combatant is not in the current battle.", {
         code: "BATTLE_COMBATANT_NOT_FOUND",
@@ -233,12 +234,6 @@ function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
       battleLifecycleError("Battle character session settlement failed.", {
         code: "CHARACTER_SESSION_SETTLEMENT_INVALID",
         characterId: matched.characterId,
-        message: matched.message,
-      }),
-    ),
-    Match.when({ tag: "battleRosterOperationInvalid" }, (matched) =>
-      battleLifecycleError("Battle lifecycle operation is invalid.", {
-        code: "BATTLE_LIFECYCLE_OPERATION_INVALID",
         message: matched.message,
       }),
     ),

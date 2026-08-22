@@ -24,6 +24,10 @@ import {
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { type AvailableCharacterSession } from "./session-store.ts";
+import type {
+  CharacterBattleRosterCombatant,
+  StatBlockBattleRosterCombatant,
+} from "./battle-roster-session-types.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import {
   type BattleCombatantToolInput,
@@ -52,12 +56,12 @@ export type StartableBattleCombatants = {
 export type ProjectedBattleCombatant =
   | {
       readonly tag: "characterSession";
-      readonly creatureInit: BattleCreatureInit;
+      readonly creatureInit: CharacterBattleRosterCombatant;
       readonly characterSession: StartableCharacterSessionCombatant;
     }
   | {
       readonly tag: "encounterCombatant";
-      readonly creatureInit: BattleCreatureInit;
+      readonly creatureInit: StatBlockBattleRosterCombatant;
     };
 
 export function handleStartBattleToolCall(
@@ -258,17 +262,29 @@ export function projectBattleCombatant(input: {
         unitLibrary: root.unitLibrary,
         statBlockCatalog: root.statBlockCatalog,
       });
-      return Either.isLeft(characterInit)
-        ? Either.left(
-            errorContent(characterInit.left.message, {
-              code: "CHARACTER_BATTLE_INIT_INVALID",
-            }),
-          )
-        : Either.right({
-            tag: "characterSession" as const,
-            creatureInit: { ...characterInit.right },
-            characterSession: { character, session },
-          });
+      if (Either.isLeft(characterInit)) {
+        return Either.left(
+          errorContent(characterInit.left.message, {
+            code: "CHARACTER_BATTLE_INIT_INVALID",
+          }),
+        );
+      }
+      if (characterInit.right.creatureInit.kind !== "character") {
+        return Either.left(
+          errorContent(
+            "Character battle initialization produced a non-character combatant.",
+            { code: "CHARACTER_BATTLE_INIT_INVALID" },
+          ),
+        );
+      }
+      return Either.right({
+        tag: "characterSession" as const,
+        creatureInit: {
+          ...characterInit.right,
+          creatureInit: characterInit.right.creatureInit,
+        },
+        characterSession: { character, session },
+      });
     }),
     Match.when({ kind: "statBlock" }, (statBlockCombatant) => {
       const encounterCombatant = statBlockCombatant;
@@ -302,9 +318,20 @@ export function projectBattleCombatant(input: {
           }),
         );
       }
+      if (creatureInit.right.creatureInit.kind !== "statBlock") {
+        return Either.left(
+          errorContent(
+            "Stat Block battle initialization produced a character combatant.",
+            { code: "STAT_BLOCK_BATTLE_INIT_INVALID" },
+          ),
+        );
+      }
       return Either.right({
         tag: "encounterCombatant" as const,
-        creatureInit: creatureInit.right,
+        creatureInit: {
+          ...creatureInit.right,
+          creatureInit: creatureInit.right.creatureInit,
+        },
       });
     }),
     Match.exhaustive,

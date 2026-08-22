@@ -6,6 +6,7 @@ import type {
   CharacterSessionRegistryIssue,
   InBattleCharacterSession,
 } from "./session-store.ts";
+import { projectCharacterSessionInBattle } from "./character-session-occupancy.ts";
 import { errorContent } from "./tool-content.ts";
 
 export type CharacterSessionBattleAdmissionIssue = {
@@ -19,13 +20,11 @@ export function admitCharacterSessionsToBattle(input: {
   readonly battleId: InBattleCharacterSession["battleId"];
   readonly sessions: readonly AvailableCharacterSession[];
 }): Either.Either<void, CharacterSessionBattleAdmissionIssue> {
-  const inBattleSessions = input.sessions.map(
-    (session) =>
-      ({
-        tag: "inBattle",
-        sheet: session,
-        battleId: input.battleId,
-      }) as const,
+  const inBattleSessions = input.sessions.map((session) =>
+    projectCharacterSessionInBattle({
+      session,
+      battleId: input.battleId,
+    }),
   );
   const committed = input.registry.setAll(inBattleSessions);
   return Either.isLeft(committed)
