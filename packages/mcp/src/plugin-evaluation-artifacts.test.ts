@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { Either, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -164,6 +164,7 @@ const ConnectionObservationSchema = Schema.Union(
     confirmation: ConfirmationBehaviorSchema,
   }),
 );
+type ConnectionObservation = typeof ConnectionObservationSchema.Type;
 const ObservedConnectionCaseResultSchema = Schema.Struct({
   caseId: Schema.String,
   evidenceKind: Schema.Literal("connectionAndToolSelection"),
@@ -257,21 +258,29 @@ function expectedInstalledCaseIds(
   inventory: EvaluationInventory,
   evidenceKind: InstalledEvidenceKind,
 ): ReadonlySet<string> {
-  switch (evidenceKind) {
-    case "connectionAndToolSelection":
-      return new Set(inventory.mcpToolSelection.map(({ id }) => id));
-    case "installedSkillActivation":
-      return new Set(inventory.skillActivation.map(({ id }) => id));
-    case "installedCompleteWorkflow":
-      return new Set(
-        inventory.skillActivation
-          .filter(({ kind }) => kind === "indirect" || kind === "followUp")
-          .map(({ id }) => id),
-      );
-  }
+  return Match.value(evidenceKind).pipe(
+    Match.when(
+      "connectionAndToolSelection",
+      () => new Set(inventory.mcpToolSelection.map(({ id }) => id)),
+    ),
+    Match.when(
+      "installedSkillActivation",
+      () => new Set(inventory.skillActivation.map(({ id }) => id)),
+    ),
+    Match.when(
+      "installedCompleteWorkflow",
+      () =>
+        new Set(
+          inventory.skillActivation
+            .filter(({ kind }) => kind === "indirect" || kind === "followUp")
+            .map(({ id }) => id),
+        ),
+    ),
+    Match.exhaustive,
+  );
 }
 
-function hasSameCaseIds(
+function caseSetEquals(
   actual: ReadonlyArray<string>,
   expected: ReadonlySet<string>,
 ): boolean {
@@ -290,6 +299,7 @@ function hasCompleteInstalledCaseCoverage(evidence: {
   readonly caseResults: ReadonlyArray<{
     readonly caseId: string;
     readonly evidenceKind: string;
+    readonly observation?: unknown;
   }>;
 }): boolean {
   const requiredCaseKeys = evidence.operatorProtocol.flatMap(
@@ -299,18 +309,12 @@ function hasCompleteInstalledCaseCoverage(evidence: {
   const actualCaseKeys = evidence.caseResults.map(
     ({ caseId, evidenceKind }) => `${caseId}:${evidenceKind}`,
   );
-  if (
-    !(
-      actualCaseKeys.length === requiredCaseKeys.length &&
-      new Set(actualCaseKeys).size === requiredCaseKeys.length &&
-      requiredCaseKeys.every((key) => actualCaseKeys.includes(key))
-    )
-  ) {
+  if (!caseSetEquals(actualCaseKeys, new Set(requiredCaseKeys))) {
     return false;
   }
   for (const step of evidence.operatorProtocol) {
     if (
-      !hasSameCaseIds(
+      !caseSetEquals(
         step.requiredCases,
         expectedInstalledCaseIds(evaluationInventory, step.evidenceKind),
       )
@@ -327,7 +331,7 @@ function hasCompleteInstalledCaseCoverage(evidence: {
       .filter((result) => result.evidenceKind === evidenceKind)
       .map(({ caseId }) => caseId);
     if (
-      !hasSameCaseIds(
+      !caseSetEquals(
         actualCaseIds,
         expectedInstalledCaseIds(evaluationInventory, evidenceKind),
       )
@@ -335,7 +339,79 @@ function hasCompleteInstalledCaseCoverage(evidence: {
       return false;
     }
   }
+  for (const result of evidence.caseResults) {
+    if (
+      result.evidenceKind === "connectionAndToolSelection" &&
+      result.observation !== undefined &&
+      !hasInventoryCompatibleConnectionObservation(
+        result.caseId,
+        result.observation,
+      )
+    ) {
+      return false;
+    }
+  }
   return true;
+}
+
+function hasInventoryCompatibleConnectionObservation(
+  caseId: string,
+  observation: unknown,
+): observation is ConnectionObservation {
+  const inventoryCase = evaluationInventory.mcpToolSelection.find(
+    ({ id }) => id === caseId,
+  );
+  if (inventoryCase === undefined || !isRecord(observation)) return false;
+  if (observation.tag === "noToolSelected") {
+    return inventoryCase.expectedToolNames.length === 0;
+  }
+  if (observation.tag !== "toolSelected") return false;
+  const expectedToolNames: ReadonlyArray<string> =
+    inventoryCase.expectedToolNames;
+  return (
+    typeof observation.selectedTool === "string" &&
+    expectedToolNames.includes(observation.selectedTool)
+  );
+}
+
+function observedConnectionObservation(
+  caseId: string,
+  index: number,
+): ConnectionObservation {
+  const inventoryCase = evaluationInventory.mcpToolSelection.find(
+    ({ id }) => id === caseId,
+  );
+  if (inventoryCase === undefined) {
+    throw new Error(`Missing MCP inventory case ${caseId}.`);
+  }
+  if (inventoryCase.expectedToolNames.length === 0) {
+    return {
+      tag: "noToolSelected",
+      reason: "The request is unrelated to the installed MCP surface.",
+      confirmation: { tag: "notRequested" },
+    };
+  }
+  const selectedTool = inventoryCase.expectedToolNames[0];
+  if (selectedTool === undefined) {
+    throw new Error(`MCP inventory case ${caseId} has no expected tool.`);
+  }
+  return {
+    tag: "toolSelected",
+    selectedTool,
+    arguments: {},
+    outcome:
+      index === 1
+        ? {
+            tag: "error",
+            details: ["Observed failure."],
+            confirmation: { tag: "notRequested" },
+          }
+        : {
+            tag: "success",
+            result: { tag: "ok" },
+            confirmation: { tag: "notRequested" },
+          },
+  };
 }
 
 const expectedRowIds = [
@@ -430,13 +506,19 @@ describe("SRD Play evaluation artifacts", () => {
         row,
       ]),
     );
+    expect(manifestByKey.size).toBe(manifest.evidence.length);
     const skillCaseIds = new Set(inventory.skillActivation.map(({ id }) => id));
     for (const row of matrix.rows) {
       if (row.mcpEvidence.status === "observed") {
+        const rowRefKeys = new Set<string>();
         for (const ref of row.mcpEvidence.refs) {
-          const manifestRow = manifestByKey.get(
-            `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}`,
-          );
+          const refKey = `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}`;
+          expect(
+            rowRefKeys.has(refKey),
+            `${row.id}: duplicate MCP evidence reference ${refKey}`,
+          ).toBe(false);
+          rowRefKeys.add(refKey);
+          const manifestRow = manifestByKey.get(refKey);
           expect(manifestRow, row.id).toBeDefined();
           expect(
             existsSync(resolve(repoRoot, manifestRow?.ownerPath ?? "")),
@@ -582,31 +664,7 @@ describe("SRD Play evaluation artifacts", () => {
               caseId,
               evidenceKind,
               status: "observed" as const,
-              observation:
-                caseId === "mcp-unsupported-history"
-                  ? {
-                      tag: "noToolSelected" as const,
-                      reason:
-                        "The request is unrelated to the installed MCP surface.",
-                      confirmation: { tag: "notRequested" as const },
-                    }
-                  : {
-                      tag: "toolSelected" as const,
-                      selectedTool: "list_catalog_units",
-                      arguments: {},
-                      outcome:
-                        index === 1
-                          ? {
-                              tag: "error" as const,
-                              details: ["Observed failure."],
-                              confirmation: { tag: "notRequested" as const },
-                            }
-                          : {
-                              tag: "success" as const,
-                              result: { tag: "ok" },
-                              confirmation: { tag: "notRequested" as const },
-                            },
-                    },
+              observation: observedConnectionObservation(caseId, index),
               promptRef: caseId,
               observedAt: `2026-08-21T00:${String(index).padStart(2, "0")}:00Z`,
               resultSummary:
@@ -639,6 +697,37 @@ describe("SRD Play evaluation artifacts", () => {
     });
     expect(Either.isLeft(contradictory)).toBe(true);
   });
+
+  test("couples observed MCP selections to inventory expectations", () => {
+    expect(
+      hasInventoryCompatibleConnectionObservation("mcp-direct-catalog", {
+        tag: "toolSelected",
+        selectedTool: "list_catalog_units",
+      }),
+    ).toBe(true);
+    expect(
+      hasInventoryCompatibleConnectionObservation("mcp-follow-up-detail", {
+        tag: "toolSelected",
+        selectedTool: "list_catalog_units",
+      }),
+    ).toBe(false);
+    expect(
+      hasInventoryCompatibleConnectionObservation("mcp-follow-up-detail", {
+        tag: "toolSelected",
+        selectedTool: "inspect_catalog_unit",
+      }),
+    ).toBe(true);
+    expect(
+      hasInventoryCompatibleConnectionObservation("mcp-direct-catalog", {
+        tag: "noToolSelected",
+      }),
+    ).toBe(false);
+    expect(
+      hasInventoryCompatibleConnectionObservation("mcp-unsupported-history", {
+        tag: "noToolSelected",
+      }),
+    ).toBe(true);
+  });
 });
 
 function decodeInstalledEvidence(value: unknown): InstalledEvidence {
@@ -658,10 +747,10 @@ function expectInstalledCaseCoverage(
   const actualKeys = evidence.caseResults.map(
     ({ caseId, evidenceKind }) => `${caseId}:${evidenceKind}`,
   );
-  expect([...actualKeys].sort()).toEqual([...expectedKeys].sort());
+  expect(caseSetEquals(actualKeys, new Set(expectedKeys))).toBe(true);
   for (const step of evidence.operatorProtocol) {
     expect(
-      hasSameCaseIds(
+      caseSetEquals(
         step.requiredCases,
         expectedInstalledCaseIds(inventory, step.evidenceKind),
       ),
@@ -677,7 +766,7 @@ function expectInstalledCaseCoverage(
       .filter((result) => result.evidenceKind === evidenceKind)
       .map(({ caseId }) => caseId);
     expect(
-      hasSameCaseIds(
+      caseSetEquals(
         actualCaseIds,
         expectedInstalledCaseIds(inventory, evidenceKind),
       ),

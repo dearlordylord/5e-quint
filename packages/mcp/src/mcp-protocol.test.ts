@@ -1394,6 +1394,34 @@ describe("MCP protocol server", () => {
           },
         });
         const afterTargetResult = operationResult(afterTarget);
+        const pendingTurn = await client.callTool({
+          name: "end_turn",
+          arguments: { playSessionId, actorId: "row-shield-goblin" },
+        });
+        expect(pendingTurn.isError).toBe(true);
+        if (!isJsonObject(pendingTurn.structuredContent)) {
+          throw new Error("Expected typed pending-turn restoration output.");
+        }
+        expect(operationResult(pendingTurn.structuredContent)).toMatchObject({
+          details: { code: "BATTLE_FILLS_PENDING" },
+        });
+        expect(pendingTurn.structuredContent).toMatchObject({
+          restoration: { tag: "retained" },
+          nextOperations: expect.arrayContaining(["discover_battle_acts"]),
+        });
+        const stillPending = operationResult(
+          await callStructuredTool(client, {
+            name: "discover_battle_acts",
+            arguments: { playSessionId },
+          }),
+        );
+        expect(stillPending).toMatchObject({
+          snapshot: { currentActorId: "row-shield-goblin" },
+          session: {
+            transientBattleFills: objectField(afterTargetResult, "session")
+              .transientBattleFills,
+          },
+        });
         const attackRollHole = jsonObjectArrayAt(
           objectField(afterTargetResult, "result"),
           "holes",
@@ -1484,9 +1512,34 @@ describe("MCP protocol server", () => {
         expect(operationResult(endedTurn)).toMatchObject({
           snapshot: { currentActorId: "row-shield-wizard" },
         });
+        expect(endedTurn).toMatchObject({
+          restoration: { tag: "retained" },
+          nextOperations: expect.arrayContaining(["fill_battle_hole"]),
+        });
       },
     );
   }, 60_000);
+
+  test(
+    "battle-act-resolution-protocol",
+    async () => {
+      const [clientTransport, serverTransport] =
+        InMemoryTransport.createLinkedPair();
+      const { server } = createDndMcpProtocolServer();
+      const client = new Client({
+        name: "battle-act-resolution-protocol-client",
+        version: "0.1.0",
+      });
+      try {
+        await server.connect(serverTransport);
+        await client.connect(clientTransport);
+        await verifyWidthVertical(client);
+      } finally {
+        await Promise.allSettled([client.close(), server.close()]);
+      }
+    },
+    FULL_ACCEPTANCE_TEST_TIMEOUT_MS,
+  );
 
   test("battle-roundtrip-protocol", async () => {
     const [clientTransport, serverTransport] =
@@ -2365,7 +2418,6 @@ describe("MCP protocol server", () => {
 
         await verifyToolContract(client);
         await verifyBaselineVertical(client);
-        await verifyWidthVertical(client);
         await verifyLevelThreeWizardVertical(client);
         await verifyLevelFourWizardVertical(client);
       } finally {

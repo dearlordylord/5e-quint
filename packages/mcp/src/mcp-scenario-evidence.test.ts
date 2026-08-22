@@ -169,6 +169,24 @@ describe("MCP scenario evidence manifest", () => {
     ).toBe(false);
     expect(
       sourceDefinesVitestScenario(
+        'describe.skip("skipped-suite", () => { test("nested-skipped", () => {}); });',
+        "nested-skipped",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'suite.skip("skipped-suite", () => { it("nested-skipped-it", () => {}); });',
+        "nested-skipped-it",
+      ),
+    ).toBe(false);
+    expect(
+      sourceDefinesVitestScenario(
+        'describe("live-suite", () => { test("nested-live", () => {}); });',
+        "nested-live",
+      ),
+    ).toBe(true);
+    expect(
+      sourceDefinesVitestScenario(
         'test("other-scenario", () => {});',
         "missing-scenario",
       ),

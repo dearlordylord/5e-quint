@@ -368,17 +368,17 @@
       "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "C11-BATTLE-MCP-EVIDENCE",
-      "summary": "The protocol acceptance scenario discovers battle acts, fills targetChoice, attackRoll, and rolledDice battle holes for weapon attacks, verifies Hit Point changes, and advances turns in Initiative order."
+      "summary": "The protocol acceptance scenario discovers a returned Goblin Attack, fills its returned target, attack-roll, and interrupt holes, verifies the resolved result, rejects a pending-hole turn end without changing the current actor, and advances the returned turn."
     },
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
       "scopeIds": ["level-1", "level-1-2"],
-      "scenarioId": "use-action-surge",
-      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "scenarioId": "battle-act-resolution-protocol",
+      "ownerPath": "packages/mcp/src/mcp-protocol.test.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
-      "taskId": "C11-BATTLE-MCP-EVIDENCE",
-      "summary": "The protocol acceptance scenario resolves the level-2 Fighter Action Surge feature through resolve_battle_act and then rediscovers battle acts before taking another attack."
+      "taskId": "C11-BATTLE-ACT-RESOLUTION-MCP-EVIDENCE",
+      "summary": "The protocol acceptance scenario creates a finalized Fighter and Wizard roster, resolves a no-hole Action Surge through resolve_battle_act, replays a returned attack subject through typed target, attack-roll, and rolled-dice fills, and asserts the resulting Hit Point projections."
     },
     {
       "kind": "mcp-scenario",

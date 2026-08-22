@@ -1270,34 +1270,45 @@ export async function verifyWidthVertical(client: Client) {
     "Action Surge",
   );
 
-  await callTool(client, "fill_battle_hole", {
+  const afterFirstTarget = await callTool(client, "fill_battle_hole", {
     subject: flailSubject,
     fill: attackTargetFill(flailSubject, "skeleton-a"),
   });
-  await callTool(client, "fill_battle_hole", {
+  const afterFirstAttackRoll = await callTool(client, "fill_battle_hole", {
     subject: flailSubject,
-    fill: attackRollFill(18, 15),
+    fill: battleAttackRollFill(
+      resultHole(afterFirstTarget, "attackRoll").holeId,
+      18,
+      15,
+    ),
   });
   const afterBludgeoning = await callTool(client, "fill_battle_hole", {
     subject: flailSubject,
-    fill: rolledDiceFill("battle:attack:damage-result:1d8+3-bludgeoning", [
-      [1],
-    ]),
+    fill: rolledDiceFill(
+      resultHole(afterFirstAttackRoll, "rolledDice").holeId,
+      [[1]],
+    ),
   });
   assert.equal(combatantHp(afterBludgeoning, "skeleton-a"), 5);
 
-  await callTool(client, "resolve_battle_act", {
+  const resolvedActionSurge = await callTool(client, "resolve_battle_act", {
     subject: actionSurgeSubject,
   });
-  await callTool(client, "fill_battle_hole", {
+  assert.equal(get(resolvedActionSurge, "result.tag"), "resolved");
+  const afterSecondTarget = await callTool(client, "fill_battle_hole", {
     subject: flailSubject,
     fill: attackTargetFill(flailSubject, "skeleton-a"),
   });
-  await callTool(client, "fill_battle_hole", {
+  const afterSecondAttackRoll = await callTool(client, "fill_battle_hole", {
     subject: flailSubject,
-    fill: attackRollFill(1, 1),
+    fill: battleAttackRollFill(
+      resultHole(afterSecondTarget, "attackRoll").holeId,
+      1,
+      1,
+    ),
   });
-  assert.equal(combatantHp(afterBludgeoning, "skeleton-a"), 5);
+  assert.equal(get(afterSecondAttackRoll, "result.tag"), "resolved");
+  assert.equal(combatantHp(afterSecondAttackRoll, "skeleton-a"), 5);
 
   assert.equal(
     get(

@@ -27,37 +27,41 @@ export const McpEvaluationCaseSchema = Schema.Union(
   Schema.Struct({
     ...McpEvaluationCaseBase,
     kind: Schema.Literal("negative"),
-    expectedToolNames: Schema.Array(Schema.String),
+    expectedToolNames: Schema.Tuple(),
   }),
 );
 
 const SkillEvaluationCaseBase = {
   id: Schema.String,
   prompt: Schema.String,
-  expectedActivation: Schema.Literal("activate", "doNotActivate"),
 };
 
 export const SkillEvaluationCaseSchema = Schema.Union(
   Schema.Struct({
     ...SkillEvaluationCaseBase,
     kind: Schema.Literal("direct"),
+    expectedActivation: Schema.Literal("activate"),
   }),
   Schema.Struct({
     ...SkillEvaluationCaseBase,
     kind: Schema.Literal("indirect"),
+    expectedActivation: Schema.Literal("activate"),
   }),
   Schema.Struct({
     ...SkillEvaluationCaseBase,
     kind: Schema.Literal("followUp"),
     after: Schema.String,
+    expectedActivation: Schema.Literal("activate"),
   }),
   Schema.Struct({
     ...SkillEvaluationCaseBase,
     kind: Schema.Literal("negative"),
+    expectedActivation: Schema.Literal("doNotActivate"),
   }),
   Schema.Struct({
     ...SkillEvaluationCaseBase,
     kind: Schema.Literal("boundary"),
+    expectedActivation: Schema.Literal("activate"),
   }),
 );
 

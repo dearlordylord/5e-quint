@@ -784,14 +784,9 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "battle-act-protocol",
+            "scenarioId": "battle-act-resolution-protocol",
             "flowId": "battle",
-            "taskId": "C11-BATTLE-MCP-EVIDENCE"
-          },
-          {
-            "scenarioId": "battle-act-protocol",
-            "flowId": "battle",
-            "taskId": "C11-BATTLE-MCP-EVIDENCE"
+            "taskId": "C11-BATTLE-ACT-RESOLUTION-MCP-EVIDENCE"
           }
         ]
       },
