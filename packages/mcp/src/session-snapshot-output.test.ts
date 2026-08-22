@@ -54,6 +54,46 @@ function outputJsonSchema(schema: Schema.Schema.AnyNoContext) {
   return mcpOutputJsonSchema(schema);
 }
 
+const setupState = {
+  tag: "initialInitiativeSetup",
+  battleId: "battle:projection-contract",
+  combatants: [],
+} as const;
+const activeState = {
+  tag: "activeBattle",
+  battleId: "battle:projection-contract",
+  currentActorId: "combatant:projection-contract",
+} as const;
+const noneState = { tag: "none" } as const;
+type ProjectionBattleState =
+  | typeof setupState
+  | typeof activeState
+  | typeof noneState;
+
+function sessionForProjectionState(battleState: ProjectionBattleState) {
+  return {
+    draftIds: [],
+    characterIds: [],
+    selectedStatBlockId: null,
+    battleState,
+  };
+}
+
+function resolutionSessionForProjectionState(
+  battleState: ProjectionBattleState,
+) {
+  return {
+    ...sessionForProjectionState(battleState),
+    transientBattleFills: null,
+  };
+}
+
+const presentation = {
+  availableActs: [],
+  admittedSpellPresentations: [],
+  presentedInterruptChoices: [],
+};
+
 describe("MCP session wire projections", () => {
   test("keeps battle fill definitions out of the session summary schema", () => {
     expect(
@@ -79,41 +119,16 @@ describe("MCP session wire projections", () => {
   });
 
   test("rejects battle output and admin projections with contradictory snapshots", () => {
-    const validateStart = new AjvJsonSchemaValidator().getValidator(
+    const jsonSchemaValidator = new AjvJsonSchemaValidator();
+    const validateStart = jsonSchemaValidator.getValidator(
       mcpOutputJsonSchema(StartBattleOutputSchema),
     );
-    const setupState = {
-      tag: "initialInitiativeSetup",
-      battleId: "battle:projection-contract",
-      combatants: [],
-    } as const;
-    const activeState = {
-      tag: "activeBattle",
-      battleId: "battle:projection-contract",
-      currentActorId: "combatant:projection-contract",
-    } as const;
-    const session = (
-      battleState:
-        | typeof setupState
-        | typeof activeState
-        | { readonly tag: "none" },
-    ) => ({
-      draftIds: [],
-      characterIds: [],
-      selectedStatBlockId: null,
-      battleState,
-    });
-    const presentation = {
-      availableActs: [],
-      admittedSpellPresentations: [],
-      presentedInterruptChoices: [],
-    };
     expect(
       validateStart({
         ...presentation,
         battleState: setupState,
         snapshot: {},
-        session: session(setupState),
+        session: sessionForProjectionState(setupState),
       }).valid,
     ).toBe(false);
     expect(
@@ -121,31 +136,47 @@ describe("MCP session wire projections", () => {
         ...presentation,
         battleState: activeState,
         snapshot: null,
-        session: session(activeState),
+        session: sessionForProjectionState(activeState),
       }).valid,
     ).toBe(false);
 
-    const validateResolution = new AjvJsonSchemaValidator().getValidator(
+    const validateResolution = jsonSchemaValidator.getValidator(
       mcpOutputJsonSchema(BattleResolutionOutputSchema),
     );
-    const resolutionSession = (
-      battleState:
-        | typeof setupState
-        | typeof activeState
-        | { readonly tag: "none" },
-    ) => ({
-      ...session(battleState),
-      transientBattleFills: null,
-    });
     expect(
       validateResolution({
         ...presentation,
-        battleState: { tag: "none" },
+        battleState: noneState,
         result: {},
         snapshot: {},
-        session: resolutionSession({ tag: "none" }),
+        session: resolutionSessionForProjectionState(noneState),
       }).valid,
     ).toBe(false);
+
+    const validateAdmin = jsonSchemaValidator.getValidator(
+      mcpOutputJsonSchema(AdminSessionProjectionSchema),
+    );
+    expect(
+      validateAdmin({
+        session: sessionForProjectionState(setupState),
+        battle: {},
+        characters: [],
+      }).valid,
+    ).toBe(false);
+    expect(
+      validateAdmin({
+        session: sessionForProjectionState(activeState),
+        battle: null,
+        characters: [],
+      }).valid,
+    ).toBe(false);
+  }, 30_000);
+
+  test("accepts canonical active battle resolution projections", () => {
+    const jsonSchemaValidator = new AjvJsonSchemaValidator();
+    const validateResolution = jsonSchemaValidator.getValidator(
+      mcpOutputJsonSchema(BattleResolutionOutputSchema),
+    );
     const root = createMcpPlaySessionRoot();
     handleWireToolCall(
       root,
@@ -193,14 +224,14 @@ describe("MCP session wire projections", () => {
       presentedInterruptChoices: [],
     };
 
-    const validateLifecycle = new AjvJsonSchemaValidator().getValidator(
+    const validateLifecycle = jsonSchemaValidator.getValidator(
       mcpOutputJsonSchema(BattleLifecycleOutputSchema),
     );
     const setupOutput = {
       ...presentation,
       battleState: setupState,
       snapshot: null,
-      session: session(setupState),
+      session: sessionForProjectionState(setupState),
     };
     const activeRosterOutput = {
       ...activeResolutionFixture,
@@ -211,9 +242,9 @@ describe("MCP session wire projections", () => {
     };
     const noBattleSuccessOutput = {
       ...presentation,
-      battleState: { tag: "none" as const },
+      battleState: noneState,
       snapshot: null,
-      session: session({ tag: "none" }),
+      session: sessionForProjectionState(noneState),
     };
 
     expect(
@@ -243,13 +274,13 @@ describe("MCP session wire projections", () => {
     expect(
       validateResolution({
         ...activeResolutionFixture,
-        session: resolutionSession({ tag: "none" }),
+        session: resolutionSessionForProjectionState(noneState),
       }).valid,
     ).toBe(false);
     expect(
       validateResolution({
         ...activeResolutionFixture,
-        session: resolutionSession(setupState),
+        session: resolutionSessionForProjectionState(setupState),
       }).valid,
     ).toBe(false);
     expect(
@@ -258,25 +289,7 @@ describe("MCP session wire projections", () => {
         battleState: setupState,
         result: {},
         snapshot: {},
-        session: resolutionSession(setupState),
-      }).valid,
-    ).toBe(false);
-
-    const validateAdmin = new AjvJsonSchemaValidator().getValidator(
-      mcpOutputJsonSchema(AdminSessionProjectionSchema),
-    );
-    expect(
-      validateAdmin({
-        session: session(setupState),
-        battle: {},
-        characters: [],
-      }).valid,
-    ).toBe(false);
-    expect(
-      validateAdmin({
-        session: session(activeState),
-        battle: null,
-        characters: [],
+        session: resolutionSessionForProjectionState(setupState),
       }).valid,
     ).toBe(false);
   }, 30_000);

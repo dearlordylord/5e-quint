@@ -32,10 +32,12 @@ const COMPLEXITY_BASELINE_PATH = join(
 );
 const COMMON_COVERAGE_EXCLUDES = sourceGlobsUnder("src");
 
-// Every production package must appear here. Coverage floors are temporary
-// non-regression ratchets, initially measured on 2026-07-26 and incrementally
-// remeasured as coverage lands. Issue #227's real target remains 99% for every
-// metric in every package.
+// Every production package must appear here. Library coverage floors are
+// temporary non-regression ratchets remeasured with Vitest 4.1.11 and
+// @vitest/coverage-v8 4.1.11's AST remapper on 2026-08-22. The previous
+// 2026-07-26 values came from Vitest 3's legacy remapper and are not
+// comparable. Issue #227's real target remains 99% for every metric in every
+// package.
 // Duplication ceilings remain at issue #228's real 2% target except
 // for an explicitly identified temporary ratchet. Libraries are consumed as
 // TypeScript source by their owning applications; the root Turbo build
@@ -47,47 +49,92 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "battle-runtime": {
-    coverage: { lines: 98, statements: 98, functions: 100, branches: 95.8 },
+    coverage: {
+      lines: 97.13,
+      statements: 96.77,
+      functions: 98.31,
+      branches: 93.85,
+    },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
   "character-battle-runtime": {
-    coverage: { lines: 99, statements: 99, functions: 100, branches: 99 },
+    coverage: {
+      lines: 99.21,
+      statements: 99.16,
+      functions: 100,
+      branches: 98.58,
+    },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
   "character-creation-runtime": {
-    coverage: { lines: 99, statements: 99, functions: 100, branches: 99 },
+    coverage: {
+      lines: 99.48,
+      statements: 99.37,
+      functions: 99.44,
+      branches: 98.01,
+    },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
   "character-sheet-runtime": {
-    coverage: { lines: 99, statements: 99, functions: 100, branches: 99 },
+    coverage: {
+      lines: 99.24,
+      statements: 99.04,
+      functions: 99.37,
+      branches: 97.57,
+    },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
   mcp: {
-    coverage: { lines: 99, statements: 99, functions: 100, branches: 99 },
+    coverage: {
+      lines: 93.99,
+      statements: 93.15,
+      functions: 92.83,
+      branches: 86.84,
+    },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
   shared: {
-    coverage: { lines: 99, statements: 99, functions: 100, branches: 99 },
+    coverage: {
+      lines: 98.16,
+      statements: 98.18,
+      functions: 96.2,
+      branches: 98.18,
+    },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
   "shared-algebras": {
-    coverage: { lines: 99, statements: 99, functions: 100, branches: 99 },
+    coverage: {
+      lines: 98.99,
+      statements: 99.03,
+      functions: 98.37,
+      branches: 98.01,
+    },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
   surface: {
-    coverage: { lines: 99, statements: 99, functions: 99, branches: 99 },
+    coverage: {
+      lines: 99.17,
+      statements: 99.08,
+      functions: 98.66,
+      branches: 96.7,
+    },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
   "tactical-space": {
-    coverage: { lines: 99, statements: 99, functions: 99, branches: 99 },
+    coverage: {
+      lines: 99.56,
+      statements: 99.58,
+      functions: 100,
+      branches: 98.62,
+    },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },

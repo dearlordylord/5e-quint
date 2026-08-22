@@ -9,5 +9,9 @@ export default defineConfig({
     // Tests construct fresh composition roots and close their transports.
     // Sharing the module cache avoids recollecting the runtime schema graph.
     isolate: false,
+    // Schema validation and protocol fixtures share that graph; concurrent
+    // coverage workers can push the existing 30-second test budget over its
+    // boundary. Keep this package on the repository's single-worker bound.
+    maxWorkers: 1,
   },
 });
