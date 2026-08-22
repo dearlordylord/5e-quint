@@ -1,10 +1,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import {
-  createMcpCompositionRoot,
-  handleToolCall,
-} from "../../packages/mcp/src/server.ts";
+import { createMcpPlaySessionRoot } from "../../packages/mcp/src/composition-root.ts";
+import { handleToolCall } from "../../packages/mcp/src/server.ts";
 
 import {
   currentGitRevision,
@@ -38,7 +36,7 @@ function main(): void {
     );
   }
 
-  const root = createMcpCompositionRoot();
+  const root = createMcpPlaySessionRoot();
   for (const exchange of parsed.value.exchanges) {
     const actual = handleToolCall(root, exchange.tool, exchange.args);
     const actualSha = sha256Canonical(actual);
