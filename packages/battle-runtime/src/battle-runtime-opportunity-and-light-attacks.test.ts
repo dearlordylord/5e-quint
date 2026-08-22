@@ -1535,7 +1535,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     });
 
     const attackRoll = requireHole(afterTarget, "attackRoll");
-    expect(attackRoll).not.toHaveProperty("rollMode");
+    expect(attackRoll).toHaveProperty("rollMode", "normal");
     expect(
       resolveBattleSubject({
         state: hiddenGoblinTurn,

@@ -2302,7 +2302,7 @@ describe("battle runtime: class action features", () => {
       "attackRoll",
     );
 
-    expect(mutualUnseenAttackRoll).not.toHaveProperty("rollMode");
+    expect(mutualUnseenAttackRoll).toHaveProperty("rollMode", "normal");
   });
 
   test("Innate Sorcery does not project onto non-Sorcerer spell sources and stops after expiration", () => {
@@ -4224,7 +4224,7 @@ describe("battle runtime: class action features", () => {
     if (roll.kind !== "attackRoll") {
       throw new Error("Expected attack-roll hole.");
     }
-    expect(roll.rollMode).toBeUndefined();
+    expect(roll.rollMode).toBe("normal");
     const reckless = resolveBattleSubject({
       state: contestedState,
       subject: attackSubject,

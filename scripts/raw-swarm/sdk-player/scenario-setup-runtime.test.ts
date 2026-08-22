@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
+// KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -14,8 +15,10 @@ import {
   battleObjectId,
   combatantId,
   discoverBattleActs,
+  endBattleRuntimeTurn,
   readyTriggerDescription,
   resolveBattleRuntimeSubject,
+  resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
 } from "../../../packages/battle-runtime/src/index.ts";
 import {
   battleRuntimeContextFromCharacterAdmission,
@@ -64,6 +67,10 @@ import {
   scenarioOpportunityAttackExecutionCandidates,
   planScenarioMovement,
   scenarioSessionWithBattleResult,
+  scenarioSessionWithTableD20TestCircumstance,
+  scenarioBattleResultWithD20TestCircumstances,
+  scenarioD20TestCircumstancePreparation,
+  scenarioD20TestResolutionId,
   tableAuthoredSpatialDecision,
 } from "./scenario-session.ts";
 import type {
@@ -227,6 +234,179 @@ describe("scenario setup public-SDK boundary", () => {
           combatantId("goblin-warrior"),
         ),
       ).toBe(true);
+    }
+  }, 120_000);
+
+  test("binds the issue 279 Table decision to the Wolf's exact first attack-roll test", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios/table-d20-circumstance-advantage-probe-repair-retry.setup.ts",
+      ),
+      [],
+    );
+    expect(setup).toMatchObject({
+      tag: "ready",
+      observation: { issue: 279, status: "bound-to-next-matching-d20-test" },
+    });
+    if (setup.tag !== "ready") return;
+
+    const wolfId = combatantId("wolf");
+    const horseId = combatantId("riding-horse");
+    const adjacentScenario = createScenarioSession({
+      battle: setup.session.battle,
+      spatial: {
+        kind: "geometryDerived",
+        arena: {
+          cells: Array.from({ length: 4 }, (_, x) => ({
+            x,
+            y: 0,
+            terrain: "ordinary" as const,
+          })),
+          boundaries: [],
+        },
+        placements: [
+          { tokenId: wolfId, coordinate: { x: 1, y: 0 } },
+          { tokenId: horseId, coordinate: { x: 2, y: 0 } },
+        ],
+        spatialDecisions: [],
+      },
+      ambientIllumination: "brightLight",
+      statBlockDamageNotation: "rolled",
+      environment: { overhead: { kind: "open" }, barrierHeights: [] },
+      initialRangedAttackEnemyRelationships: [],
+      movementAllyRelationships: [],
+      opportunityAttackEnemyRelationships: [],
+      objects: [],
+    });
+    expect(Either.isRight(adjacentScenario)).toBe(true);
+    if (Either.isLeft(adjacentScenario)) return;
+    const boundScenario = scenarioSessionWithTableD20TestCircumstance({
+      session: adjacentScenario.right,
+      binding: {
+        selection: {
+          kind: "nextD20TestForActor",
+          testKind: "attackRoll",
+          actorId: wolfId,
+        },
+        targetId: horseId,
+        source: "disadvantage",
+      },
+    });
+    expect(Either.isRight(boundScenario)).toBe(true);
+    if (Either.isLeft(boundScenario)) return;
+    const horseTurnEnded = endBattleRuntimeTurn({
+      session: boundScenario.right.battle,
+      actorId: horseId,
+      fills: [],
+    });
+    expect(horseTurnEnded.tag).toBe("resolved");
+    if (horseTurnEnded.tag !== "resolved") return;
+    const wolfTurnSession = scenarioSessionWithBattleResult(
+      boundScenario.right,
+      horseTurnEnded.session,
+    );
+    expect(Either.isRight(wolfTurnSession)).toBe(true);
+    if (Either.isLeft(wolfTurnSession)) return;
+    const session = wolfTurnSession.right;
+    const attackAct = scenarioBattleActs(session).find(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.action === "attack" &&
+        subject.actorId === wolfId,
+    );
+    expect(attackAct).toBeDefined();
+    if (attackAct === undefined) return;
+    const targetHole = attackAct.initialHoles.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    expect(targetHole?.kind).toBe("targetChoice");
+    if (targetHole?.kind !== "targetChoice") return;
+    const targetFills = scenarioAttackTargetFills({
+      session,
+      subject: attackAct.subject,
+      fills: [
+        {
+          kind: "targetChoice",
+          holeId: targetHole.holeId,
+          value: horseId,
+          spatialFacts: [],
+        },
+      ],
+    });
+    expect(Either.isRight(targetFills)).toBe(true);
+    if (Either.isLeft(targetFills)) return;
+
+    const preliminary =
+      resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+        session: session.battle,
+        subject: attackAct.subject,
+        fills: targetFills.right,
+        d20TestResolutionId: scenarioD20TestResolutionId(session),
+        tableD20TestCircumstanceDecisions: [],
+      });
+    expect(preliminary.tag).toBe("needsHoles");
+    if (preliminary.tag !== "needsHoles") return;
+    expect(preliminary.d20TestCircumstanceRequests).toMatchObject([
+      { testKind: "attackRoll", targetId: horseId },
+    ]);
+    const preparation = scenarioD20TestCircumstancePreparation({
+      session,
+      subject: attackAct.subject,
+      fills: targetFills.right,
+      requests: preliminary.d20TestCircumstanceRequests,
+    });
+    expect(preparation.decisions).toHaveLength(1);
+    expect(preparation.decisions[0]).toMatchObject({
+      testKind: "attackRoll",
+      source: "disadvantage",
+    });
+
+    const admitted = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+      session: session.battle,
+      subject: attackAct.subject,
+      fills: targetFills.right,
+      d20TestResolutionId: scenarioD20TestResolutionId(session),
+      tableD20TestCircumstanceDecisions: preparation.decisions,
+    });
+    const projected = scenarioBattleResultWithD20TestCircumstances({
+      result: admitted,
+      decisions: preparation.decisions,
+    });
+    expect(projected.tag).toBe("needsHoles");
+    if (projected.tag !== "needsHoles") return;
+    const attackRoll = projected.holes.find(
+      (hole) => hole.kind === "attackRoll",
+    );
+    expect(attackRoll).toMatchObject({
+      kind: "attackRoll",
+      rollMode: "disadvantage",
+    });
+    if (attackRoll?.kind !== "attackRoll") return;
+
+    const rolled = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+      session: session.battle,
+      subject: attackAct.subject,
+      fills: [
+        ...targetFills.right,
+        {
+          kind: "attackRoll",
+          holeId: attackRoll.holeId,
+          value: {
+            total: 30,
+            naturalD20: DieRollResult(18),
+            rollMode: "disadvantage",
+          },
+        },
+      ],
+      d20TestResolutionId: scenarioD20TestResolutionId(session),
+      tableD20TestCircumstanceDecisions: preparation.decisions,
+    });
+    expect(rolled.tag).toBe("needsHoles");
+    if (rolled.tag === "needsHoles") {
+      expect(rolled.holes.some((hole) => hole.kind === "rolledDice")).toBe(
+        true,
+      );
     }
   }, 120_000);
 

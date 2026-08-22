@@ -3949,7 +3949,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       saveHole.targetRollModes.find(
         (projection) => projection.targetId === skeletonId,
       ),
-    ).toBeUndefined();
+    ).toEqual({ targetId: skeletonId, rollMode: "normal" });
   });
 
   test("Heightened Spell rejects a disadvantaged target outside the affected spell targets", () => {

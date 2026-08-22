@@ -1323,7 +1323,7 @@ describe("L3MSPEC species battle support", () => {
     if (poisoned.kind !== "grappleOutcome") {
       throw new Error("Expected Powerful Build poisoned escape Grapple hole.");
     }
-    expect(poisoned).not.toHaveProperty("rollMode");
+    expect(poisoned).toHaveProperty("rollMode", "normal");
     const unselected = requireHole(
       powerfulBuildEscapeGrappleScenario({ selected: false }).result,
       "grappleOutcome",

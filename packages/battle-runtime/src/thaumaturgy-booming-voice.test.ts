@@ -219,7 +219,7 @@ describe("Thaumaturgy Booming Voice", () => {
         fighterId,
         difficultyClass(13),
       ),
-    ).not.toHaveProperty("rollMode");
+    ).toHaveProperty("rollMode", "normal");
   });
 
   test("rejects unsupported synthetic Booming Voice operation, filter, and attachment profiles", () => {

@@ -49,6 +49,12 @@ export type SpellCastResourceSpendResult =
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
+function metamagicApplicationsOrEmpty(
+  applications: readonly CharacterBattleMetamagicOptionFact[] | undefined,
+): readonly CharacterBattleMetamagicOptionFact[] {
+  return applications ?? [];
+}
+
 export function spendSpellCastMetamagicResources(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
@@ -98,7 +104,9 @@ export function spendSpellCastResources(input: {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  const metamagicApplications = input.metamagicApplications ?? [];
+  const metamagicApplications = metamagicApplicationsOrEmpty(
+    input.metamagicApplications,
+  );
   const spellCastState =
     input.skipTargetActionSpellCastEarlyEnd === true
       ? input.state

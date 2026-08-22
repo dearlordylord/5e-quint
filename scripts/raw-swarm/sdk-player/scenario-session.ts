@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 import type {
   AttackTargetConstraint,
   BattleIllumination,
@@ -22,6 +23,11 @@ import type {
   CombatantId,
   StatBlockDamageNotation,
   AvailableBattleAct,
+  TableD20TestCircumstanceDecision,
+  TableD20TestCircumstanceSource,
+  BattleRuntimeTableD20TestResolutionResult,
+  BattleD20TestCircumstanceRequest,
+  D20TestResolutionId,
 } from "@dnd/battle-runtime";
 import {
   battleTablePositionId,
@@ -34,6 +40,11 @@ import {
   opportunityAttackLeavesReach,
   opportunityAttackThreatEqual,
   resolveBattleRuntimeSubject,
+  admitTableD20TestCircumstanceDecisions,
+  battleHolesWithTableD20TestCircumstances,
+  battleD20TestCircumstanceRequests,
+  d20TestResolutionId,
+  sameBattleSubject,
   zeroHpLifecycleIsTerminal,
 } from "../../../packages/battle-runtime/src/index.ts";
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -219,11 +230,30 @@ export type ScenarioSession = Readonly<{
   readonly battle: BattleRuntimeSession;
   readonly battlefield: ScenarioBattlefield;
   readonly movementResolution: ScenarioMovementResolution;
+  readonly tableD20TestCircumstances: ScenarioTableD20TestCircumstanceState;
   readonly lineage: Readonly<{
     readonly scenarioSessionLineageId: ScenarioSessionLineageId;
     readonly battleRuntimeSessionIdentity: string;
   }>;
   readonly [scenarioSessionBrand]: true;
+}>;
+
+export type ScenarioTableD20TestCircumstanceBinding = Readonly<{
+  readonly selection:
+    | Readonly<{ readonly kind: "subject"; readonly subject: BattleSubject }>
+    | Readonly<{
+        readonly kind: "nextD20TestForActor";
+        readonly testKind: "abilityCheck" | "savingThrow" | "attackRoll";
+        readonly actorId: CombatantId;
+      }>;
+  readonly targetId?: CombatantId;
+  readonly source: TableD20TestCircumstanceSource;
+}>;
+
+export type ScenarioTableD20TestCircumstanceState = Readonly<{
+  readonly resolutionOrdinal: number;
+  readonly bindings: readonly ScenarioTableD20TestCircumstanceBinding[];
+  readonly activeDecisions: readonly TableD20TestCircumstanceDecision[];
 }>;
 
 type ScenarioStatBlockAttackSubject = Extract<
@@ -312,9 +342,13 @@ function sameStatBlockAttackProcedure(
   );
 }
 
+export type ScenarioAvailableBattleAct = AvailableBattleAct & {
+  readonly d20TestCircumstanceRequests: readonly BattleD20TestCircumstanceRequest[];
+};
+
 export function scenarioBattleActs(
   session: ScenarioSession,
-): readonly AvailableBattleAct[] {
+): readonly ScenarioAvailableBattleAct[] {
   const acts = discoverBattleActs(session.battle);
   const statBlockOptions = acts.flatMap(({ subject }) =>
     isStatBlockAttackSubject(subject) ? [subject] : [],
@@ -328,9 +362,8 @@ export function scenarioBattleActs(
         available: statBlockOptions,
       });
     })
-    .map((act) => ({
-      ...act,
-      initialHoles: act.initialHoles.map((hole) =>
+    .map((act) => {
+      const initialHoles = act.initialHoles.map((hole) =>
         hole.kind === "readyDeclaration"
           ? {
               ...hole,
@@ -340,8 +373,39 @@ export function scenarioBattleActs(
               }),
             }
           : hole,
-      ),
-    }));
+      );
+      const requests = battleD20TestCircumstanceRequests({
+        resolutionId: scenarioD20TestResolutionId(session),
+        holes: initialHoles,
+        resolvedFills: [],
+      });
+      const preparation = scenarioD20TestCircumstancePreparation({
+        session,
+        subject: act.subject,
+        fills: [],
+        requests,
+      });
+      const currentRequestRefs = new Set(
+        requests.map(({ requestRef }) => requestRef),
+      );
+      const admitted = admitTableD20TestCircumstanceDecisions({
+        requests,
+        decisions: preparation.decisions.filter(({ requestRef }) =>
+          currentRequestRefs.has(requestRef),
+        ),
+      });
+      return {
+        ...act,
+        initialHoles: Either.isLeft(admitted)
+          ? initialHoles
+          : battleHolesWithTableD20TestCircumstances({
+              holes: initialHoles,
+              requests,
+              admitted: admitted.right,
+            }),
+        d20TestCircumstanceRequests: requests,
+      };
+    });
 }
 
 export function scenarioBattleFills(
@@ -578,11 +642,19 @@ function makeScenarioSession(
     kind: "idle",
   }),
   sessionLineageId: ScenarioSessionLineageId = newScenarioSessionLineageId(),
+  tableD20TestCircumstances: ScenarioTableD20TestCircumstanceState = Object.freeze(
+    {
+      resolutionOrdinal: 0,
+      bindings: Object.freeze([]),
+      activeDecisions: Object.freeze([]),
+    },
+  ),
 ): ScenarioSession {
   const session = Object.freeze({
     battle,
     battlefield,
     movementResolution,
+    tableD20TestCircumstances,
     lineage: Object.freeze({
       scenarioSessionLineageId: sessionLineageId,
       battleRuntimeSessionIdentity: runtimeValueIdentity(battle),
@@ -592,6 +664,209 @@ function makeScenarioSession(
   // The brand is compile-time only; WeakSet membership is the runtime proof
   // that this value passed createScenarioSession's composition checks.
   return session as ScenarioSession;
+}
+
+export type ScenarioTableD20TestCircumstanceBindingIssue = Readonly<{
+  readonly tag: "unknown-d20-test-actor" | "duplicate-d20-test-binding";
+  readonly message: string;
+}>;
+
+function sameScenarioD20TestSelection(
+  left: ScenarioTableD20TestCircumstanceBinding["selection"],
+  right: ScenarioTableD20TestCircumstanceBinding["selection"],
+): boolean {
+  return Match.value(left).pipe(
+    Match.when(
+      { kind: "subject" },
+      ({ subject }) =>
+        right.kind === "subject" && sameBattleSubject(subject, right.subject),
+    ),
+    Match.when(
+      { kind: "nextD20TestForActor" },
+      ({ testKind, actorId }) =>
+        right.kind === "nextD20TestForActor" &&
+        right.testKind === testKind &&
+        right.actorId === actorId,
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function scenarioSessionWithTableD20TestCircumstance(input: {
+  readonly session: ScenarioSession;
+  readonly binding: ScenarioTableD20TestCircumstanceBinding;
+}): Either.Either<
+  ScenarioSession,
+  ScenarioTableD20TestCircumstanceBindingIssue
+> {
+  const selectedActorId =
+    input.binding.selection.kind === "nextD20TestForActor"
+      ? input.binding.selection.actorId
+      : input.binding.selection.subject.actorId;
+  if (!input.session.battle.state.combatants.has(selectedActorId)) {
+    return Either.left({
+      tag: "unknown-d20-test-actor",
+      message: `A Table D20 Test circumstance binding names unknown combatant ${String(selectedActorId)}.`,
+    });
+  }
+  const duplicate = input.session.tableD20TestCircumstances.bindings.some(
+    (binding) =>
+      sameScenarioD20TestSelection(
+        binding.selection,
+        input.binding.selection,
+      ) && binding.targetId === input.binding.targetId,
+  );
+  if (duplicate) {
+    return Either.left({
+      tag: "duplicate-d20-test-binding",
+      message:
+        "A battle subject and target can have only one pending Table D20 Test circumstance binding.",
+    });
+  }
+  return Either.right(
+    makeScenarioSession(
+      input.session.battle,
+      input.session.battlefield,
+      input.session.movementResolution,
+      input.session.lineage.scenarioSessionLineageId,
+      Object.freeze({
+        ...input.session.tableD20TestCircumstances,
+        bindings: Object.freeze([
+          ...input.session.tableD20TestCircumstances.bindings,
+          Object.freeze({ ...input.binding }),
+        ]),
+      }),
+    ),
+  );
+}
+
+export function scenarioD20TestResolutionId(
+  session: ScenarioSession,
+): D20TestResolutionId {
+  return d20TestResolutionId(
+    `${session.lineage.scenarioSessionLineageId}:d20-resolution:${String(session.tableD20TestCircumstances.resolutionOrdinal)}`,
+  );
+}
+
+export type ScenarioD20TestCircumstancePreparation = Readonly<{
+  readonly decisions: readonly TableD20TestCircumstanceDecision[];
+  readonly state: ScenarioTableD20TestCircumstanceState;
+}>;
+
+function bindingMatchesD20TestRequest(input: {
+  readonly binding: ScenarioTableD20TestCircumstanceBinding;
+  readonly request: BattleD20TestCircumstanceRequest;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+}): boolean {
+  const selectionMatches =
+    input.binding.selection.kind === "subject"
+      ? sameBattleSubject(input.binding.selection.subject, input.subject)
+      : input.binding.selection.actorId === input.subject.actorId &&
+        input.binding.selection.testKind === input.request.testKind;
+  if (!selectionMatches) return false;
+  if (input.binding.targetId === undefined) return true;
+  if (input.request.targetId !== undefined) {
+    return input.request.targetId === input.binding.targetId;
+  }
+  return (
+    input.request.testKind === "attackRoll" &&
+    [...input.fills].reverse().find((fill) => fill.kind === "targetChoice")
+      ?.value === input.binding.targetId
+  );
+}
+
+export function scenarioD20TestCircumstancePreparation(input: {
+  readonly session: ScenarioSession;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+  readonly requests: readonly BattleD20TestCircumstanceRequest[];
+}): ScenarioD20TestCircumstancePreparation {
+  const remainingBindings = [
+    ...input.session.tableD20TestCircumstances.bindings,
+  ];
+  const decisions = [
+    ...input.session.tableD20TestCircumstances.activeDecisions,
+  ];
+  for (const request of input.requests) {
+    if (decisions.some(({ requestRef }) => requestRef === request.requestRef)) {
+      continue;
+    }
+    const bindingIndex = remainingBindings.findIndex((binding) =>
+      bindingMatchesD20TestRequest({
+        binding,
+        request,
+        subject: input.subject,
+        fills: input.fills,
+      }),
+    );
+    const binding = remainingBindings[bindingIndex];
+    if (binding === undefined) continue;
+    decisions.push({
+      requestRef: request.requestRef,
+      testKind: request.testKind,
+      source: binding.source,
+    });
+    remainingBindings.splice(bindingIndex, 1);
+  }
+  return {
+    decisions: Object.freeze(decisions),
+    state: Object.freeze({
+      ...input.session.tableD20TestCircumstances,
+      bindings: Object.freeze(remainingBindings),
+      activeDecisions: Object.freeze(decisions),
+    }),
+  };
+}
+
+export function scenarioBattleResultWithD20TestCircumstances(input: {
+  readonly result: BattleRuntimeTableD20TestResolutionResult;
+  readonly decisions: readonly TableD20TestCircumstanceDecision[];
+}): BattleRuntimeTableD20TestResolutionResult {
+  if (input.result.tag !== "needsHoles") return input.result;
+  const currentDecisionRefs = new Set(
+    input.result.d20TestCircumstanceRequests.map(
+      ({ requestRef }) => requestRef,
+    ),
+  );
+  const currentDecisions = input.decisions.filter(({ requestRef }) =>
+    currentDecisionRefs.has(requestRef),
+  );
+  const admitted = admitTableD20TestCircumstanceDecisions({
+    requests: input.result.d20TestCircumstanceRequests,
+    decisions: currentDecisions,
+  });
+  if (Either.isLeft(admitted)) return input.result;
+  return {
+    ...input.result,
+    holes: battleHolesWithTableD20TestCircumstances({
+      holes: input.result.holes,
+      requests: input.result.d20TestCircumstanceRequests,
+      admitted: admitted.right,
+    }),
+  };
+}
+
+export function scenarioSessionAfterD20TestCircumstanceResolution(input: {
+  readonly session: ScenarioSession;
+  readonly state: ScenarioTableD20TestCircumstanceState;
+  readonly resolutionTag: BattleRuntimeTableD20TestResolutionResult["tag"];
+}): ScenarioSession {
+  const state =
+    input.resolutionTag === "resolved"
+      ? Object.freeze({
+          resolutionOrdinal: input.state.resolutionOrdinal + 1,
+          bindings: input.state.bindings,
+          activeDecisions: Object.freeze([]),
+        })
+      : input.state;
+  return makeScenarioSession(
+    input.session.battle,
+    input.session.battlefield,
+    input.session.movementResolution,
+    input.session.lineage.scenarioSessionLineageId,
+    state,
+  );
 }
 
 function nonEmptyIssues(
@@ -1538,6 +1813,7 @@ export function planScenarioMovement(input: {
         input.session.battlefield,
         movementResolution,
         input.session.lineage.scenarioSessionLineageId,
+        input.session.tableD20TestCircumstances,
       ),
       subject: movementResolution.subject,
       fills: [fill, ...input.fills],
@@ -1828,6 +2104,7 @@ export function planScenarioMovement(input: {
       input.session.battlefield,
       movementResolution,
       input.session.lineage.scenarioSessionLineageId,
+      input.session.tableD20TestCircumstances,
     ),
     subject: movementResolution.subject,
     fills: [fill, ...input.fills],
@@ -2622,6 +2899,7 @@ export function scenarioSessionWithBattleResult(
         battlefield,
         movementResolution,
         session.lineage.scenarioSessionLineageId,
+        session.tableD20TestCircumstances,
       ),
     );
   }
@@ -2648,6 +2926,7 @@ export function scenarioSessionWithBattleResult(
       battlefield,
       movementResolution,
       session.lineage.scenarioSessionLineageId,
+      session.tableD20TestCircumstances,
     ),
   );
 }
@@ -2664,6 +2943,7 @@ export function scenarioSessionAfterRejectedMovement(
       session.battlefield,
       { kind: "idle" },
       session.lineage.scenarioSessionLineageId,
+      session.tableD20TestCircumstances,
     ),
   );
 }

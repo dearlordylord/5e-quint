@@ -18,6 +18,15 @@ do not call fresh act discovery. The session retains the subject but not the
 accepted fill prefix, so carry the complete prefix forward from the previous
 attempt source.
 
+A **D20 Test** is exactly an Ability Check, Saving Throw, or attack roll. Each
+rolled pending test is surfaced with an effective `rollMode`: `normal`,
+`advantage`, or `disadvantage`. The accompanying
+`d20TestCircumstanceRequests` identify the exact resolution occurrence and,
+for a multi-target save, the individual target. The ScenarioSession has
+already combined any Table-authored circumstance with mechanical sources;
+success or failure remains a separate outcome fact. A `withoutRoll` outcome is
+not a D20 Test occurrence and has no circumstance decision to consume.
+
 For a repeated-damage allocation, the later `rolledDice` fill has one group for
 each entry in the earlier `spellTargetAllocation.value.allocations` array, in
 that same order. Group `i` must contain exactly

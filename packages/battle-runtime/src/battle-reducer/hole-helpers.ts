@@ -21,6 +21,7 @@ import {
 } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { mechanicalD20TestRollMode } from "../d20-test-circumstance.ts";
 import type {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -455,10 +456,10 @@ export function requiredAbilityCheckRollMode(
         ability,
         context.skill,
       ));
-  if (hasAdvantage === hasDisadvantage) {
-    return undefined;
-  }
-  return hasAdvantage ? "advantage" : "disadvantage";
+  return mechanicalD20TestRollMode({
+    advantage: hasAdvantage,
+    disadvantage: hasDisadvantage,
+  });
 }
 
 export function requiredConditionEndAbilityCheckRollMode(
@@ -480,10 +481,10 @@ export function requiredConditionEndAbilityCheckRollMode(
       condition,
       "advantage",
     );
-  if (hasAdvantage === hasDisadvantage) {
-    return undefined;
-  }
-  return hasAdvantage ? "advantage" : "disadvantage";
+  return mechanicalD20TestRollMode({
+    advantage: hasAdvantage,
+    disadvantage: hasDisadvantage,
+  });
 }
 
 export function passivePerceptionModifierDelta(

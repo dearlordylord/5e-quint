@@ -541,7 +541,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
         [],
         activationRef,
       ),
-    ).toBeUndefined();
+    ).toBe("normal");
 
     const helperId = combatantId("synthetic-helper");
     const helpBattle = startBattleRight({
@@ -582,7 +582,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
     };
     expect(
       requiredAttackRollMode(helpedState, fighterId, goblinId, helpedAttack),
-    ).toBe(undefined);
+    ).toBe("normal");
     expect(
       attackRollModeWithOptionalOngoingFeature(
         helpedState,
@@ -592,7 +592,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
         [],
         activationRef,
       ),
-    ).toBeUndefined();
+    ).toBe("normal");
     expect(
       attackRollModeWithOptionalOngoingFeature(
         state,

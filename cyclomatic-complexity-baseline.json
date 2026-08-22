@@ -70,11 +70,11 @@
       "module/binding:resolveBrutalStrikeForcefulBlowMovement": 16,
       "module/binding:resolveGrapplerPunchAndGrabAfterHit": 12,
       "module/binding:resolveHuntersPreyHordeBreakerAfterPrimaryDamage": 21,
-      "module/binding:resolveSelectedAttackProcedure": 220,
+      "module/binding:resolveSelectedAttackProcedure": 214,
       "module/binding:resolveWeaponMasteryCleaveAfterPrimaryDamage": 20
     },
     "packages/battle-runtime/src/battle-reducer/attack-offhand.ts": {
-      "module/binding:resolveBonusActionAttack": 79
+      "module/binding:resolveBonusActionAttack": 77
     },
     "packages/battle-runtime/src/battle-reducer/attack-resolution.ts": {
       "module/binding:classFeatureExtraAttackForActor": 10,
@@ -218,7 +218,7 @@
       "module/binding:releaseGlyphExplosiveRune": 10
     },
     "packages/battle-runtime/src/battle-reducer/hole-helpers.ts": {
-      "module/binding:requiredAbilityCheckRollMode": 14
+      "module/binding:requiredAbilityCheckRollMode": 12
     },
     "packages/battle-runtime/src/battle-reducer/interrupt-continuation.ts": {
       "module/binding:attackDamageContinuationCunningStrikeFillSet": 9,

@@ -3,6 +3,7 @@
 // features.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.grappler unit-feature.hunters-prey unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
@@ -151,6 +152,12 @@ import {
   parseSavingThrowRelationshipFacts,
   savingThrowTargetsEnemy,
 } from "./roll-trigger-relationship-facts.ts";
+import {
+  admittedAttackRollTableSource,
+  combineD20TestRollMode,
+  mechanicalD20TestRollMode,
+  mechanicalD20TestRollModeSources,
+} from "../d20-test-circumstance.ts";
 import {
   attackActionBonusWithPassiveFeatureBonus,
   attackActionOptionName,
@@ -562,9 +569,10 @@ function attackRollModeFromSources(
   hasAdvantage: boolean,
   hasDisadvantage: boolean,
 ): AttackRollMode | undefined {
-  if (hasAdvantage && !hasDisadvantage) return "advantage";
-  if (hasDisadvantage && !hasAdvantage) return "disadvantage";
-  return undefined;
+  return mechanicalD20TestRollMode({
+    advantage: hasAdvantage,
+    disadvantage: hasDisadvantage,
+  });
 }
 
 export function attackRollHasAdvantageSource(
@@ -601,21 +609,7 @@ export function attackRollModeWithOptionalOngoingFeature(
   if (activatedOngoingFeatureProcedureRef === undefined) {
     return baseline;
   }
-  if (baseline === "disadvantage") {
-    return undefined;
-  }
-  if (
-    baseline === undefined &&
-    attackRollHasAdvantageSource(
-      state,
-      attackerId,
-      targetId,
-      attack,
-      targetSpatialFacts,
-    )
-  ) {
-    return undefined;
-  }
+  if (baseline === "normal" || baseline === "disadvantage") return "normal";
   return "advantage";
 }
 
@@ -2075,5 +2069,17 @@ export function attackRollModeMatches(
   roll: BattleAttackRollResult,
   requiredMode: AttackRollMode | undefined,
 ): boolean {
-  return requiredMode === undefined || roll.rollMode === requiredMode;
+  const tableSource = admittedAttackRollTableSource(roll);
+  if (tableSource === undefined) {
+    return (
+      requiredMode === undefined || (roll.rollMode ?? "normal") === requiredMode
+    );
+  }
+  return (
+    (roll.rollMode ?? "normal") ===
+    combineD20TestRollMode(
+      mechanicalD20TestRollModeSources(requiredMode),
+      tableSource,
+    )
+  );
 }

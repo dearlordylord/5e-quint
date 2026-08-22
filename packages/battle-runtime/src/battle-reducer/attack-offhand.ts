@@ -353,18 +353,6 @@ function resolveBonusActionAttack(
     fillSet.attackRoll.activatedOngoingFeatureProcedureRef,
   );
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined &&
-    fillSet.attackRoll.rollMode !== requiredRollMode
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      `${label} roll mode does not match the activated ongoing feature rule.`,
-    );
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
     return invalidResult(
       input.state,

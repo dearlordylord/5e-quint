@@ -395,7 +395,7 @@ describe("battle runtime: Sneak Attack", () => {
     );
     const target = attackInitialTargetHole(state, subject);
     const roll = attackRollHoleAfterTarget(state, target, subject, goblinId);
-    expect(roll).not.toHaveProperty("rollMode");
+    expect(roll).toHaveProperty("rollMode", "normal");
     const damage = attackDamageHoleAfterHit(
       state,
       target,
@@ -628,7 +628,7 @@ describe("battle runtime: Sneak Attack", () => {
       }),
       "attackRoll",
     );
-    expect(mutualUnseen).not.toHaveProperty("rollMode");
+    expect(mutualUnseen).toHaveProperty("rollMode", "normal");
   });
 
   test("mutual unseen cancellation lets Sneak Attack use the ally-within-5-feet branch", () => {
@@ -690,7 +690,7 @@ describe("battle runtime: Sneak Attack", () => {
       }),
       "attackRoll",
     );
-    expect(roll).not.toHaveProperty("rollMode");
+    expect(roll).toHaveProperty("rollMode", "normal");
     const damage = requireHole(
       resolveBattleSubject({
         state,
