@@ -83,7 +83,7 @@ export function resolveRemarkableAthleteCriticalHitMovement(input: {
       input.fills.remarkableAthleteCriticalHitMovementDecision !== undefined ||
       input.fills.remarkableAthleteCriticalHitMovement !== undefined
     ) {
-      /* v8 ignore start -- Malformed resolution input: attack discovery emits Remarkable Athlete fills only after an eligible selected-profile Critical Hit with movement available. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: attack discovery emits Remarkable Athlete fills only after an eligible selected-profile Critical Hit with movement available. */
       return {
         tag: "result",
         result: invalidResult(
@@ -93,7 +93,7 @@ export function resolveRemarkableAthleteCriticalHitMovement(input: {
         ),
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return { tag: "ok", state: input.state };
   }
 
@@ -102,7 +102,7 @@ export function resolveRemarkableAthleteCriticalHitMovement(input: {
   const movementFill = input.fills.remarkableAthleteCriticalHitMovement;
   if (decision === undefined) {
     if (movementFill !== undefined) {
-      /* v8 ignore start -- Malformed resolution input: the movement hole is emitted only after the decoded Remarkable Athlete decision chooses "use". */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: the movement hole is emitted only after the decoded Remarkable Athlete decision chooses "use". */
       return {
         tag: "result",
         result: invalidResult(
@@ -112,7 +112,7 @@ export function resolveRemarkableAthleteCriticalHitMovement(input: {
         ),
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return {
       tag: "result",
       result: needsHolesResult(input.state, input.subject, [decisionHole]),
@@ -120,7 +120,7 @@ export function resolveRemarkableAthleteCriticalHitMovement(input: {
   }
   if (decision.value === "decline") {
     if (movementFill !== undefined) {
-      /* v8 ignore start -- Malformed resolution input: declining does not emit a movement hole, so a decoded movement fill cannot accompany that decision. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: declining does not emit a movement hole, so a decoded movement fill cannot accompany that decision. */
       return {
         tag: "result",
         result: invalidResult(
@@ -130,7 +130,7 @@ export function resolveRemarkableAthleteCriticalHitMovement(input: {
         ),
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return { tag: "ok", state: input.state };
   }
   if (movementFill === undefined) {

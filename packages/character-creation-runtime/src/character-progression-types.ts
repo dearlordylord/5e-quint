@@ -143,9 +143,9 @@ export function characterProgressionWithClassLevelGain(input: {
     characterLevel: characterClassLevel(nextCharacterLevel),
     hitPointRule: input.hitPointRule,
   });
-  /* v8 ignore start -- The consecutive level and fixed higher-level Hit Point rule satisfy this narrowed constructor. */
+  /* v8 ignore start -- @preserve -- The consecutive level and fixed higher-level Hit Point rule satisfy this narrowed constructor. */
   if (Either.isLeft(entry)) return Either.left(entry.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     startingClass: input.progression.startingClass,

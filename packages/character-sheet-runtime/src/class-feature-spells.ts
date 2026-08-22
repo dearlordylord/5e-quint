@@ -148,7 +148,7 @@ function classLevelForClassFeatureUnit(input: {
   readonly unitLibrary: UnitCatalog;
   readonly featureUnit: Extract<UnitRecord, { readonly kind: "class_feature" }>;
 }): number {
-  /* v8 ignore start -- Malformed build/catalog correlation: V8 maps the exhausted-scan edge to this loop, but an admitted class feature's owning class must occur in the same build progression. */
+  /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: V8 maps the exhausted-scan edge to this loop, but an admitted class feature's owning class must occur in the same build progression. */
   for (const progressionClassUnitId of progressionClassUnitIds(
     input.build.progression,
   )) {
@@ -162,7 +162,7 @@ function classLevelForClassFeatureUnit(input: {
     }
   }
   return 0;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function preparedSpellIdsForClassFeatureGrant(

@@ -62,7 +62,7 @@ export function prepareAfterHitSlotSpellCast(
 ):
   | { readonly tag: "prepared"; readonly state: BattleState }
   | BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
@@ -70,7 +70,7 @@ export function prepareAfterHitSlotSpellCast(
       "Attack-hit Bonus Action spell accepts only spell-cast Reaction trigger facts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spellCastReactionWindow = maybeOpenAfterHitSpellCastInterrupt(input);
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;

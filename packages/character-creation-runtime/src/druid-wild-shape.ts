@@ -115,20 +115,20 @@ export function characterBuildDruidWildShapeFacts(input: {
   if (Either.isLeft(druidLevel)) return Either.left(druidLevel.left);
 
   const knownFormRoster = wildShapeKnownFormRoster(feature);
-  /* v8 ignore start -- Admission retains Wild Shape only after proving its Beast-form roster exists. */
+  /* v8 ignore start -- @preserve -- Admission retains Wild Shape only after proving its Beast-form roster exists. */
   if (knownFormRoster === undefined) {
     return druidWildShapeFactsIssue(
       "Wild Shape requires known Beast form roster facts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const useCountCap = feature.mechanics.resource.cap;
   const maxChallengeRating = knownFormRoster.maxChallengeRating;
   const knownFormCount = classLevelChoiceCountAtLevel(
     knownFormRoster.knownForms,
     druidLevel.right,
   );
-  /* v8 ignore start -- Admission proves both retained projections use class-level threshold tiers. */
+  /* v8 ignore start -- @preserve -- Admission proves both retained projections use class-level threshold tiers. */
   if (
     useCountCap.kind !== "threshold_tiers" ||
     !isClassLevelThresholdTiers(useCountCap) ||
@@ -138,7 +138,7 @@ export function characterBuildDruidWildShapeFacts(input: {
       "Wild Shape requires class-level tiered use count and Beast form Challenge Rating facts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({
     unitId: feature.id,
     useCount: {

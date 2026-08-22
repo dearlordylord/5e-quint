@@ -158,7 +158,7 @@ function applyThaumaturgyBoomingVoiceEffect(
 function resolveThaumaturgyBoomingVoice(
   input: SpellProcedureProfileResolveInput<ThaumaturgyBoomingVoiceInvocation>,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
@@ -170,7 +170,7 @@ function resolveThaumaturgyBoomingVoice(
       "Thaumaturgy Booming Voice uses only the total active 1-minute effect count witness.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const activeCountFill = input.fillSet.thaumaturgyActiveOneMinuteEffectCount;
   if (activeCountFill === undefined) {
@@ -179,7 +179,7 @@ function resolveThaumaturgyBoomingVoice(
     ]);
   }
   const activeCount = activeCountFill.value.activeOneMinuteEffectCount;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!Number.isInteger(activeCount) || activeCount < 0) {
     return invalidResult(
       input.input.state,
@@ -187,7 +187,7 @@ function resolveThaumaturgyBoomingVoice(
       "Thaumaturgy active 1-minute effect count must be a non-negative integer.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const actor = input.input.state.combatants.get(input.actorId);
   const existingBoomingVoiceEffectCount =
     actor?.activeEffects.filter((effect) =>
@@ -197,7 +197,7 @@ function resolveThaumaturgyBoomingVoice(
         input.invocation,
       ),
     ).length ?? 0;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (activeCount < existingBoomingVoiceEffectCount) {
     return invalidResult(
       input.input.state,
@@ -205,10 +205,10 @@ function resolveThaumaturgyBoomingVoice(
       "Thaumaturgy active 1-minute effect count must include active Booming Voice effects tracked by battle runtime.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const activeCountAfterCast =
     activeCount - existingBoomingVoiceEffectCount + 1;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (activeCountAfterCast > THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS) {
     return invalidResult(
       input.input.state,
@@ -216,7 +216,7 @@ function resolveThaumaturgyBoomingVoice(
       "Thaumaturgy can have at most three active 1-minute effects after this cast.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return resolveSpellActiveEffectCast({
     resolution: input,

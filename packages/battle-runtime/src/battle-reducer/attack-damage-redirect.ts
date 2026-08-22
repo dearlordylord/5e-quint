@@ -99,7 +99,7 @@ export function attackDamageReductionZeroDamageRedirectSelection(input: {
   if (target === undefined && save === undefined && damage === undefined) {
     return { tag: "ok", value: undefined };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (target === undefined || save === undefined || damage === undefined) {
     return {
       tag: "invalid",
@@ -107,8 +107,8 @@ export function attackDamageReductionZeroDamageRedirectSelection(input: {
         "Attack damage reduction redirect requires target, save, and damage facts.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !attackDamageReductionRedirectResourceAvailable(state, reactorId, offer)
   ) {
@@ -118,8 +118,8 @@ export function attackDamageReductionZeroDamageRedirectSelection(input: {
         "Attack damage reduction redirect requires an available projected resource.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !attackDamageReductionZeroDamageRedirectTargetChoices(
       state,
@@ -138,11 +138,11 @@ export function attackDamageReductionZeroDamageRedirectSelection(input: {
       message: "Attack damage reduction redirect target is not eligible.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const outcome = save.value.outcomes.find(
     (candidate) => candidate.targetId === target.value,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if ("area" in save.value) {
     return {
       tag: "invalid",
@@ -150,8 +150,8 @@ export function attackDamageReductionZeroDamageRedirectSelection(input: {
         "Attack damage reduction redirect save must not include spell area facts.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (outcome === undefined || save.value.outcomes.length !== 1) {
     return {
       tag: "invalid",
@@ -159,12 +159,12 @@ export function attackDamageReductionZeroDamageRedirectSelection(input: {
         "Attack damage reduction redirect save must name the redirect target once.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const redirectedDamageRoll = rolledDiceFillTotal(damage, {
     dice: offer.damageDice.dice,
     dieSize: offer.damageDice.dieSize,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (redirectedDamageRoll === null) {
     return {
       tag: "invalid",
@@ -172,7 +172,7 @@ export function attackDamageReductionZeroDamageRedirectSelection(input: {
         "Attack damage reduction redirect damage must match its projected dice.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
     value: {
@@ -227,7 +227,7 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
           } satisfies AttackDamageReductionZeroDamageRedirectAvailableOffer,
         ];
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (offers.length !== redirectReductions.length) {
     return {
       tag: "invalid",
@@ -235,11 +235,11 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
         "Attack damage reduction redirect procedure binding is no longer available.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (offers.length === 0) {
     return { tag: "ok", state: input.state };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (offers.length > 1) {
     return {
       tag: "invalid",
@@ -247,7 +247,7 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
         "Attack damage reduction redirect expects exactly one zero-damage redirect offer.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (Number(input.reducedDamageBeforeTargetAdjustments) !== 0) {
     if (
       input.redirectTarget === undefined &&
@@ -276,7 +276,7 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
             "enemySavingThrow",
           ),
         );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipFacts === null) {
     return {
       tag: "invalid",
@@ -284,7 +284,7 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
         "Attack damage reduction redirect relationship facts must answer the saving-throw hole request.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const selection = attackDamageReductionZeroDamageRedirectSelection({
     state: input.state,
     reactorId: offer.reactorId,

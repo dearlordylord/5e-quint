@@ -1,6 +1,6 @@
 // This module contains only TypeScript type vocabulary, which is erased before
 // runtime and therefore has no executable behavior for tests to cover.
-/* v8 ignore file */
+/* v8 ignore file -- @preserve */
 
 // Authored-free mechanical vocabulary shared by spell admission and execution.
 

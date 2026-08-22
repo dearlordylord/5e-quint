@@ -289,7 +289,7 @@ function resolveParsedPersistentAreaSaveDamage(
     (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
       fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
   );
-  /* v8 ignore start -- Malformed fill set: each discovered persistent-area save and damage hole can be answered only once. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: each discovered persistent-area save and damage hole can be answered only once. */
   if (saveFills.length > 1 || damageFills.length > 1) {
     return invalidResult(
       resolution.state,
@@ -297,7 +297,7 @@ function resolveParsedPersistentAreaSaveDamage(
       `${procedureName} save received duplicate fills.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
@@ -308,11 +308,11 @@ function resolveParsedPersistentAreaSaveDamage(
     resolution.subject.actorId,
     procedureName,
   );
-  /* v8 ignore start -- Malformed fill: the save outcome must answer the discovered single-target hole for the triggering actor. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the save outcome must answer the discovered single-target hole for the triggering actor. */
   if (parsedSave.tag === "invalid") {
     return invalidResult(resolution.state, "invalidFill", parsedSave.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const saveOutcome = parsedSave.outcome;
   if (!saveOutcome.succeeded) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
@@ -342,11 +342,11 @@ function resolveParsedPersistentAreaSaveDamage(
     damageFill,
     effect.damage.expr,
   );
-  /* v8 ignore start -- Malformed fill: the damage roll must match the exact expression carried by its discovered hole. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the damage roll must match the exact expression carried by its discovered hole. */
   if (damageIssue !== null) {
     return invalidResult(resolution.state, "invalidFill", damageIssue);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const adjustedDamage = persistentAreaAdjustedDamage({
     state: resolution.state,
@@ -372,7 +372,7 @@ function resolveParsedPersistentAreaSaveDamage(
             fill.kind === "concentrationSavingThrow" &&
             fill.holeId === concentrationHole.holeId,
         );
-  /* v8 ignore start -- Malformed fill set: a damaged concentrating target exposes at most one Concentration save hole. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: a damaged concentrating target exposes at most one Concentration save hole. */
   if (concentrationFills.length > 1) {
     return invalidResult(
       resolution.state,
@@ -380,7 +380,7 @@ function resolveParsedPersistentAreaSaveDamage(
       `${procedureName} save received duplicate Concentration save fills.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const concentrationFill =
     concentrationHole === null
       ? undefined
@@ -396,7 +396,7 @@ function resolveParsedPersistentAreaSaveDamage(
     damageHole.holeId,
     ...(concentrationHole === null ? [] : [concentrationHole.holeId]),
   ]);
-  /* v8 ignore start -- Malformed fill set: every supplied fill must answer a hole derived for this exact replay subject. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: every supplied fill must answer a hole derived for this exact replay subject. */
   if (resolution.fills.some((fill) => !consumedHoleIds.has(fill.holeId))) {
     return invalidResult(
       resolution.state,
@@ -404,7 +404,7 @@ function resolveParsedPersistentAreaSaveDamage(
       `${procedureName} save received a fill for an unrelated hole.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const afterDamage = applyPreparedSlotSpellDamage(
     resolution.state,

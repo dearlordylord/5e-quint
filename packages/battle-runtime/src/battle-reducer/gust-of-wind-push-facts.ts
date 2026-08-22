@@ -44,17 +44,17 @@ function validateGustOfWindLinePushDisposition(
   if (disposition.distanceFeet !== distanceFeet) {
     return "Gust of Wind push disposition must use the spell's 15-foot distance.";
   }
-  /* v8 ignore start -- The typed push-disposition union fixes this flag to false; the guard only protects untyped JavaScript callers outside the BattleFill contract. */
+  /* v8 ignore start -- @preserve -- The typed push-disposition union fixes this flag to false; the guard only protects untyped JavaScript callers outside the BattleFill contract. */
   if (disposition.provokesOpportunityAttacks !== false) {
     return "Gust of Wind push disposition must not provoke Opportunity Attacks.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (disposition.kind === "pushed") {
-    /* v8 ignore start -- BattleTablePositionId admits only non-empty trimmed strings; this guard only protects untyped JavaScript callers outside the branded-id contract. */
+    /* v8 ignore start -- @preserve -- BattleTablePositionId admits only non-empty trimmed strings; this guard only protects untyped JavaScript callers outside the branded-id contract. */
     if (disposition.destinationId.length === 0) {
       return "Gust of Wind pushed destinations must be caller-supplied non-empty table positions.";
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return null;
   }
   return null;

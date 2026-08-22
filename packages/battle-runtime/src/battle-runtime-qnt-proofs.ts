@@ -31,7 +31,7 @@ export function discoverProofModules(): readonly ProofModule[] {
 export { proofModuleTimeoutMs };
 export type { ProofModuleOutcome };
 
-/* v8 ignore start -- Default coverage deliberately skips the resource-locked, opt-in QNT proof lane; this wrapper is exercised only by `test:qnt-proofs`, and counting it would require running the slow proof corpus inside the unrelated runtime coverage lane. */
+/* v8 ignore start -- @preserve -- Default coverage deliberately skips the resource-locked, opt-in QNT proof lane; this wrapper is exercised only by `test:qnt-proofs`, and counting it would require running the slow proof corpus inside the unrelated runtime coverage lane. */
 export async function runProofModule(
   proofModule: ProofModule,
 ): Promise<ProofModuleOutcome> {
@@ -41,4 +41,4 @@ export async function runProofModule(
     matchPattern: testNamePrefix,
   });
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */

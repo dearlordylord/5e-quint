@@ -177,7 +177,7 @@ function availableCharacterSessionDetail(
     });
   }
   const hitDice = characterSheetHitDice(sheet, root.unitLibrary);
-  /* v8 ignore next -- The immediately preceding HP maximum projection proved the same build/catalog Hit Die facts. */
+  /* v8 ignore next -- @preserve -- The immediately preceding HP maximum projection proved the same build/catalog Hit Die facts. */
   if (Either.isLeft(hitDice)) {
     return Either.left({
       tag: "characterSessionDetailInvalid",

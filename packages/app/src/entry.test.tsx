@@ -4,6 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { RootApp } from "./entry.tsx"
 
+vi.mock("#/admin-mirror/AdminMirrorPage.tsx", () => ({
+  AdminMirrorPage: () => <div>MCP Admin Mirror route</div>
+}))
+
 let consoleErrorSpy: ReturnType<typeof vi.spyOn>
 
 beforeEach(() => {
@@ -44,6 +48,12 @@ describe("RootApp route boot", () => {
     render(<RootApp path="/trace" />)
 
     expect(screen.getByText("Battle Runtime Trace Viewer Pending")).toBeTruthy()
+  })
+
+  it("renders the admin mirror route", () => {
+    render(<RootApp path="/admin" />)
+
+    expect(screen.getByText("MCP Admin Mirror route")).toBeTruthy()
   })
 
   it("boots into a document root when the browser entry element exists", async () => {

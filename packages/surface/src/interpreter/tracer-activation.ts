@@ -332,12 +332,12 @@ export function tracePhase(
       }
       return resId;
     }
-    /* v8 ignore start -- ActivationPhase is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- ActivationPhase is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = phase;
       throw new Error(`unhandled phase: ${String(_exhaustive)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -354,12 +354,12 @@ export function tracePhaseContinuation(
     id: continuationId,
     category: "window",
     atomKind: "repeat_continuation",
-    /* v8 ignore start -- ContinuationPredicate currently admits only damage_roll_has_duplicate_faces; the plain fallback requires malformed continuation input */
+    /* v8 ignore start -- @preserve -- ContinuationPredicate currently admits only damage_roll_has_duplicate_faces; the plain fallback requires malformed continuation input */
     label:
       continuation.when.kind === "damage_roll_has_duplicate_faces"
         ? `repeat_continuation\nwhen damage roll has duplicate faces (${continuation.when.minimumMultiplicity}+)`
         : "repeat_continuation",
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   });
   edges.push({ from: hostId, to: continuationId, relation: "opens_window" });
 

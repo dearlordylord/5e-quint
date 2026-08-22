@@ -419,7 +419,7 @@ function applyScalarBuffEffect(
 function resolveScalarBuff(
   input: ScalarBuffResolveInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       ATTACK_TARGET_HOLE_ID,
@@ -433,7 +433,7 @@ function resolveScalarBuff(
       "Scalar buff spells use target fills and optional scalar dice roll.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const targetSelectionResolution = spellSelectionResolution(
     input.input.state,
     input.input.subject,
@@ -467,11 +467,11 @@ function resolveScalarBuff(
       input.fillSet.healingRoll,
       input.invocation,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.input.state, "invalidFill", validation);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 
   return completeSpellActiveEffectCast({

@@ -56,13 +56,13 @@ export function characterSheetArmorClassState(
   const loadout = build.equipment.loadout;
   const defaultState = defaultArmorClassState();
   const armorTraining = characterBuildArmorTraining(build, unitLibrary);
-  /* v8 ignore start -- Armor training failure means the parsed build and Unit catalog no longer correlate. */
+  /* v8 ignore start -- @preserve -- Armor training failure means the parsed build and Unit catalog no longer correlate. */
   if (Either.isLeft(armorTraining)) {
     return characterSheetIssue(
       armorTraining.left.map(characterCreationIssueMessage).join("; "),
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const armor =
     loadout.armor == null
@@ -71,11 +71,11 @@ export function characterSheetArmorClassState(
           unitLibrary,
           characterEquipmentItemSourceFromId(loadout.armor).unitId,
         );
-  /* v8 ignore start -- A loadout armor item id must resolve in the same Unit catalog used to parse equipment. */
+  /* v8 ignore start -- @preserve -- A loadout armor item id must resolve in the same Unit catalog used to parse equipment. */
   if (armor !== undefined && Either.isLeft(armor)) {
     return Either.left(armor.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const shield =
     loadout.shield == null
@@ -84,11 +84,11 @@ export function characterSheetArmorClassState(
           unitLibrary,
           characterEquipmentItemSourceFromId(loadout.shield).unitId,
         );
-  /* v8 ignore start -- A loadout shield item id must resolve in the same Unit catalog used to parse equipment. */
+  /* v8 ignore start -- @preserve -- A loadout shield item id must resolve in the same Unit catalog used to parse equipment. */
   if (shield !== undefined && Either.isLeft(shield)) {
     return Either.left(shield.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const base =
     armor?.right.kind === "armor"
@@ -97,7 +97,7 @@ export function characterSheetArmorClassState(
           wearingArmor: false,
           wieldingShield: shield?.right.kind === "shield",
         });
-  /* v8 ignore next -- Base selection rejection is malformed stored choice or build/catalog input. */
+  /* v8 ignore next -- @preserve -- Base selection rejection is malformed stored choice or build/catalog input. */
   if (Either.isLeft(base)) return Either.left(base.left);
 
   const bonuses: ArmorClassState["bonuses"][number][] = [];
@@ -148,9 +148,9 @@ export function characterSheetArmorClass(
   if (Either.isRight(state)) {
     return Either.right(currentArmorClass(state.right));
   }
-  /* v8 ignore start -- The scalar wrapper propagates malformed Armor Class state input unchanged. */
+  /* v8 ignore start -- @preserve -- The scalar wrapper propagates malformed Armor Class state input unchanged. */
   return Either.left(state.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function characterSheetArmorClassProjection(
@@ -203,23 +203,23 @@ function selectedUnarmoredBaseSource(
       input.unitLibrary,
       equipment,
     );
-  /* v8 ignore start -- Malformed build/catalog correlation: feature ids admitted into the build must still resolve while Armor Class candidates are projected. */
+  /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: feature ids admitted into the build must still resolve while Armor Class candidates are projected. */
   if (Either.isLeft(classFeatureCandidateResult)) {
     return Either.left(classFeatureCandidateResult.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const candidates = [defaultBase, ...classFeatureCandidateResult.right];
   const baseChoice = input.baseChoice;
   if (baseChoice !== undefined) {
     const selected = candidates.find((candidate) =>
       armorClassChoiceEquals(candidate.choice, baseChoice),
     );
-    /* v8 ignore start -- Malformed retained selection: a stored Armor Class base identity must name a candidate reprojected from the same admitted build. */
+    /* v8 ignore start -- @preserve -- Malformed retained selection: a stored Armor Class base identity must name a candidate reprojected from the same admitted build. */
     if (selected !== undefined) return Either.right(selected.base);
     return characterSheetIssue(
       "Selected Armor Class base formula is not available.",
     );
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   const classFeatureCandidates = candidates.filter(
     (candidate) => candidate.choice.kind === "class_feature",
@@ -245,7 +245,7 @@ function characterSheetClassFeatureArmorClassBaseCandidates(
   const candidates: CharacterSheetArmorClassBaseCandidate[] = [];
   for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, unitId);
-    /* v8 ignore next -- A build-owned Armor Class feature id must resolve in the same Unit catalog. */
+    /* v8 ignore next -- @preserve -- A build-owned Armor Class feature id must resolve in the same Unit catalog. */
     if (Either.isLeft(unit)) return Either.left(unit.left);
     candidates.push(...armorClassBaseCandidatesForUnit(unit.right, equipment));
   }
@@ -287,7 +287,7 @@ function armorClassBaseCandidatesForClassFeatureComponent(
   mechanics: ClassFeatureComponentMechanics,
   equipment: CharacterSheetArmorClassEquipmentState,
 ): readonly CharacterSheetArmorClassBaseCandidate[] {
-  /* v8 ignore next -- Unsupported authored AC data: this component projector is reached only for admitted passive mechanics. */
+  /* v8 ignore next -- @preserve -- Unsupported authored AC data: this component projector is reached only for admitted passive mechanics. */
   if (mechanics.family !== "passive") return [];
   if (!equipmentPredicateMatches(mechanics.condition, equipment)) {
     return [];
@@ -295,12 +295,12 @@ function armorClassBaseCandidatesForClassFeatureComponent(
   return mechanics.grants.flatMap((grant) => {
     if (grant.kind !== "modify_ac_set_base") return [];
     const base = armorClassBaseSourceForFormula(unitId, grant.formula);
-    /* v8 ignore start -- Unsupported authored AC data: V8 maps the untranslatable-formula edge to this whole conditional, but admission permits only formulas this projector can translate. */
+    /* v8 ignore start -- @preserve -- Unsupported authored AC data: V8 maps the untranslatable-formula edge to this whole conditional, but admission permits only formulas this projector can translate. */
     if (base !== undefined) {
       return [{ choice: { kind: "class_feature", unitId }, base }];
     }
     return [];
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   });
 }
 
@@ -317,20 +317,20 @@ function equipmentPredicateMatches(
       equipmentPredicateMatches(part, equipment),
     );
   }
-  /* v8 ignore next -- Unsupported authored AC profile: holding-item predicates require item-specific state this base projector does not admit. */
+  /* v8 ignore next -- @preserve -- Unsupported authored AC profile: holding-item predicates require item-specific state this base projector does not admit. */
   if (predicate.kind === "holding_item") return false;
-  /* v8 ignore next -- Unsupported authored AC profile: peering predicates require item-specific state this base projector does not admit. */
+  /* v8 ignore next -- @preserve -- Unsupported authored AC profile: peering predicates require item-specific state this base projector does not admit. */
   if (predicate.kind === "peering_through_item") return false;
-  /* v8 ignore next -- Unsupported authored AC profile: wearing-item predicates require item-specific state this base projector does not admit. */
+  /* v8 ignore next -- @preserve -- Unsupported authored AC profile: wearing-item predicates require item-specific state this base projector does not admit. */
   if (predicate.kind === "wearing_item") return false;
-  /* v8 ignore next -- Unsupported authored AC profile: Monk-weapon predicates require weapon qualification state this base projector does not admit. */
+  /* v8 ignore next -- @preserve -- Unsupported authored AC profile: Monk-weapon predicates require weapon qualification state this base projector does not admit. */
   if (predicate.kind === "unarmed_or_monk_weapons_only") return false;
-  /* v8 ignore next -- Unsupported authored AC profile: wearing-armor predicates do not admit an unarmored base formula. */
+  /* v8 ignore next -- @preserve -- Unsupported authored AC profile: wearing-armor predicates do not admit an unarmored base formula. */
   if (predicate.kind === "wearing_armor") return false;
   if (predicate.kind === "not_wearing_armor") return !equipment.wearingArmor;
-  /* v8 ignore next -- Unsupported authored AC profile: wielding-weapon predicates require weapon-specific state this base projector does not admit. */
+  /* v8 ignore next -- @preserve -- Unsupported authored AC profile: wielding-weapon predicates require weapon-specific state this base projector does not admit. */
   if (predicate.kind === "wielding_weapon") return false;
-  /* v8 ignore next -- Internal invariant: EquipmentPredicate is exhaustively handled above. */
+  /* v8 ignore next -- @preserve -- Internal invariant: EquipmentPredicate is exhaustively handled above. */
   const exhaustive: never = predicate;
   return exhaustive;
 }
@@ -365,7 +365,7 @@ function armorClassBaseSourceForFormula(
       sourceUnitId,
     };
   }
-  /* v8 ignore start -- Unsupported authored AC data: V8 maps the escaped-roster edge to this final conditional, but admission permits base_plus_dex_cha after the three preceding formulas. */
+  /* v8 ignore start -- @preserve -- Unsupported authored AC data: V8 maps the escaped-roster edge to this final conditional, but admission permits base_plus_dex_cha after the three preceding formulas. */
   if (formula.kind === "base_plus_dex_cha") {
     return {
       kind: "ability_sum",
@@ -376,7 +376,7 @@ function armorClassBaseSourceForFormula(
     };
   }
   return undefined;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function armorBaseSource(

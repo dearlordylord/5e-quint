@@ -158,12 +158,12 @@ function validateD20TestNaturalOneRerollFills(input: {
         decision: fill.value.d20TestNaturalOneReroll,
         requiredRollMode: abilityCheckRollMode,
       });
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (issue !== null) {
-        /* v8 ignore next -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
+        /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
         return { tag: "invalid", message: issue };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       continue;
     }
     if (fill.kind === "savingThrowOutcome") {
@@ -210,12 +210,12 @@ function validateD20TestNaturalOneRerollFills(input: {
           withoutRoll: outcome.withoutRoll,
           succeeded: outcome.succeeded,
         });
-        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+        /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (issue !== null) {
-          /* v8 ignore next -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
+          /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
           return { tag: "invalid", message: issue };
         }
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
       }
       continue;
     }
@@ -261,12 +261,12 @@ function validateD20TestNaturalOneRerollFills(input: {
         withoutRoll: fill.value.withoutRoll,
         succeeded: fill.value.succeeded,
       });
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (issue !== null) {
-        /* v8 ignore next -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
+        /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
         return { tag: "invalid", message: issue };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
     }
   }
   return { tag: "ok" };
@@ -284,16 +284,16 @@ function resolveD20TestNaturalOneRerollDecisionHole(input: {
     ...input.resolutionInput,
     fills: input.resolutionInput.fills.slice(0, input.decision.fillIndex),
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (pending.tag !== "needsHoles") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.resolutionInput.state,
       "invalidFill",
       D20_TEST_NATURAL_ONE_REROLL_DECISION_REQUIRED_MESSAGE,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   let matched = false;
   const holes = pending.holes.map((hole): BattleHole => {
     if (
@@ -305,16 +305,16 @@ function resolveD20TestNaturalOneRerollDecisionHole(input: {
     }
     return hole;
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!matched) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.resolutionInput.state,
       "invalidFill",
       D20_TEST_NATURAL_ONE_REROLL_DECISION_REQUIRED_MESSAGE,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return { ...pending, holes };
 }
 
@@ -323,16 +323,16 @@ export function resolveD20TestNaturalOneRerollFills(input: {
   readonly resolvePrefix: D20TestNaturalOneRerollPrefixResolver;
 }): BattleResolutionResult | undefined {
   const validation = validateD20TestNaturalOneRerollFills(input);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.resolutionInput.state,
       "invalidFill",
       validation.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return validation.tag === "decisionRequired"
     ? resolveD20TestNaturalOneRerollDecisionHole({
         ...input,

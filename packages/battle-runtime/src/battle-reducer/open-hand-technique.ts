@@ -112,15 +112,15 @@ export function resolveOpenHandTechniqueAfterHit(input: {
   if (input.decision === undefined) {
     return { tag: "needsHoles", holes: [openHandTechniqueDecisionHole()] };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.decision.holeId !== OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID) {
     return {
       tag: "invalid",
       message: "Open Hand Technique decision uses the wrong hole.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!isOpenHandTechniqueChoice(input.decision.value)) {
     return {
       tag: "invalid",
@@ -128,7 +128,7 @@ export function resolveOpenHandTechniqueAfterHit(input: {
         "Open Hand Technique decision must choose a supported effect or decline.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Match.value(input.decision.value).pipe(
     Match.when("decline", () => {
       if (input.savingThrow !== undefined) {
@@ -184,16 +184,16 @@ function resolveOpenHandTechniqueSaveChoice(
       holes: [openHandTechniqueSavingThrowHole(input.state, hit, choice)],
     };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.savingThrow.holeId !== OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID) {
     return {
       tag: "invalid",
       message: "Open Hand Technique Saving Throw uses the wrong hole.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const outcomes = input.savingThrow.value.outcomes;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (outcomes.length !== 1 || outcomes[0]?.targetId !== hit.targetId) {
     return {
       tag: "invalid",
@@ -201,7 +201,7 @@ function resolveOpenHandTechniqueSaveChoice(
         "Open Hand Technique Saving Throw must target the attacked creature.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const savingThrowState = stateWithUnitFeatureSavingThrowRelationships({
     relationshipRequestState: input.state,
     state: input.state,
@@ -209,7 +209,7 @@ function resolveOpenHandTechniqueSaveChoice(
     targetId: hit.targetId,
     savingThrow: input.savingThrow,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (savingThrowState === null) {
     return {
       tag: "invalid",
@@ -217,9 +217,9 @@ function resolveOpenHandTechniqueSaveChoice(
         "Open Hand Technique relationship facts must answer the saving-throw hole request.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const push = openHandTechniquePush(input.savingThrow);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (choice !== "pushAwayOnFailedSave" && push !== undefined) {
     return {
       tag: "invalid",
@@ -227,9 +227,9 @@ function resolveOpenHandTechniqueSaveChoice(
         "Open Hand Technique Push disposition is only valid for failed Push saves.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (outcomes[0].succeeded) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (push !== undefined) {
       return {
         tag: "invalid",
@@ -237,7 +237,7 @@ function resolveOpenHandTechniqueSaveChoice(
           "Open Hand Technique Push disposition is only valid after a failed save.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return { tag: "ok", state: savingThrowState, shovePushes: [] };
   }
   return choice === "pushAwayOnFailedSave"
@@ -318,7 +318,7 @@ function applyOpenHandTechniquePushAway(
 ): OpenHandTechniqueAfterHitResult {
   const distanceFeet =
     hit.execution.technique.effects.pushAwayOnFailedSave.distanceFeet;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (push === undefined) {
     return {
       tag: "invalid",
@@ -326,8 +326,8 @@ function applyOpenHandTechniquePushAway(
         "Open Hand Technique Push failed save requires caller-supplied push disposition.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (push.targetId !== hit.targetId) {
     return {
       tag: "invalid",
@@ -335,16 +335,16 @@ function applyOpenHandTechniquePushAway(
         "Open Hand Technique Push disposition must target the attacked creature.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const validation = validateOpenHandTechniquePushDisposition(
     push.disposition,
     distanceFeet,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation !== null) {
     return { tag: "invalid", message: validation };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return { tag: "ok", state, shovePushes: [push] };
 }
 
@@ -372,7 +372,7 @@ function applyOpenHandTechniqueApplyProne(
   };
 }
 
-/* v8 ignore start -- Malformed Open Hand push disposition: the discovered forced-movement choice caps distance, forbids opportunity attacks, and requires a destination for an applied push. */
+/* v8 ignore start -- @preserve -- Malformed Open Hand push disposition: the discovered forced-movement choice caps distance, forbids opportunity attacks, and requires a destination for an applied push. */
 function validateOpenHandTechniquePushDisposition(
   disposition: BattleShovePushDisposition,
   maximumDistanceFeet: BattleShovePushDisposition["distanceFeet"],
@@ -390,7 +390,7 @@ function validateOpenHandTechniquePushDisposition(
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function openHandTechniqueFlurryHit(
   state: BattleState,

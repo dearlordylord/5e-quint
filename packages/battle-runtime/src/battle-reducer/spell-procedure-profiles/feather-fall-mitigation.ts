@@ -165,11 +165,11 @@ function featherFallMitigationSpellProjection(
       };
 }
 
-/* v8 ignore start -- Reaction-only profile: Feather Fall candidates are admitted from creature-falls interrupt frames, so ordinary turn discovery must return no acts. */
+/* v8 ignore start -- @preserve -- Reaction-only profile: Feather Fall candidates are admitted from creature-falls interrupt frames, so ordinary turn discovery must return no acts. */
 function discoverFeatherFallMitigationCastAct(): readonly AvailableBattleAct[] {
   return [];
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function resolveFeatherFallMitigation(
   input: FeatherFallMitigationResolveInput,

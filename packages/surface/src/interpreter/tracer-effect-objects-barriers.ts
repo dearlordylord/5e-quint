@@ -631,13 +631,13 @@ export function traceObjectAndBarrierEffectAtom(
       });
       return id;
     }
-    /* v8 ignore start -- this object/barrier effect subset is decoder-narrowed to the handled tags */
+    /* v8 ignore start -- @preserve -- this object/barrier effect subset is decoder-narrowed to the handled tags */
     default: {
       const _exhaustive: never = e;
       throw new Error(
         `unhandled object or barrier effect atom: ${String(_exhaustive)}`,
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }

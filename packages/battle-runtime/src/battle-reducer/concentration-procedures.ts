@@ -16,16 +16,16 @@ type EndConcentrationSubject = Extract<
 export function resolveEndConcentrationCommand(
   input: BattleResolutionInputForSubject<EndConcentrationSubject>,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "End Concentration does not accept fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const actor = input.state.combatants.get(input.subject.actorId);
   if (actor === undefined || actor.concentration === null) {
     return invalidResult(

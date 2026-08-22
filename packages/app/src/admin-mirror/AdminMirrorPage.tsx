@@ -395,7 +395,7 @@ export function decodeMirrorSessionEvent(value: string): Either.Either<AdminMirr
 function defaultMirrorUrl(): string {
   const configured = import.meta.env.VITE_ADMIN_MIRROR_URL
   if (configured !== undefined && configured.length > 0) return configured
-  /* v8 ignore next -- this browser page only constructs its default URL while rendering in a browser */
+  /* v8 ignore next -- @preserve -- this browser page only constructs its default URL while rendering in a browser */
   if (typeof window === "undefined") return `http://localhost:${DEFAULT_MIRROR_PORT}`
   return `${window.location.protocol}//${window.location.hostname}:${DEFAULT_MIRROR_PORT}`
 }

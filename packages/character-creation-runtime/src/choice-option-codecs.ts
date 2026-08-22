@@ -78,13 +78,13 @@ export function requireAbilityScoreIncreaseTwoScoresOptionId(input: {
   readonly secondaryIncrease: PositiveIntegerType;
   readonly maxScore: AbilityScoreType;
 }): CreationChoiceOptionId {
-  /* v8 ignore start -- Typed callers construct two-score options only after proving the abilities differ. */
+  /* v8 ignore start -- @preserve -- Typed callers construct two-score options only after proving the abilities differ. */
   if (input.primary === input.secondary) {
     throw new Error(
       "Ability Score Increase two-score option ids require distinct ability scores.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return creationChoiceOptionId(
     `ability_scores:${input.primary}:+${input.primaryIncrease};${input.secondary}:+${input.secondaryIncrease}:max${input.maxScore}`,

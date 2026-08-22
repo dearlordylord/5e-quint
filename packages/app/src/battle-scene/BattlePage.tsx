@@ -49,7 +49,7 @@ export function BattlePage({
     (nextCursor: number) => {
       const bounded = Math.max(FIRST_STEP, Math.min(nextCursor, lastStep))
       setCursor(bounded)
-      /* v8 ignore next -- callbacks cannot fire during React server rendering */
+      /* v8 ignore next -- @preserve -- callbacks cannot fire during React server rendering */
       if (typeof window === "undefined") return
       const url = new URL(window.location.href)
       if (bounded === FIRST_STEP) url.searchParams.delete("step")
@@ -69,7 +69,7 @@ export function BattlePage({
   const playbackScrubberProps = { cursor, lastStep, onStepTo: stepTo } as const
 
   useEffect(() => {
-    /* v8 ignore next -- React does not execute effects during server rendering */
+    /* v8 ignore next -- @preserve -- React does not execute effects during server rendering */
     if (typeof window === "undefined") return
     const onScroll = () => {
       const headerHeight = headerRef.current?.offsetHeight
@@ -91,7 +91,7 @@ export function BattlePage({
   }, [autoPlay, cursor, lastStep, stepTo])
 
   useEffect(() => {
-    /* v8 ignore next -- React does not execute effects during server rendering */
+    /* v8 ignore next -- @preserve -- React does not execute effects during server rendering */
     if (typeof window === "undefined") return
     const handler = (event: KeyboardEvent) => {
       if (event.key === "ArrowRight") {
@@ -182,7 +182,7 @@ export function BattlePage({
 }
 
 function initialStep(stepCount: number): number {
-  /* v8 ignore next -- this browser component's initializer only executes while rendering in a browser */
+  /* v8 ignore next -- @preserve -- this browser component's initializer only executes while rendering in a browser */
   if (typeof window === "undefined") return FIRST_STEP
   const raw = new URLSearchParams(window.location.search).get("step")
   if (raw === null) return FIRST_STEP

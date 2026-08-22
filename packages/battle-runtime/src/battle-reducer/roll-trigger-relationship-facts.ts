@@ -32,7 +32,7 @@ export function parseAttackTargetChoiceFill(
 ):
   | { readonly tag: "ok"; readonly fill: BattleAttackTargetChoiceFill }
   | { readonly tag: "invalid"; readonly message: string } {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !targetChoiceFillHasAttackRollRelationshipFacts(fill) ||
     relationshipDecisionRequired !== (fill.relationshipFacts !== undefined) ||
@@ -46,7 +46,7 @@ export function parseAttackTargetChoiceFill(
         "Attack target relationship facts must answer the attack target hole request.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return { tag: "ok", fill };
 }
 

@@ -345,7 +345,7 @@ function discoverSelfTransformationModeCastAct(
 function resolveSelfTransformationMode(
   input: SelfTransformationModeResolveInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !selfTransformationModeFillsAreAllowed(input.input.fills, input.invocation)
   ) {
@@ -355,7 +355,7 @@ function resolveSelfTransformationMode(
       "Self-transformation mode spells use one mode choice fill and Natural Weapons damage type choice.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const modeEffect = selfTransformationModeEffectPayloadFromFillSet(
     input.invocation,
     input.fillSet,
@@ -370,11 +370,11 @@ function resolveSelfTransformationMode(
       spellDamageTypeChoiceHole(input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (modeEffect.tag === "invalid") {
     return invalidResult(input.input.state, "invalidFill", modeEffect.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,
@@ -434,7 +434,7 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
   readonly fills: readonly BattleFill[];
   readonly fillSet: OkSpellFillSet;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!selfTransformationModeFillsAreAllowed(input.fills, input.invocation)) {
     return invalidResult(
       input.state,
@@ -442,7 +442,7 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
       "Self-transformation mode spells use one mode choice fill and Natural Weapons damage type choice.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const modeEffect = selfTransformationModeEffectPayloadFromFillSet(
     input.invocation,
     input.fillSet,
@@ -463,11 +463,11 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
       }),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (modeEffect.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", modeEffect.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const effectOwner = input.state.combatants.get(input.targetId);
   if (effectOwner === undefined) {
     return invalidResult(
@@ -567,7 +567,7 @@ function selfTransformationModeEffectPayload(
     return { tag: "needsDamageType" };
   }
   const selectedDamageType = damageTypeChoice.value;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !invocation.naturalWeaponFacts.damage.damageTypeChoices.includes(
       selectedDamageType,
@@ -578,7 +578,7 @@ function selfTransformationModeEffectPayload(
       message: "Natural Weapons damage type choice is not available.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
     modeEffect: {

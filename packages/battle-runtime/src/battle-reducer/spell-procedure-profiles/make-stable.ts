@@ -151,7 +151,7 @@ function discoverMakeStableCastAct(
 function resolveMakeStable(
   input: SpellProcedureProfileResolveInput<MakeStableInvocation>,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [ATTACK_TARGET_HOLE_ID])
   ) {
@@ -161,7 +161,7 @@ function resolveMakeStable(
       "Stable cantrips use one zero-Hit-Point target fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const targetSelection = selectSingleSpellTarget({
     state: input.input.state,
     subject: input.input.subject,
@@ -187,7 +187,7 @@ function resolveMakeStable(
   }
 
   const target = targetSelection.target;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (target.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
     return invalidResult(
       input.input.state,
@@ -195,7 +195,7 @@ function resolveMakeStable(
       "Spell target must be a zero-Hit-Point non-dead combatant within the selected spell's supported range.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const nextTarget = {
     ...target,

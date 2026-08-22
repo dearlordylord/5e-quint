@@ -827,7 +827,7 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
     });
   }
   const target = input.state.combatants.get(input.targetId);
-  /* v8 ignore start -- A present familiar is removed only after its live combatant has been resolved; a missing entry is malformed cross-record state. */
+  /* v8 ignore start -- @preserve -- A present familiar is removed only after its live combatant has been resolved; a missing entry is malformed cross-record state. */
   if (target === undefined) {
     return removeInvalidPresentFindFamiliarAfterZeroHitPointDamage({
       state: input.state,
@@ -835,7 +835,7 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
       ownerId: entry.ownerId,
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const disappearedFamiliar = findFamiliarDisappearedAtZeroHitPointsState({
     storedForm: retainedForm,
     ownerId: entry.ownerId,
@@ -860,7 +860,7 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
   };
 }
 
-/* v8 ignore start -- Malformed cross-record state repair: runtime admission creates present familiars with matching Stat Block combatants; this branch defensively removes an independently decoded or forged inconsistent companion record. */
+/* v8 ignore start -- @preserve -- Malformed cross-record state repair: runtime admission creates present familiars with matching Stat Block combatants; this branch defensively removes an independently decoded or forged inconsistent companion record. */
 function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
   readonly state: BattleState;
   readonly companionId: CombatantId;
@@ -877,7 +877,7 @@ function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
   companions.delete(input.ownerId);
   return { ...stateWithoutCombatant, companions };
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function applyHideousLaughterDamageRepeatSaves(
   state: BattleState,

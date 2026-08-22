@@ -521,7 +521,7 @@ function bookOfShadowsOnPersonAccesses(
   );
 }
 
-/* v8 ignore start -- Malformed ritual-access initialization: admitted spellbook entries are unique, leveled ritual spells carrying their typed spellbook-Ritual facts. */
+/* v8 ignore start -- @preserve -- Malformed ritual-access initialization: admitted spellbook entries are unique, leveled ritual spells carrying their typed spellbook-Ritual facts. */
 export function characterBattleSpellbookRitualSpellAccessInitIssue(
   spellbookRitualSpellAccesses: readonly CharacterBattleSpellbookRitualSpellAccessInit[],
 ): string | null {
@@ -543,7 +543,7 @@ export function characterBattleSpellbookRitualSpellAccessInitIssue(
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export function parseCharacterBattleInvocationSpellAccesses(
   invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[],
@@ -600,11 +600,11 @@ export function characterResourceState(
   resourcePoolRef: BattleResourcePoolExecutionRef,
 ): CharacterBattleResourceState {
   const initIssue = characterBattleResourceInitIssue(input, classLevels);
-  /* v8 ignore start -- Resource admission runs this constructor only after the same initialization issue check at the battle boundary. */
+  /* v8 ignore start -- @preserve -- Resource admission runs this constructor only after the same initialization issue check at the battle boundary. */
   if (initIssue !== null) {
     throw new Error(initIssue);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const resource =
     input.spellAccessFreeCast === undefined
       ? characterBattleResourceForUnit(input.unit)
@@ -703,7 +703,7 @@ function characterBattleResourceLevel(
   return unitClassLevel ?? Number(characterBattleLevel(classLevels));
 }
 
-/* v8 ignore start -- Malformed resource initialization: admitted character resources match their Unit-defined pool kind, cap, and nonnegative bounded remaining amount. */
+/* v8 ignore start -- @preserve -- Malformed resource initialization: admitted character resources match their Unit-defined pool kind, cap, and nonnegative bounded remaining amount. */
 export function characterBattleResourceInitIssue(
   input: CharacterBattleResourceInit,
   classLevels: CharacterBattleClassLevels,
@@ -790,9 +790,9 @@ function useCountResourceInitIssue(
     ? "Ability-modifier resource cap requires the projected ability modifier."
     : null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- Malformed Metamagic initialization: admitted state has unique positive-cost options and references its character-owned Sorcery Point pool. */
+/* v8 ignore start -- @preserve -- Malformed Metamagic initialization: admitted state has unique positive-cost options and references its character-owned Sorcery Point pool. */
 export function characterBattleMetamagicInitIssue(input: {
   readonly metamagic: CharacterBattleMetamagicInit | undefined;
   readonly resources: readonly CharacterBattleResourceInit[];
@@ -832,7 +832,7 @@ export function characterBattleMetamagicInitIssue(input: {
     ? null
     : "Metamagic battle state must reference a point-pool Sorcery Point resource.";
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export function characterBattleMetamagicState(
   metamagic: CharacterBattleMetamagicInit | undefined,
@@ -899,9 +899,9 @@ function characterBattleResourceForUnitOrNull(
     const resource = unit.mechanics.resource;
     if (resource !== undefined) {
       if (!activationResourceIsSupportedByBattleForUnit(unit, resource)) {
-        /* v8 ignore start -- Both admitted species-resource profiles require a use-count resource with a proficiency-bonus cap, so this support predicate is established by the profile guards above. */
+        /* v8 ignore start -- @preserve -- Both admitted species-resource profiles require a use-count resource with a proficiency-bonus cap, so this support predicate is established by the profile guards above. */
         return null;
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
       }
       return resource;
     }
@@ -1588,13 +1588,13 @@ export function characterSpellcastingState(
       const expenditure = spellSlotExpenditures.find(
         (candidate) => candidate.spellLevel === slot.spellLevel,
       );
-      /* v8 ignore start -- The preceding length, membership, and uniqueness checks establish an expenditure for every admitted slot. */
+      /* v8 ignore start -- @preserve -- The preceding length, membership, and uniqueness checks establish an expenditure for every admitted slot. */
       if (expenditure === undefined) {
         throw new Error(
           "Spell Slot expenditure state must match slot capacity.",
         );
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       return {
         spellLevel: spellSlotLevel(slot.spellLevel),
         count: resourceCount(slot.count),
@@ -1696,7 +1696,7 @@ function spellcastingSourceClassName(
   ) {
     return sourceClassName;
   }
-  /* v8 ignore next -- Character spellcasting admission checks the source class against the admitted class-level set before state projection. */
+  /* v8 ignore next -- @preserve -- Character spellcasting admission checks the source class against the admitted class-level set before state projection. */
   throw new Error(
     "Battle spellcasting source class must match a character class level.",
   );

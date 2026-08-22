@@ -111,7 +111,7 @@ export function createFreshCharacterSheet(
   if (Either.isLeft(hitPoints)) {
     issues.push({ code: "hitPointStateInvalid" });
   }
-  /* v8 ignore start -- Malformed fresh-sheet input: in-play HP, condition, rest, or resource state must be empty at construction. */
+  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: in-play HP, condition, rest, or resource state must be empty at construction. */
   if (input.tempHp !== 0) {
     issues.push({ code: "temporaryHitPointsNotZero" });
   }
@@ -133,27 +133,27 @@ export function createFreshCharacterSheet(
   if ((input.resourceExpenditures?.length ?? 0) !== 0) {
     issues.push({ code: "resourceExpendituresNotEmpty" });
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed fresh-sheet input: Heroic Inspiration must begin in the explicit none state. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: Heroic Inspiration must begin in the explicit none state. */
   if (
     input.heroicInspiration !== undefined &&
     input.heroicInspiration.tag !== "none"
   ) {
     issues.push({ code: "heroicInspirationNotEmpty" });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const bookOfShadowsPresence = bookOfShadowsPresenceFromInput(input);
-  /* v8 ignore start -- Malformed fresh-sheet input: Book of Shadows presence disagrees with the selected build. */
+  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: Book of Shadows presence disagrees with the selected build. */
   if (Either.isLeft(bookOfShadowsPresence)) {
     issues.push({ code: "bookOfShadowsPresenceInvalid" });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const druidWildShapeKnownForms = druidWildShapeKnownFormsConstruction(input);
   if (Either.isLeft(druidWildShapeKnownForms)) {
     issues.push(...druidWildShapeKnownForms.left);
   }
   const druidCircleLand = druidCircleLandFromInput(input);
-  /* v8 ignore start -- Malformed fresh-sheet input: Circle of the Land state is unreadable or disagrees with the selected build and Book of Shadows state. */
+  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: Circle of the Land state is unreadable or disagrees with the selected build and Book of Shadows state. */
   if (Either.isLeft(druidCircleLand)) {
     issues.push({ code: "druidCircleLandInvalid" });
   } else if (
@@ -167,13 +167,13 @@ export function createFreshCharacterSheet(
   ) {
     issues.push({ code: "druidCircleLandInvalid" });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const fiendishResilience = fiendishResilienceFromInput(input);
-  /* v8 ignore start -- Malformed fresh-sheet input: Fiendish Resilience state disagrees with the selected build. */
+  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: Fiendish Resilience state disagrees with the selected build. */
   if (Either.isLeft(fiendishResilience)) {
     issues.push({ code: "fiendishResilienceInvalid" });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const spellSlotState = isSpellcastingBuild(input.build)
     ? spellSlotStateFromInput({
@@ -192,7 +192,7 @@ export function createFreshCharacterSheet(
       issues.push({ code: "pactSlotStateUnexpected" });
     }
   } else {
-    /* v8 ignore start -- Malformed fresh-sheet input: a spellcaster cannot begin with an invalid or expended ordinary Spell Slot projection. */
+    /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: a spellcaster cannot begin with an invalid or expended ordinary Spell Slot projection. */
     if (
       Either.isLeft(spellSlotState) ||
       input.spellSlotExpenditures?.some(
@@ -201,7 +201,7 @@ export function createFreshCharacterSheet(
     ) {
       issues.push({ code: "spellSlotStateInvalid" });
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   const pactSlotExpenditure = isSpellcastingBuild(input.build)
     ? pactSlotExpenditureFromInput({
@@ -211,7 +211,7 @@ export function createFreshCharacterSheet(
           : { pactSlots: input.pactSlots }),
       })
     : Either.right(undefined);
-  /* v8 ignore start -- Malformed fresh-sheet input: a spellcaster cannot begin with invalid or expended Pact Slots. */
+  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: a spellcaster cannot begin with invalid or expended Pact Slots. */
   if (
     isSpellcastingBuild(input.build) &&
     (Either.isLeft(pactSlotExpenditure) ||
@@ -219,17 +219,17 @@ export function createFreshCharacterSheet(
   ) {
     issues.push({ code: "pactSlotStateInvalid" });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const firstIssue = issues[0];
   if (firstIssue !== undefined) {
     const orderedIssues = [...issues].sort(compareConstructionIssues);
     const firstOrderedIssue = orderedIssues[0];
-    /* v8 ignore start -- A nonempty accumulated issue list necessarily remains nonempty after sorting. */
+    /* v8 ignore start -- @preserve -- A nonempty accumulated issue list necessarily remains nonempty after sorting. */
     if (firstOrderedIssue === undefined) {
       throw new Error("Character Sheet construction issue ordering failed.");
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return Either.left([firstOrderedIssue, ...orderedIssues.slice(1)]);
   }
 
@@ -258,11 +258,11 @@ export function createFreshCharacterSheet(
   if (isNonSpellcastingBuild(input.build)) {
     return Either.right(freshCharacterSheet({ ...common, build: input.build }));
   }
-  /* v8 ignore start -- The parsed CharacterBuild union is exhaustive between spellcasting and non-spellcasting variants. */
+  /* v8 ignore start -- @preserve -- The parsed CharacterBuild union is exhaustive between spellcasting and non-spellcasting variants. */
   if (!isSpellcastingBuild(input.build)) {
     return Either.left([{ code: "spellSlotStateInvalid" }]);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right(
     freshCharacterSheet({
       ...common,
@@ -286,7 +286,7 @@ function freshCharacterSheetHitPoints(
   input: CharacterSheetInput,
 ): Either.Either<FreshCharacterSheetHitPoints, CharacterSheetIssue> {
   const capacity = characterSheetHitPointCapacity(input);
-  /* v8 ignore start -- Malformed fresh-sheet input: current HP must equal the build-derived effective maximum. */
+  /* v8 ignore start -- @preserve -- Malformed fresh-sheet input: current HP must equal the build-derived effective maximum. */
   if (
     Either.isLeft(capacity) ||
     capacity.right.currentHp !== capacity.right.hitPointMaximum
@@ -295,19 +295,19 @@ function freshCharacterSheetHitPoints(
       "Fresh Character Sheet requires full current Hit Points.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const hitPoints = characterSheetHitPoints({
     ...input,
     currentHp: capacity.right.currentHp,
     tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
   });
-  /* v8 ignore start -- Internal invariant: full positive build capacity above constructs a conscious positive-HP fresh state. */
+  /* v8 ignore start -- @preserve -- Internal invariant: full positive build capacity above constructs a conscious positive-HP fresh state. */
   if (Either.isLeft(hitPoints) || hitPoints.right.tag !== "positive") {
     return characterSheetIssue(
       "Fresh Character Sheet requires positive conscious Hit Point state.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({
     ...hitPoints.right,
     tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
@@ -318,7 +318,7 @@ function compareConstructionIssues(
   left: CharacterSheetConstructionIssue,
   right: CharacterSheetConstructionIssue,
 ): number {
-  /* v8 ignore start -- This ordering is exercised only for batches of malformed fresh-sheet inputs, including multiple Stat Block-specific issues. */
+  /* v8 ignore start -- @preserve -- This ordering is exercised only for batches of malformed fresh-sheet inputs, including multiple Stat Block-specific issues. */
   if ("statBlockId" in left && "statBlockId" in right) {
     const identityOrder =
       left.statBlockId < right.statBlockId
@@ -335,17 +335,17 @@ function compareConstructionIssues(
     CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES.indexOf(left.code) -
     CHARACTER_SHEET_CONSTRUCTION_ISSUE_CODES.indexOf(right.code)
   );
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function requireFreshConstructionFact<Value, Error>(
   result: Either.Either<Value, Error>,
 ): Value {
-  /* v8 ignore next -- Internal invariant: createFreshCharacterSheet calls this only after accumulating no issue from the same parsed fact. */
+  /* v8 ignore next -- @preserve -- Internal invariant: createFreshCharacterSheet calls this only after accumulating no issue from the same parsed fact. */
   if (Either.isRight(result)) return result.right;
-  /* v8 ignore start -- Internal invariant: the Left branch is unreachable after the immediately preceding no-issues gate. */
+  /* v8 ignore start -- @preserve -- Internal invariant: the Left branch is unreachable after the immediately preceding no-issues gate. */
   throw new Error("Fresh Character Sheet facts were already accumulated.");
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function rebuildCharacterSheet(
@@ -353,72 +353,72 @@ export function rebuildCharacterSheet(
   storedSpellSlotState?: CharacterSheetSpellSlotSourceState,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
   const hitPointCapacity = characterSheetHitPointCapacity(input);
-  /* v8 ignore start -- Malformed rebuild input: build and retained HP facts must still yield one correlated effective capacity. */
+  /* v8 ignore start -- @preserve -- Malformed rebuild input: build and retained HP facts must still yield one correlated effective capacity. */
   if (Either.isLeft(hitPointCapacity))
     return Either.left(hitPointCapacity.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spentHitDice = spentHitDiceFromInput(input);
-  /* v8 ignore next -- Rebuild spent-Hit-Dice rejection is malformed retained pool input. */
+  /* v8 ignore next -- @preserve -- Rebuild spent-Hit-Dice rejection is malformed retained pool input. */
   if (Either.isLeft(spentHitDice)) return Either.left(spentHitDice.left);
   const restFeatureUses = restFeatureUsesFromInput(input);
-  /* v8 ignore next -- Rebuild rest-use rejection is malformed retained feature-use input. */
+  /* v8 ignore next -- @preserve -- Rebuild rest-use rejection is malformed retained feature-use input. */
   if (Either.isLeft(restFeatureUses)) return Either.left(restFeatureUses.left);
   const conditions = conditionsFromInput(input.conditions);
-  /* v8 ignore next -- Rebuild condition rejection is malformed retained condition input. */
+  /* v8 ignore next -- @preserve -- Rebuild condition rejection is malformed retained condition input. */
   if (Either.isLeft(conditions)) return Either.left(conditions.left);
   const resourceExpenditures = resourceExpendituresFromInput(input);
-  /* v8 ignore start -- Malformed rebuild input: retained resource expenditures failed correlation with the admitted build resources. */
+  /* v8 ignore start -- @preserve -- Malformed rebuild input: retained resource expenditures failed correlation with the admitted build resources. */
   if (Either.isLeft(resourceExpenditures)) {
     return Either.left(resourceExpenditures.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const heroicInspiration = heroicInspirationFromInput(input);
-  /* v8 ignore start -- Malformed rebuild input: Heroic Inspiration failed its closed-state parser. */
+  /* v8 ignore start -- @preserve -- Malformed rebuild input: Heroic Inspiration failed its closed-state parser. */
   if (Either.isLeft(heroicInspiration)) {
     return Either.left(heroicInspiration.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const companion = companionFromInput(input.companion);
-  /* v8 ignore start -- Malformed rebuild input: retained companion state failed its closed-state parser. */
+  /* v8 ignore start -- @preserve -- Malformed rebuild input: retained companion state failed its closed-state parser. */
   if (Either.isLeft(companion)) {
     return Either.left(companion.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const bookOfShadowsPresence = bookOfShadowsPresenceFromInput(input);
-  /* v8 ignore start -- Malformed rebuild input: Book of Shadows presence disagrees with the selected build. */
+  /* v8 ignore start -- @preserve -- Malformed rebuild input: Book of Shadows presence disagrees with the selected build. */
   if (Either.isLeft(bookOfShadowsPresence)) {
     return Either.left(bookOfShadowsPresence.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const druidWildShapeKnownForms = druidWildShapeKnownFormsFromInput(input);
-  /* v8 ignore start -- Malformed rebuild input: retained Wild Shape forms disagree with the admitted Druid build and catalog. */
+  /* v8 ignore start -- @preserve -- Malformed rebuild input: retained Wild Shape forms disagree with the admitted Druid build and catalog. */
   if (Either.isLeft(druidWildShapeKnownForms)) {
     return Either.left(druidWildShapeKnownForms.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const druidCircleLand = druidCircleLandFromInput(input);
-  /* v8 ignore start -- Malformed rebuild input: retained Circle of the Land state disagrees with the admitted Druid build and catalog. */
+  /* v8 ignore start -- @preserve -- Malformed rebuild input: retained Circle of the Land state disagrees with the admitted Druid build and catalog. */
   if (Either.isLeft(druidCircleLand)) {
     return Either.left(druidCircleLand.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const druidCircleBookOfShadowsIssue =
     storedBookOfShadowsDruidCircleLandSelectionIssue({
       build: input.build,
       unitLibrary: input.unitLibrary,
       circleLand: druidCircleLand.right,
     });
-  /* v8 ignore start -- Malformed rebuild input: retained Book of Shadows and Circle of the Land selections violate their admitted cross-feature constraint. */
+  /* v8 ignore start -- @preserve -- Malformed rebuild input: retained Book of Shadows and Circle of the Land selections violate their admitted cross-feature constraint. */
   if (Either.isLeft(druidCircleBookOfShadowsIssue)) {
     return Either.left(druidCircleBookOfShadowsIssue.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const fiendishResilience = fiendishResilienceFromInput(input);
-  /* v8 ignore start -- Malformed rebuild input: retained Fiendish Resilience state disagrees with the admitted Warlock build and catalog. */
+  /* v8 ignore start -- @preserve -- Malformed rebuild input: retained Fiendish Resilience state disagrees with the admitted Warlock build and catalog. */
   if (Either.isLeft(fiendishResilience)) {
     return Either.left(fiendishResilience.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const hitPoints = characterSheetHitPoints({
     ...input,
     currentHp: hitPointCapacity.right.currentHp,
@@ -438,7 +438,7 @@ export function rebuildCharacterSheet(
   });
 
   if (isNonSpellcastingBuild(input.build)) {
-    /* v8 ignore start -- Malformed rebuild input: a non-spellcasting build cannot carry ordinary or Pact Magic slot state. */
+    /* v8 ignore start -- @preserve -- Malformed rebuild input: a non-spellcasting build cannot carry ordinary or Pact Magic slot state. */
     if (
       input.spellSlotExpenditures !== undefined ||
       storedSpellSlotState !== undefined
@@ -452,7 +452,7 @@ export function rebuildCharacterSheet(
         "Non-spellcasting Character Sheet cannot carry Pact Slot state.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return Either.right({
       ...commonState,
       build: input.build,
@@ -460,11 +460,11 @@ export function rebuildCharacterSheet(
   }
 
   if (!isSpellcastingBuild(input.build)) {
-    /* v8 ignore start -- The parsed CharacterBuild union is exhaustive between spellcasting and non-spellcasting variants. */
+    /* v8 ignore start -- @preserve -- The parsed CharacterBuild union is exhaustive between spellcasting and non-spellcasting variants. */
     return characterSheetIssue(
       "Character build spellcasting state is inconsistent.",
     );
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   const build = input.build;
   const spellSlotState =
@@ -484,11 +484,11 @@ export function rebuildCharacterSheet(
     build,
     ...(input.pactSlots === undefined ? {} : { pactSlots: input.pactSlots }),
   });
-  /* v8 ignore start -- Malformed rebuild input: Pact Slot expenditure failed correlation with the parsed build capacity. */
+  /* v8 ignore start -- @preserve -- Malformed rebuild input: Pact Slot expenditure failed correlation with the parsed build capacity. */
   if (Either.isLeft(pactSlotExpenditure)) {
     return Either.left(pactSlotExpenditure.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     ...commonState,
@@ -550,13 +550,13 @@ function bookOfShadowsPresenceFromInput(
   CharacterSheetIssue
 > {
   if (!characterBuildHasBookOfShadows(input.build)) {
-    /* v8 ignore start -- Malformed sheet input: Book of Shadows presence is supplied without the corresponding selected access. */
+    /* v8 ignore start -- @preserve -- Malformed sheet input: Book of Shadows presence is supplied without the corresponding selected access. */
     return input.bookOfShadowsPresence === undefined
       ? Either.right(undefined)
       : characterSheetIssue(
           "Character Sheet Book of Shadows presence requires Book of Shadows selection.",
         );
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return Either.right(input.bookOfShadowsPresence ?? { tag: "onPerson" });
 }
@@ -565,34 +565,34 @@ export function parseCharacterSheet(
   value: unknown,
   unitLibrary: UnitCatalog,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  /* v8 ignore next -- Malformed stored sheet: the raw persistence boundary requires a record before any field parsing. */
+  /* v8 ignore next -- @preserve -- Malformed stored sheet: the raw persistence boundary requires a record before any field parsing. */
   if (!isRecord(value)) return characterSheetIssue("Expected Character Sheet.");
-  /* v8 ignore start -- Malformed stored sheet: the top-level tag or character id does not match the available-sheet wire shape. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: the top-level tag or character id does not match the available-sheet wire shape. */
   if (value.tag !== "available") {
     return characterSheetIssue("Expected available Character Sheet.");
   }
   if (typeof value.characterId !== "string") {
     return characterSheetIssue("Character Sheet requires character id.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (Object.hasOwn(value, "maximumHp")) {
     return characterSheetIssue(
       "Stored Character Sheet must not carry build-derived maximum HP.",
     );
   }
   const build = parseCharacterBuild(value.build, unitLibrary);
-  /* v8 ignore next -- Character Build parser rejection is malformed stored build input. */
+  /* v8 ignore next -- @preserve -- Character Build parser rejection is malformed stored build input. */
   if (Either.isLeft(build)) return Either.left(build.left);
   const bookOfShadowsPresence = parseStoredCharacterSheetBookOfShadowsPresence(
     build.right,
     value.bookOfShadowsPresence,
   );
-  /* v8 ignore start -- Malformed stored sheet: Book of Shadows presence failed correlation with the parsed build. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: Book of Shadows presence failed correlation with the parsed build. */
   if (Either.isLeft(bookOfShadowsPresence)) {
     return Either.left(bookOfShadowsPresence.left);
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed stored sheet: the required Hit Point maximum reduction field is absent or invalid. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: the required Hit Point maximum reduction field is absent or invalid. */
   if (!Object.hasOwn(value, "hitPointMaximumReduction")) {
     return characterSheetIssue(
       "Character Sheet Hit Point maximum reduction is required.",
@@ -602,21 +602,21 @@ export function parseCharacterSheet(
   if (Either.isLeft(hitPointMaximumReduction)) {
     return Either.left(hitPointMaximumReduction.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const exhaustionLevel = parseStoredExhaustionLevel(value.exhaustionLevel);
-  /* v8 ignore start -- Malformed stored sheet: Exhaustion is outside its closed integer range. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: Exhaustion is outside its closed integer range. */
   if (Either.isLeft(exhaustionLevel)) {
     return Either.left(exhaustionLevel.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const hitPoints = parseStoredHitPoints(value.hitPoints);
-  /* v8 ignore next -- Hit Point parser rejection is malformed stored HP input. */
+  /* v8 ignore next -- @preserve -- Hit Point parser rejection is malformed stored HP input. */
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const conditions = parseStoredConditions(value.conditions);
-  /* v8 ignore next -- Condition parser rejection is malformed stored condition input. */
+  /* v8 ignore next -- @preserve -- Condition parser rejection is malformed stored condition input. */
   if (Either.isLeft(conditions)) return Either.left(conditions.left);
   const spentHitDice = parseStoredSpentHitDice(value.spentHitDice);
-  /* v8 ignore next -- Spent-Hit-Dice parser rejection is malformed stored pool input. */
+  /* v8 ignore next -- @preserve -- Spent-Hit-Dice parser rejection is malformed stored pool input. */
   if (Either.isLeft(spentHitDice)) return Either.left(spentHitDice.left);
   const resourceExpenditures = parseStoredResourceExpenditures(
     value.resourceExpenditures,
@@ -627,49 +627,49 @@ export function parseCharacterSheet(
   const heroicInspiration = parseStoredHeroicInspiration(
     value.heroicInspiration,
   );
-  /* v8 ignore start -- Malformed stored sheet: Heroic Inspiration failed its closed tagged-state parser. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: Heroic Inspiration failed its closed tagged-state parser. */
   if (Either.isLeft(heroicInspiration)) {
     return Either.left(heroicInspiration.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const companion = parseStoredCharacterSheetCompanion(value.companion);
-  /* v8 ignore next -- Companion parser rejection is malformed stored companion input. */
+  /* v8 ignore next -- @preserve -- Companion parser rejection is malformed stored companion input. */
   if (Either.isLeft(companion)) return Either.left(companion.left);
   const spellSlots = parseStoredSpellSlots(build.right, unitLibrary, value);
-  /* v8 ignore next -- Spell Slot parser rejection is malformed stored slot input. */
+  /* v8 ignore next -- @preserve -- Spell Slot parser rejection is malformed stored slot input. */
   if (Either.isLeft(spellSlots)) return Either.left(spellSlots.left);
   const pactSlots = parseStoredPactSlots(build.right, value);
-  /* v8 ignore next -- Pact Slot parser rejection is malformed stored Pact input. */
+  /* v8 ignore next -- @preserve -- Pact Slot parser rejection is malformed stored Pact input. */
   if (Either.isLeft(pactSlots)) return Either.left(pactSlots.left);
   const restFeatureUses = parseStoredRestFeatureUses(
     build.right,
     unitLibrary,
     value.restFeatureUses,
   );
-  /* v8 ignore next -- Rest-feature parser rejection is malformed stored use-state input. */
+  /* v8 ignore next -- @preserve -- Rest-feature parser rejection is malformed stored use-state input. */
   if (Either.isLeft(restFeatureUses)) return Either.left(restFeatureUses.left);
   const druidWildShapeKnownForms = parseStoredDruidWildShapeKnownForms(
     value.druidWildShapeKnownForms,
   );
-  /* v8 ignore start -- Malformed stored sheet: the optional Wild Shape known-form roster failed its boundary parser. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: the optional Wild Shape known-form roster failed its boundary parser. */
   if (Either.isLeft(druidWildShapeKnownForms)) {
     return Either.left(druidWildShapeKnownForms.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const druidCircleLand = parseStoredDruidCircleLand(value.druidCircleLand);
-  /* v8 ignore start -- Malformed stored sheet: the optional Druid Circle land selection failed its boundary parser. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: the optional Druid Circle land selection failed its boundary parser. */
   if (Either.isLeft(druidCircleLand)) {
     return Either.left(druidCircleLand.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const fiendishResilience = parseStoredFiendishResilience(
     value.fiendishResilience,
   );
-  /* v8 ignore start -- Malformed stored sheet: the optional Fiendish Resilience selection failed its boundary parser. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: the optional Fiendish Resilience selection failed its boundary parser. */
   if (Either.isLeft(fiendishResilience)) {
     return Either.left(fiendishResilience.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return rebuildCharacterSheet(
     {
@@ -751,35 +751,35 @@ function heroicInspirationFromInput(
 ): Either.Either<CharacterSheetHeroicInspiration, CharacterSheetIssue> {
   const state =
     input.heroicInspiration ?? CHARACTER_SHEET_NO_HEROIC_INSPIRATION;
-  /* v8 ignore start -- Malformed typed input: Heroic Inspiration carries a tag outside its closed state union. */
+  /* v8 ignore start -- @preserve -- Malformed typed input: Heroic Inspiration carries a tag outside its closed state union. */
   return state.tag === CHARACTER_SHEET_NO_HEROIC_INSPIRATION.tag ||
     state.tag === CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE.tag
     ? Either.right(state)
     : characterSheetIssue("Expected Character Sheet Heroic Inspiration state.");
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function parseStoredHeroicInspiration(
   value: unknown,
 ): Either.Either<CharacterSheetHeroicInspiration, CharacterSheetIssue> {
-  /* v8 ignore start -- Malformed stored sheet: Heroic Inspiration is absent or not a closed tagged-state record. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: Heroic Inspiration is absent or not a closed tagged-state record. */
   if (!isRecord(value)) {
     return characterSheetIssue(
       "Character Sheet requires Heroic Inspiration state.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (value.tag === CHARACTER_SHEET_NO_HEROIC_INSPIRATION.tag) {
     return Either.right(CHARACTER_SHEET_NO_HEROIC_INSPIRATION);
   }
   if (value.tag === CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE.tag) {
     return Either.right(CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE);
   }
-  /* v8 ignore start -- Malformed stored sheet: Heroic Inspiration carries a tag outside the closed none/available roster. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: Heroic Inspiration carries a tag outside the closed none/available roster. */
   return characterSheetIssue(
     "Expected Character Sheet Heroic Inspiration state.",
   );
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function parseStoredExhaustionLevel(
@@ -794,11 +794,11 @@ function parseStoredExhaustionLevel(
   ) {
     return Either.right(value as CharacterSheetExhaustionLevel);
   }
-  /* v8 ignore start -- Malformed stored sheet: Exhaustion is not an integer in the closed 0-through-6 range. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: Exhaustion is not an integer in the closed 0-through-6 range. */
   return characterSheetIssue(
     "Character Sheet Exhaustion level must be an integer from 0 to 6.",
   );
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function spentHitDiceFromInput(
@@ -808,16 +808,16 @@ function spentHitDiceFromInput(
   CharacterSheetIssue
 > {
   const capacity = characterBuildHitDice(input.build, input.unitLibrary);
-  /* v8 ignore next -- Malformed build/catalog correlation: admitted class progression must still yield its Hit Die capacities. */
+  /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: admitted class progression must still yield its Hit Die capacities. */
   if (Either.isLeft(capacity)) return Either.left(capacity.left);
   const spentHitDice = input.spentHitDice ?? [];
   const spentByClass = new Map<UnitRecord["id"], ResourceCount>();
   for (const spent of spentHitDice) {
-    /* v8 ignore start -- Malformed sheet input: spent Hit Dice duplicates a class pool. */
+    /* v8 ignore start -- @preserve -- Malformed sheet input: spent Hit Dice duplicates a class pool. */
     if (spentByClass.has(spent.classUnitId)) {
       return characterSheetIssue("Spent Hit Dice state must not duplicate.");
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     spentByClass.set(spent.classUnitId, spent.spent);
   }
   const capacityByClass = new Map(
@@ -826,14 +826,14 @@ function spentHitDiceFromInput(
   const result = [];
   for (const spent of spentHitDice) {
     const pool = capacityByClass.get(spent.classUnitId);
-    /* v8 ignore start -- Malformed sheet input: a spent Hit Die pool names no class retained by the build. */
+    /* v8 ignore start -- @preserve -- Malformed sheet input: a spent Hit Die pool names no class retained by the build. */
     if (pool === undefined) {
       return characterSheetIssue(
         "Spent Hit Dice state must match build Hit Dice exactly.",
       );
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed sheet input: a spent Hit Die count is nonintegral, negative, or above its build-derived pool. */
+    /* v8 ignore stop -- @preserve */
+    /* v8 ignore start -- @preserve -- Malformed sheet input: a spent Hit Die count is nonintegral, negative, or above its build-derived pool. */
     if (
       !Number.isInteger(spent.spent) ||
       spent.spent < 0 ||
@@ -843,7 +843,7 @@ function spentHitDiceFromInput(
         "Spent Hit Dice state cannot exceed build Hit Dice.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (spent.spent > 0) {
       result.push({
         classUnitId: spent.classUnitId,
@@ -860,17 +860,17 @@ function restFeatureUsesFromInput(
   const uses = input.restFeatureUses ?? [];
   const usedFeatureTags = new Set<string>();
   for (const use of uses) {
-    /* v8 ignore start -- Malformed sheet input: retained rest-feature use state must explicitly record Long-Rest use. */
+    /* v8 ignore start -- @preserve -- Malformed sheet input: retained rest-feature use state must explicitly record Long-Rest use. */
     if (use.usedSinceLongRest !== true) {
       return characterSheetIssue("Expected supported rest feature use state.");
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const useKey = restFeatureUseStateKey(use);
-    /* v8 ignore start -- Malformed sheet input: rest-feature use state duplicates the same feature or spell-recipient lockout key. */
+    /* v8 ignore start -- @preserve -- Malformed sheet input: rest-feature use state duplicates the same feature or spell-recipient lockout key. */
     if (usedFeatureTags.has(useKey)) {
       return characterSheetIssue("Rest feature use state must not duplicate.");
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const featureUseState = restFeatureUseStateMatchesBuild(input, use);
     if (Either.isLeft(featureUseState))
       return Either.left(featureUseState.left);
@@ -894,27 +894,27 @@ function restFeatureUseStateMatchesBuild(
       spellId: use.spellId,
       unitLibrary: input.unitLibrary,
     });
-    /* v8 ignore start -- Malformed retained rest state: a spell lockout must reference the admitted rest-benefit profile that created it. */
+    /* v8 ignore start -- @preserve -- Malformed retained rest state: a spell lockout must reference the admitted rest-benefit profile that created it. */
     if (Either.isLeft(profile)) {
       return characterSheetIssue(
         "Spell recipient rest lockout requires an admitted spell rest-benefit profile.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return Either.right(undefined);
   }
   if (use.tag === COMMUNE_CASTING_REST_FEATURE_TAG) {
-    /* v8 ignore start -- Malformed Commune state: the retained cast count is not a positive integer. */
+    /* v8 ignore start -- @preserve -- Malformed Commune state: the retained cast count is not a positive integer. */
     if (!Number.isInteger(use.castCount) || use.castCount < 1) {
       return characterSheetIssue(
         "Commune cast count requires a positive integer count.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return Either.right(undefined);
   }
   if (use.tag === ARCANE_RECOVERY_REST_FEATURE_TAG) {
-    /* v8 ignore start -- Malformed retained rest state: Arcane Recovery use requires the admitted Wizard recovery profile that created it. */
+    /* v8 ignore start -- @preserve -- Malformed retained rest state: Arcane Recovery use requires the admitted Wizard recovery profile that created it. */
     if (
       Either.isLeft(
         restSpellSlotRecoveryProfileForBuild(input.build, input.unitLibrary),
@@ -924,11 +924,11 @@ function restFeatureUseStateMatchesBuild(
         "Arcane Recovery rest feature use requires the Wizard Arcane Recovery feature.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return Either.right(undefined);
   }
   if (use.tag === MAGICAL_CUNNING_REST_FEATURE_TAG) {
-    /* v8 ignore start -- Malformed rest state: Magical Cunning use is retained by a build without its admitted recovery profile. */
+    /* v8 ignore start -- @preserve -- Malformed rest state: Magical Cunning use is retained by a build without its admitted recovery profile. */
     if (
       Either.isLeft(
         pactSlotRecoveryProfileForBuild(input.build, input.unitLibrary),
@@ -938,23 +938,23 @@ function restFeatureUseStateMatchesBuild(
         "Magical Cunning rest feature use requires the Warlock Magical Cunning feature.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return Either.right(undefined);
   }
   if (use.tag === UNCANNY_METABOLISM_REST_FEATURE_TAG) {
     const facts = characterBuildMonkUncannyMetabolismFacts(input);
-    /* v8 ignore next -- Malformed build/catalog correlation: Uncanny Metabolism facts can fail only when admitted Monk Units no longer resolve. */
+    /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: Uncanny Metabolism facts can fail only when admitted Monk Units no longer resolve. */
     if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
-    /* v8 ignore start -- Malformed retained rest state: Uncanny Metabolism use requires the admitted Monk feature that created it. */
+    /* v8 ignore start -- @preserve -- Malformed retained rest state: Uncanny Metabolism use requires the admitted Monk feature that created it. */
     if (facts.right === undefined) {
       return characterSheetIssue(
         "Uncanny Metabolism rest feature use requires the Monk Uncanny Metabolism feature.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return Either.right(undefined);
   }
-  /* v8 ignore start -- Malformed retained state: this final range contains only a Sorcerous Restoration use without its admitted profile or an unknown tag outside the closed CharacterSheetRestFeatureUse union. */
+  /* v8 ignore start -- @preserve -- Malformed retained state: this final range contains only a Sorcerous Restoration use without its admitted profile or an unknown tag outside the closed CharacterSheetRestFeatureUse union. */
   if (use.tag === SORCEROUS_RESTORATION_REST_FEATURE_TAG) {
     if (
       Either.isLeft(
@@ -968,7 +968,7 @@ function restFeatureUseStateMatchesBuild(
     return Either.right(undefined);
   }
   return characterSheetIssue("Expected supported rest feature use state.");
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function conditionsFromInput(
@@ -976,7 +976,7 @@ function conditionsFromInput(
 ): Either.Either<readonly CharacterSheetCondition[], CharacterSheetIssue> {
   const active = new Set<CharacterSheetCondition>();
   for (const condition of conditions) {
-    /* v8 ignore start -- Malformed sheet input: a condition is outside the closed non-Unconscious roster or is duplicated. */
+    /* v8 ignore start -- @preserve -- Malformed sheet input: a condition is outside the closed non-Unconscious roster or is duplicated. */
     if (!CHARACTER_SHEET_CONDITIONS.some((allowed) => allowed === condition)) {
       return characterSheetIssue(
         "Character Sheet condition state must contain supported non-Unconscious conditions.",
@@ -987,7 +987,7 @@ function conditionsFromInput(
         "Character Sheet condition state must not duplicate.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     active.add(condition);
   }
   return Either.right([...conditions]);
@@ -999,7 +999,7 @@ function parseStoredSpentHitDice(
   readonly CharacterSheetSpentHitDiePool[],
   CharacterSheetIssue
 > {
-  /* v8 ignore start -- Malformed stored sheet: spent Hit Dice state is absent, non-list, or contains an invalid entry/count shape. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: spent Hit Dice state is absent, non-list, or contains an invalid entry/count shape. */
   if (!Array.isArray(value)) {
     return characterSheetIssue(
       "Character Sheet requires spent Hit Dice state.",
@@ -1017,7 +1017,7 @@ function parseStoredSpentHitDice(
     }
     const spentCount = parseResourceCount(spent.spent);
     if (Either.isLeft(spentCount)) return Either.left(spentCount.left);
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     spentHitDice.push({
       classUnitId: authoredUnitId(spent.classUnitId),
       spent: spentCount.right,
@@ -1029,7 +1029,7 @@ function parseStoredSpentHitDice(
 function parseStoredConditions(
   value: unknown,
 ): Either.Either<readonly CharacterSheetCondition[], CharacterSheetIssue> {
-  /* v8 ignore start -- Malformed stored sheet: condition state is absent, non-list, or contains a value outside the closed condition roster. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: condition state is absent, non-list, or contains a value outside the closed condition roster. */
   if (!Array.isArray(value)) {
     return characterSheetIssue("Character Sheet requires condition state.");
   }
@@ -1046,7 +1046,7 @@ function parseStoredConditions(
         "Character Sheet condition state must contain supported non-Unconscious conditions.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     conditions.push(supportedCondition);
   }
   return conditionsFromInput(conditions);
@@ -1058,7 +1058,7 @@ function parseStoredRestFeatureUses(
   value: unknown,
 ): Either.Either<readonly CharacterSheetRestFeatureUse[], CharacterSheetIssue> {
   if (value === undefined) return Either.right([]);
-  /* v8 ignore start -- Malformed stored sheet: rest-feature use state is not a list of exact supported tagged records. */
+  /* v8 ignore start -- @preserve -- Malformed stored sheet: rest-feature use state is not a list of exact supported tagged records. */
   if (!Array.isArray(value)) {
     return characterSheetIssue("Expected Character Sheet rest feature uses.");
   }
@@ -1089,7 +1089,7 @@ function parseStoredRestFeatureUses(
           "Spell recipient rest lockout requires a spell Unit id.",
         );
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       uses.push({
         tag: use.tag,
         spellId: authoredUnitId(use.spellId),
@@ -1098,7 +1098,7 @@ function parseStoredRestFeatureUses(
       continue;
     }
     if (use.tag === COMMUNE_CASTING_REST_FEATURE_TAG) {
-      /* v8 ignore start -- Malformed stored sheet: Commune use state has extra fields or an invalid cast-count value. */
+      /* v8 ignore start -- @preserve -- Malformed stored sheet: Commune use state has extra fields or an invalid cast-count value. */
       if (!recordHasExactKeys(use, ["tag", "usedSinceLongRest", "castCount"])) {
         return characterSheetIssue(
           "Commune casting state must contain exactly tag, Long Rest use flag, and cast count.",
@@ -1106,7 +1106,7 @@ function parseStoredRestFeatureUses(
       }
       const castCount = parseResourceCount(use.castCount);
       if (Either.isLeft(castCount)) return Either.left(castCount.left);
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       uses.push({
         tag: use.tag,
         usedSinceLongRest: true,
@@ -1114,13 +1114,13 @@ function parseStoredRestFeatureUses(
       });
       continue;
     }
-    /* v8 ignore start -- Malformed stored sheet: a simple rest-feature use record carries fields beyond its tag and Long-Rest flag. */
+    /* v8 ignore start -- @preserve -- Malformed stored sheet: a simple rest-feature use record carries fields beyond its tag and Long-Rest flag. */
     if (!recordHasExactKeys(use, ["tag", "usedSinceLongRest"])) {
       return characterSheetIssue(
         "Character Sheet rest feature use state must contain exactly tag and Long Rest use flag.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     uses.push({ tag: use.tag, usedSinceLongRest: true });
   }
   return restFeatureUsesFromInput({

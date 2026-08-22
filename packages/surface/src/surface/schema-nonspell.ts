@@ -534,7 +534,7 @@ export const TriggeredReactionAbilityMechanicsSchema = Schema.Struct({
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
   duration: exactOptional(ClassFeatureDurationSchema),
-  /* v8 ignore next -- this nested declarative schema initializes during collection; canonical triggered-reaction records are decoded by the catalog tests */
+  /* v8 ignore next -- @preserve -- this nested declarative schema initializes during collection; canonical triggered-reaction records are decoded by the catalog tests */
   usageLimit: exactOptional(
     Schema.Struct({ kind: Schema.Literal("once_per_turn") }),
   ),
@@ -690,7 +690,7 @@ const ResourcePoolSpellSlotCreationOptionsSchema = Schema.NonEmptyArray(
   ResourcePoolSpellSlotCreationOptionSchema,
 ).pipe(
   Schema.filter(distinctSpellSlotCreationLevels, {
-    /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed point-pool options repeat a Spell Slot level */
+    /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed point-pool options repeat a Spell Slot level */
     message: () =>
       "Point-pool Spell Slot creation options must have distinct Spell Slot levels.",
   }),
@@ -768,7 +768,7 @@ const metamagicChoiceCountMatchesSorcererTable = (
 
 const MetamagicChoiceCountSchema = ClassLevelChoiceCountSchema.pipe(
   Schema.filter(metamagicChoiceCountMatchesSorcererTable, {
-    /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed Metamagic totals disagree with the SRD table */
+    /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed Metamagic totals disagree with the SRD table */
     message: () =>
       "Sorcerer Metamagic option totals must match the SRD Sorcerer Features table.",
   }),
@@ -935,7 +935,7 @@ const MetamagicOptionSchema = Schema.Union(
 
 const MetamagicOptionsSchema = Schema.NonEmptyArray(MetamagicOptionSchema).pipe(
   Schema.filter(distinctCompleteMetamagicOptionSet, {
-    /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed Metamagic options duplicate or omit an authored option */
+    /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed Metamagic options duplicate or omit an authored option */
     message: () =>
       "Sorcerer Metamagic must author each SRD Metamagic option exactly once.",
   }),
@@ -1004,7 +1004,7 @@ const DruidWildCompanionSpendOptionsSchema = Schema.NonEmptyArray(
   DruidWildCompanionSpendOptionSchema,
 ).pipe(
   Schema.filter(druidWildCompanionSpendOptionsMatchSrd, {
-    /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed Wild Companion spend options violate the fixed pair */
+    /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed Wild Companion spend options violate the fixed pair */
     message: () =>
       "Druid Wild Companion spend options must be exactly one Spell Slot option and one Wild Shape use option.",
   }),
@@ -1656,7 +1656,7 @@ export const AbjureFoesMechanicsSchema = strictStruct({
   }),
 });
 
-/* v8 ignore start -- declarative mechanics-schema construction initializes before full-suite V8 attribution; the canonical Monk feature is decoded by the catalog tests */
+/* v8 ignore start -- @preserve -- declarative mechanics-schema construction initializes before full-suite V8 attribution; the canonical Monk feature is decoded by the catalog tests */
 export const AcrobaticMovementMechanicsSchema = strictStruct({
   family: Schema.Literal("acrobatic_movement"),
   condition: EquipmentPredicateSchema,
@@ -1672,7 +1672,7 @@ export const AcrobaticMovementMechanicsSchema = strictStruct({
     }),
   }),
 });
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export const SupremeSneakMechanicsSchema = strictStruct({
   family: Schema.Literal("cunning_strike_option_grant"),
@@ -1741,7 +1741,7 @@ export const SacredWeaponMechanicsSchema = strictStruct({
   }),
 });
 
-/* v8 ignore start -- declarative mechanics-schema construction initializes before V8 attribution; canonical Hunter's Prey records are decoded by the catalog tests */
+/* v8 ignore start -- @preserve -- declarative mechanics-schema construction initializes before V8 attribution; canonical Hunter's Prey records are decoded by the catalog tests */
 export const HuntersPreyMechanicsSchema = strictStruct({
   family: Schema.Literal("hunters_prey"),
   choice: strictStruct({
@@ -1783,7 +1783,7 @@ export const HuntersPreyMechanicsSchema = strictStruct({
     }),
   ),
 });
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export const SteadyAimMechanicsSchema = strictStruct({
   family: Schema.Literal("steady_aim"),
@@ -1871,7 +1871,7 @@ export const CombatTurnStartHeroicInspirationMechanicsSchema = strictStruct({
   grant: strictStruct({ kind: Schema.Literal("heroic_inspiration") }),
 });
 
-/* v8 ignore start -- these union declarations only assemble already-tested mechanics schemas during collection */
+/* v8 ignore start -- @preserve -- these union declarations only assemble already-tested mechanics schemas during collection */
 export const ClassFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
@@ -2003,7 +2003,7 @@ export const WarlockClassFeatureMechanicsSchema = Schema.Union(
   WarlockPactSlotRecoveryMechanicsSchema,
   EnemyZeroHitPointTemporaryHitPointsMechanicsSchema,
 );
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export const MasteryTriggerSchema = Schema.Union(
   strictStruct({ kind: Schema.Literal("weapon_hit") }),
@@ -2019,7 +2019,7 @@ export const SneakAttackDamageRiderTriggerSchema = strictStruct({
   ),
 });
 
-/* v8 ignore next -- this declarative schema factory is initialized during module collection; canonical Frenzy mechanics are decoded by catalog tests */
+/* v8 ignore next -- @preserve -- this declarative schema factory is initialized during module collection; canonical Frenzy mechanics are decoded by catalog tests */
 export const FrenzyAttackDamageRiderTriggerSchema = strictStruct({
   kind: Schema.Literal("hit_with_attack_roll"),
   attackFilter: Schema.Literal("strength_based_attack"),
@@ -2049,7 +2049,7 @@ export const ClassLevelDamageDiceSchema = strictStruct({
   ),
 });
 
-/* v8 ignore start -- these rider schema declarations initialize during collection; canonical Rage and attack-rider records are decoded by catalog tests */
+/* v8 ignore start -- @preserve -- these rider schema declarations initialize during collection; canonical Rage and attack-rider records are decoded by catalog tests */
 export const RageDamageBonusDiceSchema = strictStruct({
   kind: Schema.Literal("rage_damage_bonus"),
   dieSize: Schema.Literal(6),
@@ -2060,7 +2060,7 @@ export const AddAttackDamageDiceRiderSchema = strictStruct({
   dice: Schema.Union(ClassLevelDamageDiceSchema, RageDamageBonusDiceSchema),
   damageType: Schema.Literal("same_as_attack"),
 });
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export const SecondaryTargetSelectionSchema = strictStruct({
   kind: Schema.Literal("adjacent_to_primary"),
@@ -2085,7 +2085,7 @@ export const ModifyRollAdvantageRiderSchema = Schema.Struct({
   expiresOn: RiderExpirySchema,
 });
 
-/* v8 ignore start -- this declarative save-result schema initializes during collection; canonical mastery records decode both admitted results */
+/* v8 ignore start -- @preserve -- this declarative save-result schema initializes during collection; canonical mastery records decode both admitted results */
 export const SaveGateRiderResultSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("apply_condition"),
@@ -2093,7 +2093,7 @@ export const SaveGateRiderResultSchema = Schema.Union(
   }),
   strictStruct({ kind: Schema.Literal("none") }),
 );
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export const SaveGateRiderSchema = Schema.Struct({
   kind: Schema.Literal("save_gate"),
@@ -2127,7 +2127,7 @@ export const ToppleMasteryEffectSchema = strictStruct({
   onSuccess: strictStruct({ kind: Schema.Literal("none") }),
 });
 
-/* v8 ignore start -- these declarative mastery schema factories initialize during module collection; canonical Push, Slow, and Vex records are decoded by catalog tests */
+/* v8 ignore start -- @preserve -- these declarative mastery schema factories initialize during module collection; canonical Push, Slow, and Vex records are decoded by catalog tests */
 export const PushMasteryEffectSchema = strictStruct({
   kind: Schema.Literal("push_creature"),
   maxDistanceFeet: Schema.Literal(10),
@@ -2153,9 +2153,9 @@ export const VexMasteryEffectSchema = strictStruct({
     kind: Schema.Literal("end_of_next_turn"),
   }),
 });
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- this declarative replacement schema initializes during collection; the canonical feature record is decoded by catalog tests */
+/* v8 ignore start -- @preserve -- this declarative replacement schema initializes during collection; the canonical feature record is decoded by catalog tests */
 export const SaveDamageReplacementMechanicsSchema = Schema.Struct({
   family: Schema.Literal("save_damage_replacement"),
   trigger: Schema.Struct({
@@ -2174,7 +2174,7 @@ export const SaveDamageReplacementMechanicsSchema = Schema.Struct({
     }),
   ),
 });
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 const BardicInspirationDieReductionSchema = strictStruct({
   kind: Schema.Literal("bardic_inspiration_die"),
@@ -2233,7 +2233,7 @@ const AttackDamageReductionZeroDamageRedirectSchema = strictStruct({
   }),
 });
 
-/* v8 ignore start -- this declarative reaction-modifier schema tree initializes during collection; canonical reaction-reduction records are decoded by catalog tests */
+/* v8 ignore start -- @preserve -- this declarative reaction-modifier schema tree initializes during collection; canonical reaction-reduction records are decoded by catalog tests */
 const ReactionRollOrDamageReductionModifierSchema = Schema.Union(
   strictStruct({
     kind: Schema.Literal("attack_roll_reduction"),
@@ -2295,9 +2295,9 @@ const ReactionRollOrDamageReductionModifierSchema = Schema.Union(
 const ReactionRollOrDamageReductionModifiersSchema = Schema.NonEmptyArray(
   ReactionRollOrDamageReductionModifierSchema,
 );
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- this declarative reaction schema initializes during collection; canonical reaction-reduction features are decoded by catalog tests */
+/* v8 ignore start -- @preserve -- this declarative reaction schema initializes during collection; canonical reaction-reduction features are decoded by catalog tests */
 export const ReactionRollOrDamageReductionMechanicsSchema = Schema.Union(
   strictStruct({
     family: Schema.Literal("reaction_roll_or_damage_reduction"),
@@ -2310,17 +2310,17 @@ export const ReactionRollOrDamageReductionMechanicsSchema = Schema.Union(
     modifiers: ReactionRollOrDamageReductionModifiersSchema,
   }),
 );
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- this declarative reroll schema initializes during collection; the canonical reroll feature is decoded by catalog tests */
+/* v8 ignore start -- @preserve -- this declarative reroll schema initializes during collection; the canonical reroll feature is decoded by catalog tests */
 export const RerollWeaponDamageDiceRiderSchema = strictStruct({
   kind: Schema.Literal("reroll_weapon_damage_dice"),
   diceScope: Schema.Literal("weapon_damage_dice"),
   choose: Schema.Literal("either_roll"),
 });
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- these mastery schema unions initialize during collection; every canonical mastery record is decoded by catalog tests */
+/* v8 ignore start -- @preserve -- these mastery schema unions initialize during collection; every canonical mastery record is decoded by catalog tests */
 export const WeaponHitMasteryEffectSchema = Schema.Union(
   PushMasteryEffectSchema,
   SapMasteryEffectSchema,
@@ -2333,7 +2333,7 @@ export const MasteryEffectSchema = Schema.Union(
   VexMasteryEffectSchema,
   GrantWeaponAttackRiderSchema,
 );
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export const OnHitRiderEffectSchema = Schema.Union(
   MasteryEffectSchema,
@@ -2363,14 +2363,14 @@ export const PushMasteryMechanicsSchema = strictStruct({
   effect: PushMasteryEffectSchema,
 });
 
-/* v8 ignore start -- this declarative Topple schema initializes during collection; the canonical Topple record is decoded by catalog tests */
+/* v8 ignore start -- @preserve -- this declarative Topple schema initializes during collection; the canonical Topple record is decoded by catalog tests */
 export const ToppleMasteryMechanicsSchema = strictStruct({
   ...OnHitTriggerMechanicsBaseFields,
   optional: Schema.Literal(true),
   trigger: strictStruct({ kind: Schema.Literal("weapon_hit") }),
   effect: ToppleMasteryEffectSchema,
 });
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export const SlowMasteryMechanicsSchema = strictStruct({
   ...OnHitTriggerMechanicsBaseFields,
@@ -2419,7 +2419,7 @@ export const AttackDamageRiderMechanicsSchema = strictStruct({
         "attackFilter" in mechanics.trigger &&
         mechanics.effect.dice.kind === "rage_damage_bonus"),
     {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after a malformed attack rider combines incompatible trigger, optionality, and dice facts */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after a malformed attack rider combines incompatible trigger, optionality, and dice facts */
       message: () =>
         "Attack damage riders must use matching optionality, trigger, and dice source.",
     },
@@ -2511,7 +2511,7 @@ export const HitPointTriggeredReplacementMechanicsSchema = Schema.Struct({
   resetCadence: RestResetCadenceSchema,
 });
 
-/* v8 ignore start -- this declarative replacement schema initializes during collection; its canonical owner is decoded by catalog tests */
+/* v8 ignore start -- @preserve -- this declarative replacement schema initializes during collection; its canonical owner is decoded by catalog tests */
 export const AttackRollMissToHitReplacementMechanicsSchema = strictStruct({
   family: Schema.Literal("triggered_replacement"),
   trigger: AttackRollMissReplacementTriggerSchema,
@@ -2519,14 +2519,14 @@ export const AttackRollMissToHitReplacementMechanicsSchema = strictStruct({
   optional: Schema.Literal(true),
   resetCadence: strictStruct({ kind: Schema.Literal("start_of_next_turn") }),
 });
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- this declarative replacement union initializes during collection; both owned variants are decoded by catalog tests */
+/* v8 ignore start -- @preserve -- this declarative replacement union initializes during collection; both owned variants are decoded by catalog tests */
 export const TriggeredReplacementMechanicsSchema = Schema.Union(
   HitPointTriggeredReplacementMechanicsSchema,
   AttackRollMissToHitReplacementMechanicsSchema,
 );
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 const UnitMetadataSchema = Schema.Struct({
   id: surfaceIdentity(UnitId, "id"),
@@ -2537,7 +2537,7 @@ const UnitMetadataSchema = Schema.Struct({
 const distinctAbilities = (abilities: readonly unknown[]): boolean =>
   new Set(abilities).size === abilities.length;
 
-/* v8 ignore start -- this declarative primary-ability union initializes during collection; schema-base tests decode and format both admitted variants */
+/* v8 ignore start -- @preserve -- this declarative primary-ability union initializes during collection; schema-base tests decode and format both admitted variants */
 export const PrimaryAbilityExpressionSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("all_of"),
@@ -2551,7 +2551,7 @@ export const PrimaryAbilityExpressionSchema = Schema.Union(
   Schema.filter(
     (primaryAbilities) => distinctAbilities(primaryAbilities.abilities),
     {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed class Primary Ability entries repeat an ability */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed class Primary Ability entries repeat an ability */
       message: () => "Class Primary Ability entries must be distinct.",
     },
   ),
@@ -2560,18 +2560,18 @@ export const PrimaryAbilityExpressionSchema = Schema.Union(
       primaryAbilities.kind !== "any_of" ||
       primaryAbilities.abilities.length > 1,
     {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after a malformed any-of Primary Ability supplies fewer than two alternatives */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after a malformed any-of Primary Ability supplies fewer than two alternatives */
       message: () =>
         "Class Primary Ability any_of entries must contain multiple alternatives.",
     },
   ),
 );
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export const BackgroundAbilityScoreIncreaseSchema = Schema.Struct({
   abilities: Schema.Tuple(AbilitySchema, AbilitySchema, AbilitySchema).pipe(
     Schema.filter(distinctAbilities, {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed Background ability choices repeat an ability */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed Background ability choices repeat an ability */
       message: () =>
         "Background ability score list must contain three distinct abilities.",
     }),
@@ -2881,7 +2881,7 @@ export const ListPreparedSpellcastingCreationSchema = Schema.Struct({
       );
     },
     {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed list-prepared choices disagree with their class spellcasting facts */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed list-prepared choices disagree with their class spellcasting facts */
       message: () =>
         "List-prepared spellcasting choices must match class Spellcasting facts, counts, uniqueness, and available Spell Slot levels.",
     },
@@ -2911,7 +2911,7 @@ export const ListPreparedSpellcastingProgressionCreationSchema = Schema.Struct({
         spellcasting.spellcastingProgression,
         1,
       );
-      /* v8 ignore start -- a missing/duplicate level-1 progression or mismatched projection is malformed list-prepared authorship */
+      /* v8 ignore start -- @preserve -- a missing/duplicate level-1 progression or mismatched projection is malformed list-prepared authorship */
       if (
         levelOne === undefined ||
         !distinctListPreparedSpellcastingProgressionLevels(
@@ -2924,7 +2924,7 @@ export const ListPreparedSpellcastingProgressionCreationSchema = Schema.Struct({
       ) {
         return false;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
 
       const maxCantripCount = Math.max(
         ...spellcasting.spellcastingProgression.map((row) => row.cantripCount),
@@ -2962,7 +2962,7 @@ export const ListPreparedSpellcastingProgressionCreationSchema = Schema.Struct({
       );
     },
     {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed list-prepared progression choices violate their level or spell-list bounds */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed list-prepared progression choices violate their level or spell-list bounds */
       message: () =>
         "List-prepared spellcasting progression choices must match level-1 facts, provide enough unique spell options for each progression row, and prepare only spells at or below available Spell Slot levels.",
     },
@@ -3008,7 +3008,7 @@ export const PactMagicSpellcastingCreationSchema = Schema.Struct({
       );
     },
     {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed Pact Magic choices violate their counts, levels, or spell list */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed Pact Magic choices violate their counts, levels, or spell list */
       message: () =>
         "Pact Magic choices must match their counts, be unique, use the Warlock spell list, and prepare only spells at or below the Pact Slot level.",
     },
@@ -3077,11 +3077,11 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
       const slotLevels = spellcasting.spellSlotProjection.slots.map((slot) =>
         slot.spellLevel.toString(),
       );
-      /* v8 ignore start -- duplicate Wizard Spell Slot levels are malformed progression authorship */
+      /* v8 ignore start -- @preserve -- duplicate Wizard Spell Slot levels are malformed progression authorship */
       if (!distinctStrings(slotLevels)) {
         return false;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
 
       if (
         !distinctWizardSpellcastingProgressionLevels(
@@ -3118,11 +3118,11 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
             row.spellSlots.map((slot) => slot.spellLevel.toString()),
           ),
         );
-      /* v8 ignore start -- duplicate Spell Slot levels within a Wizard progression row are malformed authorship */
+      /* v8 ignore start -- @preserve -- duplicate Spell Slot levels within a Wizard progression row are malformed authorship */
       if (!progressionSlotsHaveDistinctLevels) {
         return false;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
 
       const availableSlotLevels = new Set(
         spellcasting.spellcastingProgression.flatMap((row) =>
@@ -3142,7 +3142,7 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
       );
     },
     {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed Wizard choices violate cantrip, spellbook, or preparation facts */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed Wizard choices violate cantrip, spellbook, or preparation facts */
       message: () =>
         "Wizard spellcasting choices must match cantrip and spellbook counts, provide enough unique prepared spell options, and prepare only spellbook spells with available Spell Slot levels.",
     },
@@ -3341,16 +3341,16 @@ function pactMagicOptionsCoverProgression(spellcasting: {
   );
 }
 
-/* v8 ignore start -- this declarative owner union initializes during collection; direct reader tests decode every admitted class spellcasting shape */
+/* v8 ignore start -- @preserve -- this declarative owner union initializes during collection; direct reader tests decode every admitted class spellcasting shape */
 export const ClassSpellcastingCreationSchema = Schema.Union(
   ListPreparedSpellcastingCreationSchema,
   ListPreparedSpellcastingProgressionCreationSchema,
   PactMagicSpellcastingCreationSchema,
   WizardSpellcastingCreationSchema,
 );
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- these declarative class-schema objects initialize during full-suite collection before V8 attribution; schema-nonspell-readers.test.ts decodes each owner directly */
+/* v8 ignore start -- @preserve -- these declarative class-schema objects initialize during full-suite collection before V8 attribution; schema-nonspell-readers.test.ts decodes each owner directly */
 const ClassRecordBaseFields = {
   ...UnitMetadataSchema.fields,
   kind: ClassRecordKindSchema,
@@ -3393,15 +3393,15 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
 }).pipe(
   Schema.filter(
     (unit) => {
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const classFacts = CLASS_PREPARED_SPELLCASTING_FACTS.find(
         (facts) => facts.className === unit.className,
       );
-      /* v8 ignore start -- the owning schema restricts className to the table-backed list-prepared names, so a missing facts row requires malformed internal composition */
+      /* v8 ignore start -- @preserve -- the owning schema restricts className to the table-backed list-prepared names, so a missing facts row requires malformed internal composition */
       if (classFacts === undefined) {
         return false;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
 
       return (
         unit.spellcasting.spellcastingAbility ===
@@ -3440,15 +3440,15 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
           : true)
       );
     },
-    /* v8 ignore start -- the remaining filter options and schema composition are declarative initialization; direct reader tests exercise the valid class record */
+    /* v8 ignore start -- @preserve -- the remaining filter options and schema composition are declarative initialization; direct reader tests exercise the valid class record */
     {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed class records contradict their list-prepared spellcasting table facts */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed class records contradict their list-prepared spellcasting table facts */
       message: () =>
         "List-prepared class records must match class-specific level-1 spellcasting ability, focus, cantrip count, prepared-spell count, Spell Slot projection, prepared-spell replacement timing/cardinality, and class spell list.",
     },
   ),
 );
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function listPreparedSpellcastingProgressionMatchesLevelOneFacts(
   spellcasting: {
@@ -3493,7 +3493,7 @@ function listPreparedSpellcastingProgressionMatchesLevelOneFacts(
   );
 }
 
-/* v8 ignore start -- this declarative Pact Magic class schema initializes during collection; schema-nonspell-readers.test.ts decodes the canonical Warlock directly */
+/* v8 ignore start -- @preserve -- this declarative Pact Magic class schema initializes during collection; schema-nonspell-readers.test.ts decodes the canonical Warlock directly */
 export const PactMagicClassRecordSchema = Schema.Struct({
   ...ClassRecordBaseFields,
   className: Schema.Literal("warlock"),
@@ -3501,7 +3501,7 @@ export const PactMagicClassRecordSchema = Schema.Struct({
 }).pipe(
   Schema.filter(
     (unit) => {
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const levelOne = pactMagicProgressionAtLevel(
         unit.spellcasting.pactMagicProgression,
         1,
@@ -3518,17 +3518,17 @@ export const PactMagicClassRecordSchema = Schema.Struct({
         pactMagicOptionsCoverProgression(unit.spellcasting)
       );
     },
-    /* v8 ignore start -- the remaining filter options and schema composition are declarative initialization; malformed diagnostics are excluded explicitly */
+    /* v8 ignore start -- @preserve -- the remaining filter options and schema composition are declarative initialization; malformed diagnostics are excluded explicitly */
     {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after a malformed Warlock class record contradicts its Pact Magic level-1 facts */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after a malformed Warlock class record contradicts its Pact Magic level-1 facts */
       message: () =>
         "Warlock Pact Magic class records must match level-1 cantrip, prepared-spell, Pact Slot count, Pact Slot level, and Warlock spell list facts.",
     },
   ),
 );
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- these declarative class and class-feature owner schemas initialize before full-suite V8 attribution; direct reader tests decode every listed owner */
+/* v8 ignore start -- @preserve -- these declarative class and class-feature owner schemas initialize before full-suite V8 attribution; direct reader tests decode every listed owner */
 export const SpellcastingClassRecordSchema = Schema.Union(
   ListPreparedSpellcastingClassRecordSchema,
   PactMagicClassRecordSchema,
@@ -3589,7 +3589,7 @@ export const FighterClassFeatureRecordSchema = Schema.Struct({
   className: Schema.Literal("fighter"),
   mechanics: FighterClassFeatureMechanicsSchema,
 });
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export const ClericClassFeatureRecordSchema = Schema.Struct({
   ...ClassFeatureRecordBaseFields,
@@ -3716,7 +3716,7 @@ const FeatAbilityScoreIncreaseAbilityScopeSchema = Schema.Union(
     kind: Schema.Literal("specific_abilities"),
     abilities: Schema.NonEmptyArray(AbilitySchema).pipe(
       Schema.filter(distinctAbilities, {
-        /* v8 ignore next 2 -- this callback only formats the diagnostic after a malformed Feat ability scope repeats an ability */
+        /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after a malformed Feat ability scope repeats an ability */
         message: () =>
           "Feat ability score increase ability list must contain distinct abilities.",
       }),
@@ -3742,7 +3742,7 @@ const FeatAbilityScoreIncreaseChoiceSchema = Schema.Struct({
   ),
 }).pipe(
   Schema.filter(
-    /* v8 ignore start -- a two-score Feat with fewer than two scoped abilities is malformed authored input */
+    /* v8 ignore start -- @preserve -- a two-score Feat with fewer than two scoped abilities is malformed authored input */
     (choice) =>
       choice.methods.every(
         (method) =>
@@ -3750,9 +3750,9 @@ const FeatAbilityScoreIncreaseChoiceSchema = Schema.Struct({
           choice.abilityScope.kind === "all_abilities" ||
           choice.abilityScope.abilities.length > 1,
       ),
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after a malformed two-score Feat exposes fewer than two legal abilities */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after a malformed two-score Feat exposes fewer than two legal abilities */
       message: () =>
         "Feat two-score ability score increases require at least two legal abilities.",
     },

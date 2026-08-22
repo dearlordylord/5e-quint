@@ -311,7 +311,7 @@ function resolveBattleSubjectInternal(
       ...input,
       state: normalizedInputState,
     });
-    /* v8 ignore start -- Normalization changes only active-effect lifecycle state and preserves every admitted procedure binding. */
+    /* v8 ignore start -- @preserve -- Normalization changes only active-effect lifecycle state and preserves every admitted procedure binding. */
     if (normalizedAdmission.tag === "staleCharacterProcedure") {
       return invalidResult(
         normalizedInputState,
@@ -319,7 +319,7 @@ function resolveBattleSubjectInternal(
         "The selected character procedure reference is no longer bound to this actor.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return resolveBattleSubjectInternal(normalizedAdmission.input, options);
   }
   const d20TestNaturalOneRerollResult = resolveD20TestNaturalOneRerollFills({
@@ -371,7 +371,7 @@ function resolvePendingInterruptSubject(input: {
       return activeContinuation.result;
     }
     const nonContinuationFrame = activeContinuation.frame;
-    /* v8 ignore start -- Defensive stale-subject rejection: these typed cleanup frames are resolved by their dedicated witness APIs, not ordinary subject dispatch. */
+    /* v8 ignore start -- @preserve -- Defensive stale-subject rejection: these typed cleanup frames are resolved by their dedicated witness APIs, not ordinary subject dispatch. */
     if (nonContinuationFrame.kind === "flySpeedGrantEndFallCleanup") {
       return invalidResult(
         input.input.state,
@@ -386,7 +386,7 @@ function resolvePendingInterruptSubject(input: {
         "Fall damage landing mitigation must be resolved before other battle subjects.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (nonContinuationFrame.frame.activeInterrupt !== undefined) {
       return resolveActiveInterruptProcedure({
         resolution: input.input,
@@ -436,7 +436,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       "Subject actor is not the current actor.",
     );
   }
-  /* v8 ignore start -- Defensive stale-subject rejection: rediscovery omits Legendary Actions once their post-turn window has closed. */
+  /* v8 ignore start -- @preserve -- Defensive stale-subject rejection: rediscovery omits Legendary Actions once their post-turn window has closed. */
   if (
     isLegendaryAttackSubject(input.state, input.subject) &&
     !statBlockLegendaryActionWindowIsOpen(input.state, actorId)
@@ -447,9 +447,9 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       "Legendary Actions are available only after another creature's turn ends.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
-  /* v8 ignore start -- Defensive malformed/stale subject rejection: admitted and rediscovered subjects always name a combatant still present in the battle. */
+  /* v8 ignore start -- @preserve -- Defensive malformed/stale subject rejection: admitted and rediscovered subjects always name a combatant still present in the battle. */
   if (!input.state.combatants.has(actorId)) {
     return invalidResult(
       input.state,
@@ -457,16 +457,16 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       "Subject actor is not in this battle.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const commandObligationIssue = pendingCommandObligationIssue(
     input.state,
     input.subject,
   );
-  /* v8 ignore start -- Defensive stale-subject rejection: rediscovery exposes the pending Command obligation instead of unrelated subjects. */
+  /* v8 ignore start -- @preserve -- Defensive stale-subject rejection: rediscovery exposes the pending Command obligation instead of unrelated subjects. */
   if (commandObligationIssue !== null) {
     return invalidResult(input.state, "staleSubject", commandObligationIssue);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const commandHaltIssue = commandHaltSuppressionIssue(
     input.state,
     input.subject,
@@ -818,7 +818,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
               }),
         });
       }
-      /* v8 ignore start -- Exhaustive continuation marker: creature-fall interrupt frames store this subject under a `resolved` continuation, and resumeInterruptedProcedure returns that state before dispatching the marker. Only a forged direct resolution request reaches this arm. */
+      /* v8 ignore start -- @preserve -- Exhaustive continuation marker: creature-fall interrupt frames store this subject under a `resolved` continuation, and resumeInterruptedProcedure returns that state before dispatching the marker. Only a forged direct resolution request reaches this arm. */
       if (subject.command === "creatureFalls") {
         return {
           tag: "resolved" as const,
@@ -826,7 +826,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
           snapshot: snapshotBattle(input.state),
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       if (subject.command === "dragonsBreathExhale") {
         return resolveDragonsBreathExhaleCommand({
           ...input,
@@ -834,10 +834,10 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         });
       }
     }
-    /* v8 ignore start -- The subject union is exhausted above; this emitted tail is reachable only if a new variant is added without a dispatcher arm, which fails compilation at this assignment. */
+    /* v8 ignore start -- @preserve -- The subject union is exhausted above; this emitted tail is reachable only if a new variant is added without a dispatcher arm, which fails compilation at this assignment. */
     const exhaustive: never = subject;
     return exhaustive;
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   })();
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
 }

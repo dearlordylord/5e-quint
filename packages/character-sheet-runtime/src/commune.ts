@@ -66,7 +66,7 @@ function communeInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly previousCastCountSinceLongRest: CharacterSheetCommuneInvocation["repeatedCasting"]["previousCastCountSinceLongRest"];
 }): Either.Either<CharacterSheetCommuneInvocation, CharacterSheetIssue> {
-  /* v8 ignore start -- The catalog record failed the exact authored level-5 Commune support profile required by this projector. */
+  /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Commune support profile required by this projector. */
   if (
     input.spell.mechanics.family !== "activation" ||
     input.spell.mechanics.level !== 5 ||
@@ -78,29 +78,29 @@ function communeInvocationFromSpell(input: {
       "Commune requires the supported self-range level-5 Divination profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const directPhase = input.spell.mechanics.phases.find(
     (phase) =>
       phase.kind === "direct" &&
       phase.attachment.kind === "self" &&
-      /* v8 ignore next -- Unsupported authored Commune data: the admitted direct phase requires exactly one explicit no-op effect. */
+      /* v8 ignore next -- @preserve -- Unsupported authored Commune data: the admitted direct phase requires exactly one explicit no-op effect. */
       (phase.effects ?? []).length === 1 &&
-      /* v8 ignore next -- Unsupported authored Commune data: omission of that required effect was rejected by the same profile predicate. */
+      /* v8 ignore next -- @preserve -- Unsupported authored Commune data: omission of that required effect was rejected by the same profile predicate. */
       (phase.effects ?? [])[0]?.kind === "none",
   );
-  /* v8 ignore start -- The catalog record has Commune facts but no supported direct self answer phase. */
+  /* v8 ignore start -- @preserve -- The catalog record has Commune facts but no supported direct self answer phase. */
   if (directPhase === undefined) {
     return characterSheetIssue(
       "Commune requires the supported direct self table-answer profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const questionWindow = timeSpanDuration(input.spell.mechanics.duration.value);
-  /* v8 ignore start -- The authored Commune question window is always accepted by the elapsed-time parser. */
+  /* v8 ignore start -- @preserve -- The authored Commune question window is always accepted by the elapsed-time parser. */
   if (Either.isLeft(questionWindow)) {
     return characterSheetIssue("Commune requires a supported duration.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     tag: "commune",

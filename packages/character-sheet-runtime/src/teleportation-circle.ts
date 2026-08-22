@@ -57,7 +57,7 @@ function teleportationCircleInvocationFromSpell(input: {
   CharacterSheetIssue
 > {
   const spell = input.spell;
-  /* v8 ignore start -- The catalog record failed the exact authored level-5 Teleportation Circle support profile required by this projector. */
+  /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Teleportation Circle support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -76,15 +76,15 @@ function teleportationCircleInvocationFromSpell(input: {
       "Teleportation Circle requires the supported level-5 travel-circle profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.value);
-  /* v8 ignore start -- The authored one-round duration is always accepted by the elapsed-time parser. */
+  /* v8 ignore start -- @preserve -- The authored one-round duration is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue(
       "Teleportation Circle requires a supported duration.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const directPhase = spell.mechanics.phases.find(
     (phase) =>
       phase.kind === "direct" &&
@@ -92,19 +92,19 @@ function teleportationCircleInvocationFromSpell(input: {
       phase.attachment.origin.kind === "point_within_range" &&
       phase.attachment.shape.kind === "circle" &&
       phase.attachment.shape.radiusFeet === 5 &&
-      /* v8 ignore next -- Unsupported authored Teleportation Circle data: the admitted portal phase requires exactly one explicit no-op effect. */
+      /* v8 ignore next -- @preserve -- Unsupported authored Teleportation Circle data: the admitted portal phase requires exactly one explicit no-op effect. */
       (phase.effects ?? []).length === 1 &&
-      /* v8 ignore next -- Unsupported authored Teleportation Circle data: omission of that required effect was rejected by the same profile predicate. */
+      /* v8 ignore next -- @preserve -- Unsupported authored Teleportation Circle data: omission of that required effect was rejected by the same profile predicate. */
       (phase.effects ?? [])[0]?.kind === "none",
   );
-  /* v8 ignore start -- The catalog record has Teleportation Circle spell facts but no supported portal phase. */
+  /* v8 ignore start -- @preserve -- The catalog record has Teleportation Circle spell facts but no supported portal phase. */
   if (directPhase === undefined) {
     return characterSheetIssue(
       "Teleportation Circle requires the supported 5-foot-radius portal profile.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- The catalog record omits the exact permanent-circle repetition cadence. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- The catalog record omits the exact permanent-circle repetition cadence. */
   if (
     spell.mechanics.duration.permanentAfter?.kind !== "repeated_casts" ||
     spell.mechanics.duration.permanentAfter.cadence !== "daily" ||
@@ -115,7 +115,7 @@ function teleportationCircleInvocationFromSpell(input: {
       "Teleportation Circle requires the supported permanent-circle cadence.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     tag: "teleportationCircle",

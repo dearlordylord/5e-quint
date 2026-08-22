@@ -131,7 +131,7 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
     };
   }
   const cleanupFrame = cleanup.frame;
-  /* v8 ignore start -- Malformed internal state: cleanup frames are emitted only after the ended Fly Speed grant has been removed, so a frame retaining that exact effect contradicts the cleanup transition. */
+  /* v8 ignore start -- @preserve -- Malformed internal state: cleanup frames are emitted only after the ended Fly Speed grant has been removed, so a frame retaining that exact effect contradicts the cleanup transition. */
   if (target.activeEffects.includes(cleanupFrame.endedEffect)) {
     return {
       tag: "invalid",
@@ -142,7 +142,7 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
         "Fly Speed end-fall witness can only resolve after the emitted Fly effect cleanup removed the ended grant.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const cleanedState = battleStateWithoutInterruptStackFrame(
     input.state,
     cleanup.frameIndex,

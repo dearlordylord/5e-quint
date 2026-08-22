@@ -73,7 +73,7 @@ export class DamageRelationshipDecisionsByHole {
       if (fill.kind !== "damageRelationshipDecisions") {
         continue;
       }
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         ![...input.damageEventHoleIds].some(
           (damageEventHoleId) =>
@@ -86,7 +86,7 @@ export class DamageRelationshipDecisionsByHole {
           message: `Damage relationship decisions must uniquely match ${input.owner} relationship hole.`,
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       fills.set(fill.holeId, fill);
     }
     return {
@@ -113,7 +113,7 @@ export class DamageRelationshipDecisionsByHole {
       return { tag: "needsHoles", holes: [hole] };
     }
     const decisions = resolveDecisionAnswers(fill.answers, hole.questions);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (decisions === null) {
       return {
         tag: "invalid",
@@ -121,7 +121,7 @@ export class DamageRelationshipDecisionsByHole {
           "Damage relationship decisions must answer every emitted question exactly once.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return { tag: "ok", decisions };
   }
 

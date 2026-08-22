@@ -67,7 +67,7 @@ function discoverHeldLightHurlCastAct(
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const initialHoles = [
-    /* v8 ignore next -- The upstream Magic Action discovery gate removes this hurl when Antimagic excludes its actor; otherwise Produce Flame permits that actor creature as a target, so this list is nonempty. */
+    /* v8 ignore next -- @preserve -- The upstream Magic Action discovery gate removes this hurl when Antimagic excludes its actor; otherwise Produce Flame permits that actor creature as a target, so this list is nonempty. */
     ...(targetHole.choices.length === 0 ? [] : [targetHole]),
     spellObjectTargetHole(invocation),
   ];

@@ -136,13 +136,13 @@ export function traceCreatureActions(
   ]);
   actions.multiattacks?.forEach((ma, idx) => {
     for (const d of ma.dispatches) {
-      /* v8 ignore start -- a dispatch to an absent named action is malformed Stat Block action composition */
+      /* v8 ignore start -- @preserve -- a dispatch to an absent named action is malformed Stat Block action composition */
       if (!definedNames.has(d.name)) {
         throw new Error(
           `multiattack "${ma.name}" dispatches to unknown action "${d.name}"`,
         );
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
     }
     traceMultiattack(ctx, ma, idx + 1);
   });
@@ -355,12 +355,12 @@ export function describeCommandCost(c: CreatureControl): string {
       return "bonus action";
     case "action":
       return "action";
-    /* v8 ignore start -- command cost is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- command cost is a decoded tagged union exhausted above */
     default: {
       const _: never = c.commandCost;
       throw new Error(`unhandled command cost: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -378,12 +378,12 @@ export function describeStatBlockValue(v: StatBlockValue): string {
       return `${v.base} + ${v.perLevel}×(${v.axis}−${v.startingAtLevel})`;
     case "caster_derived":
       return v.source;
-    /* v8 ignore start -- StatBlockValue is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- StatBlockValue is a decoded tagged union exhausted above */
     default: {
       const _: never = v;
       throw new Error(`unhandled StatBlockValue: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -412,12 +412,12 @@ export function describeSpawnedCreatureStatBlock(
       return `familiar forms / ${creature.normalForms
         .map((form) => `${form.displayName}:${form.statBlockId}`)
         .join(", ")} / ${creature.additionalNormalFormEligibility.kind}`;
-    /* v8 ignore start -- spawned-creature mechanics are decoder-narrowed to the handled creature shapes */
+    /* v8 ignore start -- @preserve -- spawned-creature mechanics are decoder-narrowed to the handled creature shapes */
     default: {
       const _exhaustive: never = creature;
       return _exhaustive;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -431,11 +431,11 @@ export function describeSpawnedCreatureDisplayName(
       return creature.displayName;
     case "familiar_form_catalog":
       return "Familiar";
-    /* v8 ignore start -- spawned-creature mechanics are decoder-narrowed to the handled creature shapes */
+    /* v8 ignore start -- @preserve -- spawned-creature mechanics are decoder-narrowed to the handled creature shapes */
     default: {
       const _exhaustive: never = creature;
       return _exhaustive;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }

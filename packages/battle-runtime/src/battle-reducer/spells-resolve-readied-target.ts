@@ -83,15 +83,15 @@ export function readiedSpellTargetSelection(
   }
   if (selectionKind === "object") {
     const objectTarget = fillSet.objectTarget;
-    /* v8 ignore start -- The shared target-domain classifier proves that an object selection carries its object. */
+    /* v8 ignore start -- @preserve -- The shared target-domain classifier proves that an object selection carries its object. */
     if (objectTarget === undefined) {
       return {
         tag: "invalid",
         message: "Readied spell object target selection is missing its object.",
       };
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Object-target holes are admitted only for the single-creature-or-object targeting shape. */
+    /* v8 ignore stop -- @preserve */
+    /* v8 ignore start -- @preserve -- Object-target holes are admitted only for the single-creature-or-object targeting shape. */
     if (invocation.targeting.kind !== "singleCreatureOrObject") {
       return {
         tag: "invalid",
@@ -99,7 +99,7 @@ export function readiedSpellTargetSelection(
           "Readied spell object target does not match the selected spell's targeting.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return {
       tag: "object",
       fillSet: {
@@ -111,7 +111,7 @@ export function readiedSpellTargetSelection(
   }
   if (selectionKind === "creature") {
     const targetId = fillSet.targetId;
-    /* v8 ignore start -- The shared target-domain classifier proves that a creature selection carries its target. */
+    /* v8 ignore start -- @preserve -- The shared target-domain classifier proves that a creature selection carries its target. */
     if (targetId === undefined) {
       return {
         tag: "invalid",
@@ -119,7 +119,7 @@ export function readiedSpellTargetSelection(
           "Readied spell creature target selection is missing its target.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return {
       tag: "creature",
       fillSet: {

@@ -143,7 +143,7 @@ export function resolveInterruptLifecycleDecision(input: {
       ),
     );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fill.holeId !== INTERRUPT_DECISION_HOLE_ID) {
     return withoutInterruptRoute(
       invalidResult(
@@ -153,10 +153,10 @@ export function resolveInterruptLifecycleDecision(input: {
       ),
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const responder = input.state.combatants.get(input.fill.value.responderId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     responder === undefined ||
     !unofferedEligibleResponders(frame).includes(input.fill.value.responderId)
@@ -169,7 +169,7 @@ export function resolveInterruptLifecycleDecision(input: {
       ),
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   if (input.fill.value.kind === "decline") {
     return withInterruptRoute(
@@ -183,7 +183,7 @@ export function resolveInterruptLifecycleDecision(input: {
   }
 
   const admittedChoice = admittedInterruptChoice(frame, input.fill.value);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (admittedChoice === null) {
     return withoutInterruptRoute(
       invalidResult(
@@ -193,7 +193,7 @@ export function resolveInterruptLifecycleDecision(input: {
       ),
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const choiceTurnResource = interruptChoiceTurnResource(admittedChoice.choice);
   if (
     choiceTurnResource === "reaction" &&
@@ -371,13 +371,13 @@ function resolveReactionRollOrDamageReduction(input: {
     input.choice.choice,
     input.selection.fills,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (reductionRoll.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", reductionRoll.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const reduction = reductionRoll.value;
-  /* v8 ignore start -- Malformed resolution input: these guards reject selections that contradict their admitted trigger-specific choice. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: these guards reject selections that contradict their admitted trigger-specific choice. */
   if (
     input.choice.choice.kind === "attackDamageReduction" &&
     input.frame.trigger !== "attackHit"
@@ -421,7 +421,7 @@ function resolveReactionRollOrDamageReduction(input: {
       "Fall damage reductions must be chosen when the creature falls.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendReactionModifierResource(
     spendReaction(input.state, input.choice.reactorId),
     input.choice.reactorId,

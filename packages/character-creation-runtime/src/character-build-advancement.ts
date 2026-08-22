@@ -738,9 +738,9 @@ export function fighterClassUnitId(input: {
   readonly classUnitId: ClassUnitId;
 }): Either.Either<FighterClassUnitId, CharacterBuildAdvancementIssue> {
   const classUnit = classUnitRecord(input);
-  /* v8 ignore start -- The typed route constructor already admitted this class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const facts = classCreationFacts(classUnit.right);
   if (facts.className !== FIGHTER_CLASS_NAME) {
@@ -761,9 +761,9 @@ export function warlockClassUnitId(input: {
   readonly classUnitId: ClassUnitId;
 }): Either.Either<WarlockClassUnitId, CharacterBuildAdvancementIssue> {
   const classUnit = classUnitRecord(input);
-  /* v8 ignore start -- The typed route constructor already admitted this class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const facts = classCreationFacts(classUnit.right);
   if (facts.className !== WARLOCK_CLASS_NAME) {
@@ -784,9 +784,9 @@ export function sorcererClassUnitId(input: {
   readonly classUnitId: ClassUnitId;
 }): Either.Either<SorcererClassUnitId, CharacterBuildAdvancementIssue> {
   const classUnit = classUnitRecord(input);
-  /* v8 ignore start -- The typed route constructor already admitted this class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const facts = classCreationFacts(classUnit.right);
   if (facts.className !== SORCERER_CLASS_NAME) {
@@ -842,9 +842,9 @@ export function fightingStyleCantripUnitId(input: {
   readonly unitId: UnitRecord["id"];
 }): Either.Either<FightingStyleCantripUnitId, CharacterBuildAdvancementIssue> {
   const featureChoice = fightingStyleCantripFeatureChoiceForClass(input);
-  /* v8 ignore start -- The typed Fighting Style cantrip route was admitted from this exact class feature choice. */
+  /* v8 ignore start -- @preserve -- The typed Fighting Style cantrip route was admitted from this exact class feature choice. */
   if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   if (
     !allCantripsFromClassSpellList({
@@ -1024,19 +1024,19 @@ export function classLevelGainWithFightingStyleCantripReplacement(input: {
   CharacterBuildAdvancementIssue
 > {
   const featureChoice = fightingStyleCantripFeatureChoiceForClass(input);
-  /* v8 ignore start -- The typed Fighting Style replacement route was admitted from this exact cantrip feature choice. */
+  /* v8 ignore start -- @preserve -- The typed Fighting Style replacement route was admitted from this exact cantrip feature choice. */
   if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const replaceCantripId = fightingStyleCantripUnitId({
     unitLibrary: input.unitLibrary,
     classUnitId: input.classUnitId,
     unitId: input.replaceCantripId,
   });
-  /* v8 ignore start -- The route parser already narrowed the replaced cantrip id against the retained Fighting Style selection. */
+  /* v8 ignore start -- @preserve -- The route parser already narrowed the replaced cantrip id against the retained Fighting Style selection. */
   if (Either.isLeft(replaceCantripId))
     return Either.left(replaceCantripId.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const selectedCantripId = fightingStyleCantripUnitId({
     unitLibrary: input.unitLibrary,
@@ -1074,9 +1074,9 @@ export function warlockLevelGain(input: {
   CharacterBuildAdvancementIssue
 > {
   const classUnitId = warlockClassUnitId(input);
-  /* v8 ignore start -- The typed Warlock route already established this selected class as Warlock. */
+  /* v8 ignore start -- @preserve -- The typed Warlock route already established this selected class as Warlock. */
   if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const gainedInvocations = parseEldritchInvocationSelections({
     unitLibrary: input.unitLibrary,
@@ -1123,9 +1123,9 @@ export function sorcererLevelGain(input: {
   CharacterBuildAdvancementIssue
 > {
   const classUnitId = sorcererClassUnitId(input);
-  /* v8 ignore start -- The typed Sorcerer route already established this selected class as Sorcerer. */
+  /* v8 ignore start -- @preserve -- The typed Sorcerer route already established this selected class as Sorcerer. */
   if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const gainedOptions = parseSorcererMetamagicOptionIds(input.gainedOptions);
   if (Either.isLeft(gainedOptions)) return Either.left(gainedOptions.left);
@@ -1158,9 +1158,9 @@ export function advanceCharacterBuildClassLevel(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
   });
-  /* v8 ignore start -- The typed route constructor already admitted this class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const spellcasting = updateSpellcastingForClassLevelGain(input);
   if (Either.isLeft(spellcasting)) return Either.left(spellcasting.left);
@@ -1253,7 +1253,7 @@ export function advanceCharacterBuildClassLevel(input: {
     classUnitId: input.levelGain.classUnitId,
     hitPointRule: input.levelGain.hitPointRule,
   });
-  /* v8 ignore start -- A parsed level gain cannot make its already-valid progression nonconsecutive; this reports malformed direct inputs. */
+  /* v8 ignore start -- @preserve -- A parsed level gain cannot make its already-valid progression nonconsecutive; this reports malformed direct inputs. */
   if (Either.isLeft(progression)) {
     return Either.left({
       code: "invalidCharacterProgressionLevel",
@@ -1261,7 +1261,7 @@ export function advanceCharacterBuildClassLevel(input: {
       message: "Cannot add class level to CharacterBuild progression.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     ...buildForFeatureUpdate,
@@ -1363,9 +1363,9 @@ export function advanceCharacterBuildFightingStyleReplacementWithRoute<
     unitLibrary: input.unitLibrary,
     levelGain: input.levelGain,
   });
-  /* v8 ignore start -- The route constructor already admitted every class-level gain invariant consumed by the reducer. */
+  /* v8 ignore start -- @preserve -- The route constructor already admitted every class-level gain invariant consumed by the reducer. */
   if (Either.isLeft(advanced)) return Either.left(advanced.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     build: advanced.right,
@@ -1501,9 +1501,9 @@ function updateSpellcastingForClassLevelGain(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
   });
-  /* v8 ignore start -- The typed route constructor already admitted this class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const facts = classCreationFacts(classUnit.right);
   if (facts.className !== WARLOCK_CLASS_NAME) {
@@ -1514,7 +1514,7 @@ function updateSpellcastingForClassLevelGain(input: {
     input.build.progression,
     input.levelGain.classUnitId,
   );
-  /* v8 ignore start -- Admitted Warlock class facts always include Pact Magic spellcasting creation data. */
+  /* v8 ignore start -- @preserve -- Admitted Warlock class facts always include Pact Magic spellcasting creation data. */
   const warlockSpellcasting =
     "spellcasting" in facts ? facts.spellcasting : undefined;
   const unchanged = warlockPactMagicCanRemainUnchanged({
@@ -1526,7 +1526,7 @@ function updateSpellcastingForClassLevelGain(input: {
       ? {}
       : { spellcasting: warlockSpellcasting }),
   });
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (Either.isLeft(unchanged)) return Either.left(unchanged.left);
 
   return Either.right(input.build.spellcasting);
@@ -1591,7 +1591,7 @@ function classUnitRecord(input: {
   readonly classUnitId: UnitRecord["id"];
 }): Either.Either<ClassRecord, CharacterBuildAdvancementIssue> {
   const unit = input.unitLibrary.getUnit(input.classUnitId);
-  /* v8 ignore start -- Supported advancement routes admit a class id from this catalog before calling the typed core. */
+  /* v8 ignore start -- @preserve -- Supported advancement routes admit a class id from this catalog before calling the typed core. */
   if (Option.isNone(unit)) {
     return Either.left({
       code: "unknownUnitId",
@@ -1608,7 +1608,7 @@ function classUnitRecord(input: {
       message: `${input.classUnitId} is not a class Unit.`,
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right(unit.value);
 }
@@ -1645,7 +1645,7 @@ function parseEldritchInvocationSelection(input: {
   if (Either.isLeft(invocationId)) return Either.left(invocationId.left);
 
   const option = eldritchInvocationOptionForInvocationId(invocationId.right);
-  /* v8 ignore start -- The closed invocation-id parser and installed option table are defined from the same roster. */
+  /* v8 ignore start -- @preserve -- The closed invocation-id parser and installed option table are defined from the same roster. */
   if (option === undefined) {
     return Either.left({
       code: "unknownEldritchInvocation",
@@ -1653,7 +1653,7 @@ function parseEldritchInvocationSelection(input: {
       message: `Unknown Eldritch Invocation id ${invocationId.right}.`,
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   if (option.repeatability.kind === "once") {
     if (input.selection.kind !== "nonRepeatable") {
@@ -1846,9 +1846,9 @@ function plainClassLevelGainFeatures(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
   });
-  /* v8 ignore start -- The typed route constructor already admitted this class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const facts = classCreationFacts(classUnit.right);
   if (facts.className === SORCERER_CLASS_NAME) {
@@ -1884,9 +1884,9 @@ function plainClassLevelGainFeatures(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: WarlockClassUnitId(input.levelGain.classUnitId),
   });
-  /* v8 ignore start -- The typed plain-Warlock route was admitted from this exact invocation feature choice. */
+  /* v8 ignore start -- @preserve -- The typed plain-Warlock route was admitted from this exact invocation feature choice. */
   if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const nextWarlockLevel =
     classLevelForUnit(input.build.progression, input.levelGain.classUnitId) + 1;
@@ -1921,9 +1921,9 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
   CharacterBuildAdvancementIssue
 > {
   const feature = weaponMasteryFeatureForClass(input);
-  /* v8 ignore start -- The supported Weapon Mastery route was admitted from this exact class feature. */
+  /* v8 ignore start -- @preserve -- The supported Weapon Mastery route was admitted from this exact class feature. */
   if (Either.isLeft(feature)) return Either.left(feature.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (feature.right === undefined) return Either.right(input.build.features);
 
   const currentClassLevel = classLevelForUnit(
@@ -1934,13 +1934,13 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
     featureUnitId: feature.right.id,
     unitLibrary: input.unitLibrary,
   });
-  /* v8 ignore start -- The admitted Weapon Mastery feature always has a projected profile. */
+  /* v8 ignore start -- @preserve -- The admitted Weapon Mastery feature always has a projected profile. */
   const levelProfiles =
     profile === undefined
       ? undefined
       : weaponMasteryChoiceProfilesForLevelGain(profile, currentClassLevel);
-  /* v8 ignore stop */
-  /* v8 ignore start -- The admitted Weapon Mastery feature supplies a profile covering its owning class level. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- The admitted Weapon Mastery feature supplies a profile covering its owning class level. */
   if (levelProfiles === undefined) {
     return Either.left({
       code: "missingWeaponMasteryFeatureChoice",
@@ -1948,7 +1948,7 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
       message: "Cannot find the class Weapon Mastery choice feature.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const { currentProfile, nextProfile } = levelProfiles;
 
   const selectedWeaponUnitIds = selectedWeaponMasteryFeaturesForFeature(
@@ -2004,14 +2004,14 @@ function weaponMasteryChoiceProfilesForLevelGain(
     profile,
     currentClassLevel + 1,
   );
-  /* v8 ignore start -- An admitted Weapon Mastery profile covers both adjacent supported class levels. */
+  /* v8 ignore start -- @preserve -- An admitted Weapon Mastery profile covers both adjacent supported class levels. */
   return Option.isNone(currentProfile) || Option.isNone(nextProfile)
     ? undefined
     : {
         currentProfile: currentProfile.value,
         nextProfile: nextProfile.value,
       };
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function updateWeaponMasterySelectedFeatures(input: {
@@ -2026,9 +2026,9 @@ function updateWeaponMasterySelectedFeatures(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
   });
-  /* v8 ignore start -- The typed route constructor already admitted this class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const feature = weaponMasteryFeatureForClass({
     build: input.build,
@@ -2036,9 +2036,9 @@ function updateWeaponMasterySelectedFeatures(input: {
     classUnit: classUnit.right,
     classUnitId: input.levelGain.classUnitId,
   });
-  /* v8 ignore start -- The supported Weapon Mastery level-gain route was admitted from this exact class feature. */
+  /* v8 ignore start -- @preserve -- The supported Weapon Mastery level-gain route was admitted from this exact class feature. */
   if (Either.isLeft(feature)) return Either.left(feature.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (feature.right === undefined) {
     return Either.left({
       code: "missingWeaponMasteryFeatureChoice",
@@ -2065,13 +2065,13 @@ function updateWeaponMasterySelectedFeatures(input: {
     featureUnitId: feature.right.id,
     unitLibrary: input.unitLibrary,
   });
-  /* v8 ignore start -- The admitted Weapon Mastery level-gain feature always has a projected profile. */
+  /* v8 ignore start -- @preserve -- The admitted Weapon Mastery level-gain feature always has a projected profile. */
   const levelProfiles =
     profile === undefined
       ? undefined
       : weaponMasteryChoiceProfilesForLevelGain(profile, currentClassLevel);
-  /* v8 ignore stop */
-  /* v8 ignore start -- The admitted Weapon Mastery level-gain route supplies a profile covering both adjacent levels. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- The admitted Weapon Mastery level-gain route supplies a profile covering both adjacent levels. */
   if (levelProfiles === undefined) {
     return Either.left({
       code: "missingWeaponMasteryFeatureChoice",
@@ -2079,7 +2079,7 @@ function updateWeaponMasterySelectedFeatures(input: {
       message: "Cannot find the class Weapon Mastery choice feature.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const { currentProfile, nextProfile } = levelProfiles;
 
   const currentWeaponUnitIds = selectedWeaponMasteryFeaturesForFeature(
@@ -2237,7 +2237,7 @@ function weaponMasteryFeatureForClass(input: {
       return Option.isSome(unit) && isWeaponMasteryChoiceFeature(unit.value);
     });
 
-  /* v8 ignore start -- Supported class facts admit at most one Weapon Mastery choice feature for a class level. */
+  /* v8 ignore start -- @preserve -- Supported class facts admit at most one Weapon Mastery choice feature for a class level. */
   if (featureUnitIds.length > 1) {
     return Either.left({
       code: "ambiguousWeaponMasteryFeatureChoice",
@@ -2258,7 +2258,7 @@ function weaponMasteryFeatureForClass(input: {
         classUnitId: input.classUnitId,
         message: "Cannot find the class Weapon Mastery choice feature.",
       });
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function selectedWeaponMasteryFeaturesForFeature(
@@ -2321,9 +2321,9 @@ function replaceFightingStyleSelectedFeature(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
   });
-  /* v8 ignore start -- The typed route constructor already admitted this class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return weaponMasterySelectionsCanRemainUnchanged({
     build: { ...input.build, features: replacedFeatures.right },
@@ -2346,20 +2346,20 @@ function fightingStyleSelectedFeaturesReplaced(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: input.classUnitId,
   });
-  /* v8 ignore start -- The typed Fighting Style replacement route already established the Fighter class identity. */
+  /* v8 ignore start -- @preserve -- The typed Fighting Style replacement route already established the Fighter class identity. */
   if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const hole = fightingStyleFeatureChoiceHoleForFighterClass({
     unitLibrary: input.unitLibrary,
     classUnitId: classUnitId.right,
   });
-  /* v8 ignore start -- The typed replacement route was admitted from this exact retained Fighting Style hole. */
+  /* v8 ignore start -- @preserve -- The typed replacement route was admitted from this exact retained Fighting Style hole. */
   if (Either.isLeft(hole)) return Either.left(hole.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const featureUnitId = unitChoiceSourceUnitId(hole.right);
-  /* v8 ignore start -- The admitted Fighting Style hole is Unit-sourced by its retained class feature. */
+  /* v8 ignore start -- @preserve -- The admitted Fighting Style hole is Unit-sourced by its retained class feature. */
   if (featureUnitId === undefined) {
     return Either.left({
       code: "missingFightingStyleFeatureChoice",
@@ -2368,11 +2368,11 @@ function fightingStyleSelectedFeaturesReplaced(input: {
         "Cannot find the Fighter class-feature Fighting Style feat choice.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const selectedFeatUnitId = input.selectedFeatUnitId;
   const selectedOptionId = creationChoiceOptionId(selectedFeatUnitId);
-  /* v8 ignore start -- The replacement constructor admits only option ids from this exact Fighting Style hole. */
+  /* v8 ignore start -- @preserve -- The replacement constructor admits only option ids from this exact Fighting Style hole. */
   if (!choiceOptionIdsFitHole(hole.right, [selectedOptionId])) {
     return Either.left({
       code: "invalidFightingStyleReplacement",
@@ -2380,7 +2380,7 @@ function fightingStyleSelectedFeaturesReplaced(input: {
       message: `${selectedFeatUnitId} is not supported for this Fighting Style replacement.`,
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const selectedFeatures = input.build.features.filter((feature) =>
     isSelectedFromFeature(feature, featureUnitId),
@@ -2435,9 +2435,9 @@ function updateFightingStyleCantrips(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
   });
-  /* v8 ignore start -- The typed cantrip replacement route was admitted from this exact acquisition feature choice. */
+  /* v8 ignore start -- @preserve -- The typed cantrip replacement route was admitted from this exact acquisition feature choice. */
   if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const spellcasting = input.build.spellcasting;
   const source = spellcasting?.sources.find(
@@ -2467,11 +2467,11 @@ function updateFightingStyleCantrips(input: {
     source,
     levelGain: input.levelGain.preparedSpellcasting,
   });
-  /* v8 ignore start -- The typed list-prepared route was admitted against this exact spellcasting source and level row. */
+  /* v8 ignore start -- @preserve -- The typed list-prepared route was admitted against this exact spellcasting source and level row. */
   if (Either.isLeft(preparedSpellcasting)) {
     return Either.left(preparedSpellcasting.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     ...spellcasting,
@@ -2581,9 +2581,9 @@ function applyListPreparedSpellcastingLevelGain(input: {
   CharacterBuildAdvancementIssue
 > {
   const classUnit = classUnitRecord(input);
-  /* v8 ignore start -- The typed route constructor already admitted this class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const facts = classCreationFacts(classUnit.right);
   if (!("spellcasting" in facts)) {
@@ -2607,7 +2607,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
     facts.spellcasting,
     currentClassLevel + 1,
   );
-  /* v8 ignore start -- The list-prepared level-gain route is admitted only when both adjacent table rows and its class spell list exist. */
+  /* v8 ignore start -- @preserve -- The list-prepared level-gain route is admitted only when both adjacent table rows and its class spell list exist. */
   if (
     currentSpellcasting === undefined ||
     nextSpellcasting === undefined ||
@@ -2622,7 +2622,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
         "Cannot advance list-prepared spellcasting because the current or next class level has no supported list-prepared spellcasting facts.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const preparedSpells = applyListPreparedSpellChanges({
     eligibleSpellLists: listPreparedSpellEligibleSpellLists({
@@ -2823,9 +2823,9 @@ function updateSorcererMetamagicOptions(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
   });
-  /* v8 ignore start -- The typed Sorcerer level-gain route was admitted from this exact Metamagic feature choice. */
+  /* v8 ignore start -- @preserve -- The typed Sorcerer level-gain route was admitted from this exact Metamagic feature choice. */
   if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const sorcererLevel = classLevelForUnit(
     input.build.progression,
@@ -2870,7 +2870,7 @@ function updateSorcererMetamagicOptions(input: {
         optionId,
       ),
   );
-  /* v8 ignore start -- The Metamagic level-gain parser admits gained option ids from this installed feature roster. */
+  /* v8 ignore start -- @preserve -- The Metamagic level-gain parser admits gained option ids from this installed feature roster. */
   if (invalidGain !== undefined) {
     return Either.left({
       code: "invalidSorcererMetamagicOption",
@@ -2879,7 +2879,7 @@ function updateSorcererMetamagicOptions(input: {
         "Metamagic option gains must come from the installed Surface option roster.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const alreadyKnownGain = gainedOptions.find((optionId) =>
     selectedOptionIds.includes(optionId),
@@ -2938,9 +2938,9 @@ function sorcererMetamagicCanRemainUnchanged(input: {
   readonly nextSorcererLevel: number;
 }): Either.Either<void, CharacterBuildAdvancementIssue> {
   const featureChoice = sorcererMetamagicFeatureForSorcererClass(input);
-  /* v8 ignore start -- The retained Sorcerer build was admitted from this exact Metamagic feature choice. */
+  /* v8 ignore start -- @preserve -- The retained Sorcerer build was admitted from this exact Metamagic feature choice. */
   if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const selectedOptionIds = selectedSorcererMetamagicOptionFeaturesForFeature(
     input.build.features,
@@ -2995,7 +2995,7 @@ function sorcererMetamagicSelectionCountIssue(input: {
     (optionId) =>
       !sorcererMetamagicOptionBelongsToFeature(input.mechanics, optionId),
   );
-  /* v8 ignore start -- Retained Metamagic selections were projected from this exact installed option roster. */
+  /* v8 ignore start -- @preserve -- Retained Metamagic selections were projected from this exact installed option roster. */
   if (invalidOption !== undefined) {
     return {
       code: "invalidSorcererMetamagicOption",
@@ -3004,7 +3004,7 @@ function sorcererMetamagicSelectionCountIssue(input: {
         "Metamagic known options must come from the installed Surface option roster.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const duplicateOption = duplicateValue(input.selectedOptionIds);
   return duplicateOption === undefined
@@ -3067,9 +3067,9 @@ function updateWarlockEldritchInvocations(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
   });
-  /* v8 ignore start -- The typed Warlock level-gain route was admitted from this exact invocation feature choice. */
+  /* v8 ignore start -- @preserve -- The typed Warlock level-gain route was admitted from this exact invocation feature choice. */
   if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const currentWarlockLevel = classLevelForUnit(
     input.build.progression,
@@ -3196,7 +3196,7 @@ function replaceEldritchInvocationSelection(input: {
         "Cannot replace an Eldritch Invocation that the build has not selected.",
     });
   }
-  /* v8 ignore start -- Valid CharacterBuild features cannot contain the same nonrepeatable invocation selection more than once. */
+  /* v8 ignore start -- @preserve -- Valid CharacterBuild features cannot contain the same nonrepeatable invocation selection more than once. */
   if (remainingMatchingIndexes.length > 0) {
     return Either.left({
       code: "ambiguousSelectedEldritchInvocation",
@@ -3206,7 +3206,7 @@ function replaceEldritchInvocationSelection(input: {
         "Cannot replace an Eldritch Invocation selection when multiple matching selections exist.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const retainedInvocations = input.selectedInvocations.filter(
     (_selection, index) => index !== replaceIndex,
@@ -3248,11 +3248,11 @@ function updateWarlockPactMagic(input: {
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
   });
-  /* v8 ignore start -- The typed Warlock route was admitted from class facts containing Pact Magic. */
+  /* v8 ignore start -- @preserve -- The typed Warlock route was admitted from class facts containing Pact Magic. */
   if (Either.isLeft(facts)) return Either.left(facts.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
-  /* v8 ignore start -- An admitted Warlock level gain retains the class's existing Pact Magic source and spellcasting projection. */
+  /* v8 ignore start -- @preserve -- An admitted Warlock level gain retains the class's existing Pact Magic source and spellcasting projection. */
   if (spellcasting === undefined || source === undefined) {
     return Either.left({
       code: "missingWarlockPactMagicSpellcasting",
@@ -3261,7 +3261,7 @@ function updateWarlockPactMagic(input: {
         "Cannot advance Warlock Pact Magic because the build has no Warlock spellcasting source.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const currentWarlockLevel = classLevelForUnit(
     input.build.progression,
@@ -3279,11 +3279,11 @@ function updateWarlockPactMagic(input: {
   const currentIssue = currentPactMagicStateIssue({
     source,
     progression: currentProgression,
-    /* v8 ignore start -- An admitted Warlock build always retains its Pact Magic slot pool. */
+    /* v8 ignore start -- @preserve -- An admitted Warlock build always retains its Pact Magic slot pool. */
     ...(spellcasting.slotPools.pactMagic === undefined
       ? {}
       : { pactMagicSlotPool: spellcasting.slotPools.pactMagic }),
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   });
   if (currentIssue !== undefined) return Either.left(currentIssue);
 
@@ -3342,7 +3342,7 @@ function warlockPactMagicCanRemainUnchanged(input: {
   readonly nextWarlockLevel: number;
   readonly spellcasting?: ClassSpellcastingCreation;
 }): Either.Either<void, CharacterBuildAdvancementIssue> {
-  /* v8 ignore start -- The typed plain-Warlock route retains Pact Magic class facts and its existing build source from support admission. */
+  /* v8 ignore start -- @preserve -- The typed plain-Warlock route retains Pact Magic class facts and its existing build source from support admission. */
   if (input.spellcasting?.kind !== "pact_magic_spellcasting_creation") {
     return Either.left({
       code: "missingWarlockPactMagicSpellcasting",
@@ -3362,7 +3362,7 @@ function warlockPactMagicCanRemainUnchanged(input: {
         "Cannot advance Warlock Pact Magic because the build has no Pact Magic spellcasting facts.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const currentProgression = pactMagicProgressionAtLevel(
     input.spellcasting,
@@ -3377,9 +3377,9 @@ function warlockPactMagicCanRemainUnchanged(input: {
     pactMagicSlotPool,
     progression: currentProgression,
   });
-  /* v8 ignore start -- An admitted CharacterBuild already matches its current Pact Magic table row and slot projection. */
+  /* v8 ignore start -- @preserve -- An admitted CharacterBuild already matches its current Pact Magic table row and slot projection. */
   if (currentIssue !== undefined) return Either.left(currentIssue);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   if (source.cantrips.length !== nextProgression.cantripTotal) {
     return Either.left({
@@ -3427,7 +3427,7 @@ function applyWarlockPactMagicCantripChanges(input: {
   readonly currentProgression: PactMagicProgressionRow;
   readonly nextProgression: PactMagicProgressionRow;
 }): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
-  /* v8 ignore start -- An admitted CharacterBuild stores the exact current Pact Magic cantrip table count. */
+  /* v8 ignore start -- @preserve -- An admitted CharacterBuild stores the exact current Pact Magic cantrip table count. */
   if (input.currentCantrips.length !== input.currentProgression.cantripTotal) {
     return Either.left({
       code: "invalidWarlockPactMagicCantripSelectionCount",
@@ -3438,7 +3438,7 @@ function applyWarlockPactMagicCantripChanges(input: {
         "Cannot advance Warlock Pact Magic from a build whose current cantrip count does not match its Warlock level.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const expectedGains =
     input.nextProgression.cantripTotal - input.currentProgression.cantripTotal;
@@ -3489,7 +3489,7 @@ function applyWarlockPactMagicCantripChanges(input: {
     });
   }
 
-  /* v8 ignore start -- Exact gain cardinality plus count-preserving replacement makes a different final count impossible. */
+  /* v8 ignore start -- @preserve -- Exact gain cardinality plus count-preserving replacement makes a different final count impossible. */
   return finalCantrips.length === input.nextProgression.cantripTotal
     ? Either.right(finalCantrips)
     : Either.left({
@@ -3500,7 +3500,7 @@ function applyWarlockPactMagicCantripChanges(input: {
         message:
           "Warlock Pact Magic cantrip changes must leave the build with the table count for the new Warlock level.",
       });
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function applyWarlockPactMagicPreparedSpellChanges(input: {
@@ -3510,7 +3510,7 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
   readonly currentProgression: PactMagicProgressionRow;
   readonly nextProgression: PactMagicProgressionRow;
 }): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
-  /* v8 ignore start -- An admitted CharacterBuild stores the exact current Pact Magic prepared-spell table count. */
+  /* v8 ignore start -- @preserve -- An admitted CharacterBuild stores the exact current Pact Magic prepared-spell table count. */
   if (
     input.currentPreparedSpells.length !==
     input.currentProgression.preparedSpellTotal
@@ -3524,7 +3524,7 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
         "Cannot advance Warlock Pact Magic from a build whose current prepared-spell count does not match its Warlock level.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const expectedGains =
     input.nextProgression.preparedSpellTotal -
@@ -3578,7 +3578,7 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
     });
   }
 
-  /* v8 ignore start -- Exact gain cardinality plus count-preserving replacement makes a different final count impossible. */
+  /* v8 ignore start -- @preserve -- Exact gain cardinality plus count-preserving replacement makes a different final count impossible. */
   return finalPreparedSpells.length === input.nextProgression.preparedSpellTotal
     ? Either.right(finalPreparedSpells)
     : Either.left({
@@ -3589,7 +3589,7 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
         message:
           "Warlock Pact Magic prepared-spell changes must leave the build with the table count for the new Warlock level.",
       });
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function replaceWarlockPactMagicCantrip(input: {
@@ -3669,9 +3669,9 @@ function fightingStyleFeatureChoiceHoleForFighterClass(input: {
   readonly classUnitId: FighterClassUnitId;
 }): Either.Either<ChoiceCreationHole, CharacterBuildAdvancementIssue> {
   const classUnit = classUnitRecord(input);
-  /* v8 ignore start -- The typed Fighting Style route already admitted this Fighter class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed Fighting Style route already admitted this Fighter class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const facts = classCreationFacts(classUnit.right);
   const holes = facts.featureGrants.flatMap((grant) => {
@@ -3694,7 +3694,7 @@ function fightingStyleFeatureChoiceHoleForFighterClass(input: {
     );
   });
 
-  /* v8 ignore start -- The supported Fighter catalog contains exactly one acquisition feature that owns the Fighting Style hole. */
+  /* v8 ignore start -- @preserve -- The supported Fighter catalog contains exactly one acquisition feature that owns the Fighting Style hole. */
   if (holes.length === 0) {
     return Either.left({
       code: "missingFightingStyleFeatureChoice",
@@ -3726,7 +3726,7 @@ function fightingStyleFeatureChoiceHoleForFighterClass(input: {
         "Cannot find the Fighter class-feature Fighting Style feat choice.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right(hole);
 }
@@ -3739,9 +3739,9 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
   CharacterBuildAdvancementIssue
 > {
   const classUnit = classUnitRecord(input);
-  /* v8 ignore start -- The typed Fighting Style cantrip route already admitted this class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed Fighting Style cantrip route already admitted this class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const facts = classCreationFacts(classUnit.right);
   const choices = facts.featureGrants.flatMap((grant) => {
@@ -3786,7 +3786,7 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
     }));
   });
 
-  /* v8 ignore start -- An admitted Fighting Style cantrip replacement has exactly one matching acquisition grant in its class facts. */
+  /* v8 ignore start -- @preserve -- An admitted Fighting Style cantrip replacement has exactly one matching acquisition grant in its class facts. */
   if (choices.length === 0) {
     return Either.left({
       code: "missingFightingStyleCantripFeatureChoice",
@@ -3815,7 +3815,7 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
         "Cannot find a class-feature acquisition choice that grants known cantrip access for this class level gain.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right(choice);
 }
@@ -3838,9 +3838,9 @@ function eldritchInvocationFeatureForWarlockClass(input: {
   CharacterBuildAdvancementIssue
 > {
   const classUnit = classUnitRecord(input);
-  /* v8 ignore start -- The typed Warlock route already admitted this Warlock class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed Warlock route already admitted this Warlock class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const facts = classCreationFacts(classUnit.right);
   const featureChoices = facts.featureGrants.flatMap((grant) => {
@@ -3862,7 +3862,7 @@ function eldritchInvocationFeatureForWarlockClass(input: {
     ];
   });
 
-  /* v8 ignore start -- The supported Warlock catalog contains exactly one feature choice with the invocation choice key. */
+  /* v8 ignore start -- @preserve -- The supported Warlock catalog contains exactly one feature choice with the invocation choice key. */
   if (featureChoices.length === 0) {
     return Either.left({
       code: "missingEldritchInvocationFeatureChoice",
@@ -3891,7 +3891,7 @@ function eldritchInvocationFeatureForWarlockClass(input: {
           "Cannot find the Warlock class-feature Eldritch Invocation choice.",
       })
     : Either.right(featureChoice);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function sorcererMetamagicFeatureForSorcererClass(input: {
@@ -3902,9 +3902,9 @@ function sorcererMetamagicFeatureForSorcererClass(input: {
   CharacterBuildAdvancementIssue
 > {
   const classUnit = classUnitRecord(input);
-  /* v8 ignore start -- The typed Sorcerer route already admitted this Sorcerer class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed Sorcerer route already admitted this Sorcerer class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const facts = classCreationFacts(classUnit.right);
   const featureChoices = facts.featureGrants.flatMap((grant) => {
@@ -3925,7 +3925,7 @@ function sorcererMetamagicFeatureForSorcererClass(input: {
     ];
   });
 
-  /* v8 ignore start -- The supported Sorcerer catalog contains exactly one Metamagic option-choice feature. */
+  /* v8 ignore start -- @preserve -- The supported Sorcerer catalog contains exactly one Metamagic option-choice feature. */
   if (featureChoices.length === 0) {
     return Either.left({
       code: "missingSorcererMetamagicFeatureChoice",
@@ -3954,7 +3954,7 @@ function sorcererMetamagicFeatureForSorcererClass(input: {
           "Cannot find the Sorcerer class-feature Metamagic option choice.",
       })
     : Either.right(featureChoice);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function eldritchInvocationCountAtLevel(
@@ -4119,7 +4119,7 @@ function unmetEldritchInvocationPrerequisite(input: {
     const option = eldritchInvocationOptionForInvocationId(
       selection.invocationId,
     );
-    /* v8 ignore start -- EldritchInvocationSelection carries an id already parsed against the closed installed invocation roster. */
+    /* v8 ignore start -- @preserve -- EldritchInvocationSelection carries an id already parsed against the closed installed invocation roster. */
     if (option === undefined) {
       return {
         code: "unknownEldritchInvocation",
@@ -4127,7 +4127,7 @@ function unmetEldritchInvocationPrerequisite(input: {
         message: `Unknown Eldritch Invocation id ${selection.invocationId}.`,
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
 
     const repeatableChoiceIssue = invalidRepeatableChoiceIssue({
       build: input.build,
@@ -4191,7 +4191,7 @@ function eldritchInvocationRequiresKnownInvocation(input: {
   readonly invocationId: EldritchInvocationId;
   readonly requiredInvocationId: EldritchInvocationId;
 }): boolean {
-  /* v8 ignore start -- Parsed invocation selections carry ids from the installed invocation option roster. */
+  /* v8 ignore start -- @preserve -- Parsed invocation selections carry ids from the installed invocation option roster. */
   return (
     eldritchInvocationOptionForInvocationId(
       input.invocationId,
@@ -4201,7 +4201,7 @@ function eldritchInvocationRequiresKnownInvocation(input: {
         prerequisite.invocationId === input.requiredInvocationId,
     ) ?? false
   );
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function invalidRepeatableChoiceIssue(input: {
@@ -4214,7 +4214,7 @@ function invalidRepeatableChoiceIssue(input: {
   >["repeatability"];
 }): CharacterBuildAdvancementIssue | undefined {
   if (input.repeatability.kind === "once") {
-    /* v8 ignore start -- Parsing correlates once-only invocation ids with the nonRepeatable selection variant. */
+    /* v8 ignore start -- @preserve -- Parsing correlates once-only invocation ids with the nonRepeatable selection variant. */
     return input.selection.kind === "nonRepeatable"
       ? undefined
       : {
@@ -4224,10 +4224,10 @@ function invalidRepeatableChoiceIssue(input: {
           message:
             "Only Repeatable Eldritch Invocations can carry an associated repeatable choice.",
         };
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 
-  /* v8 ignore start -- Parsing correlates repeatable invocation ids with the repeatable selection variant. */
+  /* v8 ignore start -- @preserve -- Parsing correlates repeatable invocation ids with the repeatable selection variant. */
   if (input.selection.kind === "nonRepeatable") {
     return {
       code: "missingRepeatableEldritchInvocationChoice",
@@ -4236,7 +4236,7 @@ function invalidRepeatableChoiceIssue(input: {
         "Repeatable Eldritch Invocation selections must include the associated cantrip or Origin feat choice.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return repeatableChoiceAvailableForBuild({
     build: input.build,
@@ -4282,7 +4282,7 @@ function knownWarlockCantripIds(
   classUnitId: WarlockClassUnitId,
   unitLibrary: UnitCatalog,
 ): readonly UnitRecord["id"][] {
-  /* v8 ignore start -- An admitted Warlock invocation workflow retains its Pact Magic spellcasting source. */
+  /* v8 ignore start -- @preserve -- An admitted Warlock invocation workflow retains its Pact Magic spellcasting source. */
   return (
     warlockSpellcastingSource(build, classUnitId)?.cantrips.filter(
       (cantripId) =>
@@ -4293,7 +4293,7 @@ function knownWarlockCantripIds(
         }),
     ) ?? []
   );
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function repeatableChoiceMatchesRule(input: {
@@ -4302,11 +4302,11 @@ function repeatableChoiceMatchesRule(input: {
   readonly repeatableChoice: CharacterBuildEldritchInvocationRepeatableChoice;
 }): boolean {
   const option = eldritchInvocationOptionForInvocationId(input.invocationId);
-  /* v8 ignore start -- Parsed repeatable selections retain invocation ids whose installed option is repeatable. */
+  /* v8 ignore start -- @preserve -- Parsed repeatable selections retain invocation ids whose installed option is repeatable. */
   if (option?.repeatability.kind !== "repeatable") {
     return false;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return eldritchInvocationRepeatableChoiceSatisfiesRule({
     unitLibrary: input.unitLibrary,
@@ -4359,12 +4359,12 @@ function warlockPactMagicSpellcastingForClass(input: {
   CharacterBuildAdvancementIssue
 > {
   const classUnit = classUnitRecord(input);
-  /* v8 ignore start -- The typed Pact Magic route already admitted this Warlock class id from the same catalog. */
+  /* v8 ignore start -- @preserve -- The typed Pact Magic route already admitted this Warlock class id from the same catalog. */
   if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const facts = classCreationFacts(classUnit.right);
-  /* v8 ignore start -- The branded Warlock class route is admitted only from class facts containing Pact Magic creation data. */
+  /* v8 ignore start -- @preserve -- The branded Warlock class route is admitted only from class facts containing Pact Magic creation data. */
   if (facts.spellcasting?.kind !== "pact_magic_spellcasting_creation") {
     return Either.left({
       code: "missingWarlockPactMagicSpellcasting",
@@ -4372,7 +4372,7 @@ function warlockPactMagicSpellcastingForClass(input: {
       message: "Cannot find Warlock Pact Magic class spellcasting facts.",
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right(facts.spellcasting);
 }
@@ -4392,9 +4392,9 @@ function pactMagicProgressionAtLevel(
     undefined,
   );
   const firstRow = spellcasting.pactMagicProgression[0];
-  /* v8 ignore start -- A Warlock class level is at least one and the admitted Pact Magic table has a level-one row. */
+  /* v8 ignore start -- @preserve -- A Warlock class level is at least one and the admitted Pact Magic table has a level-one row. */
   return row ?? firstRow;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function currentPactMagicStateIssue(input: {
@@ -4430,7 +4430,7 @@ function currentPactMagicStateIssue(input: {
     input.pactMagicSlotPool?.count !== input.progression.pactSlotCount ||
     input.pactMagicSlotPool?.slotLevel !== input.progression.pactSlotLevel
   ) {
-    /* v8 ignore start -- An admitted Warlock build supplies the mismatched pool here; absence is a malformed direct build. */
+    /* v8 ignore start -- @preserve -- An admitted Warlock build supplies the mismatched pool here; absence is a malformed direct build. */
     return invalidPactMagicSlotProjectionIssue({
       warlockLevel: input.progression.atLevel,
       progression: input.progression,
@@ -4438,7 +4438,7 @@ function currentPactMagicStateIssue(input: {
         ? {}
         : { pactMagicSlotPool: input.pactMagicSlotPool }),
     });
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 
   return undefined;
@@ -4449,7 +4449,7 @@ function invalidPactMagicSlotProjectionIssue(input: {
   readonly progression: PactMagicProgressionRow;
   readonly pactMagicSlotPool?: CharacterBuildPactMagicSlotPool;
 }): CharacterBuildAdvancementIssue {
-  /* v8 ignore start -- This diagnostic is constructed from an existing Pact Magic pool after detecting a value mismatch. */
+  /* v8 ignore start -- @preserve -- This diagnostic is constructed from an existing Pact Magic pool after detecting a value mismatch. */
   return {
     code: "invalidWarlockPactMagicSlotProjection",
     warlockLevel: input.warlockLevel,
@@ -4464,7 +4464,7 @@ function invalidPactMagicSlotProjectionIssue(input: {
     message:
       "Warlock Pact Magic slot capacity must match the Warlock Features table.",
   };
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function pactMagicSlotPoolFromProgression(
@@ -4537,9 +4537,9 @@ function grantFeatCategories(
 function unitChoiceSourceUnitId(
   hole: ChoiceCreationHole,
 ): UnitRecord["id"] | undefined {
-  /* v8 ignore start -- Callers pass only Unit-sourced class-feature choice holes to this helper. */
+  /* v8 ignore start -- @preserve -- Callers pass only Unit-sourced class-feature choice holes to this helper. */
   return hole.source.tag === "unitChoice" ? hole.source.unitId : undefined;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function isSelectedFromFeature(

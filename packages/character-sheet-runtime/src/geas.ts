@@ -44,10 +44,10 @@ export function castGeas(input: {
     spellName: "Geas",
     invocation: (spell) => {
       const commandIssue = geasCommandIssue(input.command);
-      /* v8 ignore next -- Malformed Geas request: command facts are parsed by the narrowed request contract before invocation projection. */
+      /* v8 ignore next -- @preserve -- Malformed Geas request: command facts are parsed by the narrowed request contract before invocation projection. */
       if (commandIssue !== null) return characterSheetIssue(commandIssue);
       const targetIssue = geasTargetIssue(input.target);
-      /* v8 ignore next -- Malformed Geas request: target facts are parsed by the narrowed request contract before invocation projection. */
+      /* v8 ignore next -- @preserve -- Malformed Geas request: target facts are parsed by the narrowed request contract before invocation projection. */
       if (targetIssue !== null) return characterSheetIssue(targetIssue);
       return geasInvocationFromSpell({
         spell: spell,
@@ -59,19 +59,19 @@ export function castGeas(input: {
 }
 
 function geasCommandIssue(command: CharacterSheetGeasCommand): string | null {
-  /* v8 ignore start -- These branches reject an empty or non-table-owned command outside the narrowed Geas request contract. */
+  /* v8 ignore start -- @preserve -- These branches reject an empty or non-table-owned command outside the narrowed Geas request contract. */
   if (command.commandText.trim().length === 0) {
     return "Geas requires a nonempty command.";
   }
   if (command.adjudicationOwner !== "table") {
     return "Geas command compliance must be table-owned session evidence.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }
 
 function geasTargetIssue(target: CharacterSheetGeasTarget): string | null {
-  /* v8 ignore start -- These branches reject malformed visibility or save facts outside the narrowed Geas target contract. */
+  /* v8 ignore start -- @preserve -- These branches reject malformed visibility or save facts outside the narrowed Geas target contract. */
   if (target.visibleByCaster !== true || target.withinRangeFeet !== 60) {
     return "Geas targets must be visible creatures within 60 feet.";
   }
@@ -82,7 +82,7 @@ function geasTargetIssue(target: CharacterSheetGeasTarget): string | null {
   ) {
     return "Geas requires a Wisdom Saving Throw outcome when the target can understand the command.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }
 
@@ -92,7 +92,7 @@ function geasInvocationFromSpell(input: {
   readonly command: CharacterSheetGeasCommand;
 }): Either.Either<CharacterSheetGeasInvocation, CharacterSheetIssue> {
   const spell = input.spell;
-  /* v8 ignore start -- The catalog record failed the exact authored level-5 Geas support profile required by this projector. */
+  /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Geas support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -112,7 +112,7 @@ function geasInvocationFromSpell(input: {
       "Geas requires the supported level-5 Enchantment command profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const hasSaveGatePhase = hasWisdomSaveGatePhase(
     spell,
@@ -124,23 +124,23 @@ function geasInvocationFromSpell(input: {
       phase.onFail.condition === "charmed" &&
       phase.onSuccess.kind === "none",
   );
-  /* v8 ignore start -- The catalog record has Geas spell facts but no supported Wisdom save/Charmed phase. */
+  /* v8 ignore start -- @preserve -- The catalog record has Geas spell facts but no supported Wisdom save/Charmed phase. */
   if (!hasSaveGatePhase) {
     return characterSheetIssue(
       "Geas requires the supported Wisdom save Charmed profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const duration = timeSpanDuration({
     unit: "day",
     amount: GEAS_DURATION_DAYS,
   });
-  /* v8 ignore start -- The fixed thirty-day Geas duration is always accepted by the elapsed-time parser. */
+  /* v8 ignore start -- @preserve -- The fixed thirty-day Geas duration is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Geas requires a supported duration.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     tag: "geas",

@@ -89,7 +89,7 @@ export function resolveSlowSomaticSpellFailure(input: {
           "Slow Somatic spell failure fills are valid only for slowed spell casts with an effective Somatic component.",
         );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fills.length > 1) {
     return invalidResult(
       input.state,
@@ -97,12 +97,12 @@ export function resolveSlowSomaticSpellFailure(input: {
       "Slow Somatic spell failure outcome was filled twice.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const fill = fills[0];
   if (fill === undefined) {
     return needsHolesResult(input.castingState, input.subject, [hole]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fill.holeId !== hole.holeId) {
     return invalidResult(
       input.state,
@@ -110,7 +110,7 @@ export function resolveSlowSomaticSpellFailure(input: {
       "Slow Somatic spell failure fill must use the selected Slow chance hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return fill.value.spellFailed
     ? spendSpellCastResources({
         state: input.castingState,

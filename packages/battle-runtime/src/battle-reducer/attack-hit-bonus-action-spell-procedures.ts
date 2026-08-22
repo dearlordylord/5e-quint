@@ -239,16 +239,16 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     );
   }
   if (invocation.procedure === "afterHitDamage") {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillValidation.tag !== "validNonSave") {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Attack-hit damage spell fills were not parsed.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return spellProcedureExecutionFor(
       executionRegistry,
       invocation.procedure,
@@ -260,16 +260,16 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     });
   }
   if (invocation.procedure === "afterHitDamageAndIllumination") {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillValidation.tag !== "validNonSave") {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Attack-hit damage and illumination spell fills were not parsed.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return spellProcedureExecutionFor(
       executionRegistry,
       invocation.procedure,
@@ -281,16 +281,16 @@ export function resolveCastAttackHitBonusActionSpellCommand(
     });
   }
   if (invocation.procedure === "afterHitTimedDamageAndSave") {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillValidation.tag !== "validNonSave") {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Attack-hit timed damage and save spell fills were not parsed.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return spellProcedureExecutionFor(
       executionRegistry,
       invocation.procedure,

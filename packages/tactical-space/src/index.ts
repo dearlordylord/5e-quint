@@ -1499,12 +1499,12 @@ function distanceFeetFromCellDistance(
 
 function makeDistanceFeet(cellDistance: number): DistanceFeet {
   const distance = distanceFeetFromCellDistance(cellDistance);
-  /* v8 ignore next -- parseArena bounds relation spans, while route seeds call this only with literal zero. */
+  /* v8 ignore next -- @preserve -- parseArena bounds relation spans, while route seeds call this only with literal zero. */
   if (distance === undefined) {
     // Arena parsing bounds authored spans so every reachable relation has an
     // exact safe distance. This branch protects the internal invariant if a
     // future caller bypasses that aggregate.
-    /* v8 ignore next -- the parser/construction invariant above makes this assertion unreachable for valid callers. */
+    /* v8 ignore next -- @preserve -- the parser/construction invariant above makes this assertion unreachable for valid callers. */
     throw new Error("Tactical-space distance exceeded exact numeric capacity.");
   }
   return distance;
@@ -2138,11 +2138,11 @@ function compareStepSequences(
     const comparison = compareCoordinates(first[index].to, second[index].to);
     firstDifference ||= comparison;
   }
-  /* v8 ignore start -- fixed five-foot steps make equal-distance valid nodes equal in length. */
+  /* v8 ignore start -- @preserve -- fixed five-foot steps make equal-distance valid nodes equal in length. */
   if (firstDifference === 0) {
     return first.length - second.length;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return firstDifference;
 }
 
@@ -2440,21 +2440,21 @@ function makePreviewHandle(
 
 function arenaDataOf(arena: Arena): ArenaData {
   const data = arenaDataByHandle.get(arena);
-  /* v8 ignore start -- only handles returned by parseArena are valid Arena values. */
+  /* v8 ignore start -- @preserve -- only handles returned by parseArena are valid Arena values. */
   if (data === undefined) {
     throw new Error("Arena handle was not created by parseArena.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return data;
 }
 
 function stateDataOf(state: SpatialState): StateData {
   const data = stateDataByHandle.get(state);
-  /* v8 ignore start -- only handles returned by createState are valid SpatialState values. */
+  /* v8 ignore start -- @preserve -- only handles returned by createState are valid SpatialState values. */
   if (data === undefined) {
     throw new Error("Spatial state handle was not created by createState.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return data;
 }
 
@@ -2533,13 +2533,13 @@ type CanonicalProjection = CanonicalArenaProjection | CanonicalStateProjection;
 
 function canonicalJson(projection: CanonicalProjection): string {
   const canonical = JSON.stringify(projection);
-  /* v8 ignore start -- CanonicalProjection is built from typed finite fields, so JSON.stringify is defined. */
+  /* v8 ignore start -- @preserve -- CanonicalProjection is built from typed finite fields, so JSON.stringify is defined. */
   if (canonical === undefined) {
     throw new Error(
       "A proven tactical-space canonical projection was not serializable.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return canonical;
 }
 

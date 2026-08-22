@@ -58,6 +58,11 @@ describe("CharacterCreationPage", () => {
     document.body.append(editor)
     fireEvent.keyDown(editor, { key: "ArrowRight" })
     editor.remove()
+    const panel = document.createElement("div")
+    Object.defineProperty(panel, "isContentEditable", { value: false })
+    document.body.append(panel)
+    fireEvent.keyDown(panel, { key: "Escape" })
+    panel.remove()
     expect(screen.getByText("3. Determine Ability Scores", { selector: "h2" })).toBeTruthy()
 
     fireEvent.keyDown(window, { key: "ArrowLeft" })

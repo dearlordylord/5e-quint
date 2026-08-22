@@ -79,6 +79,12 @@ describe("AdminMirrorPage mirror boundary", () => {
     expect(Either.isLeft(decoded)).toBe(true)
   })
 
+  test("rejects valid JSON with an invalid mirror event shape", () => {
+    const decoded = decodeMirrorSessionEvent(JSON.stringify({}))
+
+    expect(Either.isLeft(decoded)).toBe(true)
+  })
+
   test("decodes mirror session events", () => {
     const decoded = decodeMirrorSessionEvent(JSON.stringify(rawSessionState({ sequence: 2 })))
 
@@ -155,7 +161,7 @@ describe("AdminMirrorPage mirror boundary", () => {
   })
 
   test("renders retained projection details and follows refresh and stream events", async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ sessions: [rawDetailedSessionState()] }))
+    fetchMock.mockImplementation(() => Promise.resolve(jsonResponse({ sessions: [rawDetailedSessionState()] })))
 
     const { unmount } = render(<AdminMirrorPage />)
 
@@ -180,6 +186,8 @@ describe("AdminMirrorPage mirror boundary", () => {
     const modalBackdrop = modalContent.closest(".fixed")
     if (!(modalBackdrop instanceof HTMLElement)) throw new Error("Expected JSON modal backdrop.")
     fireEvent.mouseDown(modalContent)
+    expect(screen.getByText("Derived Input")).toBeTruthy()
+    fireEvent.keyDown(window, { key: "Enter" })
     expect(screen.getByText("Derived Input")).toBeTruthy()
     fireEvent.mouseDown(modalBackdrop)
     await waitFor(() => expect(screen.queryByText("Derived Input")).toBeNull())

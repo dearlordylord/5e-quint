@@ -263,7 +263,7 @@ const MentalMessageRecipientBlockDurationSchema = strictStruct({
   amount: Schema.Literal(8),
 });
 
-/* v8 ignore start -- this declarative Sending-effect schema initializes during collection; the canonical Sending record is decoded by catalog tests */
+/* v8 ignore start -- @preserve -- this declarative Sending-effect schema initializes during collection; the canonical Sending record is decoded by catalog tests */
 export const MentalMessageDeliveryEffectSchema = strictStruct({
   kind: Schema.Literal("deliver_mental_message"),
   recipient: Schema.Literal("met_by_caster_or_described_by_someone_who_met_it"),
@@ -291,7 +291,7 @@ export const MentalMessageDeliveryEffectSchema = strictStruct({
     retryResult: Schema.Literal("caster_learns_blocked_and_spell_fails"),
   }),
 });
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export const EtherealPhaseEffectSchema = strictStruct({
   kind: Schema.Literal("ethereal_phase"),
@@ -3244,7 +3244,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         onSuccessCount: EffectAtomSchema,
         onFailureCount: EffectAtomSchema,
       }),
-      /* v8 ignore start -- this declarative delayed-save union arm initializes during collection; canonical delayed-save spells are decoded by catalog tests */
+      /* v8 ignore start -- @preserve -- this declarative delayed-save union arm initializes during collection; canonical delayed-save spells are decoded by catalog tests */
       Schema.Struct({
         kind: Schema.Literal("delayed_save"),
         condition: optionalExact(ConditionSchema),
@@ -3254,7 +3254,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         onSuccess: EffectAtomSchema,
         onFailure: EffectAtomSchema,
       }),
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       Schema.Struct({
         kind: Schema.Literal("condition_persists_after_full_duration"),
         condition: ConditionSchema,
@@ -3797,7 +3797,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
             skills: nonEmpty(SkillSchema),
           }).pipe(
             Schema.filter((source) => distinctSkills(source.skills), {
-              /* v8 ignore next 2 -- this callback only formats the diagnostic after a malformed Expertise source repeats a skill */
+              /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after a malformed Expertise source repeats a skill */
               message: () =>
                 "Listed Expertise skill source must contain distinct skills.",
             }),
@@ -3930,17 +3930,17 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           }),
         ),
       }).pipe(
-        /* v8 ignore start -- a free-cast grant that combines a numeric count with class scaling is malformed authored input */
+        /* v8 ignore start -- @preserve -- a free-cast grant that combines a numeric count with class scaling is malformed authored input */
         Schema.filter(
           (grant) =>
             typeof grant.count === "number" || grant.scaling === undefined,
           {
-            /* v8 ignore next 2 -- this callback only formats the diagnostic after a malformed free-cast grant supplies both a numeric count and class scaling */
+            /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after a malformed free-cast grant supplies both a numeric count and class scaling */
             message: () =>
               "Proficiency Bonus spell free-cast counts must not also carry class-level scaling.",
           },
         ),
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
       ),
       Schema.Struct({
         kind: Schema.Literal("grant_die_token"),
@@ -4680,7 +4680,7 @@ export const ActivationMechanicsSchema = Schema.extend(
   }),
 );
 
-/* v8 ignore start -- these exported declarative schemas initialize during full-suite collection before V8 attributes their statements; schema-spell-readers.test.ts decodes their shapes directly */
+/* v8 ignore start -- @preserve -- these exported declarative schemas initialize during full-suite collection before V8 attributes their statements; schema-spell-readers.test.ts decodes their shapes directly */
 export const ModalActivationMechanicsSchema = Schema.extend(
   SpellMechanicsCommonHeaderSchema,
   Schema.Struct({
@@ -4835,7 +4835,7 @@ export const CreatureSpeedSchema = Schema.Struct({
   feet: StatBlockValueSchema,
   requiresSlotLevel: optionalExact(Schema.Number),
 });
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export const CreatureResistanceListSchema = Schema.Union(
   Schema.Struct({
@@ -5100,7 +5100,7 @@ export const MagicCircleAffectedCreatureTypeChoiceSchema = strictStruct({
     (choice) =>
       sameStringSet(choice.options, MAGIC_CIRCLE_AFFECTED_CREATURE_TYPES),
     {
-      /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed Magic Circle choices differ from the fixed creature-type set */
+      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed Magic Circle choices differ from the fixed creature-type set */
       message: () =>
         "Magic Circle affected creature type choice must expose exactly Celestial, Elemental, Fey, Fiend, and Undead.",
     },

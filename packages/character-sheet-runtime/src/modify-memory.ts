@@ -40,10 +40,10 @@ export function castModifyMemory(input: {
     spellName: "Modify Memory",
     invocation: (spell) => {
       const targetIssue = modifyMemoryTargetIssue(input.target);
-      /* v8 ignore next -- Malformed Modify Memory request: target facts are parsed by the narrowed request contract before invocation projection. */
+      /* v8 ignore next -- @preserve -- Malformed Modify Memory request: target facts are parsed by the narrowed request contract before invocation projection. */
       if (targetIssue !== null) return characterSheetIssue(targetIssue);
       const memoryEditIssue = modifyMemoryEditIssue(input.memoryEdit);
-      /* v8 ignore next -- Malformed Modify Memory request: edit facts are parsed by the narrowed request contract before invocation projection. */
+      /* v8 ignore next -- @preserve -- Malformed Modify Memory request: edit facts are parsed by the narrowed request contract before invocation projection. */
       if (memoryEditIssue !== null) return characterSheetIssue(memoryEditIssue);
       return modifyMemoryInvocationFromSpell({
         spell: spell,
@@ -57,7 +57,7 @@ export function castModifyMemory(input: {
 function modifyMemoryTargetIssue(
   target: CharacterSheetModifyMemoryTarget,
 ): string | null {
-  /* v8 ignore start -- These branches reject malformed target facts outside the narrowed Modify Memory request contract. */
+  /* v8 ignore start -- @preserve -- These branches reject malformed target facts outside the narrowed Modify Memory request contract. */
   if (target.visibleByCaster !== true || target.withinRangeFeet !== 30) {
     return "Modify Memory targets must be visible creatures within 30 feet.";
   }
@@ -67,14 +67,14 @@ function modifyMemoryTargetIssue(
   ) {
     return "Modify Memory requires a Wisdom Saving Throw outcome.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }
 
 function modifyMemoryEditIssue(
   memoryEdit: CharacterSheetModifyMemoryMemoryEdit,
 ): string | null {
-  /* v8 ignore start -- These branches reject malformed memory-edit facts outside the narrowed level-5 Modify Memory contract. */
+  /* v8 ignore start -- @preserve -- These branches reject malformed memory-edit facts outside the narrowed level-5 Modify Memory contract. */
   if (memoryEdit.eventAgeHoursMax !== 24) {
     return "Modify Memory level-5 support requires an event within the last 24 hours.";
   }
@@ -90,7 +90,7 @@ function modifyMemoryEditIssue(
   ) {
     return "Modify Memory behavior and nonsensical-memory consequences must be table-owned.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }
 
@@ -100,7 +100,7 @@ function modifyMemoryInvocationFromSpell(input: {
   readonly memoryEdit: CharacterSheetModifyMemoryMemoryEdit;
 }): Either.Either<CharacterSheetModifyMemoryInvocation, CharacterSheetIssue> {
   const spell = input.spell;
-  /* v8 ignore start -- The catalog record failed the exact authored level-5 Modify Memory support profile required by this projector. */
+  /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Modify Memory support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -119,15 +119,15 @@ function modifyMemoryInvocationFromSpell(input: {
       "Modify Memory requires the supported level-5 Enchantment memory-edit profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
-  /* v8 ignore start -- The catalog record has Modify Memory spell facts but omits its required target-damage early end. */
+  /* v8 ignore start -- @preserve -- The catalog record has Modify Memory spell facts but omits its required target-damage early end. */
   if (!spell.mechanics.duration.earlyEnd?.some(isTargetTakesDamageEnd)) {
     return characterSheetIssue(
       "Modify Memory requires the target-damage early-ending profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const hasSaveGatePhase = hasWisdomSaveGatePhase(
     spell,
@@ -138,20 +138,20 @@ function modifyMemoryInvocationFromSpell(input: {
       phase.onSuccess.kind === "none" &&
       appliesModifyMemoryConditions(phase.onFail),
   );
-  /* v8 ignore start -- The catalog record has Modify Memory spell facts but no supported Wisdom-save condition phase. */
+  /* v8 ignore start -- @preserve -- The catalog record has Modify Memory spell facts but no supported Wisdom-save condition phase. */
   if (!hasSaveGatePhase) {
     return characterSheetIssue(
       "Modify Memory requires the supported Wisdom save Charmed/Incapacitated profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
-  /* v8 ignore start -- The exact one-minute duration admitted above is always accepted by the elapsed-time parser. */
+  /* v8 ignore start -- @preserve -- The exact one-minute duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Modify Memory requires a supported duration.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     tag: "modify_memory",

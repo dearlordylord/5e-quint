@@ -28,15 +28,15 @@ export function castPreparedSpell<Invocation>(input: {
   CharacterSheetIssue
 > {
   const unit = getRequiredUnit(input.unitLibrary, input.spellId);
-  /* v8 ignore next -- A selected prepared spell id missing from the catalog is malformed catalog correlation. */
+  /* v8 ignore next -- @preserve -- A selected prepared spell id missing from the catalog is malformed catalog correlation. */
   if (Either.isLeft(unit)) return Either.left(unit.left);
-  /* v8 ignore start -- A selected prepared spell id resolving to a non-Spell Unit is malformed catalog correlation. */
+  /* v8 ignore start -- @preserve -- A selected prepared spell id resolving to a non-Spell Unit is malformed catalog correlation. */
   if (unit.right.kind !== "spell") {
     return characterSheetIssue(
       input.spellRecordIssue ?? `${input.spellName} requires a Spell record.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (!hasPreparedClassSpellAccess(input.sheet, unit.right.id)) {
     return characterSheetIssue(
       input.spellAccessIssue ??
@@ -44,14 +44,14 @@ export function castPreparedSpell<Invocation>(input: {
     );
   }
   const invocation = input.invocation(unit.right);
-  /* v8 ignore next -- Invocation rejection is attributed to the spell-specific malformed request or unsupported authored profile. */
+  /* v8 ignore next -- @preserve -- Invocation rejection is attributed to the spell-specific malformed request or unsupported authored profile. */
   if (Either.isLeft(invocation)) return Either.left(invocation.left);
   const spent = spendCharacterSheetSpellSlot({
     sheet: input.sheet,
     spellLevel: input.spellLevel,
     spellSlotSource: "ordinary",
   });
-  /* v8 ignore next -- Slot-spend rejection is malformed prepared-cast slot state. */
+  /* v8 ignore next -- @preserve -- Slot-spend rejection is malformed prepared-cast slot state. */
   if (Either.isLeft(spent)) return Either.left(spent.left);
   return Either.right({ sheet: spent.right, invocation: invocation.right });
 }

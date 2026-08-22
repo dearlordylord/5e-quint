@@ -422,13 +422,13 @@ export function applyInitiativeSwap(input: {
       "Initiative Swap source has already used its post-roll swap opportunity.",
     );
   }
-  /* v8 ignore start -- An open setup workflow can only change state through Initiative Swap, which preserves the initial empty already-acted collection. */
+  /* v8 ignore start -- @preserve -- An open setup workflow can only change state through Initiative Swap, which preserves the initial empty already-acted collection. */
   if (state.initiative.alreadyActed.length > 0) {
     return battleStateInitIssue(
       "Initiative Swap is only available immediately after rolling Initiative.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const source = state.combatants.get(input.sourceId);
   if (source === undefined) {
     return battleStateInitIssue(
@@ -576,7 +576,7 @@ function admitCharacterSpellExecution(input: {
                       },
                     ];
               },
-              /* v8 ignore next -- Fresh lifecycle admission allocates a new execution, then adds only currently admitted spells, so it cannot contain a retained unavailable spell binding. */
+              /* v8 ignore next -- @preserve -- Fresh lifecycle admission allocates a new execution, then adds only currently admitted spells, so it cannot contain a retained unavailable spell binding. */
               unavailableSpellInvocation: () => [],
               unitFeature: () => [],
               unitSupportProfile: () => [],

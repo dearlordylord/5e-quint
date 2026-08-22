@@ -264,16 +264,16 @@ export function resolveUnitFeature(
       unitFeature,
     );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Unsupported Unit feature does not accept battle fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return invalidResult(
     input.state,
@@ -285,18 +285,18 @@ export function resolveUnitFeature(
 export function resolveUnitFeatureHeldWeaponActivation(
   input: AdmittedUnitFeatureHeldWeaponActivationBattleResolutionInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Held-weapon Unit feature activation does not accept battle fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const actor = input.state.combatants.get(input.subject.actorId);
-  /* v8 ignore start -- Admitted-subject invariant: held-weapon Unit subjects pass character-owner procedure admission before this resolver is dispatched. */
+  /* v8 ignore start -- @preserve -- Admitted-subject invariant: held-weapon Unit subjects pass character-owner procedure admission before this resolver is dispatched. */
   if (!isCharacterBattleCreatureState(actor)) {
     return invalidResult(
       input.state,
@@ -304,13 +304,13 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Held-weapon Unit feature is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const procedure = characterUnitProcedure(
     actor.origin.execution,
     input.subject.procedureRef,
     CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   );
-  /* v8 ignore start -- Discovered-subject invariant: held-weapon activation discovery emits only the selected Sacred Weapon procedure admitted above. */
+  /* v8 ignore start -- @preserve -- Discovered-subject invariant: held-weapon activation discovery emits only the selected Sacred Weapon procedure admitted above. */
   if (
     procedure?.kind !== "unitFeature" ||
     procedure.execution.kind !== "paladinSacredWeapon"
@@ -321,7 +321,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Held-weapon Unit feature is no longer selected for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const unitFeature = procedure.execution;
   if (
     !sacredWeaponHeldMeleeWeapons(input.state, actor).some(
@@ -356,7 +356,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
     unit: unitFeature.sacredWeapon.duration.unit,
     amount: unitFeature.sacredWeapon.duration.amount,
   });
-  /* v8 ignore start -- Admitted Sacred Weapon invariant: the support-profile parser accepts the SRD one-minute duration before producing execution facts. */
+  /* v8 ignore start -- @preserve -- Admitted Sacred Weapon invariant: the support-profile parser accepts the SRD one-minute duration before producing execution facts. */
   if (Either.isLeft(durationTicks)) {
     return invalidResult(
       input.state,
@@ -364,7 +364,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Sacred Weapon duration is not supported by battle runtime.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextActor: CharacterBattleCreatureState = {
     ...actor,
     activeEffects: [
@@ -416,16 +416,16 @@ function resolvePaladinSacredWeaponDismissUnitFeature(
   input: UnitFeatureBattleResolutionInput,
   actor: CharacterBattleCreatureState,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Sacred Weapon dismissal does not accept battle fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const activeEffects = actor.activeEffects.filter(
     (effect) =>
       !(
@@ -460,16 +460,16 @@ function resolveRogueSteadyAimUnitFeature(
   actor: CharacterBattleCreatureState,
   unitFeature: MechanicalUnitFeature<"rogueSteadyAim">,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Steady Aim does not accept battle fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (Number(actor.movementSpentFeet) > 0) {
     return invalidResult(
       input.state,
@@ -569,12 +569,12 @@ function resolveMagicActionHealingPoolUnitFeature(
     input.fills,
     input.subject.procedureRef,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (distribution.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", distribution.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (distribution.value === undefined) {
     return needsHolesResult(input.state, input.subject, [
       magicActionHealingPoolDistributionHole(
@@ -594,12 +594,12 @@ function resolveMagicActionHealingPoolUnitFeature(
     unitFeature,
     fill: distribution.value,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", validation.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextActor: BattleCreatureState = {
     ...actor,
     origin: {
@@ -669,12 +669,12 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     input.subject.procedureRef,
     unitFeature,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fills.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fills.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "action",
     action: "magic",
@@ -714,12 +714,12 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     savingThrows: fills.value.savingThrows,
     healingTarget: fills.value.healingTarget,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", validation.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const savingThrowTargetIds = [...validation.outcomesByTargetId.keys()];
   const relationshipFacts = parseSavingThrowRelationshipFacts(
     fills.value.savingThrows.relationshipFacts ?? [],
@@ -731,16 +731,16 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
       "enemySavingThrow",
     ),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipFacts === null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Magic Action damage and healing relationship facts must answer the saving-throw hole request.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const actorAfterResourceSpend: CharacterBattleCreatureState = {
     ...actor,
@@ -773,11 +773,11 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
     (state, targetId) => {
       const target = state.combatants.get(targetId);
-      /* v8 ignore start -- Internal invariant guard: validation proves every damage target exists, and spending the feature resource preserves combatant-map membership. */
+      /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves every damage target exists, and spending the feature resource preserves combatant-map membership. */
       if (target === undefined) {
         return state;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const outcome = validation.outcomesByTargetId.get(targetId);
       const damageBeforeTargetAdjustments =
         outcome?.succeeded === true
@@ -809,7 +809,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const healingTarget = stateAfterDamage.combatants.get(
     validation.healingTargetId,
   );
-  /* v8 ignore start -- Internal invariant guard: validation proves the healing target exists, and damage application preserves combatant-map membership. */
+  /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves the healing target exists, and damage application preserves combatant-map membership. */
   if (healingTarget === undefined) {
     return invalidResult(
       input.state,
@@ -817,7 +817,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
       "Magic Action healing target is no longer in the battle.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const stateAfterHealing = {
     ...stateAfterDamage,
     combatants: new Map(stateAfterDamage.combatants).set(
@@ -864,12 +864,12 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
     input.fills,
     input.subject.procedureRef,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fills.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fills.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (fills.value.savingThrows === undefined) {
     return needsHolesResult(input.state, input.subject, [
       magicActionSaveGatedConditionSavingThrowHole(
@@ -889,12 +889,12 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
     unitFeature,
     savingThrows: fills.value.savingThrows,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", validation.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const savingThrowTargetIds = validation.outcomes.map(
     (outcome) => outcome.targetId,
   );
@@ -908,16 +908,16 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
       "enemySavingThrow",
     ),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipFacts === null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Magic Action condition relationship facts must answer the saving-throw hole request.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "action",
     action: "magic",
@@ -988,16 +988,16 @@ export function resolveDruidWildShapeUnitFeature(
   const unitFeature = procedure.execution;
 
   if (input.subject.action === "dismiss") {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (input.fills.length > 0) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Druid Wild Shape dismiss does not accept battle fills.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (activeDruidWildShapeEffect(actor) === null) {
       return invalidResult(
         input.state,
@@ -1008,7 +1008,7 @@ export function resolveDruidWildShapeUnitFeature(
     const spent = spendActivationResource(input.state.currentTurnResources, {
       kind: "bonusAction",
     });
-    /* v8 ignore start -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
+    /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
     if (Either.isLeft(spent)) {
       return invalidResult(
         input.state,
@@ -1016,7 +1016,7 @@ export function resolveDruidWildShapeUnitFeature(
         "Druid Wild Shape Bonus Action is no longer available.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const nextState = dismissDruidWildShapeForm({
       state: { ...input.state, currentTurnResources: spent.right },
       actorId: actor.combatantId,
@@ -1072,25 +1072,25 @@ export function resolveDruidWildShapeUnitFeature(
       };
     }
     if (input.fills.length !== 1) {
-      /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore start -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid" as const,
         message: "Druid Wild Shape equipment disposition must be filled once.",
       };
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
     }
     const fill = input.fills[0];
     if (
       fill?.kind !== "wildShapeEquipmentDisposition" ||
       fill.holeId !== expectedEquipmentDispositionHole.holeId
     ) {
-      /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore start -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid" as const,
         message:
           "Druid Wild Shape equipment disposition fill must match the equipment disposition hole.",
       };
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
     }
     const validation = validateWildShapeEquipmentDispositionFill({
       candidates: equipmentCandidates,
@@ -1103,7 +1103,7 @@ export function resolveDruidWildShapeUnitFeature(
         dispositions: validation.dispositions,
       };
     }
-    /* v8 ignore next -- Malformed Unit-feature fill set: the equipment parser already classified this replay fill as contradictory. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: the equipment parser already classified this replay fill as contradictory. */
     return validation;
   })();
   if (equipmentDisposition.tag === "needsHoles") {
@@ -1115,20 +1115,20 @@ export function resolveDruidWildShapeUnitFeature(
       snapshot: snapshotBattle(input.state),
     };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (equipmentDisposition.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       equipmentDisposition.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  /* v8 ignore start -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1136,7 +1136,7 @@ export function resolveDruidWildShapeUnitFeature(
       "Druid Wild Shape Bonus Action is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextActor: CharacterBattleCreatureState = {
     ...actor,
     origin: {
@@ -1255,74 +1255,74 @@ export function resolveBardicInspirationGrantUnitFeature(
     input.fills,
     input.subject.procedureRef,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (targetFill.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", targetFill.message);
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (targetFill.value === undefined) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Bardic Inspiration requires a target creature.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const target = input.state.combatants.get(targetFill.value.value);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (target === undefined || target.combatantId === input.subject.actorId) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Bardic Inspiration target must be another creature in this battle.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target.activeEffects.some(
       (effect) => effect.kind === "bardicInspirationDie",
     )
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Bardic Inspiration target already has a Bardic Inspiration die.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!bardicInspirationTargetCanPerceiveSurroundings(target)) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Bardic Inspiration target must be able to see or hear the Bard.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !bardicInspirationGrantTargetChoices(
       input.state,
       input.subject.actorId,
     ).includes(target.combatantId)
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Bardic Inspiration target must be another creature in this battle.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !hasBardicInspirationRangeFact(
       targetFill.value.spatialFacts ?? [],
@@ -1332,15 +1332,15 @@ export function resolveBardicInspirationGrantUnitFeature(
       unitFeature,
     )
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Bardic Inspiration target must be within 60 feet.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !(
       (!hasCondition(target.conditions, "blinded") &&
@@ -1359,14 +1359,14 @@ export function resolveBardicInspirationGrantUnitFeature(
         ))
     )
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Bardic Inspiration target must be able to see or hear the Bard.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const nextActor: BattleCreatureState = {
     ...actor,
@@ -1433,38 +1433,38 @@ export function resolveBardicInspirationFailedD20Test(
       "Bardic Inspiration is no longer available for the D20 Test actor.",
     );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(input.bardicInspirationRoll) ||
     input.bardicInspirationRoll < 1 ||
     input.bardicInspirationRoll > die.dieSize
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       `Bardic Inspiration roll must be a 1d${die.dieSize} result.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const outcome = bardicInspirationD20TestOutcome(input);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (outcome.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", outcome.message);
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (outcome.value.originalSucceeded) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Bardic Inspiration requires an already-failed D20 Test.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const nextActor: BattleCreatureState = {
     ...actor,
@@ -1503,27 +1503,27 @@ function bardicInspirationD20TestOutcome(
     }
   | { readonly tag: "invalid"; readonly message: string } {
   if (input.d20Test.kind === "attackRoll") {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!attackRollResultIsValid(input.d20Test.attackRoll)) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message: "Attack roll result is outside the d20 attack-roll protocol.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
       input.d20Test.attackRoll,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (spellAttackRerollIssue !== null) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message: spellAttackRerollIssue,
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const criticalThreshold = input.d20Test.criticalThreshold ?? 20;
     const boostedRoll = {
       ...input.d20Test.attackRoll,
@@ -1578,34 +1578,34 @@ function bardicInspirationGrantTargetFill(
       fill.kind === "targetChoice" &&
       fill.holeId === bardicInspirationGrantTargetHoleId(procedureRef)
     ) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (target !== undefined) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return {
           tag: "invalid",
           message: "Bardic Inspiration target was filled twice.",
         };
       }
-      /* v8 ignore stop */
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore stop -- @preserve */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.relationshipFacts !== undefined) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return {
           tag: "invalid",
           message:
             "Bardic Inspiration target relationship facts were not requested.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       target = fill;
       continue;
     }
-    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Bardic Inspiration replay holes.`,
     };
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return { tag: "ok", value: target };
 }
@@ -1647,24 +1647,24 @@ function magicActionHealingPoolDistributionFill(
       fill.kind === "hitPointHealingDistribution" &&
       fill.holeId === magicActionHealingPoolDistributionHoleId(procedureRef)
     ) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (distribution !== undefined) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return {
           tag: "invalid",
           message: "Magic Action healing distribution was filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       distribution = fill;
       continue;
     }
-    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Magic Action healing replay holes.`,
     };
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return { tag: "ok", value: distribution };
 }
@@ -1680,15 +1680,15 @@ function validateMagicActionHealingPoolDistribution(input: {
   | { readonly tag: "ok" }
   | { readonly tag: "invalid"; readonly message: string } {
   const allocations = input.fill.value.allocations;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (allocations.length === 0) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: "Magic Action healing requires at least one allocation.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const seenTargets = new Set<CombatantId>();
   let spentHitPoints = 0;
   const poolHitPoints = magicActionHealingPoolSize(
@@ -1696,59 +1696,59 @@ function validateMagicActionHealingPoolDistribution(input: {
     input.unitFeature,
   );
   for (const allocation of allocations) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (seenTargets.has(allocation.targetId)) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message: "Magic Action healing target was allocated twice.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     seenTargets.add(allocation.targetId);
     const healing = Number(allocation.hitPoints);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!Number.isInteger(healing) || healing <= 0) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Magic Action healing allocations must restore a positive integer number of Hit Points.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const target = input.state.combatants.get(allocation.targetId);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (target === undefined) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Magic Action healing target must be a creature in this battle.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
       state: input.state,
       source: OTHER_MAGICAL_EFFECT_SOURCE,
       targetIds: [allocation.targetId],
     });
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (antimagicInterdiction !== null) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return { tag: "invalid", message: antimagicInterdiction };
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore stop -- @preserve */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!combatantIsBloodied(target)) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message: "Magic Action healing target must be Bloodied.",
       };
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore stop -- @preserve */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       allocation.targetId !== input.actorId &&
       !hasMagicActionHealingPoolRangeFact(
@@ -1759,34 +1759,34 @@ function validateMagicActionHealingPoolDistribution(input: {
         input.unitFeature,
       )
     ) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message: "Magic Action healing target must be within range.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const cap = combatantHalfHitPointMaximum(target);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (Number(target.hp) + healing > cap) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Magic Action healing cannot restore a target above half its Hit Point Maximum.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     spentHitPoints += healing;
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (spentHitPoints > poolHitPoints) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message: "Magic Action healing allocations exceed the healing pool.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return { tag: "ok" };
 }
@@ -1847,12 +1847,12 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
     unitFeature,
     input.subject.procedureRef,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fills.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fills.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (fills.value.savingThrows === undefined) {
     return needsHolesResult(input.state, input.subject, [
       attackActionAreaSaveDamageReplacementSavingThrowHole(
@@ -1869,12 +1869,12 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
     unitFeature,
     savingThrows: fills.value.savingThrows,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", validation.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const savingThrowTargetIds = [...validation.outcomesByTargetId.keys()];
   const relationshipFacts = parseSavingThrowRelationshipFacts(
     fills.value.savingThrows.relationshipFacts ?? [],
@@ -1886,16 +1886,16 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
       "enemySavingThrow",
     ),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipFacts === null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Area damage replacement relationship facts must answer the saving-throw hole request.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     validation.damageTargetIds.length > 0 &&
     fills.value.damageRoll === undefined
@@ -1957,25 +1957,25 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
     };
   }
   const damageRoll = fills.value.damageRoll;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageRoll === undefined) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Area damage replacement requires a damage roll for affected targets.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const damageRollTotal = rolledDiceTotal(damageRoll.value);
   const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
     (state, targetId) => {
       const target = state.combatants.get(targetId);
-      /* v8 ignore start -- Internal invariant guard: validation proves every affected target exists, and spending the Attack action and feature resource preserves combatant-map membership. */
+      /* v8 ignore start -- @preserve -- Internal invariant guard: validation proves every affected target exists, and spending the Attack action and feature resource preserves combatant-map membership. */
       if (target === undefined) {
         return state;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const outcome = validation.outcomesByTargetId.get(targetId);
       const damageBeforeTargetAdjustments =
         outcome?.succeeded === true
@@ -2032,16 +2032,16 @@ function attackActionAreaSaveDamageReplacementFills(
       fill.holeId ===
         attackActionAreaSaveDamageReplacementSavingThrowHoleId(procedureRef)
     ) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (savingThrows !== undefined) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return {
           tag: "invalid",
           message:
             "Area damage replacement Saving Throw outcomes were filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       savingThrows = fill;
       continue;
     }
@@ -2050,34 +2050,34 @@ function attackActionAreaSaveDamageReplacementFills(
       fill.holeId ===
         attackActionAreaSaveDamageReplacementDamageRollHoleId(procedureRef)
     ) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (damageRoll !== undefined) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return {
           tag: "invalid",
           message: "Area damage replacement damage roll was filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const validation = validateRolledDiceFillForDiceExpr(
         fill,
         attackActionAreaSaveDamageReplacementDamageDiceExpr(actor, unitFeature),
       );
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (validation !== null) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return { tag: "invalid", message: validation };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       damageRoll = fill;
       continue;
     }
-    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the area damage replacement replay holes.`,
     };
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return { tag: "ok", value: { savingThrows, damageRoll } };
 }
@@ -2097,102 +2097,102 @@ function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
       >;
     }
   | { readonly tag: "invalid"; readonly message: string } {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!("area" in input.savingThrows.value)) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message:
         "Area damage replacement requires table-supplied Cone or Line area facts.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const area = input.savingThrows.value.area;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (area.originAnchorId !== input.actorId) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message:
         "Area damage replacement must originate from the acting creature.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!input.state.combatants.has(area.originAnchorId)) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message:
         "Area damage replacement origin must be a combatant in this battle.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if ("kind" in area || "sleepNonSleeperFacts" in area) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: "Area damage replacement uses plain Cone or Line area facts.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const affectedTargetIds = new Set(area.affectedTargetIds);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (affectedTargetIds.size !== area.affectedTargetIds.length) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message:
         "Area damage replacement affected targets must not duplicate targets.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   for (const targetId of affectedTargetIds) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!input.state.combatants.has(targetId)) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Area damage replacement target must be a creature in this battle.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
     state: input.state,
     source: OTHER_MAGICAL_EFFECT_SOURCE,
     targetIds: [...affectedTargetIds],
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (antimagicInterdiction !== null) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return { tag: "invalid", message: antimagicInterdiction };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const outcomesByTargetId = new Map<CombatantId, BattleSavingThrowOutcome>();
   for (const outcome of input.savingThrows.value.outcomes) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!affectedTargetIds.has(outcome.targetId)) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Area damage replacement Saving Throw outcomes must match the table-supplied affected targets.",
       };
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore stop -- @preserve */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (outcomesByTargetId.has(outcome.targetId)) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Area damage replacement Saving Throw outcomes must not duplicate targets.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     outcomesByTargetId.set(outcome.targetId, outcome);
   }
   if (outcomesByTargetId.size === affectedTargetIds.size) {
@@ -2202,13 +2202,13 @@ function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
       outcomesByTargetId,
     };
   }
-  /* v8 ignore start -- Malformed Unit-feature fill set: admitted replay fills cover every table-supplied affected target. */
+  /* v8 ignore start -- @preserve -- Malformed Unit-feature fill set: admitted replay fills cover every table-supplied affected target. */
   return {
     tag: "invalid",
     message:
       "Area damage replacement Saving Throw outcomes must cover every table-supplied affected target.",
   };
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function attackActionAreaSaveDamageReplacementDamageRollHole(
@@ -2322,25 +2322,25 @@ function magicActionSaveGatedConditionFills(
       fill.holeId ===
         magicActionSaveGatedConditionSavingThrowHoleId(procedureRef)
     ) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (savingThrows !== undefined) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return {
           tag: "invalid",
           message:
             "Magic Action condition Saving Throw outcomes were filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       savingThrows = fill;
       continue;
     }
-    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Magic Action condition replay holes.`,
     };
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return { tag: "ok", value: { savingThrows } };
 }
@@ -2365,39 +2365,39 @@ function validateMagicActionSaveGatedCondition(input: {
     input.sourceProcedureRef,
     input.spellSaveDc,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.savingThrows.holeId !== hole.holeId) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message:
         "Magic Action condition Saving Throw fill must use the selected feature hole.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!("outcomes" in input.savingThrows.value)) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: "Magic Action condition uses target Saving Throw outcomes.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const maxTargets = magicActionSaveGatedConditionMaxTargets(
     input.actor,
     input.unitFeature,
   );
   const outcomes = input.savingThrows.value.outcomes;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (outcomes.length < 1 || outcomes.length > maxTargets) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Magic Action condition requires between 1 and ${maxTargets} selected targets.`,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const choices = new Set(
     magicActionSaveGatedConditionTargetChoices(
       input.state,
@@ -2407,28 +2407,28 @@ function validateMagicActionSaveGatedCondition(input: {
   );
   const seen = new Set<CombatantId>();
   for (const outcome of outcomes) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (seen.has(outcome.targetId)) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Magic Action condition Saving Throw outcomes must not duplicate targets.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     seen.add(outcome.targetId);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!choices.has(outcome.targetId)) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Magic Action condition target must be a visible creature within range.",
       };
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore stop -- @preserve */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       !magicActionSaveGatedConditionHasTargetSpatialFact(
         input.savingThrows.spatialFacts ?? [],
@@ -2438,14 +2438,14 @@ function validateMagicActionSaveGatedCondition(input: {
         input.unitFeature,
       )
     ) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Magic Action condition target requires table-supplied visibility and range evidence.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return { tag: "ok", outcomes };
 }
@@ -2566,16 +2566,16 @@ function magicActionAreaSaveDamageHealingFills(
       fill.holeId ===
         magicActionAreaSaveDamageHealingSavingThrowHoleId(procedureRef)
     ) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (savingThrows !== undefined) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return {
           tag: "invalid",
           message:
             "Magic Action damage and healing Saving Throw outcomes were filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       savingThrows = fill;
       continue;
     }
@@ -2584,15 +2584,15 @@ function magicActionAreaSaveDamageHealingFills(
       fill.holeId ===
         magicActionAreaSaveDamageHealingHealingTargetHoleId(procedureRef)
     ) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (healingTarget !== undefined) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return {
           tag: "invalid",
           message: "Magic Action damage and healing target was filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       healingTarget = fill;
       continue;
     }
@@ -2601,26 +2601,26 @@ function magicActionAreaSaveDamageHealingFills(
       fill.holeId ===
         magicActionAreaSaveDamageHealingDamageRollHoleId(procedureRef)
     ) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (damageRoll !== undefined) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return {
           tag: "invalid",
           message:
             "Magic Action damage and healing damage roll was filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const validation = validateRolledDiceFillForDiceExpr(
         fill,
         unitFeature.damageHealing.damage.amount.expr,
       );
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (validation !== null) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return { tag: "invalid", message: validation };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       damageRoll = fill;
       continue;
     }
@@ -2629,35 +2629,35 @@ function magicActionAreaSaveDamageHealingFills(
       fill.holeId ===
         magicActionAreaSaveDamageHealingHealingRollHoleId(procedureRef)
     ) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (healingRoll !== undefined) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return {
           tag: "invalid",
           message:
             "Magic Action damage and healing healing roll was filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const validation = validateRolledDiceFillForDiceExpr(
         fill,
         unitFeature.damageHealing.healing.amount.expr,
       );
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (validation !== null) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return { tag: "invalid", message: validation };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       healingRoll = fill;
       continue;
     }
-    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Magic Action damage and healing replay holes.`,
     };
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return {
     tag: "ok",
@@ -2687,77 +2687,77 @@ function validateMagicActionAreaSaveDamageHealing(input: {
   const outcomes = input.savingThrows.value.outcomes;
   const outcomesByTargetId = new Map<CombatantId, BattleSavingThrowOutcome>();
   for (const outcome of outcomes) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (outcomesByTargetId.has(outcome.targetId)) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Magic Action damage and healing target Saving Throw was filled twice.",
       };
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore stop -- @preserve */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (input.state.combatants.get(outcome.targetId) === undefined) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Magic Action damage and healing Saving Throw target must be a creature in this battle.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     outcomesByTargetId.set(outcome.targetId, outcome);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.state.combatants.get(healingTarget) === undefined) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message:
         "Magic Action damage and healing target must be a creature in this battle.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
     state: input.state,
     source: OTHER_MAGICAL_EFFECT_SOURCE,
     targetIds: [...outcomesByTargetId.keys(), healingTarget],
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (antimagicInterdiction !== null) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return { tag: "invalid", message: antimagicInterdiction };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaFact = magicActionAreaSaveDamageHealingAreaFact(
     input.savingThrows.spatialFacts ?? [],
     input.actorId,
     input.sourceProcedureRef,
     input.unitFeature,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (areaFact === undefined) {
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message:
         "Magic Action damage and healing requires caller-supplied Sphere area membership.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaTargetIds = new Set(areaFact.targetIds);
   for (const targetId of [...outcomesByTargetId.keys(), healingTarget]) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!areaTargetIds.has(targetId)) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid",
         message:
           "Magic Action damage and healing target must be in the supplied Sphere area.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return {
     tag: "ok",
@@ -2884,31 +2884,31 @@ export function resolveFailedAbilityCheckResourceBoost(
     );
   }
 
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.boostRoll < 1 ||
     input.boostRoll > unitFeature.abilityCheck.bonus.dieSize ||
     !Number.isInteger(input.boostRoll)
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Failed ability-check resource boost roll is outside its projected die range.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.abilityCheck.originalTotal >= input.abilityCheck.dc) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Failed ability-check resource boost requires an already-failed ability check.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const boostedTotal = input.abilityCheck.originalTotal + input.boostRoll;
   const boostedSucceeded = boostedTotal >= input.abilityCheck.dc;
@@ -2994,32 +2994,32 @@ export function resolveSuccessfulAbilityCheckReactionReduction(
     );
   }
 
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.abilityCheck.originalTotal < input.abilityCheck.dc) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Ability-check Reaction reduction requires an already-successful ability check.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     modifier.requiresVisibleCreature &&
     !combatantCanSee(input.state, input.reactorId, input.abilityCheck.actorId)
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Ability-check Reaction reduction requires a visible creature.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !hasReactionRollOrDamageReductionRangeFact(
       input.abilityCheck.targetSpatialFacts,
@@ -3029,29 +3029,29 @@ export function resolveSuccessfulAbilityCheckReactionReduction(
       modifier.rangeFeet,
     )
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Ability-check Reaction reduction requires the creature to be within range.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const reductionTotal = reactionReductionResourceDieRollTotal({
     reduction: modifier.reduction,
     rollTotal: input.reductionRoll,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (reductionTotal.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       `Ability-check Reaction reduction ${reductionTotal.message}`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const reducedTotal = input.abilityCheck.originalTotal - reductionTotal.value;
   const reducedSucceeded = reducedTotal >= input.abilityCheck.dc;
@@ -3106,16 +3106,16 @@ export function resolveExtraActionGrantUnitFeature(
   resource: CharacterBattleResourceState,
   unitFeature: MechanicalUnitFeature<"extraActionGrant">,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "This Unit feature does not accept battle fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   if (!resourceHasUsesRemaining(resource) || resource.usedThisTurn) {
     return invalidResult(
@@ -3189,12 +3189,12 @@ export function resolveSelfBonusActionHealingUnitFeature(
   }
 
   const healingRoll = selfBonusActionHealingRollFill(input.fills, unitFeature);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (healingRoll.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", healingRoll.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (healingRoll.value === undefined) {
     return needsHolesResult(input.state, input.subject, [
       selfBonusActionHealingRollHole(unitFeature),
@@ -3237,16 +3237,16 @@ export function resolveOngoingFeatureUnitFeature(
   resource: CharacterBattleResourceState,
   unitFeature: MechanicalUnitFeature<"ongoingFeature">,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "This Unit feature does not accept battle fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     !ongoingFeatureIsAvailable(
       input.state,
@@ -3344,25 +3344,25 @@ export function selfBonusActionHealingRollFill(
       fill.kind === "rolledDice" &&
       fill.holeId === selfBonusActionHealingRollHoleId()
     ) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (healingRoll !== undefined) {
-        /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+        /* v8 ignore next -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
         return {
           tag: "invalid",
           message: "Self-healing roll was filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       healingRoll = fill;
       continue;
     }
 
-    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- @preserve -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the self-healing replay holes.`,
     };
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 
   if (healingRoll === undefined) {

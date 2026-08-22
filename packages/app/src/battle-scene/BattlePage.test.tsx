@@ -60,6 +60,7 @@ describe("BattlePage", () => {
     expect(window.location.search).toBe("")
     fireEvent.keyDown(window, { key: "ArrowRight" })
     fireEvent.keyDown(window, { key: "ArrowLeft" })
+    fireEvent.keyDown(window, { key: "PageDown" })
 
     fireEvent.change(screen.getByRole("slider"), { target: { value: "2" } })
     expect(window.location.search).toBe("?step=2")
@@ -67,6 +68,13 @@ describe("BattlePage", () => {
     Object.defineProperty(window, "scrollY", { configurable: true, value: 500 })
     fireEvent.scroll(window)
     expect(screen.getAllByRole("button", { name: "Next" })).toHaveLength(2)
+    const stickyHeader = document.querySelector(".sticky")
+    if (!(stickyHeader instanceof HTMLElement)) throw new Error("Expected sticky battle header.")
+    const offsetHeightDescriptor = Object.getOwnPropertyDescriptor(stickyHeader, "offsetHeight")
+    Object.defineProperty(stickyHeader, "offsetHeight", { configurable: true, value: undefined })
+    fireEvent.scroll(window)
+    if (offsetHeightDescriptor === undefined) delete (stickyHeader as { offsetHeight?: number }).offsetHeight
+    else Object.defineProperty(stickyHeader, "offsetHeight", offsetHeightDescriptor)
 
     fireEvent.click(screen.getAllByRole("button", { name: "Play" })[0])
     act(() => {
@@ -75,6 +83,8 @@ describe("BattlePage", () => {
     expect(window.location.search).toBe("?step=3")
     fireEvent.click(screen.getAllByRole("button", { name: "Pause" })[0])
     expect(consoleErrorSpy).not.toHaveBeenCalled()
+    fireEvent.click(screen.getAllByRole("button", { name: "Reset" })[0])
+    expect(window.location.search).toBe("")
     vi.useRealTimers()
   })
 

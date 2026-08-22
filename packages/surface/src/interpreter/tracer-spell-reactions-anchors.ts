@@ -441,12 +441,12 @@ export function traceAnchorTarget(
         label: `area\n${a.shape.kind} ≤ ${a.shape.maxSideFeet} ft side\nrange ${describeRange(range)}`,
       });
       return id;
-    /* v8 ignore start -- AnchorTarget is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- AnchorTarget is a decoded tagged union exhausted above */
     default: {
       const _: never = a;
       throw new Error(`unhandled anchor target: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -458,12 +458,12 @@ export function describeAnchoredEvent(e: AnchoredEvent): string {
       return "creature enters area";
     case "caster_defined_visual_or_audible_condition":
       return `caster-defined visual/audible condition\nwithin ${e.maxDistanceFeet} ft of anchor`;
-    /* v8 ignore start -- AnchoredEvent is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- AnchoredEvent is a decoded tagged union exhausted above */
     default: {
       const _: never = e;
       throw new Error(`unhandled anchored event: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -471,12 +471,12 @@ export function describeAnchoredFilter(f: AnchoredFilter): string {
   switch (f.kind) {
     case "creature_exemption_list":
       return "creature exemption list\n(chosen at cast)";
-    /* v8 ignore start -- AnchoredFilter currently has one decoded tag */
+    /* v8 ignore start -- @preserve -- AnchoredFilter currently has one decoded tag */
     default: {
       const _: never = f.kind;
       throw new Error(`unhandled anchored filter: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -499,11 +499,11 @@ export function describeAnchoredSignal(s: AnchoredSignal): string {
         spokenMessageMouthPlacementLabels[s.mouthPlacement],
         spokenMessageRepetitionLabels[s.repetition],
       ].join("\n");
-    /* v8 ignore start -- AnchoredSignal is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- AnchoredSignal is a decoded tagged union exhausted above */
     default: {
       const _: never = s;
       throw new Error(`unhandled anchored signal: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }

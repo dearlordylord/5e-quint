@@ -51,10 +51,10 @@ export function castArcaneHand(input: {
         sheet: input.sheet,
         unitLibrary: input.unitLibrary,
       });
-      /* v8 ignore start -- Malformed sheet/catalog correlation: an admitted caster build must still yield its hit-point maximum. */
+      /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: an admitted caster build must still yield its hit-point maximum. */
       if (Either.isLeft(hitPointMaximum))
         return Either.left(hitPointMaximum.left);
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       return arcaneHandInvocationFromSpell({
         spell: spell,
         space: input.space,
@@ -72,7 +72,7 @@ function arcaneHandInvocationFromSpell(input: {
   readonly hitPointMaximum: HpType;
 }): Either.Either<CharacterSheetArcaneHandInvocation, CharacterSheetIssue> {
   const spell = input.spell;
-  /* v8 ignore start -- The catalog record failed the exact authored level-5 Arcane Hand support profile required by this projector. */
+  /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Arcane Hand support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -91,29 +91,29 @@ function arcaneHandInvocationFromSpell(input: {
       "Arcane Hand requires the supported level-5 magical hand profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const directPhase = spell.mechanics.phases.find(
     (phase) =>
       phase.kind === "direct" &&
       phase.attachment.kind === "location" &&
-      /* v8 ignore next -- Unsupported authored Arcane Hand data: the admitted direct phase requires exactly one explicit no-op effect. */
+      /* v8 ignore next -- @preserve -- Unsupported authored Arcane Hand data: the admitted direct phase requires exactly one explicit no-op effect. */
       (phase.effects ?? []).length === 1 &&
-      /* v8 ignore next -- Unsupported authored Arcane Hand data: omission of that required effect was rejected by the same profile predicate. */
+      /* v8 ignore next -- @preserve -- Unsupported authored Arcane Hand data: omission of that required effect was rejected by the same profile predicate. */
       (phase.effects ?? [])[0]?.kind === "none",
   );
-  /* v8 ignore start -- The catalog record has Arcane Hand facts but no supported visible-space phase. */
+  /* v8 ignore start -- @preserve -- The catalog record has Arcane Hand facts but no supported visible-space phase. */
   if (directPhase === undefined) {
     return characterSheetIssue(
       "Arcane Hand requires the supported visible unoccupied space profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
-  /* v8 ignore start -- The exact one-minute duration is always accepted by the elapsed-time parser. */
+  /* v8 ignore start -- @preserve -- The exact one-minute duration is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Arcane Hand requires a supported duration.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     tag: "arcaneHand",

@@ -671,11 +671,11 @@ export function parseCharacterBuild(
     value.spellcasting === undefined
       ? undefined
       : parseStoredSpellcasting(value.spellcasting);
-  /* v8 ignore start -- Malformed stored build: the optional spellcasting object failed its boundary parser. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: the optional spellcasting object failed its boundary parser. */
   if (spellcasting !== undefined && Either.isLeft(spellcasting)) {
     return Either.left(spellcasting.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const equipment = parseStoredEquipment(value.equipment);
   if (Either.isLeft(equipment)) return Either.left(equipment.left);
 
@@ -757,13 +757,13 @@ function parseStoredSpeciesChoiceFacts(
   const source = storedDraconicAncestryDamageTypeSource(speciesId, unitLibrary);
   if (Either.isLeft(source)) return Either.left(source.left);
   if (value === undefined) {
-    /* v8 ignore start -- Malformed stored build: a species with an authored Draconic Ancestry source omitted its required selected ancestry fact. */
+    /* v8 ignore start -- @preserve -- Malformed stored build: a species with an authored Draconic Ancestry source omitted its required selected ancestry fact. */
     return source.right === undefined
       ? Either.right(undefined)
       : characterSheetIssue(
           "Character Build requires selected Draconic Ancestry fact for species with a Draconic Ancestry source.",
         );
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   if (!isRecord(value)) {
     return characterSheetIssue(
@@ -964,7 +964,7 @@ function storedBookOfShadowsSelectionIssue(
   if (sources.length === 0) {
     return Either.right(undefined);
   }
-  /* v8 ignore start -- Malformed stored build: Book of Shadows access disagrees with its single admitted Pact-of-the-Tome Warlock source or selected spell roster. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: Book of Shadows access disagrees with its single admitted Pact-of-the-Tome Warlock source or selected spell roster. */
   if (sources.length !== 1) {
     return characterSheetIssue(
       "Character Build supports one Book of Shadows Spell Access source.",
@@ -1056,7 +1056,7 @@ function storedBookOfShadowsSelectionIssue(
       "Character Build Book of Shadows Ritual selections must be level-1 ritual-tagged Spell Definitions.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right(undefined);
 }
 
@@ -1073,11 +1073,11 @@ function hasSelectedWarlockEldritchInvocation(
       return false;
     }
     const source = unitLibrary.getUnit(feature.selectedFromUnitId);
-    /* v8 ignore start -- Malformed stored build: a selected Pact of the Tome invocation references a missing or non-feature source Unit. */
+    /* v8 ignore start -- @preserve -- Malformed stored build: a selected Pact of the Tome invocation references a missing or non-feature source Unit. */
     if (Option.isNone(source) || source.value.kind !== "class_feature") {
       return false;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const mechanics = source.value.mechanics;
     return (
       mechanics.family === "feature_choice" &&
@@ -1095,7 +1095,7 @@ function spellRecordsForIds(
   const spells: SpellRecord[] = [];
   for (const spellId of spellIds) {
     const spell = getRequiredUnit(unitLibrary, spellId);
-    /* v8 ignore start -- Malformed stored build: an admitted Book of Shadows selection references a missing or non-spell Unit. */
+    /* v8 ignore start -- @preserve -- Malformed stored build: an admitted Book of Shadows selection references a missing or non-spell Unit. */
     if (Either.isLeft(spell)) {
       return Either.left(spell.left);
     }
@@ -1104,7 +1104,7 @@ function spellRecordsForIds(
         `Character Build Book of Shadows selection must reference Spell Definitions: ${spellId}`,
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     spells.push(spell.right);
   }
   return Either.right(spells);
@@ -1126,11 +1126,11 @@ function parseStoredOriginLanguages(
   ) {
     return characterSheetIssue("Character Build requires origin languages.");
   }
-  /* v8 ignore start -- Malformed stored build: origin-language data passed structural checks but failed the narrowed starting-language tuple guard. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: origin-language data passed structural checks but failed the narrowed starting-language tuple guard. */
   return isCharacterStartingLanguages(value)
     ? Either.right(value)
     : characterSheetIssue("Character Build requires origin languages.");
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function parseStoredClassFeatureLanguages(input: {
@@ -1143,13 +1143,13 @@ function parseStoredClassFeatureLanguages(input: {
   CharacterSheetIssue
 > {
   const { value, originLanguages, build, unitLibrary } = input;
-  /* v8 ignore start -- Malformed stored build: class-feature language state is absent instead of the required list. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: class-feature language state is absent instead of the required list. */
   if (!Array.isArray(value)) {
     return characterSheetIssue(
       "Character Build requires class-feature languages.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const knownLanguages = new Set<StoredClassFeatureLanguage>(originLanguages);
   const ownedClassFeatureUnitIds = new Set(
@@ -1159,11 +1159,11 @@ function parseStoredClassFeatureLanguages(input: {
     ownedClassFeatureUnitIds,
     unitLibrary,
   });
-  /* v8 ignore start -- Malformed catalog correlation: an owned class-feature language source cannot be projected from its installed Unit facts. */
+  /* v8 ignore start -- @preserve -- Malformed catalog correlation: an owned class-feature language source cannot be projected from its installed Unit facts. */
   if (Either.isLeft(expectedProjection)) {
     return Either.left(expectedProjection.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const choiceCountsBySourceUnitId = new Map<UnitRecord["id"], number>();
   const fixedLanguagesBySourceUnitId = new Map<
     UnitRecord["id"],
@@ -1171,7 +1171,7 @@ function parseStoredClassFeatureLanguages(input: {
   >();
   const classFeatureLanguages: StoredClassFeatureLanguageFact[] = [];
   for (const item of value) {
-    /* v8 ignore start -- Malformed stored build: a class-feature language entry must match one of the two exact typed language-fact shapes. */
+    /* v8 ignore start -- @preserve -- Malformed stored build: a class-feature language entry must match one of the two exact typed language-fact shapes. */
     if (
       !isRecord(item) ||
       (item.kind !== "classFeatureLanguageGrant" &&
@@ -1182,7 +1182,7 @@ function parseStoredClassFeatureLanguages(input: {
       return characterSheetIssue(
         "Character Build requires class-feature language facts.",
       );
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
     }
     const languageFact: StoredClassFeatureLanguageFact = {
       kind: item.kind,
@@ -1195,13 +1195,13 @@ function parseStoredClassFeatureLanguages(input: {
         `Character Build class-feature language source Unit ${languageFact.sourceUnitId} is not owned by the build.`,
       );
     }
-    /* v8 ignore start -- Malformed stored build: a class-feature language duplicates an already retained language. */
+    /* v8 ignore start -- @preserve -- Malformed stored build: a class-feature language duplicates an already retained language. */
     if (knownLanguages.has(languageFact.language)) {
       return characterSheetIssue(
         `Duplicate Character Build language ${languageFact.language}.`,
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (
       languageFact.kind === "classFeatureLanguageChoice" &&
       expectedProjection.right.fixedLanguages.has(languageFact.language)
@@ -1214,11 +1214,11 @@ function parseStoredClassFeatureLanguages(input: {
       languageFact,
       unitLibrary,
     });
-    /* v8 ignore start -- Malformed stored build: a retained class-feature language does not match its installed source Unit grant. */
+    /* v8 ignore start -- @preserve -- Malformed stored build: a retained class-feature language does not match its installed source Unit grant. */
     if (Either.isLeft(sourceMatch)) {
       return Either.left(sourceMatch.left);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (languageFact.kind === "classFeatureLanguageChoice") {
       choiceCountsBySourceUnitId.set(
         languageFact.sourceUnitId,
@@ -1272,10 +1272,10 @@ function storedClassFeatureLanguageSourceUnitIds(
 ): readonly UnitRecord["id"][] {
   return progressionClassUnitIds(build.progression).flatMap((classUnitId) => {
     const unit = unitLibrary.getUnit(classUnitId);
-    /* v8 ignore next -- Malformed build/catalog correlation: every class id admitted into stored progression must resolve in its retained Unit catalog. */
+    /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: every class id admitted into stored progression must resolve in its retained Unit catalog. */
     if (Option.isNone(unit)) return [];
     const facts = readClassCreationFacts(unit.value);
-    /* v8 ignore next -- Unsupported authored data: stored progression admits only class Units with readable creation facts. */
+    /* v8 ignore next -- @preserve -- Unsupported authored data: stored progression admits only class Units with readable creation facts. */
     if (facts.tag !== "readable") return [];
     return facts.value.featureGrants
       .filter(
@@ -1291,7 +1291,7 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<void, CharacterSheetIssue> {
   const sourceUnit = input.unitLibrary.getUnit(input.languageFact.sourceUnitId);
-  /* v8 ignore start -- Malformed stored build: a class-feature language fact must reference its admitted passive class-feature Unit. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: a class-feature language fact must reference its admitted passive class-feature Unit. */
   if (
     Option.isNone(sourceUnit) ||
     sourceUnit.value.kind !== "class_feature" ||
@@ -1300,18 +1300,18 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
     return characterSheetIssue(
       `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
     );
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 
   if (input.languageFact.kind === "classFeatureLanguageChoice") {
-    /* v8 ignore start -- Malformed stored build: a choice language fact references a source with no language-choice grant. */
+    /* v8 ignore start -- @preserve -- Malformed stored build: a choice language fact references a source with no language-choice grant. */
     return storedClassFeatureLanguageChoiceGrantCount(sourceUnit.value) ===
       undefined
       ? characterSheetIssue(
           `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
         )
       : Either.right(undefined);
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 
   const matches = sourceUnit.value.mechanics.grants.some((grant) => {
@@ -1321,13 +1321,13 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
       Either.isRight(language) && language.right === input.languageFact.language
     );
   });
-  /* v8 ignore start -- Malformed stored build: a fixed language fact is absent from the installed source Unit's fixed grants. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: a fixed language fact is absent from the installed source Unit's fixed grants. */
   return matches
     ? Either.right(undefined)
     : characterSheetIssue(
         `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
       );
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function storedClassFeatureLanguageProjection(input: {
@@ -1358,13 +1358,13 @@ function storedClassFeatureLanguageProjection(input: {
     for (const grant of sourceUnit.value.mechanics.grants) {
       if (grant.kind !== "grant_language") continue;
       const language = languageFromSurfaceLanguageId(grant.languageId);
-      /* v8 ignore start -- Malformed installed content: a supported fixed-language grant carries an id outside the shared language codec. */
+      /* v8 ignore start -- @preserve -- Malformed installed content: a supported fixed-language grant carries an id outside the shared language codec. */
       if (Either.isLeft(language)) {
         return characterSheetIssue(
           `Unsupported class-feature language id ${grant.languageId} on Unit ${sourceUnitId}.`,
         );
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const sourceLanguages =
         fixedLanguagesBySourceUnitId.get(sourceUnitId) ??
         new Set<StoredClassFeatureLanguage>();
@@ -1383,13 +1383,13 @@ function storedClassFeatureLanguageProjection(input: {
 function storedClassFeatureLanguageChoiceGrantCount(
   sourceUnit: UnitRecord,
 ): number | undefined {
-  /* v8 ignore start -- Unsupported stored language source: only admitted passive class-feature Units can contribute a language-choice count. */
+  /* v8 ignore start -- @preserve -- Unsupported stored language source: only admitted passive class-feature Units can contribute a language-choice count. */
   if (
     sourceUnit.kind !== "class_feature" ||
     sourceUnit.mechanics.family !== "passive"
   ) {
     return undefined;
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   const choiceGrantCount = sourceUnit.mechanics.grants.reduce(
     (count, grant) =>
@@ -1418,11 +1418,11 @@ function parseStoredAlignment(
 function parseStoredAbilityScores(
   value: unknown,
 ): Either.Either<CharacterBuild["abilityScores"], CharacterSheetIssue> {
-  /* v8 ignore start -- Malformed stored build: ability scores are not represented by the required record. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: ability scores are not represented by the required record. */
   if (!isRecord(value)) {
     return characterSheetIssue("Character Build requires ability scores.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const scores = Object.fromEntries(
     ABILITIES.map((ability) => [ability, value[ability]]),
   );
@@ -1553,13 +1553,13 @@ function parseStoredFeatures(
       typeof feature.optionId === "string"
     ) {
       const optionId = sorcererMetamagicOptionId(feature.optionId);
-      /* v8 ignore start -- Malformed stored build: a selected Metamagic option id is outside the installed closed option roster. */
+      /* v8 ignore start -- @preserve -- Malformed stored build: a selected Metamagic option id is outside the installed closed option roster. */
       if (Either.isLeft(optionId)) {
         return characterSheetIssue(
           "Character Build Sorcerer Metamagic option selection is invalid.",
         );
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       features.push({
         kind: "selectedSorcererMetamagicOption" as const,
         optionId: optionId.right,
@@ -1591,7 +1591,7 @@ function parseStoredEldritchInvocationSelection(
   >["selection"],
   CharacterSheetIssue
 > {
-  /* v8 ignore start -- Malformed stored build: an Eldritch Invocation selection omits its string invocation id or names no installed option. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: an Eldritch Invocation selection omits its string invocation id or names no installed option. */
   if (typeof value.invocationId !== "string") {
     return characterSheetIssue(
       "Character Build Eldritch Invocation selection is invalid.",
@@ -1604,7 +1604,7 @@ function parseStoredEldritchInvocationSelection(
       "Character Build Eldritch Invocation selection is invalid.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (option.repeatability.kind === "once") {
     return value.kind === "nonRepeatable"
       ? Either.right({ kind: "nonRepeatable", invocationId })
@@ -1647,13 +1647,13 @@ function parseStoredEldritchInvocationRepeatableChoice(
   CharacterBuildEldritchInvocationRepeatableChoice,
   CharacterSheetIssue
 > {
-  /* v8 ignore start -- Malformed stored build: a repeatable invocation choice is not one of the two typed choice records. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: a repeatable invocation choice is not one of the two typed choice records. */
   if (!isRecord(value) || typeof value.kind !== "string") {
     return characterSheetIssue(
       "Character Build Eldritch Invocation repeatable choice is invalid.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     value.kind === "knownWarlockCantrip" &&
     typeof value.cantripId === "string"
@@ -1707,7 +1707,7 @@ function parseStoredAbilityCheckBonusFeature(input: {
 function parseStoredSpellcasting(
   value: unknown,
 ): Either.Either<CharacterBuildSpellcasting, CharacterSheetIssue> {
-  /* v8 ignore start -- Malformed stored build: spellcasting omits its required nonempty source list. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: spellcasting omits its required nonempty source list. */
   if (
     !isRecord(value) ||
     !Array.isArray(value.sources) ||
@@ -1717,25 +1717,25 @@ function parseStoredSpellcasting(
       "Character Build spellcasting requires sources.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const sources = value.sources.map(parseStoredSpellcastingSource);
   const firstIssue = sources.find(Either.isLeft);
-  /* v8 ignore next -- Malformed stored build: every raw spellcasting source is parsed before a CharacterBuildSpellcasting value is constructed. */
+  /* v8 ignore next -- @preserve -- Malformed stored build: every raw spellcasting source is parsed before a CharacterBuildSpellcasting value is constructed. */
   if (firstIssue !== undefined) return Either.left(firstIssue.left);
   const slotPools = parseStoredSpellSlotPools(value.slotPools);
-  /* v8 ignore next -- Malformed stored build: raw spell-slot pools are parsed before a CharacterBuildSpellcasting value is constructed. */
+  /* v8 ignore next -- @preserve -- Malformed stored build: raw spell-slot pools are parsed before a CharacterBuildSpellcasting value is constructed. */
   if (Either.isLeft(slotPools)) return Either.left(slotPools.left);
   const parsedSources = sources
     .filter(Either.isRight)
     .map((source) => source.right);
   const [firstSource, ...remainingSources] = parsedSources;
-  /* v8 ignore start -- The nonempty source-list check above makes an absent first parsed source an internal impossibility. */
+  /* v8 ignore start -- @preserve -- The nonempty source-list check above makes an absent first parsed source an internal impossibility. */
   if (firstSource === undefined) {
     return characterSheetIssue(
       "Character Build spellcasting requires sources.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({
     sources: [firstSource, ...remainingSources],
     slotPools: slotPools.right,
@@ -1745,7 +1745,7 @@ function parseStoredSpellcasting(
 function parseStoredSpellcastingSource(
   value: unknown,
 ): Either.Either<CharacterBuildSpellcastingSource, CharacterSheetIssue> {
-  /* v8 ignore start -- Malformed stored build: a spellcasting source fails its required scalar and list field shape. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: a spellcasting source fails its required scalar and list field shape. */
   if (
     !isRecord(value) ||
     typeof value.sourceUnitId !== "string" ||
@@ -1759,16 +1759,16 @@ function parseStoredSpellcastingSource(
       "Character Build spellcasting source is invalid.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const bookOfShadows =
     value.bookOfShadows === undefined
       ? undefined
       : parseStoredBookOfShadowsSpellAccess(value.bookOfShadows);
-  /* v8 ignore start -- Malformed stored build: the optional Book of Shadows access object failed its boundary parser. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: the optional Book of Shadows access object failed its boundary parser. */
   if (bookOfShadows !== undefined && Either.isLeft(bookOfShadows)) {
     return Either.left(bookOfShadows.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({
     sourceUnitId: authoredUnitId(value.sourceUnitId),
     spellcastingAbility: value.spellcastingAbility,
@@ -1786,7 +1786,7 @@ function parseStoredSpellcastingSource(
 function parseStoredBookOfShadowsSpellAccess(
   value: unknown,
 ): Either.Either<CharacterBuildBookOfShadowsSpellAccess, CharacterSheetIssue> {
-  /* v8 ignore start -- Malformed stored build: Book of Shadows access fails its exact tagged-record shape. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: Book of Shadows access fails its exact tagged-record shape. */
   if (
     !isRecord(value) ||
     value.tag !== "bookOfShadows" ||
@@ -1796,21 +1796,21 @@ function parseStoredBookOfShadowsSpellAccess(
       "Character Build Book of Shadows Spell Access is invalid.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const cantrips = parseStoredBookOfShadowsCantripIds(value.cantrips);
-  /* v8 ignore start -- Malformed stored build: the Book of Shadows cantrip roster failed its exact-cardinality parser. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: the Book of Shadows cantrip roster failed its exact-cardinality parser. */
   if (Either.isLeft(cantrips)) {
     return Either.left(cantrips.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const ritualSpells = parseStoredBookOfShadowsRitualSpellIds(
     value.ritualSpells,
   );
-  /* v8 ignore start -- Malformed stored build: the Book of Shadows ritual roster failed its exact-cardinality parser. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: the Book of Shadows ritual roster failed its exact-cardinality parser. */
   if (Either.isLeft(ritualSpells)) {
     return Either.left(ritualSpells.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({
     tag: value.tag,
     cantrips: cantrips.right,
@@ -1850,7 +1850,7 @@ function parseStoredBookOfShadowsCantripIds(
   CharacterBuildBookOfShadowsSpellAccess["cantrips"],
   CharacterSheetIssue
 > {
-  /* v8 ignore start -- Malformed stored build: Book of Shadows cantrips are not a string list of exactly three ids. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: Book of Shadows cantrips are not a string list of exactly three ids. */
   if (!isStringArray(value)) {
     return characterSheetIssue(
       "Character Build Book of Shadows cantrips are invalid.",
@@ -1867,7 +1867,7 @@ function parseStoredBookOfShadowsCantripIds(
       "Character Build Book of Shadows requires exactly three cantrips.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right([
     authoredUnitId(first),
     authoredUnitId(second),
@@ -1881,7 +1881,7 @@ function parseStoredBookOfShadowsRitualSpellIds(
   CharacterBuildBookOfShadowsSpellAccess["ritualSpells"],
   CharacterSheetIssue
 > {
-  /* v8 ignore start -- Malformed stored build: Book of Shadows rituals are not a string list of exactly two ids. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: Book of Shadows rituals are not a string list of exactly two ids. */
   if (!isStringArray(value)) {
     return characterSheetIssue(
       "Character Build Book of Shadows Ritual spells are invalid.",
@@ -1893,38 +1893,38 @@ function parseStoredBookOfShadowsRitualSpellIds(
       "Character Build Book of Shadows requires exactly two Ritual spells.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right([authoredUnitId(first), authoredUnitId(second)]);
 }
 
 function parseStoredSpellSlotPools(
   value: unknown,
 ): Either.Either<CharacterBuildSpellcasting["slotPools"], CharacterSheetIssue> {
-  /* v8 ignore start -- Malformed stored build: spellcasting slot pools are absent or not a record. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: spellcasting slot pools are absent or not a record. */
   if (!isRecord(value)) {
     return characterSheetIssue(
       "Character Build spellcasting requires slot pools.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spellcasting =
     value.spellcasting === undefined
       ? undefined
       : parseStoredSpellcastingSlotPool(value.spellcasting);
-  /* v8 ignore start -- Malformed stored build: the optional ordinary Spell Slot pool failed its boundary parser. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: the optional ordinary Spell Slot pool failed its boundary parser. */
   if (spellcasting !== undefined && Either.isLeft(spellcasting)) {
     return Either.left(spellcasting.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const pactMagic =
     value.pactMagic === undefined
       ? undefined
       : parseStoredPactMagicSlotPool(value.pactMagic);
-  /* v8 ignore start -- Malformed stored build: the optional Pact Magic pool failed its boundary parser. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: the optional Pact Magic pool failed its boundary parser. */
   if (pactMagic !== undefined && Either.isLeft(pactMagic)) {
     return Either.left(pactMagic.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({
     ...(spellcasting === undefined ? {} : { spellcasting: spellcasting.right }),
     ...(pactMagic === undefined ? {} : { pactMagic: pactMagic.right }),
@@ -1937,7 +1937,7 @@ function parseStoredSpellcastingSlotPool(
   NonNullable<CharacterBuildSpellcasting["slotPools"]["spellcasting"]>,
   CharacterSheetIssue
 > {
-  /* v8 ignore start -- Malformed stored build: an ordinary Spell Slot pool or one of its capacity rows fails its typed shape. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: an ordinary Spell Slot pool or one of its capacity rows fails its typed shape. */
   if (
     !isRecord(value) ||
     value.kind !== "spellcasting" ||
@@ -1958,7 +1958,7 @@ function parseStoredSpellcastingSlotPool(
         "Character Build Spell Slot capacity is invalid.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     slots.push({ spellLevel: slot.spellLevel, count: slot.count });
   }
   return Either.right({ kind: "spellcasting", slots });
@@ -1970,7 +1970,7 @@ function parseStoredPactMagicSlotPool(
   NonNullable<CharacterBuildSpellcasting["slotPools"]["pactMagic"]>,
   CharacterSheetIssue
 > {
-  /* v8 ignore start -- Malformed stored build: the Pact Magic pool fails its tagged positive-integer shape. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: the Pact Magic pool fails its tagged positive-integer shape. */
   if (
     !isRecord(value) ||
     value.kind !== "pactMagic" ||
@@ -1981,7 +1981,7 @@ function parseStoredPactMagicSlotPool(
       "Character Build Pact Magic slot pool is invalid.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({
     kind: "pactMagic",
     slotLevel: value.slotLevel,
@@ -2009,7 +2009,7 @@ function parseStoredEquipment(
   const owned = parseStoredOwnedEquipment(value.owned);
   if (Either.isLeft(owned)) return Either.left(owned.left);
   const loadout = parseStoredLoadout(value.loadout);
-  /* v8 ignore next -- Malformed stored build: raw loadout fields are parsed before CharacterBuildEquipment is constructed. */
+  /* v8 ignore next -- @preserve -- Malformed stored build: raw loadout fields are parsed before CharacterBuildEquipment is constructed. */
   if (Either.isLeft(loadout)) return Either.left(loadout.left);
   const ownedItemIds = new Set(
     owned.right.flatMap((item) =>
@@ -2198,16 +2198,16 @@ function parseStoredLoadout(
   value: Readonly<Record<string, unknown>>,
 ): Either.Either<CharacterBuildEquipment["loadout"], CharacterSheetIssue> {
   const armor = parseOptionalEquipmentItemId(value.armor, "armor");
-  /* v8 ignore next -- Malformed stored loadout: a present armor item id must parse at this raw-storage boundary. */
+  /* v8 ignore next -- @preserve -- Malformed stored loadout: a present armor item id must parse at this raw-storage boundary. */
   if (Either.isLeft(armor)) return Either.left(armor.left);
   const shield = parseOptionalEquipmentItemId(value.shield, "shield");
-  /* v8 ignore next -- Malformed stored loadout: a present shield item id must parse at this raw-storage boundary. */
+  /* v8 ignore next -- @preserve -- Malformed stored loadout: a present shield item id must parse at this raw-storage boundary. */
   if (Either.isLeft(shield)) return Either.left(shield.left);
   const weapon = parseStoredMainWeapon(value.weapon);
-  /* v8 ignore next -- Malformed stored loadout: a present main-weapon record must parse at this raw-storage boundary. */
+  /* v8 ignore next -- @preserve -- Malformed stored loadout: a present main-weapon record must parse at this raw-storage boundary. */
   if (Either.isLeft(weapon)) return Either.left(weapon.left);
   const offHandWeapon = parseStoredOffHandWeapon(value.offHandWeapon);
-  /* v8 ignore next -- Malformed stored loadout: a present off-hand weapon record must parse at this raw-storage boundary. */
+  /* v8 ignore next -- @preserve -- Malformed stored loadout: a present off-hand weapon record must parse at this raw-storage boundary. */
   if (Either.isLeft(offHandWeapon)) return Either.left(offHandWeapon.left);
   return Either.right({
     ...(armor.right === undefined ? {} : { armor: armor.right }),
@@ -2226,7 +2226,7 @@ function parseStoredMainWeapon(
   CharacterSheetIssue
 > {
   if (value === undefined) return Either.right(undefined);
-  /* v8 ignore start -- Malformed stored build: a main-hand weapon loadout is not a one-handed item record with a valid main-slot item id. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: a main-hand weapon loadout is not a one-handed item record with a valid main-slot item id. */
   if (!isRecord(value) || value.grip !== "one_handed") {
     return characterSheetIssue("Character Build weapon loadout is invalid.");
   }
@@ -2235,7 +2235,7 @@ function parseStoredMainWeapon(
   if (itemId.right === undefined) {
     return characterSheetIssue("Character Build weapon loadout is invalid.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const parsedItemId = itemId.right as NonNullable<
     CharacterBuildEquipment["loadout"]["weapon"]
   >["itemId"];
@@ -2252,7 +2252,7 @@ function parseStoredOffHandWeapon(
   CharacterSheetIssue
 > {
   if (value === undefined) return Either.right(undefined);
-  /* v8 ignore start -- Malformed stored build: an off-hand weapon loadout is not an item record with a valid off-slot item id. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: an off-hand weapon loadout is not an item record with a valid off-slot item id. */
   if (!isRecord(value)) {
     return characterSheetIssue(
       "Character Build off-hand weapon loadout is invalid.",
@@ -2265,7 +2265,7 @@ function parseStoredOffHandWeapon(
       "Character Build off-hand weapon loadout is invalid.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({
     itemId: itemId.right as NonNullable<
       CharacterBuildEquipment["loadout"]["offHandWeapon"]
@@ -2278,7 +2278,7 @@ function parseOptionalEquipmentItemId(
   slot: "armor" | "shield" | "main" | "off",
 ): Either.Either<CharacterEquipmentItemId | undefined, CharacterSheetIssue> {
   if (value === undefined) return Either.right(undefined);
-  /* v8 ignore start -- Malformed stored build: an equipment item id is non-string, unparseable, or belongs to a different loadout slot. */
+  /* v8 ignore start -- @preserve -- Malformed stored build: an equipment item id is non-string, unparseable, or belongs to a different loadout slot. */
   if (typeof value !== "string") {
     return characterSheetIssue("Character Build equipment item id is invalid.");
   }
@@ -2288,7 +2288,7 @@ function parseOptionalEquipmentItemId(
       "Character Build equipment item slot is invalid.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right(characterEquipmentItemId(parsed.right));
 }
 

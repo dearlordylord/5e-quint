@@ -7508,7 +7508,7 @@ function serializedBattleActOwnsBoundProcedure(
       Match.discriminatorsExhaustive("kind")({
         spellInvocation: (procedure) =>
           procedure.executionFacts.kind === "bonusActionDashSpell",
-        /* v8 ignore next -- Malformed snapshot defense: an explicitly unavailable Spell Invocation can never own an executable Bonus Action standard-action subject. */
+        /* v8 ignore next -- @preserve -- Malformed snapshot defense: an explicitly unavailable Spell Invocation can never own an executable Bonus Action standard-action subject. */
         unavailableSpellInvocation: () => false,
         unitFeature: (procedure) => {
           const executionKind = procedure.execution.kind;

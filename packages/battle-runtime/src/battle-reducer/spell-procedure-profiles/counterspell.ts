@@ -150,11 +150,11 @@ function counterspellSpellProjection(
   };
 }
 
-/* v8 ignore start -- Reaction-only profile: Counterspell candidates are admitted from matching spell-cast interrupt frames, so ordinary turn discovery must return no acts. */
+/* v8 ignore start -- @preserve -- Reaction-only profile: Counterspell candidates are admitted from matching spell-cast interrupt frames, so ordinary turn discovery must return no acts. */
 function discoverCounterspellCastAct(): readonly BattleActDiscoveryCandidate[] {
   return [];
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function resolveCounterspell(
   input: CounterspellResolveInput,
@@ -173,7 +173,7 @@ function resolveCounterspell(
       "Counterspell requires a matching spell-cast Reaction trigger.",
     );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       spellSavingThrowOutcomeHoleId(input.invocation),
@@ -185,7 +185,7 @@ function resolveCounterspell(
       "Counterspell targets the caster from the spell-cast trigger and uses only that caster's Constitution Saving Throw when needed.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const savingThrowHole = spellSavingThrowOutcomeHole(
     input.input.state,
@@ -204,13 +204,13 @@ function resolveCounterspell(
     input.input.subject.reactorId,
     input.input.frame.casterId,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation !== null) {
     return invalidResult(input.input.state, "invalidFill", validation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const outcome = input.fillSet.savingThrowOutcomes.outcomes[0];
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (outcome === undefined) {
     return invalidResult(
       input.input.state,
@@ -218,7 +218,7 @@ function resolveCounterspell(
       "Counterspell requires the triggering caster's Saving Throw outcome.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const triggeringCasterSaveSucceeded = outcome.succeeded;
 
   const castingState = stateAfterSpellCastDeclared({
@@ -306,7 +306,7 @@ function stateAfterCounteredSpellCast(
     interruptFrame?.kind === "interruptCheckpoint"
       ? interruptFrame.frame
       : null;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (spellCastCheckpoint?.trigger !== "spellCast") {
     return {
       tag: "invalid",
@@ -314,7 +314,7 @@ function stateAfterCounteredSpellCast(
         "Counterspell can only end the current spell-cast interrupt checkpoint.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const committedState = commitCounteredSpellPayment(state, frame);
   if (Either.isLeft(committedState)) {
     return { tag: "invalid", message: committedState.left };
@@ -330,24 +330,24 @@ function stateAfterCounteredSpellCast(
     releasedResources,
     frame,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (Either.isLeft(wastedResources)) {
     return {
       tag: "invalid",
       message: wastedResources.left,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const metamagicSpend = spendCounteredSpellMetamagic(
     committedState.right,
     wastedResources.right,
     frame,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (Either.isLeft(metamagicSpend)) {
     return { tag: "invalid", message: metamagicSpend.left };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
     state: {

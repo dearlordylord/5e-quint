@@ -360,12 +360,12 @@ export function traceEffectAtomScaling(
       return;
     case "planar_entity_answers":
       return;
-    /* v8 ignore start -- AreaDirectEffectAtom is decoder-narrowed to the effect tags handled above */
+    /* v8 ignore start -- @preserve -- AreaDirectEffectAtom is decoder-narrowed to the effect tags handled above */
     default: {
       const _exhaustive: never = e;
       throw new Error(`unhandled effect atom scaling: ${String(_exhaustive)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -391,14 +391,14 @@ export function traceUsageLimit(
       label: expectedLabel,
     });
   } else {
-    /* v8 ignore start -- the Surface usage-limit group invariant requires one kind per group; a conflicting label is malformed group composition */
+    /* v8 ignore start -- @preserve -- the Surface usage-limit group invariant requires one kind per group; a conflicting label is malformed group composition */
     if (existingNode.label !== expectedLabel) {
       throw new Error(
         `Usage limit group "${limit.limitGroup}" has inconsistent kinds: ` +
           `existing "${existingNode.label}", new "${expectedLabel}"`,
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   edges.push({ from: hostId, to: fenceId, relation });
   return fenceId;
@@ -483,11 +483,11 @@ export function describeUsageLimit(limit: UsageLimit): string {
       return "once per turn";
     case "once_per_round":
       return "once per round";
-    /* v8 ignore start -- UsageLimit is decoder-narrowed to the two handled kinds */
+    /* v8 ignore start -- @preserve -- UsageLimit is decoder-narrowed to the two handled kinds */
     default: {
       const _: never = limit.kind;
       throw new Error(`unhandled usage limit: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }

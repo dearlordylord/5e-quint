@@ -416,7 +416,7 @@ function objectLightSpellEffectOccurrenceId(
 function resolveObjectLight(
   input: SpellProcedureProfileResolveInput<ObjectLightInvocation>,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       spellObjectTargetHoleId(input.invocation),
@@ -428,7 +428,7 @@ function resolveObjectLight(
       "Object light spells use only an object target fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.objectTarget === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellObjectTargetHole(input.invocation),
@@ -455,7 +455,7 @@ function resolveObjectLight(
     input.invocation,
     input.metamagicApplications,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (lightFact === null) {
     return invalidResult(
       input.input.state,
@@ -463,7 +463,7 @@ function resolveObjectLight(
       "Object light target does not satisfy the selected spell's object targeting requirements.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,

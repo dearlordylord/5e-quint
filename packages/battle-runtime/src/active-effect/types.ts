@@ -315,12 +315,12 @@ export type SpiritualWeaponActiveEffect = BattleSpellEffectBase &
     readonly attackBonus: AttackBonus;
     readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
   };
-/* v8 ignore start -- This canonical value exists only to derive SpellTurnStartDamageAndSaveSource; production code consumes the derived type and has no runtime array consumer. */
+/* v8 ignore start -- @preserve -- This canonical value exists only to derive SpellTurnStartDamageAndSaveSource; production code consumes the derived type and has no runtime array consumer. */
 export const SPELL_TURN_START_DAMAGE_AND_SAVE_SOURCES = [
   "afterHitTimedDamageAndSave",
   "turnBoundaryEffectLifecycle",
 ] as const;
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 export type SpellTurnStartDamageAndSaveSource =
   (typeof SPELL_TURN_START_DAMAGE_AND_SAVE_SOURCES)[number];
 export type GlyphDurableOccurrenceAnchor =

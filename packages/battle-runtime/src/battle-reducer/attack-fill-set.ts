@@ -190,15 +190,15 @@ export function selectedAttackFillSet(
     ),
     owner: "an Attack",
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipDecisions.tag === "invalid") {
-    /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
+    /* v8 ignore next -- @preserve -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
     return {
       tag: "invalid",
       message: relationshipDecisions.message,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return {
     tag: "ok",

@@ -60,13 +60,13 @@ export function characterSheetAbilityCheckProficiencyBonus(
     input.build,
     input.unitLibrary,
   );
-  /* v8 ignore start -- A proficiency projection failure means the parsed build and Unit catalog no longer correlate. */
+  /* v8 ignore start -- @preserve -- A proficiency projection failure means the parsed build and Unit catalog no longer correlate. */
   if (Either.isLeft(proficiencies)) {
     return characterSheetIssue(
       proficiencies.left.map(characterCreationIssueMessage).join("; "),
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const proficiencyBonus = characterSheetProficiencyBonusForCharacterLevel(
     characterLevel(computeTotalLevel(input.build.progression)),
@@ -89,11 +89,11 @@ export function characterSheetAbilityCheckProficiencyBonus(
     input.build,
     input.unitLibrary,
   );
-  /* v8 ignore start -- Jack of All Trades lookup failure means a build-owned feature id no longer resolves in its Unit catalog. */
+  /* v8 ignore start -- @preserve -- Jack of All Trades lookup failure means a build-owned feature id no longer resolves in its Unit catalog. */
   if (Either.isLeft(jackOfAllTradesUnitId)) {
     return Either.left(jackOfAllTradesUnitId.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Match.value(input.otherProficiencyBonus).pipe(
     Match.when({ tag: "otherProficiencyBonusApplies" }, () =>
       Either.right({
@@ -148,7 +148,7 @@ export function characterSheetAbilityCheckAbility(
     input.build,
     input.unitLibrary,
   )) {
-    /* v8 ignore next -- Malformed build/catalog correlation: the shared component iterator can fail only when an admitted feature id no longer resolves. */
+    /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: the shared component iterator can fail only when an admitted feature id no longer resolves. */
     if (Either.isLeft(feature)) return Either.left(feature.left);
     for (const grant of feature.right.mechanics.grants) {
       if (
@@ -195,7 +195,7 @@ export function characterSheetJumpDistanceAbility(
     input.build,
     input.unitLibrary,
   )) {
-    /* v8 ignore next -- Malformed build/catalog correlation: the shared component iterator can fail only when an admitted feature id no longer resolves. */
+    /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: the shared component iterator can fail only when an admitted feature id no longer resolves. */
     if (Either.isLeft(feature)) return Either.left(feature.left);
     for (const grant of feature.right.mechanics.grants) {
       if (
@@ -229,7 +229,7 @@ export function characterSheetLinkedSpeedGrants(
     build,
     unitLibrary,
   )) {
-    /* v8 ignore next -- Malformed build/catalog correlation: the shared component iterator can fail only when an admitted feature id no longer resolves. */
+    /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: the shared component iterator can fail only when an admitted feature id no longer resolves. */
     if (Either.isLeft(feature)) return Either.left(feature.left);
     for (const grant of feature.right.mechanics.grants) {
       if (grant.kind !== "grant_speed") continue;
@@ -257,12 +257,12 @@ function* characterSheetClassFeatureComponents(
 > {
   for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, unitId);
-    /* v8 ignore start -- Build-owned feature ids must resolve in the same Unit catalog used to derive the feature roster. */
+    /* v8 ignore start -- @preserve -- Build-owned feature ids must resolve in the same Unit catalog used to derive the feature roster. */
     if (Either.isLeft(unit)) {
       yield Either.left(unit.left);
       continue;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (unit.right.kind !== "class_feature") continue;
     if (unit.right.mechanics.family === "composite") {
       for (const part of unit.right.mechanics.parts) {
@@ -283,7 +283,7 @@ function characterBuildJackOfAllTradesFeatureUnitId(
 ): Either.Either<UnitRecord["id"] | undefined, CharacterSheetIssue> {
   for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, unitId);
-    /* v8 ignore next -- Malformed build/catalog correlation: Jack of All Trades lookup receives feature ids already admitted from this catalog. */
+    /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: Jack of All Trades lookup receives feature ids already admitted from this catalog. */
     if (Either.isLeft(unit)) return Either.left(unit.left);
     if (
       unit.right.kind === "class_feature" &&

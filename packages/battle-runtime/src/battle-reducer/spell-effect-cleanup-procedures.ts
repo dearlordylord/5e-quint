@@ -26,16 +26,16 @@ export function resolveDisperseFogCloudCommand(
     >;
   },
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Fog Cloud strong-wind dispersal uses no fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const fogCloud = [...input.state.combatants.values()]
     .flatMap((combatant) => combatant.activeEffects)
     .find(
@@ -72,16 +72,16 @@ export function resolveDisperseCloudkillCommand(
     >;
   },
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Cloudkill strong-wind dispersal uses no fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const cloudkill = [...input.state.combatants.values()]
     .flatMap((combatant) => combatant.activeEffects)
     .find(
@@ -118,16 +118,16 @@ export function resolveWardingBondSeparationCommand(
     >;
   },
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 1) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Warding Bond separation uses one table spatial fact fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const target = input.state.combatants.get(input.subject.targetId);
   const effect = target?.activeEffects.find(
     (
@@ -158,7 +158,7 @@ export function resolveWardingBondSeparationCommand(
   if (fill === undefined) {
     return needsHolesResult(input.state, input.subject, [hole]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fill.kind !== "targetSpatialFacts" ||
     fill.holeId !== hole.holeId ||
@@ -169,14 +169,14 @@ export function resolveWardingBondSeparationCommand(
       facts: fill.spatialFacts,
     })
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Warding Bond separation requires a table fact that the connected creatures are beyond 60 feet.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = battleStateAfterWardingBondSeparation({
     state: input.state,
     sourceCombatantId: effect.sourceCombatantId,

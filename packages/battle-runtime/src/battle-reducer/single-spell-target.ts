@@ -35,7 +35,7 @@ export function selectSingleSpellTarget(input: {
     ]);
   }
   const target = input.state.combatants.get(input.targetId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target === undefined ||
     !spellTargetIsLegal(
@@ -52,7 +52,7 @@ export function selectSingleSpellTarget(input: {
       input.invalidTargetMessage,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return { tag: "selected", targetId: input.targetId, target };
 }
 
@@ -84,7 +84,7 @@ export function selectSingleSpellTargetAndDamageType(input: {
       spellDamageTypeChoiceHole(input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!input.invocation.damageTypeChoices.includes(input.damageType)) {
     return invalidResult(
       input.state,
@@ -92,7 +92,7 @@ export function selectSingleSpellTargetAndDamageType(input: {
       input.invalidDamageTypeMessage,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "selected",
     targetId: targetSelection.targetId,

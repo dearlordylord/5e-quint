@@ -217,7 +217,7 @@ function discoverMagicWeaponEnhancementCastAct(
 function resolveMagicWeaponEnhancement(
   input: SpellProcedureProfileResolveInput<MagicWeaponEnhancementInvocation>,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       magicWeaponTargetItemHoleId(input.invocation),
@@ -229,14 +229,14 @@ function resolveMagicWeaponEnhancement(
       "Magic Weapon uses one nonmagical weapon item target fill and spell-cast Reaction facts only.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.magicWeaponTargetItem === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       magicWeaponTargetItemHole(input.invocation),
     ]);
   }
   const targetItem = input.fillSet.magicWeaponTargetItem.value;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!battleMagicWeaponTargetItemIsHeldWeapon(input.input.state, targetItem)) {
     return invalidResult(
       input.input.state,
@@ -244,8 +244,8 @@ function resolveMagicWeaponEnhancement(
       "Magic Weapon target item must identify a held nonmagical weapon item.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     battleWeaponItemHasMagicWeaponEnhancement(
       input.input.state,
@@ -263,7 +263,7 @@ function resolveMagicWeaponEnhancement(
       "Magic Weapon target item is already magical from an active Magic Weapon effect.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
     resolution: input,
@@ -274,7 +274,7 @@ function resolveMagicWeaponEnhancement(
   }
 
   const actor = input.input.state.combatants.get(input.actorId);
-  /* v8 ignore start -- Admitted spell-resolution invariant: the bound Magic Weapon procedure and its caster are resolved together before profile dispatch. */
+  /* v8 ignore start -- @preserve -- Admitted spell-resolution invariant: the bound Magic Weapon procedure and its caster are resolved together before profile dispatch. */
   if (actor === undefined) {
     return invalidResult(
       input.input.state,
@@ -282,7 +282,7 @@ function resolveMagicWeaponEnhancement(
       "Magic Weapon caster is not in this battle.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const effected = replaceTargetActiveEffect(
     input.input.state,
     input.actorId,

@@ -173,11 +173,11 @@ function stateWithoutCommandPendingEffect(
   effect: CommandPendingEffect,
 ): BattleState {
   const target = state.combatants.get(actorId);
-  /* v8 ignore start -- Command subjects are admitted from an actor present in the committed Battle state. */
+  /* v8 ignore start -- @preserve -- Command subjects are admitted from an actor present in the committed Battle state. */
   if (target === undefined) {
     return state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     ...state,
     combatants: new Map(state.combatants).set(actorId, {
@@ -239,7 +239,7 @@ function resolveCommandGrovelCommand(
     input.subject,
     "grovel",
   );
-  /* v8 ignore start -- Malformed resolution request: discovery creates Command Grovel subjects only from the pending effect retained in this same battle state. */
+  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates Command Grovel subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -247,11 +247,11 @@ function resolveCommandGrovelCommand(
       "Command Grovel is no longer pending for this actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const unsupportedFill = input.fills.find(
     (fill) => !isEndTurnFillKind(fill.kind),
   );
-  /* v8 ignore start -- Malformed fill set: the discovered Command Grovel subject exposes only the holes belonging to the delegated End Turn resolution. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: the discovered Command Grovel subject exposes only the holes belonging to the delegated End Turn resolution. */
   if (unsupportedFill !== undefined) {
     return invalidResult(
       input.state,
@@ -259,7 +259,7 @@ function resolveCommandGrovelCommand(
       "Command Grovel only accepts End Turn fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const proned = applyCommandGrovelProneToTarget(
     input.state,
     input.subject.actorId,
@@ -293,7 +293,7 @@ function resolveCommandDropCommand(
     input.subject,
     "drop",
   );
-  /* v8 ignore start -- Malformed resolution request: discovery creates Command Drop subjects only from the pending effect retained in this same battle state. */
+  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates Command Drop subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -301,12 +301,12 @@ function resolveCommandDropCommand(
       "Command Drop is no longer pending for this actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const heldObjectFactFills = input.fills.filter(
     (fill): fill is Extract<BattleFill, { readonly kind: "heldObjectFacts" }> =>
       fill.kind === "heldObjectFacts",
   );
-  /* v8 ignore start -- Malformed fill set: one Command Drop held-object-facts hole cannot be filled more than once. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: one Command Drop held-object-facts hole cannot be filled more than once. */
   if (heldObjectFactFills.length > 1) {
     return invalidResult(
       input.state,
@@ -314,11 +314,11 @@ function resolveCommandDropCommand(
       "Command Drop held-object facts were filled twice.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const unsupportedFill = input.fills.find(
     (fill) => fill.kind !== "heldObjectFacts" && !isEndTurnFillKind(fill.kind),
   );
-  /* v8 ignore start -- Malformed fill set: Command Drop exposes only its held-object-facts hole and the delegated End Turn holes. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: Command Drop exposes only its held-object-facts hole and the delegated End Turn holes. */
   if (unsupportedFill !== undefined) {
     return invalidResult(
       input.state,
@@ -326,13 +326,13 @@ function resolveCommandDropCommand(
       "Command Drop only accepts held-object facts and End Turn fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const canonicalObjectIds = canonicalHeldObjectIdsForActor(
     input.state,
     input.subject.actorId,
   );
-  /* v8 ignore start -- Malformed fill set: a character actor's admitted loadout is the canonical held-object source, so an external held-object fill would contradict it. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: a character actor's admitted loadout is the canonical held-object source, so an external held-object fill would contradict it. */
   if (canonicalObjectIds !== null && heldObjectFactFills.length > 0) {
     return invalidResult(
       input.state,
@@ -340,14 +340,14 @@ function resolveCommandDropCommand(
       "Command Drop uses canonical character loadout facts for this actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const heldObjectFactFill = heldObjectFactFills[0];
   if (canonicalObjectIds === null && heldObjectFactFill === undefined) {
     return needsHolesResult(input.state, input.subject, [
       commandDropHeldObjectFactsHole(input.subject),
     ]);
   }
-  /* v8 ignore start -- Malformed fill: the supplied held-object facts must answer the exact hole derived from this discovered Command Drop subject. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the supplied held-object facts must answer the exact hole derived from this discovered Command Drop subject. */
   if (
     heldObjectFactFill !== undefined &&
     heldObjectFactFill.holeId !==
@@ -359,9 +359,9 @@ function resolveCommandDropCommand(
       "Command Drop held-object facts must use the selected Command Drop hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const objectIds = canonicalObjectIds ?? heldObjectFactFill?.value.objectIds;
-  /* v8 ignore start -- Internal protocol invariant: the preceding needsHoles return guarantees either canonical loadout facts or a supplied held-object fill. */
+  /* v8 ignore start -- @preserve -- Internal protocol invariant: the preceding needsHoles return guarantees either canonical loadout facts or a supplied held-object fill. */
   if (objectIds === undefined) {
     return invalidResult(
       input.state,
@@ -369,9 +369,9 @@ function resolveCommandDropCommand(
       "Command Drop requires known held-object facts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const uniqueObjectIds = new Set(objectIds);
-  /* v8 ignore start -- Malformed fill: held-object facts represent a set of object identities and therefore cannot repeat an identity. */
+  /* v8 ignore start -- @preserve -- Malformed fill: held-object facts represent a set of object identities and therefore cannot repeat an identity. */
   if (uniqueObjectIds.size !== objectIds.length) {
     return invalidResult(
       input.state,
@@ -379,7 +379,7 @@ function resolveCommandDropCommand(
       "Command Drop held-object facts must not duplicate objects.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const withoutPending = stateWithoutCommandPendingEffect(
     input.state,
@@ -433,7 +433,7 @@ function resolveCommandApproachCommand(
     input.subject,
     "approach",
   );
-  /* v8 ignore start -- Malformed resolution request: discovery creates Command Approach subjects only from the pending effect retained in this same battle state. */
+  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates Command Approach subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -441,14 +441,14 @@ function resolveCommandApproachCommand(
       "Command Approach is no longer pending for this actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movementFills = input.fills.filter(
     (fill): fill is Extract<BattleFill, { readonly kind: "movement" }> =>
       fill.kind === "movement",
   );
   if (movementFills.length === 0) {
     if (!combatantCanMoveInState(input.state, input.subject.actorId)) {
-      /* v8 ignore start -- Malformed fill set: a Command Approach subject with no available movement exposes no fill holes, so callers cannot supply fills. */
+      /* v8 ignore start -- @preserve -- Malformed fill set: a Command Approach subject with no available movement exposes no fill holes, so callers cannot supply fills. */
       if (input.fills.length > 0) {
         return invalidResult(
           input.state,
@@ -456,7 +456,7 @@ function resolveCommandApproachCommand(
           "Command Approach cannot apply fills when no movement is available.",
         );
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const withoutPending = stateWithoutCommandPendingEffect(
         input.state,
         input.subject.actorId,
@@ -472,7 +472,7 @@ function resolveCommandApproachCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- Malformed fill set: Command Approach exposes exactly one Movement hole. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: Command Approach exposes exactly one Movement hole. */
   if (movementFills.length > 1) {
     return invalidResult(
       input.state,
@@ -480,9 +480,9 @@ function resolveCommandApproachCommand(
       "Command Approach accepts one Movement fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movementFill = movementFills[0]!;
-  /* v8 ignore start -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for Command Approach. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for Command Approach. */
   if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
     return invalidResult(
       input.state,
@@ -490,9 +490,9 @@ function resolveCommandApproachCommand(
       "Movement fill does not match the requested Command Approach hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const approachFact = movementFill.value.commandApproach;
-  /* v8 ignore start -- Malformed fill: a Command Approach Movement value must carry the route/proximity facts required by that command. */
+  /* v8 ignore start -- @preserve -- Malformed fill: a Command Approach Movement value must carry the route/proximity facts required by that command. */
   if (approachFact === undefined) {
     return invalidResult(
       input.state,
@@ -500,7 +500,7 @@ function resolveCommandApproachCommand(
       "Command Approach requires caller-supplied shortest/direct route and proximity facts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movement = parseBattleMovement(
     input.state,
     input.subject.actorId,
@@ -509,11 +509,11 @@ function resolveCommandApproachCommand(
       kind: "commandApproach",
     },
   );
-  /* v8 ignore start -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or Command Approach constraints. */
+  /* v8 ignore start -- @preserve -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or Command Approach constraints. */
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const extraFills = input.fills.filter((fill) => fill.kind !== "movement");
   const threats = opportunityAttackThreatsForMovement(
     input.state,
@@ -563,7 +563,7 @@ function resolveCommandApproachAfterMovement(input: {
     input.subject,
     "approach",
   );
-  /* v8 ignore start -- Malformed continuation: an interrupted Command Approach continuation retains the pending effect from the state that opened its interrupt window. */
+  /* v8 ignore start -- @preserve -- Malformed continuation: an interrupted Command Approach continuation retains the pending effect from the state that opened its interrupt window. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -571,7 +571,7 @@ function resolveCommandApproachAfterMovement(input: {
       "Command Approach is no longer pending for this actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movementEffects = resolveMovementEffectsAfterMovement({
     state: input.state,
     subject: input.subject,
@@ -587,7 +587,7 @@ function resolveCommandApproachAfterMovement(input: {
     effect,
   );
   if (!input.movedWithinFiveFeetOfCaster) {
-    /* v8 ignore start -- Malformed continuation fills: Command Approach delegates End Turn holes only when the admitted route reached within five feet of the caster. */
+    /* v8 ignore start -- @preserve -- Malformed continuation fills: Command Approach delegates End Turn holes only when the admitted route reached within five feet of the caster. */
     if (movementEffects.remainingFills.length > 0) {
       return invalidResult(
         input.state,
@@ -595,7 +595,7 @@ function resolveCommandApproachAfterMovement(input: {
         "Command Approach did not end the turn, so End Turn fills do not apply.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return {
       tag: "resolved",
       state: withoutPending,
@@ -630,7 +630,7 @@ function resolveCommandFleeCommand(
     input.subject,
     "flee",
   );
-  /* v8 ignore start -- Malformed resolution request: discovery creates Command Flee subjects only from the pending effect retained in this same battle state. */
+  /* v8 ignore start -- @preserve -- Malformed resolution request: discovery creates Command Flee subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -638,7 +638,7 @@ function resolveCommandFleeCommand(
       "Command Flee is no longer pending for this actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movementFills = input.fills.filter(
     (fill): fill is Extract<BattleFill, { readonly kind: "movement" }> =>
       fill.kind === "movement",
@@ -665,7 +665,7 @@ function resolveCommandFleeCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- Malformed fill set: Command Flee exposes exactly one Movement hole. */
+  /* v8 ignore start -- @preserve -- Malformed fill set: Command Flee exposes exactly one Movement hole. */
   if (movementFills.length > 1) {
     return invalidResult(
       input.state,
@@ -673,9 +673,9 @@ function resolveCommandFleeCommand(
       "Command Flee accepts one Movement fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movementFill = movementFills[0]!;
-  /* v8 ignore start -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for Command Flee. */
+  /* v8 ignore start -- @preserve -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for Command Flee. */
   if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
     return invalidResult(
       input.state,
@@ -683,9 +683,9 @@ function resolveCommandFleeCommand(
       "Movement fill does not match the requested Command Flee hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const fleeFact = movementFill.value.commandFlee;
-  /* v8 ignore start -- Malformed fill: a Command Flee Movement value must carry the fastest-available moving-away route facts required by that command. */
+  /* v8 ignore start -- @preserve -- Malformed fill: a Command Flee Movement value must carry the fastest-available moving-away route facts required by that command. */
   if (fleeFact === undefined) {
     return invalidResult(
       input.state,
@@ -693,13 +693,13 @@ function resolveCommandFleeCommand(
       "Command Flee requires caller-supplied fastest-available moving-away route facts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movementBudgetFeet = battleMovementBudgetForActor(
     input.state,
     input.subject.actorId,
     movementFill.value.speedKind,
   ).remainingFeet;
-  /* v8 ignore start -- Malformed fill: Command Flee requires the route to consume the selected remaining Movement budget exactly. */
+  /* v8 ignore start -- @preserve -- Malformed fill: Command Flee requires the route to consume the selected remaining Movement budget exactly. */
   if (movementFill.value.movementCostFeet !== movementBudgetFeet) {
     return invalidResult(
       input.state,
@@ -707,7 +707,7 @@ function resolveCommandFleeCommand(
       "Command Flee must spend the selected remaining Movement budget.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movement = parseBattleMovement(
     input.state,
     input.subject.actorId,
@@ -716,11 +716,11 @@ function resolveCommandFleeCommand(
       kind: "commandFlee",
     },
   );
-  /* v8 ignore start -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or Command Flee constraints. */
+  /* v8 ignore start -- @preserve -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or Command Flee constraints. */
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const extraFills = input.fills.filter((fill) => fill.kind !== "movement");
   const threats = opportunityAttackThreatsForMovement(
     input.state,
@@ -768,7 +768,7 @@ function resolveCommandFleeAfterMovement(input: {
     input.subject,
     "flee",
   );
-  /* v8 ignore start -- Malformed continuation: an interrupted Command Flee continuation retains the pending effect from the state that opened its interrupt window. */
+  /* v8 ignore start -- @preserve -- Malformed continuation: an interrupted Command Flee continuation retains the pending effect from the state that opened its interrupt window. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -776,7 +776,7 @@ function resolveCommandFleeAfterMovement(input: {
       "Command Flee is no longer pending for this actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movementEffects = resolveMovementEffectsAfterMovement({
     state: input.state,
     subject: input.subject,

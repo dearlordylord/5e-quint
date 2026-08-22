@@ -429,7 +429,7 @@ export function grappleLinkForTarget(
   | { readonly tag: "invalid"; readonly message: string } {
   const grappler = state.combatants.get(grapplerId);
   const target = state.combatants.get(targetId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     grappler === undefined ||
     target === undefined ||
@@ -440,13 +440,13 @@ export function grappleLinkForTarget(
       message: "Grapple target must be another combatant in this battle.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (grappledBy(state, targetId) !== undefined) {
     return { tag: "invalid", message: "Grapple target is already Grappled." };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (activeDruidWildShapeForm(grappler) !== null) {
     return {
       tag: "invalid",
@@ -454,24 +454,24 @@ export function grappleLinkForTarget(
         "Grapple while using a Beast form requires unsupported form anatomy and free-hand projection.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const hand = firstFreeHand(state, grappler, state.grapples);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (hand === undefined) {
     return { tag: "invalid", message: "Grapple requires a free hand." };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const grapplerSize = combatantEffectiveSize(grappler);
   const targetSize = combatantEffectiveSize(target);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!targetIsNoMoreThanOneSizeLarger(grapplerSize, targetSize)) {
     return {
       tag: "invalid",
       message: "Grapple target cannot be more than one size larger.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !facts.some(
       (fact) =>
@@ -485,7 +485,7 @@ export function grappleLinkForTarget(
       message: "Grapple target must be within reach by table-supplied fact.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
     link: {
@@ -508,15 +508,15 @@ export function shoveForTarget(
   | { readonly tag: "invalid"; readonly message: string } {
   const shover = state.combatants.get(shoverId);
   const target = state.combatants.get(targetId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (shover === undefined || target === undefined || shoverId === targetId) {
     return {
       tag: "invalid",
       message: "Shove target must be another combatant in this battle.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !targetIsNoMoreThanOneSizeLarger(
       combatantEffectiveSize(shover),
@@ -528,8 +528,8 @@ export function shoveForTarget(
       message: "Shove target cannot be more than one size larger.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !facts.some(
       (fact) =>
@@ -543,7 +543,7 @@ export function shoveForTarget(
       message: "Shove target must be within reach by table-supplied fact.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return { tag: "ok", dc: unarmedStrikeSaveDc(shover) };
 }
 

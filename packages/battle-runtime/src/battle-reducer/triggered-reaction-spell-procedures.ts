@@ -115,7 +115,7 @@ export function resolveCastTriggeredReactionSpellCommand(
       "Triggered Reaction spell casting requires an active matching interrupt checkpoint.",
     );
   }
-  /* v8 ignore next -- The interrupt choice admission already narrows this command to a supported triggered-reaction invocation. */
+  /* v8 ignore next -- @preserve -- The interrupt choice admission already narrows this command to a supported triggered-reaction invocation. */
   if (
     reactor?.origin.kind !== "character" ||
     invocation === undefined ||
@@ -177,7 +177,7 @@ export function resolveCastTriggeredReactionSpellCommand(
   }
 
   if (invocation.procedure === "saveGatedDamage") {
-    /* v8 ignore next -- Triggered save-gated Reaction spells are admitted only from prepared spell-slot bindings. */
+    /* v8 ignore next -- @preserve -- Triggered save-gated Reaction spells are admitted only from prepared spell-slot bindings. */
     if (!isPreparedSlottedSaveGatedDamageInvocation(invocation)) {
       return invalidResult(
         input.state,
@@ -192,12 +192,12 @@ export function resolveCastTriggeredReactionSpellCommand(
       input.subject.actorId,
       input.state,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.tag === "invalid") {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.state, "invalidFill", fillSet.message);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return spellProcedureExecutionFor(
       executionRegistry,
       invocation.procedure,
@@ -308,7 +308,7 @@ function triggeredReactionSpellCastTargetIds(input: {
   if (input.invocation.procedure === "shieldReaction") {
     return [input.reactorId];
   }
-  /* v8 ignore next -- The selected Reaction choice was discovered from a matching after-damage frame. */
+  /* v8 ignore next -- @preserve -- The selected Reaction choice was discovered from a matching after-damage frame. */
   if (
     input.invocation.procedure === "saveGatedDamage" &&
     input.frame.trigger === "afterDamage"
@@ -373,12 +373,12 @@ function resolveDirectTriggeredReactionSpellCommand(
     input.subject.actorId,
     input.state,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const { invocation, ...resolutionInput } = input;
   return Match.value(invocation).pipe(
     byDirectTriggeredReactionProcedure("counterspell", (invocation) =>
@@ -444,20 +444,20 @@ export function resolveTriggeredReactionSaveGatedDamage(
       "Hellish Rebuke requires a matching after-damage Reaction trigger.",
     );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fillSet.targetId !== undefined ||
     fillSet.targetList !== undefined ||
     fillSet.attackRoll !== undefined
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Hellish Rebuke targets the creature from the after-damage trigger.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const savingThrowHole = spellSavingThrowOutcomeHole(
     input.state,
     input.subject.reactorId,
@@ -473,23 +473,23 @@ export function resolveTriggeredReactionSaveGatedDamage(
     input.subject.reactorId,
     input.frame.damageSourceId,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (savingThrowValidation !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", savingThrowValidation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const savingThrowOutcome = fillSet.savingThrowOutcomes.outcomes[0];
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (savingThrowOutcome === undefined) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Hellish Rebuke requires the damaging creature's Saving Throw outcome.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const saveDamageResult = saveGateDamageResultForOutcome(
     input.state,
     input.frame.damageSourceId,
@@ -497,16 +497,16 @@ export function resolveTriggeredReactionSaveGatedDamage(
     savingThrowOutcome.succeeded,
   );
   if (fillSet.damageRoll === undefined) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Source damage roll penalty does not match an active source-side damage penalty.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return needsHolesResult(input.state, input.subject, [
       spellDamageHole(input.invocation),
     ]);
@@ -516,14 +516,14 @@ export function resolveTriggeredReactionSaveGatedDamage(
     input.invocation,
     false,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageValidation !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const target = input.state.combatants.get(input.frame.damageSourceId);
-  /* v8 ignore start -- The public interrupt dispatcher proves every checkpoint actor is still present before admitting this reaction command. */
+  /* v8 ignore start -- @preserve -- The public interrupt dispatcher proves every checkpoint actor is still present before admitting this reaction command. */
   if (target === undefined) {
     return invalidResult(
       input.state,
@@ -531,7 +531,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
       "Hellish Rebuke target is no longer in the battle.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spellDamageByType = spellDamageByTypeForTarget(
     target,
     input.invocation,
@@ -545,21 +545,21 @@ export function resolveTriggeredReactionSaveGatedDamage(
       spellDamageByType,
       fillSet.damageRoll.holeId,
     );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     unexpectedSourceDamageRollPenaltyRoll(
       fillSet.sourceDamageRollPenaltyRolls,
       expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
     ) !== undefined
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
     fillSet.sourceDamageRollPenaltyRolls,
     damageSource,
@@ -572,16 +572,16 @@ export function resolveTriggeredReactionSaveGatedDamage(
     fillSet.damageRoll.holeId,
     sourceDamageRollPenaltyRoll,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (sourcePenalty.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (sourcePenalty.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [
       ...sourcePenalty.holes,
@@ -624,16 +624,16 @@ export function resolveTriggeredReactionSaveGatedDamage(
       ...concentrationSaveCheck.holes,
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (concentrationSaveCheck.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       concentrationSaveCheck.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const damageDispositionHole = zeroHitPointReplacementDispositionHole({
     damageSourceId: input.subject.reactorId,
     target,
@@ -645,16 +645,16 @@ export function resolveTriggeredReactionSaveGatedDamage(
     holes: damageDispositionHoles,
     fills: fillSet.damageDispositions,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageDispositionValidation !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       damageDispositionValidation,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     damageDispositionHole !== null &&
     damageDispositionFillFor(
@@ -678,16 +678,16 @@ export function resolveTriggeredReactionSaveGatedDamage(
       ...hideousLaughterSaveCheck.holes,
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (hideousLaughterSaveCheck.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       hideousLaughterSaveCheck.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
     fillSet.hideousLaughterDamageRepeatSaves,
     hideousLaughterSaveCheck.holes,
@@ -722,12 +722,12 @@ export function resolveTriggeredReactionSaveGatedDamage(
       relationshipCheck.holes,
     );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipCheck.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", relationshipCheck.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const castingState = stateAfterSpellCastDeclared({
     state: input.state,
     casterId: input.subject.reactorId,

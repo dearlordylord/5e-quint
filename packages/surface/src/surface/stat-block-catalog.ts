@@ -81,11 +81,11 @@ export function isSrd521StatBlock(
 export function assertSrd521StatBlock(
   statBlock: StatBlockRecord,
 ): Srd521StatBlock {
-  /* v8 ignore start -- callers must establish SRD provenance before invoking this assertion; a non-SRD Stat Block violates that internal precondition */
+  /* v8 ignore start -- @preserve -- callers must establish SRD provenance before invoking this assertion; a non-SRD Stat Block violates that internal precondition */
   if (!isSrd521StatBlock(statBlock)) {
     throw new Error(`Stat Block is not SRD 5.2.1: ${statBlock.id}`);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return statBlock;
 }
@@ -100,11 +100,11 @@ export function defineSrdStatBlockCollection(input: {
   } as const satisfies SrdStatBlockCollection;
   const provenanceIssues = validateSrdStatBlockCollection(collection);
 
-  /* v8 ignore start -- Srd521StatBlock input typing makes mixed-provenance collection construction malformed internal composition */
+  /* v8 ignore start -- @preserve -- Srd521StatBlock input typing makes mixed-provenance collection construction malformed internal composition */
   if (provenanceIssues.length > 0) {
     throw new Error("SRD Stat Block collection contains non-SRD provenance");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return collection;
 }

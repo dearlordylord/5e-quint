@@ -176,11 +176,11 @@ export function mirrorImageHitInterceptionCheck(input: {
     return { tag: "needsHoles", hole };
   }
   const validation = validateMirrorImageDuplicateRoll(input.fill, hole);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation !== null) {
     return { tag: "invalid", message: validation };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const result = resolveMirrorImageHitInterception(
     { remainingDuplicates: effect.remainingDuplicates },
     {
@@ -271,7 +271,7 @@ function mirrorImageDuplicateRollSucceeds(fill: BattleRolledDiceFill): boolean {
   );
 }
 
-/* v8 ignore start -- Malformed Mirror Image roll: discovery fixes the duplicate-roll hole and dice expression and does not offer attack-damage choices. */
+/* v8 ignore start -- @preserve -- Malformed Mirror Image roll: discovery fixes the duplicate-roll hole and dice expression and does not offer attack-damage choices. */
 function validateMirrorImageDuplicateRoll(
   fill: BattleRolledDiceFill,
   hole: BattleMirrorImageDuplicateRollHole,
@@ -292,7 +292,7 @@ function validateMirrorImageDuplicateRoll(
   });
   return validation;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function stateAfterMirrorImageDuplicateDestroyed(
   state: BattleState,

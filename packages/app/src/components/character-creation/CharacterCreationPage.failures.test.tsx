@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { SORCERER_FONT_OF_MAGIC_UNIT_ID } from "@dnd/character-creation-runtime"
 import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
@@ -89,6 +90,26 @@ vi.mock("#/components/character-creation/characterCreationRuntime.ts", async (im
                   sourceUnitId: unitId("synthetic:resource-source"),
                   spellId: unitId("synthetic:resource-spell"),
                   tag: "spellAccessFreeCast"
+                },
+                {
+                  count: resourceCount(2),
+                  expended: resourceCount(1),
+                  resetCadence: { kind: "long_rest" },
+                  resource: { cap: { kind: "fixed", uses: 2 }, kind: "use_count" },
+                  tag: "useCountResource",
+                  unitId: unitId("synthetic:use-count-resource")
+                },
+                {
+                  count: resourceCount(2),
+                  expended: resourceCount(1),
+                  resetCadence: { kind: "long_rest" },
+                  resource: {
+                    cap: { kind: "fixed", uses: 2 },
+                    kind: "point_pool",
+                    poolId: "sorcery_points"
+                  },
+                  tag: "pointPoolResource",
+                  unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID
                 }
               ],
               tempHp: Hp(2)
@@ -159,7 +180,9 @@ describe("CharacterCreationPage failure presentation", () => {
       expect(screen.getByText(/2 temp/)).toBeTruthy()
       expect(screen.getByText("Level 1: 1/3")).toBeTruthy()
       expect(screen.getByText("Level 2: 1/2")).toBeTruthy()
-      expect(screen.getByText("synthetic:resource-source: 1/2")).toBeTruthy()
+      expect(screen.getByText(/synthetic:resource-source: 1\/2/)).toBeTruthy()
+      expect(screen.getByText(/synthetic:use-count-resource: 1\/2/)).toBeTruthy()
+      expect(screen.getByText(/sorcerer_font_of_magic: 1\/2/)).toBeTruthy()
     } finally {
       pageFailures.richSummary = false
     }

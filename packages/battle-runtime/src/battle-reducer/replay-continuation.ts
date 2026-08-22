@@ -382,24 +382,24 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
       "Glyph stored spell release replay no longer has a matching durable occurrence.",
     );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (result.tag === "ambiguousOccurrence") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       result.state,
       "invalidFill",
       "Glyph stored spell release replay matched multiple durable occurrences.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
   return invalidResult(
     result.state,
     "invalidFill",
     result.message ??
       `Glyph stored spell release replay witness is invalid: ${result.reason}.`,
   );
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 type ActiveInterruptCheckpoint = BattleInterruptCheckpoint & {

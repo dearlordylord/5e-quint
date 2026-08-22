@@ -873,7 +873,7 @@ export function characterResourceInitIssue(
   return null;
 }
 
-/* v8 ignore start -- Malformed character initialization: admitted Druid Wild Shape state has at most one owning resource and threads only forms accepted by that resource profile. */
+/* v8 ignore start -- @preserve -- Malformed character initialization: admitted Druid Wild Shape state has at most one owning resource and threads only forms accepted by that resource profile. */
 export function characterDruidWildShapeAvailableFormsInitIssue(
   creatureInit: CharacterBattleCreatureInit,
   classLevels: CharacterBattleClassLevels,
@@ -906,7 +906,7 @@ export function characterDruidWildShapeAvailableFormsInitIssue(
   );
   return issue === null ? null : battleStateInitIssue(issue);
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 type CharacterSpellcastingInitAdmission =
   | { readonly tag: "absent" }
@@ -1061,7 +1061,7 @@ export function combatantKnockedOutUnconscious(
   combatant: BattleCreatureState,
 ): Either.Either<BattlePositiveHpUnconscious | null, BattleStateInitIssue> {
   if (combatant.positiveHpUnconscious === null) return Either.right(null);
-  /* v8 ignore start -- Forged-state defense: the BattleCreatureState union couples Knocked Out metadata to branded 1 HP and KnockedOutConditionState, so parsed/constructed states cannot violate this relationship. */
+  /* v8 ignore start -- @preserve -- Forged-state defense: the BattleCreatureState union couples Knocked Out metadata to branded 1 HP and KnockedOutConditionState, so parsed/constructed states cannot violate this relationship. */
   if (
     Number(combatant.hp) !== 1 ||
     !hasCondition(combatant.conditions, "unconscious")
@@ -1070,6 +1070,6 @@ export function combatantKnockedOutUnconscious(
       "BattleCreatureState invariant violated: Knocked Out Unconscious requires exactly 1 HP and the Unconscious condition.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right(combatant.positiveHpUnconscious);
 }

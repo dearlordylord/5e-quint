@@ -221,7 +221,7 @@ export function selectedSpellAttackDamageProcedure(
     };
   }
   const selectedDamageType = damageTypeChoice.value;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!invocation.damage.damageTypeChoices.includes(selectedDamageType)) {
     return {
       tag: "invalid",
@@ -229,7 +229,7 @@ export function selectedSpellAttackDamageProcedure(
         "Spell attack damage type must be one of the selected spell's choices.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
     invocation: {
@@ -1667,13 +1667,13 @@ export function validateSpellDamageFill(
   }
   if (invocation.procedure !== "spellAttackDamage") {
     const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
-    /* v8 ignore start -- Malformed spell-damage fill: non-attack damage discovery never offers attack-only reroll choices, so any reported choice issue contradicts the discovered hole. */
+    /* v8 ignore start -- @preserve -- Malformed spell-damage fill: non-attack damage discovery never offers attack-only reroll choices, so any reported choice issue contradicts the discovered hole. */
     if (spellDamageRerollIssue !== null) {
       return spellDamageRerollIssue;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
-  /* v8 ignore start -- Malformed spell-damage fill: the rolled-dice fill is keyed by the exact normal or critical damage hole discovered for this invocation. */
+  /* v8 ignore start -- @preserve -- Malformed spell-damage fill: the rolled-dice fill is keyed by the exact normal or critical damage hole discovered for this invocation. */
   if (
     fill.holeId !==
     spellDamageHoleId(invocation, critical, spellMarkedDamageRiders)
@@ -1682,56 +1682,56 @@ export function validateSpellDamageFill(
       ? "Critical hit spell damage must use the critical spell damage hole."
       : "Spell damage must use the selected action-time spell act damage hole.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const usesComponentDamageGroups =
     spellMarkedDamageRiders.length > 0 ||
     (invocation.procedure === "saveGatedDamage" &&
       invocation.additionalDamageComponents.length > 0);
   if (usesComponentDamageGroups) {
     const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
-    /* v8 ignore start -- Malformed component-damage fill: component discovery does not offer whole-roll spell rerolls, so a reroll choice cannot accompany this hole. */
+    /* v8 ignore start -- @preserve -- Malformed component-damage fill: component discovery does not offer whole-roll spell rerolls, so a reroll choice cannot accompany this hole. */
     if (spellDamageRerollIssue !== null) {
       return spellDamageRerollIssue;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const components = spellDamageComponents(
       invocation,
       critical,
       spellMarkedDamageRiders,
     );
-    /* v8 ignore start -- Malformed component-damage fill: discovery publishes one rolled-dice group per computed damage component. */
+    /* v8 ignore start -- @preserve -- Malformed component-damage fill: discovery publishes one rolled-dice group per computed damage component. */
     if (fill.value.length !== components.length) {
       return "filled spell damage groups do not match current spell damage";
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     for (const [index, component] of components.entries()) {
       const group = fill.value[index];
-      /* v8 ignore start -- Malformed sparse raw fill: JSON-authored rolled-dice groups are dense, and the preceding cardinality check fixes the index range. */
+      /* v8 ignore start -- @preserve -- Malformed sparse raw fill: JSON-authored rolled-dice groups are dense, and the preceding cardinality check fixes the index range. */
       if (group === undefined) {
         return "filled spell damage groups do not match current spell damage";
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       if (index === 0 && hasMaxDieAdditionalDiceLimit(invocation)) {
         const validation = validateMaxDieAdditionalDiceFill(
           { ...fill, value: [group] },
           invocation,
           critical,
         );
-        /* v8 ignore start -- Malformed max-die component: the rolled group must satisfy the die expression and the discovered additional-die sequence. */
+        /* v8 ignore start -- @preserve -- Malformed max-die component: the rolled group must satisfy the die expression and the discovered additional-die sequence. */
         if (validation !== null) {
           return validation;
         }
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
       } else {
         const validation = validateRolledDiceForDiceExpr(
           [group],
           component.expr,
         );
-        /* v8 ignore start -- Malformed component roll: each discovered component fixes the count and size of its submitted dice. */
+        /* v8 ignore start -- @preserve -- Malformed component roll: each discovered component fixes the count and size of its submitted dice. */
         if (validation !== null) {
           return validation.reason;
         }
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
       }
     }
     return null;
@@ -1778,36 +1778,36 @@ function validateMaxDieAdditionalDiceFill(
   );
   const rolledDiceCount = rolledResults.length;
   const additionalDice = rolledDiceCount - baseDice;
-  /* v8 ignore start -- Malformed max-die fill: discovery always requests at least the spell's fixed base dice. */
+  /* v8 ignore start -- @preserve -- Malformed max-die fill: discovery always requests at least the spell's fixed base dice. */
   if (additionalDice < 0) {
     return "filled dice count is below the spell's base damage dice";
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed max-die fill: discovery caps submitted additional dice at the invocation's typed spellcasting limit. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed max-die fill: discovery caps submitted additional dice at the invocation's typed spellcasting limit. */
   if (additionalDice > invocation.damage.maxDieAdditionalDiceLimit) {
     return "filled additional max-die damage dice exceed this caster's spellcasting ability modifier.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const validation = validateRolledDiceForDiceExpr(fill.value, {
     dice: rolledDiceCount,
     dieSize: invocation.damage.expr.dieSize,
   });
-  /* v8 ignore start -- Malformed max-die fill: every submitted result is parsed against the spell's fixed die size before resolution. */
+  /* v8 ignore start -- @preserve -- Malformed max-die fill: every submitted result is parsed against the spell's fixed die size before resolution. */
   if (validation !== null) {
     return validation.reason;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const authorizationError = validateMaxDieAdditionalDiceSequence(
     rolledResults,
     baseDice,
     invocation.damage.expr.dieSize,
     additionalDice,
   );
-  /* v8 ignore start -- Malformed exploding-die sequence: each additional die is admitted only after an earlier maximum result authorizes it. */
+  /* v8 ignore start -- @preserve -- Malformed exploding-die sequence: each additional die is admitted only after an earlier maximum result authorizes it. */
   if (authorizationError !== null) {
     return authorizationError;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }
 
@@ -1842,7 +1842,7 @@ function validateMaxDieAdditionalDiceSequence(
   return null;
 }
 
-/* v8 ignore start -- Malformed rolled-dice validator: discovery fixes the sequence part, critical-hole identity, damage groups, and die expressions; supported damage execution is measured after this boundary. */
+/* v8 ignore start -- @preserve -- Malformed rolled-dice validator: discovery fixes the sequence part, critical-hole identity, damage groups, and die expressions; supported damage execution is measured after this boundary. */
 export function validateSpellAttackSequencePartDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   invocation: Extract<
@@ -1896,7 +1896,7 @@ export function validateSpellAttackSequencePartDamageFill(
   });
   return validation?.reason ?? null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export function validateSpellHealingFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
@@ -1914,7 +1914,7 @@ export function validateSpellHealingFill(
   });
 }
 
-/* v8 ignore start -- Malformed scalar-buff fill: temporary-Hit-Point discovery fixes the eligible effect kind, rolled-dice hole, and dice expression. */
+/* v8 ignore start -- @preserve -- Malformed scalar-buff fill: temporary-Hit-Point discovery fixes the eligible effect kind, rolled-dice hole, and dice expression. */
 export function validateScalarBuffTemporaryHitPointsFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   invocation: Extract<
@@ -1933,7 +1933,7 @@ export function validateScalarBuffTemporaryHitPointsFill(
     dieSize: invocation.effect.amount.expr.dieSize,
   });
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export function validateSpellBurstDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
@@ -1956,31 +1956,31 @@ export function validatePreparedSlotSpellDamageGroups(
   allocations: readonly BattleSpellTargetAllocation[],
 ): string | null {
   const attackDamageChoiceIssue = attackDamageChoiceUnsupportedIssue(fill);
-  /* v8 ignore start -- Malformed repeated-damage fill: prepared-slot discovery does not offer attack-only damage choices. */
+  /* v8 ignore start -- @preserve -- Malformed repeated-damage fill: prepared-slot discovery does not offer attack-only damage choices. */
   if (attackDamageChoiceIssue !== null) {
     return attackDamageChoiceIssue;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
-  /* v8 ignore start -- Malformed repeated-damage fill: prepared-slot allocation does not offer whole-roll spell rerolls. */
+  /* v8 ignore start -- @preserve -- Malformed repeated-damage fill: prepared-slot allocation does not offer whole-roll spell rerolls. */
   if (spellDamageRerollIssue !== null) {
     return spellDamageRerollIssue;
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed repeated-damage fill: discovery publishes exactly one damage group for each admitted target allocation. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed repeated-damage fill: discovery publishes exactly one damage group for each admitted target allocation. */
   if (fill.value.length !== allocations.length) {
     return "Repeated spell damage dice groups must match the target allocation entries.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const mismatched = allocations.find(
     (allocation, index) =>
       fill.value[index]?.results.length !== allocation.count,
   );
-  /* v8 ignore start -- Malformed repeated-damage group: each allocation count fixes the number of dice in its corresponding dense group. */
+  /* v8 ignore start -- @preserve -- Malformed repeated-damage group: each allocation count fixes the number of dice in its corresponding dense group. */
   return mismatched === undefined
     ? null
     : "Each repeated spell damage dice group must match that target's allocated effect count.";
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function attackDamageChoiceUnsupportedIssue(

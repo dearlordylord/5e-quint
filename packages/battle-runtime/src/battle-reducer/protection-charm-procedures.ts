@@ -66,26 +66,26 @@ export function resolveProtectionRelevantEffectSaveCommand(
   if (saveFill === undefined) {
     return needsHolesResult(input.state, input.subject, [hole]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (saveFill.relationshipFacts !== undefined) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Protection from Evil and Good save relationship facts were not requested.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const validation = validateProtectionRelevantEffectSavingThrowOutcome(
     saveFill.value,
     input.subject.actorId,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", validation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = applyProtectionRelevantEffectSaveOutcome(
     input.state,
     input.subject.actorId,
@@ -110,27 +110,27 @@ export function resolveCreatureTypeProtectionConditionAttemptCommand(
     >
   >,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length !== 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Creature Type Protection condition attempts do not accept fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const target = input.state.combatants.get(input.subject.actorId);
-  /* v8 ignore start -- Dispatcher invariant: runtime-command resolution admits only a subject whose actor is the current known combatant. */
+  /* v8 ignore start -- @preserve -- Dispatcher invariant: runtime-command resolution admits only a subject whose actor is the current known combatant. */
   if (target === undefined) {
-    /* v8 ignore next -- Dispatcher invariant: the public resolver rejects an unknown subject actor before this handler runs. */
+    /* v8 ignore next -- @preserve -- Dispatcher invariant: the public resolver rejects an unknown subject actor before this handler runs. */
     return invalidResult(
       input.state,
       "staleSubject",
       "Creature Type Protection condition attempt requires a known target.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     !conditionApplicationPreventedByCreatureTypeProtection(
       input.state,
@@ -163,16 +163,16 @@ export function resolveCreatureTypeProtectionPossessionAttemptCommand(
     >
   >,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length !== 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Creature Type Protection possession attempts do not accept fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const disposition = resolveBattlePossessionAttempt({
     state: input.state,
     sourceCombatantId: input.subject.sourceCombatantId,

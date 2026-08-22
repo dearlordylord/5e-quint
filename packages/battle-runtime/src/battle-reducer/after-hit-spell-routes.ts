@@ -74,7 +74,7 @@ export function afterHitSpellDiscoveryRoutesForResolution(
       choice.reactorId,
       choice.subject.procedureRef,
     );
-    /* v8 ignore next -- Every admitted after-hit choice retains its executable procedure binding. */
+    /* v8 ignore next -- @preserve -- Every admitted after-hit choice retains its executable procedure binding. */
     if (invocation === undefined) continue;
     if (invocation.resource.tag === "spellSlot") {
       owners.add("battleSpellSlotAndActionEconomy");
@@ -136,7 +136,7 @@ export function afterHitSpellRouteForInterrupt(input: {
     return undefined;
   }
   const selectedChoice =
-    /* v8 ignore next -- Reducer route projection runs only while the admitted interrupt frame remains on the stack. */
+    /* v8 ignore next -- @preserve -- Reducer route projection runs only while the admitted interrupt frame remains on the stack. */
     input.before.interruptStack.length === 0
       ? undefined
       : currentInterruptCheckpoint(input.before)?.choices.find(
@@ -145,7 +145,7 @@ export function afterHitSpellRouteForInterrupt(input: {
             candidate.subject.procedureRef === choice.procedureRef,
         );
   const invocation =
-    /* v8 ignore next -- The selected after-hit choice is admitted from the same procedure binding retained by the frame. */
+    /* v8 ignore next -- @preserve -- The selected after-hit choice is admitted from the same procedure binding retained by the frame. */
     selectedChoice === undefined
       ? undefined
       : spellInvocationForInterruptChoice(
@@ -153,7 +153,7 @@ export function afterHitSpellRouteForInterrupt(input: {
           selectedChoice.reactorId,
           selectedChoice.subject.procedureRef,
         );
-  /* v8 ignore next -- The selected after-hit choice is admitted from the same procedure binding retained by the frame. */
+  /* v8 ignore next -- @preserve -- The selected after-hit choice is admitted from the same procedure binding retained by the frame. */
   if (invocation === undefined) return undefined;
 
   const choiceFillKinds = choice.fills

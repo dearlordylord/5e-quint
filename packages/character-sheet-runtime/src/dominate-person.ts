@@ -41,7 +41,7 @@ export function castDominatePerson(input: {
     spellName: "Dominate Person",
     invocation: (spell) => {
       const targetIssue = dominatePersonTargetIssue(input.target);
-      /* v8 ignore next -- Malformed Dominate Person request: target facts are parsed by the narrowed request contract before invocation projection. */
+      /* v8 ignore next -- @preserve -- Malformed Dominate Person request: target facts are parsed by the narrowed request contract before invocation projection. */
       if (targetIssue !== null) return characterSheetIssue(targetIssue);
       return dominatePersonInvocationFromSpell({
         spell: spell,
@@ -54,7 +54,7 @@ export function castDominatePerson(input: {
 function dominatePersonTargetIssue(
   target: CharacterSheetDominatePersonTarget,
 ): string | null {
-  /* v8 ignore start -- These branches reject malformed visibility, creature-type, or save facts outside the narrowed Dominate Person target contract. */
+  /* v8 ignore start -- @preserve -- These branches reject malformed visibility, creature-type, or save facts outside the narrowed Dominate Person target contract. */
   if (target.visibleByCaster !== true || target.withinRangeFeet !== 60) {
     return "Dominate Person targets must be visible Humanoids within 60 feet.";
   }
@@ -67,7 +67,7 @@ function dominatePersonTargetIssue(
   ) {
     return "Dominate Person requires a Wisdom Saving Throw outcome.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }
 
@@ -76,7 +76,7 @@ function dominatePersonInvocationFromSpell(input: {
   readonly target: CharacterSheetDominatePersonTarget;
 }): Either.Either<CharacterSheetDominatePersonInvocation, CharacterSheetIssue> {
   const spell = input.spell;
-  /* v8 ignore start -- The catalog record failed the exact authored level-5 Dominate Person support profile required by this projector. */
+  /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Dominate Person support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -95,7 +95,7 @@ function dominatePersonInvocationFromSpell(input: {
       "Dominate Person requires the supported level-5 Enchantment mental-control profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const hasSaveGatePhase = hasWisdomSaveGatePhase(
     spell,
@@ -108,22 +108,22 @@ function dominatePersonInvocationFromSpell(input: {
       phase.onSuccess.kind === "none" &&
       hasDamageTriggeredEndingRepeatSave(phase.repeatSaves),
   );
-  /* v8 ignore start -- The catalog record has Dominate Person spell facts but no supported Wisdom save/control phase. */
+  /* v8 ignore start -- @preserve -- The catalog record has Dominate Person spell facts but no supported Wisdom save/control phase. */
   if (!hasSaveGatePhase) {
     return characterSheetIssue(
       "Dominate Person requires the supported Wisdom save Charmed control profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
-  /* v8 ignore start -- The exact one-minute duration admitted above is always accepted by the elapsed-time parser. */
+  /* v8 ignore start -- @preserve -- The exact one-minute duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue(
       "Dominate Person requires a supported duration.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     tag: "dominate_person",
@@ -153,16 +153,16 @@ function dominatePersonInvocationFromSpell(input: {
 }
 
 function isDominatePersonTargetSelection(selection: unknown): boolean {
-  /* v8 ignore next -- Unsupported authored Dominate Person data: its target selection must be a record. */
+  /* v8 ignore next -- @preserve -- Unsupported authored Dominate Person data: its target selection must be a record. */
   if (selection === null || typeof selection !== "object") return false;
-  /* v8 ignore next -- Unsupported authored Dominate Person data: its target selection must use the one-target mode. */
+  /* v8 ignore next -- @preserve -- Unsupported authored Dominate Person data: its target selection must use the one-target mode. */
   if (!("mode" in selection) || selection.mode !== "one") return false;
-  /* v8 ignore start -- Unsupported authored Dominate Person data: the admitted target-selection record requires explicit targetKinds and typeFilter fields. */
+  /* v8 ignore start -- @preserve -- Unsupported authored Dominate Person data: the admitted target-selection record requires explicit targetKinds and typeFilter fields. */
   const targetKinds =
     "targetKinds" in selection ? selection.targetKinds : undefined;
   const typeFilter =
     "typeFilter" in selection ? selection.typeFilter : undefined;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return (
     Array.isArray(targetKinds) &&
     targetKinds.length === 1 &&
@@ -174,7 +174,7 @@ function isDominatePersonTargetSelection(selection: unknown): boolean {
 }
 
 function hasDamageTriggeredEndingRepeatSave(repeatSaves: unknown): boolean {
-  /* v8 ignore next -- Unsupported authored Dominate Person data: repeat saves must be represented as an operation list. */
+  /* v8 ignore next -- @preserve -- Unsupported authored Dominate Person data: repeat saves must be represented as an operation list. */
   if (!Array.isArray(repeatSaves)) return false;
   return repeatSaves.some(
     (repeatSave) =>

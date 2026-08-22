@@ -85,14 +85,14 @@ export function tracePassiveOrActivated(
       return tracePassiveMechanics(m, nodes, edges, ids);
     case "activation":
       return traceActivatedAbility(m, nodes, edges, ids);
-    /* v8 ignore start -- class-feature mechanics are decoder-narrowed to the supported families above */
+    /* v8 ignore start -- @preserve -- class-feature mechanics are decoder-narrowed to the supported families above */
     default: {
       const _exhaustive: never = m;
       throw new Error(
         `unhandled mechanics family: ${String((_exhaustive as { family: string }).family)}`,
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -168,24 +168,24 @@ export function traceMagicItemMechanics(
             return traceMagicItemSpawnedCreature(part, nodes, edges, ids);
           case "triggered_reaction":
             return traceTriggeredReactionAbility(part, nodes, edges, ids);
-          /* v8 ignore start -- magic-item component mechanics are decoder-narrowed to the handled families */
+          /* v8 ignore start -- @preserve -- magic-item component mechanics are decoder-narrowed to the handled families */
           default: {
             const _exhaustive: never = part;
             throw new Error(
               `unhandled magic-item component family: ${String((_exhaustive as { family: string }).family)}`,
             );
           }
-          /* v8 ignore stop */
+          /* v8 ignore stop -- @preserve */
         }
       });
-    /* v8 ignore start -- magic-item mechanics are decoder-narrowed to the handled families above */
+    /* v8 ignore start -- @preserve -- magic-item mechanics are decoder-narrowed to the handled families above */
     default: {
       const _exhaustive: never = m;
       throw new Error(
         `unhandled magic-item mechanics family: ${String((_exhaustive as { family: string }).family)}`,
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -342,7 +342,7 @@ function traceWeaponAttackDamageDieFloorMechanics(
     label:
       `${mechanics.effect.kind}\n${mechanics.effect.dieScope}\n` +
       `minimum ${mechanics.effect.minimumResult}\n` +
-      /* v8 ignore next -- this mechanic's schema requires optional=true; the required label needs malformed Feat mechanics */
+      /* v8 ignore next -- @preserve -- this mechanic's schema requires optional=true; the required label needs malformed Feat mechanics */
       (mechanics.optional ? "optional" : "required"),
   });
   edges.push({ from: procId, to: effectId, relation: "includes" });
@@ -374,7 +374,7 @@ function traceLightExtraAttackDamageAbilityModifierMechanics(
     label:
       `${mechanics.effect.kind}\n${mechanics.effect.modifierSource}\n` +
       `${mechanics.effect.appliesWhen}\n` +
-      /* v8 ignore next -- this mechanic's schema requires optional=true; the required label needs malformed Feat mechanics */
+      /* v8 ignore next -- @preserve -- this mechanic's schema requires optional=true; the required label needs malformed Feat mechanics */
       (mechanics.optional ? "optional" : "required"),
   });
   edges.push({ from: procId, to: effectId, relation: "includes" });
@@ -688,12 +688,12 @@ export function describeMagicItemAttunementRestriction(
       return "spellcaster";
     case "class_list":
       return restriction.classes.join(", ");
-    /* v8 ignore start -- AttunementRestriction is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- AttunementRestriction is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = restriction;
       return _exhaustive;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -742,11 +742,11 @@ export function traceItemDestruction(
       edges.push({ from: rootId, to: destId, relation: "lifecycle" });
       return;
     }
-    /* v8 ignore start -- item destruction policy is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- item destruction policy is a decoded tagged union exhausted above */
     default: {
       const _: never = d;
       throw new Error(`unhandled item destruction policy: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }

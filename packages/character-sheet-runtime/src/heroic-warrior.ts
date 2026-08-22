@@ -28,7 +28,7 @@ export function useHeroicWarriorAtCombatTurnStart(input: {
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
   const feature = combatTurnStartHeroicInspirationFeature(input);
-  /* v8 ignore next -- Malformed build/catalog correlation: Heroic Warrior lookup can fail only when an admitted feature id no longer resolves. */
+  /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: Heroic Warrior lookup can fail only when an admitted feature id no longer resolves. */
   if (Either.isLeft(feature)) return Either.left(feature.left);
   if (feature.right === undefined) {
     return characterSheetIssue(
@@ -58,11 +58,11 @@ function combatTurnStartHeroicInspirationFeature(input: {
     input.unitLibrary,
   )) {
     const unit = input.unitLibrary.getUnit(unitId);
-    /* v8 ignore start -- Malformed build/catalog correlation: every feature id admitted into the build must resolve in its retained Unit catalog. */
+    /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: every feature id admitted into the build must resolve in its retained Unit catalog. */
     if (Option.isNone(unit)) {
       return characterSheetIssue(`Missing class feature Unit ${unitId}.`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (isCombatTurnStartHeroicInspirationFeature(unit.value)) {
       return Either.right(unit.value);
     }

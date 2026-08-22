@@ -836,7 +836,7 @@ export function releaseGlyphExplosiveRune(input: {
       sourceEffectId,
     };
   }
-  /* v8 ignore start -- Invalid runtime state: addGlyphDurableOccurrence enforces source-effect uniqueness, so an admitted BattleState cannot contain multiple matching Glyph occurrences. */
+  /* v8 ignore start -- @preserve -- Invalid runtime state: addGlyphDurableOccurrence enforces source-effect uniqueness, so an admitted BattleState cannot contain multiple matching Glyph occurrences. */
   if (refs.length > 1) {
     return {
       tag: "ambiguousOccurrence",
@@ -844,8 +844,8 @@ export function releaseGlyphExplosiveRune(input: {
       sourceEffectId,
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
   const [ref] = refs;
   if (ref === undefined) {
     return {
@@ -854,14 +854,14 @@ export function releaseGlyphExplosiveRune(input: {
       sourceEffectId,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const validation = glyphExplosiveRuneReleaseWitnessValidation({
     state: input.state,
     profile: input.profile,
     effect: ref.effect,
     witness: input.witness,
   });
-  /* v8 ignore start -- Malformed release witness: trigger discovery binds the occurrence, branch, target geometry, and source identities that this defensive validator rejects. */
+  /* v8 ignore start -- @preserve -- Malformed release witness: trigger discovery binds the occurrence, branch, target geometry, and source identities that this defensive validator rejects. */
   if (validation !== null) {
     return {
       tag: "invalidWitness",
@@ -870,13 +870,13 @@ export function releaseGlyphExplosiveRune(input: {
       reason: validation,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const savingThrow = glyphExplosiveRuneSavingThrowCheck({
     state: input.state,
     effect: ref.effect,
     witness: input.witness,
   });
-  /* v8 ignore start -- Malformed saving-throw witness: the discovered Glyph holes fix target membership, outcome cardinality, and relationship facts before this release is called. */
+  /* v8 ignore start -- @preserve -- Malformed saving-throw witness: the discovered Glyph holes fix target membership, outcome cardinality, and relationship facts before this release is called. */
   if (savingThrow.tag === "invalid") {
     return {
       tag: "invalidWitness",
@@ -885,7 +885,7 @@ export function releaseGlyphExplosiveRune(input: {
       reason: savingThrow.reason,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (savingThrow.tag === "needsHoles") {
     return {
       tag: "needsHoles",
@@ -901,7 +901,7 @@ export function releaseGlyphExplosiveRune(input: {
     witness: input.witness,
     savingThrowOutcomes: savingThrow.outcomes,
   });
-  /* v8 ignore start -- Malformed damage-lifecycle witness: discovered reduction, concentration, and repeat-save holes are the only fills forwarded to this private check. */
+  /* v8 ignore start -- @preserve -- Malformed damage-lifecycle witness: discovered reduction, concentration, and repeat-save holes are the only fills forwarded to this private check. */
   if (lifecycle.tag === "invalid") {
     return {
       tag: "invalidWitness",
@@ -910,7 +910,7 @@ export function releaseGlyphExplosiveRune(input: {
       reason: lifecycle.reason,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (lifecycle.tag === "needsHoles") {
     return {
       tag: "needsHoles",
@@ -929,7 +929,7 @@ export function releaseGlyphExplosiveRune(input: {
     witness: input.witness,
     lifecycle: lifecycle.lifecycle,
   });
-  /* v8 ignore start -- Malformed release witness: validation above proves the explosive-rune target and damage facts consumed by the private apply step. */
+  /* v8 ignore start -- @preserve -- Malformed release witness: validation above proves the explosive-rune target and damage facts consumed by the private apply step. */
   if (applied.tag === "invalid") {
     return {
       tag: "invalidWitness",
@@ -938,7 +938,7 @@ export function releaseGlyphExplosiveRune(input: {
       reason: applied.reason,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "released",
     state: applied.state,
@@ -964,7 +964,7 @@ export function releaseGlyphStoredSpell(input: {
       sourceEffectId,
     };
   }
-  /* v8 ignore start -- Invalid runtime state: addGlyphDurableOccurrence enforces source-effect uniqueness, so an admitted BattleState cannot contain multiple matching Glyph occurrences. */
+  /* v8 ignore start -- @preserve -- Invalid runtime state: addGlyphDurableOccurrence enforces source-effect uniqueness, so an admitted BattleState cannot contain multiple matching Glyph occurrences. */
   if (refs.length > 1) {
     return {
       tag: "ambiguousOccurrence",
@@ -972,8 +972,8 @@ export function releaseGlyphStoredSpell(input: {
       sourceEffectId,
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
   const [ref] = refs;
   if (ref === undefined) {
     return {
@@ -982,14 +982,14 @@ export function releaseGlyphStoredSpell(input: {
       sourceEffectId,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const validation = glyphStoredSpellReleaseWitnessValidation({
     state: input.state,
     profile: input.profile,
     effect: ref.effect,
     witness: input.witness,
   });
-  /* v8 ignore start -- Malformed stored-spell witness: release discovery binds the occurrence, stored branch, triggering creature, and source identities rejected here. */
+  /* v8 ignore start -- @preserve -- Malformed stored-spell witness: release discovery binds the occurrence, stored branch, triggering creature, and source identities rejected here. */
   if (validation !== null) {
     return {
       tag: "invalidWitness",
@@ -1006,7 +1006,7 @@ export function releaseGlyphStoredSpell(input: {
       reason: "storedReleaseBranchMismatch",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const resolved = resolveStoredSpellGlyphRelease({
     state: input.state,
     profile: input.profile,
@@ -1106,7 +1106,7 @@ export function endGlyphDurableOccurrence(input: {
       sourceEffectId: input.witness.sourceEffectId,
     };
   }
-  /* v8 ignore start -- Invalid runtime state: addGlyphDurableOccurrence enforces source-effect uniqueness, so an admitted BattleState cannot contain multiple matching Glyph occurrences. */
+  /* v8 ignore start -- @preserve -- Invalid runtime state: addGlyphDurableOccurrence enforces source-effect uniqueness, so an admitted BattleState cannot contain multiple matching Glyph occurrences. */
   if (refs.length > 1) {
     return {
       tag: "ambiguousOccurrence",
@@ -1114,8 +1114,8 @@ export function endGlyphDurableOccurrence(input: {
       sourceEffectId: input.witness.sourceEffectId,
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
   const [ref] = refs;
   if (ref === undefined) {
     return {
@@ -1124,9 +1124,9 @@ export function endGlyphDurableOccurrence(input: {
       sourceEffectId: input.witness.sourceEffectId,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const validation = glyphEndWitnessValidation(ref.effect, input.witness);
-  /* v8 ignore start -- Malformed end witness: trigger discovery binds the occurrence identity and end-reason-specific movement or trigger facts checked here. */
+  /* v8 ignore start -- @preserve -- Malformed end witness: trigger discovery binds the occurrence identity and end-reason-specific movement or trigger facts checked here. */
   if (validation !== null) {
     return {
       tag: "invalidWitness",
@@ -1135,7 +1135,7 @@ export function endGlyphDurableOccurrence(input: {
       reason: validation,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ended",
     state: battleStateWithoutGlyphOccurrence(
@@ -1375,7 +1375,7 @@ type GlyphStoredSpellInvocationValidationResult =
       }
     >;
 
-/* v8 ignore start -- Malformed stored-invocation validator: Glyph inscription admission fixes spell level, storage support, procedure support, and target shape; admitted storage projection remains measured. */
+/* v8 ignore start -- @preserve -- Malformed stored-invocation validator: Glyph inscription admission fixes spell level, storage support, procedure support, and target shape; admitted storage projection remains measured. */
 function glyphStoredSpellInvocationValidation(input: {
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly release: GlyphDurableOccurrenceStoredSpellReleaseCandidate;
@@ -1402,7 +1402,7 @@ function glyphStoredSpellInvocationValidation(input: {
   }
   return { tag: "valid", storedInvocation };
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function glyphStoredSpellInvocationRequiresFullDurationOwner(
   invocation: GlyphStoredSpellCandidateFacts,
@@ -1490,7 +1490,7 @@ function isGlyphStoredSpiritualWeaponInvocation(
   return invocation.procedure === "spiritualWeaponAttackProxy";
 }
 
-/* v8 ignore start -- Malformed release-witness validator: Glyph release discovery binds occurrence branch, creature, target shape, placement, procedure, and area origin before execution. */
+/* v8 ignore start -- @preserve -- Malformed release-witness validator: Glyph release discovery binds occurrence branch, creature, target shape, placement, procedure, and area origin before execution. */
 function glyphStoredSpellReleaseWitnessValidation(input: {
   readonly state: BattleState;
   readonly profile: GlyphStoredSpellReleaseProfile;
@@ -1563,7 +1563,7 @@ function glyphStoredSpellReleaseWitnessValidation(input: {
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function isGlyphStoredSpellOccurrence(
   effect: GlyphDurableOccurrenceActiveEffect,
@@ -1571,7 +1571,7 @@ function isGlyphStoredSpellOccurrence(
   return effect.release.kind === "spellGlyph";
 }
 
-/* v8 ignore start -- Malformed placement-witness validator: the stored procedure determines whether hostile placement applies and fixes its subject, target, area, and reachable position facts. */
+/* v8 ignore start -- @preserve -- Malformed placement-witness validator: the stored procedure determines whether hostile placement applies and fixes its subject, target, area, and reachable position facts. */
 function glyphStoredSpellHostilePlacementValidation(input: {
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly invocation: GlyphStoredSpellProcedure;
@@ -1658,7 +1658,7 @@ function glyphStoredSpellHostilePlacementValidation(input: {
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function resolveStoredSpellGlyphRelease(input: {
   readonly state: BattleState;
@@ -1694,11 +1694,11 @@ function resolveStoredSpellGlyphRelease(input: {
     input.effect.sourceCombatantId,
     input.state,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const release = storedGlyphSpellReleasePlan(
     input.effect.release,
     procedureRef,
@@ -2138,7 +2138,7 @@ function combatantWithoutGlyphOccurrence(
     : { ...combatant, activeEffects };
 }
 
-/* v8 ignore start -- Malformed explosive-rune witness validator: trigger discovery fixes occurrence identity, covered area, affected targets, and save/damage lifecycle facts before release. */
+/* v8 ignore start -- @preserve -- Malformed explosive-rune witness validator: trigger discovery fixes occurrence identity, covered area, affected targets, and save/damage lifecycle facts before release. */
 function glyphExplosiveRuneReleaseWitnessValidation(input: {
   readonly state: BattleState;
   readonly profile: GlyphExplosiveRuneReleaseProfile;
@@ -2189,7 +2189,7 @@ function glyphExplosiveRuneReleaseWitnessValidation(input: {
     ? null
     : "damageRollMismatch";
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function affectedGlyphExplosiveRuneTargetIds(
   witness: GlyphExplosiveRuneReleaseWitness,

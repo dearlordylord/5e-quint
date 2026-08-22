@@ -191,7 +191,7 @@ function resolveSanctuaryTargetingInterdiction(
       spellTargetListHole(input.input.state, input.actorId, input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (targetList.targetIds.length !== 1) {
     return invalidResult(
       input.input.state,
@@ -199,14 +199,14 @@ function resolveSanctuaryTargetingInterdiction(
       "Sanctuary must target exactly one creature.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const targetId = targetList.targetIds[0]!;
   const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
     input.input.state,
     input.actorId,
   );
   const target = spellCastState.combatants.get(targetId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target === undefined ||
     !spellTargetIsLegal(
@@ -223,7 +223,7 @@ function resolveSanctuaryTargetingInterdiction(
       "Sanctuary target must be a combatant within range.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const combatants = new Map(spellCastState.combatants).set(
     targetId,
     combatantWithSanctuaryWard(target, input.invocation),

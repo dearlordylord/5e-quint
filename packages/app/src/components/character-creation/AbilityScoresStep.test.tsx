@@ -46,7 +46,10 @@ describe("AbilityScoresStep", () => {
     const holes = assessCharacterDraft(createCharacterDraft({})).holes
     render(<AbilityScoresStep holes={holes} onFill={vi.fn()} />)
 
-    fireEvent.change(screen.getByRole("combobox", { name: "Generation method" }), {
+    const method = screen.getByRole("combobox", { name: "Generation method" })
+    fireEvent.change(method, { target: { value: "unsupported" } })
+    expect((method as HTMLSelectElement).value).toBe("standardArray")
+    fireEvent.change(method, {
       target: { value: "pointBuy" }
     })
     for (const ability of Object.keys(STANDARD_ARRAY_BY_ABILITY)) {
@@ -55,7 +58,6 @@ describe("AbilityScoresStep", () => {
       })
     }
     expect(screen.getByText(/invalid point-buy scores/i)).toBeTruthy()
-
     fireEvent.change(screen.getByRole("spinbutton", { name: /str/i }), {
       target: { value: "" }
     })

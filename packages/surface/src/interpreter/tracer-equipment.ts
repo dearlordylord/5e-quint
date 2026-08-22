@@ -246,12 +246,12 @@ export function describeWeaponApplicability(
       return "(any melee weapon)";
     case "ammunition":
       return "(ammunition)";
-    /* v8 ignore start -- weapon applicability is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- weapon applicability is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = applicability;
       throw new Error(`unhandled weapon applicability: ${String(_exhaustive)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -280,12 +280,12 @@ export function describeArmorAcFormula(formula: ArmorAcFormula): string {
       return `${formula.base} + DEX mod (max 2)`;
     case "heavy_fixed":
       return `${formula.ac}`;
-    /* v8 ignore start -- armor AC formula is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- armor AC formula is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = formula;
       throw new Error(`unhandled armor AC formula: ${String(_exhaustive)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -295,12 +295,12 @@ export function describeWeaponDamage(damage: WeaponDamage): string {
       return `${damage.dice}d${damage.dieSize} ${damage.damageType}`;
     case "flat":
       return `${damage.amount} ${damage.damageType}`;
-    /* v8 ignore start -- weapon damage is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- weapon damage is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = damage;
       throw new Error(`unhandled weapon damage: ${String(_exhaustive)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -322,12 +322,12 @@ export function describeWeaponProperty(property: WeaponPropertyDetail): string {
       return `thrown (${property.range.normal}/${property.range.long})`;
     case "versatile":
       return `versatile (${describeWeaponDamage(property.damage)})`;
-    /* v8 ignore start -- weapon property is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- weapon property is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = property;
       throw new Error(`unhandled weapon property: ${String(_exhaustive)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 

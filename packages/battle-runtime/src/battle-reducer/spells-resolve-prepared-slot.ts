@@ -103,7 +103,7 @@ export function resolvePreparedSlotSpellAct(input: {
     input.actorId,
     input.invocation,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fillSet.targetId !== undefined) {
     return invalidResult(
       input.input.state,
@@ -111,8 +111,8 @@ export function resolvePreparedSlotSpellAct(input: {
       "Repeated-damage slot spells use spell target allocation fills, not a single-target fill.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fillSet.attackRoll !== undefined) {
     return invalidResult(
       input.input.state,
@@ -120,7 +120,7 @@ export function resolvePreparedSlotSpellAct(input: {
       `Spell does not use an attack roll.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.targetAllocation === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       allocationHole,
@@ -134,7 +134,7 @@ export function resolvePreparedSlotSpellAct(input: {
     targetAllocation.allocations,
     targetAllocation.spatialFacts,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (allocationValidation !== null) {
     return invalidResult(
       input.input.state,
@@ -142,7 +142,7 @@ export function resolvePreparedSlotSpellAct(input: {
       allocationValidation,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   for (const allocation of targetAllocation.allocations) {
     const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
@@ -165,7 +165,7 @@ export function resolvePreparedSlotSpellAct(input: {
         sanctuaryCheck.hole,
       ]);
     }
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (sanctuaryCheck.tag === "invalid") {
       return invalidResult(
         input.input.state,
@@ -173,7 +173,7 @@ export function resolvePreparedSlotSpellAct(input: {
         sanctuaryCheck.message,
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (sanctuaryCheck.tag === "lost") {
       return input.spendsCastResources === false
         ? {
@@ -192,7 +192,7 @@ export function resolvePreparedSlotSpellAct(input: {
     const replacementFacts = spellAllocationSpatialFacts(
       sanctuaryCheck.spatialFacts,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (replacementFacts === null) {
       return invalidResult(
         input.input.state,
@@ -200,11 +200,11 @@ export function resolvePreparedSlotSpellAct(input: {
         "Sanctuary replacement Magic Missile target must include allocation-compatible spell target facts.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const replacementTarget = input.input.state.combatants.get(
       sanctuaryCheck.targetId,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (replacementTarget === undefined) {
       return invalidResult(
         input.input.state,
@@ -212,7 +212,7 @@ export function resolvePreparedSlotSpellAct(input: {
         "Sanctuary replacement Magic Missile target must be a combatant in this battle.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const originalAllocationFill = input.input.fills.find(
       (
         fill,
@@ -223,7 +223,7 @@ export function resolvePreparedSlotSpellAct(input: {
         fill.kind === "spellTargetAllocation" &&
         fill.holeId === allocationHole.holeId,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (originalAllocationFill === undefined) {
       return invalidResult(
         input.input.state,
@@ -231,7 +231,7 @@ export function resolvePreparedSlotSpellAct(input: {
         "Sanctuary replacement requires the original Magic Missile allocation fill.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const allocationCounts = new Map<CombatantId, number>();
     for (const currentAllocation of targetAllocation.allocations) {
       const targetId =
@@ -273,11 +273,11 @@ export function resolvePreparedSlotSpellAct(input: {
       input.actorId,
       input.input.state,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.tag === "invalid") {
       return invalidResult(input.input.state, "invalidFill", fillSet.message);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return resolvePreparedSlotSpellAct({
       ...input,
       input: { ...input.input, fills },
@@ -306,7 +306,7 @@ export function resolvePreparedSlotSpellAct(input: {
   }
 
   if (input.fillSet.damageRoll == null) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (input.fillSet.sourceDamageRollPenaltyRolls.length > 0) {
       return invalidResult(
         input.input.state,
@@ -314,7 +314,7 @@ export function resolvePreparedSlotSpellAct(input: {
         "Source damage roll penalty does not match an active source-side damage penalty.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return needsHolesResult(input.input.state, input.input.subject, [
       spellDamageHole(input.invocation),
     ]);
@@ -326,21 +326,21 @@ export function resolvePreparedSlotSpellAct(input: {
       damageRoll,
       targetAllocation.allocations,
     );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageValidation !== null) {
     return invalidResult(input.input.state, "invalidFill", damageValidation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const source = input.input.state.combatants.get(input.actorId);
   const expectedSourcePenaltyHoles = targetAllocation.allocations.flatMap(
     (allocation, allocationIndex) => {
       const target = input.input.state.combatants.get(allocation.targetId);
-      /* v8 ignore start -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
+      /* v8 ignore start -- @preserve -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
       if (target === undefined) {
         return [];
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const damageByType = repeatedDamageAllocationSpellDamageByType(
         target,
         input.invocation,
@@ -359,7 +359,7 @@ export function resolvePreparedSlotSpellAct(input: {
       return hole === null ? [] : [hole];
     },
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     unexpectedSourceDamageRollPenaltyRoll(
       input.fillSet.sourceDamageRollPenaltyRolls,
@@ -372,18 +372,18 @@ export function resolvePreparedSlotSpellAct(input: {
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const damageAmountByAllocationIndex = new Map<number, number>();
   for (const [
     allocationIndex,
     allocation,
   ] of targetAllocation.allocations.entries()) {
     const target = input.input.state.combatants.get(allocation.targetId);
-    /* v8 ignore start -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
+    /* v8 ignore start -- @preserve -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
     if (target === undefined) {
       continue;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const damageByType = repeatedDamageAllocationSpellDamageByType(
       target,
       input.invocation,
@@ -407,7 +407,7 @@ export function resolvePreparedSlotSpellAct(input: {
         sourcePenaltyDamageRollHoleId,
       ),
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (sourcePenalty.tag === "invalid") {
       return invalidResult(
         input.input.state,
@@ -415,7 +415,7 @@ export function resolvePreparedSlotSpellAct(input: {
         "Source damage roll penalty does not match an active source-side damage penalty.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (sourcePenalty.tag === "needsHoles") {
       return needsHolesResult(input.input.state, input.input.subject, [
         ...sourcePenalty.holes,
@@ -434,11 +434,11 @@ export function resolvePreparedSlotSpellAct(input: {
   const allocationTargetDamageAmounts = targetAllocation.allocations.flatMap(
     (allocation, allocationIndex) => {
       const target = input.input.state.combatants.get(allocation.targetId);
-      /* v8 ignore start -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
+      /* v8 ignore start -- @preserve -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
       if (target === undefined) {
         return [];
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const damageAmount =
         damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
       return [{ target, damageAmount }];
@@ -470,7 +470,7 @@ export function resolvePreparedSlotSpellAct(input: {
   const concentrationSaveIds = new Set<BattleHoleId>(
     concentrationSaves.map((concentrationSave) => concentrationSave.holeId),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.concentrationSavingThrows.some(
       (fill) => !concentrationSaveIds.has(fill.holeId),
@@ -482,7 +482,7 @@ export function resolvePreparedSlotSpellAct(input: {
       "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const damageDispositionHoles = allocationTargetDamageAmounts.flatMap(
     ({ target, damageAmount }) => {
       const hole = zeroHitPointReplacementDispositionHole({
@@ -497,7 +497,7 @@ export function resolvePreparedSlotSpellAct(input: {
     holes: damageDispositionHoles,
     fills: input.fillSet.damageDispositions,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageDispositionValidation !== null) {
     return invalidResult(
       input.input.state,
@@ -505,7 +505,7 @@ export function resolvePreparedSlotSpellAct(input: {
       damageDispositionValidation,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const missingDamageDispositionHoles = damageDispositionHoles.filter(
     (hole) =>
       damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
@@ -519,11 +519,11 @@ export function resolvePreparedSlotSpellAct(input: {
   const hideousLaughterSaveChecks = targetAllocation.allocations.map(
     (allocation, allocationIndex) => {
       const target = input.input.state.combatants.get(allocation.targetId);
-      /* v8 ignore start -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
+      /* v8 ignore start -- @preserve -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
       if (target === undefined) {
         return { tag: "ok" as const, holes: [] };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const damageAmount =
         damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
       const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
@@ -545,7 +545,7 @@ export function resolvePreparedSlotSpellAct(input: {
   const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
     (check) => check.tag === "invalid",
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (invalidHideousLaughterSaveCheck?.tag === "invalid") {
     return invalidResult(
       input.input.state,
@@ -553,7 +553,7 @@ export function resolvePreparedSlotSpellAct(input: {
       invalidHideousLaughterSaveCheck.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const missingHideousLaughterSaveHoles = hideousLaughterSaveChecks.flatMap(
     (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
   );
@@ -567,7 +567,7 @@ export function resolvePreparedSlotSpellAct(input: {
       check.tag === "invalid" ? [] : check.holes.map((hole) => hole.holeId),
     ),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.hideousLaughterDamageRepeatSaves.some(
       (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
@@ -579,7 +579,7 @@ export function resolvePreparedSlotSpellAct(input: {
       "Hideous Laughter damage repeat save fill must match a requested damaged target.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const relationshipCheck = damageRelationshipDecisionFillCheck({
     state: input.input.state,
@@ -614,7 +614,7 @@ export function resolvePreparedSlotSpellAct(input: {
       relationshipCheck.holes,
     );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipCheck.tag === "invalid") {
     return invalidResult(
       input.input.state,
@@ -622,7 +622,7 @@ export function resolvePreparedSlotSpellAct(input: {
       relationshipCheck.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spellEffectState =
     input.spendsCastResources === false
       ? input.input.state
@@ -633,11 +633,11 @@ export function resolvePreparedSlotSpellAct(input: {
   const damaged = targetAllocation.allocations.reduce(
     (state, allocation, allocationIndex) => {
       const target = state.combatants.get(allocation.targetId);
-      /* v8 ignore start -- Validated allocation IDs are unique current members; an earlier damage application can remove only its own zero-HP familiar, never a distinct later allocation target. */
+      /* v8 ignore start -- @preserve -- Validated allocation IDs are unique current members; an earlier damage application can remove only its own zero-HP familiar, never a distinct later allocation target. */
       if (target === undefined) {
         return state;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const damageAmount =
         damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
       const concentrationSave = concentrationSavingThrowHole(
@@ -717,11 +717,11 @@ export function resolvePreparedSlotSpellAct(input: {
     const afterDamageEvents = targetAllocation.allocations.flatMap(
       (allocation, allocationIndex): readonly BattleAfterDamageEvent[] => {
         const target = input.input.state.combatants.get(allocation.targetId);
-        /* v8 ignore start -- Validated allocation IDs come from the current combatant map and the after-damage projection reads that unchanged map. */
+        /* v8 ignore start -- @preserve -- Validated allocation IDs come from the current combatant map and the after-damage projection reads that unchanged map. */
         if (target === undefined) {
           return [];
         }
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
         const damageAmount =
           damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
         return [
@@ -791,11 +791,11 @@ function repeatedDamageAllocationSpellDamageByType(
     return new Map();
   }
   const group = damageRoll.value[allocationIndex];
-  /* v8 ignore start -- validatePreparedSlotSpellDamageGroups proves one dense dice group per validated allocation entry before this helper is called. */
+  /* v8 ignore start -- @preserve -- validatePreparedSlotSpellDamageGroups proves one dense dice group per validated allocation entry before this helper is called. */
   if (group === undefined) {
     return new Map();
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const diceTotal = group.results.reduce(
     (groupTotal, dieResult): number => groupTotal + Number(dieResult),
     0,

@@ -368,16 +368,16 @@ function parseStoredRetainedCompanionHitPoints(
     return characterSheetIssue("Expected retained companion hit points.");
   }
   const currentHp = parseHp(value.currentHp);
-  /* v8 ignore next -- Malformed stored companion state: current HP must parse as a nonnegative HP value at this raw boundary. */
+  /* v8 ignore next -- @preserve -- Malformed stored companion state: current HP must parse as a nonnegative HP value at this raw boundary. */
   if (Either.isLeft(currentHp)) return Either.left(currentHp.left);
   const positiveCurrentHp =
     parseCharacterSheetRetainedCompanionCurrentHitPoints(currentHp.right);
-  /* v8 ignore start -- Malformed stored companion state: retained companions require positive current HP. */
+  /* v8 ignore start -- @preserve -- Malformed stored companion state: retained companions require positive current HP. */
   if (Either.isLeft(positiveCurrentHp))
     return Either.left(positiveCurrentHp.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const tempHp = parseHp(value.tempHp);
-  /* v8 ignore next -- Malformed stored companion state: temporary HP must parse as a nonnegative HP value at this raw boundary. */
+  /* v8 ignore next -- @preserve -- Malformed stored companion state: temporary HP must parse as a nonnegative HP value at this raw boundary. */
   return Either.isLeft(tempHp)
     ? Either.left(tempHp.left)
     : Either.right({
@@ -421,13 +421,13 @@ function retainedCompanionCreationSource(
       spellId: source.spellId,
       invocation: { kind: "ritual" },
     });
-    /* v8 ignore next -- Malformed retained companion request: a ritual source must pass the spell-access invocation boundary that admitted it. */
+    /* v8 ignore next -- @preserve -- Malformed retained companion request: a ritual source must pass the spell-access invocation boundary that admitted it. */
     if (Either.isLeft(invocation)) return Either.left(invocation.left);
     const spell = requiredSpellRecord(
       input.unitLibrary,
       invocation.right.spellId,
     );
-    /* v8 ignore next -- Malformed support catalog: the admitted retained-companion ritual spell id must resolve to its Spell Unit. */
+    /* v8 ignore next -- @preserve -- Malformed support catalog: the admitted retained-companion ritual spell id must resolve to its Spell Unit. */
     if (Either.isLeft(spell)) return Either.left(spell.left);
     const eligibility = findFamiliarFormEligibilityForSpell(spell.right);
     return eligibility === null
@@ -474,7 +474,7 @@ function retainedCompanionCreationSource(
     input.unitLibrary,
     authoredUnitId(feature.right.mechanics.spellId),
   );
-  /* v8 ignore next -- Malformed support catalog: the admitted retained-companion feature spell id must resolve to its Spell Unit. */
+  /* v8 ignore next -- @preserve -- Malformed support catalog: the admitted retained-companion feature spell id must resolve to its Spell Unit. */
   if (Either.isLeft(spell)) return Either.left(spell.left);
   const eligibility = findFamiliarFormEligibilityForSpell(spell.right);
   return eligibility === null
@@ -691,7 +691,7 @@ function spendRetainedCompanionUseCountResource(input: {
   readonly resourceUnitId: UnitRecord["id"];
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
-  /* v8 ignore next -- Malformed build/catalog correlation: retained-companion spending reuses the resource projection admitted for this sheet. */
+  /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: retained-companion spending reuses the resource projection admitted for this sheet. */
   if (Either.isLeft(resources)) return Either.left(resources.left);
   const resource = resources.right.find(
     (
@@ -703,13 +703,13 @@ function spendRetainedCompanionUseCountResource(input: {
       candidate.tag === "useCountResource" &&
       candidate.unitId === input.resourceUnitId,
   );
-  /* v8 ignore start -- Malformed retained companion request: a use-count spend must name the admitted resource selected with its feature source. */
+  /* v8 ignore start -- @preserve -- Malformed retained companion request: a use-count spend must name the admitted resource selected with its feature source. */
   if (resource === undefined) {
     return characterSheetIssue(
       "Retained companion class-feature spend requires the selected use-count resource.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (resource.expended >= resource.count) {
     return characterSheetIssue(
       "Retained companion class-feature spend requires an unexpended use-count resource.",

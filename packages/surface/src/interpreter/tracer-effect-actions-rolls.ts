@@ -471,7 +471,7 @@ export function traceActionAndRollEffectAtom(
       });
       return id;
     }
-    /* v8 ignore next -- the valid block-targeting arm is directly asserted in tracer.test.ts; V8 retains a zero-count switch-arm artifact in aggregate coverage */
+    /* v8 ignore next -- @preserve -- the valid block-targeting arm is directly asserted in tracer.test.ts; V8 retains a zero-count switch-arm artifact in aggregate coverage */
     case "block_targeting": {
       const id = ids("eff");
       nodes.push({
@@ -522,13 +522,13 @@ export function traceActionAndRollEffectAtom(
       });
       return id;
     }
-    /* v8 ignore start -- this action/roll effect subset is decoder-narrowed to the handled tags */
+    /* v8 ignore start -- @preserve -- this action/roll effect subset is decoder-narrowed to the handled tags */
     default: {
       const _exhaustive: never = e;
       throw new Error(
         `unhandled action or roll effect atom: ${String(_exhaustive)}`,
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }

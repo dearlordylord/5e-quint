@@ -121,11 +121,11 @@ export function presentFindFamiliarHitPoints(
     return "Present Find Familiar combatant is missing.";
   }
   const currentHp = findFamiliarCurrentHitPoints(combatant.hp);
-  /* v8 ignore start -- Present-companion lifecycle invariant: a familiar at zero HP is transitioned and removed atomically before present-state HP is retained. */
+  /* v8 ignore start -- @preserve -- Present-companion lifecycle invariant: a familiar at zero HP is transitioned and removed atomically before present-state HP is retained. */
   if (typeof currentHp === "string") {
     return currentHp;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     currentHp,
     tempHp: combatant.tempHp,
@@ -201,11 +201,11 @@ export function temporarilyDismissFindFamiliar(
     withFindFamiliar(spent.state, nextFamiliar),
     familiarId,
   );
-  /* v8 ignore start -- Atomic dismissal invariant: the present companion was resolved from this roster immediately before its combatant is removed. */
+  /* v8 ignore start -- @preserve -- Atomic dismissal invariant: the present companion was resolved from this roster immediately before its combatant is removed. */
   if (nextState.tag === "invalid") {
     return nextState;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return resolvedFindFamiliarResult(
     nextState.state,
     droppedObjectsForFamiliarDisappearance({
@@ -230,23 +230,23 @@ function temporarilyDismissFindFamiliarFacts(
   familiarId: CombatantId,
 ): TemporarilyDismissFindFamiliarFacts | string {
   const hitPoints = presentFindFamiliarHitPoints(input.state, familiarId);
-  /* v8 ignore start -- Present-companion lifecycle invariant: zero-HP damage processing transitions and removes the familiar atomically before a dismissal can observe it as present. */
+  /* v8 ignore start -- @preserve -- Present-companion lifecycle invariant: zero-HP damage processing transitions and removes the familiar atomically before a dismissal can observe it as present. */
   if (typeof hitPoints === "string") return hitPoints;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const combatant = input.state.combatants.get(familiarId);
-  /* v8 ignore start -- Present-companion lifecycle invariant: the same live combatant that supplied retained Hit Points owns its Reaction availability. */
+  /* v8 ignore start -- @preserve -- Present-companion lifecycle invariant: the same live combatant that supplied retained Hit Points owns its Reaction availability. */
   if (combatant === undefined) {
     return "Present Find Familiar combatant is missing.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const retainedForm = retainedStoredFormForPresentCompanion({
     state: input.state,
     companionId: familiarId,
     companion: familiar,
   });
-  /* v8 ignore start -- Present-companion invariant: dismissal receives the form and live Stat Block combatant admitted together; a retained-form mismatch requires externally corrupted companion state. */
+  /* v8 ignore start -- @preserve -- Present-companion invariant: dismissal receives the form and live Stat Block combatant admitted together; a retained-form mismatch requires externally corrupted companion state. */
   if (typeof retainedForm === "string") return retainedForm;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     hitPoints,
     ammunitionStocks: combatant.ammunitionStocks,
@@ -298,11 +298,11 @@ export function permanentlyDismissFindFamiliar(
     { ...spent.state, companions },
     familiar.combatantId,
   );
-  /* v8 ignore start -- Atomic permanent-dismissal invariant: a present companion's combatant is removed from the same roster entry that supplied its identity. */
+  /* v8 ignore start -- @preserve -- Atomic permanent-dismissal invariant: a present companion's combatant is removed from the same roster entry that supplied its identity. */
   if (nextState.tag === "invalid") {
     return nextState;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return resolvedFindFamiliarResult(nextState.state, []);
 }
 
@@ -312,7 +312,7 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
   const state = input.admission.state;
   const casterId = input.admission.subject.actorId;
   const familiarEntry = findCompanionEntryByOwner(state.companions, casterId);
-  /* v8 ignore start -- Reappearance admission proves this owner has the temporarily dismissed companion represented by the admitted form. */
+  /* v8 ignore start -- @preserve -- Reappearance admission proves this owner has the temporarily dismissed companion represented by the admitted form. */
   if (
     familiarEntry === undefined ||
     familiarEntry.companion.status !== "temporarilyDismissed"
@@ -323,9 +323,9 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
       "Find Familiar can reappear only from temporary dismissal.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const familiar = familiarEntry.companion;
-  /* v8 ignore start -- The admission object is constructed from this retained companion; a differing reappearance id requires corrupting the branded admission. */
+  /* v8 ignore start -- @preserve -- The admission object is constructed from this retained companion; a differing reappearance id requires corrupting the branded admission. */
   if (
     input.admission.combatantAdmission.combatantId !==
     familiar.reappearanceCombatantId
@@ -336,17 +336,17 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
       "Find Familiar reappearance admission does not match the retained familiar.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const identityIssue = findFamiliarIdentityIssue(
     state,
     casterId,
     familiar.reappearanceCombatantId,
   );
-  /* v8 ignore start -- Reappearance admission collision-checks the retained combatant id against the current roster immediately before commit. */
+  /* v8 ignore start -- @preserve -- Reappearance admission collision-checks the retained combatant id against the current roster immediately before commit. */
   if (identityIssue !== null) {
     return invalidFindFamiliarResult(state, "invalidFill", identityIssue);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextFamiliar = findFamiliarPresentState({
     form: familiar,
     combatantId: familiar.reappearanceCombatantId,
@@ -376,11 +376,11 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
     ammunitionStocks: familiar.ammunitionStocks,
     reactionAvailable: familiar.reactionAvailable,
   });
-  /* v8 ignore start -- Admitted reappearance commit: owner, identity, form, HP, and roster insertion were proven together before this helper returns. */
+  /* v8 ignore start -- @preserve -- Admitted reappearance commit: owner, identity, form, HP, and roster insertion were proven together before this helper returns. */
   if (nextState.tag === "invalid") {
     return nextState;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return resolvedFindFamiliarResult(
     nextState.state,
     [],
@@ -406,15 +406,15 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
     companionId: input.familiarId,
     companion: entry.familiar,
   });
-  /* v8 ignore start -- Zero-HP disappearance starts from a present companion and the live Stat Block combatant admitted with its stored form. */
+  /* v8 ignore start -- @preserve -- Zero-HP disappearance starts from a present companion and the live Stat Block combatant admitted with its stored form. */
   if (typeof retainedForm === "string") {
     return invalidFindFamiliarResult(input.state, "invalidFill", retainedForm);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const reactionAvailable = input.state.combatants.get(
     input.familiarId,
   )?.reactionAvailable;
-  /* v8 ignore start -- Zero-HP disappearance starts from the present familiar combatant that owns the retained Reaction resource. */
+  /* v8 ignore start -- @preserve -- Zero-HP disappearance starts from the present familiar combatant that owns the retained Reaction resource. */
   if (reactionAvailable === undefined) {
     return invalidFindFamiliarResult(
       input.state,
@@ -422,7 +422,7 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
       "Present Find Familiar combatant is missing.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextFamiliar = findFamiliarDisappearedAtZeroHitPointsState({
     storedForm: retainedForm,
     identity: entry.familiar.identity,
@@ -435,11 +435,11 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
     withFindFamiliar(input.state, nextFamiliar),
     input.familiarId,
   );
-  /* v8 ignore start -- Atomic zero-HP lifecycle invariant: the present companion lookup and combatant removal operate on the same roster state. */
+  /* v8 ignore start -- @preserve -- Atomic zero-HP lifecycle invariant: the present companion lookup and combatant removal operate on the same roster state. */
   if (nextState.tag === "invalid") {
     return nextState;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return resolvedFindFamiliarResult(
     nextState.state,
     droppedObjectsForFamiliarDisappearance({
@@ -464,7 +464,7 @@ export function withFindFamiliarCombatant(input: {
 }):
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
-  /* v8 ignore start -- Internal commit invariant: cast and reappearance workflows establish the caster in the battle before constructing an admitted familiar. */
+  /* v8 ignore start -- @preserve -- Internal commit invariant: cast and reappearance workflows establish the caster in the battle before constructing an admitted familiar. */
   if (!input.state.combatants.has(input.casterId)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -472,18 +472,18 @@ export function withFindFamiliarCombatant(input: {
       "Find Familiar caster is not in this battle.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const priorWithoutFamiliar = withoutPresentFindFamiliarCombatant(
     input.state,
     input.familiarId,
   );
-  /* v8 ignore start -- Internal commit invariant: callers collision-check familiar identity, so removing the prior manifestation cannot fail its roster checks. */
+  /* v8 ignore start -- @preserve -- Internal commit invariant: callers collision-check familiar identity, so removing the prior manifestation cannot fail its roster checks. */
   if (priorWithoutFamiliar.tag === "invalid") {
     return priorWithoutFamiliar;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const maxHp = input.combatantAdmission.initialization.maxHp;
-  /* v8 ignore start -- Admitted Stat Block invariant: combatant admission parses maximum HP as a positive integer before this commit helper receives it. */
+  /* v8 ignore start -- @preserve -- Admitted Stat Block invariant: combatant admission parses maximum HP as a positive integer before this commit helper receives it. */
   if (maxHp < Hp(1)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -491,8 +491,8 @@ export function withFindFamiliarCombatant(input: {
       "Present Find Familiar requires maximum HP above 0.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Retained-companion invariant: reappearance HP is captured only from a previously admitted, living familiar manifestation. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Retained-companion invariant: reappearance HP is captured only from a previously admitted, living familiar manifestation. */
   if (input.currentHp !== undefined && input.currentHp < Hp(1)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -500,8 +500,8 @@ export function withFindFamiliarCombatant(input: {
       "Present Find Familiar admission requires current HP above 0.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Retained-companion invariant: stored current HP originates from the same admitted form and therefore cannot exceed its maximum HP. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Retained-companion invariant: stored current HP originates from the same admitted form and therefore cannot exceed its maximum HP. */
   if (input.currentHp !== undefined && input.currentHp > maxHp) {
     return invalidFindFamiliarResult(
       input.state,
@@ -509,7 +509,7 @@ export function withFindFamiliarCombatant(input: {
       "Present Find Familiar admission current HP must not exceed maximum HP.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const added = addBattleStatBlockCombatant({
     state: priorWithoutFamiliar.state,
     combatant: {
@@ -522,7 +522,7 @@ export function withFindFamiliarCombatant(input: {
       reactionAvailable: input.reactionAvailable,
     },
   });
-  /* v8 ignore start -- Internal commit invariant: the familiar identity was collision-checked and its Stat Block combatant admission succeeded immediately before insertion. */
+  /* v8 ignore start -- @preserve -- Internal commit invariant: the familiar identity was collision-checked and its Stat Block combatant admission succeeded immediately before insertion. */
   if (Either.isLeft(added)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -530,7 +530,7 @@ export function withFindFamiliarCombatant(input: {
       battleStateInitIssueMessage(added.left),
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "resolved",
     state: withFindFamiliar(added.right, input.familiar),
@@ -552,7 +552,7 @@ function withoutPresentFindFamiliarCombatant(
     state,
     combatantIds: [familiarId],
   });
-  /* v8 ignore start -- Internal removal invariant: callers pass an id already proven to be the present companion in this roster, so lifecycle-alignment removal cannot fail. */
+  /* v8 ignore start -- @preserve -- Internal removal invariant: callers pass an id already proven to be the present companion in this roster, so lifecycle-alignment removal cannot fail. */
   if (Either.isLeft(removed)) {
     return invalidFindFamiliarResult(
       state,
@@ -560,7 +560,7 @@ function withoutPresentFindFamiliarCombatant(
       battleStateInitIssueMessage(removed.left),
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return { tag: "resolved", state: { ...removed.right, companions } };
 }
 

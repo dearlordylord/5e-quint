@@ -34,14 +34,14 @@ export function castMislead(input: {
     spellLevel: MISLEAD_SPELL_LEVEL,
     spellName: "Mislead",
     invocation: (spell) => {
-      /* v8 ignore start -- Noninteger or nonpositive Speed is malformed Mislead casting input. */
+      /* v8 ignore start -- @preserve -- Noninteger or nonpositive Speed is malformed Mislead casting input. */
       if (!Number.isInteger(input.casting.casterSpeedFeet)) {
         return characterSheetIssue("Mislead requires an integer caster Speed.");
       }
       if (input.casting.casterSpeedFeet <= 0) {
         return characterSheetIssue("Mislead requires a positive caster Speed.");
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       return misleadInvocationFromSpell({
         spell: spell,
         casting: input.casting,
@@ -55,7 +55,7 @@ function misleadInvocationFromSpell(input: {
   readonly casting: CharacterSheetMisleadCasting;
 }): Either.Either<CharacterSheetMisleadInvocation, CharacterSheetIssue> {
   const spell = input.spell;
-  /* v8 ignore start -- The catalog record failed the exact authored level-5 Mislead support profile required by this projector. */
+  /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Mislead support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -73,9 +73,9 @@ function misleadInvocationFromSpell(input: {
       "Mislead requires the supported self-range level-5 Illusion profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
-  /* v8 ignore start -- The catalog record has Mislead spell facts but no supported Invisible early-ending profile. */
+  /* v8 ignore start -- @preserve -- The catalog record has Mislead spell facts but no supported Invisible early-ending profile. */
   if (
     !hasDurationEnd(spell, "target_makes_attack_roll") ||
     !hasDurationEnd(spell, "target_deals_damage") ||
@@ -85,7 +85,7 @@ function misleadInvocationFromSpell(input: {
       "Mislead requires the supported Invisible early-ending profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const directPhase = spell.mechanics.phases.find(
     (phase) =>
@@ -96,20 +96,20 @@ function misleadInvocationFromSpell(input: {
           effect.kind === "apply_condition" && effect.condition === "invisible",
       ) === true,
   );
-  /* v8 ignore start -- The catalog record has Mislead spell facts but no supported direct self phase. */
+  /* v8 ignore start -- @preserve -- The catalog record has Mislead spell facts but no supported direct self phase. */
   if (directPhase === undefined) {
     return characterSheetIssue(
       "Mislead requires the supported self Invisible profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
-  /* v8 ignore start -- The authored Mislead duration admitted above is always accepted by the elapsed-time parser. */
+  /* v8 ignore start -- @preserve -- The authored Mislead duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Mislead requires a supported duration.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     tag: "mislead",

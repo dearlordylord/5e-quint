@@ -76,5 +76,16 @@ describe("EventLog", () => {
       />
     )
     expect(scrollTo).toHaveBeenLastCalledWith({ top: 20 })
+
+    rowTop = 20
+    visibleTop = 0
+    view.rerender(
+      <EventLog
+        cursor={1}
+        entries={[{ label: "Started", detail: "Round one" }, { label: "Current" }, { label: "Future", detail: "" }]}
+        onJumpTo={onJumpTo}
+      />
+    )
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 20 })
   })
 })

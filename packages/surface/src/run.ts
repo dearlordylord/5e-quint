@@ -1,4 +1,4 @@
-/* v8 ignore start -- this file is only the Node process bootstrap; run-cli.test.ts covers the argument, decoding, rendering, and output behavior */
+/* v8 ignore start -- @preserve -- this file is only the Node process bootstrap; run-cli.test.ts covers the argument, decoding, rendering, and output behavior */
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { argv, exit, stdout } from "node:process";
@@ -12,4 +12,4 @@ const exitCode = runSurfaceTraceCli(argv.slice(2), {
   writeStdout: (contents) => stdout.write(contents),
 });
 if (exitCode !== 0) exit(exitCode);
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */

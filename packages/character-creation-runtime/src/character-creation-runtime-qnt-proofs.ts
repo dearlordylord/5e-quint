@@ -21,7 +21,7 @@ export function discoverProofModules(): readonly ProofModule[] {
 export { proofModuleTimeoutMs };
 export type { ProofModuleOutcome };
 
-/* v8 ignore start -- QNT proof execution belongs to the opt-in proof lane, not V8 unit coverage. */
+/* v8 ignore start -- @preserve -- QNT proof execution belongs to the opt-in proof lane, not V8 unit coverage. */
 export async function runProofModule(
   proofModule: ProofModule,
 ): Promise<ProofModuleOutcome> {
@@ -31,4 +31,4 @@ export async function runProofModule(
     matchPattern: testNamePrefix,
   });
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */

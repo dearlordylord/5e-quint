@@ -307,7 +307,7 @@ function discoverSlowActivePenaltiesCastAct(
 function resolveSlowActivePenalties(
   input: SlowActivePenaltiesResolveInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.targetList !== undefined ||
@@ -322,7 +322,7 @@ function resolveSlowActivePenalties(
       "Slow uses an area Saving Throw outcome fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaSave = resolveAreaSaveMetamagicFills({
     state: input.input.state,
     subject: input.input.subject,
@@ -340,7 +340,7 @@ function resolveSlowActivePenalties(
     savingThrowOutcomes,
     input.invocation.maxTargets,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (areaWitnessValidation !== null) {
     return invalidResult(
       input.input.state,
@@ -348,7 +348,7 @@ function resolveSlowActivePenalties(
       areaWitnessValidation,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const affectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
@@ -467,7 +467,7 @@ function applySlowActivePenaltyEffects(
   };
 }
 
-/* v8 ignore start -- Malformed area-witness validator: Slow discovery supplies the typed Cube geometry, unique chosen targets, and matching outcomes; admitted Slow execution remains measured. */
+/* v8 ignore start -- @preserve -- Malformed area-witness validator: Slow discovery supplies the typed Cube geometry, unique chosen targets, and matching outcomes; admitted Slow execution remains measured. */
 function validateSlowAreaWitness(
   savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue,
   maxTargets: 6,
@@ -513,7 +513,7 @@ function validateSlowAreaWitness(
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 const SlowActivePenaltiesInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({

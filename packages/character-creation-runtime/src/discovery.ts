@@ -245,7 +245,7 @@ export function discoverClassGrantedHoles(input: {
   const startingUnitId = startingClassUnitId(progression);
   const classUnitId = startingUnitId;
   const classUnit = input.unitLibrary.getUnit(classUnitId);
-  /* v8 ignore start -- Supported progression admission resolves its starting class from this same catalog and parses its class facts. */
+  /* v8 ignore start -- @preserve -- Supported progression admission resolves its starting class from this same catalog and parses its class facts. */
   if (Option.isNone(classUnit)) {
     return [];
   }
@@ -254,7 +254,7 @@ export function discoverClassGrantedHoles(input: {
   if (facts.tag !== "readable") {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return [
     ...unselectedUnitChoiceHole(
@@ -480,11 +480,11 @@ function pactMagicSpellOptionsAvailableToSpellcasting(
     { readonly kind: "pact_magic_spellcasting_creation" }
   >,
 ): readonly { readonly spellId: string; readonly spellLevel: number }[] {
-  /* v8 ignore start -- Supported Pact Magic creation rows always expose at least one Pact Slot. */
+  /* v8 ignore start -- @preserve -- Supported Pact Magic creation rows always expose at least one Pact Slot. */
   if (spellcasting.pactSlotProjection.count <= 0) {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return spellcasting.preparedAccess.spells.filter(
     (spell) => spell.spellLevel <= spellcasting.pactSlotProjection.spellLevel,
   );
@@ -507,9 +507,9 @@ function wizardSpellbookOptionsAvailableToSpellcasting(
 function compactChoiceHoles(
   holes: readonly (CreationHole | undefined)[],
 ): readonly ChoiceCreationHole[] {
-  /* v8 ignore start -- Callers pass only optional results from choice-hole factories to this narrowing helper. */
+  /* v8 ignore start -- @preserve -- Callers pass only optional results from choice-hole factories to this narrowing helper. */
   return holes.flatMap((hole) => (hole?.kind === "choice" ? [hole] : []));
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function classSpellcastingCreation(
@@ -542,9 +542,9 @@ function discoverSubclassHoles(
           cardinality: EXACTLY_ONE_CHOICE,
           options: choice.options.flatMap((unitId) => {
             const unit = input.unitLibrary.getUnit(unitId);
-            /* v8 ignore start -- Supported subclass choice facts reference installed subclass Units in this catalog. */
+            /* v8 ignore start -- @preserve -- Supported subclass choice facts reference installed subclass Units in this catalog. */
             return Option.isSome(unit) ? [unitOption(unit.value)] : [];
-            /* v8 ignore stop */
+            /* v8 ignore stop -- @preserve */
           }),
         }),
         input.supportProfile,
@@ -569,16 +569,16 @@ function discoverSelectedSubclassFeatureGrantHoles(
       choice.source.choiceKey === CLASS_SUBCLASS_CHOICE_KEY
         ? choice.options.flatMap(
             (option) =>
-              /* v8 ignore start -- Supported subclass selections retain Unit references on every option. */
+              /* v8 ignore start -- @preserve -- Supported subclass selections retain Unit references on every option. */
               option.unitRef == null ? [] : [option.unitRef.unitId],
-            /* v8 ignore stop */
+            /* v8 ignore stop -- @preserve */
           )
         : [],
   );
 
   return selectedSubclassIds.flatMap((subclassId) => {
     const subclass = input.unitLibrary.getUnit(subclassId);
-    /* v8 ignore start -- Supported subclass selections retain an installed subclass owned by the selected class. */
+    /* v8 ignore start -- @preserve -- Supported subclass selections retain an installed subclass owned by the selected class. */
     if (
       Option.isNone(subclass) ||
       subclass.value.kind !== "subclass" ||
@@ -586,7 +586,7 @@ function discoverSelectedSubclassFeatureGrantHoles(
     ) {
       return [];
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
 
     return subclass.value.featureGrants.flatMap((grant) =>
       grant.level <= classLevel
@@ -610,7 +610,7 @@ function discoverAdditionalClassGrantedHoles(
   supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationHole[] {
   const classUnit = unitLibrary.getUnit(classUnitId);
-  /* v8 ignore start -- This helper receives class ids from an admitted progression in the same catalog. */
+  /* v8 ignore start -- @preserve -- This helper receives class ids from an admitted progression in the same catalog. */
   if (Option.isNone(classUnit)) {
     return [];
   }
@@ -618,7 +618,7 @@ function discoverAdditionalClassGrantedHoles(
   if (facts.tag !== "readable") {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return [
     ...discoverClassFeatureGrantHolesInLevelOrder(
@@ -726,11 +726,11 @@ function classFeatureAcquisitionCantripGrantSpellList(
   unitLibrary: UnitCatalog,
   spellList: GrantSpellAccessChoice["spellList"],
 ): ClassFeatureAcquisitionCantripGrantSpellList | undefined {
-  /* v8 ignore start -- Supported acquisition cantrip grants name an installed class spell list. */
+  /* v8 ignore start -- @preserve -- Supported acquisition cantrip grants name an installed class spell list. */
   return isClassFeatureAcquisitionCantripGrantSpellList(unitLibrary, spellList)
     ? spellList
     : undefined;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function isClassFeatureAcquisitionCantripGrantSpellList(
@@ -794,9 +794,9 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
               CLASS_FEATURE_FEAT_CHOICE_KEY,
               [],
             );
-            /* v8 ignore start -- The admitted acquisition feat grant produces a well-formed feat choice hole. */
+            /* v8 ignore start -- @preserve -- The admitted acquisition feat grant produces a well-formed feat choice hole. */
             return hole === undefined ? [] : [hole];
-            /* v8 ignore stop */
+            /* v8 ignore stop -- @preserve */
           }
           if (
             grant.kind !== "grant_spell_access_choice" ||
@@ -809,7 +809,7 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
             input.classFacts,
             input.classLevel,
           );
-          /* v8 ignore start -- Supported acquisition cantrip grants have list-prepared class spellcasting, a positive feasible count, and an installed class spell list. */
+          /* v8 ignore start -- @preserve -- Supported acquisition cantrip grants have list-prepared class spellcasting, a positive feasible count, and an installed class spell list. */
           if (
             spellcasting === undefined ||
             !isListPreparedSpellcastingCreation(spellcasting)
@@ -853,7 +853,7 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
           if (choiceCardinalityMax(cardinality) > options.length) {
             return [];
           }
-          /* v8 ignore stop */
+          /* v8 ignore stop -- @preserve */
 
           const hole = requireChoiceCreationHole(
             choiceHole({
@@ -865,9 +865,9 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
               options,
             }),
           );
-          /* v8 ignore start -- The admitted acquisition spell grant produces a well-formed cantrip choice hole. */
+          /* v8 ignore start -- @preserve -- The admitted acquisition spell grant produces a well-formed cantrip choice hole. */
           return hole === undefined ? [] : [hole];
-          /* v8 ignore stop */
+          /* v8 ignore stop -- @preserve */
         }),
       );
   });
@@ -890,9 +890,9 @@ function discoverSelectedFeatAbilityScoreIncreaseHoles(input: {
       const featUnitId = option.unitRef?.unitId;
       if (featUnitId == null) return [];
       const unit = input.unitLibrary.getUnit(featUnitId);
-      /* v8 ignore start -- Supported feat selections retain an installed feat Unit reference from this catalog. */
+      /* v8 ignore start -- @preserve -- Supported feat selections retain an installed feat Unit reference from this catalog. */
       if (Option.isNone(unit)) return [];
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const options = selectedFeatAbilityScoreIncreaseOptions(unit.value);
       if (options.length === 0) return [];
 
@@ -929,7 +929,7 @@ export function discoverBackgroundGrantedHoles(input: {
   }
 
   const backgroundUnit = input.unitLibrary.getUnit(backgroundUnitId);
-  /* v8 ignore start -- Supported background admission resolves this selected id and parses its facts in the same catalog. */
+  /* v8 ignore start -- @preserve -- Supported background admission resolves this selected id and parses its facts in the same catalog. */
   if (Option.isNone(backgroundUnit)) {
     return [];
   }
@@ -937,7 +937,7 @@ export function discoverBackgroundGrantedHoles(input: {
   if (facts.tag !== "readable") {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return [
     ...unselectedBackgroundAbilityScoreIncreaseHole(
@@ -987,7 +987,7 @@ function discoverBackgroundOriginFeatGrantHoles(input: {
   }
 
   const backgroundUnit = input.unitLibrary.getUnit(backgroundUnitId);
-  /* v8 ignore start -- Supported origin-feat discovery resolves this admitted background and parses its facts in the same catalog. */
+  /* v8 ignore start -- @preserve -- Supported origin-feat discovery resolves this admitted background and parses its facts in the same catalog. */
   if (Option.isNone(backgroundUnit)) {
     return [];
   }
@@ -995,7 +995,7 @@ function discoverBackgroundOriginFeatGrantHoles(input: {
   if (facts.tag !== "readable") {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return originFeatGrantChoiceHoles(
     facts.value.originFeatId,
@@ -1152,7 +1152,7 @@ function selectedSpeciesTraitUnits(input: {
   }
 
   const speciesUnit = input.unitLibrary.getUnit(speciesUnitId);
-  /* v8 ignore start -- Species-trait discovery runs only for an admitted species id with readable facts in this catalog. */
+  /* v8 ignore start -- @preserve -- Species-trait discovery runs only for an admitted species id with readable facts in this catalog. */
   if (Option.isNone(speciesUnit)) {
     return [];
   }
@@ -1160,15 +1160,15 @@ function selectedSpeciesTraitUnits(input: {
   if (facts.tag !== "readable") {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Object.values(facts.value.traits).flatMap((traitUnitId) => {
     const traitUnit = input.unitLibrary.getUnit(traitUnitId);
-    /* v8 ignore start -- Admitted species facts reference installed species-trait Units in the same catalog. */
+    /* v8 ignore start -- @preserve -- Admitted species facts reference installed species-trait Units in the same catalog. */
     return Option.isSome(traitUnit) && traitUnit.value.kind === "species_trait"
       ? [traitUnit.value]
       : [];
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   });
 }
 
@@ -1181,9 +1181,9 @@ function selectedSpeciesOriginFeatUnitIds(
       selection.source.choiceKey === SPECIES_ORIGIN_FEAT_CHOICE_KEY
         ? selection.options.flatMap(
             (option) =>
-              /* v8 ignore start -- Supported species Origin feat selections retain Unit references on every option. */
+              /* v8 ignore start -- @preserve -- Supported species Origin feat selections retain Unit references on every option. */
               option.unitRef == null ? [] : [option.unitRef.unitId],
-            /* v8 ignore stop */
+            /* v8 ignore stop -- @preserve */
           )
         : [],
     ),
@@ -1276,9 +1276,9 @@ export function discoverEquipmentHoles(input: {
       input.supportProfile,
     ).flatMap((unitId) => {
       const unit = input.unitLibrary.getUnit(unitId);
-      /* v8 ignore start -- Supported purchasable equipment ids resolve to installed Units in this catalog. */
+      /* v8 ignore start -- @preserve -- Supported purchasable equipment ids resolve to installed Units in this catalog. */
       return Option.isSome(unit) ? [unitOption(unit.value)] : [];
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
     }),
   });
   const hasValidPurchaseSelection = hasValidEquipmentPurchaseSelectionForHole(
@@ -1457,7 +1457,7 @@ export function hasSupportedCoinEquipmentPath(input: {
 
   const classUnit = input.unitLibrary.getUnit(classUnitId);
   const backgroundUnit = input.unitLibrary.getUnit(backgroundUnitId);
-  /* v8 ignore start -- Supported coin-path admission resolves both selected Units and parses their creation facts in this catalog. */
+  /* v8 ignore start -- @preserve -- Supported coin-path admission resolves both selected Units and parses their creation facts in this catalog. */
   if (Option.isNone(classUnit) || Option.isNone(backgroundUnit)) {
     return false;
   }
@@ -1466,7 +1466,7 @@ export function hasSupportedCoinEquipmentPath(input: {
   if (classFacts.tag !== "readable" || backgroundFacts.tag !== "readable") {
     return false;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return (
     selectedCoinGrantStartingEquipmentChoice(
@@ -1581,11 +1581,11 @@ function hasValidLoadoutSlotSelectionForHole(
   draft: CharacterDraft,
   hole: CreationHole,
 ): boolean {
-  /* v8 ignore start -- This helper is called only after narrowing a loadout-sourced hole. */
+  /* v8 ignore start -- @preserve -- This helper is called only after narrowing a loadout-sourced hole. */
   if (hole.source.tag !== "loadout") {
     return false;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const slot = hole.source.slot;
   return draft.selections.choices.some(
@@ -1864,11 +1864,11 @@ export function classFeatureGrantChoiceHoles(
   } = {},
 ): readonly ChoiceCreationHole[] {
   const feature = requireClassFeature(unitLibrary, featureUnitId);
-  /* v8 ignore start -- Admitted class feature grants reference an installed class-feature Unit. */
+  /* v8 ignore start -- @preserve -- Admitted class feature grants reference an installed class-feature Unit. */
   if (feature === undefined) {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const mechanics = feature.mechanics;
 
   if (mechanics.family === "passive") {
@@ -1890,7 +1890,7 @@ export function classFeatureGrantChoiceHoles(
 
   if (mechanics.family === "class_feature_acquisition_choice") {
     const choiceKey = unitChoiceKey(mechanics.choiceKey);
-    /* v8 ignore start -- Supported acquisition-choice mechanics carry a canonical nonempty choice key and produce a choice hole. */
+    /* v8 ignore start -- @preserve -- Supported acquisition-choice mechanics carry a canonical nonempty choice key and produce a choice hole. */
     if (Either.isLeft(choiceKey)) {
       return [];
     }
@@ -1906,7 +1906,7 @@ export function classFeatureGrantChoiceHoles(
       }),
     );
     return hole === undefined ? [] : [hole];
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 
   if (mechanics.family === "feature_choice") {
@@ -1919,7 +1919,7 @@ export function classFeatureGrantChoiceHoles(
 
   if (mechanics.family === "hunters_prey") {
     const choiceKey = unitChoiceKey(HUNTERS_PREY_CHOICE_KEY);
-    /* v8 ignore start -- The canonical Hunter's Prey key is a fixed valid UnitChoiceKey and its mechanics produce a choice hole. */
+    /* v8 ignore start -- @preserve -- The canonical Hunter's Prey key is a fixed valid UnitChoiceKey and its mechanics produce a choice hole. */
     if (Either.isLeft(choiceKey)) {
       return [];
     }
@@ -1934,7 +1934,7 @@ export function classFeatureGrantChoiceHoles(
       }),
     );
     return hole === undefined ? [] : [hole];
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 
   if (mechanics.family === "wizard_spellbook_learning") {
@@ -1949,9 +1949,9 @@ export function classFeatureGrantChoiceHoles(
 
   if (isWeaponMasteryChoiceFeature(feature)) {
     const hole = weaponMasteryFeatureHoleSource(feature, unitLibrary, input);
-    /* v8 ignore start -- The admitted Weapon Mastery feature produces a well-formed choice hole. */
+    /* v8 ignore start -- @preserve -- The admitted Weapon Mastery feature produces a well-formed choice hole. */
     return hole === undefined ? [] : [hole];
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 
   return [];
@@ -2062,7 +2062,7 @@ function wizardSpellbookLearningChoiceHoles(
       { readonly timing: { readonly kind: "class_feature_acquisition" } }
     > => grant.timing.kind === "class_feature_acquisition",
   );
-  /* v8 ignore start -- Supported spellbook-learning mechanics include an acquisition grant at the feature's admitted class level. */
+  /* v8 ignore start -- @preserve -- Supported spellbook-learning mechanics include an acquisition grant at the feature's admitted class level. */
   if (
     acquisitionGrant === undefined ||
     (input.classLevel ?? 1) < acquiredAtLevel
@@ -2081,7 +2081,7 @@ function wizardSpellbookLearningChoiceHoles(
   if (choiceCardinalityMax(cardinality) > options.length) {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const hole = requireChoiceCreationHole(
     choiceHole({
@@ -2090,9 +2090,9 @@ function wizardSpellbookLearningChoiceHoles(
       options,
     }),
   );
-  /* v8 ignore start -- The admitted spellbook-learning grant produces a well-formed choice hole. */
+  /* v8 ignore start -- @preserve -- The admitted spellbook-learning grant produces a well-formed choice hole. */
   return hole === undefined ? [] : [hole];
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function wizardSpellbookLearningOptions(input: {
@@ -2112,7 +2112,7 @@ function wizardSpellbookLearningOptions(input: {
         "spellcasting" in unit &&
         unit.spellcasting?.kind === "wizard_spellcasting_creation",
     );
-  /* v8 ignore start -- Admitted Wizard spellbook-learning eligibility resolves the Wizard class and its spellbook facts in this catalog. */
+  /* v8 ignore start -- @preserve -- Admitted Wizard spellbook-learning eligibility resolves the Wizard class and its spellbook facts in this catalog. */
   if (
     wizard === undefined ||
     !("spellcasting" in wizard) ||
@@ -2120,7 +2120,7 @@ function wizardSpellbookLearningOptions(input: {
   ) {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return wizard.spellcasting.spellbookAccess.spells
     .filter((spellbookSpell) => {
@@ -2135,13 +2135,13 @@ function wizardSpellbookLearningOptions(input: {
     })
     .sort(
       (left, right) =>
-        /* v8 ignore start -- Catalog Unit ids are unique, so two spellbook options cannot compare equal. */
+        /* v8 ignore start -- @preserve -- Catalog Unit ids are unique, so two spellbook options cannot compare equal. */
         left.spellId < right.spellId
           ? -1
           : left.spellId > right.spellId
             ? 1
             : 0,
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
     )
     .map((spell) => ({
       optionId: creationChoiceOptionId(spell.spellId),
@@ -2158,7 +2158,7 @@ function sorcererMetamagicChoiceHoles(
   >,
   input: { readonly classLevel?: number },
 ): readonly ChoiceCreationHole[] {
-  /* v8 ignore start -- Admitted Metamagic mechanics use the canonical Metamagic choice key and a positive table count. */
+  /* v8 ignore start -- @preserve -- Admitted Metamagic mechanics use the canonical Metamagic choice key and a positive table count. */
   if (mechanics.choiceKey !== SORCERER_METAMAGIC_OPTIONS_CHOICE_KEY) {
     return [];
   }
@@ -2169,7 +2169,7 @@ function sorcererMetamagicChoiceHoles(
   if (cardinality === undefined) {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const hole = requireChoiceCreationHole(
     choiceHole({
@@ -2182,9 +2182,9 @@ function sorcererMetamagicChoiceHoles(
     }),
   );
 
-  /* v8 ignore start -- The admitted Metamagic mechanics produce a well-formed choice hole. */
+  /* v8 ignore start -- @preserve -- The admitted Metamagic mechanics produce a well-formed choice hole. */
   return hole === undefined ? [] : [hole];
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function eldritchInvocationChoiceHoles(
@@ -2192,7 +2192,7 @@ function eldritchInvocationChoiceHoles(
   mechanics: FeatureChoiceMechanics,
   input: { readonly classLevel?: number },
 ): readonly ChoiceCreationHole[] {
-  /* v8 ignore start -- Admitted invocation mechanics use the canonical invocation key and a count supported by the installed roster. */
+  /* v8 ignore start -- @preserve -- Admitted invocation mechanics use the canonical invocation key and a count supported by the installed roster. */
   if (mechanics.choiceKey !== ELDRITCH_INVOCATIONS_CHOICE_KEY) {
     return [];
   }
@@ -2208,7 +2208,7 @@ function eldritchInvocationChoiceHoles(
   if (choiceCardinalityMax(cardinality) > options.length) {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const hole = requireChoiceCreationHole(
     choiceHole({
@@ -2217,9 +2217,9 @@ function eldritchInvocationChoiceHoles(
       options,
     }),
   );
-  /* v8 ignore start -- The admitted invocation mechanics produce a well-formed choice hole. */
+  /* v8 ignore start -- @preserve -- The admitted invocation mechanics produce a well-formed choice hole. */
   return hole === undefined ? [] : [hole];
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function passiveGrantChoiceHoles(
@@ -2246,9 +2246,9 @@ export function passiveGrantChoiceHoles(
       input.featChoiceKey,
       input.excludedMagicInitiateSpellLists,
     );
-    /* v8 ignore start -- The admitted feat grant produces a well-formed choice hole. */
+    /* v8 ignore start -- @preserve -- The admitted feat grant produces a well-formed choice hole. */
     return hole === undefined ? [] : [hole];
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   if (grant.kind === "grant_proficiency") {
     return proficiencyGrantChoiceHoles(
@@ -2292,14 +2292,14 @@ function languageGrantChoiceHole(
 ): readonly ChoiceCreationHole[] {
   const cardinality = exactChoiceCardinality(grant.count);
   const options = languageChoiceOptionsForSource(grant.source, knownLanguages);
-  /* v8 ignore start -- Supported language-choice grants have a positive count no larger than their remaining language table. */
+  /* v8 ignore start -- @preserve -- Supported language-choice grants have a positive count no larger than their remaining language table. */
   if (
     cardinality === undefined ||
     choiceCardinalityMax(cardinality) > options.length
   ) {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const hole = requireChoiceCreationHole(
     choiceHole({
@@ -2308,9 +2308,9 @@ function languageGrantChoiceHole(
       options,
     }),
   );
-  /* v8 ignore start -- The admitted language grant produces a well-formed choice hole. */
+  /* v8 ignore start -- @preserve -- The admitted language grant produces a well-formed choice hole. */
   return hole === undefined ? [] : [hole];
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function languageChoiceOptionsForSource(
@@ -2379,7 +2379,7 @@ function draftOwnedFixedClassFeatureLanguages(
   return uniqueLanguages(
     progressionClassUnitIds(progression).flatMap((classUnitId) => {
       const unit = unitLibrary.getUnit(classUnitId);
-      /* v8 ignore start -- Progression admission resolves every retained class id and parses its facts in this catalog. */
+      /* v8 ignore start -- @preserve -- Progression admission resolves every retained class id and parses its facts in this catalog. */
       if (Option.isNone(unit)) {
         return [];
       }
@@ -2387,7 +2387,7 @@ function draftOwnedFixedClassFeatureLanguages(
       if (facts.tag !== "readable") {
         return [];
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
 
       return facts.value.featureGrants
         .filter(
@@ -2436,9 +2436,9 @@ function selectedClassFeatureLanguageChoices(
 
       return selection.options.flatMap((option) => {
         const language = languageFromCreationChoiceOptionId(option.optionId);
-        /* v8 ignore start -- Supported language selections retain only ids emitted by the language codec. */
+        /* v8 ignore start -- @preserve -- Supported language selections retain only ids emitted by the language codec. */
         return Either.isRight(language) ? [language.right] : [];
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
       });
     }),
   );
@@ -2471,9 +2471,9 @@ function expertiseGrantChoiceHole(
       options,
     }),
   );
-  /* v8 ignore start -- The admitted expertise grant produces a well-formed choice hole. */
+  /* v8 ignore start -- @preserve -- The admitted expertise grant produces a well-formed choice hole. */
   return hole === undefined ? [] : [hole];
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function eligibleExpertiseSkills(
@@ -2646,7 +2646,7 @@ function draftFixedClassToolProficiencies(
   return uniqueToolProficiencies(
     progressionClassUnitIds(progression).flatMap((classUnitId) => {
       const unit = unitLibrary.getUnit(classUnitId);
-      /* v8 ignore start -- Progression admission resolves every retained class id and parses its facts in this catalog. */
+      /* v8 ignore start -- @preserve -- Progression admission resolves every retained class id and parses its facts in this catalog. */
       if (Option.isNone(unit)) {
         return [];
       }
@@ -2654,7 +2654,7 @@ function draftFixedClassToolProficiencies(
       if (facts.tag !== "readable") {
         return [];
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
 
       const subjects =
         classUnitId === startingUnitId
@@ -2723,13 +2723,13 @@ function backgroundSkillProficiencies(
   unitLibrary: UnitCatalog,
 ): readonly Skill[] {
   const backgroundUnit = unitLibrary.getUnit(backgroundUnitId);
-  /* v8 ignore start -- Background proficiency projection receives the admitted selected background from this catalog. */
+  /* v8 ignore start -- @preserve -- Background proficiency projection receives the admitted selected background from this catalog. */
   if (Option.isNone(backgroundUnit)) {
     return [];
   }
   const facts = readBackgroundCreationFacts(backgroundUnit.value);
   return facts.tag === "readable" ? facts.value.skillProficiencies : [];
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function uniqueSkills(skills: readonly Skill[]): readonly Skill[] {
@@ -2781,11 +2781,11 @@ function requireClassFeature(
   featureUnitId: UnitRecord["id"],
 ): ClassFeatureRecord | undefined {
   const feature = unitLibrary.getUnit(featureUnitId);
-  /* v8 ignore start -- Feature grants in admitted class facts reference installed class-feature Units. */
+  /* v8 ignore start -- @preserve -- Feature grants in admitted class facts reference installed class-feature Units. */
   if (Option.isNone(feature) || feature.value.kind !== "class_feature") {
     return undefined;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return feature.value;
 }
@@ -2795,7 +2795,7 @@ function requireOriginFeat(
   featUnitId: UnitRecord["id"],
 ): FeatRecord | undefined {
   const feat = unitLibrary.getUnit(featUnitId);
-  /* v8 ignore start -- Origin-feat grants in admitted creation facts reference installed Origin feat Units. */
+  /* v8 ignore start -- @preserve -- Origin-feat grants in admitted creation facts reference installed Origin feat Units. */
   if (
     Option.isNone(feat) ||
     feat.value.kind !== "feat" ||
@@ -2803,7 +2803,7 @@ function requireOriginFeat(
   ) {
     return undefined;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return feat.value;
 }
@@ -2928,7 +2928,7 @@ function proficiencyGrantChoiceHole(
   ownedToolProficiencies: readonly ToolProficiencyId[],
 ): readonly ChoiceCreationHole[] {
   const choiceKey = unitChoiceKey(choiceKeyText);
-  /* v8 ignore start -- Supported authored proficiency grants carry a canonical nonempty choice key and feasible positive count. */
+  /* v8 ignore start -- @preserve -- Supported authored proficiency grants carry a canonical nonempty choice key and feasible positive count. */
   if (Either.isLeft(choiceKey)) {
     return [];
   }
@@ -2954,7 +2954,7 @@ function proficiencyGrantChoiceHole(
   ) {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const hole = requireChoiceCreationHole(
     choiceHole({
@@ -2963,9 +2963,9 @@ function proficiencyGrantChoiceHole(
       options,
     }),
   );
-  /* v8 ignore start -- The admitted proficiency grant produces a well-formed choice hole. */
+  /* v8 ignore start -- @preserve -- The admitted proficiency grant produces a well-formed choice hole. */
   return hole === undefined ? [] : [hole];
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function abilityScoreIncreaseOptions(
@@ -2995,7 +2995,7 @@ function weaponMasteryFeatureHoleSource(
     featureUnitId: feature.id,
     unitLibrary,
   });
-  /* v8 ignore start -- An admitted Weapon Mastery choice feature has a profile covering its supported class level. */
+  /* v8 ignore start -- @preserve -- An admitted Weapon Mastery choice feature has a profile covering its supported class level. */
   if (profile === undefined) {
     return undefined;
   }
@@ -3005,7 +3005,7 @@ function weaponMasteryFeatureHoleSource(
       ? Option.some(profile)
       : weaponMasteryChoiceProfileForClassLevel(profile, input.classLevel);
   if (Option.isNone(projectedProfile)) return undefined;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const options = projectedProfile.value.eligibleWeapons.map(unitOption);
 
   return requireChoiceCreationHole(
@@ -3020,11 +3020,11 @@ function weaponMasteryFeatureHoleSource(
 function requireChoiceCreationHole(
   hole: CreationHole | undefined,
 ): ChoiceCreationHole | undefined {
-  /* v8 ignore start -- Call sites construct a choice hole immediately before narrowing it with this helper. */
+  /* v8 ignore start -- @preserve -- Call sites construct a choice hole immediately before narrowing it with this helper. */
   if (hole?.kind !== "choice") {
     return undefined;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return hole;
 }
@@ -3076,11 +3076,11 @@ export function draftHole(
       return undefined;
     }
     const unit = unitLibrary.getUnit(speciesId);
-    /* v8 ignore start -- A retained species id was selected from this catalog before dependent size-hole discovery. */
+    /* v8 ignore start -- @preserve -- A retained species id was selected from this catalog before dependent size-hole discovery. */
     if (Option.isNone(unit)) {
       return undefined;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const facts = readSpeciesCreationFacts(unit.value);
     if (facts.tag !== "readable" || facts.value.size.kind !== "choice") {
       return undefined;
@@ -3099,11 +3099,11 @@ export function draftHole(
       return undefined;
     }
     const unit = unitLibrary.getUnit(speciesId);
-    /* v8 ignore start -- A retained species id was selected from this catalog before ancestry-hole discovery. */
+    /* v8 ignore start -- @preserve -- A retained species id was selected from this catalog before ancestry-hole discovery. */
     if (Option.isNone(unit)) {
       return undefined;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const source = draconicAncestryDamageTypeSource(unit.value);
     if (source === undefined) {
       return undefined;

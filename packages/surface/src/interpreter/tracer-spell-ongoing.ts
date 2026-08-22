@@ -625,12 +625,12 @@ export function traceOngoingTrigger(
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
     }
-    /* v8 ignore start -- OngoingTrigger is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- OngoingTrigger is a decoded tagged union exhausted above */
     default: {
       const _: never = trigger;
       throw new Error(`unhandled ongoing trigger: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -647,12 +647,12 @@ export function describeOngoingTurnWindow(
       return `effect turn ${turnWindow.turn}`;
     case "effect_turn_range":
       return `effect turns ${turnWindow.from}-${turnWindow.to}`;
-    /* v8 ignore start -- the decoded ongoing turn-window union is exhausted above */
+    /* v8 ignore start -- @preserve -- the decoded ongoing turn-window union is exhausted above */
     default: {
       const _: never = turnWindow;
       throw new Error(`unhandled ongoing turn window: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 

@@ -466,16 +466,16 @@ function resolveSpellCreatedHeldObject(
     resolution,
     state: input.input.state,
   });
-  /* v8 ignore start -- The dispatcher rechecks the stored Bonus Action subject against current turn and slot resources before invoking this profile; this fallback preserves the shared resource-spender contract. */
+  /* v8 ignore start -- @preserve -- The dispatcher rechecks the stored Bonus Action subject against current turn and slot resources before invoking this profile; this fallback preserves the shared resource-spender contract. */
   if (resourced.tag === "invalid") {
     return resourced;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const allocation = allocateBattleActiveEffectRef({
     state: resourced.state,
     ownerId: input.actorId,
   });
-  /* v8 ignore start -- Resource spending cannot remove combatants, and dispatcher admission established this actor immediately before resolution; allocation retains a typed failure for callers without that proof. */
+  /* v8 ignore start -- @preserve -- Resource spending cannot remove combatants, and dispatcher admission established this actor immediately before resolution; allocation retains a typed failure for callers without that proof. */
   if (allocation.tag === "ownerNotFound") {
     return invalidResult(
       resourced.state,
@@ -483,7 +483,7 @@ function resolveSpellCreatedHeldObject(
       "Held-object effect owner is no longer in the battle.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const effected = applySpellCreatedHeldObjectEffect({
     state: allocation.state,
     actorId: input.actorId,
@@ -494,11 +494,11 @@ function resolveSpellCreatedHeldObject(
     },
     sourceExecution: input.invocation,
   });
-  /* v8 ignore start -- The hand-state check above proves the actor and free hand, while this admitted spell procedure proves a character owner; resource spending and effect-ref allocation preserve all three facts. */
+  /* v8 ignore start -- @preserve -- The hand-state check above proves the actor and free hand, while this admitted spell procedure proves a character owner; resource spending and effect-ref allocation preserve all three facts. */
   if (effected.tag === "invalid") {
     return invalidResult(input.input.state, "staleSubject", effected.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "resolved",
     state: effected.state,
@@ -510,7 +510,7 @@ function resolveSpellCreatedHeldObjectAttack(
   input: SpellCreatedHeldObjectAttackResolveInput,
   executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fillSet.reactionSpellTargetFacts.length > 0) {
     return invalidResult(
       input.input.state,
@@ -518,7 +518,7 @@ function resolveSpellCreatedHeldObjectAttack(
       "Spell-created held object attacks are not spell casts and do not accept spell-cast Reaction facts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return resolveSpellAttackDamageAct(input, executionRegistry);
 }
 
@@ -567,7 +567,7 @@ function resolveSpellCreatedHeldObjectReEvoke(
       kind: "bonusAction",
     },
   );
-  /* v8 ignore start -- The dispatcher rechecks the stored Bonus Action subject before invoking this synthesized profile; this fallback keeps direct callers of the action-economy operation total. */
+  /* v8 ignore start -- @preserve -- The dispatcher rechecks the stored Bonus Action subject before invoking this synthesized profile; this fallback keeps direct callers of the action-economy operation total. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.input.state,
@@ -575,18 +575,18 @@ function resolveSpellCreatedHeldObjectReEvoke(
       "Bonus Action spell-created held object re-evocation is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const reEvoked = setSpellCreatedHeldObjectState({
     state: { ...input.input.state, currentTurnResources: spent.right },
     actorId: input.actorId,
     effect: activeEffect,
     objectState: { kind: "held" },
   });
-  /* v8 ignore start -- The checks above prove the actor, matching not-held effect, and free hand that setSpellCreatedHeldObjectState requires; spending a Bonus Action changes none of those facts. */
+  /* v8 ignore start -- @preserve -- The checks above prove the actor, matching not-held effect, and free hand that setSpellCreatedHeldObjectState requires; spending a Bonus Action changes none of those facts. */
   if (reEvoked.tag === "invalid") {
     return invalidResult(input.input.state, "staleSubject", reEvoked.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "resolved",
     state: reEvoked.state,
@@ -606,7 +606,7 @@ function spellCreatedHeldObjectHandStateError(
   readonly reason: "invalidFill" | "staleSubject";
   readonly message: string;
 } | null {
-  /* v8 ignore start -- Replay validation rejects fills that do not correspond to the discovered cast holes before dispatch reaches this profile. */
+  /* v8 ignore start -- @preserve -- Replay validation rejects fills that do not correspond to the discovered cast holes before dispatch reaches this profile. */
   if (
     options.allowSpellCastReactionFacts
       ? !fillsBelongToSpellCastHoles(fills)
@@ -614,7 +614,7 @@ function spellCreatedHeldObjectHandStateError(
   ) {
     return { reason: "invalidFill", message: options.unrelatedFillsMessage };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (!spellCreatedHeldObjectHasFreeHand(state, actorId)) {
     return {
       reason: "staleSubject",

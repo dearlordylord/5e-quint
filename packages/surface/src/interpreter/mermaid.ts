@@ -135,12 +135,12 @@ function get5etoolsUrl(unit: UnitRecord): string | null {
       return `https://5e.tools/items.html#${encodeHashParts(unit.name, source)}`;
     case "mastery":
       return null;
-    /* v8 ignore start -- UnitRecord is a decoded tagged union exhausted above; another kind is malformed before rendering */
+    /* v8 ignore start -- @preserve -- UnitRecord is a decoded tagged union exhausted above; another kind is malformed before rendering */
     default: {
       const _exhaustive: never = unit;
       return _exhaustive;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -151,12 +151,12 @@ function get5etoolsSource(unit: UnitRecord): string | null {
       return "XPHB";
     case "synthetic-test":
       return null;
-    /* v8 ignore start -- Provenance is a decoded tagged union exhausted above; another kind is malformed before rendering */
+    /* v8 ignore start -- @preserve -- Provenance is a decoded tagged union exhausted above; another kind is malformed before rendering */
     default: {
       const _exhaustive: never = unit.provenance.kind;
       return _exhaustive;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -169,7 +169,7 @@ function encodeHashPart(part: string | number): string {
 }
 
 function capitalizeAscii(value: string): string {
-  /* v8 ignore start -- decoded class-feature class names are non-empty; the empty arm requires malformed authored identity */
+  /* v8 ignore start -- @preserve -- decoded class-feature class names are non-empty; the empty arm requires malformed authored identity */
   return value.length === 0 ? value : value[0].toUpperCase() + value.slice(1);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }

@@ -264,7 +264,7 @@ export function d20TestNaturalOneRerollRollIssue(input: {
     : D20_TEST_NATURAL_ONE_REROLL_MODE_MESSAGE;
 }
 
-/* v8 ignore start -- Malformed raw natural-1 outcome protocol: supported decisions require consistent roll presence, raw-die selection, replacement face, and projected outcome; effective outcome application remains measured. */
+/* v8 ignore start -- @preserve -- Malformed raw natural-1 outcome protocol: supported decisions require consistent roll presence, raw-die selection, replacement face, and projected outcome; effective outcome application remains measured. */
 export function d20TestNaturalOneRerollOutcomeIssue(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly originalNaturalD20: number | undefined;
@@ -302,9 +302,9 @@ export function d20TestNaturalOneRerollOutcomeIssue(input: {
     ? null
     : D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- Malformed raw natural-1 die protocol: supported decisions require an eligible actor, a known natural 1, and a valid d20 replacement face; effective reroll application remains measured. */
+/* v8 ignore start -- @preserve -- Malformed raw natural-1 die protocol: supported decisions require an eligible actor, a known natural 1, and a valid d20 replacement face; effective reroll application remains measured. */
 export function d20TestNaturalOneRerollDieIssue(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly originalNaturalD20: number | undefined;
@@ -334,7 +334,7 @@ export function d20TestNaturalOneRerollDieIssue(input: {
     ? null
     : D20_TEST_NATURAL_ONE_REROLL_REPLACEMENT_MESSAGE;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export function effectiveD20TestNaturalOneRerollAttackRoll(
   attackRoll: BattleAttackRollResult,
@@ -539,7 +539,7 @@ function d20TestRollFactsIssue(facts: D20TestRollFacts): string | null {
   return d20TestRawRolledD20sIssue(facts);
 }
 
-/* v8 ignore start -- Malformed raw-d20 facts: Advantage or Disadvantage discovery supplies two valid faces and a selected face consistent with its roll mode. */
+/* v8 ignore start -- @preserve -- Malformed raw-d20 facts: Advantage or Disadvantage discovery supplies two valid faces and a selected face consistent with its roll mode. */
 function d20TestRawRolledD20sIssue(facts: D20TestRollFacts): string | null {
   if (facts.rolledD20s === undefined) {
     return null;
@@ -568,7 +568,7 @@ function d20TestRawRolledD20sIssue(facts: D20TestRollFacts): string | null {
     ? null
     : D20_TEST_NATURAL_ONE_REROLL_SELECTED_DIE_MESSAGE;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function d20TestNaturalOneRerollTriggered(facts: D20TestRollFacts): boolean {
   return facts.rolledD20s === undefined
@@ -577,7 +577,7 @@ function d20TestNaturalOneRerollTriggered(facts: D20TestRollFacts): boolean {
         Number(facts.rolledD20s.second) === 1;
 }
 
-/* v8 ignore start -- Malformed raw rolled-die reroll protocol: supported decisions forbid stacked rerolls and require a valid replacement, roll mode, selected natural-1 die, and projected total. */
+/* v8 ignore start -- @preserve -- Malformed raw rolled-die reroll protocol: supported decisions forbid stacked rerolls and require a valid replacement, roll mode, selected natural-1 die, and projected total. */
 function d20TestNaturalOneRerollRolledDieRollIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement: BattleD20TestRolledDieRollReplacement;
@@ -604,9 +604,9 @@ function d20TestNaturalOneRerollRolledDieRollIssue(input: {
     projectedTotal: input.replacement.result.total,
   });
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- Malformed raw rolled-die outcome protocol: supported decisions bind valid replacement and projected natural faces to the selected natural-1 die. */
+/* v8 ignore start -- @preserve -- Malformed raw rolled-die outcome protocol: supported decisions bind valid replacement and projected natural faces to the selected natural-1 die. */
 function d20TestNaturalOneRerollRolledDieOutcomeIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement: BattleD20TestRolledDieOutcomeReplacement;
@@ -623,9 +623,9 @@ function d20TestNaturalOneRerollRolledDieOutcomeIssue(input: {
     projectedNaturalD20: Number(input.replacement.result.naturalD20),
   });
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- Malformed rolled-die projection: an admitted raw-die reroll replaces a selected natural 1 and must project the roll-mode-selected face and derived total. */
+/* v8 ignore start -- @preserve -- Malformed rolled-die projection: an admitted raw-die reroll replaces a selected natural 1 and must project the roll-mode-selected face and derived total. */
 function d20TestRolledDieProjectionIssue(input: {
   readonly facts: D20TestRollFacts;
   readonly replacement:
@@ -663,7 +663,7 @@ function d20TestRolledDieProjectionIssue(input: {
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function selectedRolledD20Face(rolledD20s: BattleD20TestRolledD20s): number {
   return rolledD20Face(rolledD20s, rolledD20s.selected);

@@ -345,7 +345,7 @@ function resolveHypnoticPattern(
 ): BattleResolutionResult {
   const metamagicApplications =
     input.storedGlyphRelease === undefined ? input.metamagicApplications : [];
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.targetList !== undefined ||
@@ -360,7 +360,7 @@ function resolveHypnoticPattern(
       "Hypnotic Pattern uses an area Saving Throw outcome fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaSave = resolveAreaSaveMetamagicFills({
     state: input.input.state,
     subject: input.input.subject,
@@ -376,7 +376,7 @@ function resolveHypnoticPattern(
   const savingThrowOutcomes = areaSave.savingThrowOutcomes;
   const areaWitnessValidation =
     validateHypnoticPatternAreaWitness(savingThrowOutcomes);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (areaWitnessValidation !== null) {
     return invalidResult(
       input.input.state,
@@ -384,7 +384,7 @@ function resolveHypnoticPattern(
       areaWitnessValidation,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
     savingThrowOutcomes,
@@ -521,7 +521,7 @@ function applyHypnoticPatternControlEffects(
   return { state: { ...state, combatants }, appliedTargetIds };
 }
 
-/* v8 ignore start -- Malformed area-witness validator: Hypnotic Pattern discovery supplies the typed Cube geometry, unique visible targets, and matching outcomes; admitted effect execution remains measured. */
+/* v8 ignore start -- @preserve -- Malformed area-witness validator: Hypnotic Pattern discovery supplies the typed Cube geometry, unique visible targets, and matching outcomes; admitted effect execution remains measured. */
 function validateHypnoticPatternAreaWitness(
   savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue,
 ): string | null {
@@ -563,7 +563,7 @@ function validateHypnoticPatternAreaWitness(
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function breakConcentrationForIncapacitatedTargets(
   state: BattleState,

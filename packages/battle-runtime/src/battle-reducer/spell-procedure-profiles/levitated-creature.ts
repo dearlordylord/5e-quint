@@ -204,7 +204,7 @@ function discoverLevitatedCreatureCastAct(
 function resolveLevitatedCreature(
   input: LevitatedCreatureResolveInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToDeclaredHoles(input.input.fills, [
       ATTACK_TARGET_HOLE_ID,
@@ -219,7 +219,7 @@ function resolveLevitatedCreature(
       "Levitate's creature branch uses one target, one initial-rise fill, and, for unwilling targets, one Constitution Saving Throw fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const targetSelection = selectSingleSpellTarget({
     state: input.input.state,
     subject: input.input.subject,
@@ -251,7 +251,7 @@ function resolveLevitatedCreature(
     return saveGate.resolution;
   }
   if (saveGate.tag === "unaffected") {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (input.fillSet.levitateInitialRiseFeet !== undefined) {
       return invalidResult(
         input.input.state,
@@ -259,7 +259,7 @@ function resolveLevitatedCreature(
         "Successful Levitate creature saves are unaffected and do not use an initial-rise fill.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (input.storedGlyphRelease !== undefined) {
       return resolvedResult(input.input.state);
     }

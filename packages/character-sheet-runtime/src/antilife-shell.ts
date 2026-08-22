@@ -50,7 +50,7 @@ function antilifeShellInvocationFromSpell(input: {
   readonly placement: CharacterSheetAntilifeShellBarrierPlacement;
 }): Either.Either<CharacterSheetAntilifeShellInvocation, CharacterSheetIssue> {
   const spell = input.spell;
-  /* v8 ignore start -- The catalog record failed the exact authored level-5 Antilife Shell support profile required by this projector. */
+  /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Antilife Shell support profile required by this projector. */
   if (
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 5 ||
@@ -68,29 +68,29 @@ function antilifeShellInvocationFromSpell(input: {
       "Antilife Shell requires the supported level-5 creature barrier profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
-  /* v8 ignore start -- The catalog record has Antilife Shell facts but no supported self-originating Emanation. */
+  /* v8 ignore start -- @preserve -- The catalog record has Antilife Shell facts but no supported self-originating Emanation. */
   if (!hasSupportedAntilifeShellAttachment(spell)) {
     return characterSheetIssue(
       "Antilife Shell requires the supported self-originating Emanation profile.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- The catalog record has Antilife Shell facts but no supported passage-prevention operation. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- The catalog record has Antilife Shell facts but no supported passage-prevention operation. */
   if (!hasSupportedAntilifeShellOperation(spell)) {
     return characterSheetIssue(
       "Antilife Shell requires the supported creature passage prevention profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
-  /* v8 ignore start -- The authored Antilife Shell duration is always accepted by the elapsed-time parser. */
+  /* v8 ignore start -- @preserve -- The authored Antilife Shell duration is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Antilife Shell requires a supported duration.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     tag: "antilifeShell",
@@ -129,7 +129,7 @@ function antilifeShellInvocationFromSpell(input: {
 }
 
 function hasSupportedAntilifeShellAttachment(spell: SpellRecord): boolean {
-  /* v8 ignore next -- Unsupported authored Antilife Shell data: admission requires ongoing-effect mechanics before attachment projection. */
+  /* v8 ignore next -- @preserve -- Unsupported authored Antilife Shell data: admission requires ongoing-effect mechanics before attachment projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   const attachment = spell.mechanics.attachment;
   return (
@@ -141,7 +141,7 @@ function hasSupportedAntilifeShellAttachment(spell: SpellRecord): boolean {
 }
 
 function hasSupportedAntilifeShellOperation(spell: SpellRecord): boolean {
-  /* v8 ignore next -- Unsupported authored Antilife Shell data: admission requires ongoing-effect mechanics before operation projection. */
+  /* v8 ignore next -- @preserve -- Unsupported authored Antilife Shell data: admission requires ongoing-effect mechanics before operation projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   return spell.mechanics.operations.some((operation) => {
     const effect = operation.effect;

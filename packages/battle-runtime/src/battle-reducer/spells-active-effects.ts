@@ -311,11 +311,11 @@ export function applySpellActiveEffects(
     return state;
   }
   const target = state.combatants.get(targetId);
-  /* v8 ignore start -- Defensive internal guard: the admitted spell-attack target is resolved from the combatant map and remains present through post-damage active-effect application. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: the admitted spell-attack target is resolved from the combatant map and remains present through post-damage active-effect application. */
   if (target == null) {
     return state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const laterDamageEffect =
     invocation.laterDamage === null
       ? []
@@ -603,23 +603,23 @@ export function applySpellCreatedHeldObjectEffect(input: {
   | { readonly tag: "updated"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
   const actor = input.state.combatants.get(input.actorId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (actor === undefined) {
     return {
       tag: "invalid",
       message: "Spell-created held object actor is not in this battle.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const freeHand = spellCreatedHeldObjectFreeHand(input.state, input.actorId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (freeHand === undefined) {
     return {
       tag: "invalid",
       message: "Spell-created held object requires a free hand.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const activeEffects = [...actor.activeEffects, input.activeEffect];
   const nextActor = battleCreatureWithSpellCreatedHeldObjectHand(
     {
@@ -628,14 +628,14 @@ export function applySpellCreatedHeldObjectEffect(input: {
     },
     freeHand,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (nextActor.origin.kind !== "character") {
     return {
       tag: "invalid",
       message: "Spell-created held object execution owner is not a character.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const dynamicExecution =
     characterExecutionWithSpellCreatedHeldObjectProcedures(
       nextActor.origin.execution,
@@ -750,14 +750,14 @@ export function setSpellCreatedHeldObjectState(input: {
   | { readonly tag: "updated"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
   const actor = input.state.combatants.get(input.actorId);
-  /* v8 ignore start -- Defensive internal guard: held-object procedures pass the actor that supplied the selected active effect, so it remains present for this synchronous transition. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: held-object procedures pass the actor that supplied the selected active effect, so it remains present for this synchronous transition. */
   if (actor === undefined) {
     return {
       tag: "invalid",
       message: "Spell-created held object actor is not in this battle.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return setSpellCreatedHeldObjectStateForActor({ ...input, actor });
 }
 
@@ -796,14 +796,14 @@ function spellCreatedHeldObjectHeldActor(input: {
   | { readonly tag: "updated"; readonly actor: BattleCreatureState }
   | { readonly tag: "invalid"; readonly message: string } {
   const freeHand = spellCreatedHeldObjectFreeHand(input.state, input.actorId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (freeHand === undefined) {
     return {
       tag: "invalid",
       message: "Spell-created held object requires a free hand.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "updated",
     actor: battleCreatureWithSpellCreatedHeldObjectHand(input.actor, freeHand),
@@ -1226,18 +1226,18 @@ export function applyDancingLightsSpellEffect(
   plan: DancingLightsCastPlan,
 ): BattleState {
   const caster = state.combatants.get(actorId);
-  /* v8 ignore start -- Defensive internal guard: action-spell admission preserves the character caster through Dancing Lights cast application. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: action-spell admission preserves the character caster through Dancing Lights cast application. */
   if (caster === undefined) {
     return state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const allocation = allocateBattleActiveEffectRefForCreature({
     owner: caster,
   });
   const owner = allocation.owner;
-  /* v8 ignore start -- Defensive internal guard: the Dancing Lights invocation is admitted only for a character spellcaster, and active-effect allocation preserves origin kind. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: the Dancing Lights invocation is admitted only for a character spellcaster, and active-effect allocation preserves origin kind. */
   if (owner.origin.kind !== "character") return state;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const activeEffect: Extract<
     BattleActiveEffect,
     { readonly kind: "dancingLights" }
@@ -1290,11 +1290,11 @@ export function repositionDancingLightsSpellEffect(
   plan: DancingLightsRepositionPlan,
 ): BattleState {
   const caster = state.combatants.get(actorId);
-  /* v8 ignore start -- Defensive internal guard: the admitted Dancing Lights reposition subject retains its caster while the active effect is replayed. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: the admitted Dancing Lights reposition subject retains its caster while the active effect is replayed. */
   if (caster === undefined) {
     return state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     ...state,
     combatants: new Map(state.combatants).set(actorId, {
@@ -1429,11 +1429,11 @@ export function applySelfTransformationModeEffect(input: {
   readonly effectRef: BattleActiveEffectExecutionRef;
 }): BattleState {
   const actor = input.state.combatants.get(input.actorId);
-  /* v8 ignore start -- Defensive internal guard: the selected self-transformation target is admitted from the combatant map and retained through effect application. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: the selected self-transformation target is admitted from the combatant map and retained through effect application. */
   if (actor === undefined) {
     return input.state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const activeEffects = [
     ...actor.activeEffects.filter(
       (effect) =>
@@ -1485,11 +1485,11 @@ export function applyFailedSaveSpellActiveEffects(
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
-    /* v8 ignore start -- Defensive internal guard: validated failed-save target ids are selected from the current combatant map before post-damage riders are applied. */
+    /* v8 ignore start -- @preserve -- Defensive internal guard: validated failed-save target ids are selected from the current combatant map before post-damage riders are applied. */
     if (target === undefined) {
       continue;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const activeEffects = activeEffectRiders.reduce(
       (effects, rider): readonly BattleActiveEffect[] => [
         ...effects.filter(
@@ -1541,11 +1541,11 @@ export function applyFailedSaveSpellConditionEffects(
   let nextState = state;
   for (const targetId of targetIds) {
     const target = nextState.combatants.get(targetId);
-    /* v8 ignore start -- Defensive internal guard: validated failed-save target ids are selected from the current combatant map before condition effects are applied. */
+    /* v8 ignore start -- @preserve -- Defensive internal guard: validated failed-save target ids are selected from the current combatant map before condition effects are applied. */
     if (target === undefined) {
       continue;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (
       conditionApplicationPreventedByCreatureTypeProtection(
         state,
@@ -2705,11 +2705,11 @@ export function applyWebRestrainedCondition(
   effect: Extract<BattleActiveEffect, { readonly kind: "webRestraintHazard" }>,
 ): BattleState {
   const target = state.combatants.get(targetId);
-  /* v8 ignore start -- Defensive internal guard: Web failed-save outcomes are validated against the current combatant map before restraint is applied. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: Web failed-save outcomes are validated against the current combatant map before restraint is applied. */
   if (target === undefined) {
     return state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const replacing = target.activeEffects.filter(
     (candidate) =>
       candidate.kind === "spellCondition" &&
@@ -2818,11 +2818,11 @@ export function applyCommandPendingEffects(
   let nextState = state;
   for (const targetId of targetIds) {
     const target = nextState.combatants.get(targetId);
-    /* v8 ignore start -- Defensive internal guard: Command failed-save target ids are validated against the current combatant map before pending effects are applied. */
+    /* v8 ignore start -- @preserve -- Defensive internal guard: Command failed-save target ids are validated against the current combatant map before pending effects are applied. */
     if (target === undefined) {
       continue;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const allocation = allocateBattleActiveEffectRefForCreature({
       owner: target,
     });
@@ -2863,11 +2863,11 @@ export function applyCommandGrovelProneToTarget(
   effect: Extract<BattleActiveEffect, { readonly kind: "commandPending" }>,
 ): BattleState {
   const target = state.combatants.get(targetId);
-  /* v8 ignore start -- Defensive internal guard: Grovel resolution receives the current target and its pending Command effect from the admitted turn-start command. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: Grovel resolution receives the current target and its pending Command effect from the admitted turn-start command. */
   if (target === undefined) {
     return state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     ...state,
     combatants: new Map(state.combatants).set(
@@ -2891,11 +2891,11 @@ function applyProneToCombatants(
 ): Map<CombatantId, BattleCreatureState> {
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
-    /* v8 ignore start -- Defensive internal guard: prone target ids come from validated spell or feature saving-throw outcomes over the current combatant map. */
+    /* v8 ignore start -- @preserve -- Defensive internal guard: prone target ids come from validated spell or feature saving-throw outcomes over the current combatant map. */
     if (target === undefined) {
       continue;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     combatants.set(
       targetId,
       battleCreatureStateWithKnockOutPreservedConditions(
@@ -2917,11 +2917,11 @@ export function applyFailedSaveAttackRollAdvantageEffects(
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
-    /* v8 ignore start -- Defensive internal guard: Faerie Fire failed-save target ids are validated against the current combatant map before outlines are applied. */
+    /* v8 ignore start -- @preserve -- Defensive internal guard: Faerie Fire failed-save target ids are validated against the current combatant map before outlines are applied. */
     if (target === undefined) {
       continue;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     combatants.set(targetId, {
       ...target,
       activeEffects: [
@@ -2955,11 +2955,11 @@ export function applySaveGatedConditionImmunityEffects(
 ): BattleState {
   return targetIds.reduce((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
-    /* v8 ignore start -- Defensive internal guard: protection-spell failed-save target ids are validated against the current combatant map before immunities are applied. */
+    /* v8 ignore start -- @preserve -- Defensive internal guard: protection-spell failed-save target ids are validated against the current combatant map before immunities are applied. */
     if (target === undefined) {
       return nextState;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const nextEffects = invocation.activeEffects.map((effect) => ({
       ...effect,
       sourceProcedureRef: invocation.sourceProcedureRef,
@@ -3259,11 +3259,11 @@ export function endHeldLightSpellEffect(
   >,
 ): BattleState {
   const caster = state.combatants.get(actorId);
-  /* v8 ignore start -- Defensive internal guard: the admitted held-light hurl subject retains its caster through effect teardown. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: the admitted held-light hurl subject retains its caster through effect teardown. */
   if (caster === undefined) {
     return state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     ...state,
     combatants: new Map(state.combatants).set(actorId, {
@@ -3293,11 +3293,11 @@ export function applyDragonsBreathInitialSpellEffect(
   procedureRef: BattleProcedureExecutionRef,
 ): BattleState {
   const target = state.combatants.get(targetId);
-  /* v8 ignore start -- Defensive internal guard: Dragon's Breath initial targeting is validated against the current combatant map before its granted effect is applied. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: Dragon's Breath initial targeting is validated against the current combatant map before its granted effect is applied. */
   if (target === undefined) {
     return state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const allocation = allocateBattleActiveEffectRefForCreature({
     owner: target,
   });
@@ -3329,11 +3329,11 @@ export function applyShieldReactionSpellActiveEffect(
   >,
 ): BattleState {
   const reactor = state.combatants.get(reactorId);
-  /* v8 ignore start -- Defensive internal guard: the admitted Shield interrupt retains its reactor through active-effect application. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: the admitted Shield interrupt retains its reactor through active-effect application. */
   if (reactor === undefined) {
     return state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return {
     ...state,

@@ -236,16 +236,16 @@ export function resolveReleaseSpellCreatedHeldObjectCommand(
     >
   >,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Spell-created held object release does not accept fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const released = releaseSpellCreatedHeldObjectState({
     state: input.state,
     actorId: input.subject.actorId,
@@ -274,16 +274,16 @@ export function resolveDancingLightsCastSpellAct(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (dancingLightsFillSetHasUnrelatedFills(input.fillSet)) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Dancing Lights spells use only a Dancing Lights placement fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const placement = input.fillSet.dancingLightsPlacement?.value;
   if (placement === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -299,12 +299,12 @@ export function resolveDancingLightsCastSpellAct(input: {
     input.invocation,
     placement,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (Either.isLeft(placementPlan)) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.input.state, "invalidFill", placementPlan.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
     spellCastInterruptFrame({
@@ -326,9 +326,9 @@ export function resolveDancingLightsCastSpellAct(input: {
     invocation: input.invocation,
     errorState: input.input.state,
   });
-  /* v8 ignore start -- Defensive internal guard: dispatcher admission proves this cantrip's Magic Action, and spell-cast interrupt replay cannot spend the caster's Action before this synchronous commit. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher admission proves this cantrip's Magic Action, and spell-cast interrupt replay cannot spend the caster's Action before this synchronous commit. */
   if (resourced.tag === "invalid") return resourced;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const effected = applyDancingLightsSpellEffect(
     resourced.state,
     input.actorId,
@@ -351,16 +351,16 @@ export function resolveDancingLightsRepositionSpellAct(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (dancingLightsFillSetHasUnrelatedFills(input.fillSet)) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Dancing Lights spells use only a Dancing Lights placement fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const activeEffect = input.input.state.combatants
     .get(input.actorId)
     ?.activeEffects.find(
@@ -398,12 +398,12 @@ export function resolveDancingLightsRepositionSpellAct(input: {
     activeEffect,
     placement,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (Either.isLeft(placementPlan)) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.input.state, "invalidFill", placementPlan.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const effected = repositionDancingLightsSpellEffect(
     input.input.state,
     input.actorId,
@@ -412,7 +412,7 @@ export function resolveDancingLightsRepositionSpellAct(input: {
   const spent = spendActivationResource(effected.currentTurnResources, {
     kind: "bonusAction",
   });
-  /* v8 ignore start -- Defensive internal guard: dispatcher admission proves the Bonus Action is available, and the preceding synchronous light reposition does not spend turn resources. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher admission proves the Bonus Action is available, and the preceding synchronous light reposition does not spend turn resources. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.input.state,
@@ -420,7 +420,7 @@ export function resolveDancingLightsRepositionSpellAct(input: {
       "Bonus Action spell is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const state = {
     ...effected,
     currentTurnResources: spent.right,
@@ -687,23 +687,23 @@ export function resolveReadySpellAct(
     input.subject.actorId,
     input.state,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!fillsBelongToSpellCastHoles(input.fills)) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Ready Spell accepts only spell-cast Reaction trigger facts.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Defensive lifecycle guard: Ready spends the caster's only Magic-capable Action, and supported extra-action grants cannot Ready another spell before the held spell expires. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Defensive lifecycle guard: Ready spends the caster's only Magic-capable Action, and supported extra-action grants cannot Ready another spell before the held spell expires. */
   if (input.state.readiedSpells.has(input.subject.actorId)) {
     return invalidResult(
       input.state,
@@ -711,7 +711,7 @@ export function resolveReadySpellAct(
       "This caster is already holding a readied spell.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const castingState = invocation.spellRuleFacts.components.verbal
     ? revealHidden(input.state, input.subject.actorId)
     : input.state;
@@ -742,7 +742,7 @@ export function resolveReadySpellAct(
   const refreshedActor = afterPriorConcentration.combatants.get(
     input.subject.actorId,
   );
-  /* v8 ignore start -- Defensive internal guard: invocation admission proves a character caster, and synchronous Concentration teardown preserves that combatant and origin. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: invocation admission proves a character caster, and synchronous Concentration teardown preserves that combatant and origin. */
   if (refreshedActor?.origin.kind !== "character") {
     return invalidResult(
       input.state,
@@ -750,7 +750,7 @@ export function resolveReadySpellAct(
       "Ready Spell caster is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const concentratingActor = {
     ...refreshedActor,
     concentration: {
@@ -777,7 +777,7 @@ export function resolveReadySpellAct(
     ),
   };
   const spent = spendAction(withConcentration.currentTurnResources, "magic");
-  /* v8 ignore start -- Defensive internal guard: dispatcher Magic-action admission runs before Ready resolution, and the preceding synchronous setup does not spend an Action. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Magic-action admission runs before Ready resolution, and the preceding synchronous setup does not spend an Action. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -785,7 +785,7 @@ export function resolveReadySpellAct(
       "Magic action is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const slotted =
     invocation.resource.tag === "spellSlot"
       ? expendSpellSlot(
@@ -798,7 +798,7 @@ export function resolveReadySpellAct(
     invocation.resource.tag === "spellSlot"
       ? markSpellSlotExpendedThisTurn(spent.right, input.subject.actorId)
       : Either.right(spent.right);
-  /* v8 ignore start -- Defensive internal guard: spell discovery and interrupt-checkpoint admission reject a second committed Spell Slot use before Ready resolution. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: spell discovery and interrupt-checkpoint admission reject a second committed Spell Slot use before Ready resolution. */
   if (Either.isLeft(nextTurnResources)) {
     return invalidResult(
       input.state,
@@ -806,7 +806,7 @@ export function resolveReadySpellAct(
       "This turn has already expended a Spell Slot.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = {
     ...slotted,
     currentTurnResources: nextTurnResources.right,
@@ -832,11 +832,11 @@ export function resolveSpellRelease(
         input.subject.actorId,
         input.state,
       );
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered holes. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered holes. */
       if (fillSet.tag === "invalid") {
         return invalidResult(input.state, "invalidFill", fillSet.message);
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       return resolveStoredGlyphAttackBurstSaveDamageSpellRelease({
         input,
         actorId: input.subject.actorId,
@@ -877,12 +877,12 @@ function resolveNonSpiritualSpellRelease(
     input.subject.actorId,
     input.state,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return resolveNonSpiritualSelectedInvocation({
     input,
     request,
@@ -906,7 +906,7 @@ function resolveNonSpiritualSelectedInvocation(input: {
       selectedInvocation.hole,
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: the selected invocation must satisfy the admitted spell release procedure contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: the selected invocation must satisfy the admitted spell release procedure contract. */
   if (selectedInvocation.tag === "invalid") {
     return invalidResult(
       input.input.state,
@@ -914,7 +914,7 @@ function resolveNonSpiritualSelectedInvocation(input: {
       selectedInvocation.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const invocation = selectedInvocation.invocation;
   if (invocation.procedure === "saveGatedDamage") {
     return resolveSaveGateDamageSpellRelease({
@@ -993,12 +993,12 @@ function resolveStoredGlyphDirectTargetRelease(
     input.subject.actorId,
     input.state,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const selectedInvocation = selectedSpellAttackDamageProcedure(
     candidateInvocation,
     fillSet.damageTypeChoice,
@@ -1008,16 +1008,16 @@ function resolveStoredGlyphDirectTargetRelease(
       selectedInvocation.hole,
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (selectedInvocation.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       selectedInvocation.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const invocation = selectedInvocation.invocation;
   if (invocation.procedure === "spiritualWeaponAttackProxy") {
     if (fillSet.spiritualWeaponForcePosition === undefined) {
@@ -1029,12 +1029,12 @@ function resolveStoredGlyphDirectTargetRelease(
       fillSet.spiritualWeaponForcePosition,
       invocation,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (placementError !== null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.state, "invalidFill", placementError);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return resolveTargetedSpellRelease(
     input,
@@ -1053,7 +1053,7 @@ function resolveTargetedSpellRelease(
   storedGlyphRetargetingMatches: boolean,
 ): BattleResolutionResult {
   const target = input.state.combatants.get(targetId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target == null ||
     (!storedGlyphRetargetingMatches &&
@@ -1065,14 +1065,14 @@ function resolveTargetedSpellRelease(
         fillSet.targetSpatialFacts,
       ))
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Readied spell target must be a combatant within the selected spell's supported range.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return resolveTargetedSpellReleaseAfterTarget({
     input,
     invocation,
@@ -1527,9 +1527,9 @@ function prepareTargetedSpellDamage(
 ): TargetedSpellDamagePreparation {
   const damageRoll = input.fillSet.damageRoll;
   if (damageRoll == null) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (input.fillSet.sourceDamageRollPenaltyRolls.length > 0) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return {
         tag: "result",
         result: invalidResult(
@@ -1539,7 +1539,7 @@ function prepareTargetedSpellDamage(
         ),
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return {
       tag: "result",
       result: needsHolesResult(input.input.state, input.input.subject, [
@@ -1583,15 +1583,15 @@ function prepareTargetedSpellDamageWithRoll(
     critical,
     input.spellMarkedDamageRiders,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageValidation !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
       result: invalidResult(input.input.state, "invalidFill", damageValidation),
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spellDamageByType = spellDamageByTypeForTarget(
     input.target,
     input.invocation,
@@ -1631,14 +1631,14 @@ function resolveTargetedSpellSourceDamagePreparation(
       input.spellDamageByType,
       input.damageRoll.holeId,
     );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     unexpectedSourceDamageRollPenaltyRoll(
       input.fillSet.sourceDamageRollPenaltyRolls,
       expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
     ) !== undefined
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
       result: invalidResult(
@@ -1648,7 +1648,7 @@ function resolveTargetedSpellSourceDamagePreparation(
       ),
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
     input.fillSet.sourceDamageRollPenaltyRolls,
     damageSource,
@@ -1661,9 +1661,9 @@ function resolveTargetedSpellSourceDamagePreparation(
     input.damageRoll.holeId,
     sourceDamageRollPenaltyRoll,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (sourcePenalty.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
       result: invalidResult(
@@ -1673,7 +1673,7 @@ function resolveTargetedSpellSourceDamagePreparation(
       ),
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (sourcePenalty.tag === "needsHoles") {
     return {
       tag: "result",
@@ -1779,9 +1779,9 @@ function resolveTargetedSpellConcentrationLifecycle(
       ]),
     };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (concentrationSaveCheck.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
       result: invalidResult(
@@ -1791,7 +1791,7 @@ function resolveTargetedSpellConcentrationLifecycle(
       ),
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ready",
     concentrationFill,
@@ -1817,9 +1817,9 @@ function resolveTargetedSpellHideousLaughterLifecycle(
       ]),
     };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (hideousLaughterSaveCheck.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
       result: invalidResult(
@@ -1829,7 +1829,7 @@ function resolveTargetedSpellHideousLaughterLifecycle(
       ),
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ready",
     hideousLaughterLifecycleFills: fillsMatchingHoleIds(
@@ -1851,9 +1851,9 @@ function resolveTargetedSpellDamageDisposition(
     holes: damageDispositionHole === null ? [] : [damageDispositionHole],
     fills: input.fillSet.damageDispositions,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageDispositionValidation !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
       result: invalidResult(
@@ -1863,7 +1863,7 @@ function resolveTargetedSpellDamageDisposition(
       ),
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     damageDispositionHole !== null &&
     damageDispositionFillFor(
@@ -1925,9 +1925,9 @@ function resolveTargetedSpellDamageRelationship(
       ),
     };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipCheck.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return {
       tag: "result",
       result: invalidResult(
@@ -1937,7 +1937,7 @@ function resolveTargetedSpellDamageRelationship(
       ),
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ready",
     relationshipDecisions: relationshipCheck.decisions,

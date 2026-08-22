@@ -59,7 +59,7 @@ export function castDivineIntervention(input: {
   readonly spellId: UnitRecord["id"];
 }): Either.Either<CharacterSheetDivineInterventionResult, CharacterSheetIssue> {
   const feature = divineInterventionFeatureForSheet(input);
-  /* v8 ignore next -- Unsupported invocation input: this operation is admitted only for a retained Divine Intervention feature profile. */
+  /* v8 ignore next -- @preserve -- Unsupported invocation input: this operation is admitted only for a retained Divine Intervention feature profile. */
   if (Either.isLeft(feature)) return Either.left(feature.left);
 
   const resource = divineInterventionResource({
@@ -67,7 +67,7 @@ export function castDivineIntervention(input: {
     unitLibrary: input.unitLibrary,
     featureUnitId: feature.right.id,
   });
-  /* v8 ignore next -- Malformed retained support state: Divine Intervention admission correlates its feature with one projected use-count resource. */
+  /* v8 ignore next -- @preserve -- Malformed retained support state: Divine Intervention admission correlates its feature with one projected use-count resource. */
   if (Either.isLeft(resource)) return Either.left(resource.left);
   if (resource.right.expended >= resource.right.count) {
     return characterSheetIssue(
@@ -76,20 +76,20 @@ export function castDivineIntervention(input: {
   }
 
   const spell = getRequiredUnit(input.unitLibrary, input.spellId);
-  /* v8 ignore next -- Malformed selection/catalog correlation: the selected Divine Intervention spell id comes from this admitted Unit catalog. */
+  /* v8 ignore next -- @preserve -- Malformed selection/catalog correlation: the selected Divine Intervention spell id comes from this admitted Unit catalog. */
   if (Either.isLeft(spell)) return Either.left(spell.left);
-  /* v8 ignore start -- A spell id selected from Divine Intervention's admitted catalog must resolve to a Spell Unit. */
+  /* v8 ignore start -- @preserve -- A spell id selected from Divine Intervention's admitted catalog must resolve to a Spell Unit. */
   if (spell.right.kind !== "spell") {
     return characterSheetIssue("Divine Intervention requires a Spell record.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const invocation = divineInterventionInvocationFromSpell({
     spell: spell.right,
     featureUnitId: feature.right.id,
     unitLibrary: input.unitLibrary,
   });
-  /* v8 ignore next -- Unsupported authored data: Divine Intervention selection narrows to the supported Cleric spell invocation profile before projection. */
+  /* v8 ignore next -- @preserve -- Unsupported authored data: Divine Intervention selection narrows to the supported Cleric spell invocation profile before projection. */
   if (Either.isLeft(invocation)) return Either.left(invocation.left);
 
   return Either.right({
@@ -129,7 +129,7 @@ function divineInterventionResource(input: {
   readonly featureUnitId: UnitRecord["id"];
 }): Either.Either<DivineInterventionResource, CharacterSheetIssue> {
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
-  /* v8 ignore next -- Malformed build/catalog correlation: resource projection can fail only when retained admitted Units no longer resolve. */
+  /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: resource projection can fail only when retained admitted Units no longer resolve. */
   if (Either.isLeft(resources)) return Either.left(resources.left);
   const resource = resources.right.find(
     (
@@ -141,13 +141,13 @@ function divineInterventionResource(input: {
       candidate.tag === "useCountResource" &&
       candidate.unitId === input.featureUnitId,
   );
-  /* v8 ignore start -- Divine Intervention feature ownership and its Long Rest use-count resource are correlated by resource projection. */
+  /* v8 ignore start -- @preserve -- Divine Intervention feature ownership and its Long Rest use-count resource are correlated by resource projection. */
   if (resource === undefined) {
     return characterSheetIssue(
       "Divine Intervention requires the supported Long Rest use-count resource.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({
     unitId: resource.unitId,
     count: resource.count,
@@ -201,11 +201,11 @@ function isClericSpellAtSupportedDivineInterventionLevel(
   spell: SpellRecord,
   unitLibrary: UnitCatalog,
 ): boolean {
-  /* v8 ignore start -- Spells above level 5 are outside Divine Intervention's narrowed selectable spell contract. */
+  /* v8 ignore start -- @preserve -- Spells above level 5 are outside Divine Intervention's narrowed selectable spell contract. */
   if (spell.mechanics.level > 5) {
     return false;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (spell.mechanics.level === 0) {
     return allCantripsFromClassSpellList({
       className: "cleric",
@@ -257,7 +257,7 @@ function replaceDivineInterventionExpenditure(input: {
       expenditure.tag !== "useCountResource" ||
       expenditure.unitId !== input.unitId,
   );
-  /* v8 ignore start -- Internal workflow invariant: Divine Intervention calls this helper only after incrementing its positive use-count expenditure by one. */
+  /* v8 ignore start -- @preserve -- Internal workflow invariant: Divine Intervention calls this helper only after incrementing its positive use-count expenditure by one. */
   if (input.expended > resourceCount(0)) {
     next.push({
       tag: "useCountResource",
@@ -265,6 +265,6 @@ function replaceDivineInterventionExpenditure(input: {
       expended: input.expended,
     });
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return next;
 }

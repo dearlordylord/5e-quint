@@ -260,12 +260,12 @@ export function traceActivationCost(
       edges.push({ from: procId, to: id, relation: "consumes" });
       return;
     }
-    /* v8 ignore start -- ActivationCost is a decoded tagged union exhausted above; another tag is malformed */
+    /* v8 ignore start -- @preserve -- ActivationCost is a decoded tagged union exhausted above; another tag is malformed */
     default: {
       const _exhaustive: never = c;
       throw new Error(`unhandled activation cost: ${String(_exhaustive)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -357,12 +357,12 @@ export function describeUseCountCap(cap: UseCountResource["cap"]): string {
       return `max = ${cap.ability.toUpperCase()} modifier${cap.minimum === undefined ? "" : ` (minimum ${cap.minimum})`}`;
     case "unlimited":
       return "unlimited";
-    /* v8 ignore start -- the decoded use-count cap union is exhausted above */
+    /* v8 ignore start -- @preserve -- the decoded use-count cap union is exhausted above */
     default: {
       const _: never = cap;
       throw new Error(`unhandled use count cap: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -387,12 +387,12 @@ export function describeClassWeaponProficiency(
       return `${proficiency.category} weapons with ${proficiency.anyOfProperties.join(
         " or ",
       )}`;
-    /* v8 ignore start -- ToolProficiencyGrant is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- ToolProficiencyGrant is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = proficiency;
       return _exhaustive;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -495,12 +495,12 @@ export function traceResetCadence(
       // ItemDestructionPolicy.permanent_on_empty for item lifecycle.
       return;
     }
-    /* v8 ignore start -- ResetCadence is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- ResetCadence is a decoded tagged union exhausted above */
     default: {
       const _: never = c;
       throw new Error(`unhandled reset cadence: ${String(_)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   for (const r of rests) {
     const rid = ids("rest");

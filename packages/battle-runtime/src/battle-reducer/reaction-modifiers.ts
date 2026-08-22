@@ -207,15 +207,15 @@ export function reactionModifierReductionRoll(
       isBattleRolledDiceFill(candidate) &&
       candidate.holeId === REACTION_MODIFIER_ROLL_HOLE_ID,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fill === undefined) {
     return {
       tag: "invalid",
       message: "This Reaction modifier requires one reduction roll fill.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fills.some(
       (candidate) =>
@@ -229,14 +229,14 @@ export function reactionModifierReductionRoll(
       message: "Reaction modifier reduction roll was filled twice.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const expectedDieResults =
     "dice" in choice.reduction ? choice.reduction.dice : 1;
   const value = rolledDiceFillTotal(fill, {
     dice: expectedDieResults,
     dieSize: choice.reduction.dieSize,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (value === null) {
     return {
       tag: "invalid",
@@ -244,7 +244,7 @@ export function reactionModifierReductionRoll(
         "Reaction modifier roll must provide one valid reduction die result.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if ("dice" in choice.reduction) {
     return reactionReductionResourceDieRollTotal({
       reduction: choice.reduction,
@@ -275,7 +275,7 @@ export function reactionReductionResourceDieRollTotal(input: {
   | { readonly tag: "invalid"; readonly message: string } {
   const minimumRollTotal = input.reduction.dice;
   const maximumRollTotal = input.reduction.dice * input.reduction.dieSize;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.rollTotal < minimumRollTotal ||
     input.rollTotal > maximumRollTotal ||
@@ -286,7 +286,7 @@ export function reactionReductionResourceDieRollTotal(input: {
       message: `reduction roll must be a ${reactionReductionResourceDieLabel(input.reduction)} result.`,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
     value: input.rollTotal + input.reduction.flatModifier,

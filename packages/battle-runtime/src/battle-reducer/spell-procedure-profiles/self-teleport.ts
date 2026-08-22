@@ -136,7 +136,7 @@ function discoverSelfTeleportCastAct(
 function resolveSelfTeleport(
   input: SelfTeleportResolveInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       spellTeleportDestinationHoleId(input.invocation, input.actorId),
@@ -148,7 +148,7 @@ function resolveSelfTeleport(
       "Self-teleport spells use a teleport-destination fill only.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   if (input.fillSet.teleportDestination === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -163,17 +163,17 @@ function resolveSelfTeleport(
     destinationFill,
     destination,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation !== null) {
     return invalidResult(input.input.state, "invalidFill", validation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const antimagicTransitInvalidReason = antimagicFieldTransitInvalidReason({
     state: input.input.state,
     actorId: input.actorId,
     witnesses: destination.antimagicFieldTransit,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (antimagicTransitInvalidReason !== null) {
     return invalidResult(
       input.input.state,
@@ -181,7 +181,7 @@ function resolveSelfTeleport(
       antimagicTransitInvalidReason,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const resolution = { ...input, actionCostOverride: "bonusAction" as const };
   const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({
@@ -226,7 +226,7 @@ function selfTeleportOutcomeDestination(
   };
 }
 
-/* v8 ignore start -- Malformed teleport witness: discovery binds the destination hole to this caster and spell and offers only nonzero destinations within the invocation range. */
+/* v8 ignore start -- @preserve -- Malformed teleport witness: discovery binds the destination hole to this caster and spell and offers only nonzero destinations within the invocation range. */
 function validateSelfTeleportDestination(
   invocation: BattleExecutableSpellInvocation<SelfTeleportInvocation>,
   actorId: CombatantId,
@@ -250,7 +250,7 @@ function validateSelfTeleportDestination(
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 const SelfTeleportInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({

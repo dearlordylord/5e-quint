@@ -1881,7 +1881,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         spacingFeet: value.spacingFeet,
       }),
-      /* v8 ignore start -- Dancing Lights reposition is synthesized from an admitted active effect; it is never an authored character spell invocation at this projection boundary. */
+      /* v8 ignore start -- @preserve -- Dancing Lights reposition is synthesized from an admitted active effect; it is never an authored character spell invocation at this projection boundary. */
       dancingLightsReposition: (value) => ({
         spellRuleFacts,
         access: value.access,
@@ -1894,7 +1894,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         spacingFeet: value.spacingFeet,
       }),
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       dancingLightsSeparateCast: (value) => ({
         spellRuleFacts,
         access: value.access,
@@ -2032,7 +2032,7 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         resource: value.resource,
       }),
-      /* v8 ignore start -- Held-light hurl is synthesized from an admitted active effect; it is never an authored character spell invocation at this projection boundary. */
+      /* v8 ignore start -- @preserve -- Held-light hurl is synthesized from an admitted active effect; it is never an authored character spell invocation at this projection boundary. */
       heldLightHurl: (value) => ({
         spellRuleFacts,
         access: value.access,
@@ -2056,7 +2056,7 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       hypnoticPattern: (value) => ({
         spellRuleFacts,
         ability: value.ability,
@@ -2521,7 +2521,7 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         resource: value.resource,
       }),
-      /* v8 ignore start -- The held-object attack is synthesized from an admitted active effect; it is never an authored character spell invocation at this projection boundary. */
+      /* v8 ignore start -- @preserve -- The held-object attack is synthesized from an admitted active effect; it is never an authored character spell invocation at this projection boundary. */
       spellCreatedHeldObjectAttack: (value) => ({
         spellRuleFacts,
         access: value.access,
@@ -2535,8 +2535,8 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-      /* v8 ignore stop */
-      /* v8 ignore start -- Held-object re-evocation is synthesized from an admitted active effect; it is never an authored character spell invocation at this projection boundary. */
+      /* v8 ignore stop -- @preserve */
+      /* v8 ignore start -- @preserve -- Held-object re-evocation is synthesized from an admitted active effect; it is never an authored character spell invocation at this projection boundary. */
       spellCreatedHeldObjectReEvoke: (value) => ({
         spellRuleFacts,
         access: value.access,
@@ -2546,7 +2546,7 @@ export function spellProcedureExecution(
         procedure: value.procedure,
         resource: value.resource,
       }),
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       spellHostedWeaponAttack: (value) => ({
         spellRuleFacts,
         access: value.access,

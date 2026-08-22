@@ -211,7 +211,7 @@ function discoverConditionImmunityAndTurnStartTemporaryHitPointsCastAct(
 function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
   input: SpellProcedureProfileResolveInput<ConditionImmunityAndTurnStartTemporaryHitPointsSpellInvocation>,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       ATTACK_TARGET_HOLE_ID,
@@ -224,7 +224,7 @@ function resolveConditionImmunityAndTurnStartTemporaryHitPoints(
       "Condition-immunity turn-start Temporary Hit Points spells use target fills only.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const targetSelectionResolution = spellSelectionResolution(
     input.input.state,
     input.input.subject,

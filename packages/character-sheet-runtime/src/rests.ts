@@ -226,7 +226,7 @@ export function completeShortRestArcaneRecoveryWithRoute(
       qRoute: [completeArcaneRecoverySpellSlotRestRouteEvent()],
     };
   }
-  /* v8 ignore start -- Malformed Short Rest route input failed before an Arcane Recovery route owner could be established. */
+  /* v8 ignore start -- @preserve -- Malformed Short Rest route input failed before an Arcane Recovery route owner could be established. */
   if (result.owner === undefined) {
     return {
       tag: "rejected",
@@ -235,7 +235,7 @@ export function completeShortRestArcaneRecoveryWithRoute(
       qRoute: [],
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "rejected",
     route: "arcaneRecovery",
@@ -329,57 +329,57 @@ export function completeLongRest(
   input: CharacterSheetLongRestInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
   const sheet = input.completion.startedRest.sheet;
-  /* v8 ignore start -- Malformed Long Rest input: a rest cannot complete while the character has zero HP. */
+  /* v8 ignore start -- @preserve -- Malformed Long Rest input: a rest cannot complete while the character has zero HP. */
   if (characterSheetCurrentHp(sheet) < Hp(1)) {
     return characterSheetIssue(
       "Long Rest requires the Character Sheet to have at least 1 HP.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const companion = companionAfterLongRest(sheet.companion);
   const heroicInspiration = heroicInspirationAfterLongRest({
     sheet,
     unitLibrary: input.unitLibrary,
   });
-  /* v8 ignore start -- Malformed sheet/catalog correlation: Long Rest reprojects Heroic Inspiration only from class units admitted when the build was created. */
+  /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: Long Rest reprojects Heroic Inspiration only from class units admitted when the build was created. */
   if (Either.isLeft(heroicInspiration)) {
     return Either.left(heroicInspiration.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (isCharacterSheetWithSpellSlots(sheet)) {
     const build = characterSheetLongRestBuild(input, sheet.build);
-    /* v8 ignore next -- Malformed Long Rest input: weapon-mastery reselections are parsed against this admitted build before completion. */
+    /* v8 ignore next -- @preserve -- Malformed Long Rest input: weapon-mastery reselections are parsed against this admitted build before completion. */
     if (Either.isLeft(build)) return Either.left(build.left);
     const hitPoints = characterSheetLongRestHitPoints({
       build: build.right,
       unitLibrary: input.unitLibrary,
     });
-    /* v8 ignore next -- Malformed sheet/catalog correlation: an admitted build and its unit catalog must still yield a hit-point maximum. */
+    /* v8 ignore next -- @preserve -- Malformed sheet/catalog correlation: an admitted build and its unit catalog must still yield a hit-point maximum. */
     if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
     const druidWildShapeKnownForms = druidWildShapeKnownFormsAfterLongRest({
       input,
       build: build.right,
     });
-    /* v8 ignore start -- Malformed sheet/catalog correlation: retained Druid state cannot be reprojected from its admitted spellcasting build. */
+    /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Druid state cannot be reprojected from its admitted spellcasting build. */
     if (Either.isLeft(druidWildShapeKnownForms)) {
       return Either.left(druidWildShapeKnownForms.left);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const druidCircleLand = druidCircleLandAfterLongRest({
       input,
       build: build.right,
     });
-    /* v8 ignore start -- Malformed sheet/catalog correlation: retained Circle of the Land state cannot be reprojected from its admitted spellcasting build. */
+    /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Circle of the Land state cannot be reprojected from its admitted spellcasting build. */
     if (Either.isLeft(druidCircleLand)) {
       return Either.left(druidCircleLand.left);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const fiendishResilience = fiendishResilienceAfterLongRest({ input });
-    /* v8 ignore start -- Malformed sheet/catalog correlation: retained Fiendish Resilience cannot be reprojected from its admitted build. */
+    /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Fiendish Resilience cannot be reprojected from its admitted build. */
     if (Either.isLeft(fiendishResilience)) {
       return Either.left(fiendishResilience.left);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return Either.right({
       ...sheet,
       build: build.right,
@@ -406,38 +406,38 @@ export function completeLongRest(
     });
   }
   const build = characterSheetLongRestBuild(input, sheet.build);
-  /* v8 ignore next -- Malformed Long Rest input: weapon-mastery reselections are parsed against this admitted build before completion. */
+  /* v8 ignore next -- @preserve -- Malformed Long Rest input: weapon-mastery reselections are parsed against this admitted build before completion. */
   if (Either.isLeft(build)) return Either.left(build.left);
   const hitPoints = characterSheetLongRestHitPoints({
     build: build.right,
     unitLibrary: input.unitLibrary,
   });
-  /* v8 ignore next -- Malformed sheet/catalog correlation: an admitted build and its unit catalog must still yield a hit-point maximum. */
+  /* v8 ignore next -- @preserve -- Malformed sheet/catalog correlation: an admitted build and its unit catalog must still yield a hit-point maximum. */
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const druidWildShapeKnownForms = druidWildShapeKnownFormsAfterLongRest({
     input,
     build: build.right,
   });
-  /* v8 ignore start -- Malformed sheet/catalog correlation: retained Druid state cannot be reprojected from its admitted non-spellcasting build. */
+  /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Druid state cannot be reprojected from its admitted non-spellcasting build. */
   if (Either.isLeft(druidWildShapeKnownForms)) {
     return Either.left(druidWildShapeKnownForms.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const druidCircleLand = druidCircleLandAfterLongRest({
     input,
     build: build.right,
   });
-  /* v8 ignore start -- Malformed sheet/catalog correlation: retained Circle of the Land state cannot be reprojected from its admitted non-spellcasting build. */
+  /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Circle of the Land state cannot be reprojected from its admitted non-spellcasting build. */
   if (Either.isLeft(druidCircleLand)) {
     return Either.left(druidCircleLand.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const fiendishResilience = fiendishResilienceAfterLongRest({ input });
-  /* v8 ignore start -- Malformed sheet/catalog correlation: retained Fiendish Resilience cannot be reprojected from its admitted non-spellcasting build. */
+  /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Fiendish Resilience cannot be reprojected from its admitted non-spellcasting build. */
   if (Either.isLeft(fiendishResilience)) {
     return Either.left(fiendishResilience.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({
     ...sheet,
     build: build.right,
@@ -540,7 +540,7 @@ function characterSheetLongRestHitPoints(input: {
     },
     unitLibrary: input.unitLibrary,
   });
-  /* v8 ignore next -- Malformed sheet/catalog correlation: an admitted build and its unit catalog must still yield a hit-point maximum. */
+  /* v8 ignore next -- @preserve -- Malformed sheet/catalog correlation: an admitted build and its unit catalog must still yield a hit-point maximum. */
   if (Either.isLeft(hitPointMaximum)) return Either.left(hitPointMaximum.left);
   return characterSheetHitPoints({
     currentHp: hitPointMaximum.right,
@@ -569,7 +569,7 @@ function characterSheetHasLongRestHeroicInspirationGrant(input: {
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<boolean, CharacterSheetIssue> {
   const species = getRequiredUnit(input.unitLibrary, input.sheet.build.species);
-  /* v8 ignore start -- Malformed build/catalog correlation: the retained species is missing or has unreadable creation facts. */
+  /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: the retained species is missing or has unreadable creation facts. */
   if (Either.isLeft(species)) {
     return Either.left(species.left);
   }
@@ -577,7 +577,7 @@ function characterSheetHasLongRestHeroicInspirationGrant(input: {
   if (speciesFacts.tag !== "readable") {
     return Either.right(false);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   for (const traitUnitId of Object.values(speciesFacts.value.traits)) {
     const trait = getRequiredUnit(
       input.unitLibrary,
@@ -706,7 +706,7 @@ export function interruptLongRest(
     arcaneRecovery: input.arcaneRecovery,
     sorcerousRestoration: input.sorcerousRestoration,
   });
-  /* v8 ignore next -- Malformed interruption benefit input: Short Rest options are parsed against the retained sheet before the interrupted Long Rest resumes. */
+  /* v8 ignore next -- @preserve -- Malformed interruption benefit input: Short Rest options are parsed against the retained sheet before the interrupted Long Rest resumes. */
   if (Either.isLeft(shortRest)) return Either.left(shortRest.left);
   const resumedRestWithBenefits = characterSheetLongRestAfterInterruption({
     rest: input.rest,
@@ -749,14 +749,14 @@ export function completeMagicalCunningRite(
   input: CharacterSheetMagicalCunningInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
   const pactSlots = characterSheetPactSlots(input.sheet);
-  /* v8 ignore start -- Malformed Magical Cunning input: the sheet lacks Pact Slot state. */
+  /* v8 ignore start -- @preserve -- Malformed Magical Cunning input: the sheet lacks Pact Slot state. */
   if (pactSlots === undefined) {
     return characterSheetIssue("Magical Cunning requires Pact Slot state.");
   }
   if (!isCharacterSheetWithSpellSlots(input.sheet)) {
     return characterSheetIssue("Magical Cunning requires Pact Slot state.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const profile = pactSlotRecoveryProfileForBuild(
     input.sheet.build,
     input.unitLibrary,
@@ -771,13 +771,13 @@ export function completeMagicalCunningRite(
       "Magical Cunning cannot be used again until a Long Rest.",
     );
   }
-  /* v8 ignore start -- Malformed Magical Cunning input: no Pact Slot is expended. */
+  /* v8 ignore start -- @preserve -- Malformed Magical Cunning input: no Pact Slot is expended. */
   if (pactSlots.expended < resourceCount(1)) {
     return characterSheetIssue(
       "Magical Cunning must recover expended Pact Slots.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const recovered = magicalCunningRecoveredPactSlots({
     pactSlots,
     profile: profile.right,
@@ -820,12 +820,12 @@ export function pactSlotRecoveryProfileForBuild(
   const profiles: CharacterSheetPactSlotRecoveryProfile[] = [];
   for (const classUnitId of progressionClassUnitIds(build.progression)) {
     const unit = getRequiredUnit(unitLibrary, classUnitId);
-    /* v8 ignore next -- Malformed build/catalog correlation: every class id in an admitted progression must resolve in its retained unit catalog. */
+    /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: every class id in an admitted progression must resolve in its retained unit catalog. */
     if (Either.isLeft(unit)) return Either.left(unit.left);
     const facts = readClassCreationFacts(unit.right);
-    /* v8 ignore start -- Malformed build/catalog correlation: every Unit admitted as a progression class must expose readable class-creation facts. */
+    /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: every Unit admitted as a progression class must expose readable class-creation facts. */
     if (facts.tag !== "readable") continue;
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const classLevel = classLevelForUnit(build.progression, classUnitId);
     for (const grant of facts.value.featureGrants) {
       if (grant.level > classLevel) continue;
@@ -845,21 +845,21 @@ export function pactSlotRecoveryProfileForBuild(
       "Magical Cunning requires the Warlock Magical Cunning feature.",
     );
   }
-  /* v8 ignore start -- Malformed admitted build: multiple Pact Slot recovery profiles survived support admission. */
+  /* v8 ignore start -- @preserve -- Malformed admitted build: multiple Pact Slot recovery profiles survived support admission. */
   if (profiles.length > 1) {
     return characterSheetIssue(
       "Character Sheet supports only one Pact Slot recovery feature.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const profile = profiles[0];
-  /* v8 ignore start -- The nonempty profile check above makes an absent first Pact Slot recovery profile impossible. */
+  /* v8 ignore start -- @preserve -- The nonempty profile check above makes an absent first Pact Slot recovery profile impossible. */
   if (profile === undefined) {
     return characterSheetIssue(
       "Magical Cunning requires the Warlock Magical Cunning feature.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right(profile);
 }
 
@@ -899,13 +899,13 @@ function characterBuildWithWeaponMasteryReselections<
   readonly unitLibrary: UnitCatalog;
   readonly reselections: ReadonlyNonEmptyArray<CharacterSheetWeaponMasteryReselection>;
 }): Either.Either<TBuild, CharacterSheetIssue> {
-  /* v8 ignore start -- The ReadonlyNonEmptyArray reselection type makes an empty batch an internal malformed-call invariant. */
+  /* v8 ignore start -- @preserve -- The ReadonlyNonEmptyArray reselection type makes an empty batch an internal malformed-call invariant. */
   if (input.reselections.length === 0) {
     return characterSheetIssue(
       "Weapon Mastery Long Rest reselection input must be nonempty.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const ownedFeatureUnitIds = new Set(
     characterBuildFeatureUnitIds(input.build, input.unitLibrary),
   );
@@ -915,7 +915,7 @@ function characterBuildWithWeaponMasteryReselections<
   >();
 
   for (const reselection of input.reselections) {
-    /* v8 ignore start -- Malformed Weapon Mastery reselection: the batch duplicates a feature source or names an unowned feature. */
+    /* v8 ignore start -- @preserve -- Malformed Weapon Mastery reselection: the batch duplicates a feature source or names an unowned feature. */
     if (reselectedWeaponUnitIdsByFeature.has(reselection.featureUnitId)) {
       return characterSheetIssue(
         "Weapon Mastery Long Rest reselection must not duplicate feature sources.",
@@ -926,7 +926,7 @@ function characterBuildWithWeaponMasteryReselections<
         "Weapon Mastery Long Rest reselection requires the Character Build to own the feature.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const selectedWeaponUnitIds = selectedWeaponMasteryUnitIdsForLongRest({
       build: input.build,
       unitLibrary: input.unitLibrary,
@@ -959,7 +959,7 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
     featureUnitId: input.reselection.featureUnitId,
     unitLibrary: input.unitLibrary,
   });
-  /* v8 ignore start -- Malformed Weapon Mastery reselection: feature profile ownership or Long-Rest support disagrees with the admitted build. */
+  /* v8 ignore start -- @preserve -- Malformed Weapon Mastery reselection: feature profile ownership or Long-Rest support disagrees with the admitted build. */
   if (profile === undefined) {
     return characterSheetIssue(
       "Weapon Mastery Long Rest reselection requires a Weapon Mastery class-feature Unit.",
@@ -979,13 +979,13 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
       "Weapon Mastery class-feature Unit does not support Long Rest reselection.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const currentWeaponUnitIds = selectedWeaponMasteryUnitIds(
     input.build,
     input.reselection.featureUnitId,
   );
-  /* v8 ignore start -- Malformed retained build: current Weapon Mastery selections violate the admitted feature cardinality or uniqueness. */
+  /* v8 ignore start -- @preserve -- Malformed retained build: current Weapon Mastery selections violate the admitted feature cardinality or uniqueness. */
   if (
     currentWeaponUnitIds.length !== levelProfile.value.choiceCount ||
     new Set(currentWeaponUnitIds).size !== currentWeaponUnitIds.length
@@ -994,10 +994,10 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
       "Existing Weapon Mastery selections must match the feature choice count.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const selectedWeaponUnitIds = input.reselection.selectedWeaponUnitIds;
-  /* v8 ignore start -- Malformed Weapon Mastery reselection: selected weapons violate admitted cardinality, uniqueness, or eligibility. */
+  /* v8 ignore start -- @preserve -- Malformed Weapon Mastery reselection: selected weapons violate admitted cardinality, uniqueness, or eligibility. */
   if (selectedWeaponUnitIds.length !== levelProfile.value.choiceCount) {
     return characterSheetIssue(
       "Weapon Mastery Long Rest reselection must match the feature choice count.",
@@ -1019,7 +1019,7 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
       "Weapon Mastery Long Rest reselection must choose eligible proficient weapons.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const currentWeaponUnitIdSet = new Set(currentWeaponUnitIds);
   const changedChoiceCount = selectedWeaponUnitIds.filter(
@@ -1078,7 +1078,7 @@ function characterBuildFeaturesWithWeaponMasteryReselections(
     }
   }
 
-  /* v8 ignore start -- Internal workflow invariant: reselection validation proves every map key already has at least one retained selectedClassChoice entry, so this defensive insertion fallback is not reached. */
+  /* v8 ignore start -- @preserve -- Internal workflow invariant: reselection validation proves every map key already has at least one retained selectedClassChoice entry, so this defensive insertion fallback is not reached. */
   for (const [
     featureUnitId,
     selectedWeaponUnitIds,
@@ -1092,7 +1092,7 @@ function characterBuildFeaturesWithWeaponMasteryReselections(
       })),
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return nextFeatures;
 }

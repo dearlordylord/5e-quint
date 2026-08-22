@@ -19,14 +19,14 @@ export function timePassed(
   // turn-boundary Death Saving Throws, but this operation currently only
   // handles calendar-time Stable recovery.
   const totalTicks = elapsedTimeTicksFromTimeSpanDuration(input.duration);
-  /* v8 ignore start -- Malformed elapsed-time input: CharacterSheetTimePassedInput is admitted only after its TimeSpanDuration parses to nonnegative ticks. */
+  /* v8 ignore start -- @preserve -- Malformed elapsed-time input: CharacterSheetTimePassedInput is admitted only after its TimeSpanDuration parses to nonnegative ticks. */
   if (Either.isLeft(totalTicks)) {
     return invalidElapsedTimeResult(
       input.sheet,
       `Invalid elapsed-time duration: ${totalTicks.left.kind}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const consumed = passStableRecoveryTime({
     sheet: input.sheet,
     ticks: totalTicks.right,

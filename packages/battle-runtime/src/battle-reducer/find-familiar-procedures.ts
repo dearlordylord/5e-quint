@@ -118,9 +118,9 @@ export function resolveCompanionLifecycleSubject(
       casterId: input.subject.actorId,
     });
   }
-  /* v8 ignore next -- Exhaustive-match harness: every compile-time-known companion lifecycle action is handled above. */
+  /* v8 ignore next -- @preserve -- Exhaustive-match harness: every compile-time-known companion lifecycle action is handled above. */
   const exhaustive: never = input.subject.action;
-  /* v8 ignore next -- Exhaustive-match harness: the never value cannot be returned for a compile-time-known lifecycle action. */
+  /* v8 ignore next -- @preserve -- Exhaustive-match harness: the never value cannot be returned for a compile-time-known lifecycle action. */
   return exhaustive;
 }
 
@@ -354,7 +354,7 @@ export function deliverTouchSpellThroughFindFamiliar(
       "The familiar-delivered spell procedure is no longer bound to its caster.",
     );
   }
-  /* v8 ignore start -- The touch-spell candidate subject union excludes Wild Shape, so admission can only produce the general variant. */
+  /* v8 ignore start -- @preserve -- The touch-spell candidate subject union excludes Wild Shape, so admission can only produce the general variant. */
   if (admission.input.admissionKind !== "general") {
     return invalidResult(
       input.state,
@@ -362,7 +362,7 @@ export function deliverTouchSpellThroughFindFamiliar(
       "The familiar-delivered spell procedure is no longer bound to its caster.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const admittedSpell = admittedFindFamiliarSpell(
     admission.input,
     input.subject,

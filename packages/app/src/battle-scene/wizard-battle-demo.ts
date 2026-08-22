@@ -399,7 +399,7 @@ function nameOf(combatantId: CombatantId): string {
 
 function requireUnitCatalog() {
   const result = buildUnitCatalog({ collections: [srdUnitCollection] })
-  /* v8 ignore next -- the checked-in SRD collection is validated by the catalog tests */
+  /* v8 ignore next -- @preserve -- the checked-in SRD collection is validated by the catalog tests */
   if (result.tag !== "ok") {
     throw new Error("Wizard battle demo SRD Unit catalog is invalid.")
   }
@@ -408,7 +408,7 @@ function requireUnitCatalog() {
 
 function requireSpellRecord(unitId: string): SpellRecord {
   const unit = unitCatalog.requireUnit(unitId)
-  /* v8 ignore next -- these ids are selected from the fixture's typed spell constants */
+  /* v8 ignore next -- @preserve -- these ids are selected from the fixture's typed spell constants */
   if (unit.kind !== "spell") {
     throw new Error(`Wizard battle demo Unit is not a spell: ${unitId}`)
   }
@@ -731,7 +731,7 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): W
     subject: spellReady.subject,
     fills: [saveFill, damageRollFillWithGroups(damageRoll, [plan.spell.damageRollResults])]
   })
-  /* v8 ignore next -- the fixture supplies every hole exposed by the preceding resolution */
+  /* v8 ignore next -- @preserve -- the fixture supplies every hole exposed by the preceding resolution */
   if (resolved.tag !== "resolved") {
     throw new Error(`Expected ${plan.spell.name} to resolve, got ${resolved.tag}.`)
   }
@@ -833,7 +833,7 @@ function resolveCounterspellChain(
     nextBuilder = pushCounterspellCastStep(nextBuilder, link, reactionResult)
     pendingInterrupt = reactionResult
   }
-  /* v8 ignore next -- every finite fixture chain returns from the loop's terminal link */
+  /* v8 ignore next -- @preserve -- every finite fixture chain returns from the loop's terminal link */
   throw new Error(`Expected ${plan.spell.name} Counterspell chain to resume.`)
 }
 
@@ -915,7 +915,7 @@ function passCurrentTurn(
   })
   const result = endBattleRuntimeTurn({ session: nextBuilder.session, actorId })
   if (result.tag === "resolved") {
-    /* v8 ignore next -- a scripted death save is supplied only for turns that expose its hole */
+    /* v8 ignore next -- @preserve -- a scripted death save is supplied only for turns that expose its hole */
     if (deathSave !== undefined) {
       throw new Error(`Did not receive expected Death Saving Throw for ${nameOf(deathSave.targetId)}.`)
     }
@@ -927,7 +927,7 @@ function passCurrentTurn(
   }
   requireNeedsHoles(result, "Expected End Turn to resolve or ask for a Death Saving Throw.")
   const deathSavingThrow = requireHole(result.holes, "deathSavingThrow")
-  /* v8 ignore next -- scripted death-save identity follows the immediately exposed typed hole */
+  /* v8 ignore next -- @preserve -- scripted death-save identity follows the immediately exposed typed hole */
   if (deathSave === undefined || deathSavingThrow.combatantId !== deathSave.targetId) {
     throw new Error("Unexpected Death Saving Throw hole while advancing the wizard battle demo.")
   }
@@ -936,7 +936,7 @@ function passCurrentTurn(
     subject: result.subject,
     fills: [deathSavingThrowFill(deathSavingThrow, deathSave.roll)]
   })
-  /* v8 ignore next -- the immediately exposed death-save hole is filled above */
+  /* v8 ignore next -- @preserve -- the immediately exposed death-save hole is filled above */
   if (resolved.tag !== "resolved") {
     throw new Error(`Expected Death Saving Throw to resolve, got ${resolved.tag}.`)
   }
@@ -986,7 +986,7 @@ function pushStep(
 
 function requireCurrentActor(state: BattleState, actorId: CombatantId): void {
   const currentActorId = snapshotBattle(state).currentActorId
-  /* v8 ignore next -- callers advance the fixture in the battle state's turn order */
+  /* v8 ignore next -- @preserve -- callers advance the fixture in the battle state's turn order */
   if (currentActorId !== actorId) {
     throw new Error(`Expected current actor ${nameOf(actorId)}, got ${nameOf(currentActorId)}.`)
   }
@@ -1106,7 +1106,7 @@ function deathSaveText(roll: number): string {
 function requireNonEmptySteps(
   steps: ReadonlyArray<WizardBattleDemoStep>
 ): readonly [WizardBattleDemoStep, ...Array<WizardBattleDemoStep>] {
-  /* v8 ignore next -- the fixture builder always authors its initial step before publication */
+  /* v8 ignore next -- @preserve -- the fixture builder always authors its initial step before publication */
   if (steps.length < 1) {
     throw new Error("Wizard battle demo did not produce any steps.")
   }
@@ -1128,7 +1128,7 @@ function requireInitialSession(spellsById: Readonly<Record<string, SpellRecord>>
       })
     )
   })
-  /* v8 ignore next -- battle setup inputs are checked-in typed fixture records */
+  /* v8 ignore next -- @preserve -- battle setup inputs are checked-in typed fixture records */
   if (Either.isLeft(session)) {
     throw new Error(`Wizard battle demo fixture is invalid: ${battleStateInitIssueMessage(session.left)}`)
   }

@@ -66,7 +66,7 @@ function telepathicBondInvocationFromSpell(input: {
   readonly targets: readonly CharacterSheetTelepathicBondTarget[];
 }): Either.Either<CharacterSheetTelepathicBondInvocation, CharacterSheetIssue> {
   const spell = input.spell;
-  /* v8 ignore start -- The catalog record failed the exact authored level-5 Telepathic Bond support profile required by this projector. */
+  /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Telepathic Bond support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -82,15 +82,15 @@ function telepathicBondInvocationFromSpell(input: {
       "Telepathic Bond requires the supported level-5 Divination target-link profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.value);
-  /* v8 ignore start -- The authored one-hour duration is always accepted by the elapsed-time parser. */
+  /* v8 ignore start -- @preserve -- The authored one-hour duration is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue(
       "Telepathic Bond requires a supported duration.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const directPhase = spell.mechanics.phases.find(
     (phase) =>
       phase.kind === "direct" &&
@@ -98,18 +98,18 @@ function telepathicBondInvocationFromSpell(input: {
       phase.attachment.holeId === "telepathic_bond_targets" &&
       phase.attachment.value.kind === "target" &&
       isSupportedTelepathicBondSelection(phase.attachment.value.selection) &&
-      /* v8 ignore next -- Unsupported authored Telepathic Bond data: the admitted target phase requires exactly one explicit no-op effect. */
+      /* v8 ignore next -- @preserve -- Unsupported authored Telepathic Bond data: the admitted target phase requires exactly one explicit no-op effect. */
       (phase.effects ?? []).length === 1 &&
-      /* v8 ignore next -- Unsupported authored Telepathic Bond data: omission of that required effect was rejected by the same profile predicate. */
+      /* v8 ignore next -- @preserve -- Unsupported authored Telepathic Bond data: omission of that required effect was rejected by the same profile predicate. */
       (phase.effects ?? [])[0]?.kind === "none",
   );
-  /* v8 ignore start -- The catalog record has Telepathic Bond facts but no supported willing-creature link phase. */
+  /* v8 ignore start -- @preserve -- The catalog record has Telepathic Bond facts but no supported willing-creature link phase. */
   if (directPhase === undefined) {
     return characterSheetIssue(
       "Telepathic Bond requires the supported willing-creature link profile.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     tag: "telepathicBond",

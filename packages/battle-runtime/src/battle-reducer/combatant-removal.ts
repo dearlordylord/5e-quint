@@ -57,13 +57,13 @@ export function removeBattleCombatants(input: {
   for (const id of removeIds) {
     const combatant = input.state.combatants.get(id);
     const allocation = executionScopeCursors.get(id);
-    /* v8 ignore start -- BattleState invariant: every present combatant is initialized with one active execution-scope allocation at the same roster boundary. */
+    /* v8 ignore start -- @preserve -- BattleState invariant: every present combatant is initialized with one active execution-scope allocation at the same roster boundary. */
     if (combatant === undefined || allocation?.kind !== "active") {
       return battleStateInitIssue(
         "Cannot retire a combatant without an active execution-scope allocation.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     executionScopeCursors.set(id, {
       kind: "retired",
       nextScopeOrdinal: allocation.nextScopeOrdinal,
@@ -74,13 +74,13 @@ export function removeBattleCombatants(input: {
   const initiativeOption = removeFromInitiative(input.state.initiative, (id) =>
     removeIds.has(id),
   );
-  /* v8 ignore start -- BattleState invariant: roster and Initiative contain the same combatants, and the all-combatants removal case is rejected above. */
+  /* v8 ignore start -- @preserve -- BattleState invariant: roster and Initiative contain the same combatants, and the all-combatants removal case is rejected above. */
   if (Option.isNone(initiativeOption)) {
     return battleStateInitIssue(
       "Cannot remove every combatant from Initiative.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const combatants = new Map(
     [...input.state.combatants]
       .filter(([id]) => !removeIds.has(id))

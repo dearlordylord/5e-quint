@@ -371,7 +371,7 @@ function discoverCreatureSizeChangeCastAct(
 function resolveCreatureSizeChange(
   input: SpellProcedureProfileResolveInput<CreatureSizeChangeInvocation>,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToDeclaredHoles(input.input.fills, [
       ATTACK_TARGET_HOLE_ID,
@@ -385,7 +385,7 @@ function resolveCreatureSizeChange(
       "Creature size-change spells use one target and, for unwilling targets, one Saving Throw fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const targetSelection = selectSingleSpellTarget({
     state: input.input.state,
     subject: input.input.subject,

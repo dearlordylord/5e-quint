@@ -244,7 +244,7 @@ export function resolveFogCloudObscurementSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
@@ -271,13 +271,13 @@ export function resolveFogCloudObscurementSpellAct(input: {
       "Fog Cloud uses one table-supplied fog area fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.areaChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellAreaChoiceHole(input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.areaChoice.kind !== "fogCloudArea" ||
     input.fillSet.areaChoice.areaId.length === 0
@@ -288,7 +288,7 @@ export function resolveFogCloudObscurementSpellAct(input: {
       "Fog Cloud area id must be a non-empty fog area.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
@@ -324,7 +324,7 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
@@ -351,13 +351,13 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
       "Darkness uses one table-supplied magical Darkness area fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.areaChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellAreaChoiceHole(input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.areaChoice.kind !== "magicalDarknessArea" ||
     input.fillSet.areaChoice.areaId.length === 0
@@ -368,7 +368,7 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
       "Darkness area id must be a non-empty magical Darkness area.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
@@ -383,11 +383,11 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
     areaChoice,
     input.invocation,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (invalidOverlap !== null) {
     return invalidResult(input.input.state, "invalidFill", invalidOverlap);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return resolveAreaOngoingSpellEffect({
     state: input.input.state,
@@ -453,7 +453,7 @@ export function resolveFlamingSphereSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
@@ -480,13 +480,13 @@ export function resolveFlamingSphereSpellAct(input: {
       "Movable sphere uses one table-supplied sphere area fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.areaChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellAreaChoiceHole(input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.areaChoice.kind !== "flamingSphereArea" ||
     input.fillSet.areaChoice.areaId.length === 0
@@ -497,7 +497,7 @@ export function resolveFlamingSphereSpellAct(input: {
       "Movable sphere area id must be a non-empty sphere area.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
@@ -533,7 +533,7 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
@@ -560,13 +560,13 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
       "Spike Growth uses one table-supplied sphere area fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.areaChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellAreaChoiceHole(input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.areaChoice.kind !== "spikeGrowthArea" ||
     input.fillSet.areaChoice.areaId.length === 0
@@ -577,7 +577,7 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
       "Spike Growth area id must be a non-empty sphere area.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
@@ -613,7 +613,7 @@ export function resolveMoonbeamSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
@@ -640,13 +640,13 @@ export function resolveMoonbeamSpellAct(input: {
       "Movable cylinder uses one table-supplied cylinder area fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.areaChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellAreaChoiceHole(input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.areaChoice.kind !== "moonbeamCylinderArea" ||
     input.fillSet.areaChoice.areaId.length === 0
@@ -657,7 +657,7 @@ export function resolveMoonbeamSpellAct(input: {
       "Movable cylinder area id must be a non-empty cylinder area.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
@@ -693,7 +693,7 @@ export function resolveWebRestraintHazardSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
@@ -720,13 +720,13 @@ export function resolveWebRestraintHazardSpellAct(input: {
       "Web uses one table-supplied cube area fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.areaChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellAreaChoiceHole(input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.areaChoice.kind !== "webCubeArea" ||
     input.fillSet.areaChoice.areaId.length === 0
@@ -737,7 +737,7 @@ export function resolveWebRestraintHazardSpellAct(input: {
       "Web area id must be a non-empty cube area.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
@@ -772,7 +772,7 @@ export function resolveSleetStormAreaHazardSpellAct(input: {
   >;
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
@@ -799,13 +799,13 @@ export function resolveSleetStormAreaHazardSpellAct(input: {
       "Sleet Storm uses one table-supplied cylinder area fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.areaChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellAreaChoiceHole(input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.areaChoice.kind !== "sleetStormCylinderArea" ||
     input.fillSet.areaChoice.areaId.length === 0
@@ -816,7 +816,7 @@ export function resolveSleetStormAreaHazardSpellAct(input: {
       "Sleet Storm area id must be a non-empty cylinder area.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaChoice = input.fillSet.areaChoice;
 
   return resolveAreaOngoingSpellEffect({
@@ -844,7 +844,7 @@ export function resolveInsectPlagueAreaHazardSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
@@ -871,13 +871,13 @@ export function resolveInsectPlagueAreaHazardSpellAct(input: {
       "Insect Plague uses one table-supplied sphere area fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.areaChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellAreaChoiceHole(input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.areaChoice.kind !== "insectPlagueSphereArea" ||
     input.fillSet.areaChoice.areaId.length === 0
@@ -888,7 +888,7 @@ export function resolveInsectPlagueAreaHazardSpellAct(input: {
       "Insect Plague area id must be a non-empty sphere area.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaChoice = input.fillSet.areaChoice;
 
   return resolveAreaOngoingSpellEffect({
@@ -916,7 +916,7 @@ export function resolveCloudkillAreaHazardSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
@@ -943,13 +943,13 @@ export function resolveCloudkillAreaHazardSpellAct(input: {
       "Cloudkill uses one table-supplied sphere area fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.areaChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellAreaChoiceHole(input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.areaChoice.kind !== "cloudkillSphereArea" ||
     input.fillSet.areaChoice.areaId.length === 0
@@ -960,7 +960,7 @@ export function resolveCloudkillAreaHazardSpellAct(input: {
       "Cloudkill area id must be a non-empty sphere area.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaChoice = input.fillSet.areaChoice;
 
   return resolveAreaOngoingSpellEffect({
@@ -989,7 +989,7 @@ export function resolveGustOfWindLineSpellAct(input: {
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
   readonly releaseResource?: AreaOngoingSpellReleaseResource;
 }): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
@@ -1016,7 +1016,7 @@ export function resolveGustOfWindLineSpellAct(input: {
       "Gust of Wind uses one Line-area Saving Throw fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const metamagicSelections = saveMetamagicSelectionState({
     state: input.input.state,
@@ -1026,7 +1026,7 @@ export function resolveGustOfWindLineSpellAct(input: {
     metamagicApplications: input.metamagicApplications,
     targetId: undefined,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (metamagicSelections.tag === "invalid") {
     return invalidResult(
       input.input.state,
@@ -1034,7 +1034,7 @@ export function resolveGustOfWindLineSpellAct(input: {
       metamagicSelections.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (metamagicSelections.tag === "needsHoles") {
     return needsHolesResult(
       input.input.state,
@@ -1069,7 +1069,7 @@ export function resolveGustOfWindLineSpellAct(input: {
         }
       : {},
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (savingThrowValidation !== null) {
     return invalidResult(
       input.input.state,
@@ -1077,8 +1077,8 @@ export function resolveGustOfWindLineSpellAct(input: {
       savingThrowValidation,
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !("area" in savingThrowOutcomes) ||
     savingThrowOutcomes.area.kind !== "gustOfWindLineArea"
@@ -1089,7 +1089,7 @@ export function resolveGustOfWindLineSpellAct(input: {
       "Gust of Wind requires Line area and direction facts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const area: Extract<
     BattleSpellAreaChoice,
     { readonly kind: "gustOfWindLineArea" }
@@ -1102,11 +1102,11 @@ export function resolveGustOfWindLineSpellAct(input: {
     failedTargetIds,
     pushDistanceFeet: input.invocation.pushDistanceFeet,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (areaValidation !== null) {
     return invalidResult(input.input.state, "invalidFill", areaValidation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (failedTargetIds.length > 0) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,

@@ -1218,26 +1218,26 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
 
   const bonusActionStandardActionSupport =
     battleBonusActionStandardActionSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (bonusActionStandardActionSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle bonus-action standard-action Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (bonusActionStandardActionSupport !== null) {
     supportProfiles.push(bonusActionStandardActionSupport);
   }
 
   const bonusActionDelegatedStandardActionsSupport =
     battleBonusActionDelegatedStandardActionsSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (bonusActionDelegatedStandardActionsSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Bonus Action delegated standard-action Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (bonusActionDelegatedStandardActionsSupport !== null) {
     supportProfiles.push(bonusActionDelegatedStandardActionsSupport);
   }
@@ -1251,13 +1251,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
 
   const criticalRangeSupport =
     battleWeaponOrUnarmedCriticalRange19SupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (criticalRangeSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle critical-range Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (criticalRangeSupport === "criticalRange19") {
     supportProfiles.push(WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE);
   }
@@ -1265,39 +1265,39 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const attackDamageRiderSupport = battleAttackDamageRiderSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (attackDamageRiderSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle attack-damage rider Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (attackDamageRiderSupport === "attackDamageRider") {
     supportProfiles.push(ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE);
   }
 
   const saveDamageReplacementSupport =
     battleSaveDamageReplacementSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (saveDamageReplacementSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle save-damage replacement Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (saveDamageReplacementSupport === "saveDamageReplacement") {
     supportProfiles.push(SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE);
   }
 
   const reactionRollOrDamageReductionSupport =
     battleReactionRollOrDamageReductionSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (reactionRollOrDamageReductionSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle reaction roll or damage reduction Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     reactionRollOrDamageReductionSupport === "reactionRollOrDamageReduction"
   ) {
@@ -1314,65 +1314,65 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
 
   const retaliationReactionAttackSupport =
     battleRetaliationReactionAttackSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (retaliationReactionAttackSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Retaliation reaction attack Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (retaliationReactionAttackSupport !== null) {
     supportProfiles.push(retaliationReactionAttackSupport);
   }
 
   const passiveArmorClassBonusSupport =
     battlePassiveArmorClassBonusSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (passiveArmorClassBonusSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle passive Armor Class bonus Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (passiveArmorClassBonusSupport === "passiveArmorClassBonus") {
     supportProfiles.push(PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE);
   }
 
   const passiveRangedAttackRollBonusSupport =
     battlePassiveRangedAttackRollBonusSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (passiveRangedAttackRollBonusSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle passive ranged attack-roll bonus Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (passiveRangedAttackRollBonusSupport !== null) {
     supportProfiles.push(passiveRangedAttackRollBonusSupport);
   }
 
   const initiativeProficiencyAndSwapSupport =
     battleInitiativeProficiencyAndSwapSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (initiativeProficiencyAndSwapSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Initiative proficiency-and-swap Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (initiativeProficiencyAndSwapSupport !== null) {
     supportProfiles.push(initiativeProficiencyAndSwapSupport);
   }
 
   const attackRollMissToHitReplacementSupport =
     battleAttackRollMissToHitReplacementSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (attackRollMissToHitReplacementSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle attack-roll miss-to-hit replacement Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (attackRollMissToHitReplacementSupport !== null) {
     supportProfiles.push(attackRollMissToHitReplacementSupport);
   }
@@ -1382,52 +1382,52 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
       unit: input.unit,
       draconicAncestryDamageType: input.sourceFacts?.draconicAncestryDamageType,
     });
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (attackActionAreaSaveDamageReplacementSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Attack-action area save-damage replacement Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (attackActionAreaSaveDamageReplacementSupport !== null) {
     supportProfiles.push(attackActionAreaSaveDamageReplacementSupport);
   }
 
   const d20TestNaturalOneRerollSupport =
     battleD20TestNaturalOneRerollSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (d20TestNaturalOneRerollSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle D20 Test natural-1 reroll Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (d20TestNaturalOneRerollSupport !== null) {
     supportProfiles.push(d20TestNaturalOneRerollSupport);
   }
 
   const passiveSavingThrowRollModeSupport =
     battlePassiveSavingThrowRollModeSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (passiveSavingThrowRollModeSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle passive Saving Throw roll-mode Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (passiveSavingThrowRollModeSupport !== null) {
     supportProfiles.push(passiveSavingThrowRollModeSupport);
   }
 
   const passiveAbilityCheckRollModeSupport =
     battlePassiveAbilityCheckRollModeSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (passiveAbilityCheckRollModeSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle passive Ability Check roll-mode Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (passiveAbilityCheckRollModeSupport !== null) {
     supportProfiles.push(passiveAbilityCheckRollModeSupport);
   }
@@ -1437,13 +1437,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
       unit: input.unit,
       draconicAncestryDamageType: input.sourceFacts?.draconicAncestryDamageType,
     });
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (passiveDamageResistanceSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle passive damage Resistance Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (passiveDamageResistanceSupport !== null) {
     supportProfiles.push(passiveDamageResistanceSupport);
   }
@@ -1451,26 +1451,26 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const passiveSpeedBonusSupport = battlePassiveSpeedBonusSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (passiveSpeedBonusSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle passive Speed bonus Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (passiveSpeedBonusSupport !== null) {
     supportProfiles.push(passiveSpeedBonusSupport);
   }
 
   const passiveSpeedKindGrantsSupport =
     battlePassiveSpeedKindGrantsSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (passiveSpeedKindGrantsSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle passive Speed-kind grants Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (passiveSpeedKindGrantsSupport !== null) {
     supportProfiles.push(passiveSpeedKindGrantsSupport);
   }
@@ -1478,52 +1478,52 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const acrobaticMovementSupport = battleAcrobaticMovementSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (acrobaticMovementSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Acrobatic Movement Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (acrobaticMovementSupport !== null) {
     supportProfiles.push(acrobaticMovementSupport);
   }
 
   const creatureSpaceMovementPermissionSupport =
     battleCreatureSpaceMovementPermissionSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (creatureSpaceMovementPermissionSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle creature-space movement permission Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (creatureSpaceMovementPermissionSupport !== null) {
     supportProfiles.push(creatureSpaceMovementPermissionSupport);
   }
 
   const hideActionObscurementPermissionSupport =
     battleHideActionObscurementPermissionSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (hideActionObscurementPermissionSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Hide action obscurement permission Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (hideActionObscurementPermissionSupport !== null) {
     supportProfiles.push(hideActionObscurementPermissionSupport);
   }
 
   const weaponDamageDiceRollChoiceSupport =
     battleWeaponDamageDiceRollChoiceSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (weaponDamageDiceRollChoiceSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle weapon damage dice roll choice Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (weaponDamageDiceRollChoiceSupport === "weaponDamageDiceRollChoice") {
     supportProfiles.push(WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE);
   }
@@ -1531,143 +1531,143 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const attackDamageDieFloorSupport = battleAttackDamageDieFloorSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (attackDamageDieFloorSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle attack damage die floor Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (attackDamageDieFloorSupport === "attackDamageDieFloor") {
     supportProfiles.push(ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE);
   }
 
   const lightExtraAttackDamageAbilityModifierSupport =
     battleLightExtraAttackDamageAbilityModifierSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (lightExtraAttackDamageAbilityModifierSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Light extra attack damage ability modifier Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (lightExtraAttackDamageAbilityModifierSupport !== null) {
     supportProfiles.push(lightExtraAttackDamageAbilityModifierSupport);
   }
 
   const martialArtsAttackProjectionSupport =
     battleMartialArtsAttackProjectionSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (martialArtsAttackProjectionSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Martial Arts attack projection Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (martialArtsAttackProjectionSupport === "martialArtsAttackProjection") {
     supportProfiles.push(MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE);
   }
 
   const monkFocusBattleOptionsSupport =
     battleMonkFocusBattleOptionsSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (monkFocusBattleOptionsSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Monk Focus options Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (monkFocusBattleOptionsSupport !== null) {
     supportProfiles.push(monkFocusBattleOptionsSupport);
   }
 
   const attackActionAttackCountScalingSupport =
     battleAttackActionAttackCountScalingSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (attackActionAttackCountScalingSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Attack action attack-count scaling Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (attackActionAttackCountScalingSupport !== null) {
     supportProfiles.push(attackActionAttackCountScalingSupport);
   }
 
   const zeroHitPointReplacementSupport =
     battleZeroHitPointReplacementSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (zeroHitPointReplacementSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle zero-Hit-Point replacement Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (zeroHitPointReplacementSupport === "zeroHitPointReplacement") {
     supportProfiles.push(ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE);
   }
 
   const bonusActionDashTemporaryHitPointsSupport =
     battleBonusActionDashTemporaryHitPointsSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (bonusActionDashTemporaryHitPointsSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Bonus Action Dash Temporary Hit Points Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (bonusActionDashTemporaryHitPointsSupport !== null) {
     supportProfiles.push(bonusActionDashTemporaryHitPointsSupport);
   }
 
   const failedAbilityCheckResourceBoostSupport =
     battleFailedAbilityCheckResourceBoostSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (failedAbilityCheckResourceBoostSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle failed ability-check resource boost Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (failedAbilityCheckResourceBoostSupport !== null) {
     supportProfiles.push(failedAbilityCheckResourceBoostSupport);
   }
 
   const failedSavingThrowRerollSupport =
     battleFailedSavingThrowRerollSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (failedSavingThrowRerollSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle failed Saving Throw reroll Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (failedSavingThrowRerollSupport !== null) {
     supportProfiles.push(failedSavingThrowRerollSupport);
   }
 
   const spellSlotHealingModifierSupport =
     battleSpellSlotHealingModifierSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (spellSlotHealingModifierSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Spell Slot healing modifier Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (spellSlotHealingModifierSupport !== null) {
     supportProfiles.push(spellSlotHealingModifierSupport);
   }
 
   const magicActionHealingPoolSupport =
     battleMagicActionHealingPoolSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (magicActionHealingPoolSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Magic Action healing pool Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (magicActionHealingPoolSupport !== null) {
     supportProfiles.push(magicActionHealingPoolSupport);
   }
@@ -1677,13 +1677,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
       input.unit,
       input.classLevels,
     );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (magicActionAreaSaveDamageHealingSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Magic Action area save damage/healing Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (magicActionAreaSaveDamageHealingSupport !== null) {
     supportProfiles.push(magicActionAreaSaveDamageHealingSupport);
   }
@@ -1693,26 +1693,26 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
       input.unit,
       input.classLevels,
     );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (magicActionSaveGatedConditionSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Magic Action save-gated condition Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (magicActionSaveGatedConditionSupport !== null) {
     supportProfiles.push(magicActionSaveGatedConditionSupport);
   }
 
   const enemyZeroHitPointTemporaryHitPointsSupport =
     battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (enemyZeroHitPointTemporaryHitPointsSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle enemy zero-Hit-Point Temporary Hit Points Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (enemyZeroHitPointTemporaryHitPointsSupport !== null) {
     supportProfiles.push(enemyZeroHitPointTemporaryHitPointsSupport);
   }
@@ -1720,13 +1720,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const remarkableAthleteSupport = battleRemarkableAthleteSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (remarkableAthleteSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Remarkable Athlete Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (remarkableAthleteSupport !== null) {
     supportProfiles.push(remarkableAthleteSupport);
   }
@@ -1734,13 +1734,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const openHandTechniqueSupport = battleOpenHandTechniqueSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (openHandTechniqueSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Open Hand Technique Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (openHandTechniqueSupport !== null) {
     supportProfiles.push(openHandTechniqueSupport);
   }
@@ -1796,13 +1796,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
 
   const bardicInspirationGrantSupport =
     battleBardicInspirationGrantSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (bardicInspirationGrantSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Bardic Inspiration grant Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (bardicInspirationGrantSupport !== null) {
     supportProfiles.push(bardicInspirationGrantSupport);
   }
@@ -1814,26 +1814,26 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
           input.unit,
           input.classLevels,
         );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (druidWildShapeKnownFormSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Druid Wild Shape Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (druidWildShapeKnownFormSupport !== null) {
     supportProfiles.push(druidWildShapeKnownFormSupport);
   }
 
   const druidWildCompanionSpellCastSupport =
     battleDruidWildCompanionSpellCastSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (druidWildCompanionSpellCastSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Druid Wild Companion Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (druidWildCompanionSpellCastSupport !== null) {
     supportProfiles.push(druidWildCompanionSpellCastSupport);
   }
@@ -1845,13 +1845,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
           input.unit,
           input.classLevels,
         );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (tacticalMasterReplacementSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Tactical Master Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (tacticalMasterReplacementSupport !== null) {
     supportProfiles.push(tacticalMasterReplacementSupport);
   }
@@ -1859,13 +1859,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const weaponMasteryPushSupport = battleWeaponMasteryPushSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (weaponMasteryPushSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Weapon Mastery Push Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (weaponMasteryPushSupport !== null) {
     supportProfiles.push(weaponMasteryPushSupport);
   }
@@ -1873,13 +1873,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const weaponMasterySapSupport = battleWeaponMasterySapSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (weaponMasterySapSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Weapon Mastery Sap Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (weaponMasterySapSupport !== null) {
     supportProfiles.push(weaponMasterySapSupport);
   }
@@ -1887,13 +1887,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const weaponMasteryToppleSupport = battleWeaponMasteryToppleSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (weaponMasteryToppleSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Weapon Mastery Topple Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (weaponMasteryToppleSupport !== null) {
     supportProfiles.push(weaponMasteryToppleSupport);
   }
@@ -1901,13 +1901,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const weaponMasteryCleaveSupport = battleWeaponMasteryCleaveSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (weaponMasteryCleaveSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Weapon Mastery Cleave Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (weaponMasteryCleaveSupport !== null) {
     supportProfiles.push(weaponMasteryCleaveSupport);
   }
@@ -1915,13 +1915,13 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const weaponMasterySlowSupport = battleWeaponMasterySlowSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
+  /* v8 ignore start -- @preserve -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
   if (weaponMasterySlowSupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Weapon Mastery Slow Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (weaponMasterySlowSupport !== null) {
     supportProfiles.push(weaponMasterySlowSupport);
   }
@@ -2133,7 +2133,7 @@ function parseAuthoredAttackDamageReductionZeroDamageRedirect(
   redirect: unknown,
   expectedResourceUnitId: AuthoredUnitSource["id"],
 ): AuthoredAttackDamageReductionZeroDamageRedirect | null {
-  /* v8 ignore next -- Malformed authored mechanics: the redirect payload must be a non-null object before its nested shape can be parsed. */
+  /* v8 ignore next -- @preserve -- Malformed authored mechanics: the redirect payload must be a non-null object before its nested shape can be parsed. */
   if (typeof redirect !== "object" || redirect === null) return null;
   // Cast justification: the object guard above is the boundary evidence; every
   // nested field read below is checked before returning a freshly built value.
@@ -2633,14 +2633,14 @@ export function battleBonusActionStandardActionSupportForUnit(
   }
 
   const actions = alternateActionCostActions(unit.mechanics.from.actions);
-  /* v8 ignore start -- Malformed alternate-action-cost Surface mechanics are rejected here; supported projection and unrelated mechanics remain covered by admission tests. */
+  /* v8 ignore start -- @preserve -- Malformed alternate-action-cost Surface mechanics are rejected here; supported projection and unrelated mechanics remain covered by admission tests. */
   if (unit.mechanics.from.kind !== "standard_action" || actions === null) {
     return "unsupported";
   }
   if (unit.mechanics.to.kind !== "bonus_action") {
     return "unsupported";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return {
     kind: "alternateActionCost",
@@ -2668,7 +2668,7 @@ export function battleBonusActionDelegatedStandardActionsSupportForUnit(
   }
 
   const { sleightOfHand, objectUse } = unit.mechanics;
-  /* v8 ignore start -- Malformed delegated-action Surface mechanics are rejected here; the canonical supported projection is covered by admission tests. */
+  /* v8 ignore start -- @preserve -- Malformed delegated-action Surface mechanics are rejected here; the canonical supported projection is covered by admission tests. */
   if (
     unit.mechanics.activationCost.kind !== "bonus_action" ||
     sleightOfHand.abilityCheck.ability !== "dex" ||
@@ -2682,7 +2682,7 @@ export function battleBonusActionDelegatedStandardActionsSupportForUnit(
   ) {
     return "unsupported";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return {
     kind: BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
@@ -2727,7 +2727,7 @@ function alternateActionCostActions(
   actions: readonly StandardActionKind[],
 ): ReadonlyNonEmptyArray<AlternateActionCostAction> | null {
   const first = actions[0];
-  /* v8 ignore start -- Malformed authored alternate-cost mechanics: admission requires a non-empty list containing only the supported standard-action subset. */
+  /* v8 ignore start -- @preserve -- Malformed authored alternate-cost mechanics: admission requires a non-empty list containing only the supported standard-action subset. */
   if (first === undefined || !isAlternateActionCostAction(first)) {
     return null;
   }
@@ -2735,7 +2735,7 @@ function alternateActionCostActions(
   if (!rest.every(isAlternateActionCostAction)) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return [first, ...rest];
 }
 
@@ -2772,7 +2772,7 @@ export function battleMonkFocusBattleOptionsSupportForUnit(
       ? "unsupported"
       : null;
   }
-  /* v8 ignore start -- Malformed Monk Focus resource and option shapes are rejected here; the canonical three-option projection is covered by admission tests. */
+  /* v8 ignore start -- @preserve -- Malformed Monk Focus resource and option shapes are rejected here; the canonical three-option projection is covered by admission tests. */
   if (
     unit.mechanics.resource.kind !== "use_count" ||
     unit.mechanics.resource.cap.kind !== "linear_per_level" ||
@@ -2791,7 +2791,7 @@ export function battleMonkFocusBattleOptionsSupportForUnit(
   ) {
     return "unsupported";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const flurryOfBlows = battleOptions.find(
     (option) =>
@@ -2803,7 +2803,7 @@ export function battleMonkFocusBattleOptionsSupportForUnit(
   const stepOfTheWind = battleOptions.find(
     (option) => option.battleExecution?.kind === "bonus_action_mobility_modes",
   );
-  /* v8 ignore start -- Malformed Monk Focus option identities are rejected here after typed option parsing; canonical option projection remains covered. */
+  /* v8 ignore start -- @preserve -- Malformed Monk Focus option identities are rejected here after typed option parsing; canonical option projection remains covered. */
   if (
     flurryOfBlows?.battleExecution?.kind !==
       "bonus_action_unarmed_strike_sequence" ||
@@ -2812,7 +2812,7 @@ export function battleMonkFocusBattleOptionsSupportForUnit(
   ) {
     return "unsupported";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return {
     kind: MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
@@ -2892,10 +2892,10 @@ function monkFocusBattleExecution(option: {
       jumpDistanceMultiplier: { multiplier: 2, expires: "end_of_turn" },
     };
   }
-  /* v8 ignore start -- Malformed authored Focus option: known option projections are handled above; any other battle-execution shape remains unsupported. The function terminator shares V8's ignored fallback range. */
+  /* v8 ignore start -- @preserve -- Malformed authored Focus option: known option projections are handled above; any other battle-execution shape remains unsupported. The function terminator shares V8's ignored fallback range. */
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function tupleMatches<T extends readonly [string, string]>(
   actual: unknown,
@@ -6518,11 +6518,11 @@ function cunningStrikeProfileForAdmittedUnit(
 ): CunningStrikeSupportedUnitFeatureProfile | null {
   if (classLevels !== undefined) {
     const classLevel = findCharacterClassLevel(classLevels, unit.className);
-    /* v8 ignore start -- Unsupported character/profile pairing: admission requires the Rogue level at or above acquisition. */
+    /* v8 ignore start -- @preserve -- Unsupported character/profile pairing: admission requires the Rogue level at or above acquisition. */
     if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
       return null;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   const mechanics = unit.mechanics;
   const options = cunningStrikeOptionsForMechanics(mechanics);
@@ -7231,7 +7231,7 @@ export function battleDruidWildCompanionSpellCastSupportForUnit(
   ) {
     return null;
   }
-  /* v8 ignore start -- Malformed Wild Companion Surface mechanics are rejected at profile admission; canonical synthetic fixture projection is covered. */
+  /* v8 ignore start -- @preserve -- Malformed Wild Companion Surface mechanics are rejected at profile admission; canonical synthetic fixture projection is covered. */
   return (
     // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
     unit.mechanics.spellId === "find_familiar" &&
@@ -7245,7 +7245,7 @@ export function battleDruidWildCompanionSpellCastSupportForUnit(
       ? DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE
       : "unsupported"
   );
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
@@ -7302,7 +7302,7 @@ export function battleTacticalMasterReplacementSupportForUnit(
     return null;
   }
   const mechanics = unit.mechanics;
-  /* v8 ignore start -- Malformed Tactical Master replacement mechanics are rejected at profile admission; the canonical mastery-choice projection is covered. */
+  /* v8 ignore start -- @preserve -- Malformed Tactical Master replacement mechanics are rejected at profile admission; the canonical mastery-choice projection is covered. */
   const supported =
     mechanics.trigger.kind ===
       "attack_with_weapon_mastery_property_you_can_use" &&
@@ -7318,7 +7318,7 @@ export function battleTacticalMasterReplacementSupportForUnit(
         replacementProperties: TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
       }
     : "unsupported";
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function parseBattleUnitSupportClassLevels(
@@ -7405,7 +7405,7 @@ export function battleWeaponMasterySapSupportForUnit(
   if (unit.kind !== "mastery") {
     return null;
   }
-  /* v8 ignore start -- Malformed Sap mastery mechanics are rejected at profile admission; canonical Sap projection and unrelated mastery shapes remain covered. */
+  /* v8 ignore start -- @preserve -- Malformed Sap mastery mechanics are rejected at profile admission; canonical Sap projection and unrelated mastery shapes remain covered. */
   const supported =
     unit.mechanics.family === "on_hit_trigger" &&
     unit.mechanics.trigger.kind === "weapon_hit" &&
@@ -7423,7 +7423,7 @@ export function battleWeaponMasterySapSupportForUnit(
     unit.mechanics.effect.kind === "modify_roll_advantage"
     ? "unsupported"
     : null;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function battleWeaponMasteryPushSupportForUnit(
@@ -7432,7 +7432,7 @@ export function battleWeaponMasteryPushSupportForUnit(
   if (unit.kind !== "mastery") {
     return null;
   }
-  /* v8 ignore start -- Malformed Push mastery mechanics are rejected at profile admission; canonical Push projection and unrelated mastery shapes remain covered. */
+  /* v8 ignore start -- @preserve -- Malformed Push mastery mechanics are rejected at profile admission; canonical Push projection and unrelated mastery shapes remain covered. */
   const supported =
     unit.mechanics.family === "on_hit_trigger" &&
     unit.mechanics.trigger.kind === "weapon_hit" &&
@@ -7448,7 +7448,7 @@ export function battleWeaponMasteryPushSupportForUnit(
     unit.mechanics.effect.kind === "push_creature"
     ? "unsupported"
     : null;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function battleWeaponMasteryToppleSupportForUnit(
@@ -7457,7 +7457,7 @@ export function battleWeaponMasteryToppleSupportForUnit(
   if (unit.kind !== "mastery") {
     return null;
   }
-  /* v8 ignore start -- Malformed Topple mastery mechanics are rejected at profile admission; canonical Topple projection and unrelated mastery shapes remain covered. */
+  /* v8 ignore start -- @preserve -- Malformed Topple mastery mechanics are rejected at profile admission; canonical Topple projection and unrelated mastery shapes remain covered. */
   const supported =
     unit.mechanics.family === "on_hit_trigger" &&
     unit.mechanics.trigger.kind === "weapon_hit" &&
@@ -7476,7 +7476,7 @@ export function battleWeaponMasteryToppleSupportForUnit(
     unit.mechanics.effect.kind === "save_gate"
     ? "unsupported"
     : null;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function battleWeaponMasterySlowSupportForUnit(
@@ -7485,7 +7485,7 @@ export function battleWeaponMasterySlowSupportForUnit(
   if (unit.kind !== "mastery") {
     return null;
   }
-  /* v8 ignore start -- Malformed Slow mastery mechanics are rejected at profile admission; canonical Slow projection and unrelated mastery shapes remain covered. */
+  /* v8 ignore start -- @preserve -- Malformed Slow mastery mechanics are rejected at profile admission; canonical Slow projection and unrelated mastery shapes remain covered. */
   const supported =
     unit.mechanics.family === "on_hit_trigger" &&
     unit.mechanics.trigger.kind === "weapon_hit_with_damage" &&
@@ -7501,7 +7501,7 @@ export function battleWeaponMasterySlowSupportForUnit(
     unit.mechanics.effect.kind === "speed_delta"
     ? "unsupported"
     : null;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function battleWeaponMasteryCleaveSupportForUnit(
@@ -7517,7 +7517,7 @@ export function battleWeaponMasteryCleaveSupportForUnit(
   ) {
     return null;
   }
-  /* v8 ignore start -- Malformed Cleave mastery mechanics are rejected at profile admission; canonical Cleave projection is covered. */
+  /* v8 ignore start -- @preserve -- Malformed Cleave mastery mechanics are rejected at profile admission; canonical Cleave projection is covered. */
   const supported =
     unit.mechanics.trigger.kind === "weapon_hit_melee_only" &&
     unit.mechanics.optional === true &&
@@ -7533,7 +7533,7 @@ export function battleWeaponMasteryCleaveSupportForUnit(
   }
   return "unsupported";
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function parseBardicInspirationGrantUnitFeatureProfile(
   unit: AuthoredUnitSource,
@@ -7542,25 +7542,25 @@ function parseBardicInspirationGrantUnitFeatureProfile(
   SupportedUnitFeatureProfile,
   { readonly kind: "bardicInspirationGrant" }
 > | null {
-  /* v8 ignore start -- Unsupported structured input: Bardic Inspiration grant execution is admitted only from a Bard class-feature record. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: Bardic Inspiration grant execution is admitted only from a Bard class-feature record. */
   if (unit.kind !== "class_feature" || unit.className !== "bard") {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
-  /* v8 ignore start -- Unsupported character/profile pairing: admission requires the Bard level at or above acquisition. */
+  /* v8 ignore start -- @preserve -- Unsupported character/profile pairing: admission requires the Bard level at or above acquisition. */
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Unsupported structured input: Bardic Inspiration grant owns activation mechanics; other mechanics families are rejected before projection. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: Bardic Inspiration grant owns activation mechanics; other mechanics families are rejected before projection. */
   if (unit.mechanics.family !== "activation") {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const mechanics = unit.mechanics;
   const range = mechanics.range;
-  /* v8 ignore start -- Unsupported structured input: this profile owns the exact Bonus Action, 60-foot target, Charisma use-count, Long Rest, one-phase activation shape. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: this profile owns the exact Bonus Action, 60-foot target, Charisma use-count, Long Rest, one-phase activation shape. */
   if (
     mechanics.activationCost.kind !== "bonus_action" ||
     range === undefined ||
@@ -7575,9 +7575,9 @@ function parseBardicInspirationGrantUnitFeatureProfile(
   ) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const phase = mechanics.phases[0];
-  /* v8 ignore start -- Unsupported structured input: the grant must be one direct target-attached effect with single-target selection. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the grant must be one direct target-attached effect with single-target selection. */
   if (
     phase?.kind !== "direct" ||
     phase.attachment.kind !== "target" ||
@@ -7586,9 +7586,9 @@ function parseBardicInspirationGrantUnitFeatureProfile(
   ) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const effect = phase.effects[0];
-  /* v8 ignore start -- Unsupported structured input: the granted token must match the SRD failed-D20-test, one-hour, class-threshold die shape. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the granted token must match the SRD failed-D20-test, one-hour, class-threshold die shape. */
   if (
     effect?.kind !== "grant_die_token" ||
     effect.maxHeld !== 1 ||
@@ -7601,14 +7601,14 @@ function parseBardicInspirationGrantUnitFeatureProfile(
   ) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(effect.duration);
   const dieSize = bardicInspirationDieSizeAtClassLevel(effect.die, classLevel);
-  /* v8 ignore start -- Unsupported structured input: the threshold die table or duration failed its typed SRD projection. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the threshold die table or duration failed its typed SRD projection. */
   if (dieSize === null || Either.isLeft(durationTicks)) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     kind: "bardicInspirationGrant",
     unit,
@@ -7699,13 +7699,13 @@ function parseExtraActionGrantUnitFeatureProfile(
   SupportedUnitFeatureProfile,
   { readonly kind: "extraActionGrant" }
 > | null {
-  /* v8 ignore start -- Unsupported structured input: extra-action grant execution is admitted only from a class-feature record. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: extra-action grant execution is admitted only from a class-feature record. */
   if (unit.kind !== "class_feature") {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const mechanics = unit.mechanics;
-  /* v8 ignore start -- Unsupported structured input: this profile owns a free activation with use-count, Short/Long Rest reset, and once-per-turn usage. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: this profile owns a free activation with use-count, Short/Long Rest reset, and once-per-turn usage. */
   if (
     mechanics.family !== "activation" ||
     mechanics.activationCost.kind !== "free" ||
@@ -7715,29 +7715,29 @@ function parseExtraActionGrantUnitFeatureProfile(
   ) {
     return null;
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Unsupported structured input: extra-action grant owns exactly one activation phase. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: extra-action grant owns exactly one activation phase. */
   if (mechanics.phases.length !== 1) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const phase = mechanics.phases[0];
-  /* v8 ignore start -- Unsupported structured input: the sole extra-action phase must be direct. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the sole extra-action phase must be direct. */
   if (phase?.kind !== "direct") {
     return null;
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Unsupported structured input: the direct phase must contain exactly one effect. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the direct phase must contain exactly one effect. */
   if (phase.effects?.length !== 1) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const effect = phase.effects[0];
-  /* v8 ignore start -- Unsupported structured input: the sole effect must grant the extra action projected by this profile. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the sole effect must grant the extra action projected by this profile. */
   if (effect.kind !== "grant_extra_action") {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     kind: "extraActionGrant",
     unit,
@@ -7781,7 +7781,7 @@ export function battleRetaliationReactionAttackSupportForUnit(
   ) {
     return null;
   }
-  /* v8 ignore start -- Malformed Retaliation reaction mechanics are rejected at profile admission; the canonical one-attack reaction projection is covered. */
+  /* v8 ignore start -- @preserve -- Malformed Retaliation reaction mechanics are rejected at profile admission; the canonical one-attack reaction projection is covered. */
   if (activationTrigger["rangeFeet"] !== 5 || mechanics.phases.length !== 1) {
     return "unsupported";
   }
@@ -7811,7 +7811,7 @@ export function battleRetaliationReactionAttackSupportForUnit(
   ) {
     return "unsupported";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     kind: RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE,
     retaliation: {
@@ -7834,19 +7834,19 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
   SupportedUnitFeatureProfile,
   { readonly kind: "selfBonusActionHealing" }
 > | null {
-  /* v8 ignore start -- Unsupported structured input: this support profile is class-feature-only; other authored unit families are rejected before projection. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: this support profile is class-feature-only; other authored unit families are rejected before projection. */
   if (unit.kind !== "class_feature") {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
-  /* v8 ignore start -- Unsupported character/profile pairing: admission requires the owning class level at or above the feature's acquisition level. */
+  /* v8 ignore start -- @preserve -- Unsupported character/profile pairing: admission requires the owning class level at or above the feature's acquisition level. */
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const mechanics = unit.mechanics;
-  /* v8 ignore start -- Unsupported structured input: self Bonus Action healing owns one activation, use-count, reset-cadence, and direct-phase shape. The admitted healing projection remains measured below. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: self Bonus Action healing owns one activation, use-count, reset-cadence, and direct-phase shape. The admitted healing projection remains measured below. */
   if (
     mechanics.family !== "activation" ||
     mechanics.activationCost.kind !== "bonus_action" ||
@@ -7856,9 +7856,9 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
   ) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const phase = mechanics.phases[0];
-  /* v8 ignore start -- Unsupported structured input: the healing phase must be one direct self-attached effect; other phase shapes are rejected at profile admission. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the healing phase must be one direct self-attached effect; other phase shapes are rejected at profile admission. */
   if (
     phase?.kind !== "direct" ||
     phase.attachment.kind !== "self" ||
@@ -7866,9 +7866,9 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
   ) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const effect = phase.effects[0];
-  /* v8 ignore start -- Unsupported structured input: this profile admits the exact self-healing linear-per-class-level dice shape; malformed or differently-scaled healing atoms are rejected. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: this profile admits the exact self-healing linear-per-class-level dice shape; malformed or differently-scaled healing atoms are rejected. */
   if (
     effect?.kind !== "heal_hp" ||
     effect.target !== "self" ||
@@ -7881,7 +7881,7 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
   ) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     kind: "selfBonusActionHealing",
     unit,
@@ -7902,13 +7902,13 @@ function parseOngoingFeatureUnitFeatureProfile(
   SupportedUnitFeatureProfile,
   { readonly kind: "ongoingFeature" }
 > | null {
-  /* v8 ignore start -- Unsupported structured input: ongoing feature execution is admitted only from a class-feature record. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: ongoing feature execution is admitted only from a class-feature record. */
   if (unit.kind !== "class_feature") {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const mechanics = unit.mechanics;
-  /* v8 ignore start -- Unsupported structured input: an ongoing feature owns exactly one activation phase and an explicit lifecycle block; other mechanics families are rejected. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: an ongoing feature owns exactly one activation phase and an explicit lifecycle block; other mechanics families are rejected. */
   if (
     mechanics.family !== "activation" ||
     !("ongoingFeature" in mechanics) ||
@@ -7917,9 +7917,9 @@ function parseOngoingFeatureUnitFeatureProfile(
   ) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const phase = mechanics.phases[0];
-  /* v8 ignore start -- Unsupported structured input: ongoing feature effects must be a non-empty direct self-attached phase before their typed effect parser runs. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: ongoing feature effects must be a non-empty direct self-attached phase before their typed effect parser runs. */
   if (
     phase?.kind !== "direct" ||
     phase.attachment.kind !== "self" ||
@@ -7928,7 +7928,7 @@ function parseOngoingFeatureUnitFeatureProfile(
   ) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
@@ -7942,11 +7942,11 @@ function parseOngoingFeatureUnitFeatureProfile(
   const parsedEffects =
     parseOngoingFeatureEffects(effects, classLevel) ??
     parseSpellBenefitActivationProjectionEffects(effects);
-  /* v8 ignore start -- Unsupported structured input: neither the ongoing-effect parser nor the spell-benefit activation parser admitted this effect list. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: neither the ongoing-effect parser nor the spell-benefit activation parser admitted this effect list. */
   if (parsedEffects === null) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const override = mechanics.ongoingFeature.levelOverrides
     ?.filter((candidate) => classLevel >= candidate.atClassLevel)
     .at(-1);
@@ -7965,17 +7965,17 @@ function parseOngoingFeatureUnitFeatureProfile(
       : mechanics.activationCost.kind === "free"
         ? { trigger: "firstAttackRoll" as const, spendsUse: false }
         : null;
-  /* v8 ignore start -- Unsupported structured input: activation timing and cost did not form either the Bonus Action or first-attack trigger owned by this profile. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: activation timing and cost did not form either the Bonus Action or first-attack trigger owned by this profile. */
   if (activation === null) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const lifecycleProfile = parseOngoingFeatureLifecycle(lifecycle);
-  /* v8 ignore start -- Unsupported structured input: the lifecycle block did not parse into a supported turn-boundary, extended, or fixed duration. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the lifecycle block did not parse into a supported turn-boundary, extended, or fixed duration. */
   if (lifecycleProfile === null) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const actionRestrictions = support.actionRestrictions ?? [];
   return {
     kind: "ongoingFeature",
@@ -7999,17 +7999,17 @@ function parseAttackDamageRiderUnitFeatureProfile(
   { readonly kind: "attackDamageRider" }
 > | null {
   const mechanics = attackDamageRiderMechanicsProjection(unit);
-  /* v8 ignore start -- Unsupported structured input: attack-damage riders require a class-feature record whose mechanics projection parsed successfully. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: attack-damage riders require a class-feature record whose mechanics projection parsed successfully. */
   if (unit.kind !== "class_feature" || mechanics === null) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
-  /* v8 ignore start -- Unsupported character/profile pairing: admission requires the owning class level at or above acquisition. */
+  /* v8 ignore start -- @preserve -- Unsupported character/profile pairing: admission requires the owning class level at or above acquisition. */
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (mechanics.optional === true) {
     return {
       kind: "attackDamageRider",
@@ -8041,17 +8041,17 @@ function parseSaveDamageReplacementUnitFeatureProfile(
   { readonly kind: "saveDamageReplacement" }
 > | null {
   const mechanics = saveDamageReplacementMechanicsProjection(unit);
-  /* v8 ignore start -- Unsupported structured input: save-damage replacement requires a class-feature record whose mechanics projection parsed successfully. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: save-damage replacement requires a class-feature record whose mechanics projection parsed successfully. */
   if (unit.kind !== "class_feature" || mechanics === null) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
-  /* v8 ignore start -- Unsupported character/profile pairing: admission requires the owning class level at or above acquisition. */
+  /* v8 ignore start -- @preserve -- Unsupported character/profile pairing: admission requires the owning class level at or above acquisition. */
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     kind: "saveDamageReplacement",
     unit,
@@ -8070,26 +8070,26 @@ function parseReactionRollOrDamageReductionUnitFeatureProfile(
   SupportedUnitFeatureProfile,
   { readonly kind: "reactionRollOrDamageReduction" }
 > | null {
-  /* v8 ignore start -- Unsupported structured input: reaction roll/damage reduction execution is admitted only from a class-feature record. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: reaction roll/damage reduction execution is admitted only from a class-feature record. */
   if (unit.kind !== "class_feature") {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
-  /* v8 ignore start -- Unsupported character/profile pairing: admission requires the owning class level at or above acquisition. */
+  /* v8 ignore start -- @preserve -- Unsupported character/profile pairing: admission requires the owning class level at or above acquisition. */
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const modifiers = reactionRollOrDamageReductionMechanicsProjection(
     unit,
     classLevel,
   );
-  /* v8 ignore start -- Unsupported structured input: the reaction modifier mechanics did not parse into a supported roll or damage reduction. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the reaction modifier mechanics did not parse into a supported roll or damage reduction. */
   if (modifiers === null) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     kind: "reactionRollOrDamageReduction",
     unit,
@@ -8469,7 +8469,7 @@ function durationToRounds(duration: {
   readonly amount: number;
 }): number | null {
   const ticks = elapsedTimeTicksFromTimeSpanDuration(duration);
-  /* v8 ignore next -- Unsupported structured input: admitted ongoing-feature durations use positive Surface time spans convertible to whole combat rounds. */
+  /* v8 ignore next -- @preserve -- Unsupported structured input: admitted ongoing-feature durations use positive Surface time spans convertible to whole combat rounds. */
   if (Either.isLeft(ticks)) {
     return null;
   }
@@ -8492,11 +8492,11 @@ function parseOngoingFeatureEffects(
       effect.kind === "grant_resistance" &&
       typeof effect.damageType === "string"
     ) {
-      /* v8 ignore start -- Unsupported structured input: the ongoing-feature support profile admits an unfiltered resistance grant only. Source-filtered resistance records are rejected at this admission boundary; admitted resistance projection remains measured below. */
+      /* v8 ignore start -- @preserve -- Unsupported structured input: the ongoing-feature support profile admits an unfiltered resistance grant only. Source-filtered resistance records are rejected at this admission boundary; admitted resistance projection remains measured below. */
       if ("sourceFilter" in effect && effect.sourceFilter !== undefined) {
         return null;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       resistances.push(effect.damageType);
       continue;
     }
@@ -8504,12 +8504,12 @@ function parseOngoingFeatureEffects(
       effect.kind === "modify_roll_advantage" &&
       effect.on.includes("attack_roll")
     ) {
-      /* v8 ignore start -- Unsupported structured input: this profile admits an attack-roll-only modifier, so a mixed roll-target list is rejected before projection. */
+      /* v8 ignore start -- @preserve -- Unsupported structured input: this profile admits an attack-roll-only modifier, so a mixed roll-target list is rejected before projection. */
       if (effect.on.some((target) => target !== "attack_roll")) {
         return null;
       }
-      /* v8 ignore stop */
-      /* v8 ignore start -- Unsupported structured input: attacker, skill, condition, save, range, count, and expiry filters are outside this ongoing-feature profile. The supported optional ability-filter projection remains measured after this guard. */
+      /* v8 ignore stop -- @preserve */
+      /* v8 ignore start -- @preserve -- Unsupported structured input: attacker, skill, condition, save, range, count, and expiry filters are outside this ongoing-feature profile. The supported optional ability-filter projection remains measured after this guard. */
       if (
         ("attackerTypeFilter" in effect &&
           effect.attackerTypeFilter !== undefined) ||
@@ -8529,7 +8529,7 @@ function parseOngoingFeatureEffects(
       ) {
         return null;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const abilityFilter: readonly Ability[] | undefined =
         "abilityFilter" in effect && Array.isArray(effect.abilityFilter)
           ? effect.abilityFilter
@@ -8547,20 +8547,20 @@ function parseOngoingFeatureEffects(
       continue;
     }
     if (effect.kind === "modify_damage_numeric") {
-      /* v8 ignore start -- Unsupported structured input: this profile admits either no weapon filter or the typed weapon-category filter; other structured filter shapes are rejected at admission. */
+      /* v8 ignore start -- @preserve -- Unsupported structured input: this profile admits either no weapon filter or the typed weapon-category filter; other structured filter shapes are rejected at admission. */
       if (
         effect.weaponFilter !== undefined &&
         effect.weaponFilter.kind !== "weapon_category"
       ) {
         return null;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const amount = numericDeltaForClassLevel(effect.delta, classLevel);
-      /* v8 ignore start -- Unsupported structured input: numericDeltaForClassLevel admits only the fixed-number and class-threshold shapes projected by this profile. */
+      /* v8 ignore start -- @preserve -- Unsupported structured input: numericDeltaForClassLevel admits only the fixed-number and class-threshold shapes projected by this profile. */
       if (amount === null) {
         return null;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       damageModifiers.push({
         amount,
         ...optionalProperty("abilityFilter", effect.abilityFilter),
@@ -8570,7 +8570,7 @@ function parseOngoingFeatureEffects(
       });
       continue;
     }
-    /* v8 ignore next -- Unsupported structured input: every effect kind owned by this ongoing-feature profile is handled above; unrelated effect atoms are rejected at admission. */
+    /* v8 ignore next -- @preserve -- Unsupported structured input: every effect kind owned by this ongoing-feature profile is handled above; unrelated effect atoms are rejected at admission. */
     return null;
   }
   return rollModifiers.length === 0 &&
@@ -8586,11 +8586,11 @@ function parseSpellBenefitActivationProjectionEffects(
   Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>,
   "rollModifiers" | "spellModifiers" | "damageModifiers" | "resistances"
 > | null {
-  /* v8 ignore start -- Unsupported structured input: the spell-benefit activation profile is defined by exactly one save-DC atom and one spell-attack atom; other cardinalities are rejected before projection. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the spell-benefit activation profile is defined by exactly one save-DC atom and one spell-attack atom; other cardinalities are rejected before projection. */
   if (effects.length !== 2) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const saveDc = effects.find((effect) => effect.kind === "modify_save_dc");
   const attackRollAdvantage = effects.find(
     (effect) => effect.kind === "modify_roll_advantage",
@@ -8598,7 +8598,7 @@ function parseSpellBenefitActivationProjectionEffects(
   const saveDcModifier = spellSaveDcModifierBenefit(saveDc);
   const attackRollModifier =
     spellAttackRollModeModifierBenefit(attackRollAdvantage);
-  /* v8 ignore start -- Unsupported structured input: malformed atom shapes or benefits sourced from different classes cannot form one spell-benefit activation profile. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: malformed atom shapes or benefits sourced from different classes cannot form one spell-benefit activation profile. */
   if (
     saveDcModifier === null ||
     attackRollModifier === null ||
@@ -8606,7 +8606,7 @@ function parseSpellBenefitActivationProjectionEffects(
   ) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     rollModifiers: [],
     spellModifiers: [
@@ -8631,7 +8631,7 @@ type SpellSaveDcModifierBenefitEffect = {
   readonly spellSourceFilter: unknown;
 };
 
-/* v8 ignore start -- Structured-input shape gate: support is admitted only for the exact +1 fixed save-DC atom. Exhaustive malformed field permutations are rejected here; the narrowed profile projection remains measured in spellSaveDcModifierBenefit. */
+/* v8 ignore start -- @preserve -- Structured-input shape gate: support is admitted only for the exact +1 fixed save-DC atom. Exhaustive malformed field permutations are rejected here; the narrowed profile projection remains measured in spellSaveDcModifierBenefit. */
 function isSpellSaveDcModifierBenefitEffect(
   effect: { readonly kind: string } | undefined,
 ): effect is SpellSaveDcModifierBenefitEffect {
@@ -8649,18 +8649,18 @@ function isSpellSaveDcModifierBenefitEffect(
     "spellSourceFilter" in effect
   );
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function spellSaveDcModifierBenefit(
   effect: { readonly kind: string } | undefined,
 ): { readonly sourceClassName: ClassName; readonly saveDcBonus: 1 } | null {
-  /* v8 ignore start -- Unsupported structured input: the exact atom shape is narrowed by isSpellSaveDcModifierBenefitEffect before its projection below. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the exact atom shape is narrowed by isSpellSaveDcModifierBenefitEffect before its projection below. */
   if (!isSpellSaveDcModifierBenefitEffect(effect)) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const sourceClassName = spellSourceFilterClassName(effect.spellSourceFilter);
-  /* v8 ignore next -- Unsupported structured input: the admitted spell benefit supplies a typed class-name source filter, so null represents only a caller-mutated filter. */
+  /* v8 ignore next -- @preserve -- Unsupported structured input: the admitted spell benefit supplies a typed class-name source filter, so null represents only a caller-mutated filter. */
   return sourceClassName === null ? null : { sourceClassName, saveDcBonus: 1 };
 }
 
@@ -8671,7 +8671,7 @@ type SpellAttackRollModeModifierBenefitEffect = {
   readonly spellSourceFilter: unknown;
 };
 
-/* v8 ignore start -- Structured-input shape gate: support is admitted only for the exact spell-attack Advantage atom with no extra fields. Exhaustive malformed field permutations are rejected here; the narrowed projection remains measured in spellAttackRollModeModifierBenefit. */
+/* v8 ignore start -- @preserve -- Structured-input shape gate: support is admitted only for the exact spell-attack Advantage atom with no extra fields. Exhaustive malformed field permutations are rejected here; the narrowed projection remains measured in spellAttackRollModeModifierBenefit. */
 function isSpellAttackRollModeModifierBenefitEffect(
   effect: { readonly kind: string } | undefined,
 ): effect is SpellAttackRollModeModifierBenefitEffect {
@@ -8687,7 +8687,7 @@ function isSpellAttackRollModeModifierBenefitEffect(
     "spellSourceFilter" in effect
   );
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function spellAttackRollModeModifierBenefit(
   effect: { readonly kind: string } | undefined,
@@ -8695,13 +8695,13 @@ function spellAttackRollModeModifierBenefit(
   readonly sourceClassName: ClassName;
   readonly attackRollMode: "advantage";
 } | null {
-  /* v8 ignore start -- Unsupported structured input: the exact atom shape is narrowed by isSpellAttackRollModeModifierBenefitEffect before its projection below. */
+  /* v8 ignore start -- @preserve -- Unsupported structured input: the exact atom shape is narrowed by isSpellAttackRollModeModifierBenefitEffect before its projection below. */
   if (!isSpellAttackRollModeModifierBenefitEffect(effect)) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const sourceClassName = spellSourceFilterClassName(effect.spellSourceFilter);
-  /* v8 ignore next -- Unsupported structured input: the admitted spell benefit supplies a typed class-name source filter, so null represents only a caller-mutated filter. */
+  /* v8 ignore next -- @preserve -- Unsupported structured input: the admitted spell benefit supplies a typed class-name source filter, so null represents only a caller-mutated filter. */
   return sourceClassName === null
     ? null
     : { sourceClassName, attackRollMode: "advantage" };
@@ -8727,7 +8727,7 @@ function hasOnlySpellAttackRollModeModifierBenefitFields(effect: {
 function spellSourceFilterClassName(
   spellSourceFilter: unknown,
 ): ClassName | null {
-  /* v8 ignore next -- Unsupported structured input: Surface admission supplies an object with one recognized className; the alternatives reject malformed imported atoms. */
+  /* v8 ignore next -- @preserve -- Unsupported structured input: Surface admission supplies an object with one recognized className; the alternatives reject malformed imported atoms. */
   if (
     typeof spellSourceFilter !== "object" ||
     spellSourceFilter === null ||

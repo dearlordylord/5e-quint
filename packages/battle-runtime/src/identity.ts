@@ -110,7 +110,7 @@ export const BattleProcedureExecutionRef = Schema.NonEmptyTrimmedString.pipe(
   Schema.filter(
     (reference) => nestedExecutionReferenceIsCanonical(reference, "procedure"),
     {
-      /* v8 ignore next -- Only a malformed externally decoded reference requests this diagnostic; constructors emit the canonical nested identity shape. */
+      /* v8 ignore next -- @preserve -- Only a malformed externally decoded reference requests this diagnostic; constructors emit the canonical nested identity shape. */
       message: () => "Invalid canonical Battle procedure execution ref.",
     },
   ),
@@ -143,7 +143,7 @@ export type BattleAttackProcedureExecutionRef =
 export const BattleStatBlockProcedureExecutionRef =
   BattleProcedureExecutionRef.pipe(
     Schema.filter(statBlockProcedureExecutionReferenceIsCanonical, {
-      /* v8 ignore next -- Only a malformed externally decoded Stat Block reference requests this diagnostic; the scoped constructor is canonical. */
+      /* v8 ignore next -- @preserve -- Only a malformed externally decoded Stat Block reference requests this diagnostic; the scoped constructor is canonical. */
       message: () =>
         "Invalid canonical Battle Stat Block procedure execution ref.",
     }),
@@ -198,7 +198,7 @@ export const BattleAttackExecutionScopeRef = Schema.NonEmptyTrimmedString.pipe(
         reference,
         "attackExecution",
       ),
-    /* v8 ignore next -- Only a malformed externally decoded attack scope requests this diagnostic; the battle-owned scope constructor is canonical. */
+    /* v8 ignore next -- @preserve -- Only a malformed externally decoded attack scope requests this diagnostic; the battle-owned scope constructor is canonical. */
     { message: () => "Invalid canonical Battle attack execution scope ref." },
   ),
   Schema.brand("BattleAttackExecutionScopeRef"),

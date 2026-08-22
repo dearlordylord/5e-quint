@@ -315,11 +315,11 @@ export function needsAttackDamageConcentrationResult(input: {
     input.attack,
     { kind: "acceptedAttack" },
   );
-  /* v8 ignore start -- Defensive internal guard: dispatcher admission proves the Attack resource exists, and the pre-concentration damage path preserves it; reaction-window paths spend and return before calling this helper. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher admission proves the Attack resource exists, and the pre-concentration damage path preserves it; reaction-window paths spend and return before calling this helper. */
   if (spent.tag === "invalid") {
     return spent;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return needsHolesResult(spent.state, input.subject, [
     input.concentrationSave,
   ]);
@@ -330,14 +330,14 @@ export function resolveDash(
     Extract<BattleSubject, { readonly tag: "action"; readonly action: "dash" }>
   >,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", "Dash accepts no fills.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const actor = input.state.combatants.get(input.subject.actorId);
-  /* v8 ignore start -- Defensive internal guard: the dispatcher derives the current actor from the combatant map, so its current-actor gate rejects an absent Dash actor before routing here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: the dispatcher derives the current actor from the combatant map, so its current-actor gate rejects an absent Dash actor before routing here. */
   if (actor === undefined) {
     return invalidResult(
       input.state,
@@ -345,7 +345,7 @@ export function resolveDash(
       "Dash actor is not in this battle.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const speedKind = input.subject.speedKind;
   if (!representedMovementSpeedKinds(actor).includes(speedKind)) {
     return invalidResult(
@@ -355,7 +355,7 @@ export function resolveDash(
     );
   }
   const spent = spendAction(input.state.currentTurnResources, "dash");
-  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Dash here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Dash here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -363,7 +363,7 @@ export function resolveDash(
       "Dash is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = applyDashToActor(
     input.state,
     actor,
@@ -380,18 +380,18 @@ export function resolveDash(
 export function resolveDisengage(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Disengage accepts no fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendAction(input.state.currentTurnResources, "disengage");
-  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Disengage here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Disengage here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -399,7 +399,7 @@ export function resolveDisengage(
       "Disengage is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = applyDisengage(input.state, spent.right);
   return {
     tag: "resolved",
@@ -411,12 +411,12 @@ export function resolveDisengage(
 export function resolveBonusActionDash(
   input: BonusActionStandardActionDashResolverInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", "Dash accepts no fills.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const actor = input.actor;
   const speedKind = input.subject.speedKind;
   if (!representedMovementSpeedKinds(actor).includes(speedKind)) {
@@ -451,7 +451,7 @@ function resolveAdmittedBonusActionDash(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  /* v8 ignore start -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing Dash here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing Dash here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -459,7 +459,7 @@ function resolveAdmittedBonusActionDash(
       "Dash is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = applyDashToActor(
     input.state,
     input.actor,
@@ -516,20 +516,20 @@ function resolveBonusActionDashTemporaryHitPoints(
 export function resolveBonusActionDisengage(
   input: BonusActionStandardActionDisengageResolverInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Disengage accepts no fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  /* v8 ignore start -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing Disengage here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing Disengage here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -537,7 +537,7 @@ export function resolveBonusActionDisengage(
       "Disengage is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = applyDisengage(input.state, spent.right);
   return {
     tag: "resolved",
@@ -549,14 +549,14 @@ export function resolveBonusActionDisengage(
 export function resolveDodge(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", "Dodge accepts no fills.");
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const actor = input.state.combatants.get(input.subject.actorId);
-  /* v8 ignore start -- Defensive internal guard: the dispatcher derives the current actor from the combatant map, so its current-actor gate rejects an absent Dodge actor before routing here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: the dispatcher derives the current actor from the combatant map, so its current-actor gate rejects an absent Dodge actor before routing here. */
   if (actor === undefined) {
     return invalidResult(
       input.state,
@@ -564,9 +564,9 @@ export function resolveDodge(
       "Dodge actor is not in this battle.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendAction(input.state.currentTurnResources, "dodge");
-  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Dodge here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Dodge here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -574,7 +574,7 @@ export function resolveDodge(
       "Dodge is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const combatants = new Map(input.state.combatants).set(actor.combatantId, {
     ...actor,
     dodging: true,
@@ -607,21 +607,21 @@ export function resolveReady(
     ]);
   }
   const declaration = readyDeclarationFill(input.fills);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     declaration === null ||
     !readyResponseIsOffered(responseChoices, declaration.value.response)
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Ready requires one offered trigger-and-response declaration.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendAction(input.state.currentTurnResources, "ready");
-  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Ready here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Ready here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -629,7 +629,7 @@ export function resolveReady(
       "Ready is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = {
     ...input.state,
     currentTurnResources: spent.right,
@@ -666,57 +666,57 @@ export function resolveHelpAttack(
       helpAttackAllyHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     allyFill.kind !== "helpAttackAllyDecision" ||
     allyFill.holeId !== HELP_ATTACK_ALLY_HOLE_ID
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Help requires an ally target fill first.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const allyId = allyFill.allyId;
   const ally = input.state.combatants.get(allyId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     allyId === input.subject.actorId ||
     ally === undefined ||
     zeroHpLifecycleIsTerminal(ally) ||
     !helpAttackAllyChoices(input.state, input.subject.actorId).includes(allyId)
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Help ally must be another live combatant.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (targetFillValue === undefined) {
     return needsHolesResult(input.state, input.subject, [
       helpAttackTargetHole(input.state, input.subject.actorId, allyId),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.length > 2 ||
     targetFillValue.kind !== "helpAttackEnemyDecision" ||
     targetFillValue.holeId !== HELP_ATTACK_TARGET_HOLE_ID
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Help requires one enemy target fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const targetEnemyId = targetFillValue.targetEnemyId;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !targetFillValue.targetWithinFiveFeetOfHelper ||
     !helpAttackTargetChoices(
@@ -725,16 +725,16 @@ export function resolveHelpAttack(
       allyId,
     ).includes(targetEnemyId)
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Help target must be an enemy within 5 feet of the helper.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendAction(input.state.currentTurnResources, "help");
-  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Help here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Help here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -742,7 +742,7 @@ export function resolveHelpAttack(
       "Help is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = {
     ...input.state,
     currentTurnResources: spent.right,
@@ -780,22 +780,22 @@ export function resolveShakeAwakeFromSleep(
       sleepShakeAwakeTargetHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.length > 1 ||
     targetFill.kind !== "targetChoice" ||
     targetFill.holeId !== SLEEP_SHAKE_AWAKE_TARGET_HOLE_ID
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Sleep shake-awake requires one target fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const targetId = targetFill.value;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !sleepShakeAwakeTargetChoices(input.state, input.subject.actorId).includes(
       targetId,
@@ -806,14 +806,14 @@ export function resolveShakeAwakeFromSleep(
       targetId,
     )
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Sleep shake-awake target must be within 5 feet of the actor by table-supplied fact.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendTurnAction(input.state.currentTurnResources);
   if (Either.isLeft(spent)) {
     return invalidResult(
@@ -850,22 +850,22 @@ export function resolveShakeAwakeFromHypnoticPattern(
       hypnoticPatternShakeAwakeTargetHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.length > 1 ||
     targetFill.kind !== "targetChoice" ||
     targetFill.holeId !== HYPNOTIC_PATTERN_SHAKE_AWAKE_TARGET_HOLE_ID
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Hypnotic Pattern shake-awake requires one target fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const targetId = targetFill.value;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !hypnoticPatternShakeAwakeTargetChoices(
       input.state,
@@ -877,14 +877,14 @@ export function resolveShakeAwakeFromHypnoticPattern(
       targetId,
     )
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Hypnotic Pattern shake-awake target must be within 5 feet of the actor by table-supplied fact.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendTurnAction(input.state.currentTurnResources);
   if (Either.isLeft(spent)) {
     return invalidResult(
@@ -913,7 +913,7 @@ export function resolveHide(
     "actor" in input
       ? input.actor
       : input.state.combatants.get(input.subject.actorId);
-  /* v8 ignore start -- Defensive internal guard: dispatcher combatant and action-eligibility admission rejects a missing or ineligible actor before routing Hide here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher combatant and action-eligibility admission rejects a missing or ineligible actor before routing Hide here. */
   if (actor === undefined || !combatantCanTakeActions(actor)) {
     return invalidResult(
       input.state,
@@ -921,7 +921,7 @@ export function resolveHide(
       "Hide is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (!canHideInCurrentCircumstances(input.state, input.subject.actorId)) {
     return invalidResult(
       input.state,
@@ -938,12 +938,12 @@ export function resolveHide(
       rollMode: checkHole.rollMode,
     },
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (check.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", check.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (check.value === undefined) {
     return needsHolesResult(input.state, input.subject, [checkHole]);
   }
@@ -954,7 +954,7 @@ export function resolveHide(
           kind: "bonusAction",
         })
       : spendAction(input.state.currentTurnResources, "hide");
-  /* v8 ignore start -- Defensive internal guard: dispatcher standard- or Bonus Action resource admission rejects an exhausted resource before routing Hide here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard- or Bonus Action resource admission rejects an exhausted resource before routing Hide here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -962,7 +962,7 @@ export function resolveHide(
       "Hide is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const hidden =
     check.value.value.total >= HIDE_DC
       ? { discoveryDc: difficultyClass(check.value.value.total) }
@@ -1053,41 +1053,41 @@ export function resolveSearch(
       searchTargetHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (targetFill.holeId !== SEARCH_TARGET_HOLE_ID) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Search target fill does not match the requested hole.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (targetFill.relationshipFacts !== undefined) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Search target relationship facts were not requested.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const target = input.state.combatants.get(targetFill.value);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target === undefined ||
     target.combatantId === input.subject.actorId ||
     target.hidden === null
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Search target must be a hidden combatant in this battle.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const checkHole = searchAbilityCheckHole(
     target.hidden.discoveryDc,
     input.state,
@@ -1100,17 +1100,17 @@ export function resolveSearch(
     "Search",
     { rollMode: checkHole.rollMode },
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (check.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", check.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (check.value === undefined) {
     return needsHolesResult(input.state, input.subject, [checkHole]);
   }
   const spent = spendAction(input.state.currentTurnResources, "search");
-  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Search here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Search here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1118,7 +1118,7 @@ export function resolveSearch(
       "Search is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const found = check.value.value.total >= target.hidden.discoveryDc;
   const nextTarget = found ? { ...target, hidden: null } : target;
   const nextState = normalizeBattleGrapples({
@@ -1167,20 +1167,20 @@ export function resolveStatBlockBonusActionDisengage(
   actor: StatBlockBattleCreatureState,
   procedureRef: import("../identity.ts").BattleStatBlockProcedureExecutionRef,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Stat Block Bonus Action Disengage accepts no fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  /* v8 ignore start -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing the Stat Block option here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing the Stat Block option here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1188,7 +1188,7 @@ export function resolveStatBlockBonusActionDisengage(
       "Bonus Action is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = updateStatBlockActorResources(
     {
       ...input.state,
@@ -1225,19 +1225,19 @@ export function resolveStatBlockBonusActionHide(
       rollMode: checkHole.rollMode,
     },
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (check.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", check.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (check.value === undefined) {
     return needsHolesResult(input.state, input.subject, [checkHole]);
   }
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  /* v8 ignore start -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing the Stat Block option here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing the Stat Block option here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1245,7 +1245,7 @@ export function resolveStatBlockBonusActionHide(
       "Bonus Action is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const hidden =
     check.value.value.total >= HIDE_DC
       ? { discoveryDc: difficultyClass(check.value.value.total) }
@@ -1273,55 +1273,55 @@ export function resolveGrapple(
   input: GrappleBattleResolutionInput,
 ): BattleResolutionResult {
   const fillSet = grappleFillSet(input.fills);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (fillSet.targetId === undefined) {
     return needsHolesResult(input.state, input.subject, [
       grappleTargetHole(input.state, input.subject.actorId),
     ]);
   }
   const targetFill = input.fills.find((fill) => fill.kind === "targetChoice");
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (targetFill?.holeId !== GRAPPLE_TARGET_HOLE_ID) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Grapple target fill does not match the requested hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const link = grappleLinkForTarget(
     input.state,
     input.subject.actorId,
     fillSet.targetId,
     fillSet.targetSpatialFacts,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (link.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", link.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (fillSet.outcome === undefined) {
     return needsHolesResult(input.state, input.subject, [
       grappleOutcomeHole(input.state, link.link),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.outcome.holeId !== GRAPPLE_OUTCOME_HOLE_ID) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Grapple outcome fill does not match the requested hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const relationshipFacts = parseSavingThrowRelationshipFacts(
     fillSet.outcome.relationshipFacts ?? [],
     link.link.grapplerId,
@@ -1332,20 +1332,20 @@ export function resolveGrapple(
       "enemySavingThrow",
     ),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipFacts === null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Grapple relationship facts must answer the saving-throw hole request.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendUnarmedStrikeActionResource(
     input.state.currentTurnResources,
   );
-  /* v8 ignore start -- Defensive internal guard: dispatcher unarmed-strike resource admission rejects an exhausted compatible Action before routing Grapple here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher unarmed-strike resource admission rejects an exhausted compatible Action before routing Grapple here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1353,7 +1353,7 @@ export function resolveGrapple(
       "Grapple is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = applyGrappleSavingThrowOutcome({
     state: {
       ...input.state,
@@ -1397,40 +1397,40 @@ export function resolveShove(
   input: ShoveBattleResolutionInput,
 ): BattleResolutionResult {
   const fillSet = shoveFillSet(input.fills);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (fillSet.targetId === undefined) {
     return needsHolesResult(input.state, input.subject, [
       shoveTargetHole(input.state, input.subject.actorId),
     ]);
   }
   const targetFill = input.fills.find((fill) => fill.kind === "targetChoice");
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (targetFill?.holeId !== SHOVE_TARGET_HOLE_ID) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Shove target fill does not match the requested hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const shove = shoveForTarget(
     input.state,
     input.subject.actorId,
     fillSet.targetId,
     fillSet.targetSpatialFacts,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (shove.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", shove.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (fillSet.outcome === undefined) {
     return needsHolesResult(input.state, input.subject, [
       shoveOutcomeHole({
@@ -1441,16 +1441,16 @@ export function resolveShove(
       }),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.outcome.holeId !== SHOVE_OUTCOME_HOLE_ID) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Shove outcome fill does not match the requested hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     !fillSet.outcome.value.succeeded &&
     fillSet.outcome.value.failedEffect.kind === "pushAway"
@@ -1458,12 +1458,12 @@ export function resolveShove(
     const pushValidation = validateShovePushDisposition(
       fillSet.outcome.value.failedEffect.disposition,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (pushValidation !== null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.state, "invalidFill", pushValidation);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   const relationshipFacts = parseSavingThrowRelationshipFacts(
     fillSet.outcome.relationshipFacts ?? [],
@@ -1475,20 +1475,20 @@ export function resolveShove(
       "enemySavingThrow",
     ),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipFacts === null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Shove relationship facts must answer the saving-throw hole request.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendUnarmedStrikeActionResource(
     input.state.currentTurnResources,
   );
-  /* v8 ignore start -- Defensive internal guard: dispatcher unarmed-strike resource admission rejects an exhausted compatible Action before routing Shove here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher unarmed-strike resource admission rejects an exhausted compatible Action before routing Shove here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1496,7 +1496,7 @@ export function resolveShove(
       "Shove is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const savingThrowExtendedState = extendSavingThrowOngoingFeatures(
     input.state,
     input.subject.actorId,
@@ -1531,42 +1531,42 @@ export function resolveEscapeGrapple(
     );
   }
   const fillSet = grappleFillSet(input.fills);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.targetId !== undefined) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Escape Grapple does not use a target fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (fillSet.outcome === undefined) {
     return needsHolesResult(input.state, input.subject, [
       escapeGrappleOutcomeHole(input.state, grapple, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.outcome.holeId !== ESCAPE_GRAPPLE_OUTCOME_HOLE_ID) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Escape Grapple outcome fill does not match the requested hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendEscapeGrappleActionResource(
     input.state.currentTurnResources,
     input.subject.actorId,
   );
-  /* v8 ignore start -- Defensive internal guard: dispatcher Escape Grapple admission rejects turn resources that cannot pay the action cost before routing here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Escape Grapple admission rejects turn resources that cannot pay the action cost before routing here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1574,7 +1574,7 @@ export function resolveEscapeGrapple(
       "Escape Grapple is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = normalizeBattleGrapples({
     ...input.state,
     currentTurnResources: spent.right,
@@ -1604,7 +1604,7 @@ export function resolveEscapeSpellRestraint(
       "No spell-imposed Restraint is available to escape.",
     );
   }
-  /* v8 ignore start -- Discovered-subject invariant: the effect reference comes from a restraint effect whose immutable escape procedure is an Ability Check. */
+  /* v8 ignore start -- @preserve -- Discovered-subject invariant: the effect reference comes from a restraint effect whose immutable escape procedure is an Ability Check. */
   if (!isAbilityCheckSpellConditionEffect(effect)) {
     return invalidResult(
       input.state,
@@ -1612,8 +1612,8 @@ export function resolveEscapeSpellRestraint(
       "Spell-imposed Restraint escape is no longer available.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Discovered-subject invariant: target-only escape discovery emits the restrained target as actor; the effect's allowed-actor rule cannot change in place. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Discovered-subject invariant: target-only escape discovery emits the restrained target as actor; the effect's allowed-actor rule cannot change in place. */
   if (
     effect.escape.allowedActor === "target" &&
     input.subject.actorId !== input.subject.targetId
@@ -1624,9 +1624,9 @@ export function resolveEscapeSpellRestraint(
       "This spell-imposed Restraint can only be escaped by the restrained target.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const dc = spellSaveDcForCaster(input.state, effect.sourceCombatantId);
-  /* v8 ignore start -- BattleState lifecycle invariant: removing a spell source also removes its sourced active effects, so a surviving restraint retains its caster DC. */
+  /* v8 ignore start -- @preserve -- BattleState lifecycle invariant: removing a spell source also removes its sourced active effects, so a surviving restraint retains its caster DC. */
   if (dc === null) {
     return invalidResult(
       input.state,
@@ -1634,7 +1634,7 @@ export function resolveEscapeSpellRestraint(
       "Spell-imposed Restraint escape DC is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const checkHole = escapeSpellRestraintAbilityCheckHole(input.state, effect, {
     actorId: input.subject.actorId,
     targetId: input.subject.targetId,
@@ -1645,16 +1645,16 @@ export function resolveEscapeSpellRestraint(
     "Escape spell Restraint",
     { rollMode: checkHole.rollMode },
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (check.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", check.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (check.value === undefined) {
     return needsHolesResult(input.state, input.subject, [checkHole]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.subject.actorId !== input.subject.targetId &&
     effect.escape.allowedActor === "targetOrCreatureWithinReach" &&
@@ -1664,16 +1664,16 @@ export function resolveEscapeSpellRestraint(
       input.subject.targetId,
     )
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Escape spell Restraint helper must be within reach of the restrained target by table-supplied fact.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spent = spendAction(input.state.currentTurnResources, "utilize");
-  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing this Utilize action here. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing this Utilize action here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1681,7 +1681,7 @@ export function resolveEscapeSpellRestraint(
       "Escape spell Restraint is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState =
     check.value.value.total >= dc
       ? resolveSuccessfulEscapeSpellRestraint(
@@ -1782,16 +1782,16 @@ export function resolveReleaseGrappleCommand(
     >
   >,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Release Grapple does not use fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = normalizeBattleGrapples({
     ...input.state,
     grapples: input.state.grapples.filter(
@@ -1825,12 +1825,12 @@ export function abilityCheckFill(
   let check: Extract<BattleFill, { readonly kind: "abilityCheck" }> | undefined;
   for (const fill of fills) {
     if (fill.kind === "abilityCheck" && fill.holeId === holeId) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (check !== undefined) {
-        /* v8 ignore next -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+        /* v8 ignore next -- @preserve -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
         return { tag: "invalid", message: `${label} check was filled twice.` };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       check = {
         ...fill,
         value: effectiveD20TestNaturalOneRerollAbilityCheckValue(
@@ -1840,17 +1840,17 @@ export function abilityCheckFill(
       };
       continue;
     }
-    /* v8 ignore start -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+    /* v8 ignore start -- @preserve -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the ${label} replay holes.`,
     };
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return { tag: "ok", value: check };
 }
 
-/* v8 ignore start -- Malformed Shove disposition: the discovered push outcome fixes the SRD 5-foot distance and non-provoking forced-movement fact. */
+/* v8 ignore start -- @preserve -- Malformed Shove disposition: the discovered push outcome fixes the SRD 5-foot distance and non-provoking forced-movement fact. */
 function validateShovePushDisposition(
   disposition: BattleShovePushOutcome["disposition"],
 ): string | null {
@@ -1862,7 +1862,7 @@ function validateShovePushDisposition(
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function applyShoveOutcome(input: {
   readonly state: BattleState;
@@ -1881,11 +1881,11 @@ function applyShoveOutcome(input: {
   return Match.value(input.outcome.failedEffect).pipe(
     Match.when({ kind: "prone" }, () => {
       const target = input.state.combatants.get(input.targetId);
-      /* v8 ignore start -- Defensive internal guard: Shove target admission and outcome validation preserve the selected combatant through effect application. */
+      /* v8 ignore start -- @preserve -- Defensive internal guard: Shove target admission and outcome validation preserve the selected combatant through effect application. */
       if (target === undefined) {
         return { state: input.state, shovePushes: [] };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const state = {
         ...input.state,
         combatants: new Map(input.state.combatants).set(
@@ -1919,45 +1919,45 @@ export function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
     | undefined;
   for (const fill of fills) {
     if (fill.kind === "targetChoice") {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.relationshipFacts !== undefined) {
-        /* v8 ignore next -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+        /* v8 ignore next -- @preserve -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
         return {
           tag: "invalid",
           message:
             "Grapple target relationship facts do not match a requested target decision.",
         };
       }
-      /* v8 ignore stop */
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore stop -- @preserve */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (targetId !== undefined) {
-        /* v8 ignore next -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+        /* v8 ignore next -- @preserve -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
         return { tag: "invalid", message: "Grapple target was filled twice." };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
       continue;
     }
     if (fill.kind === "grappleOutcome") {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (outcome !== undefined) {
-        /* v8 ignore next -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+        /* v8 ignore next -- @preserve -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
         return {
           tag: "invalid",
           message: "Grapple outcome was filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       outcome = fill;
       continue;
     }
-    /* v8 ignore start -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+    /* v8 ignore start -- @preserve -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Grapple replay holes.`,
     };
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return { tag: "ok", targetId, targetSpatialFacts, outcome };
 }
@@ -1970,45 +1970,45 @@ export function shoveFillSet(fills: readonly BattleFill[]): ShoveFillSet {
     | undefined;
   for (const fill of fills) {
     if (fill.kind === "targetChoice") {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.relationshipFacts !== undefined) {
-        /* v8 ignore next -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+        /* v8 ignore next -- @preserve -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
         return {
           tag: "invalid",
           message:
             "Shove target relationship facts do not match a requested target decision.",
         };
       }
-      /* v8 ignore stop */
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore stop -- @preserve */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (targetId !== undefined) {
-        /* v8 ignore next -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+        /* v8 ignore next -- @preserve -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
         return { tag: "invalid", message: "Shove target was filled twice." };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
       continue;
     }
     if (fill.kind === "shoveOutcome") {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (outcome !== undefined) {
-        /* v8 ignore next -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+        /* v8 ignore next -- @preserve -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
         return {
           tag: "invalid",
           message: "Shove outcome was filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       outcome = fill;
       continue;
     }
-    /* v8 ignore start -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+    /* v8 ignore start -- @preserve -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Shove replay holes.`,
     };
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   return { tag: "ok", targetId, targetSpatialFacts, outcome };
 }
@@ -2173,34 +2173,34 @@ export function validateRolledDiceForWeaponAttack(
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
   );
-  /* v8 ignore start -- Malformed weapon-damage fill: attack discovery publishes exactly one rolled-dice group for every computed damage component. */
+  /* v8 ignore start -- @preserve -- Malformed weapon-damage fill: attack discovery publishes exactly one rolled-dice group for every computed damage component. */
   if (groups.length !== components.length) {
     return "filled damage groups do not match current attack damage";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   for (const [index, component] of components.entries()) {
     const group = groups[index];
-    /* v8 ignore start -- Malformed sparse raw fill: JSON-authored rolled-dice groups are dense, and the preceding cardinality check fixes the index range. */
+    /* v8 ignore start -- @preserve -- Malformed sparse raw fill: JSON-authored rolled-dice groups are dense, and the preceding cardinality check fixes the index range. */
     if (group === undefined) {
       return "filled damage groups do not match current attack damage";
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const validation = validateRolledDiceForDiceExpr([group], component.expr);
-    /* v8 ignore start -- Malformed weapon-damage roll: each discovered component fixes the count and size of its submitted dice. */
+    /* v8 ignore start -- @preserve -- Malformed weapon-damage roll: each discovered component fixes the count and size of its submitted dice. */
     if (validation !== null) {
       return validation.reason;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 
   if (weaponDamageDiceRollChoice !== undefined) {
     const weaponDamage = weaponDamageComponent(attack, critical);
-    /* v8 ignore start -- Contradictory damage choice: discovery offers a weapon-dice choice only when the attack has a weapon damage component. */
+    /* v8 ignore start -- @preserve -- Contradictory damage choice: discovery offers a weapon-dice choice only when the attack has a weapon damage component. */
     if (weaponDamage === null) {
       return "Weapon damage dice roll choice requires weapon damage dice.";
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const candidateValidation = validateRolledDiceForDiceExpr(
       weaponDamageDiceRollChoice.candidates,
       {
@@ -2208,23 +2208,23 @@ export function validateRolledDiceForWeaponAttack(
         dieSize: weaponDamage.expr.dieSize,
       },
     );
-    /* v8 ignore start -- Malformed damage-choice candidates: discovery fixes two complete candidate rolls using the weapon component's count and die size. */
+    /* v8 ignore start -- @preserve -- Malformed damage-choice candidates: discovery fixes two complete candidate rolls using the weapon component's count and die size. */
     if (candidateValidation !== null) {
       return candidateValidation.reason;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const selectedCandidate =
       weaponDamageDiceRollChoice.selection === "first"
         ? weaponDamageDiceRollChoice.candidates[0]
         : weaponDamageDiceRollChoice.candidates[1];
-    /* v8 ignore start -- Malformed damage-choice selection: the submitted base weapon group must equal the candidate selected at discovery. */
+    /* v8 ignore start -- @preserve -- Malformed damage-choice selection: the submitted base weapon group must equal the candidate selected at discovery. */
     if (
       JSON.stringify(groups[0]?.results) !==
       JSON.stringify(selectedCandidate.results)
     ) {
       return "Selected weapon damage dice roll choice must match the base weapon damage group.";
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 
   return null;

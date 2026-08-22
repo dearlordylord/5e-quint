@@ -283,7 +283,7 @@ function resolveWardingBond(
     input.actorId,
     input.invocation,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!fillsBelongToSpellCastHoles(input.input.fills, [targetHole.holeId])) {
     return invalidResult(
       input.input.state,
@@ -291,7 +291,7 @@ function resolveWardingBond(
       "Warding Bond uses one willing target with paired worn rings and connection range facts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   if (input.fillSet.targetId === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -300,7 +300,7 @@ function resolveWardingBond(
   }
 
   const target = input.input.state.combatants.get(input.fillSet.targetId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target === undefined ||
     !spellTargetIsLegal(
@@ -329,7 +329,7 @@ function resolveWardingBond(
       "Warding Bond target must be another willing creature with paired worn platinum rings within 60 feet.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,

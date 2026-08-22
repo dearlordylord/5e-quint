@@ -147,12 +147,12 @@ export function traceDiceAmountScaling(
       // scaling already lives on the source damage atom and
       // propagates through the link.
       return;
-    /* v8 ignore start -- DiceAmount is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- DiceAmount is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = amt;
       throw new Error(`unhandled dice amount: ${String(_exhaustive)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 

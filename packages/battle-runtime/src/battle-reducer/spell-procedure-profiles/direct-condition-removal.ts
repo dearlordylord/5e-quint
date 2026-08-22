@@ -150,7 +150,7 @@ function discoverDirectConditionRemovalCastAct(
 function resolveDirectConditionRemoval(
   input: SpellProcedureProfileResolveInput<DirectConditionRemovalSpellInvocation>,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       ATTACK_TARGET_HOLE_ID,
@@ -163,7 +163,7 @@ function resolveDirectConditionRemoval(
       "Direct condition-removal spells use one target fill and one condition choice.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const targetSelectionResolution = spellSelectionResolution(
     input.input.state,
@@ -182,7 +182,7 @@ function resolveDirectConditionRemoval(
   const selectedCondition = input.invocation.conditionChoices.find(
     (choice) => choice === conditionChoice,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (selectedCondition === undefined) {
     return invalidResult(
       input.input.state,
@@ -190,7 +190,7 @@ function resolveDirectConditionRemoval(
       "Spell condition choice is not available for this spell.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,

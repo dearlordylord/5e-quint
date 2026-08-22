@@ -152,16 +152,16 @@ export function resumeInterruptedProcedure(
   }
   if (continuation.kind === "attackDamage") {
     const damageAmount = attackDamageContinuationAmount(state, continuation);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageAmount === null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         state,
         "invalidFill",
         "Attack damage target is no longer available.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const concentrationPending = attackDamageContinuationConcentrationHole(
       state,
       continuation,
@@ -375,9 +375,9 @@ export function resolveActiveInterruptContinuation(input: {
       );
     }),
     byInterruptFrameKind("attackDamageContinuationCunningStrike", (frame) => {
-      /* v8 ignore start -- Defensive stale-subject rejection: legal continuation discovery exposes only the stored Cunning Strike participant while this frame is active. */
+      /* v8 ignore start -- @preserve -- Defensive stale-subject rejection: legal continuation discovery exposes only the stored Cunning Strike participant while this frame is active. */
       if (!sameBattleSubject(input.subject, frame.continuation.participant)) {
-        /* v8 ignore next -- Malformed resolution input: this branch rejects a subject that contradicts the admitted active continuation frame. */
+        /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects a subject that contradicts the admitted active continuation frame. */
         return activeContinuationResult(
           invalidResult(
             input.state,
@@ -386,7 +386,7 @@ export function resolveActiveInterruptContinuation(input: {
           ),
         );
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       return activeContinuationResult(
         input.execution.resolveAttackDamageCunningStrike({
           state: input.state,
@@ -474,12 +474,12 @@ function resolveAttackDamageContinuationCunningStrike(input: {
     input.frame,
     input.fills,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (nextFill.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", nextFill.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const cunningStrike = {
     ...continuation.continuation.cunningStrike,
     fills:
@@ -490,12 +490,12 @@ function resolveAttackDamageContinuationCunningStrike(input: {
   const fillSet = attackDamageContinuationCunningStrikeFillSet(
     cunningStrike.fills,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const resolved = resolveCunningStrikeAfterAttackDamage({
     state: stateWithoutCurrentFrame,
     selected: cunningStrike.selected,
@@ -504,12 +504,12 @@ function resolveAttackDamageContinuationCunningStrike(input: {
     toolPossession: fillSet.toolPossession,
     endTurnCover: fillSet.endTurnCover,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (resolved.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", resolved.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (resolved.tag === "needsHoles") {
     const pendingFrame: BattleAttackDamageContinuationCunningStrikeFrame = {
       ...input.frame,
@@ -687,39 +687,39 @@ function resolveAttackDamageContinuationConcentration(input: {
     input.state,
     input.frame.continuation,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (concentrationSave === null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Concentration Saving Throw is no longer available for the damaged target.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const concentrationFill = attackDamageContinuationConcentrationFill(
     input.frame.continuation,
     input.fills,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (concentrationFill.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", concentrationFill.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (concentrationFill.value === undefined) {
     return needsHolesResult(input.state, input.subject, [concentrationSave]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (concentrationFill.value.holeId !== concentrationSave.holeId) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Concentration Saving Throw fill does not match the damaged target.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollOutcomeIssue({
     actor: input.state.combatants.get(concentrationSave.combatantId),
     rollMode: concentrationSave.rollMode,
@@ -732,16 +732,16 @@ function resolveAttackDamageContinuationConcentration(input: {
     withoutRoll: concentrationFill.value.value.withoutRoll,
     succeeded: concentrationFill.value.value.succeeded,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (d20TestNaturalOneRerollIssue !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       d20TestNaturalOneRerollIssue,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const stateWithoutFrame = {
     ...input.state,
     interruptStack: input.state.interruptStack.slice(0, -1),
@@ -788,22 +788,22 @@ function attackDamageContinuationConcentrationFill(
   const accumulated = battleFillPrefixAccumulated(prefix, submitted);
   const remaining = accumulated ? submitted.slice(prefix.length) : submitted;
   if (remaining.length === 0) {
-    /* v8 ignore next -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
+    /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
     return { tag: "ok", value: undefined };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     remaining.length !== 1 ||
     remaining[0]?.kind !== "concentrationSavingThrow"
   ) {
-    /* v8 ignore next -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
+    /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
     return {
       tag: "invalid",
       message:
         "Attack damage Concentration continuation accepts the pending Concentration Saving Throw after the original attack fills.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return { tag: "ok", value: remaining[0] };
 }
 
@@ -821,22 +821,22 @@ function attackDamageContinuationCunningStrikeFill(
   const accumulated = battleFillPrefixAccumulated(prefix, submitted);
   const remaining = accumulated ? submitted.slice(prefix.length) : submitted;
   if (remaining.length === 0) {
-    /* v8 ignore next -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
+    /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
     return { tag: "ok", value: undefined };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     remaining.length !== 1 ||
     !isCunningStrikeContinuationFill(remaining[0]!)
   ) {
-    /* v8 ignore next -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
+    /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
     return {
       tag: "invalid",
       message:
         "Cunning Strike continuation accepts one requested Cunning Strike after-damage fill after the original attack fills.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return { tag: "ok", value: remaining[0] };
 }
 
@@ -894,53 +894,53 @@ function attackDamageContinuationCunningStrikeFillSet(
     | undefined;
   for (const fill of fills) {
     if (fill.kind === "savingThrowOutcome") {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (savingThrow !== undefined) {
-        /* v8 ignore next -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
+        /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
         return {
           tag: "invalid",
           message: "Cunning Strike Saving Throw was filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       savingThrow = fill;
       continue;
     }
     if (fill.kind === "movement") {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (movement !== undefined) {
-        /* v8 ignore next -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
+        /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
         return {
           tag: "invalid",
           message: "Cunning Strike movement was filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       movement = fill;
       continue;
     }
     if (fill.kind === "cunningStrikeEndTurnCoverFacts") {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (endTurnCover !== undefined) {
-        /* v8 ignore next -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
+        /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
         return {
           tag: "invalid",
           message: "Cunning Strike end-turn cover facts were filled twice.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       endTurnCover = fill;
       continue;
     }
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (toolPossession !== undefined) {
-      /* v8 ignore next -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
+      /* v8 ignore next -- @preserve -- Malformed continuation fill set: this parser rejects a duplicate fill or one that does not belong to the admitted interrupt or reroll holes. */
       return {
         tag: "invalid",
         message: "Cunning Strike tool-possession facts were filled twice.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     toolPossession = fill;
   }
   return { tag: "ok", savingThrow, movement, toolPossession, endTurnCover };

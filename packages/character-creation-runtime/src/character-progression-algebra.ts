@@ -60,9 +60,9 @@ export function parseCharacterProgressionShape(input: {
       hitPointRule: entry.hitPointRule,
     }),
   );
-  /* v8 ignore start -- Parsed progression entries have already satisfied this per-entry class-level boundary. */
+  /* v8 ignore start -- @preserve -- Parsed progression entries have already satisfied this per-entry class-level boundary. */
   if (Either.isLeft(advancements)) return Either.left(advancements.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     startingClass: input.startingClass,

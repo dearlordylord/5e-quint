@@ -74,45 +74,45 @@ export function resolveLevitateAltitudeControlCommand(
     maxDistanceFeet: effect.maxAltitudeChangeFeet,
   });
   const fill = input.fills[0];
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 1) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Levitate altitude control uses one altitude-change fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (fill === undefined) {
     return needsHolesResult(input.state, input.subject, [hole]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fill.kind !== "levitateAltitudeChange" || fill.holeId !== hole.holeId) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Levitate altitude control requires the selected altitude-change fill.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !hole.directions.includes(fill.value.direction) ||
     fill.value.distanceFeet <= 0 ||
     fill.value.distanceFeet > hole.maxDistanceFeet ||
     !Number.isInteger(fill.value.distanceFeet)
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Levitate altitude change must be a positive whole number no greater than the spell limit.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !levitatedTargetWithinSpellRangeFactPresent({
       facts: fill.spatialFacts,
@@ -122,14 +122,14 @@ export function resolveLevitateAltitudeControlCommand(
       rangeFeet: effect.rangeFeet,
     })
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Levitate altitude control requires a table fact that the target remains within the spell's range.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spentState = {
     ...input.state,
     currentTurnResources: Either.getOrThrow(
@@ -161,16 +161,16 @@ export function resolveReplaceSelfTransformationModeCommand(
     >
   >,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Self-transformation mode replacement uses no fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const actor = input.state.combatants.get(input.subject.actorId);
   if (
     !combatantCanTakeActions(actor) ||
@@ -218,13 +218,13 @@ export function resolveReplaceSelfTransformationModeCommand(
             naturalWeaponFacts: activeEffect.naturalWeaponFacts,
             naturalWeaponDamageType: input.subject.naturalWeaponDamageType,
           }
-        : /* v8 ignore next -- Discovered-subject invariant: the selected damage type comes from these immutable active-effect choices. */
+        : /* v8 ignore next -- @preserve -- Discovered-subject invariant: the selected damage type comes from these immutable active-effect choices. */
           null
       : {
           mode: input.subject.mode,
           naturalWeaponFacts: activeEffect.naturalWeaponFacts,
         };
-  /* v8 ignore start -- Stale forged subject: discovery derives Natural Weapons choices from this same active effect, whose immutable procedure facts remain attached for its lifetime. */
+  /* v8 ignore start -- @preserve -- Stale forged subject: discovery derives Natural Weapons choices from this same active effect, whose immutable procedure facts remain attached for its lifetime. */
   if (modeEffect === null) {
     return invalidResult(
       input.state,
@@ -232,7 +232,7 @@ export function resolveReplaceSelfTransformationModeCommand(
       "Natural Weapons damage type is no longer available.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const nextState = applySelfTransformationModeEffect({
     state: { ...input.state, currentTurnResources: spent },
     actorId: input.subject.actorId,

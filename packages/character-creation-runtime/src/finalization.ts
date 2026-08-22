@@ -288,14 +288,14 @@ export function finalizeCharacterDraft(input: {
   }
 
   const selections = finalizedSelectionsAfterHoleClosure(input.draft);
-  /* v8 ignore start -- No open holes plus a parsed CharacterDraft necessarily produces FinalizedCharacterSelections. */
+  /* v8 ignore start -- @preserve -- No open holes plus a parsed CharacterDraft necessarily produces FinalizedCharacterSelections. */
   if (selections == null) {
     return {
       tag: "invalid",
       issues: [illegalFinalizationIssue({ tag: "draftIncomplete" })],
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const supportedSelections = executableSupportSelections(
     selections,
@@ -643,11 +643,11 @@ function backgroundSupportDependencies(
     selections.background,
     "background",
   );
-  /* v8 ignore start -- The selected background was admitted as readable from this catalog before score projection. */
+  /* v8 ignore start -- @preserve -- The selected background was admitted as readable from this catalog before score projection. */
   if (Either.isLeft(backgroundFacts)) {
     return Either.left([backgroundFacts.left]);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const scoresAfterBackground = applyBackgroundAbilityScoreIncrease(
     selections.abilityScoreGeneration.assignedScores,
     selections.backgroundAbilityScoreIncrease,
@@ -682,14 +682,14 @@ function speciesSupportDependencies(
     selections.species,
     "species",
   );
-  /* v8 ignore start -- The selected species was admitted as readable from this catalog before dependency projection. */
+  /* v8 ignore start -- @preserve -- The selected species was admitted as readable from this catalog before dependency projection. */
   return Either.isLeft(speciesFacts)
     ? Either.left([speciesFacts.left])
     : Either.right({
         speciesFacts: speciesFacts.right,
         speciesUnit: speciesUnit.right,
       });
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function selectedFeatUnitsForFinalization(
@@ -778,11 +778,11 @@ export function selectedPreparedSpellsAreInSelectedSpellbook(
       startingClassUnitId(selections.progression),
     ),
   );
-  /* v8 ignore start -- Admitted Wizard class facts project Wizard spellcasting at every supported character-creation level. */
+  /* v8 ignore start -- @preserve -- Admitted Wizard class facts project Wizard spellcasting at every supported character-creation level. */
   if (spellcasting == null || !isWizardSpellcastingCreation(spellcasting)) {
     return false;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const unitChoices = unitChoiceSelections(selections);
   const selectedSpellbook = new Set(
     selectedWizardSpellbookUnitRefs(unitChoices),
@@ -932,7 +932,7 @@ function finalizedSpeciesChoiceFacts(
 > {
   const draconicSource = draconicAncestryDamageTypeSource(species);
   const lineageSource = speciesLineageChoiceSource(species, unitLibrary);
-  /* v8 ignore start -- Support admission rejects unreadable, conflicting, or absent species-choice sources before projection. */
+  /* v8 ignore start -- @preserve -- Support admission rejects unreadable, conflicting, or absent species-choice sources before projection. */
   if (Either.isLeft(lineageSource)) {
     return Either.left(lineageSource.left);
   }
@@ -963,7 +963,7 @@ function finalizedSpeciesChoiceFacts(
           speciesUnitId: species.id,
         }),
       ]);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function finalizedDraconicAncestryChoiceFacts(
@@ -974,7 +974,7 @@ function finalizedDraconicAncestryChoiceFacts(
   const selected = source.options.find(
     (option) => option.id === selections.draconicAncestry,
   );
-  /* v8 ignore start -- Support admission retains a Draconic Ancestry id only after matching this exact species option roster. */
+  /* v8 ignore start -- @preserve -- Support admission retains a Draconic Ancestry id only after matching this exact species option roster. */
   if (selected === undefined || selections.draconicAncestry === undefined) {
     return Either.left([
       illegalFinalizationIssue({
@@ -983,7 +983,7 @@ function finalizedDraconicAncestryChoiceFacts(
       }),
     ]);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     draconicAncestry: {
@@ -1003,7 +1003,7 @@ function speciesLineageChoiceSource(
   unitLibrary: UnitCatalog,
 ): Either.Either<SpeciesLineageChoiceSource | undefined, FinalizationIssues> {
   const facts = readSpeciesCreationFacts(species);
-  /* v8 ignore start -- Species-choice projection receives readable species facts with installed trait references from support admission. */
+  /* v8 ignore start -- @preserve -- Species-choice projection receives readable species facts with installed trait references from support admission. */
   if (facts.tag !== "readable") {
     return Either.right(undefined);
   }
@@ -1022,8 +1022,8 @@ function speciesLineageChoiceSource(
         ]
       : [];
   });
-  /* v8 ignore stop */
-  /* v8 ignore start -- The supported species catalog admits at most one trait carrying Gnomish Lineage mechanics. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- The supported species catalog admits at most one trait carrying Gnomish Lineage mechanics. */
   if (sources.length > 1) {
     return Either.left([
       illegalFinalizationIssue({
@@ -1032,7 +1032,7 @@ function speciesLineageChoiceSource(
       }),
     ]);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right(sources[0]);
 }
@@ -1046,7 +1046,7 @@ function finalizedGnomishLineageChoiceFacts(
     selections,
     source,
   );
-  /* v8 ignore start -- Support admission retains both lineage choices only after matching the installed trait's option rosters. */
+  /* v8 ignore start -- @preserve -- Support admission retains both lineage choices only after matching the installed trait's option rosters. */
   if (lineageId === undefined || spellcastingAbility === undefined) {
     return Either.left([
       illegalFinalizationIssue({
@@ -1055,7 +1055,7 @@ function finalizedGnomishLineageChoiceFacts(
       }),
     ]);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     gnomishLineage: {
@@ -1105,11 +1105,11 @@ function selectedSingleUnitChoiceOptionId(
       candidate.source.unitId === traitUnitId &&
       candidate.source.choiceKey === choiceKey,
   );
-  /* v8 ignore start -- A one-option retained selection necessarily has an element at index zero. */
+  /* v8 ignore start -- @preserve -- A one-option retained selection necessarily has an element at index zero. */
   return selection?.options.length === 1
     ? selection.options[0]?.optionId
     : undefined;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function illegalFinalizationIssue(
@@ -1121,7 +1121,7 @@ export function illegalFinalizationIssue(
   };
 }
 
-/* v8 ignore start -- Supported selections have already decoded these option ids; only malformed direct projections reach this translator. */
+/* v8 ignore start -- @preserve -- Supported selections have already decoded these option ids; only malformed direct projections reach this translator. */
 function choiceOptionCodecProjectionIssue(
   issue: ChoiceOptionCodecIssue,
 ): CharacterBuildProjectionIssue {
@@ -1134,7 +1134,7 @@ function choiceOptionCodecProjectionIssue(
     },
   };
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export function unsupportedFinalizationIssue(
   cause: CreationFinalizationUnsupportedCause,
@@ -1623,13 +1623,13 @@ export function buildCharacterBuild(input: {
     progression,
     input.unitLibrary,
   );
-  /* v8 ignore start -- The support gate already read every class in this progression from this catalog. */
+  /* v8 ignore start -- @preserve -- The support gate already read every class in this progression from this catalog. */
   if (Either.isLeft(classFactsByUnitId)) {
     return Either.left(classFactsByUnitId.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const classFacts = classFactsByUnitId.right.get(selectedClassUnitId);
-  /* v8 ignore start -- The support gate already established facts for the starting class id. */
+  /* v8 ignore start -- @preserve -- The support gate already established facts for the starting class id. */
   if (classFacts == null) {
     return Either.left([
       characterBuildProjectionIssue({
@@ -1639,97 +1639,97 @@ export function buildCharacterBuild(input: {
       }),
     ]);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const backgroundUnit = unitForFinalization(
     input.unitLibrary,
     selections.background,
     "background",
   );
-  /* v8 ignore start -- The support gate already resolved this selected background in the same catalog. */
+  /* v8 ignore start -- @preserve -- The support gate already resolved this selected background in the same catalog. */
   if (Either.isLeft(backgroundUnit)) return Either.left([backgroundUnit.left]);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const backgroundFacts = readableForFinalization(
     readBackgroundCreationFacts(backgroundUnit.right),
     selections.background,
     "background",
   );
-  /* v8 ignore start -- The support gate already parsed this selected background's creation facts. */
+  /* v8 ignore start -- @preserve -- The support gate already parsed this selected background's creation facts. */
   if (Either.isLeft(backgroundFacts))
     return Either.left([backgroundFacts.left]);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const speciesUnit = unitForFinalization(
     input.unitLibrary,
     selections.species,
     "species",
   );
-  /* v8 ignore start -- The support gate already resolved this selected species in the same catalog. */
+  /* v8 ignore start -- @preserve -- The support gate already resolved this selected species in the same catalog. */
   if (Either.isLeft(speciesUnit)) return Either.left([speciesUnit.left]);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const speciesFacts = readableForFinalization(
     readSpeciesCreationFacts(speciesUnit.right),
     selections.species,
     "species",
   );
-  /* v8 ignore start -- The support gate already parsed this selected species's creation facts. */
+  /* v8 ignore start -- @preserve -- The support gate already parsed this selected species's creation facts. */
   if (Either.isLeft(speciesFacts)) return Either.left([speciesFacts.left]);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const speciesChoiceFacts = finalizedSpeciesChoiceFacts(
     selections,
     speciesUnit.right,
     input.unitLibrary,
   );
-  /* v8 ignore start -- The support gate already proved the species source agrees with its selected choices. */
+  /* v8 ignore start -- @preserve -- The support gate already proved the species source agrees with its selected choices. */
   if (Either.isLeft(speciesChoiceFacts)) {
     return Either.left(speciesChoiceFacts.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const baseScores = selections.abilityScoreGeneration.assignedScores;
   const finalScores = applyBackgroundAbilityScoreIncrease(
     baseScores,
     selections.backgroundAbilityScoreIncrease,
     backgroundFacts.right.abilityScoreIncrease.abilities,
   );
-  /* v8 ignore start -- The support gate already admitted this background increase against these scores. */
+  /* v8 ignore start -- @preserve -- The support gate already admitted this background increase against these scores. */
   if (Either.isLeft(finalScores)) return Either.left([finalScores.left]);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const featureScores = applyClassFeatureAbilityScoreIncreases(
     finalScores.right,
     selections,
   );
-  /* v8 ignore start -- Supported choice holes and feat prerequisites already establish these feature increases. */
+  /* v8 ignore start -- @preserve -- Supported choice holes and feat prerequisites already establish these feature increases. */
   if (Either.isLeft(featureScores)) return Either.left(featureScores.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const finalAbilityScores = featureScores.right;
   const proficiencyChoices = selectedBuildProficiencyChoiceSubjects(
     selections,
     input.unitLibrary,
   );
-  /* v8 ignore start -- The support gate already decoded all selected proficiency option ids. */
+  /* v8 ignore start -- @preserve -- The support gate already decoded all selected proficiency option ids. */
   if (Either.isLeft(proficiencyChoices)) {
     return Either.left(proficiencyChoices.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const buildSpellcasting = finalizedBuildSpellcasting({
     classFactsByUnitId: classFactsByUnitId.right,
     selections,
     supportedSelections: input.supportedSelections,
     unitLibrary: input.unitLibrary,
   });
-  /* v8 ignore start -- The support gate already checked authored spellcasting facts and selected spells. */
+  /* v8 ignore start -- @preserve -- The support gate already checked authored spellcasting facts and selected spells. */
   if (Either.isLeft(buildSpellcasting)) {
     return Either.left(buildSpellcasting.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const abilityCheckBonusFeatures =
     finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
       input.supportedSelections.unitChoices,
       input.unitLibrary,
     );
-  /* v8 ignore start -- Support admission retains only acquisition choices whose mechanics project supported ability-check bonuses. */
+  /* v8 ignore start -- @preserve -- Support admission retains only acquisition choices whose mechanics project supported ability-check bonuses. */
   if (Either.isLeft(abilityCheckBonusFeatures)) {
     return Either.left(abilityCheckBonusFeatures.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const buildFeatures: readonly CharacterBuildFeature[] = [
     ...finalizedClassChoiceFeaturesForSupportedChoices(
       input.supportedSelections.unitChoices,
@@ -1757,11 +1757,11 @@ export function buildCharacterBuild(input: {
     input.unitLibrary,
     input.supportProfile,
   );
-  /* v8 ignore start -- Support admission validates every retained loadout and owned equipment id before build projection. */
+  /* v8 ignore start -- @preserve -- Support admission validates every retained loadout and owned equipment id before build projection. */
   if (Either.isLeft(buildEquipment)) {
     return Either.left(buildEquipment.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     progression,
@@ -1995,7 +1995,7 @@ export function characterBuildHitPoints(
   const startingClassFacts = classFactsByUnitId.right.get(
     startingClassUnitId(build.progression),
   );
-  /* v8 ignore start -- allClassFactsForFinalization just populated this map from the same nonempty progression. */
+  /* v8 ignore start -- @preserve -- allClassFactsForFinalization just populated this map from the same nonempty progression. */
   if (startingClassFacts == null) {
     return Either.left([
       characterBuildProjectionIssue({
@@ -2005,7 +2005,7 @@ export function characterBuildHitPoints(
       }),
     ]);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const hitPointMaximumGrantBonus = hitPointMaximumGrantBonusTotal(
     build,
@@ -2022,9 +2022,9 @@ export function characterBuildHitPoints(
     fixedHigherLevelHitPointDice: build.progression.advancements.flatMap(
       (advancement) => {
         const facts = classFactsByUnitId.right.get(advancement.classUnitId);
-        /* v8 ignore start -- allClassFactsForFinalization populated this map from the same progression advancements. */
+        /* v8 ignore start -- @preserve -- allClassFactsForFinalization populated this map from the same progression advancements. */
         return facts == null ? [] : [facts.hitPointDie];
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
       },
     ),
     hitPointMaximumBonus: hitPointMaximumGrantBonus.right,
@@ -2034,7 +2034,7 @@ export function characterBuildHitPoints(
     maximum: hp(maximum),
     hitDice: progressionClassLevels(build.progression).flatMap((entry) => {
       const facts = classFactsByUnitId.right.get(entry.classUnitId);
-      /* v8 ignore start -- allClassFactsForFinalization populated this map from the same progression class ids. */
+      /* v8 ignore start -- @preserve -- allClassFactsForFinalization populated this map from the same progression class ids. */
       return facts == null
         ? []
         : [
@@ -2044,7 +2044,7 @@ export function characterBuildHitPoints(
               total: hitDieTotal(entry.classLevel),
             },
           ];
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
     }),
   });
 }
@@ -2201,15 +2201,15 @@ function deterministicHitPointMaximumDelta(
 }
 
 function deterministicFlatDiceExpr(amount: DiceExpr): number | undefined {
-  /* v8 ignore start -- This helper exists only to reject malformed nondeterministic maximum-HP grants; admitted grants use explicit flat expressions. */
+  /* v8 ignore start -- @preserve -- This helper exists only to reject malformed nondeterministic maximum-HP grants; admitted grants use explicit flat expressions. */
   return amount.dice === 0 ? (amount.flat ?? 0) : undefined;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function deterministicFlatDiceDelta(amount: DiceExprDelta): number | undefined {
-  /* v8 ignore start -- This helper exists only to reject malformed nondeterministic maximum-HP deltas; admitted grants use explicit flat deltas. */
+  /* v8 ignore start -- @preserve -- This helper exists only to reject malformed nondeterministic maximum-HP deltas; admitted grants use explicit flat deltas. */
   return (amount.dice ?? 0) === 0 ? (amount.flat ?? 0) : undefined;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function characterBuildProficiencies(
@@ -2230,7 +2230,7 @@ export function characterBuildProficiencies(
   const startingClassFacts = classFactsByUnitId.right.get(
     startingClassUnitId(build.progression),
   );
-  /* v8 ignore start -- allClassFactsForFinalization just populated this map from the same nonempty progression. */
+  /* v8 ignore start -- @preserve -- allClassFactsForFinalization just populated this map from the same nonempty progression. */
   if (startingClassFacts == null) {
     return Either.left([
       characterBuildProjectionIssue({
@@ -2240,7 +2240,7 @@ export function characterBuildProficiencies(
       }),
     ]);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const backgroundUnit = unitForFinalization(
     unitLibrary,
@@ -2264,17 +2264,17 @@ export function characterBuildProficiencies(
   );
   const multiclassTools =
     finalizedBuildSurfaceToolProficiencyIds(multiclassSubjects);
-  /* v8 ignore start -- Supported multiclass tool grants already carry ids admitted by the shared tool codec. */
+  /* v8 ignore start -- @preserve -- Supported multiclass tool grants already carry ids admitted by the shared tool codec. */
   if (Either.isLeft(multiclassTools)) return Either.left(multiclassTools.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const startingClassTools = finalizedBuildSurfaceToolProficiencyIds(
     fixedToolProficiencySubjects(startingClassFacts.toolProficiencies),
   );
-  /* v8 ignore start -- Supported starting-class tool grants already carry ids admitted by the shared tool codec. */
+  /* v8 ignore start -- @preserve -- Supported starting-class tool grants already carry ids admitted by the shared tool codec. */
   if (Either.isLeft(startingClassTools)) {
     return Either.left(startingClassTools.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     savingThrows: startingClassFacts.savingThrowProficiencies,
@@ -2334,7 +2334,7 @@ export function characterBuildArmorTraining(
   const startingClassFacts = classFactsByUnitId.right.get(
     startingClassUnitId(build.progression),
   );
-  /* v8 ignore start -- allClassFactsForFinalization just populated this map from the same nonempty progression. */
+  /* v8 ignore start -- @preserve -- allClassFactsForFinalization just populated this map from the same nonempty progression. */
   if (startingClassFacts == null) {
     return Either.left([
       characterBuildProjectionIssue({
@@ -2344,7 +2344,7 @@ export function characterBuildArmorTraining(
       }),
     ]);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const multiclassSubjects = fixedMulticlassProficiencySubjects(
     {
@@ -2467,7 +2467,7 @@ function finalizedClassFeatureLanguages(
     for (const grant of unit.value.mechanics.grants) {
       if (grant.kind === "grant_language") {
         const language = languageFromSurfaceLanguageId(grant.languageId);
-        /* v8 ignore start -- Supported passive language grants carry only Surface language ids admitted by the codec. */
+        /* v8 ignore start -- @preserve -- Supported passive language grants carry only Surface language ids admitted by the codec. */
         if (Either.isLeft(language)) {
           issues.push(
             characterBuildProjectionIssue({
@@ -2489,7 +2489,7 @@ function finalizedClassFeatureLanguages(
           );
           continue;
         }
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
 
         knownLanguages.add(language.right);
         classFeatureLanguages.push({
@@ -2508,7 +2508,7 @@ function finalizedClassFeatureLanguages(
         input.unitChoices,
         unitId,
       );
-      /* v8 ignore start -- The support gate admits exactly the authored number of unique language options for each retained language-choice grant. */
+      /* v8 ignore start -- @preserve -- The support gate admits exactly the authored number of unique language options for each retained language-choice grant. */
       if (selection === undefined) {
         issues.push(
           characterBuildProjectionIssue({
@@ -2571,7 +2571,7 @@ function finalizedClassFeatureLanguages(
           );
           continue;
         }
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
 
         knownLanguages.add(language.right);
         classFeatureLanguages.push({
@@ -2670,14 +2670,14 @@ export function allFinalizedChoicesSupported(
       backgroundFacts.value.startingEquipment,
     ),
   );
-  /* v8 ignore start -- Supported class and background equipment choices each produce a Unit-sourced choice hole. */
+  /* v8 ignore start -- @preserve -- Supported class and background equipment choices each produce a Unit-sourced choice hole. */
   if (
     classEquipmentHole === undefined ||
     backgroundEquipmentHole === undefined
   ) {
     return false;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const supportedHoles = supportedFinalizationChoiceHoles({
     selections,
     classFacts: classFacts.value,
@@ -2910,9 +2910,9 @@ function supportedFinalizationChoiceHoles(
     )
     .flatMap((hole) => {
       const unitHole = requireUnitChoiceCreationHole(hole);
-      /* v8 ignore start -- Admitted class-feature grant mechanics produce a Unit-sourced choice hole here. */
+      /* v8 ignore start -- @preserve -- Admitted class-feature grant mechanics produce a Unit-sourced choice hole here. */
       return unitHole === undefined ? [] : [unitHole];
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
     });
   const subclassHoles = [...input.classFactsByUnitId].flatMap(
     ([classUnitId, facts]) =>
@@ -2930,7 +2930,7 @@ function supportedFinalizationChoiceHoles(
                 cardinality: EXACTLY_ONE_CHOICE,
                 options: choice.options.flatMap((unitId) => {
                   const unit = input.unitLibrary.getUnit(unitId);
-                  /* v8 ignore start -- Supported subclass choice facts reference installed subclass Units in this catalog. */
+                  /* v8 ignore start -- @preserve -- Supported subclass choice facts reference installed subclass Units in this catalog. */
                   return Option.isSome(unit)
                     ? [
                         {
@@ -2940,7 +2940,7 @@ function supportedFinalizationChoiceHoles(
                         },
                       ]
                     : [];
-                  /* v8 ignore stop */
+                  /* v8 ignore stop -- @preserve */
                 }),
               }),
             ),
@@ -3208,7 +3208,7 @@ function selectedSpeciesTraitUnitsForFinalization(
   }
 
   const speciesUnit = input.unitLibrary.getUnit(input.selections.species);
-  /* v8 ignore start -- Support admission resolves this selected species, parses its facts, and retains installed species-trait references. */
+  /* v8 ignore start -- @preserve -- Support admission resolves this selected species, parses its facts, and retains installed species-trait references. */
   if (Option.isNone(speciesUnit)) {
     return [];
   }
@@ -3223,7 +3223,7 @@ function selectedSpeciesTraitUnitsForFinalization(
       ? [traitUnit.value]
       : [];
   });
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function selectedSpeciesOriginFeatUnitIds(
@@ -3235,9 +3235,9 @@ function selectedSpeciesOriginFeatUnitIds(
       selection.source.choiceKey === SPECIES_ORIGIN_FEAT_CHOICE_KEY
         ? selection.options.flatMap(
             (option) =>
-              /* v8 ignore start -- Supported species Origin feat selections retain Unit references on every option. */
+              /* v8 ignore start -- @preserve -- Supported species Origin feat selections retain Unit references on every option. */
               option.unitRef == null ? [] : [option.unitRef.unitId],
-            /* v8 ignore stop */
+            /* v8 ignore stop -- @preserve */
           )
         : [],
     ),
@@ -3260,16 +3260,16 @@ function selectedSubclassFeatureGrantChoiceHoles(input: {
       choice.source.choiceKey === CLASS_SUBCLASS_CHOICE_KEY
         ? choice.options.flatMap(
             (option) =>
-              /* v8 ignore start -- Supported subclass selections retain Unit references on every option. */
+              /* v8 ignore start -- @preserve -- Supported subclass selections retain Unit references on every option. */
               option.unitRef == null ? [] : [option.unitRef.unitId],
-            /* v8 ignore stop */
+            /* v8 ignore stop -- @preserve */
           )
         : [],
     );
 
     return selectedSubclassIds.flatMap((subclassId) => {
       const subclass = input.unitLibrary.getUnit(subclassId);
-      /* v8 ignore start -- Support admission retains only an installed subclass owned by the selected class. */
+      /* v8 ignore start -- @preserve -- Support admission retains only an installed subclass owned by the selected class. */
       if (
         Option.isNone(subclass) ||
         subclass.value.kind !== "subclass" ||
@@ -3277,7 +3277,7 @@ function selectedSubclassFeatureGrantChoiceHoles(input: {
       ) {
         return [];
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
 
       return subclass.value.featureGrants
         .filter((grant) => grant.level <= classLevel)
@@ -3342,11 +3342,11 @@ function multiclassProficiencyChoiceHole(
   subjects: readonly ProficiencyGrantSubject[],
 ): readonly UnitChoiceCreationHole[] {
   const choiceKey = unitChoiceKey(choiceKeyText);
-  /* v8 ignore start -- Supported multiclass proficiency facts carry a canonical nonempty choice key. */
+  /* v8 ignore start -- @preserve -- Supported multiclass proficiency facts carry a canonical nonempty choice key. */
   if (Either.isLeft(choiceKey)) {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const options = subjects.flatMap(proficiencyGrantSubjectOptions);
   return compact([
     requireUnitChoiceCreationHole(
@@ -3372,9 +3372,9 @@ function selectedFeatAbilityScoreChoiceHoles(
       const featUnitId = option.unitRef?.unitId;
       if (featUnitId == null) return [];
       const unit = unitLibrary.getUnit(featUnitId);
-      /* v8 ignore start -- Supported feat selections retain an installed feat Unit reference from this catalog. */
+      /* v8 ignore start -- @preserve -- Supported feat selections retain an installed feat Unit reference from this catalog. */
       if (Option.isNone(unit)) return [];
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const options = selectedFeatAbilityScoreIncreaseOptions(unit.value);
       if (options.length === 0) return [];
 
@@ -3397,11 +3397,11 @@ function selectedFeatAbilityScoreChoiceHoles(
 function requireChoiceCreationHole(
   hole: CreationHole | undefined,
 ): ChoiceCreationHole | undefined {
-  /* v8 ignore start -- Call sites construct a choice hole immediately before narrowing it with this helper. */
+  /* v8 ignore start -- @preserve -- Call sites construct a choice hole immediately before narrowing it with this helper. */
   if (hole?.kind !== "choice") {
     return undefined;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return hole;
 }
@@ -3416,11 +3416,11 @@ function requireUnitChoiceCreationHole(
   hole: CreationHole | undefined,
 ): UnitChoiceCreationHole | undefined {
   const choice = requireChoiceCreationHole(hole);
-  /* v8 ignore start -- Call sites construct a Unit-sourced choice hole immediately before narrowing it. */
+  /* v8 ignore start -- @preserve -- Call sites construct a Unit-sourced choice hole immediately before narrowing it. */
   if (choice === undefined || !isUnitChoiceCreationHole(choice)) {
     return undefined;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return choice;
 }
@@ -3435,11 +3435,11 @@ function requireLoadoutCreationHole(
   hole: CreationHole | undefined,
 ): LoadoutCreationHole | undefined {
   const choice = requireChoiceCreationHole(hole);
-  /* v8 ignore start -- Call sites construct a loadout-sourced choice hole immediately before narrowing it. */
+  /* v8 ignore start -- @preserve -- Call sites construct a loadout-sourced choice hole immediately before narrowing it. */
   if (choice === undefined || !isLoadoutCreationHole(choice)) {
     return undefined;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return choice;
 }
@@ -3461,27 +3461,27 @@ function supportedStartingEquipmentChoice(
   choices: readonly StartingEquipmentChoice[],
   supportProfile: CharacterCreationSupportProfile,
 ): boolean {
-  /* v8 ignore start -- This support helper receives a selection already matched to the expected equipment owner and choice key. */
+  /* v8 ignore start -- @preserve -- This support helper receives a selection already matched to the expected equipment owner and choice key. */
   if (
     selection.source.unitId !== unitId ||
     selection.source.choiceKey !== choiceKey
   ) {
     return false;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const hole = startingEquipmentChoiceHole(
     unitSource(unitId, choiceKey),
     choices,
   );
-  /* v8 ignore start -- Supported equipment choices produce a well-formed hole and the retained selection matches that exact roster. */
+  /* v8 ignore start -- @preserve -- Supported equipment choices produce a well-formed hole and the retained selection matches that exact roster. */
   if (hole === undefined) {
     return false;
   }
   if (!choiceSelectionMatchesHole(selection, hole, supportProfile)) {
     return false;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return true;
 }
@@ -3638,11 +3638,11 @@ function huntersPreySelectedOption(
       kind: "huntersPrey",
       selection: "nearbyDifferentTargetSameWeaponAttack",
     };
-    /* v8 ignore start -- Support admission retains a Hunter's Prey selection only from the feature's closed two-option roster. */
+    /* v8 ignore start -- @preserve -- Support admission retains a Hunter's Prey selection only from the feature's closed two-option roster. */
   }
   return undefined;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function characterBuildDerivedFeatureUnitIds(
   build: Pick<CharacterBuild, "progression" | "background" | "species">,
@@ -3828,7 +3828,7 @@ function finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
           selection.source.unitId,
           grant,
         );
-        /* v8 ignore start -- Support admission retains only acquisition grants whose typed shape projects an ability-check bonus. */
+        /* v8 ignore start -- @preserve -- Support admission retains only acquisition grants whose typed shape projects an ability-check bonus. */
         if (projected === undefined) {
           issues.push(
             characterBuildProjectionIssue({
@@ -3839,18 +3839,18 @@ function finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
           );
           continue;
         }
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
         features.push(projected);
       }
     }
   }
 
   const collectedIssues = nonEmptyReadonlyArray(issues);
-  /* v8 ignore start -- Support admission retains only acquisition grants that project a supported ability-check bonus. */
+  /* v8 ignore start -- @preserve -- Support admission retains only acquisition grants that project a supported ability-check bonus. */
   return collectedIssues == null
     ? Either.right(features)
     : Either.left(collectedIssues);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function classFeatureAcquisitionAbilityCheckBonusFeature(
@@ -3858,7 +3858,7 @@ function classFeatureAcquisitionAbilityCheckBonusFeature(
   grant: ModifyRollNumericGrant,
 ): CharacterBuildFeature | undefined {
   const abilityFilter = fixedModifyRollAbilityFilter(grant.abilityFilter);
-  /* v8 ignore start -- Support admission retains only the fixed single-ability ability-check bonus grant shape projected below. */
+  /* v8 ignore start -- @preserve -- Support admission retains only the fixed single-ability ability-check bonus grant shape projected below. */
   if (
     grant.on.length !== 1 ||
     grant.on[0] !== "ability_check" ||
@@ -3871,7 +3871,7 @@ function classFeatureAcquisitionAbilityCheckBonusFeature(
   ) {
     return undefined;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return {
     kind: "abilityCheckBonus",
@@ -3889,11 +3889,11 @@ function classFeatureAcquisitionAbilityCheckBonusFeature(
 function fixedModifyRollAbilityFilter(
   abilityFilter: ModifyRollNumericGrant["abilityFilter"],
 ): FixedModifyRollAbilityFilter | undefined {
-  /* v8 ignore start -- Supported acquisition ability-check bonuses carry the fixed ability-array form. */
+  /* v8 ignore start -- @preserve -- Supported acquisition ability-check bonuses carry the fixed ability-array form. */
   return abilityFilter === undefined || "kind" in abilityFilter
     ? undefined
     : abilityFilter;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 // KERNEL-COVERAGE: runtime-owner CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION
@@ -3925,11 +3925,11 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
         selection,
         loadoutChoice,
       );
-      /* v8 ignore start -- Supported loadout selections retain a matched loadout choice and its selected equipment Unit id. */
+      /* v8 ignore start -- @preserve -- Supported loadout selections retain a matched loadout choice and its selected equipment Unit id. */
       if (loadoutChoice == null || selectedUnitId == null) {
         return equipment;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
 
       if (loadoutChoice.buildSlot === "armor") {
         return {
@@ -3976,7 +3976,7 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
     (unitId) => {
       const itemUnitId = characterEquipmentItemUnitId(unitId);
       const unit = unitLibrary.getUnit(unitId);
-      /* v8 ignore start -- Supported equipment selections retain only ids accepted by the equipment-item id constructor. */
+      /* v8 ignore start -- @preserve -- Supported equipment selections retain only ids accepted by the equipment-item id constructor. */
       if (Either.isLeft(itemUnitId) || Option.isNone(unit)) {
         return Either.left(
           characterBuildProjectionIssue({
@@ -4017,14 +4017,14 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
               quantity: PositiveInteger(1),
             } satisfies CharacterBuildOwnedEquipmentItem,
           });
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
     },
   );
-  /* v8 ignore start -- Supported equipment selections retain only ids accepted by the item-id projection above. */
+  /* v8 ignore start -- @preserve -- Supported equipment selections retain only ids accepted by the item-id projection above. */
   if (Either.isLeft(purchased)) {
     return Either.left(purchased.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const starting = finalizedStartingEquipment(selections, unitLibrary);
   if (Either.isLeft(starting)) {
@@ -4390,7 +4390,7 @@ export function finalizedBuildSpellcasting(input: {
   }
 
   const spellcastingSlotPool = singleSpellcastingSlotPool(projections);
-  /* v8 ignore start -- Support admission rejects incompatible duplicate ordinary or Pact Magic pool projections. */
+  /* v8 ignore start -- @preserve -- Support admission rejects incompatible duplicate ordinary or Pact Magic pool projections. */
   if (Either.isLeft(spellcastingSlotPool)) {
     return Either.left([spellcastingSlotPool.left]);
   }
@@ -4398,7 +4398,7 @@ export function finalizedBuildSpellcasting(input: {
   if (Either.isLeft(pactMagicSlotPool)) {
     return Either.left([pactMagicSlotPool.left]);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right({
     sources,
@@ -4587,13 +4587,13 @@ function singleSpellcastingSlotPool(
   }
   if (pools.length === 1) {
     return Either.right(first);
-    /* v8 ignore start -- Support admission rejects a second ordinary spell-slot pool before finalization. */
+    /* v8 ignore start -- @preserve -- Support admission rejects a second ordinary spell-slot pool before finalization. */
   }
   return Either.left(
     illegalFinalizationIssue({ tag: "multipleSpellcastingSlotPools" }),
   );
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function singlePactMagicSlotPool(
   projections: readonly FinalizedSpellcastingSourceProjection[],
@@ -4612,13 +4612,13 @@ function singlePactMagicSlotPool(
   }
   if (pools.length === 1) {
     return Either.right(first);
-    /* v8 ignore start -- Support admission rejects a second Pact Magic slot pool before finalization. */
+    /* v8 ignore start -- @preserve -- Support admission rejects a second Pact Magic slot pool before finalization. */
   }
   return Either.left(
     illegalFinalizationIssue({ tag: "multiplePactMagicSlotPools" }),
   );
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function ownedEquipmentDefaultSlot(
   unitLibrary: UnitCatalog,
@@ -4658,9 +4658,9 @@ function selectedUnitRefsForChoice(
     .flatMap((choice) =>
       choice.options.flatMap(
         (option) =>
-          /* v8 ignore start -- Supported spell selections retain Unit references on every option. */
+          /* v8 ignore start -- @preserve -- Supported spell selections retain Unit references on every option. */
           option.unitRef == null ? [] : [option.unitRef.unitId],
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
       ),
     );
 }
@@ -4680,9 +4680,9 @@ function selectedUnitRefsForChoiceSource(
     .flatMap((choice) =>
       choice.options.flatMap(
         (option) =>
-          /* v8 ignore start -- Supported selected spell choices retain Unit references on every option. */
+          /* v8 ignore start -- @preserve -- Supported selected spell choices retain Unit references on every option. */
           option.unitRef == null ? [] : [option.unitRef.unitId],
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
       ),
     );
 }
@@ -4691,7 +4691,7 @@ function selectedUnitIdForLoadoutChoice(
   selection: LoadoutChoiceSelection,
   loadoutChoice: ReturnType<typeof supportedLoadoutChoiceForSource>,
 ): LoadoutEquipmentUnitId | undefined {
-  /* v8 ignore start -- The support gate resolves this exact loadout choice and validates its sole selected option. */
+  /* v8 ignore start -- @preserve -- The support gate resolves this exact loadout choice and validates its sole selected option. */
   if (loadoutChoice == null) {
     return undefined;
   }
@@ -4700,7 +4700,7 @@ function selectedUnitIdForLoadoutChoice(
   return option?.optionId === loadoutChoice.optionId
     ? selection.source.equipmentUnitId
     : undefined;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 export function optionalUnitId(
@@ -4821,21 +4821,21 @@ function applyClassFeatureAbilityScoreIncreases(
 
     for (const optionId of choiceSelectionOptionIds(selection)) {
       const decoded = decodeAbilityScoreIncreaseOptionId(optionId);
-      /* v8 ignore start -- Supported class-feature score choices are decoded before finalization and retain codec-emitted ids. */
+      /* v8 ignore start -- @preserve -- Supported class-feature score choices are decoded before finalization and retain codec-emitted ids. */
       if (Either.isLeft(decoded)) {
         decodingIssues.push(choiceOptionCodecProjectionIssue(decoded.left));
         continue;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       deltasWithCaps.push(...decoded.right);
     }
   }
   const collectedDecodingIssues = nonEmptyReadonlyArray(decodingIssues);
-  /* v8 ignore start -- Supported score-increase choices retain only ids emitted by the score-increase codec. */
+  /* v8 ignore start -- @preserve -- Supported score-increase choices retain only ids emitted by the score-increase codec. */
   if (collectedDecodingIssues != null) {
     return Either.left(collectedDecodingIssues);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const capIssues: CharacterBuildProjectionIssue[] = [];
   let scores = baseScores;
@@ -4944,14 +4944,14 @@ export function abilityModifier(score: number): number {
 function skillsFromChoiceSelection(
   selection: UnitChoiceSelection | undefined,
 ): readonly Skill[] {
-  /* v8 ignore start -- Supported proficiency selections retain only option ids from the closed skill roster. */
+  /* v8 ignore start -- @preserve -- Supported proficiency selections retain only option ids from the closed skill roster. */
   return selection == null
     ? []
     : choiceSelectionOptionIds(selection).flatMap((optionId) => {
         const skill = SKILLS.find((candidate) => candidate === optionId);
         return skill == null ? [] : [skill];
       });
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function selectedBuildProficiencyChoiceSubjects(
@@ -4965,7 +4965,7 @@ function selectedBuildProficiencyChoiceSubjects(
     selections,
     unitLibrary,
   );
-  /* v8 ignore start -- Support admission already decoded every retained proficiency and tool option id. */
+  /* v8 ignore start -- @preserve -- Support admission already decoded every retained proficiency and tool option id. */
   if (Either.isLeft(unitProficiencySubjects)) {
     return Either.left(unitProficiencySubjects.left);
   }
@@ -4974,7 +4974,7 @@ function selectedBuildProficiencyChoiceSubjects(
   if (Either.isLeft(toolProficiencies)) {
     return Either.left(toolProficiencies.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   return Either.right([
     ...skillsFromChoiceSelection(
@@ -5042,7 +5042,7 @@ function finalizedBuildToolProficiencies(
   const backgroundToolIds: ToolProficiencyId[] = [];
   if (toolSelection != null) {
     for (const optionId of choiceSelectionOptionIds(toolSelection)) {
-      /* v8 ignore start -- Supported background tool choices are decoded before finalization and retain only admitted tool ids. */
+      /* v8 ignore start -- @preserve -- Supported background tool choices are decoded before finalization and retain only admitted tool ids. */
       if (!isCharacterBuildToolProficiencyId(String(optionId))) {
         return Either.left([
           characterBuildProjectionIssue({
@@ -5056,7 +5056,7 @@ function finalizedBuildToolProficiencies(
       if (Either.isLeft(parsed)) {
         return Either.left([choiceOptionCodecProjectionIssue(parsed.left)]);
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       backgroundToolIds.push(parsed.right);
     }
   }
@@ -5070,7 +5070,7 @@ function finalizedBuildSurfaceToolProficiencyIds(
   const toolIds: ToolProficiencyId[] = [];
   for (const subject of subjects) {
     if (subject.kind !== "tool") continue;
-    /* v8 ignore start -- Supported Surface tool grants retain only ids accepted by the shared tool codec. */
+    /* v8 ignore start -- @preserve -- Supported Surface tool grants retain only ids accepted by the shared tool codec. */
     if (!isCharacterBuildToolProficiencyId(subject.toolId)) {
       return Either.left([
         characterBuildProjectionIssue({
@@ -5084,7 +5084,7 @@ function finalizedBuildSurfaceToolProficiencyIds(
     if (Either.isLeft(parsed)) {
       return Either.left([choiceOptionCodecProjectionIssue(parsed.left)]);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     toolIds.push(parsed.right);
   }
   return Either.right(toolIds);
@@ -5122,12 +5122,12 @@ function decodedUnitProficiencySubjects(
 
       for (const optionId of choiceSelectionOptionIds(selection)) {
         const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
-        /* v8 ignore start -- Supported proficiency selections retain only ids emitted by the shared proficiency codec. */
+        /* v8 ignore start -- @preserve -- Supported proficiency selections retain only ids emitted by the shared proficiency codec. */
         if (Either.isLeft(decoded)) {
           issues.push(choiceOptionCodecProjectionIssue(decoded.left));
           continue;
         }
-        /* v8 ignore stop */
+        /* v8 ignore stop -- @preserve */
         subjects.push(decoded.right);
       }
       continue;
@@ -5154,22 +5154,22 @@ function decodedUnitProficiencySubjects(
 
     for (const optionId of choiceSelectionOptionIds(selection)) {
       const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
-      /* v8 ignore start -- Supported multiclass proficiency selections retain only ids emitted by the shared proficiency codec. */
+      /* v8 ignore start -- @preserve -- Supported multiclass proficiency selections retain only ids emitted by the shared proficiency codec. */
       if (Either.isLeft(decoded)) {
         issues.push(choiceOptionCodecProjectionIssue(decoded.left));
         continue;
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       subjects.push(decoded.right);
     }
   }
 
   const collectedIssues = nonEmptyReadonlyArray(issues);
-  /* v8 ignore start -- Supported proficiency choices retain only ids emitted by the shared proficiency codec. */
+  /* v8 ignore start -- @preserve -- Supported proficiency choices retain only ids emitted by the shared proficiency codec. */
   return collectedIssues == null
     ? Either.right(subjects)
     : Either.left(collectedIssues);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function expertiseSubjectsForSelection(
@@ -5181,11 +5181,11 @@ function expertiseSubjectsForSelection(
     selection,
     unitLibrary,
   );
-  /* v8 ignore start -- isGrantExpertiseSelection immediately established this selection's expertise source. */
+  /* v8 ignore start -- @preserve -- isGrantExpertiseSelection immediately established this selection's expertise source. */
   if (skillSource === undefined) {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const ownedSkills = selectedSkillProficiencies(selections, unitLibrary);
   const ownedSkillExpertise = skillExpertiseFromChoiceSelections(
     selections.choices,
@@ -5201,11 +5201,11 @@ function expertiseSubjectsForSelection(
   );
   return choiceSelectionOptionIds(selection).flatMap((optionId) => {
     const skill = SKILLS.find((candidate) => candidate === optionId);
-    /* v8 ignore start -- Support admission retains expertise options only from the eligible owned-skill roster. */
+    /* v8 ignore start -- @preserve -- Support admission retains expertise options only from the eligible owned-skill roster. */
     return skill != null && eligibleSkills.includes(skill)
       ? [{ kind: "skill_expertise" as const, skill }]
       : [];
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   });
 }
 
@@ -5345,13 +5345,13 @@ function backgroundSkillProficiencies(
   unitLibrary: UnitCatalog,
 ): readonly Skill[] {
   const backgroundUnit = unitLibrary.getUnit(backgroundUnitId);
-  /* v8 ignore start -- Supported finalized selections resolve their admitted background id and readable facts in this catalog. */
+  /* v8 ignore start -- @preserve -- Supported finalized selections resolve their admitted background id and readable facts in this catalog. */
   if (Option.isNone(backgroundUnit)) {
     return [];
   }
   const facts = readBackgroundCreationFacts(backgroundUnit.value);
   return facts.tag === "readable" ? facts.value.skillProficiencies : [];
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 type ClassFeatureAcquisitionChoiceMechanics = Extract<
@@ -5386,11 +5386,11 @@ function classFeatureAcquisitionFixedProficiencySubjects(
     selection,
     unitLibrary,
   );
-  /* v8 ignore start -- The caller invokes this projection only after matching the selection to acquisition-choice mechanics. */
+  /* v8 ignore start -- @preserve -- The caller invokes this projection only after matching the selection to acquisition-choice mechanics. */
   if (mechanics === undefined) {
     return [];
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const optionIds = new Set(choiceSelectionOptionIds(selection));
   return mechanics.options
     .filter((option) => optionIds.has(creationChoiceOptionId(option.id)))
@@ -5405,9 +5405,9 @@ function classFeatureAcquisitionFixedProficiencySubjects(
       const decoded = decodeProficiencyGrantSubjectOptionId(
         proficiencyGrantSubjectOptionId(subject),
       );
-      /* v8 ignore start -- Supported fixed proficiency grants use subjects emitted by the shared proficiency codec. */
+      /* v8 ignore start -- @preserve -- Supported fixed proficiency grants use subjects emitted by the shared proficiency codec. */
       return Either.isRight(decoded) ? [decoded.right] : [];
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
     });
 }
 

@@ -173,7 +173,7 @@ function resolveExpeditiousRetreatDash(
 ): BattleResolutionResult {
   const subject = input.input.subject;
   const actor = input.input.state.combatants.get(subject.actorId);
-  /* v8 ignore start -- Internal routing invariant: public resolution verifies that the admitted spell subject still has a battle actor before dispatching to this profile. */
+  /* v8 ignore start -- @preserve -- Internal routing invariant: public resolution verifies that the admitted spell subject still has a battle actor before dispatching to this profile. */
   if (actor === undefined) {
     return invalidResult(
       input.input.state,
@@ -181,8 +181,8 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat caster is not in this battle.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
@@ -190,7 +190,7 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat accepts only spell-cast Reaction trigger facts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (!spellHasAvailableSpend(actor, input.invocation)) {
     return invalidResult(
       input.input.state,
@@ -211,7 +211,7 @@ function resolveExpeditiousRetreatDash(
       "This turn has already expended a Spell Slot.",
     );
   }
-  /* v8 ignore start -- Malformed replay subject: ordinary discovery emits one Expeditious Retreat act for each represented movement speed kind and cannot emit an unrelated kind. */
+  /* v8 ignore start -- @preserve -- Malformed replay subject: ordinary discovery emits one Expeditious Retreat act for each represented movement speed kind and cannot emit an unrelated kind. */
   if (!representedMovementSpeedKinds(actor).includes(subject.speedKind)) {
     return invalidResult(
       input.input.state,
@@ -219,7 +219,7 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat Dash speed kind is not represented for this combatant.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     activeOngoingFeaturesPreventSpellInvocation(
       input.input.state,
@@ -234,11 +234,11 @@ function resolveExpeditiousRetreatDash(
     );
   }
 
-  /* v8 ignore start -- Admitted Expeditious Retreat always has its SRD Verbal component; the non-revealing branch is retained only by the generic spell-facts shape. */
+  /* v8 ignore start -- @preserve -- Admitted Expeditious Retreat always has its SRD Verbal component; the non-revealing branch is retained only by the generic spell-facts shape. */
   const castingState = input.invocation.spellRuleFacts.components.verbal
     ? revealHidden(input.input.state, subject.actorId)
     : input.input.state;
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,
     [subject.actorId],
@@ -256,7 +256,7 @@ function resolveExpeditiousRetreatDash(
   const spent = spendActivationResource(spellCastState.currentTurnResources, {
     kind: "bonusAction",
   });
-  /* v8 ignore start -- Internal preflight invariant: spellActTurnResourceAvailable immediately above proved the same unchanged action-economy state can spend this Bonus Action. */
+  /* v8 ignore start -- @preserve -- Internal preflight invariant: spellActTurnResourceAvailable immediately above proved the same unchanged action-economy state can spend this Bonus Action. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.input.state,
@@ -264,7 +264,7 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat Bonus Action is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const afterPriorConcentration = breakBattleConcentration(
     spellCastState,
     subject.actorId,
@@ -287,7 +287,7 @@ function resolveExpeditiousRetreatDash(
         spent.right,
         input.input.subject.actorId,
       );
-      /* v8 ignore start -- Internal preflight invariant: spellActTurnResourceAvailable already proved this actor has no Spell Slot use in the unchanged turn-resource state. */
+      /* v8 ignore start -- @preserve -- Internal preflight invariant: spellActTurnResourceAvailable already proved this actor has no Spell Slot use in the unchanged turn-resource state. */
       if (Either.isLeft(slotTurnResources)) {
         return invalidResult(
           input.input.state,
@@ -295,7 +295,7 @@ function resolveExpeditiousRetreatDash(
           "This turn has already expended a Spell Slot.",
         );
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       const slotted = expendSpellSlot(
         afterPriorConcentration,
         subject.actorId,
@@ -315,7 +315,7 @@ function resolveExpeditiousRetreatDash(
     return resourced;
   }
   const effectHost = resourced.state.combatants.get(subject.actorId);
-  /* v8 ignore start -- Internal roster invariant: the caster lookup succeeded above, and concentration teardown plus Spell Slot expenditure do not remove combatants. */
+  /* v8 ignore start -- @preserve -- Internal roster invariant: the caster lookup succeeded above, and concentration teardown plus Spell Slot expenditure do not remove combatants. */
   if (effectHost === undefined) {
     return invalidResult(
       input.input.state,
@@ -323,7 +323,7 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat caster is not in this battle.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const allocation = allocateBattleActiveEffectRefForCreature({
     owner: effectHost,
   });

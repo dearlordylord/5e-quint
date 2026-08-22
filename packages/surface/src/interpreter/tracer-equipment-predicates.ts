@@ -102,13 +102,13 @@ export function traceEquipmentPredicate(
       });
       return [id];
     }
-    /* v8 ignore start -- EquipmentPredicate is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- EquipmentPredicate is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = p;
       throw new Error(
         `unhandled equipment predicate ${JSON.stringify(_exhaustive)}`,
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }

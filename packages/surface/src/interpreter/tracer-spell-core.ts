@@ -264,12 +264,12 @@ function traceMaterialComponents(
       edges.push({ from: procId, to: id, relation: "requires" });
       return;
     }
-    /* v8 ignore start -- paired material component is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- paired material component is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = components.m.kind;
       throw new Error(`unhandled material component: ${String(_exhaustive)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 
@@ -352,12 +352,12 @@ export function traceCastingTimeQuota(
         }${ct.ritual ? " / Ritual" : ""})`,
       });
       return id;
-    /* v8 ignore start -- CastingTime is a decoded tagged union exhausted above */
+    /* v8 ignore start -- @preserve -- CastingTime is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = ct;
       throw new Error(`unhandled casting time: ${String(_exhaustive)}`);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
 }
 

@@ -56,13 +56,13 @@ const CHARACTER_SHEET_HIT_POINT_MAXIMUM_PROJECTION_ROUTE = [
 export function characterSheetHitPoints(
   input: CharacterSheetHitPointsInput,
 ): Either.Either<CharacterSheetHitPoints, CharacterSheetIssue> {
-  /* v8 ignore start -- Malformed HP input: Temporary Hit Points are not a nonnegative integer. */
+  /* v8 ignore start -- @preserve -- Malformed HP input: Temporary Hit Points are not a nonnegative integer. */
   if (!isNonNegativeInteger(input.tempHp)) {
     return characterSheetIssue(
       "Character Sheet Temporary Hit Points must be nonnegative.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const tempHp = input.tempHp;
   if (Number(input.currentHp) > 0) {
     if (input.zeroHpLifecycle !== undefined) {
@@ -84,22 +84,22 @@ export function characterSheetHitPoints(
         : { tag: "knockedOut", tempHp },
     );
   }
-  /* v8 ignore start -- Malformed zero-HP input: Knock Out Unconscious state is meaningful only while current HP is positive. */
+  /* v8 ignore start -- @preserve -- Malformed zero-HP input: Knock Out Unconscious state is meaningful only while current HP is positive. */
   if (input.positiveHpUnconscious !== undefined) {
     return characterSheetIssue(
       "Zero-HP Character Sheet cannot carry Knock Out Unconscious state.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const lifecycle = canonicalZeroHpLifecycle(
     input.zeroHpLifecycle ?? {
       tag: "unstable",
       deathSaves: { successes: 0, failures: 0 },
     },
   );
-  /* v8 ignore start -- Malformed zero-HP input: the supplied lifecycle failed its terminal-count invariants. */
+  /* v8 ignore start -- @preserve -- Malformed zero-HP input: the supplied lifecycle failed its terminal-count invariants. */
   if (Either.isLeft(lifecycle)) return Either.left(lifecycle.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({ tag: "zero", tempHp, lifecycle: lifecycle.right });
 }
 
@@ -142,7 +142,7 @@ export function characterSheetHitPointMaximumProjection(input: {
     build: input.sheet.build,
     unitLibrary: input.unitLibrary,
   });
-  /* v8 ignore start -- Malformed build/catalog correlation: normal or reduced HP maximum cannot be projected from the retained build. */
+  /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: normal or reduced HP maximum cannot be projected from the retained build. */
   if (Either.isLeft(normalHitPointMaximum)) {
     return Either.left(normalHitPointMaximum.left);
   }
@@ -153,7 +153,7 @@ export function characterSheetHitPointMaximumProjection(input: {
   if (Either.isLeft(effectiveHitPointMaximum)) {
     return Either.left(effectiveHitPointMaximum.left);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({
     normalHitPointMaximum: normalHitPointMaximum.right,
     effectiveHitPointMaximum: effectiveHitPointMaximum.right,
@@ -179,13 +179,13 @@ export function characterSheetHitPointCapacity(
   CharacterSheetIssue
 > {
   const normalMaximum = characterSheetBuildNormalHitPointMaximum(input);
-  /* v8 ignore next -- Malformed build/catalog correlation: admitted class progression must still yield its normal HP maximum. */
+  /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: admitted class progression must still yield its normal HP maximum. */
   if (Either.isLeft(normalMaximum)) return Either.left(normalMaximum.left);
   const hitPointMaximum = characterSheetEffectiveHitPointMaximum({
     normalMaximum: normalMaximum.right,
     hitPointMaximumReduction: input.hitPointMaximumReduction,
   });
-  /* v8 ignore next -- Malformed retained HP state: maximum reduction must remain below the build-derived normal maximum. */
+  /* v8 ignore next -- @preserve -- Malformed retained HP state: maximum reduction must remain below the build-derived normal maximum. */
   if (Either.isLeft(hitPointMaximum)) return Either.left(hitPointMaximum.left);
   const currentHp = input.currentHp ?? hitPointMaximum.right;
   if (currentHp > hitPointMaximum.right) {
@@ -204,38 +204,38 @@ export function recoverCharacterSheetHitPoints(input: {
   readonly deadCharacterMessage: string;
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
   if (input.healing === Hp(0)) return Either.right(input.sheet);
-  /* v8 ignore start -- Malformed healing input: a dead character cannot regain HP through this recovery path. */
+  /* v8 ignore start -- @preserve -- Malformed healing input: a dead character cannot regain HP through this recovery path. */
   if (
     input.sheet.hitPoints.tag === "zero" &&
     input.sheet.hitPoints.lifecycle.tag === "dead"
   ) {
     return characterSheetIssue(input.deadCharacterMessage);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const currentHp = characterSheetCurrentHp(input.sheet);
   const hitPointMaximum = characterSheetHitPointMaximum({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
   });
-  /* v8 ignore next -- Malformed sheet/catalog correlation: healing reuses the HP maximum admitted for this sheet build. */
+  /* v8 ignore next -- @preserve -- Malformed sheet/catalog correlation: healing reuses the HP maximum admitted for this sheet build. */
   if (Either.isLeft(hitPointMaximum)) return Either.left(hitPointMaximum.left);
   const recoveredHp = currentHp + input.healing;
-  /* v8 ignore start -- Malformed healing input: reject-above-maximum recovery exceeds the build-derived missing HP. */
+  /* v8 ignore start -- @preserve -- Malformed healing input: reject-above-maximum recovery exceeds the build-derived missing HP. */
   if (
     input.overflow.tag === "rejectAboveMaximum" &&
     recoveredHp > hitPointMaximum.right
   ) {
     return characterSheetIssue(input.overflow.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const hitPoints = characterSheetHitPoints({
     currentHp: Hp(Math.min(Number(hitPointMaximum.right), Number(recoveredHp))),
     tempHp: characterSheetTempHp(input.sheet),
   });
-  /* v8 ignore start -- The recovery calculation above produces a nonnegative canonical HP state. */
+  /* v8 ignore start -- @preserve -- The recovery calculation above produces a nonnegative canonical HP state. */
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({ ...input.sheet, hitPoints: hitPoints.right });
 }
 
@@ -260,14 +260,14 @@ export function passStableRecoveryTime(input: {
     };
   }
   if (lifecycle.recovery.kind === "regains1HpAfter") {
-    /* v8 ignore start -- Malformed elapsed-time input: fixed Stable recovery received a fill even though no roll hole exists. */
+    /* v8 ignore start -- @preserve -- Malformed elapsed-time input: fixed Stable recovery received a fill even though no roll hole exists. */
     if (input.fills.length !== 0) {
       return invalidElapsedTimeResult(
         input.sheet,
         "Elapsed-time recovery received fills when no roll is pending.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return passStableRecoveryRule({
       sheet: input.sheet,
       ticks: input.ticks,
@@ -275,7 +275,7 @@ export function passStableRecoveryTime(input: {
   }
   const hole = stableRecoveryRollHole(input.sheet.characterId);
   const fill = stableRecoveryFillFor(input.fills, hole);
-  /* v8 ignore start -- Malformed elapsed-time input: Stable recovery received a wrong, duplicate, or extra roll fill. */
+  /* v8 ignore start -- @preserve -- Malformed elapsed-time input: Stable recovery received a wrong, duplicate, or extra roll fill. */
   if (fill === undefined && input.fills.length !== 0) {
     return invalidElapsedTimeResult(
       input.sheet,
@@ -288,7 +288,7 @@ export function passStableRecoveryTime(input: {
       "Elapsed-time recovery accepts exactly one matching fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (fill === undefined) {
     return passStableRecoveryRule({
       sheet: input.sheet,
@@ -297,10 +297,10 @@ export function passStableRecoveryTime(input: {
     });
   }
   const roll = stableRecoveryRollFromFill(fill);
-  /* v8 ignore start -- Malformed elapsed-time input: the matching Stable recovery fill failed its one-d4 parser. */
+  /* v8 ignore start -- @preserve -- Malformed elapsed-time input: the matching Stable recovery fill failed its one-d4 parser. */
   if (Either.isLeft(roll))
     return invalidElapsedTimeResult(input.sheet, roll.left.message);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return passStableRecoveryRuleWithRoll({
     sheet: input.sheet,
     ticks: input.ticks,
@@ -337,12 +337,12 @@ function characterSheetBuildNormalHitPointMaximum(input: {
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<HpType, CharacterSheetIssue> {
   const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
-  /* v8 ignore start -- Malformed build/catalog correlation: character creation cannot project the retained build's normal HP maximum. */
+  /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: character creation cannot project the retained build's normal HP maximum. */
   if (Either.isLeft(hitPoints))
     return characterSheetIssue(
       hitPoints.left.map(characterCreationIssueMessage).join("; "),
     );
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right(Hp(Number(hitPoints.right.maximum)));
 }
 
@@ -350,7 +350,7 @@ function characterSheetEffectiveHitPointMaximum(input: {
   readonly normalMaximum: HpType;
   readonly hitPointMaximumReduction: HpType;
 }): Either.Either<HpType, CharacterSheetIssue> {
-  /* v8 ignore start -- Malformed HP input: the normal maximum is nonpositive or its reduction leaves no positive effective maximum. */
+  /* v8 ignore start -- @preserve -- Malformed HP input: the normal maximum is nonpositive or its reduction leaves no positive effective maximum. */
   if (input.normalMaximum < Hp(1)) {
     return characterSheetIssue("Character Sheet maximum HP must be positive.");
   }
@@ -359,7 +359,7 @@ function characterSheetEffectiveHitPointMaximum(input: {
       "Character Sheet Hit Point maximum reduction must leave a positive Hit Point maximum.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right(
     Hp(Number(input.normalMaximum) - Number(input.hitPointMaximumReduction)),
   );
@@ -371,24 +371,24 @@ function passStableRecoveryRule(input: {
   readonly hole?: RuntimeHole;
 }): CharacterSheetElapsedTimeResult {
   const sheet = input.sheet;
-  /* v8 ignore start -- Internal workflow invariant: V8 maps the rejected edge to this guard, but passStableRecoveryTime calls this rule only after narrowing to zero HP with a Stable lifecycle. */
+  /* v8 ignore start -- @preserve -- Internal workflow invariant: V8 maps the rejected edge to this guard, but passStableRecoveryTime calls this rule only after narrowing to zero HP with a Stable lifecycle. */
   if (
     sheet.hitPoints.tag !== "zero" ||
     sheet.hitPoints.lifecycle.tag !== "stable"
   ) {
     return { tag: "resolved", sheet, elapsedTicks: input.ticks };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const recovery = sheet.hitPoints.lifecycle.recovery;
   const advanced =
     recovery.kind === "regains1HpAfter"
       ? advanceStableRecovery({ recovery, ticks: input.ticks })
       : advanceStableRecovery({ recovery, ticks: input.ticks });
-  /* v8 ignore start -- Malformed elapsed-time input: Stable recovery advancement rejected an invalid tick interval. */
+  /* v8 ignore start -- @preserve -- Malformed elapsed-time input: Stable recovery advancement rejected an invalid tick interval. */
   if (Either.isLeft(advanced)) {
     return invalidElapsedTimeResult(sheet, advanced.left.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return stableRecoveryAdvanceResult({
     sheet,
     hitPoints: sheet.hitPoints,
@@ -404,7 +404,7 @@ function passStableRecoveryRuleWithRoll(input: {
   readonly hole: RuntimeHole;
 }): CharacterSheetElapsedTimeResult {
   const sheet = input.sheet;
-  /* v8 ignore start -- Malformed elapsed-time input: a Stable recovery roll was applied while no roll was pending. */
+  /* v8 ignore start -- @preserve -- Malformed elapsed-time input: a Stable recovery roll was applied while no roll was pending. */
   if (
     sheet.hitPoints.tag !== "zero" ||
     sheet.hitPoints.lifecycle.tag !== "stable" ||
@@ -415,7 +415,7 @@ function passStableRecoveryRuleWithRoll(input: {
       "Elapsed-time recovery received a roll when no roll is pending.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const advanced = advanceStableRecoveryWithRoll({
     recovery: sheet.hitPoints.lifecycle.recovery,
     ticks: input.ticks,
@@ -504,7 +504,7 @@ function stableRecoveryRollFromFill(
     dice: STABLE_RECOVERY_ROLL_DICE_EXPR.dice,
     dieSize: STABLE_RECOVERY_ROLL_DICE_EXPR.dieSize,
   });
-  /* v8 ignore start -- Malformed Stable recovery fill: the roll group fails the exact one-d4 hole validator. */
+  /* v8 ignore start -- @preserve -- Malformed Stable recovery fill: the roll group fails the exact one-d4 hole validator. */
   if (validation !== null) {
     return characterSheetIssue(validation.reason);
   }
@@ -513,7 +513,7 @@ function stableRecoveryRollFromFill(
   return roll === undefined
     ? characterSheetIssue("Stable recovery requires one d4 roll.")
     : Either.right(roll);
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 }
 
 function replaceCharacterSheetHitPoints(
@@ -535,23 +535,23 @@ function canonicalZeroHpLifecycle(
   if (lifecycle.tag === "stable") return Either.right(lifecycle);
   if (lifecycle.tag === "dead") {
     const { successes, failures } = lifecycle.deathSaves;
-    /* v8 ignore start -- Malformed zero-HP lifecycle: Dead requires exactly three failures and fewer than three successes. */
+    /* v8 ignore start -- @preserve -- Malformed zero-HP lifecycle: Dead requires exactly three failures and fewer than three successes. */
     if (successes === 3 || failures !== 3) {
       return characterSheetIssue(
         "Dead Character Sheet requires exactly three death save failures.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return Either.right({ tag: "dead", deathSaves: { successes, failures } });
   }
   const { successes, failures } = lifecycle.deathSaves;
-  /* v8 ignore start -- Malformed zero-HP lifecycle: Unstable cannot retain terminal success or failure counts. */
+  /* v8 ignore start -- @preserve -- Malformed zero-HP lifecycle: Unstable cannot retain terminal success or failure counts. */
   if (successes === 3 || failures === 3) {
     return characterSheetIssue(
       "Unstable Character Sheet cannot carry terminal death save counts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return Either.right({ tag: "unstable", deathSaves: { successes, failures } });
 }
 

@@ -159,7 +159,7 @@ function resolveMoveCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills[0]?.kind !== "movement") {
     return invalidResult(
       input.state,
@@ -167,8 +167,8 @@ function resolveMoveCommand(
       "Move requires a Movement fill first.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.filter((candidate) => candidate.kind === "movement").length !==
     1
@@ -179,9 +179,9 @@ function resolveMoveCommand(
       "Move requires exactly one Movement fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const fill = input.fills[0];
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fill.holeId !== MOVEMENT_HOLE_ID) {
     return invalidResult(
       input.state,
@@ -189,17 +189,17 @@ function resolveMoveCommand(
       "Movement fill does not match the requested hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movement = parseBattleMovement(
     input.state,
     input.subject.actorId,
     fill,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const threats = opportunityAttackThreatsForMovement(
     input.state,
     movement.movement,
@@ -279,7 +279,7 @@ function resolveJumpMovementReplacementCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills[0]?.kind !== "movement") {
     return invalidResult(
       input.state,
@@ -287,8 +287,8 @@ function resolveJumpMovementReplacementCommand(
       "Jump movement replacement requires a Movement fill first.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.filter((candidate) => candidate.kind === "movement").length !==
     1
@@ -299,9 +299,9 @@ function resolveJumpMovementReplacementCommand(
       "Jump movement replacement requires exactly one Movement fill.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const fill = input.fills[0];
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fill.holeId !== MOVEMENT_HOLE_ID) {
     return invalidResult(
       input.state,
@@ -309,18 +309,18 @@ function resolveJumpMovementReplacementCommand(
       "Movement fill does not match the requested Jump movement replacement hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movement = parseBattleMovement(
     input.state,
     input.subject.actorId,
     fill,
     { kind: "jumpMovementReplacement", effect },
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const threats = opportunityAttackThreatsForMovement(
     input.state,
@@ -357,7 +357,7 @@ function resolveJumpMovementReplacementCommand(
   if (movementEffects.tag !== "resolved") {
     return movementEffects;
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementEffects.remainingFills.length > 0) {
     return invalidResult(
       input.state,
@@ -365,7 +365,7 @@ function resolveJumpMovementReplacementCommand(
       "Jump movement replacement only accepts Movement, Spike Growth damage, Concentration, and damage disposition fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const consumedState = markJumpMovementReplacementUsed(
     movementEffects.state,
     input.subject.actorId,
@@ -389,11 +389,11 @@ function jumpMovementReplacementEffectForSubject(
   >,
 ): JumpMovementReplacementEffect | null {
   const actor = state.combatants.get(subject.actorId);
-  /* v8 ignore start -- Discovery creates the replacement subject from this actor's active effect. */
+  /* v8 ignore start -- @preserve -- Discovery creates the replacement subject from this actor's active effect. */
   if (actor === undefined) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return (
     actor.activeEffects.find(
       (effect): effect is JumpMovementReplacementEffect =>
@@ -410,11 +410,11 @@ function markJumpMovementReplacementUsed(
   consumedEffect: JumpMovementReplacementEffect,
 ): BattleState {
   const actor = state.combatants.get(actorId);
-  /* v8 ignore start -- The subject is admitted from the same combatant map that supplied the consumed Jump effect. */
+  /* v8 ignore start -- @preserve -- The subject is admitted from the same combatant map that supplied the consumed Jump effect. */
   if (actor === undefined) {
     return state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const activeEffects = actor.activeEffects.map((effect) =>
     effect.kind === "jumpMovementReplacement" &&
     effect.sourceCombatantId === consumedEffect.sourceCombatantId &&
@@ -434,7 +434,7 @@ function markJumpMovementReplacementUsed(
 function resolveStandFromProneCommand(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
     return invalidResult(
       input.state,
@@ -442,7 +442,7 @@ function resolveStandFromProneCommand(
       "Stand from Prone accepts no fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const actor = input.state.combatants.get(input.subject.actorId);
   const cost = standFromProneCostFeet(input.state, input.subject.actorId);
   if (
@@ -514,7 +514,7 @@ export function parseBattleMovement(
       : battleMovementBudgetForActor(state, moverId, fill.value.speedKind)
           .remainingFeet;
   const mover = state.combatants.get(moverId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     mover === undefined ||
     !representedMovementSpeedKinds(mover).includes(fill.value.speedKind)
@@ -524,13 +524,13 @@ export function parseBattleMovement(
       message: "Movement speed kind is not represented for this combatant.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!combatantCanMoveWithBudget(state, moverId, movementBudgetFeet)) {
     return { tag: "invalid", message: "Current combatant cannot move." };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fill.value.movementCostFeet <= 0 ||
     !Number.isInteger(fill.value.movementCostFeet)
@@ -540,47 +540,47 @@ export function parseBattleMovement(
       message: "Movement cost must be a positive integer.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movementCostFactValidation = validateMovementCostFacts(
     state,
     moverId,
     fill.value,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementCostFactValidation !== null) {
     return {
       tag: "invalid",
       message: movementCostFactValidation,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const acrobaticMovementValidation = validateAcrobaticMovementFact(
     state,
     mover,
     fill.value.acrobaticMovement,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (acrobaticMovementValidation !== null) {
     return {
       tag: "invalid",
       message: acrobaticMovementValidation,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const creatureSpaceTraversalValidation =
     validateCreatureSpaceTraversalMovementFact(
       state,
       mover,
       fill.value.creatureSpaceTraversal,
     );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (creatureSpaceTraversalValidation !== null) {
     return {
       tag: "invalid",
       message: creatureSpaceTraversalValidation,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaExtraCostFeet = areaMovementExtraCostFeet(state, fill.value);
   const jumpMovementValidation = validateJumpMovementReplacementFact(
     state,
@@ -590,14 +590,14 @@ export function parseBattleMovement(
     fill.value.movementCostFeet,
     areaExtraCostFeet,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (jumpMovementValidation !== null) {
     return {
       tag: "invalid",
       message: jumpMovementValidation,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const levitatedMovementValidation = validateLevitatedMovementFact({
     combatant: mover,
     fact: fill.value.levitatedMovement,
@@ -605,68 +605,68 @@ export function parseBattleMovement(
     movementCostFeet: fill.value.movementCostFeet,
     areaExtraCostFeet,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (levitatedMovementValidation !== null) {
     return {
       tag: "invalid",
       message: levitatedMovementValidation,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const commandApproachValidation = validateCommandApproachMovementFact(
     fill.value.commandApproach,
     mode.kind === "commandApproach",
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (commandApproachValidation !== null) {
     return {
       tag: "invalid",
       message: commandApproachValidation,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const commandFleeValidation = validateCommandFleeMovementFact(
     fill.value.commandFlee,
     mode.kind === "commandFlee",
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (commandFleeValidation !== null) {
     return {
       tag: "invalid",
       message: commandFleeValidation,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const brutalStrikeForcefulBlowValidation =
     validateBrutalStrikeForcefulBlowMovementFact(
       fill.value.brutalStrikeForcefulBlow,
       mode.kind === "brutalStrikeForcefulBlow" ? mode.targetId : undefined,
     );
-  /* v8 ignore start -- Malformed Brutal Strike fill: the table-owned straight-toward-target fact must match the selected attack target. */
+  /* v8 ignore start -- @preserve -- Malformed Brutal Strike fill: the table-owned straight-toward-target fact must match the selected attack target. */
   if (brutalStrikeForcefulBlowValidation !== null) {
     return {
       tag: "invalid",
       message: brutalStrikeForcefulBlowValidation,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const movementCost = ordinaryMovementCost(
     movementFeet(fill.value.movementCostFeet),
     fill.value.speedKind,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (Number(movementCost.costFeet) > Number(movementBudgetFeet)) {
     return {
       tag: "invalid",
       message: "Movement cost exceeds the combatant's remaining Movement.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const seen = new Set<string>();
   const provokedOpportunityAttacks: BattleOpportunityAttackThreat[] = [];
   for (const threat of fill.value.provokedOpportunityAttacks) {
     const reactorId = threat.reactorId;
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (reactorId === moverId) {
       return {
         tag: "invalid",
@@ -674,8 +674,8 @@ export function parseBattleMovement(
           "Movement Opportunity Attack threat cannot name the mover as reactor.",
       };
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore stop -- @preserve */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!state.combatants.has(reactorId)) {
       return {
         tag: "invalid",
@@ -683,12 +683,12 @@ export function parseBattleMovement(
           "Movement Opportunity Attack threat references an unknown combatant.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const attack = attackActionOptionsForActor(state, reactorId).find(
       (option) =>
         interruptAttackExecutionSelectionMatchesOption(threat, option),
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (attack === undefined) {
       return {
         tag: "invalid",
@@ -696,8 +696,8 @@ export function parseBattleMovement(
           "Movement Opportunity Attack threat references an unknown attack option.",
       };
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore stop -- @preserve */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (attackTargetConstraint(attack).kind !== "meleeReach") {
       return {
         tag: "invalid",
@@ -705,16 +705,16 @@ export function parseBattleMovement(
           "Movement Opportunity Attack threat must name a melee attack option.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const threatKey = opportunityAttackThreatIdentityKey(reactorId, threat);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (seen.has(threatKey)) {
       return {
         tag: "invalid",
         message: "Movement Opportunity Attack threat repeats an attack option.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     seen.add(threatKey);
     provokedOpportunityAttacks.push(threat);
   }
@@ -862,11 +862,11 @@ function validateSpikeGrowthMovementDamageRoll(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   hole: BattleSpikeGrowthMovementDamageRollHole,
 ): string | null {
-  /* v8 ignore start -- The selected Movement damage hole is the only hole admitted for this fill. */
+  /* v8 ignore start -- @preserve -- The selected Movement damage hole is the only hole admitted for this fill. */
   if (fill.holeId !== hole.holeId) {
     return "Spike Growth movement damage must use the selected damage hole.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return validateRolledDiceFillForDiceExpr(
     fill,
     hole.spikeGrowthMovement.damage.expr,
@@ -939,7 +939,7 @@ export function resolveMovementEffectsAfterMovement(input: {
   let nextState = movedState;
   for (const request of requests) {
     const target = nextState.combatants.get(input.movement.moverId);
-    /* v8 ignore start -- Internal resolved-movement invariant: callers admit movement while its mover exists, applyBattleMovement preserves combatant keys, and Spike Growth damage never removes a combatant. This fallback only protects a direct malformed continuation call. */
+    /* v8 ignore start -- @preserve -- Internal resolved-movement invariant: callers admit movement while its mover exists, applyBattleMovement preserves combatant keys, and Spike Growth damage never removes a combatant. This fallback only protects a direct malformed continuation call. */
     if (target === undefined) {
       return {
         tag: "resolved",
@@ -949,7 +949,7 @@ export function resolveMovementEffectsAfterMovement(input: {
         ),
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const damageHole = spikeGrowthMovementDamageRollHole(
       input.movement.moverId,
       request,
@@ -969,11 +969,11 @@ export function resolveMovementEffectsAfterMovement(input: {
       damageFill,
       damageHole,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
 
     const damageAmount = spikeGrowthMovementDamageAmount(
       input.state,
@@ -1018,7 +1018,7 @@ export function resolveMovementEffectsAfterMovement(input: {
           damageDispositionHoles.some((hole) => hole.holeId === fill.holeId),
       ),
     });
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageDispositionValidation !== null) {
       return invalidResult(
         input.state,
@@ -1026,7 +1026,7 @@ export function resolveMovementEffectsAfterMovement(input: {
         damageDispositionValidation,
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const missingDispositionHole = damageDispositionHoles.find(
       (hole) =>
         damageDispositionFillFor(
@@ -1073,7 +1073,7 @@ export function resolveMovementEffectsAfterMovement(input: {
   const consumedHoleIds = new Set(
     [...consumedFills].map((fill) => fill.holeId),
   );
-  /* v8 ignore start -- Malformed resolution input: a duplicate fill for a consumed Spike Growth hole is still owned by this procedure, even though fill kinds are shared with other procedures. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: a duplicate fill for a consumed Spike Growth hole is still owned by this procedure, even though fill kinds are shared with other procedures. */
   if (remainingFills.some((fill) => consumedHoleIds.has(fill.holeId))) {
     return invalidResult(
       input.state,
@@ -1081,7 +1081,7 @@ export function resolveMovementEffectsAfterMovement(input: {
       "Move received a fill that does not match a pending Spike Growth movement damage hole.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "resolved",
     state: nextState,
@@ -1104,7 +1104,7 @@ export function resolveMoveAfterMovement(input: {
   if (movementEffects.tag !== "resolved") {
     return movementEffects;
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementEffects.remainingFills.length > 0) {
     return invalidResult(
       input.state,
@@ -1112,7 +1112,7 @@ export function resolveMoveAfterMovement(input: {
       "Move only accepts Movement, Spike Growth damage, Concentration, and damage disposition fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "resolved",
     state: movementEffects.state,
@@ -1201,23 +1201,23 @@ function validateAreaDifficultTerrainMovementFact(
   if (fact === undefined) {
     return { tag: "notApplicable" };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fact.kind !== "areaDifficultTerrain") {
     return {
       tag: "invalid",
       message: "Area Difficult Terrain movement fact has the wrong kind.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fact.sources.length === 0) {
     return {
       tag: "invalid",
       message: "Area Difficult Terrain movement fact requires a source.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(fact.totalDistanceFeet) ||
     fact.totalDistanceFeet <= 0
@@ -1228,8 +1228,8 @@ function validateAreaDifficultTerrainMovementFact(
         "Area Difficult Terrain total distance must be a positive integer.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(fact.difficultTerrainDistanceFeet) ||
     fact.difficultTerrainDistanceFeet <= 0
@@ -1239,8 +1239,8 @@ function validateAreaDifficultTerrainMovementFact(
       message: "Area Difficult Terrain distance must be a positive integer.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     Number(fact.difficultTerrainDistanceFeet) > Number(fact.totalDistanceFeet)
   ) {
@@ -1250,22 +1250,22 @@ function validateAreaDifficultTerrainMovementFact(
         "Area Difficult Terrain distance cannot exceed total Movement distance.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const sourceKeys = new Set<string>();
   let spikeGrowthDamageDistanceFeet = 0;
   for (const source of fact.sources) {
     const key = areaDifficultTerrainSourceKey(source);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (sourceKeys.has(key)) {
       return {
         tag: "invalid",
         message: "Area Difficult Terrain movement fact repeats a source.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     sourceKeys.add(key);
     if (source.kind === "spikeGrowthHazard") {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         !Number.isInteger(source.damageDistanceFeet) ||
         source.damageDistanceFeet <= 0
@@ -1276,8 +1276,8 @@ function validateAreaDifficultTerrainMovementFact(
             "Spike Growth movement damage distance must be a positive integer.",
         };
       }
-      /* v8 ignore stop */
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore stop -- @preserve */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (Number(source.damageDistanceFeet) > Number(fact.totalDistanceFeet)) {
         return {
           tag: "invalid",
@@ -1285,8 +1285,8 @@ function validateAreaDifficultTerrainMovementFact(
             "Spike Growth movement damage distance cannot exceed total Movement distance.",
         };
       }
-      /* v8 ignore stop */
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      /* v8 ignore stop -- @preserve */
+      /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         Number(source.damageDistanceFeet) >
         Number(fact.difficultTerrainDistanceFeet)
@@ -1297,10 +1297,10 @@ function validateAreaDifficultTerrainMovementFact(
             "Spike Growth movement damage distance cannot exceed Difficult Terrain distance.",
         };
       }
-      /* v8 ignore stop */
+      /* v8 ignore stop -- @preserve */
       spikeGrowthDamageDistanceFeet += Number(source.damageDistanceFeet);
     }
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!activeAreaDifficultTerrainSourceMatches(state, source)) {
       return {
         tag: "invalid",
@@ -1308,9 +1308,9 @@ function validateAreaDifficultTerrainMovementFact(
           "Area Difficult Terrain movement fact does not match an active Difficult Terrain area.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     spikeGrowthDamageDistanceFeet > Number(fact.difficultTerrainDistanceFeet)
   ) {
@@ -1320,7 +1320,7 @@ function validateAreaDifficultTerrainMovementFact(
         "Spike Growth movement damage distances cannot exceed Difficult Terrain distance.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
     totalDistanceFeet: fact.totalDistanceFeet,
@@ -1335,15 +1335,15 @@ function validateGustOfWindLineMovementFact(
   if (fact === undefined) {
     return { tag: "notApplicable" };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fact.kind !== "gustOfWindLineMovement") {
     return {
       tag: "invalid",
       message: "Gust of Wind Line movement fact has the wrong kind.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(fact.totalDistanceFeet) ||
     fact.totalDistanceFeet <= 0
@@ -1353,8 +1353,8 @@ function validateGustOfWindLineMovementFact(
       message: "Gust of Wind Line total distance must be a positive integer.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(fact.closerDistanceFeet) ||
     fact.closerDistanceFeet <= 0
@@ -1364,8 +1364,8 @@ function validateGustOfWindLineMovementFact(
       message: "Gust of Wind Line closer distance must be a positive integer.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (Number(fact.closerDistanceFeet) > Number(fact.totalDistanceFeet)) {
     return {
       tag: "invalid",
@@ -1373,7 +1373,7 @@ function validateGustOfWindLineMovementFact(
         "Gust of Wind Line closer distance cannot exceed total Movement distance.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const source = state.combatants.get(fact.sourceCombatantId);
   const effect = source?.activeEffects.find(
     (candidate): candidate is GustOfWindLineEffect =>
@@ -1383,7 +1383,7 @@ function validateGustOfWindLineMovementFact(
       candidate.areaId === fact.areaId &&
       candidate.directionId === fact.directionId,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (effect === undefined) {
     return {
       tag: "invalid",
@@ -1391,7 +1391,7 @@ function validateGustOfWindLineMovementFact(
         "Gust of Wind Line movement fact does not match an active Gust of Wind Line.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
     totalDistanceFeet: fact.totalDistanceFeet,
@@ -1434,11 +1434,11 @@ function validateAcrobaticMovementFact(
   if (profile === null) {
     return ACROBATIC_MOVEMENT_MISSING_PROFILE_MESSAGE;
   }
-  /* v8 ignore start -- Defensive internal guard: movement dispatch admits only the current actor before the typed movement fill reaches this parser. */
+  /* v8 ignore start -- @preserve -- Defensive internal guard: movement dispatch admits only the current actor before the typed movement fill reaches this parser. */
   if (currentActorId(state) !== mover.combatantId) {
     return ACROBATIC_MOVEMENT_TURN_MESSAGE;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     combatantWearingArmor(state, mover) ||
     combatantWieldingShield(state, mover)
@@ -1525,11 +1525,11 @@ function validateCreatureSpaceTraversalMovementFact(
   }
   const largerCreatureSpacePermission =
     creatureSpaceMovementPermissionProfileForCombatant(mover) !== null;
-  /* v8 ignore start -- Defensive boundary for direct parser callers that bypass BattleFillSchema. */
+  /* v8 ignore start -- @preserve -- Defensive boundary for direct parser callers that bypass BattleFillSchema. */
   if (!Array.isArray(fact.occupiedSpaces) || fact.occupiedSpaces.length === 0) {
     return CREATURE_SPACE_TRAVERSAL_MISSING_PERMISSION_MESSAGE;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const seenOccupants = new Set<CombatantId>();
   for (const occupiedSpace of fact.occupiedSpaces) {
     const occupantIssue = creatureSpaceTraversalOccupantIssue(
@@ -1552,22 +1552,22 @@ function creatureSpaceTraversalOccupantIssue(
   seenOccupants: ReadonlySet<CombatantId>,
   largerCreatureSpacePermission: boolean,
 ): string | null {
-  /* v8 ignore start -- Malformed traversal witness: the table adapter lists other creatures whose spaces the mover crosses, never the mover itself. */
+  /* v8 ignore start -- @preserve -- Malformed traversal witness: the table adapter lists other creatures whose spaces the mover crosses, never the mover itself. */
   if (occupantId === mover.combatantId) {
     return CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE;
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed traversal witness: the table adapter emits each occupied creature once, so this rejects only a caller-mutated duplicate. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed traversal witness: the table adapter emits each occupied creature once, so this rejects only a caller-mutated duplicate. */
   if (seenOccupants.has(occupantId)) {
     return CREATURE_SPACE_TRAVERSAL_REPEATED_OCCUPANT_MESSAGE;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const occupant = state.combatants.get(occupantId);
-  /* v8 ignore start -- Malformed traversal witness: occupied-space selection is drawn from this battle, so this rejects only a caller-mutated foreign identity. */
+  /* v8 ignore start -- @preserve -- Malformed traversal witness: occupied-space selection is drawn from this battle, so this rejects only a caller-mutated foreign identity. */
   if (occupant === undefined) {
     return CREATURE_SPACE_TRAVERSAL_UNKNOWN_OCCUPANT_MESSAGE;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (zeroHpLifecycleIsTerminal(occupant)) {
     return CREATURE_SPACE_TRAVERSAL_TERMINAL_OCCUPANT_MESSAGE;
   }
@@ -1584,12 +1584,12 @@ function creatureSpaceTraversalPermissionIssue(
   largerCreatureSpacePermission: boolean,
 ): string | null {
   if (isIncapacitated(occupant.conditions)) return null;
-  /* v8 ignore start -- Malformed creature-space traversal fill: ordinary movers may cross only Incapacitated occupants; the exceptional profile separately admits larger creatures. */
+  /* v8 ignore start -- @preserve -- Malformed creature-space traversal fill: ordinary movers may cross only Incapacitated occupants; the exceptional profile separately admits larger creatures. */
   if (!largerCreatureSpacePermission) {
     return CREATURE_SPACE_TRAVERSAL_MISSING_PERMISSION_MESSAGE;
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed traversal witness: the admitted exceptional table fact includes only creature spaces larger than the mover. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed traversal witness: the admitted exceptional table fact includes only creature spaces larger than the mover. */
   if (
     !creatureSizeIsLargerThanSelf(
       combatantEffectiveSize(mover),
@@ -1598,14 +1598,14 @@ function creatureSpaceTraversalPermissionIssue(
   ) {
     return CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }
 
 function creatureSpaceTraversalDestinationIssue(
   fact: BattleCreatureSpaceTraversalMovementFact,
 ): string | null {
-  /* v8 ignore start -- Malformed traversal destination: the table adapter cannot select a position already named as occupied while labeling it unoccupied. */
+  /* v8 ignore start -- @preserve -- Malformed traversal destination: the table adapter cannot select a position already named as occupied while labeling it unoccupied. */
   if (
     fact.destination.kind === "unoccupiedSpace" &&
     fact.occupiedSpaces.some(
@@ -1615,12 +1615,12 @@ function creatureSpaceTraversalDestinationIssue(
   ) {
     return CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE;
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed traversal destination: creature-space traversal may pass through occupied spaces but the table adapter must select an unoccupied destination. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed traversal destination: creature-space traversal may pass through occupied spaces but the table adapter must select an unoccupied destination. */
   if (fact.destination.kind === "occupiedCreatureSpace") {
     return CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }
 
@@ -1656,30 +1656,30 @@ function validateMovementCostFacts(
     state,
     value.areaDifficultTerrain,
   );
-  /* v8 ignore start -- Malformed movement-cost fill: the area table adapter constructs the typed Difficult Terrain fact, so this only propagates a caller-mutated contradiction. */
+  /* v8 ignore start -- @preserve -- Malformed movement-cost fill: the area table adapter constructs the typed Difficult Terrain fact, so this only propagates a caller-mutated contradiction. */
   if (difficultTerrain.tag === "invalid") {
     return difficultTerrain.message;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const gust = validateGustOfWindLineMovementFact(
     state,
     value.gustOfWindLineMovement,
   );
-  /* v8 ignore start -- Malformed movement-cost fill: the Gust of Wind table adapter constructs the typed Line fact, so this only propagates a caller-mutated contradiction. */
+  /* v8 ignore start -- @preserve -- Malformed movement-cost fill: the Gust of Wind table adapter constructs the typed Line fact, so this only propagates a caller-mutated contradiction. */
   if (gust.tag === "invalid") {
     return gust.message;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const grappleDrag = validateGrappleDragMovementFact(
     state,
     moverId,
     value.grappleDrag,
   );
-  /* v8 ignore start -- Malformed movement-cost fill: the Grapple table adapter constructs the typed drag fact, so this only propagates a caller-mutated contradiction. */
+  /* v8 ignore start -- @preserve -- Malformed movement-cost fill: the Grapple table adapter constructs the typed drag fact, so this only propagates a caller-mutated contradiction. */
   if (grappleDrag.tag === "invalid") {
     return grappleDrag.message;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const areaCosts = [difficultTerrain, gust].filter(
     (
       result,
@@ -1691,30 +1691,30 @@ function validateMovementCostFacts(
       return null;
     }
   }
-  /* v8 ignore start -- Contradictory movement fill: the table adapter cannot combine Grapple drag with a spell-owned Jump replacement. */
+  /* v8 ignore start -- @preserve -- Contradictory movement fill: the table adapter cannot combine Grapple drag with a spell-owned Jump replacement. */
   if (grappleDrag.tag === "ok" && value.jumpMovementReplacement !== undefined) {
     return "Grapple drag movement facts cannot be combined with Jump movement replacement.";
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Contradictory movement fill: the table adapter cannot combine Grapple drag with a Levitate altitude change. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Contradictory movement fill: the table adapter cannot combine Grapple drag with a Levitate altitude change. */
   if (
     grappleDrag.tag === "ok" &&
     value.levitatedMovement?.altitudeChange !== undefined
   ) {
     return "Grapple drag movement facts cannot be combined with Levitate altitude-change movement.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const firstAreaCost = areaCosts[0];
   const allCosts =
     grappleDrag.tag === "ok" ? [...areaCosts, grappleDrag] : areaCosts;
   const firstCost = allCosts[0];
-  /* v8 ignore start -- The preceding area/Grapple admission guards prove that a non-empty cost list reaches this point. */
+  /* v8 ignore start -- @preserve -- The preceding area/Grapple admission guards prove that a non-empty cost list reaches this point. */
   if (firstCost === undefined) {
     return null;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const remainingAreaCosts = areaCosts.slice(1);
-  /* v8 ignore start -- Contradictory area witnesses: table-derived Difficult Terrain and Gust facts share one movement path and therefore one total distance. */
+  /* v8 ignore start -- @preserve -- Contradictory area witnesses: table-derived Difficult Terrain and Gust facts share one movement path and therefore one total distance. */
   if (
     firstAreaCost !== undefined &&
     remainingAreaCosts.some(
@@ -1725,8 +1725,8 @@ function validateMovementCostFacts(
   ) {
     return "Area movement-cost facts must agree on total Movement distance.";
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Contradictory movement witnesses: all table-derived area and Grapple facts share one movement path and therefore one total distance. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Contradictory movement witnesses: all table-derived area and Grapple facts share one movement path and therefore one total distance. */
   if (
     allCosts
       .slice(1)
@@ -1738,7 +1738,7 @@ function validateMovementCostFacts(
   ) {
     return "Movement-cost facts must agree on total Movement distance.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     value.jumpMovementReplacement !== undefined ||
     value.levitatedMovement?.altitudeChange !== undefined
@@ -1752,22 +1752,22 @@ function validateMovementCostFacts(
   if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
     return null;
   }
-  /* v8 ignore start -- Malformed combined-cost projection: the table adapter computes total distance plus every non-exempt area and Grapple increment before submitting the movement fill. */
+  /* v8 ignore start -- @preserve -- Malformed combined-cost projection: the table adapter computes total distance plus every non-exempt area and Grapple increment before submitting the movement fill. */
   if (grappleDrag.tag === "ok" && areaCosts.length > 0) {
     return "Combined movement-cost facts must spend total distance plus all area and non-exempt grapple drag extra movement costs.";
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed Grapple-cost projection: the table adapter computes one extra foot per non-exempt dragged foot. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed Grapple-cost projection: the table adapter computes one extra foot per non-exempt dragged foot. */
   if (grappleDrag.tag === "ok") {
     return "Grapple drag movement must spend total distance plus 1 extra foot for every foot a non-exempt Grappled target is dragged.";
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed combined-area projection: the table adapter sums Difficult Terrain and Gust of Wind increments over their shared path. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed combined-area projection: the table adapter sums Difficult Terrain and Gust of Wind increments over their shared path. */
   if (difficultTerrain.tag === "ok" && gust.tag === "ok") {
     return "Combined area Difficult Terrain and Gust of Wind movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain and 1 extra foot for every foot moved closer to the caster through the Line.";
   }
-  /* v8 ignore stop */
-  /* v8 ignore next -- Malformed single-area projection: after the typed area facts above, this tail only reports which caller-supplied movement-cost total was inconsistent. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore next -- @preserve -- Malformed single-area projection: after the typed area facts above, this tail only reports which caller-supplied movement-cost total was inconsistent. */
   return difficultTerrain.tag === "ok"
     ? "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain."
     : "Gust of Wind Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.";
@@ -1790,7 +1790,7 @@ function validateGrappleDragMovementFact(
   if (fact === undefined) {
     return { tag: "notApplicable" };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(fact.totalDistanceFeet) ||
     fact.totalDistanceFeet <= 0
@@ -1800,19 +1800,19 @@ function validateGrappleDragMovementFact(
       message: "Grapple drag total distance must be a positive integer.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const seenTargets = new Set<CombatantId>();
   let extraCostFeet = 0;
   for (const target of fact.targets) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!Number.isInteger(target.distanceFeet) || target.distanceFeet <= 0) {
       return {
         tag: "invalid",
         message: "Grapple drag target distance must be a positive integer.",
       };
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore stop -- @preserve */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (Number(target.distanceFeet) > Number(fact.totalDistanceFeet)) {
       return {
         tag: "invalid",
@@ -1820,22 +1820,22 @@ function validateGrappleDragMovementFact(
           "Grapple drag target distance cannot exceed total Movement distance.",
       };
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore stop -- @preserve */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (seenTargets.has(target.targetId)) {
       return {
         tag: "invalid",
         message: "Grapple drag movement fact repeats a target.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     seenTargets.add(target.targetId);
     const link = state.grapples.find(
       (candidate) =>
         candidate.grapplerId === moverId &&
         candidate.targetId === target.targetId,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (link === undefined) {
       return {
         tag: "invalid",
@@ -1843,17 +1843,17 @@ function validateGrappleDragMovementFact(
           "Grapple drag movement fact must reference a creature Grappled by the mover.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const grappler = state.combatants.get(link.grapplerId);
     const draggedTarget = state.combatants.get(link.targetId);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (grappler === undefined || draggedTarget === undefined) {
       return {
         tag: "invalid",
         message: "Grapple drag movement fact references a stale Grapple link.",
       };
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (!grappleTargetExemptFromDragCost(grappler, draggedTarget)) {
       extraCostFeet += Number(target.distanceFeet);
     }
@@ -1895,38 +1895,38 @@ function validateJumpMovementReplacementFact(
   areaExtraCostFeet: MovementFeet,
 ): string | null {
   if (effect === undefined) {
-    /* v8 ignore start -- Malformed movement fill: discovery does not request Jump facts for ordinary movement, so this rejects only caller-supplied cross-procedure data. */
+    /* v8 ignore start -- @preserve -- Malformed movement fill: discovery does not request Jump facts for ordinary movement, so this rejects only caller-supplied cross-procedure data. */
     return fact === undefined
       ? null
       : "Jump movement replacement facts cannot be supplied for ordinary Movement.";
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
-  /* v8 ignore start -- Malformed Jump fill: discovery requests distance and landing facts whenever the active spell replacement is selected. */
+  /* v8 ignore start -- @preserve -- Malformed Jump fill: discovery requests distance and landing facts whenever the active spell replacement is selected. */
   if (fact === undefined) {
     return "Jump movement replacement requires caller-supplied jump distance and landing facts.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const expectedMovementCostFeet = movementFeet(
     Number(effect.movementCostFeet) + Number(areaExtraCostFeet),
   );
-  /* v8 ignore start -- Malformed Jump cost projection: the table adapter sums the spell-owned movement cost and any area surcharge. */
+  /* v8 ignore start -- @preserve -- Malformed Jump cost projection: the table adapter sums the spell-owned movement cost and any area surcharge. */
   if (movementCostFeet !== expectedMovementCostFeet) {
     return "Jump movement replacement must spend the spell's Movement cost plus any area movement costs.";
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed Jump distance: the table adapter supplies a positive whole-foot landing distance. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed Jump distance: the table adapter supplies a positive whole-foot landing distance. */
   if (!Number.isInteger(fact.distanceFeet) || fact.distanceFeet <= 0) {
     return "Jump movement replacement distance must be a positive integer.";
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed Jump distance: the table adapter constrains the selected landing to the active spell's computed maximum. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed Jump distance: the table adapter constrains the selected landing to the active spell's computed maximum. */
   if (
     Number(fact.distanceFeet) >
     Number(maxJumpMovementReplacementDistanceFeet(state, moverId, effect))
   ) {
     return "Jump movement replacement distance exceeds the active maximum.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }
 
@@ -1935,17 +1935,17 @@ function validateCommandApproachMovementFact(
   required: boolean,
 ): string | null {
   if (!required) {
-    /* v8 ignore start -- Malformed Command fill: discovery does not request Approach route facts for ordinary movement. */
+    /* v8 ignore start -- @preserve -- Malformed Command fill: discovery does not request Approach route facts for ordinary movement. */
     return fact === undefined
       ? null
       : "Command Approach route facts cannot be supplied for ordinary Movement.";
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
-  /* v8 ignore start -- Malformed Command fill: discovery requests the table-owned Approach route whenever that command movement is pending. */
+  /* v8 ignore start -- @preserve -- Malformed Command fill: discovery requests the table-owned Approach route whenever that command movement is pending. */
   if (fact === undefined) {
     return "Command Approach requires caller-supplied route facts.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }
 
@@ -1954,17 +1954,17 @@ function validateCommandFleeMovementFact(
   required: boolean,
 ): string | null {
   if (!required) {
-    /* v8 ignore start -- Malformed Command fill: discovery does not request Flee route facts for ordinary movement. */
+    /* v8 ignore start -- @preserve -- Malformed Command fill: discovery does not request Flee route facts for ordinary movement. */
     return fact === undefined
       ? null
       : "Command Flee route facts cannot be supplied for ordinary Movement.";
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
-  /* v8 ignore start -- Malformed Command fill: discovery requests the table-owned Flee route whenever that command movement is pending. */
+  /* v8 ignore start -- @preserve -- Malformed Command fill: discovery requests the table-owned Flee route whenever that command movement is pending. */
   if (fact === undefined) {
     return "Command Flee requires caller-supplied route facts.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }
 
@@ -1973,19 +1973,19 @@ function validateBrutalStrikeForcefulBlowMovementFact(
   requiredTargetId: CombatantId | undefined,
 ): string | null {
   if (requiredTargetId === undefined) {
-    /* v8 ignore start -- Malformed Brutal Strike fill: discovery requests this spatial fact only for Forceful Blow follow-up movement. */
+    /* v8 ignore start -- @preserve -- Malformed Brutal Strike fill: discovery requests this spatial fact only for Forceful Blow follow-up movement. */
     return fact === undefined
       ? null
       : "Brutal Strike Forceful Blow spatial facts cannot be supplied for ordinary Movement.";
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
-  /* v8 ignore start -- Malformed Brutal Strike fill: the table adapter must attest that the path runs straight toward the pushed target. */
+  /* v8 ignore start -- @preserve -- Malformed Brutal Strike fill: the table adapter must attest that the path runs straight toward the pushed target. */
   if (fact === undefined) {
     return "Brutal Strike Forceful Blow requires caller-supplied straight-toward-target facts.";
   }
   if (fact.targetId !== requiredTargetId) {
     return "Brutal Strike Forceful Blow movement must be straight toward the attack target.";
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return null;
 }

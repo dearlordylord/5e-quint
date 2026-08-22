@@ -486,7 +486,7 @@ export function empoweredSpellStackingIssue(input: {
   ]);
 }
 
-/* v8 ignore start -- Malformed Empowered Spell combination: option discovery excludes duplicate or excessive Metamagic stacking and requires the casting character's bound Sorcery Point pool to cover the combined cost. */
+/* v8 ignore start -- @preserve -- Malformed Empowered Spell combination: option discovery excludes duplicate or excessive Metamagic stacking and requires the casting character's bound Sorcery Point pool to cover the combined cost. */
 export function empoweredSpellCombinedUseIssue(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly castApplications: readonly CharacterBattleMetamagicOptionFact[];
@@ -509,7 +509,7 @@ export function empoweredSpellCombinedUseIssue(input: {
     ? null
     : "Empowered Spell requires enough unexpended Sorcery Points for all Metamagic options used on this spell.";
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 export function empoweredSpellMetamagicApplication(
   actor: BattleCreatureState | undefined,
@@ -759,7 +759,7 @@ function spellMetamagicSupportIssue(input: {
   });
 }
 
-/* v8 ignore start -- Unsupported Quickened Spell procedure: admitted applications already narrow to action-cost spell procedures with an explicit bonus-action rewrite. */
+/* v8 ignore start -- @preserve -- Unsupported Quickened Spell procedure: admitted applications already narrow to action-cost spell procedures with an explicit bonus-action rewrite. */
 function quickenedActionRewriteSupportIssue(
   invocation: RuntimeSpellProcedure,
 ): string | null {
@@ -772,7 +772,7 @@ function quickenedActionRewriteSupportIssue(
   }
   return QUICKENED_ACTION_CASTING_TIME_REQUIRED_MESSAGE;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function castPropertyMetamagicSupportIssue(
   effectKinds: ReadonlySet<CharacterBattleMetamagicEffectKind>,

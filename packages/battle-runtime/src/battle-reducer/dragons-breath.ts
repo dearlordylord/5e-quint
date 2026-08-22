@@ -105,21 +105,21 @@ export function resolveDragonsBreathExhaleCommand(
     "savingThrowOutcome",
     [saveHole.holeId],
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (saveFillsValidation !== null) {
     return invalidResult(input.state, "invalidFill", saveFillsValidation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const saveFill = savingThrowFillFor(input.fills, saveHole.holeId);
   if (saveFill === undefined) {
     const fillsValidation = validateExpectedDragonBreathFills(input.fills, [
       { kind: "savingThrowOutcome", holeId: saveHole.holeId },
     ]);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillsValidation !== null) {
       return invalidResult(input.state, "invalidFill", fillsValidation);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return needsHolesResult(input.state, input.subject, [saveHole]);
   }
   const saveValidation = validateDragonsBreathSavingThrowFill(
@@ -127,11 +127,11 @@ export function resolveDragonsBreathExhaleCommand(
     input.subject.actorId,
     saveFill,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (saveValidation !== null) {
     return invalidResult(input.state, "invalidFill", saveValidation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const outcomes = saveFill.value.outcomes;
   const savingThrowTargetIds = outcomes.map((outcome) => outcome.targetId);
   const relationshipFacts = parseSavingThrowRelationshipFacts(
@@ -144,7 +144,7 @@ export function resolveDragonsBreathExhaleCommand(
       "enemySavingThrow",
     ),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipFacts === null) {
     return invalidResult(
       input.state,
@@ -152,16 +152,16 @@ export function resolveDragonsBreathExhaleCommand(
       "Dragon's Breath relationship facts must answer the saving-throw hole request.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (outcomes.length === 0) {
     const fillsValidation = validateExpectedDragonBreathFills(input.fills, [
       { kind: "savingThrowOutcome", holeId: saveHole.holeId },
     ]);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillsValidation !== null) {
       return invalidResult(input.state, "invalidFill", fillsValidation);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const resolvedState = battleStateAfterSpendingDragonsBreathMagicAction(
       input,
       savingThrowTargetIds,
@@ -182,22 +182,22 @@ export function resolveDragonsBreathExhaleCommand(
       "rolledDice",
       [damageHole.holeId],
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageFillsValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageFillsValidation);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return needsHolesResult(input.state, input.subject, [damageHole]);
   }
   const damageValidation = validateRolledDiceFillForDiceExpr(
     damageFill,
     damageHole.dragonsBreath.expr,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const spellDamageReductionRolls = input.fills.filter(
     (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
@@ -224,7 +224,7 @@ export function resolveDragonsBreathExhaleCommand(
       damageByType,
       spellDamageReductionRoll,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (spellReduction.tag === "invalid") {
       return invalidResult(
         input.state,
@@ -232,7 +232,7 @@ export function resolveDragonsBreathExhaleCommand(
         "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (spellReduction.tag === "needsHoles") {
       return needsHolesResult(input.state, input.subject, [
         ...spellReduction.holes,
@@ -289,7 +289,7 @@ export function resolveDragonsBreathExhaleCommand(
       missingConcentrationHoles,
     );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     concentrationFills.some((fill) => !concentrationHoleIds.has(fill.holeId))
   ) {
@@ -299,7 +299,7 @@ export function resolveDragonsBreathExhaleCommand(
       "Concentration Saving Throw fill is only valid for a concentrating Dragon's Breath damage target.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const damageDispositionHoles = damageEntriesByTarget.flatMap((entry) => {
     const hole =
       entry.damageAmount <= 0
@@ -323,11 +323,11 @@ export function resolveDragonsBreathExhaleCommand(
     holes: damageDispositionHoles,
     fills: damageDispositions,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (dispositionValidation !== null) {
     return invalidResult(input.state, "invalidFill", dispositionValidation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const missingDispositionHoles = damageDispositionHoles.filter(
     (hole) => damageDispositionFillFor(damageDispositions, hole) === undefined,
   );
@@ -353,11 +353,11 @@ export function resolveDragonsBreathExhaleCommand(
       holeId: hole.holeId,
     })),
   ]);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillsValidation !== null) {
     return invalidResult(input.state, "invalidFill", fillsValidation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   let damaged = battleStateAfterSpendingDragonsBreathMagicAction(
     input,
@@ -373,7 +373,7 @@ export function resolveDragonsBreathExhaleCommand(
       entry.damageByType,
       entry.spellDamageReductionRoll,
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (spellReduction.tag !== "ok") {
       return invalidResult(
         input.state,
@@ -381,7 +381,7 @@ export function resolveDragonsBreathExhaleCommand(
         "Spell damage reduction state changed before Dragon's Breath damage could resolve.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const damageAmount = damageAmountByTypeAfterTargetAdjustments(
       damaged,
       spellReduction.target,
@@ -496,7 +496,7 @@ function activeDragonsBreathEffect(
   );
 }
 
-/* v8 ignore start -- Malformed saving-throw validator: Dragon's Breath discovery supplies the exhaler-owned Cone, unique affected targets, and matching outcomes; admitted damage execution remains measured. */
+/* v8 ignore start -- @preserve -- Malformed saving-throw validator: Dragon's Breath discovery supplies the exhaler-owned Cone, unique affected targets, and matching outcomes; admitted damage execution remains measured. */
 function validateDragonsBreathSavingThrowFill(
   state: BattleState,
   actorId: CombatantId,
@@ -528,9 +528,9 @@ function validateDragonsBreathSavingThrowFill(
     ? null
     : "Dragon's Breath Saving Throw outcomes must cover every table-supplied Cone affected target.";
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- Malformed area-witness validator: the Dragon's Breath Cone hole fixes its geometry, origin, battle membership, and unique affected targets before resolution. */
+/* v8 ignore start -- @preserve -- Malformed area-witness validator: the Dragon's Breath Cone hole fixes its geometry, origin, battle membership, and unique affected targets before resolution. */
 function validateDragonsBreathArea(
   state: BattleState,
   area: BattleSpellAreaChoice,
@@ -552,9 +552,9 @@ function validateDragonsBreathArea(
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- Malformed fill-set validator: discovery publishes the exact Dragon's Breath hole kinds and identities; admitted fills are consumed after this boundary. */
+/* v8 ignore start -- @preserve -- Malformed fill-set validator: discovery publishes the exact Dragon's Breath hole kinds and identities; admitted fills are consumed after this boundary. */
 function validateExpectedDragonBreathFillKind(
   fills: readonly BattleFill[],
   kind: BattleFill["kind"],
@@ -576,9 +576,9 @@ function validateExpectedDragonBreathFillKind(
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
-/* v8 ignore start -- Malformed fill-set validator: the resolver forwards only fills keyed by its discovered Dragon's Breath holes, so unexpected and duplicate keys are defensive rejections. */
+/* v8 ignore start -- @preserve -- Malformed fill-set validator: the resolver forwards only fills keyed by its discovered Dragon's Breath holes, so unexpected and duplicate keys are defensive rejections. */
 function validateExpectedDragonBreathFills(
   fills: readonly BattleFill[],
   expected: readonly ExpectedDragonBreathFill[],
@@ -597,7 +597,7 @@ function validateExpectedDragonBreathFills(
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function dragonBreathFillKey(fill: ExpectedDragonBreathFill): string {
   return `${fill.kind}:${fill.holeId}`;

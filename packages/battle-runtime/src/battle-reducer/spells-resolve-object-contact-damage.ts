@@ -142,12 +142,12 @@ export function resolveObjectContactDamageSpellAct(input: {
     input.fillSet,
     { allowObjectTarget: true, allowSpellCastReactionFacts: true },
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (unrelatedFills !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.input.state, "invalidFill", unrelatedFills);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (input.fillSet.objectTarget === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellObjectTargetHole(input.invocation),
@@ -167,16 +167,16 @@ export function resolveObjectContactDamageSpellAct(input: {
     objectTarget.objectId,
     input.invocation,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (metalFact === null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Object-contact damage requires a visible manufactured metal object within spell range.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const contactSelection = validateObjectContactTargets({
     state: input.input.state,
     actorId: input.actorId,
@@ -190,16 +190,16 @@ export function resolveObjectContactDamageSpellAct(input: {
       contactSelection.hole,
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (contactSelection.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       contactSelection.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const spellCastReactionWindow = maybeOpenInterruptWindow(
     input.input.state,
@@ -227,11 +227,11 @@ export function resolveObjectContactDamageSpellAct(input: {
       invocation: input.invocation,
       errorState: input.input.state,
     });
-    /* v8 ignore start -- Spell-spend admission immediately precedes this commit; interrupted continuations redispatch through admission. */
+    /* v8 ignore start -- @preserve -- Spell-spend admission immediately precedes this commit; interrupted continuations redispatch through admission. */
     if (spentResources.tag === "invalid") {
       return spentResources;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const stagedEffect = applyObjectContactDamageActiveEffect({
       state: spentResources.state,
       actorId: input.actorId,
@@ -287,11 +287,11 @@ export function resolveObjectContactDamageSpellAct(input: {
     invocation: input.invocation,
     errorState: input.input.state,
   });
-  /* v8 ignore start -- No-contact resolution cannot change spell resources after admission; interrupted continuations redispatch through admission. */
+  /* v8 ignore start -- @preserve -- No-contact resolution cannot change spell resources after admission; interrupted continuations redispatch through admission. */
   if (spentResources.tag === "invalid") {
     return spentResources;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const effected = applyObjectContactDamageActiveEffect({
     state: spentResources.state,
     actorId: input.actorId,
@@ -320,12 +320,12 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     input.fillSet,
     { allowObjectTarget: false, allowSpellCastReactionFacts: false },
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (unrelatedFills !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.input.state, "invalidFill", unrelatedFills);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     ongoingSpellEffectSuppressedByAntimagicField(
       input.input.state,
@@ -353,16 +353,16 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
       contactSelection.hole,
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (contactSelection.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       contactSelection.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const actionState = battleStateAfterTargetActionEarlyEndForActor(
     input.input.state,
     input.actorId,
@@ -386,7 +386,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     damageResolution.state.currentTurnResources,
     { kind: "bonusAction" },
   );
-  /* v8 ignore start -- Repeat admission proves this spend; damage lifecycle cannot consume the caster's Bonus Action, and interruptions redispatch. */
+  /* v8 ignore start -- @preserve -- Repeat admission proves this spend; damage lifecycle cannot consume the caster's Bonus Action, and interruptions redispatch. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.input.state,
@@ -394,7 +394,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
       "Bonus Action spell is no longer available for the current actor.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return finishObjectContactDamageResolution({
     state: { ...damageResolution.state, currentTurnResources: spent.right },
     subject: input.input.subject,
@@ -432,7 +432,7 @@ function validateObjectContactTargets(input: {
   if (fill === undefined) {
     return { tag: "needsHoles", hole };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fill.holeId !==
     spellObjectContactTargetsHoleId({
@@ -446,34 +446,34 @@ function validateObjectContactTargets(input: {
         "Object-contact target fill must use the selected spell object-contact hole.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const targetIds = fill.targetIds;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (targetIds.length !== new Set(targetIds).size) {
     return {
       tag: "invalid",
       message: "Object-contact target fill must not repeat a combatant.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (targetIds.some((targetId) => !input.state.combatants.has(targetId))) {
     return {
       tag: "invalid",
       message: "Object-contact targets must be combatants in this battle.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
     state: input.state,
     source: SPELL_MAGICAL_EFFECT_SOURCE,
     targetIds,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (antimagicInterdiction !== null) {
     return { tag: "invalid", message: antimagicInterdiction };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const rangeFacts = fill.spatialFacts.filter(
     (
       fact,
@@ -492,7 +492,7 @@ function validateObjectContactTargets(input: {
           ? input.invocation.activeEffect.rangeFeet
           : input.invocation.rangeFeet),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.requiresObjectWithinRange && matchingRangeFacts.length !== 1) {
     return {
       tag: "invalid",
@@ -500,8 +500,8 @@ function validateObjectContactTargets(input: {
         "Repeated object-contact damage requires exactly one matching object-within-range witness.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!input.requiresObjectWithinRange && rangeFacts.length > 0) {
     return {
       tag: "invalid",
@@ -509,8 +509,8 @@ function validateObjectContactTargets(input: {
         "Initial object-contact damage does not use an object-within-range repeat witness.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (rangeFacts.length !== matchingRangeFacts.length) {
     return {
       tag: "invalid",
@@ -518,7 +518,7 @@ function validateObjectContactTargets(input: {
         "Object-within-range witness must match the selected spell object.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const contactFacts = fill.spatialFacts.filter(
     (
       fact,
@@ -535,15 +535,15 @@ function validateObjectContactTargets(input: {
       fact.objectId === input.objectId &&
       selectedTargetIds.has(fact.targetId),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (matchingContactFacts.length !== contactFacts.length) {
     return {
       tag: "invalid",
       message: "Physical-contact witnesses must match selected targets.",
     };
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     targetIds.some(
       (targetId) =>
@@ -556,7 +556,7 @@ function validateObjectContactTargets(input: {
         "Every object-contact target must have a matching physical-contact witness.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const holdingOrWearingFacts = fill.spatialFacts.filter(
     (
       fact,
@@ -572,7 +572,7 @@ function validateObjectContactTargets(input: {
       fact.objectId === input.objectId &&
       selectedTargetIds.has(fact.targetId),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (matchingHoldingOrWearingFacts.length !== holdingOrWearingFacts.length) {
     return {
       tag: "invalid",
@@ -580,11 +580,11 @@ function validateObjectContactTargets(input: {
         "Holding-or-wearing witnesses must match selected object-contact targets.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const holdingOrWearingTargets = new Set(
     matchingHoldingOrWearingFacts.map((fact) => fact.targetId),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (holdingOrWearingTargets.size !== matchingHoldingOrWearingFacts.length) {
     return {
       tag: "invalid",
@@ -592,7 +592,7 @@ function validateObjectContactTargets(input: {
         "Object-contact target fill must not repeat a holding-or-wearing witness for the same combatant.",
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const holdingOrWearingByTarget = new Map<
     CombatantId,
     ObjectContactHoldingOrWearingRelation
@@ -637,7 +637,7 @@ function resolveObjectContactDamage(input: {
     > {
   const needsHolesState = input.needsHolesState ?? input.state;
   if (input.targetIds.length === 0) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       input.fillSet.damageRoll !== undefined ||
       input.fillSet.concentrationSavingThrows.length > 0 ||
@@ -647,14 +647,14 @@ function resolveObjectContactDamage(input: {
       input.fillSet.objectDropResolution !== undefined ||
       input.fillSet.sourceDamageRollPenaltyRolls.length > 0
     ) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.errorState,
         "invalidFill",
         "Object-contact damage fills are not valid when no contact creatures are selected.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     return {
       tag: "resolved",
       state: input.state,
@@ -673,12 +673,12 @@ function resolveObjectContactDamage(input: {
     input.invocation,
     false,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageValidation !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.errorState, "invalidFill", damageValidation);
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const sourceCombatant = input.state.combatants.get(input.actorId);
   const damageTargets = battleDamageTargets({
     state: input.state,
@@ -696,21 +696,21 @@ function resolveObjectContactDamage(input: {
       return hole === null ? [] : [hole];
     },
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     unexpectedSourceDamageRollPenaltyRoll(
       input.fillSet.sourceDamageRollPenaltyRolls,
       expectedSourcePenaltyHoles,
     ) !== undefined
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
       "invalidFill",
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const resolvedDamageTargets: BattleDamageTarget<number>[] = [];
   const unresolvedSourcePenaltyHoles: Array<
     Parameters<typeof deduplicateBattleHolesById>[0][number]
@@ -727,16 +727,16 @@ function resolveObjectContactDamage(input: {
         damageRoll.holeId,
       ),
     );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (check.tag === "invalid") {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.errorState,
         "invalidFill",
         "Source damage roll penalty does not match an active source-side damage penalty.",
       );
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     if (check.tag === "needsHoles") {
       unresolvedSourcePenaltyHoles.push(...check.holes);
       continue;
@@ -783,20 +783,20 @@ function resolveObjectContactDamage(input: {
   const concentrationSaveIds = new Set<BattleHoleId>(
     concentrationSaves.map((hole) => hole.holeId),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.concentrationSavingThrows.some(
       (fill) => !concentrationSaveIds.has(fill.holeId),
     )
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
       "invalidFill",
       "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const damageDispositionHoles = resolvedDamageTargets.flatMap(
     ({ target, damage }) => {
       const hole = zeroHitPointReplacementDispositionHole({
@@ -811,16 +811,16 @@ function resolveObjectContactDamage(input: {
     holes: damageDispositionHoles,
     fills: input.fillSet.damageDispositions,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageDispositionValidation !== null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
       "invalidFill",
       damageDispositionValidation,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const missingDamageDispositionHoles = damageDispositionHoles.filter(
     (hole) =>
       damageDispositionFillFor(input.fillSet.damageDispositions, hole) ===
@@ -852,16 +852,16 @@ function resolveObjectContactDamage(input: {
   const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
     (check) => check.tag === "invalid",
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (invalidHideousLaughterSaveCheck?.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
       "invalidFill",
       invalidHideousLaughterSaveCheck.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const missingHideousLaughterSaveHoles = hideousLaughterSaveChecks.flatMap(
     (check) => (check.tag === "needsHoles" ? [...check.holes] : []),
   );
@@ -875,20 +875,20 @@ function resolveObjectContactDamage(input: {
       check.tag === "invalid" ? [] : check.holes.map((hole) => hole.holeId),
     ),
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.hideousLaughterDamageRepeatSaves.some(
       (fill) => !hideousLaughterSaveHoleIds.has(fill.holeId),
     )
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
       "invalidFill",
       "Hideous Laughter damage repeat save fill must match a requested damaged target.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const damagedHoldingOrWearingTargets =
     objectContactDamagedHoldingOrWearingTargets({
       damageTargets: resolvedDamageTargets,
@@ -901,19 +901,19 @@ function resolveObjectContactDamage(input: {
     objectId: input.objectId,
     targets: damagedHoldingOrWearingTargets,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     objectContactSaveHole === null &&
     input.fillSet.objectContactSavingThrowOutcome !== undefined
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
       "invalidFill",
       "Object-contact saving throw outcome is only valid for a damaged creature holding or wearing the spell object.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     objectContactSaveHole !== null &&
     input.fillSet.objectContactSavingThrowOutcome === undefined
@@ -930,12 +930,12 @@ function resolveObjectContactDamage(input: {
       fill: input.fillSet.objectContactSavingThrowOutcome,
       hole: objectContactSaveHole,
     });
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (saveValidation !== null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.errorState, "invalidFill", saveValidation);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   const failedSaveTargetIds =
     input.fillSet.objectContactSavingThrowOutcome === undefined
@@ -952,19 +952,19 @@ function resolveObjectContactDamage(input: {
           objectId: input.objectId,
           targetIds: failedSaveTargetIds,
         });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     objectDropHole === null &&
     input.fillSet.objectDropResolution !== undefined
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
       "invalidFill",
       "Object drop resolution is only valid for failed object-contact saving throws.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     objectDropHole !== null &&
     input.fillSet.objectDropResolution === undefined
@@ -979,12 +979,12 @@ function resolveObjectContactDamage(input: {
       fill: input.fillSet.objectDropResolution,
       hole: objectDropHole,
     });
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (dropValidation !== null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.errorState, "invalidFill", dropValidation);
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
   }
   const droppedObjects =
     input.fillSet.objectDropResolution?.value.outcomes.flatMap(
@@ -1048,25 +1048,25 @@ function resolveObjectContactDamage(input: {
       relationshipCheck.holes,
     );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipCheck.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
       "invalidFill",
       relationshipCheck.message,
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const damaged = resolvedDamageTargets.reduce((state, damageTarget) => {
     const targetId = damageTarget.target.combatantId;
     const damageAmount = damageTarget.damage;
     const target = state.combatants.get(targetId);
-    /* v8 ignore start -- Validated target IDs are unique current members; an earlier damage application can remove only its own zero-HP familiar, never a distinct later target. */
+    /* v8 ignore start -- @preserve -- Validated target IDs are unique current members; an earlier damage application can remove only its own zero-HP familiar, never a distinct later target. */
     if (target === undefined) {
       return state;
     }
-    /* v8 ignore stop */
+    /* v8 ignore stop -- @preserve */
     const concentrationSave = concentrationSavingThrowHole(
       target,
       damageAmount,
@@ -1195,7 +1195,7 @@ function objectContactSavingThrowOutcomeHoleKey(input: {
   return `battle:spell:object-contact-damage:holding-wearing-save:${input.actorId}:${input.procedureRef}:${input.objectId}`;
 }
 
-/* v8 ignore start -- Malformed object-contact save witness: discovery fixes the object save hole, excludes area facts, and names each holding-or-wearing target exactly once. */
+/* v8 ignore start -- @preserve -- Malformed object-contact save witness: discovery fixes the object save hole, excludes area facts, and names each holding-or-wearing target exactly once. */
 function objectContactSavingThrowFillValidation(input: {
   readonly fill: Extract<
     OkSpellFillSet["objectContactSavingThrowOutcome"],
@@ -1216,7 +1216,7 @@ function objectContactSavingThrowFillValidation(input: {
       "Object-contact saving throw outcomes must match damaged holding-or-wearing targets exactly once.",
   });
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function objectDropResolutionHole(input: {
   readonly actorId: CombatantId;
@@ -1268,7 +1268,7 @@ function objectDropResolutionFillValidation(input: {
   });
 }
 
-/* v8 ignore start -- Malformed outcome target set: callers supply targets from their discovered typed holes, so duplicate, missing, and unrelated target ids are forged raw fills. */
+/* v8 ignore start -- @preserve -- Malformed outcome target set: callers supply targets from their discovered typed holes, so duplicate, missing, and unrelated target ids are forged raw fills. */
 function exactOutcomeTargetsValidation(input: {
   readonly outcomes: readonly { readonly targetId: CombatantId }[];
   readonly targetIds: readonly CombatantId[];
@@ -1287,7 +1287,7 @@ function exactOutcomeTargetsValidation(input: {
   }
   return null;
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function applyObjectContactPenalties(input: {
   readonly state: BattleState;
@@ -1384,11 +1384,11 @@ function applyObjectContactDamageActiveEffect(input: {
   readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageInvocation>;
 }): BattleState {
   const actor = input.state.combatants.get(input.actorId);
-  /* v8 ignore start -- Admitted object-contact spell invocations retain a character actor across resource and effect state transitions. */
+  /* v8 ignore start -- @preserve -- Admitted object-contact spell invocations retain a character actor across resource and effect state transitions. */
   if (actor === undefined) {
     return input.state;
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const allocation = allocateBattleActiveEffectRefForCreature({
     owner: actor,
   });

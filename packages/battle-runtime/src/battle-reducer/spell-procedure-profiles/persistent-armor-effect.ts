@@ -245,7 +245,7 @@ function resolvePersistentArmorEffect(
   const originalState = input.input.state;
   const castingState = input.input.castingState;
 
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined &&
     input.fillSet.objectTarget !== undefined
@@ -256,7 +256,7 @@ function resolvePersistentArmorEffect(
       "Spell target must choose either one combatant or one object, not both.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   if (
     input.fillSet.targetId === undefined &&
     input.fillSet.objectTarget === undefined
@@ -265,7 +265,7 @@ function resolvePersistentArmorEffect(
       spellTargetHole(originalState, input.actorId, input.invocation),
     ]);
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fillSet.objectTarget !== undefined) {
     return invalidResult(
       originalState,
@@ -273,8 +273,8 @@ function resolvePersistentArmorEffect(
       "Object target fill does not match this spell act.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fillSet.targetId === undefined) {
     return invalidResult(
       originalState,
@@ -282,9 +282,9 @@ function resolvePersistentArmorEffect(
       "Spell target fill did not select a target.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const target = originalState.combatants.get(input.fillSet.targetId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target === undefined ||
     !spellTargetIsLegal(
@@ -301,8 +301,8 @@ function resolvePersistentArmorEffect(
       "Spell target must be a combatant within the selected spell's supported range.",
     );
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.attackRoll != null ||
     input.fillSet.damageRoll != null ||
@@ -315,7 +315,7 @@ function resolvePersistentArmorEffect(
       "Persistent spell effects do not use attack or damage fills.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const effected = applyPersistentArmorEffect(
     castingState,

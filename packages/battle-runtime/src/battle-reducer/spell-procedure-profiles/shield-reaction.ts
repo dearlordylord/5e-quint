@@ -146,11 +146,11 @@ function shieldReactionSpellProjection(
   };
 }
 
-/* v8 ignore start -- Reaction-only profile: Shield candidates are admitted from attack-hit or Magic Missile interrupt frames, so ordinary turn discovery must return no acts. */
+/* v8 ignore start -- @preserve -- Reaction-only profile: Shield candidates are admitted from attack-hit or Magic Missile interrupt frames, so ordinary turn discovery must return no acts. */
 function discoverShieldReactionCastAct(): readonly AvailableBattleAct[] {
   return [];
 }
-/* v8 ignore stop */
+/* v8 ignore stop -- @preserve */
 
 function resolveShieldReaction(
   input: ShieldReactionResolveInput,
@@ -162,7 +162,7 @@ function resolveShieldReaction(
       "Shield requires a matching attack-hit or Magic Missile Reaction trigger.",
     );
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
@@ -170,7 +170,7 @@ function resolveShieldReaction(
       "Shield accepts only spell-cast Reaction trigger facts.",
     );
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
 
   const castingState = stateAfterSpellCastDeclared({
     state: input.input.state,

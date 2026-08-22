@@ -201,25 +201,25 @@ export function checkHideousLaughterDamageRepeatSaveFills(input: {
   if (missingHoles.length > 0) {
     return { tag: "needsHoles", holes: missingHoles };
   }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length !== holes.length) {
     return {
       tag: "invalid",
       message: HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   const invalidFillIssue = input.fills
     .map((fill) => hideousLaughterDamageRepeatSaveFillIssue(fill, holes))
     .find((issue): issue is string => issue !== null);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (invalidFillIssue !== undefined) {
     return {
       tag: "invalid",
       message: invalidFillIssue,
     };
   }
-  /* v8 ignore stop */
+  /* v8 ignore stop -- @preserve */
   return { tag: "ok", holes };
 }
 
