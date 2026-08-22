@@ -3820,7 +3820,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       "attackRoll",
     );
 
-    expect(hiddenRoll).not.toHaveProperty("rollMode");
+    expect(hiddenRoll).toHaveProperty("rollMode", "normal");
   });
 
   test("Dodge attack-roll Disadvantage requires seeing the attacker", () => {

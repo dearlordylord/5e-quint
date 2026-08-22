@@ -65,6 +65,31 @@ export {
 } from "./battle-runtime-context.ts";
 
 export {
+  D20_TEST_KINDS,
+  D20_TEST_ROLL_MODES,
+  TABLE_D20_TEST_CIRCUMSTANCE_SOURCES,
+  admitTableD20TestCircumstanceDecisions,
+  battleD20TestCircumstanceRequests,
+  battleHolesWithTableD20TestCircumstances,
+  combineD20TestRollMode,
+  mechanicalD20TestRollModeSources,
+  mechanicalD20TestRollMode,
+  effectiveD20TestRollMode,
+  d20TestResolutionId,
+  type BattleD20TestCircumstanceRequest,
+  type BattleD20TestRequestRef,
+  type D20TestKind,
+  type D20TestRollMode,
+  type D20TestRollModeSources,
+  type D20TestOrdinal,
+  type D20TestResolutionId,
+  type TableD20TestCircumstanceDecision,
+  type TableD20TestCircumstanceDecisionAdmissionIssue,
+  type TableD20TestCircumstanceDecisionIssue,
+  type TableD20TestCircumstanceSource,
+} from "./d20-test-circumstance.ts";
+
+export {
   characterProcedureBinding,
   characterProcedureBindingSnapshots,
 } from "./character-execution-admission.ts";
@@ -638,12 +663,15 @@ export {
 
 export {
   endBattleRuntimeTurn,
+  endBattleRuntimeTurnWithTableD20TestCircumstances,
   openCreatureFallsRuntimeInterruptWindow,
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
+  resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
   resolveBattleSubject,
   type BattleRuntimeResolutionInput,
   type BattleRuntimeResolutionResult,
+  type BattleRuntimeTableD20TestResolutionResult,
 } from "./battle-session-execution.ts";
 
 export {

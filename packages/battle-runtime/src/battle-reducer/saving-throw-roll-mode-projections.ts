@@ -1,5 +1,36 @@
 import type { BattleSavingThrowRollModeProjection } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
+import { mechanicalD20TestRollMode } from "../d20-test-circumstance.ts";
+
+type SavingThrowRollModeSources = Readonly<{
+  readonly advantage: boolean;
+  readonly disadvantage: boolean;
+}>;
+
+function addSavingThrowRollModeSource(
+  existing: SavingThrowRollModeSources | undefined,
+  rollMode: BattleSavingThrowRollModeProjection["rollMode"],
+): SavingThrowRollModeSources {
+  return {
+    advantage:
+      existing?.advantage === true ||
+      rollMode === "advantage" ||
+      rollMode === "normal",
+    disadvantage:
+      existing?.disadvantage === true ||
+      rollMode === "disadvantage" ||
+      rollMode === "normal",
+  };
+}
+
+function savingThrowRollModeProjection(
+  targetId: CombatantId,
+  sources: SavingThrowRollModeSources | undefined,
+): readonly BattleSavingThrowRollModeProjection[] {
+  if (sources === undefined) return [];
+  const rollMode = mechanicalD20TestRollMode(sources);
+  return rollMode === undefined ? [] : [{ targetId, rollMode }];
+}
 
 export function uniqueSavingThrowRollModeProjections(
   projections: readonly BattleSavingThrowRollModeProjection[],
@@ -14,24 +45,12 @@ export function uniqueSavingThrowRollModeProjections(
     if (existing === undefined) {
       targetOrder.push(projection.targetId);
     }
-    rollModeSources.set(projection.targetId, {
-      advantage:
-        existing?.advantage === true || projection.rollMode === "advantage",
-      disadvantage:
-        existing?.disadvantage === true ||
-        projection.rollMode === "disadvantage",
-    });
+    rollModeSources.set(
+      projection.targetId,
+      addSavingThrowRollModeSource(existing, projection.rollMode),
+    );
   }
-  return targetOrder.flatMap((targetId) => {
-    const sources = rollModeSources.get(targetId);
-    if (sources === undefined || sources.advantage === sources.disadvantage) {
-      return [];
-    }
-    return [
-      {
-        targetId,
-        rollMode: sources.advantage ? "advantage" : "disadvantage",
-      },
-    ] satisfies readonly BattleSavingThrowRollModeProjection[];
-  });
+  return targetOrder.flatMap((targetId) =>
+    savingThrowRollModeProjection(targetId, rollModeSources.get(targetId)),
+  );
 }

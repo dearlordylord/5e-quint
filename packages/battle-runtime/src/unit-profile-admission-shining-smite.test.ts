@@ -307,7 +307,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       }),
       "attackRoll",
     );
-    expect(unseenUnarmedAttackRoll).not.toHaveProperty("rollMode");
+    expect(unseenUnarmedAttackRoll).toHaveProperty("rollMode", "normal");
 
     const endConcentrationAct = discoverBattleActs(
       battleRuntimeSessionForTest({

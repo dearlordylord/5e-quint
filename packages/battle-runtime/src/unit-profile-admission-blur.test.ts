@@ -103,7 +103,7 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
         },
       ],
     });
-    expect(attackRoll.rollMode).toBeUndefined();
+    expect(attackRoll.rollMode).toBe("normal");
   });
 
   test("blur attack-roll defense ends when Concentration is broken", () => {

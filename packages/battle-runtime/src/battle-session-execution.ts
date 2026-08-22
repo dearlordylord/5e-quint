@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 import { optionalProperty } from "./optional-property.ts";
 import { Match } from "effect";
 import * as Either from "effect/Either";
@@ -23,6 +24,7 @@ import type { CombatantId } from "./identity.ts";
 import { sameBattleSubject, type BattleSubject } from "./battle-subjects.ts";
 import type {
   BattleFill,
+  BattleHole,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleSnapshot,
@@ -30,6 +32,15 @@ import type {
 } from "./battle-state-execution.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
 import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
+import {
+  admitTableD20TestCircumstanceDecisions,
+  battleD20TestCircumstanceRequests,
+  retainAdmittedAttackRollTableSource,
+  type BattleD20TestCircumstanceRequest,
+  type D20TestResolutionId,
+  type TableD20TestCircumstanceDecision,
+  type TableD20TestCircumstanceDecisionAdmissionIssue,
+} from "./d20-test-circumstance.ts";
 
 export type BattleRuntimeResolutionInput = {
   readonly session: BattleRuntimeSession;
@@ -80,7 +91,44 @@ export type BattleRuntimeResolutionResult =
       readonly routeEvents?: BattleReducerRouteEvents;
     };
 
+export type BattleRuntimeTableD20TestResolutionResult =
+  | Extract<BattleRuntimeResolutionResult, { readonly tag: "resolved" }>
+  | (Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> & {
+      readonly d20TestCircumstanceRequests: readonly BattleD20TestCircumstanceRequest[];
+    })
+  | (Extract<BattleRuntimeResolutionResult, { readonly tag: "invalid" }> &
+      (
+        | {
+            readonly tableD20TestCircumstanceDecisionIssue: TableD20TestCircumstanceDecisionAdmissionIssue;
+          }
+        | { readonly tableD20TestCircumstanceDecisionIssue?: never }
+      ));
+
 const byBattleResolutionTag = Match.discriminator("tag");
+
+function rolledD20TestRequests(
+  requests: readonly BattleD20TestCircumstanceRequest[],
+  fill: BattleFill | undefined,
+): readonly BattleD20TestCircumstanceRequest[] {
+  const rolledSavingThrowTargetIds =
+    fill?.kind === "concentrationSavingThrow" && fill.value.withoutRoll === true
+      ? new Set<CombatantId>()
+      : fill?.kind === "savingThrowOutcome"
+        ? new Set(
+            fill.value.outcomes.flatMap((outcome) =>
+              outcome.withoutRoll === true ? [] : [outcome.targetId],
+            ),
+          )
+        : undefined;
+  return rolledSavingThrowTargetIds === undefined
+    ? requests
+    : requests.filter(
+        (request) =>
+          request.testKind !== "savingThrow" ||
+          (request.targetId !== undefined &&
+            rolledSavingThrowTargetIds.has(request.targetId)),
+      );
+}
 
 export function resolveBattleRuntimeSubject(
   input: BattleRuntimeResolutionInput,
@@ -131,6 +179,137 @@ export function resolveBattleRuntimeSubject(
       fills: input.fills,
     }),
   );
+}
+
+function appendUnseenD20TestRequests(
+  accumulated: BattleD20TestCircumstanceRequest[],
+  projected: readonly BattleD20TestCircumstanceRequest[],
+): void {
+  for (const request of projected) {
+    const alreadyAccumulated = accumulated.some(
+      ({ requestRef }) => requestRef === request.requestRef,
+    );
+    if (!alreadyAccumulated) accumulated.push(request);
+  }
+}
+
+function retainAttackRollTableSourceForFrontier(input: {
+  readonly fill: BattleFill | undefined;
+  readonly holes: readonly BattleHole[];
+  readonly requests: readonly BattleD20TestCircumstanceRequest[];
+  readonly decisions: ReadonlyMap<
+    BattleD20TestCircumstanceRequest["requestRef"],
+    TableD20TestCircumstanceDecision
+  >;
+}): void {
+  if (input.fill?.kind !== "attackRoll") return;
+  const attackHole = input.holes.find(
+    (hole) => hole.kind === "attackRoll" && hole.holeId === input.fill?.holeId,
+  );
+  const attackRequest = input.requests.find(
+    (request) =>
+      request.testKind === "attackRoll" &&
+      request.holeInstanceKey === attackHole?.holeInstanceKey,
+  );
+  const decision =
+    attackRequest === undefined
+      ? undefined
+      : input.decisions.get(attackRequest.requestRef);
+  if (decision?.testKind === "attackRoll") {
+    retainAdmittedAttackRollTableSource(input.fill.value, decision.source);
+  }
+}
+
+function subjectD20TestRequests(input: {
+  readonly resolution: BattleRuntimeResolutionInput;
+  readonly resolutionId: D20TestResolutionId;
+  readonly fills: readonly BattleFill[];
+  readonly decisions: ReadonlyMap<
+    BattleD20TestCircumstanceRequest["requestRef"],
+    TableD20TestCircumstanceDecision
+  >;
+}): readonly BattleD20TestCircumstanceRequest[] {
+  const requests: BattleD20TestCircumstanceRequest[] = [];
+  for (let fillIndex = 0; fillIndex <= input.fills.length; fillIndex += 1) {
+    const frontier = resolveBattleRuntimeSubject({
+      ...input.resolution,
+      fills: input.fills.slice(0, fillIndex),
+    });
+    if (frontier.tag !== "needsHoles") continue;
+    const fill = input.fills[fillIndex];
+    const frontierRequests = rolledD20TestRequests(
+      battleD20TestCircumstanceRequests({
+        resolutionId: input.resolutionId,
+        holes: frontier.holes,
+        resolvedFills: input.fills.slice(0, fillIndex),
+      }),
+      fill,
+    );
+    appendUnseenD20TestRequests(requests, frontierRequests);
+    retainAttackRollTableSourceForFrontier({
+      fill,
+      holes: frontier.holes,
+      requests: frontierRequests,
+      decisions: input.decisions,
+    });
+  }
+  return requests;
+}
+
+export function resolveBattleRuntimeSubjectWithTableD20TestCircumstances(
+  input: BattleRuntimeResolutionInput & {
+    readonly d20TestResolutionId: D20TestResolutionId;
+    readonly tableD20TestCircumstanceDecisions: readonly TableD20TestCircumstanceDecision[];
+  },
+): BattleRuntimeTableD20TestResolutionResult {
+  const fills = input.fills.map((fill) =>
+    fill.kind === "attackRoll"
+      ? {
+          ...fill,
+          value: { ...fill.value },
+        }
+      : fill,
+  );
+  const decisionByRequestRef = new Map(
+    input.tableD20TestCircumstanceDecisions.map((decision) => [
+      decision.requestRef,
+      decision,
+    ]),
+  );
+  const requests = subjectD20TestRequests({
+    resolution: input,
+    resolutionId: input.d20TestResolutionId,
+    fills,
+    decisions: decisionByRequestRef,
+  });
+  const admission = admitTableD20TestCircumstanceDecisions({
+    requests,
+    decisions: input.tableD20TestCircumstanceDecisions,
+  });
+  if (Either.isLeft(admission)) {
+    return {
+      tag: "invalid",
+      session: input.session,
+      reason: "invalidFill",
+      message: admission.left.issues.map(({ message }) => message).join(" "),
+      snapshot: snapshotBattle(input.session.state),
+      tableD20TestCircumstanceDecisionIssue: admission.left,
+    };
+  }
+  const result = resolveBattleRuntimeSubject({
+    ...input,
+    fills,
+  });
+  return result.tag === "needsHoles"
+    ? {
+        ...result,
+        d20TestCircumstanceRequests: battleD20TestCircumstanceRequests({
+          resolutionId: input.d20TestResolutionId,
+          holes: result.holes,
+          resolvedFills: fills,
+        }),
+      }
+    : result;
 }
 
 function battleRuntimeResolutionWithFamiliarPresentation(
@@ -210,6 +389,68 @@ export function endBattleRuntimeTurn(input: {
       ...optionalProperty("fills", input.fills),
     }),
   );
+}
+
+export function endBattleRuntimeTurnWithTableD20TestCircumstances(input: {
+  readonly session: BattleRuntimeSession;
+  readonly actorId: CombatantId;
+  readonly fills: readonly BattleFill[];
+  readonly d20TestResolutionId: D20TestResolutionId;
+  readonly tableD20TestCircumstanceDecisions: readonly TableD20TestCircumstanceDecision[];
+}): BattleRuntimeTableD20TestResolutionResult {
+  const requests: BattleD20TestCircumstanceRequest[] = [];
+  for (let fillIndex = 0; fillIndex <= input.fills.length; fillIndex += 1) {
+    const frontier = endBattleRuntimeTurn({
+      session: input.session,
+      actorId: input.actorId,
+      fills: input.fills.slice(0, fillIndex),
+    });
+    if (frontier.tag !== "needsHoles") continue;
+    const fill = input.fills[fillIndex];
+    const frontierRequests = rolledD20TestRequests(
+      battleD20TestCircumstanceRequests({
+        resolutionId: input.d20TestResolutionId,
+        holes: frontier.holes,
+        resolvedFills: input.fills.slice(0, fillIndex),
+      }),
+      fill,
+    );
+    for (const request of frontierRequests) {
+      if (
+        !requests.some(
+          ({ requestRef: priorRequestRef }) =>
+            priorRequestRef === request.requestRef,
+        )
+      ) {
+        requests.push(request);
+      }
+    }
+  }
+  const admission = admitTableD20TestCircumstanceDecisions({
+    requests,
+    decisions: input.tableD20TestCircumstanceDecisions,
+  });
+  if (Either.isLeft(admission)) {
+    return {
+      tag: "invalid",
+      session: input.session,
+      reason: "invalidFill",
+      message: admission.left.issues.map(({ message }) => message).join(" "),
+      snapshot: snapshotBattle(input.session.state),
+      tableD20TestCircumstanceDecisionIssue: admission.left,
+    };
+  }
+  const result = endBattleRuntimeTurn(input);
+  return result.tag === "needsHoles"
+    ? {
+        ...result,
+        d20TestCircumstanceRequests: battleD20TestCircumstanceRequests({
+          resolutionId: input.d20TestResolutionId,
+          holes: result.holes,
+          resolvedFills: input.fills,
+        }),
+      }
+    : result;
 }
 
 export function openCreatureFallsRuntimeInterruptWindow(input: {

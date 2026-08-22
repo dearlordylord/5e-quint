@@ -682,7 +682,9 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
       effect,
       "damage",
     );
-    expect(damageSaveHole.targetRollModes).toEqual([]);
+    expect(damageSaveHole.targetRollModes).toEqual([
+      { targetId: spellTargetId, rollMode: "normal" },
+    ]);
   });
   test("Hideous Laughter does not leave Concentration after all initial saves succeed", () => {
     const spell = spellRecord(hideousLaughterUnitId);

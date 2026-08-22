@@ -2114,21 +2114,6 @@ export function resolveSelectedAttackProcedure<
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !attackRollModeWasEstablishedBeforeReplay &&
-    !brutalStrikeSelected &&
-    fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined &&
-    fillSet.attackRoll.rollMode !== requiredRollMode
-  ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Attack roll mode does not match the activated ongoing feature rule.",
-    );
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    !attackRollModeWasEstablishedBeforeReplay &&
     brutalStrikeSelected &&
     fillSet.attackRoll.activatedOngoingFeatureProcedureRef === undefined &&
     !recklessAttackIsAvailableOrActiveForBrutalStrike(
