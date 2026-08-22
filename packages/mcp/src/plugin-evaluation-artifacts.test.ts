@@ -10,7 +10,16 @@ import {
   decodeEvaluationInventory,
   type EvaluationInventory,
 } from "../test-support/evaluation-inventory.ts";
-import { decodeCapabilityMatrix } from "../test-support/capability-matrix.ts";
+import {
+  decodeCapabilityMatrix,
+  CapabilityMatrixSchema,
+  NON_DERIVED_CAPABILITY_ROW_ID_VALUES,
+  type CapabilityMatrix,
+} from "../test-support/capability-matrix.ts";
+import {
+  CharacterSessionQueryKindsSchema,
+  CHARACTER_SESSION_QUERY_KIND_VALUES,
+} from "./character-session-query-tool-input.ts";
 import { sourceDefinesVitestScenario } from "../test-support/mcp-scenario-executable.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
@@ -21,7 +30,7 @@ const manifestPath = resolve(
   "plans/unit-profile-coverage/mcp-scenario-evidence.json",
 );
 
-const McpManifestRowSchema = Schema.Struct({
+const McpManifestRowCommonFields = {
   kind: Schema.Literal("mcp-scenario"),
   flowId: Schema.String,
   scopeIds: Schema.NonEmptyArray(Schema.String),
@@ -30,11 +39,87 @@ const McpManifestRowSchema = Schema.Struct({
   testPath: Schema.String,
   taskId: Schema.String,
   summary: Schema.String,
-});
-const McpManifestSchema = Schema.Struct({
-  schema: Schema.Literal("dnd.mcp-scenario-evidence.v1"),
-  evidence: Schema.NonEmptyArray(McpManifestRowSchema),
-});
+};
+
+type EvidenceRefKey = `${string}\u0000${string}\u0000${string}`;
+
+declare const NonQueryCoverageScenarioIdBrand: unique symbol;
+type NonQueryCoverageScenarioId = string & {
+  readonly [NonQueryCoverageScenarioIdBrand]: true;
+};
+
+function evidenceRefKey(ref: {
+  readonly scenarioId: string;
+  readonly flowId: string;
+  readonly taskId: string;
+}): EvidenceRefKey {
+  return `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}`;
+}
+
+function mcpManifestSchemaFor(matrix: CapabilityMatrix) {
+  const derivedQueryEvidenceRefs = matrix.rows
+    .filter((row) => row.id === "character-sheet-derived-queries")
+    .flatMap((row) =>
+      row.mcpEvidence.status === "observed" ? row.mcpEvidence.refs : [],
+    );
+  const derivedQueryEvidenceKeys = new Set<EvidenceRefKey>(
+    derivedQueryEvidenceRefs.map(evidenceRefKey),
+  );
+  const derivedQueryScenarioIds = new Set(
+    derivedQueryEvidenceRefs.map(({ scenarioId }) => scenarioId),
+  );
+  const derivedRowSchemas = derivedQueryEvidenceRefs.map((ref) =>
+    Schema.Struct({
+      ...McpManifestRowCommonFields,
+      flowId: Schema.Literal(ref.flowId),
+      scenarioId: Schema.Literal(ref.scenarioId),
+      taskId: Schema.Literal(ref.taskId),
+      queryKinds: CharacterSessionQueryKindsSchema,
+    }),
+  );
+  const derivedRowSchema = Schema.Union(...derivedRowSchemas, Schema.Never);
+  const NonQueryCoverageScenarioIdSchema = Schema.String.pipe(
+    Schema.filter(
+      (scenarioId): scenarioId is NonQueryCoverageScenarioId =>
+        !derivedQueryScenarioIds.has(scenarioId),
+      {
+        description:
+          "ordinary manifest rows cannot use a canonical derived-query scenario id",
+      },
+    ),
+  );
+  const nonDerivedRowSchema = Schema.Struct({
+    ...McpManifestRowCommonFields,
+    scenarioId: NonQueryCoverageScenarioIdSchema,
+  }).pipe(
+    Schema.filter((row) => !derivedQueryEvidenceKeys.has(evidenceRefKey(row)), {
+      description:
+        "ordinary manifest rows cannot use a canonical derived-query evidence key",
+    }),
+  );
+  const rowSchema = Schema.Union(derivedRowSchema, nonDerivedRowSchema);
+  return Schema.Struct({
+    schema: Schema.Literal("dnd.mcp-scenario-evidence.v1"),
+    ownerPackage: Schema.Literal("@dnd/mcp"),
+    check: Schema.Struct({
+      packageName: Schema.Literal("@dnd/mcp"),
+      script: Schema.String,
+    }),
+    requiredFlows: Schema.NonEmptyArray(
+      Schema.Struct({
+        flowId: Schema.String,
+        scopeIds: Schema.NonEmptyArray(Schema.String),
+        followUpTaskIdsByScope: Schema.Record({
+          key: Schema.String,
+          value: Schema.String,
+        }),
+        description: Schema.String,
+      }),
+    ),
+    evidence: Schema.NonEmptyArray(rowSchema),
+    scopeAuditDecisions: Schema.Array(Schema.Any),
+  });
+}
 const ConnectionOperatorStepSchema = Schema.Struct({
   step: Schema.Literal("mcp-connection"),
   evidenceKind: Schema.Literal("connectionAndToolSelection"),
@@ -387,27 +472,9 @@ function observedConnectionObservation(
 }
 
 const expectedRowIds = [
-  "character-creation-draft-finalization",
-  "character-progression-class-level",
-  "character-progression-druid-known-form",
-  "character-session-list-detail",
+  ...NON_DERIVED_CAPABILITY_ROW_ID_VALUES.slice(0, 4),
   "character-sheet-derived-queries",
-  "character-companion-retention",
-  "character-rest-lifecycles",
-  "character-healing-rest-benefits",
-  "character-feature-resources",
-  "character-font-of-magic-conversion",
-  "character-ritual-invocation",
-  "character-calendar-time",
-  "battle-mixed-roster-start",
-  "battle-character-settlement",
-  "battle-direct-initiative",
-  "battle-initial-initiative-setup",
-  "battle-roster-lifecycle",
-  "battle-snapshot-read",
-  "battle-act-discovery",
-  "battle-act-resolution",
-  "battle-turn-end",
+  ...NON_DERIVED_CAPABILITY_ROW_ID_VALUES.slice(4),
 ] as const;
 const expectedLeafIssues = [
   318, 320, 320, 318, 319, 318, 321, 322, 323, 323, 319, 321, 324, 324, 324,
@@ -415,6 +482,128 @@ const expectedLeafIssues = [
 ] as const;
 
 describe("SRD Play evaluation artifacts", () => {
+  test("specializes query-kind metadata to the canonical capability and scenario", () => {
+    const matrixPath = resolve(evalRoot, "capability-matrix.json");
+    const rawMatrix = JSON.parse(readFileSync(matrixPath, "utf8"));
+    const unrelatedMatrixRow = rawMatrix.rows.find(
+      (row: { readonly id: string }) =>
+        row.id !== "character-sheet-derived-queries",
+    );
+    if (unrelatedMatrixRow === undefined) {
+      throw new Error("Expected an unrelated capability matrix row.");
+    }
+    const matrixWithUnrelatedKinds = {
+      ...rawMatrix,
+      rows: rawMatrix.rows.map((row: { readonly id: string }) =>
+        row.id === unrelatedMatrixRow.id
+          ? {
+              ...row,
+              requiredQueryKinds: [...CHARACTER_SESSION_QUERY_KIND_VALUES],
+            }
+          : row,
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(CapabilityMatrixSchema, {
+          onExcessProperty: "error",
+        })(matrixWithUnrelatedKinds),
+      ),
+    ).toBe(true);
+    const matrixWithDerivedIdentityAsOrdinary = {
+      ...rawMatrix,
+      rows: rawMatrix.rows.map(
+        (row: {
+          readonly id: string;
+          readonly requiredQueryKinds?: readonly string[];
+        }) => {
+          if (row.id !== "character-sheet-derived-queries") return row;
+          const {
+            requiredQueryKinds: _requiredQueryKinds,
+            ...withoutRequiredQueryKinds
+          } = row;
+          void _requiredQueryKinds;
+          return withoutRequiredQueryKinds;
+        },
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(CapabilityMatrixSchema, {
+          onExcessProperty: "error",
+        })(matrixWithDerivedIdentityAsOrdinary),
+      ),
+    ).toBe(true);
+
+    const matrix = decodeCapabilityMatrix(matrixPath);
+    const rawManifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+    const coverageRow = rawManifest.evidence.find(
+      (row: { readonly queryKinds?: readonly string[] }) =>
+        row.queryKinds !== undefined,
+    );
+    const unrelatedManifestRow = rawManifest.evidence.find(
+      (row: { readonly queryKinds?: readonly string[] }) =>
+        row.queryKinds === undefined,
+    );
+    if (coverageRow === undefined || unrelatedManifestRow === undefined) {
+      throw new Error(
+        "Expected both query coverage and ordinary manifest rows.",
+      );
+    }
+    const manifestWithUnrelatedKinds = {
+      ...rawManifest,
+      evidence: rawManifest.evidence.map(
+        (row: { readonly scenarioId: string }) =>
+          row.scenarioId === unrelatedManifestRow.scenarioId
+            ? {
+                ...row,
+                queryKinds: [...CHARACTER_SESSION_QUERY_KIND_VALUES],
+              }
+            : row,
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(mcpManifestSchemaFor(matrix), {
+          onExcessProperty: "error",
+        })(manifestWithUnrelatedKinds),
+      ),
+    ).toBe(true);
+    const manifestWithoutCoverageKinds = {
+      ...rawManifest,
+      evidence: rawManifest.evidence.map(
+        (row: {
+          readonly scenarioId: string;
+          readonly queryKinds?: unknown;
+        }) => {
+          if (row.scenarioId !== coverageRow.scenarioId) return row;
+          const { queryKinds: _queryKinds, ...withoutQueryKinds } = row;
+          void _queryKinds;
+          return withoutQueryKinds;
+        },
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(mcpManifestSchemaFor(matrix), {
+          onExcessProperty: "error",
+        })(manifestWithoutCoverageKinds),
+      ),
+    ).toBe(true);
+
+    const decodedManifest = decodeFile(
+      mcpManifestSchemaFor(matrix),
+      manifestPath,
+    );
+    for (const row of decodedManifest.evidence) {
+      if ("queryKinds" in row) {
+        expect(row.scenarioId).toBe(coverageRow.scenarioId);
+      } else {
+        expect(row.scenarioId).not.toBe(coverageRow.scenarioId);
+      }
+    }
+  });
+
   test("keeps exactly the normative #314 capability rows", () => {
     const matrix = decodeCapabilityMatrix(
       resolve(evalRoot, "capability-matrix.json"),
@@ -422,6 +611,23 @@ describe("SRD Play evaluation artifacts", () => {
     expect(matrix.rows.map((row) => row.id)).toEqual(expectedRowIds);
     expect(matrix.rows.map((row) => row.leafIssue)).toEqual(expectedLeafIssues);
     expect(new Set(matrix.rows.map((row) => row.id)).size).toBe(21);
+    const derivedQueries = matrix.rows.find(
+      (row) => row.id === "character-sheet-derived-queries",
+    );
+    expect(
+      derivedQueries !== undefined && "requiredQueryKinds" in derivedQueries
+        ? derivedQueries.requiredQueryKinds
+        : undefined,
+    ).toEqual([...CHARACTER_SESSION_QUERY_KIND_VALUES]);
+    for (const row of matrix.rows) {
+      if (row.id === "character-sheet-derived-queries") {
+        expect(row.requiredQueryKinds).toEqual(
+          CHARACTER_SESSION_QUERY_KIND_VALUES,
+        );
+      } else {
+        expect("requiredQueryKinds" in row).toBe(false);
+      }
+    }
     expect(
       existsSync(
         resolve(repoRoot, matrix.representativeHeadlessJourney.testPath),
@@ -472,7 +678,7 @@ describe("SRD Play evaluation artifacts", () => {
     const matrix = decodeCapabilityMatrix(
       resolve(evalRoot, "capability-matrix.json"),
     );
-    const manifest = decodeFile(McpManifestSchema, manifestPath);
+    const manifest = decodeFile(mcpManifestSchemaFor(matrix), manifestPath);
     const inventory: EvaluationInventory = decodeEvaluationInventory(
       resolve(evalRoot, "evaluation-inventory.json"),
     );
@@ -496,6 +702,14 @@ describe("SRD Play evaluation artifacts", () => {
           rowRefKeys.add(refKey);
           const manifestRow = manifestByKey.get(refKey);
           expect(manifestRow, row.id).toBeDefined();
+          if ("requiredQueryKinds" in row) {
+            expect(
+              manifestRow !== undefined && "queryKinds" in manifestRow
+                ? manifestRow.queryKinds
+                : undefined,
+              row.id,
+            ).toEqual(row.requiredQueryKinds);
+          }
           expect(
             existsSync(resolve(repoRoot, manifestRow?.ownerPath ?? "")),
           ).toBe(true);
@@ -827,7 +1041,7 @@ function decodeFile<S extends Schema.Schema.AnyNoContext>(
   schema: S,
   path: string,
 ): Schema.Schema.Type<S> {
-  return Schema.decodeUnknownSync(schema)(
+  return Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(
     JSON.parse(readFileSync(path, "utf8")),
   );
 }

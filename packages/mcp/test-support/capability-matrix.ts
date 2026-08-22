@@ -2,6 +2,31 @@ import { readFileSync } from "node:fs";
 
 import { Schema } from "effect";
 
+import { CharacterSessionQueryKindsSchema } from "../src/character-session-query-tool-input.ts";
+
+export const NON_DERIVED_CAPABILITY_ROW_ID_VALUES = [
+  "character-creation-draft-finalization",
+  "character-progression-class-level",
+  "character-progression-druid-known-form",
+  "character-session-list-detail",
+  "character-companion-retention",
+  "character-rest-lifecycles",
+  "character-healing-rest-benefits",
+  "character-feature-resources",
+  "character-font-of-magic-conversion",
+  "character-ritual-invocation",
+  "character-calendar-time",
+  "battle-mixed-roster-start",
+  "battle-character-settlement",
+  "battle-direct-initiative",
+  "battle-initial-initiative-setup",
+  "battle-roster-lifecycle",
+  "battle-snapshot-read",
+  "battle-act-discovery",
+  "battle-act-resolution",
+  "battle-turn-end",
+] as const;
+
 const EvidenceRefSchema = Schema.Struct({
   scenarioId: Schema.String,
   flowId: Schema.String,
@@ -28,8 +53,7 @@ const InstalledRowEvidenceSchema = Schema.Struct({
   caseIds: Schema.NonEmptyArray(Schema.String),
 });
 
-const CapabilityRowSchema = Schema.Struct({
-  id: Schema.String,
+const CapabilityRowCommonFields = {
   capability: Schema.String,
   leafIssue: Schema.Number,
   mcpSurface: Schema.NonEmptyArray(Schema.String),
@@ -37,7 +61,23 @@ const CapabilityRowSchema = Schema.Struct({
   mcpEvidence: McpEvidenceSchema,
   installedChatGptEvidence: InstalledRowEvidenceSchema,
   boundary: Schema.String,
+};
+
+const DerivedQueryCapabilityRowSchema = Schema.Struct({
+  ...CapabilityRowCommonFields,
+  id: Schema.Literal("character-sheet-derived-queries"),
+  requiredQueryKinds: CharacterSessionQueryKindsSchema,
 });
+
+const NonDerivedCapabilityRowSchema = Schema.Struct({
+  ...CapabilityRowCommonFields,
+  id: Schema.Literal(...NON_DERIVED_CAPABILITY_ROW_ID_VALUES),
+});
+
+const CapabilityRowSchema = Schema.Union(
+  DerivedQueryCapabilityRowSchema,
+  NonDerivedCapabilityRowSchema,
+);
 
 export const CapabilityMatrixSchema = Schema.Struct({
   schema: Schema.Literal("dnd.srd-play.capability-matrix.v2"),

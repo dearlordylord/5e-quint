@@ -18,8 +18,10 @@ import {
 import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import {
   armorClassBuild,
+  bardJackOfAllTradesBuild,
   druidCircleLandBuild,
   prayerOfHealingClericBuild,
+  weaponMasteryBuild,
   wizardBuild,
 } from "../../character-sheet-runtime/src/test-support.test-support.ts";
 
@@ -37,6 +39,7 @@ import {
   verifyWizardIceKnifeBattleHandoff,
 } from "../test-support/mcp-acceptance-scenarios.ts";
 import { requireJsonSchema } from "../test-support/json-schema.ts";
+import { CHARACTER_SESSION_QUERY_KIND_VALUES } from "./character-session-query-tool-input.ts";
 import { createMcpApplicationServices } from "./composition-root.ts";
 import { availableCharacterSession } from "./session-store.ts";
 import { adminProjection } from "./admin-mirror.ts";
@@ -1186,6 +1189,209 @@ describe("MCP protocol server", () => {
             },
           },
         });
+      },
+    );
+  }, 60_000);
+
+  test("character-sheet-derived-queries-protocol", async () => {
+    await withCharacterRowCoverage(
+      "character-sheet-derived-queries-protocol",
+      async ({ client, host, playSessionId, validateQuery }) => {
+        await installDerivedQueryCoverageSessions(host, playSessionId);
+        const observedQueryKinds = new Set<string>();
+        const query = async (
+          characterId: string,
+          input: Readonly<Record<string, unknown>>,
+        ): Promise<Readonly<Record<string, unknown>>> => {
+          const response = await callStructuredTool(client, {
+            name: "query_character_session",
+            arguments: {
+              playSessionId,
+              characterId,
+              query: input,
+            },
+          });
+          expect(validateQuery(response).valid).toBe(true);
+          const result = operationResult(response);
+          const projectedQuery = objectField(result, "query");
+          if (typeof projectedQuery.kind !== "string") {
+            throw new Error("Expected a returned Character Sheet query kind.");
+          }
+          observedQueryKinds.add(projectedQuery.kind);
+          expect(projectedQuery.kind).toBe(input.kind);
+          return projectedQuery;
+        };
+
+        const ability = await query("character:row-derived-barbarian", {
+          kind: "abilityCheckAbility",
+          skill: "stealth",
+          defaultAbility: "dex",
+          activeFeatureUnitIds: ["barbarian_rage"],
+        });
+        expect(ability).toMatchObject({
+          kind: "abilityCheckAbility",
+          projection: {
+            defaultAbility: "dex",
+            optionalSubstitutions: [
+              {
+                ability: "str",
+                sourceUnitId: "barbarian_primal_knowledge",
+                requiredActiveFeatureUnitId: "barbarian_rage",
+              },
+            ],
+          },
+        });
+
+        const proficiency = await query("character:row-derived-bard", {
+          kind: "abilityCheckProficiencyBonus",
+          skill: "performance",
+          otherProficiencyBonus: { tag: "noOtherProficiencyBonus" },
+        });
+        expect(proficiency).toMatchObject({
+          kind: "abilityCheckProficiencyBonus",
+          projection: {
+            proficiencyBonus: {
+              tag: "jackOfAllTrades",
+              sourceUnitId: "bard_jack_of_all_trades",
+              skill: "performance",
+              bonus: 1,
+            },
+          },
+        });
+
+        const jump = await query("character:row-derived-rogue", {
+          kind: "jumpDistanceAbility",
+          defaultAbility: "str",
+        });
+        expect(jump).toMatchObject({
+          kind: "jumpDistanceAbility",
+          projection: {
+            defaultAbility: "str",
+            optionalSubstitutions: [
+              {
+                ability: "dex",
+                replaces: "str",
+                sourceUnitId: "rogue_second_story_work",
+              },
+            ],
+          },
+        });
+
+        const linkedSpeed = await query("character:row-derived-rogue", {
+          kind: "linkedSpeedGrants",
+        });
+        expect(arrayField(linkedSpeed, "projection")).toEqual([
+          {
+            sourceUnitId: "rogue_second_story_work",
+            speedKind: "climb",
+            feet: { kind: "walk_speed" },
+          },
+        ]);
+
+        const armorClass = await query("character:row-derived-armor", {
+          kind: "armorClass",
+          baseChoice: {
+            kind: "class_feature",
+            unitId: "barbarian_unarmored_defense",
+          },
+        });
+        expect(armorClass).toMatchObject({
+          kind: "armorClass",
+          projection: {
+            armorClass: 13,
+            state: {
+              base: {
+                source: "unarmored_defense",
+                sourceUnitId: "barbarian_unarmored_defense",
+              },
+            },
+          },
+        });
+
+        const spellAccess = await query("character:row-derived-cleric", {
+          kind: "spellAccess",
+        });
+        expect(arrayField(spellAccess, "projection")).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              source: "classFeature",
+              sourceUnitId: "cleric_life_domain_spells",
+              spellId: "bless",
+            }),
+          ]),
+        );
+
+        const knownForms = await query("character:row-druid", {
+          kind: "knownForms",
+        });
+        expect(knownForms).toMatchObject({
+          kind: "knownForms",
+          projection: {
+            statBlockIds: [
+              "stat_block_rat",
+              "stat_block_riding_horse",
+              "stat_block_spider",
+              "stat_block_wolf",
+            ],
+          },
+        });
+
+        const weaponMastery = await query("character:row-derived-mastery", {
+          kind: "weaponMasterySelections",
+          featureUnitId: "paladin_weapon_mastery",
+        });
+        expect(weaponMastery).toMatchObject({
+          kind: "weaponMasterySelections",
+          projection: {
+            featureUnitId: "paladin_weapon_mastery",
+            selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+            choiceCount: 2,
+          },
+        });
+
+        const ritualAccesses = await query("character:row-ritual-wizard", {
+          kind: "spellbookRitualAccesses",
+        });
+        expect(arrayField(ritualAccesses, "projection")).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              tag: "spellbookRitual",
+              spell: expect.objectContaining({ id: "detect_magic" }),
+            }),
+          ]),
+        );
+
+        const ritualAccess = await query("character:row-ritual-wizard", {
+          kind: "spellbookRitualAccess",
+          spellId: "detect_magic",
+        });
+        expect(ritualAccess).toMatchObject({
+          kind: "spellbookRitualAccess",
+          projection: {
+            tag: "spellbookRitual",
+            spell: { id: "detect_magic" },
+          },
+        });
+
+        const invocation = await query("character:row-ritual-wizard", {
+          kind: "spellInvocation",
+          spellId: "detect_magic",
+          invocation: { kind: "ritual" },
+        });
+        expect(invocation).toMatchObject({
+          kind: "spellInvocation",
+          projection: {
+            tag: "accepted",
+            invocation: {
+              tag: "spellbookRitual",
+              spellId: "detect_magic",
+            },
+          },
+        });
+
+        expect([...observedQueryKinds].sort()).toEqual(
+          [...CHARACTER_SESSION_QUERY_KIND_VALUES].sort(),
+        );
       },
     );
   }, 60_000);
@@ -2706,6 +2912,7 @@ type OutputSchemaValidator = (value: unknown) => { readonly valid: boolean };
 async function withCharacterRowCoverage(
   clientName: string,
   run: (context: {
+    readonly host: ReturnType<typeof createDndMcpProtocolServer>;
     readonly client: Client;
     readonly playSessionId: string;
     readonly validateApply: OutputSchemaValidator;
@@ -2741,6 +2948,7 @@ async function withCharacterRowCoverage(
       requireJsonSchema(queryTool.outputSchema, "query operation outputSchema"),
     );
     await run({
+      host,
       client,
       playSessionId,
       validateApply,
@@ -2968,6 +3176,90 @@ async function installCharacterRowCoverageSessions(
         ...(input.zeroHpLifecycle === undefined
           ? {}
           : { zeroHpLifecycle: input.zeroHpLifecycle }),
+      });
+      if (Either.isLeft(session)) throw new Error(session.left.message);
+      root.sessionStore.characters.set(session.right);
+    }
+  });
+  if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
+}
+
+async function installDerivedQueryCoverageSessions(
+  host: ReturnType<typeof createDndMcpProtocolServer>,
+  playSessionId: string,
+) {
+  const decoded = decodePlaySessionId(playSessionId);
+  if (decoded._tag === "Left") throw new Error(decoded.left);
+  const derivedRogueBuild = {
+    ...armorClassBuild({
+      startingClass: "class_rogue",
+      advancements: ["class_rogue", "class_rogue"],
+    }),
+    features: [
+      {
+        kind: "selectedClassChoice" as const,
+        selectedFromUnitId: unitId("class_rogue"),
+        unitId: unitId("subclass_rogue_thief"),
+      },
+    ],
+  };
+  const derivedSpellAccessBuild = {
+    ...prayerOfHealingClericBuild(),
+    features: [
+      {
+        kind: "selectedClassChoice" as const,
+        selectedFromUnitId: unitId("class_cleric"),
+        unitId: unitId("subclass_cleric_life_domain"),
+      },
+    ],
+  };
+  const result = await host.playSessions.run(decoded.right, (root) => {
+    const sessions = [
+      {
+        characterId: "character:row-derived-barbarian",
+        build: armorClassBuild({
+          startingClass: "class_barbarian",
+          advancements: ["class_barbarian", "class_barbarian"],
+        }),
+      },
+      {
+        characterId: "character:row-derived-bard",
+        build: bardJackOfAllTradesBuild({ totalLevel: 2 }),
+      },
+      {
+        characterId: "character:row-derived-rogue",
+        build: derivedRogueBuild,
+      },
+      {
+        characterId: "character:row-derived-armor",
+        build: armorClassBuild({
+          startingClass: "class_barbarian",
+          advancements: ["class_monk"],
+        }),
+      },
+      {
+        characterId: "character:row-derived-cleric",
+        build: derivedSpellAccessBuild,
+      },
+      {
+        characterId: "character:row-derived-mastery",
+        build: weaponMasteryBuild({
+          startingClass: "class_paladin",
+          featureUnitId: "paladin_weapon_mastery",
+          selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+        }),
+      },
+    ];
+    for (const input of sessions) {
+      const session = availableCharacterSession({
+        characterId: characterId(input.characterId),
+        build: input.build,
+        currentHp: Hp(1),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary: root.unitLibrary,
       });
       if (Either.isLeft(session)) throw new Error(session.left.message);
       root.sessionStore.characters.set(session.right);

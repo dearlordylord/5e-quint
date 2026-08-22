@@ -11,6 +11,10 @@ const blockedStatus = "blocked";
 const mcpScenarioEvidenceSchema = "dnd.mcp-scenario-evidence.v1";
 const mcpScenarioEvidenceSourcePath =
   "plans/unit-profile-coverage/mcp-scenario-evidence.json";
+const characterSessionQueryInputSourcePath =
+  "packages/mcp/src/character-session-query-tool-input.ts";
+const capabilityMatrixSourcePath =
+  "plugins/srd-play/evals/capability-matrix.json";
 const ultraGoldenScopeFields = Object.freeze([
   { scopeId: "level-1", reportField: "level1FullSupport" },
   { scopeId: "level-1-2", reportField: "level12FullSupport" },
@@ -152,6 +156,7 @@ const mcpEvidenceRowFields = new Set([
   "testPath",
   "taskId",
   "summary",
+  "queryKinds",
 ]);
 const mcpScopeAuditDecisionFields = new Set([
   "scopeId",
@@ -176,6 +181,143 @@ function validateNonEmptyStringArray(value, context) {
       ? []
       : [`${context}[${index}] must be a non-empty string.`],
   );
+}
+
+function sameOrderedStringArray(actual, expected) {
+  return (
+    Array.isArray(actual) &&
+    actual.length === expected.length &&
+    new Set(actual).size === actual.length &&
+    actual.every((value, index) => value === expected[index])
+  );
+}
+
+function productionCharacterSessionQueryKinds(root) {
+  const sourcePath = path.join(root, characterSessionQueryInputSourcePath);
+  if (!fs.existsSync(sourcePath)) {
+    return { kinds: undefined, issues: [] };
+  }
+  let typescript;
+  try {
+    typescript = require("typescript");
+  } catch (error) {
+    return {
+      kinds: undefined,
+      issues: [
+        `Cannot load TypeScript to read ${characterSessionQueryInputSourcePath}: ${String(error)}`,
+      ],
+    };
+  }
+  const source = typescript.createSourceFile(
+    sourcePath,
+    fs.readFileSync(sourcePath, "utf8"),
+    typescript.ScriptTarget.Latest,
+    true,
+    typescript.ScriptKind.TS,
+  );
+  const declaration = source.statements
+    .filter(typescript.isVariableStatement)
+    .flatMap((statement) => Array.from(statement.declarationList.declarations))
+    .find(
+      (candidate) =>
+        typescript.isIdentifier(candidate.name) &&
+        candidate.name.text === "CHARACTER_SESSION_QUERY_KIND_VALUES",
+    );
+  const initializer = declaration?.initializer;
+  const arrayInitializer =
+    initializer !== undefined && typescript.isAsExpression(initializer)
+      ? initializer.expression
+      : initializer;
+  if (
+    arrayInitializer === undefined ||
+    !typescript.isArrayLiteralExpression(arrayInitializer)
+  ) {
+    return {
+      kinds: undefined,
+      issues: [
+        `${characterSessionQueryInputSourcePath} must define CHARACTER_SESSION_QUERY_KIND_VALUES as an array.`,
+      ],
+    };
+  }
+  const kinds = arrayInitializer.elements.map((element) =>
+    typescript.isStringLiteral(element) ? element.text : undefined,
+  );
+  if (kinds.some((kind) => kind === undefined)) {
+    return {
+      kinds: undefined,
+      issues: [
+        `${characterSessionQueryInputSourcePath} query-kind values must be string literals.`,
+      ],
+    };
+  }
+  const stringKinds = kinds;
+  return new Set(stringKinds).size === stringKinds.length
+    ? { kinds: stringKinds, issues: [] }
+    : {
+        kinds: undefined,
+        issues: [
+          `${characterSessionQueryInputSourcePath} query-kind values must be unique.`,
+        ],
+      };
+}
+
+function derivedQueryEvidenceContract(root) {
+  const matrixPath = path.join(root, capabilityMatrixSourcePath);
+  const queryKindSource = productionCharacterSessionQueryKinds(root);
+  if (!fs.existsSync(matrixPath) || queryKindSource.kinds === undefined) {
+    return {
+      issues: queryKindSource.issues,
+      evidenceKeys: new Set(),
+      kinds: queryKindSource.kinds,
+    };
+  }
+  let matrix;
+  try {
+    matrix = JSON.parse(fs.readFileSync(matrixPath, "utf8"));
+  } catch (error) {
+    return {
+      issues: [`Cannot read ${capabilityMatrixSourcePath}: ${String(error)}`],
+      evidenceKeys: new Set(),
+      kinds: queryKindSource.kinds,
+    };
+  }
+  const row = Array.isArray(matrix.rows)
+    ? matrix.rows.find(
+        (candidate) =>
+          isRecord(candidate) &&
+          candidate.id === "character-sheet-derived-queries",
+      )
+    : undefined;
+  const refs =
+    isRecord(row) &&
+    isRecord(row.mcpEvidence) &&
+    row.mcpEvidence.status === "observed"
+      ? row.mcpEvidence.refs
+      : undefined;
+  const evidenceKeys = new Set(
+    Array.isArray(refs)
+      ? refs
+          .filter(isRecord)
+          .map(
+            (ref) => `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}`,
+          )
+      : [],
+  );
+  const issues = [...queryKindSource.issues];
+  if (evidenceKeys.size === 0) {
+    issues.push(
+      "Capability matrix character-sheet-derived-queries must reference an observed MCP scenario.",
+    );
+  }
+  if (
+    !isRecord(row) ||
+    !sameOrderedStringArray(row.requiredQueryKinds, queryKindSource.kinds)
+  ) {
+    issues.push(
+      "Capability matrix character-sheet-derived-queries.requiredQueryKinds must exactly match the production query-kind owner.",
+    );
+  }
+  return { issues, evidenceKeys, kinds: queryKindSource.kinds };
 }
 
 function validateStringArray(value, context) {
@@ -446,6 +588,22 @@ function validateMcpScenarioEvidence(manifest, { root }) {
   const context = "MCP scenario evidence manifest";
   const issues = [];
   if (!isRecord(manifest)) return [`${context} must be an object.`];
+  const requiresDerivedQueryContract =
+    Array.isArray(manifest.evidence) &&
+    manifest.evidence.some(
+      (row) => isRecord(row) && row.queryKinds !== undefined,
+    );
+  const derivedQueryContract = derivedQueryEvidenceContract(root);
+  if (
+    requiresDerivedQueryContract &&
+    derivedQueryContract.kinds === undefined &&
+    derivedQueryContract.issues.length === 0
+  ) {
+    issues.push(
+      `${context} requires the production Character Session query-kind owner and capability matrix for queryKinds evidence.`,
+    );
+  }
+  issues.push(...derivedQueryContract.issues);
   issues.push(
     ...unexpectedFieldIssues(manifest, mcpScenarioEvidenceFields, context),
   );
@@ -607,6 +765,38 @@ function validateMcpScenarioEvidence(manifest, { root }) {
             );
           }
         }
+      }
+      if (row.queryKinds !== undefined) {
+        issues.push(
+          ...validateNonEmptyStringArray(
+            row.queryKinds,
+            `${rowContext}.queryKinds`,
+          ),
+        );
+        if (
+          !derivedQueryContract.evidenceKeys.has(
+            `${row.scenarioId}\u0000${row.flowId}\u0000${row.taskId}`,
+          )
+        ) {
+          issues.push(
+            `${rowContext}.queryKinds is only allowed on the canonical derived-query evidence scenario.`,
+          );
+        } else if (
+          derivedQueryContract.kinds !== undefined &&
+          !sameOrderedStringArray(row.queryKinds, derivedQueryContract.kinds)
+        ) {
+          issues.push(
+            `${rowContext}.queryKinds must exactly match the production Character Session query-kind owner.`,
+          );
+        }
+      } else if (
+        derivedQueryContract.evidenceKeys.has(
+          `${row.scenarioId}\u0000${row.flowId}\u0000${row.taskId}`,
+        )
+      ) {
+        issues.push(
+          `${rowContext}.queryKinds is required for the canonical derived-query evidence scenario.`,
+        );
       }
       const rowKey = `${row.flowId}\u0000${row.scenarioId}\u0000${row.testPath}`;
       if (seenEvidenceRows.has(rowKey)) {
