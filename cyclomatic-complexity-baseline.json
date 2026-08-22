@@ -1335,10 +1335,10 @@
       "module/binding:surfaceSchemaRoleKey": 9
     },
     "packages/surface/src/surface/schema-nonspell.ts": {
-      "module/call:Schema.filter:argument-0:selector-319164eeb25f": 14,
-      "module/call:Schema.filter:argument-0:selector-596ceba291f1": 14,
-      "module/call:Schema.filter:argument-0:selector-e29253ecda76": 10,
-      "module/call:Schema.filter:argument-0:selector-f26dd1a3486a": 17
+      "module/call:Schema.filter:argument-0:selector-0d851a375de1": 17,
+      "module/call:Schema.filter:argument-0:selector-4f2a16240006": 14,
+      "module/call:Schema.filter:argument-0:selector-d6439d46566a": 14,
+      "module/call:Schema.filter:argument-0:selector-e8d6fdfe4db4": 10
     },
     "packages/surface/src/surface/schema.ts": {
       "module/binding:factorUnionAst": 11
