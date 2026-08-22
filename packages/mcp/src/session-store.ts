@@ -187,7 +187,10 @@ export type McpSessionStore = {
     McpBattleRosterTransitionIssue
   >;
   planActiveBattleRosterTransition(
-    operation: Exclude<McpBattleRosterOperation, { readonly kind: "remove" }>,
+    operation: Extract<
+      McpBattleRosterOperation,
+      { readonly kind: "addCharacter" | "addStatBlock" }
+    >,
   ): Either.Either<
     Extract<ActiveBattleRosterTransitionPreview, { readonly kind: "add" }>,
     McpBattleRosterTransitionIssue
@@ -278,7 +281,10 @@ export function createMcpSessionStore(input: {
     McpBattleRosterTransitionIssue
   >;
   function planActiveBattleRosterTransition(
-    operation: Exclude<McpBattleRosterOperation, { readonly kind: "remove" }>,
+    operation: Extract<
+      McpBattleRosterOperation,
+      { readonly kind: "addCharacter" | "addStatBlock" }
+    >,
   ): Either.Either<
     Extract<ActiveBattleRosterTransitionPreview, { readonly kind: "add" }>,
     McpBattleRosterTransitionIssue

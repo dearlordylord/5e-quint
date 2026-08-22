@@ -4,7 +4,8 @@ import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { describe, expect, test } from "vitest";
 import { Either } from "effect";
-import { characterId } from "@dnd/battle-runtime";
+import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
+import { characterId, combatantId } from "@dnd/battle-runtime";
 import {
   MONK_MONKS_FOCUS_UNIT_ID,
   characterDraftId,
@@ -1200,6 +1201,17 @@ describe("MCP protocol server", () => {
           combatantId: "lifecycle-skeleton",
         },
       });
+      const battleAfterStatBlockAdd = await callStructuredTool(client, {
+        name: "read_battle_state",
+        arguments: { playSessionId },
+      });
+      expect(operationResult(battleAfterStatBlockAdd)).toMatchObject({
+        snapshot: {
+          combatants: expect.arrayContaining([
+            expect.objectContaining({ combatantId: "lifecycle-skeleton" }),
+          ]),
+        },
+      });
 
       const removedStatBlock = await callStructuredTool(client, {
         name: "battle_lifecycle",
@@ -1217,6 +1229,17 @@ describe("MCP protocol server", () => {
           tag: "combatantRemoved",
           combatantId: "lifecycle-skeleton",
           removedCombatantIds: ["lifecycle-skeleton"],
+        },
+      });
+      const battleAfterStatBlockRemoval = await callStructuredTool(client, {
+        name: "read_battle_state",
+        arguments: { playSessionId },
+      });
+      expect(operationResult(battleAfterStatBlockRemoval)).toMatchObject({
+        snapshot: {
+          combatants: expect.not.arrayContaining([
+            expect.objectContaining({ combatantId: "lifecycle-skeleton" }),
+          ]),
         },
       });
 
@@ -1282,6 +1305,40 @@ describe("MCP protocol server", () => {
         },
       });
 
+      const adjustedBattle = await host.playSessions.run(
+        decoded.right,
+        (root) => {
+          const battle = root.sessionStore.battleSession;
+          if (battle === null) {
+            throw new Error("Expected an active battle before settlement.");
+          }
+          const characterCombatant = battle.state.combatants.get(
+            combatantId("lifecycle-first"),
+          );
+          if (characterCombatant?.origin.kind !== "character") {
+            throw new Error("Expected a Battle-owned Character combatant.");
+          }
+          return root.sessionStore.storeActiveBattle(
+            battleRuntimeSessionForTest({
+              state: {
+                ...battle.state,
+                combatants: new Map(battle.state.combatants).set(
+                  characterCombatant.combatantId,
+                  {
+                    ...characterCombatant,
+                    hp: Hp(7),
+                    positiveHpUnconscious: null,
+                  },
+                ),
+              },
+              context: battle.context,
+            }),
+          );
+        },
+      );
+      if (Either.isLeft(adjustedBattle)) {
+        throw new Error("Expected canonical Battle HP adjustment to commit.");
+      }
       const removed = await callStructuredTool(client, {
         name: "battle_lifecycle",
         arguments: {
@@ -1303,6 +1360,17 @@ describe("MCP protocol server", () => {
       const settled = await callStructuredTool(client, {
         name: "inspect_character_session",
         arguments: { playSessionId, characterId: firstCharacterId },
+      });
+      expect(settled).toMatchObject({
+        operation: {
+          result: {
+            detail: {
+              sheetProjection: {
+                currentHp: 7,
+              },
+            },
+          },
+        },
       });
       expect(JSON.stringify(settled)).toContain('"tag":"available"');
 
@@ -1390,6 +1458,7 @@ describe("MCP protocol server", () => {
           return structuredClone({
             projection: projection.right,
             sessionSnapshot: root.sessionStore.snapshot(),
+            drafts: Array.from(root.sessionStore.drafts.entries()),
             characterSessions: Array.from(
               root.sessionStore.characters.entries(),
             ),
