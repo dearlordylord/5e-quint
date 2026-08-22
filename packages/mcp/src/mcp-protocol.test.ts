@@ -11,10 +11,16 @@ import {
   characterDraftId,
 } from "@dnd/character-creation-runtime";
 import { Hp, resourceCount } from "@dnd/shared/types";
-import { unitId } from "@dnd/shared/game-facts";
+import {
+  elapsedTimeTicks,
+  ELAPSED_TIME_TICKS_PER_HOUR,
+} from "@dnd/shared/elapsed-time";
+import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import {
   armorClassBuild,
+  druidCircleLandBuild,
   prayerOfHealingClericBuild,
+  wizardBuild,
 } from "../../character-sheet-runtime/src/test-support.test-support.ts";
 
 import {
@@ -810,6 +816,24 @@ describe("MCP protocol server", () => {
       const validateOutput = new AjvJsonSchemaValidator().getValidator(
         operationTool.outputSchema as JsonSchemaType,
       );
+      const rawDiceRaw = await client.callTool({
+        name: "roll_dice",
+        arguments: {
+          playSessionId,
+          groups: [{ dice: 1, dieSize: 20 }],
+        },
+      });
+      if (rawDiceRaw.isError === true) {
+        throw new Error(`roll_dice failed: ${JSON.stringify(rawDiceRaw)}`);
+      }
+      if (!isJsonObject(rawDiceRaw.structuredContent)) {
+        throw new Error("Expected typed roll_dice result.");
+      }
+      const rawDice = operationResult(rawDiceRaw.structuredContent);
+      expect(rawDice.correlationId).toBeTypeOf("string");
+      expect(arrayField(rawDice, "groups")[0]).toMatchObject({
+        dieSize: 20,
+      });
       await verifyLevelNineRangerExpertiseSheetScenario(client);
       const rangerCharacterId = characterIdFromDraftId(
         characterDraftId("draft:stdio-level-nine-orc-soldier-ranger-expertise"),
@@ -907,6 +931,543 @@ describe("MCP protocol server", () => {
       await Promise.allSettled([client.close(), host.server.close()]);
     }
   }, 30_000);
+
+  test("routes the missing Character Sheet row operations through real MCP", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const host = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "character-row-coverage-protocol-client",
+      version: "0.1.0",
+    });
+
+    try {
+      await host.server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const playSessionId = await createPlaySession(client);
+      await installCharacterRowCoverageSessions(host, playSessionId);
+
+      const applyTool = (await client.listTools()).tools.find(
+        (tool) => tool.name === "apply_character_session_operation",
+      );
+      const queryTool = (await client.listTools()).tools.find(
+        (tool) => tool.name === "query_character_session",
+      );
+      if (
+        applyTool?.outputSchema === undefined ||
+        queryTool?.outputSchema === undefined
+      ) {
+        throw new Error("Expected Character Session operation schemas.");
+      }
+      const validateApply = new AjvJsonSchemaValidator().getValidator(
+        applyTool.outputSchema as JsonSchemaType,
+      );
+      const validateQuery = new AjvJsonSchemaValidator().getValidator(
+        queryTool.outputSchema as JsonSchemaType,
+      );
+
+      const replaced = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:row-druid",
+          operation: {
+            kind: "replaceDruidWildShapeKnownForm",
+            replacement: {
+              replaceStatBlockId: "stat_block_rat",
+              selectedStatBlockId: "stat_block_cat",
+            },
+          },
+        },
+      });
+      expect(validateApply(replaced).valid).toBe(true);
+      expect(operationResult(replaced)).toMatchObject({
+        detail: { tag: "available", characterId: "character:row-druid" },
+      });
+
+      const retained = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:row-companion-wizard",
+          operation: {
+            kind: "retainOneAtATimeCompanion",
+            companionId: "row-coverage-familiar",
+            source: { tag: "ritualSpell", spellId: "find_familiar" },
+            selectedForm: { tag: "normalNamedForm", formId: "cat" },
+            creatureTypeOverrideChoiceId: "fey",
+          },
+        },
+      });
+      expect(validateApply(retained).valid).toBe(true);
+      expect(operationResult(retained)).toMatchObject({
+        character: {
+          companion: {
+            companion: { companionId: "row-coverage-familiar" },
+          },
+        },
+      });
+
+      const mixedRoster = await callStructuredTool(client, {
+        name: "start_battle",
+        arguments: {
+          playSessionId,
+          battleId: "battle:row-coverage-mixed-companion",
+          initialCombatants: [
+            {
+              kind: "characterSession",
+              ammunitionStocks: [],
+              characterId: "character:row-companion-wizard",
+              combatantId: "row-companion-owner",
+              initiative: 12,
+            },
+            {
+              kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId: "row-companion-goblin",
+              initiative: 8,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+          ],
+          companionAdmissions: [
+            {
+              ownerCharacterId: "character:row-companion-wizard",
+              ammunitionStocks: [],
+              companionCombatantId: "row-coverage-familiar",
+              initiative: 18,
+            },
+          ],
+        },
+      });
+      expect(operationResult(mixedRoster)).toMatchObject({
+        snapshot: {
+          companions: [
+            expect.objectContaining({
+              companionId: "row-coverage-familiar",
+              ownerId: "row-companion-owner",
+            }),
+          ],
+          turnOrder: [
+            "row-coverage-familiar",
+            "row-companion-owner",
+            "row-companion-goblin",
+          ],
+        },
+      });
+      const mixedRosterEnded = await callStructuredTool(client, {
+        name: "end_battle",
+        arguments: { playSessionId },
+      });
+      expect(operationResult(mixedRosterEnded)).toMatchObject({
+        endedBattleId: "battle:row-coverage-mixed-companion",
+        session: { battleState: { tag: "none" } },
+      });
+
+      const shieldBattle = await callStructuredTool(client, {
+        name: "start_battle",
+        arguments: {
+          playSessionId,
+          battleId: "battle:row-coverage-interrupt",
+          initialCombatants: [
+            {
+              kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              statBlockId: "stat_block_goblin_warrior",
+              combatantId: "row-shield-goblin",
+              initiative: 20,
+              admissionSource: { kind: "encounterParticipant" },
+            },
+            {
+              kind: "characterSession",
+              ammunitionStocks: [],
+              characterId: "character:row-shield-wizard",
+              combatantId: "row-shield-wizard",
+              initiative: 10,
+            },
+          ],
+        },
+      });
+      expect(operationResult(shieldBattle)).toMatchObject({
+        snapshot: {
+          currentActorId: "row-shield-goblin",
+        },
+      });
+      const discoveredShieldBattle = operationResult(
+        await callStructuredTool(client, {
+          name: "discover_battle_acts",
+          arguments: { playSessionId },
+        }),
+      );
+      const goblinAttack = jsonObjectArrayAt(
+        discoveredShieldBattle,
+        "availableActs",
+      ).find((act) => {
+        const subject = act.subject;
+        return (
+          act.summary === "Take the Attack action with Scimitar." &&
+          isJsonObject(subject) &&
+          subject.tag === "action" &&
+          subject.action === "attack" &&
+          subject.actorId === "row-shield-goblin" &&
+          subject.statBlockDamageNotation === undefined
+        );
+      });
+      if (!goblinAttack || !isJsonObject(goblinAttack.subject)) {
+        throw new Error("Expected a returned goblin Scimitar Attack act.");
+      }
+      const attackSubject = goblinAttack.subject;
+      const attackHoles = jsonObjectArrayAt(goblinAttack, "initialHoles");
+      const targetHole = attackHoles.find(
+        (hole) => hole.kind === "targetChoice",
+      );
+      if (
+        !targetHole ||
+        typeof targetHole.holeId !== "string" ||
+        typeof attackSubject.actorId !== "string" ||
+        typeof attackSubject.procedureRef !== "string"
+      ) {
+        throw new Error("Expected an execution-bound Attack target hole.");
+      }
+      const targetSelection = {
+        procedureRef: attackSubject.procedureRef,
+        ...(typeof attackSubject.attackAbility === "string"
+          ? { attackAbility: attackSubject.attackAbility }
+          : {}),
+        ...(typeof attackSubject.attackDamageType === "string"
+          ? { attackDamageType: attackSubject.attackDamageType }
+          : {}),
+      };
+      const afterTarget = await callStructuredTool(client, {
+        name: "fill_battle_hole",
+        arguments: {
+          playSessionId,
+          subject: attackSubject,
+          fill: {
+            kind: "targetChoice",
+            holeId: targetHole.holeId,
+            value: "row-shield-wizard",
+            spatialFacts: [
+              {
+                kind: "attackTargetInMeleeReach",
+                actorId: attackSubject.actorId,
+                targetId: "row-shield-wizard",
+                ...targetSelection,
+              },
+            ],
+          },
+        },
+      });
+      const afterTargetResult = operationResult(afterTarget);
+      const attackRollHole = jsonObjectArrayAt(
+        objectField(afterTargetResult, "result"),
+        "holes",
+      ).find((hole) => hole.kind === "attackRoll");
+      if (!attackRollHole || typeof attackRollHole.holeId !== "string") {
+        throw new Error("Expected a returned Attack roll hole.");
+      }
+      const afterAttackRoll = await callStructuredTool(client, {
+        name: "fill_battle_hole",
+        arguments: {
+          playSessionId,
+          subject: attackSubject,
+          fill: {
+            kind: "attackRoll",
+            holeId: attackRollHole.holeId,
+            value: {
+              total: 14,
+              naturalD20: 10,
+              ...(typeof attackRollHole.rollMode === "string"
+                ? { rollMode: attackRollHole.rollMode }
+                : {}),
+            },
+          },
+        },
+      });
+      const afterAttackRollResult = operationResult(afterAttackRoll);
+      const interruptHole = jsonObjectArrayAt(
+        objectField(afterAttackRollResult, "result"),
+        "holes",
+      ).find((hole) => hole.kind === "interruptDecision");
+      const interruptChoices = jsonObjectArrayAt(
+        afterAttackRollResult,
+        "presentedInterruptChoices",
+      );
+      const shieldChoice = interruptChoices.find((presented) => {
+        const choice = presented.choice;
+        const presentation = presented.presentation;
+        return (
+          isJsonObject(choice) &&
+          choice.kind === "castTriggeredReactionSpell" &&
+          choice.reactorId === "row-shield-wizard" &&
+          isJsonObject(presentation) &&
+          presentation.kind === "spell" &&
+          isJsonObject(presentation.invocation) &&
+          presentation.invocation.spellId === "shield"
+        );
+      });
+      if (
+        !interruptHole ||
+        typeof interruptHole.holeId !== "string" ||
+        !shieldChoice ||
+        !isJsonObject(shieldChoice.choice) ||
+        !isJsonObject(shieldChoice.choice.subject) ||
+        typeof shieldChoice.choice.subject.procedureRef !== "string"
+      ) {
+        throw new Error("Expected a returned Shield interrupt choice.");
+      }
+      const resolvedInterrupt = await callStructuredTool(client, {
+        name: "fill_battle_hole",
+        arguments: {
+          playSessionId,
+          subject: attackSubject,
+          fill: {
+            kind: "interruptDecision",
+            holeId: interruptHole.holeId,
+            value: {
+              kind: "resolve",
+              responderId: "row-shield-wizard",
+              choice: {
+                kind: "castTriggeredReactionSpell",
+                procedureRef: shieldChoice.choice.subject.procedureRef,
+                fills: [],
+              },
+            },
+          },
+        },
+      });
+      expect(operationResult(resolvedInterrupt)).toMatchObject({
+        result: { tag: "resolved" },
+      });
+      await callStructuredTool(client, {
+        name: "end_turn",
+        arguments: { playSessionId, actorId: "row-shield-goblin" },
+      });
+      const shieldBattleEndedRaw = await client.callTool({
+        name: "end_battle",
+        arguments: { playSessionId },
+      });
+      if (shieldBattleEndedRaw.isError === true) {
+        throw new Error(
+          `Expected interrupt battle to end: ${JSON.stringify(
+            shieldBattleEndedRaw.structuredContent,
+          )}`,
+        );
+      }
+      if (!isJsonObject(shieldBattleEndedRaw.structuredContent)) {
+        throw new Error("Expected typed interrupt battle settlement.");
+      }
+      const shieldBattleEnded = shieldBattleEndedRaw.structuredContent;
+      expect(operationResult(shieldBattleEnded)).toMatchObject({
+        endedBattleId: "battle:row-coverage-interrupt",
+      });
+
+      const shortRest = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:row-rest-fighter",
+          operation: {
+            kind: "completeShortRest",
+            restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+          },
+        },
+      });
+      expect(validateApply(shortRest).valid).toBe(true);
+      expect(operationResult(shortRest)).toMatchObject({
+        result: {
+          tag: "shortRestCompleted",
+          restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+        },
+      });
+
+      const longRest = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:row-rest-fighter",
+          operation: {
+            kind: "completeLongRest",
+            timing: { tag: "noPriorLongRest" },
+            restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 8,
+          },
+        },
+      });
+      expect(validateApply(longRest).valid).toBe(true);
+      expect(operationResult(longRest)).toMatchObject({
+        result: {
+          tag: "longRestCompleted",
+          restedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 8,
+        },
+      });
+
+      const interruptedLongRest = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:row-interrupted-rest-fighter",
+          operation: {
+            kind: "interruptLongRest",
+            timing: { tag: "noPriorLongRest" },
+            interruptionSegments: [
+              {
+                cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+                interruption: "takeDamage",
+                spendHitDice: [{ classUnitId: "class_fighter", roll: 4 }],
+              },
+            ],
+            completion: {
+              cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 10,
+            },
+          },
+        },
+      });
+      expect(validateApply(interruptedLongRest).valid).toBe(true);
+      expect(operationResult(interruptedLongRest)).toMatchObject({
+        result: { tag: "longRestCompleted" },
+      });
+
+      const calendarResolved = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:row-calendar-fighter",
+          operation: {
+            kind: "passCalendarTime",
+            duration: { kind: "timeSpan", unit: "hour", amount: 1 },
+            fills: [],
+          },
+        },
+      });
+      expect(validateApply(calendarResolved).valid).toBe(true);
+      expect(operationResult(calendarResolved)).toMatchObject({
+        result: {
+          tag: "resolved",
+          elapsedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+        },
+      });
+
+      const calendarNeedsRoll = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:row-stable-fighter",
+          operation: {
+            kind: "passCalendarTime",
+            duration: { kind: "timeSpan", unit: "hour", amount: 1 },
+            fills: [],
+          },
+        },
+      });
+      expect(validateApply(calendarNeedsRoll).valid).toBe(true);
+      const stableResult = operationResult(calendarNeedsRoll);
+      expect(stableResult).toMatchObject({
+        result: { tag: "needsHoles", holes: expect.any(Array) },
+      });
+      const stableResultPayload = objectField(stableResult, "result");
+      const stableHoles = arrayField(stableResultPayload, "holes");
+      const stableRollHole = stableHoles.find(
+        (hole): hole is Readonly<Record<string, unknown>> =>
+          isJsonObject(hole) && hole.kind === "rolledDice",
+      );
+      if (!stableRollHole || typeof stableRollHole.holeId !== "string") {
+        throw new Error("Expected a Stable recovery rolled-dice hole.");
+      }
+      const calendarFilled = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:row-stable-fighter",
+          operation: {
+            kind: "passCalendarTime",
+            duration: { kind: "timeSpan", unit: "hour", amount: 1 },
+            fills: [
+              {
+                kind: "rolledDice",
+                holeId: stableRollHole.holeId,
+                value: [{ results: [2] }],
+              },
+            ],
+          },
+        },
+      });
+      expect(validateApply(calendarFilled).valid).toBe(true);
+      expect(operationResult(calendarFilled)).toMatchObject({
+        result: { tag: "resolved" },
+      });
+
+      const ritualAccess = await callStructuredTool(client, {
+        name: "query_character_session",
+        arguments: {
+          playSessionId,
+          characterId: "character:row-ritual-wizard",
+          query: { kind: "spellbookRitualAccesses" },
+        },
+      });
+      expect(validateQuery(ritualAccess).valid).toBe(true);
+      const ritualAccessResult = operationResult(ritualAccess);
+      const ritualAccessQuery = objectField(ritualAccessResult, "query");
+      expect(ritualAccessQuery.kind).toBe("spellbookRitualAccesses");
+      expect(arrayField(ritualAccessQuery, "projection")).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            tag: "spellbookRitual",
+            spell: expect.objectContaining({ id: "detect_magic" }),
+          }),
+        ]),
+      );
+      const ritualInvocation = await callStructuredTool(client, {
+        name: "query_character_session",
+        arguments: {
+          playSessionId,
+          characterId: "character:row-ritual-wizard",
+          query: {
+            kind: "spellInvocation",
+            spellId: "detect_magic",
+            invocation: { kind: "ritual" },
+          },
+        },
+      });
+      expect(validateQuery(ritualInvocation).valid).toBe(true);
+      expect(operationResult(ritualInvocation)).toMatchObject({
+        query: {
+          projection: {
+            tag: "accepted",
+            invocation: {
+              tag: "spellbookRitual",
+              spellId: "detect_magic",
+            },
+          },
+        },
+      });
+
+      const spellRestBenefit = await callStructuredTool(client, {
+        name: "apply_character_session_operation",
+        arguments: {
+          playSessionId,
+          characterId: "character:row-healing-cleric",
+          operation: {
+            kind: "applySpellRestBenefit",
+            spellId: "prayer_of_healing",
+            castLevel: 2,
+            recipients: [
+              {
+                characterId: "character:row-healing-target",
+                eligibility: { remainedWithinRangeForEntireCasting: true },
+                healingRolls: [4, 4],
+              },
+            ],
+          },
+        },
+      });
+      expect(validateApply(spellRestBenefit).valid).toBe(true);
+      expect(operationResult(spellRestBenefit)).toMatchObject({
+        result: { tag: "spellRestBenefitApplied" },
+      });
+    } finally {
+      await Promise.allSettled([client.close(), host.server.close()]);
+    }
+  }, 60_000);
 
   test("round-trips a mixed character and Stat Block roster through MCP", async () => {
     const [clientTransport, serverTransport] =
@@ -2106,6 +2667,148 @@ async function installHealingSessions(
   if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
 }
 
+async function installCharacterRowCoverageSessions(
+  host: ReturnType<typeof createDndMcpProtocolServer>,
+  playSessionId: string,
+) {
+  const decoded = decodePlaySessionId(playSessionId);
+  if (decoded._tag === "Left") throw new Error(decoded.left);
+  const result = await host.playSessions.run(decoded.right, (root) => {
+    const wizardBase = wizardBuild({ wizardAdvancements: 0 });
+    const companionWizardBuild = {
+      ...wizardBase,
+      spellcasting: {
+        ...wizardBase.spellcasting!,
+        sources: [
+          {
+            ...wizardBase.spellcasting!.sources[0]!,
+            spellbook: [unitId("find_familiar")],
+            preparedSpells: [unitId("find_familiar")],
+          },
+        ] as const,
+      },
+    };
+    const ritualWizardBuild = {
+      ...wizardBase,
+      spellcasting: {
+        ...wizardBase.spellcasting!,
+        sources: [
+          {
+            ...wizardBase.spellcasting!.sources[0]!,
+            spellbook: [unitId("detect_magic")],
+            preparedSpells: [unitId("detect_magic")],
+          },
+        ] as const,
+      },
+    };
+    const shieldWizardBuild = {
+      ...wizardBase,
+      spellcasting: {
+        ...wizardBase.spellcasting!,
+        sources: [
+          {
+            ...wizardBase.spellcasting!.sources[0]!,
+            spellbook: [unitId("shield")],
+            preparedSpells: [unitId("shield")],
+          },
+        ] as const,
+      },
+    };
+    const stableFighterBuild = armorClassBuild({
+      startingClass: "class_fighter",
+    });
+    const sessions = [
+      {
+        characterId: "character:row-druid",
+        build: druidCircleLandBuild({ druidLevel: 2 }),
+        druidWildShapeKnownFormStatBlockIds: [
+          statBlockId("stat_block_rat"),
+          statBlockId("stat_block_riding_horse"),
+          statBlockId("stat_block_spider"),
+          statBlockId("stat_block_wolf"),
+        ],
+        currentHp: Hp(10),
+      },
+      {
+        characterId: "character:row-companion-wizard",
+        build: companionWizardBuild,
+        currentHp: Hp(7),
+      },
+      {
+        characterId: "character:row-ritual-wizard",
+        build: ritualWizardBuild,
+        currentHp: Hp(7),
+      },
+      {
+        characterId: "character:row-shield-wizard",
+        build: shieldWizardBuild,
+        currentHp: Hp(7),
+      },
+      {
+        characterId: "character:row-rest-fighter",
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        currentHp: Hp(10),
+      },
+      {
+        characterId: "character:row-interrupted-rest-fighter",
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        currentHp: Hp(10),
+      },
+      {
+        characterId: "character:row-calendar-fighter",
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        currentHp: Hp(10),
+      },
+      {
+        characterId: "character:row-stable-fighter",
+        build: stableFighterBuild,
+        currentHp: Hp(0),
+        zeroHpLifecycle: {
+          tag: "stable" as const,
+          recovery: {
+            kind: "regains1HpAfter1d4Hours" as const,
+            elapsedBeforeRecoveryRoll: elapsedTimeTicks(0),
+          },
+        },
+      },
+      {
+        characterId: "character:row-healing-cleric",
+        build: prayerOfHealingClericBuild(),
+        currentHp: Hp(10),
+      },
+      {
+        characterId: "character:row-healing-target",
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        currentHp: Hp(1),
+      },
+    ];
+    for (const input of sessions) {
+      const session = availableCharacterSession({
+        characterId: characterId(input.characterId),
+        build: input.build,
+        currentHp: input.currentHp,
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary: root.unitLibrary,
+        ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+          ? {}
+          : {
+              druidWildShapeKnownFormStatBlockIds:
+                input.druidWildShapeKnownFormStatBlockIds,
+            }),
+        ...(input.zeroHpLifecycle === undefined
+          ? {}
+          : { zeroHpLifecycle: input.zeroHpLifecycle }),
+      });
+      if (Either.isLeft(session)) throw new Error(session.left.message);
+      root.sessionStore.characters.set(session.right);
+    }
+  });
+  if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
+}
+
 async function installInitiativeSession(
   host: ReturnType<typeof createDndMcpProtocolServer>,
   playSessionId: string,
@@ -2207,4 +2910,16 @@ function objectField(
   const result = value[field];
   if (!isJsonObject(result)) throw new Error(`Expected ${field} object.`);
   return result;
+}
+
+function jsonObjectArrayAt(
+  value: Readonly<Record<string, unknown>>,
+  field: string,
+): ReadonlyArray<Readonly<Record<string, unknown>>> {
+  return arrayField(value, field).map((entry, index) => {
+    if (!isJsonObject(entry)) {
+      throw new Error(`${field}.${index} must be an object.`);
+    }
+    return entry;
+  });
 }

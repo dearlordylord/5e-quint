@@ -6,7 +6,11 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { mcpAcceptanceScenarioIds } from "../test-support/mcp-acceptance-scenarios.ts";
+import {
+  decodeEvaluationInventory,
+  type EvaluationInventory,
+} from "../test-support/evaluation-inventory.ts";
+import { mcpScenarioEvidenceIds } from "../test-support/mcp-acceptance-scenarios.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
@@ -31,16 +35,9 @@ const McpEvidenceSchema = Schema.Union(
     reason: Schema.String,
   }),
 );
-const InstalledRowEvidenceSchema = Schema.Union(
-  Schema.Struct({
-    status: Schema.Literal("pending"),
-    caseIds: Schema.NonEmptyArray(Schema.String),
-  }),
-  Schema.Struct({
-    status: Schema.Literal("observed"),
-    caseIds: Schema.NonEmptyArray(Schema.String),
-  }),
-);
+const InstalledRowEvidenceSchema = Schema.Struct({
+  caseIds: Schema.NonEmptyArray(Schema.String),
+});
 const CapabilityRowSchema = Schema.Struct({
   id: Schema.String,
   capability: Schema.String,
@@ -77,19 +74,8 @@ const CapabilityMatrixSchema = Schema.Struct({
       "plugins/srd-play/evals/installed-chatgpt-evidence.json",
     ),
     evidenceKind: Schema.Literal("installedSkillActivation"),
-    status: Schema.Literal("pending"),
   }),
   rows: Schema.NonEmptyArray(CapabilityRowSchema),
-});
-const EvaluationCaseSchema = Schema.Struct({
-  id: Schema.String,
-  kind: Schema.String,
-  prompt: Schema.String,
-  after: Schema.optionalWith(Schema.String, { exact: true }),
-});
-const EvaluationInventorySchema = Schema.Struct({
-  mcpToolSelection: Schema.Array(EvaluationCaseSchema),
-  skillActivation: Schema.Array(EvaluationCaseSchema),
 });
 const McpManifestRowSchema = Schema.Struct({
   kind: Schema.Literal("mcp-scenario"),
@@ -118,6 +104,7 @@ const OperatorStepSchema = Schema.Struct({
 const PendingCaseResultSchema = Schema.Struct({
   caseId: Schema.String,
   evidenceKind: Schema.Literal(
+    "connectionAndToolSelection",
     "installedSkillActivation",
     "installedCompleteWorkflow",
   ),
@@ -126,6 +113,7 @@ const PendingCaseResultSchema = Schema.Struct({
 const ObservedCaseResultSchema = Schema.Struct({
   caseId: Schema.String,
   evidenceKind: Schema.Literal(
+    "connectionAndToolSelection",
     "installedSkillActivation",
     "installedCompleteWorkflow",
   ),
@@ -178,8 +166,47 @@ const ObservedInstalledEvidenceSchema = Schema.Struct({
 const InstalledEvidenceSchema = Schema.Union(
   PendingInstalledEvidenceSchema,
   ObservedInstalledEvidenceSchema,
+).pipe(
+  Schema.filter(hasCompleteInstalledCaseCoverage, {
+    description:
+      "installed evidence with every connection, activation, and workflow case",
+  }),
 );
 type InstalledEvidence = typeof InstalledEvidenceSchema.Type;
+
+const expectedInstalledCaseKeys = [
+  "mcp-direct-catalog:connectionAndToolSelection",
+  "mcp-indirect-catalog:connectionAndToolSelection",
+  "mcp-follow-up-detail:connectionAndToolSelection",
+  "mcp-unsupported-history:connectionAndToolSelection",
+  "skill-direct:installedSkillActivation",
+  "skill-natural:installedSkillActivation",
+  "skill-continuation:installedSkillActivation",
+  "skill-unrelated-dnd:installedSkillActivation",
+  "skill-authoring-boundary:installedSkillActivation",
+  "skill-natural:installedCompleteWorkflow",
+  "skill-continuation:installedCompleteWorkflow",
+] as const;
+
+function hasCompleteInstalledCaseCoverage(evidence: {
+  readonly status: "pending" | "observed";
+  readonly caseResults: ReadonlyArray<{
+    readonly caseId: string;
+    readonly evidenceKind:
+      | "connectionAndToolSelection"
+      | "installedSkillActivation"
+      | "installedCompleteWorkflow";
+  }>;
+}): boolean {
+  const actualCaseKeys = evidence.caseResults.map(
+    ({ caseId, evidenceKind }) => `${caseId}:${evidenceKind}`,
+  );
+  return (
+    actualCaseKeys.length === expectedInstalledCaseKeys.length &&
+    new Set(actualCaseKeys).size === expectedInstalledCaseKeys.length &&
+    expectedInstalledCaseKeys.every((key) => actualCaseKeys.includes(key))
+  );
+}
 
 const expectedRowIds = [
   "character-creation-draft-finalization",
@@ -233,7 +260,16 @@ describe("SRD Play evaluation artifacts", () => {
         resolve(repoRoot, matrix.installedChatGptEvidence.artifactPath),
       ),
     ).toBe(true);
-    expect(mcpAcceptanceScenarioIds()).toContain(
+    const installedEvidence = decodeInstalledEvidence(
+      JSON.parse(
+        readFileSync(
+          resolve(repoRoot, matrix.installedChatGptEvidence.artifactPath),
+          "utf8",
+        ),
+      ),
+    );
+    expect(installedEvidence.status).toBe("pending");
+    expect(mcpScenarioEvidenceIds()).toContain(
       matrix.representativeHeadlessJourney.scenarioId,
     );
     for (const row of matrix.rows) {
@@ -242,16 +278,14 @@ describe("SRD Play evaluation artifacts", () => {
       expect(row.mcpSurface.length, row.id).toBeGreaterThan(0);
       expect(row.modelVisibleProjection.length, row.id).toBeGreaterThan(0);
       expect(row.mcpEvidence.status, row.id).toBe("observed");
-      expect(row.installedChatGptEvidence.status, row.id).toBe("pending");
     }
   });
 
   test("cross-validates MCP refs, inventory cases, scenario ids, and projection contracts", async () => {
     const matrix = decodeJson(CapabilityMatrixSchema, "capability-matrix.json");
     const manifest = decodeFile(McpManifestSchema, manifestPath);
-    const inventory = decodeJson(
-      EvaluationInventorySchema,
-      "evaluation-inventory.json",
+    const inventory: EvaluationInventory = decodeEvaluationInventory(
+      resolve(evalRoot, "evaluation-inventory.json"),
     );
     const manifestByKey = new Map(
       manifest.evidence.map((row) => [
@@ -259,7 +293,7 @@ describe("SRD Play evaluation artifacts", () => {
         row,
       ]),
     );
-    const scenarioIds = new Set<string>(mcpAcceptanceScenarioIds());
+    const scenarioIds = new Set<string>(mcpScenarioEvidenceIds());
     const skillCaseIds = new Set(inventory.skillActivation.map(({ id }) => id));
     for (const row of matrix.rows) {
       if (row.mcpEvidence.status === "observed") {
@@ -297,23 +331,33 @@ describe("SRD Play evaluation artifacts", () => {
       await client.connect(clientTransport);
       const tools = await client.listTools();
       const toolByName = new Map(tools.tools.map((tool) => [tool.name, tool]));
+      const missingProjections: string[] = [];
       for (const row of matrix.rows) {
-        const outputSchemaText = row.mcpSurface
-          .map((toolName) => {
-            const tool = toolByName.get(toolName);
-            expect(tool, `${row.id}: ${toolName}`).toBeDefined();
-            expect(
-              tool?.outputSchema,
-              `${row.id}: ${toolName} outputSchema`,
-            ).toBeDefined();
-            return JSON.stringify(tool?.outputSchema);
-          })
-          .join(" ");
+        const outputSchemas = row.mcpSurface.map((toolName) => {
+          const tool = toolByName.get(toolName);
+          expect(tool, `${row.id}: ${toolName}`).toBeDefined();
+          expect(
+            tool?.outputSchema,
+            `${row.id}: ${toolName} outputSchema`,
+          ).toBeDefined();
+          return tool?.outputSchema;
+        });
         for (const projection of row.modelVisibleProjection) {
-          const root = projection.split(/[.[]/u, 1)[0];
-          expect(outputSchemaText, `${row.id}: ${projection}`).toContain(root);
+          if (
+            !outputSchemas.some((schema) =>
+              schemaHasProjectionPath(schema, projection),
+            )
+          ) {
+            missingProjections.push(`${row.id}: ${projection}`);
+          }
         }
       }
+      expect(missingProjections).toEqual([]);
+      const readBattleStateSchema =
+        toolByName.get("read_battle_state")?.outputSchema;
+      expect(
+        schemaHasProjectionPath(readBattleStateSchema, "snapshot.notReal"),
+      ).toBe(false);
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
@@ -341,14 +385,18 @@ describe("SRD Play evaluation artifacts", () => {
         ),
       ).size,
     ).toBe(evidence.caseResults.length);
+    expect(
+      evidence.caseResults
+        .map(({ caseId, evidenceKind }) => `${caseId}:${evidenceKind}`)
+        .sort(),
+    ).toEqual([...expectedInstalledCaseKeys].sort());
     expect(evidence.operatorProtocol.map(({ step }) => step)).toEqual([
       "mcp-connection",
       "complete-plugin",
       "newcomer-journey",
     ]);
-    const inventory = decodeJson(
-      EvaluationInventorySchema,
-      "evaluation-inventory.json",
+    const inventory: EvaluationInventory = decodeEvaluationInventory(
+      resolve(evalRoot, "evaluation-inventory.json"),
     );
     const mcpCaseIds = new Set(inventory.mcpToolSelection.map(({ id }) => id));
     const skillCaseIds = new Set(inventory.skillActivation.map(({ id }) => id));
@@ -364,7 +412,11 @@ describe("SRD Play evaluation artifacts", () => {
       }
     }
     for (const result of evidence.caseResults) {
-      expect(skillCaseIds.has(result.caseId)).toBe(true);
+      const caseIds =
+        result.evidenceKind === "connectionAndToolSelection"
+          ? mcpCaseIds
+          : skillCaseIds;
+      expect(caseIds.has(result.caseId)).toBe(true);
     }
   });
 
@@ -389,28 +441,24 @@ describe("SRD Play evaluation artifacts", () => {
         accountScope: "developer-mode-account",
         workspacePolicy: "developer-mode-enabled",
       },
-      caseResults: [
-        {
-          caseId: "skill-direct",
-          evidenceKind: "installedSkillActivation",
-          status: "observed",
-          result: "passed",
-          promptRef: "skill-direct",
-          observedAt: "2026-08-21T00:00:00Z",
-          resultSummary: "Skill activated and selected the catalog tool.",
-          observedToolNames: ["list_catalog_units"],
-        },
-        {
-          caseId: "skill-unrelated-dnd",
-          evidenceKind: "installedSkillActivation",
-          status: "observed",
-          result: "failed",
-          promptRef: "skill-unrelated-dnd",
-          observedAt: "2026-08-21T00:01:00Z",
-          resultSummary: "Skill activated unexpectedly.",
-          observedToolNames: [],
-        },
-      ],
+      caseResults: pending.caseResults.map(
+        ({ caseId, evidenceKind }, index) => ({
+          caseId,
+          evidenceKind,
+          status: "observed" as const,
+          result: index === 1 ? ("failed" as const) : ("passed" as const),
+          promptRef: caseId,
+          observedAt: `2026-08-21T00:${String(index).padStart(2, "0")}:00Z`,
+          resultSummary:
+            index === 1
+              ? "The observed case failed its expected behavior."
+              : "The observed case produced the expected behavior.",
+          observedToolNames:
+            evidenceKind === "connectionAndToolSelection"
+              ? ["list_catalog_units"]
+              : [],
+        }),
+      ),
     };
     const decoded = decodeInstalledEvidence(observed);
     expect(decoded.status).toBe("observed");
@@ -428,6 +476,78 @@ function decodeInstalledEvidence(value: unknown): InstalledEvidence {
   return Schema.decodeUnknownSync(InstalledEvidenceSchema, {
     onExcessProperty: "error",
   })(value);
+}
+
+function schemaHasProjectionPath(schema: unknown, projection: string): boolean {
+  const root = isRecord(schema) ? schema : {};
+  const segments = projection
+    .replaceAll("[]", "")
+    .split(".")
+    .filter((segment) => segment.length > 0);
+  return schemaContainsPath(root, segments, root, new Set(), 0);
+}
+
+function schemaContainsPath(
+  schema: unknown,
+  segments: readonly string[],
+  root: Readonly<Record<string, unknown>>,
+  visited: Set<string>,
+  depth: number,
+): boolean {
+  if (segments.length === 0) return true;
+  if (depth > 100 || !isRecord(schema)) return false;
+
+  const reference = schema["$ref"];
+  if (typeof reference === "string") {
+    if (visited.has(reference)) return false;
+    const definitionName = reference.startsWith("#/$defs/")
+      ? reference.slice("#/$defs/".length)
+      : undefined;
+    const definitions = isRecord(root["$defs"]) ? root["$defs"] : undefined;
+    const definition =
+      definitionName === undefined ? undefined : definitions?.[definitionName];
+    if (definition === undefined) return false;
+    const nextVisited = new Set(visited);
+    nextVisited.add(reference);
+    return schemaContainsPath(
+      definition,
+      segments,
+      root,
+      nextVisited,
+      depth + 1,
+    );
+  }
+
+  for (const combinator of ["anyOf", "oneOf", "allOf"] as const) {
+    const branches = schema[combinator];
+    if (
+      Array.isArray(branches) &&
+      branches.some((branch) =>
+        schemaContainsPath(branch, segments, root, visited, depth + 1),
+      )
+    ) {
+      return true;
+    }
+  }
+
+  const properties = isRecord(schema.properties) ? schema.properties : {};
+  const [segment, ...remaining] = segments;
+  const matchingProperty = properties[segment];
+  if (
+    matchingProperty !== undefined &&
+    schemaContainsPath(matchingProperty, remaining, root, visited, depth + 1)
+  ) {
+    return true;
+  }
+  return (
+    Object.values(properties).some((property) =>
+      schemaContainsPath(property, segments, root, visited, depth + 1),
+    ) || schemaContainsPath(schema.items, segments, root, visited, depth + 1)
+  );
+}
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function decodeJson<S extends Schema.Schema.AnyNoContext>(

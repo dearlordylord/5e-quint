@@ -15,8 +15,7 @@
   },
   "installedChatGptEvidence": {
     "artifactPath": "plugins/srd-play/evals/installed-chatgpt-evidence.json",
-    "evidenceKind": "installedSkillActivation",
-    "status": "pending"
+    "evidenceKind": "installedSkillActivation"
   },
   "rows": [
     {
@@ -31,7 +30,7 @@
       ],
       "modelVisibleProjection": [
         "holes",
-        "draft.revision",
+        "draft",
         "finalization",
         "restoration"
       ],
@@ -46,7 +45,6 @@
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-natural", "skill-continuation"]
       },
       "boundary": "Creation choices and identifiers are live SDK-owned holes; the Skill owns no presets or parallel Character Sheet shape."
@@ -72,7 +70,6 @@
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-continuation"]
       },
       "boundary": "Only SDK-supported level-gain facts are accepted; the mutation returns canonical detail and next operations rather than storing progression beside the Character Sheet."
@@ -84,21 +81,20 @@
       "mcpSurface": ["apply_character_session_operation"],
       "modelVisibleProjection": [
         "operation.result.detail",
-        "details.code",
+        "operation.result",
         "restoration"
       ],
       "mcpEvidence": {
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "create-warrior-second-level",
+            "scenarioId": "character-row-coverage-druid-known-form",
             "flowId": "character-sheet",
-            "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            "taskId": "C10-CHARACTER-ROW-DRUID-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-continuation"]
       },
       "boundary": "Known-form replacement uses existing admission facts and returns typed rejection for unsupported or invalid replacements; no identity-specific MCP tool exists."
@@ -125,7 +121,6 @@
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-natural", "skill-continuation"]
       },
       "boundary": "The selected detail is derived from the canonical Character Sheet/session owner; no Plugin-only character record is persisted."
@@ -138,21 +133,20 @@
       "modelVisibleProjection": [
         "query.kind",
         "query.projection",
-        "details.code",
+        "operation.result",
         "restoration"
       ],
       "mcpEvidence": {
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "query-character-sheet-facts",
+            "scenarioId": "character-row-coverage-ritual-query",
             "flowId": "character-sheet",
-            "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            "taskId": "C10-CHARACTER-ROW-RITUAL-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-continuation"]
       },
       "boundary": "Queries expose existing SDK projections, including ritual-only invocation, and do not add a spell ledger, search layer, or generic non-ritual casting."
@@ -165,21 +159,20 @@
       "modelVisibleProjection": [
         "operation.result",
         "operation.result.detail",
-        "characters",
+        "projection",
         "restoration"
       ],
       "mcpEvidence": {
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+            "scenarioId": "character-row-coverage-companion-retention",
             "flowId": "character-sheet",
-            "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            "taskId": "C10-CHARACTER-ROW-COMPANION-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-continuation"]
       },
       "boundary": "Companion identity, admission, and derived state remain Character Sheet-owned; the shared mutation surface returns typed ownership and conflict recovery."
@@ -199,14 +192,13 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
+            "scenarioId": "character-row-coverage-rest-lifecycle",
             "flowId": "character-sheet",
-            "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            "taskId": "C10-CHARACTER-ROW-REST-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-continuation"]
       },
       "boundary": "Rest timing, recovery choices, interruptions, and calendar gates remain one atomic SDK-composed intent; no rest intermediate is retained."
@@ -218,7 +210,6 @@
       "mcpSurface": ["apply_character_session_operation"],
       "modelVisibleProjection": [
         "operation.result",
-        "details.recovery",
         "detail.sheetProjection",
         "restoration"
       ],
@@ -226,14 +217,18 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
+            "scenarioId": "character-row-coverage-spell-rest-benefit",
             "flowId": "character-sheet",
-            "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            "taskId": "C10-CHARACTER-ROW-SPELL-REST-MCP-EVIDENCE"
+          },
+          {
+            "scenarioId": "character-healing-lay-on-hands-protocol",
+            "flowId": "character-sheet",
+            "taskId": "C10-CHARACTER-HEALING-LAY-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-continuation"]
       },
       "boundary": "Healing admission and multi-recipient atomic commit are SDK-owned; unsupported sources return typed recovery instead of an invented capability."
@@ -253,14 +248,13 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+            "scenarioId": "character-resource-operation-protocol",
             "flowId": "character-sheet",
-            "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            "taskId": "C10-CHARACTER-RESOURCE-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-continuation"]
       },
       "boundary": "Raw faces are independent visible facts; existing Character Sheet resource operations perform all feature arithmetic and accept only their typed inputs."
@@ -280,14 +274,13 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
+            "scenarioId": "character-font-of-magic-protocol",
             "flowId": "character-sheet",
-            "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            "taskId": "C10-CHARACTER-FONT-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-continuation"]
       },
       "boundary": "Both conversion directions commit only canonical Character Sheet resource state; no generic resource engine or duplicate expenditure state is introduced."
@@ -300,20 +293,19 @@
       "modelVisibleProjection": [
         "query.projection",
         "query.projection.invocation",
-        "details.code"
+        "operation.result"
       ],
       "mcpEvidence": {
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "query-character-sheet-facts",
+            "scenarioId": "character-row-coverage-ritual-query",
             "flowId": "character-sheet",
-            "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            "taskId": "C10-CHARACTER-ROW-RITUAL-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-continuation"]
       },
       "boundary": "Only the existing ritual invocation projection is exposed; generic out-of-Battle non-ritual casting remains excluded by the parent specification."
@@ -333,14 +325,13 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
+            "scenarioId": "character-row-coverage-calendar-time",
             "flowId": "character-sheet",
-            "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE"
+            "taskId": "C10-CHARACTER-ROW-CALENDAR-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-continuation"]
       },
       "boundary": "Calendar time preserves the SDK resolved/open/invalid outcomes and caller fills; it is not a durable MCP-owned clock workflow."
@@ -360,14 +351,13 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "start-battle-with-initiative",
+            "scenarioId": "battle-row-coverage-mixed-companion-roster",
             "flowId": "battle",
-            "taskId": "C11-BATTLE-MCP-EVIDENCE"
+            "taskId": "C11-BATTLE-MIXED-COMPANION-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-natural", "skill-continuation"]
       },
       "boundary": "Battle admission composes existing Character Session and SRD Stat Block owners; it creates no parallel roster or creature model."
@@ -394,7 +384,6 @@
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-natural", "skill-continuation"]
       },
       "boundary": "Closeout computes the existing character settlements before one Play Session commit; Stat Blocks do not become Character Session rows."
@@ -420,7 +409,6 @@
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-natural", "skill-continuation"]
       },
       "boundary": "The caller supplies final Initiative facts; MCP performs no Initiative calculation or alternate roster ownership."
@@ -440,14 +428,13 @@
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
+            "scenarioId": "battle-initial-initiative-setup-protocol",
             "flowId": "battle",
-            "taskId": "C11-BATTLE-MCP-EVIDENCE"
+            "taskId": "C11-BATTLE-INITIAL-SETUP-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-natural", "skill-continuation"]
       },
       "boundary": "Setup remains the sole SDK-owned Battle state until finalization; roll mode and swaps are returned facts, not MCP-derived mechanics."
@@ -461,21 +448,20 @@
         "result.tag",
         "combatantId",
         "snapshot.combatants",
-        "detail.tag",
+        "operation.result",
         "restoration"
       ],
       "mcpEvidence": {
         "status": "observed",
         "refs": [
           {
-            "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
+            "scenarioId": "battle-roster-lifecycle-protocol",
             "flowId": "battle",
-            "taskId": "C11-BATTLE-MCP-EVIDENCE"
+            "taskId": "C11-BATTLE-ROSTER-LIFECYCLE-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-natural", "skill-continuation"]
       },
       "boundary": "Roster transitions use current admission, occupancy, settlement, and atomic recovery semantics; no death, victory, encounter, or narrative rule is inferred."
@@ -502,7 +488,6 @@
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-natural", "skill-continuation"]
       },
       "boundary": "BattleState and its canonical snapshot remain authoritative; no display log or hidden widget metadata owns correctness."
@@ -529,7 +514,6 @@
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-natural", "skill-continuation"]
       },
       "boundary": "Acts, subjects, and holes are read from live Battle state; the Skill never invents an executable action or stale fill."
@@ -552,11 +536,15 @@
             "scenarioId": "use-action-surge",
             "flowId": "battle",
             "taskId": "C11-BATTLE-MCP-EVIDENCE"
+          },
+          {
+            "scenarioId": "battle-row-coverage-interrupt-resolution",
+            "flowId": "battle",
+            "taskId": "C11-BATTLE-INTERRUPT-MCP-EVIDENCE"
           }
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-natural", "skill-continuation"]
       },
       "boundary": "No-hole Acts use resolve_battle_act; Acts with holes use ordinary typed fills, and pending-fill discipline remains runtime-owned."
@@ -583,7 +571,6 @@
         ]
       },
       "installedChatGptEvidence": {
-        "status": "pending",
         "caseIds": ["skill-natural", "skill-continuation"]
       },
       "boundary": "Turn end remains a runtime command and is rejected while required Runtime Holes are pending; no automatic result or victory inference is added."

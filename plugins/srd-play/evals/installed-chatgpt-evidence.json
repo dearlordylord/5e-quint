@@ -17,7 +17,7 @@
     {
       "step": "mcp-connection",
       "evidenceKind": "connectionAndToolSelection",
-      "instructions": "In ChatGPT developer mode, connect the MCP server through a public HTTPS endpoint or Secure MCP Tunnel, review discovered tool metadata, and run the mcpToolSelection prompts from the evaluation inventory. Record selected tool, arguments, result, errors, and confirmation behavior in the canonical MCP evidence layer.",
+      "instructions": "In ChatGPT developer mode, connect the MCP server through a public HTTPS endpoint or Secure MCP Tunnel, review discovered tool metadata, and run the mcpToolSelection prompts from the evaluation inventory. Record selected tool, arguments, result, errors, and confirmation behavior in these installed-evidence case results; keep this account/workspace observation separate from the local MCP protocol manifest.",
       "requiredCases": [
         "mcp-direct-catalog",
         "mcp-indirect-catalog",
@@ -45,6 +45,26 @@
     }
   ],
   "caseResults": [
+    {
+      "caseId": "mcp-direct-catalog",
+      "evidenceKind": "connectionAndToolSelection",
+      "status": "pending"
+    },
+    {
+      "caseId": "mcp-indirect-catalog",
+      "evidenceKind": "connectionAndToolSelection",
+      "status": "pending"
+    },
+    {
+      "caseId": "mcp-follow-up-detail",
+      "evidenceKind": "connectionAndToolSelection",
+      "status": "pending"
+    },
+    {
+      "caseId": "mcp-unsupported-history",
+      "evidenceKind": "connectionAndToolSelection",
+      "status": "pending"
+    },
     {
       "caseId": "skill-direct",
       "evidenceKind": "installedSkillActivation",

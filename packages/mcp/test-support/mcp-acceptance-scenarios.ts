@@ -452,6 +452,99 @@ const agentConversationScenarios = [
   },
 ] as const;
 
+/**
+ * Operation-specific protocol evidence is kept separate from the newcomer
+ * conversation registry. These ids name real MCP Client tests whose summaries
+ * can be checked against the canonical scenario-evidence manifest.
+ */
+export const mcpProtocolEvidenceScenarios = [
+  {
+    id: "character-row-coverage-druid-known-form",
+    testName:
+      "routes the missing Character Sheet row operations through real MCP",
+    operations: ["replaceDruidWildShapeKnownForm"],
+  },
+  {
+    id: "character-row-coverage-companion-retention",
+    testName:
+      "routes the missing Character Sheet row operations through real MCP",
+    operations: ["retainOneAtATimeCompanion"],
+  },
+  {
+    id: "character-row-coverage-rest-lifecycle",
+    testName:
+      "routes the missing Character Sheet row operations through real MCP",
+    operations: ["completeShortRest", "completeLongRest", "interruptLongRest"],
+  },
+  {
+    id: "character-row-coverage-calendar-time",
+    testName:
+      "routes the missing Character Sheet row operations through real MCP",
+    operations: ["passCalendarTime", "rolledDice hole fill"],
+  },
+  {
+    id: "character-row-coverage-ritual-query",
+    testName:
+      "routes the missing Character Sheet row operations through real MCP",
+    operations: ["spellbookRitualAccesses", "spellInvocation ritual"],
+  },
+  {
+    id: "character-row-coverage-spell-rest-benefit",
+    testName:
+      "routes the missing Character Sheet row operations through real MCP",
+    operations: ["applySpellRestBenefit"],
+  },
+  {
+    id: "character-healing-lay-on-hands-protocol",
+    testName:
+      "routes Lay On Hands through the real MCP client and returns its envelope",
+    operations: ["applyLayOnHands"],
+  },
+  {
+    id: "character-resource-operation-protocol",
+    testName:
+      "routes a Character Sheet resource operation through the real MCP client",
+    operations: [
+      "useMonkUncannyMetabolismWhenRollingInitiative",
+      "spendSpellAccessFreeCast",
+      "roll_dice",
+    ],
+  },
+  {
+    id: "character-font-of-magic-protocol",
+    testName:
+      "routes a Character Sheet resource operation through the real MCP client",
+    operations: [
+      "convertFontOfMagicSorceryPointsToSpellSlot",
+      "convertFontOfMagicSpellSlotToSorceryPoints",
+    ],
+  },
+  {
+    id: "battle-initial-initiative-setup-protocol",
+    testName:
+      "routes initial Initiative setup modes, swaps, finalization, and invalid transitions through MCP",
+    operations: ["start_battle initialSetup", "battle_lifecycle finalize"],
+  },
+  {
+    id: "battle-row-coverage-mixed-companion-roster",
+    testName:
+      "routes the missing Character Sheet row operations through real MCP",
+    operations: ["start_battle companionAdmissions", "end_battle"],
+  },
+  {
+    id: "battle-row-coverage-interrupt-resolution",
+    testName:
+      "routes the missing Character Sheet row operations through real MCP",
+    operations: ["fill_battle_hole interruptDecision", "Shield reaction"],
+  },
+  {
+    id: "battle-roster-lifecycle-protocol",
+    testName:
+      "adds and removes Battle combatants through the unified atomic lifecycle surface",
+    operations: ["battle_lifecycle addCombatant", "removeCombatant"],
+  },
+] as const;
+
 export async function verifyToolContract(client: Client) {
   const listed = await client.listTools();
   const toolNames = listed.tools.map((tool) => tool.name).sort();
@@ -646,9 +739,20 @@ export async function verifyToolContract(client: Client) {
   );
 }
 
-export async function verifyBaselineVertical(client: Client) {
-  const draftId = "draft:stdio-accepted-orc-soldier-fighter";
-  const created = await callTool(client, "create_character_draft", { draftId });
+export type BaselineVerticalFacts = {
+  readonly draftId: string;
+  readonly characterId: string;
+  readonly statBlockId: string;
+};
+
+export async function verifyBaselineVertical(
+  client: Client,
+): Promise<BaselineVerticalFacts> {
+  const requestedDraftId = "draft:stdio-accepted-orc-soldier-fighter";
+  const created = await callTool(client, "create_character_draft", {
+    draftId: requestedDraftId,
+  });
+  const draftId = parseString(get(created, "draft.draftId"), "draft.draftId");
   assert.deepEqual(holeIds(created), [
     "cc:draft:draft.progression.initial",
     "cc:draft:draft.background",
@@ -759,15 +863,21 @@ export async function verifyBaselineVertical(client: Client) {
 
   const listedBeforeBattle = await callTool(client, "list_characters", {});
   assert.equal(get(listedBeforeBattle, "characters.0.hitPoints.current"), 12);
+  const listedCharacter = jsonObjectArrayAt(
+    listedBeforeBattle,
+    "characters",
+  ).find((character) => typeof character.characterId === "string");
+  assert.ok(listedCharacter, "list_characters must return a Character Session");
+  const characterId = parseString(
+    listedCharacter.characterId,
+    "characters[].characterId",
+  );
   const detailBeforeBattle = await callTool(
     client,
     "inspect_character_session",
-    { characterId: testCharacterId(draftId) },
+    { characterId },
   );
-  assert.equal(
-    get(detailBeforeBattle, "detail.characterId"),
-    testCharacterId(draftId),
-  );
+  assert.equal(get(detailBeforeBattle, "detail.characterId"), characterId);
   assert.equal(get(detailBeforeBattle, "detail.tag"), "available");
   assert.equal(
     get(detailBeforeBattle, "detail.sheetProjection.hitPointMaximum"),
@@ -780,6 +890,10 @@ export async function verifyBaselineVertical(client: Client) {
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
   });
+  const statBlockId = parseString(
+    get(selected, "selectedStatBlock.id"),
+    "selectedStatBlock.id",
+  );
   assert.equal(
     get(selected, "selectedStatBlock.statBlock.displayName"),
     "Goblin Warrior",
@@ -791,14 +905,14 @@ export async function verifyBaselineVertical(client: Client) {
       {
         kind: "characterSession",
         ammunitionStocks: [],
-        characterId: testCharacterId(draftId),
+        characterId,
         combatantId: "fighter",
         initiative: 18,
       },
       {
         kind: "statBlock",
         ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
-        statBlockId: "stat_block_goblin_warrior",
+        statBlockId,
         combatantId: "goblin",
         initiative: 7,
         admissionSource: { kind: "encounterParticipant" },
@@ -870,9 +984,9 @@ export async function verifyBaselineVertical(client: Client) {
     subject: goblinAttack,
     fill: attackTargetFill(goblinAttack, "fighter"),
   });
-  const goblinAttackRoll = (
-    get(goblinTarget, "result.holes") as JsonObject[]
-  ).find((hole) => hole.kind === "attackRoll");
+  const goblinAttackRoll = jsonObjectArrayAt(goblinTarget, "result.holes").find(
+    (hole) => hole.kind === "attackRoll",
+  );
   assert.ok(goblinAttackRoll);
   await callTool(client, "fill_battle_hole", {
     subject: goblinAttack,
@@ -890,7 +1004,7 @@ export async function verifyBaselineVertical(client: Client) {
   });
   assert.equal(combatantHp(goblinDamage, "fighter"), 5);
   const inBattleDetail = await callTool(client, "inspect_character_session", {
-    characterId: testCharacterId(draftId),
+    characterId,
   });
   assert.equal(get(inBattleDetail, "detail.tag"), "inBattle");
   assert.equal(
@@ -904,7 +1018,7 @@ export async function verifyBaselineVertical(client: Client) {
     client,
     "query_character_session",
     {
-      characterId: testCharacterId(draftId),
+      characterId,
       query: { kind: "linkedSpeedGrants" },
     },
   );
@@ -923,7 +1037,7 @@ export async function verifyBaselineVertical(client: Client) {
   assert.equal(get(listed, "characters.0.hitPoints.current"), 5);
   assert.equal(get(listed, "characters.0.hitPoints.maximum"), 12);
   const continuedDetail = await callTool(client, "inspect_character_session", {
-    characterId: testCharacterId(draftId),
+    characterId,
   });
   assert.equal(get(continuedDetail, "detail.sheetProjection.currentHp"), 5);
   assert.equal(
@@ -931,14 +1045,14 @@ export async function verifyBaselineVertical(client: Client) {
     12,
   );
   assert.equal(
-    (get(listed, "characters") as JsonObject[]).some(
+    jsonObjectArrayAt(listed, "characters").some(
       (character) => character.displayName === "Goblin Warrior",
     ),
     false,
   );
 
   const abilityQuery = await callTool(client, "query_character_session", {
-    characterId: testCharacterId(draftId),
+    characterId,
     query: {
       kind: "abilityCheckAbility",
       skill: "athletics",
@@ -957,7 +1071,7 @@ export async function verifyBaselineVertical(client: Client) {
     client,
     "query_character_session",
     {
-      characterId: testCharacterId(draftId),
+      characterId,
       query: { kind: "knownForms" },
     },
   );
@@ -965,6 +1079,7 @@ export async function verifyBaselineVertical(client: Client) {
     get(knownFormsQuery, "details.code"),
     "CHARACTER_SESSION_QUERY_REJECTED",
   );
+  return { draftId, characterId, statBlockId };
 }
 
 /**
@@ -975,11 +1090,8 @@ export async function verifyBaselineVertical(client: Client) {
  */
 export async function verifyCompleteNewcomerJourney(client: Client) {
   await verifyToolContract(client);
-  await verifyBaselineVertical(client);
-
-  const characterId = testCharacterId(
-    "draft:stdio-accepted-orc-soldier-fighter",
-  );
+  const baseline = await verifyBaselineVertical(client);
+  const { characterId } = baseline;
 
   const queried = await callTool(client, "query_character_session", {
     characterId,
@@ -1035,16 +1147,14 @@ export async function verifyCompleteNewcomerJourney(client: Client) {
   });
   assert.equal(typeof get(dice, "correlationId"), "string");
   assert.deepEqual(
-    (get(dice, "groups") as JsonObject[]).map((group) => group.dieSize),
+    jsonObjectArrayAt(dice, "groups").map((group) => group.dieSize),
     [20, 6],
   );
 
   // This existing level-9 creation path keeps the resource spend in the same
   // Play Session while still making the chosen character through real holes.
-  await verifyLevelNineRangerExpertiseSheetScenario(client);
-  const rangerId = testCharacterId(
-    "draft:stdio-level-nine-orc-soldier-ranger-expertise",
-  );
+  const rangerFacts = await verifyLevelNineRangerExpertiseSheetScenario(client);
+  const { characterId: rangerId } = rangerFacts;
   const freeCast = await callTool(client, "apply_character_session_operation", {
     characterId: rangerId,
     operation: {
@@ -1077,11 +1187,19 @@ export async function verifyCompleteNewcomerJourney(client: Client) {
     ],
   });
   assert.equal(get(setup, "battleState.tag"), "initialInitiativeSetup");
+  const battleId = parseString(
+    get(setup, "battleState.battleId"),
+    "battleState.battleId",
+  );
 
   const active = await callTool(client, "battle_lifecycle", {
     operation: { kind: "finalizeInitialInitiativeSetup" },
   });
   assert.equal(get(active, "battleState.tag"), "activeBattle");
+  const activeActorId = parseString(
+    get(active, "snapshot.currentActorId"),
+    "snapshot.currentActorId",
+  );
 
   const added = await callTool(client, "battle_lifecycle", {
     operation: {
@@ -1107,19 +1225,20 @@ export async function verifyCompleteNewcomerJourney(client: Client) {
   assert.equal(get(removed, "result.tag"), "combatantRemoved");
 
   const endedFighterTurn = await callTool(client, "end_turn", {
-    actorId: "newcomer-fighter",
+    actorId: activeActorId,
   });
-  assert.equal(
+  const nextActorId = parseString(
     get(endedFighterTurn, "snapshot.currentActorId"),
-    "newcomer-goblin",
+    "snapshot.currentActorId",
   );
-  await callTool(client, "end_turn", { actorId: "newcomer-goblin" });
+  await callTool(client, "end_turn", { actorId: nextActorId });
 
   const ended = await callTool(client, "end_battle", {});
   assert.equal(get(ended, "session.battleState.tag"), "none");
+  assert.equal(get(ended, "endedBattleId"), battleId);
 
   const listed = await callTool(client, "list_characters", {});
-  const characterRows = get(listed, "characters") as JsonObject[];
+  const characterRows = jsonObjectArrayAt(listed, "characters");
   assert.ok(
     characterRows.some(
       (row) => row.characterId === characterId && row.status === "available",
@@ -2287,6 +2406,9 @@ export async function verifyLevelNineRangerExpertiseSheetScenario(
     get(ranger, "spellSlots"),
     levelNineRangerUnexpendedSpellSlots,
   );
+  return {
+    characterId: parseString(ranger.characterId, "characters[].characterId"),
+  };
 }
 
 export async function verifyLevelNineRangerExpertiseBattleHandoff(
@@ -4222,7 +4344,7 @@ function initialHolesOfKind(
 }
 
 function characterRow(payload: JsonObject, characterId: string) {
-  const characters = get(payload, "characters") as JsonObject[];
+  const characters = jsonObjectArrayAt(payload, "characters");
   const character = characters.find(
     (candidate) => candidate.characterId === characterId,
   );
@@ -4365,4 +4487,12 @@ export function verifyAgentConversationScenarios() {
 
 export function mcpAcceptanceScenarioIds() {
   return agentConversationScenarios.map((scenario) => scenario.id);
+}
+
+export function mcpProtocolScenarioIds() {
+  return mcpProtocolEvidenceScenarios.map((scenario) => scenario.id);
+}
+
+export function mcpScenarioEvidenceIds() {
+  return [...mcpAcceptanceScenarioIds(), ...mcpProtocolScenarioIds()];
 }

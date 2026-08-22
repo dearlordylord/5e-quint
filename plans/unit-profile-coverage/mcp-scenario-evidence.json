@@ -504,51 +504,131 @@
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
-      "scenarioId": "query-character-sheet-facts",
+      "scenarioId": "character-row-coverage-ritual-query",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
-      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
-      "summary": "The real MCP protocol contract and baseline vertical expose the discriminated Character Session query surface, structured projections, and typed rejection paths without storing derived facts."
+      "taskId": "C10-CHARACTER-ROW-RITUAL-MCP-EVIDENCE",
+      "summary": "The real MCP row-coverage client calls query_character_session for both spellbookRitualAccesses and ritual spellInvocation, validates the returned ritual projections, and keeps query facts derived from the stored Character Sheet."
     },
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
-      "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+      "scenarioId": "character-row-coverage-companion-retention",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
-      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
-      "summary": "The real MCP protocol resource and companion operation tests route Character Session feature-resource and retained-companion mutations through one shared surface and validate the returned canonical detail."
+      "taskId": "C10-CHARACTER-ROW-COMPANION-MCP-EVIDENCE",
+      "summary": "The real MCP row-coverage client calls retainOneAtATimeCompanion with the returned Character Session id and validates the retained companion projection before Battle admission."
     },
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
-      "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
+      "scenarioId": "character-row-coverage-rest-lifecycle",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
-      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
-      "summary": "The real MCP protocol operation tests route Short Rest, Long Rest, Stable calendar time, healing/rest-benefit, and atomic recovery intents through the shared Character Session surface."
+      "taskId": "C10-CHARACTER-ROW-REST-MCP-EVIDENCE",
+      "summary": "The real MCP row-coverage client calls completeShortRest, completeLongRest, and an interrupted Long Rest with returned typed results through apply_character_session_operation."
     },
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
-      "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
+      "scenarioId": "character-font-of-magic-protocol",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
-      "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
-      "summary": "The real MCP protocol resource tests route Font of Magic conversion and Spell Access free-cast operations through the shared Character Session surface and validate typed results."
+      "taskId": "C10-CHARACTER-FONT-MCP-EVIDENCE",
+      "summary": "The real MCP resource client calls both Font of Magic conversion directions and validates each typed Character Session result through apply_character_session_operation."
     },
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
       "scopeIds": ["level-1", "level-1-2"],
-      "scenarioId": "create-level-nine-ranger-expertise-and-battle-handoff",
+      "scenarioId": "battle-initial-initiative-setup-protocol",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
-      "taskId": "C11-BATTLE-MCP-EVIDENCE",
-      "summary": "The real MCP protocol tests route initial-Initiative setup, lifecycle add/remove, occupancy and settlement, and canonical snapshot reads through the Battle surfaces with typed recovery."
+      "taskId": "C11-BATTLE-INITIAL-SETUP-MCP-EVIDENCE",
+      "summary": "The real MCP initial-setup client calls start_battle in initialSetup mode, applies and rejects Initiative swaps, finalizes setup, and validates the returned setup and active Battle projections."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "character-row-coverage-druid-known-form",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-ROW-DRUID-MCP-EVIDENCE",
+      "summary": "The real MCP row-coverage client calls replaceDruidWildShapeKnownForm on an admitted Druid Character Session and validates the canonical returned available detail."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "character-row-coverage-calendar-time",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-ROW-CALENDAR-MCP-EVIDENCE",
+      "summary": "The real MCP row-coverage client calls passCalendarTime for a resolved character and for a Stable character, copies the returned rolled-dice hole id, and validates the resolved fill outcome."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "character-row-coverage-spell-rest-benefit",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-ROW-SPELL-REST-MCP-EVIDENCE",
+      "summary": "The real MCP row-coverage client successfully applies Prayer of Healing rest benefits to a returned recipient and validates the typed spell-rest result."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "character-healing-lay-on-hands-protocol",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-HEALING-LAY-MCP-EVIDENCE",
+      "summary": "The real MCP Lay On Hands client calls applyLayOnHands and validates the returned healing result and follow-up operation envelope."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "character-resource-operation-protocol",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C10-CHARACTER-RESOURCE-MCP-EVIDENCE",
+      "summary": "The real MCP resource client calls roll_dice for independent raw faces, then routes Uncanny Metabolism and Spell Access free-cast operations through the shared Character Session surface and validates their typed resource results."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "battle-row-coverage-mixed-companion-roster",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-MIXED-COMPANION-MCP-EVIDENCE",
+      "summary": "The real MCP row-coverage client starts and ends a mixed Battle roster containing the returned Character Session, its retained companion admission, and an SRD Stat Block, validating companion and settlement projections."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "battle-roster-lifecycle-protocol",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-ROSTER-LIFECYCLE-MCP-EVIDENCE",
+      "summary": "The real MCP roster-lifecycle client calls battle_lifecycle addCombatant and removeCombatant for Stat Block and Character Session origins and validates occupancy and settlement recovery."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scopeIds": ["level-1", "level-1-2"],
+      "scenarioId": "battle-row-coverage-interrupt-resolution",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "C11-BATTLE-INTERRUPT-MCP-EVIDENCE",
+      "summary": "The real MCP row-coverage client discovers a returned Goblin Attack, fills its target and attack-roll holes, copies the presented Shield reaction choice, fills the interruptDecision hole, and validates the resolved result."
     }
   ],
   "scopeAuditDecisions": [

@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
 import {
-  mcpAcceptanceScenarioIds,
+  mcpScenarioEvidenceIds,
   verifyAgentConversationScenarios,
 } from "../test-support/mcp-acceptance-scenarios.ts";
 
@@ -73,7 +73,7 @@ describe("MCP scenario evidence manifest", () => {
     const packageJson = readJson<{ readonly scripts: Record<string, string> }>(
       packageJsonPath,
     );
-    const scenarioIds = new Set<string>(mcpAcceptanceScenarioIds());
+    const scenarioIds = new Set<string>(mcpScenarioEvidenceIds());
     const requiredFlowIds = new Set(
       manifest.requiredFlows.map((flow) => flow.flowId),
     );
