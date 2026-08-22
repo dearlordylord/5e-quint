@@ -95,7 +95,7 @@ const TranscriptHeaderSchema = Schema.Struct({
 });
 type TranscriptHeader = Schema.Schema.Type<typeof TranscriptHeaderSchema>;
 
-type McpToolExchange = {
+export type McpToolExchange = {
   readonly seq: number;
   readonly tool: string;
   readonly args: unknown;

@@ -47,6 +47,8 @@ export type PlaySessionRegistry = {
   ): Promise<Either.Either<A, PlaySessionUnavailable>>;
 };
 
+export type PlaySessionIdFactory = () => PlaySessionId;
+
 type LivePlaySession = {
   readonly root: McpPlaySessionRoot;
   tail: Promise<void>;
@@ -54,14 +56,17 @@ type LivePlaySession = {
 
 export function createPlaySessionRegistry(input: {
   readonly createRoot: (playSessionId: PlaySessionId) => McpPlaySessionRoot;
+  readonly playSessionIdFactory?: PlaySessionIdFactory;
 }): PlaySessionRegistry {
   const liveSessions = new Map<PlaySessionId, LivePlaySession>();
+  const playSessionIdFactory =
+    input.playSessionIdFactory ?? generatedPlaySessionId;
 
   return {
     create() {
-      let playSessionId = generatedPlaySessionId();
+      let playSessionId = playSessionIdFactory();
       while (liveSessions.has(playSessionId)) {
-        playSessionId = generatedPlaySessionId();
+        playSessionId = playSessionIdFactory();
       }
       const root = input.createRoot(playSessionId);
       liveSessions.set(playSessionId, { root, tail: Promise.resolve() });
