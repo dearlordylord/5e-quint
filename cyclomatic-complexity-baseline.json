@@ -70,7 +70,7 @@
       "module/binding:resolveBrutalStrikeForcefulBlowMovement": 16,
       "module/binding:resolveGrapplerPunchAndGrabAfterHit": 12,
       "module/binding:resolveHuntersPreyHordeBreakerAfterPrimaryDamage": 21,
-      "module/binding:resolveSelectedAttackProcedure": 220,
+      "module/binding:resolveSelectedAttackProcedure": 218,
       "module/binding:resolveWeaponMasteryCleaveAfterPrimaryDamage": 20
     },
     "packages/battle-runtime/src/battle-reducer/attack-offhand.ts": {
@@ -716,7 +716,7 @@
       "module/binding:resolveWebRestraintHazardSpellAct": 24
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts": {
-      "module/binding:resolveAttackBurstSaveDamageSpellAct": 120
+      "module/binding:resolveAttackBurstSaveDamageSpell": 126
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts": {
       "module/binding:resolveSpellAttackSequenceAct": 20,
@@ -1221,8 +1221,18 @@
     "packages/mcp/src/battle-tools.ts": {
       "module/binding:handleBattleToolCall/call:Match.when:argument-1:selector-808174cea28e": 13
     },
+    "packages/mcp/src/character-session-sheet-rebuild.ts": {
+      "module/binding:rebuildCharacterSheetForOperation": 9
+    },
+    "packages/mcp/src/json-schema-sharing.ts": {
+      "module/binding:visitSchemaChildren": 12
+    },
+    "packages/mcp/src/play-session-protocol.ts": {
+      "module/binding:nextOperationsFrom": 10
+    },
     "packages/mcp/src/start-battle-tool.ts": {
-      "module/binding:admitCompanionAdmissions": 9
+      "module/binding:admitCompanionAdmissions": 9,
+      "module/binding:handleStartBattleToolCall": 9
     },
     "packages/shared-algebras/src/ability-score-algebra.ts": {
       "module/binding:pointBuyCost": 9
