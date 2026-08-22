@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type * as BattleRuntime from "@dnd/battle-runtime"
-import { combatantId } from "@dnd/battle-runtime"
+import { battlePresentedSnapshot, combatantId } from "@dnd/battle-runtime"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
@@ -53,5 +53,16 @@ describe("BattlePage presentation failure", () => {
     render(<BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />)
 
     expect(screen.getByRole("alert").textContent).toContain("missingStatBlockPresentation")
+  })
+
+  it("renders typed scene projection issues after snapshot projection succeeds", async () => {
+    const actual = await vi.importActual<typeof BattleRuntime>("@dnd/battle-runtime")
+    const successfulSnapshot = actual.battlePresentedSnapshot(WIZARD_BATTLE_DEMO_STEPS[0].session)
+    expect(successfulSnapshot._tag).toBe("Right")
+    vi.mocked(battlePresentedSnapshot).mockReturnValueOnce(successfulSnapshot)
+
+    render(<BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />)
+
+    expect(screen.getByRole("alert").textContent).toContain("missingCurrentActor")
   })
 })
