@@ -1,14 +1,14 @@
 # SRD Play developer-mode runbook
 
-This directory contains the `srd-play` Skill, its MCP connection descriptor,
-and the evaluation artifacts. The MCP server remains the runtime composition
-owner in [`packages/mcp/README.md`](../../packages/mcp/README.md); this document
-owns only local connection and developer-mode operation.
+This directory contains the `srd-play` Skill and evaluation artifacts. The MCP
+server remains the runtime composition owner in
+[`packages/mcp/README.md`](../../packages/mcp/README.md); this document owns
+the developer-mode connection procedure.
 
 ## Verify the local connection
 
 From the repository root, install the workspace with pnpm and run the existing
-local protocol seam:
+source-checkout protocol seam:
 
 ```sh
 pnpm install
@@ -16,8 +16,10 @@ pnpm --filter @dnd/mcp exec vitest run src/plugin-local-connection.test.ts \
   --pool=threads --maxWorkers=1
 ```
 
-The bundled [`.mcp.json`](.mcp.json) starts `@dnd/mcp` through its stdio
-entrypoint. It is the local-client connection used by automated tests; it is
+The source-only descriptor at
+[`packages/mcp/test-support/srd-play-local-mcp.json`](../../packages/mcp/test-support/srd-play-local-mcp.json)
+starts `@dnd/mcp` through its stdio entrypoint. It is used only by the
+source-checkout test; it is not part of the installed plugin package and is
 not a ChatGPT developer-mode endpoint.
 
 ## Connect the MCP server in ChatGPT developer mode
@@ -38,8 +40,8 @@ mode. Follow the current [OpenAI plugin connection guide](https://developers.ope
 4. Review the discovered tool names, descriptions, schemas, and annotations.
    Resolve transport, initialization, schema, or authentication errors before
    evaluating selection.
-5. Start a new conversation, add the MCP connection from the tools menu, and
-   run the MCP cases in
+5. Start a new conversation, add the separately created MCP connection from
+   the tools menu, and run the MCP cases in
    [`evals/evaluation-inventory.json`](evals/evaluation-inventory.json).
    Record selected tools, arguments, results, errors, and confirmation behavior
    in the installed-evidence artifact; local tests do not establish these
@@ -94,16 +96,19 @@ state ownership, or the installed-evidence record. If the tunnel is not listed,
 check workspace association and Tunnels **Read + Use**, then run
 `tunnel-client doctor --profile srd-play-local --explain` again.
 
-## Install and evaluate the complete plugin
+## Install and evaluate the plugin package
 
-After the MCP connection works, package the complete plugin from this
-directory (`plugins/srd-play`) with its Skill, manifest, and MCP descriptor
-using the current ChatGPT plugin packaging flow. Add that package to a local
-marketplace and install it from the Plugins Directory, then start a new
-conversation with the plugin enabled. Run the direct, natural, follow-up,
-negative, and authoring boundary prompts in the evaluation inventory. For a
-combined workflow, retain the Play Session handle, use only returned Creation
-Hole options and Battle Acts/Holes, stop at meaningful choices, and record the
+After the MCP connection works, package the Skill-only plugin from this
+directory (`plugins/srd-play`) with its manifest and Skill using the current
+ChatGPT plugin packaging flow. The manifest intentionally has no `mcpServers`
+entry: a checkout-relative `pnpm` command cannot survive an installed plugin's
+cache location. Keep the separately created MCP connection available in the
+conversation, add the Skill package to a local marketplace, and install it
+from the Plugins Directory. Start a new conversation with both the Skill and
+MCP connection enabled. Run the direct, natural, follow-up, negative, and
+authoring boundary prompts in the evaluation inventory. For a combined
+workflow, retain the Play Session handle, use only returned Creation Hole
+options and Battle Acts/Holes, stop at meaningful choices, and record the
 final Character Session list.
 
 Record those observations in

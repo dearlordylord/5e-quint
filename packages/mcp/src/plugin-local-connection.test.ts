@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -13,6 +13,13 @@ import { decodeEvaluationInventory } from "../test-support/evaluation-inventory.
 const pluginRoot = fileURLToPath(
   new URL("../../../plugins/srd-play/", import.meta.url),
 );
+const repositoryRoot = resolve(pluginRoot, "../..");
+const localMcpConfigRoot = resolve(repositoryRoot, "packages/mcp/test-support");
+const localMcpConfigPath = resolve(
+  localMcpConfigRoot,
+  "srd-play-local-mcp.json",
+);
+const pluginManifestPath = resolve(pluginRoot, ".codex-plugin/plugin.json");
 const LOCAL_PLUGIN_CONNECTION_TEST_TIMEOUT_MS = 90_000;
 const LOCAL_PLUGIN_WORKFLOW_DEADLINE_MS = 60_000;
 const PROCESS_TERMINATION_GRACE_MS = 100;
@@ -26,6 +33,11 @@ const LocalMcpConfigSchema = Schema.Struct({
       cwd: Schema.String,
     }),
   }),
+});
+
+const InstalledPluginManifestSchema = Schema.Struct({
+  skills: Schema.String,
+  mcpServers: Schema.optionalWith(Schema.String, { exact: true }),
 });
 
 const ForwardTestResultsSchema = Schema.Struct({
@@ -48,6 +60,18 @@ const ForwardTestResultsSchema = Schema.Struct({
 });
 
 describe("local SRD Play plugin evaluation seams", () => {
+  test("keeps the installed Skill package separate from the source MCP seam", () => {
+    const manifest = decodeJsonFile(
+      InstalledPluginManifestSchema,
+      pluginManifestPath,
+    );
+
+    expect(manifest.mcpServers).toBeUndefined();
+    expect(existsSync(resolve(pluginRoot, ".mcp.json"))).toBe(false);
+    expect(localMcpConfigPath.startsWith(`${pluginRoot}/`)).toBe(false);
+    expect(readFileSync(localMcpConfigPath, "utf8")).toContain('"@dnd/mcp"');
+  });
+
   test("retains the required MCP and installed-Skill evaluation inventory", () => {
     const inventory = decodeEvaluationInventory(
       resolve(pluginRoot, "evals/evaluation-inventory.json"),
@@ -91,14 +115,12 @@ describe("local SRD Play plugin evaluation seams", () => {
   test(
     "starts the configured stdio command and connects to the real MCP protocol",
     async () => {
-      const config = decodeJsonFile(
-        LocalMcpConfigSchema,
-        resolve(pluginRoot, ".mcp.json"),
-      ).mcpServers["srd-play"];
+      const config = decodeJsonFile(LocalMcpConfigSchema, localMcpConfigPath)
+        .mcpServers["srd-play"];
       const transport = new StdioClientTransport({
         command: config.command,
         args: [...config.args],
-        cwd: resolve(pluginRoot, config.cwd),
+        cwd: resolve(localMcpConfigRoot, config.cwd),
         stderr: "pipe",
       });
       const client = new Client({

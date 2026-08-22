@@ -9,11 +9,10 @@
   "interface": {
     "displayName": "SRD Play",
     "shortDescription": "Create SRD characters and play isolated battles.",
-    "longDescription": "Connects one focused conversation Skill to the existing D&D MCP application for redistributable SRD catalog exploration, character creation, and battle play.",
+    "longDescription": "Provides one focused conversation Skill for the existing D&D MCP application, covering redistributable SRD catalog exploration, character creation, and battle play.",
     "developerName": "5e Quint developers",
     "category": "Lifestyle",
     "capabilities": ["Interactive"],
     "defaultPrompt": "Help me create an SRD character and start a battle."
-  },
-  "mcpServers": "./.mcp.json"
+  }
 }
