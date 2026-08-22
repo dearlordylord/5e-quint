@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 
 import { Schema } from "effect";
 
+import { CharacterSessionQueryKindsSchema } from "../src/character-session-query-tool-input.ts";
+
 const EvidenceRefSchema = Schema.Struct({
   scenarioId: Schema.String,
   flowId: Schema.String,
@@ -28,19 +30,32 @@ const InstalledRowEvidenceSchema = Schema.Struct({
   caseIds: Schema.NonEmptyArray(Schema.String),
 });
 
-const CapabilityRowSchema = Schema.Struct({
+const CapabilityRowBaseSchema = Schema.Struct({
   id: Schema.String,
   capability: Schema.String,
   leafIssue: Schema.Number,
   mcpSurface: Schema.NonEmptyArray(Schema.String),
   modelVisibleProjection: Schema.NonEmptyArray(ProjectionPathSchema),
   mcpEvidence: McpEvidenceSchema,
-  requiredQueryKinds: Schema.optionalWith(Schema.NonEmptyArray(Schema.String), {
+  requiredQueryKinds: Schema.optionalWith(CharacterSessionQueryKindsSchema, {
     exact: true,
   }),
   installedChatGptEvidence: InstalledRowEvidenceSchema,
   boundary: Schema.String,
 });
+
+const CapabilityRowSchema = CapabilityRowBaseSchema.pipe(
+  Schema.filter(
+    ({ id, requiredQueryKinds }) =>
+      id === "character-sheet-derived-queries"
+        ? requiredQueryKinds !== undefined
+        : requiredQueryKinds === undefined,
+    {
+      description:
+        "only the derived-query capability row may declare required query kinds",
+    },
+  ),
+);
 
 export const CapabilityMatrixSchema = Schema.Struct({
   schema: Schema.Literal("dnd.srd-play.capability-matrix.v2"),

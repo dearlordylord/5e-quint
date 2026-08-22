@@ -10,6 +10,41 @@ import {
 
 export const CHARACTER_SESSION_QUERY_TOOL_NAME = "query_character_session";
 
+export const CHARACTER_SESSION_QUERY_KIND_VALUES = [
+  "abilityCheckAbility",
+  "abilityCheckProficiencyBonus",
+  "jumpDistanceAbility",
+  "linkedSpeedGrants",
+  "armorClass",
+  "spellAccess",
+  "knownForms",
+  "weaponMasterySelections",
+  "spellbookRitualAccesses",
+  "spellbookRitualAccess",
+  "spellInvocation",
+] as const;
+export type CharacterSessionQueryKind =
+  (typeof CHARACTER_SESSION_QUERY_KIND_VALUES)[number];
+export const CharacterSessionQueryKindSchema = Schema.Literal(
+  ...CHARACTER_SESSION_QUERY_KIND_VALUES,
+);
+export const CharacterSessionQueryKindsSchema = Schema.NonEmptyArray(
+  CharacterSessionQueryKindSchema,
+).pipe(
+  Schema.filter(
+    (queryKinds) =>
+      queryKinds.length === CHARACTER_SESSION_QUERY_KIND_VALUES.length &&
+      queryKinds.every(
+        (queryKind, index) =>
+          queryKind === CHARACTER_SESSION_QUERY_KIND_VALUES[index],
+      ),
+    {
+      description:
+        "the exact ordered set of production Character Session query kinds",
+    },
+  ),
+);
+
 const AbilitySchema = Schema.Literal(...ABILITIES);
 const SurfaceSkillSchema = Schema.Literal(...SURFACE_SKILLS);
 const UnitIdArraySchema = Schema.Array(UnitId);
@@ -19,14 +54,14 @@ const ArmorClassBaseChoiceSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("class_feature"), unitId: UnitId }),
 );
 
-export const CharacterSessionQuerySchema = Schema.Union(
-  Schema.Struct({
+const CharacterSessionQuerySchemaByKind = {
+  abilityCheckAbility: Schema.Struct({
     kind: Schema.Literal("abilityCheckAbility"),
     skill: SurfaceSkillSchema,
     defaultAbility: AbilitySchema,
     activeFeatureUnitIds: UnitIdArraySchema,
   }),
-  Schema.Struct({
+  abilityCheckProficiencyBonus: Schema.Struct({
     kind: Schema.Literal("abilityCheckProficiencyBonus"),
     skill: SurfaceSkillSchema,
     otherProficiencyBonus: Schema.Union(
@@ -38,43 +73,62 @@ export const CharacterSessionQuerySchema = Schema.Union(
       }),
     ),
   }),
-  Schema.Struct({
+  jumpDistanceAbility: Schema.Struct({
     kind: Schema.Literal("jumpDistanceAbility"),
     defaultAbility: AbilitySchema,
   }),
-  Schema.Struct({
+  linkedSpeedGrants: Schema.Struct({
     kind: Schema.Literal("linkedSpeedGrants"),
   }),
-  Schema.Struct({
+  armorClass: Schema.Struct({
     kind: Schema.Literal("armorClass"),
     baseChoice: Schema.optionalWith(ArmorClassBaseChoiceSchema, {
       exact: true,
     }),
   }),
-  Schema.Struct({
+  spellAccess: Schema.Struct({
     kind: Schema.Literal("spellAccess"),
   }),
-  Schema.Struct({
+  knownForms: Schema.Struct({
     kind: Schema.Literal("knownForms"),
   }),
-  Schema.Struct({
+  weaponMasterySelections: Schema.Struct({
     kind: Schema.Literal("weaponMasterySelections"),
     featureUnitId: UnitId,
   }),
-  Schema.Struct({
+  spellbookRitualAccesses: Schema.Struct({
     kind: Schema.Literal("spellbookRitualAccesses"),
   }),
-  Schema.Struct({
+  spellbookRitualAccess: Schema.Struct({
     kind: Schema.Literal("spellbookRitualAccess"),
     spellId: UnitId,
   }),
-  Schema.Struct({
+  spellInvocation: Schema.Struct({
     kind: Schema.Literal("spellInvocation"),
     spellId: UnitId,
     invocation: Schema.Struct({
       kind: Schema.Literal("ritual"),
     }),
   }),
+} as const satisfies Record<
+  CharacterSessionQueryKind,
+  Schema.Schema.AnyNoContext
+>;
+
+function unionQuerySchemas<
+  const Members extends Record<string, Schema.Schema.AnyNoContext>,
+>(
+  members: Members,
+): Schema.Schema<
+  Schema.Schema.Type<Members[keyof Members]>,
+  Schema.Schema.Encoded<Members[keyof Members]>,
+  Schema.Schema.Context<Members[keyof Members]>
+> {
+  return Schema.Union(...Object.values(members));
+}
+
+export const CharacterSessionQuerySchema = unionQuerySchemas(
+  CharacterSessionQuerySchemaByKind,
 );
 
 export const QueryCharacterSessionArgsSchema = Schema.Struct({

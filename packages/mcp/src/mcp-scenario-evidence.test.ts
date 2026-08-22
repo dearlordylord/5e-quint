@@ -2,10 +2,14 @@ import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { decodeCapabilityMatrix } from "../test-support/capability-matrix.ts";
-import { CHARACTER_SHEET_DERIVED_QUERY_KINDS } from "../test-support/character-sheet-query-evidence.ts";
+import {
+  CharacterSessionQueryKindsSchema,
+  CHARACTER_SESSION_QUERY_KIND_VALUES,
+} from "./character-session-query-tool-input.ts";
 import { sourceDefinesVitestScenario } from "../test-support/mcp-scenario-executable.ts";
 
 type McpRequiredFlow = {
@@ -70,6 +74,33 @@ function readJson<T>(path: string): T {
 }
 
 describe("MCP scenario evidence manifest", () => {
+  test("uses the production query-kind owner for exact evidence obligations", () => {
+    const decode = (value: unknown) =>
+      Schema.decodeUnknownEither(CharacterSessionQueryKindsSchema)(value);
+    expect(decode([...CHARACTER_SESSION_QUERY_KIND_VALUES])).toEqual(
+      expect.objectContaining({ _tag: "Right" }),
+    );
+    expect(
+      decode([
+        ...CHARACTER_SESSION_QUERY_KIND_VALUES.slice(0, -1),
+        "unknownQueryKind",
+      ]),
+    ).toEqual(expect.objectContaining({ _tag: "Left" }));
+    expect(
+      decode([
+        ...CHARACTER_SESSION_QUERY_KIND_VALUES.slice(0, -1),
+        CHARACTER_SESSION_QUERY_KIND_VALUES[0],
+      ]),
+    ).toEqual(expect.objectContaining({ _tag: "Left" }));
+    expect(
+      decode([
+        CHARACTER_SESSION_QUERY_KIND_VALUES[1],
+        CHARACTER_SESSION_QUERY_KIND_VALUES[0],
+        ...CHARACTER_SESSION_QUERY_KIND_VALUES.slice(2),
+      ]),
+    ).toEqual(expect.objectContaining({ _tag: "Left" }));
+  });
+
   test("validates matrix-backed executable MCP scenarios", () => {
     const manifest = readJson<McpScenarioEvidenceManifest>(manifestPath);
     const capabilityMatrix = decodeCapabilityMatrix(capabilityMatrixPath);
@@ -88,6 +119,18 @@ describe("MCP scenario evidence manifest", () => {
             )
           : [],
       ),
+    );
+    const derivedQueryEvidenceKeys = new Set(
+      capabilityMatrix.rows
+        .filter((row) => row.id === "character-sheet-derived-queries")
+        .flatMap((row) =>
+          row.mcpEvidence.status === "observed"
+            ? row.mcpEvidence.refs.map(
+                (ref) =>
+                  `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}`,
+              )
+            : [],
+        ),
     );
 
     expect(validateMcpScenarioEvidence(manifest, { root: repoRoot })).toEqual(
@@ -128,6 +171,14 @@ describe("MCP scenario evidence manifest", () => {
               evidenceKey,
           ),
       );
+      if (row.queryKinds !== undefined) {
+        expect(derivedQueryEvidenceKeys.has(evidenceKey)).toBe(true);
+      }
+      if (derivedQueryEvidenceKeys.has(evidenceKey)) {
+        expect(row.queryKinds).toEqual([
+          ...CHARACTER_SESSION_QUERY_KIND_VALUES,
+        ]);
+      }
       if (matrixRow?.requiredQueryKinds !== undefined) {
         expect(row.queryKinds).toEqual(matrixRow.requiredQueryKinds);
       }
@@ -150,7 +201,7 @@ describe("MCP scenario evidence manifest", () => {
       (row) => row.id === "character-sheet-derived-queries",
     );
     expect(derivedQueryRow?.requiredQueryKinds).toEqual([
-      ...CHARACTER_SHEET_DERIVED_QUERY_KINDS,
+      ...CHARACTER_SESSION_QUERY_KIND_VALUES,
     ]);
   });
 

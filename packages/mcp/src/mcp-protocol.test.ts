@@ -39,7 +39,7 @@ import {
   verifyWizardIceKnifeBattleHandoff,
 } from "../test-support/mcp-acceptance-scenarios.ts";
 import { requireJsonSchema } from "../test-support/json-schema.ts";
-import { CHARACTER_SHEET_DERIVED_QUERY_KINDS } from "../test-support/character-sheet-query-evidence.ts";
+import { CHARACTER_SESSION_QUERY_KIND_VALUES } from "./character-session-query-tool-input.ts";
 import { createMcpApplicationServices } from "./composition-root.ts";
 import { availableCharacterSession } from "./session-store.ts";
 import { adminProjection } from "./admin-mirror.ts";
@@ -1390,7 +1390,7 @@ describe("MCP protocol server", () => {
         });
 
         expect([...observedQueryKinds].sort()).toEqual(
-          [...CHARACTER_SHEET_DERIVED_QUERY_KINDS].sort(),
+          [...CHARACTER_SESSION_QUERY_KIND_VALUES].sort(),
         );
       },
     );
