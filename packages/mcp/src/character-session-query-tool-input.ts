@@ -64,7 +64,24 @@ function querySchemaFor<
   });
 }
 
-const CharacterSessionQuerySchemaByKind = {
+function querySchemaMap<
+  const Members extends Record<
+    CharacterSessionQueryKind,
+    Schema.Schema.AnyNoContext
+  >,
+>(
+  members: Members & {
+    [Kind in CharacterSessionQueryKind]: Schema.Schema.Type<
+      Members[Kind]
+    > extends { readonly kind: Kind }
+      ? unknown
+      : never;
+  },
+): Members {
+  return members;
+}
+
+const CharacterSessionQuerySchemaByKind = querySchemaMap({
   abilityCheckAbility: querySchemaFor("abilityCheckAbility", {
     skill: SurfaceSkillSchema,
     defaultAbility: AbilitySchema,
@@ -108,7 +125,7 @@ const CharacterSessionQuerySchemaByKind = {
 } as const satisfies Record<
   CharacterSessionQueryKind,
   Schema.Schema.AnyNoContext
->;
+>);
 
 function unionQuerySchemas<
   const Members extends Record<
