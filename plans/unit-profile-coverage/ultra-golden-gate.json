@@ -136,7 +136,7 @@
             {
               "flowId": "character-creation",
               "kind": "mcp-scenario",
-              "scenarioId": "create-baseline-character",
+              "scenarioId": "character-creation-protocol",
               "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             },
@@ -171,8 +171,85 @@
             {
               "flowId": "character-sheet",
               "kind": "mcp-scenario",
-              "scenarioId": "finish-battle-and-inspect-character-state",
+              "scenarioId": "battle-roundtrip-protocol",
               "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-class-level-advancement-protocol",
+              "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-sheet-derived-queries-protocol",
+              "taskId": "C10-CHARACTER-DERIVED-QUERIES-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-ritual-query",
+              "taskId": "C10-CHARACTER-ROW-RITUAL-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-companion-retention",
+              "taskId": "C10-CHARACTER-ROW-COMPANION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-rest-lifecycle",
+              "taskId": "C10-CHARACTER-ROW-REST-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-font-of-magic-protocol",
+              "taskId": "C10-CHARACTER-FONT-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-druid-known-form",
+              "taskId": "C10-CHARACTER-ROW-DRUID-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-calendar-time",
+              "taskId": "C10-CHARACTER-ROW-CALENDAR-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-spell-rest-benefit",
+              "taskId": "C10-CHARACTER-ROW-SPELL-REST-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-healing-lay-on-hands-protocol",
+              "taskId": "C10-CHARACTER-HEALING-LAY-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-resource-operation-protocol",
+              "taskId": "C10-CHARACTER-RESOURCE-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             },
             {
@@ -185,22 +262,22 @@
             {
               "flowId": "battle",
               "kind": "mcp-scenario",
-              "scenarioId": "start-battle-with-initiative",
+              "scenarioId": "battle-roundtrip-protocol",
               "taskId": "C11-BATTLE-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             },
             {
               "flowId": "battle",
               "kind": "mcp-scenario",
-              "scenarioId": "take-turns-and-resolve-attacks",
+              "scenarioId": "battle-act-protocol",
               "taskId": "C11-BATTLE-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             },
             {
               "flowId": "battle",
               "kind": "mcp-scenario",
-              "scenarioId": "use-action-surge",
-              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "scenarioId": "battle-act-resolution-protocol",
+              "taskId": "C11-BATTLE-ACT-RESOLUTION-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             },
             {
@@ -222,6 +299,34 @@
               "kind": "mcp-scenario",
               "scenarioId": "recover-from-invalid-or-stale-actions",
               "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "battle-initial-initiative-setup-protocol",
+              "taskId": "C11-BATTLE-INITIAL-SETUP-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "battle-row-coverage-mixed-companion-roster",
+              "taskId": "C11-BATTLE-MIXED-COMPANION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "battle-roster-lifecycle-protocol",
+              "taskId": "C11-BATTLE-ROSTER-LIFECYCLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "battle-row-coverage-interrupt-resolution",
+              "taskId": "C11-BATTLE-INTERRUPT-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             }
           ],
@@ -411,7 +516,7 @@
             {
               "flowId": "character-creation",
               "kind": "mcp-scenario",
-              "scenarioId": "create-baseline-character",
+              "scenarioId": "character-creation-protocol",
               "taskId": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             },
@@ -446,8 +551,85 @@
             {
               "flowId": "character-sheet",
               "kind": "mcp-scenario",
-              "scenarioId": "finish-battle-and-inspect-character-state",
+              "scenarioId": "battle-roundtrip-protocol",
               "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-class-level-advancement-protocol",
+              "taskId": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-sheet-derived-queries-protocol",
+              "taskId": "C10-CHARACTER-DERIVED-QUERIES-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-ritual-query",
+              "taskId": "C10-CHARACTER-ROW-RITUAL-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-companion-retention",
+              "taskId": "C10-CHARACTER-ROW-COMPANION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-rest-lifecycle",
+              "taskId": "C10-CHARACTER-ROW-REST-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-font-of-magic-protocol",
+              "taskId": "C10-CHARACTER-FONT-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-druid-known-form",
+              "taskId": "C10-CHARACTER-ROW-DRUID-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-calendar-time",
+              "taskId": "C10-CHARACTER-ROW-CALENDAR-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-row-coverage-spell-rest-benefit",
+              "taskId": "C10-CHARACTER-ROW-SPELL-REST-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-healing-lay-on-hands-protocol",
+              "taskId": "C10-CHARACTER-HEALING-LAY-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "character-resource-operation-protocol",
+              "taskId": "C10-CHARACTER-RESOURCE-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             },
             {
@@ -460,22 +642,22 @@
             {
               "flowId": "battle",
               "kind": "mcp-scenario",
-              "scenarioId": "start-battle-with-initiative",
+              "scenarioId": "battle-roundtrip-protocol",
               "taskId": "C11-BATTLE-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             },
             {
               "flowId": "battle",
               "kind": "mcp-scenario",
-              "scenarioId": "take-turns-and-resolve-attacks",
+              "scenarioId": "battle-act-protocol",
               "taskId": "C11-BATTLE-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             },
             {
               "flowId": "battle",
               "kind": "mcp-scenario",
-              "scenarioId": "use-action-surge",
-              "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "scenarioId": "battle-act-resolution-protocol",
+              "taskId": "C11-BATTLE-ACT-RESOLUTION-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             },
             {
@@ -497,6 +679,34 @@
               "kind": "mcp-scenario",
               "scenarioId": "recover-from-invalid-or-stale-actions",
               "taskId": "C11-BATTLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "battle-initial-initiative-setup-protocol",
+              "taskId": "C11-BATTLE-INITIAL-SETUP-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "battle-row-coverage-mixed-companion-roster",
+              "taskId": "C11-BATTLE-MIXED-COMPANION-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "battle-roster-lifecycle-protocol",
+              "taskId": "C11-BATTLE-ROSTER-LIFECYCLE-MCP-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "battle-row-coverage-interrupt-resolution",
+              "taskId": "C11-BATTLE-INTERRUPT-MCP-EVIDENCE",
               "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             }
           ],
@@ -1648,7 +1858,7 @@
         {
           "auditDecision": {
             "auditTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
-            "reason": "Level-1-7 adds supported Evasion runtime obligations plus closed class/spell accounting, but no new MCP tool workflow shape beyond workflow discovery, character creation, Character Sheet read, and battle handoff. The existing level-6 Rogue vertical is the highest admitted MCP character-creation path and already follows returned draft revisions, option ids, character ids, battle ids, and battle subjects; Evasion support remains proven by the support, QNT/generator, and MBT/parity layers rather than by MCP evidence.",
+            "reason": "Level-1-7 adds supported Evasion runtime obligations plus closed class/spell accounting, but no new MCP tool workflow shape beyond workflow discovery, character creation, Character Sheet read, and battle handoff. The existing level-6 Rogue vertical is the admitted default MCP character-creation path for this scope and already follows returned draft revisions, option ids, character ids, battle ids, and battle subjects; Evasion support remains proven by the support, QNT/generator, and MBT/parity layers rather than by MCP evidence.",
             "result": "reuse-existing-evidence",
             "reusedFlowIds": [
               "mcp-workflow-discovery",
@@ -1895,7 +2105,7 @@
         {
           "auditDecision": {
             "auditTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
-            "reason": "Level-1-8 adds repeated ASI, numeric progression, and Wild Shape threshold accounting that is closed outside MCP workflow execution; it does not introduce a new MCP tool flow beyond the four existing required flows. The existing level-6 Rogue vertical remains the highest admitted MCP character-creation path and proves returned-state sequencing for creation, sheet, and battle handoff, while level-8 mechanics stay covered by support completeness and parity layers.",
+            "reason": "Level-1-8 adds repeated ASI, numeric progression, and Wild Shape threshold accounting that is closed outside MCP workflow execution; it does not introduce a new MCP tool flow beyond the four existing required flows. The existing level-6 Rogue vertical remains the admitted default MCP character-creation path for this scope and proves returned-state sequencing for creation, sheet, and battle handoff, while level-8 mechanics stay covered by support completeness and parity layers.",
             "result": "reuse-existing-evidence",
             "reusedFlowIds": [
               "mcp-workflow-discovery",
