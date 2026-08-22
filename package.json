@@ -26,7 +26,7 @@
     "check:qnt-inventory": "node scripts/check-qnt-inventory.cjs",
     "check:qnt-run-block-separation": "node scripts/check-qnt-run-block-separation.cjs",
     "check:ralph-task-index": "node scripts/ralph-task-index-self-test.cjs && pnpm exec tsc -p scripts/ralph-issue-context.tsconfig.json --noEmit && pnpm exec vitest run scripts/ralph-issue-context.test.ts scripts/ralph-issue-context.property.test.ts scripts/ralph-issue-context.cli.test.ts scripts/ralph-issue-context.git.integration.test.ts scripts/ralph-issue-context.process.test.ts scripts/ralph-worktree-install.test.ts scripts/ralph-run.test.ts",
-    "check:raw-swarm-sdk-player": "pnpm exec tsc -p scripts/raw-swarm/sdk-player/tsconfig.json && mise exec -- pnpm exec vitest run scripts/raw-swarm/scenario-catalogue.test.ts scripts/raw-swarm/scenario-authoring.test.ts scripts/raw-swarm/repository-path.test.ts scripts/raw-swarm/capability-projection.test.ts scripts/raw-swarm/complete-path-comparison.test.ts scripts/raw-swarm/scenario-stage-plan.test.ts scripts/raw-swarm/stage-plan-authority.test.ts scripts/raw-swarm/scenario-campaign.test.ts scripts/raw-swarm/scenario-admission.test.ts scripts/raw-swarm/model-telemetry.test.ts scripts/raw-swarm/performance-comparison.test.ts scripts/raw-swarm/player-continuation-evidence.test.ts scripts/raw-swarm/fixed-baseline-measurement.test.ts scripts/raw-swarm/artifact-index.test.ts scripts/raw-swarm/replay-cache-measurement.test.ts scripts/raw-swarm/replay-sdk-player.test.ts scripts/raw-swarm/review-comparison.test.ts scripts/raw-swarm/review-invocation-evidence.test.ts scripts/raw-swarm/review-output-validation.test.ts scripts/raw-swarm/review-invocation-policy.test.ts scripts/raw-swarm/sdk-player/scenario-character-runtime.test.ts scripts/raw-swarm/sdk-player/scenario-setup-authoring.test.ts scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts scripts/raw-swarm/sdk-player/sdk-replay-input.test.ts scripts/raw-swarm/sdk-player/sdk-transcript.property.test.ts scripts/raw-swarm/sdk-player/sdk-audit.test.ts scripts/raw-swarm/sdk-player/sdk-review-packet.test.ts scripts/raw-swarm/sdk-player/player-turn-projection.test.ts scripts/raw-swarm/sdk-player/consumer-distribution.test.ts scripts/raw-swarm/fixed-scenario-benchmark.test.ts scripts/raw-swarm/findings.test.ts scripts/raw-swarm/report.test.ts scripts/raw-swarm/runner-boundaries.test.ts --pool=threads --maxWorkers=1",
+    "check:raw-swarm-sdk-player": "pnpm exec tsc -p scripts/raw-swarm/sdk-player/tsconfig.json && mise exec -- pnpm exec vitest run scripts/raw-swarm/scenario-catalogue.test.ts scripts/raw-swarm/scenario-authoring.test.ts scripts/raw-swarm/repository-path.test.ts scripts/raw-swarm/capability-projection.test.ts scripts/raw-swarm/complete-path-comparison.test.ts scripts/raw-swarm/scenario-stage-plan.test.ts scripts/raw-swarm/stage-plan-authority.test.ts scripts/raw-swarm/scenario-campaign.test.ts scripts/raw-swarm/scenario-admission.test.ts scripts/raw-swarm/model-telemetry.test.ts scripts/raw-swarm/performance-comparison.test.ts scripts/raw-swarm/player-continuation-evidence.test.ts scripts/raw-swarm/fixed-baseline-measurement.test.ts scripts/raw-swarm/artifact-index.test.ts scripts/raw-swarm/replay-cache-measurement.test.ts scripts/raw-swarm/replay-freeplay.test.ts scripts/raw-swarm/replay-sdk-player.test.ts scripts/raw-swarm/review-comparison.test.ts scripts/raw-swarm/review-invocation-evidence.test.ts scripts/raw-swarm/review-output-validation.test.ts scripts/raw-swarm/review-invocation-policy.test.ts scripts/raw-swarm/sdk-player/scenario-character-runtime.test.ts scripts/raw-swarm/sdk-player/scenario-setup-authoring.test.ts scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts scripts/raw-swarm/sdk-player/sdk-replay-input.test.ts scripts/raw-swarm/sdk-player/sdk-transcript.property.test.ts scripts/raw-swarm/sdk-player/sdk-audit.test.ts scripts/raw-swarm/sdk-player/sdk-review-packet.test.ts scripts/raw-swarm/sdk-player/player-turn-projection.test.ts scripts/raw-swarm/sdk-player/consumer-distribution.test.ts scripts/raw-swarm/fixed-scenario-benchmark.test.ts scripts/raw-swarm/findings.test.ts scripts/raw-swarm/report.test.ts scripts/raw-swarm/runner-boundaries.test.ts --pool=threads --maxWorkers=1",
     "proof:qnt": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-mbt-lock.sh pnpm run proof:qnt:body",
     "proof:qnt:body": "scripts/assert-resource-lock.sh mbt && pnpm check:qnt-inventory && pnpm check:mbt-driver-closure && pnpm check:qnt-proof-closure && pnpm --filter @dnd/battle-runtime test:qnt-proofs:body && pnpm --filter @dnd/shared-algebras proof:quint:body && pnpm --filter @dnd/character-creation-runtime test:qnt-slice:body",
     "raw-coverage:check": "node scripts/raw-coverage-check.cjs",
@@ -69,7 +69,7 @@
     "@types/node": "^22.19.15",
     "@typescript-eslint/parser": "^8.57.2",
     "@typescript/native": "npm:typescript@^7.0.2",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/coverage-v8": "4.1.11",
     "effect": "~3.21.5",
     "esbuild": "0.27.4",
     "eslint": "^9.39.4",
@@ -87,7 +87,7 @@
     "turbo": "latest",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.2",
-    "vitest": "^3.2.4"
+    "vitest": "4.1.11"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

@@ -36,39 +36,55 @@ export const PLAY_SESSION_UNAVAILABLE: PlaySessionUnavailable = {
   },
 };
 
+export type PlaySessionCreation = {
+  readonly playSessionId: PlaySessionId;
+  readonly projection: McpSessionSnapshot;
+};
+
+export type PlaySessionCreationFailure = {
+  readonly tag: "playSessionCreationFailed";
+  readonly reason: "playSessionIdCollision";
+  readonly message: string;
+};
+
 export type PlaySessionRegistry = {
-  create(): {
-    readonly playSessionId: PlaySessionId;
-    readonly projection: McpSessionSnapshot;
-  };
+  create(): Either.Either<PlaySessionCreation, PlaySessionCreationFailure>;
   run<A>(
     playSessionId: PlaySessionId,
     operation: (root: McpPlaySessionRoot) => A | Promise<A>,
   ): Promise<Either.Either<A, PlaySessionUnavailable>>;
 };
 
+export type PlaySessionIdFactory = () => PlaySessionId;
+
 type LivePlaySession = {
   readonly root: McpPlaySessionRoot;
   tail: Promise<void>;
 };
 
+const MAX_PLAY_SESSION_ID_ATTEMPTS = 16;
+
 export function createPlaySessionRegistry(input: {
   readonly createRoot: (playSessionId: PlaySessionId) => McpPlaySessionRoot;
+  readonly playSessionIdFactory?: PlaySessionIdFactory;
 }): PlaySessionRegistry {
   const liveSessions = new Map<PlaySessionId, LivePlaySession>();
+  const playSessionIdFactory =
+    input.playSessionIdFactory ?? generatedPlaySessionId;
 
   return {
     create() {
-      let playSessionId = generatedPlaySessionId();
-      while (liveSessions.has(playSessionId)) {
-        playSessionId = generatedPlaySessionId();
-      }
-      const root = input.createRoot(playSessionId);
-      liveSessions.set(playSessionId, { root, tail: Promise.resolve() });
-      return {
-        playSessionId,
-        projection: root.sessionStore.snapshot(),
-      };
+      return Either.map(
+        availablePlaySessionId(playSessionIdFactory, liveSessions),
+        (playSessionId) => {
+          const root = input.createRoot(playSessionId);
+          liveSessions.set(playSessionId, { root, tail: Promise.resolve() });
+          return {
+            playSessionId,
+            projection: root.sessionStore.snapshot(),
+          };
+        },
+      );
     },
     async run(playSessionId, operation) {
       const session = liveSessions.get(playSessionId);
@@ -84,6 +100,21 @@ export function createPlaySessionRegistry(input: {
       return Either.right(await result);
     },
   };
+}
+
+function availablePlaySessionId(
+  playSessionIdFactory: PlaySessionIdFactory,
+  liveSessions: ReadonlyMap<PlaySessionId, LivePlaySession>,
+): Either.Either<PlaySessionId, PlaySessionCreationFailure> {
+  for (let attempt = 0; attempt < MAX_PLAY_SESSION_ID_ATTEMPTS; attempt += 1) {
+    const playSessionId = playSessionIdFactory();
+    if (!liveSessions.has(playSessionId)) return Either.right(playSessionId);
+  }
+  return Either.left({
+    tag: "playSessionCreationFailed",
+    reason: "playSessionIdCollision",
+    message: `Unable to allocate a unique Play Session handle after ${MAX_PLAY_SESSION_ID_ATTEMPTS} attempts.`,
+  });
 }
 
 export function decodePlaySessionId(

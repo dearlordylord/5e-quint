@@ -26,6 +26,7 @@ import {
   statefulPlaySessionToolDefinition,
 } from "./play-session-tool-contract.ts";
 import { createPlaySessionRegistry } from "./play-session.ts";
+import type { PlaySessionIdFactory } from "./play-session.ts";
 import { isBattleToolName } from "./battle-tools.ts";
 import { isCharacterToolName } from "./character-tools.ts";
 import { isDiceToolName } from "./dice-tool-input.ts";
@@ -40,9 +41,14 @@ type ProtocolToolDefinition = {
   readonly outputSchema?: McpOutputSchema;
 };
 
+export type McpProtocolServerOptions = {
+  readonly playSessionIdFactory?: PlaySessionIdFactory;
+};
+
 export function createDndMcpProtocolServer(
   applicationServices: McpApplicationServices = createMcpApplicationServices(),
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
+  options: McpProtocolServerOptions = {},
 ) {
   const protocolDefinitions = [
     ...playSessionToolDefinitions,
@@ -61,6 +67,9 @@ export function createDndMcpProtocolServer(
         applicationServices,
         adminMirrorSessionId(playSessionId),
       ),
+    ...(options.playSessionIdFactory === undefined
+      ? {}
+      : { playSessionIdFactory: options.playSessionIdFactory }),
   });
   const server = new Server(
     { name: "dnd-surface-runtime", version: "0.1.0" },

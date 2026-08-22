@@ -926,10 +926,12 @@ Unparseable lines are still forwarded and recorded explicitly. The transcript
 header carries the scenario id, tested Git SHA, and start time.
 
 `replay-freeplay.ts` pairs every recorded `tools/call` with its response,
-replays the calls against a fresh in-process SDK composition root, and compares
-canonical response hashes. It proves determinism of the concrete recorded
-interaction when replayed from its recorded clean revision; rerunning the agent
-can legitimately choose a different path.
+replays the calls through a fresh in-process MCP protocol server and client,
+and compares canonical response hashes. Recorded process-lifetime Play Session
+handles are supplied to the canonical protocol registry so routed calls remain
+verbatim. It proves determinism of the concrete recorded interaction when
+replayed from its recorded clean revision; rerunning the agent can legitimately
+choose a different path.
 
 ```sh
 mise exec -- pnpm exec tsx scripts/raw-swarm/mcp-recording-shim.ts \
