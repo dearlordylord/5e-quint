@@ -299,7 +299,7 @@ function workflowGuide() {
     limits: [
       "Use discover_creation_holes, list_characters, inspect_character_session, query_character_session, list_stat_blocks, and discover_battle_acts for the currently executable workflows, projections, and acts.",
       "Character creation exposes one draft.progression.initial fill for the selected progression profile; MCP does not expose a later level-1 class-entry fill.",
-      "MCP does not roll dice. Use user-provided or external dice results.",
+      "roll_dice is an optional independent raw-face roller: it returns bounded groups with server correlation only. It does not derive modifiers or outcomes, inspect or auto-fill Battle holes, retain history, or provide caller idempotency; calculations must use canonical returned facts.",
       "Character Session queries do not persist derived facts, expose generic out-of-Battle casting, maintain a spell ledger, or add search, pagination, indexing, or recommendation infrastructure.",
       "Revival workflows beyond the typed zero-HP character closeout remain unsupported.",
     ],

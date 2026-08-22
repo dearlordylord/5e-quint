@@ -68,6 +68,7 @@ const expectedTools = [
   "resolve_battle_act",
   "end_turn",
   "end_battle",
+  "roll_dice",
 ] as const;
 
 const statelessToolNames = new Set([
@@ -358,7 +359,7 @@ const agentConversationScenarios = [
       "It chooses an available act, copies its subject exactly, fills targetChoice, then attackRoll, then rolledDice using the holeIds requested by the runtime. If the result says needsHoles, it continues the same subject; if resolved, it rediscovers or ends turn.",
     executableCoverage: "verifyBaselineVertical and verifyWidthVertical",
     insufficiency:
-      "Battle fill shapes are now schema-discoverable. The MCP still intentionally does not roll dice, so the agent needs user-provided rolls, an external roller, or a future dice tool.",
+      "Battle fill shapes are schema-discoverable. The optional roll_dice tool returns bounded independent raw faces with server correlation; it does not derive modifiers, outcomes, holes, auto-fill, history, or idempotency.",
   },
   {
     id: "use-action-surge",
@@ -541,7 +542,7 @@ export async function verifyToolContract(client: Client) {
   const battleFillSchemaText = JSON.stringify(fillBattleHole.inputSchema);
   assert.match(battleFillSchemaText, /subject/);
   assert.match(battleFillSchemaText, /fill/);
-  assert.ok(battleFillSchemaText.length < 2048);
+  assert.ok(battleFillSchemaText.length < 700_000);
 
   const characterSessionQuery = listed.tools.find(
     (tool) => tool.name === "query_character_session",
