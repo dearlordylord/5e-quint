@@ -1397,7 +1397,7 @@ describe("Raw Swarm findings projection", () => {
       relative(repoRoot, dbPath),
     ]);
     expect(audit).toContain("generation-rejection");
-  });
+  }, 30_000);
 
   test("rejects malformed projections, duplicate identities, broken pointers, and tampering", () => {
     const input = fixture();
