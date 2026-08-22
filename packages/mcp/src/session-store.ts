@@ -54,6 +54,7 @@ export type {
   McpBattleRosterTransitionIssue,
 } from "./battle-roster-session-types.ts";
 
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export type AvailableCharacterSession = CharacterSheet;
 export type AvailableCharacterSessionInput = CharacterSheetRebuildInput;
 export type CharacterSessionIssue = {
