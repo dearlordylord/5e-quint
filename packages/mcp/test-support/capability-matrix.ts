@@ -30,31 +30,35 @@ const InstalledRowEvidenceSchema = Schema.Struct({
   caseIds: Schema.NonEmptyArray(Schema.String),
 });
 
-const CapabilityRowBaseSchema = Schema.Struct({
-  id: Schema.String,
+const CapabilityRowCommonFields = {
   capability: Schema.String,
   leafIssue: Schema.Number,
   mcpSurface: Schema.NonEmptyArray(Schema.String),
   modelVisibleProjection: Schema.NonEmptyArray(ProjectionPathSchema),
   mcpEvidence: McpEvidenceSchema,
-  requiredQueryKinds: Schema.optionalWith(CharacterSessionQueryKindsSchema, {
-    exact: true,
-  }),
   installedChatGptEvidence: InstalledRowEvidenceSchema,
   boundary: Schema.String,
+};
+
+const DerivedQueryCapabilityRowSchema = Schema.Struct({
+  ...CapabilityRowCommonFields,
+  id: Schema.Literal("character-sheet-derived-queries"),
+  requiredQueryKinds: CharacterSessionQueryKindsSchema,
 });
 
-const CapabilityRowSchema = CapabilityRowBaseSchema.pipe(
-  Schema.filter(
-    ({ id, requiredQueryKinds }) =>
-      id === "character-sheet-derived-queries"
-        ? requiredQueryKinds !== undefined
-        : requiredQueryKinds === undefined,
-    {
+const NonDerivedCapabilityRowSchema = Schema.Struct({
+  ...CapabilityRowCommonFields,
+  id: Schema.String.pipe(
+    Schema.filter((id) => id !== "character-sheet-derived-queries", {
       description:
-        "only the derived-query capability row may declare required query kinds",
-    },
+        "non-derived capability rows cannot use the derived-query discriminator",
+    }),
   ),
+});
+
+const CapabilityRowSchema = Schema.Union(
+  DerivedQueryCapabilityRowSchema,
+  NonDerivedCapabilityRowSchema,
 );
 
 export const CapabilityMatrixSchema = Schema.Struct({

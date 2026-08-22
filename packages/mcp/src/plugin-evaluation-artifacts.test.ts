@@ -29,7 +29,7 @@ const manifestPath = resolve(
   "plans/unit-profile-coverage/mcp-scenario-evidence.json",
 );
 
-const McpManifestRowSchema = Schema.Struct({
+const McpManifestRowCommonFields = {
   kind: Schema.Literal("mcp-scenario"),
   flowId: Schema.String,
   scopeIds: Schema.NonEmptyArray(Schema.String),
@@ -38,40 +38,64 @@ const McpManifestRowSchema = Schema.Struct({
   testPath: Schema.String,
   taskId: Schema.String,
   summary: Schema.String,
-  queryKinds: Schema.optionalWith(CharacterSessionQueryKindsSchema, {
-    exact: true,
-  }),
-});
+};
+
+type EvidenceRefKey = `${string}\u0000${string}\u0000${string}`;
+
+function evidenceRefKey(ref: {
+  readonly scenarioId: string;
+  readonly flowId: string;
+  readonly taskId: string;
+}): EvidenceRefKey {
+  return `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}`;
+}
+
 function mcpManifestSchemaFor(matrix: CapabilityMatrix) {
-  const derivedQueryEvidenceKeys = new Set(
-    matrix.rows
-      .filter((row) => row.id === "character-sheet-derived-queries")
-      .flatMap((row) =>
-        row.mcpEvidence.status === "observed"
-          ? row.mcpEvidence.refs.map(
-              (ref) =>
-                `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}`,
-            )
-          : [],
-      ),
+  const derivedQueryEvidenceRefs = matrix.rows
+    .filter((row) => row.id === "character-sheet-derived-queries")
+    .flatMap((row) =>
+      row.mcpEvidence.status === "observed" ? row.mcpEvidence.refs : [],
+    );
+  const derivedQueryEvidenceKeys = new Set<EvidenceRefKey>(
+    derivedQueryEvidenceRefs.map(evidenceRefKey),
   );
-  const rowSchema = McpManifestRowSchema.pipe(
-    Schema.filter(
-      (row) => {
-        const key = `${row.scenarioId}\u0000${row.flowId}\u0000${row.taskId}`;
-        return derivedQueryEvidenceKeys.has(key)
-          ? row.queryKinds !== undefined
-          : row.queryKinds === undefined;
-      },
-      {
-        description:
-          "only the canonical derived-query evidence scenario may declare query kinds",
-      },
-    ),
+  const derivedRowSchemas = derivedQueryEvidenceRefs.map((ref) =>
+    Schema.Struct({
+      ...McpManifestRowCommonFields,
+      flowId: Schema.Literal(ref.flowId),
+      scenarioId: Schema.Literal(ref.scenarioId),
+      taskId: Schema.Literal(ref.taskId),
+      queryKinds: CharacterSessionQueryKindsSchema,
+    }),
   );
+  const derivedRowSchema = Schema.Union(...derivedRowSchemas, Schema.Never);
+  const nonDerivedRowSchema = Schema.Struct(McpManifestRowCommonFields).pipe(
+    Schema.filter((row) => !derivedQueryEvidenceKeys.has(evidenceRefKey(row)), {
+      description:
+        "ordinary manifest rows cannot use a canonical derived-query evidence key",
+    }),
+  );
+  const rowSchema = Schema.Union(derivedRowSchema, nonDerivedRowSchema);
   return Schema.Struct({
     schema: Schema.Literal("dnd.mcp-scenario-evidence.v1"),
+    ownerPackage: Schema.Literal("@dnd/mcp"),
+    check: Schema.Struct({
+      packageName: Schema.Literal("@dnd/mcp"),
+      script: Schema.String,
+    }),
+    requiredFlows: Schema.NonEmptyArray(
+      Schema.Struct({
+        flowId: Schema.String,
+        scopeIds: Schema.NonEmptyArray(Schema.String),
+        followUpTaskIdsByScope: Schema.Record({
+          key: Schema.String,
+          value: Schema.String,
+        }),
+        description: Schema.String,
+      }),
+    ),
     evidence: Schema.NonEmptyArray(rowSchema),
+    scopeAuditDecisions: Schema.Array(Schema.Any),
   });
 }
 const ConnectionOperatorStepSchema = Schema.Struct({
@@ -550,9 +574,11 @@ describe("SRD Play evaluation artifacts", () => {
     const derivedQueries = matrix.rows.find(
       (row) => row.id === "character-sheet-derived-queries",
     );
-    expect(derivedQueries?.requiredQueryKinds).toEqual([
-      ...CHARACTER_SESSION_QUERY_KIND_VALUES,
-    ]);
+    expect(
+      derivedQueries !== undefined && "requiredQueryKinds" in derivedQueries
+        ? derivedQueries.requiredQueryKinds
+        : undefined,
+    ).toEqual([...CHARACTER_SESSION_QUERY_KIND_VALUES]);
     expect(
       existsSync(
         resolve(repoRoot, matrix.representativeHeadlessJourney.testPath),
@@ -627,10 +653,13 @@ describe("SRD Play evaluation artifacts", () => {
           rowRefKeys.add(refKey);
           const manifestRow = manifestByKey.get(refKey);
           expect(manifestRow, row.id).toBeDefined();
-          if (row.requiredQueryKinds !== undefined) {
-            expect(manifestRow?.queryKinds, row.id).toEqual(
-              row.requiredQueryKinds,
-            );
+          if ("requiredQueryKinds" in row) {
+            expect(
+              manifestRow !== undefined && "queryKinds" in manifestRow
+                ? manifestRow.queryKinds
+                : undefined,
+              row.id,
+            ).toEqual(row.requiredQueryKinds);
           }
           expect(
             existsSync(resolve(repoRoot, manifestRow?.ownerPath ?? "")),
@@ -963,7 +992,7 @@ function decodeFile<S extends Schema.Schema.AnyNoContext>(
   schema: S,
   path: string,
 ): Schema.Schema.Type<S> {
-  return Schema.decodeUnknownSync(schema)(
+  return Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(
     JSON.parse(readFileSync(path, "utf8")),
   );
 }

@@ -54,15 +54,47 @@ const ArmorClassBaseChoiceSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("class_feature"), unitId: UnitId }),
 );
 
-const CharacterSessionQuerySchemaByKind = {
-  abilityCheckAbility: Schema.Struct({
-    kind: Schema.Literal("abilityCheckAbility"),
+type CharacterSessionQuerySchemaEntry = {
+  readonly kind: CharacterSessionQueryKind;
+  readonly schema: Schema.Schema.AnyNoContext;
+};
+
+function querySchemaEntry<
+  const Kind extends CharacterSessionQueryKind,
+  const Fields extends Schema.Struct.Fields,
+>(kind: Kind, fields: Fields) {
+  return {
+    kind,
+    schema: Schema.Struct({
+      kind: Schema.Literal(kind),
+      ...fields,
+    }),
+  };
+}
+
+function querySchemaEntries<
+  const Entries extends readonly CharacterSessionQuerySchemaEntry[],
+>(
+  entries: Entries &
+    (Exclude<CharacterSessionQueryKind, Entries[number]["kind"]> extends never
+      ? unknown
+      : {
+          readonly missingQueryKinds: Exclude<
+            CharacterSessionQueryKind,
+            Entries[number]["kind"]
+          >;
+        }),
+): Entries {
+  return entries;
+}
+
+const CharacterSessionQuerySchemaEntries = querySchemaEntries([
+  querySchemaEntry("abilityCheckAbility", {
     skill: SurfaceSkillSchema,
     defaultAbility: AbilitySchema,
     activeFeatureUnitIds: UnitIdArraySchema,
   }),
-  abilityCheckProficiencyBonus: Schema.Struct({
-    kind: Schema.Literal("abilityCheckProficiencyBonus"),
+  querySchemaEntry("abilityCheckProficiencyBonus", {
     skill: SurfaceSkillSchema,
     otherProficiencyBonus: Schema.Union(
       Schema.Struct({
@@ -73,62 +105,46 @@ const CharacterSessionQuerySchemaByKind = {
       }),
     ),
   }),
-  jumpDistanceAbility: Schema.Struct({
-    kind: Schema.Literal("jumpDistanceAbility"),
+  querySchemaEntry("jumpDistanceAbility", {
     defaultAbility: AbilitySchema,
   }),
-  linkedSpeedGrants: Schema.Struct({
-    kind: Schema.Literal("linkedSpeedGrants"),
-  }),
-  armorClass: Schema.Struct({
-    kind: Schema.Literal("armorClass"),
+  querySchemaEntry("linkedSpeedGrants", {}),
+  querySchemaEntry("armorClass", {
     baseChoice: Schema.optionalWith(ArmorClassBaseChoiceSchema, {
       exact: true,
     }),
   }),
-  spellAccess: Schema.Struct({
-    kind: Schema.Literal("spellAccess"),
-  }),
-  knownForms: Schema.Struct({
-    kind: Schema.Literal("knownForms"),
-  }),
-  weaponMasterySelections: Schema.Struct({
-    kind: Schema.Literal("weaponMasterySelections"),
+  querySchemaEntry("spellAccess", {}),
+  querySchemaEntry("knownForms", {}),
+  querySchemaEntry("weaponMasterySelections", {
     featureUnitId: UnitId,
   }),
-  spellbookRitualAccesses: Schema.Struct({
-    kind: Schema.Literal("spellbookRitualAccesses"),
-  }),
-  spellbookRitualAccess: Schema.Struct({
-    kind: Schema.Literal("spellbookRitualAccess"),
+  querySchemaEntry("spellbookRitualAccesses", {}),
+  querySchemaEntry("spellbookRitualAccess", {
     spellId: UnitId,
   }),
-  spellInvocation: Schema.Struct({
-    kind: Schema.Literal("spellInvocation"),
+  querySchemaEntry("spellInvocation", {
     spellId: UnitId,
     invocation: Schema.Struct({
       kind: Schema.Literal("ritual"),
     }),
   }),
-} as const satisfies Record<
-  CharacterSessionQueryKind,
-  Schema.Schema.AnyNoContext
->;
+]);
 
 function unionQuerySchemas<
-  const Members extends Record<string, Schema.Schema.AnyNoContext>,
+  const Entries extends readonly CharacterSessionQuerySchemaEntry[],
 >(
-  members: Members,
+  entries: Entries,
 ): Schema.Schema<
-  Schema.Schema.Type<Members[keyof Members]>,
-  Schema.Schema.Encoded<Members[keyof Members]>,
-  Schema.Schema.Context<Members[keyof Members]>
+  Schema.Schema.Type<Entries[number]["schema"]>,
+  Schema.Schema.Encoded<Entries[number]["schema"]>,
+  Schema.Schema.Context<Entries[number]["schema"]>
 > {
-  return Schema.Union(...Object.values(members));
+  return Schema.Union(...entries.map(({ schema }) => schema));
 }
 
 export const CharacterSessionQuerySchema = unionQuerySchemas(
-  CharacterSessionQuerySchemaByKind,
+  CharacterSessionQuerySchemaEntries,
 );
 
 export const QueryCharacterSessionArgsSchema = Schema.Struct({

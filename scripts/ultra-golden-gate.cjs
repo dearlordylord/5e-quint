@@ -588,7 +588,21 @@ function validateMcpScenarioEvidence(manifest, { root }) {
   const context = "MCP scenario evidence manifest";
   const issues = [];
   if (!isRecord(manifest)) return [`${context} must be an object.`];
+  const requiresDerivedQueryContract =
+    Array.isArray(manifest.evidence) &&
+    manifest.evidence.some(
+      (row) => isRecord(row) && row.queryKinds !== undefined,
+    );
   const derivedQueryContract = derivedQueryEvidenceContract(root);
+  if (
+    requiresDerivedQueryContract &&
+    derivedQueryContract.kinds === undefined &&
+    derivedQueryContract.issues.length === 0
+  ) {
+    issues.push(
+      `${context} requires the production Character Session query-kind owner and capability matrix for queryKinds evidence.`,
+    );
+  }
   issues.push(...derivedQueryContract.issues);
   issues.push(
     ...unexpectedFieldIssues(manifest, mcpScenarioEvidenceFields, context),

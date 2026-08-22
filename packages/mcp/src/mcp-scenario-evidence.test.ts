@@ -1,6 +1,14 @@
-import { existsSync, readFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
+import { tmpdir } from "node:os";
 
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
@@ -101,6 +109,138 @@ describe("MCP scenario evidence manifest", () => {
     ).toEqual(expect.objectContaining({ _tag: "Left" }));
   });
 
+  test("rejects query-kind drift through the public scenario validator", () => {
+    const manifest = readJson<McpScenarioEvidenceManifest>(manifestPath);
+    const derivedRowIndex = manifest.evidence.findIndex(
+      (row) => row.queryKinds !== undefined,
+    );
+    const ordinaryRowIndex = manifest.evidence.findIndex(
+      (row) => row.queryKinds === undefined,
+    );
+    if (derivedRowIndex < 0 || ordinaryRowIndex < 0) {
+      throw new Error(
+        "Expected both derived-query and ordinary MCP evidence rows.",
+      );
+    }
+    const mutateEvidence = (
+      mutate: (
+        row: McpScenarioEvidenceRow,
+        index: number,
+      ) => McpScenarioEvidenceRow,
+    ): McpScenarioEvidenceManifest => ({
+      ...manifest,
+      evidence: manifest.evidence.map(mutate),
+    });
+    const expectValidatorIssue = (
+      candidate: McpScenarioEvidenceManifest,
+      expectedText: string,
+    ): void => {
+      expect(
+        validateMcpScenarioEvidence(candidate, { root: repoRoot }).some(
+          (issue) => issue.includes(expectedText),
+        ),
+        expectedText,
+      ).toBe(true);
+    };
+
+    expectValidatorIssue(
+      mutateEvidence((row, index) =>
+        index === derivedRowIndex && row.queryKinds !== undefined
+          ? {
+              ...row,
+              queryKinds: [...row.queryKinds.slice(0, -1), "unknownQueryKind"],
+            }
+          : row,
+      ),
+      "queryKinds must exactly match",
+    );
+    expectValidatorIssue(
+      mutateEvidence((row, index) =>
+        index === derivedRowIndex && row.queryKinds !== undefined
+          ? {
+              ...row,
+              queryKinds: [
+                ...row.queryKinds.slice(0, -1),
+                row.queryKinds[0] ?? "",
+              ],
+            }
+          : row,
+      ),
+      "queryKinds must exactly match",
+    );
+    expectValidatorIssue(
+      mutateEvidence((row, index) => {
+        if (index !== derivedRowIndex || row.queryKinds === undefined) {
+          return row;
+        }
+        const { queryKinds: _queryKinds, ...withoutQueryKinds } = row;
+        void _queryKinds;
+        return withoutQueryKinds;
+      }),
+      "queryKinds is required",
+    );
+    expectValidatorIssue(
+      mutateEvidence((row, index) =>
+        index === ordinaryRowIndex
+          ? { ...row, queryKinds: [...CHARACTER_SESSION_QUERY_KIND_VALUES] }
+          : row,
+      ),
+      "queryKinds is only allowed",
+    );
+    expectValidatorIssue(
+      mutateEvidence((row, index) =>
+        index === derivedRowIndex && row.queryKinds !== undefined
+          ? {
+              ...row,
+              queryKinds: [
+                row.queryKinds[1] ?? "",
+                row.queryKinds[0] ?? "",
+                ...row.queryKinds.slice(2),
+              ],
+            }
+          : row,
+      ),
+      "queryKinds must exactly match",
+    );
+  });
+
+  test("rejects missing or malformed production query-kind declarations", () => {
+    const manifest = readJson<McpScenarioEvidenceManifest>(manifestPath);
+    const missingRoot = mkdtempSync(resolve(tmpdir(), "dnd-mcp-query-owner-"));
+    try {
+      expect(
+        validateMcpScenarioEvidence(manifest, { root: missingRoot }).some(
+          (issue) =>
+            issue.includes(
+              "requires the production Character Session query-kind owner",
+            ),
+        ),
+      ).toBe(true);
+    } finally {
+      rmSync(missingRoot, { recursive: true, force: true });
+    }
+
+    const malformedRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-mcp-query-owner-"),
+    );
+    try {
+      const sourceDirectory = resolve(malformedRoot, "packages/mcp/src");
+      mkdirSync(sourceDirectory, { recursive: true });
+      writeFileSync(
+        resolve(sourceDirectory, "character-session-query-tool-input.ts"),
+        'export const CHARACTER_SESSION_QUERY_KIND_VALUES = ["valid", 1] as const;\n',
+      );
+      expect(
+        validateMcpScenarioEvidence(manifest, { root: malformedRoot }).some(
+          (issue) =>
+            issue.includes("query-kind values must be string literals"),
+        ),
+      ).toBe(true);
+    } finally {
+      rmSync(malformedRoot, { recursive: true, force: true });
+    }
+  });
+
   test("validates matrix-backed executable MCP scenarios", () => {
     const manifest = readJson<McpScenarioEvidenceManifest>(manifestPath);
     const capabilityMatrix = decodeCapabilityMatrix(capabilityMatrixPath);
@@ -179,7 +319,7 @@ describe("MCP scenario evidence manifest", () => {
           ...CHARACTER_SESSION_QUERY_KIND_VALUES,
         ]);
       }
-      if (matrixRow?.requiredQueryKinds !== undefined) {
+      if (matrixRow !== undefined && "requiredQueryKinds" in matrixRow) {
         expect(row.queryKinds).toEqual(matrixRow.requiredQueryKinds);
       }
       if (executableEvidenceKeys.has(evidenceKey)) {
@@ -200,9 +340,11 @@ describe("MCP scenario evidence manifest", () => {
     const derivedQueryRow = capabilityMatrix.rows.find(
       (row) => row.id === "character-sheet-derived-queries",
     );
-    expect(derivedQueryRow?.requiredQueryKinds).toEqual([
-      ...CHARACTER_SESSION_QUERY_KIND_VALUES,
-    ]);
+    expect(
+      derivedQueryRow !== undefined && "requiredQueryKinds" in derivedQueryRow
+        ? derivedQueryRow.requiredQueryKinds
+        : undefined,
+    ).toEqual([...CHARACTER_SESSION_QUERY_KIND_VALUES]);
   });
 
   test("couples ids to non-skipped test declarations, not comments or skipped cases", () => {
