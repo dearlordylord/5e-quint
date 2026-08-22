@@ -178,12 +178,12 @@ The battle-session tool boundary exposes these user-facing tools:
 - `read_battle_state` returns the canonical stored `BattleState` projection and
   current battle snapshot. The Play Session projection has exactly one Battle
   workflow state: `none`, `initialInitiativeSetup`, or `activeBattle`.
+  Character occupancy remains visible through the Character Session read models
+  while the SDK setup object or active Battle owns the combat facts.
 - `roll_dice` is an optional independent bounded raw-face roller. It returns
   server-correlated results, but never derives modifiers or outcomes, inspects
   or auto-fills Battle holes, retains history, or provides caller idempotency;
   calculations must use canonical returned facts.
-  Character occupancy remains visible through the Character Session read models
-  while the SDK setup object or active Battle owns the combat facts.
 - `discover_battle_acts` returns the current actor's battle acts. The battle
   runtime is the source of truth for which acts are currently available.
 - `fill_battle_hole` submits one fill at a time for a selected battle act
