@@ -10,7 +10,8 @@ import {
   decodeEvaluationInventory,
   type EvaluationInventory,
 } from "../test-support/evaluation-inventory.ts";
-import { mcpScenarioEvidenceIds } from "../test-support/mcp-acceptance-scenarios.ts";
+import { mcpAcceptanceScenarioIds } from "../test-support/mcp-acceptance-scenarios.ts";
+import { sourceDefinesVitestScenario } from "../test-support/mcp-scenario-executable.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
@@ -24,6 +25,10 @@ const EvidenceRefSchema = Schema.Struct({
   scenarioId: Schema.String,
   flowId: Schema.String,
   taskId: Schema.String,
+});
+const ProjectionPathSchema = Schema.Struct({
+  toolName: Schema.String,
+  pathSegments: Schema.NonEmptyArray(Schema.String),
 });
 const McpEvidenceSchema = Schema.Union(
   Schema.Struct({
@@ -43,7 +48,7 @@ const CapabilityRowSchema = Schema.Struct({
   capability: Schema.String,
   leafIssue: Schema.Number,
   mcpSurface: Schema.NonEmptyArray(Schema.String),
-  modelVisibleProjection: Schema.NonEmptyArray(Schema.String),
+  modelVisibleProjection: Schema.NonEmptyArray(ProjectionPathSchema),
   mcpEvidence: McpEvidenceSchema,
   installedChatGptEvidence: InstalledRowEvidenceSchema,
   boundary: Schema.String,
@@ -91,29 +96,92 @@ const McpManifestSchema = Schema.Struct({
   schema: Schema.Literal("dnd.mcp-scenario-evidence.v1"),
   evidence: Schema.NonEmptyArray(McpManifestRowSchema),
 });
-const OperatorStepSchema = Schema.Struct({
-  step: Schema.String,
-  evidenceKind: Schema.Literal(
-    "connectionAndToolSelection",
-    "installedSkillActivation",
-    "installedCompleteWorkflow",
-  ),
+const ConnectionOperatorStepSchema = Schema.Struct({
+  step: Schema.Literal("mcp-connection"),
+  evidenceKind: Schema.Literal("connectionAndToolSelection"),
   instructions: Schema.String,
-  requiredCases: Schema.NonEmptyArray(Schema.String),
-});
-const PendingCaseResultSchema = Schema.Struct({
-  caseId: Schema.String,
-  evidenceKind: Schema.Literal(
-    "connectionAndToolSelection",
-    "installedSkillActivation",
-    "installedCompleteWorkflow",
+  requiredCases: Schema.Tuple(
+    Schema.Literal("mcp-direct-catalog"),
+    Schema.Literal("mcp-indirect-catalog"),
+    Schema.Literal("mcp-follow-up-detail"),
+    Schema.Literal("mcp-unsupported-history"),
   ),
+});
+const SkillActivationOperatorStepSchema = Schema.Struct({
+  step: Schema.Literal("complete-plugin"),
+  evidenceKind: Schema.Literal("installedSkillActivation"),
+  instructions: Schema.String,
+  requiredCases: Schema.Tuple(
+    Schema.Literal("skill-direct"),
+    Schema.Literal("skill-natural"),
+    Schema.Literal("skill-continuation"),
+    Schema.Literal("skill-unrelated-dnd"),
+    Schema.Literal("skill-authoring-boundary"),
+  ),
+});
+const CompleteWorkflowOperatorStepSchema = Schema.Struct({
+  step: Schema.Literal("newcomer-journey"),
+  evidenceKind: Schema.Literal("installedCompleteWorkflow"),
+  instructions: Schema.String,
+  requiredCases: Schema.Tuple(
+    Schema.Literal("skill-natural"),
+    Schema.Literal("skill-continuation"),
+  ),
+});
+const PendingConnectionCaseResultSchema = Schema.Struct({
+  caseId: Schema.String,
+  evidenceKind: Schema.Literal("connectionAndToolSelection"),
   status: Schema.Literal("pending"),
 });
-const ObservedCaseResultSchema = Schema.Struct({
+const PendingSkillActivationCaseResultSchema = Schema.Struct({
+  caseId: Schema.String,
+  evidenceKind: Schema.Literal("installedSkillActivation"),
+  status: Schema.Literal("pending"),
+});
+const PendingWorkflowCaseResultSchema = Schema.Struct({
+  caseId: Schema.String,
+  evidenceKind: Schema.Literal("installedCompleteWorkflow"),
+  status: Schema.Literal("pending"),
+});
+const PendingCaseResultSchema = Schema.Union(
+  PendingConnectionCaseResultSchema,
+  PendingSkillActivationCaseResultSchema,
+  PendingWorkflowCaseResultSchema,
+);
+const ObservedConnectionCaseResultSchema = Schema.Struct({
+  caseId: Schema.String,
+  evidenceKind: Schema.Literal("connectionAndToolSelection"),
+  status: Schema.Literal("observed"),
+  selectedTool: Schema.String,
+  arguments: Schema.Record({ key: Schema.String, value: Schema.Any }),
+  result: Schema.Union(
+    Schema.Struct({ tag: Schema.Literal("returned"), value: Schema.Any }),
+    Schema.Struct({
+      tag: Schema.Literal("error"),
+      message: Schema.String,
+    }),
+  ),
+  errors: Schema.Union(
+    Schema.Struct({ tag: Schema.Literal("none") }),
+    Schema.Struct({
+      tag: Schema.Literal("reported"),
+      messages: Schema.NonEmptyArray(Schema.String),
+    }),
+  ),
+  confirmationBehavior: Schema.Union(
+    Schema.Struct({ tag: Schema.Literal("notRequested") }),
+    Schema.Struct({
+      tag: Schema.Literal("requested"),
+      outcome: Schema.Literal("accepted", "declined"),
+    }),
+  ),
+  promptRef: Schema.String,
+  observedAt: Schema.String,
+  resultSummary: Schema.String,
+});
+const ObservedSkillCaseResultSchema = Schema.Struct({
   caseId: Schema.String,
   evidenceKind: Schema.Literal(
-    "connectionAndToolSelection",
     "installedSkillActivation",
     "installedCompleteWorkflow",
   ),
@@ -124,6 +192,10 @@ const ObservedCaseResultSchema = Schema.Struct({
   resultSummary: Schema.String,
   observedToolNames: Schema.Array(Schema.String),
 });
+const ObservedCaseResultSchema = Schema.Union(
+  ObservedConnectionCaseResultSchema,
+  ObservedSkillCaseResultSchema,
+);
 const InstalledEvidenceCommonSchema = {
   schema: Schema.Literal("dnd.srd-play.installed-chatgpt-evidence.v2"),
   recordedAt: Schema.String,
@@ -144,7 +216,11 @@ const InstalledEvidenceCommonSchema = {
   officialGuidance: Schema.Literal(
     "https://developers.openai.com/plugins/deploy/connect-chatgpt",
   ),
-  operatorProtocol: Schema.NonEmptyArray(OperatorStepSchema),
+  operatorProtocol: Schema.Tuple(
+    ConnectionOperatorStepSchema,
+    SkillActivationOperatorStepSchema,
+    CompleteWorkflowOperatorStepSchema,
+  ),
 };
 const PendingInstalledEvidenceSchema = Schema.Struct({
   ...InstalledEvidenceCommonSchema,
@@ -174,37 +250,27 @@ const InstalledEvidenceSchema = Schema.Union(
 );
 type InstalledEvidence = typeof InstalledEvidenceSchema.Type;
 
-const expectedInstalledCaseKeys = [
-  "mcp-direct-catalog:connectionAndToolSelection",
-  "mcp-indirect-catalog:connectionAndToolSelection",
-  "mcp-follow-up-detail:connectionAndToolSelection",
-  "mcp-unsupported-history:connectionAndToolSelection",
-  "skill-direct:installedSkillActivation",
-  "skill-natural:installedSkillActivation",
-  "skill-continuation:installedSkillActivation",
-  "skill-unrelated-dnd:installedSkillActivation",
-  "skill-authoring-boundary:installedSkillActivation",
-  "skill-natural:installedCompleteWorkflow",
-  "skill-continuation:installedCompleteWorkflow",
-] as const;
-
 function hasCompleteInstalledCaseCoverage(evidence: {
-  readonly status: "pending" | "observed";
+  readonly operatorProtocol: ReadonlyArray<{
+    readonly requiredCases: ReadonlyArray<string>;
+    readonly evidenceKind: string;
+  }>;
   readonly caseResults: ReadonlyArray<{
     readonly caseId: string;
-    readonly evidenceKind:
-      | "connectionAndToolSelection"
-      | "installedSkillActivation"
-      | "installedCompleteWorkflow";
+    readonly evidenceKind: string;
   }>;
 }): boolean {
+  const requiredCaseKeys = evidence.operatorProtocol.flatMap(
+    ({ requiredCases, evidenceKind }) =>
+      requiredCases.map((caseId) => `${caseId}:${evidenceKind}`),
+  );
   const actualCaseKeys = evidence.caseResults.map(
     ({ caseId, evidenceKind }) => `${caseId}:${evidenceKind}`,
   );
   return (
-    actualCaseKeys.length === expectedInstalledCaseKeys.length &&
-    new Set(actualCaseKeys).size === expectedInstalledCaseKeys.length &&
-    expectedInstalledCaseKeys.every((key) => actualCaseKeys.includes(key))
+    actualCaseKeys.length === requiredCaseKeys.length &&
+    new Set(actualCaseKeys).size === requiredCaseKeys.length &&
+    requiredCaseKeys.every((key) => actualCaseKeys.includes(key))
   );
 }
 
@@ -269,7 +335,7 @@ describe("SRD Play evaluation artifacts", () => {
       ),
     );
     expect(installedEvidence.status).toBe("pending");
-    expect(mcpScenarioEvidenceIds()).toContain(
+    expect(mcpAcceptanceScenarioIds()).toContain(
       matrix.representativeHeadlessJourney.scenarioId,
     );
     for (const row of matrix.rows) {
@@ -293,15 +359,11 @@ describe("SRD Play evaluation artifacts", () => {
         row,
       ]),
     );
-    const scenarioIds = new Set<string>(mcpScenarioEvidenceIds());
+    const acceptanceScenarioIds = new Set<string>(mcpAcceptanceScenarioIds());
     const skillCaseIds = new Set(inventory.skillActivation.map(({ id }) => id));
     for (const row of matrix.rows) {
       if (row.mcpEvidence.status === "observed") {
         for (const ref of row.mcpEvidence.refs) {
-          expect(
-            scenarioIds.has(ref.scenarioId),
-            `${row.id}: ${ref.scenarioId}`,
-          ).toBe(true);
           const manifestRow = manifestByKey.get(
             `${ref.scenarioId}\u0000${ref.flowId}\u0000${ref.taskId}`,
           );
@@ -311,6 +373,15 @@ describe("SRD Play evaluation artifacts", () => {
           ).toBe(true);
           expect(
             existsSync(resolve(repoRoot, manifestRow?.testPath ?? "")),
+          ).toBe(true);
+          const testSource = readFileSync(
+            resolve(repoRoot, manifestRow?.testPath ?? ""),
+            "utf8",
+          );
+          expect(
+            acceptanceScenarioIds.has(ref.scenarioId) ||
+              sourceDefinesVitestScenario(testSource, ref.scenarioId),
+            `${row.id}: ${ref.scenarioId} must identify an executable scenario`,
           ).toBe(true);
         }
       }
@@ -333,22 +404,26 @@ describe("SRD Play evaluation artifacts", () => {
       const toolByName = new Map(tools.tools.map((tool) => [tool.name, tool]));
       const missingProjections: string[] = [];
       for (const row of matrix.rows) {
-        const outputSchemas = row.mcpSurface.map((toolName) => {
-          const tool = toolByName.get(toolName);
-          expect(tool, `${row.id}: ${toolName}`).toBeDefined();
+        for (const projection of row.modelVisibleProjection) {
+          expect(
+            row.mcpSurface,
+            `${row.id}: projection tool ${projection.toolName}`,
+          ).toContain(projection.toolName);
+          const tool = toolByName.get(projection.toolName);
+          expect(tool, `${row.id}: ${projection.toolName}`).toBeDefined();
           expect(
             tool?.outputSchema,
-            `${row.id}: ${toolName} outputSchema`,
+            `${row.id}: ${projection.toolName} outputSchema`,
           ).toBeDefined();
-          return tool?.outputSchema;
-        });
-        for (const projection of row.modelVisibleProjection) {
           if (
-            !outputSchemas.some((schema) =>
-              schemaHasProjectionPath(schema, projection),
+            !schemaHasProjectionPath(
+              tool?.outputSchema,
+              projection.pathSegments,
             )
           ) {
-            missingProjections.push(`${row.id}: ${projection}`);
+            missingProjections.push(
+              `${row.id}: ${projection.toolName}.${projection.pathSegments.join(".")}`,
+            );
           }
         }
       }
@@ -356,7 +431,19 @@ describe("SRD Play evaluation artifacts", () => {
       const readBattleStateSchema =
         toolByName.get("read_battle_state")?.outputSchema;
       expect(
-        schemaHasProjectionPath(readBattleStateSchema, "snapshot.notReal"),
+        schemaHasProjectionPath(readBattleStateSchema, ["snapshot", "notReal"]),
+      ).toBe(false);
+      expect(
+        schemaHasProjectionPath(readBattleStateSchema, [
+          "operation",
+          "snapshot",
+        ]),
+      ).toBe(false);
+      expect(
+        rowProjectionMatchesSurface(
+          { toolName: "start_battle", pathSegments: ["snapshot"] },
+          ["read_battle_state"],
+        ),
       ).toBe(false);
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
@@ -385,19 +472,15 @@ describe("SRD Play evaluation artifacts", () => {
         ),
       ).size,
     ).toBe(evidence.caseResults.length);
-    expect(
-      evidence.caseResults
-        .map(({ caseId, evidenceKind }) => `${caseId}:${evidenceKind}`)
-        .sort(),
-    ).toEqual([...expectedInstalledCaseKeys].sort());
+    const inventory: EvaluationInventory = decodeEvaluationInventory(
+      resolve(evalRoot, "evaluation-inventory.json"),
+    );
+    expectInstalledCaseCoverage(evidence, inventory);
     expect(evidence.operatorProtocol.map(({ step }) => step)).toEqual([
       "mcp-connection",
       "complete-plugin",
       "newcomer-journey",
     ]);
-    const inventory: EvaluationInventory = decodeEvaluationInventory(
-      resolve(evalRoot, "evaluation-inventory.json"),
-    );
     const mcpCaseIds = new Set(inventory.mcpToolSelection.map(({ id }) => id));
     const skillCaseIds = new Set(inventory.skillActivation.map(({ id }) => id));
     for (const step of evidence.operatorProtocol) {
@@ -441,23 +524,40 @@ describe("SRD Play evaluation artifacts", () => {
         accountScope: "developer-mode-account",
         workspacePolicy: "developer-mode-enabled",
       },
-      caseResults: pending.caseResults.map(
-        ({ caseId, evidenceKind }, index) => ({
-          caseId,
-          evidenceKind,
-          status: "observed" as const,
-          result: index === 1 ? ("failed" as const) : ("passed" as const),
-          promptRef: caseId,
-          observedAt: `2026-08-21T00:${String(index).padStart(2, "0")}:00Z`,
-          resultSummary:
-            index === 1
-              ? "The observed case failed its expected behavior."
-              : "The observed case produced the expected behavior.",
-          observedToolNames:
-            evidenceKind === "connectionAndToolSelection"
-              ? ["list_catalog_units"]
-              : [],
-        }),
+      caseResults: pending.caseResults.map(({ caseId, evidenceKind }, index) =>
+        evidenceKind === "connectionAndToolSelection"
+          ? {
+              caseId,
+              evidenceKind,
+              status: "observed" as const,
+              selectedTool: "list_catalog_units",
+              arguments: {},
+              result:
+                index === 1
+                  ? { tag: "error" as const, message: "Observed failure." }
+                  : { tag: "returned" as const, value: { tag: "ok" } },
+              errors: { tag: "none" as const },
+              confirmationBehavior: { tag: "notRequested" as const },
+              promptRef: caseId,
+              observedAt: `2026-08-21T00:${String(index).padStart(2, "0")}:00Z`,
+              resultSummary:
+                index === 1
+                  ? "The observed case failed its expected behavior."
+                  : "The observed case produced the expected behavior.",
+            }
+          : {
+              caseId,
+              evidenceKind,
+              status: "observed" as const,
+              result: index === 1 ? ("failed" as const) : ("passed" as const),
+              promptRef: caseId,
+              observedAt: `2026-08-21T00:${String(index).padStart(2, "0")}:00Z`,
+              resultSummary:
+                index === 1
+                  ? "The observed case failed its expected behavior."
+                  : "The observed case produced the expected behavior.",
+              observedToolNames: [],
+            },
       ),
     };
     const decoded = decodeInstalledEvidence(observed);
@@ -478,13 +578,46 @@ function decodeInstalledEvidence(value: unknown): InstalledEvidence {
   })(value);
 }
 
-function schemaHasProjectionPath(schema: unknown, projection: string): boolean {
+function expectInstalledCaseCoverage(
+  evidence: InstalledEvidence,
+  inventory: EvaluationInventory,
+): void {
+  const expectedKeys = evidence.operatorProtocol.flatMap(
+    ({ requiredCases, evidenceKind }) =>
+      requiredCases.map((caseId) => `${caseId}:${evidenceKind}`),
+  );
+  const actualKeys = evidence.caseResults.map(
+    ({ caseId, evidenceKind }) => `${caseId}:${evidenceKind}`,
+  );
+  expect([...actualKeys].sort()).toEqual([...expectedKeys].sort());
+  const mcpCaseIds = new Set(inventory.mcpToolSelection.map(({ id }) => id));
+  const skillCaseIds = new Set(inventory.skillActivation.map(({ id }) => id));
+  for (const step of evidence.operatorProtocol) {
+    const inventoryCaseIds =
+      step.evidenceKind === "connectionAndToolSelection"
+        ? mcpCaseIds
+        : skillCaseIds;
+    for (const caseId of step.requiredCases) {
+      expect(inventoryCaseIds.has(caseId), `${step.step}: ${caseId}`).toBe(
+        true,
+      );
+    }
+  }
+  for (const result of evidence.caseResults) {
+    const inventoryCaseIds =
+      result.evidenceKind === "connectionAndToolSelection"
+        ? mcpCaseIds
+        : skillCaseIds;
+    expect(inventoryCaseIds.has(result.caseId), result.caseId).toBe(true);
+  }
+}
+
+function schemaHasProjectionPath(
+  schema: unknown,
+  pathSegments: readonly string[],
+): boolean {
   const root = isRecord(schema) ? schema : {};
-  const segments = projection
-    .replaceAll("[]", "")
-    .split(".")
-    .filter((segment) => segment.length > 0);
-  return schemaContainsPath(root, segments, root, new Set(), 0);
+  return schemaContainsPath(root, pathSegments, root, new Set(), 0);
 }
 
 function schemaContainsPath(
@@ -530,20 +663,31 @@ function schemaContainsPath(
     }
   }
 
-  const properties = isRecord(schema.properties) ? schema.properties : {};
   const [segment, ...remaining] = segments;
-  const matchingProperty = properties[segment];
-  if (
-    matchingProperty !== undefined &&
-    schemaContainsPath(matchingProperty, remaining, root, visited, depth + 1)
-  ) {
-    return true;
+  if (segment === "[]") {
+    return schemaContainsPath(
+      schema.items,
+      remaining,
+      root,
+      visited,
+      depth + 1,
+    );
   }
-  return (
-    Object.values(properties).some((property) =>
-      schemaContainsPath(property, segments, root, visited, depth + 1),
-    ) || schemaContainsPath(schema.items, segments, root, visited, depth + 1)
-  );
+  const properties = isRecord(schema.properties) ? schema.properties : {};
+  const property = properties[segment];
+  return property === undefined
+    ? false
+    : schemaContainsPath(property, remaining, root, visited, depth + 1);
+}
+
+function rowProjectionMatchesSurface(
+  projection: {
+    readonly toolName: string;
+    readonly pathSegments: readonly string[];
+  },
+  mcpSurface: readonly string[],
+): boolean {
+  return mcpSurface.includes(projection.toolName);
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

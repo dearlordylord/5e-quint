@@ -29,10 +29,22 @@
         "finalize_character"
       ],
       "modelVisibleProjection": [
-        "holes",
-        "draft",
-        "finalization",
-        "restoration"
+        {
+          "toolName": "discover_creation_holes",
+          "pathSegments": ["operation", "result", "holes"]
+        },
+        {
+          "toolName": "create_character_draft",
+          "pathSegments": ["operation", "result", "draft"]
+        },
+        {
+          "toolName": "finalize_character",
+          "pathSegments": ["operation", "result", "finalization"]
+        },
+        {
+          "toolName": "create_character_draft",
+          "pathSegments": ["restoration"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -55,9 +67,18 @@
       "leafIssue": 320,
       "mcpSurface": ["apply_character_session_operation"],
       "modelVisibleProjection": [
-        "operation.result.detail",
-        "projection.characterIds",
-        "nextOperations"
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["projection", "characterIds"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["nextOperations"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -80,9 +101,18 @@
       "leafIssue": 320,
       "mcpSurface": ["apply_character_session_operation"],
       "modelVisibleProjection": [
-        "operation.result.detail",
-        "operation.result",
-        "restoration"
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -105,10 +135,22 @@
       "leafIssue": 318,
       "mcpSurface": ["list_characters", "inspect_character_session"],
       "modelVisibleProjection": [
-        "characters",
-        "detail",
-        "detail.sheetProjection",
-        "session"
+        {
+          "toolName": "list_characters",
+          "pathSegments": ["operation", "result", "characters"]
+        },
+        {
+          "toolName": "inspect_character_session",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "inspect_character_session",
+          "pathSegments": ["operation", "result", "detail", "sheetProjection"]
+        },
+        {
+          "toolName": "inspect_character_session",
+          "pathSegments": ["projection"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -131,10 +173,22 @@
       "leafIssue": 319,
       "mcpSurface": ["query_character_session"],
       "modelVisibleProjection": [
-        "query.kind",
-        "query.projection",
-        "operation.result",
-        "restoration"
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["operation", "result", "query", "kind"]
+        },
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["operation", "result", "query", "projection"]
+        },
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["restoration"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -157,10 +211,22 @@
       "leafIssue": 318,
       "mcpSurface": ["apply_character_session_operation"],
       "modelVisibleProjection": [
-        "operation.result",
-        "operation.result.detail",
-        "projection",
-        "restoration"
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["projection"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -183,10 +249,22 @@
       "leafIssue": 321,
       "mcpSurface": ["apply_character_session_operation"],
       "modelVisibleProjection": [
-        "operation.result",
-        "operation.result.detail",
-        "unresolvedInputs",
-        "restoration"
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["unresolvedInputs"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -209,9 +287,18 @@
       "leafIssue": 322,
       "mcpSurface": ["apply_character_session_operation"],
       "modelVisibleProjection": [
-        "operation.result",
-        "detail.sheetProjection",
-        "restoration"
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail", "sheetProjection"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -239,10 +326,22 @@
       "leafIssue": 323,
       "mcpSurface": ["apply_character_session_operation", "roll_dice"],
       "modelVisibleProjection": [
-        "operation.result",
-        "operation.result.detail",
-        "groups",
-        "correlationId"
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "roll_dice",
+          "pathSegments": ["operation", "result", "groups"]
+        },
+        {
+          "toolName": "roll_dice",
+          "pathSegments": ["operation", "result", "correlationId"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -265,10 +364,22 @@
       "leafIssue": 323,
       "mcpSurface": ["apply_character_session_operation"],
       "modelVisibleProjection": [
-        "operation.result",
-        "operation.result.detail",
-        "detail.sheetProjection",
-        "restoration"
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail", "sheetProjection"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -291,9 +402,24 @@
       "leafIssue": 319,
       "mcpSurface": ["query_character_session"],
       "modelVisibleProjection": [
-        "query.projection",
-        "query.projection.invocation",
-        "operation.result"
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["operation", "result", "query", "projection"]
+        },
+        {
+          "toolName": "query_character_session",
+          "pathSegments": [
+            "operation",
+            "result",
+            "query",
+            "projection",
+            "invocation"
+          ]
+        },
+        {
+          "toolName": "query_character_session",
+          "pathSegments": ["operation", "result"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -316,10 +442,22 @@
       "leafIssue": 321,
       "mcpSurface": ["apply_character_session_operation"],
       "modelVisibleProjection": [
-        "operation.result",
-        "operation.result.detail",
-        "unresolvedInputs",
-        "restoration"
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["operation", "result", "detail"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["unresolvedInputs"]
+        },
+        {
+          "toolName": "apply_character_session_operation",
+          "pathSegments": ["restoration"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -342,10 +480,22 @@
       "leafIssue": 324,
       "mcpSurface": ["start_battle"],
       "modelVisibleProjection": [
-        "battleState",
-        "snapshot",
-        "session.characterIds",
-        "restoration"
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "battleState"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "snapshot"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "session", "characterIds"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["restoration"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -368,10 +518,22 @@
       "leafIssue": 324,
       "mcpSurface": ["end_battle", "list_characters"],
       "modelVisibleProjection": [
-        "endedBattleId",
-        "session.characterIds",
-        "characters",
-        "session.battleState"
+        {
+          "toolName": "end_battle",
+          "pathSegments": ["operation", "result", "endedBattleId"]
+        },
+        {
+          "toolName": "end_battle",
+          "pathSegments": ["operation", "result", "session", "characterIds"]
+        },
+        {
+          "toolName": "list_characters",
+          "pathSegments": ["operation", "result", "characters"]
+        },
+        {
+          "toolName": "end_battle",
+          "pathSegments": ["operation", "result", "session", "battleState"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -394,9 +556,18 @@
       "leafIssue": 324,
       "mcpSurface": ["start_battle"],
       "modelVisibleProjection": [
-        "snapshot.turnOrder",
-        "snapshot.currentActorId",
-        "battleState"
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "snapshot", "turnOrder"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "battleState"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -419,10 +590,22 @@
       "leafIssue": 325,
       "mcpSurface": ["start_battle", "battle_lifecycle"],
       "modelVisibleProjection": [
-        "battleState.tag",
-        "battleState.combatants",
-        "nextOperations",
-        "snapshot"
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "battleState", "tag"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "battleState", "combatants"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["nextOperations"]
+        },
+        {
+          "toolName": "start_battle",
+          "pathSegments": ["operation", "result", "snapshot"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -445,11 +628,26 @@
       "leafIssue": 326,
       "mcpSurface": ["battle_lifecycle", "read_battle_state"],
       "modelVisibleProjection": [
-        "result.tag",
-        "combatantId",
-        "snapshot.combatants",
-        "operation.result",
-        "restoration"
+        {
+          "toolName": "battle_lifecycle",
+          "pathSegments": ["operation", "result", "result", "tag"]
+        },
+        {
+          "toolName": "battle_lifecycle",
+          "pathSegments": ["operation", "result", "result", "combatantId"]
+        },
+        {
+          "toolName": "read_battle_state",
+          "pathSegments": ["operation", "result", "snapshot", "combatants"]
+        },
+        {
+          "toolName": "battle_lifecycle",
+          "pathSegments": ["operation", "result"]
+        },
+        {
+          "toolName": "battle_lifecycle",
+          "pathSegments": ["restoration"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -472,10 +670,22 @@
       "leafIssue": 324,
       "mcpSurface": ["read_battle_state"],
       "modelVisibleProjection": [
-        "snapshot",
-        "availableActs",
-        "snapshot.currentActorId",
-        "session"
+        {
+          "toolName": "read_battle_state",
+          "pathSegments": ["operation", "result", "snapshot"]
+        },
+        {
+          "toolName": "read_battle_state",
+          "pathSegments": ["operation", "result", "availableActs"]
+        },
+        {
+          "toolName": "read_battle_state",
+          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+        },
+        {
+          "toolName": "read_battle_state",
+          "pathSegments": ["operation", "result", "session"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -498,10 +708,34 @@
       "leafIssue": 327,
       "mcpSurface": ["discover_battle_acts", "fill_battle_hole"],
       "modelVisibleProjection": [
-        "availableActs",
-        "availableActs[].subject",
-        "availableActs[].initialHoles",
-        "snapshot.currentActorId"
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": ["operation", "result", "availableActs"]
+        },
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": [
+            "operation",
+            "result",
+            "availableActs",
+            "[]",
+            "subject"
+          ]
+        },
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": [
+            "operation",
+            "result",
+            "availableActs",
+            "[]",
+            "initialHoles"
+          ]
+        },
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -524,10 +758,27 @@
       "leafIssue": 327,
       "mcpSurface": ["resolve_battle_act", "fill_battle_hole"],
       "modelVisibleProjection": [
-        "result.tag",
-        "result.holes",
-        "session.transientBattleFills",
-        "snapshot"
+        {
+          "toolName": "resolve_battle_act",
+          "pathSegments": ["operation", "result", "result", "tag"]
+        },
+        {
+          "toolName": "resolve_battle_act",
+          "pathSegments": ["operation", "result", "result", "holes"]
+        },
+        {
+          "toolName": "resolve_battle_act",
+          "pathSegments": [
+            "operation",
+            "result",
+            "session",
+            "transientBattleFills"
+          ]
+        },
+        {
+          "toolName": "resolve_battle_act",
+          "pathSegments": ["operation", "result", "snapshot"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",
@@ -555,10 +806,22 @@
       "leafIssue": 327,
       "mcpSurface": ["end_turn"],
       "modelVisibleProjection": [
-        "snapshot.currentActorId",
-        "snapshot.turnOrder",
-        "nextOperations",
-        "restoration"
+        {
+          "toolName": "end_turn",
+          "pathSegments": ["operation", "result", "snapshot", "currentActorId"]
+        },
+        {
+          "toolName": "end_turn",
+          "pathSegments": ["operation", "result", "snapshot", "turnOrder"]
+        },
+        {
+          "toolName": "end_turn",
+          "pathSegments": ["nextOperations"]
+        },
+        {
+          "toolName": "end_turn",
+          "pathSegments": ["restoration"]
+        }
       ],
       "mcpEvidence": {
         "status": "observed",

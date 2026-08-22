@@ -318,7 +318,7 @@
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
       "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
-      "summary": "The level-6 Rogue scenario creates and finalizes an Orc Soldier Rogue 6 by selecting only returned progression, class, background, Ability Score Improvement, equipment, loadout, and Expertise option ids. The level-7 and level-8 scopes reuse this highest admitted MCP creation vertical because character creation does not yet admit level-7 or level-8 progression options; no MCP evidence row is used as runtime support for those later-level mechanics."
+      "summary": "The level-6 Rogue scenario creates and finalizes an Orc Soldier Rogue 6 by selecting only returned progression, class, background, Ability Score Improvement, equipment, loadout, and Expertise option ids. The level-7 and level-8 scopes reuse this admitted default MCP creation vertical because character creation does not yet admit level-7 or level-8 progression options; no MCP evidence row is used as runtime support for those later-level mechanics."
     },
     {
       "kind": "mcp-scenario",
@@ -684,7 +684,7 @@
       "scopeId": "level-1-7",
       "auditTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
       "result": "reuse-existing-evidence",
-      "reason": "Level-1-7 adds supported Evasion runtime obligations plus closed class/spell accounting, but no new MCP tool workflow shape beyond workflow discovery, character creation, Character Sheet read, and battle handoff. The existing level-6 Rogue vertical is the highest admitted MCP character-creation path and already follows returned draft revisions, option ids, character ids, battle ids, and battle subjects; Evasion support remains proven by the support, QNT/generator, and MBT/parity layers rather than by MCP evidence.",
+      "reason": "Level-1-7 adds supported Evasion runtime obligations plus closed class/spell accounting, but no new MCP tool workflow shape beyond workflow discovery, character creation, Character Sheet read, and battle handoff. The existing level-6 Rogue vertical is the admitted default MCP character-creation path for this scope and already follows returned draft revisions, option ids, character ids, battle ids, and battle subjects; Evasion support remains proven by the support, QNT/generator, and MBT/parity layers rather than by MCP evidence.",
       "reusedFlowIds": [
         "mcp-workflow-discovery",
         "character-creation",
@@ -696,7 +696,7 @@
       "scopeId": "level-1-8",
       "auditTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
       "result": "reuse-existing-evidence",
-      "reason": "Level-1-8 adds repeated ASI, numeric progression, and Wild Shape threshold accounting that is closed outside MCP workflow execution; it does not introduce a new MCP tool flow beyond the four existing required flows. The existing level-6 Rogue vertical remains the highest admitted MCP character-creation path and proves returned-state sequencing for creation, sheet, and battle handoff, while level-8 mechanics stay covered by support completeness and parity layers.",
+      "reason": "Level-1-8 adds repeated ASI, numeric progression, and Wild Shape threshold accounting that is closed outside MCP workflow execution; it does not introduce a new MCP tool flow beyond the four existing required flows. The existing level-6 Rogue vertical remains the admitted default MCP character-creation path for this scope and proves returned-state sequencing for creation, sheet, and battle handoff, while level-8 mechanics stay covered by support completeness and parity layers.",
       "reusedFlowIds": [
         "mcp-workflow-discovery",
         "character-creation",

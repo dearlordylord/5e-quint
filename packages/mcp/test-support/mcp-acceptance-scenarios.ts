@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
-import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { characterDraftId } from "@dnd/character-creation-runtime";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
@@ -28,6 +27,7 @@ import {
 } from "./battle-act-labels.ts";
 import { loadoutHoleId, unitHoleId } from "./creation-hole-ids.ts";
 import { battleToolWireArgs } from "./battle-tool-wire-args.ts";
+import { requireJsonSchema } from "./json-schema.ts";
 
 type JsonObject = Record<string, unknown>;
 
@@ -452,99 +452,6 @@ const agentConversationScenarios = [
   },
 ] as const;
 
-/**
- * Operation-specific protocol evidence is kept separate from the newcomer
- * conversation registry. These ids name real MCP Client tests whose summaries
- * can be checked against the canonical scenario-evidence manifest.
- */
-export const mcpProtocolEvidenceScenarios = [
-  {
-    id: "character-row-coverage-druid-known-form",
-    testName:
-      "routes the missing Character Sheet row operations through real MCP",
-    operations: ["replaceDruidWildShapeKnownForm"],
-  },
-  {
-    id: "character-row-coverage-companion-retention",
-    testName:
-      "routes the missing Character Sheet row operations through real MCP",
-    operations: ["retainOneAtATimeCompanion"],
-  },
-  {
-    id: "character-row-coverage-rest-lifecycle",
-    testName:
-      "routes the missing Character Sheet row operations through real MCP",
-    operations: ["completeShortRest", "completeLongRest", "interruptLongRest"],
-  },
-  {
-    id: "character-row-coverage-calendar-time",
-    testName:
-      "routes the missing Character Sheet row operations through real MCP",
-    operations: ["passCalendarTime", "rolledDice hole fill"],
-  },
-  {
-    id: "character-row-coverage-ritual-query",
-    testName:
-      "routes the missing Character Sheet row operations through real MCP",
-    operations: ["spellbookRitualAccesses", "spellInvocation ritual"],
-  },
-  {
-    id: "character-row-coverage-spell-rest-benefit",
-    testName:
-      "routes the missing Character Sheet row operations through real MCP",
-    operations: ["applySpellRestBenefit"],
-  },
-  {
-    id: "character-healing-lay-on-hands-protocol",
-    testName:
-      "routes Lay On Hands through the real MCP client and returns its envelope",
-    operations: ["applyLayOnHands"],
-  },
-  {
-    id: "character-resource-operation-protocol",
-    testName:
-      "routes a Character Sheet resource operation through the real MCP client",
-    operations: [
-      "useMonkUncannyMetabolismWhenRollingInitiative",
-      "spendSpellAccessFreeCast",
-      "roll_dice",
-    ],
-  },
-  {
-    id: "character-font-of-magic-protocol",
-    testName:
-      "routes a Character Sheet resource operation through the real MCP client",
-    operations: [
-      "convertFontOfMagicSorceryPointsToSpellSlot",
-      "convertFontOfMagicSpellSlotToSorceryPoints",
-    ],
-  },
-  {
-    id: "battle-initial-initiative-setup-protocol",
-    testName:
-      "routes initial Initiative setup modes, swaps, finalization, and invalid transitions through MCP",
-    operations: ["start_battle initialSetup", "battle_lifecycle finalize"],
-  },
-  {
-    id: "battle-row-coverage-mixed-companion-roster",
-    testName:
-      "routes the missing Character Sheet row operations through real MCP",
-    operations: ["start_battle companionAdmissions", "end_battle"],
-  },
-  {
-    id: "battle-row-coverage-interrupt-resolution",
-    testName:
-      "routes the missing Character Sheet row operations through real MCP",
-    operations: ["fill_battle_hole interruptDecision", "Shield reaction"],
-  },
-  {
-    id: "battle-roster-lifecycle-protocol",
-    testName:
-      "adds and removes Battle combatants through the unified atomic lifecycle surface",
-    operations: ["battle_lifecycle addCombatant", "removeCombatant"],
-  },
-] as const;
-
 export async function verifyToolContract(client: Client) {
   const listed = await client.listTools();
   const toolNames = listed.tools.map((tool) => tool.name).sort();
@@ -576,8 +483,10 @@ export async function verifyToolContract(client: Client) {
   assert.match(startBattleOutputSchemaText, /session/);
 
   const validateStartBattleOutput = new AjvJsonSchemaValidator().getValidator(
-    (startBattle as { readonly outputSchema: unknown })
-      .outputSchema as JsonSchemaType,
+    requireJsonSchema(
+      (startBattle as { readonly outputSchema: unknown }).outputSchema,
+      "start_battle outputSchema",
+    ),
   );
   const emptyStartBattleProjection = {
     snapshot: null,
@@ -4487,12 +4396,4 @@ export function verifyAgentConversationScenarios() {
 
 export function mcpAcceptanceScenarioIds() {
   return agentConversationScenarios.map((scenario) => scenario.id);
-}
-
-export function mcpProtocolScenarioIds() {
-  return mcpProtocolEvidenceScenarios.map((scenario) => scenario.id);
-}
-
-export function mcpScenarioEvidenceIds() {
-  return [...mcpAcceptanceScenarioIds(), ...mcpProtocolScenarioIds()];
 }

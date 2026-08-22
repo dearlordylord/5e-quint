@@ -5,9 +5,10 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
 import {
-  mcpScenarioEvidenceIds,
+  mcpAcceptanceScenarioIds,
   verifyAgentConversationScenarios,
 } from "../test-support/mcp-acceptance-scenarios.ts";
+import { sourceDefinesVitestScenario } from "../test-support/mcp-scenario-executable.ts";
 
 type McpRequiredFlow = {
   readonly flowId: string;
@@ -73,7 +74,7 @@ describe("MCP scenario evidence manifest", () => {
     const packageJson = readJson<{ readonly scripts: Record<string, string> }>(
       packageJsonPath,
     );
-    const scenarioIds = new Set<string>(mcpScenarioEvidenceIds());
+    const acceptanceScenarioIds = new Set<string>(mcpAcceptanceScenarioIds());
     const requiredFlowIds = new Set(
       manifest.requiredFlows.map((flow) => flow.flowId),
     );
@@ -106,7 +107,12 @@ describe("MCP scenario evidence manifest", () => {
       expect(row.kind).toBe("mcp-scenario");
       expect(requiredFlowIds.has(row.flowId)).toBe(true);
       expect(row.scopeIds.length).toBeGreaterThan(0);
-      expect(scenarioIds.has(row.scenarioId)).toBe(true);
+      const testSource = readFileSync(resolve(repoRoot, row.testPath), "utf8");
+      expect(
+        acceptanceScenarioIds.has(row.scenarioId) ||
+          sourceDefinesVitestScenario(testSource, row.scenarioId),
+        `${row.scenarioId} must be an acceptance scenario or an executable Vitest case in ${row.testPath}`,
+      ).toBe(true);
       expect(existsSync(resolve(repoRoot, row.ownerPath))).toBe(true);
       expect(existsSync(resolve(repoRoot, row.testPath))).toBe(true);
       expect(row.taskId).toMatch(taskIdPattern);
