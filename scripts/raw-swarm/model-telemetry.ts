@@ -1366,6 +1366,11 @@ function modelInvocationTimeoutMilliseconds(value: number | undefined): number {
   return decoded.right;
 }
 
+function completionEventSeparator(path: string): string {
+  const rawEvents = readFileSync(path, "utf8");
+  return rawEvents.length === 0 || rawEvents.endsWith("\n") ? "" : "\n";
+}
+
 function runCodexProcess<A>(input: {
   readonly args: readonly [string, ...string[]];
   readonly cwd: string;
@@ -1449,7 +1454,10 @@ function runCodexProcess<A>(input: {
           `${input.completionErrorPrefix}: ${completedEvent.left.message}`,
         );
       }
-      writeSync(eventFd, `${JSON.stringify(completedEvent.right)}\n`);
+      writeSync(
+        eventFd,
+        `${completionEventSeparator(input.eventPath)}${JSON.stringify(completedEvent.right)}\n`,
+      );
       return {
         process: spawned,
         invocationResult: completionState.result,

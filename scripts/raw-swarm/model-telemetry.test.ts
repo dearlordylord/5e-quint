@@ -175,6 +175,25 @@ describe("Raw Swarm model invocation telemetry", () => {
     }
   });
 
+  test("separates completion telemetry from a final JSON event without a newline", () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-event-separator-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(codex, `#!/bin/sh\nprintf '{"type":"turn.started"}'\n`);
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      const result = runCodexInvocation(input);
+      expect(result.invocationResult).toMatchObject({
+        tag: "failed",
+        failureKind: "lastMessageMissing",
+      });
+      expect(readCodexEvents(input.eventPath)).toMatchObject({ tag: "valid" });
+      expect(existsSync(input.ledgerPath)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("retains a schema-decoded last message before recording success", () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-valid-output-"));
     const codex = resolve(root, "codex");
