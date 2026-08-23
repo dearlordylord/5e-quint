@@ -58,7 +58,6 @@ import {
   type MovementFeet,
 } from "../../../packages/shared/src/types.ts";
 import {
-  CELL_SIZE_FEET,
   arenaSnapshot,
   createState,
   interveningTokens,
@@ -2349,14 +2348,16 @@ type ScenarioTableSpatialFactQuestionForSubject = Extract<
   | { readonly kind: "hypnoticPatternShakeAwakeTarget" }
 >;
 
-const SCENARIO_GRAPPLE_SHOVE_REACH_FEET: DistanceFeet = CELL_SIZE_FEET;
-const SCENARIO_SHAKE_AWAKE_TARGET_ADJACENCY_FEET: DistanceFeet = CELL_SIZE_FEET;
-const SCENARIO_HELP_ATTACK_ADJACENCY_FEET: DistanceFeet = CELL_SIZE_FEET;
-const SCENARIO_RANGED_ENEMY_PROXIMITY_FEET: DistanceFeet = CELL_SIZE_FEET;
+const SCENARIO_FIVE_FOOT_DISTANCE_FEET = 5 as const;
+const SCENARIO_GRAPPLE_SHOVE_REACH_FEET = SCENARIO_FIVE_FOOT_DISTANCE_FEET;
+const SCENARIO_SHAKE_AWAKE_TARGET_ADJACENCY_FEET =
+  SCENARIO_FIVE_FOOT_DISTANCE_FEET;
+const SCENARIO_HELP_ATTACK_ADJACENCY_FEET = SCENARIO_FIVE_FOOT_DISTANCE_FEET;
+const SCENARIO_RANGED_ENEMY_PROXIMITY_FEET = SCENARIO_FIVE_FOOT_DISTANCE_FEET;
 
 function scenarioTableSpatialFactDistanceLimitFeet(
   question: ScenarioTableSpatialFactQuestion,
-): DistanceFeet {
+): typeof SCENARIO_FIVE_FOOT_DISTANCE_FEET {
   return Match.value(question).pipe(
     Match.when(
       { kind: "grappleTarget" },
