@@ -1093,19 +1093,21 @@ function originalCompositeReviewInputs(
       );
     }
     const review = decoded.right;
-    const reviewAdmission = retainedScenarioReviewMatchesAdmission(
-      review,
-      expectedScenario,
-    );
-    if (Either.isLeft(reviewAdmission)) {
-      fail(
-        `Review replay input ${canonical} does not bind to the admitted Scenario: ${reviewAdmission.left}`,
-      );
-    }
     if (review.reviewStage !== expectedStage) {
       fail(
         `Review replay input ${canonical} has stage ${review.reviewStage}, expected ${expectedStage}.`,
       );
+    }
+    if (expectedStage === "final") {
+      const reviewAdmission = retainedScenarioReviewMatchesAdmission(
+        review,
+        expectedScenario,
+      );
+      if (Either.isLeft(reviewAdmission)) {
+        fail(
+          `Review replay input ${canonical} does not bind to the admitted Scenario: ${reviewAdmission.left}`,
+        );
+      }
     }
     if (invocationIds.has(review.invocationId)) {
       fail(

@@ -345,69 +345,37 @@ function retainedCandidateCompositeReviewInput(input: {
   };
 }
 
+type CompositeReviewLedgerSpec = Readonly<{
+  readonly invocationId: string;
+  readonly reviewStage: "milestone" | "final";
+  readonly subject: CompositeReviewFixtureSubject;
+}>;
+
 function retainedGenerationReviewLedger(
   root: string,
   subject: CompositeReviewFixtureSubject = FINDINGS_REVIEW_SUBJECT,
+  options: Readonly<{
+    readonly reviewEntries?: readonly CompositeReviewLedgerSpec[];
+    readonly generationInvocationIds?: readonly string[];
+  }> = {},
 ): string {
   const path = resolve(root, "generation-invocations.jsonl");
-  const reviewResult = (invocationId: string) =>
-    retainedCompositeReviewInput({
-      reviewStage:
-        invocationId === "original-milestone" ? "milestone" : "final",
-      invocationId,
-    }).result;
-  const eventBytes = (invocationId: string): string =>
-    `${[
+  const reviewEntries =
+    options.reviewEntries ??
+    ([
       {
-        type: "raw-swarm.invocation.started",
-        schemaVersion: 4,
+        invocationId: "original-milestone",
+        reviewStage: "milestone",
         subject,
-        gitSha: "a".repeat(40),
-        phase: "scenarioCompositeReview",
-        stagePlanReason: "The campaign requires a composite review.",
-        fallbackInvocationId: invocationId,
-        model: "gpt-5.6-luna",
-        reasoningEffort: "max",
-        startedAt: "2026-08-18T00:00:00.000Z",
       },
       {
-        type: "thread.started",
-        thread_id: invocationId,
+        invocationId: "original-final",
+        reviewStage: "final",
+        subject,
       },
-      {
-        type: "item.completed",
-        item: {
-          type: "agent_message",
-          text: JSON.stringify({ result: reviewResult(invocationId) }),
-        },
-      },
-      {
-        type: "raw-swarm.invocation.completed",
-        schemaVersion: 4,
-        elapsedMilliseconds: 10,
-        exit: { tag: "exited", status: 0 },
-        result: { tag: "succeeded" },
-      },
-    ]
-      .map((value) => JSON.stringify(value))
-      .join("\n")}\n`;
-  const eventPath = (invocationId: string) =>
-    resolve(root, `${invocationId}.events.jsonl`);
-  for (const invocationId of ["original-milestone", "original-final"]) {
-    writeFileSync(eventPath(invocationId), eventBytes(invocationId));
-  }
-  const entry = (invocationId: string) => ({
-    schemaVersion: 4,
-    subject,
+    ] as const satisfies readonly CompositeReviewLedgerSpec[]);
+  const common = {
     gitSha: "a".repeat(40),
-    eventsSha256: createHash("sha256")
-      .update(readFileSync(eventPath(invocationId)))
-      .digest("hex"),
-    phase: "scenarioCompositeReview",
-    stagePlanReason: "The campaign requires a composite review.",
-    invocationId,
-    model: "gpt-5.6-luna",
-    reasoningEffort: "max",
     startedAt: "2026-08-18T00:00:00.000Z",
     elapsedMilliseconds: 10,
     exit: { tag: "exited", status: 0 },
@@ -417,10 +385,88 @@ function retainedGenerationReviewLedger(
       reason:
         "The first-party event stream exposed no turn.completed usage object.",
     },
+  } as const;
+  const eventPath = (invocationId: string) =>
+    resolve(root, `${invocationId}.events.jsonl`);
+  const eventBytes = (review: CompositeReviewLedgerSpec): string =>
+    `${[
+      {
+        type: "raw-swarm.invocation.started",
+        schemaVersion: 4,
+        subject: review.subject,
+        gitSha: common.gitSha,
+        phase: "scenarioCompositeReview",
+        stagePlanReason: "The campaign requires a composite review.",
+        fallbackInvocationId: review.invocationId,
+        model: "gpt-5.6-luna",
+        reasoningEffort: "max",
+        startedAt: common.startedAt,
+      },
+      { type: "thread.started", thread_id: review.invocationId },
+      {
+        type: "item.completed",
+        item: {
+          type: "agent_message",
+          text: JSON.stringify({
+            result: retainedCompositeReviewInput({
+              reviewStage: review.reviewStage,
+              invocationId: review.invocationId,
+            }).result,
+          }),
+        },
+      },
+      {
+        type: "raw-swarm.invocation.completed",
+        schemaVersion: 4,
+        elapsedMilliseconds: common.elapsedMilliseconds,
+        exit: common.exit,
+        result: common.result,
+      },
+    ]
+      .map((value) => JSON.stringify(value))
+      .join("\n")}\n`;
+  for (const review of reviewEntries) {
+    writeFileSync(eventPath(review.invocationId), eventBytes(review));
+  }
+  const reviewLedgerEntry = (review: CompositeReviewLedgerSpec) => ({
+    schemaVersion: 4 as const,
+    subject: review.subject,
+    invocationId: review.invocationId,
+    model: "gpt-5.6-luna",
+    reasoningEffort: "max",
+    phase: "scenarioCompositeReview" as const,
+    stagePlanReason: "The campaign requires a composite review.",
+    eventsSha256: createHash("sha256")
+      .update(readFileSync(eventPath(review.invocationId)))
+      .digest("hex"),
+    ...common,
   });
+  const generationSubject = {
+    tag: "scenarioCampaign" as const,
+    campaignId: "findings-campaign" as const,
+    evidenceSetId: "findings-campaign-evidence" as const,
+    plannedScenarioId: "findings-example" as const,
+  };
+  const generationLedgerEntries = (options.generationInvocationIds ?? []).map(
+    (invocationId) => ({
+      schemaVersion: 4 as const,
+      subject: generationSubject,
+      invocationId,
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      phase: "scenarioGeneration" as const,
+      stagePlanReason: "The campaign requires scenario generation.",
+      eventsSha256: "0".repeat(64),
+      ...common,
+    }),
+  );
+  const entries = [
+    ...generationLedgerEntries,
+    ...reviewEntries.map(reviewLedgerEntry),
+  ];
   writeFileSync(
     path,
-    `${JSON.stringify(entry("original-milestone"))}\n${JSON.stringify(entry("original-final"))}\n`,
+    `${entries.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
   );
   return relative(repoRoot, path);
 }
@@ -456,6 +502,95 @@ function reportCommand(args: readonly string[]): string {
 }
 
 describe("Raw Swarm findings projection", () => {
+  test("retains the milestone Candidate after a three-iteration revision with a distinct final hash", () => {
+    const input = fixture();
+    const milestoneSubject = {
+      tag: "scenarioCandidate",
+      campaignId: "findings-campaign",
+      evidenceSetId: "findings-campaign-evidence",
+      candidateId: "findings-milestone-candidate",
+      candidateScenarioSha256: "b".repeat(64),
+      plannedScenarioId: "findings-example",
+    } as const satisfies CompositeReviewFixtureSubject;
+    const finalSubject = {
+      tag: "scenarioCandidate",
+      campaignId: "findings-campaign",
+      evidenceSetId: "findings-campaign-evidence",
+      candidateId: "findings-final-candidate",
+      candidateScenarioSha256: input.scenarioSha256,
+      plannedScenarioId: "findings-example",
+    } as const satisfies CompositeReviewFixtureSubject;
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      FINDINGS_REVIEW_SUBJECT,
+      {
+        reviewEntries: [
+          {
+            invocationId: "iteration-two-milestone",
+            reviewStage: "milestone",
+            subject: milestoneSubject,
+          },
+          {
+            invocationId: "iteration-three-final",
+            reviewStage: "final",
+            subject: finalSubject,
+          },
+        ],
+        generationInvocationIds: [
+          "iteration-one-generation",
+          "iteration-two-revision",
+          "iteration-three-generation",
+        ],
+      },
+    );
+    const milestonePath = resolve(input.root, "iteration-two-milestone.json");
+    const finalPath = resolve(input.root, "iteration-three-final.json");
+    writeFileSync(
+      milestonePath,
+      `${JSON.stringify(
+        retainedCandidateCompositeReviewInput({
+          reviewStage: "milestone",
+          invocationId: "iteration-two-milestone",
+          subject: milestoneSubject,
+        }),
+      )}\n`,
+    );
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCandidateCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "iteration-three-final",
+          subject: finalSubject,
+        }),
+      )}\n`,
+    );
+
+    const projection = projectExecutionFindings({
+      transcriptPath: input.transcriptRelative,
+      evidenceSetDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [generationLedgerRelative],
+      reviewReplay: {
+        tag: "milestoneAndFinal",
+        milestonePath: relative(repoRoot, milestonePath),
+        finalPath: relative(repoRoot, finalPath),
+      },
+      issueLinks: [],
+    });
+
+    expect(projection.authorities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ role: "replay-milestone" }),
+        expect.objectContaining({ role: "replay-final" }),
+      ]),
+    );
+    expect(
+      projection.authorities.filter(({ role }) => role.startsWith("replay-")),
+    ).toHaveLength(2);
+  });
+
   test("retains original milestone/final composite-review envelopes as replay authorities without ledger rows", () => {
     const input = fixture();
     const generationLedgerRelative = retainedGenerationReviewLedger(input.root);
