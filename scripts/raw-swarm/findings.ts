@@ -29,6 +29,7 @@ import {
 import {
   modelInvocationScenarioReference,
   parseModelInvocationLedgerEntry,
+  readCodexEvents,
 } from "./model-telemetry.ts";
 import {
   canonicalJson,
@@ -1246,10 +1247,12 @@ function originalCompositeReviewInputs(
       role: retainedEventRole,
       path: eventPath,
     });
+    const parsedEvents = readCodexEvents(eventPath);
+    if (parsedEvents.tag === "invalid") fail(parsedEvents.message);
     validateRetainedScenarioReviewInvocation({
       binding: binding.right,
-      eventPath,
       eventSha256: eventAuthority.sha256,
+      events: parsedEvents.events,
     });
     if (
       retainedEventRole !== eventRole ||

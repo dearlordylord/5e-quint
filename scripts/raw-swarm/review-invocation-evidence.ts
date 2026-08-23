@@ -6,6 +6,7 @@ import { Either, Schema } from "effect";
 import {
   artifactAuthority,
   ArtifactAuthoritySchema,
+  artifactAuthorityForBytes,
   readJsonLines,
   type ArtifactAuthority,
 } from "./artifact-authority.ts";
@@ -17,7 +18,7 @@ import {
   modelInvocationEvidenceFromEvents,
   modelInvocationScenarioReference,
   parseModelInvocationLedgerEntry,
-  readCodexEvents,
+  readCodexEventsWithSource,
   type ModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
 import {
@@ -55,6 +56,10 @@ import {
   type GitSha,
   type ScenarioId,
 } from "./transcript.ts";
+import {
+  canonicalRepositoryReadPath,
+  canonicalRepositoryReadRelativePath,
+} from "./repository-path.ts";
 
 // This manifest is the current tracer evidence shape: unlike the fixed
 // benchmark's historical documentDeclarationSet path, it retains the packet
@@ -145,7 +150,8 @@ function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
  */
 export function validateRetainedScenarioReviewInvocationEvidence(input: {
   readonly retainedInputPath: string;
-  readonly eventPath: string;
+  readonly eventAuthority: ArtifactAuthority;
+  readonly events: readonly unknown[];
   readonly reviewStage: "milestone" | "final";
   readonly ledgerEntry: ModelInvocationLedgerEntry;
 }): ArtifactAuthority {
@@ -196,13 +202,31 @@ export function validateRetainedScenarioReviewInvocationEvidence(input: {
           },
         );
   if (Either.isLeft(binding)) fail(binding.left);
-  const eventAuthority = artifactAuthority(input.eventPath);
   validateRetainedScenarioReviewInvocation({
     binding: binding.right,
-    eventPath: input.eventPath,
-    eventSha256: eventAuthority.sha256,
+    eventSha256: input.eventAuthority.sha256,
+    events: input.events,
   });
-  return eventAuthority;
+  return input.eventAuthority;
+}
+
+function readInvocationEventEvidence(path: string): {
+  readonly authority: ArtifactAuthority;
+  readonly events: readonly unknown[];
+} {
+  const canonicalPath = canonicalRepositoryReadPath(repoRoot, path);
+  if (Either.isLeft(canonicalPath)) fail(canonicalPath.left);
+  const parsed = readCodexEventsWithSource(canonicalPath.right);
+  if (parsed.tag === "invalid") fail(parsed.message);
+  const repositoryPath = canonicalRepositoryReadRelativePath(repoRoot, path);
+  if (Either.isLeft(repositoryPath)) fail(repositoryPath.left);
+  return {
+    authority: artifactAuthorityForBytes(
+      repositoryPath.right,
+      parsed.rawContents,
+    ),
+    events: parsed.events,
+  };
 }
 
 function deriveManifest(input: {
@@ -290,9 +314,7 @@ function deriveManifest(input: {
     fail("Review invocation ledger invocation ids must be distinct.");
   }
   const eventEvidence = input.invocationEventPaths.map((path) => {
-    const parsed = readCodexEvents(resolve(repoRoot, path));
-    if (parsed.tag === "invalid") fail(parsed.message);
-    return { authority: artifactAuthority(path), events: parsed.events };
+    return readInvocationEventEvidence(path);
   });
   const eventHashes = eventEvidence.map(({ authority }) => authority.sha256);
   const evidenceByHash = new Map(
@@ -419,6 +441,15 @@ function deriveManifest(input: {
       Schema.Struct({ result: ScenarioCompositeReviewSchema }),
       { onExcessProperty: "error" },
     )(output);
+    if (entry !== undefined && events !== undefined) {
+      validateRetainedScenarioReviewInvocationEvidence({
+        retainedInputPath: replayInputPath,
+        eventAuthority: events.authority,
+        events: events.events,
+        reviewStage,
+        ledgerEntry: entry,
+      });
+    }
     if (
       entry === undefined ||
       events === undefined ||

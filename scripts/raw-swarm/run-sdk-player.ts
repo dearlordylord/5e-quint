@@ -68,6 +68,7 @@ import {
 import { Either, Match, Schema } from "effect";
 import {
   runCodexInvocation,
+  terminateOwnedProcess,
   type ModelInvocationRun,
 } from "./model-telemetry.ts";
 import {
@@ -1022,6 +1023,7 @@ async function main(args: readonly string[]): Promise<void> {
         cwd: trusted,
         env: { ...process.env, RAW_SWARM_PLAYER_ROOT: scratch },
         stdio: ["ignore", supervisorLog, supervisorLog],
+        detached: process.platform !== "win32",
       },
     );
 
@@ -1098,15 +1100,13 @@ async function main(args: readonly string[]): Promise<void> {
     try {
       if (supervisorProcess !== undefined) {
         const runningSupervisor = supervisorProcess;
-        const stopped = new Promise<void>((resolveStopped) => {
-          if (runningSupervisor.exitCode !== null) {
-            resolveStopped();
-            return;
-          }
-          runningSupervisor.once("exit", () => resolveStopped());
+        const termination = await terminateOwnedProcess(runningSupervisor, {
+          detached: process.platform !== "win32",
         });
-        runningSupervisor.kill("SIGTERM");
-        await stopped;
+        if (termination.tag === "unreaped") {
+          preparationFailure = `SDK supervisor cleanup was not reaped: ${termination.reason}`;
+          console.error(preparationFailure);
+        }
       }
       if (supervisorLog !== undefined) closeSync(supervisorLog);
       if (existsSync(resolve(trusted, "evidence/sdk-calls.jsonl"))) {

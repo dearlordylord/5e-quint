@@ -6,6 +6,7 @@ import {
   appendInvocationEvidenceEvents,
   appendInvocationLedger,
   invocationEventsSha256,
+  jsonModelInvocationLastMessageDecoder,
   modelInvocationCompletedEvent,
   modelInvocationEvidenceFromEvents,
   modelInvocationResultFromCodexEvents,
@@ -15,6 +16,7 @@ import {
   runCodexInvocation,
   type ModelInvocationPhase,
 } from "./model-telemetry.ts";
+import { ReviewOutputSchema } from "./review-contract.ts";
 import {
   decodeScenarioId,
   GitShaSchema,
@@ -34,19 +36,6 @@ function flag(args: readonly string[], name: string): string {
   return at >= 0 && args[at + 1] !== undefined
     ? args[at + 1]!
     : fail(`Missing ${name}.`);
-}
-
-function runJsonDecoder(
-  contents: string,
-): Either.Either<unknown, { tag: "malformed"; message: string }> {
-  try {
-    return Either.right(JSON.parse(contents));
-  } catch (error: unknown) {
-    return Either.left({
-      tag: "malformed",
-      message: error instanceof Error ? error.message : String(error),
-    });
-  }
 }
 
 async function runPostPlayInvocation(args: readonly string[]): Promise<number> {
@@ -118,7 +107,10 @@ async function runPostPlayInvocation(args: readonly string[]): Promise<number> {
       reasoningEffort,
       operation: {
         tag: "expectedLastMessage",
-        expected: { path: outputPath, decode: runJsonDecoder },
+        expected: {
+          path: outputPath,
+          decode: jsonModelInvocationLastMessageDecoder(ReviewOutputSchema),
+        },
       },
     });
     if (result.tag === "failed") {

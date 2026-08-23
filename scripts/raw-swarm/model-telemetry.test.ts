@@ -198,6 +198,66 @@ exec ${process.execPath} -e 'process.on("SIGTERM", () => {}); require("node:fs")
     }
   }, 10_000);
 
+  test("keeps supervising a TERM-exiting leader until its ignored descendant is gone", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-group-term-ignore-"));
+    const codex = resolve(root, "codex");
+    const leaderPath = resolve(root, "leader.cjs");
+    const descendantPidPath = resolve(root, "descendant.pid");
+    const leaderReadyPath = resolve(root, "leader-ready");
+    const leaderExitedPath = resolve(root, "leader-exited");
+    const leader = `
+const fs = require("node:fs");
+const { spawn } = require("node:child_process");
+const descendant = spawn(process.execPath, ["-e", "process.on('SIGTERM', () => {}); setInterval(() => {}, 10000)"], { stdio: "ignore" });
+fs.writeFileSync(process.env.RAW_DESCENDANT_PID, String(descendant.pid));
+process.on("SIGTERM", () => { fs.writeFileSync(process.env.RAW_LEADER_EXITED, "yes"); process.exit(0); });
+fs.writeFileSync(process.env.RAW_LEADER_READY, "yes");
+setInterval(() => {}, 10000);
+`;
+    writeFileSync(leaderPath, leader);
+    writeFileSync(codex, `#!/bin/sh\nexec ${process.execPath} ${leaderPath}\n`);
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root, 1_000);
+      input.env.RAW_DESCENDANT_PID = descendantPidPath;
+      input.env.RAW_LEADER_READY = leaderReadyPath;
+      input.env.RAW_LEADER_EXITED = leaderExitedPath;
+      const invocation = runCodexInvocation(input);
+      const readyDeadline = Date.now() + 900;
+      while (!existsSync(leaderReadyPath) && Date.now() < readyDeadline) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      expect(existsSync(leaderReadyPath)).toBe(true);
+      const result = await invocation;
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: {
+          tag: "timedOut",
+          termination: {
+            tag: "reaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          },
+        },
+        cause: { tag: "process" },
+      });
+      expect(readFileSync(leaderExitedPath, "utf8")).toBe("yes");
+      const descendantPid = Number(readFileSync(descendantPidPath, "utf8"));
+      expect(Number.isInteger(descendantPid)).toBe(true);
+      const deadline = Date.now() + 1_000;
+      while (Date.now() < deadline) {
+        try {
+          process.kill(descendantPid, 0);
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        } catch {
+          break;
+        }
+      }
+      expect(() => process.kill(descendantPid, 0)).toThrow();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 10_000);
+
   test("bounds a supervisor whose child never emits a settlement event", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-no-settlement-"));
     let killCount = 0;
@@ -273,6 +333,45 @@ exec ${process.execPath} -e 'process.on("SIGTERM", () => {}); require("node:fs")
             tag: "failed",
             reason: expect.stringContaining("does not exist"),
           },
+        },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects a preexisting expected output before starting the child", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-stale-output-"));
+    const codex = resolve(root, "codex");
+    const startedPath = resolve(root, "started");
+    writeFileSync(
+      codex,
+      `#!/bin/sh\nprintf '%s' started > ${JSON.stringify(startedPath)}\nexit 0\n`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      writeFileSync(input.operation.expected.path, '{"result":"stale"}\n');
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        cause: {
+          tag: "process",
+          reason: expect.stringContaining(
+            "claimed exclusively before invocation",
+          ),
+        },
+      });
+      expect(existsSync(startedPath)).toBe(false);
+      expect(
+        parseModelInvocationLedgerEntry(
+          JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+        ),
+      ).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: { tag: "failedToStart" },
+          result: { tag: "failed" },
         },
       });
     } finally {

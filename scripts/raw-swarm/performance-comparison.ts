@@ -3601,10 +3601,14 @@ function currentAuthorityContentIssues(
       );
     }
     try {
+      const parsedEvents = readCodexEvents(resolve(repoRoot, authority.path));
+      if (parsedEvents.tag === "invalid") {
+        throw new Error(parsedEvents.message);
+      }
       validateRetainedScenarioReviewInvocation({
         binding,
-        eventPath: authority.path,
         eventSha256: authority.sha256,
+        events: parsedEvents.events,
       });
     } catch (error: unknown) {
       issues.push(
@@ -4460,10 +4464,16 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       );
     } else {
       try {
+        const parsedEvents = readCodexEvents(
+          resolve(repoRoot, replayEventsAuthority.path),
+        );
+        if (parsedEvents.tag === "invalid") {
+          throw new Error(parsedEvents.message);
+        }
         validateRetainedScenarioReviewInvocation({
           binding: binding.right,
-          eventPath: replayEventsAuthority.path,
           eventSha256: replayEventsAuthority.sha256,
+          events: parsedEvents.events,
         });
       } catch (error: unknown) {
         issues.push(

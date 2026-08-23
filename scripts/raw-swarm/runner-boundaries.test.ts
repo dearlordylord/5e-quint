@@ -539,7 +539,7 @@ while [ "$#" -gt 0 ]; do
 done
 printf '%s\n' '{"type":"turn.completed"}'
 cat > "$RAW_REVIEW_CAPTURE"
-printf '%s' '{}' > "$output"
+printf '%s' '{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","transcriptSha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","reviewer":"synthetic-reviewer","verdicts":[{"class":"pass","claim":"Synthetic review output is valid.","evidence":"Synthetic review evidence is retained."}]}' > "$output"
 `,
     );
     chmodSync(fakeGit, 0o755);
@@ -691,7 +691,7 @@ printf '%s' '{}' > "$output"
         'cat > "$RAW_REVIEW_CAPTURE"',
         "printf '%s\\n' '{\"type\":\"turn.completed\"}'",
         "printf '%s\\n' \"$RAW_REVIEW_CONTEXT_READ_EVENT\"",
-        "printf '%s' '{}' > \"$output\"",
+        'printf \'%s\' \'{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","transcriptSha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","reviewer":"synthetic-reviewer","verdicts":[{"class":"pass","claim":"Synthetic review output is valid.","evidence":"Synthetic review evidence is retained."}]}\' > "$output"',
         "",
       ].join("\n"),
     );
@@ -859,7 +859,10 @@ esac
         readonly result: { readonly tag: string };
       };
       expect(ledger.exit).toEqual({ tag: "exited", status: 0 });
-      expect(ledger.result.tag).toBe("succeeded");
+      expect(ledger.result).toMatchObject({
+        tag: "failed",
+        failureKind: "lastMessageSchemaInvalid",
+      });
     } finally {
       rmSync(testRoot, { recursive: true, force: true });
       rmSync(commandRoot, { recursive: true, force: true });

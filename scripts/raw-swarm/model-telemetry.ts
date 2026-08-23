@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   appendFileSync,
   closeSync,
@@ -1083,7 +1083,7 @@ export type CodexEventReadResult =
       readonly message: string;
     };
 
-type CodexEventReadResultWithSource =
+export type CodexEventReadResultWithSource =
   | {
       readonly tag: "valid";
       readonly events: readonly unknown[];
@@ -1091,7 +1091,7 @@ type CodexEventReadResultWithSource =
     }
   | Extract<CodexEventReadResult, { readonly tag: "invalid" }>;
 
-function readCodexEventsWithSource(
+export function readCodexEventsWithSource(
   path: string,
 ): CodexEventReadResultWithSource {
   const rawContents = readFileSync(path);
@@ -1686,6 +1686,25 @@ export type ExpectedModelInvocationLastMessage<A> = Readonly<{
   readonly decode: ModelInvocationLastMessageDecoder<A>;
 }>;
 
+type ExpectedModelInvocationOutputClaim = Readonly<{ readonly token: string }>;
+
+function claimExpectedModelInvocationOutput(
+  path: string,
+): ExpectedModelInvocationOutputClaim | string {
+  const token = `raw-swarm-expected-output-claim:${randomUUID()}`;
+  try {
+    const descriptor = openSync(path, "wx");
+    try {
+      writeSync(descriptor, token);
+    } finally {
+      closeSync(descriptor);
+    }
+    return { token };
+  } catch (error: unknown) {
+    return `Expected Codex last-message output file could not be claimed exclusively before invocation: ${path}: ${error instanceof Error ? error.message : String(error)}.`;
+  }
+}
+
 /**
  * Every invocation names whether it promises a retained final message.  A
  * structured-output caller cannot accidentally omit the decoder, while
@@ -1708,6 +1727,7 @@ type DecodedModelInvocationLastMessage<A> =
 
 function decodeExpectedModelInvocationLastMessage<A>(input: {
   readonly expected: ExpectedModelInvocationLastMessage<A>;
+  readonly claimToken?: string;
 }): DecodedModelInvocationLastMessage<A> {
   if (!existsSync(input.expected.path)) {
     return {
@@ -1729,6 +1749,13 @@ function decodeExpectedModelInvocationLastMessage<A>(input: {
       tag: "invalid",
       reason: `Expected Codex last-message output file could not be read: ${error instanceof Error ? error.message : String(error)}.`,
       failureKind: "lastMessageUnreadable",
+    };
+  }
+  if (input.claimToken !== undefined && contents.right === input.claimToken) {
+    return {
+      tag: "invalid",
+      reason: `Expected Codex last-message output file does not exist as an invocation result: ${input.expected.path}.`,
+      failureKind: "lastMessageMissing",
     };
   }
   if (contents.right.trim().length === 0) {
@@ -1763,10 +1790,6 @@ function decodeExpectedModelInvocationLastMessage<A>(input: {
 type CurrentModelInvocationExit = Schema.Schema.Type<
   typeof CurrentModelInvocationExitSchema
 >;
-type ModelInvocationTimeoutTermination = Extract<
-  CurrentModelInvocationExit,
-  { readonly tag: "timedOut" }
->["termination"];
 export type ModelInvocationProcess = Exclude<
   CurrentModelInvocationExit,
   { readonly tag: "shellStatus" }
@@ -1904,6 +1927,7 @@ function invocationLifecycleFromProcess<A>(input: {
   readonly process: ModelInvocationProcess;
   readonly operation: ModelInvocationOperation<A>;
   readonly codexEventAnalysis: CodexEventAnalysis;
+  readonly expectedOutputClaimToken?: string;
 }): ModelInvocationRun<A> {
   if (!isSuccessfulModelInvocationProcess(input.process)) {
     const unsuccessfulProcess = unsuccessfulModelInvocationProcess(
@@ -1964,6 +1988,9 @@ function invocationLifecycleFromProcess<A>(input: {
   }
   const decoded = decodeExpectedModelInvocationLastMessage({
     expected: input.operation.expected,
+    ...(input.expectedOutputClaimToken === undefined
+      ? {}
+      : { claimToken: input.expectedOutputClaimToken }),
   });
   return decoded.tag === "invalid"
     ? {
@@ -2019,7 +2046,13 @@ export type ModelInvocationSignalDelivery = Schema.Schema.Type<
   typeof ModelInvocationSignalDeliverySchema
 >;
 
-type OwnedProcessSignalTarget = Pick<ReturnType<typeof spawn>, "pid" | "kill">;
+type OwnedProcessSignalTarget = Pick<
+  ReturnType<typeof spawn>,
+  "pid" | "kill"
+> & {
+  /** A process-group id is present only when the caller created a detached group. */
+  readonly processGroupId?: number;
+};
 
 function signalDeliveryFailureReason(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -2030,8 +2063,8 @@ export function signalOwnedProcess(
   signal: "SIGTERM" | "SIGKILL",
 ): ModelInvocationSignalDelivery {
   if (
-    child.pid === undefined ||
-    child.pid <= 0 ||
+    child.processGroupId === undefined ||
+    child.processGroupId <= 0 ||
     process.platform === "win32"
   ) {
     try {
@@ -2051,7 +2084,7 @@ export function signalOwnedProcess(
     }
   }
   try {
-    process.kill(-child.pid, signal);
+    process.kill(-child.processGroupId, signal);
     return { tag: "confirmed", signal };
   } catch (error: unknown) {
     return {
@@ -2068,6 +2101,139 @@ export function signalOwnedProcess(
   }
 }
 
+type OwnedProcessGroupState =
+  | "notTracked"
+  | "present"
+  | "gone"
+  | "indeterminate";
+
+function ownedProcessSignalTarget(
+  child: ReturnType<typeof spawn>,
+  detached: boolean,
+): OwnedProcessSignalTarget {
+  return {
+    pid: child.pid,
+    kill: (signal) => child.kill(signal),
+    ...(process.platform === "win32" || !detached || child.pid === undefined
+      ? {}
+      : { processGroupId: child.pid }),
+  };
+}
+
+function ownedProcessGroupState(
+  target: OwnedProcessSignalTarget,
+): OwnedProcessGroupState {
+  if (target.processGroupId === undefined || process.platform === "win32") {
+    return "notTracked";
+  }
+  try {
+    process.kill(-target.processGroupId, 0);
+    return "present";
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "code" in error) {
+      if (error.code === "ESRCH") return "gone";
+      if (error.code === "EPERM") return "present";
+    }
+    return "indeterminate";
+  }
+}
+
+function ownedProcessHasExited(child: ReturnType<typeof spawn>): boolean {
+  return (
+    (child.exitCode !== null && child.exitCode !== undefined) ||
+    (child.signalCode !== null && child.signalCode !== undefined)
+  );
+}
+
+async function waitForOwnedProcessSettlement(input: {
+  readonly child: ReturnType<typeof spawn>;
+  readonly target: OwnedProcessSignalTarget;
+  readonly timeoutMilliseconds: number;
+}): Promise<boolean> {
+  return await new Promise<boolean>((resolve) => {
+    const startedMilliseconds = Date.now();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let settled = false;
+    function finish(value: boolean): void {
+      if (settled) return;
+      settled = true;
+      if (timer !== undefined) clearTimeout(timer);
+      input.child.removeListener("exit", observe);
+      input.child.removeListener("close", observe);
+      resolve(value);
+    }
+    function observe(): void {
+      if (settled) return;
+      const groupState = ownedProcessGroupState(input.target);
+      if (
+        ownedProcessHasExited(input.child) &&
+        (groupState === "gone" || groupState === "notTracked")
+      ) {
+        finish(true);
+        return;
+      }
+      if (Date.now() - startedMilliseconds >= input.timeoutMilliseconds) {
+        finish(false);
+        return;
+      }
+      timer = setTimeout(observe, 10);
+    }
+    input.child.once("exit", observe);
+    input.child.once("close", observe);
+    observe();
+  });
+}
+
+export type OwnedProcessTermination =
+  | Readonly<{
+      readonly tag: "reaped";
+      readonly signalDelivery: ModelInvocationSignalDelivery;
+    }>
+  | Readonly<{
+      readonly tag: "unreaped";
+      readonly signalDelivery: ModelInvocationSignalDelivery;
+      readonly reason: string;
+    }>;
+
+/**
+ * Bound cleanup for a detached process group. The leader's exit is not enough
+ * to settle cleanup: descendants keep the owned group alive until they are
+ * observed gone or the bounded TERM-to-KILL window expires.
+ */
+export async function terminateOwnedProcess(
+  child: ReturnType<typeof spawn>,
+  options: Readonly<{ readonly detached: boolean }>,
+): Promise<OwnedProcessTermination> {
+  const target = ownedProcessSignalTarget(child, options.detached);
+  const term = signalOwnedProcess(target, "SIGTERM");
+  if (
+    await waitForOwnedProcessSettlement({
+      child,
+      target,
+      timeoutMilliseconds: MODEL_INVOCATION_TERMINATION_GRACE_MILLISECONDS,
+    })
+  ) {
+    return { tag: "reaped", signalDelivery: term };
+  }
+  const kill = signalOwnedProcess(target, "SIGKILL");
+  if (
+    await waitForOwnedProcessSettlement({
+      child,
+      target,
+      timeoutMilliseconds:
+        MODEL_INVOCATION_TERMINATION_SETTLEMENT_GRACE_MILLISECONDS,
+    })
+  ) {
+    return { tag: "reaped", signalDelivery: kill };
+  }
+  return {
+    tag: "unreaped",
+    signalDelivery: kill,
+    reason:
+      "The owned process group did not settle before the termination boundary expired.",
+  };
+}
+
 async function spawnOwnedCodex(input: {
   readonly args: readonly string[];
   readonly cwd: string;
@@ -2080,29 +2246,16 @@ async function spawnOwnedCodex(input: {
 }): Promise<ModelInvocationProcess> {
   return await new Promise<ModelInvocationProcess>((resolve) => {
     let settled = false;
-    const timers: {
-      timeout: ReturnType<typeof setTimeout> | undefined;
-      grace: ReturnType<typeof setTimeout> | undefined;
-      settlement: ReturnType<typeof setTimeout> | undefined;
-    } = { timeout: undefined, grace: undefined, settlement: undefined };
+    const timers: { timeout: ReturnType<typeof setTimeout> | undefined } = {
+      timeout: undefined,
+    };
     let timeoutStarted = false;
-    let signalDelivery: ModelInvocationSignalDelivery | undefined;
-    let timeoutTermination: ModelInvocationTimeoutTermination | undefined;
+    let leaderOutcome: ModelInvocationProcess | undefined;
     const finish = (result: ModelInvocationProcess): void => {
       if (settled) return;
       settled = true;
       if (timers.timeout !== undefined) clearTimeout(timers.timeout);
-      if (timers.grace !== undefined) clearTimeout(timers.grace);
-      if (timers.settlement !== undefined) clearTimeout(timers.settlement);
-      resolve(
-        timeoutTermination === undefined
-          ? result
-          : {
-              tag: "timedOut",
-              timeoutMilliseconds: input.timeoutMilliseconds,
-              termination: timeoutTermination,
-            },
-      );
+      resolve(result);
     };
     let child: ReturnType<typeof spawn>;
     try {
@@ -2120,60 +2273,66 @@ async function spawnOwnedCodex(input: {
       });
       return;
     }
+    const signalTarget = ownedProcessSignalTarget(
+      child,
+      process.platform !== "win32",
+    );
     const processExited = (
       status: number | null,
       signal: NodeJS.Signals | null,
     ): void => {
-      if (timeoutStarted) {
-        timeoutTermination = {
-          tag: "reaped",
-          signalDelivery:
-            signalDelivery ??
-            ({
-              tag: "notDelivered",
-              signal: "SIGTERM",
-              reason:
-                "The process settled before the timeout signal delivery result was observed.",
-            } satisfies ModelInvocationSignalDelivery),
-        };
-      }
+      if (leaderOutcome !== undefined) return;
       if (signal !== null) {
-        finish({ tag: "signaled", signal });
+        leaderOutcome = { tag: "signaled", signal };
       } else if (status !== null) {
-        finish({ tag: "exited", status });
+        leaderOutcome = { tag: "exited", status };
       } else {
-        finish({
+        leaderOutcome = {
           tag: "failedToStart",
           message: "Codex returned no process status.",
-        });
+        };
       }
+      if (!timeoutStarted) finish(leaderOutcome);
     };
     timers.timeout = setTimeout(() => {
       timeoutStarted = true;
-      signalDelivery = signalOwnedProcess(child, "SIGTERM");
-      timers.grace = setTimeout(() => {
-        if (settled) return;
-        signalDelivery = signalOwnedProcess(child, "SIGKILL");
-        timers.settlement = setTimeout(() => {
-          if (settled) return;
-          timeoutTermination = {
-            tag: "unreaped",
-            signalDelivery:
-              signalDelivery ??
-              ({
-                tag: "notDelivered",
-                signal: "SIGKILL",
-                reason: "No timeout signal delivery result was recorded.",
-              } satisfies ModelInvocationSignalDelivery),
-            reason:
-              "The child did not emit an exit or close event after the final timeout signal.",
-          };
+      void (async () => {
+        const term = signalOwnedProcess(signalTarget, "SIGTERM");
+        if (
+          await waitForOwnedProcessSettlement({
+            child,
+            target: signalTarget,
+            timeoutMilliseconds:
+              MODEL_INVOCATION_TERMINATION_GRACE_MILLISECONDS,
+          })
+        ) {
           finish({
-            tag: "failedToStart",
-            message: "Codex timeout settlement was not observed.",
+            tag: "timedOut",
+            timeoutMilliseconds: input.timeoutMilliseconds,
+            termination: { tag: "reaped", signalDelivery: term },
           });
-        }, MODEL_INVOCATION_TERMINATION_SETTLEMENT_GRACE_MILLISECONDS);
-      }, MODEL_INVOCATION_TERMINATION_GRACE_MILLISECONDS);
+          return;
+        }
+        const kill = signalOwnedProcess(signalTarget, "SIGKILL");
+        const reaped = await waitForOwnedProcessSettlement({
+          child,
+          target: signalTarget,
+          timeoutMilliseconds:
+            MODEL_INVOCATION_TERMINATION_SETTLEMENT_GRACE_MILLISECONDS,
+        });
+        finish({
+          tag: "timedOut",
+          timeoutMilliseconds: input.timeoutMilliseconds,
+          termination: reaped
+            ? { tag: "reaped", signalDelivery: kill }
+            : {
+                tag: "unreaped",
+                signalDelivery: kill,
+                reason:
+                  "The owned Codex process group did not settle after the final timeout signal.",
+              },
+        });
+      })();
     }, input.timeoutMilliseconds);
     child.once("error", (error: Error) => {
       if (timeoutStarted) return;
@@ -2234,16 +2393,26 @@ async function runCodexProcess<A, E extends object>(input: {
     writeSync(eventFd, `${JSON.stringify(input.startedEvent)}\n`);
     const logFd = openSync(input.logPath, "wx");
     try {
-      const processOutcome = await spawnOwnedCodex({
-        args: codexArgs,
-        cwd: input.cwd,
-        env: input.env,
-        stdinFd: input.stdinFd,
-        eventFd,
-        logFd,
-        timeoutMilliseconds: input.timeoutMilliseconds,
-        spawnProcess: input.spawnProcess,
-      });
+      const outputClaim =
+        input.operation.tag === "expectedLastMessage"
+          ? claimExpectedModelInvocationOutput(input.operation.expected.path)
+          : undefined;
+      const processOutcome =
+        outputClaim === undefined || typeof outputClaim !== "string"
+          ? await spawnOwnedCodex({
+              args: codexArgs,
+              cwd: input.cwd,
+              env: input.env,
+              stdinFd: input.stdinFd,
+              eventFd,
+              logFd,
+              timeoutMilliseconds: input.timeoutMilliseconds,
+              spawnProcess: input.spawnProcess,
+            })
+          : ({
+              tag: "failedToStart",
+              message: outputClaim,
+            } satisfies ModelInvocationProcess);
       const exit = processOutcome;
       const retainedEvents = readCodexEventsWithSource(input.eventPath);
       if (retainedEvents.tag === "invalid") {
@@ -2260,6 +2429,9 @@ async function runCodexProcess<A, E extends object>(input: {
         process: processOutcome,
         codexEventAnalysis: codexEventAnalysis.right,
         operation: input.operation,
+        ...(typeof outputClaim === "string" || outputClaim === undefined
+          ? {}
+          : { expectedOutputClaimToken: outputClaim.token }),
       });
       const result = modelInvocationResultFromLifecycle(
         lifecycle,

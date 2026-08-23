@@ -11,7 +11,6 @@ import {
 } from "./scenario-campaign.ts";
 import {
   modelInvocationEvidenceFromEvents,
-  readCodexEvents,
 } from "./model-telemetry.ts";
 import {
   RetainedScenarioReviewInputSchema,
@@ -89,8 +88,9 @@ export function finalAgentMessage(events: readonly unknown[]): unknown {
  */
 export function validateRetainedScenarioReviewInvocation(input: {
   readonly binding: RetainedScenarioReviewReplayBinding;
-  readonly eventPath: string;
   readonly eventSha256: string;
+  /** Parsed from the same bytes whose hash is passed above. */
+  readonly events: readonly unknown[];
 }): void {
   const { binding } = input;
   const retained = binding.retainedInput;
@@ -101,11 +101,7 @@ export function validateRetainedScenarioReviewInvocation(input: {
       `Retained ${reviewStage} review input does not match its ledger event hash.`,
     );
   }
-  const parsedEvents = readCodexEvents(resolve(repoRoot, input.eventPath));
-  if (parsedEvents.tag === "invalid") {
-    fail(parsedEvents.message);
-  }
-  const derived = modelInvocationEvidenceFromEvents(parsedEvents.events);
+  const derived = modelInvocationEvidenceFromEvents(input.events);
   if (
     derived.tag === "invalid" ||
     derived.entry.schemaVersion !== ledgerEntry.schemaVersion
@@ -141,7 +137,7 @@ export function validateRetainedScenarioReviewInvocation(input: {
   const output = Schema.decodeUnknownEither(
     Schema.Struct({ result: ScenarioCompositeReviewSchema }),
     { onExcessProperty: "error" },
-  )(finalAgentMessage(parsedEvents.events));
+  )(finalAgentMessage(input.events));
   if (
     Either.isLeft(output) ||
     canonicalJson(output.right.result) !== canonicalJson(retained.result)
