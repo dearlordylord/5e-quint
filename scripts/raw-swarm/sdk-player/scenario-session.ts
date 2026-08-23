@@ -205,8 +205,6 @@ export type ScenarioSpatialSetupInput =
       readonly spatialDecisions: readonly ScenarioSpatialDecisionInput[];
     }>;
 
-const SCENARIO_CLOSE_TARGET_DISTANCE_FEET = 5;
-
 type ScenarioMovementResolution =
   | Readonly<{ readonly kind: "idle" }>
   | Readonly<{
@@ -444,34 +442,13 @@ export function projectGeometryTargetHoles(input: {
         hole;
       return { ...geometryHole, choices };
     }
-    if (
-      input.subject.tag !== "action" ||
-      (input.subject.action !== "grapple" &&
-        input.subject.action !== "shove" &&
-        input.subject.action !== "shakeAwakeFromSleep" &&
-        input.subject.action !== "shakeAwakeFromHypnoticPattern")
-    ) {
-      return hole;
-    }
-    const firstTarget = hole.choices[0];
-    if (firstTarget === undefined) {
-      const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
-        hole;
-      return geometryHole;
-    }
-    const targetQuestion = scenarioTableSpatialFactQuestionForSubject(
-      input.subject,
-      firstTarget,
-    );
-    if (targetQuestion === undefined) {
+    const targetQuestionForSubject =
+      scenarioTableSpatialFactQuestionFactoryForSubject(input.subject);
+    if (targetQuestionForSubject === undefined) {
       return hole;
     }
     const choices = hole.choices.filter((targetId) => {
-      const question = scenarioTableSpatialFactQuestionForSubject(
-        input.subject,
-        targetId,
-      );
-      if (question === undefined) return false;
+      const question = targetQuestionForSubject(targetId);
       const relation = scenarioRelationForSpatialQuestion(
         input.session,
         question,
@@ -479,7 +456,7 @@ export function projectGeometryTargetHoles(input: {
       return (
         relation.tag === "relation" &&
         Number(relation.relation.distanceFeet) <=
-          SCENARIO_CLOSE_TARGET_DISTANCE_FEET
+          scenarioTableSpatialFactDistanceLimitFeet(question)
       );
     });
     const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
@@ -2363,6 +2340,39 @@ type ScenarioTableSpatialFactQuestion = Extract<
   | { readonly kind: "helpAttackTarget" }
 >;
 
+const SCENARIO_GRAPPLE_SHOVE_REACH_FEET = 5;
+const SCENARIO_SHAKE_AWAKE_TARGET_ADJACENCY_FEET = 5;
+const SCENARIO_HELP_ATTACK_ADJACENCY_FEET = 5;
+const SCENARIO_RANGED_ENEMY_PROXIMITY_FEET = 5;
+
+function scenarioTableSpatialFactDistanceLimitFeet(
+  question: ScenarioTableSpatialFactQuestion,
+): number {
+  return Match.value(question).pipe(
+    Match.when(
+      { kind: "grappleTarget" },
+      () => SCENARIO_GRAPPLE_SHOVE_REACH_FEET,
+    ),
+    Match.when(
+      { kind: "shoveTarget" },
+      () => SCENARIO_GRAPPLE_SHOVE_REACH_FEET,
+    ),
+    Match.when(
+      { kind: "sleepShakeAwakeTarget" },
+      () => SCENARIO_SHAKE_AWAKE_TARGET_ADJACENCY_FEET,
+    ),
+    Match.when(
+      { kind: "hypnoticPatternShakeAwakeTarget" },
+      () => SCENARIO_SHAKE_AWAKE_TARGET_ADJACENCY_FEET,
+    ),
+    Match.when(
+      { kind: "helpAttackTarget" },
+      () => SCENARIO_HELP_ATTACK_ADJACENCY_FEET,
+    ),
+    Match.exhaustive,
+  );
+}
+
 function scenarioTableSpatialFactForQuestion(
   question: ScenarioTableSpatialFactQuestion,
 ): BattleTargetSpatialFact {
@@ -2399,40 +2409,60 @@ function scenarioTableSpatialFactForQuestion(
   );
 }
 
+type ScenarioTableSpatialFactQuestionFactory = (
+  targetId: CombatantId,
+) => ScenarioTableSpatialFactQuestion;
+
+function scenarioTableSpatialFactQuestionFactoryForSubject(
+  subject: BattleSubject,
+): ScenarioTableSpatialFactQuestionFactory | undefined {
+  if (subject.tag !== "action") return undefined;
+  return Match.value(subject).pipe(
+    Match.when(
+      { tag: "action", action: "grapple" },
+      ({ actorId }) =>
+        (targetId: CombatantId) => ({
+          kind: "grappleTarget" as const,
+          grapplerId: actorId,
+          targetId,
+        }),
+    ),
+    Match.when(
+      { tag: "action", action: "shove" },
+      ({ actorId }) =>
+        (targetId: CombatantId) => ({
+          kind: "shoveTarget" as const,
+          shoverId: actorId,
+          targetId,
+        }),
+    ),
+    Match.when(
+      { tag: "action", action: "shakeAwakeFromSleep" },
+      ({ actorId }) =>
+        (targetId: CombatantId) => ({
+          kind: "sleepShakeAwakeTarget" as const,
+          actorId,
+          targetId,
+        }),
+    ),
+    Match.when(
+      { tag: "action", action: "shakeAwakeFromHypnoticPattern" },
+      ({ actorId }) =>
+        (targetId: CombatantId) => ({
+          kind: "hypnoticPatternShakeAwakeTarget" as const,
+          actorId,
+          targetId,
+        }),
+    ),
+    Match.orElse(() => undefined),
+  );
+}
+
 function scenarioTableSpatialFactQuestionForSubject(
   subject: BattleSubject,
   targetId: CombatantId,
 ): ScenarioTableSpatialFactQuestion | undefined {
-  if (subject.tag !== "action") return undefined;
-  return Match.value(subject).pipe(
-    Match.when({ tag: "action", action: "grapple" }, ({ actorId }) => ({
-      kind: "grappleTarget" as const,
-      grapplerId: actorId,
-      targetId,
-    })),
-    Match.when({ tag: "action", action: "shove" }, ({ actorId }) => ({
-      kind: "shoveTarget" as const,
-      shoverId: actorId,
-      targetId,
-    })),
-    Match.when(
-      { tag: "action", action: "shakeAwakeFromSleep" },
-      ({ actorId }) => ({
-        kind: "sleepShakeAwakeTarget" as const,
-        actorId,
-        targetId,
-      }),
-    ),
-    Match.when(
-      { tag: "action", action: "shakeAwakeFromHypnoticPattern" },
-      ({ actorId }) => ({
-        kind: "hypnoticPatternShakeAwakeTarget" as const,
-        actorId,
-        targetId,
-      }),
-    ),
-    Match.orElse(() => undefined),
-  );
+  return scenarioTableSpatialFactQuestionFactoryForSubject(subject)?.(targetId);
 }
 
 /**
@@ -2486,7 +2516,7 @@ export function scenarioTableSpatialFactFills(input: {
       }
       if (
         Number(relation.relation.distanceFeet) >
-        SCENARIO_CLOSE_TARGET_DISTANCE_FEET
+        scenarioTableSpatialFactDistanceLimitFeet(targetQuestion)
       ) {
         return Either.left({
           tag: "table-spatial-fact-projection",
@@ -2547,7 +2577,7 @@ export function scenarioTableSpatialFactFills(input: {
     }
     if (
       Number(relation.relation.distanceFeet) >
-      SCENARIO_CLOSE_TARGET_DISTANCE_FEET
+      scenarioTableSpatialFactDistanceLimitFeet(targetQuestion)
     ) {
       return Either.left({
         tag: "table-spatial-fact-projection",
@@ -3259,7 +3289,7 @@ export function scenarioEnemyWithinFiveFeetCanSeeAttacker(
     return (
       relation.tag === "relation" &&
       Number(relation.relation.distanceFeet) <=
-        SCENARIO_CLOSE_TARGET_DISTANCE_FEET &&
+        SCENARIO_RANGED_ENEMY_PROXIMITY_FEET &&
       relation.relation.attackerCanSeeTarget
     );
   });
