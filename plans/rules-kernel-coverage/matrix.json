@@ -5192,7 +5192,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
       ],
-      "reason": "The QNT owner is limited to the Prone integer-distance source: <=5 feet supplies Advantage, >5 feet supplies Disadvantage, and the source composes with cancellation. The executable parity witness covers the exact 5/6 boundary. Runtime state/codecs/fill-set own the single attackTargetDistance fact and its exact bound-selection uniqueness; attack-spatial owns exact distance matching and melee/ranged legality; attack-roll owns Prone mode; opportunity-attacks owns fixed-target OA, readied, and retaliation admission; interrupt-execution and interrupt-lifecycle own interruption choice and continuation; movement-speed and movement-procedures own canonical threat identity, reach validation, and movement continuation; battle-subjects owns the typed attack-distance and reaction subject contracts; domain-constants owns the canonical range-band and Prone threshold values; and ScenarioSession owns stable public threat projection. Reactions reject missing, contradictory, or out-of-range distance facts before an attack roll.",
+      "reason": "The QNT owner is limited to the Prone integer-distance source: <=5 feet supplies Advantage, >5 feet supplies Disadvantage, and the source composes with cancellation. The executable parity witness covers the exact 5/6 boundary. Runtime state/codecs/fill-set own the single attackTargetDistance fact and its exact bound-selection uniqueness; attack-spatial owns exact distance matching and melee/ranged legality; d20-test-circumstance owns deriving the canonical Prone distance source into mechanical D20 roll-mode sources; attack-roll owns applying Prone mode; opportunity-attacks owns fixed-target OA, readied, and retaliation admission; interrupt-execution and interrupt-lifecycle own interruption choice and continuation; movement-speed and movement-procedures own canonical threat identity, reach validation, and movement continuation; battle-subjects owns the typed attack-distance and reaction subject contracts; domain-constants owns the canonical range-band and Prone threshold values; and ScenarioSession owns stable public threat projection. Reactions reject missing, contradictory, or out-of-range distance facts before an attack roll.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -5207,6 +5207,7 @@
         "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
         "packages/battle-runtime/src/battle-reducer/movement-procedures.ts",
+        "packages/battle-runtime/src/d20-test-circumstance.ts",
         "scripts/raw-swarm/sdk-player/scenario-session.ts"
       ],
       "status": "covered",
