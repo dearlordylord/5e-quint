@@ -556,7 +556,6 @@ export function fixedBenchmarkCodexArgs(
   reasoningEffort: string,
   prompt: string,
   schemaPath: string | undefined,
-  outputPath: string | undefined,
   sandbox: "workspace-write" | "danger-full-access",
 ): readonly [string, ...string[]] {
   return [
@@ -575,7 +574,6 @@ export function fixedBenchmarkCodexArgs(
     "-c",
     "model_reasoning_effort=" + JSON.stringify(reasoningEffort),
     ...(schemaPath === undefined ? [] : ["--output-schema", schemaPath]),
-    ...(outputPath === undefined ? [] : ["--output-last-message", outputPath]),
     prompt,
   ];
 }
@@ -1155,7 +1153,6 @@ async function runStructuredCall<A, I>(input: {
           local,
         }),
         schemaPath,
-        outputPath,
         FIXED_BENCHMARK_PREPARATION_SANDBOX,
       ),
       cwd: scratch,
@@ -1302,7 +1299,6 @@ async function runAuxiliaryStructuredCall<A, I>(input: {
           local,
         }),
         schemaPath,
-        outputPath,
         FIXED_BENCHMARK_PREPARATION_SANDBOX,
       ),
       cwd: scratch,
@@ -1713,7 +1709,6 @@ async function characterSourceCall(input: {
                 FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS.scenarioCharacterAuthoring,
             }),
             undefined,
-            undefined,
             FIXED_BENCHMARK_PREPARATION_SANDBOX,
           ),
           cwd: scratch,
@@ -1837,7 +1832,6 @@ async function setupSourceCalls(input: {
                 readableFiles,
                 taskPrompt: prompt,
               }),
-              undefined,
               undefined,
               FIXED_BENCHMARK_PREPARATION_SANDBOX,
             ),

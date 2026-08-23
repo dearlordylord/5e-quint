@@ -617,6 +617,7 @@ describe("Raw Swarm findings projection", () => {
       result: {
         tag: "failed",
         failureKind: "lastMessageMissing",
+        operation: "expectedLastMessage",
         reason: "Expected Codex last-message output file does not exist.",
       },
     };

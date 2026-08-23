@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
+import type { EventEmitter } from "node:events";
 import {
   appendFileSync,
   closeSync,
@@ -135,16 +136,24 @@ const HistoricalModelInvocationResultSchema = Schema.Union(
   }),
 );
 
-/** Current v5 results distinguish process/Codex failures from output failures. */
+/**
+ * Current v5 output failures retain their operation in durable evidence.  A
+ * last-message failure is meaningful only for an invocation that promised a
+ * retained last message; keeping that fact in the record prevents a
+ * no-output row from being interpreted as an output failure later.
+ */
 const CurrentModelInvocationResultSchema = Schema.Union(
   HistoricalModelInvocationResultSchema,
   Schema.Struct({
     tag: Schema.Literal("failed"),
     reason: Schema.NonEmptyTrimmedString,
-    failureKind: Schema.Literal(
-      ...MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS,
-      ...MODEL_INVOCATION_CODEX_FAILURE_KINDS,
-    ),
+    failureKind: Schema.Literal(...MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS),
+    operation: Schema.Literal("expectedLastMessage"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("failed"),
+    reason: Schema.NonEmptyTrimmedString,
+    failureKind: Schema.Literal(...MODEL_INVOCATION_CODEX_FAILURE_KINDS),
   }),
 );
 
@@ -479,9 +488,6 @@ export type ModelInvocationLedgerEntry = Schema.Schema.Type<
 >;
 export type ModelInvocationResult = Schema.Schema.Type<
   typeof CurrentModelInvocationResultSchema
->;
-type CurrentModelInvocationLedgerEntryEncoded = Schema.Schema.Encoded<
-  typeof CurrentModelInvocationLedgerEntrySchema
 >;
 type ModelInvocationEventEntry =
   | Omit<HistoricalModelInvocationLedgerEntry, "eventsSha256">
@@ -935,11 +941,9 @@ type CodexEventAnalysis = Readonly<{
   readonly result: ModelInvocationResult;
 }>;
 
-function hasCodexTerminalEvent(events: readonly unknown[]): boolean {
+function hasCodexCompletedEvent(events: readonly unknown[]): boolean {
   return events.some(
-    (event) =>
-      isJsonRecord(event) &&
-      (event.type === "turn.completed" || event.type === "turn.failed"),
+    (event) => isJsonRecord(event) && event.type === "turn.completed",
   );
 }
 
@@ -952,32 +956,14 @@ function analyzeCodexEvents(
   const processResult = resultFromExit(exit);
   if (processResult.tag === "succeeded") {
     if (Option.isSome(failureReason.right)) {
-      if (exit.tag === "shellStatus") {
-        return Either.left(
-          "Codex emitted a terminal failure event but exited successfully.",
-        );
-      }
-      return Either.right({
-        failureReason: failureReason.right,
-        result: {
-          tag: "failed",
-          reason: failureReason.right.value,
-          failureKind: "codexEvent",
-        },
-      });
+      return Either.left(
+        "Codex emitted a first-party failure event but exited successfully.",
+      );
     }
-    if (!hasCodexTerminalEvent(events)) {
-      const reason =
-        "Codex exited successfully without a first-party terminal turn event.";
-      if (exit.tag === "shellStatus")
-        return Either.right({
-          failureReason: Option.none(),
-          result: processResult,
-        });
-      return Either.right({
-        failureReason: Option.some(reason),
-        result: { tag: "failed", reason, failureKind: "codexEvent" },
-      });
+    if (!hasCodexCompletedEvent(events)) {
+      return Either.left(
+        "Codex exited successfully without a first-party turn.completed event.",
+      );
     }
   }
   return Either.right({
@@ -1291,12 +1277,28 @@ export function modelInvocationEvidenceFromEvents(
         "Model invocation start and completion records must use the same schema version.",
     };
   }
-  if (completion.result.tag === "succeeded" && !hasCodexTerminalEvent(events)) {
+  if (
+    completion.result.tag === "succeeded" &&
+    !hasCodexCompletedEvent(events)
+  ) {
     return {
       tag: "invalid",
       message:
-        "Successful v5 invocation evidence requires a first-party terminal turn event.",
+        "Successful v5 invocation evidence requires a first-party turn.completed event.",
     };
+  }
+  if (completion.result.tag === "succeeded") {
+    const failureReason = firstPartyCodexFailureReason(events);
+    if (Either.isLeft(failureReason)) {
+      return { tag: "invalid", message: failureReason.left };
+    }
+    if (Option.isSome(failureReason.right)) {
+      return {
+        tag: "invalid",
+        message:
+          "Successful v5 invocation evidence cannot include a first-party failure event.",
+      };
+    }
   }
   return {
     tag: "valid",
@@ -1379,11 +1381,22 @@ export function benchmarkModelInvocationEvidenceFromEvents(
     };
   }
   if (completion.schemaVersion === 5 && completion.result.tag === "succeeded") {
-    if (!hasCodexTerminalEvent(events)) {
+    const failureReason = firstPartyCodexFailureReason(events);
+    if (Either.isLeft(failureReason)) {
+      return { tag: "invalid", message: failureReason.left };
+    }
+    if (Option.isSome(failureReason.right)) {
       return {
         tag: "invalid",
         message:
-          "Successful v5 benchmark evidence requires a first-party terminal turn event.",
+          "Successful v5 benchmark evidence cannot include a first-party failure event.",
+      };
+    }
+    if (!hasCodexCompletedEvent(events)) {
+      return {
+        tag: "invalid",
+        message:
+          "Successful v5 benchmark evidence requires a first-party turn.completed event.",
       };
     }
   }
@@ -1606,28 +1619,43 @@ export function codexInvocationMetadataMatchesArgs(input: {
   );
 }
 
-export function appendInvocationEvidenceEvents(input: {
-  readonly path: string;
-  readonly start: ModelInvocationStartedEvent;
-  readonly completion: ModelInvocationCompletedEvent;
-}): void {
-  const rawEvents = readFileSync(input.path, "utf8");
-  const separated =
-    rawEvents.length === 0 || rawEvents.endsWith("\n") ? "" : "\n";
-  const encoded = `${JSON.stringify(input.start)}\n${rawEvents}${separated}${JSON.stringify(input.completion)}\n`;
-  const descriptor = openSync(input.path, "w");
-  try {
-    writeSync(descriptor, encoded);
-  } finally {
-    closeSync(descriptor);
+/**
+ * Bind the retained-output contract to the actual Codex command.  Callers
+ * provide the command body; this boundary owns the exact output path and
+ * rejects a no-output operation that attempts to retain one.
+ */
+function codexInvocationArgsForOperation(
+  args: readonly string[],
+  operation: ModelInvocationOperation<unknown>,
+): readonly string[] {
+  if (args.length === 0) {
+    throw new Error("Codex invocation requires a command argument.");
   }
-}
-
-export function appendInvocationLedger(
-  path: string,
-  entry: CurrentModelInvocationLedgerEntryEncoded,
-): void {
-  appendFileSync(path, `${JSON.stringify(entry)}\n`);
+  const outputPaths = flagValues(args, "--output-last-message");
+  const outputFlagCount = args.filter(
+    (argument) =>
+      argument === "--output-last-message" ||
+      argument.startsWith("--output-last-message="),
+  ).length;
+  if (operation.tag === "noOutput") {
+    if (outputFlagCount > 0) {
+      throw new Error(
+        "A no-output invocation cannot include --output-last-message.",
+      );
+    }
+    return codexJsonArgs([args[0]!, ...args.slice(1)]);
+  }
+  if (outputFlagCount > 0 || outputPaths.length > 0) {
+    throw new Error(
+      "The expected-last-message operation owns the Codex --output-last-message path.",
+    );
+  }
+  return codexJsonArgs([
+    args[0]!,
+    ...args.slice(1),
+    "--output-last-message",
+    operation.expected.path,
+  ]);
 }
 
 export function invocationEventsSha256(path: string): string {
@@ -1794,6 +1822,29 @@ export type ModelInvocationProcess = Exclude<
   CurrentModelInvocationExit,
   { readonly tag: "shellStatus" }
 >;
+
+/**
+ * The runner only needs this small child-process surface.  Keeping the spawn
+ * seam at this boundary makes deterministic lifecycle tests possible without
+ * pretending an arbitrary object is Node's ChildProcess type.
+ */
+export type SpawnedCodexProcess = EventEmitter &
+  Readonly<{
+    readonly pid?: number | undefined;
+    readonly exitCode?: number | null | undefined;
+    readonly signalCode?: NodeJS.Signals | null | undefined;
+    readonly kill: (signal: NodeJS.Signals) => boolean;
+  }>;
+
+export type SpawnOwnedCodexProcess = (input: {
+  readonly args: readonly string[];
+  readonly cwd: string;
+  readonly env: NodeJS.ProcessEnv;
+  readonly stdinFd?: number | undefined;
+  readonly eventFd: number;
+  readonly logFd: number;
+  readonly detached: boolean;
+}) => SpawnedCodexProcess;
 
 type SuccessfulModelInvocationProcess = Readonly<{
   readonly tag: "exited";
@@ -2020,6 +2071,7 @@ function modelInvocationResultFromLifecycle(
     ? {
         tag: "failed",
         failureKind: lifecycle.cause.failureKind,
+        operation: "expectedLastMessage",
         reason: lifecycle.cause.reason,
       }
     : codexResult.tag === "failed"
@@ -2046,10 +2098,9 @@ export type ModelInvocationSignalDelivery = Schema.Schema.Type<
   typeof ModelInvocationSignalDeliverySchema
 >;
 
-type OwnedProcessSignalTarget = Pick<
-  ReturnType<typeof spawn>,
-  "pid" | "kill"
-> & {
+type OwnedProcessSignalTarget = {
+  readonly pid: number | undefined;
+  readonly kill: (signal: NodeJS.Signals) => boolean;
   /** A process-group id is present only when the caller created a detached group. */
   readonly processGroupId?: number;
 };
@@ -2108,7 +2159,7 @@ type OwnedProcessGroupState =
   | "indeterminate";
 
 function ownedProcessSignalTarget(
-  child: ReturnType<typeof spawn>,
+  child: SpawnedCodexProcess,
   detached: boolean,
 ): OwnedProcessSignalTarget {
   return {
@@ -2138,15 +2189,27 @@ function ownedProcessGroupState(
   }
 }
 
-function ownedProcessHasExited(child: ReturnType<typeof spawn>): boolean {
+function ownedProcessHasExited(child: SpawnedCodexProcess): boolean {
   return (
     (child.exitCode !== null && child.exitCode !== undefined) ||
     (child.signalCode !== null && child.signalCode !== undefined)
   );
 }
 
+function observedProcessOutcome(
+  child: SpawnedCodexProcess,
+): ModelInvocationProcess | undefined {
+  if (child.signalCode !== null && child.signalCode !== undefined) {
+    return { tag: "signaled", signal: child.signalCode };
+  }
+  if (child.exitCode !== null && child.exitCode !== undefined) {
+    return { tag: "exited", status: child.exitCode };
+  }
+  return undefined;
+}
+
 async function waitForOwnedProcessSettlement(input: {
-  readonly child: ReturnType<typeof spawn>;
+  readonly child: SpawnedCodexProcess;
   readonly target: OwnedProcessSignalTarget;
   readonly timeoutMilliseconds: number;
 }): Promise<boolean> {
@@ -2166,8 +2229,8 @@ async function waitForOwnedProcessSettlement(input: {
       if (settled) return;
       const groupState = ownedProcessGroupState(input.target);
       if (
-        ownedProcessHasExited(input.child) &&
-        (groupState === "gone" || groupState === "notTracked")
+        groupState === "gone" ||
+        (groupState === "notTracked" && ownedProcessHasExited(input.child))
       ) {
         finish(true);
         return;
@@ -2201,7 +2264,7 @@ export type OwnedProcessTermination =
  * observed gone or the bounded TERM-to-KILL window expires.
  */
 export async function terminateOwnedProcess(
-  child: ReturnType<typeof spawn>,
+  child: SpawnedCodexProcess,
   options: Readonly<{ readonly detached: boolean }>,
 ): Promise<OwnedProcessTermination> {
   const target = ownedProcessSignalTarget(child, options.detached);
@@ -2242,14 +2305,15 @@ async function spawnOwnedCodex(input: {
   readonly eventFd: number;
   readonly logFd: number;
   readonly timeoutMilliseconds: number;
-  readonly spawnProcess?: typeof spawn | undefined;
+  readonly spawnProcess?: SpawnOwnedCodexProcess | undefined;
 }): Promise<ModelInvocationProcess> {
-  return await new Promise<ModelInvocationProcess>((resolve) => {
+  return await new Promise<ModelInvocationProcess>((resolve, reject) => {
     let settled = false;
     const timers: { timeout: ReturnType<typeof setTimeout> | undefined } = {
       timeout: undefined,
     };
     let timeoutStarted = false;
+    let normalCleanupStarted = false;
     let leaderOutcome: ModelInvocationProcess | undefined;
     const finish = (result: ModelInvocationProcess): void => {
       if (settled) return;
@@ -2257,14 +2321,40 @@ async function spawnOwnedCodex(input: {
       if (timers.timeout !== undefined) clearTimeout(timers.timeout);
       resolve(result);
     };
-    let child: ReturnType<typeof spawn>;
+    const failCleanup = (boundary: string, reason: string): void => {
+      if (settled) return;
+      settled = true;
+      if (timers.timeout !== undefined) clearTimeout(timers.timeout);
+      reject(
+        new Error(
+          `Codex process-group cleanup did not settle ${boundary}: ${reason}`,
+        ),
+      );
+    };
+    let child: SpawnedCodexProcess;
     try {
-      const spawnProcess = input.spawnProcess ?? spawn;
-      child = spawnProcess("codex", input.args, {
+      const detached = process.platform !== "win32";
+      const spawnProcess =
+        input.spawnProcess ??
+        ((spawnInput) =>
+          spawn("codex", [...spawnInput.args], {
+            cwd: spawnInput.cwd,
+            env: spawnInput.env,
+            stdio: [
+              spawnInput.stdinFd ?? "ignore",
+              spawnInput.eventFd,
+              spawnInput.logFd,
+            ],
+            detached: spawnInput.detached,
+          }));
+      child = spawnProcess({
+        args: input.args,
         cwd: input.cwd,
         env: input.env,
-        stdio: [input.stdinFd ?? "ignore", input.eventFd, input.logFd],
-        detached: process.platform !== "win32",
+        stdinFd: input.stdinFd,
+        eventFd: input.eventFd,
+        logFd: input.logFd,
+        detached,
       });
     } catch (error: unknown) {
       finish({
@@ -2277,6 +2367,50 @@ async function spawnOwnedCodex(input: {
       child,
       process.platform !== "win32",
     );
+    const settleAfterNormalExit = (): void => {
+      if (normalCleanupStarted || timeoutStarted || settled) return;
+      normalCleanupStarted = true;
+      void (async () => {
+        if (
+          await waitForOwnedProcessSettlement({
+            child,
+            target: signalTarget,
+            timeoutMilliseconds:
+              MODEL_INVOCATION_TERMINATION_GRACE_MILLISECONDS,
+          })
+        ) {
+          finish(
+            leaderOutcome ??
+              observedProcessOutcome(child) ?? {
+                tag: "failedToStart",
+                message:
+                  "Owned Codex process group disappeared before Node reported a process status.",
+              },
+          );
+          return;
+        }
+        const termination = await terminateOwnedProcess(child, {
+          detached: process.platform !== "win32",
+        });
+        if (termination.tag === "unreaped") {
+          failCleanup("after the leader exited", termination.reason);
+          return;
+        }
+        finish(
+          leaderOutcome ??
+            observedProcessOutcome(child) ?? {
+              tag: "failedToStart",
+              message:
+                "Owned Codex process group settled before Node reported a process status.",
+            },
+        );
+      })().catch((error: unknown) => {
+        failCleanup(
+          "after the leader exited",
+          error instanceof Error ? error.message : String(error),
+        );
+      });
+    };
     const processExited = (
       status: number | null,
       signal: NodeJS.Signals | null,
@@ -2292,9 +2426,10 @@ async function spawnOwnedCodex(input: {
           message: "Codex returned no process status.",
         };
       }
-      if (!timeoutStarted) finish(leaderOutcome);
+      if (!timeoutStarted) settleAfterNormalExit();
     };
     timers.timeout = setTimeout(() => {
+      if (normalCleanupStarted) return;
       timeoutStarted = true;
       void (async () => {
         const term = signalOwnedProcess(signalTarget, "SIGTERM");
@@ -2332,10 +2467,15 @@ async function spawnOwnedCodex(input: {
                   "The owned Codex process group did not settle after the final timeout signal.",
               },
         });
-      })();
+      })().catch((error: unknown) => {
+        failCleanup(
+          "after timeout cleanup",
+          error instanceof Error ? error.message : String(error),
+        );
+      });
     }, input.timeoutMilliseconds);
     child.once("error", (error: Error) => {
-      if (timeoutStarted) return;
+      if (timeoutStarted || normalCleanupStarted) return;
       finish({ tag: "failedToStart", message: error.message });
     });
     child.once("exit", processExited);
@@ -2376,9 +2516,12 @@ async function runCodexProcess<A, E extends object>(input: {
   ) => Either.Either<object, ParseResult.ParseError>;
   readonly completionErrorPrefix: string;
   readonly evidenceFromEvents: InvocationEvidenceFromEvents<E>;
-  readonly spawnProcess?: typeof spawn | undefined;
+  readonly spawnProcess?: SpawnOwnedCodexProcess | undefined;
 }): Promise<RunCodexProcessResult<A, E>> {
-  const codexArgs = codexJsonArgs(input.args);
+  const codexArgs = codexInvocationArgsForOperation(
+    input.args,
+    input.operation,
+  );
   if (
     !codexInvocationMetadataMatchesArgs({
       args: codexArgs,
@@ -2511,7 +2654,7 @@ type RunCodexInvocationInput<
   readonly reasoningEffort: string;
   readonly timeoutMilliseconds?: number;
   readonly operation: O;
-  readonly spawnProcess?: typeof spawn | undefined;
+  readonly spawnProcess?: SpawnOwnedCodexProcess | undefined;
 };
 
 type NoOutputOperation = Readonly<{ readonly tag: "noOutput" }>;
@@ -2616,7 +2759,7 @@ type RunBenchmarkAuxiliaryInvocationInput<
   readonly reasoningEffort: string;
   readonly timeoutMilliseconds?: number;
   readonly operation: O;
-  readonly spawnProcess?: typeof spawn | undefined;
+  readonly spawnProcess?: SpawnOwnedCodexProcess | undefined;
 };
 
 export function runBenchmarkAuxiliaryInvocation<A = unknown>(

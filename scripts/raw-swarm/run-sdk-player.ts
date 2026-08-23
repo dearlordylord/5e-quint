@@ -195,6 +195,18 @@ function emitExecutionFindings(output: string): void {
   });
 }
 
+export type SdkPlayerExecutionFailure = Readonly<{
+  readonly tag: "fatalExecutionFailure";
+  readonly kind: "unreapedSupervisorCleanup";
+  readonly reason: string;
+}>;
+
+function sdkPlayerExecutionFailureMessage(
+  failure: SdkPlayerExecutionFailure,
+): string {
+  return `${failure.kind}: ${failure.reason}`;
+}
+
 function emitTranscriptlessFindings(input: {
   readonly output: string;
   readonly executionStartPath: string;
@@ -949,6 +961,8 @@ async function main(args: readonly string[]): Promise<void> {
   let supervisorProcess: ReturnType<typeof spawn> | undefined;
   let supervisorLog: number | undefined;
   let preparationFailure: string | undefined;
+  let executionFailure: SdkPlayerExecutionFailure | undefined;
+  let removeTemporaryDirectories = true;
   try {
     buildConsumerDistribution({
       destination: scratch,
@@ -1047,8 +1061,6 @@ async function main(args: readonly string[]): Promise<void> {
         PLAYER_MODEL,
         "-c",
         `model_reasoning_effort="${PLAYER_REASONING_EFFORT}"`,
-        "--output-last-message",
-        agentFinalPath,
         [
           `Read ${deliveredContextFileName}, PLAYER.md, SCENARIO.md, OBSERVATION.json, and attempt.ts.`,
           "Act as the player described there and continue until the SDK supervisor accepts a playerConcluded outcome or returns a terminalObstruction. Stop immediately after a terminalObstruction; it is retained evidence.",
@@ -1104,11 +1116,19 @@ async function main(args: readonly string[]): Promise<void> {
           detached: process.platform !== "win32",
         });
         if (termination.tag === "unreaped") {
-          preparationFailure = `SDK supervisor cleanup was not reaped: ${termination.reason}`;
-          console.error(preparationFailure);
+          executionFailure = {
+            tag: "fatalExecutionFailure",
+            kind: "unreapedSupervisorCleanup",
+            reason: termination.reason,
+          };
+          removeTemporaryDirectories = false;
+          console.error(sdkPlayerExecutionFailureMessage(executionFailure));
         }
       }
       if (supervisorLog !== undefined) closeSync(supervisorLog);
+      if (executionFailure !== undefined) {
+        throw new Error(sdkPlayerExecutionFailureMessage(executionFailure));
+      }
       if (existsSync(resolve(trusted, "evidence/sdk-calls.jsonl"))) {
         const agentLogPath = resolve(trusted, "agent.log");
         if (existsSync(agentLogPath)) {
@@ -1169,9 +1189,11 @@ async function main(args: readonly string[]): Promise<void> {
         });
       }
     } finally {
-      rmSync(scratch, { recursive: true });
-      rmSync(trusted, { recursive: true });
-      rmSync(codexHome, { recursive: true });
+      if (removeTemporaryDirectories) {
+        rmSync(scratch, { recursive: true });
+        rmSync(trusted, { recursive: true });
+        rmSync(codexHome, { recursive: true });
+      }
     }
   }
   console.log(`SDK player evidence: ${output}`);

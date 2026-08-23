@@ -110,7 +110,6 @@ describe("fixed scenario benchmark boundary", () => {
         "medium",
         "Review the synthetic source.",
         undefined,
-        undefined,
         "workspace-write",
       ),
     ).toContain("--skip-git-repo-check");

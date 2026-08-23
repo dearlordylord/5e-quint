@@ -319,8 +319,6 @@ async function runCodexJson<A, I>(
             `model_reasoning_effort=${JSON.stringify(execution.reasoningEffort)}`,
             "--output-schema",
             schemaPath,
-            "--output-last-message",
-            outputPath,
             prompt,
           ],
           cwd: repoRoot,

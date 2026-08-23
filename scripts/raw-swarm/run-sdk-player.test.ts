@@ -13,6 +13,16 @@ import {
 } from "./model-telemetry.ts";
 
 describe("SDK player invocation lifecycle", () => {
+  async function waitForFile(path: string, timeoutMilliseconds = 1_000) {
+    const deadline = Date.now() + timeoutMilliseconds;
+    while (!existsSync(path) && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (!existsSync(path)) {
+      throw new Error(`Timed out waiting for readiness file: ${path}`);
+    }
+  }
+
   test("retains a terminal obstruction when the model exits nonzero", () => {
     const result = reconcilePlayerInvocation(
       {
@@ -83,7 +93,7 @@ describe("SDK player invocation lifecycle", () => {
       process.execPath,
       [
         "-e",
-        'require("node:fs").writeFileSync(process.env.RAW_SUPERVISOR_READY, "ready"); process.on("SIGTERM", () => {}); setInterval(() => {}, 10000);',
+        'process.on("SIGTERM", () => {}); require("node:fs").writeFileSync(process.env.RAW_SUPERVISOR_READY, "ready"); setInterval(() => {}, 10000);',
       ],
       {
         env: { ...process.env, RAW_SUPERVISOR_READY: readyPath },
@@ -92,11 +102,7 @@ describe("SDK player invocation lifecycle", () => {
       },
     );
     try {
-      const deadline = Date.now() + 1_000;
-      while (!existsSync(readyPath) && Date.now() < deadline) {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }
-      expect(existsSync(readyPath)).toBe(true);
+      await waitForFile(readyPath);
       const termination = await terminateOwnedProcess(supervisor, {
         detached: process.platform !== "win32",
       });
