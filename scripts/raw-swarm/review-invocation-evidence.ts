@@ -31,6 +31,7 @@ import {
   retainedScenarioReviewMatchesReplayBinding,
   retainedScenarioReviewScenarioId,
   retainedScenarioReviewSubject,
+  type RetainedScenarioReviewInput,
 } from "./scenario-review-input.ts";
 import {
   codexOutputJsonSchema,
@@ -146,19 +147,16 @@ function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
  * Binds one retained original composite-review envelope to the event stream
  * and current ledger row that produced it. The event authority remains separate
  * from the envelope authority so callers cannot substitute a copied ledger
- * row or result while retaining the original input path.
+ * row or result after the envelope has been parsed.
  */
 export function validateRetainedScenarioReviewInvocationEvidence(input: {
-  readonly retainedInputPath: string;
+  readonly retainedInput: RetainedScenarioReviewInput;
   readonly eventAuthority: ArtifactAuthority;
   readonly events: readonly unknown[];
   readonly reviewStage: "milestone" | "final";
   readonly ledgerEntry: ModelInvocationLedgerEntry;
 }): ArtifactAuthority {
-  const retained = retainedReviewInput(
-    input.retainedInputPath,
-    input.reviewStage,
-  );
+  const retained = input.retainedInput;
   const subject = retainedScenarioReviewSubject(retained);
   const binding =
     subject.tag === "scenarioCandidate"
@@ -443,7 +441,7 @@ function deriveManifest(input: {
     )(output);
     if (entry !== undefined && events !== undefined) {
       validateRetainedScenarioReviewInvocationEvidence({
-        retainedInputPath: replayInputPath,
+        retainedInput: replayInput,
         eventAuthority: events.authority,
         events: events.events,
         reviewStage,
