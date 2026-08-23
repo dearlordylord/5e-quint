@@ -29,10 +29,12 @@ import {
   type TokenCount,
 } from "./model-telemetry.ts";
 import {
+  canonicalFindingAuthoritySnapshotForBytes,
   FindingsProjectionSchema,
   findingsSdkCallCount,
   findingsTranscriptSha256,
   validateFindingsProjection,
+  type CanonicalFindingAuthoritySnapshot,
   type Finding,
   type FindingsProjection,
 } from "./findings.ts";
@@ -2960,10 +2962,10 @@ export function assembleCompletePathMeasurement(
     ]);
     const findingsValidation = validateFindingsProjection(
       findingsDecoded.right,
-      {
-        readAuthorityBytes: (path) =>
-          findingAuthorityBytes(eventAuthorityCache, path),
-      },
+      findingAuthoritySnapshots(
+        eventAuthorityCache,
+        findingsDecoded.right.authorities,
+      ),
     );
     if (findingsValidation.tag === "invalid") {
       return Either.left(
@@ -3122,17 +3124,19 @@ function eventAuthoritySnapshotAtPath(
     : entry.parsed;
 }
 
-function findingAuthorityBytes(
+function findingAuthoritySnapshots(
   snapshots: EventAuthoritySnapshotCache,
-  path: string,
-): Either.Either<Uint8Array, string> {
-  const entry = snapshots.get(eventAuthorityCacheKey(path));
-  if (entry !== undefined) return entry.rawContents;
-  try {
-    return Either.right(readFileSync(resolve(repoRoot, path)));
-  } catch {
-    return Either.left(`Finding authority is unreadable: ${path}.`);
-  }
+  authorities: readonly FindingAuthority[],
+): readonly CanonicalFindingAuthoritySnapshot[] {
+  return authorities.flatMap((authority) => {
+    const entry = snapshots.get(eventAuthorityCacheKey(authority.path));
+    if (entry === undefined || Either.isLeft(entry.rawContents)) return [];
+    const snapshot = canonicalFindingAuthoritySnapshotForBytes(
+      authority,
+      entry.rawContents.right,
+    );
+    return Either.isRight(snapshot) ? [snapshot.right] : [];
+  });
 }
 
 function eventAuthorityPathsForMeasurement(
@@ -3878,10 +3882,13 @@ function currentAuthorityIssues(
       }),
     );
   }
-  const findingsValidation = validateFindingsProjection(measurement.findings, {
-    readAuthorityBytes: (path) =>
-      findingAuthorityBytes(eventAuthorityCache, path),
-  });
+  const findingsValidation = validateFindingsProjection(
+    measurement.findings,
+    findingAuthoritySnapshots(
+      eventAuthorityCache,
+      measurement.findings.authorities,
+    ),
+  );
   if (findingsValidation.tag === "invalid") {
     issues.push(`Findings authority is invalid: ${findingsValidation.message}`);
     return issues;
@@ -5222,10 +5229,13 @@ function benchmarkAuthorityIssues(
     }
   }
 
-  const findingsValidation = validateFindingsProjection(measurement.findings, {
-    readAuthorityBytes: (path) =>
-      findingAuthorityBytes(eventAuthorityCache, path),
-  });
+  const findingsValidation = validateFindingsProjection(
+    measurement.findings,
+    findingAuthoritySnapshots(
+      eventAuthorityCache,
+      measurement.findings.authorities,
+    ),
+  );
   if (findingsValidation.tag === "invalid") {
     issues.push(`Findings authority is invalid: ${findingsValidation.message}`);
   } else {

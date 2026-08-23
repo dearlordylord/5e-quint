@@ -739,6 +739,57 @@ describe("Raw Swarm findings projection", () => {
     expect(authorityFor(source.right)).toEqual(original);
   });
 
+  test("public validation cannot substitute an arbitrary authority reader", () => {
+    const input = fixture();
+    const projection = projectExecutionFindings({
+      transcriptPath: input.transcriptRelative,
+      evidenceSetDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [],
+      issueLinks: [],
+    });
+    const originalBytes = new Map(
+      projection.authorities.map((authority) => [
+        authority.path,
+        readFileSync(resolve(repoRoot, authority.path)),
+      ]),
+    );
+    const executionAuthority = projection.authorities.find(
+      (authority) => authority.role === "executionStart",
+    );
+    expect(executionAuthority).toBeDefined();
+    if (executionAuthority === undefined) return;
+    const executionPath = resolve(repoRoot, executionAuthority.path);
+    writeFileSync(
+      executionPath,
+      `${originalBytes.get(executionAuthority.path)!.toString()}\n`,
+    );
+
+    const validation = Reflect.apply(validateFindingsProjection, undefined, [
+      projection,
+      {
+        readAuthorityBytes: (path: string) =>
+          Either.right(originalBytes.get(path) ?? new Uint8Array()),
+      },
+    ]);
+    expect(validation).toMatchObject({
+      tag: "invalid",
+      message: /authority hash does not match/,
+    });
+
+    writeFileSync(executionPath, originalBytes.get(executionAuthority.path)!);
+    const forgedSnapshot = Reflect.apply(
+      validateFindingsProjection,
+      undefined,
+      [projection, [{ path: executionAuthority.path }]],
+    );
+    expect(forgedSnapshot).toMatchObject({
+      tag: "invalid",
+      message: /snapshot is not canonical/,
+    });
+  });
+
   test("projects a zero-exit invalid last message as a generation invocation failure", () => {
     const root = directory();
     const ledgerPath = retainedGenerationReviewLedger(root);

@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Either, Match, Schema } from "effect";
 
 import { ScenarioCompositeReviewSchema } from "./scenario-campaign.ts";
 import {
@@ -102,9 +102,14 @@ export type RetainedScenarioReviewInput = Schema.Schema.Type<
 export function retainedScenarioReviewSubject(
   input: RetainedScenarioReviewInput,
 ): RetainedScenarioReviewSubject | HistoricalRetainedScenarioReviewSubject {
-  return input.schemaVersion === 2
-    ? { tag: "scenario", scenarioId: input.scenarioId }
-    : input.subject;
+  return Match.value(input).pipe(
+    Match.when(
+      { schemaVersion: 2 },
+      ({ scenarioId }) => ({ tag: "scenario", scenarioId }) as const,
+    ),
+    Match.when({ schemaVersion: 3 }, ({ subject }) => subject),
+    Match.exhaustive,
+  );
 }
 
 export function retainedScenarioReviewScenarioId(
@@ -339,12 +344,12 @@ function replayLedgerSchemaVersion(
     return Either.right(ledgerEntry.schemaVersion);
   }
   if (ledgerEntry.schemaVersion !== 4 && ledgerEntry.schemaVersion !== 5) {
-    const lifecycle =
-      input.schemaVersion === 3 && input.subject.tag === "scenarioCandidate"
-        ? "Candidate"
-        : input.schemaVersion === 3 && input.subject.tag === "benchmark"
-          ? "benchmark"
-          : "Scenario";
+    const lifecycle = Match.value(input.subject).pipe(
+      Match.when({ tag: "scenarioCandidate" }, () => "Candidate" as const),
+      Match.when({ tag: "benchmark" }, () => "benchmark" as const),
+      Match.when({ tag: "scenario" }, () => "Scenario" as const),
+      Match.exhaustive,
+    );
     return Either.left(
       `Current ${lifecycle} review invocation ${invocationId} requires current ledger evidence.`,
     );
@@ -417,14 +422,18 @@ export function retainedScenarioReviewMatchesReplayBinding(
     );
   }
   const subject = retainedScenarioReviewSubject(input);
-  const inputTag =
-    input.schemaVersion === 2
-      ? "historicalScenario"
-      : subject.tag === "scenarioCandidate"
-        ? "candidate"
-        : subject.tag === "benchmark"
-          ? "benchmark"
-          : "scenario";
+  const inputTag = Match.value(input.schemaVersion).pipe(
+    Match.when(2, () => "historicalScenario" as const),
+    Match.when(3, () =>
+      Match.value(subject).pipe(
+        Match.when({ tag: "scenarioCandidate" }, () => "candidate" as const),
+        Match.when({ tag: "benchmark" }, () => "benchmark" as const),
+        Match.when({ tag: "scenario" }, () => "scenario" as const),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
   if (
     (expected.tag === "candidate" && inputTag !== "candidate") ||
     ((expected.tag === "scenario" || expected.tag === "historicalScenario") &&
@@ -465,24 +474,49 @@ export function retainedScenarioReviewMatchesReplayBinding(
     );
   }
 
-  const envelopeScenarioReference =
-    subject.tag === "scenarioCandidate"
-      ? subject.plannedScenarioId
-      : subject.scenarioId;
+  const envelopeScenarioReference = Match.value(subject).pipe(
+    Match.when(
+      { tag: "scenarioCandidate" },
+      ({ plannedScenarioId }) => plannedScenarioId,
+    ),
+    Match.when({ tag: "scenario" }, ({ scenarioId }) => scenarioId),
+    Match.when({ tag: "benchmark" }, ({ scenarioId }) => scenarioId),
+    Match.exhaustive,
+  );
   const ledgerScenarioReference = modelInvocationScenarioReference(ledgerEntry);
+  const expectedScenarioReference = Match.value(input).pipe(
+    Match.when({ schemaVersion: 2 }, ({ scenarioId }) => scenarioId),
+    Match.when({ schemaVersion: 3 }, () => envelopeScenarioReference),
+    Match.exhaustive,
+  );
   if (
-    String(
-      input.schemaVersion === 2 ? input.scenarioId : envelopeScenarioReference,
-    ) !== String(expected.scenarioId) ||
+    String(expectedScenarioReference) !== String(expected.scenarioId) ||
     String(ledgerScenarioReference) !== String(expected.scenarioId)
   ) {
-    return Either.left(
-      input.schemaVersion === 2
-        ? expected.reviewStage === "final"
-          ? `${String(envelopeScenarioReference)} does not match admitted scenario ${String(expected.scenarioId)}.`
-          : `Historical review invocation ${input.invocationId} does not match the expected scenario identity.`
-        : `Review invocation ${input.invocationId} does not match the expected scenario identity.`,
+    const mismatchMessage = Match.value(input).pipe(
+      Match.when({ schemaVersion: 2 }, () =>
+        Match.value(expected.reviewStage).pipe(
+          Match.when(
+            "final",
+            () =>
+              `${String(envelopeScenarioReference)} does not match admitted scenario ${String(expected.scenarioId)}.`,
+          ),
+          Match.when(
+            "milestone",
+            () =>
+              `Historical review invocation ${input.invocationId} does not match the expected scenario identity.`,
+          ),
+          Match.exhaustive,
+        ),
+      ),
+      Match.when(
+        { schemaVersion: 3 },
+        () =>
+          `Review invocation ${input.invocationId} does not match the expected scenario identity.`,
+      ),
+      Match.exhaustive,
     );
+    return Either.left(mismatchMessage);
   }
 
   const ledgerSchemaVersion = replayLedgerSchemaVersion(
@@ -527,8 +561,17 @@ export function retainedScenarioReviewMatchesReplayBinding(
       subject.evidenceSetId !== expected.campaign.evidenceSetId ||
       subject.plannedScenarioId !== expected.campaign.plannedScenarioId
     ) {
+      const candidateIdentity = Match.value(subject).pipe(
+        Match.when(
+          { tag: "scenarioCandidate" },
+          ({ candidateId }) => candidateId,
+        ),
+        Match.when({ tag: "scenario" }, () => input.invocationId),
+        Match.when({ tag: "benchmark" }, () => input.invocationId),
+        Match.exhaustive,
+      );
       return Either.left(
-        `Review Candidate ${subject.tag === "scenarioCandidate" ? subject.candidateId : input.invocationId} does not belong to the expected Campaign, Evidence Set, and planned Scenario.`,
+        `Review Candidate ${candidateIdentity} does not belong to the expected Campaign, Evidence Set, and planned Scenario.`,
       );
     }
   }
