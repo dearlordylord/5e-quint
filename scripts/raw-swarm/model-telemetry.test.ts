@@ -164,6 +164,17 @@ describe("Raw Swarm model invocation telemetry", () => {
     }
   });
 
+  test("rejects a non-positive timeout instead of disabling the boundary", () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-invalid-timeout-"));
+    try {
+      expect(() => runCodexInvocation(fakeInvocationInput(root, 0))).toThrow(
+        "positive integer",
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("retains a schema-decoded last message before recording success", () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-valid-output-"));
     const codex = resolve(root, "codex");

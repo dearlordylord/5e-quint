@@ -84,6 +84,10 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(0),
 );
+const PositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThan(0),
+);
 const TokenCountSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("available"),
@@ -167,7 +171,7 @@ const ModelInvocationExitSchema = Schema.Union(
   }),
   Schema.Struct({
     tag: Schema.Literal("timedOut"),
-    timeoutMilliseconds: NonNegativeIntegerSchema,
+    timeoutMilliseconds: PositiveIntegerSchema,
   }),
 );
 
@@ -1350,6 +1354,18 @@ function processWasTimedOut(error: Error | undefined): boolean {
   return error !== undefined && "code" in error && error.code === "ETIMEDOUT";
 }
 
+function modelInvocationTimeoutMilliseconds(value: number | undefined): number {
+  const decoded = Schema.decodeUnknownEither(PositiveIntegerSchema)(
+    value === undefined ? MODEL_INVOCATION_TIMEOUT_MILLISECONDS : value,
+  );
+  if (Either.isLeft(decoded)) {
+    throw new Error(
+      `Model invocation timeout must be a positive integer: ${decoded.left.message}`,
+    );
+  }
+  return decoded.right;
+}
+
 function runCodexProcess<A>(input: {
   readonly args: readonly [string, ...string[]];
   readonly cwd: string;
@@ -1513,8 +1529,9 @@ export function runCodexInvocation<A = unknown>(input: {
     startedMilliseconds,
     model: input.model,
     reasoningEffort: input.reasoningEffort,
-    timeoutMilliseconds:
-      input.timeoutMilliseconds ?? MODEL_INVOCATION_TIMEOUT_MILLISECONDS,
+    timeoutMilliseconds: modelInvocationTimeoutMilliseconds(
+      input.timeoutMilliseconds,
+    ),
     ...(input.expectedLastMessage === undefined
       ? {}
       : { expectedLastMessage: input.expectedLastMessage }),
@@ -1608,8 +1625,9 @@ export function runBenchmarkAuxiliaryInvocation<A = unknown>(input: {
       startedMilliseconds,
       model: input.model,
       reasoningEffort: input.reasoningEffort,
-      timeoutMilliseconds:
-        input.timeoutMilliseconds ?? MODEL_INVOCATION_TIMEOUT_MILLISECONDS,
+      timeoutMilliseconds: modelInvocationTimeoutMilliseconds(
+        input.timeoutMilliseconds,
+      ),
       ...(input.expectedLastMessage === undefined
         ? {}
         : { expectedLastMessage: input.expectedLastMessage }),
