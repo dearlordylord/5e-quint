@@ -165,6 +165,77 @@ describe("Raw Swarm model invocation telemetry", () => {
     }
   });
 
+  test("retains typed timeout evidence when a child leaves a partial JSONL line", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-partial-timeout-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      `#!/bin/sh
+printf '{"type":"turn.started"}\n{"type":"turn.completed"'
+exec ${process.execPath} -e 'setTimeout(() => {}, 1000)'
+`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root, 25);
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: { tag: "timedOut", timeoutMilliseconds: 25 },
+        cause: { tag: "codex" },
+      });
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          schemaVersion: 5,
+          exit: { tag: "timedOut", timeoutMilliseconds: 25 },
+          result: { tag: "failed", failureKind: "codexEvent" },
+        },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("records a typed current event-decode failure without a timeout", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-partial-exit-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      `#!/bin/sh
+printf '{"type":"turn.completed"'
+exit 7
+`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: { tag: "exited", status: 7 },
+        cause: { tag: "codex" },
+      });
+      expect(
+        parseModelInvocationLedgerEntry(
+          JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+        ),
+      ).toMatchObject({
+        _tag: "Right",
+        right: {
+          schemaVersion: 5,
+          exit: { tag: "exited", status: 7 },
+          result: { tag: "failed", failureKind: "codexEvent" },
+        },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("escalates a TERM-ignoring child to KILL without leaving a process behind", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-term-ignore-"));
     const codex = resolve(root, "codex");

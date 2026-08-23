@@ -181,7 +181,9 @@ function currentInvocationResultMatchesExit(input: {
     input.exit.status === 0;
   if (!succeeded) {
     return (
-      input.result.tag === "failed" && input.result.failureKind === undefined
+      input.result.tag === "failed" &&
+      (input.result.failureKind === undefined ||
+        input.result.failureKind === "codexEvent")
     );
   }
   return (
@@ -975,6 +977,17 @@ function analyzeCodexEvents(
   });
 }
 
+function codexEventDecodeFailure(message: string): CodexEventAnalysis {
+  return {
+    failureReason: Option.some(message),
+    result: {
+      tag: "failed",
+      reason: message,
+      failureKind: "codexEvent",
+    },
+  };
+}
+
 /** Bind process outcome to first-party failure detail when Codex supplies it. */
 export function modelInvocationResultFromCodexEvents(
   exit: Schema.Schema.Type<typeof CurrentModelInvocationExitSchema>,
@@ -1075,7 +1088,11 @@ export type CodexEventReadResultWithSource =
       readonly events: readonly unknown[];
       readonly rawContents: Buffer;
     }
-  | Extract<CodexEventReadResult, { readonly tag: "invalid" }>;
+  | (Extract<CodexEventReadResult, { readonly tag: "invalid" }> & {
+      /** Bytes and successfully decoded prefix retained for typed failure evidence. */
+      readonly rawContents: Buffer;
+      readonly events: readonly unknown[];
+    });
 
 export function readCodexEventsWithSource(
   path: string,
@@ -1093,6 +1110,8 @@ export function readCodexEventsWithSource(
         tag: "invalid",
         line: index + 1,
         message: `Codex event line ${index + 1} is malformed JSON.`,
+        rawContents,
+        events,
       };
     }
   }
@@ -2558,27 +2577,25 @@ async function runCodexProcess<A, E extends object>(input: {
             } satisfies ModelInvocationProcess);
       const exit = processOutcome;
       const retainedEvents = readCodexEventsWithSource(input.eventPath);
-      if (retainedEvents.tag === "invalid") {
-        throw new Error(retainedEvents.message);
-      }
       const events = retainedEvents.events;
-      const codexEventAnalysis = analyzeCodexEvents(exit, events);
-      if (Either.isLeft(codexEventAnalysis)) {
-        throw new Error(
-          `Cannot derive Codex invocation result: ${codexEventAnalysis.left}`,
-        );
-      }
-      const lifecycle = invocationLifecycleFromProcess({
+      const codexEventAnalysis =
+        retainedEvents.tag === "invalid"
+          ? Either.right(codexEventDecodeFailure(retainedEvents.message))
+          : analyzeCodexEvents(exit, events);
+      const analysis = Either.isLeft(codexEventAnalysis)
+        ? codexEventDecodeFailure(codexEventAnalysis.left)
+        : codexEventAnalysis.right;
+      let lifecycle = invocationLifecycleFromProcess({
         process: processOutcome,
-        codexEventAnalysis: codexEventAnalysis.right,
+        codexEventAnalysis: analysis,
         operation: input.operation,
         ...(typeof outputClaim === "string" || outputClaim === undefined
           ? {}
           : { expectedOutputClaimToken: outputClaim.token }),
       });
-      const result = modelInvocationResultFromLifecycle(
+      let result = modelInvocationResultFromLifecycle(
         lifecycle,
-        codexEventAnalysis.right.result,
+        analysis.result,
       );
       const completedEvent = input.completionEvent({
         elapsedMilliseconds: Date.now() - input.startedMilliseconds,
@@ -2590,20 +2607,45 @@ async function runCodexProcess<A, E extends object>(input: {
           `${input.completionErrorPrefix}: ${completedEvent.left.message}`,
         );
       }
+      let completed = completedEvent.right;
+      let evidence = input.evidenceFromEvents([...events, completed]);
+      if (evidence.tag === "invalid") {
+        const fallbackAnalysis = codexEventDecodeFailure(evidence.message);
+        lifecycle = invocationLifecycleFromProcess({
+          process: processOutcome,
+          codexEventAnalysis: fallbackAnalysis,
+          operation: input.operation,
+          ...(typeof outputClaim === "string" || outputClaim === undefined
+            ? {}
+            : { expectedOutputClaimToken: outputClaim.token }),
+        });
+        result = modelInvocationResultFromLifecycle(
+          lifecycle,
+          fallbackAnalysis.result,
+        );
+        const fallbackCompletedEvent = input.completionEvent({
+          elapsedMilliseconds: Date.now() - input.startedMilliseconds,
+          exit,
+          result,
+        });
+        if (Either.isLeft(fallbackCompletedEvent)) {
+          throw new Error(
+            `${input.completionErrorPrefix}: ${fallbackCompletedEvent.left.message}`,
+          );
+        }
+        completed = fallbackCompletedEvent.right;
+        evidence = input.evidenceFromEvents([input.startedEvent, completed]);
+      }
+      if (evidence.tag === "invalid") {
+        throw new Error(evidence.message);
+      }
       const completionSeparator =
         retainedEvents.rawContents.length === 0 ||
         retainedEvents.rawContents.at(-1) === 0x0a
           ? ""
           : "\n";
-      const completionLine = `${completionSeparator}${JSON.stringify(completedEvent.right)}\n`;
+      const completionLine = `${completionSeparator}${JSON.stringify(completed)}\n`;
       writeSync(eventFd, completionLine);
-      const evidence = input.evidenceFromEvents([
-        ...events,
-        completedEvent.right,
-      ]);
-      if (evidence.tag === "invalid") {
-        throw new Error(evidence.message);
-      }
       return {
         lifecycle,
         evidence: evidence.entry,

@@ -5,6 +5,7 @@ import { Either, Match, ParseResult, Schema } from "effect";
 
 import {
   artifactAuthority,
+  artifactAuthorityForBytes,
   ArtifactAuthoritySchema,
   readJsonLines,
   type ArtifactAuthority,
@@ -21,6 +22,7 @@ import {
   modelInvocationScenarioReference,
   parseModelInvocationLedgerEntry,
   readCodexEvents,
+  readCodexEventsWithSource,
   type ModelInvocationLedgerEntry,
   type CurrentModelInvocationLedgerEntry,
   type ModelInvocationPhase,
@@ -58,7 +60,9 @@ export {
 import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
+  retainedScenarioReviewSubject,
   type RetainedScenarioReviewCampaignIdentity,
+  type RetainedScenarioReviewBenchmarkIdentity,
   type RetainedScenarioReviewReplayBinding,
 } from "./scenario-review-input.ts";
 import {
@@ -3158,6 +3162,38 @@ function candidateReplayInvocations(
   );
 }
 
+type BenchmarkReplayInvocation = CurrentModelInvocationLedgerEntry &
+  Readonly<{
+    readonly phase: "scenarioCompositeReview";
+    readonly subject: Extract<
+      CurrentModelInvocationLedgerEntry["subject"],
+      { readonly tag: "benchmark" }
+    >;
+  }>;
+
+function benchmarkReplayInvocations(
+  invocations: readonly BenchmarkInvocation[],
+): readonly BenchmarkReplayInvocation[] {
+  return invocations.filter(
+    (invocation): invocation is BenchmarkReplayInvocation =>
+      !("responsibility" in invocation) &&
+      invocation.phase === "scenarioCompositeReview" &&
+      invocation.subject.tag === "benchmark",
+  );
+}
+
+function replayBenchmarkIdentityForMeasurement(measurement: {
+  readonly invocations: readonly BenchmarkInvocation[];
+}): RetainedScenarioReviewBenchmarkIdentity | undefined {
+  const invocation = benchmarkReplayInvocations(measurement.invocations)[0];
+  return invocation === undefined
+    ? undefined
+    : {
+        benchmarkId: invocation.subject.benchmarkId,
+        profile: invocation.subject.profile,
+      };
+}
+
 function replayCampaignIdentityForMeasurement(measurement: {
   readonly invocations: readonly BenchmarkInvocation[];
 }): RetainedScenarioReviewCampaignIdentity | undefined {
@@ -4258,6 +4294,11 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
   const candidateInvocations = candidateReplayInvocations(
     measurement.invocations,
   );
+  const benchmarkInvocations = benchmarkReplayInvocations(
+    measurement.invocations,
+  );
+  const expectedReplayBenchmark =
+    replayBenchmarkIdentityForMeasurement(measurement);
   const expectedReplayCampaign =
     replayCampaignIdentityForFindings(findings, issues) ??
     replayCampaignIdentityForMeasurement(measurement);
@@ -4277,6 +4318,19 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     ) {
       issues.push(
         `Benchmark Candidate ${candidateInvocation.subject.candidateId} does not belong to one Campaign, Evidence Set, and planned Scenario identity.`,
+      );
+    }
+  }
+  for (const benchmarkInvocation of benchmarkInvocations) {
+    if (
+      expectedReplayBenchmark === undefined ||
+      benchmarkInvocation.subject.benchmarkId !==
+        expectedReplayBenchmark.benchmarkId ||
+      benchmarkInvocation.subject.profile !== expectedReplayBenchmark.profile ||
+      benchmarkInvocation.subject.scenarioId !== measurement.scenarioId
+    ) {
+      issues.push(
+        `Benchmark invocation ${benchmarkInvocation.invocationId} does not belong to the measured benchmark identity.`,
       );
     }
   }
@@ -4381,10 +4435,17 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       );
       continue;
     }
+    const replaySubject = retainedScenarioReviewSubject(replay.right);
+    const replayScenarioId =
+      replaySubject.tag === "scenarioCandidate"
+        ? replaySubject.plannedScenarioId
+        : replaySubject.scenarioId;
+    const replayLifecycleValid =
+      (replay.right.schemaVersion === 2 || replaySubject.tag === "benchmark") &&
+      replay.right.reviewStage === reviewStage;
     const replayIdentityValid =
-      replay.right.schemaVersion === 2 &&
-      replay.right.reviewStage === reviewStage &&
-      String(replay.right.scenarioId) === String(measurement.scenarioId) &&
+      replayLifecycleValid &&
+      String(replayScenarioId) === String(measurement.scenarioId) &&
       replay.right.sourceGitSha === measurement.implementationGitSha &&
       canonicalJson(replay.right.outputJsonSchema) ===
         canonicalJson(expectedOutputJsonSchema);
@@ -4400,53 +4461,75 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     );
     const candidateInvocation =
       invocation !== undefined &&
-      invocation.schemaVersion === 4 &&
+      (invocation.schemaVersion === 4 || invocation.schemaVersion === 5) &&
       invocation.phase === "scenarioCompositeReview" &&
       invocation.subject.tag === "scenarioCandidate"
+        ? invocation
+        : undefined;
+    const benchmarkInvocation =
+      invocation !== undefined &&
+      (invocation.schemaVersion === 4 || invocation.schemaVersion === 5) &&
+      invocation.phase === "scenarioCompositeReview" &&
+      invocation.subject.tag === "benchmark"
         ? invocation
         : undefined;
     const binding =
       invocation === undefined ||
       "responsibility" in invocation ||
-      invocation.schemaVersion !== 4 ||
+      (invocation.schemaVersion !== 4 && invocation.schemaVersion !== 5) ||
       invocation.phase !== "scenarioCompositeReview"
         ? Either.left("No matching composite-review invocation was retained.")
-        : candidateInvocation !== undefined
-          ? expectedReplayCampaign === undefined
+        : benchmarkInvocation !== undefined
+          ? expectedReplayBenchmark === undefined
             ? Either.left(
-                "Historical benchmark Candidate replay requires Campaign, Evidence Set, and planned Scenario identity.",
+                "Benchmark replay requires a benchmark lifecycle identity.",
               )
-            : expectedScenarioSha256 === undefined
+            : retainedScenarioReviewMatchesReplayBinding(
+                replay.right,
+                invocation,
+                {
+                  tag: "benchmark",
+                  reviewStage,
+                  scenarioId: measurement.scenarioId,
+                  benchmark: expectedReplayBenchmark,
+                },
+              )
+          : candidateInvocation !== undefined
+            ? expectedReplayCampaign === undefined
               ? Either.left(
-                  "Historical benchmark Candidate replay requires an admitted Scenario source hash.",
+                  "Historical benchmark Candidate replay requires Campaign, Evidence Set, and planned Scenario identity.",
                 )
-              : retainedScenarioReviewMatchesReplayBinding(
-                  replay.right,
-                  invocation,
-                  reviewStage === "final"
-                    ? {
-                        tag: "historicalScenario",
-                        reviewStage: "final",
-                        scenarioId: measurement.scenarioId,
-                        admittedScenarioSha256: expectedScenarioSha256,
-                        campaign: expectedReplayCampaign,
-                      }
-                    : {
-                        tag: "historicalScenario",
-                        reviewStage: "milestone",
-                        scenarioId: measurement.scenarioId,
-                        campaign: expectedReplayCampaign,
-                      },
-                )
-          : retainedScenarioReviewMatchesReplayBinding(
-              replay.right,
-              invocation,
-              {
-                tag: "scenario",
-                reviewStage,
-                scenarioId: measurement.scenarioId,
-              },
-            );
+              : expectedScenarioSha256 === undefined
+                ? Either.left(
+                    "Historical benchmark Candidate replay requires an admitted Scenario source hash.",
+                  )
+                : retainedScenarioReviewMatchesReplayBinding(
+                    replay.right,
+                    invocation,
+                    reviewStage === "final"
+                      ? {
+                          tag: "historicalScenario",
+                          reviewStage: "final",
+                          scenarioId: measurement.scenarioId,
+                          admittedScenarioSha256: expectedScenarioSha256,
+                          campaign: expectedReplayCampaign,
+                        }
+                      : {
+                          tag: "historicalScenario",
+                          reviewStage: "milestone",
+                          scenarioId: measurement.scenarioId,
+                          campaign: expectedReplayCampaign,
+                        },
+                  )
+            : retainedScenarioReviewMatchesReplayBinding(
+                replay.right,
+                invocation,
+                {
+                  tag: "scenario",
+                  reviewStage,
+                  scenarioId: measurement.scenarioId,
+                },
+              );
     if (Either.isLeft(binding)) {
       issues.push(
         `Benchmark ${reviewStage} pre-play replay event authority does not match its retained composite-review invocation: ${binding.left}`,
@@ -4461,15 +4544,24 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       );
     } else {
       try {
-        const parsedEvents = readCodexEvents(
+        const parsedEvents = readCodexEventsWithSource(
           resolve(repoRoot, replayEventsAuthority.path),
         );
         if (parsedEvents.tag === "invalid") {
           throw new Error(parsedEvents.message);
         }
+        const eventAuthority = artifactAuthorityForBytes(
+          replayEventsAuthority.path,
+          parsedEvents.rawContents,
+        );
+        if (eventAuthority.sha256 !== replayEventsAuthority.sha256) {
+          throw new Error(
+            `Benchmark ${reviewStage} pre-play replay event authority changed while it was being read.`,
+          );
+        }
         validateRetainedScenarioReviewInvocation({
           binding: binding.right,
-          eventSha256: replayEventsAuthority.sha256,
+          eventSha256: eventAuthority.sha256,
           events: parsedEvents.events,
         });
       } catch (error: unknown) {

@@ -82,6 +82,7 @@ import {
 import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewScenarioId,
+  retainedScenarioReviewSubject,
 } from "./scenario-review-input.ts";
 import {
   buildScenarioCharacterDistribution,
@@ -1592,19 +1593,39 @@ function retainReviewEnvelope(input: {
     outputJsonSchema,
   });
   if (Either.isLeft(valid)) fail(valid.left);
-  const envelope = {
-    schemaVersion: 2 as const,
-    phase: "scenarioCompositeReview" as const,
-    reviewStage: input.stage,
-    scenarioId: fixedScenarioId(),
-    sourceGitSha: input.entry.gitSha,
-    invocationId: input.entry.invocationId,
-    model: input.entry.model,
-    reasoningEffort: input.entry.reasoningEffort,
-    prompt: input.prompt,
-    outputJsonSchema,
-    result: input.result,
-  };
+  const envelope =
+    input.profile === "documentDeclarationSet"
+      ? {
+          schemaVersion: 2 as const,
+          phase: "scenarioCompositeReview" as const,
+          reviewStage: input.stage,
+          scenarioId: fixedScenarioId(),
+          sourceGitSha: input.entry.gitSha,
+          invocationId: input.entry.invocationId,
+          model: input.entry.model,
+          reasoningEffort: input.entry.reasoningEffort,
+          prompt: input.prompt,
+          outputJsonSchema,
+          result: input.result,
+        }
+      : {
+          schemaVersion: 3 as const,
+          phase: "scenarioCompositeReview" as const,
+          reviewStage: input.stage,
+          sourceGitSha: input.entry.gitSha,
+          invocationId: input.entry.invocationId,
+          model: input.entry.model,
+          reasoningEffort: input.entry.reasoningEffort,
+          prompt: input.prompt,
+          outputJsonSchema,
+          result: input.result,
+          subject: {
+            tag: "benchmark" as const,
+            benchmarkId: input.profilePaths.benchmarkId,
+            profile: input.profile,
+            scenarioId: fixedScenarioId(),
+          },
+        };
   const parsed = Schema.decodeUnknownEither(RetainedScenarioReviewInputSchema, {
     onExcessProperty: "error",
   })(envelope);
@@ -2192,10 +2213,14 @@ function eventAuthorityForHash(
 
 function validateRetainedReviewAuthority(
   profile: FixedBenchmarkProfile,
-  path: string,
+  profilePaths: FixedBenchmarkProfilePaths,
   stage: "milestone" | "final",
   implementationGitSha: GitSha,
 ): void {
+  const path =
+    stage === "milestone"
+      ? profilePaths.milestoneReviewInput
+      : profilePaths.finalReviewInput;
   if (!existsSync(path)) fail("Missing retained " + stage + " review input.");
   const parsed = Schema.decodeUnknownEither(RetainedScenarioReviewInputSchema, {
     onExcessProperty: "error",
@@ -2211,6 +2236,20 @@ function validateRetainedReviewAuthority(
     fail(
       "Retained review input is bound to a different scenario, stage, or implementation revision.",
     );
+  }
+  const subject = retainedScenarioReviewSubject(parsed.right);
+  if (profile === "boundedCapabilityProjection") {
+    if (
+      parsed.right.schemaVersion !== 3 ||
+      subject.tag !== "benchmark" ||
+      subject.benchmarkId !== profilePaths.benchmarkId ||
+      subject.profile !== profile ||
+      subject.scenarioId !== FIXED_SCENARIO_ID
+    ) {
+      fail(
+        "Bounded benchmark replay input must retain its typed benchmark lifecycle identity.",
+      );
+    }
   }
   const valid = validateBenchmarkReviewAuthority({
     profile,
@@ -2445,9 +2484,7 @@ function assembleProfile(
   for (const stage of reviewStages) {
     validateRetainedReviewAuthority(
       profile,
-      stage === "milestone"
-        ? paths.milestoneReviewInput
-        : paths.finalReviewInput,
+      paths,
       stage,
       executionProfileDescriptor.right.implementationGitSha,
     );

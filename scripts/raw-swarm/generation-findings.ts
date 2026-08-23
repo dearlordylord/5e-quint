@@ -344,15 +344,17 @@ export function projectGenerationFindings(
           {
             scenarioId: authoredIdentity.scenarioId,
             gitSha: authoredIdentity.gitSha,
-            ...(manifestIdentity.tag === "scenarioCampaign"
-              ? {
-                  campaign: {
-                    campaignId: manifestIdentity.campaignId,
-                    evidenceSetId: manifestIdentity.evidenceSetId,
-                    plannedScenarioId: manifestIdentity.plannedScenarioId,
-                  },
-                }
-              : {}),
+            owner:
+              manifestIdentity.tag === "scenarioCampaign"
+                ? {
+                    tag: "campaign" as const,
+                    campaign: {
+                      campaignId: manifestIdentity.campaignId,
+                      evidenceSetId: manifestIdentity.evidenceSetId,
+                      plannedScenarioId: manifestIdentity.plannedScenarioId,
+                    },
+                  }
+                : { tag: "scenario" as const },
           },
         ),
       );

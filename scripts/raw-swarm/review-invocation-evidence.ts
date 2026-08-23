@@ -23,11 +23,11 @@ import {
 } from "./model-telemetry.ts";
 import {
   finalAgentMessage,
-  retainedReviewInput,
   validateRetainedScenarioReviewInvocation,
 } from "./review-invocation-binding.ts";
 import { reviewInvocationPolicy } from "./review-invocation-policy.ts";
 import {
+  RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
   retainedScenarioReviewScenarioId,
   retainedScenarioReviewSubject,
@@ -143,6 +143,49 @@ function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
   });
 }
 
+type RetainedReviewInputArtifact = Readonly<{
+  readonly input: RetainedScenarioReviewInput;
+  readonly authority: ArtifactAuthority;
+}>;
+
+function retainedReviewInputArtifact(
+  path: string,
+  expectedStage: "milestone" | "final",
+): RetainedReviewInputArtifact {
+  const canonicalPath = canonicalRepositoryReadPath(repoRoot, path);
+  if (Either.isLeft(canonicalPath)) fail(canonicalPath.left);
+  let bytes: Buffer;
+  try {
+    bytes = readFileSync(canonicalPath.right);
+  } catch {
+    fail(`Retained ${expectedStage} review input is unreadable.`);
+  }
+  let value: unknown;
+  try {
+    value = JSON.parse(bytes.toString("utf8"));
+  } catch {
+    fail(`Retained ${expectedStage} review input is malformed JSON.`);
+  }
+  const decoded = Schema.decodeUnknownEither(
+    RetainedScenarioReviewInputSchema,
+    { onExcessProperty: "error" },
+  )(value);
+  if (Either.isLeft(decoded)) {
+    fail(
+      `Retained ${expectedStage} review input is invalid: ${decoded.left.message}`,
+    );
+  }
+  if (decoded.right.reviewStage !== expectedStage) {
+    fail(`Retained ${expectedStage} review input has the wrong stage.`);
+  }
+  const repositoryPath = canonicalRepositoryReadRelativePath(repoRoot, path);
+  if (Either.isLeft(repositoryPath)) fail(repositoryPath.left);
+  return {
+    input: decoded.right,
+    authority: artifactAuthorityForBytes(repositoryPath.right, bytes),
+  };
+}
+
 /**
  * Binds one retained original composite-review envelope to the event stream
  * and current ledger row that produced it. The event authority remains separate
@@ -159,46 +202,62 @@ export function validateRetainedScenarioReviewInvocationEvidence(input: {
   const retained = input.retainedInput;
   const subject = retainedScenarioReviewSubject(retained);
   const binding =
-    subject.tag === "scenarioCandidate"
-      ? input.reviewStage === "final"
-        ? retainedScenarioReviewMatchesReplayBinding(
-            retained,
-            input.ledgerEntry,
-            {
-              tag: "candidate",
-              reviewStage: "final",
-              scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
-              admittedScenarioSha256: subject.candidateScenarioSha256,
-              campaign: {
-                campaignId: subject.campaignId,
-                evidenceSetId: subject.evidenceSetId,
-                plannedScenarioId: subject.plannedScenarioId,
-              },
+    (input.ledgerEntry.schemaVersion === 4 ||
+      input.ledgerEntry.schemaVersion === 5) &&
+    input.ledgerEntry.subject.tag === "benchmark"
+      ? retainedScenarioReviewMatchesReplayBinding(
+          retained,
+          input.ledgerEntry,
+          {
+            tag: "benchmark",
+            reviewStage: input.reviewStage,
+            scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
+            benchmark: {
+              benchmarkId: input.ledgerEntry.subject.benchmarkId,
+              profile: input.ledgerEntry.subject.profile,
             },
-          )
+          },
+        )
+      : subject.tag === "scenarioCandidate"
+        ? input.reviewStage === "final"
+          ? retainedScenarioReviewMatchesReplayBinding(
+              retained,
+              input.ledgerEntry,
+              {
+                tag: "candidate",
+                reviewStage: "final",
+                scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
+                admittedScenarioSha256: subject.candidateScenarioSha256,
+                campaign: {
+                  campaignId: subject.campaignId,
+                  evidenceSetId: subject.evidenceSetId,
+                  plannedScenarioId: subject.plannedScenarioId,
+                },
+              },
+            )
+          : retainedScenarioReviewMatchesReplayBinding(
+              retained,
+              input.ledgerEntry,
+              {
+                tag: "candidate",
+                reviewStage: "milestone",
+                scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
+                campaign: {
+                  campaignId: subject.campaignId,
+                  evidenceSetId: subject.evidenceSetId,
+                  plannedScenarioId: subject.plannedScenarioId,
+                },
+              },
+            )
         : retainedScenarioReviewMatchesReplayBinding(
             retained,
             input.ledgerEntry,
             {
-              tag: "candidate",
-              reviewStage: "milestone",
+              tag: "scenario",
+              reviewStage: input.reviewStage,
               scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
-              campaign: {
-                campaignId: subject.campaignId,
-                evidenceSetId: subject.evidenceSetId,
-                plannedScenarioId: subject.plannedScenarioId,
-              },
             },
-          )
-      : retainedScenarioReviewMatchesReplayBinding(
-          retained,
-          input.ledgerEntry,
-          {
-            tag: "scenario",
-            reviewStage: input.reviewStage,
-            scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
-          },
-        );
+          );
   if (Either.isLeft(binding)) fail(binding.left);
   validateRetainedScenarioReviewInvocation({
     binding: binding.right,
@@ -347,9 +406,23 @@ function deriveManifest(input: {
   if (scenarioReviewEntries.length !== 2) {
     fail("Review invocation evidence requires two pre-play reviews.");
   }
-  const prePlayReplayInputs = input.prePlayReviewPaths.map(
-    ({ replayInputPath }, index) =>
-      retainedReviewInput(replayInputPath, index === 0 ? "milestone" : "final"),
+  const prePlayReviewArtifacts = input.prePlayReviewPaths.map(
+    (paths, index) => {
+      const expectedStage = index === 0 ? "milestone" : "final";
+      return {
+        source: retainedReviewInputArtifact(
+          paths.sourceInputPath,
+          expectedStage,
+        ),
+        replay: retainedReviewInputArtifact(
+          paths.replayInputPath,
+          expectedStage,
+        ),
+      };
+    },
+  );
+  const prePlayReplayInputs = prePlayReviewArtifacts.map(
+    ({ replay }) => replay.input,
   );
   const prePlayReplayInputIds = prePlayReplayInputs.map(
     ({ invocationId }) => invocationId,
@@ -368,13 +441,11 @@ function deriveManifest(input: {
       "Pre-play review inputs must map one-to-one to distinct scenario-review invocations.",
     );
   }
-  const sourceReplayInvocationIds = input.prePlayReviewPaths.flatMap(
-    ({ sourceInputPath, replayInputPath }, index) => {
-      const expectedStage = index === 0 ? "milestone" : "final";
-      const sourceInput = retainedReviewInput(sourceInputPath, expectedStage);
-      const replayInput = retainedReviewInput(replayInputPath, expectedStage);
-      return [sourceInput.invocationId, replayInput.invocationId];
-    },
+  const sourceReplayInvocationIds = prePlayReviewArtifacts.flatMap(
+    ({ source, replay }) => [
+      source.input.invocationId,
+      replay.input.invocationId,
+    ],
   );
   if (
     new Set(sourceReplayInvocationIds).size !== sourceReplayInvocationIds.length
@@ -385,14 +456,13 @@ function deriveManifest(input: {
   }
   const prePlayReview = <Stage extends "milestone" | "final">(
     reviewStage: Stage,
-    paths: {
-      readonly sourceInputPath: string;
-      readonly replayInputPath: string;
+    artifacts: {
+      readonly source: RetainedReviewInputArtifact;
+      readonly replay: RetainedReviewInputArtifact;
     },
   ) => {
-    const { sourceInputPath, replayInputPath } = paths;
-    const sourceInput = retainedReviewInput(sourceInputPath, reviewStage);
-    const replayInput = retainedReviewInput(replayInputPath, reviewStage);
+    const sourceInput = artifacts.source.input;
+    const replayInput = artifacts.replay.input;
     const sourceScenarioId = retainedScenarioReviewScenarioId(sourceInput);
     const replayScenarioId = retainedScenarioReviewScenarioId(replayInput);
     if (Either.isLeft(sourceScenarioId) || Either.isLeft(replayScenarioId)) {
@@ -463,13 +533,13 @@ function deriveManifest(input: {
     }
     return {
       reviewStage,
-      sourceInput: artifactAuthority(sourceInputPath),
-      replayInput: artifactAuthority(replayInputPath),
+      sourceInput: artifacts.source.authority,
+      replayInput: artifacts.replay.authority,
     };
   };
   const prePlayReviews = [
-    prePlayReview("milestone", input.prePlayReviewPaths[0]),
-    prePlayReview("final", input.prePlayReviewPaths[1]),
+    prePlayReview("milestone", prePlayReviewArtifacts[0]!),
+    prePlayReview("final", prePlayReviewArtifacts[1]!),
   ] as const;
   const postPlayEntries = entries.filter(
     ({ phase }) => phase === "postPlayReview",

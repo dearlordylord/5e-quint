@@ -367,6 +367,28 @@ function retainedCandidateCompositeReviewInput(input: {
   };
 }
 
+function retainedBenchmarkCompositeReviewInput(input: {
+  readonly reviewStage: "milestone" | "final";
+  readonly invocationId: string;
+  readonly subject: {
+    readonly tag: "benchmark";
+    readonly benchmarkId: string;
+    readonly profile: "documentDeclarationSet" | "boundedCapabilityProjection";
+    readonly scenarioId: "findings-example";
+  };
+}) {
+  const historical = retainedCompositeReviewInput(input);
+  const { scenarioId: _scenarioId, ...common } = historical;
+  return {
+    ...common,
+    schemaVersion: 3 as const,
+    model: "gpt-5.6-luna" as const,
+    reasoningEffort: "medium" as const,
+    subject: input.subject,
+    result: historical.result,
+  };
+}
+
 type CompositeReviewLedgerSpec = Readonly<{
   readonly invocationId: string;
   readonly reviewStage: "milestone" | "final";
@@ -570,6 +592,105 @@ function retainedGenerationReviewLedger(
   return relative(repoRoot, path);
 }
 
+function retainedBenchmarkReviewLedger(
+  root: string,
+  subject: {
+    readonly tag: "benchmark";
+    readonly benchmarkId: string;
+    readonly profile: "documentDeclarationSet" | "boundedCapabilityProjection";
+    readonly scenarioId: "findings-example";
+  },
+): string {
+  const path = resolve(root, "benchmark-invocations.jsonl");
+  const common = {
+    gitSha: "a".repeat(40),
+    startedAt: "2026-08-18T00:00:00.000Z",
+    elapsedMilliseconds: 10,
+    exit: { tag: "exited" as const, status: 0 },
+    result: { tag: "succeeded" as const },
+    usage: {
+      tag: "unavailable" as const,
+      reason:
+        "The first-party event stream exposed no turn.completed usage object.",
+    },
+  };
+  const entries = [
+    {
+      invocationId: "benchmark-generation",
+      phase: "scenarioGeneration" as const,
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      stagePlanReason: "The fixed benchmark requires generation.",
+    },
+    {
+      invocationId: "benchmark-final",
+      phase: "scenarioCompositeReview" as const,
+      model: "gpt-5.6-luna",
+      reasoningEffort: "medium",
+      stagePlanReason: "The fixed benchmark requires a final review.",
+    },
+  ].map((entry) => {
+    const eventPath = resolve(root, `${entry.invocationId}.events.jsonl`);
+    const events = [
+      {
+        type: "raw-swarm.invocation.started",
+        schemaVersion: 5,
+        subject,
+        gitSha: common.gitSha,
+        phase: entry.phase,
+        stagePlanReason: entry.stagePlanReason,
+        fallbackInvocationId: entry.invocationId,
+        model: entry.model,
+        reasoningEffort: entry.reasoningEffort,
+        startedAt: common.startedAt,
+      },
+      { type: "thread.started", thread_id: entry.invocationId },
+      {
+        type: "item.completed",
+        item: {
+          type: "agent_message",
+          text: JSON.stringify({
+            result: retainedCompositeReviewInput({
+              reviewStage: "final",
+              invocationId: entry.invocationId,
+            }).result,
+          }),
+        },
+      },
+      { type: "turn.completed" },
+      {
+        type: "raw-swarm.invocation.completed",
+        schemaVersion: 5,
+        elapsedMilliseconds: common.elapsedMilliseconds,
+        exit: common.exit,
+        result: common.result,
+      },
+    ];
+    writeFileSync(
+      eventPath,
+      `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
+    );
+    return {
+      schemaVersion: 5 as const,
+      subject,
+      invocationId: entry.invocationId,
+      model: entry.model,
+      reasoningEffort: entry.reasoningEffort,
+      phase: entry.phase,
+      stagePlanReason: entry.stagePlanReason,
+      eventsSha256: createHash("sha256")
+        .update(readFileSync(eventPath))
+        .digest("hex"),
+      ...common,
+    };
+  });
+  writeFileSync(
+    path,
+    `${entries.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
+  );
+  return relative(repoRoot, path);
+}
+
 function findingIdentity(finding: {
   readonly stage: string;
   readonly category: string;
@@ -628,7 +749,11 @@ describe("Raw Swarm findings projection", () => {
 
     const findings = findingsFromGenerationLedger(
       { role: "generationLedger", path: ledgerPath },
-      { scenarioId: "findings-example", gitSha: "a".repeat(40) },
+      {
+        scenarioId: "findings-example",
+        gitSha: "a".repeat(40),
+        owner: { tag: "scenario" },
+      },
     );
     expect(findings).toEqual(
       expect.arrayContaining([
@@ -967,6 +1092,131 @@ describe("Raw Swarm findings projection", () => {
     expect(binding.right).not.toHaveProperty("envelopeSubject");
     expect(binding.right).not.toHaveProperty("ledgerSchemaVersion");
     expect(binding.right).not.toHaveProperty("campaign");
+  });
+
+  test("binds a current v5 fixed-benchmark replay to benchmark lifecycle ownership", () => {
+    const benchmarkSubject = {
+      tag: "benchmark" as const,
+      benchmarkId: "synthetic-fixed-benchmark",
+      profile: "boundedCapabilityProjection" as const,
+      scenarioId: "findings-example",
+    };
+    const ledger = parseModelInvocationLedgerEntry({
+      schemaVersion: 5,
+      subject: benchmarkSubject,
+      invocationId: "benchmark-final",
+      model: "gpt-5.6-luna",
+      reasoningEffort: "medium",
+      phase: "scenarioCompositeReview",
+      stagePlanReason: "The fixed benchmark requires a final review.",
+      gitSha: "a".repeat(40),
+      eventsSha256: "b".repeat(64),
+      startedAt: "2026-08-18T00:00:00.000Z",
+      elapsedMilliseconds: 10,
+      exit: { tag: "exited", status: 0 },
+      result: { tag: "succeeded" },
+      usage: { tag: "unavailable", reason: "synthetic" },
+    });
+    const replay = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )({
+      schemaVersion: 3,
+      phase: "scenarioCompositeReview",
+      reviewStage: "final",
+      sourceGitSha: "a".repeat(40),
+      invocationId: "benchmark-final",
+      model: "gpt-5.6-luna",
+      reasoningEffort: "medium",
+      prompt: "Synthetic fixed benchmark final review.",
+      outputJsonSchema: codexOutputJsonSchema(
+        CurrentScenarioCompositeReviewSchema,
+      ),
+      result: {
+        raw: { classification: "supported", evidence: "RAW." },
+        contentAvailability: {
+          classification: "supplied",
+          evidence: "Catalog.",
+        },
+        sdkCapability: { classification: "supported", evidence: "SDK." },
+        artifactPolicy: { classification: "safe", evidence: "Policy." },
+        scenarioQuality: { classification: "ready", evidence: "Quality." },
+      },
+      subject: benchmarkSubject,
+    });
+    expect(Either.isRight(ledger)).toBe(true);
+    expect(Either.isRight(replay)).toBe(true);
+    if (Either.isLeft(ledger) || Either.isLeft(replay)) return;
+    const binding = retainedScenarioReviewMatchesReplayBinding(
+      replay.right,
+      ledger.right,
+      {
+        tag: "benchmark",
+        reviewStage: "final",
+        scenarioId: "findings-example",
+        benchmark: {
+          benchmarkId: "synthetic-fixed-benchmark",
+          profile: "boundedCapabilityProjection",
+        },
+      },
+    );
+    expect(Either.isRight(binding)).toBe(true);
+    if (Either.isLeft(binding)) return;
+    expect(binding.right).toMatchObject({
+      tag: "benchmark",
+      retainedInput: { subject: benchmarkSubject },
+      ledgerEntry: { schemaVersion: 5, subject: benchmarkSubject },
+    });
+  });
+
+  test("projects a fresh v5 fixed-benchmark replay without a Campaign manifest", () => {
+    const input = fixture();
+    const subject = {
+      tag: "benchmark" as const,
+      benchmarkId: "synthetic-fixed-benchmark",
+      profile: "boundedCapabilityProjection" as const,
+      scenarioId: "findings-example" as const,
+    };
+    const generationLedgerRelative = retainedBenchmarkReviewLedger(
+      input.root,
+      subject,
+    );
+    const finalPath = resolve(input.root, "benchmark-final.json");
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedBenchmarkCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "benchmark-final",
+          subject,
+        }),
+      )}\n`,
+    );
+
+    const projection = projectExecutionFindings({
+      transcriptPath: input.transcriptRelative,
+      evidenceSetDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [generationLedgerRelative],
+      reviewReplay: {
+        tag: "finalOnly",
+        finalPath: relative(repoRoot, finalPath),
+      },
+      issueLinks: [],
+    });
+
+    expect(projection.authorities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ role: "replay-final" }),
+        expect.objectContaining({
+          role: "prePlayReviewReplayEvents-final",
+        }),
+      ]),
+    );
+    expect(projection.authorities.some(({ role }) => role === "campaign")).toBe(
+      false,
+    );
   });
 
   test("accepts a historical envelope paired with migrated v4 Candidate ownership", () => {

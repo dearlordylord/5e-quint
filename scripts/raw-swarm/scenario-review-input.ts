@@ -12,7 +12,9 @@ import {
   EvidenceSetIdSchema,
   PlannedScenarioIdSchema,
   HistoricalScenarioIdSchema,
+  BenchmarkIdSchema,
   type EvidenceSetId,
+  type BenchmarkId,
   type HistoricalScenarioId,
   type PlannedScenarioId,
   type ScenarioCampaignId,
@@ -60,6 +62,15 @@ const RetainedScenarioReviewSubjectSchema = Schema.Union(
     tag: Schema.Literal("scenario"),
     scenarioId: ScenarioIdSchema,
   }),
+  Schema.Struct({
+    tag: Schema.Literal("benchmark"),
+    benchmarkId: BenchmarkIdSchema,
+    profile: Schema.Literal(
+      "documentDeclarationSet",
+      "boundedCapabilityProjection",
+    ),
+    scenarioId: ScenarioIdSchema,
+  }),
 );
 export type RetainedScenarioReviewSubject = Schema.Schema.Type<
   typeof RetainedScenarioReviewSubjectSchema
@@ -103,7 +114,7 @@ export function retainedScenarioReviewScenarioId(
   string
 > {
   const subject = retainedScenarioReviewSubject(input);
-  return subject.tag === "scenario"
+  return subject.tag === "scenario" || subject.tag === "benchmark"
     ? Either.right(subject.scenarioId)
     : Either.left(
         "A Scenario Candidate review reservation cannot satisfy an admitted Scenario identity.",
@@ -118,7 +129,7 @@ export function retainedScenarioReviewMatchesAdmission(
   }>,
 ): Either.Either<ReturnType<typeof retainedScenarioReviewSubject>, string> {
   const subject = retainedScenarioReviewSubject(input);
-  if (subject.tag === "scenario") {
+  if (subject.tag === "scenario" || subject.tag === "benchmark") {
     return subject.scenarioId === admission.scenarioId
       ? Either.right(subject)
       : Either.left(
@@ -154,6 +165,11 @@ export type RetainedScenarioReviewCampaignIdentity = Readonly<{
   readonly campaignId: ScenarioCampaignId;
   readonly evidenceSetId: EvidenceSetId;
   readonly plannedScenarioId: PlannedScenarioId;
+}>;
+
+export type RetainedScenarioReviewBenchmarkIdentity = Readonly<{
+  readonly benchmarkId: BenchmarkId;
+  readonly profile: "documentDeclarationSet" | "boundedCapabilityProjection";
 }>;
 
 export type RetainedScenarioReviewScenarioReference =
@@ -194,6 +210,12 @@ export type RetainedScenarioReviewReplayExpectation =
       /** Hash of the admitted Scenario, never a revised Candidate hash. */
       readonly admittedScenarioSha256: ScenarioReviewSourceSha256;
       readonly campaign: RetainedScenarioReviewCampaignIdentity;
+    }>
+  | Readonly<{
+      readonly tag: "benchmark";
+      readonly reviewStage: RetainedScenarioReviewStage;
+      readonly scenarioId: RetainedScenarioReviewScenarioReference;
+      readonly benchmark: RetainedScenarioReviewBenchmarkIdentity;
     }>;
 
 type CurrentRetainedScenarioReviewInput = Extract<
@@ -218,6 +240,15 @@ type ScenarioRetainedScenarioReviewInput = Omit<
     { readonly tag: "scenario" }
   >;
 };
+type BenchmarkRetainedScenarioReviewInput = Omit<
+  CurrentRetainedScenarioReviewInput,
+  "subject"
+> & {
+  readonly subject: Extract<
+    CurrentRetainedScenarioReviewInput["subject"],
+    { readonly tag: "benchmark" }
+  >;
+};
 type HistoricalRetainedScenarioReviewInput = Extract<
   RetainedScenarioReviewInput,
   { readonly schemaVersion: 2 }
@@ -235,6 +266,12 @@ function isScenarioRetainedScenarioReviewInput(
   return input.schemaVersion === 3 && input.subject.tag === "scenario";
 }
 
+function isBenchmarkRetainedScenarioReviewInput(
+  input: RetainedScenarioReviewInput,
+): input is BenchmarkRetainedScenarioReviewInput {
+  return input.schemaVersion === 3 && input.subject.tag === "benchmark";
+}
+
 type CandidateReplayLedgerEntry = Extract<
   CurrentModelInvocationLedgerEntry,
   {
@@ -249,6 +286,15 @@ type ScenarioReplayLedgerEntry = Extract<
     readonly subject: { readonly tag: "scenario" };
   }
 >;
+type BenchmarkReplayLedgerEntry = CurrentModelInvocationLedgerEntry &
+  Readonly<{
+    readonly schemaVersion: 4 | 5;
+    readonly phase: "scenarioCompositeReview";
+    readonly subject: Extract<
+      CurrentModelInvocationLedgerEntry["subject"],
+      { readonly tag: "benchmark" }
+    >;
+  }>;
 type HistoricalReplayLedgerEntry =
   | Extract<ModelInvocationLedgerEntry, { readonly schemaVersion: 2 }>
   | CandidateReplayLedgerEntry
@@ -269,6 +315,13 @@ export type RetainedScenarioReviewReplayBinding =
       readonly tag: "historicalScenario";
       readonly retainedInput: HistoricalRetainedScenarioReviewInput;
       readonly ledgerEntry: HistoricalReplayLedgerEntry;
+    }>
+  | Readonly<{
+      readonly tag: "benchmark";
+      readonly retainedInput:
+        | BenchmarkRetainedScenarioReviewInput
+        | HistoricalRetainedScenarioReviewInput;
+      readonly ledgerEntry: BenchmarkReplayLedgerEntry;
     }>;
 
 function replayLedgerSchemaVersion(
@@ -289,7 +342,9 @@ function replayLedgerSchemaVersion(
     const lifecycle =
       input.schemaVersion === 3 && input.subject.tag === "scenarioCandidate"
         ? "Candidate"
-        : "Scenario";
+        : input.schemaVersion === 3 && input.subject.tag === "benchmark"
+          ? "benchmark"
+          : "Scenario";
     return Either.left(
       `Current ${lifecycle} review invocation ${invocationId} requires current ledger evidence.`,
     );
@@ -319,6 +374,16 @@ function isScenarioReplayLedgerEntry(
     (entry.schemaVersion === 4 || entry.schemaVersion === 5) &&
     entry.phase === "scenarioCompositeReview" &&
     entry.subject.tag === "scenario"
+  );
+}
+
+function isBenchmarkReplayLedgerEntry(
+  entry: ModelInvocationLedgerEntry,
+): entry is BenchmarkReplayLedgerEntry {
+  return (
+    (entry.schemaVersion === 4 || entry.schemaVersion === 5) &&
+    entry.phase === "scenarioCompositeReview" &&
+    entry.subject.tag === "benchmark"
   );
 }
 
@@ -357,11 +422,16 @@ export function retainedScenarioReviewMatchesReplayBinding(
       ? "historicalScenario"
       : subject.tag === "scenarioCandidate"
         ? "candidate"
-        : "scenario";
+        : subject.tag === "benchmark"
+          ? "benchmark"
+          : "scenario";
   if (
     (expected.tag === "candidate" && inputTag !== "candidate") ||
     ((expected.tag === "scenario" || expected.tag === "historicalScenario") &&
-      inputTag === "candidate") ||
+      (inputTag === "candidate" || inputTag === "benchmark")) ||
+    (expected.tag === "benchmark" &&
+      input.schemaVersion !== 2 &&
+      inputTag !== "benchmark") ||
     (expected.tag === "historicalScenario" && input.schemaVersion !== 2)
   ) {
     return Either.left(
@@ -461,6 +531,36 @@ export function retainedScenarioReviewMatchesReplayBinding(
         `Review Candidate ${subject.tag === "scenarioCandidate" ? subject.candidateId : input.invocationId} does not belong to the expected Campaign, Evidence Set, and planned Scenario.`,
       );
     }
+  }
+
+  if (expected.tag === "benchmark") {
+    if (!isBenchmarkReplayLedgerEntry(ledgerEntry)) {
+      return Either.left(
+        `Benchmark review invocation ${input.invocationId} requires a benchmark lifecycle ledger entry.`,
+      );
+    }
+    if (
+      ledgerEntry.subject.benchmarkId !== expected.benchmark.benchmarkId ||
+      ledgerEntry.subject.profile !== expected.benchmark.profile ||
+      ledgerEntry.subject.scenarioId !== expected.scenarioId
+    ) {
+      return Either.left(
+        `Benchmark review invocation ${input.invocationId} does not match its benchmark, profile, or scenario identity.`,
+      );
+    }
+    if (
+      !isBenchmarkRetainedScenarioReviewInput(input) &&
+      input.schemaVersion !== 2
+    ) {
+      return Either.left(
+        `Benchmark review invocation ${input.invocationId} has an invalid parsed lifecycle binding.`,
+      );
+    }
+    return Either.right({
+      tag: "benchmark",
+      retainedInput: input,
+      ledgerEntry,
+    });
   }
 
   if (expected.tag === "candidate") {

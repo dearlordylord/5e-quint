@@ -9,9 +9,7 @@ import {
   HistoricalScenarioCompositeReviewSchema,
   ScenarioCompositeReviewSchema,
 } from "./scenario-campaign.ts";
-import {
-  modelInvocationEvidenceFromEvents,
-} from "./model-telemetry.ts";
+import { modelInvocationEvidenceFromEvents } from "./model-telemetry.ts";
 import {
   RetainedScenarioReviewInputSchema,
   type RetainedScenarioReviewInput,

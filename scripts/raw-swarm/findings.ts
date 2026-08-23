@@ -15,6 +15,7 @@ import {
   finalScenarioDisposition,
 } from "./scenario-campaign.ts";
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
+import { artifactAuthorityForBytes } from "./artifact-authority.ts";
 import {
   ScenarioStagePlanFindingsSchema,
   scenarioStagePlanFindings,
@@ -29,7 +30,9 @@ import {
 import {
   modelInvocationScenarioReference,
   parseModelInvocationLedgerEntry,
-  readCodexEvents,
+  readCodexEventsWithSource,
+  type CurrentModelInvocationLedgerEntry,
+  type ModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
 import {
   canonicalJson,
@@ -43,6 +46,7 @@ import {
 import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
+  type RetainedScenarioReviewBenchmarkIdentity,
   type RetainedScenarioReviewCampaignIdentity,
 } from "./scenario-review-input.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
@@ -54,7 +58,6 @@ import {
   PlannedScenarioIdSchema,
   ScenarioCampaignIdSchema,
   ScenarioIdSchema,
-  type EvidenceSetId,
   type ScenarioCampaignId,
   type ScenarioCandidateId,
   type PlannedScenarioId,
@@ -263,6 +266,8 @@ export type FindingsProjectionInput = {
 export type Source = {
   readonly role: string;
   readonly path: string;
+  /** Authority derived from the exact bytes already parsed at a replay boundary. */
+  readonly authority?: FindingAuthority;
 };
 
 type ParsedRun = {
@@ -348,6 +353,13 @@ function boundedText(value: string): string {
 
 export function authorityFor(source: Source): FindingAuthority {
   const canonical = sourcePath(source.path);
+  if (
+    source.authority !== undefined &&
+    source.authority.path === canonical &&
+    source.authority.role === source.role
+  ) {
+    return source.authority;
+  }
   const authorityPath = canonicalRepositoryReadPath(repoRoot, canonical);
   if (Either.isLeft(authorityPath)) {
     fail(`Finding authority is unreadable: ${source.path}`);
@@ -439,6 +451,42 @@ export function readSourceRecord(path: string): unknown {
   } catch {
     return undefined;
   }
+}
+
+type RetainedScenarioReviewInputRead = Readonly<{
+  readonly input: Schema.Schema.Type<typeof RetainedScenarioReviewInputSchema>;
+  readonly authority: Omit<FindingAuthority, "role">;
+}>;
+
+function readRetainedScenarioReviewInputOnce(
+  path: string,
+): Either.Either<RetainedScenarioReviewInputRead, string> {
+  const canonical = sourcePath(path);
+  let bytes: Buffer;
+  try {
+    bytes = readFileSync(resolve(repoRoot, canonical));
+  } catch {
+    return Either.left(`Review replay input ${canonical} is unreadable.`);
+  }
+  let value: unknown;
+  try {
+    value = JSON.parse(bytes.toString("utf8"));
+  } catch {
+    return Either.left(`Review replay input ${canonical} is invalid JSON.`);
+  }
+  const decoded = Schema.decodeUnknownEither(
+    RetainedScenarioReviewInputSchema,
+    { onExcessProperty: "error" },
+  )(value);
+  if (Either.isLeft(decoded)) {
+    return Either.left(
+      `Review replay input ${canonical} is invalid: ${decoded.left.message}`,
+    );
+  }
+  return Either.right({
+    input: decoded.right,
+    authority: artifactAuthorityForBytes(canonical, bytes),
+  });
 }
 
 function parseRun(transcriptPath: string): Either.Either<ParsedRun, string> {
@@ -962,17 +1010,26 @@ function findingsFromObservationSource(source: Source): readonly Finding[] {
   return findings;
 }
 
+export type GenerationLedgerOwner =
+  | Readonly<{ readonly tag: "scenario" }>
+  | Readonly<{
+      readonly tag: "campaign";
+      readonly campaign: RetainedScenarioReviewCampaignIdentity;
+    }>
+  | Readonly<{
+      readonly tag: "benchmark";
+      readonly benchmark: RetainedScenarioReviewBenchmarkIdentity & {
+        readonly scenarioId: ScenarioId;
+      };
+    }>;
+
 export function findingsFromGenerationLedger(
   source: Source,
   expected: Readonly<{
     /** A campaign ledger still refers to its reservation, not an admitted Scenario. */
     readonly scenarioId: ScenarioId | HistoricalScenarioId | PlannedScenarioId;
     readonly gitSha?: GitSha;
-    readonly campaign?: Readonly<{
-      readonly campaignId: ScenarioCampaignId;
-      readonly evidenceSetId: EvidenceSetId;
-      readonly plannedScenarioId: PlannedScenarioId;
-    }>;
+    readonly owner: GenerationLedgerOwner;
   }>,
 ): readonly Finding[] {
   const findings: Finding[] = [];
@@ -984,29 +1041,54 @@ export function findingsFromGenerationLedger(
       );
     }
     const campaignMismatch =
-      expected.campaign !== undefined &&
+      expected.owner.tag === "campaign" &&
       (decoded.right.schemaVersion === 4 ||
         decoded.right.schemaVersion === 5) &&
       ((decoded.right.phase === "scenarioGeneration" &&
         (decoded.right.subject.tag !== "scenarioCampaign" ||
-          decoded.right.subject.campaignId !== expected.campaign.campaignId ||
+          decoded.right.subject.campaignId !==
+            expected.owner.campaign.campaignId ||
           decoded.right.subject.evidenceSetId !==
-            expected.campaign.evidenceSetId ||
+            expected.owner.campaign.evidenceSetId ||
           decoded.right.subject.plannedScenarioId !==
-            expected.campaign.plannedScenarioId)) ||
+            expected.owner.campaign.plannedScenarioId)) ||
         (decoded.right.phase === "scenarioCompositeReview" &&
           decoded.right.subject.tag === "scenarioCandidate" &&
-          (decoded.right.subject.campaignId !== expected.campaign.campaignId ||
+          (decoded.right.subject.campaignId !==
+            expected.owner.campaign.campaignId ||
             decoded.right.subject.evidenceSetId !==
-              expected.campaign.evidenceSetId ||
+              expected.owner.campaign.evidenceSetId ||
             decoded.right.subject.plannedScenarioId !==
-              expected.campaign.plannedScenarioId)));
+              expected.owner.campaign.plannedScenarioId)));
+    const benchmarkMismatch =
+      expected.owner.tag === "benchmark" &&
+      (decoded.right.schemaVersion !== 4 && decoded.right.schemaVersion !== 5
+        ? true
+        : decoded.right.subject.tag !== "benchmark" ||
+          decoded.right.subject.benchmarkId !==
+            expected.owner.benchmark.benchmarkId ||
+          decoded.right.subject.profile !== expected.owner.benchmark.profile ||
+          decoded.right.subject.scenarioId !==
+            expected.owner.benchmark.scenarioId);
+    const foreignBenchmarkMismatch =
+      expected.owner.tag !== "benchmark" &&
+      (decoded.right.schemaVersion === 4 ||
+        decoded.right.schemaVersion === 5) &&
+      decoded.right.subject.tag === "benchmark";
+    const candidateWithoutCampaign =
+      expected.owner.tag !== "campaign" &&
+      (decoded.right.schemaVersion === 4 ||
+        decoded.right.schemaVersion === 5) &&
+      decoded.right.subject.tag === "scenarioCandidate";
     if (
       String(modelInvocationScenarioReference(decoded.right)) !==
         expected.scenarioId ||
       (expected.gitSha !== undefined &&
         String(decoded.right.gitSha) !== expected.gitSha) ||
-      campaignMismatch
+      campaignMismatch ||
+      benchmarkMismatch ||
+      foreignBenchmarkMismatch ||
+      candidateWithoutCampaign
     ) {
       fail(
         `Generation invocation ledger ${source.path} line ${String(line)} belongs to a different findings identity.`,
@@ -1094,6 +1176,82 @@ function requiredReplayCampaignIdentity(
   return expected;
 }
 
+type ReplayLedgerOwner = Exclude<
+  GenerationLedgerOwner,
+  Readonly<{ readonly tag: "scenario" }>
+>;
+
+function readReplayLedgerEntries(
+  generationLedgerPaths: readonly string[],
+): readonly ModelInvocationLedgerEntry[] {
+  return generationLedgerPaths.flatMap((path) => {
+    const canonical = sourcePath(path);
+    let records: readonly JsonLineRecord[];
+    try {
+      records = readJsonLineRecords(canonical);
+    } catch {
+      fail(`Original generation ledger is unreadable: ${canonical}`);
+    }
+    return records.map(({ value, line }) => {
+      const decoded = parseModelInvocationLedgerEntry(value);
+      if (Either.isLeft(decoded)) {
+        fail(
+          `Original generation ledger ${canonical} line ${String(line)} is malformed: ${decoded.left.message}`,
+        );
+      }
+      return decoded.right;
+    });
+  });
+}
+
+function replayLedgerOwner(
+  ledgerEntries: readonly ModelInvocationLedgerEntry[],
+  generationLedgerPaths: readonly string[],
+): ReplayLedgerOwner {
+  const benchmarkEntries = ledgerEntries.flatMap(
+    (entry): readonly CurrentModelInvocationLedgerEntry[] =>
+      (entry.schemaVersion === 4 || entry.schemaVersion === 5) &&
+      entry.subject.tag === "benchmark"
+        ? [entry]
+        : [],
+  );
+  if (benchmarkEntries.length > 0) {
+    if (benchmarkEntries.length !== ledgerEntries.length) {
+      fail(
+        "Generation ledgers must not mix benchmark-owned and Campaign-owned invocation rows.",
+      );
+    }
+    const first = benchmarkEntries[0]!;
+    if (first.subject.tag !== "benchmark") {
+      fail("Benchmark generation ledger ownership is malformed.");
+    }
+    for (const entry of benchmarkEntries) {
+      if (
+        entry.subject.tag !== "benchmark" ||
+        entry.subject.benchmarkId !== first.subject.benchmarkId ||
+        entry.subject.profile !== first.subject.profile ||
+        entry.subject.scenarioId !== first.subject.scenarioId
+      ) {
+        fail(
+          "Generation ledgers for benchmark replay belong to different benchmark identities.",
+        );
+      }
+    }
+    return {
+      tag: "benchmark",
+      benchmark: {
+        benchmarkId: first.subject.benchmarkId,
+        profile: first.subject.profile,
+        scenarioId: first.subject.scenarioId,
+      },
+    };
+  }
+  return {
+    tag: "campaign",
+    campaign: requiredReplayCampaignIdentity(generationLedgerPaths),
+  };
+}
+
 function originalCompositeReviewInputs(
   sources: Source[],
   selection: CompositeReviewReplaySelection | undefined,
@@ -1136,40 +1294,14 @@ function originalCompositeReviewInputs(
     fail("Review replay inputs must identify distinct envelope paths.");
   }
 
-  const ledgerEntries = generationLedgerPaths.flatMap((path) => {
-    const canonical = sourcePath(path);
-    let records: readonly JsonLineRecord[];
-    try {
-      records = readJsonLineRecords(canonical);
-    } catch {
-      fail(`Original generation ledger is unreadable: ${canonical}`);
-    }
-    return records.map(({ value, line }) => {
-      const decoded = parseModelInvocationLedgerEntry(value);
-      if (Either.isLeft(decoded)) {
-        fail(
-          `Original generation ledger ${canonical} line ${String(line)} is malformed: ${decoded.left.message}`,
-        );
-      }
-      return decoded.right;
-    });
-  });
-  const expectedCampaign = requiredReplayCampaignIdentity(
-    generationLedgerPaths,
-  );
+  const ledgerEntries = readReplayLedgerEntries(generationLedgerPaths);
+  const owner = replayLedgerOwner(ledgerEntries, generationLedgerPaths);
 
   const invocationIds = new Set<string>();
   for (const { path: canonical, stage: expectedStage } of canonicalEntries) {
-    const decoded = Schema.decodeUnknownEither(
-      RetainedScenarioReviewInputSchema,
-      { onExcessProperty: "error" },
-    )(readSourceRecord(canonical));
-    if (Either.isLeft(decoded)) {
-      fail(
-        `Review replay input ${canonical} is invalid: ${decoded.left.message}`,
-      );
-    }
-    const review = decoded.right;
+    const retained = readRetainedScenarioReviewInputOnce(canonical);
+    if (Either.isLeft(retained)) fail(retained.left);
+    const review = retained.right.input;
     if (invocationIds.has(review.invocationId)) {
       fail(
         `Review replay inputs contain duplicate original invocation id ${review.invocationId}.`,
@@ -1186,6 +1318,14 @@ function originalCompositeReviewInputs(
     }
     const entry = matches[0]!;
     const binding = (() => {
+      if (owner.tag === "benchmark") {
+        return retainedScenarioReviewMatchesReplayBinding(review, entry, {
+          tag: "benchmark",
+          reviewStage: expectedStage,
+          scenarioId: expectedScenario.scenarioId,
+          benchmark: owner.benchmark,
+        });
+      }
       if (review.schemaVersion === 2) {
         return expectedStage === "final"
           ? retainedScenarioReviewMatchesReplayBinding(review, entry, {
@@ -1193,13 +1333,13 @@ function originalCompositeReviewInputs(
               reviewStage: "final",
               scenarioId: expectedScenario.scenarioId,
               admittedScenarioSha256: expectedScenario.scenarioSha256,
-              campaign: expectedCampaign,
+              campaign: owner.campaign,
             })
           : retainedScenarioReviewMatchesReplayBinding(review, entry, {
               tag: "historicalScenario",
               reviewStage: "milestone",
               scenarioId: expectedScenario.scenarioId,
-              campaign: expectedCampaign,
+              campaign: owner.campaign,
             });
       }
       if (review.subject.tag !== "scenarioCandidate") {
@@ -1215,14 +1355,14 @@ function originalCompositeReviewInputs(
           reviewStage: "final",
           scenarioId: expectedScenario.scenarioId,
           admittedScenarioSha256: expectedScenario.scenarioSha256,
-          campaign: expectedCampaign,
+          campaign: owner.campaign,
         });
       }
       return retainedScenarioReviewMatchesReplayBinding(review, entry, {
         tag: "candidate",
         reviewStage: "milestone",
         scenarioId: expectedScenario.scenarioId,
-        campaign: expectedCampaign,
+        campaign: owner.campaign,
       });
     })();
     if (Either.isLeft(binding)) {
@@ -1243,12 +1383,21 @@ function originalCompositeReviewInputs(
         `Retained ${review.reviewStage} review event stream is missing: ${eventPath}.`,
       );
     }
-    const eventAuthority = authorityFor({
-      role: retainedEventRole,
-      path: eventPath,
-    });
-    const parsedEvents = readCodexEvents(eventPath);
+    const parsedEvents = readCodexEventsWithSource(eventPath);
     if (parsedEvents.tag === "invalid") fail(parsedEvents.message);
+    const eventAuthority = {
+      role: retainedEventRole,
+      ...artifactAuthorityForBytes(eventPath, parsedEvents.rawContents),
+    } satisfies FindingAuthority;
+    const eventSourceIndex = sources.findIndex(
+      (source) => source.path === eventPath,
+    );
+    if (eventSourceIndex >= 0) {
+      sources[eventSourceIndex] = {
+        ...sources[eventSourceIndex]!,
+        authority: eventAuthority,
+      };
+    }
     validateRetainedScenarioReviewInvocation({
       binding: binding.right,
       eventSha256: eventAuthority.sha256,
@@ -1273,6 +1422,19 @@ function originalCompositeReviewInputs(
       fail(
         `Review replay input ${canonical} could not retain its closed ${review.reviewStage} authority role.`,
       );
+    }
+    const sourceIndex = sources.findIndex(
+      (source) => source.path === canonical,
+    );
+    const replayAuthority = {
+      role,
+      ...retained.right.authority,
+    } satisfies FindingAuthority;
+    if (sourceIndex >= 0) {
+      sources[sourceIndex] = {
+        ...sources[sourceIndex]!,
+        authority: replayAuthority,
+      };
     }
   }
 }
@@ -2043,14 +2205,30 @@ export function projectExecutionFindings(
       ),
     );
   }
-  const expectedGenerationCampaign = expectedReplayCampaignIdentity(
-    input.generationLedgerPaths,
-  );
+  const expectedGenerationOwner: GenerationLedgerOwner =
+    input.reviewReplay !== undefined && input.generationLedgerPaths.length > 0
+      ? replayLedgerOwner(
+          readReplayLedgerEntries(input.generationLedgerPaths),
+          input.generationLedgerPaths,
+        )
+      : (() => {
+          const campaign = expectedReplayCampaignIdentity(
+            input.generationLedgerPaths,
+          );
+          return campaign === undefined
+            ? ({ tag: "scenario" } as const)
+            : ({ tag: "campaign", campaign } as const);
+        })();
   for (const path of input.generationLedgerPaths) {
     const manifestPath = sourcePath(
       relative(repoRoot, replayCampaignManifestPath(sourcePath(path))),
     );
     if (existsSync(resolve(repoRoot, manifestPath))) {
+      if (expectedGenerationOwner.tag === "benchmark") {
+        fail(
+          `Benchmark-owned generation ledger ${sourcePath(path)} must not carry a Campaign manifest authority.`,
+        );
+      }
       const role = addSource(sources, manifestPath, "campaign");
       if (role === undefined) {
         fail(`Generation Campaign manifest is unreadable: ${manifestPath}.`);
@@ -2069,9 +2247,7 @@ export function projectExecutionFindings(
         { role, path: canonical },
         {
           scenarioId: parsed.scenarioId,
-          ...(expectedGenerationCampaign === undefined
-            ? {}
-            : { campaign: expectedGenerationCampaign }),
+          owner: expectedGenerationOwner,
         },
       ),
     );
