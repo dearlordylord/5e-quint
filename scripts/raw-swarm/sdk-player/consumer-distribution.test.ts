@@ -21,7 +21,7 @@ import { buildSync } from "esbuild";
 
 import { capabilityContextForRole } from "../capability-projection.ts";
 import { benchmarkContextForRole } from "../benchmark-context.ts";
-import { repoRoot } from "../transcript.ts";
+import { isJsonRecord, repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import {
   assertPublicDeclarationBundle,
@@ -31,6 +31,7 @@ import {
 } from "./consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
+import { parseSdkTranscript } from "./sdk-transcript.ts";
 
 const CONSUMER_SCENARIO_ID = "ready-mixed-consumer";
 const SUPERVISOR_HANDOFF_STARTED_AT = "2026-08-21T08:00:00.000Z";
@@ -1265,32 +1266,38 @@ export const continueBattle: PlayerContinuation = (context) => {
           supervisorOptions,
         );
 
-        const transcript = readFileSync(
+        const transcriptRecords = readFileSync(
           join(trustedDestination, "evidence/sdk-calls.jsonl"),
           "utf8",
         )
           .trim()
           .split("\n")
-          .map((line) => JSON.parse(line) as Readonly<Record<string, unknown>>);
-        expect(transcript).toHaveLength(3);
-        expect(transcript[2]).toMatchObject({
+          .map((line): unknown => JSON.parse(line));
+        const parsedTranscript = parseSdkTranscript(transcriptRecords);
+        expect(parsedTranscript.tag).toBe("valid");
+        if (parsedTranscript.tag !== "valid") {
+          throw new Error(parsedTranscript.message);
+        }
+        expect(parsedTranscript.value.calls).toHaveLength(2);
+        const targetCall = parsedTranscript.value.calls[1];
+        expect(targetCall).toMatchObject({
           operation: "resolveBattleRuntimeSubject",
           outcome: "returned",
           result: { tag: "needsHoles" },
         });
-        const result = transcript[2]?.result;
-        if (typeof result !== "object" || result === null) {
+        if (targetCall === undefined || targetCall.outcome !== "returned") {
+          throw new Error("Expected projected battle resolution call");
+        }
+        const result = targetCall.result;
+        if (!isJsonRecord(result)) {
           throw new Error("Expected projected battle resolution result");
         }
-        const holes = (result as { readonly holes?: unknown }).holes;
+        const holes = result.holes;
         if (!Array.isArray(holes)) {
           throw new Error("Expected projected battle resolution holes");
         }
         const targetHole = holes.find(
-          (hole): hole is Readonly<Record<string, unknown>> =>
-            typeof hole === "object" &&
-            hole !== null &&
-            (hole as Readonly<Record<string, unknown>>).kind === "targetChoice",
+          (hole) => isJsonRecord(hole) && hole.kind === "targetChoice",
         );
         expect(targetHole).toMatchObject({
           choices: ["external-skeleton"],
