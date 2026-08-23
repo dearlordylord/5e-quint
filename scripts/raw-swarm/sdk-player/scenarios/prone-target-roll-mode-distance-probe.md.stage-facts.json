@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "prone-target-roll-mode-distance-probe",
+  "scenarioSha256": "49ab6035845f1f09423d7f98ffab81c40a81fbcab340f830a7ff2abda46f4ff9",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "Every combatant uses a canonical Wolf or Goblin Warrior stat block, and all required attacks are printed on those stat blocks; no Character Sheet is needed."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "The open square arena, exact 5-foot melee placement, 30-foot ranged placement, unobstructed view, and Wolf movement toward the painted line fit the optional geometry helper's documented envelope."
+    }
+  }
+}
