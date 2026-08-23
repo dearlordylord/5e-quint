@@ -3,7 +3,7 @@ import { Either } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, test } from "vitest";
 
-import { DieRollResult, Hp } from "@dnd/shared/types";
+import { DieRollResult, Hp, movementFeet } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -203,9 +203,10 @@ function attackTargetFill(hole: BattleHole): BattleFill {
     value: targetId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: attackerId,
         targetId,
+        distanceFeet: movementFeet(5),
         ...hole.attack.selection,
       },
     ],

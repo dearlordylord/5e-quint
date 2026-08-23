@@ -1,3 +1,4 @@
+import { movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
@@ -2380,9 +2381,10 @@ function fillBattleSubject(
               : subject.tag === "action" && procedureRef !== null
                 ? [
                     {
-                      kind: "attackTargetInMeleeReach",
+                      kind: "attackTargetDistance",
                       actorId: subject.actorId,
                       targetId: String(fill.value),
+                      distanceFeet: movementFeet(5),
                       procedureRef,
                       ...(!("attackAbility" in subject) ||
                       subject.attackAbility === undefined

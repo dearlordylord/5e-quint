@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 import fc from "fast-check";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -6,7 +7,11 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { DieRollResult, difficultyClass } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  difficultyClass,
+  movementFeet,
+} from "@dnd/shared/types";
 import { combatantId } from "./identity.ts";
 import type { BattleFill, BattleHole } from "./battle-state-execution.ts";
 import {
@@ -32,6 +37,7 @@ import {
   battleD20TestCircumstanceRequests,
   battleHolesWithTableD20TestCircumstances,
   combineD20TestRollMode,
+  proneAttackRollModeSources,
   mechanicalD20TestRollModeSources,
   effectiveD20TestRollMode,
   d20TestResolutionId,
@@ -101,6 +107,16 @@ function decision(
 }
 
 describe("Table-authored per-test D20 circumstances", () => {
+  test("matches the QNT integer-distance Prone threshold and cancellation", () => {
+    const atFiveFeet = proneAttackRollModeSources(movementFeet(5));
+    const atSixFeet = proneAttackRollModeSources(movementFeet(6));
+
+    expect(atFiveFeet).toEqual({ advantage: true, disadvantage: false });
+    expect(atSixFeet).toEqual({ advantage: false, disadvantage: true });
+    expect(combineD20TestRollMode(atFiveFeet, "disadvantage")).toBe("normal");
+    expect(combineD20TestRollMode(atSixFeet, "advantage")).toBe("normal");
+  });
+
   test("requests every RAW D20 Test kind", () => {
     expect(
       D20_TEST_KINDS.map((testKind) => requestFor(testKind).testKind),
@@ -525,7 +541,13 @@ describe("Table-authored per-test D20 circumstances", () => {
     });
     expect(rolled.tag).toBe("needsHoles");
     expect(
-      attackRollHasAdvantageSource(session.state, fighterId, goblinId),
+      attackRollHasAdvantageSource(
+        session.state,
+        fighterId,
+        goblinId,
+        undefined,
+        [],
+      ),
     ).toBe(false);
 
     const invalid = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({

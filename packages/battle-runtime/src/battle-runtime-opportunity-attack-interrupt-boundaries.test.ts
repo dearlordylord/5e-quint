@@ -42,6 +42,7 @@ import {
   supportedBattleUnitRef,
   testLongswordAttack,
   targetFill,
+  attackTargetDistanceSpatialFact,
   unitLibrary,
   type BattleFill,
   type BattleState,
@@ -179,6 +180,7 @@ function startRetaliationAfterSkeletonOpportunityAttack(
         provokedOpportunityAttacks: [
           {
             reactorId: skeletonAttack.actorId,
+            distanceFeet: movementFeet(5),
             ...attackExecutionSelectionForSubjectForTest(skeletonAttack),
           },
         ],
@@ -257,13 +259,27 @@ function startRetaliationAfterSkeletonOpportunityAttack(
     throw new Error("Expected fighter Retaliation choice.");
   }
   const retaliationChoice = reactionChoiceWithSubject([rawRetaliationChoice]);
+  const retaliationAttack = fighterAttackSubject(
+    awaitingRetaliation.state,
+    "Longsword",
+  );
+  const retaliationTargetDistanceFact: BattleFill = {
+    kind: "targetSpatialFacts",
+    holeId: ATTACK_TARGET_HOLE_ID,
+    spatialFacts: [
+      attackTargetDistanceSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(retaliationAttack),
+        movementFeet(5),
+      ),
+    ],
+  };
   const selection: BattleInterruptProcedureSelection = {
     kind: "retaliationAttack",
     reactorId: fighterId,
-    selection: attackExecutionSelectionForSubjectForTest(
-      fighterAttackSubject(awaitingRetaliation.state, "Longsword"),
-    ),
-    fills: [],
+    selection: attackExecutionSelectionForSubjectForTest(retaliationAttack),
+    fills: [retaliationTargetDistanceFact],
   };
   const startedRetaliation = resolveBattleInterrupt({
     state: awaitingRetaliation.state,
@@ -306,6 +322,7 @@ function startFighterOpportunityAttackAfterMovement(
         provokedOpportunityAttacks: [
           {
             reactorId: fighterAttack.actorId,
+            distanceFeet: movementFeet(5),
             ...attackExecutionSelectionForSubjectForTest(fighterAttack),
           },
         ],
@@ -721,6 +738,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
     const attack = attackRollFill(opportunity.attackRoll, {
       total: 30,
       naturalD20: 15,
+      rollMode: "advantage",
     });
     const damage = requireHole(
       resolveBattleSubject({
@@ -765,3 +783,4 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
     expect(completed).toMatchObject({ tag: "resolved" });
   });
 });
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE

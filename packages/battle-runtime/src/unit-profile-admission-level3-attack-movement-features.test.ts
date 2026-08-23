@@ -1424,6 +1424,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
             provokedOpportunityAttacks: [
               {
                 reactorId: remarkableAthleteTargetId,
+                distanceFeet: movementFeet(5),
                 ...attackExecutionSelectionForSubjectForTest(
                   characterAttackSubjectForTest(
                     state,

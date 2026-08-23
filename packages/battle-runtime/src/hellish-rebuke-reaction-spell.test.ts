@@ -1439,9 +1439,10 @@ function attackTargetFill(input: {
     value: spellCasterId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: damagerId,
         targetId: spellCasterId,
+        distanceFeet: movementFeet(5),
         ...input.hole.attack.selection,
       },
       ...(input.includeHellishRebukeTriggerFact

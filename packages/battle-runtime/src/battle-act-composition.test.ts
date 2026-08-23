@@ -38,7 +38,7 @@ import {
   battleStatBlockExecutionScopeRef,
   battleStatBlockProcedureExecutionRef,
 } from "./identity.ts";
-import { NonNegativeInteger } from "@dnd/shared/types";
+import { NonNegativeInteger, movementFeet } from "@dnd/shared/types";
 
 function syntheticAttackProcedureRef(
   discriminator: string,
@@ -459,6 +459,7 @@ describe("battle act composition presentations", () => {
         command: "opportunityAttack",
         reactorId: goblinId,
         targetId: fighterId,
+        distanceFeet: movementFeet(5),
         procedureRef: missingProcedureRef,
         attackAbility: "str",
         attackDamageType: "slashing",
@@ -506,6 +507,7 @@ describe("battle act composition presentations", () => {
       command: "opportunityAttack",
       reactorId: fighterId,
       targetId: goblinId,
+      distanceFeet: movementFeet(5),
       procedureRef: fighterAttack.procedureRef,
       attackAbility: fighterAttack.attackAbility,
       attackDamageType: fighterAttack.attackDamageType,
@@ -568,6 +570,7 @@ describe("battle act composition presentations", () => {
       command: "opportunityAttack",
       reactorId: fighterId,
       targetId: goblinId,
+      distanceFeet: movementFeet(5),
       procedureRef: attack.procedureRef,
       attackAbility: attack.attackAbility,
       attackDamageType: attack.attackDamageType,

@@ -732,9 +732,10 @@ function resolveUnarmedStrikeAgainstReactor(
     value: reactorId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach" as const,
+        kind: "attackTargetDistance" as const,
         actorId: triggerCreatureId,
         targetId: reactorId,
+        distanceFeet: movementFeet(5),
         ...target.attack.selection,
       },
       {

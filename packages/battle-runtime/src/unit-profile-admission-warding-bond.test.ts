@@ -523,6 +523,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       command: "opportunityAttack",
       reactorId: spellCasterId,
       targetId: spellTargetId,
+      distanceFeet: movementFeet(5),
       ...attackExecutionSelectionForSubjectForTest(clubAttack),
     };
     const attackRoll = requireResultHole(

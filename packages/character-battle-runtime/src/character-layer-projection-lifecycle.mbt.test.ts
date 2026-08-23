@@ -1,3 +1,4 @@
+import { movementFeet } from "@dnd/shared/types";
 // KERNEL-COVERAGE: parity-witness CHARACTER.LIFECYCLE.LAYER_PROJECTION
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
@@ -607,15 +608,17 @@ function targetChoiceFill(
   const spatialFact =
     subject.attackAbility === undefined
       ? {
-          kind: "attackTargetInMeleeReach" as const,
+          kind: "attackTargetDistance" as const,
           actorId: subject.actorId,
           targetId: lifecycleCharacterCombatantId,
+          distanceFeet: movementFeet(5),
           procedureRef: subject.procedureRef,
         }
       : {
-          kind: "attackTargetInMeleeReach" as const,
+          kind: "attackTargetDistance" as const,
           actorId: subject.actorId,
           targetId: lifecycleCharacterCombatantId,
+          distanceFeet: movementFeet(5),
           procedureRef: subject.procedureRef,
           attackAbility: subject.attackAbility,
           attackDamageType: subject.attackDamageType,

@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 import type {
   AbilityCheckRollModeSpellEffect,
   BattleLightEmission,
@@ -1546,6 +1547,8 @@ export type BattleOpportunityAttackSelection =
   BattleInterruptAttackExecutionSelection;
 export type BattleOpportunityAttackThreat = {
   readonly reactorId: CombatantId;
+  /** Distance at the reach-leaving trigger, before the mover's step. */
+  readonly distanceFeet: MovementFeet;
 } & BattleOpportunityAttackSelection;
 export type BattleTargetSpatialFact =
   | {
@@ -1564,11 +1567,6 @@ export type BattleTargetSpatialFact =
       readonly armorClass: ArmorClass;
       readonly damageDisposition: BattleObjectDamageDisposition;
     }
-  | ({
-      readonly kind: "attackTargetInMeleeReach";
-      readonly actorId: CombatantId;
-      readonly targetId: CombatantId;
-    } & BattleAttackExecutionSelection)
   | {
       readonly kind: "retaliationDamagerWithinFiveFeet";
       readonly damagedId: CombatantId;
@@ -1585,12 +1583,6 @@ export type BattleTargetSpatialFact =
       readonly attackerId: CombatantId;
       readonly targetId: CombatantId;
       readonly disposition: BattleShovePushDisposition;
-    } & BattleAttackExecutionSelection)
-  | ({
-      readonly kind: "attackTargetInRangedRange";
-      readonly actorId: CombatantId;
-      readonly targetId: CombatantId;
-      readonly rangeBand: BattleAttackRangeBand;
     } & BattleAttackExecutionSelection)
   | ({
       readonly kind: "attackTargetDistance";

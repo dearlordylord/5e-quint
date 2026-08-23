@@ -181,9 +181,15 @@ describe("battle runtime: Stunning Strike", () => {
     }
     expect(hasCondition(target.conditions, "stunned")).toBe(false);
     expect(effectiveWalkSpeed(resolved.state, target)).toBe(15);
-    expect(requiredAttackRollMode(resolved.state, fighterId, goblinId)).toBe(
-      "advantage",
-    );
+    expect(
+      requiredAttackRollMode(
+        resolved.state,
+        fighterId,
+        goblinId,
+        undefined,
+        [],
+      ),
+    ).toBe("advantage");
 
     const goblinTurn = requireResolved(
       endTurn({ state: resolved.state, actorId: fighterId }),
@@ -199,7 +205,13 @@ describe("battle runtime: Stunning Strike", () => {
       30,
     );
     expect(
-      requiredAttackRollMode(nextMonkTurn.state, fighterId, goblinId),
+      requiredAttackRollMode(
+        nextMonkTurn.state,
+        fighterId,
+        goblinId,
+        undefined,
+        [],
+      ),
     ).toBeUndefined();
   });
 

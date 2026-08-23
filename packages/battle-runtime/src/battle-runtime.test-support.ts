@@ -2518,14 +2518,6 @@ export function targetFill(
           ...(hole.attack === undefined
             ? []
             : [
-                attackTargetSpatialFact(
-                  hole.attack.actorId,
-                  targetId,
-                  hole.attack.selection,
-                  hole.attack.targetConstraint.kind === "rangedRange"
-                    ? "normal"
-                    : undefined,
-                ),
                 attackTargetDistanceSpatialFact(
                   hole.attack.actorId,
                   targetId,
@@ -2726,15 +2718,6 @@ export function attackTargetFill(
     throw new Error("Expected a bound attack execution selection.");
   }
   return targetFill(hole, targetId, [
-    attackTargetSpatialFact(
-      actorId,
-      targetId,
-      boundSelection,
-      hole.kind === "targetChoice" &&
-        hole.attack?.targetConstraint.kind === "rangedRange"
-        ? "normal"
-        : undefined,
-    ),
     attackTargetDistanceSpatialFact(
       actorId,
       targetId,
@@ -2750,25 +2733,17 @@ export function attackTargetSpatialFact(
   actorId: CombatantId,
   targetId: CombatantId,
   attackSelection: BattleAttackExecutionSelection,
-  rangeBand?: "normal" | "long",
+  distanceFeet: MovementFeet = movementFeet(5),
 ): NonNullable<
   Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
 >[number] {
-  const isRanged = rangeBand !== undefined;
-  return isRanged
-    ? {
-        kind: "attackTargetInRangedRange" as const,
-        actorId,
-        targetId,
-        ...attackSelection,
-        rangeBand: rangeBand ?? ("normal" as const),
-      }
-    : {
-        kind: "attackTargetInMeleeReach" as const,
-        actorId,
-        targetId,
-        ...attackSelection,
-      };
+  return {
+    kind: "attackTargetDistance" as const,
+    actorId,
+    targetId,
+    ...attackSelection,
+    distanceFeet,
+  };
 }
 
 export function attackTargetDistanceSpatialFact(

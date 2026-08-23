@@ -313,8 +313,21 @@ export function resolveActiveInterruptProcedure(input: {
       "A pending interrupt checkpoint must be resolved before the interrupted procedure can continue.",
     );
   }
+  // Fixed-target reaction attacks carry their exact target distance in the
+  // interrupt selection. Preserve that support fact for each continuation;
+  // replaying every selection fill would also replay unrelated choices that
+  // the continuation may have already consumed.
+  const continuationDistanceFills = activeInterrupt.fills.filter(
+    (fill) =>
+      fill.kind === "targetSpatialFacts" &&
+      fill.spatialFacts.some((fact) => fact.kind === "attackTargetDistance"),
+  );
+  const continuationResolution = {
+    ...input.resolution,
+    fills: [...continuationDistanceFills, ...input.resolution.fills],
+  };
   const interruptResult = input.execution.resolveSubject({
-    input: input.resolution,
+    input: continuationResolution,
     interruptRouteOptions: {
       replayingInterruptedProcedure: true,
       ...optionalProperty(

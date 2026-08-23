@@ -826,6 +826,7 @@ describe("battle runtime: Cunning Strike", () => {
             provokedOpportunityAttacks: [
               {
                 reactorId: goblinId,
+                distanceFeet: movementFeet(5),
                 ...attackExecutionSelectionForSubjectForTest(
                   goblinAttackSubject(window.state, "Scimitar"),
                 ),
@@ -1091,6 +1092,7 @@ function cunningStrikeOpportunityAttackDamageWindow(
         provokedOpportunityAttacks: [
           {
             reactorId: fighterId,
+            distanceFeet: movementFeet(5),
             ...attackExecutionSelectionForSubjectForTest(
               fighterAttackSubject(state, "Dagger"),
             ),

@@ -143,7 +143,7 @@ import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spe
 import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
-  attackExecutionSelectionMatchesOption,
+  attackTargetDistanceFeet,
   attackTargetIsLegal,
   effectiveMovementSpeed,
   grappleLinkForTarget,
@@ -1003,13 +1003,17 @@ function grappleFactsForUnarmedStrikeHit(input: {
   ) {
     return input.targetSpatialFacts;
   }
-  const hasAdmittedMeleeReach = input.targetSpatialFacts.some(
-    (fact) =>
-      fact.kind === "attackTargetInMeleeReach" &&
-      fact.actorId === input.attackerId &&
-      fact.targetId === input.targetId &&
-      attackExecutionSelectionMatchesOption(fact, input.attack),
+  const distanceFeet = attackTargetDistanceFeet(
+    input.targetSpatialFacts,
+    input.attackerId,
+    input.targetId,
+    input.attack,
   );
+  const constraint = attackTargetConstraint(input.attack);
+  const hasAdmittedMeleeReach =
+    distanceFeet !== null &&
+    constraint.kind === "meleeReach" &&
+    Number(distanceFeet) <= Number(constraint.reachFeet);
   if (!hasAdmittedMeleeReach) return input.targetSpatialFacts;
   return [
     ...input.targetSpatialFacts,

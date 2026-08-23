@@ -697,20 +697,6 @@ export function attackTargetFill(
         }
       : {}),
     spatialFacts: [
-      hole.attack.targetConstraint.kind === "rangedRange"
-        ? {
-            kind: "attackTargetInRangedRange",
-            actorId,
-            targetId,
-            ...hole.attack.selection,
-            rangeBand: "normal",
-          }
-        : {
-            kind: "attackTargetInMeleeReach",
-            actorId,
-            targetId,
-            ...hole.attack.selection,
-          },
       {
         kind: "attackTargetDistance",
         actorId,

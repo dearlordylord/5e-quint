@@ -1,5 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 import type { CombatantId } from "../identity.ts";
-import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import type {
   BattleAttackExecutionSelection,
   BattleAttackRangeBand,
@@ -29,29 +29,18 @@ export function attackTargetIsLegal(
   facts: readonly BattleTargetSpatialFact[],
 ): boolean {
   const constraint = attackTargetConstraint(attack);
-  const target = state.combatants.get(targetId);
-  const proneDistanceFeet = attackTargetDistanceFeet(
+  const distanceFeet = attackTargetDistanceFeet(
     facts,
     actorId,
     targetId,
     attack,
   );
-  const missingProneDistanceFact =
-    target !== undefined &&
-    hasCondition(target.conditions, "prone") &&
-    proneDistanceFeet === null;
   return (
     actorId !== targetId &&
     state.combatants.has(targetId) &&
-    !missingProneDistanceFact &&
+    distanceFeet !== null &&
     (constraint.kind === "meleeReach"
-      ? facts.some(
-          (fact) =>
-            fact.kind === "attackTargetInMeleeReach" &&
-            fact.actorId === actorId &&
-            fact.targetId === targetId &&
-            attackExecutionSelectionMatchesOption(fact, attack),
-        )
+      ? Number(distanceFeet) <= Number(constraint.reachFeet)
       : attackTargetRangeBand(facts, actorId, targetId, attack) !== null)
   );
 }
@@ -65,16 +54,17 @@ export function attackTargetRangeBand(
   if (attackTargetConstraint(attack).kind !== "rangedRange") {
     return null;
   }
-  for (const fact of facts) {
-    if (
-      fact.kind === "attackTargetInRangedRange" &&
-      fact.actorId === actorId &&
-      fact.targetId === targetId &&
-      attackExecutionSelectionMatchesOption(fact, attack)
-    ) {
-      return fact.rangeBand;
-    }
-  }
+  const distanceFeet = attackTargetDistanceFeet(
+    facts,
+    actorId,
+    targetId,
+    attack,
+  );
+  if (distanceFeet === null) return null;
+  const constraint = attackTargetConstraint(attack);
+  if (constraint.kind !== "rangedRange") return null;
+  if (Number(distanceFeet) <= Number(constraint.normalFeet)) return "normal";
+  if (Number(distanceFeet) <= Number(constraint.longFeet)) return "long";
   return null;
 }
 

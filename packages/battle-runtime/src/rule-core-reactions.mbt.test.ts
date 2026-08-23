@@ -222,6 +222,7 @@ function createRuleCoreReactionDriver() {
                 provokedOpportunityAttacks: [
                   {
                     reactorId,
+                    distanceFeet: movementFeet(5),
                     ...attackExecutionSelectionForSubjectForTest(
                       characterAttackSubjectForTest(
                         state,

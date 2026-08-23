@@ -115,6 +115,7 @@ import {
   classLevel,
   DieRollResult,
   difficultyClass,
+  movementFeet,
   proficiencyBonus,
   resourceCount,
   spellSlotLevel,
@@ -10525,19 +10526,21 @@ function attackMeleeReachFact(
   NonNullable<
     Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
   >[number],
-  { readonly kind: "attackTargetInMeleeReach" }
+  { readonly kind: "attackTargetDistance" }
 > {
   return subject.attackAbility === undefined
     ? {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: subject.actorId,
         targetId,
+        distanceFeet: movementFeet(5),
         procedureRef: subject.procedureRef,
       }
     : {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: subject.actorId,
         targetId,
+        distanceFeet: movementFeet(5),
         procedureRef: subject.procedureRef,
         attackAbility: subject.attackAbility,
         attackDamageType: subject.attackDamageType,

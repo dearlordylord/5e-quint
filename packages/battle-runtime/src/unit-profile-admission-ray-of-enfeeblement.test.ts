@@ -254,6 +254,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
         spellTargetId,
         spellCasterId,
         zeroAbilityWeaponAttack("weapon_longsword"),
+        [],
       ),
     ).toBe("disadvantage");
 

@@ -62,23 +62,23 @@ module d20TestCircumstanceCoreExamples {
     ) == NormalD20TestRoll),
     assert(d20TestRollModeWithProneTarget(
       noMechanicalSources,
-      ProneAttackWithinFiveFeet,
+      5,
     ) == AdvantageD20TestRoll),
     assert(d20TestRollModeWithProneTarget(
       noMechanicalSources,
-      ProneAttackBeyondFiveFeet,
+      6,
     ) == DisadvantageD20TestRoll),
     assert(d20TestRollModeWithProneTarget(
       mechanicalDisadvantage,
-      ProneAttackWithinFiveFeet,
+      5,
     ) == NormalD20TestRoll),
     assert(d20TestRollModeWithProneTarget(
       mechanicalAdvantage,
-      ProneAttackBeyondFiveFeet,
+      6,
     ) == NormalD20TestRoll),
     assert(d20TestRollModeWithProneTarget(
       cancellingMechanicalSources,
-      ProneAttackWithinFiveFeet,
+      5,
     ) == NormalD20TestRoll),
   }
 

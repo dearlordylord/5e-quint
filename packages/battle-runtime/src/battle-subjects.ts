@@ -17,7 +17,11 @@
 
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
-import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
+import {
+  MovementFeet,
+  SpellSlotLevel,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import { AbilitySchema, DamageTypeSchema } from "@dnd/surface/surface/schema";
 import type { DamageType } from "@dnd/surface/surface/types";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "./battle-interrupt-triggers.ts";
@@ -946,6 +950,7 @@ export const BattleSubjectSchema = Schema.Union(
       command: Schema.Literal("opportunityAttack"),
       reactorId: CombatantId,
       targetId: CombatantId,
+      distanceFeet: MovementFeet,
     }),
     BattleInterruptAttackExecutionSelectionSchema,
   ),

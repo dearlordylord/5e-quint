@@ -512,19 +512,20 @@ function attackTargetFill(
       attackName === secondaryAttackName
         ? [
             {
-              kind: "attackTargetInRangedRange",
+              kind: "attackTargetDistance",
               actorId,
               targetId,
               ...hole.attack.selection,
-              rangeBand: "normal",
+              distanceFeet: movementFeet(5),
             },
           ]
         : [
             {
-              kind: "attackTargetInMeleeReach",
+              kind: "attackTargetDistance",
               actorId,
               targetId,
               ...hole.attack.selection,
+              distanceFeet: movementFeet(5),
             },
           ],
   };

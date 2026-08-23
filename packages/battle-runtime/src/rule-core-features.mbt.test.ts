@@ -2649,16 +2649,17 @@ function attackTargetFill(
   return targetFill(hole, defenderId, [
     hole.attack.targetConstraint.kind === "rangedRange"
       ? {
-          kind: "attackTargetInRangedRange",
+          kind: "attackTargetDistance",
           actorId: attackerId,
           targetId: defenderId,
           ...hole.attack.selection,
-          rangeBand: "normal",
+          distanceFeet: movementFeet(5),
         }
       : {
-          kind: "attackTargetInMeleeReach",
+          kind: "attackTargetDistance",
           actorId: attackerId,
           targetId: defenderId,
+          distanceFeet: movementFeet(5),
           ...hole.attack.selection,
         },
     {

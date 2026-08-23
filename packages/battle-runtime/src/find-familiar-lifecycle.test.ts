@@ -951,9 +951,10 @@ function familiarAttackTargetFill(
     value: enemyId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: familiarId,
         targetId: enemyId,
+        distanceFeet: movementFeet(5),
         ...hole.attack.selection,
       },
     ],

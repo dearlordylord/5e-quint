@@ -1,5 +1,6 @@
 // Attack replay fill parser extracted from attack-resolution.ts.
-// Owns classification of attack fills and the uniqueness invariant for attack target range facts.
+// Owns classification of attack fills and the uniqueness invariant for attack target distance facts.
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.brutal-strike
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
@@ -1366,7 +1367,6 @@ function validateUniqueAttackTargetSpatialFacts(
   spatialFacts: readonly BattleTargetSpatialFact[],
 ): string | null {
   return (
-    validateUniqueAttackTargetRangeFacts(spatialFacts) ??
     validateUniqueAttackTargetDistanceFacts(spatialFacts) ??
     validateUniqueAttackSightFacts(spatialFacts)
   );
@@ -1391,26 +1391,4 @@ function validateUniqueAttackTargetDistanceFacts(
   return duplicate === undefined
     ? null
     : "Attack target distance facts must contain at most one distance for each actor, target, and attack.";
-}
-
-export function validateUniqueAttackTargetRangeFacts(
-  facts: readonly BattleTargetSpatialFact[],
-): string | null {
-  const rangeFacts = facts.filter(
-    (fact) => fact.kind === "attackTargetInRangedRange",
-  );
-  const duplicate = rangeFacts.find((fact, factIndex) =>
-    rangeFacts
-      .slice(0, factIndex)
-      .some(
-        (previous) =>
-          previous.actorId === fact.actorId &&
-          previous.targetId === fact.targetId &&
-          attackExecutionSelectionsEqual(previous, fact),
-      ),
-  );
-  if (duplicate === undefined) {
-    return null;
-  }
-  return "Attack target range facts must contain at most one range band for each actor, target, and attack.";
 }

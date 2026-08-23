@@ -432,6 +432,7 @@ describe("interrupt lifecycle", () => {
       opportunityAttackReactionChoices(state, actorId, [
         {
           reactorId: combatantId("missing-reactor"),
+          distanceFeet: movementFeet(5),
           procedureRef: attackSubject.procedureRef,
           attackAbility: attackSubject.attackAbility,
           attackDamageType: attackSubject.attackDamageType,
@@ -457,6 +458,7 @@ describe("interrupt lifecycle", () => {
     }
     const threat = {
       reactorId: fighterId,
+      distanceFeet: movementFeet(5),
       procedureRef: attackSubject.procedureRef,
       attackAbility: attackSubject.attackAbility,
       attackDamageType: attackSubject.attackDamageType,

@@ -318,11 +318,11 @@ describe("Sanctuary targeting interdiction", () => {
       ),
       spatialFacts: [
         {
-          kind: "attackTargetInRangedRange" as const,
+          kind: "attackTargetDistance" as const,
           actorId: attackerId,
           targetId: wardedId,
           ...attackExecutionSelectionForSubjectForTest(attack.subject),
-          rangeBand: "normal" as const,
+          distanceFeet: movementFeet(5),
         },
       ],
     };
@@ -2022,9 +2022,10 @@ function attackTargetFact(
   >,
 ) {
   return {
-    kind: "attackTargetInMeleeReach" as const,
+    kind: "attackTargetDistance" as const,
     actorId: attackerId,
     targetId,
+    distanceFeet: movementFeet(5),
     ...attackExecutionSelectionForSubjectForTest(attackSubject),
   };
 }

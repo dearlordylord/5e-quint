@@ -72,7 +72,7 @@ import type {
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { classLevel, DieRollResult } from "@dnd/shared/types";
+import { classLevel, DieRollResult, movementFeet } from "@dnd/shared/types";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
 import { BattleStatBlockProcedureExecutionRef } from "./identity.ts";
@@ -87,6 +87,7 @@ function goblinOpportunityAttackThreat(state: BattleState) {
   const subject = goblinAttackSubject(state, "Scimitar");
   return {
     reactorId: goblinId,
+    distanceFeet: movementFeet(5),
     ...attackExecutionSelectionForSubjectForTest(subject),
   };
 }
@@ -95,6 +96,7 @@ function fighterUnarmedOpportunityAttackThreat(state: BattleState) {
   const subject = fighterAttackSubject(state, "Unarmed Strike");
   return {
     reactorId: fighterId,
+    distanceFeet: movementFeet(5),
     ...attackExecutionSelectionForSubjectForTest(subject),
   };
 }
@@ -112,7 +114,11 @@ function goblinMeleeOpportunityAttackThreatFromExecution(state: BattleState) {
   if (attack === undefined) {
     throw new Error("Expected the Animal Friendship reactor's melee attack.");
   }
-  return { reactorId: goblinId, procedureRef: attack.procedureRef };
+  return {
+    reactorId: goblinId,
+    distanceFeet: movementFeet(5),
+    procedureRef: attack.procedureRef,
+  };
 }
 
 type OpportunityAttackThreat = Parameters<
@@ -1333,6 +1339,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
                 command: "opportunityAttack",
                 reactorId: goblinId,
                 targetId: fighterId,
+                distanceFeet: movementFeet(5),
                 procedureRef: goblinOpportunityAttackThreat(state).procedureRef,
               },
             },
@@ -1345,7 +1352,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     }
   });
 
-  test("attack target facts are scoped to the selected attack option and range band", () => {
+  test("attack target facts are scoped to the selected attack option and exact distance", () => {
     const state = requireResolved(
       endTurn({ state: fighterVsGoblinBattle(), actorId: fighterId }),
     ).state;
@@ -1363,9 +1370,10 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         fills: [
           targetFill(target, fighterId, [
             {
-              kind: "attackTargetInMeleeReach",
+              kind: "attackTargetDistance",
               actorId: goblinId,
               targetId: fighterId,
+              distanceFeet: movementFeet(5),
               ...attackExecutionSelectionForSubjectForTest(mismatchedSubject),
             },
           ]),
@@ -1380,11 +1388,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         fills: [
           targetFill(target, fighterId, [
             {
-              kind: "attackTargetInRangedRange",
+              kind: "attackTargetDistance",
               actorId: goblinId,
               targetId: fighterId,
               procedureRef: statBlockAttackProcedureRef(subject),
-              rangeBand: "normal",
+              distanceFeet: movementFeet(5),
             },
           ]),
         ],
@@ -1403,11 +1411,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     );
     const longRangeTargetFill = targetFill(target, fighterId, [
       {
-        kind: "attackTargetInRangedRange",
+        kind: "attackTargetDistance",
         actorId: goblinId,
         targetId: fighterId,
         procedureRef: statBlockAttackProcedureRef(subject),
-        rangeBand: "long",
+        distanceFeet: movementFeet(100),
       },
     ]);
 
@@ -1458,7 +1466,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     });
   });
 
-  test("contradictory range bands for the same attack target are rejected", () => {
+  test("contradictory distances for the same attack target are rejected", () => {
     const state = requireResolved(
       endTurn({ state: fighterVsGoblinBattle(), actorId: fighterId }),
     ).state;
@@ -1468,15 +1476,15 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       "targetChoice",
     );
     const normalRangeFact = {
-      kind: "attackTargetInRangedRange" as const,
+      kind: "attackTargetDistance" as const,
       actorId: goblinId,
       targetId: fighterId,
       procedureRef: statBlockAttackProcedureRef(subject),
-      rangeBand: "normal" as const,
+      distanceFeet: movementFeet(5),
     };
     const longRangeFact = {
       ...normalRangeFact,
-      rangeBand: "long" as const,
+      distanceFeet: movementFeet(100),
     };
 
     for (const spatialFacts of [
@@ -1493,7 +1501,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         tag: "invalid",
         reason: "invalidFill",
         message:
-          "Attack target range facts must contain at most one range band for each actor, target, and attack.",
+          "Attack target distance facts must contain at most one distance for each actor, target, and attack.",
       });
     }
   });
@@ -1520,11 +1528,11 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     );
     const longRangeTargetFill = targetFill(target, fighterId, [
       {
-        kind: "attackTargetInRangedRange",
+        kind: "attackTargetDistance",
         actorId: goblinId,
         targetId: fighterId,
         procedureRef: statBlockAttackProcedureRef(subject),
-        rangeBand: "long",
+        distanceFeet: movementFeet(100),
       },
     ]);
 
@@ -1576,6 +1584,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
             provokedOpportunityAttacks: [
               {
                 reactorId: goblinId,
+                distanceFeet: movementFeet(5),
                 ...attackExecutionSelectionForSubjectForTest(
                   goblinAttackSubject(state, "Shortbow"),
                 ),
@@ -2025,22 +2034,46 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     const movementWithProcedureRefs = movementFill(moveHole, {
       movementCostFeet: 5,
       provokedOpportunityAttacks: [
-        { reactorId, procedureRef: firstProcedureRef },
-        { reactorId, procedureRef: secondProcedureRef },
+        {
+          reactorId,
+          distanceFeet: movementFeet(5),
+          procedureRef: firstProcedureRef,
+        },
+        {
+          reactorId,
+          distanceFeet: movementFeet(5),
+          procedureRef: secondProcedureRef,
+        },
       ],
     });
     const movementWithReorderedProcedureRefs = movementFill(moveHole, {
       movementCostFeet: 5,
       provokedOpportunityAttacks: [
-        { reactorId, procedureRef: secondProcedureRef },
-        { reactorId, procedureRef: firstProcedureRef },
+        {
+          reactorId,
+          distanceFeet: movementFeet(5),
+          procedureRef: secondProcedureRef,
+        },
+        {
+          reactorId,
+          distanceFeet: movementFeet(5),
+          procedureRef: firstProcedureRef,
+        },
       ],
     });
     const movementWithChangedMultiplicity = movementFill(moveHole, {
       movementCostFeet: 5,
       provokedOpportunityAttacks: [
-        { reactorId, procedureRef: firstProcedureRef },
-        { reactorId, procedureRef: firstProcedureRef },
+        {
+          reactorId,
+          distanceFeet: movementFeet(5),
+          procedureRef: firstProcedureRef,
+        },
+        {
+          reactorId,
+          distanceFeet: movementFeet(5),
+          procedureRef: firstProcedureRef,
+        },
       ],
     });
     expect(
@@ -2851,3 +2884,4 @@ function combatantWithSourceDamagePenalty(
     }),
   };
 }
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE

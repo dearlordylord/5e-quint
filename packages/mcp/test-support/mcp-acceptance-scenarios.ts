@@ -1,3 +1,4 @@
+import { movementFeet } from "@dnd/shared/types";
 import assert from "node:assert/strict";
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -3477,9 +3478,10 @@ function attackTargetFill(subject: JsonObject, value: string) {
     value,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: subject.actorId,
         targetId: value,
+        distanceFeet: movementFeet(5),
         ...selection,
       },
     ],

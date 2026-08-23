@@ -1144,6 +1144,7 @@ function parseOpportunityAttackThreatInput(
     !isRecord(value) ||
     !hasOnlyKeys(value, [
       "reactorId",
+      "distanceFeet",
       "procedureRef",
       "attackAbility",
       "attackDamageType",
@@ -1151,6 +1152,8 @@ function parseOpportunityAttackThreatInput(
       "statBlockDamageNotation",
     ]) ||
     !isNonEmptyTrimmedString(value.reactorId) ||
+    !isFiniteNonNegativeNumber(value.distanceFeet) ||
+    !Number.isInteger(value.distanceFeet) ||
     !isNonEmptyTrimmedString(value.procedureRef)
   ) {
     return undefined;
@@ -1180,6 +1183,7 @@ function parseOpportunityAttackThreatInput(
     return undefined;
   }
   const reactorId = combatantId(value.reactorId);
+  const distanceFeet = movementFeet(value.distanceFeet);
   if (hasAttackAbility && hasAttackDamageType) {
     const procedureRef = Schema.decodeUnknownEither(
       BattleAttackProcedureExecutionRef,
@@ -1187,6 +1191,7 @@ function parseOpportunityAttackThreatInput(
     if (Either.isLeft(procedureRef)) return undefined;
     return {
       reactorId,
+      distanceFeet,
       procedureRef: procedureRef.right,
       attackAbility,
       attackDamageType,
@@ -1199,10 +1204,11 @@ function parseOpportunityAttackThreatInput(
   return selection.statBlockDamageNotation === "static"
     ? {
         reactorId,
+        distanceFeet,
         procedureRef: procedureRef.right,
         statBlockDamageNotation: "static",
       }
-    : { reactorId, procedureRef: procedureRef.right };
+    : { reactorId, distanceFeet, procedureRef: procedureRef.right };
 }
 
 function parseCreatureSpaceTraversal(

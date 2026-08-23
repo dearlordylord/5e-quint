@@ -64,6 +64,7 @@ import {
   Hp,
   NonNegativeInteger,
   PositiveInteger,
+  movementFeet,
 } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
@@ -1253,9 +1254,10 @@ export function attackTargetFill(
       : {}),
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId,
         targetId,
+        distanceFeet: movementFeet(5),
         ...selection,
       },
       ...extraSpatialFacts,

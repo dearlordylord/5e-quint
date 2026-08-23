@@ -11075,6 +11075,7 @@ function createCommandOrderingDriverWithRoute<
             provokedOpportunityAttacks: [
               {
                 reactorId: fighterId,
+                distanceFeet: movementFeet(5),
                 ...interruptAttackExecutionSelectionForSubject(
                   interruptFighterAttackSubject(state, "Unarmed Strike"),
                 ),
@@ -16204,9 +16205,10 @@ function interruptShieldAttackTargetFill(
     value: interruptShieldCasterId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: interruptShieldAttackerId,
         targetId: interruptShieldCasterId,
+        distanceFeet: movementFeet(5),
         ...hole.attack.selection,
       },
     ],
@@ -18148,17 +18150,18 @@ function targetFill(
       : [
           hole.attack.targetConstraint.kind === "meleeReach"
             ? {
-                kind: "attackTargetInMeleeReach" as const,
+                kind: "attackTargetDistance" as const,
                 actorId: hole.attack.actorId,
                 targetId,
                 ...hole.attack.selection,
+                distanceFeet: movementFeet(5),
               }
             : {
-                kind: "attackTargetInRangedRange" as const,
+                kind: "attackTargetDistance" as const,
                 actorId: hole.attack.actorId,
                 targetId,
                 ...hole.attack.selection,
-                rangeBand: "normal" as const,
+                distanceFeet: movementFeet(5),
               },
         ];
   return {

@@ -77,6 +77,7 @@ export {
 } from "./movement-speed-facts.ts";
 export {
   attackExecutionSelectionMatchesOption,
+  attackTargetDistanceFeet,
   attackTargetIsLegal,
   attackTargetRangeBand,
 } from "./attack-spatial.ts";
@@ -341,6 +342,7 @@ export function opportunityAttackThreatEqual(
 ): boolean {
   return (
     left.reactorId === right.reactorId &&
+    Number(left.distanceFeet) === Number(right.distanceFeet) &&
     interruptAttackExecutionSelectionsEqual(left, right)
   );
 }

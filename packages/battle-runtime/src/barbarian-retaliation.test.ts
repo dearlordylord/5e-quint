@@ -1,3 +1,4 @@
+import { movementFeet } from "@dnd/shared/types";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.retaliation-reaction-attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-01-BARBARIAN-RETALIATION barbarian_retaliation
 import { describe, expect, test } from "vitest";
@@ -17,6 +18,7 @@ import {
   fighterId,
   fighterAttackSubject,
   attackExecutionSelectionForSubjectForTest,
+  attackTargetDistanceSpatialFact,
   findHole,
   goblinAttackSubject,
   goblinId,
@@ -31,6 +33,7 @@ import {
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import type { BattleState } from "./battle-runtime.test-support.ts";
+import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 
 describe("battle runtime: Barbarian Retaliation", () => {
   test("opens an after-damage Reaction attack against the damaging creature within 5 feet", () => {
@@ -115,7 +118,20 @@ describe("battle runtime: Barbarian Retaliation", () => {
             kind: "retaliationAttack",
             reactorId: fighterId,
             selection: longswordSelection,
-            fills: [],
+            fills: [
+              {
+                kind: "targetSpatialFacts",
+                holeId: ATTACK_TARGET_HOLE_ID,
+                spatialFacts: [
+                  attackTargetDistanceSpatialFact(
+                    fighterId,
+                    goblinId,
+                    longswordSelection,
+                    movementFeet(5),
+                  ),
+                ],
+              },
+            ],
           },
         },
       ),
@@ -214,9 +230,10 @@ function resolveGoblinScimitarDamage(input: {
   }
   const targetFacts = [
     {
-      kind: "attackTargetInMeleeReach" as const,
+      kind: "attackTargetDistance" as const,
       actorId: goblinId,
       targetId: fighterId,
+      distanceFeet: movementFeet(5),
       ...target.attack.selection,
     },
     ...(input.includeRetaliationWitness

@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
+// KERNEL-COVERAGE: qnt-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
 // RAW trace:
 // - .references/srd-5.2.1/Playing-the-Game.md#D20 Tests defines Ability
@@ -35,9 +35,9 @@ module d20TestCircumstanceCore {
     disadvantage: bool,
   }
 
-  type ProneAttackRollDistance =
-    | ProneAttackWithinFiveFeet
-    | ProneAttackBeyondFiveFeet
+  type ProneAttackRollDistance = int
+
+  pure val proneAttackAdvantageDistanceFeet: ProneAttackRollDistance = 5
 
   type TableD20TestCircumstanceSource =
     | TableGrantsAdvantage
@@ -89,16 +89,9 @@ module d20TestCircumstanceCore {
 
   pure def proneAttackRollSource(
     distance: ProneAttackRollDistance,
-  ): D20TestRollModeSources =
-    match distance {
-      | ProneAttackWithinFiveFeet => {
-          advantage: true,
-          disadvantage: false,
-        }
-      | ProneAttackBeyondFiveFeet => {
-          advantage: false,
-          disadvantage: true,
-        }
+  ): D20TestRollModeSources = {
+    advantage: distance <= proneAttackAdvantageDistanceFeet,
+    disadvantage: distance > proneAttackAdvantageDistanceFeet,
     }
 
   pure def d20TestRollModeWithProneTarget(

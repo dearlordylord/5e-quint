@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 145,
-    "covered": 137,
+    "total": 146,
+    "covered": 138,
     "open": 2,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 111,
+      "battle": 112,
       "character-creation": 16,
       "character-sheet": 13,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 137,
+      "covered": 138,
       "needs-qnt-owner": 2,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -5162,6 +5162,56 @@
         "UBIQUITOUS_LANGUAGE.md#Table-Decisions"
       ],
       "title": "Each pending rolled D20 Test can consume one exact Table-authored Advantage or Disadvantage circumstance and combine it with mechanical sources"
+    },
+    {
+      "id": "BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/d20-test-circumstance.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-attack-pipeline.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-opportunity-and-light-attacks.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-opportunity-attack-interrupt-boundaries.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
+      ],
+      "reason": "Prone grants Advantage to attacks made within 5 feet and Disadvantage to attacks made from farther away; the QNT integer rule and executable TypeScript parity witness cover the exact 5/6 boundary and cancellation. A single attackTargetDistance fact carries actor, target, selected attack identity, and exact distance; runtime derives melee reach, ranged normal or long legality, and Prone mode from that fact and attack range inputs. Opportunity Attack threats retain the pre-leave distance, while readied and retaliation fixed-target reactions reject missing or contradictory distance facts rather than defaulting to normal mode.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-spatial.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/interrupt-execution.ts",
+        "scripts/raw-swarm/sdk-player/scenario-session.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Rules-Glossary.md#Prone",
+        ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage",
+        "UBIQUITOUS_LANGUAGE.md#Conditions",
+        "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
+      ],
+      "title": "Canonical exact attack-target distance drives melee and ranged attack legality, Prone target roll mode, and fixed-target reaction continuation"
     }
   ],
   "battleHoleFrontier": [
@@ -11048,7 +11098,10 @@
     },
     {
       "evidence": "Owns the RAW three-kind D20 Test vocabulary, Advantage/Disadvantage source combination and cancellation, and exact pending-request equality independently of battle or authored identity.",
-      "obligationIds": ["BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION"],
+      "obligationIds": [
+        "BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE",
+        "BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION"
+      ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt",
       "role": "semantic-core"
     },
@@ -17048,6 +17101,30 @@
         "pattern-match"
       ],
       "obligationId": "BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "constant-val",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "all-block"
+      ],
+      "obligationId": "BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt"
       ],

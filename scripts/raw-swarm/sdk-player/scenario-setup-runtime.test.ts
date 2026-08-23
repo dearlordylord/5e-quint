@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -789,21 +790,12 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(Either.isRight(projectedAttack)).toBe(true);
     if (Either.isLeft(projectedAttack)) return;
-    const expectedAttackFactKind =
-      attackTargetHole.attack.targetConstraint.kind === "meleeReach"
-        ? "attackTargetInMeleeReach"
-        : "attackTargetInRangedRange";
     expect(projectedAttack.right).toEqual([
       expect.objectContaining({
         kind: "targetChoice",
         holeId: attackTargetHole.holeId,
         value: attackTarget,
         spatialFacts: [
-          expect.objectContaining({
-            kind: expectedAttackFactKind,
-            actorId: attackTargetHole.attack.actorId,
-            targetId: attackTarget,
-          }),
           expect.objectContaining({
             kind: "attackTargetDistance",
             actorId: attackTargetHole.attack.actorId,
@@ -2935,6 +2927,7 @@ describe("scenario setup public-SDK boundary", () => {
         moverId: twoThreatMoverId,
       }).map(({ reactorId: candidateReactorId, selection }) => ({
         reactorId: candidateReactorId,
+        distanceFeet: movementFeet(5),
         ...selection,
       })),
     );
@@ -3724,10 +3717,6 @@ describe("scenario setup public-SDK boundary", () => {
     if (Either.isLeft(projectedAttack)) return;
     expect(projectedAttack.right[0]).toMatchObject({
       spatialFacts: [
-        expect.objectContaining({
-          kind: expect.stringMatching(/^attackTargetIn/),
-          targetId: attackTarget,
-        }),
         expect.objectContaining({
           kind: "attackTargetDistance",
           targetId: attackTarget,

@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
 import { nonEmptyArrayProperty } from "../optional-property.ts";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -895,6 +896,7 @@ export function opportunityAttackReactionChoices(
           command: "opportunityAttack" as const,
           reactorId,
           targetId: moverId,
+          distanceFeet: threat.distanceFeet,
           ...selection,
         },
       },

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DieRollResult } from "@dnd/shared/types";
+import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import {
   attackDamageDispositionFill,
   attackExecutionSelectionForSubjectForTest,
@@ -78,6 +78,7 @@ function startFighterOpportunityAttackAfterMovement(
         provokedOpportunityAttacks: [
           {
             reactorId: fighterAttack.actorId,
+            distanceFeet: movementFeet(5),
             ...attackExecutionSelectionForSubjectForTest(fighterAttack),
           },
         ],

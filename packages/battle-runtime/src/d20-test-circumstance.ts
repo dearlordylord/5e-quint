@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 import type { CombatantId } from "./identity.ts";
 import type {
   BattleAttackRollResult,

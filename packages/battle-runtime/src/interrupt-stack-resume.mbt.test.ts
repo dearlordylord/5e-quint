@@ -613,9 +613,10 @@ function attackTargetFill(
     value: shieldCasterId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: shieldAttackerId,
         targetId: shieldCasterId,
+        distanceFeet: movementFeet(5),
         ...attackExecutionSelectionForSubjectForTest(subject),
       },
     ],

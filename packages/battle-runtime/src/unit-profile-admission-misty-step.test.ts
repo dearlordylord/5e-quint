@@ -213,6 +213,7 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
           provokedOpportunityAttacks: [
             {
               reactorId: spellTargetId,
+              distanceFeet: movementFeet(5),
               ...attackExecutionSelectionForSubjectForTest(
                 characterAttackSubjectForTest(
                   state.state,

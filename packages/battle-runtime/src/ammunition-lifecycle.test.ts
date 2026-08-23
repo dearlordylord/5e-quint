@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE
-import { resourceCount } from "@dnd/shared/types";
+import { movementFeet, resourceCount } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -17,6 +17,7 @@ import { BattleSnapshotSchema } from "./battle-reducer/battle-codecs.ts";
 import { snapshotBattle } from "./battle-execution-composition.ts";
 import {
   attackRollFill,
+  attackTargetDistanceSpatialFact,
   attackTargetFill,
   characterSeed,
   damageRollFill,
@@ -28,6 +29,7 @@ import {
   wizardId,
   wizardVsSkeletonBattle,
 } from "./battle-runtime.test-support.ts";
+import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
   battleId,
   battleStateInitIssueMessage,
@@ -368,6 +370,19 @@ describe("ammunition lifecycle", () => {
     );
     expect(shortbow).toBeDefined();
     if (shortbow?.kind !== "statBlockAttack") return;
+    const attackSelection = { procedureRef: shortbow.procedureRef };
+    const targetSpatialFacts = {
+      kind: "targetSpatialFacts" as const,
+      holeId: ATTACK_TARGET_HOLE_ID,
+      spatialFacts: [
+        attackTargetDistanceSpatialFact(
+          skeletonId,
+          wizardId,
+          attackSelection,
+          movementFeet(5),
+        ),
+      ],
+    };
     const state = {
       ...session.state,
       readiedResponses: new Map(session.state.readiedResponses).set(
@@ -393,13 +408,16 @@ describe("ammunition lifecycle", () => {
     const rollRequest = resolveBattleSubject({
       state,
       subject,
-      fills: [],
+      fills: [targetSpatialFacts],
     });
     const roll = requireHole(rollRequest, "attackRoll");
     const hit = resolveBattleSubject({
       state,
       subject,
-      fills: [attackRollFill(roll, { total: 20, naturalD20: 15 })],
+      fills: [
+        targetSpatialFacts,
+        attackRollFill(roll, { total: 20, naturalD20: 15 }),
+      ],
     });
     const damage = requireHole(hit, "rolledDice");
     expect(hit.tag).toBe("needsHoles");
@@ -411,6 +429,7 @@ describe("ammunition lifecycle", () => {
       state: hit.state,
       subject,
       fills: [
+        targetSpatialFacts,
         attackRollFill(roll, { total: 20, naturalD20: 15 }),
         damageRollFill(damage, 4),
       ],

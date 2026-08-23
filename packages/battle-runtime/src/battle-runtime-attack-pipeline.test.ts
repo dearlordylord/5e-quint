@@ -535,7 +535,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       combatants: new Map(state.combatants).set(fighterId, poisonedFighter),
     };
     expect(
-      requiredAttackRollMode(poisonedState, fighterId, goblinId, attack),
+      requiredAttackRollMode(poisonedState, fighterId, goblinId, attack, []),
     ).toBe("disadvantage");
     expect(
       attackRollModeWithOptionalOngoingFeature(
@@ -586,7 +586,13 @@ describe("battle runtime: attack pipeline boundaries", () => {
       ],
     };
     expect(
-      requiredAttackRollMode(helpedState, fighterId, goblinId, helpedAttack),
+      requiredAttackRollMode(
+        helpedState,
+        fighterId,
+        goblinId,
+        helpedAttack,
+        [],
+      ),
     ).toBe("normal");
     expect(
       attackRollModeWithOptionalOngoingFeature(
@@ -615,7 +621,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
 
   test.each([
     [movementFeet(5), "advantage"],
-    [movementFeet(10), "disadvantage"],
+    [movementFeet(6), "disadvantage"],
   ] as const)(
     "derives the Prone target attack-roll mode from %s feet",
     (distanceFeet, expectedMode) => {
@@ -735,7 +741,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
             fighterId,
             goblinId,
             targetHole.attack.selection,
-            movementFeet(10),
+            movementFeet(6),
           ),
         ],
       ),
@@ -946,3 +952,4 @@ describe("battle runtime: attack pipeline boundaries", () => {
     });
   });
 });
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE

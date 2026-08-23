@@ -896,6 +896,7 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
           provokedOpportunityAttacks: [
             {
               reactorId: spellCasterId,
+              distanceFeet: movementFeet(5),
               ...attackExecutionSelectionForSubjectForTest(
                 characterAttackSubjectForTest(
                   state.state,

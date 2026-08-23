@@ -1549,9 +1549,10 @@ function attackTargetFact(
     throw new Error("Expected bound Sanctuary attack selection.");
   }
   return {
-    kind: "attackTargetInMeleeReach" as const,
+    kind: "attackTargetDistance" as const,
     actorId: attackerId,
     targetId,
+    distanceFeet: movementFeet(5),
     ...hole.attack.selection,
   };
 }

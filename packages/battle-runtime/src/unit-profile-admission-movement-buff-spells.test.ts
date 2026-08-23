@@ -552,6 +552,7 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
           provokedOpportunityAttacks: [
             {
               reactorId: spellTargetId,
+              distanceFeet: movementFeet(5),
               ...attackExecutionSelectionForSubjectForTest(
                 characterAttackSubjectForTest(
                   cast.state,

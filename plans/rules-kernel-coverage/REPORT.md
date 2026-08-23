@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 145
-- Covered obligations: 137
+- Total obligations: 146
+- Covered obligations: 138
 - Open transitional obligations: 2
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   137 |
+| covered                  |   138 |
 | needs-qnt-owner          |     2 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -23,7 +23,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | Runtime            | Count |
 | ------------------ | ----: |
 | shared-algebras    |     1 |
-| battle             |   111 |
+| battle             |   112 |
 | character-creation |    16 |
 | character-sheet    |    13 |
 | character-battle   |     4 |
@@ -177,6 +177,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING`                      | battle             | covered                  | `battle.spell-access-magic-initiate-casting`                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION`               | character-creation | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION`                     | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE`                            | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Battle Hole Frontier
 
@@ -799,7 +800,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `packages/battle-runtime/battle-runtime-magic-initiate-spell-access-tests.qnt`                                      | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/starting-currency-finalization.qnt`                                      | semantic-core           | `CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `packages/shared-algebras/proofs/rule-core/starting-currency-finalization-tests.qnt`                                | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt`                                          | semantic-core           | `BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt`                                          | semantic-core           | `BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE`, `BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt`                                 | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## QNT Registry
@@ -1356,6 +1357,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING`                      | generation-subset-clean | `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `forall`, `membership`                                                                                                     |          |           |
 | `CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION`               | generation-subset-clean | `variant`, `record`, `pure-def`, `int`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `all-block`, `bool`, `boolean-connective`, `list`, `fold`                                                                                                                                                      |          |           |
 | `BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION`                     | generation-subset-clean | `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `comparison`, `pattern-match`                                                                                                                                                                                                    |          |           |
+| `BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE`                            | generation-subset-clean | `variant`, `record`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `pattern-match`, `all-block`                                                                                                                                                                  |          |           |
 
 ### Generator Readiness Backlog
 

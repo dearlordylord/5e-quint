@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 import type {
   AttackTargetConstraint,
   BattleIllumination,
@@ -2054,10 +2055,6 @@ export function planScenarioMovement(input: {
         moverId: input.subject.actorId,
       });
       for (const candidate of candidates) {
-        const threat = {
-          reactorId: candidate.reactorId,
-          ...candidate.selection,
-        };
         const before = scenarioRelationInSpace(
           input.session,
           routeState,
@@ -2084,10 +2081,18 @@ export function planScenarioMovement(input: {
             reachFeet: candidate.reachFeet,
           })
         ) {
+          const threat = {
+            reactorId: candidate.reactorId,
+            distanceFeet: movementFeet(Number(before.relation.distanceFeet)),
+            ...candidate.selection,
+          };
           if (
             provokedOpportunityAttacks.some((threat) =>
               opportunityAttackThreatEqual(threat, {
                 reactorId: candidate.reactorId,
+                distanceFeet: movementFeet(
+                  Number(before.relation.distanceFeet),
+                ),
                 ...candidate.selection,
               }),
             )
@@ -2751,23 +2756,7 @@ export function scenarioAttackTargetFills(input: {
         message: eligibility.right.message,
       });
     }
-    const { relation, range } = eligibility.right;
-    const rangeFact = Match.value(range).pipe(
-      Match.when({ kind: "meleeReach" }, () => ({
-        kind: "attackTargetInMeleeReach" as const,
-        actorId: attack.actorId,
-        targetId: fill.value,
-        ...attack.selection,
-      })),
-      Match.when({ kind: "rangedRange" }, ({ band }) => ({
-        kind: "attackTargetInRangedRange" as const,
-        actorId: attack.actorId,
-        targetId: fill.value,
-        ...attack.selection,
-        rangeBand: band,
-      })),
-      Match.exhaustive,
-    );
+    const { relation } = eligibility.right;
     const distanceFact = {
       kind: "attackTargetDistance" as const,
       actorId: attack.actorId,
@@ -2787,13 +2776,10 @@ export function scenarioAttackTargetFills(input: {
       spatialFacts: [
         ...(fill.spatialFacts ?? []).filter(
           (fact) =>
-            fact.kind !== "attackTargetInMeleeReach" &&
-            fact.kind !== "attackTargetInRangedRange" &&
             fact.kind !== "attackTargetDistance" &&
             fact.kind !== "attackAttackerCannotSeeTarget" &&
             fact.kind !== "attackTargetCannotSeeAttacker",
         ),
-        rangeFact,
         distanceFact,
         ...(canonicalSightFact === undefined ? [] : [canonicalSightFact]),
       ],
