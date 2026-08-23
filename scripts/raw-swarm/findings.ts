@@ -984,7 +984,8 @@ export function findingsFromGenerationLedger(
     }
     const campaignMismatch =
       expected.campaign !== undefined &&
-      decoded.right.schemaVersion === 4 &&
+      (decoded.right.schemaVersion === 4 ||
+        decoded.right.schemaVersion === 5) &&
       ((decoded.right.phase === "scenarioGeneration" &&
         (decoded.right.subject.tag !== "scenarioCampaign" ||
           decoded.right.subject.campaignId !== expected.campaign.campaignId ||
