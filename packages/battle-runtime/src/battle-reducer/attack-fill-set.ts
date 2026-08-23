@@ -22,7 +22,6 @@ import {
   type AttackFillSet,
   type SelectedAttackFillSet,
 } from "./battle-runtime-protocol.ts";
-import { attackExecutionSelectionIdentitiesEqual } from "../battle-action-options.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   parseAttackTargetChoiceFill,
@@ -1385,7 +1384,7 @@ function validateUniqueAttackTargetDistanceFacts(
         (previous) =>
           previous.actorId === fact.actorId &&
           previous.targetId === fact.targetId &&
-          attackExecutionSelectionIdentitiesEqual(previous, fact),
+          previous.procedureRef === fact.procedureRef,
       ),
   );
   return duplicate === undefined

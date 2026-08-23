@@ -676,7 +676,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
     },
   );
 
-  test("matches distance facts by the full bound selection identity in either order", () => {
+  test("prefers an exact selection and safely reuses one same-procedure distance", () => {
     type AttackTargetDistanceFact = Extract<
       BattleTargetSpatialFact,
       { readonly kind: "attackTargetDistance" }
@@ -727,6 +727,22 @@ describe("battle runtime: attack pipeline boundaries", () => {
         characterAttack,
       ),
     ).toEqual(movementFeet(5));
+    expect(
+      attackTargetDistanceFeet(
+        [conflictingCharacterDamage],
+        fighterId,
+        goblinId,
+        characterAttack,
+      ),
+    ).toEqual(movementFeet(100));
+    expect(
+      attackTargetDistanceFeet(
+        [conflictingCharacterAbility, conflictingCharacterDamage],
+        fighterId,
+        goblinId,
+        characterAttack,
+      ),
+    ).toBeNull();
     expect(
       attackTargetDistanceFeet(
         [
