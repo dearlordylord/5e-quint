@@ -55,7 +55,7 @@ import {
   scenarioBattleResultWithD20TestCircumstances,
   scenarioD20TestCircumstancePreparation,
   scenarioD20TestResolutionId,
-  projectGeometryAttackTargetHoles,
+  projectGeometryTargetHoles,
   scenarioSessionAfterD20TestCircumstanceResolution,
   scenarioSessionWithBattleResult,
   scenarioTokenId,
@@ -450,8 +450,9 @@ function retainScenarioBattlefield(
           }
         : {
             ...needsHoles,
-            holes: projectGeometryAttackTargetHoles({
+            holes: projectGeometryTargetHoles({
               session,
+              subject: needsHoles.subject,
               holes: needsHoles.holes,
             }),
             session: updated.right,

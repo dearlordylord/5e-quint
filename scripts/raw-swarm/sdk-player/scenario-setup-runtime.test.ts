@@ -350,6 +350,120 @@ describe("scenario setup public-SDK boundary", () => {
     }
   });
 
+  test("projects geometry-derived Grapple and Shove target candidates from current reach", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios/open-grid-wolf-skeleton-pursuit.setup.ts",
+      ),
+      [],
+    );
+    expect(setup).toMatchObject({ tag: "ready" });
+    if (setup.tag !== "ready") return;
+
+    const wolf = combatantId("wolf");
+    const skeleton = combatantId("skeleton");
+    const geometryActs = scenarioBattleActs(setup.session).filter(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.actorId === wolf &&
+        (subject.action === "grapple" || subject.action === "shove"),
+    );
+    expect(geometryActs).toHaveLength(2);
+    for (const act of geometryActs) {
+      const targetHole = act.initialHoles.find(
+        (hole) => hole.kind === "targetChoice",
+      );
+      expect(targetHole).toMatchObject({
+        kind: "targetChoice",
+        choices: [],
+      });
+      expect(targetHole).not.toHaveProperty("requiresTableSpatialFact");
+    }
+
+    const adjacentScenario = createScenarioSession({
+      battle: setup.session.battle,
+      spatial: {
+        kind: "geometryDerived",
+        arena: {
+          cells: Array.from({ length: 7 * 7 }, (_, index) => ({
+            x: index % 7,
+            y: Math.floor(index / 7),
+            terrain: "ordinary" as const,
+          })),
+          boundaries: [],
+        },
+        placements: [
+          { tokenId: wolf, coordinate: { x: 3, y: 3 } },
+          { tokenId: skeleton, coordinate: { x: 3, y: 4 } },
+        ],
+        spatialDecisions: [],
+      },
+      ambientIllumination: setup.session.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        setup.session.battlefield.statBlockDamageNotation,
+      environment: setup.session.battlefield.environment,
+      initialRangedAttackEnemyRelationships:
+        setup.session.battlefield.initialRangedAttackEnemyRelationships,
+      movementAllyRelationships:
+        setup.session.battlefield.movementAllyRelationships,
+      opportunityAttackEnemyRelationships:
+        setup.session.battlefield.opportunityAttackEnemyRelationships,
+      objects: setup.session.battlefield.objects,
+    });
+    expect(Either.isRight(adjacentScenario)).toBe(true);
+    if (Either.isLeft(adjacentScenario)) return;
+
+    const adjacentActs = scenarioBattleActs(adjacentScenario.right).filter(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.actorId === wolf &&
+        (subject.action === "grapple" || subject.action === "shove"),
+    );
+    expect(adjacentActs).toHaveLength(2);
+    for (const act of adjacentActs) {
+      const targetHole = act.initialHoles.find(
+        (hole) => hole.kind === "targetChoice",
+      );
+      expect(targetHole).toMatchObject({
+        kind: "targetChoice",
+        choices: [skeleton],
+      });
+      expect(targetHole).not.toHaveProperty("requiresTableSpatialFact");
+    }
+
+    const tableSetup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios/four-way-crank-control-cycle.setup.ts",
+      ),
+      [],
+    );
+    expect(tableSetup).toMatchObject({ tag: "ready" });
+    if (tableSetup.tag !== "ready") return;
+    const tableActs = scenarioBattleActs(tableSetup.session).filter(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.actorId === combatantId("brine") &&
+        (subject.action === "grapple" || subject.action === "shove"),
+    );
+    expect(tableActs).toHaveLength(2);
+    for (const act of tableActs) {
+      const targetHole = act.initialHoles.find(
+        (hole) => hole.kind === "targetChoice",
+      );
+      expect(targetHole).toMatchObject({
+        kind: "targetChoice",
+        requiresTableSpatialFact: true,
+        choices: [
+          combatantId("rivet"),
+          combatantId("soot"),
+          combatantId("tangle"),
+        ],
+      });
+    }
+  });
+
   test("binds the issue 279 Table decision to the Wolf's exact first attack-roll test", async () => {
     const setup = await evaluateScenarioSetup(
       resolve(

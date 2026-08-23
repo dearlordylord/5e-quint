@@ -205,6 +205,8 @@ export type ScenarioSpatialSetupInput =
       readonly spatialDecisions: readonly ScenarioSpatialDecisionInput[];
     }>;
 
+const SCENARIO_CLOSE_TARGET_DISTANCE_FEET = 5;
+
 type ScenarioMovementResolution =
   | Readonly<{ readonly kind: "idle" }>
   | Readonly<{
@@ -365,8 +367,9 @@ export function scenarioBattleActs(
       });
     })
     .map((act) => {
-      const initialHoles = projectGeometryAttackTargetHoles({
+      const initialHoles = projectGeometryTargetHoles({
         session,
+        subject: act.subject,
         holes: act.initialHoles,
       }).map((hole) =>
         hole.kind === "readyDeclaration"
@@ -413,26 +416,70 @@ export function scenarioBattleActs(
     });
 }
 
-export function projectGeometryAttackTargetHoles(input: {
+export function projectGeometryTargetHoles(input: {
   readonly session: ScenarioSession;
+  readonly subject: BattleSubject;
   readonly holes: readonly BattleHole[];
 }): readonly BattleHole[] {
   if (input.session.battlefield.spatial.kind !== "geometryDerived") {
     return input.holes;
   }
   return input.holes.map((hole) => {
-    if (hole.kind !== "targetChoice" || hole.attack === undefined) {
+    if (hole.kind !== "targetChoice") {
       return hole;
     }
-    const attack = hole.attack;
-    const choices = hole.choices.filter((targetId) => {
-      const eligibility = scenarioAttackTargetEligibility({
-        session: input.session,
-        attack,
-        targetId,
+    if (hole.attack !== undefined) {
+      const attack = hole.attack;
+      const choices = hole.choices.filter((targetId) => {
+        const eligibility = scenarioAttackTargetEligibility({
+          session: input.session,
+          attack,
+          targetId,
+        });
+        return (
+          Either.isRight(eligibility) && eligibility.right.tag === "eligible"
+        );
       });
+      const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
+        hole;
+      return { ...geometryHole, choices };
+    }
+    if (
+      input.subject.tag !== "action" ||
+      (input.subject.action !== "grapple" &&
+        input.subject.action !== "shove" &&
+        input.subject.action !== "shakeAwakeFromSleep" &&
+        input.subject.action !== "shakeAwakeFromHypnoticPattern")
+    ) {
+      return hole;
+    }
+    const firstTarget = hole.choices[0];
+    if (firstTarget === undefined) {
+      const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
+        hole;
+      return geometryHole;
+    }
+    const targetQuestion = scenarioTableSpatialFactQuestionForSubject(
+      input.subject,
+      firstTarget,
+    );
+    if (targetQuestion === undefined) {
+      return hole;
+    }
+    const choices = hole.choices.filter((targetId) => {
+      const question = scenarioTableSpatialFactQuestionForSubject(
+        input.subject,
+        targetId,
+      );
+      if (question === undefined) return false;
+      const relation = scenarioRelationForSpatialQuestion(
+        input.session,
+        question,
+      );
       return (
-        Either.isRight(eligibility) && eligibility.right.tag === "eligible"
+        relation.tag === "relation" &&
+        Number(relation.relation.distanceFeet) <=
+          SCENARIO_CLOSE_TARGET_DISTANCE_FEET
       );
     });
     const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
@@ -2437,7 +2484,10 @@ export function scenarioTableSpatialFactFills(input: {
           message: relation.message,
         });
       }
-      if (relation.relation.distanceFeet > 5) {
+      if (
+        Number(relation.relation.distanceFeet) >
+        SCENARIO_CLOSE_TARGET_DISTANCE_FEET
+      ) {
         return Either.left({
           tag: "table-spatial-fact-projection",
           message:
@@ -2495,7 +2545,10 @@ export function scenarioTableSpatialFactFills(input: {
         message: relation.message,
       });
     }
-    if (Number(relation.relation.distanceFeet) > 5) {
+    if (
+      Number(relation.relation.distanceFeet) >
+      SCENARIO_CLOSE_TARGET_DISTANCE_FEET
+    ) {
       return Either.left({
         tag: "table-spatial-fact-projection",
         message: `The ${targetQuestion.kind} spatial witness is outside the supported 5-foot reach/adjacency boundary.`,
@@ -3205,7 +3258,8 @@ export function scenarioEnemyWithinFiveFeetCanSeeAttacker(
     });
     return (
       relation.tag === "relation" &&
-      Number(relation.relation.distanceFeet) <= 5 &&
+      Number(relation.relation.distanceFeet) <=
+        SCENARIO_CLOSE_TARGET_DISTANCE_FEET &&
       relation.relation.attackerCanSeeTarget
     );
   });
