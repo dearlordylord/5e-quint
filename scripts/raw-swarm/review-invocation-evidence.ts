@@ -155,26 +155,35 @@ export function validateRetainedScenarioReviewInvocationEvidence(input: {
     input.reviewStage,
   );
   const subject = retainedScenarioReviewSubject(retained);
-  const expectedBinding = retainedScenarioReviewMatchesReplayExpectation(
-    retained,
+  const expectedBinding =
     subject.tag === "scenarioCandidate"
-      ? {
-          tag: "candidate",
-          reviewStage: input.reviewStage,
-          scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
-          scenarioSha256: subject.candidateScenarioSha256,
-          campaign: {
-            campaignId: subject.campaignId,
-            evidenceSetId: subject.evidenceSetId,
-            plannedScenarioId: subject.plannedScenarioId,
-          },
-        }
-      : {
+      ? input.reviewStage === "final"
+        ? retainedScenarioReviewMatchesReplayExpectation(retained, {
+            tag: "candidate",
+            reviewStage: "final",
+            scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
+            admittedScenarioSha256: subject.candidateScenarioSha256,
+            campaign: {
+              campaignId: subject.campaignId,
+              evidenceSetId: subject.evidenceSetId,
+              plannedScenarioId: subject.plannedScenarioId,
+            },
+          })
+        : retainedScenarioReviewMatchesReplayExpectation(retained, {
+            tag: "candidate",
+            reviewStage: "milestone",
+            scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
+            campaign: {
+              campaignId: subject.campaignId,
+              evidenceSetId: subject.evidenceSetId,
+              plannedScenarioId: subject.plannedScenarioId,
+            },
+          })
+      : retainedScenarioReviewMatchesReplayExpectation(retained, {
           tag: "scenario",
           reviewStage: input.reviewStage,
           scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
-        },
-  );
+        });
   if (Either.isLeft(expectedBinding)) fail(expectedBinding.left);
   const binding = retainedScenarioReviewMatchesReplayBinding(
     retained,

@@ -1176,21 +1176,38 @@ function originalCompositeReviewInputs(
       );
     }
     const entry = matches[0]!;
-    const expectedBinding = retainedScenarioReviewMatchesReplayExpectation(
-      review,
-      review.schemaVersion === 3 && review.subject.tag === "scenarioCandidate"
-        ? {
-            tag: "candidate",
-            reviewStage: expectedStage,
-            ...expectedScenario,
-            campaign: expectedCampaign,
-          }
-        : {
-            tag: "scenario",
-            reviewStage: expectedStage,
-            scenarioId: expectedScenario.scenarioId,
-          },
-    );
+    const expectedBinding = (() => {
+      if (review.schemaVersion === 2) {
+        return retainedScenarioReviewMatchesReplayExpectation(review, {
+          tag: "historicalScenario",
+          reviewStage: expectedStage,
+          scenarioId: expectedScenario.scenarioId,
+          campaign: expectedCampaign,
+        });
+      }
+      if (review.subject.tag !== "scenarioCandidate") {
+        return retainedScenarioReviewMatchesReplayExpectation(review, {
+          tag: "scenario",
+          reviewStage: expectedStage,
+          scenarioId: expectedScenario.scenarioId,
+        });
+      }
+      if (expectedStage === "final") {
+        return retainedScenarioReviewMatchesReplayExpectation(review, {
+          tag: "candidate",
+          reviewStage: "final",
+          scenarioId: expectedScenario.scenarioId,
+          admittedScenarioSha256: expectedScenario.scenarioSha256,
+          campaign: expectedCampaign,
+        });
+      }
+      return retainedScenarioReviewMatchesReplayExpectation(review, {
+        tag: "candidate",
+        reviewStage: "milestone",
+        scenarioId: expectedScenario.scenarioId,
+        campaign: expectedCampaign,
+      });
+    })();
     if (Either.isLeft(expectedBinding)) {
       fail(
         `Review replay input ${canonical} does not have a valid lifecycle binding: ${expectedBinding.left}`,

@@ -3373,25 +3373,49 @@ function currentAuthorityContentIssues(
       invocation === undefined
         ? Either.left("No matching composite-review invocation was retained.")
         : (() => {
-            const expectedBinding =
-              replay.schemaVersion === 3 &&
-              replay.subject.tag === "scenarioCandidate"
-                ? expectedReplayCampaign === undefined
-                  ? Either.left(
-                      "Current Candidate replay binding requires an expected Campaign and Evidence Set identity.",
-                    )
-                  : retainedScenarioReviewMatchesReplayExpectation(replay, {
-                      tag: "candidate",
+            const expectedBinding = (() => {
+              if (replay.schemaVersion === 2) {
+                return expectedReplayCampaign === undefined
+                  ? retainedScenarioReviewMatchesReplayExpectation(replay, {
+                      tag: "scenario",
                       reviewStage: expectedReplayStage,
                       scenarioId: findings.subject.scenarioId,
-                      scenarioSha256: expectedScenarioSha256,
-                      campaign: expectedReplayCampaign,
                     })
-                : retainedScenarioReviewMatchesReplayExpectation(replay, {
-                    tag: "scenario",
-                    reviewStage: expectedReplayStage,
-                    scenarioId: findings.subject.scenarioId,
-                  });
+                  : retainedScenarioReviewMatchesReplayExpectation(replay, {
+                      tag: "historicalScenario",
+                      reviewStage: expectedReplayStage,
+                      scenarioId: findings.subject.scenarioId,
+                      campaign: expectedReplayCampaign,
+                    });
+              }
+              if (replay.subject.tag !== "scenarioCandidate") {
+                return retainedScenarioReviewMatchesReplayExpectation(replay, {
+                  tag: "scenario",
+                  reviewStage: expectedReplayStage,
+                  scenarioId: findings.subject.scenarioId,
+                });
+              }
+              if (expectedReplayCampaign === undefined) {
+                return Either.left(
+                  "Current Candidate replay binding requires an expected Campaign and Evidence Set identity.",
+                );
+              }
+              if (expectedReplayStage === "final") {
+                return retainedScenarioReviewMatchesReplayExpectation(replay, {
+                  tag: "candidate",
+                  reviewStage: "final",
+                  scenarioId: findings.subject.scenarioId,
+                  admittedScenarioSha256: expectedScenarioSha256,
+                  campaign: expectedReplayCampaign,
+                });
+              }
+              return retainedScenarioReviewMatchesReplayExpectation(replay, {
+                tag: "candidate",
+                reviewStage: "milestone",
+                scenarioId: findings.subject.scenarioId,
+                campaign: expectedReplayCampaign,
+              });
+            })();
             return Either.isLeft(expectedBinding)
               ? Either.left(expectedBinding.left)
               : retainedScenarioReviewMatchesReplayBinding(

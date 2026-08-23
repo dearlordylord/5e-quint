@@ -167,10 +167,23 @@ export type RetainedScenarioReviewReplayExpectation =
       readonly scenarioId: RetainedScenarioReviewScenarioReference;
     }>
   | Readonly<{
-      readonly tag: "candidate";
+      readonly tag: "historicalScenario";
       readonly reviewStage: RetainedScenarioReviewStage;
       readonly scenarioId: RetainedScenarioReviewScenarioReference;
-      readonly scenarioSha256: ScenarioReviewSourceSha256;
+      readonly campaign: RetainedScenarioReviewCampaignIdentity;
+    }>
+  | Readonly<{
+      readonly tag: "candidate";
+      readonly reviewStage: "milestone";
+      readonly scenarioId: RetainedScenarioReviewScenarioReference;
+      readonly campaign: RetainedScenarioReviewCampaignIdentity;
+    }>
+  | Readonly<{
+      readonly tag: "candidate";
+      readonly reviewStage: "final";
+      readonly scenarioId: RetainedScenarioReviewScenarioReference;
+      /** Hash of the admitted Scenario, never a revised Candidate hash. */
+      readonly admittedScenarioSha256: ScenarioReviewSourceSha256;
       readonly campaign: RetainedScenarioReviewCampaignIdentity;
     }>;
 
@@ -234,7 +247,8 @@ export type RetainedScenarioReviewReplayBinding =
   | (RetainedScenarioReviewReplayBindingCommon & {
       readonly tag: "candidate";
       readonly scenarioId: RetainedScenarioReviewScenarioReference;
-      readonly scenarioSha256: ScenarioReviewSourceSha256;
+      /** Hash is always derived from the parsed Candidate subject. */
+      readonly candidateScenarioSha256: ScenarioReviewSourceSha256;
       readonly campaign: RetainedScenarioReviewCampaignIdentity;
       readonly envelopeSubject: CandidateRetainedScenarioReviewInput["subject"];
       readonly retainedInput: CandidateRetainedScenarioReviewInput;
@@ -254,9 +268,11 @@ export type RetainedScenarioReviewReplayBinding =
 
 /**
  * Validate the lifecycle-specific expectation against the parsed envelope
- * once. Candidate expectations carry the complete Campaign, Evidence Set,
- * planned Scenario, and source hash identity; Scenario expectations
- * intentionally carry no Candidate ownership.
+ * once. Candidate final expectations carry the admitted Scenario hash, while
+ * milestone bindings derive their Candidate hash from the parsed subject.
+ * Historical expectations carry Campaign identity only to validate a migrated
+ * v4 Candidate ledger row; the resulting historical binding retains no
+ * Candidate ownership.
  */
 export function retainedScenarioReviewMatchesReplayExpectation(
   input: RetainedScenarioReviewInput,
@@ -265,6 +281,19 @@ export function retainedScenarioReviewMatchesReplayExpectation(
   const subject = retainedScenarioReviewSubject(input);
   const inputTag =
     subject.tag === "scenarioCandidate" ? "candidate" : "scenario";
+  if (expected.tag === "historicalScenario" && input.schemaVersion !== 2) {
+    return Either.left(
+      `Review invocation ${input.invocationId} is not a historical schema-v2 envelope.`,
+    );
+  }
+  if (expected.tag === "historicalScenario" || expected.tag === "scenario") {
+    if (inputTag === "candidate") {
+      return Either.left(
+        `Review invocation ${input.invocationId} has lifecycle ${inputTag}, not expected ${expected.tag}.`,
+      );
+    }
+    return Either.right(expected);
+  }
   if (inputTag !== expected.tag) {
     return Either.left(
       `Review invocation ${input.invocationId} has lifecycle ${inputTag}, not expected ${expected.tag}.`,
@@ -285,11 +314,7 @@ function replayLedgerSchemaVersion(
         `Historical review invocation ${invocationId} does not match the expected ledger version.`,
       );
     }
-    return ledgerEntry.subject.tag === "scenario"
-      ? Either.right(4)
-      : Either.left(
-          `Historical review invocation ${invocationId} requires a v4 Scenario lifecycle subject.`,
-        );
+    return Either.right(4);
   }
   if (ledgerEntry.schemaVersion !== 4) {
     const lifecycle =
@@ -310,9 +335,10 @@ function replayLedgerSchemaVersion(
 
 /**
  * The replay boundary has two historical shapes. Schema-2 retained reviews
- * can bind only to historical v2 or current v4 ledger scenario references;
- * schema-3 Candidate reviews require a lifecycle-discriminated v4 row so the
- * immutable Candidate, Campaign, and Evidence Set identity is preserved.
+ * can bind to exact v2 rows or migrated v4 lifecycle rows, including a
+ * scenarioCandidate row after its Campaign ownership is checked; schema-3
+ * Candidate reviews require a lifecycle-discriminated v4 row so the immutable
+ * Candidate, Campaign, and Evidence Set identity is preserved.
  */
 export function retainedScenarioReviewMatchesReplayBinding(
   input: RetainedScenarioReviewInput,
@@ -333,7 +359,9 @@ export function retainedScenarioReviewMatchesReplayBinding(
         : "scenario";
   if (
     (expected.tag === "candidate" && inputTag !== "candidate") ||
-    (expected.tag === "scenario" && inputTag === "candidate")
+    ((expected.tag === "scenario" || expected.tag === "historicalScenario") &&
+      inputTag === "candidate") ||
+    (expected.tag === "historicalScenario" && input.schemaVersion !== 2)
   ) {
     return Either.left(
       `Review invocation ${input.invocationId} has lifecycle ${inputTag}, not expected ${expected.tag}.`,
@@ -342,7 +370,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
   if (expected.tag === "candidate" && expected.reviewStage === "final") {
     const admission = retainedScenarioReviewMatchesAdmission(input, {
       scenarioId: expected.scenarioId,
-      scenarioSha256: expected.scenarioSha256,
+      scenarioSha256: expected.admittedScenarioSha256,
     });
     if (Either.isLeft(admission)) return Either.left(admission.left);
   }
@@ -394,6 +422,20 @@ export function retainedScenarioReviewMatchesReplayBinding(
   if (Either.isLeft(ledgerSchemaVersion))
     return Either.left(ledgerSchemaVersion.left);
 
+  if (
+    expected.tag === "historicalScenario" &&
+    ledgerEntry.schemaVersion === 4 &&
+    ledgerEntry.subject.tag === "scenarioCandidate" &&
+    (ledgerEntry.subject.campaignId !== expected.campaign.campaignId ||
+      ledgerEntry.subject.evidenceSetId !== expected.campaign.evidenceSetId ||
+      ledgerEntry.subject.plannedScenarioId !==
+        expected.campaign.plannedScenarioId)
+  ) {
+    return Either.left(
+      `Historical review Candidate ${ledgerEntry.subject.candidateId} does not belong to the expected Campaign, Evidence Set, and planned Scenario.`,
+    );
+  }
+
   if (expected.tag === "candidate") {
     if (
       subject.tag !== "scenarioCandidate" ||
@@ -428,7 +470,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
       ...common,
       tag: "candidate",
       scenarioId: expected.scenarioId,
-      scenarioSha256: expected.scenarioSha256,
+      candidateScenarioSha256: input.subject.candidateScenarioSha256,
       campaign: expected.campaign,
       envelopeSubject: input.subject,
       retainedInput: input,
