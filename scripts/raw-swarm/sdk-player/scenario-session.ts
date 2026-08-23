@@ -11,6 +11,7 @@ import type {
   BattleOrdinaryMovementRouteOccupant,
   BattleOpportunityAttackThreat,
   BattleFill,
+  BattleHole,
   BattleMovementSpeedKind,
   BattleProcedureExecutionRef,
   BattleReadyResponse,
@@ -363,7 +364,10 @@ export function scenarioBattleActs(
       });
     })
     .map((act) => {
-      const initialHoles = act.initialHoles.map((hole) =>
+      const initialHoles = projectGeometryAttackTargetHoles({
+        session,
+        holes: act.initialHoles,
+      }).map((hole) =>
         hole.kind === "readyDeclaration"
           ? {
               ...hole,
@@ -406,6 +410,41 @@ export function scenarioBattleActs(
         d20TestCircumstanceRequests: requests,
       };
     });
+}
+
+export function projectGeometryAttackTargetHoles(input: {
+  readonly session: ScenarioSession;
+  readonly holes: readonly BattleHole[];
+}): readonly BattleHole[] {
+  if (input.session.battlefield.spatial.kind !== "geometryDerived") {
+    return input.holes;
+  }
+  return input.holes.map((hole) => {
+    if (hole.kind !== "targetChoice" || hole.attack === undefined) {
+      return hole;
+    }
+    const attack = hole.attack;
+    const choices = hole.choices.filter((targetId) => {
+      const relation = scenarioRelationForSpatialQuestion(input.session, {
+        kind: "attackTarget",
+        actorId: attack.actorId,
+        targetId,
+        sourceProcedureRef: attack.selection.procedureRef,
+        targetConstraint: attack.targetConstraint.kind,
+      });
+      if (relation.tag !== "relation") return false;
+      return Either.isRight(
+        scenarioAttackRange({
+          constraint: attack.targetConstraint,
+          distanceFeet: Number(relation.relation.distanceFeet),
+          targetLabel: "Target",
+        }),
+      );
+    });
+    const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
+      hole;
+    return { ...geometryHole, choices };
+  });
 }
 
 export function scenarioBattleFills(

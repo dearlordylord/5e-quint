@@ -237,6 +237,63 @@ describe("scenario setup public-SDK boundary", () => {
     }
   }, 120_000);
 
+  test("projects geometry-derived melee target candidates from current reach", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios/lantern-intercept-pairwise-control.setup.ts",
+      ),
+      [],
+    );
+    expect(setup).toMatchObject({ tag: "ready" });
+    if (setup.tag !== "ready") return;
+
+    const wolf = combatantId("wolf");
+    const hawk = combatantId("hawk");
+    const skeleton = combatantId("skeleton");
+    expect(
+      scenarioRelation({
+        session: setup.session,
+        sourceId: wolf,
+        targetId: hawk,
+      }),
+    ).toMatchObject({
+      tag: "relation",
+      relation: { distanceFeet: 30 },
+    });
+    expect(
+      scenarioRelation({
+        session: setup.session,
+        sourceId: wolf,
+        targetId: skeleton,
+      }),
+    ).toMatchObject({
+      tag: "relation",
+      relation: { distanceFeet: 55 },
+    });
+
+    const attackActs = scenarioBattleActs(setup.session).filter(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.actorId === wolf &&
+        subject.action === "attack",
+    );
+    expect(attackActs.map(({ presentation }) => presentation)).toEqual([
+      expect.objectContaining({ name: "Bite" }),
+      expect.objectContaining({ name: "Unarmed Strike" }),
+    ]);
+    for (const attackAct of attackActs) {
+      const targetHole = attackAct.initialHoles.find(
+        (hole) => hole.kind === "targetChoice",
+      );
+      expect(targetHole).toMatchObject({
+        kind: "targetChoice",
+        choices: [],
+      });
+      expect(targetHole).not.toHaveProperty("requiresTableSpatialFact");
+    }
+  });
+
   test("binds the issue 279 Table decision to the Wolf's exact first attack-roll test", async () => {
     const setup = await evaluateScenarioSetup(
       resolve(
