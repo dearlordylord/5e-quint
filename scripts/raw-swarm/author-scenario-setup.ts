@@ -92,6 +92,11 @@ function runSetupAuthor(input: {
     model: "gpt-5.6-sol",
     reasoningEffort: "medium",
   });
+  if (result.invocationResult.tag === "failed") {
+    fail(
+      `Scenario setup ${input.role} invocation failed: ${result.invocationResult.reason}`,
+    );
+  }
   if (result.error !== undefined) throw result.error;
   if (result.signal !== null) {
     fail(`Scenario setup ${input.role} agent stopped by ${result.signal}.`);

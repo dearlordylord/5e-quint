@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   appendFileSync,
   closeSync,
+  existsSync,
   openSync,
   readFileSync,
   writeSync,
@@ -46,6 +47,13 @@ export const MODEL_INVOCATION_PHASES = [
   "postPlayReview",
 ] as const;
 export type ModelInvocationPhase = (typeof MODEL_INVOCATION_PHASES)[number];
+
+/**
+ * A model child must not remain an unbounded process in an evidence-producing
+ * workflow. Callers can use a shorter boundary in tests or for a narrower
+ * protocol, but every invocation has an owned timeout by default.
+ */
+export const MODEL_INVOCATION_TIMEOUT_MILLISECONDS = 30 * 60 * 1_000;
 
 /**
  * A benchmark can retain historical auxiliary work without making that work
@@ -97,24 +105,47 @@ const ModelUsageSchema = Schema.Union(
     reason: Schema.NonEmptyString,
   }),
 );
+export const MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS = [
+  "lastMessageMissing",
+  "lastMessageUnreadable",
+  "lastMessageEmpty",
+  "lastMessageMalformed",
+  "lastMessageSchemaInvalid",
+] as const;
+type ModelInvocationLastMessageFailureKind =
+  (typeof MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS)[number];
 const ModelInvocationResultSchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("succeeded") }),
   Schema.Struct({
     tag: Schema.Literal("failed"),
     reason: Schema.NonEmptyTrimmedString,
+    failureKind: Schema.optionalWith(
+      Schema.Literal(...MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS),
+      { exact: true },
+    ),
   }),
 );
 
 function invocationResultMatchesExit(input: {
   readonly exit: { readonly tag: string; readonly status?: number };
-  readonly result: { readonly tag: string };
+  readonly result: { readonly tag: string; readonly failureKind?: string };
 }): boolean {
   const succeeded =
     (input.exit.tag === "exited" || input.exit.tag === "shellStatus") &&
     input.exit.status === 0;
-  return succeeded
-    ? input.result.tag === "succeeded"
-    : input.result.tag === "failed";
+  if (succeeded) {
+    return (
+      input.result.tag === "succeeded" ||
+      (input.result.tag === "failed" &&
+        input.result.failureKind !== undefined &&
+        MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS.some(
+          (kind) => kind === input.result.failureKind,
+        ))
+    );
+  }
+  return (
+    input.result.tag === "failed" && input.result.failureKind === undefined
+  );
 }
 
 const ModelInvocationExitSchema = Schema.Union(
@@ -133,6 +164,10 @@ const ModelInvocationExitSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("shellStatus"),
     status: Schema.Number.pipe(Schema.int()),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("timedOut"),
+    timeoutMilliseconds: NonNegativeIntegerSchema,
   }),
 );
 
@@ -326,6 +361,9 @@ export type CurrentModelInvocationLedgerEntry = Schema.Schema.Type<
 >;
 export type ModelInvocationLedgerEntry = Schema.Schema.Type<
   typeof ModelInvocationLedgerEntrySchema
+>;
+export type ModelInvocationResult = Schema.Schema.Type<
+  typeof ModelInvocationResultSchema
 >;
 type CurrentModelInvocationLedgerEntryEncoded = Schema.Schema.Encoded<
   typeof CurrentModelInvocationLedgerEntrySchema
@@ -571,23 +609,42 @@ function nonNegativeInteger(value: unknown): number | undefined {
 
 function resultFromExit(
   exit: Schema.Schema.Type<typeof ModelInvocationExitSchema>,
-): Schema.Schema.Type<typeof ModelInvocationResultSchema> {
-  if (
-    (exit.tag === "exited" || exit.tag === "shellStatus") &&
-    exit.status === 0
-  ) {
+): ModelInvocationResult {
+  const succeeded = Match.value(exit).pipe(
+    Match.when({ tag: "exited" }, ({ status }) => status === 0),
+    Match.when({ tag: "shellStatus" }, ({ status }) => status === 0),
+    Match.when({ tag: "signaled" }, () => false),
+    Match.when({ tag: "failedToStart" }, () => false),
+    Match.when({ tag: "timedOut" }, () => false),
+    Match.exhaustive,
+  );
+  if (succeeded) {
     return { tag: "succeeded" };
   }
+  const reason = Match.value(exit).pipe(
+    Match.when(
+      { tag: "exited" },
+      ({ status }) => `Codex exited with status ${String(status)}.`,
+    ),
+    Match.when(
+      { tag: "signaled" },
+      ({ signal }) => `Codex stopped by ${signal}.`,
+    ),
+    Match.when({ tag: "failedToStart" }, ({ message }) => message),
+    Match.when(
+      { tag: "timedOut" },
+      ({ timeoutMilliseconds }) =>
+        `Codex invocation timed out after ${String(timeoutMilliseconds)} milliseconds.`,
+    ),
+    Match.when(
+      { tag: "shellStatus" },
+      ({ status }) => `Invocation shell exited with status ${String(status)}.`,
+    ),
+    Match.exhaustive,
+  );
   return {
     tag: "failed",
-    reason:
-      exit.tag === "exited"
-        ? `Codex exited with status ${String(exit.status)}.`
-        : exit.tag === "signaled"
-          ? `Codex stopped by ${exit.signal}.`
-          : exit.tag === "failedToStart"
-            ? exit.message
-            : `Invocation shell exited with status ${String(exit.status)}.`,
+    reason,
   };
 }
 
@@ -1144,10 +1201,156 @@ export function invocationEventsSha256(path: string): string {
 type InvocationCompletionInput = {
   readonly elapsedMilliseconds: number;
   readonly exit: ModelInvocationLedgerEntry["exit"];
-  readonly result: Schema.Schema.Type<typeof ModelInvocationResultSchema>;
+  readonly result: ModelInvocationResult;
 };
 
-function runCodexProcess(input: {
+export type ModelInvocationLastMessageDecodeFailure = Readonly<{
+  readonly tag: "malformed" | "schemaInvalid";
+  readonly message: string;
+}>;
+
+export type ModelInvocationLastMessageDecoder<A> = (
+  contents: string,
+) => Either.Either<A, ModelInvocationLastMessageDecodeFailure>;
+
+function parseJsonLastMessage(
+  contents: string,
+): Either.Either<unknown, ModelInvocationLastMessageDecodeFailure> {
+  try {
+    const parsed: unknown = JSON.parse(contents);
+    return Either.right(parsed);
+  } catch (error: unknown) {
+    return Either.left({
+      tag: "malformed",
+      message:
+        error instanceof Error
+          ? error.message
+          : `Malformed JSON: ${String(error)}`,
+    });
+  }
+}
+
+export function jsonModelInvocationLastMessageDecoder<A, I>(
+  schema: Schema.Schema<A, I>,
+): ModelInvocationLastMessageDecoder<A> {
+  return (contents) => {
+    const parsed = parseJsonLastMessage(contents);
+    if (Either.isLeft(parsed)) return Either.left(parsed.left);
+    const decoded = Schema.decodeUnknownEither(schema, {
+      onExcessProperty: "error",
+    })(parsed.right);
+    return Either.isLeft(decoded)
+      ? Either.left({ tag: "schemaInvalid", message: decoded.left.message })
+      : Either.right(decoded.right);
+  };
+}
+
+export type ExpectedModelInvocationLastMessage<A> = Readonly<{
+  readonly path: string;
+  readonly decode: ModelInvocationLastMessageDecoder<A>;
+}>;
+
+type DecodedModelInvocationLastMessage<A> =
+  | { readonly tag: "valid"; readonly value: A }
+  | {
+      readonly tag: "invalid";
+      readonly reason: string;
+      readonly failureKind: ModelInvocationLastMessageFailureKind;
+    };
+
+function decodeExpectedModelInvocationLastMessage<A>(input: {
+  readonly expected: ExpectedModelInvocationLastMessage<A>;
+}): DecodedModelInvocationLastMessage<A> {
+  if (!existsSync(input.expected.path)) {
+    return {
+      tag: "invalid",
+      reason: `Expected Codex last-message output file does not exist: ${input.expected.path}.`,
+      failureKind: "lastMessageMissing",
+    };
+  }
+  const contents = (() => {
+    try {
+      return Either.right(readFileSync(input.expected.path, "utf8"));
+    } catch (error: unknown) {
+      return Either.left(error);
+    }
+  })();
+  if (Either.isLeft(contents)) {
+    const error = contents.left;
+    return {
+      tag: "invalid",
+      reason: `Expected Codex last-message output file could not be read: ${error instanceof Error ? error.message : String(error)}.`,
+      failureKind: "lastMessageUnreadable",
+    };
+  }
+  if (contents.right.trim().length === 0) {
+    return {
+      tag: "invalid",
+      reason: `Expected Codex last-message output file is empty: ${input.expected.path}.`,
+      failureKind: "lastMessageEmpty",
+    };
+  }
+  try {
+    const decoded = input.expected.decode(contents.right);
+    return Either.isLeft(decoded)
+      ? {
+          tag: "invalid",
+          reason: `Expected Codex last-message output is ${decoded.left.tag}: ${decoded.left.message}.`,
+          failureKind:
+            decoded.left.tag === "malformed"
+              ? "lastMessageMalformed"
+              : "lastMessageSchemaInvalid",
+        }
+      : { tag: "valid", value: decoded.right };
+  } catch (error: unknown) {
+    return {
+      tag: "invalid",
+      reason: `Expected Codex last-message output is malformed: ${error instanceof Error ? error.message : String(error)}.`,
+      failureKind: "lastMessageMalformed",
+    };
+  }
+}
+
+type RunCodexProcessResult<A> = Readonly<{
+  readonly process: SpawnSyncReturns<Buffer>;
+  readonly invocationResult: ModelInvocationResult;
+  readonly decodedLastMessage?: A;
+}>;
+
+type InvocationCompletionState<A> = Readonly<{
+  readonly result: ModelInvocationResult;
+  readonly decodedLastMessage?: A;
+}>;
+
+function invocationCompletionState<A>(input: {
+  readonly result: ModelInvocationResult;
+  readonly expectedLastMessage?: ExpectedModelInvocationLastMessage<A>;
+}): InvocationCompletionState<A> {
+  if (
+    input.result.tag !== "succeeded" ||
+    input.expectedLastMessage === undefined
+  ) {
+    return { result: input.result };
+  }
+  const decoded = decodeExpectedModelInvocationLastMessage({
+    expected: input.expectedLastMessage,
+  });
+  return decoded.tag === "invalid"
+    ? {
+        result: {
+          tag: "failed",
+          failureKind: decoded.failureKind,
+          reason: decoded.reason,
+        },
+      }
+    : { result: input.result, decodedLastMessage: decoded.value };
+}
+
+function processWasTimedOut(error: Error | undefined): boolean {
+  return error !== undefined && "code" in error && error.code === "ETIMEDOUT";
+}
+
+function runCodexProcess<A>(input: {
   readonly args: readonly [string, ...string[]];
   readonly cwd: string;
   readonly env: NodeJS.ProcessEnv;
@@ -1157,12 +1360,14 @@ function runCodexProcess(input: {
   readonly startedMilliseconds: number;
   readonly model: string;
   readonly reasoningEffort: string;
+  readonly timeoutMilliseconds: number;
+  readonly expectedLastMessage?: ExpectedModelInvocationLastMessage<A>;
   readonly metadataErrorMessage: string;
   readonly completionEvent: (
     input: InvocationCompletionInput,
   ) => Either.Either<object, ParseResult.ParseError>;
   readonly completionErrorPrefix: string;
-}): SpawnSyncReturns<Buffer> {
+}): RunCodexProcessResult<A> {
   const codexArgs = codexJsonArgs(input.args);
   if (
     !codexInvocationMetadataMatchesArgs({
@@ -1182,9 +1387,17 @@ function runCodexProcess(input: {
         cwd: input.cwd,
         env: input.env,
         stdio: ["ignore", eventFd, logFd],
+        timeout: input.timeoutMilliseconds,
+        killSignal: "SIGTERM",
       });
-      const exit: ModelInvocationLedgerEntry["exit"] =
-        spawned.error !== undefined
+      const exit: ModelInvocationLedgerEntry["exit"] = processWasTimedOut(
+        spawned.error,
+      )
+        ? {
+            tag: "timedOut",
+            timeoutMilliseconds: input.timeoutMilliseconds,
+          }
+        : spawned.error !== undefined
           ? { tag: "failedToStart", message: spawned.error.message }
           : spawned.signal !== null
             ? { tag: "signaled", signal: spawned.signal }
@@ -1204,10 +1417,16 @@ function runCodexProcess(input: {
           `Cannot derive Codex invocation result: ${invocationResult.left}`,
         );
       }
+      const completionState = invocationCompletionState({
+        result: invocationResult.right,
+        ...(input.expectedLastMessage === undefined
+          ? {}
+          : { expectedLastMessage: input.expectedLastMessage }),
+      });
       const completedEvent = input.completionEvent({
         elapsedMilliseconds: Date.now() - input.startedMilliseconds,
         exit,
-        result: invocationResult.right,
+        result: completionState.result,
       });
       if (Either.isLeft(completedEvent)) {
         throw new Error(
@@ -1215,7 +1434,13 @@ function runCodexProcess(input: {
         );
       }
       writeSync(eventFd, `${JSON.stringify(completedEvent.right)}\n`);
-      return spawned;
+      return {
+        process: spawned,
+        invocationResult: completionState.result,
+        ...(completionState.decodedLastMessage === undefined
+          ? {}
+          : { decodedLastMessage: completionState.decodedLastMessage }),
+      };
     } finally {
       closeSync(logFd);
     }
@@ -1238,7 +1463,13 @@ function appendInvocationEvidenceLedger(input: {
   );
 }
 
-export function runCodexInvocation(input: {
+export type ModelInvocationRun<A> = SpawnSyncReturns<Buffer> &
+  Readonly<{
+    readonly invocationResult: ModelInvocationResult;
+    readonly decodedLastMessage?: A;
+  }>;
+
+export function runCodexInvocation<A = unknown>(input: {
   readonly args: readonly [string, ...string[]];
   readonly cwd: string;
   readonly env: NodeJS.ProcessEnv;
@@ -1252,7 +1483,9 @@ export function runCodexInvocation(input: {
   readonly fallbackInvocationId: string;
   readonly model: string;
   readonly reasoningEffort: string;
-}): SpawnSyncReturns<Buffer> {
+  readonly timeoutMilliseconds?: number;
+  readonly expectedLastMessage?: ExpectedModelInvocationLastMessage<A>;
+}): ModelInvocationRun<A> {
   const startedAt = new Date().toISOString();
   const startedMilliseconds = Date.now();
   const startedEvent = modelInvocationStartedEvent({
@@ -1280,6 +1513,11 @@ export function runCodexInvocation(input: {
     startedMilliseconds,
     model: input.model,
     reasoningEffort: input.reasoningEffort,
+    timeoutMilliseconds:
+      input.timeoutMilliseconds ?? MODEL_INVOCATION_TIMEOUT_MILLISECONDS,
+    ...(input.expectedLastMessage === undefined
+      ? {}
+      : { expectedLastMessage: input.expectedLastMessage }),
     metadataErrorMessage:
       "Invocation ledger model and reasoning effort must match the Codex arguments.",
     completionEvent: modelInvocationCompletedEvent,
@@ -1299,7 +1537,13 @@ export function runCodexInvocation(input: {
     ledgerPath: input.ledgerPath,
     entry: evidence.entry,
   });
-  return result;
+  return {
+    ...result.process,
+    invocationResult: result.invocationResult,
+    ...(result.decodedLastMessage === undefined
+      ? {}
+      : { decodedLastMessage: result.decodedLastMessage }),
+  };
 }
 
 /**
@@ -1317,7 +1561,7 @@ export type BenchmarkAuxiliaryInvocationKind =
       readonly phase: "scenarioCharacterAuthoring";
     };
 
-export function runBenchmarkAuxiliaryInvocation(input: {
+export function runBenchmarkAuxiliaryInvocation<A = unknown>(input: {
   readonly args: readonly [string, ...string[]];
   readonly cwd: string;
   readonly env: NodeJS.ProcessEnv;
@@ -1331,7 +1575,9 @@ export function runBenchmarkAuxiliaryInvocation(input: {
   readonly fallbackInvocationId: string;
   readonly model: string;
   readonly reasoningEffort: string;
-}): Either.Either<SpawnSyncReturns<Buffer>, string> {
+  readonly timeoutMilliseconds?: number;
+  readonly expectedLastMessage?: ExpectedModelInvocationLastMessage<A>;
+}): Either.Either<ModelInvocationRun<A>, string> {
   try {
     const startedAt = new Date().toISOString();
     const startedMilliseconds = Date.now();
@@ -1362,6 +1608,11 @@ export function runBenchmarkAuxiliaryInvocation(input: {
       startedMilliseconds,
       model: input.model,
       reasoningEffort: input.reasoningEffort,
+      timeoutMilliseconds:
+        input.timeoutMilliseconds ?? MODEL_INVOCATION_TIMEOUT_MILLISECONDS,
+      ...(input.expectedLastMessage === undefined
+        ? {}
+        : { expectedLastMessage: input.expectedLastMessage }),
       metadataErrorMessage:
         "Benchmark invocation ledger model and reasoning effort must match the Codex arguments.",
       completionEvent: benchmarkModelInvocationCompletedEvent,
@@ -1379,7 +1630,13 @@ export function runBenchmarkAuxiliaryInvocation(input: {
       ledgerPath: input.ledgerPath,
       entry: evidence.entry,
     });
-    return Either.right(result);
+    return Either.right({
+      ...result.process,
+      invocationResult: result.invocationResult,
+      ...(result.decodedLastMessage === undefined
+        ? {}
+        : { decodedLastMessage: result.decodedLastMessage }),
+    });
   } catch (error: unknown) {
     return Either.left(
       error instanceof Error

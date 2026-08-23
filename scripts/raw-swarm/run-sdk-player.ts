@@ -976,6 +976,7 @@ async function main(args: readonly string[]): Promise<void> {
       ? ([] as const)
       : (["--dangerously-bypass-approvals-and-sandbox"] as const);
     const agentLogPath = resolve(trusted, "agent.log");
+    const agentFinalPath = resolve(trusted, "evidence/agent-final.txt");
     const result = runCodexInvocation({
       args: [
         "exec",
@@ -992,7 +993,7 @@ async function main(args: readonly string[]): Promise<void> {
         "-c",
         `model_reasoning_effort="${PLAYER_REASONING_EFFORT}"`,
         "--output-last-message",
-        resolve(trusted, "evidence/agent-final.txt"),
+        agentFinalPath,
         [
           `Read ${deliveredContextFileName}, PLAYER.md, SCENARIO.md, OBSERVATION.json, and attempt.ts.`,
           "Act as the player described there and continue until the SDK supervisor accepts a playerConcluded outcome or returns a terminalObstruction. Stop immediately after a terminalObstruction; it is retained evidence.",
@@ -1021,7 +1022,14 @@ async function main(args: readonly string[]): Promise<void> {
       fallbackInvocationId: randomUUID(),
       model: PLAYER_MODEL,
       reasoningEffort: PLAYER_REASONING_EFFORT,
+      expectedLastMessage: {
+        path: agentFinalPath,
+        decode: (contents) => Either.right(contents),
+      },
     });
+    if (result.invocationResult.tag === "failed") {
+      fail(`Player agent invocation failed: ${result.invocationResult.reason}`);
+    }
     if (result.error !== undefined) throw result.error;
     if (result.signal !== null)
       fail(`Player agent stopped by ${result.signal}.`);

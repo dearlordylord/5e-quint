@@ -15,6 +15,7 @@ import { Either, Schema } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
+  findingsFromGenerationLedger,
   projectExecutionFindings,
   readFindingsProjection,
   makeFinding,
@@ -596,6 +597,44 @@ function reportCommand(args: readonly string[]): string {
 }
 
 describe("Raw Swarm findings projection", () => {
+  test("projects a zero-exit invalid last message as a generation invocation failure", () => {
+    const root = directory();
+    const ledgerPath = retainedGenerationReviewLedger(root);
+    const absoluteLedgerPath = resolve(repoRoot, ledgerPath);
+    const rows = readFileSync(absoluteLedgerPath, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => parseJsonRecord(line));
+    const failedRow = {
+      ...rows[0],
+      invocationId: "missing-last-message",
+      eventsSha256: "c".repeat(64),
+      exit: { tag: "exited", status: 0 },
+      result: {
+        tag: "failed",
+        failureKind: "lastMessageMissing",
+        reason: "Expected Codex last-message output file does not exist.",
+      },
+    };
+    writeFileSync(
+      absoluteLedgerPath,
+      `${rows.map((row) => JSON.stringify(row)).join("\n")}\n${JSON.stringify(failedRow)}\n`,
+    );
+
+    const findings = findingsFromGenerationLedger(
+      { role: "generationLedger", path: ledgerPath },
+      { scenarioId: "findings-example", gitSha: "a".repeat(40) },
+    );
+    expect(findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "generation-invocation-failure",
+          pointer: expect.objectContaining({ line: 3 }),
+        }),
+      ]),
+    );
+  });
+
   test("retains the milestone Candidate after a three-iteration revision with a distinct final hash", () => {
     const input = fixture();
     const milestoneQuality = {

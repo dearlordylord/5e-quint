@@ -47,6 +47,7 @@ import {
   parseBenchmarkModelInvocationLedgerEntry,
   parseModelInvocationLedgerEntry,
   firstPartyCodexFailureReason,
+  jsonModelInvocationLastMessageDecoder,
   readCodexEvents,
   runBenchmarkAuxiliaryInvocation,
   runCodexInvocation,
@@ -1175,12 +1176,25 @@ function runStructuredCall<A, I>(input: {
         input.scenarioId + "-" + input.phase + "-" + String(input.ordinal),
       model: input.model,
       reasoningEffort: input.reasoningEffort,
+      expectedLastMessage: {
+        path: outputPath,
+        decode: jsonModelInvocationLastMessageDecoder(
+          Schema.Struct({ result: input.schema }),
+        ),
+      },
     });
     assertBenchmarkPreparationEventStream({
       eventPath: events,
       scratch,
       namedInputs,
     });
+    if (result.invocationResult.tag === "failed") {
+      fail(
+        input.phase +
+          " Codex invocation failed: " +
+          result.invocationResult.reason,
+      );
+    }
     if (result.error !== undefined) throw result.error;
     if (result.signal !== null) fail("Codex stopped by " + result.signal + ".");
     if (result.status !== 0) {
@@ -1191,11 +1205,9 @@ function runStructuredCall<A, I>(input: {
           ".",
       );
     }
-    const decoded = Schema.decodeUnknownEither(
-      Schema.Struct({ result: input.schema }),
-      { onExcessProperty: "error" },
-    )(JSON.parse(readFileSync(outputPath, "utf8")));
-    if (Either.isLeft(decoded)) fail(decoded.left.message);
+    const decoded = result.decodedLastMessage;
+    if (decoded === undefined)
+      fail("Current invocation did not retain a decoded last message.");
     appendCopiedLedgerEntry(
       input.profilePaths.currentLedger,
       input.profilePaths.benchmarkLedger,
@@ -1207,7 +1219,7 @@ function runStructuredCall<A, I>(input: {
       fail("Current invocation row is not schema v4.");
     }
     return {
-      value: decoded.right.result,
+      value: decoded.result,
       eventPath: events,
       currentEntry: entry.right,
     };
@@ -1319,6 +1331,12 @@ function runAuxiliaryStructuredCall<A, I>(input: {
         input.scenarioId + "-" + input.kind.phase + "-" + String(input.ordinal),
       model: execution.model,
       reasoningEffort: execution.reasoningEffort,
+      expectedLastMessage: {
+        path: outputPath,
+        decode: jsonModelInvocationLastMessageDecoder(
+          Schema.Struct({ result: input.schema }),
+        ),
+      },
     });
     assertBenchmarkPreparationEventStream({
       eventPath: events,
@@ -1326,6 +1344,13 @@ function runAuxiliaryStructuredCall<A, I>(input: {
       namedInputs,
     });
     if (Either.isLeft(result)) fail(result.left);
+    if (result.right.invocationResult.tag === "failed") {
+      fail(
+        input.kind.phase +
+          " Codex invocation failed: " +
+          result.right.invocationResult.reason,
+      );
+    }
     if (result.right.error !== undefined) throw result.right.error;
     if (result.right.signal !== null)
       fail("Codex stopped by " + result.right.signal + ".");
@@ -1337,11 +1362,9 @@ function runAuxiliaryStructuredCall<A, I>(input: {
           ".",
       );
     }
-    const decoded = Schema.decodeUnknownEither(
-      Schema.Struct({ result: input.schema }),
-      { onExcessProperty: "error" },
-    )(JSON.parse(readFileSync(outputPath, "utf8")));
-    if (Either.isLeft(decoded)) fail(decoded.left.message);
+    const decoded = result.right.decodedLastMessage;
+    if (decoded === undefined)
+      fail("Auxiliary invocation did not retain a decoded last message.");
     appendCopiedLedgerEntry(
       input.profilePaths.auxiliaryLedger,
       input.profilePaths.benchmarkLedger,
@@ -1351,7 +1374,7 @@ function runAuxiliaryStructuredCall<A, I>(input: {
     const entry = parseBenchmarkModelInvocationLedgerEntry(row);
     if (Either.isLeft(entry)) fail(entry.left.message);
     return {
-      value: decoded.right.result,
+      value: decoded.result,
       eventPath: events,
       auxiliaryEntry: entry.right,
     };

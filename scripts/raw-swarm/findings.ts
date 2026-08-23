@@ -1011,10 +1011,13 @@ export function findingsFromGenerationLedger(
       );
     }
     const exit = decoded.right.exit;
-    const failed =
+    const processFailed =
       exit.tag === "exited" || exit.tag === "shellStatus"
         ? exit.status !== 0
         : true;
+    const resultFailed =
+      "result" in decoded.right && decoded.right.result.tag === "failed";
+    const failed = processFailed || resultFailed;
     if (!failed) continue;
     findings.push(
       makeFinding({

@@ -65,6 +65,7 @@ import {
 } from "./transcript.ts";
 import {
   invocationIdFromCodexEvents,
+  jsonModelInvocationLastMessageDecoder,
   readCodexEvents,
   runCodexInvocation,
   type CurrentModelInvocationSubject,
@@ -336,6 +337,10 @@ function runCodexJson<A, I>(
           fallbackInvocationId,
           model: execution.model,
           reasoningEffort: execution.reasoningEffort,
+          expectedLastMessage: {
+            path: outputPath,
+            decode: jsonModelInvocationLastMessageDecoder(outputSchema),
+          },
         });
       } finally {
         if (execution.retention !== undefined && existsSync(eventPath)) {
@@ -358,6 +363,11 @@ function runCodexJson<A, I>(
       codexEvents,
       fallbackInvocationId,
     );
+    if (result.invocationResult.tag === "failed") {
+      fail(
+        `Scenario agent invocation failed: ${result.invocationResult.reason}`,
+      );
+    }
     if (result.error !== undefined) throw result.error;
     if (result.signal !== null)
       fail(`Scenario agent stopped by ${result.signal}.`);
@@ -368,13 +378,9 @@ function runCodexJson<A, I>(
           "Scenario agent failed.",
       );
     }
-    const decoded = Schema.decodeUnknownEither(outputSchema, {
-      onExcessProperty: "error",
-    })(JSON.parse(readFileSync(outputPath, "utf8")));
-    if (Either.isLeft(decoded)) {
-      return fail(
-        `Scenario agent returned invalid output: ${decoded.left.message}`,
-      );
+    const decoded = result.decodedLastMessage;
+    if (decoded === undefined) {
+      return fail("Scenario agent did not retain a decoded last message.");
     }
     if (
       execution.retention?.reviewStage !== undefined &&
@@ -395,7 +401,7 @@ function runCodexJson<A, I>(
             reasoningEffort: execution.reasoningEffort,
             prompt,
             outputJsonSchema,
-            result: decoded.right.result,
+            result: decoded.result,
           },
           null,
           2,
@@ -403,7 +409,7 @@ function runCodexJson<A, I>(
         { flag: "wx" },
       );
     }
-    return decoded.right.result;
+    return decoded.result;
   } finally {
     rmSync(temporary, { recursive: true });
   }

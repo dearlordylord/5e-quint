@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
+  chmodSync,
   existsSync,
   mkdtempSync,
   readFileSync,
@@ -26,7 +27,10 @@ import {
   modelUsageFromCodexEvents,
   parseModelInvocationLedgerEntry,
   parseBenchmarkModelInvocationLedgerEntry,
+  jsonModelInvocationLastMessageDecoder,
+  readCodexEvents,
   CurrentModelInvocationLedgerEntrySchema,
+  runCodexInvocation,
 } from "./model-telemetry.ts";
 import {
   decodeHistoricalScenarioId,
@@ -42,6 +46,214 @@ const modelTelemetryCli = resolve(
 );
 
 describe("Raw Swarm model invocation telemetry", () => {
+  function fakeInvocationInput(root: string, timeoutMilliseconds?: number) {
+    const events = resolve(root, "events.jsonl");
+    const log = resolve(root, "agent.log");
+    const ledger = resolve(root, "ledger.jsonl");
+    const output = resolve(root, "output.json");
+    return {
+      args: [
+        "exec",
+        "-m",
+        "gpt-5.6-sol",
+        "-c",
+        'model_reasoning_effort="medium"',
+      ] as [string, ...string[]],
+      cwd: root,
+      env: { ...process.env, PATH: `${root}:${process.env.PATH ?? ""}` },
+      eventPath: events,
+      logPath: log,
+      ledgerPath: ledger,
+      phase: "scenarioGeneration" as const,
+      stagePlanReason: "The campaign requires scenario generation.",
+      subject: {
+        tag: "scenarioCampaign" as const,
+        campaignId: "synthetic-campaign",
+        evidenceSetId: "synthetic-evidence",
+        plannedScenarioId: "synthetic-scenario",
+      },
+      gitSha: Schema.decodeUnknownSync(GitShaSchema)("a".repeat(40)),
+      fallbackInvocationId: "synthetic-fallback",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      timeoutMilliseconds,
+      expectedLastMessage: {
+        path: output,
+        decode: (contents: string) => {
+          try {
+            return Either.right(JSON.parse(contents));
+          } catch {
+            return Either.left({
+              tag: "malformed",
+              message: "synthetic malformed JSON",
+            });
+          }
+        },
+      },
+    };
+  }
+
+  test("retains timeout telemetry and a failed result when a child stalls without output", () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-timeout-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      `#!/bin/sh\nexec ${JSON.stringify(process.execPath)} -e 'setTimeout(() => {}, 1000)'\n`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root, 25);
+      const result = runCodexInvocation(input);
+      expect(result.invocationResult).toMatchObject({
+        tag: "failed",
+        reason: expect.stringContaining("timed out"),
+      });
+      const events = readCodexEvents(input.eventPath);
+      expect(events.tag).toBe("valid");
+      if (events.tag === "valid") {
+        expect(events.events.at(-1)).toMatchObject({
+          type: "raw-swarm.invocation.completed",
+          exit: { tag: "timedOut", timeoutMilliseconds: 25 },
+          result: { tag: "failed" },
+        });
+      }
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: { tag: "timedOut", timeoutMilliseconds: 25 },
+          result: { tag: "failed" },
+        },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("retains a failed result when a child exits zero without creating output", () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-missing-output-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(codex, "#!/bin/sh\nexit 0\n");
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      const result = runCodexInvocation(input);
+      expect(result.invocationResult).toMatchObject({
+        tag: "failed",
+        failureKind: "lastMessageMissing",
+        reason: expect.stringContaining("does not exist"),
+      });
+      expect(result.status).toBe(0);
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: { tag: "exited", status: 0 },
+          result: {
+            tag: "failed",
+            reason: expect.stringContaining("does not exist"),
+          },
+        },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("retains a schema-decoded last message before recording success", () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-valid-output-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      `#!/bin/sh
+exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({result:"ready"}))'
+`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      input.env.RAW_OUTPUT_PATH = input.expectedLastMessage.path;
+      input.expectedLastMessage.decode = jsonModelInvocationLastMessageDecoder(
+        Schema.Struct({ result: Schema.Literal("ready") }),
+      );
+      const result = runCodexInvocation(input);
+      expect(result.invocationResult).toEqual({ tag: "succeeded" });
+      expect(result.decodedLastMessage).toEqual({ result: "ready" });
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+        },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test.each([
+    ["empty", "", "lastMessageEmpty"],
+    ["malformed", "{", "lastMessageMalformed"],
+    ["schema-invalid", '{"unexpected":true}', "lastMessageSchemaInvalid"],
+  ] as const)(
+    "classifies %s output as a typed invocation failure",
+    (_label, contents, failureKind) => {
+      const root = mkdtempSync(resolve(tmpdir(), "dnd-model-output-failure-"));
+      try {
+        const input = fakeInvocationInput(root);
+        input.env.RAW_OUTPUT_PATH = input.expectedLastMessage.path;
+        input.env.RAW_OUTPUT_CONTENT = contents;
+        input.expectedLastMessage.decode = (value: string) => {
+          try {
+            const parsed: unknown = JSON.parse(value);
+            if (
+              typeof parsed !== "object" ||
+              parsed === null ||
+              !("result" in parsed)
+            ) {
+              return Either.left({
+                tag: "schemaInvalid",
+                message: "result is required",
+              });
+            }
+            return Either.right(parsed);
+          } catch (error: unknown) {
+            return Either.left({
+              tag: "malformed",
+              message: error instanceof Error ? error.message : String(error),
+            });
+          }
+        };
+        writeFileSync(
+          resolve(root, "codex"),
+          `#!/bin/sh\nexec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, process.env.RAW_OUTPUT_CONTENT)'\n`,
+        );
+        chmodSync(resolve(root, "codex"), 0o755);
+        const result = runCodexInvocation(input);
+        expect(result.invocationResult).toMatchObject({
+          tag: "failed",
+          failureKind,
+        });
+        const ledger = parseModelInvocationLedgerEntry(
+          JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+        );
+        expect(ledger).toMatchObject({
+          _tag: "Right",
+          right: { result: { tag: "failed", failureKind } },
+        });
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+  );
+
   test("requires a candidate authority for composite comparison ledger rows", () => {
     const common = {
       schemaVersion: 4 as const,
