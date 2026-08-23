@@ -275,23 +275,23 @@ function replayLedgerSchemaVersion(
   input: RetainedScenarioReviewInput,
   ledgerEntry: ModelInvocationLedgerEntry,
   invocationId: string,
-): Either.Either<2 | 4, string> {
+): Either.Either<2 | 4 | 5, string> {
   if (input.schemaVersion === 2) {
     if (ledgerEntry.schemaVersion === 2) return Either.right(2);
-    if (ledgerEntry.schemaVersion !== 4) {
+    if (ledgerEntry.schemaVersion !== 4 && ledgerEntry.schemaVersion !== 5) {
       return Either.left(
         `Historical review invocation ${invocationId} does not match the expected ledger version.`,
       );
     }
-    return Either.right(4);
+    return Either.right(ledgerEntry.schemaVersion);
   }
-  if (ledgerEntry.schemaVersion !== 4) {
+  if (ledgerEntry.schemaVersion !== 4 && ledgerEntry.schemaVersion !== 5) {
     const lifecycle =
       input.schemaVersion === 3 && input.subject.tag === "scenarioCandidate"
         ? "Candidate"
         : "Scenario";
     return Either.left(
-      `Current ${lifecycle} review invocation ${invocationId} requires v4 ledger evidence.`,
+      `Current ${lifecycle} review invocation ${invocationId} requires current ledger evidence.`,
     );
   }
   if (canonicalJson(ledgerEntry.subject) !== canonicalJson(input.subject)) {
@@ -299,14 +299,14 @@ function replayLedgerSchemaVersion(
       `Current review invocation ${invocationId} does not match its lifecycle subject.`,
     );
   }
-  return Either.right(4);
+  return Either.right(ledgerEntry.schemaVersion);
 }
 
 function isCandidateReplayLedgerEntry(
   entry: ModelInvocationLedgerEntry,
 ): entry is CandidateReplayLedgerEntry {
   return (
-    entry.schemaVersion === 4 &&
+    (entry.schemaVersion === 4 || entry.schemaVersion === 5) &&
     entry.phase === "scenarioCompositeReview" &&
     entry.subject.tag === "scenarioCandidate"
   );
@@ -316,7 +316,7 @@ function isScenarioReplayLedgerEntry(
   entry: ModelInvocationLedgerEntry,
 ): entry is ScenarioReplayLedgerEntry {
   return (
-    entry.schemaVersion === 4 &&
+    (entry.schemaVersion === 4 || entry.schemaVersion === 5) &&
     entry.phase === "scenarioCompositeReview" &&
     entry.subject.tag === "scenario"
   );
@@ -338,7 +338,7 @@ function isHistoricalReplayLedgerEntry(
  * Schema-2 retained reviews can bind to exact v2 rows or migrated v4
  * lifecycle rows, including a scenarioCandidate row after its Campaign
  * ownership is checked; schema-3 Candidate reviews require a
- * lifecycle-discriminated v4 row so the immutable Candidate, Campaign, and
+ * lifecycle-discriminated current row so the immutable Candidate, Campaign, and
  * Evidence Set identity is preserved.
  */
 export function retainedScenarioReviewMatchesReplayBinding(
@@ -425,7 +425,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
 
   if (
     expected.tag === "historicalScenario" &&
-    ledgerEntry.schemaVersion === 4 &&
+    (ledgerEntry.schemaVersion === 4 || ledgerEntry.schemaVersion === 5) &&
     ledgerEntry.subject.tag === "scenarioCandidate" &&
     (ledgerEntry.subject.campaignId !== expected.campaign.campaignId ||
       ledgerEntry.subject.evidenceSetId !== expected.campaign.evidenceSetId ||
@@ -440,7 +440,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
   if (
     expected.tag === "historicalScenario" &&
     expected.reviewStage === "final" &&
-    ledgerEntry.schemaVersion === 4 &&
+    (ledgerEntry.schemaVersion === 4 || ledgerEntry.schemaVersion === 5) &&
     ledgerEntry.subject.tag === "scenarioCandidate" &&
     ledgerEntry.subject.candidateScenarioSha256 !==
       expected.admittedScenarioSha256
