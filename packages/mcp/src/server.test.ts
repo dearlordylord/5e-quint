@@ -2517,7 +2517,7 @@ describe("MCP server route", () => {
             actorId: "goblin",
             targetId: "fighter",
             ...shortbowSelection,
-            distanceFeet: movementFeet(10),
+            distanceFeet: movementFeet(100),
           },
         ],
       },
@@ -2535,7 +2535,7 @@ describe("MCP server route", () => {
           spatialFacts: [
             {
               kind: "attackTargetDistance",
-              distanceFeet: movementFeet(10),
+              distanceFeet: movementFeet(100),
             },
           ],
         },
@@ -7634,6 +7634,7 @@ function fillBattleHoleThroughTool(
                   actorId,
                   targetId: String(fill.value),
                   ...attackSelection,
+                  distanceFeet: movementFeet(5),
                 },
             {
               kind: "attackerAllyWithin5FeetOfTarget",

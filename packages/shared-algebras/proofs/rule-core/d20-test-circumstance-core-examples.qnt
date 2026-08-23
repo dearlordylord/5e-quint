@@ -80,6 +80,8 @@ module d20TestCircumstanceCoreExamples {
       cancellingMechanicalSources,
       5,
     ) == NormalD20TestRoll),
+    assert(not(validProneAttackRollDistance(-1))),
+    assert(proneAttackRollSource(-1) == noMechanicalSources),
   }
 
   run d20TestCircumstanceExactRequestBinding = {

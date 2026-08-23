@@ -39,6 +39,10 @@ module d20TestCircumstanceCore {
 
   pure val proneAttackAdvantageDistanceFeet: ProneAttackRollDistance = 5
 
+  pure def validProneAttackRollDistance(
+    distance: ProneAttackRollDistance,
+  ): bool = distance >= 0
+
   type TableD20TestCircumstanceSource =
     | TableGrantsAdvantage
     | TableImposesDisadvantage
@@ -90,7 +94,8 @@ module d20TestCircumstanceCore {
   pure def proneAttackRollSource(
     distance: ProneAttackRollDistance,
   ): D20TestRollModeSources = {
-    advantage: distance <= proneAttackAdvantageDistanceFeet,
+    advantage: validProneAttackRollDistance(distance)
+      and distance <= proneAttackAdvantageDistanceFeet,
     disadvantage: distance > proneAttackAdvantageDistanceFeet,
     }
 

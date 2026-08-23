@@ -2758,16 +2758,18 @@ export function attackTargetSpatialFact(
   targetId: CombatantId,
   attackSelection: BattleAttackExecutionSelection,
   distanceFeet: MovementFeet = movementFeet(5),
-): NonNullable<
-  Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
->[number] {
-  return {
-    kind: "attackTargetDistance" as const,
+): Extract<
+  NonNullable<
+    Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
+  >[number],
+  { readonly kind: "attackTargetDistance" }
+> {
+  return attackTargetDistanceSpatialFact(
     actorId,
     targetId,
-    ...attackSelection,
+    attackSelection,
     distanceFeet,
-  };
+  );
 }
 
 export function attackTargetDistanceSpatialFact(

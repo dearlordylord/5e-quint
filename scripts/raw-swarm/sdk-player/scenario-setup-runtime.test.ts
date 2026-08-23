@@ -86,6 +86,16 @@ import type {
 const TRACER_SCENARIO_ID = "goblin-warrior-skeleton-tracer";
 
 describe("scenario setup public-SDK boundary", () => {
+  test("rejects fractional table-authored distances instead of truncating them", () => {
+    expect(scenarioDistanceFeet(5.5)).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "invalid-spatial-distance-feet",
+        value: 5.5,
+      },
+    });
+  });
+
   test("retains a supported initial Stat Block condition", async () => {
     const setup = await evaluateScenarioSetup(
       resolve(

@@ -5,10 +5,7 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
-import {
-  battleCreatureInitFromStatBlock,
-  type BattleCreatureInit,
-} from "./battle-init.ts";
+import { battleCreatureInitFromStatBlock } from "./battle-init.ts";
 import { battleAmmunitionStock } from "./battle-ammunition.ts";
 import {
   battleExecutionScopeOrdinal,
@@ -157,7 +154,7 @@ describe("Stat Block combatant admission capability", () => {
 
     const started = startBattle({
       battleId: battleId("initial-stat-block-condition"),
-      combatants: [initialized.right] as readonly BattleCreatureInit[],
+      combatants: [initialized.right],
     });
     expect(Either.isRight(started)).toBe(true);
     if (Either.isLeft(started)) return;
