@@ -1768,6 +1768,12 @@ function characterSourceCall(input: {
       namedInputs,
     });
     if (Either.isLeft(result)) fail(result.left);
+    if (result.right.invocationResult.tag === "failed") {
+      fail(
+        "Redundant character preparation invocation failed: " +
+          result.right.invocationResult.reason,
+      );
+    }
     if (result.right.status !== 0)
       fail("Redundant character preparation failed.");
     if (
@@ -1888,6 +1894,13 @@ function setupSourceCalls(input: {
         scratch,
         namedInputs,
       });
+      if (result.invocationResult.tag === "failed") {
+        fail(
+          phase +
+            " authoring invocation failed: " +
+            result.invocationResult.reason,
+        );
+      }
       if (result.status !== 0) fail(phase + " authoring failed.");
       appendCopiedLedgerEntry(
         input.paths.currentLedger,

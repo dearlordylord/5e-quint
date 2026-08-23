@@ -58,7 +58,7 @@ describe("Raw Swarm model invocation telemetry", () => {
         "gpt-5.6-sol",
         "-c",
         'model_reasoning_effort="medium"',
-      ] as [string, ...string[]],
+      ] as const,
       cwd: root,
       env: { ...process.env, PATH: `${root}:${process.env.PATH ?? ""}` },
       eventPath: events,
