@@ -3139,10 +3139,7 @@ function readAuthorityJsonLines(
   }
 }
 
-type CandidateReplayInvocation = Omit<
-  CurrentModelInvocationLedgerEntry,
-  "phase" | "subject"
-> & {
+type CandidateReplayInvocation = CurrentModelInvocationLedgerEntry & {
   readonly phase: "scenarioCompositeReview";
   readonly subject: Extract<
     CurrentModelInvocationLedgerEntry["subject"],
@@ -3155,7 +3152,7 @@ function candidateReplayInvocations(
 ): readonly CandidateReplayInvocation[] {
   return invocations.filter(
     (invocation): invocation is CandidateReplayInvocation =>
-      invocation.schemaVersion === 4 &&
+      !("responsibility" in invocation) &&
       invocation.phase === "scenarioCompositeReview" &&
       invocation.subject.tag === "scenarioCandidate",
   );
