@@ -100,8 +100,18 @@ export function validateRetainedScenarioReviewInvocation(input: {
     input.retainedInputPath,
     input.reviewStage,
   );
-  if (input.ledgerEntry.schemaVersion !== 4) {
-    fail("Retained original composite reviews require v4 ledger evidence.");
+  const historicalReview = retained.schemaVersion === 2;
+  if (
+    (!historicalReview && input.ledgerEntry.schemaVersion !== 4) ||
+    (historicalReview &&
+      input.ledgerEntry.schemaVersion !== 2 &&
+      input.ledgerEntry.schemaVersion !== 4)
+  ) {
+    fail(
+      historicalReview
+        ? "Historical retained composite reviews require v2 or v4 ledger evidence."
+        : "Current Candidate retained composite reviews require v4 ledger evidence.",
+    );
   }
   if (input.eventSha256 !== input.ledgerEntry.eventsSha256) {
     fail(
@@ -113,9 +123,14 @@ export function validateRetainedScenarioReviewInvocation(input: {
     fail(parsedEvents.message);
   }
   const derived = modelInvocationEvidenceFromEvents(parsedEvents.events);
-  if (derived.tag === "invalid" || derived.entry.schemaVersion !== 4) {
+  if (
+    derived.tag === "invalid" ||
+    (historicalReview
+      ? derived.entry.schemaVersion !== 2 && derived.entry.schemaVersion !== 4
+      : derived.entry.schemaVersion !== 4)
+  ) {
     fail(
-      `Retained ${input.reviewStage} review input event stream is not valid v4 invocation evidence.`,
+      `Retained ${input.reviewStage} review input event stream does not match the required ${historicalReview ? "v2 or v4" : "v4"} invocation evidence.`,
     );
   }
   const withoutEventsHash = Object.fromEntries(
@@ -142,13 +157,16 @@ export function validateRetainedScenarioReviewInvocation(input: {
       `Retained ${input.reviewStage} review input has an unsupported output schema.`,
     );
   }
+  const retainedIdentityMatches =
+    retained.schemaVersion === 2
+      ? retained.scenarioId ===
+        modelInvocationScenarioReference(input.ledgerEntry)
+      : input.ledgerEntry.schemaVersion === 4 &&
+        canonicalJson(retainedScenarioReviewSubject(retained)) ===
+          canonicalJson(input.ledgerEntry.subject);
   if (
     retained.invocationId !== input.ledgerEntry.invocationId ||
-    (retained.schemaVersion === 2
-      ? retained.scenarioId !==
-        modelInvocationScenarioReference(input.ledgerEntry)
-      : canonicalJson(retainedScenarioReviewSubject(retained)) !==
-        canonicalJson(input.ledgerEntry.subject)) ||
+    !retainedIdentityMatches ||
     retained.sourceGitSha !== input.ledgerEntry.gitSha ||
     retained.model !== input.ledgerEntry.model ||
     retained.reasoningEffort !== input.ledgerEntry.reasoningEffort

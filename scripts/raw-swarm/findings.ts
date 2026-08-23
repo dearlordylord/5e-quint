@@ -41,7 +41,8 @@ import {
 } from "./transcript.ts";
 import {
   RetainedScenarioReviewInputSchema,
-  retainedScenarioReviewMatchesAdmission,
+  retainedScenarioReviewMatchesReplayBinding,
+  type RetainedScenarioReviewCampaignIdentity,
 } from "./scenario-review-input.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
 import { SdkReplayResultEvidenceSchema } from "./sdk-player/sdk-replay-result.ts";
@@ -1020,6 +1021,45 @@ export function findingsFromGenerationLedger(
   return findings;
 }
 
+function expectedReplayCampaignIdentity(
+  generationLedgerPaths: readonly string[],
+): RetainedScenarioReviewCampaignIdentity | undefined {
+  let expected: RetainedScenarioReviewCampaignIdentity | undefined;
+  for (const path of generationLedgerPaths) {
+    const ledgerPath = sourcePath(path);
+    const manifestPath = resolve(
+      repoRoot,
+      dirname(ledgerPath),
+      "campaign.json",
+    );
+    if (!existsSync(manifestPath)) continue;
+    const canonicalManifestPath = sourcePath(relative(repoRoot, manifestPath));
+    const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+      onExcessProperty: "error",
+    })(readSourceRecord(canonicalManifestPath));
+    if (Either.isLeft(decoded)) {
+      fail(
+        `Generation Campaign manifest is invalid: ${canonicalManifestPath}: ${decoded.left.message}`,
+      );
+    }
+    const campaign = {
+      campaignId: decoded.right.campaignId,
+      evidenceSetId: decoded.right.evidenceSetId,
+      plannedScenarioId: decoded.right.plannedScenarioId,
+    } satisfies RetainedScenarioReviewCampaignIdentity;
+    if (
+      expected !== undefined &&
+      canonicalJson(expected) !== canonicalJson(campaign)
+    ) {
+      fail(
+        "Generation ledgers for retained review replay belong to different Campaign identities.",
+      );
+    }
+    expected = campaign;
+  }
+  return expected;
+}
+
 function originalCompositeReviewInputs(
   sources: Source[],
   selection: CompositeReviewReplaySelection | undefined,
@@ -1080,6 +1120,9 @@ function originalCompositeReviewInputs(
       return decoded.right;
     });
   });
+  const expectedCampaign = expectedReplayCampaignIdentity(
+    generationLedgerPaths,
+  );
 
   const invocationIds = new Set<string>();
   for (const { path: canonical, stage: expectedStage } of canonicalEntries) {
@@ -1093,22 +1136,6 @@ function originalCompositeReviewInputs(
       );
     }
     const review = decoded.right;
-    if (review.reviewStage !== expectedStage) {
-      fail(
-        `Review replay input ${canonical} has stage ${review.reviewStage}, expected ${expectedStage}.`,
-      );
-    }
-    if (expectedStage === "final") {
-      const reviewAdmission = retainedScenarioReviewMatchesAdmission(
-        review,
-        expectedScenario,
-      );
-      if (Either.isLeft(reviewAdmission)) {
-        fail(
-          `Review replay input ${canonical} does not bind to the admitted Scenario: ${reviewAdmission.left}`,
-        );
-      }
-    }
     if (invocationIds.has(review.invocationId)) {
       fail(
         `Review replay inputs contain duplicate original invocation id ${review.invocationId}.`,
@@ -1124,22 +1151,14 @@ function originalCompositeReviewInputs(
       );
     }
     const entry = matches[0]!;
-    const subjectMatches =
-      review.schemaVersion === 2
-        ? modelInvocationScenarioReference(entry) ===
-          expectedScenario.scenarioId
-        : entry.schemaVersion === 4 &&
-          canonicalJson(entry.subject) === canonicalJson(review.subject);
-    if (
-      entry.schemaVersion !== 4 ||
-      entry.phase !== "scenarioCompositeReview" ||
-      !subjectMatches ||
-      entry.gitSha !== review.sourceGitSha ||
-      entry.model !== review.model ||
-      entry.reasoningEffort !== review.reasoningEffort
-    ) {
+    const binding = retainedScenarioReviewMatchesReplayBinding(review, entry, {
+      reviewStage: expectedStage,
+      ...expectedScenario,
+      ...(expectedCampaign === undefined ? {} : { campaign: expectedCampaign }),
+    });
+    if (Either.isLeft(binding)) {
       fail(
-        `Review replay input ${canonical} does not match original composite-review invocation ${review.invocationId} model, effort, scenario, or Git identity.`,
+        `Review replay input ${canonical} does not match original composite-review invocation ${review.invocationId}: ${binding.left}`,
       );
     }
     const eventPath = canonical.endsWith(".json")
@@ -1955,6 +1974,9 @@ export function projectExecutionFindings(
       ),
     );
   }
+  const expectedGenerationCampaign = expectedReplayCampaignIdentity(
+    input.generationLedgerPaths,
+  );
   for (const [index, path] of input.generationLedgerPaths.entries()) {
     const canonical = sourcePath(path);
     const role = addSource(
@@ -1967,6 +1989,9 @@ export function projectExecutionFindings(
         { role, path: canonical },
         {
           scenarioId: parsed.scenarioId,
+          ...(expectedGenerationCampaign === undefined
+            ? {}
+            : { campaign: expectedGenerationCampaign }),
         },
       ),
     );

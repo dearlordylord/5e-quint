@@ -3411,6 +3411,45 @@ describe("complete Raw Swarm path comparison", () => {
     expect(Either.isRight(validation)).toBe(true);
   });
 
+  test("rejects swapped named replay authorities even when each path and hash is valid", () => {
+    const source = measurement();
+    const milestone = source.findings.authorities.find(
+      ({ role }) => role === "replay-milestone",
+    );
+    const final = source.findings.authorities.find(
+      ({ role }) => role === "replay-final",
+    );
+    if (milestone === undefined || final === undefined) {
+      throw new Error("Synthetic named replay authorities are incomplete.");
+    }
+    const swappedFindings = {
+      ...source.findings,
+      authorities: source.findings.authorities.map((authority) =>
+        authority.role === "replay-milestone"
+          ? {
+              role: authority.role,
+              path: final.path,
+              sha256: final.sha256,
+              byteLength: final.byteLength,
+            }
+          : authority.role === "replay-final"
+            ? {
+                role: authority.role,
+                path: milestone.path,
+                sha256: milestone.sha256,
+                byteLength: milestone.byteLength,
+              }
+            : authority,
+      ),
+    };
+    const invalid = validateCompletePathMeasurement(
+      withRetainedFindings(source, swappedFindings),
+    );
+    expect(Either.isLeft(invalid)).toBe(true);
+    if (Either.isRight(invalid)) return;
+    expect(invalid.left).toContain("Replay authority role replay-milestone");
+  });
+
   test("assembles and writes a current measurement from canonical authorities", () => {
     const source = measurement();
     const sourceRoot = resolve(repoRoot, source.stagePlanAuthority.path, "..");

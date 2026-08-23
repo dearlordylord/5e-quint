@@ -316,11 +316,11 @@ type CompositeReviewFixtureSubject =
     }>
   | Readonly<{
       readonly tag: "scenarioCandidate";
-      readonly campaignId: "findings-campaign";
-      readonly evidenceSetId: "findings-campaign-evidence";
-      readonly candidateId: "findings-candidate";
+      readonly campaignId: string;
+      readonly evidenceSetId: string;
+      readonly candidateId: string;
       readonly candidateScenarioSha256: string;
-      readonly plannedScenarioId: "findings-example";
+      readonly plannedScenarioId: string;
     }>;
 
 const FINDINGS_REVIEW_SUBJECT = {
@@ -349,7 +349,18 @@ type CompositeReviewLedgerSpec = Readonly<{
   readonly invocationId: string;
   readonly reviewStage: "milestone" | "final";
   readonly subject: CompositeReviewFixtureSubject;
+  readonly ledgerSchemaVersion?: 2 | 4;
 }>;
+
+type OrderedLedgerEntry =
+  | Readonly<{
+      readonly tag: "generation";
+      readonly invocationId: string;
+    }>
+  | Readonly<{
+      readonly tag: "review";
+      readonly review: CompositeReviewLedgerSpec;
+    }>;
 
 function retainedGenerationReviewLedger(
   root: string,
@@ -357,6 +368,12 @@ function retainedGenerationReviewLedger(
   options: Readonly<{
     readonly reviewEntries?: readonly CompositeReviewLedgerSpec[];
     readonly generationInvocationIds?: readonly string[];
+    readonly orderedLedgerEntries?: readonly OrderedLedgerEntry[];
+    readonly campaignIdentity?: Readonly<{
+      readonly campaignId: string;
+      readonly evidenceSetId: string;
+      readonly plannedScenarioId: string;
+    }>;
   }> = {},
 ): string {
   const path = resolve(root, "generation-invocations.jsonl");
@@ -390,18 +407,35 @@ function retainedGenerationReviewLedger(
     resolve(root, `${invocationId}.events.jsonl`);
   const eventBytes = (review: CompositeReviewLedgerSpec): string =>
     `${[
-      {
-        type: "raw-swarm.invocation.started",
-        schemaVersion: 4,
-        subject: review.subject,
-        gitSha: common.gitSha,
-        phase: "scenarioCompositeReview",
-        stagePlanReason: "The campaign requires a composite review.",
-        fallbackInvocationId: review.invocationId,
-        model: "gpt-5.6-luna",
-        reasoningEffort: "max",
-        startedAt: common.startedAt,
-      },
+      ...(review.ledgerSchemaVersion === 2
+        ? [
+            {
+              type: "raw-swarm.invocation.started",
+              schemaVersion: 2,
+              scenarioId: "findings-example",
+              gitSha: common.gitSha,
+              phase: "scenarioCompositeReview",
+              stagePlanReason: "The campaign requires a composite review.",
+              fallbackInvocationId: review.invocationId,
+              model: "gpt-5.6-luna",
+              reasoningEffort: "max",
+              startedAt: common.startedAt,
+            },
+          ]
+        : [
+            {
+              type: "raw-swarm.invocation.started",
+              schemaVersion: 4,
+              subject: review.subject,
+              gitSha: common.gitSha,
+              phase: "scenarioCompositeReview",
+              stagePlanReason: "The campaign requires a composite review.",
+              fallbackInvocationId: review.invocationId,
+              model: "gpt-5.6-luna",
+              reasoningEffort: "max",
+              startedAt: common.startedAt,
+            },
+          ]),
       { type: "thread.started", thread_id: review.invocationId },
       {
         type: "item.completed",
@@ -417,7 +451,7 @@ function retainedGenerationReviewLedger(
       },
       {
         type: "raw-swarm.invocation.completed",
-        schemaVersion: 4,
+        schemaVersion: review.ledgerSchemaVersion ?? 4,
         elapsedMilliseconds: common.elapsedMilliseconds,
         exit: common.exit,
         result: common.result,
@@ -428,46 +462,80 @@ function retainedGenerationReviewLedger(
   for (const review of reviewEntries) {
     writeFileSync(eventPath(review.invocationId), eventBytes(review));
   }
-  const reviewLedgerEntry = (review: CompositeReviewLedgerSpec) => ({
-    schemaVersion: 4 as const,
-    subject: review.subject,
-    invocationId: review.invocationId,
-    model: "gpt-5.6-luna",
-    reasoningEffort: "max",
-    phase: "scenarioCompositeReview" as const,
-    stagePlanReason: "The campaign requires a composite review.",
-    eventsSha256: createHash("sha256")
-      .update(readFileSync(eventPath(review.invocationId)))
-      .digest("hex"),
-    ...common,
-  });
+  const reviewLedgerEntry = (review: CompositeReviewLedgerSpec) => {
+    const commonReview = {
+      invocationId: review.invocationId,
+      model: "gpt-5.6-luna" as const,
+      reasoningEffort: "max" as const,
+      phase: "scenarioCompositeReview" as const,
+      stagePlanReason: "The campaign requires a composite review.",
+      eventsSha256: createHash("sha256")
+        .update(readFileSync(eventPath(review.invocationId)))
+        .digest("hex"),
+      ...common,
+    };
+    return review.ledgerSchemaVersion === 2
+      ? {
+          schemaVersion: 2 as const,
+          scenarioId: "findings-example" as const,
+          ...commonReview,
+        }
+      : {
+          schemaVersion: 4 as const,
+          subject: review.subject,
+          ...commonReview,
+        };
+  };
   const generationSubject = {
     tag: "scenarioCampaign" as const,
     campaignId: "findings-campaign" as const,
     evidenceSetId: "findings-campaign-evidence" as const,
     plannedScenarioId: "findings-example" as const,
   };
-  const generationLedgerEntries = (options.generationInvocationIds ?? []).map(
-    (invocationId) => ({
-      schemaVersion: 4 as const,
-      subject: generationSubject,
-      invocationId,
-      model: "gpt-5.6-sol",
-      reasoningEffort: "medium",
-      phase: "scenarioGeneration" as const,
-      stagePlanReason: "The campaign requires scenario generation.",
-      eventsSha256: "0".repeat(64),
-      ...common,
-    }),
-  );
-  const entries = [
-    ...generationLedgerEntries,
-    ...reviewEntries.map(reviewLedgerEntry),
+  const generationLedgerEntry = (invocationId: string) => ({
+    schemaVersion: 4 as const,
+    subject: generationSubject,
+    invocationId,
+    model: "gpt-5.6-sol",
+    reasoningEffort: "medium",
+    phase: "scenarioGeneration" as const,
+    stagePlanReason: "The campaign requires scenario generation.",
+    eventsSha256: "0".repeat(64),
+    ...common,
+  });
+  const orderedEntries = options.orderedLedgerEntries ?? [
+    ...(options.generationInvocationIds ?? []).map(
+      (invocationId): OrderedLedgerEntry => ({
+        tag: "generation",
+        invocationId,
+      }),
+    ),
+    ...reviewEntries.map(
+      (review): OrderedLedgerEntry => ({ tag: "review", review }),
+    ),
   ];
+  const entries = orderedEntries.map((entry) =>
+    entry.tag === "generation"
+      ? generationLedgerEntry(entry.invocationId)
+      : reviewLedgerEntry(entry.review),
+  );
   writeFileSync(
     path,
     `${entries.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
   );
+  if (options.campaignIdentity !== undefined) {
+    writeFileSync(
+      resolve(root, "campaign.json"),
+      `${JSON.stringify({
+        type: "raw-swarm-scenario-campaign",
+        schemaVersion: 1,
+        ...options.campaignIdentity,
+        gitSha: common.gitSha,
+        startedAt: common.startedAt,
+        configSha256: "c".repeat(64),
+      })}\n`,
+    );
+  }
   return relative(repoRoot, path);
 }
 
@@ -536,11 +604,32 @@ describe("Raw Swarm findings projection", () => {
             subject: finalSubject,
           },
         ],
-        generationInvocationIds: [
-          "iteration-one-generation",
-          "iteration-two-revision",
-          "iteration-three-generation",
+        orderedLedgerEntries: [
+          { tag: "generation", invocationId: "iteration-one-generation" },
+          { tag: "generation", invocationId: "iteration-two-revision" },
+          {
+            tag: "review",
+            review: {
+              invocationId: "iteration-two-milestone",
+              reviewStage: "milestone",
+              subject: milestoneSubject,
+            },
+          },
+          { tag: "generation", invocationId: "iteration-three-generation" },
+          {
+            tag: "review",
+            review: {
+              invocationId: "iteration-three-final",
+              reviewStage: "final",
+              subject: finalSubject,
+            },
+          },
         ],
+        campaignIdentity: {
+          campaignId: "findings-campaign",
+          evidenceSetId: "findings-campaign-evidence",
+          plannedScenarioId: "findings-example",
+        },
       },
     );
     const milestonePath = resolve(input.root, "iteration-two-milestone.json");
@@ -589,6 +678,112 @@ describe("Raw Swarm findings projection", () => {
     expect(
       projection.authorities.filter(({ role }) => role.startsWith("replay-")),
     ).toHaveLength(2);
+  });
+
+  test("accepts an exact historical v2 composite-review ledger row", () => {
+    const input = fixture();
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      FINDINGS_REVIEW_SUBJECT,
+      {
+        reviewEntries: [
+          {
+            invocationId: "historical-final",
+            reviewStage: "final",
+            subject: FINDINGS_REVIEW_SUBJECT,
+            ledgerSchemaVersion: 2,
+          },
+        ],
+      },
+    );
+    const finalPath = resolve(input.root, "historical-final.json");
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "historical-final",
+        }),
+      )}\n`,
+    );
+
+    const projection = projectExecutionFindings({
+      transcriptPath: input.transcriptRelative,
+      evidenceSetDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [generationLedgerRelative],
+      reviewReplay: {
+        tag: "finalOnly",
+        finalPath: relative(repoRoot, finalPath),
+      },
+      issueLinks: [],
+    });
+
+    expect(
+      projection.authorities.some(({ role }) => role === "replay-final"),
+    ).toBe(true);
+  });
+
+  test("rejects a cross-campaign Candidate replay with the same scenario hash", () => {
+    const input = fixture();
+    const expectedSubject = {
+      tag: "scenarioCandidate",
+      campaignId: "findings-campaign",
+      evidenceSetId: "findings-campaign-evidence",
+      candidateId: "findings-final-candidate",
+      candidateScenarioSha256: input.scenarioSha256,
+      plannedScenarioId: "findings-example",
+    } as const satisfies CompositeReviewFixtureSubject;
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      expectedSubject,
+      {
+        reviewEntries: [
+          {
+            invocationId: "cross-campaign-final",
+            reviewStage: "final",
+            subject: expectedSubject,
+          },
+        ],
+        campaignIdentity: {
+          campaignId: "findings-campaign",
+          evidenceSetId: "findings-campaign-evidence",
+          plannedScenarioId: "findings-example",
+        },
+      },
+    );
+    const foreignSubject = {
+      ...expectedSubject,
+      campaignId: "foreign-campaign",
+      evidenceSetId: "foreign-evidence",
+    } as const;
+    const finalPath = resolve(input.root, "cross-campaign-final.json");
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCandidateCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "cross-campaign-final",
+          subject: foreignSubject,
+        }),
+      )}\n`,
+    );
+
+    expect(() =>
+      projectExecutionFindings({
+        transcriptPath: input.transcriptRelative,
+        evidenceSetDirectory: input.runRelative,
+        reviewPaths: [input.reviewRelative],
+        scenarioReviewPaths: [],
+        generationLedgerPaths: [generationLedgerRelative],
+        reviewReplay: {
+          tag: "finalOnly",
+          finalPath: relative(repoRoot, finalPath),
+        },
+        issueLinks: [],
+      }),
+    ).toThrow(/Campaign and Evidence Set|lifecycle subject/);
   });
 
   test("retains original milestone/final composite-review envelopes as replay authorities without ledger rows", () => {
