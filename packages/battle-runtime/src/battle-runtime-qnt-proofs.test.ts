@@ -1,12 +1,19 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  parseProofShardEnvironment,
+  selectProofModulesForShard,
+} from "../../../scripts/qnt-proof-harness.ts";
+import {
   discoverProofModules,
   proofModuleTimeoutMs,
   runProofModule,
 } from "./battle-runtime-qnt-proofs.ts";
 
-const proofModules = discoverProofModules();
+const proofModules = selectProofModulesForShard(
+  discoverProofModules(),
+  parseProofShardEnvironment(),
+);
 const runProofs = process.env.RUN_QNT_PROOFS === "1";
 
 // Always-on in `pnpm test`: a fast, Quint-free reminder plus a glob guard. The

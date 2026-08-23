@@ -1,18 +1,27 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  parseProofShardEnvironment,
+  selectProofModulesForShard,
+} from "../../../scripts/qnt-proof-harness.ts";
+import {
   discoverProofModules,
   proofModuleTimeoutMs,
   runProofModule,
 } from "./character-creation-runtime-qnt-proofs.ts";
 
-const proofModules = discoverProofModules();
+const discoveredProofModules = discoverProofModules();
+const proofModules = selectProofModulesForShard(
+  discoveredProofModules,
+  parseProofShardEnvironment(),
+);
 const runProofs = process.env.RUN_QNT_PROOFS === "1";
 
 test("character-creation QNT proof lane is opt-in -- run `pnpm test:qnt-proofs` to check run-block proofs", () => {
-  expect(proofModules.map((proofModule) => proofModule.modulePath)).toContain(
-    "character-creation-runtime-slice-tests.qnt",
-  );
+  expect(
+    discoveredProofModules.map((proofModule) => proofModule.modulePath),
+  ).toContain("character-creation-runtime-slice-tests.qnt");
+  expect(proofModules.length).toBeGreaterThan(0);
 
   if (!runProofs) {
     console.warn(
