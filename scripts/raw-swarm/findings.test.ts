@@ -20,7 +20,7 @@ import {
   projectExecutionFindings,
   readFindingsProjection,
   makeFinding,
-  unresolvedSource,
+  readSourceWithAuthority,
   validateFindingsProjection,
   writeFindingsProjection,
 } from "./findings.ts";
@@ -728,22 +728,15 @@ describe("Raw Swarm findings projection", () => {
     const root = directory();
     const path = resolve(root, "cached-authority.json");
     writeFileSync(path, '{"value":"before"}\n');
-    const unresolved = unresolvedSource({
+    const source = readSourceWithAuthority({
       role: "replay-final",
       path: relative(repoRoot, path),
     });
-    const original = authorityFor(unresolved);
-    const parsed = {
-      tag: "parsed" as const,
-      role: original.role,
-      path: original.path,
-      authority: {
-        byteLength: original.byteLength,
-        sha256: original.sha256,
-      },
-    };
+    expect(source._tag).toBe("Right");
+    if (Either.isLeft(source)) return;
+    const original = authorityFor(source.right);
     writeFileSync(path, '{"value":"after"}\n');
-    expect(authorityFor(parsed)).toEqual(original);
+    expect(authorityFor(source.right)).toEqual(original);
   });
 
   test("projects a zero-exit invalid last message as a generation invocation failure", () => {

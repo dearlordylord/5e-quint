@@ -236,6 +236,14 @@ export type FindingsProjectionResult =
   | { readonly tag: "valid"; readonly projection: FindingsProjection }
   | { readonly tag: "invalid"; readonly message: string };
 
+type FindingAuthorityBytesReader = (
+  path: string,
+) => Either.Either<Uint8Array, string>;
+
+type FindingsProjectionValidationOptions = Readonly<{
+  readonly readAuthorityBytes?: FindingAuthorityBytesReader;
+}>;
+
 export type FindingIssueLink = {
   readonly fingerprint: string;
   readonly githubIssueNumber?: number;
@@ -267,19 +275,25 @@ type ParsedSourceAuthority = Readonly<
   Pick<FindingAuthority, "byteLength" | "sha256">
 >;
 
-export type Source =
-  | Readonly<{
-      readonly tag: "unresolved";
-      readonly role: string;
-      readonly path: string;
-    }>
-  | Readonly<{
-      readonly tag: "parsed";
-      readonly role: string;
-      readonly path: string;
-      /** Hash metadata derived from the bytes parsed for this source. */
-      readonly authority: ParsedSourceAuthority;
-    }>;
+const parsedSourceBrand: unique symbol = Symbol("parsedFindingSource");
+const parsedSources = new WeakSet<object>();
+
+type UnresolvedSource = Readonly<{
+  readonly tag: "unresolved";
+  readonly role: string;
+  readonly path: string;
+}>;
+
+type ParsedSource = Readonly<{
+  readonly tag: "parsed";
+  readonly role: string;
+  readonly path: string;
+  /** Hash metadata derived from the bytes parsed for this source. */
+  readonly authority: ParsedSourceAuthority;
+  readonly [parsedSourceBrand]: true;
+}>;
+
+export type Source = UnresolvedSource | ParsedSource;
 
 type ParsedRun = {
   readonly scenarioId: ScenarioId;
@@ -365,6 +379,9 @@ function boundedText(value: string): string {
 export function authorityFor(source: Source): FindingAuthority {
   const canonical = sourcePath(source.path);
   if (source.tag === "parsed") {
+    if (!parsedSources.has(source)) {
+      fail("Parsed finding source is not an opaque cached source.");
+    }
     if (source.path !== canonical) {
       fail(`Parsed finding authority path is not canonical: ${source.path}`);
     }
@@ -398,15 +415,37 @@ export function unresolvedSource(input: {
   };
 }
 
-function sourceWithAuthority(
-  source: Source,
-  authority: FindingAuthority,
-): Source {
+export function readSourceWithAuthority(input: {
+  readonly role: string;
+  readonly path: string;
+}): Either.Either<Source, string> {
+  const source = (() => {
+    try {
+      return Either.right(unresolvedSource(input));
+    } catch (error: unknown) {
+      return Either.left(
+        error instanceof Error ? error.message : "Finding source is invalid.",
+      );
+    }
+  })();
+  if (Either.isLeft(source)) return source;
+  const absolutePath = canonicalRepositoryReadPath(repoRoot, source.right.path);
+  if (Either.isLeft(absolutePath)) return Either.left(absolutePath.left);
+  const bytes = (() => {
+    try {
+      return Either.right(readFileSync(absolutePath.right));
+    } catch {
+      return Either.left(`Finding source ${source.right.path} is unreadable.`);
+    }
+  })();
+  if (Either.isLeft(bytes)) return Either.left(bytes.left);
+  return Either.right(sourceWithAuthority(source.right, bytes.right));
+}
+
+function sourceWithAuthority(source: Source, bytes: Uint8Array): Source {
   const canonical = sourcePath(source.path);
-  if (authority.role !== source.role || authority.path !== canonical) {
-    fail(`Parsed finding authority does not match source ${canonical}.`);
-  }
-  return {
+  const authority = artifactAuthorityForBytes(canonical, bytes);
+  const parsed = {
     tag: "parsed",
     role: source.role,
     path: canonical,
@@ -414,7 +453,10 @@ function sourceWithAuthority(
       byteLength: authority.byteLength,
       sha256: authority.sha256,
     },
-  };
+    [parsedSourceBrand]: true,
+  } as const satisfies ParsedSource;
+  parsedSources.add(parsed);
+  return parsed;
 }
 
 export function sourcePath(path: string): string {
@@ -499,7 +541,7 @@ export function readSourceRecord(path: string): unknown {
 
 type RetainedScenarioReviewInputRead = Readonly<{
   readonly input: Schema.Schema.Type<typeof RetainedScenarioReviewInputSchema>;
-  readonly authority: Omit<FindingAuthority, "role">;
+  readonly bytes: Buffer;
 }>;
 
 function readSourceBytes(path: string): Either.Either<Buffer, string> {
@@ -537,26 +579,30 @@ function readRetainedScenarioReviewInputOnce(
   }
   return Either.right({
     input: decoded.right,
-    authority: artifactAuthorityForBytes(canonical, bytes.right),
+    bytes: bytes.right,
   });
 }
 
 function parseRun(transcriptPath: string): Either.Either<ParsedRun, string> {
   const canonicalTranscriptPath = sourcePath(transcriptPath);
-  let records: readonly unknown[];
-  try {
-    records = readJsonLines(canonicalTranscriptPath);
-  } catch (error) {
-    return Either.left(
-      `SDK transcript is malformed and cannot be projected: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-    );
+  const records = (() => {
+    try {
+      return Either.right(readJsonLines(canonicalTranscriptPath));
+    } catch (error) {
+      return Either.left(
+        `SDK transcript is malformed and cannot be projected: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  })();
+  if (Either.isLeft(records)) {
+    return Either.left(records.left);
   }
   const transcriptSha256 = createHash("sha256")
     .update(readFileSync(resolve(repoRoot, canonicalTranscriptPath)))
     .digest("hex");
-  const sdk = parseSdkTranscript(records);
+  const sdk = parseSdkTranscript(records.right);
   if (sdk.tag === "valid") {
     const header = sdk.value.header;
     return Either.right({
@@ -972,10 +1018,14 @@ function findingsFromPlayerEventSource(source: Source): readonly Finding[] {
   let failedPlayerCommand = false;
   for (const [index, line] of lines.entries()) {
     if (line.trim().length === 0) continue;
-    let value: unknown;
-    try {
-      value = JSON.parse(line);
-    } catch {
+    const value = (() => {
+      try {
+        return Either.right(JSON.parse(line) as unknown);
+      } catch {
+        return Either.left("malformed");
+      }
+    })();
+    if (Either.isLeft(value)) {
       findings.push(
         makeFinding({
           stage: "player",
@@ -987,8 +1037,10 @@ function findingsFromPlayerEventSource(source: Source): readonly Finding[] {
       );
       continue;
     }
-    if (!isJsonRecord(value) || value.type !== "item.completed") continue;
-    const item = value.item;
+    if (!isJsonRecord(value.right) || value.right.type !== "item.completed") {
+      continue;
+    }
+    const item = value.right.item;
     if (!isJsonRecord(item) || item.type !== "command_execution") continue;
     const command = typeof item.command === "string" ? item.command : "";
     if (!command.includes("player-client")) continue;
@@ -1238,13 +1290,19 @@ function readReplayLedgerEntries(
 ): readonly ModelInvocationLedgerEntry[] {
   return generationLedgerPaths.flatMap((path) => {
     const canonical = sourcePath(path);
-    let records: readonly JsonLineRecord[];
-    try {
-      records = readJsonLineRecords(canonical);
-    } catch {
+    const records = (() => {
+      try {
+        return Either.right(readJsonLineRecords(canonical));
+      } catch {
+        return Either.left(
+          `Original generation ledger is unreadable: ${canonical}`,
+        );
+      }
+    })();
+    if (Either.isLeft(records)) {
       fail(`Original generation ledger is unreadable: ${canonical}`);
     }
-    return records.map(({ value, line }) => {
+    return records.right.map(({ value, line }) => {
       const decoded = parseModelInvocationLedgerEntry(value);
       if (Either.isLeft(decoded)) {
         fail(
@@ -1447,7 +1505,7 @@ function originalCompositeReviewInputs(
     if (eventSourceIndex >= 0) {
       sources[eventSourceIndex] = sourceWithAuthority(
         sources[eventSourceIndex]!,
-        eventAuthority,
+        parsedEvents.rawContents,
       );
     }
     validateRetainedScenarioReviewInvocation({
@@ -1478,14 +1536,10 @@ function originalCompositeReviewInputs(
     const sourceIndex = sources.findIndex(
       (source) => source.path === canonical,
     );
-    const replayAuthority = {
-      role,
-      ...retained.right.authority,
-    } satisfies FindingAuthority;
     if (sourceIndex >= 0) {
       sources[sourceIndex] = sourceWithAuthority(
         sources[sourceIndex]!,
-        replayAuthority,
+        retained.right.bytes,
       );
     }
   }
@@ -1644,6 +1698,7 @@ function subjectAuthorityBindingError(
 
 function validateDecodedProjection(
   projection: FindingsProjection,
+  options: FindingsProjectionValidationOptions = {},
 ): FindingsProjectionResult {
   if (projection.subjectIdentity !== sha256Canonical(projection.subject)) {
     return {
@@ -1668,19 +1723,24 @@ function validateDecodedProjection(
       };
     }
     paths.add(authority.path);
-    let canonicalPath: string;
-    try {
-      canonicalPath = sourcePath(authority.path);
-    } catch (error) {
-      return {
-        tag: "invalid",
-        message:
+    const canonicalPath = (() => {
+      try {
+        return Either.right(sourcePath(authority.path));
+      } catch (error) {
+        return Either.left(
           error instanceof Error
             ? error.message
             : `Finding authority path is invalid: ${authority.path}.`,
+        );
+      }
+    })();
+    if (Either.isLeft(canonicalPath)) {
+      return {
+        tag: "invalid",
+        message: canonicalPath.left,
       };
     }
-    if (canonicalPath !== authority.path) {
+    if (canonicalPath.right !== authority.path) {
       return {
         tag: "invalid",
         message: `Finding authority path is not repository-relative: ${authority.path}.`,
@@ -1696,27 +1756,34 @@ function validateDecodedProjection(
         message: `Finding authority is not a canonical repository path: ${authority.path}.`,
       };
     }
-    try {
-      if (relative(repoRoot, canonicalAuthority.right) !== authority.path) {
-        return {
-          tag: "invalid",
-          message: `Finding authority is not a canonical repository path: ${authority.path}.`,
-        };
-      }
-      const bytes = readFileSync(canonicalAuthority.right);
-      if (
-        bytes.byteLength !== authority.byteLength ||
-        createHash("sha256").update(bytes).digest("hex") !== authority.sha256
-      ) {
-        return {
-          tag: "invalid",
-          message: `Finding authority hash does not match ${authority.path}.`,
-        };
-      }
-    } catch {
+    if (relative(repoRoot, canonicalAuthority.right) !== authority.path) {
       return {
         tag: "invalid",
-        message: `Finding authority is unreadable: ${authority.path}.`,
+        message: `Finding authority is not a canonical repository path: ${authority.path}.`,
+      };
+    }
+    const bytes = (() => {
+      try {
+        return options.readAuthorityBytes === undefined
+          ? Either.right(readFileSync(canonicalAuthority.right))
+          : options.readAuthorityBytes(authority.path);
+      } catch {
+        return Either.left(
+          `Finding authority is unreadable: ${authority.path}.`,
+        );
+      }
+    })();
+    if (Either.isLeft(bytes)) {
+      return { tag: "invalid", message: bytes.left };
+    }
+    if (
+      bytes.right.byteLength !== authority.byteLength ||
+      createHash("sha256").update(bytes.right).digest("hex") !==
+        authority.sha256
+    ) {
+      return {
+        tag: "invalid",
+        message: `Finding authority hash does not match ${authority.path}.`,
       };
     }
   }
@@ -1898,13 +1965,14 @@ function validateDecodedProjection(
 
 export function validateFindingsProjection(
   value: unknown,
+  options: FindingsProjectionValidationOptions = {},
 ): FindingsProjectionResult {
   const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
     onExcessProperty: "error",
   })(value);
   return Either.isLeft(decoded)
     ? { tag: "invalid", message: decoded.left.message }
-    : validateDecodedProjection(decoded.right);
+    : validateDecodedProjection(decoded.right, options);
 }
 
 export function projectExecutionFindings(

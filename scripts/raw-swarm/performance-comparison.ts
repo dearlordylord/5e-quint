@@ -2952,8 +2952,18 @@ export function assembleCompletePathMeasurement(
           findingsDecoded.left.message,
       );
     }
+    const eventAuthorityCache = eventAuthoritySnapshotsForPaths([
+      ...descriptor.right.invocationEventPaths,
+      ...findingsDecoded.right.authorities
+        .filter(({ role }) => isPrePlayReviewEventsAuthorityRole(role))
+        .map(({ path }) => path),
+    ]);
     const findingsValidation = validateFindingsProjection(
       findingsDecoded.right,
+      {
+        readAuthorityBytes: (path) =>
+          findingAuthorityBytes(eventAuthorityCache, path),
+      },
     );
     if (findingsValidation.tag === "invalid") {
       return Either.left(
@@ -2976,7 +2986,14 @@ export function assembleCompletePathMeasurement(
     );
     const eventAuthorities = mapNonEmpty(
       descriptor.right.invocationEventPaths,
-      artifactAuthority,
+      (path) => {
+        const snapshot = eventAuthoritySnapshotAtPath(
+          eventAuthorityCache,
+          path,
+        );
+        if (Either.isLeft(snapshot)) fail(snapshot.left);
+        return snapshot.right.authority;
+      },
     );
     const eventPaths = new Set(eventAuthorities.map(({ path }) => path));
     if (eventPaths.size !== eventAuthorities.length) {
@@ -2996,7 +3013,10 @@ export function assembleCompletePathMeasurement(
       findings: findingsValidation.projection,
       outcome: descriptor.right.outcome,
     };
-    return validateCompletePathMeasurement(measurement);
+    return validateParsedCompletePathMeasurement(
+      measurement,
+      eventAuthorityCache,
+    );
   } catch (error: unknown) {
     return Either.left(
       error instanceof Error
@@ -3033,23 +3053,102 @@ type FindingAuthority = FindingsProjection["authorities"][number];
 type ParsedEventAuthority = Readonly<{
   readonly authority: ArtifactAuthority;
   readonly events: readonly unknown[];
+  readonly rawContents: Buffer;
 }>;
 
-function readEventAuthority(
+type EventAuthorityCacheEntry = Readonly<{
+  readonly rawContents: Either.Either<Buffer, string>;
+  readonly parsed: Either.Either<ParsedEventAuthority, string>;
+}>;
+
+type EventAuthoritySnapshotCache = ReadonlyMap<
+  string,
+  EventAuthorityCacheEntry
+>;
+
+function eventAuthorityCacheKey(path: string): string {
+  return resolve(repoRoot, path);
+}
+
+function readEventAuthorityAtPath(path: string): EventAuthorityCacheEntry {
+  try {
+    const parsed = readCodexEventsWithSource(resolve(repoRoot, path));
+    const rawContents = Either.right(parsed.rawContents);
+    const parsedResult =
+      parsed.tag === "invalid"
+        ? Either.left(parsed.message)
+        : Either.right({
+            authority: artifactAuthorityForBytes(path, parsed.rawContents),
+            events: parsed.events,
+            rawContents: parsed.rawContents,
+          });
+    return { rawContents, parsed: parsedResult };
+  } catch {
+    const message = `Authority ${path} is unreadable or malformed JSONL.`;
+    return {
+      rawContents: Either.left(message),
+      parsed: Either.left(message),
+    };
+  }
+}
+
+function eventAuthoritySnapshotsForPaths(
+  paths: readonly string[],
+): EventAuthoritySnapshotCache {
+  const snapshots = new Map<string, EventAuthorityCacheEntry>();
+  for (const path of paths) {
+    const key = eventAuthorityCacheKey(path);
+    if (!snapshots.has(key)) {
+      snapshots.set(key, readEventAuthorityAtPath(path));
+    }
+  }
+  return snapshots;
+}
+
+function eventAuthoritySnapshot(
+  snapshots: EventAuthoritySnapshotCache,
   authority: FindingAuthority | ArtifactAuthority,
 ): Either.Either<ParsedEventAuthority, string> {
+  return eventAuthoritySnapshotAtPath(snapshots, authority.path);
+}
+
+function eventAuthoritySnapshotAtPath(
+  snapshots: EventAuthoritySnapshotCache,
+  path: string,
+): Either.Either<ParsedEventAuthority, string> {
+  const entry = snapshots.get(eventAuthorityCacheKey(path));
+  return entry === undefined
+    ? Either.left(`Event authority is not retained: ${path}.`)
+    : entry.parsed;
+}
+
+function findingAuthorityBytes(
+  snapshots: EventAuthoritySnapshotCache,
+  path: string,
+): Either.Either<Uint8Array, string> {
+  const entry = snapshots.get(eventAuthorityCacheKey(path));
+  if (entry !== undefined) return entry.rawContents;
   try {
-    const parsed = readCodexEventsWithSource(resolve(repoRoot, authority.path));
-    if (parsed.tag === "invalid") return Either.left(parsed.message);
-    return Either.right({
-      authority: artifactAuthorityForBytes(authority.path, parsed.rawContents),
-      events: parsed.events,
-    });
+    return Either.right(readFileSync(resolve(repoRoot, path)));
   } catch {
-    return Either.left(
-      `Authority ${"role" in authority ? authority.role : authority.path} is unreadable or malformed JSONL.`,
-    );
+    return Either.left(`Finding authority is unreadable: ${path}.`);
   }
+}
+
+function eventAuthorityPathsForMeasurement(
+  measurement: CompletePathMeasurement,
+): readonly string[] {
+  return measurement.schemaVersion === 2 ||
+    measurement.schemaVersion === 3 ||
+    measurement.schemaVersion === 4 ||
+    measurement.schemaVersion === 5
+    ? [
+        ...measurement.invocationEvents.map(({ path }) => path),
+        ...measurement.findings.authorities
+          .filter(({ role }) => isPrePlayReviewEventsAuthorityRole(role))
+          .map(({ path }) => path),
+      ]
+    : [];
 }
 
 function numberedAuthorityRole(role: string, prefix: string): boolean {
@@ -3259,6 +3358,7 @@ function replayCampaignIdentityForFindings(
 function currentAuthorityContentIssues(
   measurement: CompletePathMeasurementWithCurrentEvidence,
   findings: FindingsProjection,
+  eventAuthorityCache: EventAuthoritySnapshotCache,
 ): readonly string[] {
   const issues: string[] = [];
   if (findings.subject.tag !== "execution") {
@@ -3642,7 +3742,10 @@ function currentAuthorityContentIssues(
     const invocationEvent = measurement.invocationEvents.find(
       ({ path }) => path === authority.path,
     );
-    const parsedEventAuthority = readEventAuthority(authority);
+    const parsedEventAuthority = eventAuthoritySnapshot(
+      eventAuthorityCache,
+      authority,
+    );
     if (Either.isLeft(parsedEventAuthority)) {
       issues.push(parsedEventAuthority.left);
     } else if (
@@ -3763,6 +3866,7 @@ function currentAuthorityContentIssues(
 
 function currentAuthorityIssues(
   measurement: CompletePathMeasurementWithCurrentEvidence,
+  eventAuthorityCache: EventAuthoritySnapshotCache,
 ): readonly string[] {
   const issues: string[] = [];
   if (measurement.schemaVersion === 4) {
@@ -3774,7 +3878,10 @@ function currentAuthorityIssues(
       }),
     );
   }
-  const findingsValidation = validateFindingsProjection(measurement.findings);
+  const findingsValidation = validateFindingsProjection(measurement.findings, {
+    readAuthorityBytes: (path) =>
+      findingAuthorityBytes(eventAuthorityCache, path),
+  });
   if (findingsValidation.tag === "invalid") {
     issues.push(`Findings authority is invalid: ${findingsValidation.message}`);
     return issues;
@@ -3923,7 +4030,10 @@ function currentAuthorityIssues(
       );
       continue;
     }
-    const parsedEventAuthority = readEventAuthority(authority);
+    const parsedEventAuthority = eventAuthoritySnapshot(
+      eventAuthorityCache,
+      authority,
+    );
     if (Either.isLeft(parsedEventAuthority)) {
       issues.push(
         `Invocation ${invocation.invocationId} event authority is unreadable: ${parsedEventAuthority.left}`,
@@ -3989,7 +4099,13 @@ function currentAuthorityIssues(
       "A completed complete path cannot retain a failed model invocation.",
     );
   }
-  issues.push(...currentAuthorityContentIssues(measurement, findings));
+  issues.push(
+    ...currentAuthorityContentIssues(
+      measurement,
+      findings,
+      eventAuthorityCache,
+    ),
+  );
   return issues;
 }
 
@@ -4270,18 +4386,14 @@ function benchmarkReviewAuthorityByStage(
 }
 
 function benchmarkReadinessResultEventIssue(input: {
-  readonly authority: FindingAuthority;
+  readonly eventAuthority: ParsedEventAuthority;
   readonly expected: BenchmarkReadinessInput;
 }): string | undefined {
-  const parsedEventAuthority = readEventAuthority(input.authority);
-  if (Either.isLeft(parsedEventAuthority)) {
-    return `Benchmark readiness event authority is invalid: ${parsedEventAuthority.left}`;
-  }
   try {
     const output = Schema.decodeUnknownEither(
       Schema.Struct({ result: ScenarioQualityReviewSchema }),
       { onExcessProperty: "error" },
-    )(finalAgentMessage(parsedEventAuthority.right.events));
+    )(finalAgentMessage(input.eventAuthority.events));
     if (
       Either.isLeft(output) ||
       canonicalJson(output.right.result) !==
@@ -4300,6 +4412,7 @@ function benchmarkReadinessResultEventIssue(input: {
 function benchmarkRetainedPrePlayReviewIssues(input: {
   readonly measurement: BenchmarkMeasurementWithCurrentEvidence;
   readonly findings: FindingsProjection;
+  readonly eventAuthorityCache: EventAuthoritySnapshotCache;
   readonly expectedReviewSchema:
     | typeof HistoricalScenarioCompositeReviewSchema
     | typeof CurrentScenarioCompositeReviewSchema;
@@ -4554,7 +4667,10 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
         `Benchmark ${reviewStage} pre-play replay event authority does not match its retained composite-review invocation: ${binding.left}`,
       );
     } else {
-      const parsedEventAuthority = readEventAuthority(replayEventsAuthority);
+      const parsedEventAuthority = eventAuthoritySnapshot(
+        input.eventAuthorityCache,
+        replayEventsAuthority,
+      );
       if (Either.isLeft(parsedEventAuthority)) {
         issues.push(
           `Benchmark ${reviewStage} pre-play replay event authority is invalid: ${parsedEventAuthority.left}`,
@@ -4722,10 +4838,16 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
         "The document-declaration benchmark readiness events authority is not bound to its retained readiness invocation.",
       );
     } else if (readinessInput !== undefined) {
-      const outputIssue = benchmarkReadinessResultEventIssue({
-        authority: readinessEventsAuthority,
-        expected: readinessInput,
-      });
+      const readinessEvent = eventAuthoritySnapshot(
+        input.eventAuthorityCache,
+        readinessEventsAuthority,
+      );
+      const outputIssue = Either.isLeft(readinessEvent)
+        ? `Benchmark readiness event authority is invalid: ${readinessEvent.left}`
+        : benchmarkReadinessResultEventIssue({
+            eventAuthority: readinessEvent.right,
+            expected: readinessInput,
+          });
       if (outputIssue !== undefined) issues.push(outputIssue);
     }
   } else if (retainedReadinessAuthorities.length !== 0) {
@@ -4902,6 +5024,7 @@ function benchmarkCompleteEvidenceIssues(input: {
 
 function benchmarkAuthorityIssues(
   measurement: BenchmarkMeasurementWithCurrentEvidence,
+  eventAuthorityCache: EventAuthoritySnapshotCache,
 ): readonly string[] {
   const issues: string[] = [];
   const bundle = measurement.scenarioBundle;
@@ -5099,7 +5222,10 @@ function benchmarkAuthorityIssues(
     }
   }
 
-  const findingsValidation = validateFindingsProjection(measurement.findings);
+  const findingsValidation = validateFindingsProjection(measurement.findings, {
+    readAuthorityBytes: (path) =>
+      findingAuthorityBytes(eventAuthorityCache, path),
+  });
   if (findingsValidation.tag === "invalid") {
     issues.push(`Findings authority is invalid: ${findingsValidation.message}`);
   } else {
@@ -5182,6 +5308,7 @@ function benchmarkAuthorityIssues(
       ...benchmarkRetainedPrePlayReviewIssues({
         measurement,
         findings,
+        eventAuthorityCache,
         expectedReviewSchema:
           measurement.profile === "documentDeclarationSet"
             ? HistoricalScenarioCompositeReviewSchema
@@ -5279,7 +5406,10 @@ function benchmarkAuthorityIssues(
   }
   const parsedEventAuthorities = new Map<string, ParsedEventAuthority>();
   for (const authority of measurement.invocationEvents) {
-    const parsedEventAuthority = readEventAuthority(authority);
+    const parsedEventAuthority = eventAuthoritySnapshot(
+      eventAuthorityCache,
+      authority,
+    );
     if (Either.isLeft(parsedEventAuthority)) {
       issues.push(
         `Benchmark invocation event authority is unreadable: ${parsedEventAuthority.left}`,
@@ -5546,23 +5676,36 @@ function benchmarkSemanticIssues(
  * envelopes and pure schema tests; comparison inputs should come from this
  * validated boundary.
  */
+function validateParsedCompletePathMeasurement(
+  parsed: CompletePathMeasurement,
+  eventAuthorityCache: EventAuthoritySnapshotCache,
+): Either.Either<ValidatedCompletePathMeasurement, string> {
+  if (parsed.schemaVersion === 2 || parsed.schemaVersion === 4) {
+    const issues = currentAuthorityIssues(parsed, eventAuthorityCache);
+    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
+  }
+  if (parsed.schemaVersion === 3 || parsed.schemaVersion === 5) {
+    const issues = benchmarkAuthorityIssues(parsed, eventAuthorityCache);
+    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
+  }
+  return Either.right({
+    ...parsed,
+    [completePathMeasurementValidated]: true,
+  } as ValidatedCompletePathMeasurement);
+}
+
 export function validateCompletePathMeasurement(
   value: unknown,
 ): Either.Either<ValidatedCompletePathMeasurement, string> {
   const parsed = parseCompletePathMeasurement(value);
   if (Either.isLeft(parsed)) return Either.left(parsed.left.message);
-  if (parsed.right.schemaVersion === 2 || parsed.right.schemaVersion === 4) {
-    const issues = currentAuthorityIssues(parsed.right);
-    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
-  }
-  if (parsed.right.schemaVersion === 3 || parsed.right.schemaVersion === 5) {
-    const issues = benchmarkAuthorityIssues(parsed.right);
-    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
-  }
-  return Either.right({
-    ...parsed.right,
-    [completePathMeasurementValidated]: true,
-  } as ValidatedCompletePathMeasurement);
+  const eventAuthorityCache = eventAuthoritySnapshotsForPaths(
+    eventAuthorityPathsForMeasurement(parsed.right),
+  );
+  return validateParsedCompletePathMeasurement(
+    parsed.right,
+    eventAuthorityCache,
+  );
 }
 
 export function readCompletePathMeasurement(

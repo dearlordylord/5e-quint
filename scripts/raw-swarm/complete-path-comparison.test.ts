@@ -3,7 +3,12 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 
 import { Either, Schema } from "effect";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
+
+vi.mock("node:fs", async (importOriginal) => {
+  const original = await importOriginal<typeof import("node:fs")>();
+  return { ...original, readFileSync: vi.fn(original.readFileSync) };
+});
 
 import {
   assembleCompletePathMeasurement,
@@ -2811,6 +2816,41 @@ describe("complete Raw Swarm path comparison", () => {
       ),
     });
   });
+
+  test.each([
+    ["current", () => measurement()],
+    ["benchmark", () => benchmarkMeasurement("boundedCapabilityProjection")],
+  ])(
+    "reads each %s invocation event authority once across validation",
+    (_label, createMeasurement) => {
+      const source = createMeasurement();
+      const authority = source.invocationEvents[1];
+      if (authority === undefined) throw new Error("Missing invocation event.");
+      const absolutePath = resolve(repoRoot, authority.path);
+      const reads = vi.mocked(readFileSync);
+      reads.mockClear();
+      const originalRead = reads.getMockImplementation();
+      if (originalRead === undefined) throw new Error("Missing read mock.");
+      let eventReadCount = 0;
+      reads.mockImplementation((...args) => {
+        const result = originalRead(...args);
+        if (args[0] === absolutePath && eventReadCount++ === 0) {
+          writeFileSync(
+            absolutePath,
+            `${result.toString()}\n{"tamperedAfterSnapshot":true}\n`,
+          );
+        }
+        return result;
+      });
+      const validation = validateCompletePathMeasurement(source);
+      const eventReads = reads.mock.calls.filter(
+        ([path]) => path === absolutePath,
+      );
+      reads.mockImplementation(originalRead);
+      expect(validation._tag).toBe("Right");
+      expect(eventReads).toHaveLength(1);
+    },
+  );
 
   test("keeps historical baseline review fields separate from readiness and rejects readiness on the bounded profile", () => {
     const baseline = benchmarkMeasurement("documentDeclarationSet");
