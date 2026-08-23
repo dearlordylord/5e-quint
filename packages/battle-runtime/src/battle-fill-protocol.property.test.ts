@@ -81,6 +81,7 @@ import {
   holeId,
   attackRollFill,
   attackTargetFill,
+  attackTargetDistanceSpatialFact,
   testGreataxeAttack,
   testLongswordAttack,
   rageResource,
@@ -515,6 +516,44 @@ describe("battle fill protocol boundary owners", () => {
       tag: "invalid",
       message: "Attack target spatial facts were filled twice.",
     });
+  });
+
+  test("rejects duplicate attack-target distance facts deterministically", () => {
+    const state = fighterVsGoblinBattle();
+    const subject = fighterAttackSubject(state);
+    const target = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    if (target.attack === undefined) {
+      throw new Error("Expected the ordinary attack target selection.");
+    }
+    const targetChoice = attackTargetFill(
+      target,
+      fighterId,
+      goblinId,
+    ) as Extract<BattleFill, { readonly kind: "targetChoice" }>;
+    expectInvalid(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          {
+            ...targetChoice,
+            spatialFacts: [
+              ...(targetChoice.spatialFacts ?? []),
+              attackTargetDistanceSpatialFact(
+                fighterId,
+                goblinId,
+                target.attack.selection,
+                movementFeet(10),
+              ),
+            ],
+          },
+        ],
+      }),
+      "Attack target distance facts must contain at most one distance for each actor, target, and attack.",
+    );
   });
 
   test("canonical Brutal Strike effect and Forceful Blow frontiers reject duplicates and wrong movement facts", () => {
