@@ -33,7 +33,9 @@ describe("QNT proof shard selection", () => {
       ["b.qnt", "e.qnt"],
       ["c.qnt", "f.qnt"],
     ]);
-    expect(new Set(shards.flat())).toEqual(new Set(modules));
+    const assignedModules = shards.flat();
+    expect(assignedModules).toHaveLength(modules.length);
+    expect(new Set(assignedModules)).toEqual(new Set(modules));
   });
 
   test("parses and validates CI shard configuration", () => {
