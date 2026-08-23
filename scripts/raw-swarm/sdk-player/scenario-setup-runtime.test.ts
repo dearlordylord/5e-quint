@@ -27,7 +27,11 @@ import {
   battleRuntimeSessionWithRetainedCompanionTransition,
   battleRuntimeSessionWithState,
 } from "../../../packages/battle-runtime/src/battle-runtime-context.ts";
-import { applyCondition } from "../../../packages/shared-algebras/src/conditions-algebra.ts";
+import {
+  applyCondition,
+  hasCondition,
+} from "../../../packages/shared-algebras/src/conditions-algebra.ts";
+import { initiativeEntries } from "../../../packages/shared-algebras/src/initiative-algebra.ts";
 
 import { FIGHTER_EXAMPLE_DRAFT } from "../../../packages/app/src/components/character-creation/characterCreationPresets.ts";
 import { finalizeCharacterDraft } from "../../../packages/character-creation-runtime/src/index.ts";
@@ -82,6 +86,32 @@ import type {
 const TRACER_SCENARIO_ID = "goblin-warrior-skeleton-tracer";
 
 describe("scenario setup public-SDK boundary", () => {
+  test("retains a supported initial Stat Block condition", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios/prone-target-roll-mode-distance-probe.setup.ts",
+      ),
+      [],
+    );
+
+    expect(setup.tag).toBe("ready");
+    if (setup.tag !== "ready") return;
+    const wolf = setup.session.battle.state.combatants.get(combatantId("wolf"));
+    expect(wolf).toBeDefined();
+    if (wolf === undefined) return;
+    expect(hasCondition(wolf.conditions, "prone")).toBe(true);
+    expect(
+      initiativeEntries(setup.session.battle.state.initiative).map(
+        ({ creature, initiative }) => [creature, initiative],
+      ),
+    ).toEqual([
+      [combatantId("melee-goblin-warrior"), 18],
+      [combatantId("ranged-goblin-warrior"), 14],
+      [combatantId("wolf"), 7],
+    ]);
+  });
+
   test("passes controller-authored Character Sheets into neutral setup", async () => {
     const directory = mkdtempSync(
       resolve(tmpdir(), "dnd-scenario-characters-"),
