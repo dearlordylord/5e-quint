@@ -9,6 +9,8 @@
 //   GM can decide that circumstances grant Advantage or impose Disadvantage.
 // - The same section says like sources do not stack and any Advantage plus
 //   any Disadvantage produces a normal one-d20 roll.
+// - .references/srd-5.2.1/Rules-Glossary.md#Prone says an attack against a
+//   Prone target has Advantage within 5 feet and Disadvantage otherwise.
 // - UBIQUITOUS_LANGUAGE.md defines D20 Test, Advantage, Disadvantage, and
 //   Table Decision.
 //
@@ -32,6 +34,10 @@ module d20TestCircumstanceCore {
     advantage: bool,
     disadvantage: bool,
   }
+
+  type ProneAttackRollDistance =
+    | ProneAttackWithinFiveFeet
+    | ProneAttackBeyondFiveFeet
 
   type TableD20TestCircumstanceSource =
     | TableGrantsAdvantage
@@ -80,6 +86,31 @@ module d20TestCircumstanceCore {
     d20TestRollModeFromSources(
       addTableD20TestCircumstanceSource(mechanicalSources, tableSource)
     )
+
+  pure def proneAttackRollSource(
+    distance: ProneAttackRollDistance,
+  ): D20TestRollModeSources =
+    match distance {
+      | ProneAttackWithinFiveFeet => {
+          advantage: true,
+          disadvantage: false,
+        }
+      | ProneAttackBeyondFiveFeet => {
+          advantage: false,
+          disadvantage: true,
+        }
+    }
+
+  pure def d20TestRollModeWithProneTarget(
+    mechanicalSources: D20TestRollModeSources,
+    distance: ProneAttackRollDistance,
+  ): D20TestRollMode = {
+    val proneSource = proneAttackRollSource(distance)
+    d20TestRollModeFromSources({
+      advantage: mechanicalSources.advantage or proneSource.advantage,
+      disadvantage: mechanicalSources.disadvantage or proneSource.disadvantage,
+    })
+  }
 
   pure def tableD20TestCircumstanceDecisionMatches(
     pendingRequestRef: D20TestRequestRef,

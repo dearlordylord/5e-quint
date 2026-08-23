@@ -142,6 +142,7 @@ import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   attackExecutionSelectionMatchesOption,
   attackTargetIsLegal,
+  attackTargetDistanceFeet,
   attackTargetRangeBand,
 } from "./attack-spatial.ts";
 import { hasDodgeBenefit } from "./dodge-benefit.ts";
@@ -157,6 +158,7 @@ import {
   combineD20TestRollMode,
   mechanicalD20TestRollMode,
   mechanicalD20TestRollModeSources,
+  proneAttackRollModeSources,
 } from "../d20-test-circumstance.ts";
 import {
   attackActionBonusWithPassiveFeatureBonus,
@@ -265,6 +267,21 @@ function attackRollSourceFlags(
     attack !== undefined &&
     attackTargetRangeBand(targetSpatialFacts, attackerId, targetId, attack) ===
       "long";
+  const proneTargetDistanceFeet =
+    attack === undefined
+      ? null
+      : attackTargetDistanceFeet(
+          targetSpatialFacts,
+          attackerId,
+          targetId,
+          attack,
+        );
+  const proneTargetRollModeSources =
+    target !== undefined &&
+    hasCondition(target.conditions, "prone") &&
+    proneTargetDistanceFeet !== null
+      ? proneAttackRollModeSources(proneTargetDistanceFeet)
+      : { advantage: false, disadvantage: false };
   const sightAdvantage = hasAttackSightFact(
     targetSpatialFacts,
     "attackTargetCannotSeeAttacker",
@@ -289,6 +306,7 @@ function attackRollSourceFlags(
     );
   const hasAdvantage =
     sightAdvantage ||
+    proneTargetRollModeSources.advantage ||
     grapplerAttackAdvantage ||
     (attacker?.hidden !== null &&
       attacker?.hidden !== undefined &&
@@ -316,6 +334,7 @@ function attackRollSourceFlags(
     );
   const hasDisadvantage =
     sightDisadvantage ||
+    proneTargetRollModeSources.disadvantage ||
     hiddenTargetDisadvantage ||
     dodgeDisadvantage ||
     grappleDisadvantage ||

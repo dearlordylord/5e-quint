@@ -725,6 +725,28 @@ const BattleTargetSpatialFactSchema = Schema.Union(
       rangeBand: Schema.Literal(...BATTLE_ATTACK_RANGE_BANDS),
     }),
   ),
+  Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("attackTargetDistance"),
+      actorId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleAttackProcedureExecutionRef,
+      attackAbility: BattleAttackExecutionAbilitySchema,
+      attackDamageType: DamageTypeSchema,
+      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+      distanceFeet: MovementFeet,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("attackTargetDistance"),
+      actorId: CombatantId,
+      targetId: CombatantId,
+      procedureRef: BattleStatBlockProcedureExecutionRef,
+      attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+      attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
+      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+      distanceFeet: MovementFeet,
+    }),
+  ),
   Schema.Struct({
     kind: Schema.Literal("attackAttackerCannotSeeTarget"),
     attackerId: CombatantId,

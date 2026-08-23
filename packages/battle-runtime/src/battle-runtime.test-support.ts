@@ -63,6 +63,7 @@ import {
   proficiencyBonus,
   resourceCount,
   type Condition,
+  type MovementFeet,
 } from "@dnd/shared/types";
 import {
   statBlockId,
@@ -1761,13 +1762,20 @@ export function attackDamageHoleAfterHit(
   if (targetHole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
   }
+  const target = state.combatants.get(targetId);
+  const attackRollWithExpectedProneMode =
+    attackRoll.rollMode === undefined &&
+    target !== undefined &&
+    hasCondition(target.conditions, "prone")
+      ? { ...attackRoll, rollMode: "advantage" as const }
+      : attackRoll;
   return requireHole(
     resolveBattleSubject({
       state,
       subject,
       fills: [
         attackTargetFill(targetHole, subject.actorId, targetId),
-        attackRollFill(rollHole, attackRoll),
+        attackRollFill(rollHole, attackRollWithExpectedProneMode),
       ],
     }),
     "rolledDice",
@@ -1784,13 +1792,22 @@ export function criticalAttackDamageResult(
     total: 20,
     naturalD20: 20,
   });
+  const target = state.combatants.get(targetId);
+  const rollMode =
+    target !== undefined && hasCondition(target.conditions, "prone")
+      ? ("advantage" as const)
+      : undefined;
 
   return resolveBattleSubject({
     state,
     subject: fighterAttackSubject(state, "Longsword"),
     fills: [
       targetFill(targetHole, targetId),
-      attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
+      attackRollFill(rollHole, {
+        total: 20,
+        naturalD20: 20,
+        ...(rollMode === undefined ? {} : { rollMode }),
+      }),
       damageRollFillWithGroups(damageHole, [[4, 4]]),
     ],
   });
@@ -2509,6 +2526,12 @@ export function targetFill(
                     ? "normal"
                     : undefined,
                 ),
+                attackTargetDistanceSpatialFact(
+                  hole.attack.actorId,
+                  targetId,
+                  hole.attack.selection,
+                  movementFeet(5),
+                ),
               ]),
           ...(hole.spellTargetSpatialFactRequest === undefined
             ? []
@@ -2693,6 +2716,7 @@ export function attackTargetFill(
     BattleFill,
     { readonly kind: "targetChoice" }
   >["spatialFacts"] = [],
+  targetDistanceFeet: MovementFeet = movementFeet(5),
 ): BattleFill {
   const boundSelection =
     hole.kind === "targetChoice" && hole.attack !== undefined
@@ -2710,6 +2734,12 @@ export function attackTargetFill(
         hole.attack?.targetConstraint.kind === "rangedRange"
         ? "normal"
         : undefined,
+    ),
+    attackTargetDistanceSpatialFact(
+      actorId,
+      targetId,
+      boundSelection,
+      targetDistanceFeet,
     ),
     ...commonAdjacentAllySpatialFacts(actorId, targetId),
     ...(extraFacts ?? []),
@@ -2739,6 +2769,26 @@ export function attackTargetSpatialFact(
         targetId,
         ...attackSelection,
       };
+}
+
+export function attackTargetDistanceSpatialFact(
+  actorId: CombatantId,
+  targetId: CombatantId,
+  attackSelection: BattleAttackExecutionSelection,
+  distanceFeet: MovementFeet,
+): Extract<
+  NonNullable<
+    Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
+  >[number],
+  { readonly kind: "attackTargetDistance" }
+> {
+  return {
+    kind: "attackTargetDistance",
+    actorId,
+    targetId,
+    ...attackSelection,
+    distanceFeet,
+  };
 }
 
 function commonAdjacentAllySpatialFacts(

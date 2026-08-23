@@ -711,6 +711,13 @@ export function attackTargetFill(
             targetId,
             ...hole.attack.selection,
           },
+      {
+        kind: "attackTargetDistance",
+        actorId,
+        targetId,
+        ...hole.attack.selection,
+        distanceFeet: movementFeet(5),
+      },
       ...extraSpatialFacts,
     ],
   };

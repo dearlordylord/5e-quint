@@ -804,6 +804,12 @@ describe("scenario setup public-SDK boundary", () => {
             actorId: attackTargetHole.attack.actorId,
             targetId: attackTarget,
           }),
+          expect.objectContaining({
+            kind: "attackTargetDistance",
+            actorId: attackTargetHole.attack.actorId,
+            targetId: attackTarget,
+            distanceFeet: authoredDistance.right,
+          }),
         ],
       }),
     ]);
@@ -3721,6 +3727,11 @@ describe("scenario setup public-SDK boundary", () => {
         expect.objectContaining({
           kind: expect.stringMatching(/^attackTargetIn/),
           targetId: attackTarget,
+        }),
+        expect.objectContaining({
+          kind: "attackTargetDistance",
+          targetId: attackTarget,
+          distanceFeet: authoredAttackDistance.right,
         }),
       ],
     });

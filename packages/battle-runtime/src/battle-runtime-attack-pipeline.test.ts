@@ -1,6 +1,7 @@
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 import * as Schema from "effect/Schema";
 import { describe, expect, test } from "vitest";
@@ -24,11 +25,14 @@ import {
   fighterVsGoblinBattle,
   goblinId,
   recklessAttackFeature,
+  requireHole,
   resolveBattleSubject,
   startBattleRight,
   statBlockCreatureInit,
   supportedBattleUnitRef,
   targetFill,
+  attackTargetDistanceSpatialFact,
+  attackTargetFill,
   testDaggerAttack,
   testLongswordAttack,
   testShortswordAttack,
@@ -228,12 +232,13 @@ describe("battle runtime: attack pipeline boundaries", () => {
     const attackRoll = attackRollFill(rollHole, {
       total: 15,
       naturalD20: 10,
+      rollMode: "advantage",
     });
     const damageHole = attackDamageHoleAfterHit(
       state,
       targetHole,
       rollHole,
-      { total: 15, naturalD20: 10 },
+      { total: 15, naturalD20: 10, rollMode: "advantage" },
       subject,
       goblinId,
     );
@@ -606,6 +611,189 @@ describe("battle runtime: attack pipeline boundaries", () => {
     expect(attackRollHole(undefined, attack)).not.toHaveProperty(
       "missToHitReplacement",
     );
+  });
+
+  test.each([
+    [movementFeet(5), "advantage"],
+    [movementFeet(10), "disadvantage"],
+  ] as const)(
+    "derives the Prone target attack-roll mode from %s feet",
+    (distanceFeet, expectedMode) => {
+      const state = fighterVsGoblinBattle();
+      const fighter = state.combatants.get(fighterId);
+      const goblin = state.combatants.get(goblinId);
+      if (
+        fighter?.origin.kind !== "character" ||
+        fighter.origin.attack === null ||
+        goblin === undefined
+      ) {
+        throw new Error("Expected the fighter attack and goblin fixtures.");
+      }
+      const subject = fighterAttackSubject(state);
+      const targetHole = requireHole(
+        resolveBattleSubject({ state, subject, fills: [] }),
+        "targetChoice",
+      );
+      if (targetHole.attack === undefined) {
+        throw new Error("Expected the attack target selection.");
+      }
+      const proneGoblin = battleCreatureStateWithKnockOutPreservedConditions(
+        goblin,
+        applyCondition(goblin.conditions, "prone"),
+      );
+      const proneState = {
+        ...state,
+        combatants: new Map(state.combatants).set(goblinId, proneGoblin),
+      };
+      expect(
+        requiredAttackRollMode(
+          proneState,
+          fighterId,
+          goblinId,
+          fighter.origin.attack,
+          [
+            attackTargetDistanceSpatialFact(
+              fighterId,
+              goblinId,
+              targetHole.attack.selection,
+              distanceFeet,
+            ),
+          ],
+        ),
+      ).toBe(expectedMode);
+    },
+  );
+
+  test("composes Prone distance with other attack-roll sources", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = state.combatants.get(fighterId);
+    const goblin = state.combatants.get(goblinId);
+    if (
+      fighter?.origin.kind !== "character" ||
+      fighter.origin.attack === null ||
+      goblin === undefined
+    ) {
+      throw new Error("Expected the fighter attack and goblin fixtures.");
+    }
+    const subject = fighterAttackSubject(state);
+    const targetHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    if (targetHole.attack === undefined) {
+      throw new Error("Expected the attack target selection.");
+    }
+    const proneGoblin = battleCreatureStateWithKnockOutPreservedConditions(
+      goblin,
+      applyCondition(goblin.conditions, "prone"),
+    );
+    const poisonedFighter = battleCreatureStateWithKnockOutPreservedConditions(
+      fighter,
+      applyCondition(fighter.conditions, "poisoned"),
+    );
+    const composedState = {
+      ...state,
+      combatants: new Map(state.combatants)
+        .set(goblinId, proneGoblin)
+        .set(fighterId, poisonedFighter),
+    };
+    expect(
+      requiredAttackRollMode(
+        composedState,
+        fighterId,
+        goblinId,
+        fighter.origin.attack,
+        [
+          attackTargetDistanceSpatialFact(
+            fighterId,
+            goblinId,
+            targetHole.attack.selection,
+            movementFeet(5),
+          ),
+        ],
+      ),
+    ).toBe("normal");
+    const helpedState = {
+      ...composedState,
+      helpAttacks: [
+        {
+          helperId: combatantId("synthetic-helper"),
+          allyId: fighterId,
+          targetEnemyId: goblinId,
+          expiresAt: { kind: "startOfTurn" as const, combatantId: fighterId },
+        },
+      ],
+    };
+    expect(
+      requiredAttackRollMode(
+        helpedState,
+        fighterId,
+        goblinId,
+        fighter.origin.attack,
+        [
+          attackTargetDistanceSpatialFact(
+            fighterId,
+            goblinId,
+            targetHole.attack.selection,
+            movementFeet(10),
+          ),
+        ],
+      ),
+    ).toBe("normal");
+  });
+
+  test("rejects a normal fill against a Prone target within five feet", () => {
+    const state = fighterVsGoblinBattle();
+    const goblin = state.combatants.get(goblinId);
+    if (goblin === undefined) {
+      throw new Error("Expected the goblin fixture.");
+    }
+    const proneState = {
+      ...state,
+      combatants: new Map(state.combatants).set(
+        goblinId,
+        battleCreatureStateWithKnockOutPreservedConditions(
+          goblin,
+          applyCondition(goblin.conditions, "prone"),
+        ),
+      ),
+    };
+    const subject = fighterAttackSubject(proneState);
+    const targetHole = requireHole(
+      resolveBattleSubject({ state: proneState, subject, fills: [] }),
+      "targetChoice",
+    );
+    const target = attackTargetFill(
+      targetHole,
+      fighterId,
+      goblinId,
+      undefined,
+      [],
+      movementFeet(5),
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({ state: proneState, subject, fills: [target] }),
+      "attackRoll",
+    );
+    expect(attackRoll).toMatchObject({ rollMode: "advantage" });
+    expect(
+      resolveBattleSubject({
+        state: proneState,
+        subject,
+        fills: [
+          target,
+          attackRollFill(attackRoll, {
+            total: 16,
+            naturalD20: 14,
+            rollMode: "normal",
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Attack roll mode does not match the current attack-roll rule.",
+    });
   });
 
   test("a real first-attack ongoing feature projects and replays its activation profile", () => {

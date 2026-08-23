@@ -910,7 +910,11 @@ describe("battle runtime: death saves and turns", () => {
       subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, targetCharacterId),
-        attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
+        attackRollFill(rollHole, {
+          total: 20,
+          naturalD20: 20,
+          rollMode: "advantage",
+        }),
         damageRollFillWithGroups(damageHole, [[5, 5]]),
       ],
     });
@@ -964,7 +968,11 @@ describe("battle runtime: death saves and turns", () => {
       subject: fighterAttackSubject(state, "Longsword"),
       fills: [
         targetFill(targetHole, targetCharacterId),
-        attackRollFill(rollHole, { total: 1, naturalD20: 19 }),
+        attackRollFill(rollHole, {
+          total: 1,
+          naturalD20: 19,
+          rollMode: "advantage",
+        }),
         damageRollFillWithGroups(damageHole, [[1, 1]]),
       ],
     });

@@ -74,6 +74,7 @@ export {
   combineD20TestRollMode,
   mechanicalD20TestRollModeSources,
   mechanicalD20TestRollMode,
+  proneAttackRollModeSources,
   effectiveD20TestRollMode,
   d20TestResolutionId,
   type BattleD20TestCircumstanceRequest,

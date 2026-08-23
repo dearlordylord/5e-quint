@@ -2768,6 +2768,13 @@ export function scenarioAttackTargetFills(input: {
       })),
       Match.exhaustive,
     );
+    const distanceFact = {
+      kind: "attackTargetDistance" as const,
+      actorId: attack.actorId,
+      targetId: fill.value,
+      ...attack.selection,
+      distanceFeet: movementFeet(Number(relation.distanceFeet)),
+    };
     const canonicalSightFact = relation.attackerCanSeeTarget
       ? undefined
       : {
@@ -2782,10 +2789,12 @@ export function scenarioAttackTargetFills(input: {
           (fact) =>
             fact.kind !== "attackTargetInMeleeReach" &&
             fact.kind !== "attackTargetInRangedRange" &&
+            fact.kind !== "attackTargetDistance" &&
             fact.kind !== "attackAttackerCannotSeeTarget" &&
             fact.kind !== "attackTargetCannotSeeAttacker",
         ),
         rangeFact,
+        distanceFact,
         ...(canonicalSightFact === undefined ? [] : [canonicalSightFact]),
       ],
     });

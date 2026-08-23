@@ -738,6 +738,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     const attackRoll = attackRollFill(attackRollHole, {
       total: 18,
       naturalD20: 12,
+      rollMode: "advantage",
     });
     const damageHole = requireResultHole(
       resolveBattleSubject({

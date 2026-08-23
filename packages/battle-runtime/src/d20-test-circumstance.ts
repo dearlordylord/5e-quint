@@ -7,6 +7,8 @@ import type {
 } from "./battle-state-execution.ts";
 import * as Either from "effect/Either";
 import { Brand } from "effect";
+import { PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET } from "./battle-reducer/domain-constants.ts";
+import type { MovementFeet } from "@dnd/shared/types";
 
 export const D20_TEST_KINDS = [
   "abilityCheck",
@@ -26,6 +28,17 @@ export type D20TestRollModeSources = Readonly<{
   readonly advantage: boolean;
   readonly disadvantage: boolean;
 }>;
+
+export function proneAttackRollModeSources(
+  distanceFeet: MovementFeet,
+): D20TestRollModeSources {
+  return {
+    advantage:
+      Number(distanceFeet) <= Number(PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET),
+    disadvantage:
+      Number(distanceFeet) > Number(PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET),
+  };
+}
 
 export const TABLE_D20_TEST_CIRCUMSTANCE_SOURCES = [
   "advantage",

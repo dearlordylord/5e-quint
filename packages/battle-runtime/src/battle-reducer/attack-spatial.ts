@@ -1,4 +1,5 @@
 import type { CombatantId } from "../identity.ts";
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import type {
   BattleAttackExecutionSelection,
   BattleAttackRangeBand,
@@ -7,6 +8,7 @@ import type {
 } from "../battle-state-execution.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
+import type { MovementFeet } from "@dnd/shared/types";
 
 export function attackExecutionSelectionMatchesOption(
   selection: BattleAttackExecutionSelection,
@@ -27,9 +29,21 @@ export function attackTargetIsLegal(
   facts: readonly BattleTargetSpatialFact[],
 ): boolean {
   const constraint = attackTargetConstraint(attack);
+  const target = state.combatants.get(targetId);
+  const proneDistanceFeet = attackTargetDistanceFeet(
+    facts,
+    actorId,
+    targetId,
+    attack,
+  );
+  const missingProneDistanceFact =
+    target !== undefined &&
+    hasCondition(target.conditions, "prone") &&
+    proneDistanceFeet === null;
   return (
     actorId !== targetId &&
     state.combatants.has(targetId) &&
+    !missingProneDistanceFact &&
     (constraint.kind === "meleeReach"
       ? facts.some(
           (fact) =>
@@ -59,6 +73,25 @@ export function attackTargetRangeBand(
       attackExecutionSelectionMatchesOption(fact, attack)
     ) {
       return fact.rangeBand;
+    }
+  }
+  return null;
+}
+
+export function attackTargetDistanceFeet(
+  facts: readonly BattleTargetSpatialFact[],
+  actorId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption,
+): MovementFeet | null {
+  for (const fact of facts) {
+    if (
+      fact.kind === "attackTargetDistance" &&
+      fact.actorId === actorId &&
+      fact.targetId === targetId &&
+      attackExecutionSelectionMatchesOption(fact, attack)
+    ) {
+      return fact.distanceFeet;
     }
   }
   return null;

@@ -1592,6 +1592,12 @@ export type BattleTargetSpatialFact =
       readonly targetId: CombatantId;
       readonly rangeBand: BattleAttackRangeBand;
     } & BattleAttackExecutionSelection)
+  | ({
+      readonly kind: "attackTargetDistance";
+      readonly actorId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly distanceFeet: MovementFeet;
+    } & BattleAttackExecutionSelection)
   | {
       readonly kind: "attackAttackerCannotSeeTarget";
       readonly attackerId: CombatantId;

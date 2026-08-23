@@ -1367,8 +1367,30 @@ function validateUniqueAttackTargetSpatialFacts(
 ): string | null {
   return (
     validateUniqueAttackTargetRangeFacts(spatialFacts) ??
+    validateUniqueAttackTargetDistanceFacts(spatialFacts) ??
     validateUniqueAttackSightFacts(spatialFacts)
   );
+}
+
+function validateUniqueAttackTargetDistanceFacts(
+  facts: readonly BattleTargetSpatialFact[],
+): string | null {
+  const distanceFacts = facts.filter(
+    (fact) => fact.kind === "attackTargetDistance",
+  );
+  const duplicate = distanceFacts.find((fact, factIndex) =>
+    distanceFacts
+      .slice(0, factIndex)
+      .some(
+        (previous) =>
+          previous.actorId === fact.actorId &&
+          previous.targetId === fact.targetId &&
+          attackExecutionSelectionsEqual(previous, fact),
+      ),
+  );
+  return duplicate === undefined
+    ? null
+    : "Attack target distance facts must contain at most one distance for each actor, target, and attack.";
 }
 
 export function validateUniqueAttackTargetRangeFacts(

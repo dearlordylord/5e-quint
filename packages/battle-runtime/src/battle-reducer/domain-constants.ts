@@ -16,6 +16,7 @@ import type {
 
 export const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
 export const BATTLE_ATTACK_RANGE_BANDS = ["normal", "long"] as const;
+export const PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET = movementFeet(5);
 export const BATTLE_D20_ROLL_MODIFIER_DIE_SIZES = [1, 4] as const;
 export const SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET = movementFeet(5);
 export const BATTLE_D20_ROLL_MODIFIER_KINDS = [
