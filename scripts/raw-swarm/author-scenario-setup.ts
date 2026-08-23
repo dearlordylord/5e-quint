@@ -43,7 +43,7 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
-function runSetupAuthor(input: {
+async function runSetupAuthor(input: {
   readonly scratch: string;
   readonly codexHome: string;
   readonly permissionArgs: readonly string[];
@@ -52,9 +52,9 @@ function runSetupAuthor(input: {
   readonly evidenceDirectory: string;
   readonly role: ScenarioSetupAuthorRole;
   readonly instruction: string;
-}): void {
+}): Promise<void> {
   const invocationStem = `${input.scenarioId}-setup-${input.role}-authoring-${randomUUID()}`;
-  const result = runCodexInvocation({
+  const result = await runCodexInvocation({
     args: [
       "exec",
       "-C",
@@ -91,19 +91,11 @@ function runSetupAuthor(input: {
     fallbackInvocationId: `${input.scenarioId}-setup-${input.role}-authoring`,
     model: "gpt-5.6-sol",
     reasoningEffort: "medium",
+    operation: { tag: "noOutput" },
   });
-  if (result.invocationResult.tag === "failed") {
+  if (result.tag === "failed") {
     fail(
-      `Scenario setup ${input.role} invocation failed: ${result.invocationResult.reason}`,
-    );
-  }
-  if (result.error !== undefined) throw result.error;
-  if (result.signal !== null) {
-    fail(`Scenario setup ${input.role} agent stopped by ${result.signal}.`);
-  }
-  if (result.status !== 0) {
-    fail(
-      `Scenario setup ${input.role} agent exited with status ${String(result.status)}.`,
+      `Scenario setup ${input.role} invocation failed: ${result.cause.reason}`,
     );
   }
 }

@@ -2456,7 +2456,7 @@ function currentSemanticIssues(
   let previousPhaseOrder = -1;
   for (const invocation of measurement.invocations) {
     if (
-      invocation.schemaVersion === 4 &&
+      (invocation.schemaVersion === 4 || invocation.schemaVersion === 5) &&
       (invocation.phase === "player" || invocation.phase === "postPlayReview")
     ) {
       if (
@@ -2894,9 +2894,10 @@ function currentInvocationEntriesFromLedger(
           parsed.left.message,
       );
     }
-    if (parsed.right.schemaVersion !== 4) {
+    if (parsed.right.schemaVersion !== 4 && parsed.right.schemaVersion !== 5) {
       fail(
-        "Current complete-path assembly requires v4 ledger evidence: " + path,
+        "Current complete-path assembly requires current ledger evidence: " +
+          path,
       );
     }
     return parsed.right;
@@ -3414,6 +3415,17 @@ function currentAuthorityContentIssues(
       invocation === undefined
         ? Either.left("No matching composite-review invocation was retained.")
         : (() => {
+            if (
+              "responsibility" in invocation ||
+              invocation.phase !== "scenarioCompositeReview" ||
+              replay.sourceGitSha !== invocation.gitSha ||
+              invocation.model !== replay.model ||
+              invocation.reasoningEffort !== replay.reasoningEffort
+            ) {
+              return Either.left(
+                "No matching composite-review invocation was retained.",
+              );
+            }
             if (replay.schemaVersion === 2) {
               return expectedReplayCampaign === undefined
                 ? retainedScenarioReviewMatchesReplayBinding(
@@ -3876,9 +3888,12 @@ function currentAuthorityIssues(
       continue;
     }
     const evidence = modelInvocationEvidenceFromEvents(events.events);
-    if (evidence.tag === "invalid" || evidence.entry.schemaVersion !== 4) {
+    if (
+      evidence.tag === "invalid" ||
+      (evidence.entry.schemaVersion !== 4 && evidence.entry.schemaVersion !== 5)
+    ) {
       issues.push(
-        `Invocation ${invocation.invocationId} does not have valid current v4 event evidence.`,
+        `Invocation ${invocation.invocationId} does not have valid current event evidence.`,
       );
       continue;
     }
@@ -4095,7 +4110,10 @@ function benchmarkInvocationEntriesFromAuthorities(
     for (const value of parsed.value) {
       const current = parseModelInvocationLedgerEntry(value);
       if (Either.isRight(current)) {
-        if (current.right.schemaVersion !== 4) {
+        if (
+          current.right.schemaVersion !== 4 &&
+          current.right.schemaVersion !== 5
+        ) {
           issues.push(
             `Benchmark invocation ledger ${authority.path} cannot use historical evidence.`,
           );
@@ -4121,7 +4139,7 @@ function canonicalBenchmarkInvocations(
   invocations: readonly BenchmarkInvocation[],
 ): readonly CurrentModelInvocationLedgerEntry[] {
   return invocations.flatMap((invocation) =>
-    invocation.schemaVersion === 4 ? [invocation] : [],
+    !("responsibility" in invocation) ? [invocation] : [],
   );
 }
 
@@ -4388,6 +4406,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
         : undefined;
     const binding =
       invocation === undefined ||
+      "responsibility" in invocation ||
       invocation.schemaVersion !== 4 ||
       invocation.phase !== "scenarioCompositeReview"
         ? Either.left("No matching composite-review invocation was retained.")
@@ -4493,7 +4512,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     }
     const readinessInvocations = measurement.invocations.filter(
       (invocation) =>
-        invocation.schemaVersion === 3 &&
+        "responsibility" in invocation &&
         invocation.responsibility === "scenarioQuality",
     );
     if (readinessInvocations.length !== 1) {
@@ -5083,7 +5102,7 @@ function benchmarkAuthorityIssues(
     }
     invocationIds.add(invocation.invocationId);
     const invocationScenarioId =
-      invocation.schemaVersion === 3
+      "responsibility" in invocation
         ? invocation.scenarioId
         : modelInvocationScenarioReference(invocation);
     if (invocationScenarioId !== measurement.scenarioId) {
@@ -5097,7 +5116,7 @@ function benchmarkAuthorityIssues(
       );
     }
     if (
-      invocation.schemaVersion === 3 &&
+      "responsibility" in invocation &&
       measurement.profile !== "documentDeclarationSet"
     ) {
       issues.push(
@@ -5157,11 +5176,15 @@ function benchmarkAuthorityIssues(
       issues.push(events.message);
       continue;
     }
-    if (invocation.schemaVersion === 4) {
+    if (!("responsibility" in invocation)) {
       const evidence = modelInvocationEvidenceFromEvents(events.events);
-      if (evidence.tag === "invalid" || evidence.entry.schemaVersion !== 4) {
+      if (
+        evidence.tag === "invalid" ||
+        (evidence.entry.schemaVersion !== 4 &&
+          evidence.entry.schemaVersion !== 5)
+      ) {
         issues.push(
-          `Benchmark invocation ${invocation.invocationId} does not have valid v4 event evidence.`,
+          `Benchmark invocation ${invocation.invocationId} does not have valid current event evidence.`,
         );
         continue;
       }
@@ -5170,7 +5193,7 @@ function benchmarkAuthorityIssues(
       );
       if (canonicalJson(evidence.entry) !== canonicalJson(withoutEventsHash)) {
         issues.push(
-          `Benchmark invocation ${invocation.invocationId} does not match its v4 event evidence.`,
+          `Benchmark invocation ${invocation.invocationId} does not match its current event evidence.`,
         );
       }
     } else {
@@ -5295,18 +5318,18 @@ function benchmarkSemanticIssues(
   ];
   const readiness = measurement.invocations.filter(
     (invocation) =>
-      invocation.schemaVersion === 3 &&
+      "responsibility" in invocation &&
       invocation.responsibility === "scenarioQuality",
   );
   const redundantCharacters = measurement.invocations.filter(
     (invocation) =>
-      invocation.schemaVersion === 3 &&
+      "responsibility" in invocation &&
       invocation.responsibility === "redundantCharacterPreparation",
   );
   const compositeReviewStages = benchmarkReviewPlan(measurement.profile).stages;
   const compositeReviewInvocations = measurement.invocations.filter(
     (invocation) =>
-      invocation.schemaVersion === 4 &&
+      !("responsibility" in invocation) &&
       invocation.phase === "scenarioCompositeReview",
   );
   if (compositeReviewInvocations.length !== compositeReviewStages.length) {
@@ -5319,7 +5342,7 @@ function benchmarkSemanticIssues(
   );
   for (const invocation of measurement.invocations) {
     if (
-      invocation.schemaVersion === 4 &&
+      !("responsibility" in invocation) &&
       (invocation.phase === "scenarioCompositeReview" ||
         invocation.phase === "postPlayReview") &&
       invocation.reasoningEffort !== expectedReviewReasoningEffort
@@ -5342,7 +5365,7 @@ function benchmarkSemanticIssues(
     }
     const compositeIndexes = measurement.invocations.flatMap(
       (invocation, index) =>
-        invocation.schemaVersion === 4 &&
+        !("responsibility" in invocation) &&
         invocation.phase === "scenarioCompositeReview"
           ? [index]
           : [],

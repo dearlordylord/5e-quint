@@ -90,8 +90,6 @@ import type {
   ScenarioCampaignId,
 } from "./raw-swarm-identities.ts";
 
-const FAILURE_LOG_TAIL_CHARACTERS = 64 * 1024;
-
 function fail(message: string): never {
   throw new Error(message);
 }
@@ -273,7 +271,7 @@ function isCandidateRejection(
   return "tag" in value && value.tag === "candidateRejected";
 }
 
-function runCodexJson<A, I>(
+async function runCodexJson<A, I>(
   prompt: string,
   schema: Schema.Schema<A, I>,
   execution: {
@@ -291,7 +289,7 @@ function runCodexJson<A, I>(
       readonly reviewStage?: "milestone" | "final";
     };
   },
-): A {
+): Promise<A> {
   const outputSchema = Schema.Struct({ result: schema });
   const temporary = mkdtempSync(resolve(tmpdir(), "dnd-scenario-campaign-"));
   const schemaPath = resolve(temporary, "schema.json");
@@ -302,9 +300,9 @@ function runCodexJson<A, I>(
     const outputJsonSchema = codexOutputJsonSchema(schema);
     writeFileSync(schemaPath, `${JSON.stringify(outputJsonSchema, null, 2)}\n`);
     const fallbackInvocationId = randomUUID();
-    const result = (() => {
+    const result = await (async () => {
       try {
-        return runCodexInvocation({
+        return await runCodexInvocation({
           args: [
             "exec",
             "-C",
@@ -337,9 +335,12 @@ function runCodexJson<A, I>(
           fallbackInvocationId,
           model: execution.model,
           reasoningEffort: execution.reasoningEffort,
-          expectedLastMessage: {
-            path: outputPath,
-            decode: jsonModelInvocationLastMessageDecoder(outputSchema),
+          operation: {
+            tag: "expectedLastMessage",
+            expected: {
+              path: outputPath,
+              decode: jsonModelInvocationLastMessageDecoder(outputSchema),
+            },
           },
         });
       } finally {
@@ -363,25 +364,13 @@ function runCodexJson<A, I>(
       codexEvents,
       fallbackInvocationId,
     );
-    if (result.invocationResult.tag === "failed") {
-      fail(
-        `Scenario agent invocation failed: ${result.invocationResult.reason}`,
-      );
+    if (result.tag === "failed") {
+      fail(`Scenario agent invocation failed: ${result.cause.reason}`);
     }
-    if (result.error !== undefined) throw result.error;
-    if (result.signal !== null)
-      fail(`Scenario agent stopped by ${result.signal}.`);
-    if (result.status !== 0) {
-      const failureLog = readFileSync(agentLogPath, "utf8");
-      fail(
-        failureLog.slice(-FAILURE_LOG_TAIL_CHARACTERS) ||
-          "Scenario agent failed.",
-      );
-    }
-    const decoded = result.decodedLastMessage;
-    if (decoded === undefined) {
+    if (result.output.tag !== "decoded") {
       return fail("Scenario agent did not retain a decoded last message.");
     }
+    const decoded = result.output.value;
     if (
       execution.retention?.reviewStage !== undefined &&
       execution.retention !== undefined
@@ -595,11 +584,11 @@ ${scenario}`,
   };
 }
 
-export function replayRetainedScenarioReview(input: {
+export async function replayRetainedScenarioReview(input: {
   readonly retainedInput: RetainedScenarioReviewInput;
   readonly ledgerPath: string;
   readonly gitSha: GitSha;
-}): ScenarioCompositeReview {
+}): Promise<ScenarioCompositeReview> {
   if (input.retainedInput.schemaVersion === 2) {
     fail(
       "Historical Scenario review input is readable evidence but is not a current executable review subject.",
@@ -636,12 +625,12 @@ export function replayRetainedScenarioReview(input: {
     },
   } as const;
   return isCurrent
-    ? runCodexJson(
+    ? await runCodexJson(
         input.retainedInput.prompt,
         CurrentScenarioCompositeReviewSchema,
         execution,
       )
-    : runCodexJson(
+    : await runCodexJson(
         input.retainedInput.prompt,
         HistoricalScenarioCompositeReviewSchema,
         execution,

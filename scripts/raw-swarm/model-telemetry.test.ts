@@ -30,6 +30,8 @@ import {
   jsonModelInvocationLastMessageDecoder,
   readCodexEvents,
   CurrentModelInvocationLedgerEntrySchema,
+  CurrentModelInvocationLedgerEntryV4Schema,
+  CurrentModelInvocationLedgerEntryV5Schema,
   runCodexInvocation,
 } from "./model-telemetry.ts";
 import {
@@ -77,23 +79,26 @@ describe("Raw Swarm model invocation telemetry", () => {
       model: "gpt-5.6-sol",
       reasoningEffort: "medium",
       timeoutMilliseconds,
-      expectedLastMessage: {
-        path: output,
-        decode: (contents: string) => {
-          try {
-            return Either.right(JSON.parse(contents));
-          } catch {
-            return Either.left({
-              tag: "malformed",
-              message: "synthetic malformed JSON",
-            });
-          }
+      operation: {
+        tag: "expectedLastMessage" as const,
+        expected: {
+          path: output,
+          decode: (contents: string) => {
+            try {
+              return Either.right(JSON.parse(contents));
+            } catch {
+              return Either.left({
+                tag: "malformed",
+                message: "synthetic malformed JSON",
+              });
+            }
+          },
         },
       },
     };
   }
 
-  test("retains timeout telemetry and a failed result when a child stalls without output", () => {
+  test("retains timeout telemetry and a failed result when a child stalls without output", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-timeout-"));
     const codex = resolve(root, "codex");
     writeFileSync(
@@ -103,17 +108,25 @@ describe("Raw Swarm model invocation telemetry", () => {
     chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root, 25);
-      const result = runCodexInvocation(input);
-      expect(result.invocationResult).toMatchObject({
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
         tag: "failed",
-        reason: expect.stringContaining("timed out"),
+        process: {
+          tag: "timedOut",
+          timeoutMilliseconds: 25,
+          termination: "sigterm",
+        },
       });
       const events = readCodexEvents(input.eventPath);
       expect(events.tag).toBe("valid");
       if (events.tag === "valid") {
         expect(events.events.at(-1)).toMatchObject({
           type: "raw-swarm.invocation.completed",
-          exit: { tag: "timedOut", timeoutMilliseconds: 25 },
+          exit: {
+            tag: "timedOut",
+            timeoutMilliseconds: 25,
+            termination: "sigterm",
+          },
           result: { tag: "failed" },
         });
       }
@@ -123,7 +136,11 @@ describe("Raw Swarm model invocation telemetry", () => {
       expect(ledger).toMatchObject({
         _tag: "Right",
         right: {
-          exit: { tag: "timedOut", timeoutMilliseconds: 25 },
+          exit: {
+            tag: "timedOut",
+            timeoutMilliseconds: 25,
+            termination: "sigterm",
+          },
           result: { tag: "failed" },
         },
       });
@@ -132,20 +149,56 @@ describe("Raw Swarm model invocation telemetry", () => {
     }
   });
 
-  test("retains a failed result when a child exits zero without creating output", () => {
+  test("escalates a TERM-ignoring child to KILL without leaving a process behind", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-term-ignore-"));
+    const codex = resolve(root, "codex");
+    const pidPath = resolve(root, "child.pid");
+    writeFileSync(
+      codex,
+      `#!/bin/sh
+exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_CHILD_PID, String(process.pid)); process.on("SIGTERM", () => {}); setInterval(() => {}, 10000)'
+`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root, 25);
+      input.env.RAW_CHILD_PID = pidPath;
+      const startedMilliseconds = Date.now();
+      const result = await runCodexInvocation(input);
+      expect(Date.now() - startedMilliseconds).toBeLessThan(2_000);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: {
+          tag: "timedOut",
+          timeoutMilliseconds: 25,
+          termination: "sigkill",
+        },
+        cause: { tag: "process" },
+      });
+      const childPid = Number(readFileSync(pidPath, "utf8"));
+      expect(Number.isInteger(childPid)).toBe(true);
+      expect(() => process.kill(childPid, 0)).toThrow();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  test("retains a failed result when a child exits zero without creating output", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-missing-output-"));
     const codex = resolve(root, "codex");
     writeFileSync(codex, "#!/bin/sh\nexit 0\n");
     chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
-      const result = runCodexInvocation(input);
-      expect(result.invocationResult).toMatchObject({
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
         tag: "failed",
-        failureKind: "lastMessageMissing",
-        reason: expect.stringContaining("does not exist"),
+        cause: {
+          tag: "lastMessage",
+          failureKind: "lastMessageMissing",
+          reason: expect.stringContaining("does not exist"),
+        },
       });
-      expect(result.status).toBe(0);
       const ledger = parseModelInvocationLedgerEntry(
         JSON.parse(readFileSync(input.ledgerPath, "utf8")),
       );
@@ -164,28 +217,28 @@ describe("Raw Swarm model invocation telemetry", () => {
     }
   });
 
-  test("rejects a non-positive timeout instead of disabling the boundary", () => {
+  test("rejects a non-positive timeout instead of disabling the boundary", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-invalid-timeout-"));
     try {
-      expect(() => runCodexInvocation(fakeInvocationInput(root, 0))).toThrow(
-        "positive integer",
-      );
+      await expect(
+        runCodexInvocation(fakeInvocationInput(root, 0)),
+      ).rejects.toThrow("positive integer");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test("separates completion telemetry from a final JSON event without a newline", () => {
+  test("separates completion telemetry from a final JSON event without a newline", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-event-separator-"));
     const codex = resolve(root, "codex");
     writeFileSync(codex, `#!/bin/sh\nprintf '{"type":"turn.started"}'\n`);
     chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
-      const result = runCodexInvocation(input);
-      expect(result.invocationResult).toMatchObject({
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
         tag: "failed",
-        failureKind: "lastMessageMissing",
+        cause: { tag: "lastMessage", failureKind: "lastMessageMissing" },
       });
       expect(readCodexEvents(input.eventPath)).toMatchObject({ tag: "valid" });
       expect(existsSync(input.ledgerPath)).toBe(true);
@@ -194,7 +247,7 @@ describe("Raw Swarm model invocation telemetry", () => {
     }
   });
 
-  test("retains a schema-decoded last message before recording success", () => {
+  test("retains a schema-decoded last message before recording success", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-valid-output-"));
     const codex = resolve(root, "codex");
     writeFileSync(
@@ -206,13 +259,16 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
     chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
-      input.env.RAW_OUTPUT_PATH = input.expectedLastMessage.path;
-      input.expectedLastMessage.decode = jsonModelInvocationLastMessageDecoder(
+      input.env.RAW_OUTPUT_PATH = input.operation.expected.path;
+      input.operation.expected.decode = jsonModelInvocationLastMessageDecoder(
         Schema.Struct({ result: Schema.Literal("ready") }),
       );
-      const result = runCodexInvocation(input);
-      expect(result.invocationResult).toEqual({ tag: "succeeded" });
-      expect(result.decodedLastMessage).toEqual({ result: "ready" });
+      const result = await runCodexInvocation(input);
+      expect(result).toEqual({
+        tag: "succeeded",
+        process: { tag: "exited", status: 0 },
+        output: { tag: "decoded", value: { result: "ready" } },
+      });
       const ledger = parseModelInvocationLedgerEntry(
         JSON.parse(readFileSync(input.ledgerPath, "utf8")),
       );
@@ -234,13 +290,13 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
     ["schema-invalid", '{"unexpected":true}', "lastMessageSchemaInvalid"],
   ] as const)(
     "classifies %s output as a typed invocation failure",
-    (_label, contents, failureKind) => {
+    async (_label, contents, failureKind) => {
       const root = mkdtempSync(resolve(tmpdir(), "dnd-model-output-failure-"));
       try {
         const input = fakeInvocationInput(root);
-        input.env.RAW_OUTPUT_PATH = input.expectedLastMessage.path;
+        input.env.RAW_OUTPUT_PATH = input.operation.expected.path;
         input.env.RAW_OUTPUT_CONTENT = contents;
-        input.expectedLastMessage.decode = (value: string) => {
+        input.operation.expected.decode = (value: string) => {
           try {
             const parsed: unknown = JSON.parse(value);
             if (
@@ -266,10 +322,10 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
           `#!/bin/sh\nexec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, process.env.RAW_OUTPUT_CONTENT)'\n`,
         );
         chmodSync(resolve(root, "codex"), 0o755);
-        const result = runCodexInvocation(input);
-        expect(result.invocationResult).toMatchObject({
+        const result = await runCodexInvocation(input);
+        expect(result).toMatchObject({
           tag: "failed",
-          failureKind,
+          cause: { tag: "lastMessage", failureKind },
         });
         const ledger = parseModelInvocationLedgerEntry(
           JSON.parse(readFileSync(input.ledgerPath, "utf8")),
@@ -327,6 +383,33 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
           plannedScenarioId: "synthetic-scenario",
         },
       }),
+    ).toMatchObject({ _tag: "Right" });
+    const timedOut = {
+      ...common,
+      subject: {
+        tag: "scenarioCandidate" as const,
+        campaignId: "synthetic-campaign",
+        evidenceSetId: "synthetic-evidence",
+        candidateId: "synthetic-candidate",
+        candidateScenarioSha256: "c".repeat(64),
+        plannedScenarioId: "synthetic-scenario",
+      },
+      exit: {
+        tag: "timedOut" as const,
+        timeoutMilliseconds: 25,
+        termination: "sigkill" as const,
+      },
+      result: { tag: "failed" as const, reason: "Synthetic timeout." },
+    };
+    expect(
+      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV4Schema, {
+        onExcessProperty: "error",
+      })(timedOut),
+    ).toMatchObject({ _tag: "Left" });
+    expect(
+      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV5Schema, {
+        onExcessProperty: "error",
+      })({ ...timedOut, schemaVersion: 5 }),
     ).toMatchObject({ _tag: "Right" });
   });
 
@@ -770,6 +853,37 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
         }),
       ),
     ).toBe(true);
+    expect(
+      Either.isLeft(
+        parseModelInvocationLedgerEntry({
+          schemaVersion: 1,
+          ...common,
+          phase: "scenarioReadiness",
+          exit: {
+            tag: "timedOut",
+            timeoutMilliseconds: 25,
+            termination: "sigkill",
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        parseModelInvocationLedgerEntry({
+          schemaVersion: 2,
+          ...common,
+          phase: "scenarioCompositeReview",
+          stagePlanReason:
+            "Historical fixture retained before lifecycle subjects.",
+          result: { tag: "failed", reason: "timed out" },
+          exit: {
+            tag: "timedOut",
+            timeoutMilliseconds: 25,
+            termination: "sigkill",
+          },
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("rederives invocation identity and runner-owned timing from events", () => {
@@ -1138,6 +1252,42 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
         invocationId: "benchmark-thread",
         result: { tag: "succeeded" },
         usage: { tag: "available", input: { count: 10 } },
+      },
+    });
+    const currentEvidence = benchmarkModelInvocationEvidenceFromEvents([
+      {
+        type: "raw-swarm.invocation.started",
+        schemaVersion: 5,
+        profile: "documentDeclarationSet",
+        responsibility: "scenarioQuality",
+        phase: "scenarioReadiness",
+        scenarioId: "scenario",
+        gitSha: "a".repeat(40),
+        stagePlanReason: "The current benchmark retained the quality pass.",
+        fallbackInvocationId: "current-fallback",
+        model: "gpt-5.6-luna",
+        reasoningEffort: "max",
+        startedAt: "2026-08-14T00:00:00.000Z",
+      },
+      {
+        type: "raw-swarm.invocation.completed",
+        schemaVersion: 5,
+        elapsedMilliseconds: 123,
+        exit: {
+          tag: "timedOut",
+          timeoutMilliseconds: 25,
+          termination: "sigkill",
+        },
+        result: { tag: "failed", reason: "Synthetic timeout." },
+      },
+    ]);
+    expect(currentEvidence).toMatchObject({
+      tag: "valid",
+      entry: {
+        schemaVersion: 5,
+        responsibility: "scenarioQuality",
+        exit: { tag: "timedOut", termination: "sigkill" },
+        result: { tag: "failed" },
       },
     });
   });

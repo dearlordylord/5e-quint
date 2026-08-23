@@ -36,7 +36,7 @@ function assertProtectedInputsUnchanged(input: {
 
 export async function authorScenarioSetupThroughOwners<Retained>(input: {
   readonly scratch: string;
-  readonly runAuthor: (role: ScenarioSetupAuthorRole) => void;
+  readonly runAuthor: (role: ScenarioSetupAuthorRole) => void | Promise<void>;
   readonly typecheck: (phase: "neutral" | "retained") => void;
   readonly validateRetained: () => Retained | Promise<Retained>;
 }): Promise<Retained> {
@@ -44,7 +44,7 @@ export async function authorScenarioSetupThroughOwners<Retained>(input: {
   const setupPath = resolve(input.scratch, "setup.ts");
   const neutralSetupPath = resolve(input.scratch, "NEUTRAL_SETUP.ts");
 
-  input.runAuthor("neutral");
+  await input.runAuthor("neutral");
   assertProtectedInputsUnchanged({
     scratch: input.scratch,
     expected: protectedInputs,
@@ -55,7 +55,7 @@ export async function authorScenarioSetupThroughOwners<Retained>(input: {
   copyFileSync(setupPath, neutralSetupPath, constants.COPYFILE_EXCL);
   const neutralSetupSource = readFileSync(neutralSetupPath, "utf8");
   try {
-    input.runAuthor("controller");
+    await input.runAuthor("controller");
     assertProtectedInputsUnchanged({
       scratch: input.scratch,
       expected: protectedInputs,

@@ -264,9 +264,13 @@ function deriveManifest(input: {
     );
   }
   const entries = input.invocationLedgerPaths.flatMap(ledgerEntries);
-  if (entries.some((entry) => entry.schemaVersion !== 4)) {
+  if (
+    entries.some(
+      (entry) => entry.schemaVersion !== 4 && entry.schemaVersion !== 5,
+    )
+  ) {
     fail(
-      "Current review invocation evidence requires v4 ledger entries; earlier versions are historical evidence only.",
+      "Current review invocation evidence requires v4 or v5 current ledger entries; earlier versions are historical evidence only.",
     );
   }
   if (

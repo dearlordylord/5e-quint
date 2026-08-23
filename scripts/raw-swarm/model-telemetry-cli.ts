@@ -108,7 +108,7 @@ if (parsedEvents.tag === "invalid") fail(parsedEvents.message);
 const evidence = modelInvocationEvidenceFromEvents(parsedEvents.events);
 if (evidence.tag === "invalid") fail(evidence.message);
 if (evidence.entry.schemaVersion !== 4) {
-  fail("The current telemetry CLI must emit v4 model invocation evidence.");
+  fail("The telemetry CLI must emit exact v4 model invocation evidence.");
 }
 appendInvocationLedger(ledgerPath, {
   ...evidence.entry,

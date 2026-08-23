@@ -14,6 +14,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   benchmarkContextDeliveryForRole,
@@ -65,7 +66,10 @@ import {
   type ScenarioId,
 } from "./transcript.ts";
 import { Either, Match, Schema } from "effect";
-import { runCodexInvocation } from "./model-telemetry.ts";
+import {
+  runCodexInvocation,
+  type ModelInvocationRun,
+} from "./model-telemetry.ts";
 import {
   PlayerExecutionStateSchema,
   playerContinuationEvidence,
@@ -351,6 +355,60 @@ function playerEvidenceState(
     ),
     Match.exhaustive,
   );
+}
+
+export type PlayerInvocationDisposition =
+  | Readonly<{
+      readonly tag: "completed";
+      readonly output: string;
+    }>
+  | Readonly<{
+      readonly tag: "obstructed";
+      readonly obstruction: Extract<
+        PlayerEvidenceState,
+        { readonly tag: "obstructed" }
+      >["obstruction"];
+      readonly recordedContinuations: number;
+    }>;
+
+/**
+ * Reconcile process lifecycle and frozen player evidence before choosing a
+ * disposition.  A terminal SDK obstruction is diagnostic success even when
+ * Codex exits nonzero or cannot retain its final message.
+ */
+export function reconcilePlayerInvocation(
+  lifecycle: ModelInvocationRun<string>,
+  evidence: PlayerEvidenceState,
+): Either.Either<PlayerInvocationDisposition, string> {
+  if (lifecycle.tag === "failed") {
+    return evidence.tag === "obstructed"
+      ? Either.right({
+          tag: "obstructed",
+          obstruction: evidence.obstruction,
+          recordedContinuations: evidence.recordedContinuations,
+        })
+      : Either.left(
+          `Player agent invocation failed: ${lifecycle.cause.reason}`,
+        );
+  }
+  if (lifecycle.output.tag !== "decoded") {
+    return Either.left(
+      "Player agent invocation succeeded without a decoded final message.",
+    );
+  }
+  if (evidence.tag === "active") {
+    return Either.left(
+      `Player agent exited after ${String(evidence.recordedContinuations)} continuations without a recorded conclusion.`,
+    );
+  }
+  if (evidence.tag === "obstructed") {
+    return Either.right({
+      tag: "obstructed",
+      obstruction: evidence.obstruction,
+      recordedContinuations: evidence.recordedContinuations,
+    });
+  }
+  return Either.right({ tag: "completed", output: lifecycle.output.value });
 }
 
 async function main(args: readonly string[]): Promise<void> {
@@ -977,7 +1035,7 @@ async function main(args: readonly string[]): Promise<void> {
       : (["--dangerously-bypass-approvals-and-sandbox"] as const);
     const agentLogPath = resolve(trusted, "agent.log");
     const agentFinalPath = resolve(trusted, "evidence/agent-final.txt");
-    const result = runCodexInvocation({
+    const result = await runCodexInvocation({
       args: [
         "exec",
         "-C",
@@ -1022,29 +1080,20 @@ async function main(args: readonly string[]): Promise<void> {
       fallbackInvocationId: randomUUID(),
       model: PLAYER_MODEL,
       reasoningEffort: PLAYER_REASONING_EFFORT,
-      expectedLastMessage: {
-        path: agentFinalPath,
-        decode: (contents) => Either.right(contents),
+      operation: {
+        tag: "expectedLastMessage",
+        expected: {
+          path: agentFinalPath,
+          decode: (contents) => Either.right(contents),
+        },
       },
     });
-    if (result.invocationResult.tag === "failed") {
-      fail(`Player agent invocation failed: ${result.invocationResult.reason}`);
-    }
-    if (result.error !== undefined) throw result.error;
-    if (result.signal !== null)
-      fail(`Player agent stopped by ${result.signal}.`);
     const evidenceState = playerEvidenceState(trusted, scratch);
-    if (result.status !== 0 && evidenceState.tag !== "obstructed") {
-      fail(`Player agent exited with status ${String(result.status)}.`);
-    }
-    if (evidenceState.tag === "active") {
-      fail(
-        `Player agent exited after ${String(evidenceState.recordedContinuations)} continuations without a recorded conclusion.`,
-      );
-    }
-    if (evidenceState.tag === "obstructed") {
+    const disposition = reconcilePlayerInvocation(result, evidenceState);
+    if (Either.isLeft(disposition)) fail(disposition.left);
+    if (disposition.right.tag === "obstructed") {
       console.log(
-        `Player Execution retained a player-protocol obstruction after ${String(evidenceState.recordedContinuations)} continuations: ${evidenceState.obstruction.message}`,
+        `Player Execution retained a player-protocol obstruction after ${String(disposition.right.recordedContinuations)} continuations: ${disposition.right.obstruction.message}`,
       );
     }
   } catch (error: unknown) {
@@ -1133,7 +1182,12 @@ async function main(args: readonly string[]): Promise<void> {
   console.log(`SDK player evidence: ${output}`);
 }
 
-main(process.argv.slice(2)).catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (
+  process.argv[1] !== undefined &&
+  fileURLToPath(import.meta.url) === resolve(process.argv[1])
+) {
+  main(process.argv.slice(2)).catch((error: unknown) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}

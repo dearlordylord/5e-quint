@@ -133,7 +133,7 @@ async function main(args: readonly string[]): Promise<void> {
       evidenceDirectory,
       `${scenarioId.right}-authoring-invocations.jsonl`,
     );
-    const result = runCodexInvocation({
+    const result = await runCodexInvocation({
       args: [
         "exec",
         "-C",
@@ -167,20 +167,10 @@ async function main(args: readonly string[]): Promise<void> {
       fallbackInvocationId: `${scenarioId.right}-character-authoring`,
       model: "gpt-5.6-sol",
       reasoningEffort: "medium",
+      operation: { tag: "noOutput" },
     });
-    if (result.invocationResult.tag === "failed") {
-      fail(
-        `Scenario character invocation failed: ${result.invocationResult.reason}`,
-      );
-    }
-    if (result.error !== undefined) throw result.error;
-    if (result.signal !== null) {
-      fail(`Scenario character agent stopped by ${result.signal}.`);
-    }
-    if (result.status !== 0) {
-      fail(
-        `Scenario character agent exited with status ${String(result.status)}.`,
-      );
+    if (result.tag === "failed") {
+      fail(`Scenario character invocation failed: ${result.cause.reason}`);
     }
     const typecheck = spawnSync(
       process.execPath,
