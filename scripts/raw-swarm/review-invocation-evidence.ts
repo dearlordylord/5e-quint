@@ -26,7 +26,12 @@ import {
   validateRetainedScenarioReviewInvocation,
 } from "./review-invocation-binding.ts";
 import { reviewInvocationPolicy } from "./review-invocation-policy.ts";
-import { retainedScenarioReviewScenarioId } from "./scenario-review-input.ts";
+import {
+  retainedScenarioReviewMatchesReplayBinding,
+  retainedScenarioReviewMatchesReplayExpectation,
+  retainedScenarioReviewScenarioId,
+  retainedScenarioReviewSubject,
+} from "./scenario-review-input.ts";
 import {
   codexOutputJsonSchema,
   CurrentScenarioCompositeReviewSchema,
@@ -145,9 +150,42 @@ export function validateRetainedScenarioReviewInvocationEvidence(input: {
   readonly reviewStage: "milestone" | "final";
   readonly ledgerEntry: ModelInvocationLedgerEntry;
 }): ArtifactAuthority {
+  const retained = retainedReviewInput(
+    input.retainedInputPath,
+    input.reviewStage,
+  );
+  const subject = retainedScenarioReviewSubject(retained);
+  const expectedBinding = retainedScenarioReviewMatchesReplayExpectation(
+    retained,
+    subject.tag === "scenarioCandidate"
+      ? {
+          tag: "candidate",
+          reviewStage: input.reviewStage,
+          scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
+          scenarioSha256: subject.candidateScenarioSha256,
+          campaign: {
+            campaignId: subject.campaignId,
+            evidenceSetId: subject.evidenceSetId,
+            plannedScenarioId: subject.plannedScenarioId,
+          },
+        }
+      : {
+          tag: "scenario",
+          reviewStage: input.reviewStage,
+          scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
+        },
+  );
+  if (Either.isLeft(expectedBinding)) fail(expectedBinding.left);
+  const binding = retainedScenarioReviewMatchesReplayBinding(
+    retained,
+    input.ledgerEntry,
+    expectedBinding.right,
+  );
+  if (Either.isLeft(binding)) fail(binding.left);
   const eventAuthority = artifactAuthority(input.eventPath);
   validateRetainedScenarioReviewInvocation({
-    ...input,
+    binding: binding.right,
+    eventPath: input.eventPath,
     eventSha256: eventAuthority.sha256,
   });
   return eventAuthority;

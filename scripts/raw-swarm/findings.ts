@@ -42,6 +42,7 @@ import {
 import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
+  retainedScenarioReviewMatchesReplayExpectation,
   type RetainedScenarioReviewCampaignIdentity,
 } from "./scenario-review-input.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
@@ -1175,11 +1176,31 @@ function originalCompositeReviewInputs(
       );
     }
     const entry = matches[0]!;
-    const binding = retainedScenarioReviewMatchesReplayBinding(review, entry, {
-      reviewStage: expectedStage,
-      ...expectedScenario,
-      campaign: expectedCampaign,
-    });
+    const expectedBinding = retainedScenarioReviewMatchesReplayExpectation(
+      review,
+      review.schemaVersion === 3 && review.subject.tag === "scenarioCandidate"
+        ? {
+            tag: "candidate",
+            reviewStage: expectedStage,
+            ...expectedScenario,
+            campaign: expectedCampaign,
+          }
+        : {
+            tag: "scenario",
+            reviewStage: expectedStage,
+            scenarioId: expectedScenario.scenarioId,
+          },
+    );
+    if (Either.isLeft(expectedBinding)) {
+      fail(
+        `Review replay input ${canonical} does not have a valid lifecycle binding: ${expectedBinding.left}`,
+      );
+    }
+    const binding = retainedScenarioReviewMatchesReplayBinding(
+      review,
+      entry,
+      expectedBinding.right,
+    );
     if (Either.isLeft(binding)) {
       fail(
         `Review replay input ${canonical} does not match original composite-review invocation ${review.invocationId}: ${binding.left}`,
@@ -1203,11 +1224,9 @@ function originalCompositeReviewInputs(
       path: eventPath,
     });
     validateRetainedScenarioReviewInvocation({
-      retainedInputPath: canonical,
+      binding: binding.right,
       eventPath,
       eventSha256: eventAuthority.sha256,
-      reviewStage: review.reviewStage,
-      ledgerEntry: entry,
     });
     if (
       retainedEventRole !== eventRole ||

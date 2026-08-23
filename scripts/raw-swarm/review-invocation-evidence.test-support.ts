@@ -116,6 +116,19 @@ export function controlledReviewEvidenceFixture(input: {
       startedAt: "2026-08-14T00:00:00.000Z",
     })}\n`,
   );
+  writeFileSync(
+    resolve(input.directory, "campaign.json"),
+    `${JSON.stringify({
+      type: "raw-swarm-scenario-campaign",
+      schemaVersion: 1,
+      campaignId: "fixture-campaign",
+      plannedScenarioId: "same",
+      evidenceSetId: "fixture-evidence",
+      gitSha: scenarioSourceGitSha,
+      startedAt: "2026-08-14T00:00:00.000Z",
+      configSha256: "c".repeat(64),
+    })}\n`,
+  );
   const scenarioCompositeResults = [0, 1].map(() => ({
     raw: { classification: "supported" as const, evidence: "supported" },
     contentAvailability: {

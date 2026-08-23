@@ -1,10 +1,17 @@
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { Either, Schema } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
 
 import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
+import { parseModelInvocationLedgerEntry } from "./model-telemetry.ts";
+import {
+  RetainedScenarioReviewInputSchema,
+  retainedScenarioReviewMatchesReplayBinding,
+} from "./scenario-review-input.ts";
+import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 import { isJsonRecord } from "./transcript.ts";
 
@@ -103,6 +110,71 @@ describe("review invocation evidence", () => {
     expect(() =>
       readReviewInvocationEvidenceManifest(fixture.manifestPath),
     ).toThrow(/Retained milestone source and replay inputs/);
+  });
+
+  test("validates event output from a parsed replay binding without rereading the envelope", () => {
+    const directory = rawSwarmTestOutputDirectory(
+      "review-parsed-binding-test-",
+    );
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const retained = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(
+      parseJsonRecord(
+        readFileSync(fixture.replayPrePlayReviewInputPaths[0], "utf8"),
+      ),
+    );
+    const ledger = parseModelInvocationLedgerEntry(
+      parseJsonRecord(readFileSync(fixture.ledgerPath, "utf8").split("\n")[0]!),
+    );
+    expect(Either.isRight(retained)).toBe(true);
+    expect(Either.isRight(ledger)).toBe(true);
+    if (Either.isLeft(retained) || Either.isLeft(ledger)) return;
+    const binding = retainedScenarioReviewMatchesReplayBinding(
+      retained.right,
+      ledger.right,
+      {
+        tag: "scenario",
+        reviewStage: "milestone",
+        scenarioId: "same",
+      },
+    );
+    expect(Either.isRight(binding)).toBe(true);
+    if (Either.isLeft(binding)) return;
+    writeFileSync(
+      fixture.replayPrePlayReviewInputPaths[0],
+      '{"tampered":true}\n',
+    );
+    expect(() =>
+      validateRetainedScenarioReviewInvocation({
+        binding: binding.right,
+        eventPath: `${fixture.replayPrePlayReviewInputPaths[0].slice(0, -".json".length)}.events.jsonl`,
+        eventSha256: ledger.right.eventsSha256,
+      }),
+    ).not.toThrow();
   });
 
   test("rejects equal but noncanonical retained review output schemas", () => {

@@ -688,6 +688,13 @@ describe("Raw Swarm findings projection", () => {
 
     expect(milestoneInput.result.scenarioQuality).toEqual(milestoneQuality);
     expect(finalInput.result.scenarioQuality).toEqual(finalQuality);
+    expect(milestoneInput.result.scenarioQuality).toMatchObject({
+      classification: "needsRevision",
+      critique: expect.stringContaining("Revise the Candidate"),
+    });
+    expect(finalInput.result.scenarioQuality).toMatchObject({
+      classification: "ready",
+    });
     expect(milestoneSubject.candidateId).not.toBe(finalSubject.candidateId);
     expect(milestoneSubject.candidateScenarioSha256).not.toBe(
       finalSubject.candidateScenarioSha256,
@@ -729,6 +736,52 @@ describe("Raw Swarm findings projection", () => {
     expect(
       projection.authorities.filter(({ role }) => role.startsWith("replay-")),
     ).toHaveLength(2);
+    const finalLedgerValue = readFileSync(
+      resolve(repoRoot, generationLedgerRelative),
+      "utf8",
+    )
+      .trim()
+      .split("\n")
+      .map(parseJsonRecord)
+      .find(({ invocationId }) => invocationId === "iteration-three-final");
+    if (finalLedgerValue === undefined) {
+      throw new Error("Synthetic final Candidate ledger entry is incomplete.");
+    }
+    const finalLedgerEntry = parseModelInvocationLedgerEntry(finalLedgerValue);
+    const finalReplayInput = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(finalInput);
+    expect(Either.isRight(finalLedgerEntry)).toBe(true);
+    expect(Either.isRight(finalReplayInput)).toBe(true);
+    if (Either.isLeft(finalLedgerEntry) || Either.isLeft(finalReplayInput)) {
+      return;
+    }
+    const finalBinding = retainedScenarioReviewMatchesReplayBinding(
+      finalReplayInput.right,
+      finalLedgerEntry.right,
+      {
+        tag: "candidate",
+        reviewStage: "final",
+        scenarioId: "findings-example",
+        scenarioSha256: input.scenarioSha256,
+        campaign: {
+          campaignId: "findings-campaign",
+          evidenceSetId: "findings-campaign-evidence",
+          plannedScenarioId: "findings-example",
+        },
+      },
+    );
+    expect(Either.isRight(finalBinding)).toBe(true);
+    if (Either.isLeft(finalBinding)) return;
+    expect(finalBinding.right).toMatchObject({
+      tag: "candidate",
+      campaign: {
+        campaignId: "findings-campaign",
+        evidenceSetId: "findings-campaign-evidence",
+        plannedScenarioId: "findings-example",
+      },
+    });
   });
 
   test("accepts an exact historical v2 composite-review ledger row", () => {
@@ -790,32 +843,78 @@ describe("Raw Swarm findings projection", () => {
       retained.right,
       ledgerEntry.right,
       {
+        tag: "scenario",
         reviewStage: "final",
         scenarioId: "findings-example",
-        scenarioSha256: input.scenarioSha256,
-        campaign: {
-          campaignId: "findings-campaign",
-          evidenceSetId: "findings-campaign-evidence",
-          plannedScenarioId: "findings-example",
-        },
       },
     );
     expect(Either.isRight(binding)).toBe(true);
     if (Either.isLeft(binding)) return;
     expect(binding.right).toMatchObject({
+      tag: "historicalScenario",
       reviewStage: "final",
       invocationId: "historical-final",
       scenarioId: "findings-example",
-      scenarioSha256: input.scenarioSha256,
       envelopeSubject: { tag: "scenario", scenarioId: "findings-example" },
       ledgerSchemaVersion: 2,
       ledgerScenarioReference: "findings-example",
-      campaign: {
-        campaignId: "findings-campaign",
-        evidenceSetId: "findings-campaign-evidence",
-        plannedScenarioId: "findings-example",
-      },
     });
+    expect(binding.right).not.toHaveProperty("campaign");
+  });
+
+  test("rejects a historical envelope paired with v4 Candidate ownership", () => {
+    const input = fixture();
+    const candidateSubject = {
+      tag: "scenarioCandidate",
+      campaignId: "findings-campaign",
+      evidenceSetId: "findings-campaign-evidence",
+      candidateId: "findings-candidate",
+      candidateScenarioSha256: input.scenarioSha256,
+      plannedScenarioId: "findings-example",
+    } as const satisfies CompositeReviewFixtureSubject;
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      candidateSubject,
+      {
+        reviewEntries: [
+          {
+            invocationId: "historical-v4-candidate",
+            reviewStage: "final",
+            subject: candidateSubject,
+            ledgerSchemaVersion: 4,
+          },
+        ],
+      },
+    );
+    const retained = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(
+      retainedCompositeReviewInput({
+        reviewStage: "final",
+        invocationId: "historical-v4-candidate",
+      }),
+    );
+    const ledger = parseModelInvocationLedgerEntry(
+      parseJsonRecord(
+        readFileSync(resolve(repoRoot, generationLedgerRelative), "utf8"),
+      ),
+    );
+    expect(Either.isRight(retained)).toBe(true);
+    expect(Either.isRight(ledger)).toBe(true);
+    if (Either.isLeft(retained) || Either.isLeft(ledger)) return;
+    const binding = retainedScenarioReviewMatchesReplayBinding(
+      retained.right,
+      ledger.right,
+      {
+        tag: "scenario",
+        reviewStage: "final",
+        scenarioId: "findings-example",
+      },
+    );
+    expect(Either.isLeft(binding)).toBe(true);
+    if (Either.isRight(binding)) return;
+    expect(binding.left).toMatch(/v4 Scenario lifecycle subject/);
   });
 
   test("rejects replay when the generation Campaign manifest is missing", () => {
