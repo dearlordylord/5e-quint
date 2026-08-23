@@ -168,11 +168,16 @@ describe("review invocation evidence", () => {
       fixture.replayPrePlayReviewInputPaths[0],
       '{"tampered":true}\n',
     );
+    const eventPath = `${fixture.replayPrePlayReviewInputPaths[0].slice(0, -".json".length)}.events.jsonl`;
+    const events = readFileSync(eventPath, "utf8")
+      .trim()
+      .split("\n")
+      .map(parseJsonRecord);
     expect(() =>
       validateRetainedScenarioReviewInvocation({
         binding: binding.right,
-        eventPath: `${fixture.replayPrePlayReviewInputPaths[0].slice(0, -".json".length)}.events.jsonl`,
         eventSha256: ledger.right.eventsSha256,
+        events,
       }),
     ).not.toThrow();
   });
