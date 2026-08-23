@@ -3450,6 +3450,57 @@ describe("complete Raw Swarm path comparison", () => {
     expect(invalid.left).toContain("Replay authority role replay-milestone");
   });
 
+  test("rejects numbered replay authorities without milestone/final stage names", () => {
+    const source = measurement();
+    const numberedFindings = {
+      ...source.findings,
+      authorities: source.findings.authorities.map((authority) =>
+        authority.role === "replay-milestone"
+          ? { ...authority, role: "replay-1" }
+          : authority.role === "replay-final"
+            ? { ...authority, role: "replay-2" }
+            : authority,
+      ),
+    };
+    const invalid = validateCompletePathMeasurement(
+      withRetainedFindings(source, numberedFindings),
+    );
+    expect(Either.isLeft(invalid)).toBe(true);
+    if (Either.isRight(invalid)) return;
+    expect(invalid.left).toMatch(
+      /replay-(?:1|2)|retained milestone and one final/,
+    );
+  });
+
+  test("rejects the legacy unnumbered replay authority role", () => {
+    const source = measurement();
+    const milestone = source.findings.authorities.find(
+      ({ role }) => role === "replay-milestone",
+    );
+    if (milestone === undefined) {
+      throw new Error("Synthetic milestone replay authority is incomplete.");
+    }
+    const root = resolve(repoRoot, milestone.path, "..");
+    const legacy = writeAuthority(
+      root,
+      "legacy-replay.json",
+      readFileSync(resolve(repoRoot, milestone.path), "utf8"),
+    );
+    const legacyFindings = {
+      ...source.findings,
+      authorities: [
+        ...source.findings.authorities,
+        { role: "replay", ...legacy },
+      ],
+    };
+    const invalid = validateCompletePathMeasurement(
+      withRetainedFindings(source, legacyFindings),
+    );
+    expect(Either.isLeft(invalid)).toBe(true);
+    if (Either.isRight(invalid)) return;
+    expect(invalid.left).toContain("role is not closed: replay");
+  });
+
   test("assembles and writes a current measurement from canonical authorities", () => {
     const source = measurement();
     const sourceRoot = resolve(repoRoot, source.stagePlanAuthority.path, "..");

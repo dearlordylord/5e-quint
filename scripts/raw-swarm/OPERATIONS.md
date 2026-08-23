@@ -708,7 +708,10 @@ envelopes, not new model invocations. When supplied, the pair must contain
 exactly one milestone and one final envelope. Each envelope must match one
 historical v2 or current v4 `scenarioCompositeReview` row in the supplied
 generation ledger by invocation id, model, reasoning effort, scenario, and Git
-identity. A historical schema-2 envelope may use an exact v2 row (or a
+identity. The sibling `campaign.json` manifest is required for this replay
+boundary and supplies the expected Campaign, Evidence Set, and planned
+Scenario identity; a missing or malformed manifest rejects replay. A
+historical schema-2 envelope may use an exact v2 row (or a
 migrated v4 row) and retains only admitted Scenario identity; a current
 schema-3 Candidate envelope requires the matching v4 lifecycle subject,
 including its Candidate, Campaign, Evidence Set, and planned Scenario. The

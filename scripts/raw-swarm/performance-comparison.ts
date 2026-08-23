@@ -3051,7 +3051,6 @@ function isPostPlayReviewAuthorityRole(role: string): boolean {
 
 function isReplayAuthorityRole(role: string): boolean {
   return (
-    numberedAuthorityRole(role, "replay") ||
     namedReviewStageAuthorityRole(role, "replay") ||
     namedReviewStageAuthorityRole(role, "prePlayReviewReplayInput")
   );
@@ -3568,6 +3567,8 @@ function currentAuthorityContentIssues(
         !isScenarioReviewAuthorityRole(authority.role)) ||
       (authority.role.startsWith("review-") &&
         !isPostPlayReviewAuthorityRole(authority.role)) ||
+      authority.role === "replay" ||
+      authority.role === "prePlayReviewReplayInput" ||
       (authority.role.startsWith("replay-") &&
         !isReplayAuthorityRole(authority.role)) ||
       (authority.role.startsWith("prePlayReviewReplayInput-") &&
@@ -4141,6 +4142,8 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
         `Benchmark finding authority role is retired and not permitted: ${authority.role}.`,
       );
     } else if (
+      authority.role === "replay" ||
+      authority.role === "prePlayReviewReplayInput" ||
       (authority.role.startsWith("replay-") &&
         !isReplayAuthorityRole(authority.role)) ||
       (authority.role.startsWith("prePlayReviewReplayInput-") &&

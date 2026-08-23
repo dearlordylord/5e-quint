@@ -155,6 +155,27 @@ export type RetainedScenarioReviewCampaignIdentity = Readonly<{
   readonly plannedScenarioId?: PlannedScenarioId;
 }>;
 
+export type RetainedScenarioReviewReplayBinding = Readonly<{
+  readonly reviewStage: RetainedScenarioReviewStage;
+  readonly invocationId: string;
+  readonly scenarioId: Schema.Schema.Type<typeof ScenarioIdSchema>;
+  readonly scenarioSha256: ScenarioReviewSourceSha256;
+  readonly envelopeSubject:
+    | RetainedScenarioReviewSubject
+    | HistoricalRetainedScenarioReviewSubject;
+  readonly ledgerSchemaVersion: 2 | 4;
+  readonly ledgerScenarioReference: ReturnType<
+    typeof modelInvocationScenarioReference
+  >;
+  readonly sourceGitSha: Schema.Schema.Type<typeof GitShaSchema>;
+  readonly model: "gpt-5.6-luna";
+  readonly reasoningEffort: Schema.Schema.Type<
+    typeof RetainedScenarioReviewReasoningEffortSchema
+  >;
+  /** Historical Scenario envelopes do not retain Candidate ownership. */
+  readonly campaign: RetainedScenarioReviewCampaignIdentity | undefined;
+}>;
+
 /**
  * The replay boundary has two historical shapes. Schema-2 retained reviews
  * can bind only to historical v2 or current v4 ledger scenario references;
@@ -170,10 +191,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
     readonly scenarioSha256: ScenarioReviewSourceSha256;
     readonly campaign?: RetainedScenarioReviewCampaignIdentity;
   }>,
-): Either.Either<
-  RetainedScenarioReviewSubject | HistoricalRetainedScenarioReviewSubject,
-  string
-> {
+): Either.Either<RetainedScenarioReviewReplayBinding, string> {
   if (input.reviewStage !== expected.reviewStage) {
     return Either.left(
       `Review stage ${input.reviewStage} does not match expected ${expected.reviewStage}.`,
@@ -184,7 +202,7 @@ export function retainedScenarioReviewMatchesReplayBinding(
       scenarioId: expected.scenarioId,
       scenarioSha256: expected.scenarioSha256,
     });
-    if (Either.isLeft(admission)) return admission;
+    if (Either.isLeft(admission)) return Either.left(admission.left);
   }
   if (ledgerEntry.invocationId !== input.invocationId) {
     return Either.left(
@@ -207,33 +225,52 @@ export function retainedScenarioReviewMatchesReplayBinding(
   }
 
   const subject = retainedScenarioReviewSubject(input);
-  if (input.schemaVersion === 2) {
-    if (
-      (ledgerEntry.schemaVersion !== 2 && ledgerEntry.schemaVersion !== 4) ||
-      String(modelInvocationScenarioReference(ledgerEntry)) !==
-        String(expected.scenarioId)
-    ) {
-      return Either.left(
-        `Historical review invocation ${input.invocationId} does not match the expected scenario or ledger version.`,
-      );
-    }
-    return Either.right(subject);
+  const envelopeScenarioReference =
+    subject.tag === "scenarioCandidate"
+      ? subject.plannedScenarioId
+      : subject.scenarioId;
+  const ledgerScenarioReference = modelInvocationScenarioReference(ledgerEntry);
+  if (
+    String(
+      input.schemaVersion === 2 ? input.scenarioId : envelopeScenarioReference,
+    ) !== String(expected.scenarioId) ||
+    String(ledgerScenarioReference) !== String(expected.scenarioId)
+  ) {
+    return Either.left(
+      input.schemaVersion === 2
+        ? `Historical review invocation ${input.invocationId} does not match the expected scenario identity.`
+        : `Review invocation ${input.invocationId} does not match the expected scenario identity.`,
+    );
   }
 
-  if (ledgerEntry.schemaVersion !== 4) {
-    return Either.left(
-      `Current Candidate review invocation ${input.invocationId} requires v4 ledger evidence.`,
-    );
+  let ledgerSchemaVersion: 2 | 4;
+  if (input.schemaVersion === 2) {
+    if (ledgerEntry.schemaVersion !== 2 && ledgerEntry.schemaVersion !== 4) {
+      return Either.left(
+        `Historical review invocation ${input.invocationId} does not match the expected ledger version.`,
+      );
+    }
+    ledgerSchemaVersion = ledgerEntry.schemaVersion;
+  } else {
+    if (ledgerEntry.schemaVersion !== 4) {
+      return Either.left(
+        `Current Candidate review invocation ${input.invocationId} requires v4 ledger evidence.`,
+      );
+    }
+    if (canonicalJson(ledgerEntry.subject) !== canonicalJson(input.subject)) {
+      return Either.left(
+        `Current review invocation ${input.invocationId} does not match its lifecycle subject.`,
+      );
+    }
+    ledgerSchemaVersion = 4;
   }
-  if (canonicalJson(ledgerEntry.subject) !== canonicalJson(input.subject)) {
-    return Either.left(
-      `Current review invocation ${input.invocationId} does not match its lifecycle subject.`,
-    );
-  }
-  if (
-    input.subject.tag === "scenarioCandidate" &&
-    expected.campaign !== undefined
-  ) {
+
+  if (input.schemaVersion === 3 && input.subject.tag === "scenarioCandidate") {
+    if (expected.campaign === undefined) {
+      return Either.left(
+        `Current Candidate review invocation ${input.invocationId} requires an expected Campaign and Evidence Set identity.`,
+      );
+    }
     if (
       input.subject.campaignId !== expected.campaign.campaignId ||
       input.subject.evidenceSetId !== expected.campaign.evidenceSetId ||
@@ -245,5 +282,17 @@ export function retainedScenarioReviewMatchesReplayBinding(
       );
     }
   }
-  return Either.right(subject);
+  return Either.right({
+    reviewStage: expected.reviewStage,
+    invocationId: input.invocationId,
+    scenarioId: expected.scenarioId,
+    scenarioSha256: expected.scenarioSha256,
+    envelopeSubject: subject,
+    ledgerSchemaVersion,
+    ledgerScenarioReference,
+    sourceGitSha: input.sourceGitSha,
+    model: input.model,
+    reasoningEffort: input.reasoningEffort,
+    campaign: expected.campaign,
+  });
 }

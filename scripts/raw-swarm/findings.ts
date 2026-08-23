@@ -984,11 +984,16 @@ export function findingsFromGenerationLedger(
     const campaignMismatch =
       expected.campaign !== undefined &&
       decoded.right.schemaVersion === 4 &&
-      ((decoded.right.subject.tag !== "scenarioCampaign" &&
-        decoded.right.subject.tag !== "scenarioCandidate") ||
-        decoded.right.subject.campaignId !== expected.campaign.campaignId ||
-        decoded.right.subject.evidenceSetId !==
-          expected.campaign.evidenceSetId);
+      ((decoded.right.phase === "scenarioGeneration" &&
+        (decoded.right.subject.tag !== "scenarioCampaign" ||
+          decoded.right.subject.campaignId !== expected.campaign.campaignId ||
+          decoded.right.subject.evidenceSetId !==
+            expected.campaign.evidenceSetId)) ||
+        (decoded.right.phase === "scenarioCompositeReview" &&
+          decoded.right.subject.tag === "scenarioCandidate" &&
+          (decoded.right.subject.campaignId !== expected.campaign.campaignId ||
+            decoded.right.subject.evidenceSetId !==
+              expected.campaign.evidenceSetId)));
     if (
       String(modelInvocationScenarioReference(decoded.right)) !==
         expected.scenarioId ||
@@ -1027,11 +1032,7 @@ function expectedReplayCampaignIdentity(
   let expected: RetainedScenarioReviewCampaignIdentity | undefined;
   for (const path of generationLedgerPaths) {
     const ledgerPath = sourcePath(path);
-    const manifestPath = resolve(
-      repoRoot,
-      dirname(ledgerPath),
-      "campaign.json",
-    );
+    const manifestPath = replayCampaignManifestPath(ledgerPath);
     if (!existsSync(manifestPath)) continue;
     const canonicalManifestPath = sourcePath(relative(repoRoot, manifestPath));
     const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
@@ -1056,6 +1057,29 @@ function expectedReplayCampaignIdentity(
       );
     }
     expected = campaign;
+  }
+  return expected;
+}
+
+function replayCampaignManifestPath(ledgerPath: string): string {
+  return resolve(repoRoot, dirname(ledgerPath), "campaign.json");
+}
+
+function requiredReplayCampaignIdentity(
+  generationLedgerPaths: readonly string[],
+): RetainedScenarioReviewCampaignIdentity {
+  for (const path of generationLedgerPaths) {
+    const ledgerPath = sourcePath(path);
+    const manifestPath = replayCampaignManifestPath(ledgerPath);
+    if (!existsSync(manifestPath)) {
+      fail(
+        `Review replay inputs require the generation Campaign manifest beside ${ledgerPath}: ${manifestPath}.`,
+      );
+    }
+  }
+  const expected = expectedReplayCampaignIdentity(generationLedgerPaths);
+  if (expected === undefined) {
+    fail("Review replay inputs require a Campaign and Evidence Set identity.");
   }
   return expected;
 }
@@ -1120,7 +1144,7 @@ function originalCompositeReviewInputs(
       return decoded.right;
     });
   });
-  const expectedCampaign = expectedReplayCampaignIdentity(
+  const expectedCampaign = requiredReplayCampaignIdentity(
     generationLedgerPaths,
   );
 
@@ -1154,7 +1178,7 @@ function originalCompositeReviewInputs(
     const binding = retainedScenarioReviewMatchesReplayBinding(review, entry, {
       reviewStage: expectedStage,
       ...expectedScenario,
-      ...(expectedCampaign === undefined ? {} : { campaign: expectedCampaign }),
+      campaign: expectedCampaign,
     });
     if (Either.isLeft(binding)) {
       fail(
