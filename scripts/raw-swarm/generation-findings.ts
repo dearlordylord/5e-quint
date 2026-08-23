@@ -349,6 +349,7 @@ export function projectGenerationFindings(
                   campaign: {
                     campaignId: manifestIdentity.campaignId,
                     evidenceSetId: manifestIdentity.evidenceSetId,
+                    plannedScenarioId: manifestIdentity.plannedScenarioId,
                   },
                 }
               : {}),

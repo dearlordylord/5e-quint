@@ -173,7 +173,7 @@ function invocation(
             campaignId: "synthetic-complete-path-campaign",
             evidenceSetId: "synthetic-complete-path-evidence",
             candidateId: "synthetic-complete-path-candidate",
-            candidateScenarioSha256: "a".repeat(64),
+            candidateScenarioSha256: scenarioSha256,
             plannedScenarioId: scenarioId,
           }
         : values.phase === "player" || values.phase === "postPlayReview"
@@ -1513,6 +1513,90 @@ describe("complete Raw Swarm path comparison", () => {
       _tag: "Left",
       left: expect.stringContaining("setup authority"),
     });
+  }, 120_000);
+
+  test("rejects a historical benchmark Candidate from a foreign Campaign, Evidence Set, or planned Scenario", () => {
+    const source = benchmarkMeasurement("documentDeclarationSet");
+    const candidateIndex = source.invocations.findIndex(
+      ({ invocationId }) => invocationId === "composite-final",
+    );
+    const candidate = source.invocations[candidateIndex];
+    const eventAuthority = source.invocationEvents[candidateIndex];
+    if (
+      candidate === undefined ||
+      eventAuthority === undefined ||
+      candidate.schemaVersion !== 4 ||
+      candidate.phase !== "scenarioCompositeReview" ||
+      candidate.subject.tag !== "scenarioCandidate"
+    ) {
+      throw new Error("Synthetic historical Candidate evidence is incomplete.");
+    }
+    const root = resolve(repoRoot, source.invocationLedgers[0]!.path, "..");
+    const foreignSubject = {
+      ...candidate.subject,
+      campaignId:
+        "foreign-benchmark-campaign" as typeof candidate.subject.campaignId,
+      evidenceSetId:
+        "foreign-benchmark-evidence" as typeof candidate.subject.evidenceSetId,
+      plannedScenarioId:
+        "foreign-benchmark-scenario" as typeof candidate.subject.plannedScenarioId,
+    };
+    const foreignEvents = readFileSync(
+      resolve(repoRoot, eventAuthority.path),
+      "utf8",
+    )
+      .trim()
+      .split("\n")
+      .map(parseJsonRecord)
+      .map((event, index) =>
+        index === 0 ? { ...event, subject: foreignSubject } : event,
+      );
+    const foreignEventAuthority = writeAuthority(
+      root,
+      "events/foreign-composite-final.jsonl",
+      `${foreignEvents.map((event) => JSON.stringify(event)).join("\n")}\n`,
+    );
+    const foreignCandidate = {
+      ...candidate,
+      subject: foreignSubject,
+      eventsSha256: foreignEventAuthority.sha256,
+    };
+    const foreignInvocations = source.invocations.map((invocation, index) =>
+      index === candidateIndex ? foreignCandidate : invocation,
+    );
+    const foreignLedgerAuthority = writeAuthority(
+      root,
+      "foreign-benchmark-invocations.jsonl",
+      `${foreignInvocations.map((invocation) => JSON.stringify(invocation)).join("\n")}\n`,
+    );
+    const foreignFindings = {
+      ...source.findings,
+      authorities: source.findings.authorities.map((authority) =>
+        authority.role === "prePlayReviewReplayEvents-final"
+          ? { role: authority.role, ...foreignEventAuthority }
+          : authority,
+      ),
+    };
+    const foreignFindingsAuthority = writeAuthority(
+      root,
+      "foreign-benchmark-findings.json",
+      `${JSON.stringify(foreignFindings)}\n`,
+    );
+    const validation = validateCompletePathMeasurement({
+      ...source,
+      invocations: foreignInvocations,
+      invocationLedgers: [foreignLedgerAuthority],
+      invocationEvents: source.invocationEvents.map((authority, index) =>
+        index === candidateIndex ? foreignEventAuthority : authority,
+      ),
+      findings: foreignFindings,
+      findingsAuthority: foreignFindingsAuthority,
+    });
+    expect(Either.isLeft(validation)).toBe(true);
+    if (Either.isRight(validation)) return;
+    expect(validation.left).toMatch(
+      /Campaign, Evidence Set|admitted Scenario source hash/,
+    );
   }, 120_000);
 
   test("retains player obstruction evidence, rejects zero-call conclusion, and blocks comparison", () => {

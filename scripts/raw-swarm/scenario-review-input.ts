@@ -3,6 +3,7 @@ import { Either, Schema } from "effect";
 import { ScenarioCompositeReviewSchema } from "./scenario-campaign.ts";
 import {
   modelInvocationScenarioReference,
+  type CurrentModelInvocationLedgerEntry,
   type ModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
 import {
@@ -168,8 +169,16 @@ export type RetainedScenarioReviewReplayExpectation =
     }>
   | Readonly<{
       readonly tag: "historicalScenario";
-      readonly reviewStage: RetainedScenarioReviewStage;
+      readonly reviewStage: "milestone";
       readonly scenarioId: RetainedScenarioReviewScenarioReference;
+      readonly campaign: RetainedScenarioReviewCampaignIdentity;
+    }>
+  | Readonly<{
+      readonly tag: "historicalScenario";
+      readonly reviewStage: "final";
+      readonly scenarioId: RetainedScenarioReviewScenarioReference;
+      /** Hash of the admitted Scenario, never a revised Candidate hash. */
+      readonly admittedScenarioSha256: ScenarioReviewSourceSha256;
       readonly campaign: RetainedScenarioReviewCampaignIdentity;
     }>
   | Readonly<{
@@ -226,45 +235,41 @@ function isScenarioRetainedScenarioReviewInput(
   return input.schemaVersion === 3 && input.subject.tag === "scenario";
 }
 
-type RetainedScenarioReviewReplayBindingCommon = Readonly<{
-  readonly reviewStage: RetainedScenarioReviewStage;
-  readonly invocationId: string;
-  readonly ledgerSchemaVersion: 2 | 4;
-  readonly ledgerScenarioReference: ReturnType<
-    typeof modelInvocationScenarioReference
-  >;
-  readonly sourceGitSha: Schema.Schema.Type<typeof GitShaSchema>;
-  readonly model: "gpt-5.6-luna";
-  readonly reasoningEffort: Schema.Schema.Type<
-    typeof RetainedScenarioReviewReasoningEffortSchema
-  >;
-  /** The successful binding retains parsed values for downstream validators. */
-  readonly retainedInput: RetainedScenarioReviewInput;
-  readonly ledgerEntry: ModelInvocationLedgerEntry;
-}>;
+type CandidateReplayLedgerEntry = Extract<
+  CurrentModelInvocationLedgerEntry,
+  {
+    readonly phase: "scenarioCompositeReview";
+    readonly subject: { readonly tag: "scenarioCandidate" };
+  }
+>;
+type ScenarioReplayLedgerEntry = Extract<
+  CurrentModelInvocationLedgerEntry,
+  {
+    readonly phase: "scenarioCompositeReview";
+    readonly subject: { readonly tag: "scenario" };
+  }
+>;
+type HistoricalReplayLedgerEntry =
+  | Extract<ModelInvocationLedgerEntry, { readonly schemaVersion: 2 }>
+  | CandidateReplayLedgerEntry
+  | ScenarioReplayLedgerEntry;
 
 export type RetainedScenarioReviewReplayBinding =
-  | (RetainedScenarioReviewReplayBindingCommon & {
+  | Readonly<{
       readonly tag: "candidate";
-      readonly scenarioId: RetainedScenarioReviewScenarioReference;
-      /** Hash is always derived from the parsed Candidate subject. */
-      readonly candidateScenarioSha256: ScenarioReviewSourceSha256;
-      readonly campaign: RetainedScenarioReviewCampaignIdentity;
-      readonly envelopeSubject: CandidateRetainedScenarioReviewInput["subject"];
       readonly retainedInput: CandidateRetainedScenarioReviewInput;
-    })
-  | (RetainedScenarioReviewReplayBindingCommon & {
+      readonly ledgerEntry: CandidateReplayLedgerEntry;
+    }>
+  | Readonly<{
       readonly tag: "scenario";
-      readonly scenarioId: Schema.Schema.Type<typeof ScenarioIdSchema>;
-      readonly envelopeSubject: ScenarioRetainedScenarioReviewInput["subject"];
       readonly retainedInput: ScenarioRetainedScenarioReviewInput;
-    })
-  | (RetainedScenarioReviewReplayBindingCommon & {
+      readonly ledgerEntry: ScenarioReplayLedgerEntry;
+    }>
+  | Readonly<{
       readonly tag: "historicalScenario";
-      readonly scenarioId: HistoricalScenarioId;
-      readonly envelopeSubject: HistoricalRetainedScenarioReviewSubject;
       readonly retainedInput: HistoricalRetainedScenarioReviewInput;
-    });
+      readonly ledgerEntry: HistoricalReplayLedgerEntry;
+    }>;
 
 /**
  * Validate the lifecycle-specific expectation against the parsed envelope
@@ -331,6 +336,36 @@ function replayLedgerSchemaVersion(
     );
   }
   return Either.right(4);
+}
+
+function isCandidateReplayLedgerEntry(
+  entry: ModelInvocationLedgerEntry,
+): entry is CandidateReplayLedgerEntry {
+  return (
+    entry.schemaVersion === 4 &&
+    entry.phase === "scenarioCompositeReview" &&
+    entry.subject.tag === "scenarioCandidate"
+  );
+}
+
+function isScenarioReplayLedgerEntry(
+  entry: ModelInvocationLedgerEntry,
+): entry is ScenarioReplayLedgerEntry {
+  return (
+    entry.schemaVersion === 4 &&
+    entry.phase === "scenarioCompositeReview" &&
+    entry.subject.tag === "scenario"
+  );
+}
+
+function isHistoricalReplayLedgerEntry(
+  entry: ModelInvocationLedgerEntry,
+): entry is HistoricalReplayLedgerEntry {
+  return (
+    entry.schemaVersion === 2 ||
+    isCandidateReplayLedgerEntry(entry) ||
+    isScenarioReplayLedgerEntry(entry)
+  );
 }
 
 /**
@@ -436,6 +471,19 @@ export function retainedScenarioReviewMatchesReplayBinding(
     );
   }
 
+  if (
+    expected.tag === "historicalScenario" &&
+    expected.reviewStage === "final" &&
+    ledgerEntry.schemaVersion === 4 &&
+    ledgerEntry.subject.tag === "scenarioCandidate" &&
+    ledgerEntry.subject.candidateScenarioSha256 !==
+      expected.admittedScenarioSha256
+  ) {
+    return Either.left(
+      `Historical review Candidate ${ledgerEntry.subject.candidateId} does not match the admitted Scenario source hash.`,
+    );
+  }
+
   if (expected.tag === "candidate") {
     if (
       subject.tag !== "scenarioCandidate" ||
@@ -449,52 +497,44 @@ export function retainedScenarioReviewMatchesReplayBinding(
     }
   }
 
-  const common = {
-    reviewStage: expected.reviewStage,
-    invocationId: input.invocationId,
-    ledgerSchemaVersion: ledgerSchemaVersion.right,
-    ledgerScenarioReference,
-    sourceGitSha: input.sourceGitSha,
-    model: input.model,
-    reasoningEffort: input.reasoningEffort,
-    retainedInput: input,
-    ledgerEntry,
-  } as const;
   if (expected.tag === "candidate") {
-    if (!isCandidateRetainedScenarioReviewInput(input)) {
+    if (
+      !isCandidateRetainedScenarioReviewInput(input) ||
+      !isCandidateReplayLedgerEntry(ledgerEntry)
+    ) {
       return Either.left(
-        `Current Candidate review invocation ${input.invocationId} has an invalid lifecycle shape.`,
+        `Current Candidate review invocation ${input.invocationId} has an invalid parsed lifecycle binding.`,
       );
     }
     return Either.right({
-      ...common,
       tag: "candidate",
-      scenarioId: expected.scenarioId,
-      candidateScenarioSha256: input.subject.candidateScenarioSha256,
-      campaign: expected.campaign,
-      envelopeSubject: input.subject,
       retainedInput: input,
+      ledgerEntry,
     });
   }
   if (input.schemaVersion === 2) {
+    if (!isHistoricalReplayLedgerEntry(ledgerEntry)) {
+      return Either.left(
+        `Historical review invocation ${input.invocationId} has an invalid parsed lifecycle binding.`,
+      );
+    }
     return Either.right({
-      ...common,
       tag: "historicalScenario",
-      scenarioId: input.scenarioId,
-      envelopeSubject: { tag: "scenario", scenarioId: input.scenarioId },
       retainedInput: input,
+      ledgerEntry,
     });
   }
-  if (!isScenarioRetainedScenarioReviewInput(input)) {
+  if (
+    !isScenarioRetainedScenarioReviewInput(input) ||
+    !isScenarioReplayLedgerEntry(ledgerEntry)
+  ) {
     return Either.left(
-      `Scenario review invocation ${input.invocationId} has an invalid lifecycle shape.`,
+      `Scenario review invocation ${input.invocationId} has an invalid parsed lifecycle binding.`,
     );
   }
   return Either.right({
-    ...common,
     tag: "scenario",
-    scenarioId: input.subject.scenarioId,
-    envelopeSubject: input.subject,
     retainedInput: input,
+    ledgerEntry,
   });
 }

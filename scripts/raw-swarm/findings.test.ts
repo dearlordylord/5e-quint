@@ -731,6 +731,10 @@ describe("Raw Swarm findings projection", () => {
       expect.arrayContaining([
         expect.objectContaining({ role: "replay-milestone" }),
         expect.objectContaining({ role: "replay-final" }),
+        expect.objectContaining({
+          role: "campaign",
+          path: relative(repoRoot, resolve(input.root, "campaign.json")),
+        }),
       ]),
     );
     expect(
@@ -776,13 +780,11 @@ describe("Raw Swarm findings projection", () => {
     if (Either.isLeft(finalBinding)) return;
     expect(finalBinding.right).toMatchObject({
       tag: "candidate",
-      candidateScenarioSha256: input.scenarioSha256,
-      campaign: {
-        campaignId: "findings-campaign",
-        evidenceSetId: "findings-campaign-evidence",
-        plannedScenarioId: "findings-example",
-      },
+      retainedInput: { subject: finalSubject },
+      ledgerEntry: { subject: finalSubject },
     });
+    expect(finalBinding.right).not.toHaveProperty("candidateScenarioSha256");
+    expect(finalBinding.right).not.toHaveProperty("campaign");
 
     const milestoneLedgerValue = readFileSync(
       resolve(repoRoot, generationLedgerRelative),
@@ -829,8 +831,12 @@ describe("Raw Swarm findings projection", () => {
     if (Either.isLeft(milestoneBinding)) return;
     expect(milestoneBinding.right).toMatchObject({
       tag: "candidate",
-      candidateScenarioSha256: milestoneSubject.candidateScenarioSha256,
+      retainedInput: { subject: milestoneSubject },
+      ledgerEntry: { subject: milestoneSubject },
     });
+    expect(milestoneBinding.right).not.toHaveProperty(
+      "candidateScenarioSha256",
+    );
   });
 
   test("accepts an exact historical v2 composite-review ledger row", () => {
@@ -895,6 +901,7 @@ describe("Raw Swarm findings projection", () => {
         tag: "historicalScenario",
         reviewStage: "final",
         scenarioId: "findings-example",
+        admittedScenarioSha256: input.scenarioSha256,
         campaign: {
           campaignId: "findings-campaign",
           evidenceSetId: "findings-campaign-evidence",
@@ -906,13 +913,15 @@ describe("Raw Swarm findings projection", () => {
     if (Either.isLeft(binding)) return;
     expect(binding.right).toMatchObject({
       tag: "historicalScenario",
-      reviewStage: "final",
-      invocationId: "historical-final",
-      scenarioId: "findings-example",
-      envelopeSubject: { tag: "scenario", scenarioId: "findings-example" },
-      ledgerSchemaVersion: 2,
-      ledgerScenarioReference: "findings-example",
+      retainedInput: { scenarioId: "findings-example" },
+      ledgerEntry: {
+        schemaVersion: 2,
+        scenarioId: "findings-example",
+      },
     });
+    expect(binding.right).not.toHaveProperty("scenarioId");
+    expect(binding.right).not.toHaveProperty("envelopeSubject");
+    expect(binding.right).not.toHaveProperty("ledgerSchemaVersion");
     expect(binding.right).not.toHaveProperty("campaign");
   });
 
@@ -964,6 +973,7 @@ describe("Raw Swarm findings projection", () => {
         tag: "historicalScenario",
         reviewStage: "final",
         scenarioId: "findings-example",
+        admittedScenarioSha256: input.scenarioSha256,
         campaign: {
           campaignId: "findings-campaign",
           evidenceSetId: "findings-campaign-evidence",
@@ -975,11 +985,41 @@ describe("Raw Swarm findings projection", () => {
     if (Either.isLeft(binding)) return;
     expect(binding.right).toMatchObject({
       tag: "historicalScenario",
-      ledgerSchemaVersion: 4,
-      ledgerScenarioReference: "findings-example",
-      envelopeSubject: { tag: "scenario", scenarioId: "findings-example" },
+      retainedInput: { scenarioId: "findings-example" },
+      ledgerEntry: { schemaVersion: 4, subject: candidateSubject },
     });
+    expect(binding.right).not.toHaveProperty("scenarioId");
+    expect(binding.right).not.toHaveProperty("envelopeSubject");
     expect(binding.right).not.toHaveProperty("campaign");
+
+    const sameOwnerWrongHashLedger = {
+      ...ledger.right,
+      subject: {
+        ...candidateSubject,
+        candidateScenarioSha256: "f".repeat(64),
+      },
+    };
+    const sameOwnerWrongHashBinding =
+      retainedScenarioReviewMatchesReplayBinding(
+        retained.right,
+        sameOwnerWrongHashLedger,
+        {
+          tag: "historicalScenario",
+          reviewStage: "final",
+          scenarioId: "findings-example",
+          admittedScenarioSha256: input.scenarioSha256,
+          campaign: {
+            campaignId: "findings-campaign",
+            evidenceSetId: "findings-campaign-evidence",
+            plannedScenarioId: "findings-example",
+          },
+        },
+      );
+    expect(Either.isLeft(sameOwnerWrongHashBinding)).toBe(true);
+    if (Either.isRight(sameOwnerWrongHashBinding)) return;
+    expect(sameOwnerWrongHashBinding.left).toContain(
+      "admitted Scenario source hash",
+    );
 
     const foreignLedger = {
       ...ledger.right,
@@ -996,6 +1036,7 @@ describe("Raw Swarm findings projection", () => {
         tag: "historicalScenario",
         reviewStage: "final",
         scenarioId: "findings-example",
+        admittedScenarioSha256: input.scenarioSha256,
         campaign: {
           campaignId: "findings-campaign",
           evidenceSetId: "findings-campaign-evidence",
@@ -1006,6 +1047,64 @@ describe("Raw Swarm findings projection", () => {
     expect(Either.isLeft(foreignBinding)).toBe(true);
     if (Either.isRight(foreignBinding)) return;
     expect(foreignBinding.left).toMatch(/Campaign, Evidence Set/);
+  });
+
+  test("preserves a revised Candidate hash at the historical milestone", () => {
+    const input = fixture();
+    const candidateSubject = {
+      tag: "scenarioCandidate",
+      campaignId: "findings-campaign",
+      evidenceSetId: "findings-campaign-evidence",
+      candidateId: "findings-milestone-candidate",
+      candidateScenarioSha256: "f".repeat(64),
+      plannedScenarioId: "findings-example",
+    } as const satisfies CompositeReviewFixtureSubject;
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      candidateSubject,
+      {
+        reviewEntries: [
+          {
+            invocationId: "historical-v4-milestone",
+            reviewStage: "milestone",
+            subject: candidateSubject,
+            ledgerSchemaVersion: 4,
+          },
+        ],
+      },
+    );
+    const retained = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(
+      retainedCompositeReviewInput({
+        reviewStage: "milestone",
+        invocationId: "historical-v4-milestone",
+      }),
+    );
+    const ledger = parseModelInvocationLedgerEntry(
+      parseJsonRecord(
+        readFileSync(resolve(repoRoot, generationLedgerRelative), "utf8"),
+      ),
+    );
+    expect(Either.isRight(retained)).toBe(true);
+    expect(Either.isRight(ledger)).toBe(true);
+    if (Either.isLeft(retained) || Either.isLeft(ledger)) return;
+    const binding = retainedScenarioReviewMatchesReplayBinding(
+      retained.right,
+      ledger.right,
+      {
+        tag: "historicalScenario",
+        reviewStage: "milestone",
+        scenarioId: "findings-example",
+        campaign: {
+          campaignId: "findings-campaign",
+          evidenceSetId: "findings-campaign-evidence",
+          plannedScenarioId: "findings-example",
+        },
+      },
+    );
+    expect(Either.isRight(binding)).toBe(true);
   });
 
   test("rejects replay when the generation Campaign manifest is missing", () => {

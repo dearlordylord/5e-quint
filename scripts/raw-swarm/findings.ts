@@ -971,6 +971,7 @@ export function findingsFromGenerationLedger(
     readonly campaign?: Readonly<{
       readonly campaignId: ScenarioCampaignId;
       readonly evidenceSetId: EvidenceSetId;
+      readonly plannedScenarioId: PlannedScenarioId;
     }>;
   }>,
 ): readonly Finding[] {
@@ -989,12 +990,16 @@ export function findingsFromGenerationLedger(
         (decoded.right.subject.tag !== "scenarioCampaign" ||
           decoded.right.subject.campaignId !== expected.campaign.campaignId ||
           decoded.right.subject.evidenceSetId !==
-            expected.campaign.evidenceSetId)) ||
+            expected.campaign.evidenceSetId ||
+          decoded.right.subject.plannedScenarioId !==
+            expected.campaign.plannedScenarioId)) ||
         (decoded.right.phase === "scenarioCompositeReview" &&
           decoded.right.subject.tag === "scenarioCandidate" &&
           (decoded.right.subject.campaignId !== expected.campaign.campaignId ||
             decoded.right.subject.evidenceSetId !==
-              expected.campaign.evidenceSetId)));
+              expected.campaign.evidenceSetId ||
+            decoded.right.subject.plannedScenarioId !==
+              expected.campaign.plannedScenarioId)));
     if (
       String(modelInvocationScenarioReference(decoded.right)) !==
         expected.scenarioId ||
@@ -1178,12 +1183,20 @@ function originalCompositeReviewInputs(
     const entry = matches[0]!;
     const expectedBinding = (() => {
       if (review.schemaVersion === 2) {
-        return retainedScenarioReviewMatchesReplayExpectation(review, {
-          tag: "historicalScenario",
-          reviewStage: expectedStage,
-          scenarioId: expectedScenario.scenarioId,
-          campaign: expectedCampaign,
-        });
+        return expectedStage === "final"
+          ? retainedScenarioReviewMatchesReplayExpectation(review, {
+              tag: "historicalScenario",
+              reviewStage: "final",
+              scenarioId: expectedScenario.scenarioId,
+              admittedScenarioSha256: expectedScenario.scenarioSha256,
+              campaign: expectedCampaign,
+            })
+          : retainedScenarioReviewMatchesReplayExpectation(review, {
+              tag: "historicalScenario",
+              reviewStage: "milestone",
+              scenarioId: expectedScenario.scenarioId,
+              campaign: expectedCampaign,
+            });
       }
       if (review.subject.tag !== "scenarioCandidate") {
         return retainedScenarioReviewMatchesReplayExpectation(review, {
@@ -2037,6 +2050,17 @@ export function projectExecutionFindings(
   const expectedGenerationCampaign = expectedReplayCampaignIdentity(
     input.generationLedgerPaths,
   );
+  for (const path of input.generationLedgerPaths) {
+    const manifestPath = sourcePath(
+      relative(repoRoot, replayCampaignManifestPath(sourcePath(path))),
+    );
+    if (existsSync(resolve(repoRoot, manifestPath))) {
+      const role = addSource(sources, manifestPath, "campaign");
+      if (role === undefined) {
+        fail(`Generation Campaign manifest is unreadable: ${manifestPath}.`);
+      }
+    }
+  }
   for (const [index, path] of input.generationLedgerPaths.entries()) {
     const canonical = sourcePath(path);
     const role = addSource(

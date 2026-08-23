@@ -95,9 +95,10 @@ export function validateRetainedScenarioReviewInvocation(input: {
   const { binding } = input;
   const retained = binding.retainedInput;
   const ledgerEntry = binding.ledgerEntry;
+  const reviewStage = retained.reviewStage;
   if (input.eventSha256 !== ledgerEntry.eventsSha256) {
     fail(
-      `Retained ${binding.reviewStage} review input does not match its ledger event hash.`,
+      `Retained ${reviewStage} review input does not match its ledger event hash.`,
     );
   }
   const parsedEvents = readCodexEvents(resolve(repoRoot, input.eventPath));
@@ -107,10 +108,10 @@ export function validateRetainedScenarioReviewInvocation(input: {
   const derived = modelInvocationEvidenceFromEvents(parsedEvents.events);
   if (
     derived.tag === "invalid" ||
-    derived.entry.schemaVersion !== binding.ledgerSchemaVersion
+    derived.entry.schemaVersion !== ledgerEntry.schemaVersion
   ) {
     fail(
-      `Retained ${binding.reviewStage} review input event stream does not match its bound invocation evidence.`,
+      `Retained ${reviewStage} review input event stream does not match its bound invocation evidence.`,
     );
   }
   const withoutEventsHash = Object.fromEntries(
@@ -118,7 +119,7 @@ export function validateRetainedScenarioReviewInvocation(input: {
   );
   if (canonicalJson(derived.entry) !== canonicalJson(withoutEventsHash)) {
     fail(
-      `Retained ${binding.reviewStage} review input does not match its invocation event metadata.`,
+      `Retained ${reviewStage} review input does not match its invocation event metadata.`,
     );
   }
   const currentOutputSchema = codexOutputJsonSchema(
@@ -134,7 +135,7 @@ export function validateRetainedScenarioReviewInvocation(input: {
       canonicalJson(historicalOutputSchema)
   ) {
     fail(
-      `Retained ${binding.reviewStage} review input has an unsupported output schema.`,
+      `Retained ${reviewStage} review input has an unsupported output schema.`,
     );
   }
   const output = Schema.decodeUnknownEither(
@@ -146,7 +147,7 @@ export function validateRetainedScenarioReviewInvocation(input: {
     canonicalJson(output.right.result) !== canonicalJson(retained.result)
   ) {
     fail(
-      `Retained ${binding.reviewStage} review input result does not match its invocation event output.`,
+      `Retained ${reviewStage} review input result does not match its invocation event output.`,
     );
   }
 }
