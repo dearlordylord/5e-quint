@@ -1,0 +1,15 @@
+{
+  "campaignId": "prone-target-roll-mode-distance-probe-authoring",
+  "plannedScenarioId": "prone-target-roll-mode-distance-probe",
+  "scenarioTitle": "Prone target roll-mode distance probe",
+  "scenarioPurpose": "Exercise both SRD 5.2.1 Prone target attack-roll branches through the public player SDK in one compact deterministic setup: an already-Prone synthetic target is attacked before it can act, once by an attacker within 5 feet and once by an attacker farther than 5 feet. Keep all other circumstances neutral so the surfaced Advantage and Disadvantage modes are attributable to Prone and distance.",
+  "evidenceSetId": "prone-target-roll-mode-distance-probe-authoring-evidence",
+  "distributionPreference": "Generate materially distinct compact supported-only scenarios using only redistributable SRD stat blocks or visibly synthetic renamed records. Initialize one target as Prone through setup rather than prescribing a random Shove or Bite outcome. Give two hostile attackers higher Initiative than the target: one attacks from exactly 5 feet with a legal melee attack, and the other attacks from more than 5 feet with a legal ranged attack. Keep lighting bright, Cover absent, attacker conditions absent, and every other Advantage or Disadvantage source inactive. Require both attacks and normal resolution through the public SDK before conclusion. Do not use PHB+ identity or prose and do not dispatch execution by authored identity.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "supportedOnly",
+  "minimumIterations": 2,
+  "maximumIterations": 4,
+  "candidatesPerIteration": 4,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": false
+}
