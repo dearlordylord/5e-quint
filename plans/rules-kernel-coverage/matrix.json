@@ -5192,7 +5192,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
       ],
-      "reason": "Prone grants Advantage to attacks made within 5 feet and Disadvantage to attacks made from farther away; the QNT integer rule and executable TypeScript parity witness cover the exact 5/6 boundary and cancellation. A single attackTargetDistance fact carries actor, target, selected attack identity, and exact distance; runtime derives melee reach, ranged normal or long legality, and Prone mode from that fact and attack range inputs. Opportunity Attack threats retain the pre-leave distance, while readied and retaliation fixed-target reactions reject missing or contradictory distance facts rather than defaulting to normal mode.",
+      "reason": "The QNT owner is limited to the Prone integer-distance source: <=5 feet supplies Advantage, >5 feet supplies Disadvantage, and the source composes with cancellation. The executable parity witness covers the exact 5/6 boundary. Runtime state/codecs/fill-set own the single attackTargetDistance fact and its exact bound-selection uniqueness; attack-spatial owns exact distance matching and melee/ranged legality; attack-roll owns Prone mode; opportunity-attacks owns fixed-target OA, readied, and retaliation admission; interrupt-execution and interrupt-lifecycle own interruption choice and continuation; and ScenarioSession owns stable public threat projection. Reactions reject missing, contradictory, or out-of-range distance facts before an attack roll.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -5202,6 +5202,7 @@
         "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
         "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
         "packages/battle-runtime/src/battle-reducer/interrupt-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/interrupt-lifecycle.ts",
         "scripts/raw-swarm/sdk-player/scenario-session.ts"
       ],
       "status": "covered",
@@ -5211,7 +5212,7 @@
         "UBIQUITOUS_LANGUAGE.md#Conditions",
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
       ],
-      "title": "Canonical exact attack-target distance drives melee and ranged attack legality, Prone target roll mode, and fixed-target reaction continuation"
+      "title": "Canonical exact attack-target distance derives Prone roll mode and gates ordinary and fixed-target attack paths"
     }
   ],
   "battleHoleFrontier": [

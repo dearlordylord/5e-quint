@@ -705,6 +705,7 @@ export {
 export {
   opportunityAttackExecutionCandidates,
   opportunityAttackLeavesReach,
+  opportunityAttackThreatIdentityEqual,
   opportunityAttackThreatEqual,
   type BattleOpportunityAttackExecutionCandidate,
 } from "./battle-reducer/movement-speed.ts";

@@ -41,6 +41,7 @@ import {
   isBattleRuntimeSession,
   opportunityAttackExecutionCandidates,
   opportunityAttackLeavesReach,
+  opportunityAttackThreatIdentityEqual,
   opportunityAttackThreatEqual,
   resolveBattleRuntimeSubject,
   admitTableD20TestCircumstanceDecisions,
@@ -2088,7 +2089,7 @@ export function planScenarioMovement(input: {
           };
           if (
             provokedOpportunityAttacks.some((threat) =>
-              opportunityAttackThreatEqual(threat, {
+              opportunityAttackThreatIdentityEqual(threat, {
                 reactorId: candidate.reactorId,
                 distanceFeet: movementFeet(
                   Number(before.relation.distanceFeet),

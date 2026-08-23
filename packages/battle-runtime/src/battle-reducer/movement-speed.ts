@@ -341,8 +341,17 @@ export function opportunityAttackThreatEqual(
   right: BattleOpportunityAttackThreat,
 ): boolean {
   return (
+    opportunityAttackThreatIdentityEqual(left, right) &&
+    Number(left.distanceFeet) === Number(right.distanceFeet)
+  );
+}
+
+export function opportunityAttackThreatIdentityEqual(
+  left: BattleOpportunityAttackThreat,
+  right: BattleOpportunityAttackThreat,
+): boolean {
+  return (
     left.reactorId === right.reactorId &&
-    Number(left.distanceFeet) === Number(right.distanceFeet) &&
     interruptAttackExecutionSelectionsEqual(left, right)
   );
 }

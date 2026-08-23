@@ -2478,6 +2478,30 @@ export function shakeAwakeGoblinFromSleep(state: BattleState): BattleState {
 }
 
 export function targetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  targetId: CombatantId,
+  spatialFacts?: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["spatialFacts"],
+  relationshipFacts?: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["relationshipFacts"],
+): Extract<BattleFill, { readonly kind: "targetChoice" }>;
+export function targetFill(
+  hole: BattleHole,
+  targetId: CombatantId,
+  spatialFacts?: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["spatialFacts"],
+  relationshipFacts?: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["relationshipFacts"],
+): BattleFill;
+export function targetFill(
   hole: BattleHole,
   targetId: CombatantId,
   spatialFacts?: Extract<
@@ -2709,11 +2733,11 @@ export function attackTargetFill(
     { readonly kind: "targetChoice" }
   >["spatialFacts"] = [],
   targetDistanceFeet: MovementFeet = movementFeet(5),
-): BattleFill {
-  const boundSelection =
-    hole.kind === "targetChoice" && hole.attack !== undefined
-      ? hole.attack.selection
-      : attackSelection;
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.kind !== "targetChoice") {
+    throw new Error("Expected targetChoice hole.");
+  }
+  const boundSelection = hole.attack?.selection ?? attackSelection;
   if (boundSelection === undefined) {
     throw new Error("Expected a bound attack execution selection.");
   }

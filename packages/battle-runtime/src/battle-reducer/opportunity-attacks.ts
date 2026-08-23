@@ -98,6 +98,7 @@ import {
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
+import { attackTargetIsLegal } from "./attack-spatial.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -478,6 +479,21 @@ function resolveReactionAttackCommand(
       input.state,
       "invalidFill",
       targetSpatialFacts.message,
+    );
+  }
+  if (
+    !attackTargetIsLegal(
+      input.state,
+      subject.reactorId,
+      subject.targetId,
+      attack,
+      targetSpatialFacts.facts,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      `${commandLabel} target distance is outside the selected attack's legal range.`,
     );
   }
   const context: ReactionAttackCommandContext = {

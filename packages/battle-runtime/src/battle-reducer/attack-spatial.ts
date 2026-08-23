@@ -6,7 +6,10 @@ import type {
   BattleState,
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import {
+  boundAttackExecutionSelectionMatchesOption,
+  type SupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
 import type { MovementFeet } from "@dnd/shared/types";
 
@@ -14,11 +17,8 @@ export function attackExecutionSelectionMatchesOption(
   selection: BattleAttackExecutionSelection,
   attack: SupportedAttackActionOption,
 ): boolean {
-  return (
-    "procedureRef" in attack &&
-    selection.procedureRef !== undefined &&
-    selection.procedureRef === attack.procedureRef
-  );
+  if (!("procedureRef" in attack)) return false;
+  return boundAttackExecutionSelectionMatchesOption(selection, attack);
 }
 
 export function attackTargetIsLegal(

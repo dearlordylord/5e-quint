@@ -20,7 +20,10 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
 import { Match } from "effect";
-import { attackExecutionSelectionKey } from "../battle-action-options.ts";
+import {
+  attackExecutionSelectionForOption,
+  attackExecutionSelectionKey,
+} from "../battle-action-options.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
   AdmittedBattleResolutionInput,
@@ -45,6 +48,7 @@ import type {
   BattleResolvedMovement,
   BattleSpikeGrowthMovementDamageRollHole,
   BattleState,
+  BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import {
@@ -95,6 +99,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { applyPreparedSlotSpellDamage } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
+import { attackTargetIsLegal } from "./attack-spatial.ts";
 
 const MOVEMENT_PROCEDURE_COMMANDS = [
   "move",
@@ -703,6 +708,25 @@ export function parseBattleMovement(
         tag: "invalid",
         message:
           "Movement Opportunity Attack threat must name a melee attack option.",
+      };
+    }
+    const distanceFact: Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "attackTargetDistance" }
+    > = {
+      kind: "attackTargetDistance",
+      actorId: reactorId,
+      targetId: moverId,
+      ...attackExecutionSelectionForOption(attack),
+      distanceFeet: threat.distanceFeet,
+    };
+    if (
+      !attackTargetIsLegal(state, reactorId, moverId, attack, [distanceFact])
+    ) {
+      return {
+        tag: "invalid",
+        message:
+          "Movement Opportunity Attack threat distance is outside the selected attack's reach.",
       };
     }
     /* v8 ignore stop */

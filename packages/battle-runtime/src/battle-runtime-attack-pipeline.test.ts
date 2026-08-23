@@ -39,8 +39,12 @@ import {
   testCharacterD20Statistics,
   testUnarmedStrikeDieAttack,
   unitLibrary,
+  wizardVsSkeletonBattle,
+  skeletonId,
+  wizardId,
 } from "./battle-runtime.test-support.ts";
 import { combatantId } from "./identity.ts";
+import type { BattleTargetSpatialFact } from "./battle-state-execution.ts";
 import { BattleHoleSchema } from "./battle-reducer/battle-codecs.ts";
 import { spellTargetId } from "./unit-profile-admission-catalog.test-support.ts";
 import { relentlessEnduranceBattle } from "./unit-profile-admission-feature-fixture.test-support.ts";
@@ -61,6 +65,8 @@ import {
   offHandWeaponItemIdForActor,
   zeroHitPointReplacementChoices,
 } from "./battle-reducer/attack-damage-apply.ts";
+import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
+import { attackTargetDistanceFeet } from "./battle-reducer/attack-spatial.ts";
 import { applyHpDamage } from "./battle-reducer/damage-apply.ts";
 import {
   attackRollHole,
@@ -669,6 +675,116 @@ describe("battle runtime: attack pipeline boundaries", () => {
       ).toBe(expectedMode);
     },
   );
+
+  test("matches distance facts by the full bound selection identity in either order", () => {
+    type AttackTargetDistanceFact = Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "attackTargetDistance" }
+    >;
+    const characterState = fighterVsGoblinBattle();
+    const characterAttack = attackActionOptionsForActor(
+      characterState,
+      fighterId,
+    ).find((attack) => attack.kind === "weapon");
+    if (characterAttack === undefined || characterAttack.kind !== "weapon") {
+      throw new Error("Expected the bound fighter weapon attack.");
+    }
+    const characterSelection =
+      attackExecutionSelectionForOption(characterAttack);
+    const characterDistance: AttackTargetDistanceFact = {
+      kind: "attackTargetDistance",
+      actorId: fighterId,
+      targetId: goblinId,
+      ...characterSelection,
+      distanceFeet: movementFeet(5),
+    };
+    const conflictingCharacterAbility: AttackTargetDistanceFact = {
+      ...characterDistance,
+      attackAbility:
+        characterSelection.attackAbility === "dex"
+          ? ("str" as const)
+          : ("dex" as const),
+      distanceFeet: movementFeet(100),
+    };
+    const conflictingCharacterDamage: AttackTargetDistanceFact = {
+      ...characterDistance,
+      attackDamageType:
+        characterSelection.attackDamageType === "slashing"
+          ? ("piercing" as const)
+          : ("slashing" as const),
+      distanceFeet: movementFeet(100),
+    };
+
+    expect(
+      attackTargetDistanceFeet(
+        [
+          conflictingCharacterAbility,
+          conflictingCharacterDamage,
+          characterDistance,
+        ],
+        fighterId,
+        goblinId,
+        characterAttack,
+      ),
+    ).toEqual(movementFeet(5));
+    expect(
+      attackTargetDistanceFeet(
+        [
+          characterDistance,
+          conflictingCharacterDamage,
+          conflictingCharacterAbility,
+        ],
+        fighterId,
+        goblinId,
+        characterAttack,
+      ),
+    ).toEqual(movementFeet(5));
+
+    const statBlockState = wizardVsSkeletonBattle().state;
+    const statBlockAttack = attackActionOptionsForActor(
+      statBlockState,
+      skeletonId,
+    ).find((attack) => attack.kind === "statBlockAttack");
+    if (statBlockAttack?.kind !== "statBlockAttack") {
+      throw new Error("Expected a bound Stat Block attack.");
+    }
+    const statBlockSelection =
+      attackExecutionSelectionForOption(statBlockAttack);
+    const statBlockDistance: AttackTargetDistanceFact = {
+      kind: "attackTargetDistance",
+      actorId: skeletonId,
+      targetId: wizardId,
+      ...statBlockSelection,
+      distanceFeet: movementFeet(5),
+    };
+    const conflictingStatBlockNotation: AttackTargetDistanceFact =
+      statBlockAttack.damageNotation === "rolled"
+        ? {
+            ...statBlockDistance,
+            statBlockDamageNotation: "static" as const,
+            distanceFeet: movementFeet(100),
+          }
+        : {
+            ...statBlockDistance,
+            distanceFeet: movementFeet(100),
+          };
+    expect(
+      attackTargetDistanceFeet(
+        [conflictingStatBlockNotation, statBlockDistance],
+        skeletonId,
+        wizardId,
+        statBlockAttack,
+      ),
+    ).toEqual(movementFeet(5));
+    expect(
+      attackTargetDistanceFeet(
+        [statBlockDistance, conflictingStatBlockNotation],
+        skeletonId,
+        wizardId,
+        statBlockAttack,
+      ),
+    ).toEqual(movementFeet(5));
+  });
 
   test("composes Prone distance with other attack-roll sources", () => {
     const state = fighterVsGoblinBattle();

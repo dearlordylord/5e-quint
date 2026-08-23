@@ -405,6 +405,30 @@ describe("ammunition lifecycle", () => {
       targetId: wizardId,
       procedureRef: shortbow.procedureRef,
     };
+    const beyondLongRangeTargetSpatialFacts = {
+      ...targetSpatialFacts,
+      spatialFacts: [
+        attackTargetDistanceSpatialFact(
+          skeletonId,
+          wizardId,
+          attackSelection,
+          movementFeet(400),
+        ),
+      ],
+    };
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [beyondLongRangeTargetSpatialFacts],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: expect.stringContaining(
+        "outside the selected attack's legal range",
+      ),
+    });
     const rollRequest = resolveBattleSubject({
       state,
       subject,

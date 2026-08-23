@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
