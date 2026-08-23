@@ -371,7 +371,7 @@ type CompositeReviewLedgerSpec = Readonly<{
   readonly invocationId: string;
   readonly reviewStage: "milestone" | "final";
   readonly subject: CompositeReviewFixtureSubject;
-  readonly ledgerSchemaVersion?: 2 | 4;
+  readonly ledgerSchemaVersion?: 2 | 4 | 5;
   readonly scenarioQuality?: CompositeReviewScenarioQuality;
 }>;
 
@@ -428,9 +428,10 @@ function retainedGenerationReviewLedger(
   } as const;
   const eventPath = (invocationId: string) =>
     resolve(root, `${invocationId}.events.jsonl`);
-  const eventBytes = (review: CompositeReviewLedgerSpec): string =>
-    `${[
-      ...(review.ledgerSchemaVersion === 2
+  const eventBytes = (review: CompositeReviewLedgerSpec): string => {
+    const ledgerSchemaVersion = review.ledgerSchemaVersion ?? 5;
+    return `${[
+      ...(ledgerSchemaVersion === 2
         ? [
             {
               type: "raw-swarm.invocation.started",
@@ -448,7 +449,7 @@ function retainedGenerationReviewLedger(
         : [
             {
               type: "raw-swarm.invocation.started",
-              schemaVersion: 4,
+              schemaVersion: ledgerSchemaVersion,
               subject: review.subject,
               gitSha: common.gitSha,
               phase: "scenarioCompositeReview",
@@ -473,9 +474,10 @@ function retainedGenerationReviewLedger(
           }),
         },
       },
+      ...(ledgerSchemaVersion === 5 ? [{ type: "turn.completed" }] : []),
       {
         type: "raw-swarm.invocation.completed",
-        schemaVersion: review.ledgerSchemaVersion ?? 4,
+        schemaVersion: ledgerSchemaVersion,
         elapsedMilliseconds: common.elapsedMilliseconds,
         exit: common.exit,
         result: common.result,
@@ -483,6 +485,7 @@ function retainedGenerationReviewLedger(
     ]
       .map((value) => JSON.stringify(value))
       .join("\n")}\n`;
+  };
   for (const review of reviewEntries) {
     writeFileSync(eventPath(review.invocationId), eventBytes(review));
   }
@@ -498,14 +501,15 @@ function retainedGenerationReviewLedger(
         .digest("hex"),
       ...common,
     };
-    return review.ledgerSchemaVersion === 2
+    const ledgerSchemaVersion = review.ledgerSchemaVersion ?? 5;
+    return ledgerSchemaVersion === 2
       ? {
           schemaVersion: 2 as const,
           scenarioId: "findings-example" as const,
           ...commonReview,
         }
       : {
-          schemaVersion: 4 as const,
+          schemaVersion: ledgerSchemaVersion,
           subject: review.subject,
           ...commonReview,
         };

@@ -1,4 +1,5 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { EventEmitter } from "node:events";
 import {
   chmodSync,
   existsSync,
@@ -29,6 +30,7 @@ import {
   parseBenchmarkModelInvocationLedgerEntry,
   jsonModelInvocationLastMessageDecoder,
   readCodexEvents,
+  invocationEventsSha256,
   CurrentModelInvocationLedgerEntrySchema,
   CurrentModelInvocationLedgerEntryV4Schema,
   CurrentModelInvocationLedgerEntryV5Schema,
@@ -115,7 +117,10 @@ describe("Raw Swarm model invocation telemetry", () => {
         process: {
           tag: "timedOut",
           timeoutMilliseconds: 25,
-          termination: { tag: "confirmed", signal: "SIGTERM" },
+          termination: {
+            tag: "reaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGTERM" },
+          },
         },
       });
       const events = readCodexEvents(input.eventPath);
@@ -126,7 +131,10 @@ describe("Raw Swarm model invocation telemetry", () => {
           exit: {
             tag: "timedOut",
             timeoutMilliseconds: 25,
-            termination: { tag: "confirmed", signal: "SIGTERM" },
+            termination: {
+              tag: "reaped",
+              signalDelivery: { tag: "confirmed", signal: "SIGTERM" },
+            },
           },
           result: { tag: "failed" },
         });
@@ -140,7 +148,10 @@ describe("Raw Swarm model invocation telemetry", () => {
           exit: {
             tag: "timedOut",
             timeoutMilliseconds: 25,
-            termination: { tag: "confirmed", signal: "SIGTERM" },
+            termination: {
+              tag: "reaped",
+              signalDelivery: { tag: "confirmed", signal: "SIGTERM" },
+            },
           },
           result: { tag: "failed" },
         },
@@ -157,7 +168,7 @@ describe("Raw Swarm model invocation telemetry", () => {
     writeFileSync(
       codex,
       `#!/bin/sh
-exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_CHILD_PID, String(process.pid)); process.on("SIGTERM", () => {}); setInterval(() => {}, 10000)'
+exec ${process.execPath} -e 'process.on("SIGTERM", () => {}); require("node:fs").writeFileSync(process.env.RAW_CHILD_PID, String(process.pid)); setInterval(() => {}, 10000)'
 `,
     );
     chmodSync(codex, 0o755);
@@ -172,7 +183,10 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_CH
         process: {
           tag: "timedOut",
           timeoutMilliseconds: 25,
-          termination: { tag: "confirmed", signal: "SIGKILL" },
+          termination: {
+            tag: "reaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          },
         },
         cause: { tag: "process" },
       });
@@ -184,10 +198,58 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_CH
     }
   }, 10_000);
 
+  test("bounds a supervisor whose child never emits a settlement event", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-no-settlement-"));
+    let killCount = 0;
+    const child = Object.assign(new EventEmitter(), {
+      pid: undefined,
+      kill: () => {
+        killCount += 1;
+        return true;
+      },
+    });
+    const spawnProcess = (() => child) as typeof spawn;
+    try {
+      const input = fakeInvocationInput(root, 10);
+      const startedMilliseconds = Date.now();
+      const result = await runCodexInvocation({ ...input, spawnProcess });
+      expect(Date.now() - startedMilliseconds).toBeLessThan(1_000);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: {
+          tag: "timedOut",
+          termination: {
+            tag: "unreaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          },
+        },
+      });
+      expect(killCount).toBe(2);
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: {
+            tag: "timedOut",
+            termination: { tag: "unreaped" },
+          },
+          result: { tag: "failed" },
+        },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("retains a failed result when a child exits zero without creating output", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-missing-output-"));
     const codex = resolve(root, "codex");
-    writeFileSync(codex, "#!/bin/sh\nexit 0\n");
+    writeFileSync(
+      codex,
+      '#!/bin/sh\nprintf \'{"type":"turn.completed"}\\n\'\nexit 0\n',
+    );
     chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
@@ -232,7 +294,10 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_CH
   test("separates completion telemetry from a final JSON event without a newline", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-event-separator-"));
     const codex = resolve(root, "codex");
-    writeFileSync(codex, `#!/bin/sh\nprintf '{"type":"turn.started"}'\n`);
+    writeFileSync(
+      codex,
+      `#!/bin/sh\nprintf '{"type":"turn.started"}\n{"type":"turn.completed"}'\n`,
+    );
     chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
@@ -254,6 +319,7 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_CH
     writeFileSync(
       codex,
       `#!/bin/sh
+printf '{"type":"turn.completed"}\n'
 exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({result:"ready"}))'
 `,
     );
@@ -281,6 +347,9 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
           result: { tag: "succeeded" },
         },
       });
+      expect(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")).eventsSha256,
+      ).toBe(invocationEventsSha256(input.eventPath));
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -321,7 +390,7 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
         };
         writeFileSync(
           resolve(root, "codex"),
-          `#!/bin/sh\nexec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, process.env.RAW_OUTPUT_CONTENT)'\n`,
+          `#!/bin/sh\nprintf '{"type":"turn.completed"}\n'\nexec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, process.env.RAW_OUTPUT_CONTENT)'\n`,
         );
         chmodSync(resolve(root, "codex"), 0o755);
         const result = await runCodexInvocation(input);
@@ -399,7 +468,13 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
       exit: {
         tag: "timedOut" as const,
         timeoutMilliseconds: 25,
-        termination: { tag: "confirmed" as const, signal: "SIGKILL" as const },
+        termination: {
+          tag: "reaped" as const,
+          signalDelivery: {
+            tag: "confirmed" as const,
+            signal: "SIGKILL" as const,
+          },
+        },
       },
       result: { tag: "failed" as const, reason: "Synthetic timeout." },
     };
@@ -618,9 +693,21 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
         failureEvents,
       ),
     ).toEqual(
-      Either.left(
-        "Codex emitted a terminal failure event but exited successfully.",
-      ),
+      Either.right({
+        tag: "failed",
+        reason: "Synthetic service capacity is exhausted.",
+        failureKind: "codexEvent",
+      }),
+    );
+    expect(
+      modelInvocationResultFromCodexEvents({ tag: "exited", status: 0 }, []),
+    ).toEqual(
+      Either.right({
+        tag: "failed",
+        reason:
+          "Codex exited successfully without a first-party terminal turn event.",
+        failureKind: "codexEvent",
+      }),
     );
     expect(
       modelInvocationResultFromCodexEvents({ tag: "exited", status: 1 }, [
@@ -1142,6 +1229,70 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
     });
   });
 
+  test("requires positive first-party terminal evidence for v5 success", () => {
+    const started = {
+      type: "raw-swarm.invocation.started",
+      schemaVersion: 5,
+      subject: {
+        tag: "execution",
+        executionId: "execution",
+        evidenceSetId: "evidence",
+        scenarioId: "scenario",
+      },
+      gitSha: "a".repeat(40),
+      phase: "postPlayReview",
+      stagePlanReason: "The admitted plan requires post-play review.",
+      fallbackInvocationId: "fallback",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt: "2026-08-14T00:00:00.000Z",
+    } as const;
+    const completed = {
+      type: "raw-swarm.invocation.completed",
+      schemaVersion: 5,
+      elapsedMilliseconds: 10,
+      exit: { tag: "exited", status: 0 },
+      result: { tag: "succeeded" },
+    } as const;
+    expect(modelInvocationEvidenceFromEvents([started, completed])).toEqual({
+      tag: "invalid",
+      message:
+        "Successful v5 invocation evidence requires a first-party terminal turn event.",
+    });
+
+    const benchmarkStarted = {
+      type: "raw-swarm.invocation.started",
+      schemaVersion: 5,
+      profile: "documentDeclarationSet",
+      responsibility: "scenarioQuality",
+      phase: "scenarioReadiness",
+      scenarioId: "scenario",
+      gitSha: "a".repeat(40),
+      stagePlanReason: "The retained benchmark quality pass.",
+      fallbackInvocationId: "benchmark-fallback",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt: "2026-08-14T00:00:00.000Z",
+    } as const;
+    const benchmarkCompleted = {
+      type: "raw-swarm.invocation.completed",
+      schemaVersion: 5,
+      elapsedMilliseconds: 10,
+      exit: { tag: "exited", status: 0 },
+      result: { tag: "succeeded" },
+    } as const;
+    expect(
+      benchmarkModelInvocationEvidenceFromEvents([
+        benchmarkStarted,
+        benchmarkCompleted,
+      ]),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Successful v5 benchmark evidence requires a first-party terminal turn event.",
+    });
+  });
+
   test("binds v2 results to exited and shell status outcomes", () => {
     const success = {
       elapsedMilliseconds: 1,
@@ -1405,7 +1556,10 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
         exit: {
           tag: "timedOut",
           timeoutMilliseconds: 25,
-          termination: { tag: "confirmed", signal: "SIGKILL" },
+          termination: {
+            tag: "reaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          },
         },
         result: { tag: "failed", reason: "Synthetic timeout." },
       },
@@ -1417,7 +1571,10 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
         responsibility: "scenarioQuality",
         exit: {
           tag: "timedOut",
-          termination: { tag: "confirmed", signal: "SIGKILL" },
+          termination: {
+            tag: "reaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          },
         },
         result: { tag: "failed" },
       },

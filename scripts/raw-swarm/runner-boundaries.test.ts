@@ -95,15 +95,20 @@ describe("RAW swarm runner boundaries", () => {
 
   test("runs the instructionally read-only reviewer without nested sandboxing", () => {
     const script = readFileSync(reviewer, "utf8");
+    const telemetryCli = readFileSync(
+      resolve(repoRoot, "scripts/raw-swarm/model-telemetry-cli.ts"),
+      "utf8",
+    );
     const prompt = readFileSync(
       resolve(repoRoot, "scripts/raw-swarm/reviews/sdk-player.prompt.txt"),
       "utf8",
     );
 
-    expect(script).toContain("--sandbox danger-full-access");
+    expect(telemetryCli).toContain("--sandbox");
+    expect(telemetryCli).toContain("danger-full-access");
     expect(script).not.toContain("RAW_REVIEW_SANDBOX");
     expect(script).not.toContain("--iso-8601=milliseconds");
-    expect(script).toContain("new Date().toISOString()");
+    expect(script).not.toContain("new Date().toISOString()");
     expect(script).toContain("sdk-review-packet-cli.ts");
     expect(script).toContain("review-output-validation.ts");
     expect(script).toContain("review-invocation-policy.ts");
@@ -125,7 +130,8 @@ describe("RAW swarm runner boundaries", () => {
     expect(script).not.toContain("RAW_REVIEW_CONTEXT_READ_PLAN");
     expect(script).not.toContain("Read every listed contiguous range");
     expect(script).toContain("client-truncated");
-    expect(script).toContain("codex exec");
+    expect(script).toContain("model-telemetry-cli.ts");
+    expect(script).not.toContain("\ncodex exec");
     expect(script).toContain(
       "boundedCapabilityProjection) RAW_REVIEW_REASONING_EFFORT=medium",
     );
@@ -133,12 +139,9 @@ describe("RAW swarm runner boundaries", () => {
       'documentDeclarationSet|"") RAW_REVIEW_REASONING_EFFORT=max',
     );
     expect(script).toContain(
-      '-c "model_reasoning_effort=\\"$RAW_REVIEW_REASONING_EFFORT\\""',
-    );
-    expect(script).toContain(
       '--reasoning-effort "$RAW_REVIEW_REASONING_EFFORT"',
     );
-    expect(script.indexOf("model-telemetry-cli.ts")).toBeGreaterThan(
+    expect(script.indexOf("model-telemetry-cli.ts")).toBeLessThan(
       script.indexOf("review-invocation-policy.ts"),
     );
     expect(prompt).toContain("{{POST_PLAY_REVIEW_ACCESS_POLICY}}");
@@ -492,6 +495,9 @@ esac
     const fakePnpm = resolve(commandRoot, "pnpm");
     const fakeCodex = resolve(commandRoot, "codex");
     const fakeGit = resolve(commandRoot, "git");
+    const realPnpm = execFileSync("which", ["pnpm"], {
+      encoding: "utf8",
+    }).trim();
     writeFileSync(
       fakeGit,
       String.raw`#!/bin/sh
@@ -513,6 +519,7 @@ case "$*" in
   *sdk-audit-cli.ts\ build*) printf '%s\n' '{"scenarioId":"synthetic-review"}' > "$last" ;;
   *sdk-review-packet-cli.ts*) printf '%s\n' '{}' > "$last" ;;
   *review-schema.ts*) printf '%s\n' '{}' > "$last" ;;
+  *model-telemetry-cli.ts*) exec '${realPnpm}' "$@" ;;
   *) ;;
 esac
 `,
@@ -530,6 +537,7 @@ while [ "$#" -gt 0 ]; do
     shift
   fi
 done
+printf '%s\n' '{"type":"turn.completed"}'
 cat > "$RAW_REVIEW_CAPTURE"
 printf '%s' '{}' > "$output"
 `,
@@ -613,6 +621,9 @@ printf '%s' '{}' > "$output"
     const fakeGit = resolve(commandRoot, "git");
     const fakePnpm = resolve(commandRoot, "pnpm");
     const fakeCodex = resolve(commandRoot, "codex");
+    const realPnpm = execFileSync("which", ["pnpm"], {
+      encoding: "utf8",
+    }).trim();
     const contextSha = execFileSync("sha256sum", [contextPath], {
       encoding: "utf8",
     })
@@ -657,6 +668,7 @@ printf '%s' '{}' > "$output"
         '  *sdk-audit-cli.ts\\ build*) printf \'%s\\n\' \'{"scenarioId":"synthetic-review"}\' > "$last" ;;',
         "  *sdk-review-packet-cli.ts*) printf '%s\\n' '{}' > \"$last\" ;;",
         "  *review-schema.ts*) printf '%s\\n' '{}' > \"$last\" ;;",
+        `  *model-telemetry-cli.ts*) exec '${realPnpm}' "$@" ;;`,
         "  *) ;;",
         "esac",
         "",
@@ -677,6 +689,7 @@ printf '%s' '{}' > "$output"
         "  fi",
         "done",
         'cat > "$RAW_REVIEW_CAPTURE"',
+        "printf '%s\\n' '{\"type\":\"turn.completed\"}'",
         "printf '%s\\n' \"$RAW_REVIEW_CONTEXT_READ_EVENT\"",
         "printf '%s' '{}' > \"$output\"",
         "",
@@ -811,6 +824,7 @@ esac
         "    shift",
         "  fi",
         "done",
+        "printf '%s\\n' '{\"type\":\"turn.completed\"}'",
         'printf \'%s\\n\' \'{"type":"item.completed","item":{"type":"command_execution","command":"cat unrelated.txt","aggregated_output":"","exit_code":0,"status":"completed"}}\'',
         "printf '%s' '{}' > \"$output\"",
         "",
@@ -838,13 +852,14 @@ esac
       const telemetryCommand = readFileSync(pnpmCapturePath, "utf8")
         .split("\n")
         .find((line) => line.includes("model-telemetry-cli.ts"));
-      expect(telemetryCommand).toContain("--shell-status 1");
+      expect(telemetryCommand).toContain(" run ");
+      expect(telemetryCommand).not.toContain("--shell-status");
       const ledger = JSON.parse(readFileSync(ledgerPath, "utf8")) as {
         readonly exit: { readonly tag: string; readonly status?: number };
         readonly result: { readonly tag: string };
       };
-      expect(ledger.exit).toEqual({ tag: "shellStatus", status: 1 });
-      expect(ledger.result.tag).toBe("failed");
+      expect(ledger.exit).toEqual({ tag: "exited", status: 0 });
+      expect(ledger.result.tag).toBe("succeeded");
     } finally {
       rmSync(testRoot, { recursive: true, force: true });
       rmSync(commandRoot, { recursive: true, force: true });

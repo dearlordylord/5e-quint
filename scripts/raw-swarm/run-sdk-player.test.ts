@@ -45,8 +45,11 @@ describe("SDK player invocation lifecycle", () => {
         tag: "timedOut" as const,
         timeoutMilliseconds: 25,
         termination: {
-          tag: "confirmed" as const,
-          signal: "SIGKILL" as const,
+          tag: "reaped" as const,
+          signalDelivery: {
+            tag: "confirmed" as const,
+            signal: "SIGKILL" as const,
+          },
         },
       },
       cause: { tag: "process" as const, reason: "Codex timed out." },
