@@ -292,6 +292,62 @@ describe("scenario setup public-SDK boundary", () => {
       });
       expect(targetHole).not.toHaveProperty("requiresTableSpatialFact");
     }
+
+    const adjacentScenario = createScenarioSession({
+      battle: setup.session.battle,
+      spatial: {
+        kind: "geometryDerived",
+        arena: {
+          cells: Array.from({ length: 12 }, (_, x) => ({
+            x,
+            y: 0,
+            terrain: "ordinary" as const,
+          })),
+          boundaries: [],
+        },
+        placements: [
+          { tokenId: wolf, coordinate: { x: 0, y: 0 } },
+          { tokenId: hawk, coordinate: { x: 1, y: 0 } },
+          { tokenId: skeleton, coordinate: { x: 11, y: 0 } },
+        ],
+        spatialDecisions: [],
+      },
+      ambientIllumination: setup.session.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        setup.session.battlefield.statBlockDamageNotation,
+      environment: {
+        overhead: setup.session.battlefield.environment.overhead,
+        barrierHeights: [],
+      },
+      initialRangedAttackEnemyRelationships:
+        setup.session.battlefield.initialRangedAttackEnemyRelationships,
+      movementAllyRelationships:
+        setup.session.battlefield.movementAllyRelationships,
+      opportunityAttackEnemyRelationships:
+        setup.session.battlefield.opportunityAttackEnemyRelationships,
+      objects: setup.session.battlefield.objects,
+    });
+    expect(Either.isRight(adjacentScenario)).toBe(true);
+    if (Either.isLeft(adjacentScenario)) return;
+
+    const adjacentAttackActs = scenarioBattleActs(
+      adjacentScenario.right,
+    ).filter(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.actorId === wolf &&
+        subject.action === "attack",
+    );
+    for (const attackAct of adjacentAttackActs) {
+      const targetHole = attackAct.initialHoles.find(
+        (hole) => hole.kind === "targetChoice",
+      );
+      expect(targetHole).toMatchObject({
+        kind: "targetChoice",
+        choices: [hawk],
+      });
+      expect(targetHole).not.toHaveProperty("requiresTableSpatialFact");
+    }
   });
 
   test("binds the issue 279 Table decision to the Wolf's exact first attack-roll test", async () => {

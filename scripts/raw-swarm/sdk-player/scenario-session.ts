@@ -12,6 +12,7 @@ import type {
   BattleOpportunityAttackThreat,
   BattleFill,
   BattleHole,
+  BattleTargetChoiceHole,
   BattleMovementSpeedKind,
   BattleProcedureExecutionRef,
   BattleReadyResponse,
@@ -425,20 +426,13 @@ export function projectGeometryAttackTargetHoles(input: {
     }
     const attack = hole.attack;
     const choices = hole.choices.filter((targetId) => {
-      const relation = scenarioRelationForSpatialQuestion(input.session, {
-        kind: "attackTarget",
-        actorId: attack.actorId,
+      const eligibility = scenarioAttackTargetEligibility({
+        session: input.session,
+        attack,
         targetId,
-        sourceProcedureRef: attack.selection.procedureRef,
-        targetConstraint: attack.targetConstraint.kind,
       });
-      if (relation.tag !== "relation") return false;
-      return Either.isRight(
-        scenarioAttackRange({
-          constraint: attack.targetConstraint,
-          distanceFeet: Number(relation.relation.distanceFeet),
-          targetLabel: "Target",
-        }),
+      return (
+        Either.isRight(eligibility) && eligibility.right.tag === "eligible"
       );
     });
     const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
@@ -2567,6 +2561,56 @@ function scenarioAttackRange(input: {
   );
 }
 
+type ScenarioAttackTargetEligibility =
+  | Readonly<{
+      readonly tag: "eligible";
+      readonly relation: ScenarioSpatialRelation;
+      readonly range: ScenarioAttackRange;
+    }>
+  | Readonly<{
+      readonly tag: "out-of-range";
+      readonly message: string;
+    }>;
+
+function scenarioAttackTargetEligibility(input: {
+  readonly session: ScenarioSession;
+  readonly attack: NonNullable<BattleTargetChoiceHole["attack"]>;
+  readonly targetId: CombatantId;
+}): Either.Either<
+  ScenarioAttackTargetEligibility,
+  ScenarioAttackTargetProjectionIssue
+> {
+  const relation = scenarioRelationForSpatialQuestion(input.session, {
+    kind: "attackTarget",
+    actorId: input.attack.actorId,
+    targetId: input.targetId,
+    sourceProcedureRef: input.attack.selection.procedureRef,
+    targetConstraint: input.attack.targetConstraint.kind,
+  });
+  if (relation.tag !== "relation") {
+    return Either.left({
+      tag: "attack-target-projection",
+      message: relation.message,
+    });
+  }
+  const range = scenarioAttackRange({
+    constraint: input.attack.targetConstraint,
+    distanceFeet: Number(relation.relation.distanceFeet),
+    targetLabel: "Target",
+  });
+  if (Either.isLeft(range)) {
+    return Either.right({
+      tag: "out-of-range",
+      message: range.left,
+    });
+  }
+  return Either.right({
+    tag: "eligible",
+    relation: relation.relation,
+    range: range.right,
+  });
+}
+
 export function scenarioAttackTargetFills(input: {
   readonly session: ScenarioSession;
   readonly subject: BattleSubject;
@@ -2597,32 +2641,25 @@ export function scenarioAttackTargetFills(input: {
       continue;
     }
     const attack = targetHole.attack;
-    const relation = scenarioRelationForSpatialQuestion(input.session, {
-      kind: "attackTarget",
-      actorId: attack.actorId,
+    const eligibility = scenarioAttackTargetEligibility({
+      session: input.session,
+      attack,
       targetId: fill.value,
-      sourceProcedureRef: attack.selection.procedureRef,
-      targetConstraint: attack.targetConstraint.kind,
     });
-    if (relation.tag !== "relation") {
+    if (Either.isLeft(eligibility)) {
       return Either.left({
         tag: "attack-target-projection",
-        message: relation.message,
+        message: eligibility.left.message,
       });
     }
-    const distanceFeet = Number(relation.relation.distanceFeet);
-    const range = scenarioAttackRange({
-      constraint: attack.targetConstraint,
-      distanceFeet,
-      targetLabel: "Target",
-    });
-    if (Either.isLeft(range)) {
+    if (eligibility.right.tag === "out-of-range") {
       return Either.left({
         tag: "attack-target-projection",
-        message: range.left,
+        message: eligibility.right.message,
       });
     }
-    const rangeFact = Match.value(range.right).pipe(
+    const { relation, range } = eligibility.right;
+    const rangeFact = Match.value(range).pipe(
       Match.when({ kind: "meleeReach" }, () => ({
         kind: "attackTargetInMeleeReach" as const,
         actorId: attack.actorId,
@@ -2638,7 +2675,7 @@ export function scenarioAttackTargetFills(input: {
       })),
       Match.exhaustive,
     );
-    const canonicalSightFact = relation.relation.attackerCanSeeTarget
+    const canonicalSightFact = relation.attackerCanSeeTarget
       ? undefined
       : {
           kind: "attackAttackerCannotSeeTarget" as const,
