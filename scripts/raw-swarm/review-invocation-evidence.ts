@@ -148,28 +148,39 @@ type RetainedReviewInputArtifact = Readonly<{
   readonly authority: ArtifactAuthority;
 }>;
 
+function readRetainedReviewBytes(
+  path: string,
+  expectedStage: "milestone" | "final",
+): Either.Either<Buffer, string> {
+  const canonicalPath = canonicalRepositoryReadPath(repoRoot, path);
+  if (Either.isLeft(canonicalPath)) return Either.left(canonicalPath.left);
+  try {
+    return Either.right(readFileSync(canonicalPath.right));
+  } catch {
+    return Either.left(`Retained ${expectedStage} review input is unreadable.`);
+  }
+}
+
 function retainedReviewInputArtifact(
   path: string,
   expectedStage: "milestone" | "final",
 ): RetainedReviewInputArtifact {
-  const canonicalPath = canonicalRepositoryReadPath(repoRoot, path);
-  if (Either.isLeft(canonicalPath)) fail(canonicalPath.left);
-  let bytes: Buffer;
-  try {
-    bytes = readFileSync(canonicalPath.right);
-  } catch {
-    fail(`Retained ${expectedStage} review input is unreadable.`);
-  }
-  let value: unknown;
-  try {
-    value = JSON.parse(bytes.toString("utf8"));
-  } catch {
-    fail(`Retained ${expectedStage} review input is malformed JSON.`);
-  }
+  const bytes = readRetainedReviewBytes(path, expectedStage);
+  if (Either.isLeft(bytes)) fail(bytes.left);
+  const value: Either.Either<unknown, string> = (() => {
+    try {
+      return Either.right(JSON.parse(bytes.right.toString("utf8")) as unknown);
+    } catch {
+      return Either.left(
+        `Retained ${expectedStage} review input is malformed JSON.`,
+      );
+    }
+  })();
+  if (Either.isLeft(value)) fail(value.left);
   const decoded = Schema.decodeUnknownEither(
     RetainedScenarioReviewInputSchema,
     { onExcessProperty: "error" },
-  )(value);
+  )(value.right);
   if (Either.isLeft(decoded)) {
     fail(
       `Retained ${expectedStage} review input is invalid: ${decoded.left.message}`,
@@ -182,7 +193,7 @@ function retainedReviewInputArtifact(
   if (Either.isLeft(repositoryPath)) fail(repositoryPath.left);
   return {
     input: decoded.right,
-    authority: artifactAuthorityForBytes(repositoryPath.right, bytes),
+    authority: artifactAuthorityForBytes(repositoryPath.right, bytes.right),
   };
 }
 

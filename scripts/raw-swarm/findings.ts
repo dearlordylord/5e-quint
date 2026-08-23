@@ -263,12 +263,23 @@ export type FindingsProjectionInput = {
   readonly issueLinks: readonly FindingIssueLink[];
 };
 
-export type Source = {
-  readonly role: string;
-  readonly path: string;
-  /** Authority derived from the exact bytes already parsed at a replay boundary. */
-  readonly authority?: FindingAuthority;
-};
+type ParsedSourceAuthority = Readonly<
+  Pick<FindingAuthority, "byteLength" | "sha256">
+>;
+
+export type Source =
+  | Readonly<{
+      readonly tag: "unresolved";
+      readonly role: string;
+      readonly path: string;
+    }>
+  | Readonly<{
+      readonly tag: "parsed";
+      readonly role: string;
+      readonly path: string;
+      /** Hash metadata derived from the bytes parsed for this source. */
+      readonly authority: ParsedSourceAuthority;
+    }>;
 
 type ParsedRun = {
   readonly scenarioId: ScenarioId;
@@ -353,12 +364,15 @@ function boundedText(value: string): string {
 
 export function authorityFor(source: Source): FindingAuthority {
   const canonical = sourcePath(source.path);
-  if (
-    source.authority !== undefined &&
-    source.authority.path === canonical &&
-    source.authority.role === source.role
-  ) {
-    return source.authority;
+  if (source.tag === "parsed") {
+    if (source.path !== canonical) {
+      fail(`Parsed finding authority path is not canonical: ${source.path}`);
+    }
+    return {
+      role: source.role,
+      path: canonical,
+      ...source.authority,
+    };
   }
   const authorityPath = canonicalRepositoryReadPath(repoRoot, canonical);
   if (Either.isLeft(authorityPath)) {
@@ -370,6 +384,36 @@ export function authorityFor(source: Source): FindingAuthority {
     path: canonical,
     byteLength: bytes.byteLength,
     sha256: createHash("sha256").update(bytes).digest("hex"),
+  };
+}
+
+export function unresolvedSource(input: {
+  readonly role: string;
+  readonly path: string;
+}): Source {
+  return {
+    tag: "unresolved",
+    role: input.role,
+    path: sourcePath(input.path),
+  };
+}
+
+function sourceWithAuthority(
+  source: Source,
+  authority: FindingAuthority,
+): Source {
+  const canonical = sourcePath(source.path);
+  if (authority.role !== source.role || authority.path !== canonical) {
+    fail(`Parsed finding authority does not match source ${canonical}.`);
+  }
+  return {
+    tag: "parsed",
+    role: source.role,
+    path: canonical,
+    authority: {
+      byteLength: authority.byteLength,
+      sha256: authority.sha256,
+    },
   };
 }
 
@@ -439,7 +483,7 @@ export function addSource(
   if (!existsSync(resolve(repoRoot, canonical))) return undefined;
   const role = authorityRoleFor(sources, canonical, preferredRole);
   if (!sources.some((source) => source.path === canonical)) {
-    sources.push({ role, path: canonical });
+    sources.push({ tag: "unresolved", role, path: canonical });
   }
   return role;
 }
@@ -458,26 +502,34 @@ type RetainedScenarioReviewInputRead = Readonly<{
   readonly authority: Omit<FindingAuthority, "role">;
 }>;
 
+function readSourceBytes(path: string): Either.Either<Buffer, string> {
+  try {
+    return Either.right(readFileSync(resolve(repoRoot, path)));
+  } catch {
+    return Either.left(`Finding source ${path} is unreadable.`);
+  }
+}
+
 function readRetainedScenarioReviewInputOnce(
   path: string,
 ): Either.Either<RetainedScenarioReviewInputRead, string> {
   const canonical = sourcePath(path);
-  let bytes: Buffer;
-  try {
-    bytes = readFileSync(resolve(repoRoot, canonical));
-  } catch {
+  const bytes = readSourceBytes(canonical);
+  if (Either.isLeft(bytes)) {
     return Either.left(`Review replay input ${canonical} is unreadable.`);
   }
-  let value: unknown;
-  try {
-    value = JSON.parse(bytes.toString("utf8"));
-  } catch {
-    return Either.left(`Review replay input ${canonical} is invalid JSON.`);
-  }
+  const value: Either.Either<unknown, string> = (() => {
+    try {
+      return Either.right(JSON.parse(bytes.right.toString("utf8")) as unknown);
+    } catch {
+      return Either.left(`Review replay input ${canonical} is invalid JSON.`);
+    }
+  })();
+  if (Either.isLeft(value)) return Either.left(value.left);
   const decoded = Schema.decodeUnknownEither(
     RetainedScenarioReviewInputSchema,
     { onExcessProperty: "error" },
-  )(value);
+  )(value.right);
   if (Either.isLeft(decoded)) {
     return Either.left(
       `Review replay input ${canonical} is invalid: ${decoded.left.message}`,
@@ -485,7 +537,7 @@ function readRetainedScenarioReviewInputOnce(
   }
   return Either.right({
     input: decoded.right,
-    authority: artifactAuthorityForBytes(canonical, bytes),
+    authority: artifactAuthorityForBytes(canonical, bytes.right),
   });
 }
 
@@ -1393,10 +1445,10 @@ function originalCompositeReviewInputs(
       (source) => source.path === eventPath,
     );
     if (eventSourceIndex >= 0) {
-      sources[eventSourceIndex] = {
-        ...sources[eventSourceIndex]!,
-        authority: eventAuthority,
-      };
+      sources[eventSourceIndex] = sourceWithAuthority(
+        sources[eventSourceIndex]!,
+        eventAuthority,
+      );
     }
     validateRetainedScenarioReviewInvocation({
       binding: binding.right,
@@ -1431,10 +1483,10 @@ function originalCompositeReviewInputs(
       ...retained.right.authority,
     } satisfies FindingAuthority;
     if (sourceIndex >= 0) {
-      sources[sourceIndex] = {
-        ...sources[sourceIndex]!,
-        authority: replayAuthority,
-      };
+      sources[sourceIndex] = sourceWithAuthority(
+        sources[sourceIndex]!,
+        replayAuthority,
+      );
     }
   }
 }
@@ -1887,8 +1939,8 @@ export function projectExecutionFindings(
     fail("Execution start authority does not match the transcript identity.");
   }
   const sources: Source[] = [
-    { role: "transcript", path: transcriptPath },
-    { role: "executionStart", path: executionStartPath },
+    unresolvedSource({ role: "transcript", path: transcriptPath }),
+    unresolvedSource({ role: "executionStart", path: executionStartPath }),
   ];
   const sourceFindings: Finding[] = [];
 
@@ -1968,7 +2020,8 @@ export function projectExecutionFindings(
     );
   }
   const scenarioAuthoritySha256 = scenarioExists
-    ? authorityFor({ role: "scenario", path: scenarioPath }).sha256
+    ? authorityFor(unresolvedSource({ role: "scenario", path: scenarioPath }))
+        .sha256
     : undefined;
   if (
     parsed.scenarioSha256 !== undefined &&
@@ -2084,10 +2137,12 @@ export function projectExecutionFindings(
     if (addedRole === undefined) continue;
     if (candidate.kind === "observations") {
       sourceFindings.push(
-        ...findingsFromObservationSource({
-          role: addedRole,
-          path: sourcePath(`${evidenceSetDirectory}/${candidate.suffix}`),
-        }),
+        ...findingsFromObservationSource(
+          unresolvedSource({
+            role: addedRole,
+            path: sourcePath(`${evidenceSetDirectory}/${candidate.suffix}`),
+          }),
+        ),
       );
     } else if (candidate.kind === "stagePlanFindings") {
       if (
@@ -2100,10 +2155,10 @@ export function projectExecutionFindings(
       }
       sourceFindings.push(
         ...findingsFromStagePlanSource(
-          {
+          unresolvedSource({
             role: addedRole,
             path: sourcePath(`${evidenceSetDirectory}/${candidate.suffix}`),
-          },
+          }),
           {
             tag: "admitted",
             scenarioId: parsed.scenarioId,
@@ -2123,10 +2178,10 @@ export function projectExecutionFindings(
       );
     } else if (candidate.kind === "replayResult") {
       validateReplayResultSource({
-        source: {
+        source: unresolvedSource({
           role: addedRole,
           path: sourcePath(`${evidenceSetDirectory}/${candidate.suffix}`),
-        },
+        }),
         replaySupervisor: sources.find(
           (source) => source.role === "replaySupervisor",
         ),
@@ -2244,7 +2299,7 @@ export function projectExecutionFindings(
     )!;
     sourceFindings.push(
       ...findingsFromGenerationLedger(
-        { role, path: canonical },
+        unresolvedSource({ role, path: canonical }),
         {
           scenarioId: parsed.scenarioId,
           owner: expectedGenerationOwner,
@@ -2284,10 +2339,12 @@ export function projectExecutionFindings(
       );
       if (role !== undefined) {
         sourceFindings.push(
-          ...findingsFromPlayerEventSource({
-            role,
-            path: sourcePath(`${evidenceSetDirectory}/evidence/${name}`),
-          }),
+          ...findingsFromPlayerEventSource(
+            unresolvedSource({
+              role,
+              path: sourcePath(`${evidenceSetDirectory}/evidence/${name}`),
+            }),
+          ),
         );
       }
     }
@@ -2362,12 +2419,12 @@ export function writeFindingsProjection(input: {
       sha256Canonical(validation.projection) ===
         sha256Canonical(input.projection)
     ) {
-      return authorityFor({ role: "findings", path });
+      return authorityFor(unresolvedSource({ role: "findings", path }));
     }
     fail(`Refusing to overwrite a different findings artifact: ${path}`);
   }
   writeFileSync(absolute, encoded, { flag: "wx" });
-  return authorityFor({ role: "findings", path });
+  return authorityFor(unresolvedSource({ role: "findings", path }));
 }
 
 export function readFindingsProjection(path: string): FindingsProjection {

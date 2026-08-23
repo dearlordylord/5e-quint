@@ -2585,70 +2585,66 @@ async function runCodexProcess<A, E extends object>(input: {
       const analysis = Either.isLeft(codexEventAnalysis)
         ? codexEventDecodeFailure(codexEventAnalysis.left)
         : codexEventAnalysis.right;
-      let lifecycle = invocationLifecycleFromProcess({
-        process: processOutcome,
-        codexEventAnalysis: analysis,
-        operation: input.operation,
-        ...(typeof outputClaim === "string" || outputClaim === undefined
-          ? {}
-          : { expectedOutputClaimToken: outputClaim.token }),
-      });
-      let result = modelInvocationResultFromLifecycle(
-        lifecycle,
-        analysis.result,
-      );
-      const completedEvent = input.completionEvent({
-        elapsedMilliseconds: Date.now() - input.startedMilliseconds,
-        exit,
-        result,
-      });
-      if (Either.isLeft(completedEvent)) {
-        throw new Error(
-          `${input.completionErrorPrefix}: ${completedEvent.left.message}`,
-        );
-      }
-      let completed = completedEvent.right;
-      let evidence = input.evidenceFromEvents([...events, completed]);
-      if (evidence.tag === "invalid") {
-        const fallbackAnalysis = codexEventDecodeFailure(evidence.message);
-        lifecycle = invocationLifecycleFromProcess({
+      const expectedOutputClaimToken =
+        outputClaim === undefined || typeof outputClaim === "string"
+          ? undefined
+          : outputClaim.token;
+      const completedForAnalysis = (codexEventAnalysis: CodexEventAnalysis) => {
+        const lifecycle = invocationLifecycleFromProcess({
           process: processOutcome,
-          codexEventAnalysis: fallbackAnalysis,
+          codexEventAnalysis,
           operation: input.operation,
-          ...(typeof outputClaim === "string" || outputClaim === undefined
+          ...(expectedOutputClaimToken === undefined
             ? {}
-            : { expectedOutputClaimToken: outputClaim.token }),
+            : { expectedOutputClaimToken }),
         });
-        result = modelInvocationResultFromLifecycle(
+        const result = modelInvocationResultFromLifecycle(
           lifecycle,
-          fallbackAnalysis.result,
+          codexEventAnalysis.result,
         );
-        const fallbackCompletedEvent = input.completionEvent({
+        const completedEvent = input.completionEvent({
           elapsedMilliseconds: Date.now() - input.startedMilliseconds,
           exit,
           result,
         });
-        if (Either.isLeft(fallbackCompletedEvent)) {
+        if (Either.isLeft(completedEvent)) {
           throw new Error(
-            `${input.completionErrorPrefix}: ${fallbackCompletedEvent.left.message}`,
+            `${input.completionErrorPrefix}: ${completedEvent.left.message}`,
           );
         }
-        completed = fallbackCompletedEvent.right;
-        evidence = input.evidenceFromEvents([input.startedEvent, completed]);
-      }
-      if (evidence.tag === "invalid") {
-        throw new Error(evidence.message);
-      }
+        return { lifecycle, completed: completedEvent.right };
+      };
+      const initialCompletion = completedForAnalysis(analysis);
+      const finalized = (() => {
+        const evidence = input.evidenceFromEvents([
+          ...events,
+          initialCompletion.completed,
+        ]);
+        if (evidence.tag === "valid") {
+          return { ...initialCompletion, evidence: evidence.entry };
+        }
+        const fallbackCompletion = completedForAnalysis(
+          codexEventDecodeFailure(evidence.message),
+        );
+        const fallbackEvidence = input.evidenceFromEvents([
+          input.startedEvent,
+          fallbackCompletion.completed,
+        ]);
+        if (fallbackEvidence.tag === "invalid") {
+          throw new Error(fallbackEvidence.message);
+        }
+        return { ...fallbackCompletion, evidence: fallbackEvidence.entry };
+      })();
       const completionSeparator =
         retainedEvents.rawContents.length === 0 ||
         retainedEvents.rawContents.at(-1) === 0x0a
           ? ""
           : "\n";
-      const completionLine = `${completionSeparator}${JSON.stringify(completed)}\n`;
+      const completionLine = `${completionSeparator}${JSON.stringify(finalized.completed)}\n`;
       writeSync(eventFd, completionLine);
       return {
-        lifecycle,
-        evidence: evidence.entry,
+        lifecycle: finalized.lifecycle,
+        evidence: finalized.evidence,
         eventsSha256: createHash("sha256")
           .update(retainedEvents.rawContents)
           .update(completionLine)

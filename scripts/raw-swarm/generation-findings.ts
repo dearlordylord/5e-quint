@@ -14,6 +14,7 @@ import {
   pointerForSource,
   readSourceRecord,
   sourcePath,
+  unresolvedSource,
   validateFindingsProjection,
   RAW_SWARM_FINDINGS_SCHEMA_VERSION,
   type Finding,
@@ -320,7 +321,9 @@ export function projectGenerationFindings(
         scenarioId: admittedScenarioIdentity(manifestIdentity),
         gitSha: authoredIdentity.gitSha,
         scenarioSha256: authorityFor(scenarioSource).sha256,
-        scenarioReviewSha256: authorityFor({ role, path: canonical }).sha256,
+        scenarioReviewSha256: authorityFor(
+          unresolvedSource({ role, path: canonical }),
+        ).sha256,
       };
       sourceFindingsFromScenarioReview(
         canonical,
@@ -340,7 +343,7 @@ export function projectGenerationFindings(
     if (role !== undefined) {
       sourceFindings.push(
         ...findingsFromGenerationLedger(
-          { role, path: canonical },
+          unresolvedSource({ role, path: canonical }),
           {
             scenarioId: authoredIdentity.scenarioId,
             gitSha: authoredIdentity.gitSha,
@@ -544,7 +547,7 @@ export function projectGenerationFindings(
       }
       sourceFindings.push(
         ...findingsFromStagePlanSource(
-          { role, path: canonical },
+          unresolvedSource({ role, path: canonical }),
           retainedPlan.identity,
         ),
       );

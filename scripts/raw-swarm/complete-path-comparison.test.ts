@@ -2784,6 +2784,34 @@ describe("complete Raw Swarm path comparison", () => {
     });
   });
 
+  test("rejects a mutated current invocation event authority", () => {
+    const source = measurement();
+    const authority = source.invocationEvents[0];
+    if (authority === undefined) throw new Error("Missing invocation event.");
+    const path = resolve(repoRoot, authority.path);
+    writeFileSync(path, `${readFileSync(path, "utf8")}\n{"tampered":true}\n`);
+    const validation = validateCompletePathMeasurement(source);
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("event authority hash is not canonical"),
+    });
+  });
+
+  test("rejects a mutated benchmark invocation event authority", () => {
+    const source = benchmarkMeasurement("boundedCapabilityProjection");
+    const authority = source.invocationEvents[0];
+    if (authority === undefined) throw new Error("Missing invocation event.");
+    const path = resolve(repoRoot, authority.path);
+    writeFileSync(path, `${readFileSync(path, "utf8")}\n{"tampered":true}\n`);
+    const validation = validateCompletePathMeasurement(source);
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining(
+        "Benchmark invocation event authority hash is not canonical",
+      ),
+    });
+  });
+
   test("keeps historical baseline review fields separate from readiness and rejects readiness on the bounded profile", () => {
     const baseline = benchmarkMeasurement("documentDeclarationSet");
     const baselineReplay = baseline.findings.authorities.find(

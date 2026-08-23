@@ -15,10 +15,12 @@ import { Either, Schema } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
+  authorityFor,
   findingsFromGenerationLedger,
   projectExecutionFindings,
   readFindingsProjection,
   makeFinding,
+  unresolvedSource,
   validateFindingsProjection,
   writeFindingsProjection,
 } from "./findings.ts";
@@ -722,6 +724,28 @@ function reportCommand(args: readonly string[]): string {
 }
 
 describe("Raw Swarm findings projection", () => {
+  test("retains parsed source authority instead of rereading mutated bytes", () => {
+    const root = directory();
+    const path = resolve(root, "cached-authority.json");
+    writeFileSync(path, '{"value":"before"}\n');
+    const unresolved = unresolvedSource({
+      role: "replay-final",
+      path: relative(repoRoot, path),
+    });
+    const original = authorityFor(unresolved);
+    const parsed = {
+      tag: "parsed" as const,
+      role: original.role,
+      path: original.path,
+      authority: {
+        byteLength: original.byteLength,
+        sha256: original.sha256,
+      },
+    };
+    writeFileSync(path, '{"value":"after"}\n');
+    expect(authorityFor(parsed)).toEqual(original);
+  });
+
   test("projects a zero-exit invalid last message as a generation invocation failure", () => {
     const root = directory();
     const ledgerPath = retainedGenerationReviewLedger(root);
