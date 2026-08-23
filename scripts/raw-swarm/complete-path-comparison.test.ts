@@ -3302,6 +3302,115 @@ describe("complete Raw Swarm path comparison", () => {
     expect(malformed.left).toContain("Findings authority");
   });
 
+  test("retains a revised Candidate milestone while final replay binds admission", () => {
+    const source = measurement();
+    if (source.stagePlan.identity.tag !== "admitted")
+      throw new Error("Synthetic stage plan is not admitted.");
+    const root = resolve(repoRoot, source.stagePlanAuthority.path, "..");
+    const milestone = source.invocations.find(
+      ({ invocationId }) => invocationId === "composite-milestone",
+    );
+    const final = source.invocations.find(
+      ({ invocationId }) => invocationId === "composite-final",
+    );
+    if (
+      milestone === undefined ||
+      final === undefined ||
+      milestone.subject.tag !== "scenarioCandidate" ||
+      final.subject.tag !== "scenarioCandidate"
+    ) {
+      throw new Error("Synthetic composite-review invocations are incomplete.");
+    }
+    const milestoneSubject = {
+      ...milestone.subject,
+      candidateScenarioSha256: "b".repeat(64),
+    };
+    const finalSubject = {
+      ...final.subject,
+      candidateScenarioSha256: source.stagePlan.identity.scenarioSha256,
+    };
+    const revisedEntries = source.invocations.map((entry) =>
+      entry.invocationId === milestone.invocationId
+        ? { ...entry, subject: milestoneSubject }
+        : entry.invocationId === final.invocationId
+          ? { ...entry, subject: finalSubject }
+          : entry,
+    );
+    const retained = revisedEntries.map((entry) =>
+      retainInvocation(root, entry),
+    );
+    const retainedMilestone = retained.find(
+      ({ entry }) => entry.invocationId === milestone.invocationId,
+    );
+    const retainedFinal = retained.find(
+      ({ entry }) => entry.invocationId === final.invocationId,
+    );
+    if (retainedMilestone === undefined || retainedFinal === undefined) {
+      throw new Error("Synthetic revised invocation evidence is incomplete.");
+    }
+    const invocationLedger = writeAuthority(
+      root,
+      "revised-invocations.jsonl",
+      `${retained.map(({ entry }) => JSON.stringify(entry)).join("\n")}\n`,
+    );
+    const replayInput = (
+      reviewStage: "milestone" | "final",
+      invocationId: string,
+      subject: typeof milestoneSubject,
+    ) => ({
+      schemaVersion: 3 as const,
+      phase: "scenarioCompositeReview" as const,
+      reviewStage,
+      subject,
+      sourceGitSha: gitSha,
+      invocationId,
+      model: "gpt-5.6-luna" as const,
+      reasoningEffort: "max" as const,
+      prompt: `Synthetic ${reviewStage} review prompt.`,
+      outputJsonSchema: codexOutputJsonSchema(
+        CurrentScenarioCompositeReviewSchema,
+      ),
+      result: syntheticCompositeReview(),
+    });
+    const replayMilestone = writeAuthority(
+      root,
+      "revised-replay-milestone.json",
+      `${JSON.stringify(replayInput("milestone", milestone.invocationId, milestoneSubject))}\n`,
+    );
+    const replayFinal = writeAuthority(
+      root,
+      "revised-replay-final.json",
+      `${JSON.stringify(replayInput("final", final.invocationId, finalSubject))}\n`,
+    );
+    const replayAuthorityReplacements = new Map([
+      ["replay-milestone", replayMilestone],
+      ["replay-final", replayFinal],
+      ["prePlayReviewReplayEvents-milestone", retainedMilestone.authority],
+      ["prePlayReviewReplayEvents-final", retainedFinal.authority],
+    ]);
+    const revisedFindings = {
+      ...source.findings,
+      authorities: source.findings.authorities.map((authority) => {
+        const replacement = replayAuthorityReplacements.get(authority.role);
+        return replacement === undefined
+          ? authority
+          : { role: authority.role, ...replacement };
+      }),
+    };
+    const revised = withRetainedFindings(
+      {
+        ...source,
+        invocationLedgers: [invocationLedger],
+        invocations: retained.map(({ entry }) => entry),
+        invocationEvents: retained.map(({ authority }) => authority),
+      },
+      revisedFindings,
+    );
+
+    const validation = validateCompletePathMeasurement(revised);
+    expect(Either.isRight(validation)).toBe(true);
+  });
+
   test("assembles and writes a current measurement from canonical authorities", () => {
     const source = measurement();
     const sourceRoot = resolve(repoRoot, source.stagePlanAuthority.path, "..");

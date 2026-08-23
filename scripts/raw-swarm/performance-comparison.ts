@@ -3312,15 +3312,17 @@ function currentAuthorityContentIssues(
       continue;
     }
     const replay = decoded.right;
-    const replayAdmission = retainedScenarioReviewMatchesAdmission(replay, {
-      scenarioId: findings.subject.scenarioId,
-      scenarioSha256: expectedScenarioSha256,
-    });
-    if (Either.isLeft(replayAdmission)) {
-      issues.push(
-        `Replay authority ${authority.role} is not bound to the admitted Scenario identity: ${replayAdmission.left}`,
-      );
-      continue;
+    if (replay.reviewStage === "final") {
+      const replayAdmission = retainedScenarioReviewMatchesAdmission(replay, {
+        scenarioId: findings.subject.scenarioId,
+        scenarioSha256: expectedScenarioSha256,
+      });
+      if (Either.isLeft(replayAdmission)) {
+        issues.push(
+          `Replay authority ${authority.role} is not bound to the admitted Scenario identity: ${replayAdmission.left}`,
+        );
+        continue;
+      }
     }
     const currentResult = Schema.decodeUnknownEither(
       CurrentScenarioCompositeReviewSchema,
