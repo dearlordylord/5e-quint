@@ -58,6 +58,7 @@ import {
   type MovementFeet,
 } from "../../../packages/shared/src/types.ts";
 import {
+  CELL_SIZE_FEET,
   arenaSnapshot,
   createState,
   interveningTokens,
@@ -2340,14 +2341,22 @@ type ScenarioTableSpatialFactQuestion = Extract<
   | { readonly kind: "helpAttackTarget" }
 >;
 
-const SCENARIO_GRAPPLE_SHOVE_REACH_FEET = 5;
-const SCENARIO_SHAKE_AWAKE_TARGET_ADJACENCY_FEET = 5;
-const SCENARIO_HELP_ATTACK_ADJACENCY_FEET = 5;
-const SCENARIO_RANGED_ENEMY_PROXIMITY_FEET = 5;
+type ScenarioTableSpatialFactQuestionForSubject = Extract<
+  ScenarioTableSpatialFactQuestion,
+  | { readonly kind: "grappleTarget" }
+  | { readonly kind: "shoveTarget" }
+  | { readonly kind: "sleepShakeAwakeTarget" }
+  | { readonly kind: "hypnoticPatternShakeAwakeTarget" }
+>;
+
+const SCENARIO_GRAPPLE_SHOVE_REACH_FEET: DistanceFeet = CELL_SIZE_FEET;
+const SCENARIO_SHAKE_AWAKE_TARGET_ADJACENCY_FEET: DistanceFeet = CELL_SIZE_FEET;
+const SCENARIO_HELP_ATTACK_ADJACENCY_FEET: DistanceFeet = CELL_SIZE_FEET;
+const SCENARIO_RANGED_ENEMY_PROXIMITY_FEET: DistanceFeet = CELL_SIZE_FEET;
 
 function scenarioTableSpatialFactDistanceLimitFeet(
   question: ScenarioTableSpatialFactQuestion,
-): number {
+): DistanceFeet {
   return Match.value(question).pipe(
     Match.when(
       { kind: "grappleTarget" },
@@ -2411,7 +2420,7 @@ function scenarioTableSpatialFactForQuestion(
 
 type ScenarioTableSpatialFactQuestionFactory = (
   targetId: CombatantId,
-) => ScenarioTableSpatialFactQuestion;
+) => ScenarioTableSpatialFactQuestionForSubject;
 
 function scenarioTableSpatialFactQuestionFactoryForSubject(
   subject: BattleSubject,
@@ -2461,7 +2470,7 @@ function scenarioTableSpatialFactQuestionFactoryForSubject(
 function scenarioTableSpatialFactQuestionForSubject(
   subject: BattleSubject,
   targetId: CombatantId,
-): ScenarioTableSpatialFactQuestion | undefined {
+): ScenarioTableSpatialFactQuestionForSubject | undefined {
   return scenarioTableSpatialFactQuestionFactoryForSubject(subject)?.(targetId);
 }
 
