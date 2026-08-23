@@ -1,4 +1,5 @@
 // Pure leaf constants with no dependency on reducer implementation helpers.
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
 import {
   holeId,

@@ -492,9 +492,7 @@ describe("battle fill protocol boundary owners", () => {
     const targetSpatial = {
       kind: "targetSpatialFacts" as const,
       holeId: target.holeId,
-      spatialFacts:
-        (targetChoice as Extract<BattleFill, { readonly kind: "targetChoice" }>)
-          .spatialFacts ?? [],
+      spatialFacts: targetChoice.spatialFacts ?? [],
     } as const;
     expect(attackFillSet([targetSpatial], fighterId, state).tag).toBe("ok");
     expect(
@@ -528,11 +526,7 @@ describe("battle fill protocol boundary owners", () => {
     if (target.attack === undefined) {
       throw new Error("Expected the ordinary attack target selection.");
     }
-    const targetChoice = attackTargetFill(
-      target,
-      fighterId,
-      goblinId,
-    ) as Extract<BattleFill, { readonly kind: "targetChoice" }>;
+    const targetChoice = attackTargetFill(target, fighterId, goblinId);
     expectInvalid(
       resolveBattleSubject({
         state,

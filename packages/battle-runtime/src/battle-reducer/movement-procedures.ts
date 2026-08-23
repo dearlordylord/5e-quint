@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard spell.invocation-jump-movement-replacement unit-feature.acrobatic-movement unit-feature.creature-space-movement-permission
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
 import { optionalProperty } from "../optional-property.ts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
