@@ -70,6 +70,7 @@ import {
   runCodexInvocation,
   terminateOwnedProcess,
   type ModelInvocationRun,
+  type SpawnedCodexProcess,
 } from "./model-telemetry.ts";
 import {
   PlayerExecutionStateSchema,
@@ -200,6 +201,47 @@ export type SdkPlayerExecutionFailure = Readonly<{
   readonly kind: "unreapedSupervisorCleanup";
   readonly reason: string;
 }>;
+
+export type SdkPlayerExecutionFinalization =
+  | Readonly<{
+      readonly tag: "reaped";
+      readonly temporaryDirectories: "remove";
+    }>
+  | Readonly<{
+      readonly tag: "fatalExecutionFailure";
+      readonly failure: SdkPlayerExecutionFailure;
+      readonly temporaryDirectories: "preserve";
+    }>;
+
+/**
+ * Settle the runner-owned SDK supervisor before deciding whether diagnostics
+ * may be removed.  An unreaped supervisor is a fatal execution failure; its
+ * temporary roots remain available for post-mortem evidence.
+ */
+export async function finalizeSdkPlayerExecution(input: {
+  readonly supervisorProcess: SpawnedCodexProcess | undefined;
+  readonly detached: boolean;
+}): Promise<SdkPlayerExecutionFinalization> {
+  if (input.supervisorProcess === undefined) {
+    return { tag: "reaped", temporaryDirectories: "remove" };
+  }
+  const termination = await terminateOwnedProcess(input.supervisorProcess, {
+    detached: input.detached,
+  });
+  if (termination.tag === "reaped") {
+    return { tag: "reaped", temporaryDirectories: "remove" };
+  }
+  const failure: SdkPlayerExecutionFailure = {
+    tag: "fatalExecutionFailure",
+    kind: "unreapedSupervisorCleanup",
+    reason: termination.reason,
+  };
+  return {
+    tag: "fatalExecutionFailure",
+    failure,
+    temporaryDirectories: "preserve",
+  };
+}
 
 function sdkPlayerExecutionFailureMessage(
   failure: SdkPlayerExecutionFailure,
@@ -1111,17 +1153,14 @@ async function main(args: readonly string[]): Promise<void> {
   } finally {
     try {
       if (supervisorProcess !== undefined) {
-        const runningSupervisor = supervisorProcess;
-        const termination = await terminateOwnedProcess(runningSupervisor, {
+        const finalization = await finalizeSdkPlayerExecution({
+          supervisorProcess,
           detached: process.platform !== "win32",
         });
-        if (termination.tag === "unreaped") {
-          executionFailure = {
-            tag: "fatalExecutionFailure",
-            kind: "unreapedSupervisorCleanup",
-            reason: termination.reason,
-          };
-          removeTemporaryDirectories = false;
+        removeTemporaryDirectories =
+          finalization.temporaryDirectories === "remove";
+        if (finalization.tag === "fatalExecutionFailure") {
+          executionFailure = finalization.failure;
           console.error(sdkPlayerExecutionFailureMessage(executionFailure));
         }
       }

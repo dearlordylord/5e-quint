@@ -1,15 +1,26 @@
+import { EventEmitter } from "node:events";
 import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
 import { describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
 
-import { reconcilePlayerInvocation } from "./run-sdk-player.ts";
+import {
+  finalizeSdkPlayerExecution,
+  reconcilePlayerInvocation,
+} from "./run-sdk-player.ts";
 import {
   ModelInvocationNonZeroExitStatusSchema,
   terminateOwnedProcess,
+  type SpawnedCodexProcess,
 } from "./model-telemetry.ts";
 
 describe("SDK player invocation lifecycle", () => {
@@ -115,6 +126,52 @@ describe("SDK player invocation lifecycle", () => {
       }
     } finally {
       if (supervisor.exitCode === null) supervisor.kill("SIGKILL");
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  test("fails unreaped supervisor execution without deleting diagnostic directories", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-player-unreaped-"));
+    const scratch = resolve(root, "scratch");
+    const trusted = resolve(root, "trusted");
+    const codexHome = resolve(root, "codex-home");
+    const output = resolve(root, "output");
+    mkdirSync(resolve(trusted, "evidence"), { recursive: true });
+    mkdirSync(resolve(output, "evidence"), { recursive: true });
+    for (const directory of [scratch, codexHome]) mkdirSync(directory);
+    writeFileSync(resolve(trusted, "evidence/supervisor.log"), "diagnostic");
+    writeFileSync(resolve(output, "execution.json"), "diagnostic");
+    writeFileSync(
+      resolve(output, "evidence/execution-start.json"),
+      "diagnostic",
+    );
+    const supervisor: SpawnedCodexProcess = Object.assign(new EventEmitter(), {
+      pid: undefined,
+      exitCode: null,
+      signalCode: null,
+      kill: () => true,
+    });
+    try {
+      const finalization = await finalizeSdkPlayerExecution({
+        supervisorProcess: supervisor,
+        detached: false,
+      });
+      expect(finalization).toMatchObject({
+        tag: "fatalExecutionFailure",
+        failure: {
+          tag: "fatalExecutionFailure",
+          kind: "unreapedSupervisorCleanup",
+        },
+        temporaryDirectories: "preserve",
+      });
+      expect(finalization).not.toMatchObject({ tag: "reaped" });
+      expect(existsSync(scratch)).toBe(true);
+      expect(existsSync(trusted)).toBe(true);
+      expect(existsSync(resolve(trusted, "evidence"))).toBe(true);
+      expect(existsSync(codexHome)).toBe(true);
+      expect(existsSync(resolve(output, "evidence"))).toBe(true);
+      expect(existsSync(resolve(output, "replay-supervisor.mjs"))).toBe(false);
+    } finally {
       rmSync(root, { recursive: true, force: true });
     }
   }, 10_000);
