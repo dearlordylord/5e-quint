@@ -168,6 +168,29 @@ describe("Stat Block combatant admission capability", () => {
     expect(hasCondition(combatant.conditions, "prone")).toBe(true);
   });
 
+  test("rejects an initial condition forbidden by the Stat Block", () => {
+    const source = statBlockRecord();
+    const initialized = battleCreatureInitFromStatBlock({
+      combatantId: admittedCombatantId,
+      initiative: initiativeScore(10),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: ["prone"],
+      statBlock: {
+        ...source,
+        statBlock: {
+          ...source.statBlock,
+          immunities: { conditions: ["prone"] },
+        },
+      },
+    });
+
+    expect(
+      Either.isLeft(initialized)
+        ? battleStateInitIssueMessage(initialized.left)
+        : "initialized",
+    ).toBe("Stat Block combatant is immune to initial prone condition.");
+  });
+
   test("retains only authored-free mechanics and execution bindings", () => {
     const admitted = admittedFor(battleId("authored-free-capability"));
     const serialized = JSON.stringify(admitted.admission);

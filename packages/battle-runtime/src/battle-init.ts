@@ -55,6 +55,7 @@ import {
   battleStatBlockCombatantSource,
   type BattleStatBlockCombatantSource,
 } from "./stat-block-combatant-admission.ts";
+import { battleStateInitIssue } from "./battle-reducer/domain-helpers.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
 import { statBlockActionSurfaceIsSupported } from "./statblock-action-support.ts";
 import {
@@ -307,8 +308,12 @@ export type StatBlockBattleInitInput = {
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
-  readonly conditions: readonly Condition[];
+  readonly conditions: readonly StatBlockInitialCondition[];
 };
+
+export const STAT_BLOCK_INITIAL_CONDITIONS = ["prone"] as const;
+export type StatBlockInitialCondition =
+  (typeof STAT_BLOCK_INITIAL_CONDITIONS)[number];
 
 export type StatBlockBattleCreatureInit = {
   readonly kind: "statBlock";
@@ -316,7 +321,7 @@ export type StatBlockBattleCreatureInit = {
   readonly currentHp: Hp;
   readonly tempHp: Hp;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
-  readonly conditions: readonly Condition[];
+  readonly conditions: readonly StatBlockInitialCondition[];
 };
 
 export type BattleCreatureInit = {
@@ -335,6 +340,14 @@ export function battleCreatureInitFromStatBlock(
 ): Either.Either<BattleCreatureInit, BattleStateInitIssue> {
   const source = battleStatBlockCombatantSource(input.statBlock);
   if (Either.isLeft(source)) return Either.left(source.left);
+  const immuneInitialCondition = input.conditions.find((condition) =>
+    source.right.statBlock.immunities?.conditions?.includes(condition),
+  );
+  if (immuneInitialCondition !== undefined) {
+    return battleStateInitIssue(
+      `Stat Block combatant is immune to initial ${immuneInitialCondition} condition.`,
+    );
+  }
   const maxHp = toHp(source.right.statBlock.hp.value);
   return Either.right({
     combatantId: input.combatantId,

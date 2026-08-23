@@ -16,10 +16,12 @@ character state; composition projects those facts into battle initialization.
 | Surface `StatBlockRecord` for a monster or NPC | `StatBlockBattleCreatureInit` | `BattleCreatureState` |
 
 Callers construct `BattleCreatureInit[]` and then call `startBattle`. Every init
-contains a caller-supplied Initiative score and an explicit initial-condition
-collection. The runtime orders combatants, preserves caller order for ties, and
-reduces initial conditions through the canonical condition algebra; it does not
-roll or derive Initiative.
+contains a caller-supplied Initiative score. Stat-block inputs also carry an
+explicit collection of the currently supported standalone initial conditions;
+the initializer rejects a condition forbidden by that Stat Block. The runtime
+orders combatants, preserves caller order for ties, and reduces admitted initial
+conditions through the canonical condition algebra; it does not roll or derive
+Initiative.
 
 Do not conflate a Character Build, Stat Block, Unit, initialization input, and
 durable battle state. The package must not import character-creation runtimes or

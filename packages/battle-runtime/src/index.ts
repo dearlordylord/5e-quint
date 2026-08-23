@@ -372,10 +372,12 @@ export type {
   CharacterBattleWeaponMasterySelection,
   StatBlockBattleCreatureInit,
   StatBlockBattleInitInput,
+  StatBlockInitialCondition,
 } from "./battle-init.ts";
 
 export {
   KNOCKED_OUT_UNCONSCIOUS,
+  STAT_BLOCK_INITIAL_CONDITIONS,
   battleAvailableDruidWildShapeKnownForms,
   characterBattleCreatureInitWeaponAttack,
 } from "./battle-init.ts";

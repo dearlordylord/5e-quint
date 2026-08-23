@@ -220,9 +220,9 @@ const CANONICAL_CAPABILITIES = [
     roles: ["setupAuthoring"],
     operation: "battleCreatureInitFromStatBlock",
     summary:
-      "Construct a battle creature from a supplied canonical stat block.",
+      "Construct a battle creature from a supplied canonical stat block with an explicit supported initial-condition collection.",
     boundary:
-      "Use the admitted catalog record; do not dispatch mechanics by authored name, id, slug, or provenance.",
+      "Use the admitted catalog record and only the initializer's typed supported initial conditions; do not dispatch mechanics by authored name, id, slug, or provenance.",
   },
   {
     id: "character-battle-init",
