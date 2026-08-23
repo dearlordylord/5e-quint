@@ -155,6 +155,15 @@ describe("SDK player invocation lifecycle", () => {
       const finalization = await finalizeSdkPlayerExecution({
         supervisorProcess: supervisor,
         detached: false,
+        directories: {
+          scratch,
+          trusted,
+          codexHome,
+          output,
+        },
+        onReaped: () => {
+          writeFileSync(resolve(output, "replay-supervisor.mjs"), "success");
+        },
       });
       expect(finalization).toMatchObject({
         tag: "fatalExecutionFailure",
@@ -169,10 +178,47 @@ describe("SDK player invocation lifecycle", () => {
       expect(existsSync(trusted)).toBe(true);
       expect(existsSync(resolve(trusted, "evidence"))).toBe(true);
       expect(existsSync(codexHome)).toBe(true);
+      expect(existsSync(output)).toBe(true);
       expect(existsSync(resolve(output, "evidence"))).toBe(true);
       expect(existsSync(resolve(output, "replay-supervisor.mjs"))).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   }, 10_000);
+
+  test("cleans temporary roots only after a reaped finalization", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-player-reaped-"));
+    const scratch = resolve(root, "scratch");
+    const trusted = resolve(root, "trusted");
+    const codexHome = resolve(root, "codex-home");
+    const output = resolve(root, "output");
+    for (const directory of [scratch, trusted, codexHome, output])
+      mkdirSync(directory);
+    try {
+      const finalization = await finalizeSdkPlayerExecution({
+        supervisorProcess: undefined,
+        detached: false,
+        directories: {
+          scratch,
+          trusted,
+          codexHome,
+          output,
+        },
+        onReaped: () => {
+          writeFileSync(resolve(output, "reaped-success"), "success");
+        },
+      });
+      expect(finalization).toMatchObject({
+        tag: "reaped",
+        temporaryDirectories: "remove",
+      });
+      expect(existsSync(scratch)).toBe(false);
+      expect(existsSync(trusted)).toBe(false);
+      expect(existsSync(codexHome)).toBe(false);
+      expect(existsSync(output)).toBe(true);
+      expect(existsSync(resolve(output, "reaped-success"))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

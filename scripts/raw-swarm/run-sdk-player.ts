@@ -213,22 +213,46 @@ export type SdkPlayerExecutionFinalization =
       readonly temporaryDirectories: "preserve";
     }>;
 
+export type SdkPlayerExecutionDirectories = Readonly<{
+  readonly scratch: string;
+  readonly trusted: string;
+  readonly codexHome: string;
+  readonly output: string;
+}>;
+
+function removeSdkPlayerTemporaryDirectories(
+  directories: SdkPlayerExecutionDirectories,
+): void {
+  rmSync(directories.scratch, { recursive: true });
+  rmSync(directories.trusted, { recursive: true });
+  rmSync(directories.codexHome, { recursive: true });
+}
+
 /**
- * Settle the runner-owned SDK supervisor before deciding whether diagnostics
- * may be removed.  An unreaped supervisor is a fatal execution failure; its
- * temporary roots remain available for post-mortem evidence.
+ * Settle the runner-owned SDK supervisor before finalizing evidence and
+ * deciding whether diagnostics may be removed.  The reaped callback owns the
+ * success artifact path and runs before temporary roots are removed.  An
+ * unreaped supervisor is a fatal execution failure; its temporary roots and
+ * partial output remain available for post-mortem evidence.
  */
 export async function finalizeSdkPlayerExecution(input: {
   readonly supervisorProcess: SpawnedCodexProcess | undefined;
   readonly detached: boolean;
+  readonly directories: SdkPlayerExecutionDirectories;
+  readonly onReaped: () => void;
 }): Promise<SdkPlayerExecutionFinalization> {
-  if (input.supervisorProcess === undefined) {
-    return { tag: "reaped", temporaryDirectories: "remove" };
-  }
-  const termination = await terminateOwnedProcess(input.supervisorProcess, {
-    detached: input.detached,
-  });
+  const termination =
+    input.supervisorProcess === undefined
+      ? ({ tag: "reaped" } as const)
+      : await terminateOwnedProcess(input.supervisorProcess, {
+          detached: input.detached,
+        });
   if (termination.tag === "reaped") {
+    try {
+      input.onReaped();
+    } finally {
+      removeSdkPlayerTemporaryDirectories(input.directories);
+    }
     return { tag: "reaped", temporaryDirectories: "remove" };
   }
   const failure: SdkPlayerExecutionFailure = {
@@ -1004,7 +1028,17 @@ async function main(args: readonly string[]): Promise<void> {
   let supervisorLog: number | undefined;
   let preparationFailure: string | undefined;
   let executionFailure: SdkPlayerExecutionFailure | undefined;
-  let removeTemporaryDirectories = true;
+  const directories: SdkPlayerExecutionDirectories = {
+    scratch,
+    trusted,
+    codexHome,
+    output,
+  };
+  const closeSupervisorLog = (): void => {
+    if (supervisorLog === undefined) return;
+    closeSync(supervisorLog);
+    supervisorLog = undefined;
+  };
   try {
     buildConsumerDistribution({
       destination: scratch,
@@ -1151,88 +1185,78 @@ async function main(args: readonly string[]): Promise<void> {
     preparationFailure = error instanceof Error ? error.message : String(error);
     throw error;
   } finally {
-    try {
-      if (supervisorProcess !== undefined) {
-        const finalization = await finalizeSdkPlayerExecution({
-          supervisorProcess,
-          detached: process.platform !== "win32",
-        });
-        removeTemporaryDirectories =
-          finalization.temporaryDirectories === "remove";
-        if (finalization.tag === "fatalExecutionFailure") {
-          executionFailure = finalization.failure;
-          console.error(sdkPlayerExecutionFailureMessage(executionFailure));
+    const finalization = await finalizeSdkPlayerExecution({
+      supervisorProcess,
+      detached: process.platform !== "win32",
+      directories,
+      onReaped: () => {
+        closeSupervisorLog();
+        if (existsSync(resolve(trusted, "evidence/sdk-calls.jsonl"))) {
+          const agentLogPath = resolve(trusted, "agent.log");
+          if (existsSync(agentLogPath)) {
+            copyFileSync(agentLogPath, resolve(scratch, "agent.log"));
+          }
+          retainRun(scratch, trusted, output);
+          emitExecutionFindings(output);
+          copyFileSync(
+            resolve(trusted, "supervisor.mjs"),
+            resolve(output, "replay-supervisor.mjs"),
+          );
+        } else {
+          emitTranscriptlessFindings({
+            output,
+            executionStartPath,
+            scenarioId: acceptedScenarioId,
+            gitSha,
+            startedAt,
+            stage: "setup-authoring",
+            category: "experiment-boundary-obstruction",
+            kind: "setup-obstruction",
+            summary: "SDK player preparation did not produce a transcript.",
+            detail:
+              preparationFailure ??
+              "SDK player preparation ended before a canonical transcript was written.",
+            authorityPaths: [
+              { role: "scenario", path: scenarioPath },
+              { role: "scenarioReview", path: scenarioReviewPath },
+              ...(existsSync(stagePlanPath)
+                ? [{ role: "stagePlan", path: stagePlanPath }]
+                : []),
+              ...(existsSync(stagePlanFindingsPath)
+                ? [
+                    {
+                      role: "stagePlanFindings",
+                      path: stagePlanFindingsPath,
+                    },
+                  ]
+                : []),
+              ...(existsSync(retainedScenarioStageFactsPath(scenarioPath))
+                ? [
+                    {
+                      role: "stageFacts",
+                      path: retainedScenarioStageFactsPath(scenarioPath),
+                    },
+                  ]
+                : []),
+              ...(existsSync(charactersPath)
+                ? [{ role: "characters", path: charactersPath }]
+                : []),
+              ...(existsSync(setupPath)
+                ? [{ role: "setup", path: setupPath }]
+                : []),
+            ],
+            pointerAuthorityRole: existsSync(stagePlanPath)
+              ? "stagePlan"
+              : "scenario",
+          });
         }
-      }
-      if (supervisorLog !== undefined) closeSync(supervisorLog);
-      if (executionFailure !== undefined) {
-        throw new Error(sdkPlayerExecutionFailureMessage(executionFailure));
-      }
-      if (existsSync(resolve(trusted, "evidence/sdk-calls.jsonl"))) {
-        const agentLogPath = resolve(trusted, "agent.log");
-        if (existsSync(agentLogPath)) {
-          copyFileSync(agentLogPath, resolve(scratch, "agent.log"));
-        }
-        retainRun(scratch, trusted, output);
-        emitExecutionFindings(output);
-        copyFileSync(
-          resolve(trusted, "supervisor.mjs"),
-          resolve(output, "replay-supervisor.mjs"),
-        );
-      } else {
-        emitTranscriptlessFindings({
-          output,
-          executionStartPath,
-          scenarioId: acceptedScenarioId,
-          gitSha,
-          startedAt,
-          stage: "setup-authoring",
-          category: "experiment-boundary-obstruction",
-          kind: "setup-obstruction",
-          summary: "SDK player preparation did not produce a transcript.",
-          detail:
-            preparationFailure ??
-            "SDK player preparation ended before a canonical transcript was written.",
-          authorityPaths: [
-            { role: "scenario", path: scenarioPath },
-            { role: "scenarioReview", path: scenarioReviewPath },
-            ...(existsSync(stagePlanPath)
-              ? [{ role: "stagePlan", path: stagePlanPath }]
-              : []),
-            ...(existsSync(stagePlanFindingsPath)
-              ? [
-                  {
-                    role: "stagePlanFindings",
-                    path: stagePlanFindingsPath,
-                  },
-                ]
-              : []),
-            ...(existsSync(retainedScenarioStageFactsPath(scenarioPath))
-              ? [
-                  {
-                    role: "stageFacts",
-                    path: retainedScenarioStageFactsPath(scenarioPath),
-                  },
-                ]
-              : []),
-            ...(existsSync(charactersPath)
-              ? [{ role: "characters", path: charactersPath }]
-              : []),
-            ...(existsSync(setupPath)
-              ? [{ role: "setup", path: setupPath }]
-              : []),
-          ],
-          pointerAuthorityRole: existsSync(stagePlanPath)
-            ? "stagePlan"
-            : "scenario",
-        });
-      }
-    } finally {
-      if (removeTemporaryDirectories) {
-        rmSync(scratch, { recursive: true });
-        rmSync(trusted, { recursive: true });
-        rmSync(codexHome, { recursive: true });
-      }
+      },
+    });
+    if (finalization.tag === "fatalExecutionFailure") {
+      closeSupervisorLog();
+      executionFailure = finalization.failure;
+      console.error(sdkPlayerExecutionFailureMessage(executionFailure));
+      throw new Error(sdkPlayerExecutionFailureMessage(executionFailure));
     }
   }
   console.log(`SDK player evidence: ${output}`);
