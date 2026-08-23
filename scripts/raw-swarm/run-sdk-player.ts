@@ -377,7 +377,7 @@ export type PlayerInvocationDisposition =
  * Codex exits nonzero or cannot retain its final message.
  */
 export function reconcilePlayerInvocation(
-  lifecycle: ModelInvocationRun<string>,
+  lifecycle: ModelInvocationRun<string, "expectedLastMessage">,
   evidence: PlayerEvidenceState,
 ): Either.Either<PlayerInvocationDisposition, string> {
   if (lifecycle.tag === "failed") {
@@ -390,11 +390,6 @@ export function reconcilePlayerInvocation(
       : Either.left(
           `Player agent invocation failed: ${lifecycle.cause.reason}`,
         );
-  }
-  if (lifecycle.output.tag !== "decoded") {
-    return Either.left(
-      "Player agent invocation succeeded without a decoded final message.",
-    );
   }
   if (evidence.tag === "active") {
     return Either.left(

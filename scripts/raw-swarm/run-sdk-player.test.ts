@@ -1,14 +1,20 @@
 import { describe, expect, test } from "vitest";
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 
 import { reconcilePlayerInvocation } from "./run-sdk-player.ts";
+import { ModelInvocationNonZeroExitStatusSchema } from "./model-telemetry.ts";
 
 describe("SDK player invocation lifecycle", () => {
   test("retains a terminal obstruction when the model exits nonzero", () => {
     const result = reconcilePlayerInvocation(
       {
         tag: "failed",
-        process: { tag: "exited", status: 1 },
+        process: {
+          tag: "exited",
+          status: Schema.decodeUnknownSync(
+            ModelInvocationNonZeroExitStatusSchema,
+          )(1),
+        },
         cause: { tag: "process", reason: "Codex exited with status 1." },
       },
       {
@@ -34,10 +40,14 @@ describe("SDK player invocation lifecycle", () => {
   test("does not turn an active or concluded player into obstruction success", () => {
     const lifecycle = {
       tag: "failed" as const,
+      operation: "expectedLastMessage" as const,
       process: {
         tag: "timedOut" as const,
         timeoutMilliseconds: 25,
-        termination: "sigkill" as const,
+        termination: {
+          tag: "confirmed" as const,
+          signal: "SIGKILL" as const,
+        },
       },
       cause: { tag: "process" as const, reason: "Codex timed out." },
     };

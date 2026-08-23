@@ -1194,8 +1194,6 @@ async function runStructuredCall<A, I>(input: {
     if (result.tag === "failed") {
       fail(input.phase + " Codex invocation failed: " + result.cause.reason);
     }
-    if (result.output.tag !== "decoded")
-      fail("Current invocation did not retain a decoded last message.");
     const decoded = result.output.value;
     appendCopiedLedgerEntry(
       input.profilePaths.currentLedger,
@@ -1346,8 +1344,6 @@ async function runAuxiliaryStructuredCall<A, I>(input: {
           result.right.cause.reason,
       );
     }
-    if (result.right.output.tag !== "decoded")
-      fail("Auxiliary invocation did not retain a decoded last message.");
     const decoded = result.right.output.value;
     appendCopiedLedgerEntry(
       input.profilePaths.auxiliaryLedger,

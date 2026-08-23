@@ -367,9 +367,6 @@ async function runCodexJson<A, I>(
     if (result.tag === "failed") {
       fail(`Scenario agent invocation failed: ${result.cause.reason}`);
     }
-    if (result.output.tag !== "decoded") {
-      return fail("Scenario agent did not retain a decoded last message.");
-    }
     const decoded = result.output.value;
     if (
       execution.retention?.reviewStage !== undefined &&

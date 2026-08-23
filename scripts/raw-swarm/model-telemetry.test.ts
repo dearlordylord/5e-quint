@@ -33,6 +33,7 @@ import {
   CurrentModelInvocationLedgerEntryV4Schema,
   CurrentModelInvocationLedgerEntryV5Schema,
   runCodexInvocation,
+  signalOwnedProcess,
 } from "./model-telemetry.ts";
 import {
   decodeHistoricalScenarioId,
@@ -114,7 +115,7 @@ describe("Raw Swarm model invocation telemetry", () => {
         process: {
           tag: "timedOut",
           timeoutMilliseconds: 25,
-          termination: "sigterm",
+          termination: { tag: "confirmed", signal: "SIGTERM" },
         },
       });
       const events = readCodexEvents(input.eventPath);
@@ -125,7 +126,7 @@ describe("Raw Swarm model invocation telemetry", () => {
           exit: {
             tag: "timedOut",
             timeoutMilliseconds: 25,
-            termination: "sigterm",
+            termination: { tag: "confirmed", signal: "SIGTERM" },
           },
           result: { tag: "failed" },
         });
@@ -139,7 +140,7 @@ describe("Raw Swarm model invocation telemetry", () => {
           exit: {
             tag: "timedOut",
             timeoutMilliseconds: 25,
-            termination: "sigterm",
+            termination: { tag: "confirmed", signal: "SIGTERM" },
           },
           result: { tag: "failed" },
         },
@@ -171,7 +172,7 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_CH
         process: {
           tag: "timedOut",
           timeoutMilliseconds: 25,
-          termination: "sigkill",
+          termination: { tag: "confirmed", signal: "SIGKILL" },
         },
         cause: { tag: "process" },
       });
@@ -266,6 +267,7 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
       const result = await runCodexInvocation(input);
       expect(result).toEqual({
         tag: "succeeded",
+        operation: "expectedLastMessage",
         process: { tag: "exited", status: 0 },
         output: { tag: "decoded", value: { result: "ready" } },
       });
@@ -397,7 +399,7 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
       exit: {
         tag: "timedOut" as const,
         timeoutMilliseconds: 25,
-        termination: "sigkill" as const,
+        termination: { tag: "confirmed" as const, signal: "SIGKILL" as const },
       },
       result: { tag: "failed" as const, reason: "Synthetic timeout." },
     };
@@ -453,6 +455,133 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
         startedAt,
       }),
     ).toMatchObject({ _tag: "Left" });
+  });
+
+  test("rejects v5-only output failure detail in historical v2, v3, and v4 records", () => {
+    const failure = {
+      tag: "failed" as const,
+      reason: "The retained output was absent.",
+      failureKind: "lastMessageMissing" as const,
+    };
+    const historicalCommon = {
+      scenarioId: "generated-battle-123",
+      invocationId: "historical-invocation",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      gitSha: "a".repeat(40),
+      eventsSha256: "b".repeat(64),
+      stagePlanReason: "Historical invocation stage.",
+      startedAt: "2026-08-14T00:00:00.000Z",
+      elapsedMilliseconds: 1,
+      exit: { tag: "exited" as const, status: 0 },
+      usage: { tag: "unavailable" as const, reason: "synthetic" },
+    };
+    expect(
+      Either.isLeft(
+        parseModelInvocationLedgerEntry({
+          schemaVersion: 2,
+          ...historicalCommon,
+          phase: "scenarioGeneration",
+          stagePlanReason: "Historical generation.",
+          result: failure,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        parseBenchmarkModelInvocationLedgerEntry({
+          schemaVersion: 3,
+          profile: "documentDeclarationSet",
+          responsibility: "scenarioQuality",
+          phase: "scenarioReadiness",
+          ...historicalCommon,
+          result: failure,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isRight(
+        parseBenchmarkModelInvocationLedgerEntry({
+          schemaVersion: 5,
+          profile: "documentDeclarationSet",
+          responsibility: "scenarioQuality",
+          phase: "scenarioReadiness",
+          scenarioId: "current-scenario",
+          ...historicalCommon,
+          result: failure,
+        }),
+      ),
+    ).toBe(true);
+
+    const currentCommon = {
+      schemaVersion: 4 as const,
+      subject: {
+        tag: "scenarioCampaign" as const,
+        campaignId: "synthetic-campaign",
+        evidenceSetId: "synthetic-evidence",
+        plannedScenarioId: "synthetic-scenario",
+      },
+      invocationId: "current-invocation",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      gitSha: "a".repeat(40),
+      eventsSha256: "b".repeat(64),
+      phase: "scenarioGeneration" as const,
+      stagePlanReason: "Current generation.",
+      startedAt: "2026-08-14T00:00:00.000Z",
+      elapsedMilliseconds: 1,
+      exit: { tag: "exited" as const, status: 0 },
+      result: failure,
+      usage: { tag: "unavailable" as const, reason: "synthetic" },
+    };
+    expect(Either.isLeft(parseModelInvocationLedgerEntry(currentCommon))).toBe(
+      true,
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV5Schema, {
+          onExcessProperty: "error",
+        })({ ...currentCommon, schemaVersion: 5 }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV5Schema, {
+          onExcessProperty: "error",
+        })({
+          ...currentCommon,
+          schemaVersion: 5,
+          result: { ...failure, failureKind: "unknown" },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("reports signal delivery failure instead of claiming termination", () => {
+    const falseDelivery = signalOwnedProcess(
+      { pid: undefined, kill: () => false },
+      "SIGTERM",
+    );
+    expect(falseDelivery).toEqual({
+      tag: "notDelivered",
+      signal: "SIGTERM",
+      reason: "ChildProcess.kill returned false.",
+    });
+
+    const thrownDelivery = signalOwnedProcess(
+      {
+        pid: undefined,
+        kill: () => {
+          throw new Error("synthetic signal failure");
+        },
+      },
+      "SIGKILL",
+    );
+    expect(thrownDelivery).toEqual({
+      tag: "notDelivered",
+      signal: "SIGKILL",
+      reason: "ChildProcess.kill threw: synthetic signal failure",
+    });
   });
 
   test("retains the first-party failure reason instead of only the process status", () => {
@@ -1276,7 +1405,7 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
         exit: {
           tag: "timedOut",
           timeoutMilliseconds: 25,
-          termination: "sigkill",
+          termination: { tag: "confirmed", signal: "SIGKILL" },
         },
         result: { tag: "failed", reason: "Synthetic timeout." },
       },
@@ -1286,7 +1415,10 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
       entry: {
         schemaVersion: 5,
         responsibility: "scenarioQuality",
-        exit: { tag: "timedOut", termination: "sigkill" },
+        exit: {
+          tag: "timedOut",
+          termination: { tag: "confirmed", signal: "SIGKILL" },
+        },
         result: { tag: "failed" },
       },
     });

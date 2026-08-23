@@ -118,37 +118,59 @@ export const MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS = [
 ] as const;
 type ModelInvocationLastMessageFailureKind =
   (typeof MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS)[number];
-const ModelInvocationResultSchema = Schema.Union(
+/**
+ * Historical result envelopes are intentionally closed.  The output-failure
+ * discriminator was introduced with v5 and must not be backfilled into v2-v4
+ * or benchmark v3 records when they are decoded.
+ */
+const HistoricalModelInvocationResultSchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("succeeded") }),
   Schema.Struct({
     tag: Schema.Literal("failed"),
     reason: Schema.NonEmptyTrimmedString,
-    failureKind: Schema.optionalWith(
-      Schema.Literal(...MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS),
-      { exact: true },
-    ),
+  }),
+);
+
+/** Current v5 results distinguish process/Codex failures from output failures. */
+const CurrentModelInvocationResultSchema = Schema.Union(
+  HistoricalModelInvocationResultSchema,
+  Schema.Struct({
+    tag: Schema.Literal("failed"),
+    reason: Schema.NonEmptyTrimmedString,
+    failureKind: Schema.Literal(...MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS),
   }),
 );
 
 function invocationResultMatchesExit(input: {
   readonly exit: { readonly tag: string; readonly status?: number };
-  readonly result: { readonly tag: string; readonly failureKind?: string };
+  readonly result: { readonly tag: string };
 }): boolean {
   const succeeded =
     (input.exit.tag === "exited" || input.exit.tag === "shellStatus") &&
     input.exit.status === 0;
-  if (succeeded) {
+  return succeeded
+    ? input.result.tag === "succeeded"
+    : input.result.tag === "failed";
+}
+
+function currentInvocationResultMatchesExit(input: {
+  readonly exit: { readonly tag: string; readonly status?: number };
+  readonly result: {
+    readonly tag: string;
+    readonly failureKind?: ModelInvocationLastMessageFailureKind;
+  };
+}): boolean {
+  const succeeded =
+    (input.exit.tag === "exited" || input.exit.tag === "shellStatus") &&
+    input.exit.status === 0;
+  if (!succeeded) {
     return (
-      input.result.tag === "succeeded" ||
-      (input.result.tag === "failed" &&
-        input.result.failureKind !== undefined &&
-        MODEL_INVOCATION_LAST_MESSAGE_FAILURE_KINDS.some(
-          (kind) => kind === input.result.failureKind,
-        ))
+      input.result.tag === "failed" && input.result.failureKind === undefined
     );
   }
   return (
-    input.result.tag === "failed" && input.result.failureKind === undefined
+    input.result.tag === "succeeded" ||
+    (input.result.tag === "failed" && input.result.failureKind !== undefined)
   );
 }
 
@@ -180,7 +202,17 @@ const CurrentModelInvocationExitSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("timedOut"),
     timeoutMilliseconds: PositiveIntegerSchema,
-    termination: Schema.Literal("sigterm", "sigkill"),
+    termination: Schema.Union(
+      Schema.Struct({
+        tag: Schema.Literal("confirmed"),
+        signal: Schema.Literal("SIGTERM", "SIGKILL"),
+      }),
+      Schema.Struct({
+        tag: Schema.Literal("notDelivered"),
+        signal: Schema.Literal("SIGTERM", "SIGKILL"),
+        reason: Schema.NonEmptyTrimmedString,
+      }),
+    ),
   }),
 );
 
@@ -325,7 +357,7 @@ const ModelInvocationLedgerEntryV2Schema = Schema.Struct({
   startedAt: Schema.NonEmptyString,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: HistoricalModelInvocationExitSchema,
-  result: ModelInvocationResultSchema,
+  result: HistoricalModelInvocationResultSchema,
   usage: ModelUsageSchema,
 }).pipe(
   Schema.filter(invocationResultMatchesExit, {
@@ -344,7 +376,7 @@ const CurrentModelInvocationLedgerEntryV4SchemaInternal = Schema.Struct({
   startedAt: StartedAtSchema,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: HistoricalModelInvocationExitSchema,
-  result: ModelInvocationResultSchema,
+  result: HistoricalModelInvocationResultSchema,
   usage: ModelUsageSchema,
 }).pipe(
   Schema.filter(invocationSubjectMatchesPhase, {
@@ -366,13 +398,13 @@ const CurrentModelInvocationLedgerEntryV5SchemaInternal = Schema.Struct({
   startedAt: StartedAtSchema,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: CurrentModelInvocationExitSchema,
-  result: ModelInvocationResultSchema,
+  result: CurrentModelInvocationResultSchema,
   usage: ModelUsageSchema,
 }).pipe(
   Schema.filter(invocationSubjectMatchesPhase, {
     message: () => "Invocation subject must match its lifecycle phase.",
   }),
-  Schema.filter(invocationResultMatchesExit, {
+  Schema.filter(currentInvocationResultMatchesExit, {
     message: () => "Invocation result must agree with its exit status.",
   }),
 );
@@ -419,7 +451,7 @@ export type ModelInvocationLedgerEntry = Schema.Schema.Type<
   typeof ModelInvocationLedgerEntrySchema
 >;
 export type ModelInvocationResult = Schema.Schema.Type<
-  typeof ModelInvocationResultSchema
+  typeof CurrentModelInvocationResultSchema
 >;
 type CurrentModelInvocationLedgerEntryEncoded = Schema.Schema.Encoded<
   typeof CurrentModelInvocationLedgerEntrySchema
@@ -508,7 +540,7 @@ const ModelInvocationCompletedEventV2Schema = Schema.Struct({
   schemaVersion: Schema.Literal(2),
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: HistoricalModelInvocationExitSchema,
-  result: ModelInvocationResultSchema,
+  result: HistoricalModelInvocationResultSchema,
 }).pipe(
   Schema.filter(invocationResultMatchesExit, {
     message: () => "Invocation result must agree with its exit status.",
@@ -520,7 +552,7 @@ const CurrentModelInvocationCompletedEventV4Schema = Schema.Struct({
   schemaVersion: Schema.Literal(4),
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: HistoricalModelInvocationExitSchema,
-  result: ModelInvocationResultSchema,
+  result: HistoricalModelInvocationResultSchema,
 }).pipe(
   Schema.filter(invocationResultMatchesExit, {
     message: () => "Invocation result must agree with its exit status.",
@@ -532,9 +564,9 @@ const CurrentModelInvocationCompletedEventV5Schema = Schema.Struct({
   schemaVersion: Schema.Literal(5),
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: CurrentModelInvocationExitSchema,
-  result: ModelInvocationResultSchema,
+  result: CurrentModelInvocationResultSchema,
 }).pipe(
-  Schema.filter(invocationResultMatchesExit, {
+  Schema.filter(currentInvocationResultMatchesExit, {
     message: () => "Invocation result must agree with its exit status.",
   }),
 );
@@ -556,7 +588,7 @@ const BenchmarkAuxiliaryInvocationCommonFields = {
   startedAt: Schema.NonEmptyString,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: HistoricalModelInvocationExitSchema,
-  result: ModelInvocationResultSchema,
+  result: HistoricalModelInvocationResultSchema,
   usage: ModelUsageSchema,
 } as const;
 
@@ -570,7 +602,7 @@ const BenchmarkAuxiliaryInvocationCurrentCommonFields = {
   startedAt: StartedAtSchema,
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: CurrentModelInvocationExitSchema,
-  result: ModelInvocationResultSchema,
+  result: CurrentModelInvocationResultSchema,
   usage: ModelUsageSchema,
 } as const;
 
@@ -592,6 +624,10 @@ export const BenchmarkAuxiliaryModelInvocationLedgerEntryV3Schema =
       responsibility: Schema.Literal("redundantCharacterPreparation"),
       phase: Schema.Literal("scenarioCharacterAuthoring"),
     }),
+  ).pipe(
+    Schema.filter(invocationResultMatchesExit, {
+      message: () => "Invocation result must agree with its exit status.",
+    }),
   );
 
 export const BenchmarkAuxiliaryModelInvocationLedgerEntryV5Schema =
@@ -606,15 +642,15 @@ export const BenchmarkAuxiliaryModelInvocationLedgerEntryV5Schema =
       responsibility: Schema.Literal("redundantCharacterPreparation"),
       phase: Schema.Literal("scenarioCharacterAuthoring"),
     }),
+  ).pipe(
+    Schema.filter(currentInvocationResultMatchesExit, {
+      message: () => "Invocation result must agree with its exit status.",
+    }),
   );
 
 export const BenchmarkAuxiliaryModelInvocationLedgerEntrySchema = Schema.Union(
   BenchmarkAuxiliaryModelInvocationLedgerEntryV3Schema,
   BenchmarkAuxiliaryModelInvocationLedgerEntryV5Schema,
-).pipe(
-  Schema.filter(invocationResultMatchesExit, {
-    message: () => "Invocation result must agree with its exit status.",
-  }),
 );
 export type BenchmarkAuxiliaryModelInvocationLedgerEntry = Schema.Schema.Type<
   typeof BenchmarkAuxiliaryModelInvocationLedgerEntrySchema
@@ -682,7 +718,7 @@ const BenchmarkAuxiliaryInvocationCompletedEventSchema = Schema.Struct({
   schemaVersion: Schema.Literal(3),
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: HistoricalModelInvocationExitSchema,
-  result: ModelInvocationResultSchema,
+  result: HistoricalModelInvocationResultSchema,
 }).pipe(
   Schema.filter(invocationResultMatchesExit, {
     message: () => "Invocation result must agree with its exit status.",
@@ -819,9 +855,9 @@ const BenchmarkAuxiliaryInvocationCompletedEventV5Schema = Schema.Struct({
   schemaVersion: Schema.Literal(5),
   elapsedMilliseconds: NonNegativeIntegerSchema,
   exit: CurrentModelInvocationExitSchema,
-  result: ModelInvocationResultSchema,
+  result: CurrentModelInvocationResultSchema,
 }).pipe(
-  Schema.filter(invocationResultMatchesExit, {
+  Schema.filter(currentInvocationResultMatchesExit, {
     message: () => "Invocation result must agree with its exit status.",
   }),
 );
@@ -867,13 +903,15 @@ export function firstPartyCodexFailureReason(
 }
 
 /** Bind process outcome to first-party failure detail when Codex supplies it. */
-export function modelInvocationResultFromCodexEvents(
+type CodexEventAnalysis = Readonly<{
+  readonly failureReason: Option.Option<string>;
+  readonly result: ModelInvocationResult;
+}>;
+
+function analyzeCodexEvents(
   exit: Schema.Schema.Type<typeof CurrentModelInvocationExitSchema>,
   events: readonly unknown[],
-): Either.Either<
-  Schema.Schema.Type<typeof ModelInvocationResultSchema>,
-  string
-> {
+): Either.Either<CodexEventAnalysis, string> {
   const failureReason = firstPartyCodexFailureReason(events);
   if (Either.isLeft(failureReason)) return Either.left(failureReason.left);
   const processResult = resultFromExit(exit);
@@ -882,11 +920,22 @@ export function modelInvocationResultFromCodexEvents(
       "Codex emitted a terminal failure event but exited successfully.",
     );
   }
-  return Either.right(
-    Option.match(failureReason.right, {
+  return Either.right({
+    failureReason: failureReason.right,
+    result: Option.match(failureReason.right, {
       onNone: () => processResult,
       onSome: (reason) => ({ tag: "failed" as const, reason }),
     }),
+  });
+}
+
+/** Bind process outcome to first-party failure detail when Codex supplies it. */
+export function modelInvocationResultFromCodexEvents(
+  exit: Schema.Schema.Type<typeof CurrentModelInvocationExitSchema>,
+  events: readonly unknown[],
+): Either.Either<ModelInvocationResult, string> {
+  return analyzeCodexEvents(exit, events).pipe(
+    Either.map(({ result }) => result),
   );
 }
 
@@ -1620,43 +1669,112 @@ function decodeExpectedModelInvocationLastMessage<A>(input: {
 type CurrentModelInvocationExit = Schema.Schema.Type<
   typeof CurrentModelInvocationExitSchema
 >;
+type ModelInvocationTimeoutTermination = Extract<
+  CurrentModelInvocationExit,
+  { readonly tag: "timedOut" }
+>["termination"];
 export type ModelInvocationProcess = Exclude<
   CurrentModelInvocationExit,
   { readonly tag: "shellStatus" }
 >;
 
-export type ModelInvocationFailureCause =
-  | Readonly<{ readonly tag: "process"; readonly reason: string }>
-  | Readonly<{
-      readonly tag: "lastMessage";
-      readonly failureKind: ModelInvocationLastMessageFailureKind;
-      readonly reason: string;
-    }>
-  | Readonly<{ readonly tag: "codex"; readonly reason: string }>;
+type SuccessfulModelInvocationProcess = Readonly<{
+  readonly tag: "exited";
+  readonly status: 0;
+}>;
+export const ModelInvocationNonZeroExitStatusSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.filter((status) => status !== 0),
+  Schema.brand("NonZeroExitStatus"),
+);
+type NonZeroExitStatus = Schema.Schema.Type<
+  typeof ModelInvocationNonZeroExitStatusSchema
+>;
+type UnsuccessfulModelInvocationProcess =
+  Exclude<
+    ModelInvocationProcess,
+    SuccessfulModelInvocationProcess
+  > extends infer Process
+    ? Process extends { readonly tag: "exited" }
+      ? Readonly<{ readonly tag: "exited"; readonly status: NonZeroExitStatus }>
+      : Process
+    : never;
+export type ModelInvocationOperationTag =
+  ModelInvocationOperation<unknown>["tag"];
 
-export type ModelInvocationOutput<A> =
-  | Readonly<{ readonly tag: "notExpected" }>
-  | Readonly<{ readonly tag: "decoded"; readonly value: A }>;
+function isSuccessfulModelInvocationProcess(
+  process: ModelInvocationProcess,
+): process is SuccessfulModelInvocationProcess {
+  return process.tag === "exited" && process.status === 0;
+}
+
+function unsuccessfulModelInvocationProcess(
+  process: ModelInvocationProcess,
+): UnsuccessfulModelInvocationProcess {
+  if (process.tag !== "exited") return process;
+  const status = Schema.decodeUnknownEither(
+    ModelInvocationNonZeroExitStatusSchema,
+  )(process.status);
+  if (Either.isLeft(status)) {
+    throw new Error(
+      "The process lifecycle marked an exited process unsuccessful without a nonzero status.",
+    );
+  }
+  return { tag: "exited", status: status.right };
+}
+
+type ProcessFailureRun = Readonly<{
+  readonly tag: "failed";
+  readonly process: UnsuccessfulModelInvocationProcess;
+  readonly cause:
+    | Readonly<{ readonly tag: "process"; readonly reason: string }>
+    | Readonly<{ readonly tag: "codex"; readonly reason: string }>;
+}>;
+
+type SuccessfulProcessFailureRun = Readonly<{
+  readonly tag: "failed";
+  readonly process: SuccessfulModelInvocationProcess;
+  readonly cause: Readonly<{
+    readonly tag: "lastMessage";
+    readonly failureKind: ModelInvocationLastMessageFailureKind;
+    readonly reason: string;
+  }>;
+}>;
 
 /**
- * One lifecycle result owns process telemetry, output validation, and the
- * retained success/failure disposition.  There is no independent optional
- * output or SpawnSync-shaped status that callers can read out of sequence.
+ * The operation tag is carried through the lifecycle so a successful
+ * no-output operation cannot be paired with decoded output (or vice versa).
+ * Failure variants also keep process failures, successful-process output
+ * failures, and first-party Codex failures in their valid combinations.
  */
-export type ModelInvocationRun<A> =
-  | Readonly<{
-      readonly tag: "succeeded";
-      readonly process: Readonly<{
-        readonly tag: "exited";
-        readonly status: 0;
-      }>;
-      readonly output: ModelInvocationOutput<A>;
-    }>
-  | Readonly<{
-      readonly tag: "failed";
-      readonly process: ModelInvocationProcess;
-      readonly cause: ModelInvocationFailureCause;
-    }>;
+export type ModelInvocationRun<
+  A,
+  K extends ModelInvocationOperationTag = ModelInvocationOperationTag,
+> = K extends "noOutput"
+  ?
+      | Readonly<{
+          readonly tag: "succeeded";
+          readonly operation: "noOutput";
+          readonly process: SuccessfulModelInvocationProcess;
+          readonly output: Readonly<{ readonly tag: "notExpected" }>;
+        }>
+      | (ProcessFailureRun & Readonly<{ readonly operation: "noOutput" }>)
+  : K extends "expectedLastMessage"
+    ?
+        | Readonly<{
+            readonly tag: "succeeded";
+            readonly operation: "expectedLastMessage";
+            readonly process: SuccessfulModelInvocationProcess;
+            readonly output: Readonly<{
+              readonly tag: "decoded";
+              readonly value: A;
+            }>;
+          }>
+        | (ProcessFailureRun &
+            Readonly<{ readonly operation: "expectedLastMessage" }>)
+        | (SuccessfulProcessFailureRun &
+            Readonly<{ readonly operation: "expectedLastMessage" }>)
+    : never;
 
 function modelInvocationFailureReason(process: ModelInvocationProcess): string {
   return Match.value(process).pipe(
@@ -1669,10 +1787,10 @@ function modelInvocationFailureReason(process: ModelInvocationProcess): string {
       ({ signal }) => `Codex stopped by ${signal}.`,
     ),
     Match.when({ tag: "failedToStart" }, ({ message }) => message),
-    Match.when(
-      { tag: "timedOut" },
-      ({ timeoutMilliseconds, termination }) =>
-        `Codex invocation timed out after ${String(timeoutMilliseconds)} milliseconds; terminated with ${termination.toUpperCase()}.`,
+    Match.when({ tag: "timedOut" }, ({ timeoutMilliseconds, termination }) =>
+      termination.tag === "confirmed"
+        ? `Codex invocation timed out after ${String(timeoutMilliseconds)} milliseconds; terminated with ${termination.signal}.`
+        : `Codex invocation timed out after ${String(timeoutMilliseconds)} milliseconds; ${termination.signal} delivery was not confirmed: ${termination.reason}`,
     ),
     Match.exhaustive,
   );
@@ -1681,32 +1799,43 @@ function modelInvocationFailureReason(process: ModelInvocationProcess): string {
 function invocationLifecycleFromProcess<A>(input: {
   readonly process: ModelInvocationProcess;
   readonly operation: ModelInvocationOperation<A>;
-  readonly firstPartyFailureReason: string | undefined;
+  readonly codexEventAnalysis: CodexEventAnalysis;
 }): ModelInvocationRun<A> {
-  if (input.process.tag !== "exited" || input.process.status !== 0) {
-    return {
-      tag: "failed",
-      process: input.process,
-      cause:
-        input.firstPartyFailureReason === undefined
-          ? {
-              tag: "process",
-              reason: modelInvocationFailureReason(input.process),
-            }
-          : { tag: "codex", reason: input.firstPartyFailureReason },
-    };
-  }
-  if (input.firstPartyFailureReason !== undefined) {
-    return {
-      tag: "failed",
-      process: input.process,
-      cause: { tag: "codex", reason: input.firstPartyFailureReason },
-    };
+  if (!isSuccessfulModelInvocationProcess(input.process)) {
+    const unsuccessfulProcess = unsuccessfulModelInvocationProcess(
+      input.process,
+    );
+    const cause = Option.isNone(input.codexEventAnalysis.failureReason)
+      ? {
+          tag: "process" as const,
+          reason:
+            input.codexEventAnalysis.result.tag === "failed"
+              ? input.codexEventAnalysis.result.reason
+              : modelInvocationFailureReason(input.process),
+        }
+      : {
+          tag: "codex" as const,
+          reason: input.codexEventAnalysis.failureReason.value,
+        };
+    return input.operation.tag === "noOutput"
+      ? {
+          tag: "failed" as const,
+          operation: "noOutput" as const,
+          process: unsuccessfulProcess,
+          cause,
+        }
+      : {
+          tag: "failed" as const,
+          operation: "expectedLastMessage" as const,
+          process: unsuccessfulProcess,
+          cause,
+        };
   }
   if (input.operation.tag === "noOutput") {
     return {
       tag: "succeeded",
-      process: { tag: "exited", status: 0 },
+      operation: "noOutput",
+      process: { tag: "exited", status: 0 as const },
       output: { tag: "notExpected" },
     };
   }
@@ -1716,6 +1845,7 @@ function invocationLifecycleFromProcess<A>(input: {
   return decoded.tag === "invalid"
     ? {
         tag: "failed",
+        operation: "expectedLastMessage",
         process: input.process,
         cause: {
           tag: "lastMessage",
@@ -1725,22 +1855,26 @@ function invocationLifecycleFromProcess<A>(input: {
       }
     : {
         tag: "succeeded",
-        process: { tag: "exited", status: 0 },
+        operation: "expectedLastMessage",
+        process: { tag: "exited", status: 0 as const },
         output: { tag: "decoded", value: decoded.value },
       };
 }
 
 function modelInvocationResultFromLifecycle(
   lifecycle: ModelInvocationRun<unknown>,
+  codexResult: ModelInvocationResult,
 ): ModelInvocationResult {
-  if (lifecycle.tag === "succeeded") return { tag: "succeeded" };
+  if (lifecycle.tag === "succeeded") return codexResult;
   return lifecycle.cause.tag === "lastMessage"
     ? {
         tag: "failed",
         failureKind: lifecycle.cause.failureKind,
         reason: lifecycle.cause.reason,
       }
-    : { tag: "failed", reason: lifecycle.cause.reason };
+    : codexResult.tag === "failed"
+      ? { ...codexResult, reason: lifecycle.cause.reason }
+      : { tag: "failed", reason: lifecycle.cause.reason };
 }
 
 function modelInvocationTimeoutMilliseconds(value: number | undefined): number {
@@ -1762,31 +1896,63 @@ function completionEventSeparator(path: string): string {
 
 export const MODEL_INVOCATION_TERMINATION_GRACE_MILLISECONDS = 250;
 
-function signalOwnedProcess(
-  child: ReturnType<typeof spawn>,
+export type ModelInvocationSignalDelivery =
+  | Readonly<{
+      readonly tag: "confirmed";
+      readonly signal: "SIGTERM" | "SIGKILL";
+    }>
+  | Readonly<{
+      readonly tag: "notDelivered";
+      readonly signal: "SIGTERM" | "SIGKILL";
+      readonly reason: string;
+    }>;
+
+type OwnedProcessSignalTarget = Pick<ReturnType<typeof spawn>, "pid" | "kill">;
+
+function signalDeliveryFailureReason(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+export function signalOwnedProcess(
+  child: OwnedProcessSignalTarget,
   signal: "SIGTERM" | "SIGKILL",
-): void {
+): ModelInvocationSignalDelivery {
   if (
     child.pid === undefined ||
     child.pid <= 0 ||
     process.platform === "win32"
   ) {
-    child.kill(signal);
-    return;
+    try {
+      return child.kill(signal)
+        ? { tag: "confirmed", signal }
+        : {
+            tag: "notDelivered",
+            signal,
+            reason: "ChildProcess.kill returned false.",
+          };
+    } catch (error: unknown) {
+      return {
+        tag: "notDelivered",
+        signal,
+        reason: `ChildProcess.kill threw: ${signalDeliveryFailureReason(error)}`,
+      };
+    }
   }
   try {
     process.kill(-child.pid, signal);
+    return { tag: "confirmed", signal };
   } catch (error: unknown) {
-    if (
-      !(
+    return {
+      tag: "notDelivered",
+      signal,
+      reason:
         error !== null &&
         typeof error === "object" &&
         "code" in error &&
         error.code === "ESRCH"
-      )
-    ) {
-      throw error;
-    }
+          ? "Owned process group no longer exists."
+          : `Process-group signal threw: ${signalDeliveryFailureReason(error)}`,
+    };
   }
 }
 
@@ -1804,7 +1970,7 @@ async function spawnOwnedCodex(input: {
       timeout: ReturnType<typeof setTimeout> | undefined;
       grace: ReturnType<typeof setTimeout> | undefined;
     } = { timeout: undefined, grace: undefined };
-    let termination: "sigterm" | "sigkill" | undefined;
+    let termination: ModelInvocationTimeoutTermination | undefined;
     const finish = (result: ModelInvocationProcess): void => {
       if (settled) return;
       settled = true;
@@ -1836,30 +2002,17 @@ async function spawnOwnedCodex(input: {
       return;
     }
     timers.timeout = setTimeout(() => {
-      termination = "sigterm";
-      try {
-        signalOwnedProcess(child, "SIGTERM");
-      } catch (error: unknown) {
-        finish({
-          tag: "failedToStart",
-          message:
-            error instanceof Error
-              ? `Could not terminate Codex after timeout: ${error.message}`
-              : `Could not terminate Codex after timeout: ${String(error)}`,
-        });
-        return;
-      }
+      termination = signalOwnedProcess(child, "SIGTERM");
       timers.grace = setTimeout(() => {
-        termination = "sigkill";
-        try {
-          signalOwnedProcess(child, "SIGKILL");
-        } catch (error: unknown) {
+        const escalation = signalOwnedProcess(child, "SIGKILL");
+        if (escalation.tag === "confirmed") {
+          termination = escalation;
+        } else if (termination?.tag !== "confirmed") {
+          termination = escalation;
           finish({
-            tag: "failedToStart",
-            message:
-              error instanceof Error
-                ? `Could not kill Codex after timeout grace period: ${error.message}`
-                : `Could not kill Codex after timeout grace period: ${String(error)}`,
+            tag: "timedOut",
+            timeoutMilliseconds: input.timeoutMilliseconds,
+            termination: escalation,
           });
         }
       }, MODEL_INVOCATION_TERMINATION_GRACE_MILLISECONDS);
@@ -1930,29 +2083,21 @@ async function runCodexProcess<A>(input: {
       const retainedEvents = readCodexEvents(input.eventPath);
       const events =
         retainedEvents.tag === "valid" ? retainedEvents.events : [];
-      const invocationResult = modelInvocationResultFromCodexEvents(
-        exit,
-        events,
-      );
-      if (Either.isLeft(invocationResult)) {
+      const codexEventAnalysis = analyzeCodexEvents(exit, events);
+      if (Either.isLeft(codexEventAnalysis)) {
         throw new Error(
-          `Cannot derive Codex invocation result: ${invocationResult.left}`,
-        );
-      }
-      const firstPartyFailure = firstPartyCodexFailureReason(events);
-      if (Either.isLeft(firstPartyFailure)) {
-        throw new Error(
-          `Cannot derive Codex first-party failure: ${firstPartyFailure.left}`,
+          `Cannot derive Codex invocation result: ${codexEventAnalysis.left}`,
         );
       }
       const lifecycle = invocationLifecycleFromProcess({
         process: processOutcome,
-        firstPartyFailureReason: Option.isSome(firstPartyFailure.right)
-          ? firstPartyFailure.right.value
-          : undefined,
+        codexEventAnalysis: codexEventAnalysis.right,
         operation: input.operation,
       });
-      const result = modelInvocationResultFromLifecycle(lifecycle);
+      const result = modelInvocationResultFromLifecycle(
+        lifecycle,
+        codexEventAnalysis.right.result,
+      );
       const completedEvent = input.completionEvent({
         elapsedMilliseconds: Date.now() - input.startedMilliseconds,
         exit,
@@ -1990,7 +2135,10 @@ function appendInvocationEvidenceLedger(input: {
   );
 }
 
-export async function runCodexInvocation<A = unknown>(input: {
+type RunCodexInvocationInput<
+  A,
+  O extends ModelInvocationOperation<A> = ModelInvocationOperation<A>,
+> = {
   readonly args: readonly [string, ...string[]];
   readonly cwd: string;
   readonly env: NodeJS.ProcessEnv;
@@ -2005,8 +2153,24 @@ export async function runCodexInvocation<A = unknown>(input: {
   readonly model: string;
   readonly reasoningEffort: string;
   readonly timeoutMilliseconds?: number;
-  readonly operation: ModelInvocationOperation<A>;
-}): Promise<ModelInvocationRun<A>> {
+  readonly operation: O;
+};
+
+type NoOutputOperation = Readonly<{ readonly tag: "noOutput" }>;
+type ExpectedLastMessageOperation<A> = Extract<
+  ModelInvocationOperation<A>,
+  { readonly tag: "expectedLastMessage" }
+>;
+
+export function runCodexInvocation<A = unknown>(
+  input: RunCodexInvocationInput<A, NoOutputOperation>,
+): Promise<ModelInvocationRun<A, "noOutput">>;
+export function runCodexInvocation<A>(
+  input: RunCodexInvocationInput<A, ExpectedLastMessageOperation<A>>,
+): Promise<ModelInvocationRun<A, "expectedLastMessage">>;
+export async function runCodexInvocation<A = unknown>(
+  input: RunCodexInvocationInput<A>,
+): Promise<ModelInvocationRun<A>> {
   const startedAt = new Date().toISOString();
   const startedMilliseconds = Date.now();
   const startedEvent = currentModelInvocationStartedEvent({
@@ -2075,7 +2239,10 @@ export type BenchmarkAuxiliaryInvocationKind =
       readonly phase: "scenarioCharacterAuthoring";
     };
 
-export async function runBenchmarkAuxiliaryInvocation<A = unknown>(input: {
+type RunBenchmarkAuxiliaryInvocationInput<
+  A,
+  O extends ModelInvocationOperation<A> = ModelInvocationOperation<A>,
+> = {
   readonly args: readonly [string, ...string[]];
   readonly cwd: string;
   readonly env: NodeJS.ProcessEnv;
@@ -2090,8 +2257,21 @@ export async function runBenchmarkAuxiliaryInvocation<A = unknown>(input: {
   readonly model: string;
   readonly reasoningEffort: string;
   readonly timeoutMilliseconds?: number;
-  readonly operation: ModelInvocationOperation<A>;
-}): Promise<Either.Either<ModelInvocationRun<A>, string>> {
+  readonly operation: O;
+};
+
+export function runBenchmarkAuxiliaryInvocation<A = unknown>(
+  input: RunBenchmarkAuxiliaryInvocationInput<A, NoOutputOperation>,
+): Promise<Either.Either<ModelInvocationRun<A, "noOutput">, string>>;
+export function runBenchmarkAuxiliaryInvocation<A>(
+  input: RunBenchmarkAuxiliaryInvocationInput<
+    A,
+    ExpectedLastMessageOperation<A>
+  >,
+): Promise<Either.Either<ModelInvocationRun<A, "expectedLastMessage">, string>>;
+export async function runBenchmarkAuxiliaryInvocation<A = unknown>(
+  input: RunBenchmarkAuxiliaryInvocationInput<A>,
+): Promise<Either.Either<ModelInvocationRun<A>, string>> {
   try {
     const startedAt = new Date().toISOString();
     const startedMilliseconds = Date.now();
