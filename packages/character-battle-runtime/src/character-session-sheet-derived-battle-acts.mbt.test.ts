@@ -65,13 +65,14 @@ import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-suppor
 function battleCreatureInitFromStatBlock(
   input: Omit<
     Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks"
+    "ammunitionStocks" | "conditions"
   >,
 ) {
   return expectRight(
     parseBattleCreatureInitFromStatBlock({
       ...input,
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+      conditions: [],
     }),
   );
 }

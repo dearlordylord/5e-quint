@@ -169,13 +169,14 @@ import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-suppor
 function battleCreatureInitFromStatBlock(
   input: Omit<
     Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks"
+    "ammunitionStocks" | "conditions"
   >,
 ) {
   return expectRight(
     parseBattleCreatureInitFromStatBlock({
       ...input,
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+      conditions: [],
     }),
   );
 }
@@ -327,6 +328,7 @@ describe("Character Sheet battle handoff", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -859,6 +861,7 @@ describe("Character Sheet battle handoff", () => {
         statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
         initiative: initiativeScore(10),
         ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        conditions: [],
       },
     });
 
@@ -938,6 +941,7 @@ describe("Character Sheet battle handoff", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
       }),
     ).toMatchObject({
@@ -976,6 +980,7 @@ describe("Character Sheet battle handoff", () => {
           },
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
       }),
     ).toMatchObject({
@@ -4044,6 +4049,7 @@ describe("Character Sheet battle handoff", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(5),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
       }),
     ).toMatchObject({
@@ -6605,6 +6611,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(5),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -6632,6 +6639,7 @@ describe("Character Build battle projection", () => {
           },
           initiative: initiativeScore(5),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -7899,6 +7907,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -8080,6 +8089,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(5),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
       }),
     );
@@ -8557,6 +8567,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -8619,6 +8630,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -8751,6 +8763,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -8827,6 +8840,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -9095,6 +9109,7 @@ describe("Character Build battle projection", () => {
           ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -9189,6 +9204,7 @@ describe("Character Build battle projection", () => {
           ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -9676,6 +9692,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),

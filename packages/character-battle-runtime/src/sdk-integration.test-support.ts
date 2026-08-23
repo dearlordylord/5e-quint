@@ -1143,6 +1143,7 @@ export function monsterBattleInput(
     statBlock,
     initiative: initiativeScore(initiative),
     ammunitionStocks: testAmmunitionStocksForStatBlock(statBlock),
+    conditions: [],
     ...(input.tempHp === undefined ? {} : { tempHp: Hp(input.tempHp) }),
   };
 }

@@ -1412,6 +1412,7 @@ function poisonImmuneSkeletonCreature(input: {
       currentHp: Hp(13),
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     },
   };
 }

@@ -12,6 +12,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     ),
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [],
+    conditions: [],
   });
   if (sdk.isLeft(ridingHorse)) {
     return {
@@ -26,6 +27,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     statBlock: context.statBlockCatalog.requireStatBlock("stat_block_wolf"),
     initiative: sdk.initiativeScore(13),
     ammunitionStocks: [],
+    conditions: [],
   });
   if (sdk.isLeft(wolf)) {
     return {

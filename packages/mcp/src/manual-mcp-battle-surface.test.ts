@@ -1242,6 +1242,7 @@ function statBlock(
       currentHp: Hp(10),
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     }),
   );
   return { ...init, displayName: input.displayName ?? init.displayName };

@@ -156,7 +156,7 @@ function startBattleFromCharacterBuildAndStatBlockRight(
       Parameters<
         typeof startBattleFromCharacterBuildAndStatBlock
       >[0]["statBlockBattleInput"],
-      "ammunitionStocks"
+      "ammunitionStocks" | "conditions"
     >;
   },
 ): BattleRuntimeSession {
@@ -166,6 +166,7 @@ function startBattleFromCharacterBuildAndStatBlockRight(
     statBlockBattleInput: {
       ...input.statBlockBattleInput,
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     },
   });
   if (Either.isLeft(result)) {

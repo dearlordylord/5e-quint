@@ -83,6 +83,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     statBlock: wolf,
     initiative: sharedWolfInitiative,
     ammunitionStocks: [],
+    conditions: [],
   });
   if (sdk.isLeft(wolfAInit)) {
     return obstructed(
@@ -96,6 +97,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     statBlock: wolf,
     initiative: sharedWolfInitiative,
     ammunitionStocks: [],
+    conditions: [],
   });
   if (sdk.isLeft(wolfBInit)) {
     return obstructed(
@@ -109,6 +111,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     statBlock: goblin,
     initiative: sdk.initiativeScore(15),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+    conditions: [],
   });
   if (sdk.isLeft(goblinInit)) {
     return obstructed(

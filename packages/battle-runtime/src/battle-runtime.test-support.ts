@@ -4024,6 +4024,7 @@ export function statBlockCreatureInit(input: {
       currentHp: Hp(input.currentHp ?? maxHp),
       tempHp: Hp(input.tempHp ?? 0),
       ammunitionStocks,
+      conditions: [],
     },
   };
 }
@@ -4201,6 +4202,7 @@ export function skeletonCreatureInit(input: {
       currentHp: Hp(13),
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+      conditions: [],
     },
   };
 }
@@ -4234,6 +4236,7 @@ export function resistantSkeletonCreatureInit(input: {
       currentHp: Hp(13),
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+      conditions: [],
     },
   };
 }

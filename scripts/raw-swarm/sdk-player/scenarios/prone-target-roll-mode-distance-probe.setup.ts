@@ -17,18 +17,21 @@ export const setupScenario: ScenarioSetup = (context) => {
       statBlock: goblinWarrior,
       initiative: sdk.initiativeScore(18),
       ammunitionStocks: [arrowStock()],
+      conditions: [],
     }),
     sdk.battleCreatureInitFromStatBlock({
       combatantId: rangedGoblinWarriorId,
       statBlock: goblinWarrior,
       initiative: sdk.initiativeScore(14),
       ammunitionStocks: [arrowStock()],
+      conditions: [],
     }),
     sdk.battleCreatureInitFromStatBlock({
       combatantId: wolfId,
       statBlock: wolf,
       initiative: sdk.initiativeScore(7),
       ammunitionStocks: [],
+      conditions: [],
     }),
   ] as const;
 

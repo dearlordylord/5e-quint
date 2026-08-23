@@ -255,12 +255,10 @@ export function battleCreatureStateAdmissionFromInit(
   }
   const zeroHpLifecycle = zeroHpLifecycleResult.right;
   const initialConditions =
-    creatureInit.kind === "character"
-      ? (creatureInit.conditions?.reduce(
-          (conditions, condition) => applyCondition(conditions, condition),
-          EMPTY_CONDITION_STATE,
-        ) ?? EMPTY_CONDITION_STATE)
-      : EMPTY_CONDITION_STATE;
+    creatureInit.conditions?.reduce(
+      (conditions, condition) => applyCondition(conditions, condition),
+      EMPTY_CONDITION_STATE,
+    ) ?? EMPTY_CONDITION_STATE;
   const base = {
     combatantId: input.combatantId,
     initiative: input.initiative,

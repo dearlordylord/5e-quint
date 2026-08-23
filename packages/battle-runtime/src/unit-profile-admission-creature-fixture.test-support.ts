@@ -301,6 +301,7 @@ export function statBlockCreature(input: {
       ammunitionStocks: requiredAmmunitionKinds(attacks).map((ammunition) =>
         battleAmmunitionStock(ammunition, 20),
       ),
+      conditions: [],
     },
   };
 }

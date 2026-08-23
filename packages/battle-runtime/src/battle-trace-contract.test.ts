@@ -259,6 +259,7 @@ function statBlockCreatureInit(input: {
       currentHp: Hp(statBlock.statBlock.hp.value),
       tempHp: Hp(0),
       ammunitionStocks: [],
+      conditions: [],
     },
   };
 }

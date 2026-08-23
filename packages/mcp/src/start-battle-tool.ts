@@ -256,6 +256,7 @@ function startableBattleCombatant(input: {
         statBlock: statBlock.value,
         initiative: statBlockCombatant.initiative,
         ammunitionStocks: statBlockCombatant.ammunitionStocks,
+        conditions: [],
         ...(encounterCombatant.currentHp === undefined
           ? {}
           : { currentHp: encounterCombatant.currentHp }),

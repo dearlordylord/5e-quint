@@ -1420,6 +1420,7 @@ function statBlockCreature(input: {
       currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+      conditions: [],
     },
   };
 }

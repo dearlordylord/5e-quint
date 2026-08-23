@@ -51,24 +51,28 @@ export const setupScenario: ScenarioSetup = (context) => {
       statBlock: brineStatBlock,
       initiative: sdk.initiativeScore(22),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     }),
     sdk.battleCreatureInitFromStatBlock({
       combatantId: rivetId,
       statBlock: rivetStatBlock,
       initiative: sdk.initiativeScore(17),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     }),
     sdk.battleCreatureInitFromStatBlock({
       combatantId: sootId,
       statBlock: brineStatBlock,
       initiative: sdk.initiativeScore(12),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     }),
     sdk.battleCreatureInitFromStatBlock({
       combatantId: tangleId,
       statBlock: tangleStatBlock,
       initiative: sdk.initiativeScore(7),
       ammunitionStocks: [],
+      conditions: [],
     }),
   ];
 

@@ -307,6 +307,7 @@ export type StatBlockBattleInitInput = {
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
+  readonly conditions: readonly Condition[];
 };
 
 export type StatBlockBattleCreatureInit = {
@@ -315,6 +316,7 @@ export type StatBlockBattleCreatureInit = {
   readonly currentHp: Hp;
   readonly tempHp: Hp;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
+  readonly conditions: readonly Condition[];
 };
 
 export type BattleCreatureInit = {
@@ -344,6 +346,7 @@ export function battleCreatureInitFromStatBlock(
       currentHp: input.currentHp ?? maxHp,
       tempHp: input.tempHp ?? toHp(0),
       ammunitionStocks: input.ammunitionStocks,
+      conditions: input.conditions,
     },
   });
 }

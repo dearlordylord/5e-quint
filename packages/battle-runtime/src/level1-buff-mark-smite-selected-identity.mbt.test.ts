@@ -2733,6 +2733,7 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
       currentHp: maxHp,
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+      conditions: [],
     },
   };
 }

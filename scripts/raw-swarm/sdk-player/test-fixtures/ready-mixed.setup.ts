@@ -40,6 +40,7 @@ export const setupScenario: ScenarioSetup = ({
     statBlock: statBlock.value,
     initiative: sdk.initiativeScore(10),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+    conditions: [],
   });
   if (sdk.isLeft(monster)) {
     return {
