@@ -271,42 +271,6 @@ export type RetainedScenarioReviewReplayBinding =
       readonly ledgerEntry: HistoricalReplayLedgerEntry;
     }>;
 
-/**
- * Validate the lifecycle-specific expectation against the parsed envelope
- * once. Candidate final expectations carry the admitted Scenario hash, while
- * milestone bindings derive their Candidate hash from the parsed subject.
- * Historical expectations carry Campaign identity only to validate a migrated
- * v4 Candidate ledger row; the resulting historical binding retains no
- * Candidate ownership.
- */
-export function retainedScenarioReviewMatchesReplayExpectation(
-  input: RetainedScenarioReviewInput,
-  expected: RetainedScenarioReviewReplayExpectation,
-): Either.Either<RetainedScenarioReviewReplayExpectation, string> {
-  const subject = retainedScenarioReviewSubject(input);
-  const inputTag =
-    subject.tag === "scenarioCandidate" ? "candidate" : "scenario";
-  if (expected.tag === "historicalScenario" && input.schemaVersion !== 2) {
-    return Either.left(
-      `Review invocation ${input.invocationId} is not a historical schema-v2 envelope.`,
-    );
-  }
-  if (expected.tag === "historicalScenario" || expected.tag === "scenario") {
-    if (inputTag === "candidate") {
-      return Either.left(
-        `Review invocation ${input.invocationId} has lifecycle ${inputTag}, not expected ${expected.tag}.`,
-      );
-    }
-    return Either.right(expected);
-  }
-  if (inputTag !== expected.tag) {
-    return Either.left(
-      `Review invocation ${input.invocationId} has lifecycle ${inputTag}, not expected ${expected.tag}.`,
-    );
-  }
-  return Either.right(expected);
-}
-
 function replayLedgerSchemaVersion(
   input: RetainedScenarioReviewInput,
   ledgerEntry: ModelInvocationLedgerEntry,
@@ -369,11 +333,13 @@ function isHistoricalReplayLedgerEntry(
 }
 
 /**
- * The replay boundary has two historical shapes. Schema-2 retained reviews
- * can bind to exact v2 rows or migrated v4 lifecycle rows, including a
- * scenarioCandidate row after its Campaign ownership is checked; schema-3
- * Candidate reviews require a lifecycle-discriminated v4 row so the immutable
- * Candidate, Campaign, and Evidence Set identity is preserved.
+ * Construct the one canonical replay binding after validating the
+ * lifecycle-specific expectation against the parsed envelope and ledger.
+ * Schema-2 retained reviews can bind to exact v2 rows or migrated v4
+ * lifecycle rows, including a scenarioCandidate row after its Campaign
+ * ownership is checked; schema-3 Candidate reviews require a
+ * lifecycle-discriminated v4 row so the immutable Candidate, Campaign, and
+ * Evidence Set identity is preserved.
  */
 export function retainedScenarioReviewMatchesReplayBinding(
   input: RetainedScenarioReviewInput,

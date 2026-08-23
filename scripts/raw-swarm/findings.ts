@@ -42,7 +42,6 @@ import {
 import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
-  retainedScenarioReviewMatchesReplayExpectation,
   type RetainedScenarioReviewCampaignIdentity,
 } from "./scenario-review-input.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
@@ -1181,17 +1180,17 @@ function originalCompositeReviewInputs(
       );
     }
     const entry = matches[0]!;
-    const expectedBinding = (() => {
+    const binding = (() => {
       if (review.schemaVersion === 2) {
         return expectedStage === "final"
-          ? retainedScenarioReviewMatchesReplayExpectation(review, {
+          ? retainedScenarioReviewMatchesReplayBinding(review, entry, {
               tag: "historicalScenario",
               reviewStage: "final",
               scenarioId: expectedScenario.scenarioId,
               admittedScenarioSha256: expectedScenario.scenarioSha256,
               campaign: expectedCampaign,
             })
-          : retainedScenarioReviewMatchesReplayExpectation(review, {
+          : retainedScenarioReviewMatchesReplayBinding(review, entry, {
               tag: "historicalScenario",
               reviewStage: "milestone",
               scenarioId: expectedScenario.scenarioId,
@@ -1199,14 +1198,14 @@ function originalCompositeReviewInputs(
             });
       }
       if (review.subject.tag !== "scenarioCandidate") {
-        return retainedScenarioReviewMatchesReplayExpectation(review, {
+        return retainedScenarioReviewMatchesReplayBinding(review, entry, {
           tag: "scenario",
           reviewStage: expectedStage,
           scenarioId: expectedScenario.scenarioId,
         });
       }
       if (expectedStage === "final") {
-        return retainedScenarioReviewMatchesReplayExpectation(review, {
+        return retainedScenarioReviewMatchesReplayBinding(review, entry, {
           tag: "candidate",
           reviewStage: "final",
           scenarioId: expectedScenario.scenarioId,
@@ -1214,23 +1213,13 @@ function originalCompositeReviewInputs(
           campaign: expectedCampaign,
         });
       }
-      return retainedScenarioReviewMatchesReplayExpectation(review, {
+      return retainedScenarioReviewMatchesReplayBinding(review, entry, {
         tag: "candidate",
         reviewStage: "milestone",
         scenarioId: expectedScenario.scenarioId,
         campaign: expectedCampaign,
       });
     })();
-    if (Either.isLeft(expectedBinding)) {
-      fail(
-        `Review replay input ${canonical} does not have a valid lifecycle binding: ${expectedBinding.left}`,
-      );
-    }
-    const binding = retainedScenarioReviewMatchesReplayBinding(
-      review,
-      entry,
-      expectedBinding.right,
-    );
     if (Either.isLeft(binding)) {
       fail(
         `Review replay input ${canonical} does not match original composite-review invocation ${review.invocationId}: ${binding.left}`,

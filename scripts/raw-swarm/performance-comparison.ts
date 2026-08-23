@@ -58,7 +58,6 @@ export {
 import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
-  retainedScenarioReviewMatchesReplayExpectation,
   type RetainedScenarioReviewCampaignIdentity,
   type RetainedScenarioReviewReplayBinding,
 } from "./scenario-review-input.ts";
@@ -3415,64 +3414,79 @@ function currentAuthorityContentIssues(
       invocation === undefined
         ? Either.left("No matching composite-review invocation was retained.")
         : (() => {
-            const expectedBinding = (() => {
-              if (replay.schemaVersion === 2) {
-                return expectedReplayCampaign === undefined
-                  ? retainedScenarioReviewMatchesReplayExpectation(replay, {
+            if (replay.schemaVersion === 2) {
+              return expectedReplayCampaign === undefined
+                ? retainedScenarioReviewMatchesReplayBinding(
+                    replay,
+                    invocation,
+                    {
                       tag: "scenario",
                       reviewStage: expectedReplayStage,
                       scenarioId: findings.subject.scenarioId,
-                    })
-                  : expectedReplayStage === "final"
-                    ? retainedScenarioReviewMatchesReplayExpectation(replay, {
+                    },
+                  )
+                : expectedReplayStage === "final"
+                  ? retainedScenarioReviewMatchesReplayBinding(
+                      replay,
+                      invocation,
+                      {
                         tag: "historicalScenario",
                         reviewStage: "final",
                         scenarioId: findings.subject.scenarioId,
                         admittedScenarioSha256: expectedScenarioSha256,
                         campaign: expectedReplayCampaign,
-                      })
-                    : retainedScenarioReviewMatchesReplayExpectation(replay, {
+                      },
+                    )
+                  : retainedScenarioReviewMatchesReplayBinding(
+                      replay,
+                      invocation,
+                      {
                         tag: "historicalScenario",
                         reviewStage: "milestone",
                         scenarioId: findings.subject.scenarioId,
                         campaign: expectedReplayCampaign,
-                      });
-              }
-              if (replay.subject.tag !== "scenarioCandidate") {
-                return retainedScenarioReviewMatchesReplayExpectation(replay, {
+                      },
+                    );
+            }
+            if (replay.subject.tag !== "scenarioCandidate") {
+              return retainedScenarioReviewMatchesReplayBinding(
+                replay,
+                invocation,
+                {
                   tag: "scenario",
                   reviewStage: expectedReplayStage,
                   scenarioId: findings.subject.scenarioId,
-                });
-              }
-              if (expectedReplayCampaign === undefined) {
-                return Either.left(
-                  "Current Candidate replay binding requires an expected Campaign and Evidence Set identity.",
-                );
-              }
-              if (expectedReplayStage === "final") {
-                return retainedScenarioReviewMatchesReplayExpectation(replay, {
+                },
+              );
+            }
+            if (expectedReplayCampaign === undefined) {
+              return Either.left(
+                "Current Candidate replay binding requires an expected Campaign and Evidence Set identity.",
+              );
+            }
+            if (expectedReplayStage === "final") {
+              return retainedScenarioReviewMatchesReplayBinding(
+                replay,
+                invocation,
+                {
                   tag: "candidate",
                   reviewStage: "final",
                   scenarioId: findings.subject.scenarioId,
                   admittedScenarioSha256: expectedScenarioSha256,
                   campaign: expectedReplayCampaign,
-                });
-              }
-              return retainedScenarioReviewMatchesReplayExpectation(replay, {
+                },
+              );
+            }
+            return retainedScenarioReviewMatchesReplayBinding(
+              replay,
+              invocation,
+              {
                 tag: "candidate",
                 reviewStage: "milestone",
                 scenarioId: findings.subject.scenarioId,
                 campaign: expectedReplayCampaign,
-              });
-            })();
-            return Either.isLeft(expectedBinding)
-              ? Either.left(expectedBinding.left)
-              : retainedScenarioReviewMatchesReplayBinding(
-                  replay,
-                  invocation,
-                  expectedBinding.right,
-                );
+              },
+            );
           })();
     if (Either.isLeft(binding)) {
       issues.push(
