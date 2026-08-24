@@ -177,6 +177,27 @@ export type RetainedScenarioReviewCampaignIdentity = Readonly<{
   readonly plannedScenarioId: PlannedScenarioId;
 }>;
 
+/**
+ * The identity fields projected from the independent Campaign authority.
+ * Callers must obtain these fields from the retained campaign manifest, not
+ * from a Candidate review row that is being checked against that authority.
+ */
+export type RetainedScenarioReviewCampaignAuthority = Readonly<{
+  readonly campaignId: ScenarioCampaignId;
+  readonly evidenceSetId: EvidenceSetId;
+  readonly plannedScenarioId: PlannedScenarioId;
+}>;
+
+export function retainedScenarioReviewCampaignIdentityFromAuthority(
+  authority: RetainedScenarioReviewCampaignAuthority,
+): RetainedScenarioReviewCampaignIdentity {
+  return {
+    campaignId: authority.campaignId,
+    evidenceSetId: authority.evidenceSetId,
+    plannedScenarioId: authority.plannedScenarioId,
+  };
+}
+
 export type RetainedScenarioReviewBenchmarkIdentity = Readonly<{
   readonly benchmarkId: BenchmarkId;
   readonly profile: "documentDeclarationSet" | "boundedCapabilityProjection";
@@ -241,11 +262,22 @@ export type RetainedScenarioReviewReplayOwner =
       };
     }>;
 
+export function retainedScenarioReviewCampaignOwner(
+  campaign: RetainedScenarioReviewCampaignIdentity,
+): Readonly<{
+  readonly tag: "campaign";
+  readonly campaign: RetainedScenarioReviewCampaignIdentity;
+}> {
+  return { tag: "campaign", campaign };
+}
+
 /**
  * Select the lifecycle expectation from one retained envelope and its owning
  * replay identity. Schema-v2 has no subject, so a Campaign owner is required
  * to preserve migrated Candidate ownership instead of silently becoming a
- * plain Scenario expectation.
+ * plain Scenario expectation. A current Campaign review is always expected
+ * to carry a scenarioCandidate subject; a same-name Scenario subject is not a
+ * second spelling for the Candidate lifecycle.
  */
 export function retainedScenarioReviewReplayExpectation(
   input: RetainedScenarioReviewInput,
@@ -287,14 +319,6 @@ export function retainedScenarioReviewReplayExpectation(
           scenarioId: expected.scenarioId,
           campaign: expected.owner.campaign,
         };
-  }
-  const subject = retainedScenarioReviewSubject(input);
-  if (subject.tag !== "scenarioCandidate") {
-    return {
-      tag: "scenario",
-      reviewStage: expected.reviewStage,
-      scenarioId: expected.scenarioId,
-    };
   }
   return expected.reviewStage === "final"
     ? {

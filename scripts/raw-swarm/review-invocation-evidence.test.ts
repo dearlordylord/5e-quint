@@ -33,6 +33,110 @@ function parseJsonRecord(text: string): Record<string, unknown> {
   return value;
 }
 
+type ControlledReviewEvidenceFixture = ReturnType<
+  typeof controlledReviewEvidenceFixture
+>;
+
+function rewriteCurrentReviewSubject(
+  fixture: ControlledReviewEvidenceFixture,
+  index: 0 | 1,
+  subject: Record<string, unknown>,
+): void {
+  const sourcePath = fixture.sourcePrePlayReviewInputPaths[index];
+  const replayPath = fixture.replayPrePlayReviewInputPaths[index];
+  if (sourcePath === undefined || replayPath === undefined) {
+    throw new Error("Missing retained review input fixture.");
+  }
+  const result = {
+    ...(parseJsonRecord(readFileSync(replayPath, "utf8")).result as Record<
+      string,
+      unknown
+    >),
+    scenarioQuality: {
+      classification: "ready",
+      evidence: "The current lifecycle subject is retained for this test.",
+    },
+  };
+  for (const path of [sourcePath, replayPath]) {
+    const input = parseJsonRecord(readFileSync(path, "utf8"));
+    delete input.scenarioId;
+    input.schemaVersion = 3;
+    input.subject = subject;
+    input.outputJsonSchema = codexOutputJsonSchema(
+      CurrentScenarioCompositeReviewSchema,
+    );
+    input.result = result;
+    writeFileSync(path, `${JSON.stringify(input)}\n`);
+  }
+  const eventPaths = [
+    fixture.eventPaths[index],
+    `${replayPath.slice(0, -".json".length)}.events.jsonl`,
+  ];
+  for (const path of eventPaths) {
+    if (path === undefined) throw new Error("Missing review event fixture.");
+    const events = readFileSync(path, "utf8")
+      .trim()
+      .split("\n")
+      .map(parseJsonRecord);
+    const started = events[0];
+    if (started === undefined) throw new Error("Missing review start event.");
+    started.subject = subject;
+    const message = events.find(
+      (event) =>
+        event.type === "item.completed" &&
+        isJsonRecord(event.item) &&
+        event.item.type === "agent_message",
+    );
+    if (message === undefined || !isJsonRecord(message.item)) {
+      throw new Error("Missing composite-review output event.");
+    }
+    message.item.text = JSON.stringify({ result });
+    writeFileSync(
+      path,
+      `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
+    );
+  }
+  const ledger = readFileSync(fixture.ledgerPath, "utf8")
+    .trim()
+    .split("\n")
+    .map(parseJsonRecord);
+  const entry = ledger[index];
+  const eventPath = fixture.eventPaths[index];
+  if (entry === undefined || eventPath === undefined) {
+    throw new Error("Missing composite ledger fixture.");
+  }
+  entry.subject = subject;
+  entry.eventsSha256 = invocationEventsSha256(eventPath);
+  writeFileSync(
+    fixture.ledgerPath,
+    `${ledger.map((value) => JSON.stringify(value)).join("\n")}\n`,
+  );
+}
+
+function writeControlledReviewManifest(
+  fixture: ControlledReviewEvidenceFixture,
+): void {
+  writeReviewInvocationEvidenceManifest({
+    transcriptPath: fixture.transcriptPath,
+    reviewPath: fixture.reviewPath,
+    auditPath: fixture.auditPath,
+    packetPath: fixture.packetPath,
+    prePlayReviewPaths: [
+      {
+        sourceInputPath: fixture.sourcePrePlayReviewInputPaths[0],
+        replayInputPath: fixture.replayPrePlayReviewInputPaths[0],
+      },
+      {
+        sourceInputPath: fixture.sourcePrePlayReviewInputPaths[1],
+        replayInputPath: fixture.replayPrePlayReviewInputPaths[1],
+      },
+    ],
+    invocationLedgerPaths: [fixture.ledgerPath],
+    invocationEventPaths: fixture.eventPaths,
+    outputPath: fixture.manifestPath,
+  });
+}
+
 afterEach(() => {
   for (const directory of directories.splice(0))
     rmSync(directory, { recursive: true, force: true });
@@ -434,7 +538,104 @@ describe("review invocation evidence", () => {
     });
     expect(() =>
       readReviewInvocationEvidenceManifest(fixture.manifestPath),
-    ).toThrow(/one Campaign, Evidence Set/);
+    ).toThrow(/Campaign, Evidence Set/);
+  });
+
+  test("rejects a coordinated foreign Campaign owner", () => {
+    const directory = rawSwarmTestOutputDirectory(
+      "review-foreign-campaign-owner-test-",
+    );
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const admittedScenarioSha256 = sha256Text(
+      readFileSync(resolve(directory, "run/SCENARIO.md"), "utf8"),
+    );
+    const foreignSubjects = [
+      {
+        tag: "scenarioCandidate",
+        campaignId: "foreign-campaign",
+        evidenceSetId: "foreign-evidence",
+        candidateId: "foreign-milestone",
+        candidateScenarioSha256: "b".repeat(64),
+        plannedScenarioId: "same",
+      },
+      {
+        tag: "scenarioCandidate",
+        campaignId: "foreign-campaign",
+        evidenceSetId: "foreign-evidence",
+        candidateId: "foreign-final",
+        candidateScenarioSha256: admittedScenarioSha256,
+        plannedScenarioId: "same",
+      },
+    ] as const;
+    rewriteCurrentReviewSubject(fixture, 0, foreignSubjects[0]);
+    rewriteCurrentReviewSubject(fixture, 1, foreignSubjects[1]);
+    rmSync(fixture.manifestPath, { force: true });
+
+    expect(() => writeControlledReviewManifest(fixture)).toThrow(
+      /Campaign, Evidence Set, and planned Scenario/,
+    );
+  });
+
+  test("rejects a current same-name Scenario substitution under Campaign ownership", () => {
+    const directory = rawSwarmTestOutputDirectory(
+      "review-same-name-scenario-substitution-test-",
+    );
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const sameNameSubject = {
+      tag: "scenario",
+      scenarioId: "same",
+    };
+    rewriteCurrentReviewSubject(fixture, 0, sameNameSubject);
+    rewriteCurrentReviewSubject(fixture, 1, sameNameSubject);
+    rmSync(fixture.manifestPath, { force: true });
+
+    expect(() => writeControlledReviewManifest(fixture)).toThrow(
+      /lifecycle scenario, not expected candidate/,
+    );
   });
 
   test("validates event output from a parsed replay binding without rereading the envelope", () => {

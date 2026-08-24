@@ -45,6 +45,8 @@ import {
 } from "./transcript.ts";
 import {
   RetainedScenarioReviewInputSchema,
+  retainedScenarioReviewCampaignIdentityFromAuthority,
+  retainedScenarioReviewCampaignOwner,
   retainedScenarioReviewMatchesReplayBinding,
   retainedScenarioReviewReplayExpectation,
   type RetainedScenarioReviewBenchmarkIdentity,
@@ -1299,11 +1301,9 @@ function expectedReplayCampaignIdentity(
         `Generation Campaign manifest is invalid: ${canonicalManifestPath}: ${decoded.left.message}`,
       );
     }
-    const campaign = {
-      campaignId: decoded.right.campaignId,
-      evidenceSetId: decoded.right.evidenceSetId,
-      plannedScenarioId: decoded.right.plannedScenarioId,
-    } satisfies RetainedScenarioReviewCampaignIdentity;
+    const campaign = retainedScenarioReviewCampaignIdentityFromAuthority(
+      decoded.right,
+    );
     if (
       expected !== undefined &&
       canonicalJson(expected) !== canonicalJson(campaign)
@@ -1416,10 +1416,9 @@ function replayLedgerOwner(
       },
     };
   }
-  return {
-    tag: "campaign",
-    campaign: requiredReplayCampaignIdentity(generationLedgerPaths),
-  };
+  return retainedScenarioReviewCampaignOwner(
+    requiredReplayCampaignIdentity(generationLedgerPaths),
+  );
 }
 
 function originalCompositeReviewInputs(
@@ -2397,7 +2396,7 @@ export function projectExecutionFindings(
           );
           return campaign === undefined
             ? ({ tag: "scenario" } as const)
-            : ({ tag: "campaign", campaign } as const);
+            : retainedScenarioReviewCampaignOwner(campaign);
         })();
   for (const path of input.generationLedgerPaths) {
     const manifestPath = sourcePath(

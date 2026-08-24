@@ -1411,6 +1411,53 @@ describe("Raw Swarm findings projection", () => {
     expect(foreignBinding.left).toMatch(/Campaign, Evidence Set/);
   });
 
+  test("rejects a current same-name Scenario replay under Campaign ownership", () => {
+    const input = fixture();
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      FINDINGS_REVIEW_SUBJECT,
+      {
+        reviewEntries: [
+          {
+            invocationId: "current-same-name",
+            reviewStage: "final",
+            subject: FINDINGS_REVIEW_SUBJECT,
+          },
+        ],
+      },
+    );
+    const historical = retainedCompositeReviewInput({
+      reviewStage: "final",
+      invocationId: "current-same-name",
+    });
+    const { scenarioId: _scenarioId, ...common } = historical;
+    const currentInput = {
+      ...common,
+      schemaVersion: 3 as const,
+      outputJsonSchema: codexOutputJsonSchema(
+        CurrentScenarioCompositeReviewSchema,
+      ),
+      subject: FINDINGS_REVIEW_SUBJECT,
+    };
+    const finalPath = resolve(input.root, "current-same-name.json");
+    writeFileSync(finalPath, `${JSON.stringify(currentInput)}\n`);
+
+    expect(() =>
+      projectExecutionFindings({
+        transcriptPath: input.transcriptRelative,
+        evidenceSetDirectory: input.runRelative,
+        reviewPaths: [input.reviewRelative],
+        scenarioReviewPaths: [],
+        generationLedgerPaths: [generationLedgerRelative],
+        reviewReplay: {
+          tag: "finalOnly",
+          finalPath: relative(repoRoot, finalPath),
+        },
+        issueLinks: [],
+      }),
+    ).toThrow(/lifecycle scenario, not expected candidate/);
+  });
+
   test("preserves a revised Candidate hash at the historical milestone", () => {
     const input = fixture();
     const candidateSubject = {

@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 
 import { Either, Schema } from "effect";
 
@@ -29,9 +29,12 @@ import {
 import { reviewInvocationPolicy } from "./review-invocation-policy.ts";
 import {
   RetainedScenarioReviewInputSchema,
+  retainedScenarioReviewCampaignIdentityFromAuthority,
+  retainedScenarioReviewCampaignOwner,
   retainedScenarioReviewMatchesReplayBinding,
   retainedScenarioReviewReplayExpectation,
   retainedScenarioReviewSubject,
+  type RetainedScenarioReviewCampaignIdentity,
   type RetainedScenarioReviewReplayOwner,
   type RetainedScenarioReviewInput,
 } from "./scenario-review-input.ts";
@@ -63,6 +66,7 @@ import {
   canonicalRepositoryReadPath,
   canonicalRepositoryReadRelativePath,
 } from "./repository-path.ts";
+import { ScenarioCampaignManifestSchema } from "./evidence-manifests.ts";
 
 // This manifest is the current tracer evidence shape: unlike the fixed
 // benchmark's historical documentDeclarationSet path, it retains the packet
@@ -159,6 +163,56 @@ function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
     if (Either.isLeft(decoded)) fail(decoded.left.message);
     return decoded.right;
   });
+}
+
+function campaignIdentityForControlledReview(
+  retainedReviewInputPath: string,
+): RetainedScenarioReviewCampaignIdentity {
+  const canonicalReviewInputPath = canonicalRepositoryReadPath(
+    repoRoot,
+    retainedReviewInputPath,
+  );
+  if (Either.isLeft(canonicalReviewInputPath)) {
+    fail(
+      `Controlled review invocations require a repository-owned retained review input: ${canonicalReviewInputPath.left}`,
+    );
+  }
+  const reviewInputDirectory = dirname(canonicalReviewInputPath.right);
+  const campaignDirectory = basename(reviewInputDirectory).endsWith(
+    "-review-inputs",
+  )
+    ? dirname(reviewInputDirectory)
+    : reviewInputDirectory;
+  const campaignPath = resolve(campaignDirectory, "campaign.json");
+  const canonicalCampaignPath = canonicalRepositoryReadPath(
+    repoRoot,
+    campaignPath,
+  );
+  if (Either.isLeft(canonicalCampaignPath)) {
+    fail(
+      `Controlled review invocations require the Campaign manifest adjacent to ${retainedReviewInputPath}: ${canonicalCampaignPath.left}`,
+    );
+  }
+  const value: unknown = (() => {
+    try {
+      return JSON.parse(
+        readFileSync(canonicalCampaignPath.right, "utf8"),
+      ) as unknown;
+    } catch {
+      fail(
+        `Controlled review Campaign manifest is malformed JSON: ${canonicalCampaignPath.right}`,
+      );
+    }
+  })();
+  const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+    onExcessProperty: "error",
+  })(value);
+  if (Either.isLeft(decoded)) {
+    fail(
+      `Controlled review Campaign manifest is invalid: ${decoded.left.message}`,
+    );
+  }
+  return retainedScenarioReviewCampaignIdentityFromAuthority(decoded.right);
 }
 
 type RetainedReviewInputArtifact = Readonly<{
@@ -394,41 +448,10 @@ function deriveManifest(input: {
     (entry): readonly CurrentModelInvocationLedgerEntry[] =>
       entry.schemaVersion === 4 || entry.schemaVersion === 5 ? [entry] : [],
   );
-  const candidateSubjects = currentScenarioReviewEntries.flatMap(
-    ({ subject }) => (subject.tag === "scenarioCandidate" ? [subject] : []),
-  );
   const benchmarkSubjects = currentScenarioReviewEntries.flatMap(
     ({ subject }) => (subject.tag === "benchmark" ? [subject] : []),
   );
   const replayOwner: RetainedScenarioReviewReplayOwner = (() => {
-    const candidate = candidateSubjects[0];
-    if (candidate !== undefined) {
-      if (candidateSubjects.length !== currentScenarioReviewEntries.length) {
-        fail(
-          "Scenario-review invocations must retain one Campaign lifecycle owner.",
-        );
-      }
-      if (
-        candidateSubjects.some(
-          (subject) =>
-            subject.campaignId !== candidate.campaignId ||
-            subject.evidenceSetId !== candidate.evidenceSetId ||
-            subject.plannedScenarioId !== candidate.plannedScenarioId,
-        )
-      ) {
-        fail(
-          "Scenario-review invocations must retain one Campaign, Evidence Set, and planned Scenario identity.",
-        );
-      }
-      return {
-        tag: "campaign",
-        campaign: {
-          campaignId: candidate.campaignId,
-          evidenceSetId: candidate.evidenceSetId,
-          plannedScenarioId: candidate.plannedScenarioId,
-        },
-      };
-    }
     const benchmark = benchmarkSubjects[0];
     if (benchmark !== undefined) {
       if (benchmarkSubjects.length !== currentScenarioReviewEntries.length) {
@@ -448,7 +471,14 @@ function deriveManifest(input: {
       }
       return { tag: "benchmark", benchmark };
     }
-    return { tag: "scenario" };
+    const retainedReviewInputPath =
+      input.prePlayReviewPaths[0]?.sourceInputPath;
+    if (retainedReviewInputPath === undefined) {
+      fail("Controlled review invocations require a retained review input.");
+    }
+    return retainedScenarioReviewCampaignOwner(
+      campaignIdentityForControlledReview(retainedReviewInputPath),
+    );
   })();
   const prePlayReviewArtifacts = input.prePlayReviewPaths.map(
     (paths, index) => {
