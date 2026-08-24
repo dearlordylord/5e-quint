@@ -15,6 +15,7 @@ import {
 import { Either, Match, Option, ParseResult, Schema } from "effect";
 
 import {
+  canonicalJson,
   GitShaSchema,
   isJsonRecord,
   ScenarioIdSchema,
@@ -1097,6 +1098,18 @@ type CodexEventDecodeFailureEvent = Readonly<{
   readonly rawLineBase64: string;
 }>;
 
+type CodexRawRetentionReason =
+  | "malformedJsonl"
+  | "failedInvocation"
+  | "unreapedProcess";
+
+type CodexRawRetentionEvent = Readonly<{
+  readonly type: "raw-swarm.invocation.codex-raw-retained";
+  readonly reason: CodexRawRetentionReason;
+  readonly rawContentsSha256: string;
+  readonly rawContentsByteLength: number;
+}>;
+
 function codexEventDecodeFailureEvent(
   input: CodexEventDecodeFailure,
 ): CodexEventDecodeFailureEvent {
@@ -1105,6 +1118,18 @@ function codexEventDecodeFailureEvent(
     line: input.line,
     message: input.message,
     rawLineBase64: input.rawLineBase64,
+  };
+}
+
+function codexRawRetentionEvent(input: {
+  readonly rawContents: Uint8Array;
+  readonly reason: CodexRawRetentionReason;
+}): CodexRawRetentionEvent {
+  return {
+    type: "raw-swarm.invocation.codex-raw-retained",
+    reason: input.reason,
+    rawContentsSha256: sha256Bytes(input.rawContents),
+    rawContentsByteLength: input.rawContents.byteLength,
   };
 }
 
@@ -1711,8 +1736,53 @@ function codexInvocationArgsForOperation(
   ]);
 }
 
+function sha256Bytes(contents: Uint8Array): string {
+  return createHash("sha256").update(contents).digest("hex");
+}
+
 export function invocationEventsSha256(path: string): string {
-  return createHash("sha256").update(readFileSync(path)).digest("hex");
+  return sha256Bytes(readFileSync(path));
+}
+
+type SyncByteWriter = (
+  descriptor: number,
+  buffer: Uint8Array,
+  offset: number,
+  length: number,
+  position: number | null,
+) => number;
+
+const defaultSyncByteWriter: SyncByteWriter = (
+  descriptor,
+  buffer,
+  offset,
+  length,
+  position,
+) => writeSync(descriptor, buffer, offset, length, position);
+
+export function writeAllSync(
+  descriptor: number,
+  contents: Uint8Array,
+  position: number | null = null,
+  write: SyncByteWriter = defaultSyncByteWriter,
+): void {
+  let offset = 0;
+  while (offset < contents.byteLength) {
+    const remaining = contents.byteLength - offset;
+    const written = write(
+      descriptor,
+      contents,
+      offset,
+      remaining,
+      position === null ? null : position + offset,
+    );
+    if (!Number.isInteger(written) || written <= 0 || written > remaining) {
+      throw new Error(
+        `Synchronous write returned an invalid byte count: ${String(written)}.`,
+      );
+    }
+    offset += written;
+  }
 }
 
 type InvocationCompletionInput = {
@@ -1776,7 +1846,7 @@ function claimExpectedModelInvocationOutput(
   try {
     const descriptor = openSync(path, "wx");
     try {
-      writeSync(descriptor, token);
+      writeAllSync(descriptor, Buffer.from(token, "utf8"));
     } finally {
       closeSync(descriptor);
     }
@@ -2588,10 +2658,16 @@ async function runCodexProcess<A, E extends object>(input: {
   try {
     const rawEventPath = `${input.eventPath}.codex-raw`;
     const rawEventFd = openSync(rawEventPath, "wx");
+    let rawEventFdOpen = true;
+    const closeRawEvent = (): void => {
+      if (!rawEventFdOpen) return;
+      closeSync(rawEventFd);
+      rawEventFdOpen = false;
+    };
     try {
       const startedLine = `${JSON.stringify(input.startedEvent)}\n`;
-      writeSync(eventFd, startedLine);
-      writeSync(rawEventFd, startedLine);
+      writeAllSync(eventFd, Buffer.from(startedLine, "utf8"));
+      writeAllSync(rawEventFd, Buffer.from(startedLine, "utf8"));
       const logFd = openSync(input.logPath, "wx");
       try {
         const outputClaim =
@@ -2663,12 +2739,11 @@ async function runCodexProcess<A, E extends object>(input: {
             return {
               ...initialCompletion,
               evidence: evidence.entry,
-              canonicalEvents: [
+              authorityEvents: [
                 ...events,
                 ...(retainedEvents.tag === "invalid"
                   ? [codexEventDecodeFailureEvent(retainedEvents)]
                   : []),
-                initialCompletion.completed,
               ],
             };
           }
@@ -2689,32 +2764,73 @@ async function runCodexProcess<A, E extends object>(input: {
           return {
             ...fallbackCompletion,
             evidence: fallbackEvidence.entry,
-            canonicalEvents: fallbackEvents,
+            authorityEvents: fallbackEvents.slice(0, -1),
           };
         })();
-        const canonicalContents = finalized.canonicalEvents
+        const rawRetentionReason =
+          retainedEvents.tag === "invalid"
+            ? ("malformedJsonl" as const)
+            : finalized.lifecycle.tag === "succeeded"
+              ? undefined
+              : exit.tag === "timedOut" && exit.termination.tag === "unreaped"
+                ? ("unreapedProcess" as const)
+                : ("failedInvocation" as const);
+        const rawRetention =
+          rawRetentionReason === undefined
+            ? undefined
+            : codexRawRetentionEvent({
+                rawContents: retainedEvents.rawContents,
+                reason: rawRetentionReason,
+              });
+        const canonicalEvents = [
+          ...finalized.authorityEvents,
+          ...(rawRetention === undefined ? [] : [rawRetention]),
+          finalized.completed,
+        ];
+        const canonicalContents = canonicalEvents
           .map((event) => `${JSON.stringify(event)}\n`)
           .join("");
         const canonicalBytes = Buffer.from(canonicalContents, "utf8");
         ftruncateSync(eventFd, 0);
-        writeSync(eventFd, canonicalBytes, 0, canonicalBytes.length, 0);
+        writeAllSync(eventFd, canonicalBytes, 0);
+        const reread = readCodexEventsWithSource(input.eventPath);
+        if (reread.tag === "invalid") {
+          throw new Error(
+            `Canonical invocation event authority is malformed after persistence: ${reread.message}`,
+          );
+        }
+        const rereadEvidence = input.evidenceFromEvents(reread.events);
+        if (rereadEvidence.tag === "invalid") {
+          throw new Error(
+            `Canonical invocation event authority could not rederive its ledger: ${rereadEvidence.message}`,
+          );
+        }
+        if (
+          canonicalJson(rereadEvidence.entry) !==
+          canonicalJson(finalized.evidence)
+        ) {
+          throw new Error(
+            "Canonical invocation event authority rederived a different ledger entry.",
+          );
+        }
+        if (rawRetentionReason === undefined) {
+          closeRawEvent();
+          try {
+            unlinkSync(rawEventPath);
+          } catch {
+            // A clean success may retain a diagnostic sidecar if the filesystem refuses removal.
+          }
+        }
         return {
           lifecycle: finalized.lifecycle,
-          evidence: finalized.evidence,
-          eventsSha256: createHash("sha256")
-            .update(canonicalBytes)
-            .digest("hex"),
+          evidence: rereadEvidence.entry,
+          eventsSha256: sha256Bytes(reread.rawContents),
         };
       } finally {
         closeSync(logFd);
       }
     } finally {
-      closeSync(rawEventFd);
-      try {
-        unlinkSync(rawEventPath);
-      } catch {
-        // Keep the raw sidecar if an unreaped child still owns its descriptor.
-      }
+      closeRawEvent();
     }
   } finally {
     closeSync(eventFd);

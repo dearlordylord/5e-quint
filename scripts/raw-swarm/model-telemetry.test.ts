@@ -36,6 +36,7 @@ import {
   runCodexInvocation,
   signalOwnedProcess,
   type SpawnOwnedCodexProcess,
+  writeAllSync,
 } from "./model-telemetry.ts";
 import {
   decodeHistoricalScenarioId,
@@ -126,6 +127,21 @@ describe("Raw Swarm model invocation telemetry", () => {
     expect(invocationEventsSha256(eventPath)).toBe(ledger.right.eventsSha256);
   }
 
+  test("completes canonical byte writes when the writer returns short chunks", () => {
+    const contents = Buffer.from("canonical authority bytes", "utf8");
+    const chunks: Buffer[] = [];
+    const positions: Array<number | null> = [];
+    writeAllSync(17, contents, 0, (_fd, buffer, offset, length, position) => {
+      const written = Math.min(3, length);
+      chunks.push(Buffer.from(buffer.subarray(offset, offset + written)));
+      positions.push(position);
+      return written;
+    });
+    expect(Buffer.concat(chunks)).toEqual(contents);
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(positions).toEqual(chunks.map((_chunk, index) => index * 3));
+  });
+
   test("retains timeout telemetry and a failed result when a child stalls without output", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-timeout-"));
     const codex = resolve(root, "codex");
@@ -181,6 +197,7 @@ describe("Raw Swarm model invocation telemetry", () => {
           result: { tag: "failed" },
         },
       });
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -227,7 +244,17 @@ exec ${process.execPath} -e 'setTimeout(() => {}, 1000)'
             "base64",
           ),
         });
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          reason: "malformedJsonl",
+          rawContentsSha256: invocationEventsSha256(
+            `${input.eventPath}.codex-raw`,
+          ),
+          rawContentsByteLength: readFileSync(`${input.eventPath}.codex-raw`)
+            .byteLength,
+        });
       }
+      expect(existsSync(`${input.eventPath}.codex-raw`)).toBe(true);
       expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -240,7 +267,7 @@ exec ${process.execPath} -e 'setTimeout(() => {}, 1000)'
     writeFileSync(
       codex,
       `#!/bin/sh
-printf '{"type":"turn.started"}\nnot-json\n'
+printf '{"type":"turn.started"}\nnot-json\n{"type":"turn.completed"}\n'
 exit 7
 `,
     );
@@ -262,7 +289,24 @@ exit 7
           message: "Codex event line 3 is malformed JSON.",
           rawLineBase64: Buffer.from("not-json").toString("base64"),
         });
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          reason: "malformedJsonl",
+          rawContentsSha256: invocationEventsSha256(
+            `${input.eventPath}.codex-raw`,
+          ),
+          rawContentsByteLength: readFileSync(`${input.eventPath}.codex-raw`)
+            .byteLength,
+        });
       }
+      const rawEventContents = readFileSync(`${input.eventPath}.codex-raw`);
+      const rawEventPrefixLength = rawEventContents.indexOf(0x0a) + 1;
+      expect(rawEventPrefixLength).toBeGreaterThan(0);
+      expect(rawEventContents.subarray(rawEventPrefixLength)).toEqual(
+        Buffer.from(
+          '{"type":"turn.started"}\nnot-json\n{"type":"turn.completed"}\n',
+        ),
+      );
       expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -511,6 +555,18 @@ process.exit(0);
         },
       });
       expect(killCount).toBe(2);
+      const rawEventPath = `${input.eventPath}.codex-raw`;
+      expect(existsSync(rawEventPath)).toBe(true);
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          reason: "unreapedProcess",
+          rawContentsSha256: invocationEventsSha256(rawEventPath),
+          rawContentsByteLength: readFileSync(rawEventPath).byteLength,
+        });
+      }
       const ledger = parseModelInvocationLedgerEntry(
         JSON.parse(readFileSync(input.ledgerPath, "utf8")),
       );
@@ -524,6 +580,7 @@ process.exit(0);
           result: { tag: "failed" },
         },
       });
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -561,6 +618,19 @@ process.exit(0);
           },
         },
       });
+      const rawEventPath = `${input.eventPath}.codex-raw`;
+      expect(existsSync(rawEventPath)).toBe(true);
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          reason: "failedInvocation",
+          rawContentsSha256: invocationEventsSha256(rawEventPath),
+          rawContentsByteLength: readFileSync(rawEventPath).byteLength,
+        });
+      }
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -754,6 +824,7 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
           result: { tag: "succeeded" },
         },
       });
+      expect(existsSync(`${input.eventPath}.codex-raw`)).toBe(false);
       expect(
         JSON.parse(readFileSync(input.ledgerPath, "utf8")).eventsSha256,
       ).toBe(invocationEventsSha256(input.eventPath));
