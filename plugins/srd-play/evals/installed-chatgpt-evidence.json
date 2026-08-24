@@ -1,10 +1,10 @@
 {
   "schema": "dnd.srd-play.installed-chatgpt-evidence.v2",
   "status": "pending",
-  "recordedAt": "2026-08-21",
+  "recordedAt": "2026-08-24",
   "scope": "Installed ChatGPT developer-mode MCP connection and tool selection, Skill activation, and complete-plugin newcomer journey",
   "environment": { "tag": "notObserved" },
-  "pendingReason": "This repository environment has no authorized ChatGPT developer-mode installation or account/workspace policy context. Local protocol and static forward tests cannot establish installed-plugin activation or UI behavior.",
+  "pendingReason": "The operator reports that the ChatGPT developer-mode connection was added and invoked tools, but this repository process has no authorized way to inspect that conversation or recover case-level prompts, selections, results, confirmations, and Skill activation. Local protocol, tunnel transport logs, and static forward tests cannot establish the remaining installed observations.",
   "promptOwner": "plugins/srd-play/evals/evaluation-inventory.json",
   "capabilityMatrix": "plugins/srd-play/evals/capability-matrix.json",
   "canonicalMcpEvidence": {

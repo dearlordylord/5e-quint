@@ -256,3 +256,8 @@ only after an authorized installation and conversation run. Its initial
 `pending` state is intentional when no authorized ChatGPT account/workspace is
 available; automated local MCP and static Skill-forward tests must not be
 promoted to installed evidence.
+
+For an operator-to-repository handoff, provide the redacted case-level prompt,
+selected tool and arguments/result summary, confirmation behavior, observed
+Skill activation, and observation time. A ChatGPT conversation UUID by itself
+is not readable by repository automation and cannot establish those facts.
