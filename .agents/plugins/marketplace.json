@@ -1,0 +1,20 @@
+{
+  "name": "dnd-srd-play",
+  "interface": {
+    "displayName": "D&D SRD Play Development"
+  },
+  "plugins": [
+    {
+      "name": "srd-play",
+      "source": {
+        "source": "local",
+        "path": "./plugins/srd-play"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Lifestyle"
+    }
+  ]
+}

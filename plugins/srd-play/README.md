@@ -166,18 +166,89 @@ pnpm --filter @dnd/mcp test
 
 ## Install and evaluate the plugin package
 
-After the MCP connection works, package the Skill-only plugin from this
-directory (`plugins/srd-play`) with its manifest and Skill using the current
-ChatGPT plugin packaging flow. The manifest intentionally has no `mcpServers`
-entry: a checkout-relative `pnpm` command cannot survive an installed plugin's
-cache location. Keep the separately created MCP connection available in the
-conversation, add the Skill package to a local marketplace, and install it
-from the Plugins Directory. Start a new conversation with both the Skill and
-MCP connection enabled. Run the direct, natural, follow-up, negative, and
-authoring boundary prompts in the evaluation inventory. For a combined
+After the MCP connection works, install the Skill-only package from this
+repository's local marketplace. The manifest intentionally has no
+`mcpServers` entry: a checkout-relative `pnpm` command cannot survive an
+installed plugin's cache location. The MCP connection and installed Skill are
+therefore enabled together in the conversation but evaluated as distinct
+evidence.
+
+From the repository root, validate the package and Skill without adding Python
+dependencies to the workspace. These commands require `uv` and the built-in
+plugin-creator and skill-creator packages. Override the two task-specific root
+variables when Codex is installed somewhere other than the shown default:
+
+```sh
+plugin_creator_root=/home/node/.codex/skills/.system/plugin-creator
+skill_creator_root=/home/node/.codex/skills/.system/skill-creator
+
+uv run --with pyyaml python "$plugin_creator_root/scripts/validate_plugin.py" \
+  plugins/srd-play
+uv run --with pyyaml python "$skill_creator_root/scripts/quick_validate.py" \
+  plugins/srd-play/skills/play-srd
+```
+
+Register the repository marketplace and install the package. Use a stable
+checkout path that will remain present while the plugin is installed. A linked
+worktree is valid for an active development run, but removing that worktree
+leaves the globally configured marketplace path stale:
+
+```sh
+repository_root="$(git rev-parse --show-toplevel)"
+marketplace_file="$repository_root/.agents/plugins/marketplace.json"
+plugin_creator_root=/home/node/.codex/skills/.system/plugin-creator
+
+codex plugin marketplace add "$repository_root"
+marketplace_name="$(
+  python3 "$plugin_creator_root/scripts/read_marketplace_name.py" \
+    --marketplace-path "$marketplace_file"
+)"
+codex plugin add "srd-play@$marketplace_name"
+codex plugin list
+```
+
+`codex plugin list` confirms only the local Codex cache/config state. It is not
+installed ChatGPT evidence. The install command copies the local package into
+the plugin cache; it does not load later source edits automatically. After
+changing the package, update its cachebuster and reinstall it from this
+non-default marketplace:
+
+```sh
+repository_root="$(git rev-parse --show-toplevel)"
+marketplace_file="$repository_root/.agents/plugins/marketplace.json"
+plugin_creator_root=/home/node/.codex/skills/.system/plugin-creator
+
+python3 "$plugin_creator_root/scripts/update_plugin_cachebuster.py" \
+  "$repository_root/plugins/srd-play"
+marketplace_name="$(
+  python3 "$plugin_creator_root/scripts/read_marketplace_name.py" \
+    --marketplace-path "$marketplace_file"
+)"
+codex plugin add "srd-play@$marketplace_name"
+```
+
+If the registered checkout or worktree must be removed, unregister its global
+entry first with `codex plugin marketplace remove dnd-srd-play`. Register and
+install again from the replacement checkout before opening a new conversation.
+
+Restart or refresh the ChatGPT desktop app, open the Plugins Directory, select
+**D&D SRD Play Development**, and confirm that **SRD Play** is installed and
+enabled. Keep the separately created developer-mode MCP connection enabled and
+start a new conversation. Run the direct, natural, follow-up, negative, and
+authoring-boundary prompts in the evaluation inventory. For a combined
 workflow, retain the Play Session handle, use only returned Creation Hole
 options and Battle Acts/Holes, stop at meaningful choices, and record the
 final Character Session list.
+
+Use this copyable prompt for the complete journey; the Skill must pause for the
+operator's answers rather than choosing on the operator's behalf:
+
+> Use SRD Play to inspect the installed SRD character options and help me build
+> a supported character using only choices returned by the current creation
+> holes. Stop whenever I must make a meaningful choice. After finalization,
+> start a battle with that Character Session and an installed SRD Goblin
+> Warrior, follow only returned Battle Acts and Runtime Holes, end the battle
+> only when no fill is pending, and finish by listing my Character Sessions.
 
 Record those observations in
 [`evals/installed-chatgpt-evidence.json`](evals/installed-chatgpt-evidence.json)

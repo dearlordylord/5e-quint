@@ -1,6 +1,6 @@
 {
   "name": "srd-play",
-  "version": "0.1.0",
+  "version": "0.1.0+codex.20260824042822",
   "description": "Explore the redistributable SRD, create characters, and play isolated battle sessions through the D&D MCP application.",
   "author": {
     "name": "5e Quint developers"
