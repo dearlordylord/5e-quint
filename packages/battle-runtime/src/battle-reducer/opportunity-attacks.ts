@@ -526,19 +526,10 @@ function reactionAttackTargetSpatialFacts(input: {
         "Opportunity Attack target distance must match the reach-leaving trigger distance.",
     };
   }
-  const distanceFact =
-    input.subject.command === "opportunityAttack"
-      ? ({
-          kind: "attackTargetDistance",
-          actorId: input.subject.reactorId,
-          targetId: input.subject.targetId,
-          ...attackExecutionSelectionForOption(input.attack),
-          distanceFeet: input.subject.distanceFeet,
-        } satisfies Extract<
-          BattleTargetSpatialFact,
-          { readonly kind: "attackTargetDistance" }
-        >)
-      : undefined;
+  const distanceFact = reactionAttackDistanceFact({
+    subject: input.subject,
+    attack: input.attack,
+  });
   const facts =
     suppliedDistanceFeet !== null
       ? input.fillSet.targetSpatialFacts
@@ -570,6 +561,26 @@ function reactionAttackTargetSpatialFacts(input: {
     tag: "ok",
     facts,
   };
+}
+
+function reactionAttackDistanceFact(input: {
+  readonly subject: OpportunityAttackResolutionInput["subject"];
+  readonly attack: BoundSupportedAttackActionOption;
+}):
+  | Extract<BattleTargetSpatialFact, { readonly kind: "attackTargetDistance" }>
+  | undefined {
+  return Match.value(input.subject).pipe(
+    Match.when({ command: "opportunityAttack" }, (subject) => ({
+      kind: "attackTargetDistance" as const,
+      actorId: subject.reactorId,
+      targetId: subject.targetId,
+      ...attackExecutionSelectionForOption(input.attack),
+      distanceFeet: subject.distanceFeet,
+    })),
+    Match.when({ command: "retaliationAttack" }, () => undefined),
+    Match.when({ command: "releaseReadiedAttack" }, () => undefined),
+    Match.exhaustive,
+  );
 }
 
 function resolveReactionAttackAfterRoll(afterRollInput: {

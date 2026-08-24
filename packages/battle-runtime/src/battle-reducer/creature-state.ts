@@ -233,10 +233,13 @@ export function battleCreatureStateAdmissionFromInit(
       ],
     };
   }
-  const maxHp =
-    creatureInit.kind === "character"
-      ? creatureInit.maxHp
-      : Hp(creatureInit.source.statBlock.hp.value);
+  const maxHp = Match.value(creatureInit).pipe(
+    Match.when({ kind: "character" }, ({ maxHp }) => maxHp),
+    Match.when({ kind: "statBlock" }, ({ source }) =>
+      Hp(source.statBlock.hp.value),
+    ),
+    Match.exhaustive,
+  );
   if (creatureInit.currentHp > maxHp) {
     return {
       tag: "invalid",
@@ -258,12 +261,7 @@ export function battleCreatureStateAdmissionFromInit(
   }
   const zeroHpLifecycle = zeroHpLifecycleResult.right;
   const initialConditionImmunityIssue =
-    creatureInit.kind === "statBlock"
-      ? statBlockInitialConditionImmunityIssue(
-          creatureInit.source,
-          creatureInit.conditions,
-        )
-      : null;
+    initialConditionImmunityIssueForCreatureInit(creatureInit);
   if (initialConditionImmunityIssue !== null) {
     return {
       tag: "invalid",
@@ -587,6 +585,18 @@ export function battleCreatureStateAdmissionFromInit(
       }),
     },
   };
+}
+
+function initialConditionImmunityIssueForCreatureInit(
+  creatureInit: BattleCreatureInit["creatureInit"],
+): BattleStateInitLeafIssue | null {
+  return Match.value(creatureInit).pipe(
+    Match.when({ kind: "character" }, () => null),
+    Match.when({ kind: "statBlock" }, ({ source, conditions }) =>
+      statBlockInitialConditionImmunityIssue(source, conditions),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function hidePrerequisitesReferenceCombatantsIssue(
