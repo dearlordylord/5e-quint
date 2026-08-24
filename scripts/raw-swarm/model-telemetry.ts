@@ -228,6 +228,28 @@ const ModelInvocationSignalDeliverySchema = Schema.Union(
   }),
 );
 
+const OwnedLeaderProcessOutcomeSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("exited"),
+    status: Schema.Number.pipe(Schema.int()),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("signaled"),
+    signal: Schema.NonEmptyString,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("failedToStart"),
+    message: Schema.NonEmptyString,
+  }),
+);
+
+const CurrentModelInvocationCleanupUnreapedExitSchema = Schema.Struct({
+  tag: Schema.Literal("cleanupUnreaped"),
+  leader: OwnedLeaderProcessOutcomeSchema,
+  signalDelivery: ModelInvocationSignalDeliverySchema,
+  reason: Schema.NonEmptyTrimmedString,
+});
+
 /**
  * Timeout evidence records whether the child was actually reaped.  A
  * successful signal delivery alone is not process-settlement evidence.
@@ -250,6 +272,7 @@ const ModelInvocationTimeoutTerminationSchema = Schema.Union(
  */
 const CurrentModelInvocationExitSchema = Schema.Union(
   HistoricalModelInvocationExitSchema,
+  CurrentModelInvocationCleanupUnreapedExitSchema,
   Schema.Struct({
     tag: Schema.Literal("timedOut"),
     timeoutMilliseconds: PositiveIntegerSchema,
@@ -844,6 +867,7 @@ function resultFromExit(
     Match.when({ tag: "shellStatus" }, ({ status }) => status === 0),
     Match.when({ tag: "signaled" }, () => false),
     Match.when({ tag: "failedToStart" }, () => false),
+    Match.when({ tag: "cleanupUnreaped" }, () => false),
     Match.when({ tag: "timedOut" }, () => false),
     Match.exhaustive,
   );
@@ -860,6 +884,11 @@ function resultFromExit(
       ({ signal }) => `Codex stopped by ${signal}.`,
     ),
     Match.when({ tag: "failedToStart" }, ({ message }) => message),
+    Match.when(
+      { tag: "cleanupUnreaped" },
+      ({ leader, signalDelivery, reason }) =>
+        `Codex leader cleanup did not settle after ${signalDelivery.signal}: ${reason} (leader ${leader.tag}).`,
+    ),
     Match.when(
       { tag: "timedOut" },
       ({ timeoutMilliseconds }) =>
@@ -1098,17 +1127,42 @@ type CodexEventDecodeFailureEvent = Readonly<{
   readonly rawLineBase64: string;
 }>;
 
-type CodexRawRetentionReason =
-  | "malformedJsonl"
-  | "failedInvocation"
-  | "unreapedProcess";
+const CODEX_RAW_SIDECAR_SUFFIX = ".codex-raw";
+const CODEX_RAW_SNAPSHOT_SUFFIX = ".snapshot";
+const CODEX_RAW_RETENTION_EVENT_TYPE =
+  "raw-swarm.invocation.codex-raw-retained";
+const CODEX_RAW_RETENTION_REASONS = [
+  "malformedJsonl",
+  "failedInvocation",
+  "unreapedProcess",
+] as const;
+type CodexRawRetentionReason = (typeof CODEX_RAW_RETENTION_REASONS)[number];
 
-type CodexRawRetentionEvent = Readonly<{
-  readonly type: "raw-swarm.invocation.codex-raw-retained";
-  readonly reason: CodexRawRetentionReason;
-  readonly rawContentsSha256: string;
-  readonly rawContentsByteLength: number;
-}>;
+const CodexRawRetentionEventSchema = Schema.Union(
+  Schema.Struct({
+    type: Schema.Literal(CODEX_RAW_RETENTION_EVENT_TYPE),
+    source: Schema.Literal("settledSidecar"),
+    reason: Schema.Literal(
+      CODEX_RAW_RETENTION_REASONS[0],
+      CODEX_RAW_RETENTION_REASONS[1],
+    ),
+    rawContentsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+    rawContentsByteLength: NonNegativeIntegerSchema,
+  }),
+  Schema.Struct({
+    type: Schema.Literal(CODEX_RAW_RETENTION_EVENT_TYPE),
+    source: Schema.Literal("observedImmutableSnapshot"),
+    reason: Schema.Literal(CODEX_RAW_RETENTION_REASONS[2]),
+    snapshotPathSuffix: Schema.Literal(
+      `${CODEX_RAW_SIDECAR_SUFFIX}${CODEX_RAW_SNAPSHOT_SUFFIX}`,
+    ),
+    snapshotSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+    snapshotByteLength: NonNegativeIntegerSchema,
+  }),
+);
+type CodexRawRetentionEvent = Schema.Schema.Type<
+  typeof CodexRawRetentionEventSchema
+>;
 
 function codexEventDecodeFailureEvent(
   input: CodexEventDecodeFailure,
@@ -1123,13 +1177,25 @@ function codexEventDecodeFailureEvent(
 
 function codexRawRetentionEvent(input: {
   readonly rawContents: Uint8Array;
-  readonly reason: CodexRawRetentionReason;
+  readonly reason: Exclude<CodexRawRetentionReason, "unreapedProcess">;
 }): CodexRawRetentionEvent {
   return {
-    type: "raw-swarm.invocation.codex-raw-retained",
+    type: CODEX_RAW_RETENTION_EVENT_TYPE,
+    source: "settledSidecar",
     reason: input.reason,
     rawContentsSha256: sha256Bytes(input.rawContents),
     rawContentsByteLength: input.rawContents.byteLength,
+  };
+}
+
+function codexRawSnapshotEvent(contents: Uint8Array): CodexRawRetentionEvent {
+  return {
+    type: CODEX_RAW_RETENTION_EVENT_TYPE,
+    source: "observedImmutableSnapshot",
+    reason: "unreapedProcess",
+    snapshotPathSuffix: `${CODEX_RAW_SIDECAR_SUFFIX}${CODEX_RAW_SNAPSHOT_SUFFIX}`,
+    snapshotSha256: sha256Bytes(contents),
+    snapshotByteLength: contents.byteLength,
   };
 }
 
@@ -1219,9 +1285,91 @@ function decodedInvocationEvents<A, I>(
   return { tag: "valid", events: decoded };
 }
 
+function decodedCodexRawRetentionEvent(events: readonly unknown[]):
+  | {
+      readonly tag: "valid";
+      readonly event: CodexRawRetentionEvent | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const reserved = events.flatMap((event, index) =>
+    isJsonRecord(event) && event.type === CODEX_RAW_RETENTION_EVENT_TYPE
+      ? [{ event, index }]
+      : [],
+  );
+  if (reserved.length > 1) {
+    return {
+      tag: "invalid",
+      message:
+        "Model invocation evidence may contain at most one runner raw-retention event.",
+    };
+  }
+  const candidate = reserved[0];
+  if (candidate === undefined) return { tag: "valid", event: undefined };
+  const parsed = Schema.decodeUnknownEither(CodexRawRetentionEventSchema, {
+    onExcessProperty: "error",
+  })(candidate.event);
+  if (Either.isLeft(parsed)) {
+    return {
+      tag: "invalid",
+      message: `Runner raw-retention event at line ${String(candidate.index + 1)} is malformed: ${parsed.left.message}`,
+    };
+  }
+  return { tag: "valid", event: parsed.right };
+}
+
+function runnerRawRetentionEventFromChild(
+  events: readonly unknown[],
+): string | undefined {
+  const index = events.findIndex(
+    (event) =>
+      isJsonRecord(event) && event.type === CODEX_RAW_RETENTION_EVENT_TYPE,
+  );
+  return index < 0
+    ? undefined
+    : `Codex child output cannot emit runner-owned raw-retention event at line ${String(index + 1)}.`;
+}
+
+function withoutRunnerRawRetentionEvents(
+  events: readonly unknown[],
+): readonly unknown[] {
+  return events.filter(
+    (event) =>
+      !(isJsonRecord(event) && event.type === CODEX_RAW_RETENTION_EVENT_TYPE),
+  );
+}
+
+function rawRetentionEventValidationMessage(input: {
+  readonly event: CodexRawRetentionEvent | undefined;
+  readonly completion:
+    | ModelInvocationCompletedEvent
+    | BenchmarkAuxiliaryInvocationCompletedEvent;
+  readonly context: string;
+}): string | undefined {
+  if (input.event === undefined) return undefined;
+  if (input.completion.schemaVersion !== 5) {
+    return `${input.context} raw-retention events are supported only for schema version 5.`;
+  }
+  const unreaped =
+    input.completion.exit.tag === "cleanupUnreaped" ||
+    (input.completion.exit.tag === "timedOut" &&
+      input.completion.exit.termination.tag === "unreaped");
+  if (input.completion.result.tag === "succeeded") {
+    return `${input.context} successful evidence cannot claim raw-retention.`;
+  }
+  if (unreaped && input.event.source !== "observedImmutableSnapshot") {
+    return `${input.context} unreaped evidence must claim an observed immutable raw snapshot.`;
+  }
+  if (!unreaped && input.event.source !== "settledSidecar") {
+    return `${input.context} settled evidence cannot claim an observed immutable raw snapshot.`;
+  }
+  return undefined;
+}
+
 export function modelInvocationEvidenceFromEvents(
   events: readonly unknown[],
 ): ModelInvocationEventEvidence {
+  const rawRetention = decodedCodexRawRetentionEvent(events);
+  if (rawRetention.tag === "invalid") return rawRetention;
   const started = decodedInvocationEvents(
     ModelInvocationStartedEventSchema,
     "raw-swarm.invocation.started",
@@ -1253,6 +1401,14 @@ export function modelInvocationEvidenceFromEvents(
       message:
         "Model invocation start and completion records must use the same schema version.",
     };
+  }
+  const rawRetentionMessage = rawRetentionEventValidationMessage({
+    event: rawRetention.event,
+    completion,
+    context: "Model invocation",
+  });
+  if (rawRetentionMessage !== undefined) {
+    return { tag: "invalid", message: rawRetentionMessage };
   }
   if (!Number.isFinite(Date.parse(start.startedAt))) {
     return {
@@ -1412,6 +1568,8 @@ export function benchmarkModelInvocationEvidenceFromEvents(
       >;
     }
   | { readonly tag: "invalid"; readonly message: string } {
+  const rawRetention = decodedCodexRawRetentionEvent(events);
+  if (rawRetention.tag === "invalid") return rawRetention;
   const started = decodedInvocationEvents(
     Schema.Union(
       BenchmarkAuxiliaryInvocationStartedEventSchema,
@@ -1457,6 +1615,14 @@ export function benchmarkModelInvocationEvidenceFromEvents(
       message:
         "Benchmark invocation start and completion records must use the same schema version.",
     };
+  }
+  const rawRetentionMessage = rawRetentionEventValidationMessage({
+    event: rawRetention.event,
+    completion,
+    context: "Benchmark invocation",
+  });
+  if (rawRetentionMessage !== undefined) {
+    return { tag: "invalid", message: rawRetentionMessage };
   }
   if (completion.schemaVersion === 5 && completion.result.tag === "succeeded") {
     const failureReason = firstPartyCodexFailureReason(events);
@@ -1785,6 +1951,36 @@ export function writeAllSync(
   }
 }
 
+function codexRawSnapshotPath(rawEventPath: string): string {
+  return `${rawEventPath}${CODEX_RAW_SNAPSHOT_SUFFIX}`;
+}
+
+export function createCodexRawSnapshot(rawEventPath: string): Readonly<{
+  readonly path: string;
+  readonly contents: Buffer;
+  readonly event: CodexRawRetentionEvent;
+}> {
+  const observedContents = readFileSync(rawEventPath);
+  const snapshotPath = codexRawSnapshotPath(rawEventPath);
+  const snapshotFd = openSync(snapshotPath, "wx", 0o444);
+  try {
+    writeAllSync(snapshotFd, observedContents);
+  } finally {
+    closeSync(snapshotFd);
+  }
+  const snapshotContents = readFileSync(snapshotPath);
+  if (!snapshotContents.equals(observedContents)) {
+    throw new Error(
+      `Raw Codex snapshot does not match the observed sidecar bytes: ${snapshotPath}`,
+    );
+  }
+  return {
+    path: snapshotPath,
+    contents: snapshotContents,
+    event: codexRawSnapshotEvent(snapshotContents),
+  };
+}
+
 type InvocationCompletionInput = {
   readonly elapsedMilliseconds: number;
   readonly exit: ModelInvocationLedgerEntry["exit"];
@@ -1941,6 +2137,9 @@ function decodeExpectedModelInvocationLastMessage<A>(input: {
 type CurrentModelInvocationExit = Schema.Schema.Type<
   typeof CurrentModelInvocationExitSchema
 >;
+type OwnedLeaderProcessOutcome = Schema.Schema.Type<
+  typeof OwnedLeaderProcessOutcomeSchema
+>;
 export type ModelInvocationProcess = Exclude<
   CurrentModelInvocationExit,
   { readonly tag: "shellStatus" }
@@ -2088,6 +2287,11 @@ function modelInvocationFailureReason(process: ModelInvocationProcess): string {
       ({ signal }) => `Codex stopped by ${signal}.`,
     ),
     Match.when({ tag: "failedToStart" }, ({ message }) => message),
+    Match.when(
+      { tag: "cleanupUnreaped" },
+      ({ leader, signalDelivery, reason }) =>
+        `Codex leader cleanup did not settle after ${signalDelivery.signal}: ${reason} (leader ${leader.tag}).`,
+    ),
     Match.when({ tag: "timedOut" }, ({ timeoutMilliseconds, termination }) =>
       termination.tag === "reaped"
         ? `Codex invocation timed out after ${String(timeoutMilliseconds)} milliseconds; process reaped after ${termination.signalDelivery.signal}.`
@@ -2331,6 +2535,55 @@ function observedProcessOutcome(
   return undefined;
 }
 
+function leaderOutcomeForCleanup(input: {
+  readonly child: SpawnedCodexProcess;
+  readonly leaderOutcome: ModelInvocationProcess | undefined;
+}): OwnedLeaderProcessOutcome {
+  const observed = input.leaderOutcome ?? observedProcessOutcome(input.child);
+  if (observed === undefined) {
+    return {
+      tag: "failedToStart",
+      message: "Owned Codex leader cleanup settled without a process status.",
+    };
+  }
+  return Match.value(observed).pipe(
+    Match.when(
+      { tag: "exited" },
+      ({ status }) =>
+        ({ tag: "exited", status }) satisfies OwnedLeaderProcessOutcome,
+    ),
+    Match.when(
+      { tag: "signaled" },
+      ({ signal }) =>
+        ({ tag: "signaled", signal }) satisfies OwnedLeaderProcessOutcome,
+    ),
+    Match.when(
+      { tag: "failedToStart" },
+      ({ message }) =>
+        ({ tag: "failedToStart", message }) satisfies OwnedLeaderProcessOutcome,
+    ),
+    Match.when(
+      { tag: "timedOut" },
+      () =>
+        ({
+          tag: "failedToStart",
+          message:
+            "Owned Codex leader cleanup received a timeout outcome before leader settlement.",
+        }) satisfies OwnedLeaderProcessOutcome,
+    ),
+    Match.when(
+      { tag: "cleanupUnreaped" },
+      () =>
+        ({
+          tag: "failedToStart",
+          message:
+            "Owned Codex leader cleanup received a nested cleanup outcome before leader settlement.",
+        }) satisfies OwnedLeaderProcessOutcome,
+    ),
+    Match.exhaustive,
+  );
+}
+
 async function waitForOwnedProcessSettlement(input: {
   readonly child: SpawnedCodexProcess;
   readonly target: OwnedProcessSignalTarget;
@@ -2429,6 +2682,7 @@ async function spawnOwnedCodex(input: {
   readonly logFd: number;
   readonly timeoutMilliseconds: number;
   readonly spawnProcess?: SpawnOwnedCodexProcess | undefined;
+  readonly terminateOwnedProcess?: typeof terminateOwnedProcess | undefined;
 }): Promise<ModelInvocationProcess> {
   return await new Promise<ModelInvocationProcess>((resolve, reject) => {
     let settled = false;
@@ -2455,6 +2709,8 @@ async function spawnOwnedCodex(input: {
       );
     };
     let child: SpawnedCodexProcess;
+    const terminateProcess =
+      input.terminateOwnedProcess ?? terminateOwnedProcess;
     try {
       const detached = process.platform !== "win32";
       const spawnProcess =
@@ -2512,11 +2768,16 @@ async function spawnOwnedCodex(input: {
           );
           return;
         }
-        const termination = await terminateOwnedProcess(child, {
+        const termination = await terminateProcess(child, {
           detached: process.platform !== "win32",
         });
         if (termination.tag === "unreaped") {
-          failCleanup("after the leader exited", termination.reason);
+          finish({
+            tag: "cleanupUnreaped",
+            leader: leaderOutcomeForCleanup({ child, leaderOutcome }),
+            signalDelivery: termination.signalDelivery,
+            reason: termination.reason,
+          });
           return;
         }
         finish(
@@ -2640,6 +2901,7 @@ async function runCodexProcess<A, E extends object>(input: {
   readonly completionErrorPrefix: string;
   readonly evidenceFromEvents: InvocationEvidenceFromEvents<E>;
   readonly spawnProcess?: SpawnOwnedCodexProcess | undefined;
+  readonly terminateOwnedProcess?: typeof terminateOwnedProcess | undefined;
 }): Promise<RunCodexProcessResult<A, E>> {
   const codexArgs = codexInvocationArgsForOperation(
     input.args,
@@ -2685,6 +2947,7 @@ async function runCodexProcess<A, E extends object>(input: {
                 logFd,
                 timeoutMilliseconds: input.timeoutMilliseconds,
                 spawnProcess: input.spawnProcess,
+                terminateOwnedProcess: input.terminateOwnedProcess,
               })
             : ({
                 tag: "failedToStart",
@@ -2693,10 +2956,18 @@ async function runCodexProcess<A, E extends object>(input: {
         const exit = processOutcome;
         const retainedEvents = readCodexEventsWithSource(rawEventPath);
         const events = retainedEvents.events;
+        const childReservedEventMessage =
+          runnerRawRetentionEventFromChild(events);
+        const authorityEvents =
+          childReservedEventMessage === undefined
+            ? events
+            : withoutRunnerRawRetentionEvents(events);
         const codexEventAnalysis =
-          retainedEvents.tag === "invalid"
-            ? Either.right(codexEventDecodeFailure(retainedEvents.message))
-            : analyzeCodexEvents(exit, events);
+          childReservedEventMessage !== undefined
+            ? Either.right(codexEventDecodeFailure(childReservedEventMessage))
+            : retainedEvents.tag === "invalid"
+              ? Either.right(codexEventDecodeFailure(retainedEvents.message))
+              : analyzeCodexEvents(exit, events);
         const analysis = Either.isLeft(codexEventAnalysis)
           ? codexEventDecodeFailure(codexEventAnalysis.left)
           : codexEventAnalysis.right;
@@ -2733,14 +3004,17 @@ async function runCodexProcess<A, E extends object>(input: {
         };
         const initialCompletion = completedForAnalysis(analysis);
         const finalized = (() => {
-          const initialEvents = [...events, initialCompletion.completed];
+          const initialEvents = [
+            ...authorityEvents,
+            initialCompletion.completed,
+          ];
           const evidence = input.evidenceFromEvents(initialEvents);
           if (evidence.tag === "valid") {
             return {
               ...initialCompletion,
               evidence: evidence.entry,
               authorityEvents: [
-                ...events,
+                ...authorityEvents,
                 ...(retainedEvents.tag === "invalid"
                   ? [codexEventDecodeFailureEvent(retainedEvents)]
                   : []),
@@ -2767,21 +3041,25 @@ async function runCodexProcess<A, E extends object>(input: {
             authorityEvents: fallbackEvents.slice(0, -1),
           };
         })();
-        const rawRetentionReason =
-          retainedEvents.tag === "invalid"
+        const processUnreaped =
+          exit.tag === "cleanupUnreaped" ||
+          (exit.tag === "timedOut" && exit.termination.tag === "unreaped");
+        const rawRetentionReason = processUnreaped
+          ? ("unreapedProcess" as const)
+          : retainedEvents.tag === "invalid"
             ? ("malformedJsonl" as const)
             : finalized.lifecycle.tag === "succeeded"
               ? undefined
-              : exit.tag === "timedOut" && exit.termination.tag === "unreaped"
-                ? ("unreapedProcess" as const)
-                : ("failedInvocation" as const);
+              : ("failedInvocation" as const);
         const rawRetention =
           rawRetentionReason === undefined
             ? undefined
-            : codexRawRetentionEvent({
-                rawContents: retainedEvents.rawContents,
-                reason: rawRetentionReason,
-              });
+            : rawRetentionReason === "unreapedProcess"
+              ? createCodexRawSnapshot(rawEventPath).event
+              : codexRawRetentionEvent({
+                  rawContents: retainedEvents.rawContents,
+                  reason: rawRetentionReason,
+                });
         const canonicalEvents = [
           ...finalized.authorityEvents,
           ...(rawRetention === undefined ? [] : [rawRetention]),
@@ -2872,6 +3150,7 @@ type RunCodexInvocationInput<
   readonly timeoutMilliseconds?: number;
   readonly operation: O;
   readonly spawnProcess?: SpawnOwnedCodexProcess | undefined;
+  readonly terminateOwnedProcess?: typeof terminateOwnedProcess | undefined;
 };
 
 type NoOutputOperation = Readonly<{ readonly tag: "noOutput" }>;
@@ -2927,6 +3206,7 @@ export async function runCodexInvocation<A = unknown>(
     completionErrorPrefix: "Cannot create invocation completion event",
     evidenceFromEvents: modelInvocationEvidenceFromEvents,
     spawnProcess: input.spawnProcess,
+    terminateOwnedProcess: input.terminateOwnedProcess,
   });
   if (processResult.evidence.schemaVersion !== 5) {
     throw new Error(
@@ -2977,6 +3257,7 @@ type RunBenchmarkAuxiliaryInvocationInput<
   readonly timeoutMilliseconds?: number;
   readonly operation: O;
   readonly spawnProcess?: SpawnOwnedCodexProcess | undefined;
+  readonly terminateOwnedProcess?: typeof terminateOwnedProcess | undefined;
 };
 
 export function runBenchmarkAuxiliaryInvocation<A = unknown>(
@@ -3033,6 +3314,7 @@ export async function runBenchmarkAuxiliaryInvocation<A = unknown>(
         "Cannot create benchmark invocation completion event",
       evidenceFromEvents: benchmarkModelInvocationEvidenceFromEvents,
       spawnProcess: input.spawnProcess,
+      terminateOwnedProcess: input.terminateOwnedProcess,
     });
     appendInvocationEvidenceLedger({
       ledgerPath: input.ledgerPath,

@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 import {
+  appendFileSync,
   chmodSync,
   existsSync,
   mkdtempSync,
@@ -17,6 +18,7 @@ import { Either, Schema } from "effect";
 import {
   codexInvocationMetadataMatchesArgs,
   codexJsonArgs,
+  createCodexRawSnapshot,
   benchmarkModelInvocationCompletedEvent,
   benchmarkModelInvocationEvidenceFromEvents,
   benchmarkModelInvocationStartedEvent,
@@ -35,6 +37,7 @@ import {
   CurrentModelInvocationLedgerEntryV5Schema,
   runCodexInvocation,
   signalOwnedProcess,
+  terminateOwnedProcess,
   type SpawnOwnedCodexProcess,
   writeAllSync,
 } from "./model-telemetry.ts";
@@ -246,6 +249,7 @@ exec ${process.execPath} -e 'setTimeout(() => {}, 1000)'
         });
         expect(events.events).toContainEqual({
           type: "raw-swarm.invocation.codex-raw-retained",
+          source: "settledSidecar",
           reason: "malformedJsonl",
           rawContentsSha256: invocationEventsSha256(
             `${input.eventPath}.codex-raw`,
@@ -291,6 +295,7 @@ exit 7
         });
         expect(events.events).toContainEqual({
           type: "raw-swarm.invocation.codex-raw-retained",
+          source: "settledSidecar",
           reason: "malformedJsonl",
           rawContentsSha256: invocationEventsSha256(
             `${input.eventPath}.codex-raw`,
@@ -526,6 +531,65 @@ process.exit(0);
     }
   }, 10_000);
 
+  test("records an unreaped normal-exit cleanup in canonical evidence", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-normal-unreaped-"));
+    const child = Object.assign(new EventEmitter(), {
+      pid: undefined,
+      exitCode: null,
+      signalCode: null,
+      kill: () => true,
+    });
+    const spawnProcess: SpawnOwnedCodexProcess = () => {
+      queueMicrotask(() => child.emit("exit", 0, null));
+      return child;
+    };
+    const terminateAfterExit: typeof terminateOwnedProcess = async () => ({
+      tag: "unreaped",
+      signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+      reason: "Synthetic normal-exit cleanup did not settle.",
+    });
+    try {
+      const input = fakeInvocationInput(root, 1_000);
+      const result = await runCodexInvocation({
+        ...input,
+        spawnProcess,
+        terminateOwnedProcess: terminateAfterExit,
+      });
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: {
+          tag: "cleanupUnreaped",
+          leader: { tag: "exited", status: 0 },
+          signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          reason: "Synthetic normal-exit cleanup did not settle.",
+        },
+        cause: { tag: "process" },
+      });
+      const rawEventPath = `${input.eventPath}.codex-raw`;
+      const snapshotPath = `${rawEventPath}.snapshot`;
+      expect(existsSync(rawEventPath)).toBe(true);
+      expect(existsSync(snapshotPath)).toBe(true);
+      expect(readFileSync(snapshotPath)).toEqual(readFileSync(rawEventPath));
+      expect(readCodexEvents(input.eventPath)).toMatchObject({ tag: "valid" });
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: {
+            tag: "cleanupUnreaped",
+            leader: { tag: "exited", status: 0 },
+          },
+          result: { tag: "failed" },
+        },
+      });
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("bounds a supervisor whose child never emits a settlement event", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-no-settlement-"));
     let killCount = 0;
@@ -556,15 +620,21 @@ process.exit(0);
       });
       expect(killCount).toBe(2);
       const rawEventPath = `${input.eventPath}.codex-raw`;
+      const snapshotPath = `${rawEventPath}.snapshot`;
       expect(existsSync(rawEventPath)).toBe(true);
+      expect(existsSync(snapshotPath)).toBe(true);
+      expect(readFileSync(snapshotPath)).toEqual(readFileSync(rawEventPath));
       const events = readCodexEvents(input.eventPath);
       expect(events).toMatchObject({ tag: "valid" });
       if (events.tag === "valid") {
         expect(events.events).toContainEqual({
           type: "raw-swarm.invocation.codex-raw-retained",
+          source: "observedImmutableSnapshot",
           reason: "unreapedProcess",
-          rawContentsSha256: invocationEventsSha256(rawEventPath),
-          rawContentsByteLength: readFileSync(rawEventPath).byteLength,
+          snapshotPathSuffix: ".codex-raw.snapshot",
+          snapshotSha256: invocationEventsSha256(`${rawEventPath}.snapshot`),
+          snapshotByteLength: readFileSync(`${rawEventPath}.snapshot`)
+            .byteLength,
         });
       }
       const ledger = parseModelInvocationLedgerEntry(
@@ -581,6 +651,31 @@ process.exit(0);
         },
       });
       expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("keeps an observed raw snapshot stable if the live sidecar grows", () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-raw-snapshot-"));
+    const rawEventPath = resolve(root, "events.jsonl.codex-raw");
+    const observed = Buffer.from('{"type":"turn.started"}\npartial', "utf8");
+    writeFileSync(rawEventPath, observed);
+    try {
+      const snapshot = createCodexRawSnapshot(rawEventPath);
+      appendFileSync(rawEventPath, Buffer.from("\nlate-suffix", "utf8"));
+      expect(readFileSync(snapshot.path)).toEqual(observed);
+      expect(readFileSync(rawEventPath)).toEqual(
+        Buffer.concat([observed, Buffer.from("\nlate-suffix", "utf8")]),
+      );
+      expect(snapshot.event).toEqual({
+        type: "raw-swarm.invocation.codex-raw-retained",
+        source: "observedImmutableSnapshot",
+        reason: "unreapedProcess",
+        snapshotPathSuffix: ".codex-raw.snapshot",
+        snapshotSha256: invocationEventsSha256(snapshot.path),
+        snapshotByteLength: observed.byteLength,
+      });
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -625,6 +720,7 @@ process.exit(0);
       if (events.tag === "valid") {
         expect(events.events).toContainEqual({
           type: "raw-swarm.invocation.codex-raw-retained",
+          source: "settledSidecar",
           reason: "failedInvocation",
           rawContentsSha256: invocationEventsSha256(rawEventPath),
           rawContentsByteLength: readFileSync(rawEventPath).byteLength,
@@ -825,6 +921,7 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
         },
       });
       expect(existsSync(`${input.eventPath}.codex-raw`)).toBe(false);
+      expect(existsSync(`${input.eventPath}.codex-raw.snapshot`)).toBe(false);
       expect(
         JSON.parse(readFileSync(input.ledgerPath, "utf8")).eventsSha256,
       ).toBe(invocationEventsSha256(input.eventPath));
@@ -1617,6 +1714,203 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
         "Recognized raw-swarm.invocation.completed event",
       ),
     });
+  });
+
+  test("requires one strict runner-owned retention event when one is present", () => {
+    const started = {
+      type: "raw-swarm.invocation.started",
+      schemaVersion: 5,
+      subject: {
+        tag: "execution",
+        executionId: "execution",
+        evidenceSetId: "evidence",
+        scenarioId: "scenario",
+      },
+      gitSha: "a".repeat(40),
+      phase: "postPlayReview",
+      stagePlanReason: "The admitted plan requires post-play review.",
+      fallbackInvocationId: "fallback",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt: "2026-08-14T00:00:00.000Z",
+    } as const;
+    const completed = {
+      type: "raw-swarm.invocation.completed",
+      schemaVersion: 5,
+      elapsedMilliseconds: 10,
+      exit: { tag: "exited", status: 7 },
+      result: { tag: "failed", reason: "Synthetic failure." },
+    } as const;
+    const retained = {
+      type: "raw-swarm.invocation.codex-raw-retained",
+      source: "settledSidecar",
+      reason: "failedInvocation",
+      rawContentsSha256: "b".repeat(64),
+      rawContentsByteLength: 10,
+    } as const;
+    const terminalEvents = [
+      started,
+      { type: "turn.completed" },
+      retained,
+      completed,
+    ];
+    expect(modelInvocationEvidenceFromEvents(terminalEvents)).toMatchObject({
+      tag: "valid",
+    });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        {
+          type: retained.type,
+          source: retained.source,
+          reason: retained.reason,
+          rawContentsByteLength: retained.rawContentsByteLength,
+        },
+        completed,
+      ]),
+    ).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("raw-retention event"),
+    });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        {
+          type: retained.type,
+          source: retained.source,
+          reason: retained.reason,
+          rawContentsSha256: retained.rawContentsSha256,
+        },
+        completed,
+      ]),
+    ).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("raw-retention event"),
+    });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        { ...retained, rawContentsSha256: "not-a-sha256" },
+        completed,
+      ]),
+    ).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("raw-retention event"),
+    });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        retained,
+        { ...retained, rawContentsByteLength: 11 },
+        completed,
+      ]),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Model invocation evidence may contain at most one runner raw-retention event.",
+    });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        {
+          type: "raw-swarm.invocation.codex-raw-retained",
+          source: "observedImmutableSnapshot",
+          reason: "unreapedProcess",
+          snapshotPathSuffix: ".codex-raw.snapshot",
+          snapshotSha256: "c".repeat(64),
+          snapshotByteLength: 10,
+        },
+        {
+          ...completed,
+          exit: {
+            tag: "cleanupUnreaped",
+            leader: { tag: "exited", status: 0 },
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+            reason: "Synthetic cleanup boundary.",
+          },
+        },
+      ]),
+    ).toMatchObject({ tag: "valid" });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        retained,
+        {
+          ...completed,
+          result: { tag: "succeeded" },
+          exit: { tag: "exited", status: 0 },
+        },
+      ]),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Model invocation successful evidence cannot claim raw-retention.",
+    });
+  });
+
+  test("rejects a child-spoofed retention event without claiming it as authority", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-retention-spoof-"));
+    const codex = resolve(root, "codex");
+    const childScript = resolve(root, "child.cjs");
+    writeFileSync(
+      childScript,
+      [
+        'const fs = require("node:fs");',
+        "process.stdout.write(JSON.stringify({",
+        '  type: "raw-swarm.invocation.codex-raw-retained",',
+        '  source: "settledSidecar",',
+        '  reason: "failedInvocation",',
+        '  rawContentsSha256: "' + "b".repeat(64) + '",',
+        "  rawContentsByteLength: 10,",
+        '}) + "\\n");',
+        'process.stdout.write(JSON.stringify({ type: "turn.completed" }) + "\\n");',
+        'fs.writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ result: "ready" }));',
+      ].join("\n"),
+    );
+    writeFileSync(
+      codex,
+      "#!/bin/sh\nexec " + process.execPath + " " + childScript + "\n",
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      input.env.RAW_OUTPUT_PATH = input.operation.expected.path;
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: { tag: "exited", status: 0 },
+        cause: { tag: "codex" },
+      });
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        const rawEventPath = input.eventPath + ".codex-raw";
+        expect(events.events).not.toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          source: "settledSidecar",
+          reason: "failedInvocation",
+          rawContentsSha256: "b".repeat(64),
+          rawContentsByteLength: 10,
+        });
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          source: "settledSidecar",
+          reason: "failedInvocation",
+          rawContentsSha256: invocationEventsSha256(rawEventPath),
+          rawContentsByteLength: readFileSync(rawEventPath).byteLength,
+        });
+      }
+      expect(existsSync(input.eventPath + ".codex-raw")).toBe(true);
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 
   test("requires positive first-party terminal evidence for v5 success", () => {
