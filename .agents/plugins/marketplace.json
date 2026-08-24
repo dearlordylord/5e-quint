@@ -1,14 +1,14 @@
 {
   "name": "dnd-srd-play",
   "interface": {
-    "displayName": "D&D SRD Play Development"
+    "displayName": "D&D SRD Oracle Development"
   },
   "plugins": [
     {
-      "name": "srd-play",
+      "name": "dnd-srd-oracle",
       "source": {
         "source": "local",
-        "path": "./plugins/srd-play"
+        "path": "./plugins/dnd-srd-oracle"
       },
       "policy": {
         "installation": "AVAILABLE",

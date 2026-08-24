@@ -64,7 +64,7 @@ const manifestPath = resolve(
 );
 const capabilityMatrixPath = resolve(
   repoRoot,
-  "plugins/srd-play/evals/capability-matrix.json",
+  "plugins/dnd-srd-oracle/evals/capability-matrix.json",
 );
 const packageJsonPath = resolve(repoRoot, "packages/mcp/package.json");
 const taskIdPattern =

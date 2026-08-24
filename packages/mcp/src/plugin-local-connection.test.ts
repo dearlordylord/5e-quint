@@ -11,13 +11,13 @@ import { describe, expect, test } from "vitest";
 import { decodeEvaluationInventory } from "../test-support/evaluation-inventory.ts";
 
 const pluginRoot = fileURLToPath(
-  new URL("../../../plugins/srd-play/", import.meta.url),
+  new URL("../../../plugins/dnd-srd-oracle/", import.meta.url),
 );
 const repositoryRoot = resolve(pluginRoot, "../..");
 const localMcpConfigRoot = resolve(repositoryRoot, "packages/mcp/test-support");
 const localMcpConfigPath = resolve(
   localMcpConfigRoot,
-  "srd-play-local-mcp.json",
+  "dnd-srd-oracle-local-mcp.json",
 );
 const pluginManifestPath = resolve(pluginRoot, ".codex-plugin/plugin.json");
 const LOCAL_PLUGIN_CONNECTION_TEST_TIMEOUT_MS = 90_000;
@@ -29,7 +29,7 @@ const PROC_STAT_START_TIME_INDEX_AFTER_COMMAND = 19;
 
 const LocalMcpConfigSchema = Schema.Struct({
   mcpServers: Schema.Struct({
-    "srd-play": Schema.Struct({
+    "dnd-srd-oracle": Schema.Struct({
       command: Schema.String,
       args: Schema.Array(Schema.String),
       cwd: Schema.String,
@@ -38,7 +38,11 @@ const LocalMcpConfigSchema = Schema.Struct({
 });
 
 const InstalledPluginManifestSchema = Schema.Struct({
+  name: Schema.Literal("dnd-srd-oracle"),
   skills: Schema.String,
+  interface: Schema.Struct({
+    displayName: Schema.Literal("D&D SRD Oracle"),
+  }),
   mcpServers: Schema.optionalWith(Schema.String, { exact: true }),
 });
 
@@ -61,7 +65,7 @@ const ForwardTestResultsSchema = Schema.Struct({
   }),
 });
 
-describe("local SRD Play plugin evaluation seams", () => {
+describe("local D&D SRD Oracle plugin evaluation seams", () => {
   test("keeps the installed Skill package separate from the source MCP seam", () => {
     const manifest = decodeJsonFile(
       InstalledPluginManifestSchema,
@@ -124,7 +128,7 @@ describe("local SRD Play plugin evaluation seams", () => {
     "starts the configured stdio command and connects to the real MCP protocol",
     async () => {
       const config = decodeJsonFile(LocalMcpConfigSchema, localMcpConfigPath)
-        .mcpServers["srd-play"];
+        .mcpServers["dnd-srd-oracle"];
       const transport = new StdioClientTransport({
         command: config.command,
         args: [...config.args],
@@ -132,7 +136,7 @@ describe("local SRD Play plugin evaluation seams", () => {
         stderr: "pipe",
       });
       const client = new Client({
-        name: "srd-play-local-plugin-evaluation",
+        name: "dnd-srd-oracle-local-plugin-evaluation",
         version: "0.1.0",
       });
 

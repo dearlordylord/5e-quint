@@ -266,8 +266,8 @@ Deferred workflow gates:
 
 Normal package tests cover the MCP server route.
 
-The developer-mode `plugins/srd-play` connection, local installation, and
-Secure MCP Tunnel runbook lives in [`plugins/srd-play/README.md`](../../plugins/srd-play/README.md).
+The developer-mode `plugins/dnd-srd-oracle` connection, local installation, and
+Secure MCP Tunnel runbook lives in [`plugins/dnd-srd-oracle/README.md`](../../plugins/dnd-srd-oracle/README.md).
 The plugin retains returned handles and sequences canonical MCP facts; it
 contains no catalog, rules inventory, executable choices, or shadow session
 state. Its evaluation artifacts record external observations separately from

@@ -1,16 +1,16 @@
 {
-  "schema": "dnd.srd-play.installed-chatgpt-evidence.v2",
+  "schema": "dnd.srd-oracle.installed-chatgpt-evidence.v2",
   "status": "partiallyObserved",
   "recordedAt": "2026-08-24",
   "scope": "Installed ChatGPT developer-mode MCP connection and tool selection, Skill activation, and complete-plugin newcomer journey",
   "environment": {
     "tag": "observed",
     "accountScope": "operator-authorized ChatGPT account",
-    "workspacePolicy": "Developer mode enabled with the installed SRD Play Skill and separately connected no-auth MCP endpoint"
+    "workspacePolicy": "Developer mode enabled with the then-named SRD Play Skill and separately connected no-auth MCP endpoint"
   },
   "pendingReason": "The complete newcomer journey is observed from the operator-provided public snapshot at https://chatgpt.com/share/6a8c5b69-e658-83ea-8772-f057e3763ba4. The four dedicated MCP selection cases and five dedicated Skill activation cases remain pending. The earlier snapshot at https://chatgpt.com/share/6a8c4a47-e610-83ea-9163-450272c9606e remains useful supplemental evidence for explicit app activation, the pre-fix language/alignment projection defect, and stat-block battle execution, but it did not use an inventory prompt. ChatGPT shared snapshots redact app tool names, arguments, and results, so observed tool-name lists remain empty unless the visible assistant response independently reports them.",
-  "promptOwner": "plugins/srd-play/evals/evaluation-inventory.json",
-  "capabilityMatrix": "plugins/srd-play/evals/capability-matrix.json",
+  "promptOwner": "plugins/dnd-srd-oracle/evals/evaluation-inventory.json",
+  "capabilityMatrix": "plugins/dnd-srd-oracle/evals/capability-matrix.json",
   "canonicalMcpEvidence": {
     "manifestPath": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
     "status": "observed",
@@ -101,7 +101,7 @@
       "result": "passed",
       "promptRef": "complete-newcomer-journey",
       "observedAt": "2026-08-24T14:30:36.235Z",
-      "resultSummary": "The shared ChatGPT snapshot shows SRD Play activation, supported Fighter creation from returned Creation Holes, successful Character Session finalization, a completed battle against an installed Goblin Warrior with no pending fills, and the final Character Session list. The run also exposed serial independent-choice presentation and opaque equipment-package labels, which are tracked as follow-up UX findings. The surprising noncontiguous supported-progression roster is recorded as a deferred design topic rather than treated as a D&D level-system rule. Shared-link redaction prevents recovery of exact tool names and payloads.",
+      "resultSummary": "The shared ChatGPT snapshot shows activation of the plugin then named SRD Play, supported Fighter creation from returned Creation Holes, successful Character Session finalization, a completed battle against an installed Goblin Warrior with no pending fills, and the final Character Session list. The run also exposed serial independent-choice presentation and opaque equipment-package labels, which are tracked as follow-up UX findings. The surprising noncontiguous supported-progression roster is recorded as a deferred design topic rather than treated as a D&D level-system rule. Shared-link redaction prevents recovery of exact tool names and payloads.",
       "observedToolNames": []
     }
   ]

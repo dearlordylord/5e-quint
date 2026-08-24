@@ -39,7 +39,7 @@
     }
   ],
   "findingsApplied": [
-    "Constrain what-can-happen-next activation to an existing SRD Play journey.",
+    "Constrain what-can-happen-next activation to an existing D&D SRD Oracle journey.",
     "Distinguish installed catalog browsing from legal character-creation holes.",
     "Read the Play Session before discovering detailed remaining character choices.",
     "State the installed-catalog boundary for user-authored executable records."

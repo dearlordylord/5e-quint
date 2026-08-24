@@ -80,9 +80,9 @@ const CapabilityRowSchema = Schema.Union(
 );
 
 export const CapabilityMatrixSchema = Schema.Struct({
-  schema: Schema.Literal("dnd.srd-play.capability-matrix.v2"),
+  schema: Schema.Literal("dnd.srd-oracle.capability-matrix.v2"),
   status: Schema.Literal("frozen"),
-  owner: Schema.Literal("plugins/srd-play/evals"),
+  owner: Schema.Literal("plugins/dnd-srd-oracle/evals"),
   canonicalMcpEvidence: Schema.Struct({
     manifestPath: Schema.Literal(
       "plans/unit-profile-coverage/mcp-scenario-evidence.json",
@@ -102,7 +102,7 @@ export const CapabilityMatrixSchema = Schema.Struct({
   }),
   installedChatGptEvidence: Schema.Struct({
     artifactPath: Schema.Literal(
-      "plugins/srd-play/evals/installed-chatgpt-evidence.json",
+      "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
     ),
     evidenceKind: Schema.Literal("installedSkillActivation"),
   }),

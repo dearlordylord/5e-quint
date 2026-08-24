@@ -24,7 +24,7 @@ import { sourceDefinesVitestScenario } from "../test-support/mcp-scenario-execut
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
 const repoRoot = resolve(import.meta.dirname, "../../..");
-const evalRoot = resolve(repoRoot, "plugins/srd-play/evals");
+const evalRoot = resolve(repoRoot, "plugins/dnd-srd-oracle/evals");
 const manifestPath = resolve(
   repoRoot,
   "plans/unit-profile-coverage/mcp-scenario-evidence.json",
@@ -226,14 +226,14 @@ const ObservedEnvironmentSchema = Schema.Struct({
   workspacePolicy: Schema.String,
 });
 const InstalledEvidenceCommonSchema = {
-  schema: Schema.Literal("dnd.srd-play.installed-chatgpt-evidence.v2"),
+  schema: Schema.Literal("dnd.srd-oracle.installed-chatgpt-evidence.v2"),
   recordedAt: Schema.String,
   scope: Schema.String,
   promptOwner: Schema.Literal(
-    "plugins/srd-play/evals/evaluation-inventory.json",
+    "plugins/dnd-srd-oracle/evals/evaluation-inventory.json",
   ),
   capabilityMatrix: Schema.Literal(
-    "plugins/srd-play/evals/capability-matrix.json",
+    "plugins/dnd-srd-oracle/evals/capability-matrix.json",
   ),
   canonicalMcpEvidence: Schema.Struct({
     manifestPath: Schema.Literal(
@@ -517,7 +517,7 @@ const expectedLeafIssues = [
   325, 326, 324, 327, 327, 327,
 ] as const;
 
-describe("SRD Play evaluation artifacts", () => {
+describe("D&D SRD Oracle evaluation artifacts", () => {
   test("specializes query-kind metadata to the canonical capability and scenario", () => {
     const matrixPath = resolve(evalRoot, "capability-matrix.json");
     const rawMatrix = JSON.parse(readFileSync(matrixPath, "utf8"));
@@ -771,7 +771,7 @@ describe("SRD Play evaluation artifacts", () => {
       InMemoryTransport.createLinkedPair();
     const { server } = createDndMcpProtocolServer();
     const client = new Client({
-      name: "srd-play-capability-matrix-check",
+      name: "dnd-srd-oracle-capability-matrix-check",
       version: "0.1.0",
     });
     try {

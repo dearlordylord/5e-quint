@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "srd-play": {
+    "dnd-srd-oracle": {
       "command": "pnpm",
       "args": ["--filter", "@dnd/mcp", "dev"],
       "cwd": "../../.."

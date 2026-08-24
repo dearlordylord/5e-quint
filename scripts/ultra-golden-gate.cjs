@@ -14,7 +14,7 @@ const mcpScenarioEvidenceSourcePath =
 const characterSessionQueryInputSourcePath =
   "packages/mcp/src/character-session-query-tool-input.ts";
 const capabilityMatrixSourcePath =
-  "plugins/srd-play/evals/capability-matrix.json";
+  "plugins/dnd-srd-oracle/evals/capability-matrix.json";
 const ultraGoldenScopeFields = Object.freeze([
   { scopeId: "level-1", reportField: "level1FullSupport" },
   { scopeId: "level-1-2", reportField: "level12FullSupport" },

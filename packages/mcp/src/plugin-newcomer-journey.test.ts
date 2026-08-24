@@ -7,7 +7,7 @@ import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
 const COMPLETE_NEWCOMER_JOURNEY_TIMEOUT_MS = 150_000;
 
-describe("SRD Play headless newcomer journey", () => {
+describe("D&D SRD Oracle headless newcomer journey", () => {
   test(
     "complete-newcomer-journey",
     async () => {
@@ -15,7 +15,7 @@ describe("SRD Play headless newcomer journey", () => {
         InMemoryTransport.createLinkedPair();
       const { server } = createDndMcpProtocolServer();
       const client = new Client({
-        name: "srd-play-headless-newcomer",
+        name: "dnd-srd-oracle-headless-newcomer",
         version: "0.1.0",
       });
 

@@ -85,7 +85,7 @@ export const EvaluationInventorySchema = Schema.Struct({
     skillForwardTest: Schema.Struct({
       kind: Schema.Literal("independentStaticForwardTest"),
       resultPath: Schema.Literal(
-        "plugins/srd-play/evals/forward-test-results.json",
+        "plugins/dnd-srd-oracle/evals/forward-test-results.json",
       ),
     }),
     installedChatGpt: Schema.Struct({

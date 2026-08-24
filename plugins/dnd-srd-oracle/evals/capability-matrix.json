@@ -1,7 +1,7 @@
 {
-  "schema": "dnd.srd-play.capability-matrix.v2",
+  "schema": "dnd.srd-oracle.capability-matrix.v2",
   "status": "frozen",
-  "owner": "plugins/srd-play/evals",
+  "owner": "plugins/dnd-srd-oracle/evals",
   "canonicalMcpEvidence": {
     "manifestPath": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
     "evidenceKind": "mcpScenario",
@@ -14,7 +14,7 @@
     "coverage": "representativeCrossLeafOnly"
   },
   "installedChatGptEvidence": {
-    "artifactPath": "plugins/srd-play/evals/installed-chatgpt-evidence.json",
+    "artifactPath": "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
     "evidenceKind": "installedSkillActivation"
   },
   "rows": [

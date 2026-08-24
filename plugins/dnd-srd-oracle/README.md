@@ -1,6 +1,6 @@
-# SRD Play developer-mode runbook
+# D&D SRD Oracle developer-mode runbook
 
-This directory contains the `srd-play` Skill and evaluation artifacts. The MCP
+This directory contains the `dnd-srd-oracle` Skill and evaluation artifacts. The MCP
 server remains the runtime composition owner in
 [`packages/mcp/README.md`](../../packages/mcp/README.md); this document owns
 the developer-mode connection procedure.
@@ -17,7 +17,7 @@ pnpm --filter @dnd/mcp exec vitest run src/plugin-local-connection.test.ts \
 ```
 
 The source-only descriptor at
-[`packages/mcp/test-support/srd-play-local-mcp.json`](../../packages/mcp/test-support/srd-play-local-mcp.json)
+[`packages/mcp/test-support/dnd-srd-oracle-local-mcp.json`](../../packages/mcp/test-support/dnd-srd-oracle-local-mcp.json)
 starts `@dnd/mcp` through its stdio entrypoint. It is used only by the
 source-checkout test; it is not part of the installed plugin package and is
 not a ChatGPT developer-mode endpoint.
@@ -36,7 +36,7 @@ mode. Follow the current [OpenAI plugin connection guide](https://developers.ope
 3. Open **Plugins**, choose **+**, enter the user-facing name and description,
    select the connection method, and create the connection. For a public
    endpoint, enter the full `/mcp` URL; for a tunnel, select **Tunnel** and
-   choose or enter its `tunnel_id`. For this private developer-mode SRD Play
+   choose or enter its `tunnel_id`. For this private developer-mode D&D SRD Oracle
    evaluation, choose **No authentication** in the MCP/app authentication
    setting: do not configure OAuth or a user-facing API key. This no-auth
    choice is scoped to this private evaluation and is not a public
@@ -90,8 +90,8 @@ owns current permissions, releases, networking, and command details.
    git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
    environment_file="$(dirname "$git_common_dir")/.env"
    profile_dir="$git_common_dir/tunnel-client/profiles"
-   profile_name=srd-play-local
-   runtime_alias=srd-play-local
+   profile_name=dnd-srd-oracle-local
+   runtime_alias=dnd-srd-oracle-local
    mcp_command="$repository_root/node_modules/.bin/tsx $repository_root/packages/mcp/src/index.ts"
 
    set -a
@@ -152,7 +152,7 @@ owns current permissions, releases, networking, and command details.
 The tunnel is transport only: it does not change the MCP protocol, runtime
 state ownership, or the installed-evidence record. If the tunnel is not listed,
 check workspace association and Tunnels **Read + Use**, then run
-`tunnel-client doctor --profile srd-play-local --explain` again.
+`tunnel-client doctor --profile dnd-srd-oracle-local --explain` again.
 
 If ChatGPT reports that an `AppsSDKAppVersion` object exceeds the CosmosDB 2 MB
 limit, the tunnel has already completed discovery and schema validation. Run
@@ -183,9 +183,9 @@ plugin_creator_root=/home/node/.codex/skills/.system/plugin-creator
 skill_creator_root=/home/node/.codex/skills/.system/skill-creator
 
 uv run --with pyyaml python "$plugin_creator_root/scripts/validate_plugin.py" \
-  plugins/srd-play
+  plugins/dnd-srd-oracle
 uv run --with pyyaml python "$skill_creator_root/scripts/quick_validate.py" \
-  plugins/srd-play/skills/play-srd
+  plugins/dnd-srd-oracle/skills/dnd-srd-oracle
 ```
 
 Register the repository marketplace and install the package. Use a stable
@@ -203,7 +203,7 @@ marketplace_name="$(
   python3 "$plugin_creator_root/scripts/read_marketplace_name.py" \
     --marketplace-path "$marketplace_file"
 )"
-codex plugin add "srd-play@$marketplace_name"
+codex plugin add "dnd-srd-oracle@$marketplace_name"
 codex plugin list
 ```
 
@@ -219,12 +219,12 @@ marketplace_file="$repository_root/.agents/plugins/marketplace.json"
 plugin_creator_root=/home/node/.codex/skills/.system/plugin-creator
 
 python3 "$plugin_creator_root/scripts/update_plugin_cachebuster.py" \
-  "$repository_root/plugins/srd-play"
+  "$repository_root/plugins/dnd-srd-oracle"
 marketplace_name="$(
   python3 "$plugin_creator_root/scripts/read_marketplace_name.py" \
     --marketplace-path "$marketplace_file"
 )"
-codex plugin add "srd-play@$marketplace_name"
+codex plugin add "dnd-srd-oracle@$marketplace_name"
 ```
 
 If the registered checkout or worktree must be removed, unregister its global
@@ -232,7 +232,7 @@ entry first with `codex plugin marketplace remove dnd-srd-play`. Register and
 install again from the replacement checkout before opening a new conversation.
 
 Restart or refresh the ChatGPT desktop app, open the Plugins Directory, select
-**D&D SRD Play Development**, and confirm that **SRD Play** is installed and
+**D&D SRD Oracle Development**, and confirm that **D&D SRD Oracle** is installed and
 enabled. Keep the separately created developer-mode MCP connection enabled and
 start a new conversation. Run the direct, natural, follow-up, negative, and
 authoring-boundary prompts in the evaluation inventory. For a combined
@@ -243,7 +243,8 @@ final Character Session list.
 Use this copyable prompt for the complete journey; the Skill must pause for the
 operator's answers rather than choosing on the operator's behalf:
 
-> Use SRD Play to inspect the installed SRD character options and help me build
+> Use D&D SRD Oracle to inspect the installed SRD character options and help me
+> build
 > a supported character using only choices returned by the current creation
 > holes. At each stop, group every currently returned independent meaningful
 > choice so I can answer them in one reply; keep dependent choices for later,
