@@ -496,6 +496,48 @@ process.exit(0);
     }
   });
 
+  test("records a typed failure when a zero-exit stream fails analysis", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-analysis-failure-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      '#!/bin/sh\nprintf \'{"type":"turn.started"}\\n\'\nexit 0\n',
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: { tag: "exited", status: 0 },
+        cause: { tag: "codex" },
+      });
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        expect(events.events.at(-1)).toMatchObject({
+          type: "raw-swarm.invocation.completed",
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "failed", failureKind: "codexEvent" },
+        });
+      }
+      expect(
+        parseModelInvocationLedgerEntry(
+          JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+        ),
+      ).toMatchObject({
+        _tag: "Right",
+        right: {
+          schemaVersion: 5,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "failed", failureKind: "codexEvent" },
+        },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("rejects a preexisting expected output before starting the child", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-stale-output-"));
     const codex = resolve(root, "codex");
