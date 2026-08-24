@@ -105,6 +105,27 @@ describe("Raw Swarm model invocation telemetry", () => {
     };
   }
 
+  function expectLedgerRereadsFromEvents(
+    eventPath: string,
+    ledgerPath: string,
+  ): void {
+    const events = readCodexEvents(eventPath);
+    const ledger = parseModelInvocationLedgerEntry(
+      JSON.parse(readFileSync(ledgerPath, "utf8")),
+    );
+    expect(events.tag).toBe("valid");
+    expect(ledger._tag).toBe("Right");
+    if (events.tag !== "valid" || Either.isLeft(ledger)) return;
+    const reread = modelInvocationEvidenceFromEvents(events.events);
+    expect(reread.tag).toBe("valid");
+    if (reread.tag !== "valid") return;
+    const ledgerEntry = Object.fromEntries(
+      Object.entries(ledger.right).filter(([key]) => key !== "eventsSha256"),
+    );
+    expect(reread.entry).toEqual(ledgerEntry);
+    expect(invocationEventsSha256(eventPath)).toBe(ledger.right.eventsSha256);
+  }
+
   test("retains timeout telemetry and a failed result when a child stalls without output", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-timeout-"));
     const codex = resolve(root, "codex");
@@ -195,6 +216,54 @@ exec ${process.execPath} -e 'setTimeout(() => {}, 1000)'
           result: { tag: "failed", failureKind: "codexEvent" },
         },
       });
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-event-failure",
+          line: 3,
+          message: "Codex event line 3 is malformed JSON.",
+          rawLineBase64: Buffer.from('{"type":"turn.completed"').toString(
+            "base64",
+          ),
+        });
+      }
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("canonicalizes a full malformed JSONL line before hashing evidence", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-full-malformed-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      `#!/bin/sh
+printf '{"type":"turn.started"}\nnot-json\n'
+exit 7
+`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: { tag: "exited", status: 7 },
+        cause: { tag: "codex" },
+      });
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-event-failure",
+          line: 3,
+          message: "Codex event line 3 is malformed JSON.",
+          rawLineBase64: Buffer.from("not-json").toString("base64"),
+        });
+      }
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -231,6 +300,7 @@ exit 7
           result: { tag: "failed", failureKind: "codexEvent" },
         },
       });
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

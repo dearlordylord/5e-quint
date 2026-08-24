@@ -197,7 +197,6 @@ function emitExecutionFindings(output: string): void {
 }
 
 export type SdkPlayerExecutionFailure = Readonly<{
-  readonly tag: "fatalExecutionFailure";
   readonly kind: "unreapedSupervisorCleanup" | "evidenceRetentionFailure";
   readonly reason: string;
 }>;
@@ -205,12 +204,10 @@ export type SdkPlayerExecutionFailure = Readonly<{
 export type SdkPlayerExecutionFinalization =
   | Readonly<{
       readonly tag: "reaped";
-      readonly temporaryDirectories: "remove";
     }>
   | Readonly<{
-      readonly tag: "fatalExecutionFailure";
+      readonly tag: "failed";
       readonly failure: SdkPlayerExecutionFailure;
-      readonly temporaryDirectories: "preserve";
     }>;
 
 export type SdkPlayerExecutionDirectories = Readonly<{
@@ -253,28 +250,24 @@ export async function finalizeSdkPlayerExecution(input: {
       input.onReaped();
     } catch (error: unknown) {
       const failure: SdkPlayerExecutionFailure = {
-        tag: "fatalExecutionFailure",
         kind: "evidenceRetentionFailure",
         reason: error instanceof Error ? error.message : String(error),
       };
       return {
-        tag: "fatalExecutionFailure",
+        tag: "failed",
         failure,
-        temporaryDirectories: "preserve",
       };
     }
     removeSdkPlayerTemporaryDirectories(input.directories);
-    return { tag: "reaped", temporaryDirectories: "remove" };
+    return { tag: "reaped" };
   }
   const failure: SdkPlayerExecutionFailure = {
-    tag: "fatalExecutionFailure",
     kind: "unreapedSupervisorCleanup",
     reason: termination.reason,
   };
   return {
-    tag: "fatalExecutionFailure",
+    tag: "failed",
     failure,
-    temporaryDirectories: "preserve",
   };
 }
 
@@ -1038,7 +1031,6 @@ async function main(args: readonly string[]): Promise<void> {
   let supervisorProcess: ReturnType<typeof spawn> | undefined;
   let supervisorLog: number | undefined;
   let preparationFailure: string | undefined;
-  let executionFailure: SdkPlayerExecutionFailure | undefined;
   const directories: SdkPlayerExecutionDirectories = {
     scratch,
     trusted,
@@ -1263,11 +1255,13 @@ async function main(args: readonly string[]): Promise<void> {
         }
       },
     });
-    if (finalization.tag === "fatalExecutionFailure") {
+    if (finalization.tag === "failed") {
       closeSupervisorLog();
-      executionFailure = finalization.failure;
-      console.error(sdkPlayerExecutionFailureMessage(executionFailure));
-      throw new Error(sdkPlayerExecutionFailureMessage(executionFailure));
+      const failureMessage = sdkPlayerExecutionFailureMessage(
+        finalization.failure,
+      );
+      console.error(failureMessage);
+      throw new Error(failureMessage);
     }
   }
   console.log(`SDK player evidence: ${output}`);

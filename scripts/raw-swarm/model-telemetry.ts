@@ -5,8 +5,10 @@ import {
   appendFileSync,
   closeSync,
   existsSync,
+  ftruncateSync,
   openSync,
   readFileSync,
+  unlinkSync,
   writeSync,
 } from "node:fs";
 
@@ -1080,7 +1082,31 @@ export type CodexEventReadResult =
       readonly tag: "invalid";
       readonly line: number;
       readonly message: string;
+      readonly rawLineBase64: string;
     };
+
+type CodexEventDecodeFailure = Extract<
+  CodexEventReadResult,
+  { readonly tag: "invalid" }
+>;
+
+type CodexEventDecodeFailureEvent = Readonly<{
+  readonly type: "raw-swarm.invocation.codex-event-failure";
+  readonly line: number;
+  readonly message: string;
+  readonly rawLineBase64: string;
+}>;
+
+function codexEventDecodeFailureEvent(
+  input: CodexEventDecodeFailure,
+): CodexEventDecodeFailureEvent {
+  return {
+    type: "raw-swarm.invocation.codex-event-failure",
+    line: input.line,
+    message: input.message,
+    rawLineBase64: input.rawLineBase64,
+  };
+}
 
 export type CodexEventReadResultWithSource =
   | {
@@ -1098,18 +1124,26 @@ export function readCodexEventsWithSource(
   path: string,
 ): CodexEventReadResultWithSource {
   const rawContents = readFileSync(path);
-  const contents = rawContents.toString("utf8");
   const events: unknown[] = [];
-  const lines = contents.split("\n");
-  for (const [index, line] of lines.entries()) {
+  let lineStart = 0;
+  let lineNumber = 0;
+  for (let lineEnd = 0; lineEnd <= rawContents.length; lineEnd += 1) {
+    if (lineEnd !== rawContents.length && rawContents[lineEnd] !== 0x0a) {
+      continue;
+    }
+    lineNumber += 1;
+    const rawLine = rawContents.subarray(lineStart, lineEnd);
+    lineStart = lineEnd + 1;
+    const line = rawLine.toString("utf8");
     if (line.trim().length === 0) continue;
     try {
       events.push(JSON.parse(line));
     } catch {
       return {
         tag: "invalid",
-        line: index + 1,
-        message: `Codex event line ${index + 1} is malformed JSON.`,
+        line: lineNumber,
+        message: `Codex event line ${lineNumber} is malformed JSON.`,
+        rawLineBase64: rawLine.toString("base64"),
         rawContents,
         events,
       };
@@ -2552,106 +2586,135 @@ async function runCodexProcess<A, E extends object>(input: {
   }
   const eventFd = openSync(input.eventPath, "wx");
   try {
-    writeSync(eventFd, `${JSON.stringify(input.startedEvent)}\n`);
-    const logFd = openSync(input.logPath, "wx");
+    const rawEventPath = `${input.eventPath}.codex-raw`;
+    const rawEventFd = openSync(rawEventPath, "wx");
     try {
-      const outputClaim =
-        input.operation.tag === "expectedLastMessage"
-          ? claimExpectedModelInvocationOutput(input.operation.expected.path)
-          : undefined;
-      const processOutcome =
-        outputClaim === undefined || typeof outputClaim !== "string"
-          ? await spawnOwnedCodex({
-              args: codexArgs,
-              cwd: input.cwd,
-              env: input.env,
-              stdinFd: input.stdinFd,
-              eventFd,
-              logFd,
-              timeoutMilliseconds: input.timeoutMilliseconds,
-              spawnProcess: input.spawnProcess,
-            })
-          : ({
-              tag: "failedToStart",
-              message: outputClaim,
-            } satisfies ModelInvocationProcess);
-      const exit = processOutcome;
-      const retainedEvents = readCodexEventsWithSource(input.eventPath);
-      const events = retainedEvents.events;
-      const codexEventAnalysis =
-        retainedEvents.tag === "invalid"
-          ? Either.right(codexEventDecodeFailure(retainedEvents.message))
-          : analyzeCodexEvents(exit, events);
-      const analysis = Either.isLeft(codexEventAnalysis)
-        ? codexEventDecodeFailure(codexEventAnalysis.left)
-        : codexEventAnalysis.right;
-      const expectedOutputClaimToken =
-        outputClaim === undefined || typeof outputClaim === "string"
-          ? undefined
-          : outputClaim.token;
-      const completedForAnalysis = (codexEventAnalysis: CodexEventAnalysis) => {
-        const lifecycle = invocationLifecycleFromProcess({
-          process: processOutcome,
-          codexEventAnalysis,
-          operation: input.operation,
-          ...(expectedOutputClaimToken === undefined
-            ? {}
-            : { expectedOutputClaimToken }),
-        });
-        const result = modelInvocationResultFromLifecycle(
-          lifecycle,
-          codexEventAnalysis.result,
-        );
-        const completedEvent = input.completionEvent({
-          elapsedMilliseconds: Date.now() - input.startedMilliseconds,
-          exit,
-          result,
-        });
-        if (Either.isLeft(completedEvent)) {
-          throw new Error(
-            `${input.completionErrorPrefix}: ${completedEvent.left.message}`,
+      const startedLine = `${JSON.stringify(input.startedEvent)}\n`;
+      writeSync(eventFd, startedLine);
+      writeSync(rawEventFd, startedLine);
+      const logFd = openSync(input.logPath, "wx");
+      try {
+        const outputClaim =
+          input.operation.tag === "expectedLastMessage"
+            ? claimExpectedModelInvocationOutput(input.operation.expected.path)
+            : undefined;
+        const processOutcome =
+          outputClaim === undefined || typeof outputClaim !== "string"
+            ? await spawnOwnedCodex({
+                args: codexArgs,
+                cwd: input.cwd,
+                env: input.env,
+                stdinFd: input.stdinFd,
+                eventFd: rawEventFd,
+                logFd,
+                timeoutMilliseconds: input.timeoutMilliseconds,
+                spawnProcess: input.spawnProcess,
+              })
+            : ({
+                tag: "failedToStart",
+                message: outputClaim,
+              } satisfies ModelInvocationProcess);
+        const exit = processOutcome;
+        const retainedEvents = readCodexEventsWithSource(rawEventPath);
+        const events = retainedEvents.events;
+        const codexEventAnalysis =
+          retainedEvents.tag === "invalid"
+            ? Either.right(codexEventDecodeFailure(retainedEvents.message))
+            : analyzeCodexEvents(exit, events);
+        const analysis = Either.isLeft(codexEventAnalysis)
+          ? codexEventDecodeFailure(codexEventAnalysis.left)
+          : codexEventAnalysis.right;
+        const expectedOutputClaimToken =
+          outputClaim === undefined || typeof outputClaim === "string"
+            ? undefined
+            : outputClaim.token;
+        const completedForAnalysis = (
+          codexEventAnalysis: CodexEventAnalysis,
+        ) => {
+          const lifecycle = invocationLifecycleFromProcess({
+            process: processOutcome,
+            codexEventAnalysis,
+            operation: input.operation,
+            ...(expectedOutputClaimToken === undefined
+              ? {}
+              : { expectedOutputClaimToken }),
+          });
+          const result = modelInvocationResultFromLifecycle(
+            lifecycle,
+            codexEventAnalysis.result,
           );
-        }
-        return { lifecycle, completed: completedEvent.right };
-      };
-      const initialCompletion = completedForAnalysis(analysis);
-      const finalized = (() => {
-        const evidence = input.evidenceFromEvents([
-          ...events,
-          initialCompletion.completed,
-        ]);
-        if (evidence.tag === "valid") {
-          return { ...initialCompletion, evidence: evidence.entry };
-        }
-        const fallbackCompletion = completedForAnalysis(
-          codexEventDecodeFailure(evidence.message),
-        );
-        const fallbackEvidence = input.evidenceFromEvents([
-          input.startedEvent,
-          fallbackCompletion.completed,
-        ]);
-        if (fallbackEvidence.tag === "invalid") {
-          throw new Error(fallbackEvidence.message);
-        }
-        return { ...fallbackCompletion, evidence: fallbackEvidence.entry };
-      })();
-      const completionSeparator =
-        retainedEvents.rawContents.length === 0 ||
-        retainedEvents.rawContents.at(-1) === 0x0a
-          ? ""
-          : "\n";
-      const completionLine = `${completionSeparator}${JSON.stringify(finalized.completed)}\n`;
-      writeSync(eventFd, completionLine);
-      return {
-        lifecycle: finalized.lifecycle,
-        evidence: finalized.evidence,
-        eventsSha256: createHash("sha256")
-          .update(retainedEvents.rawContents)
-          .update(completionLine)
-          .digest("hex"),
-      };
+          const completedEvent = input.completionEvent({
+            elapsedMilliseconds: Date.now() - input.startedMilliseconds,
+            exit,
+            result,
+          });
+          if (Either.isLeft(completedEvent)) {
+            throw new Error(
+              `${input.completionErrorPrefix}: ${completedEvent.left.message}`,
+            );
+          }
+          return { lifecycle, completed: completedEvent.right };
+        };
+        const initialCompletion = completedForAnalysis(analysis);
+        const finalized = (() => {
+          const initialEvents = [...events, initialCompletion.completed];
+          const evidence = input.evidenceFromEvents(initialEvents);
+          if (evidence.tag === "valid") {
+            return {
+              ...initialCompletion,
+              evidence: evidence.entry,
+              canonicalEvents: [
+                ...events,
+                ...(retainedEvents.tag === "invalid"
+                  ? [codexEventDecodeFailureEvent(retainedEvents)]
+                  : []),
+                initialCompletion.completed,
+              ],
+            };
+          }
+          const fallbackCompletion = completedForAnalysis(
+            codexEventDecodeFailure(evidence.message),
+          );
+          const fallbackEvents = [
+            input.startedEvent,
+            ...(retainedEvents.tag === "invalid"
+              ? [codexEventDecodeFailureEvent(retainedEvents)]
+              : []),
+            fallbackCompletion.completed,
+          ];
+          const fallbackEvidence = input.evidenceFromEvents(fallbackEvents);
+          if (fallbackEvidence.tag === "invalid") {
+            throw new Error(fallbackEvidence.message);
+          }
+          return {
+            ...fallbackCompletion,
+            evidence: fallbackEvidence.entry,
+            canonicalEvents: fallbackEvents,
+          };
+        })();
+        const canonicalContents = finalized.canonicalEvents
+          .map((event) => `${JSON.stringify(event)}\n`)
+          .join("");
+        const canonicalBytes = Buffer.from(canonicalContents, "utf8");
+        ftruncateSync(eventFd, 0);
+        writeSync(eventFd, canonicalBytes, 0, canonicalBytes.length, 0);
+        return {
+          lifecycle: finalized.lifecycle,
+          evidence: finalized.evidence,
+          eventsSha256: createHash("sha256")
+            .update(canonicalBytes)
+            .digest("hex"),
+        };
+      } finally {
+        closeSync(logFd);
+      }
     } finally {
-      closeSync(logFd);
+      closeSync(rawEventFd);
+      try {
+        unlinkSync(rawEventPath);
+      } catch {
+        // Keep the raw sidecar if an unreaped child still owns its descriptor.
+      }
     }
   } finally {
     closeSync(eventFd);

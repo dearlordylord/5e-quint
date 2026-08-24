@@ -166,14 +166,11 @@ describe("SDK player invocation lifecycle", () => {
         },
       });
       expect(finalization).toMatchObject({
-        tag: "fatalExecutionFailure",
+        tag: "failed",
         failure: {
-          tag: "fatalExecutionFailure",
           kind: "unreapedSupervisorCleanup",
         },
-        temporaryDirectories: "preserve",
       });
-      expect(finalization).not.toMatchObject({ tag: "reaped" });
       expect(existsSync(scratch)).toBe(true);
       expect(existsSync(trusted)).toBe(true);
       expect(existsSync(resolve(trusted, "evidence"))).toBe(true);
@@ -210,7 +207,6 @@ describe("SDK player invocation lifecycle", () => {
       });
       expect(finalization).toMatchObject({
         tag: "reaped",
-        temporaryDirectories: "remove",
       });
       expect(existsSync(scratch)).toBe(false);
       expect(existsSync(trusted)).toBe(false);
@@ -247,13 +243,11 @@ describe("SDK player invocation lifecycle", () => {
         },
       });
       expect(finalization).toEqual({
-        tag: "fatalExecutionFailure",
+        tag: "failed",
         failure: {
-          tag: "fatalExecutionFailure",
           kind: "evidenceRetentionFailure",
           reason: "synthetic evidence retention failure",
         },
-        temporaryDirectories: "preserve",
       });
       expect(existsSync(scratch)).toBe(true);
       expect(existsSync(trusted)).toBe(true);
