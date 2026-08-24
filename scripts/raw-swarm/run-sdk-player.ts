@@ -198,7 +198,7 @@ function emitExecutionFindings(output: string): void {
 
 export type SdkPlayerExecutionFailure = Readonly<{
   readonly tag: "fatalExecutionFailure";
-  readonly kind: "unreapedSupervisorCleanup";
+  readonly kind: "unreapedSupervisorCleanup" | "evidenceRetentionFailure";
   readonly reason: string;
 }>;
 
@@ -232,8 +232,9 @@ function removeSdkPlayerTemporaryDirectories(
  * Settle the runner-owned SDK supervisor before finalizing evidence and
  * deciding whether diagnostics may be removed.  The reaped callback owns the
  * success artifact path and runs before temporary roots are removed.  An
- * unreaped supervisor is a fatal execution failure; its temporary roots and
- * partial output remain available for post-mortem evidence.
+ * unreaped supervisor or failed evidence retention is a fatal execution
+ * failure; temporary roots and partial output remain available for post-mortem
+ * evidence.
  */
 export async function finalizeSdkPlayerExecution(input: {
   readonly supervisorProcess: SpawnedCodexProcess | undefined;
@@ -250,9 +251,19 @@ export async function finalizeSdkPlayerExecution(input: {
   if (termination.tag === "reaped") {
     try {
       input.onReaped();
-    } finally {
-      removeSdkPlayerTemporaryDirectories(input.directories);
+    } catch (error: unknown) {
+      const failure: SdkPlayerExecutionFailure = {
+        tag: "fatalExecutionFailure",
+        kind: "evidenceRetentionFailure",
+        reason: error instanceof Error ? error.message : String(error),
+      };
+      return {
+        tag: "fatalExecutionFailure",
+        failure,
+        temporaryDirectories: "preserve",
+      };
     }
+    removeSdkPlayerTemporaryDirectories(input.directories);
     return { tag: "reaped", temporaryDirectories: "remove" };
   }
   const failure: SdkPlayerExecutionFailure = {

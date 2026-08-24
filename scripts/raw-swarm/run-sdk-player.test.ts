@@ -221,4 +221,46 @@ describe("SDK player invocation lifecycle", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test("preserves diagnostic roots when evidence retention fails", async () => {
+    const root = mkdtempSync(
+      resolve(tmpdir(), "dnd-player-retention-failure-"),
+    );
+    const scratch = resolve(root, "scratch");
+    const trusted = resolve(root, "trusted");
+    const codexHome = resolve(root, "codex-home");
+    const output = resolve(root, "output");
+    for (const directory of [scratch, trusted, codexHome, output])
+      mkdirSync(directory);
+    try {
+      const finalization = await finalizeSdkPlayerExecution({
+        supervisorProcess: undefined,
+        detached: false,
+        directories: {
+          scratch,
+          trusted,
+          codexHome,
+          output,
+        },
+        onReaped: () => {
+          throw new Error("synthetic evidence retention failure");
+        },
+      });
+      expect(finalization).toEqual({
+        tag: "fatalExecutionFailure",
+        failure: {
+          tag: "fatalExecutionFailure",
+          kind: "evidenceRetentionFailure",
+          reason: "synthetic evidence retention failure",
+        },
+        temporaryDirectories: "preserve",
+      });
+      expect(existsSync(scratch)).toBe(true);
+      expect(existsSync(trusted)).toBe(true);
+      expect(existsSync(codexHome)).toBe(true);
+      expect(existsSync(output)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
