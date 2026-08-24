@@ -66,7 +66,10 @@ import {
   zeroHitPointReplacementChoices,
 } from "./battle-reducer/attack-damage-apply.ts";
 import { attackExecutionSelectionForOption } from "./battle-action-options.ts";
-import { attackTargetDistanceFeet } from "./battle-reducer/attack-spatial.ts";
+import {
+  attackExecutionSelectionMatchesOption,
+  attackTargetDistanceFeet,
+} from "./battle-reducer/attack-spatial.ts";
 import { applyHpDamage } from "./battle-reducer/damage-apply.ts";
 import {
   attackRollHole,
@@ -98,6 +101,15 @@ describe("battle runtime: attack pipeline boundaries", () => {
 
     for (const hole of holes) {
       expect(hole.attack).not.toHaveProperty("procedureRef");
+      expect(
+        attackExecutionSelectionMatchesOption(
+          attackExecutionSelectionForOption(fighter.origin.attack),
+          hole.attack,
+        ),
+      ).toBe(false);
+      expect(
+        attackTargetDistanceFeet([], fighterId, goblinId, hole.attack),
+      ).toBeNull();
       expect(
         Either.isRight(
           Schema.decodeUnknownEither(BattleHoleSchema, {

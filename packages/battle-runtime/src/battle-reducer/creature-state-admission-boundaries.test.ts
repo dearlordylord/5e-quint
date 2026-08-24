@@ -248,6 +248,45 @@ describe("creature-state admission boundaries", () => {
     );
   });
 
+  test("admits mechanics-only Unit references beside spellcasting facts", () => {
+    const result = startBattle({
+      battleId: battleId("creature-state-mechanics-only-spellcasting"),
+      combatants: [
+        characterSeed({
+          initiative: 10,
+          classLevels: [{ className: "wizard", level: 1 }],
+          spellcasting: wizardSpellcasting(),
+          characterUnitRefs: [
+            {
+              unit: {
+                id: unitId("synthetic_mechanics_only_dash"),
+                syntheticLabel: "Synthetic Mechanics-Only Dash",
+                provenance: {
+                  kind: "classic-2024-mechanics-source-lane",
+                },
+                kind: "class_feature",
+                mechanics: {
+                  family: "alternate_action_cost",
+                  from: { kind: "standard_action", actions: ["dash"] },
+                  to: { kind: "bonus_action" },
+                },
+              },
+              supportProfiles: [
+                {
+                  kind: "alternateActionCost",
+                  from: { kind: "standardAction", actions: ["dash"] },
+                  to: { kind: "bonusAction" },
+                },
+              ],
+            },
+          ],
+        }),
+      ],
+    });
+
+    expect(Either.isRight(result)).toBe(true);
+  });
+
   test("returns missing Unconscious condition for positive-HP Knocked Out admission", () => {
     const result = startBattle({
       battleId: battleId("creature-state-positive-hp-unconscious"),
