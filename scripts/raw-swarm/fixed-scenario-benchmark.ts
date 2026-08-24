@@ -118,6 +118,14 @@ export const FIXED_SCENARIO_ID = "open-grid-wolf-skeleton-pursuit" as const;
 export const FIXED_BENCHMARK_PROFILES = BENCHMARK_IMPLEMENTATION_PROFILES;
 export type FixedBenchmarkProfile = BenchmarkImplementationProfile;
 
+function benchmarkReviewSchemaVersion(profile: FixedBenchmarkProfile): 2 | 3 {
+  return Match.value(profile).pipe(
+    Match.when("documentDeclarationSet", () => 2 as const),
+    Match.when("boundedCapabilityProjection", () => 3 as const),
+    Match.exhaustive,
+  );
+}
+
 const FIXED_BENCHMARK_ROOT = "scripts/raw-swarm/out/fixed-scenario-benchmark";
 export const FIXED_BENCHMARK_CONTEXT_ROLES = BENCHMARK_CONTEXT_ROLES;
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
@@ -1378,6 +1386,7 @@ const GenerationPreparationSchema = Schema.Struct({
 export function validateBenchmarkReviewAuthority(input: {
   readonly profile: FixedBenchmarkProfile;
   readonly reviewStage: "milestone" | "final";
+  readonly schemaVersion: 2 | 3;
   readonly result: unknown;
   readonly outputJsonSchema: unknown;
 }): Either.Either<void, string> {
@@ -1389,8 +1398,14 @@ export function validateBenchmarkReviewAuthority(input: {
       "The bounded capability-projection benchmark retains only its final composite review.",
     );
   }
+  const expectedSchemaVersion = benchmarkReviewSchemaVersion(input.profile);
+  if (input.schemaVersion !== expectedSchemaVersion) {
+    return Either.left(
+      `Benchmark ${input.profile} review must use schema version ${String(expectedSchemaVersion)}.`,
+    );
+  }
   const compatibility = classifyScenarioReviewOutputSchema({
-    schemaVersion: input.profile === "documentDeclarationSet" ? 2 : 3,
+    schemaVersion: input.schemaVersion,
     outputJsonSchema: input.outputJsonSchema,
   });
   const expectedTag =
@@ -1586,6 +1601,7 @@ function retainReviewEnvelope(input: {
   const valid = validateBenchmarkReviewAuthority({
     profile: input.profile,
     reviewStage: input.stage,
+    schemaVersion: benchmarkReviewSchemaVersion(input.profile),
     result: input.result,
     outputJsonSchema,
   });
@@ -1593,7 +1609,7 @@ function retainReviewEnvelope(input: {
   const envelope =
     input.profile === "documentDeclarationSet"
       ? {
-          schemaVersion: 2 as const,
+          schemaVersion: benchmarkReviewSchemaVersion(input.profile),
           phase: "scenarioCompositeReview" as const,
           reviewStage: input.stage,
           scenarioId: fixedScenarioId(),
@@ -1606,7 +1622,7 @@ function retainReviewEnvelope(input: {
           result: input.result,
         }
       : {
-          schemaVersion: 3 as const,
+          schemaVersion: benchmarkReviewSchemaVersion(input.profile),
           phase: "scenarioCompositeReview" as const,
           reviewStage: input.stage,
           sourceGitSha: input.entry.gitSha,
@@ -2254,6 +2270,7 @@ function validateRetainedReviewAuthority(
   const valid = validateBenchmarkReviewAuthority({
     profile,
     reviewStage: stage,
+    schemaVersion: parsed.right.schemaVersion,
     result: parsed.right.result,
     outputJsonSchema: parsed.right.outputJsonSchema,
   });

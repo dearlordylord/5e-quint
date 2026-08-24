@@ -812,6 +812,7 @@ describe("fixed scenario benchmark boundary", () => {
         validateBenchmarkReviewAuthority({
           profile: "documentDeclarationSet",
           reviewStage: "final",
+          schemaVersion: 2,
           result: historicalReview,
           outputJsonSchema: historicalSchema,
         }),
@@ -822,6 +823,7 @@ describe("fixed scenario benchmark boundary", () => {
         validateBenchmarkReviewAuthority({
           profile: "documentDeclarationSet",
           reviewStage: "final",
+          schemaVersion: 2,
           result: currentReview,
           outputJsonSchema: historicalSchema,
         }),
@@ -832,6 +834,7 @@ describe("fixed scenario benchmark boundary", () => {
         validateBenchmarkReviewAuthority({
           profile: "boundedCapabilityProjection",
           reviewStage: "final",
+          schemaVersion: 3,
           result: currentReview,
           outputJsonSchema: currentSchema,
         }),
@@ -842,11 +845,29 @@ describe("fixed scenario benchmark boundary", () => {
         validateBenchmarkReviewAuthority({
           profile: "boundedCapabilityProjection",
           reviewStage: "final",
+          schemaVersion: 3,
           result: historicalReview,
           outputJsonSchema: currentSchema,
         }),
       ),
     ).toBe(true);
+  });
+
+  test("rejects a document-profile historical review carried in a v3 envelope", () => {
+    const historicalSchema = codexOutputJsonSchema(
+      HistoricalScenarioCompositeReviewSchema,
+    );
+    const mismatch = validateBenchmarkReviewAuthority({
+      profile: "documentDeclarationSet",
+      reviewStage: "final",
+      schemaVersion: 3,
+      result: historicalReview,
+      outputJsonSchema: historicalSchema,
+    });
+
+    expect(Either.isLeft(mismatch)).toBe(true);
+    if (Either.isRight(mismatch)) return;
+    expect(mismatch.left).toContain("schema version 2");
   });
 
   test.each([
@@ -916,6 +937,7 @@ describe("fixed scenario benchmark boundary", () => {
       const rejected = validateBenchmarkReviewAuthority({
         profile: "boundedCapabilityProjection",
         reviewStage: "final",
+        schemaVersion: 3,
         result,
         outputJsonSchema: codexOutputJsonSchema(
           CurrentScenarioCompositeReviewSchema,
@@ -935,6 +957,7 @@ describe("fixed scenario benchmark boundary", () => {
     const result = validateBenchmarkReviewAuthority({
       profile: "boundedCapabilityProjection",
       reviewStage: "milestone",
+      schemaVersion: 3,
       result: currentReview,
       outputJsonSchema: currentSchema,
     });
