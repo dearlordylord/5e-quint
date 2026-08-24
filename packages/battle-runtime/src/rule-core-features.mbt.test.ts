@@ -2906,7 +2906,8 @@ function projectRuleCoreFeatureState(input: {
   );
   return withRuleCoreComponentRoute(componentOwner, {
     actionAvailable: snapshot.turn.actionResources.length > 0,
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable:
+      input.state.currentTurnResources.currentHasBonusAction,
     reactionAvailable: actor.reactionAvailable,
     featureUsesRemaining: input.featureUsesRemaining,
     actionSurgeGrant: actionSurgeGrant(input.state),

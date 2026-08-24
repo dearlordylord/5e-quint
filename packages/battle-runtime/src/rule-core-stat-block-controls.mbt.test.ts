@@ -451,7 +451,8 @@ function projectRuleCoreStatBlockControlState(input: {
     attackActionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable:
+      input.state.currentTurnResources.currentHasBonusAction,
     pendingPrimaryDispatches: dispatches.filter(
       (resource) => resource.attackProcedureRef === primaryAttackRef,
     ).length,
