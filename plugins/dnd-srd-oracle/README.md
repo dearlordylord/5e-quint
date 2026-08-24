@@ -259,11 +259,6 @@ only after an authorized installation and conversation run. Its initial
 available; automated local MCP and static Skill-forward tests must not be
 promoted to installed evidence.
 
-For a host-side agent operating alongside other repository work, follow the
-isolated worktree, dependency, API-evidence, browser-evidence, and handback
-protocol in
-[`evals/LOCAL-AGENT-HANDOFF.md`](evals/LOCAL-AGENT-HANDOFF.md).
-
 For an operator-to-repository handoff, provide the redacted case-level prompt,
 selected tool and arguments/result summary, confirmation behavior, observed
 Skill activation, and observation time. A ChatGPT conversation UUID by itself
