@@ -318,8 +318,8 @@ module ruleCoreReactionsMbt {
       recordProtocolState(
         declined,
         noPendingTrigger,
-        Set("DamageRoll"),
-        WNeedsHoles,
+        Set(),
+        WResolved,
         qInterruptedHitPoints
       ),
     }
@@ -336,8 +336,8 @@ module ruleCoreReactionsMbt {
       recordProtocolState(
         resolved,
         noPendingTrigger,
-        Set("DamageRoll"),
-        WNeedsHoles,
+        Set(),
+        WResolved,
         qInterruptedHitPoints
       ),
     }
@@ -354,8 +354,8 @@ module ruleCoreReactionsMbt {
       recordProtocolState(
         resolved,
         noPendingTrigger,
-        Set("DamageRoll"),
-        WNeedsHoles,
+        Set(),
+        WResolved,
         qInterruptedHitPoints
       ),
     }

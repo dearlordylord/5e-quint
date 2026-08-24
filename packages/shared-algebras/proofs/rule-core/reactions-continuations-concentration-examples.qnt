@@ -111,7 +111,7 @@ module reactionsContinuationsConcentrationExamples {
     all {
       assert(not(resolved.reactor.turn.reactionAvailable)),
       assert(not(resolved.reactor.turn.readiedMovementHeld)),
-      assert(resolved.reactor.movementSpentFeet == 15),
+      assert(resolved.reactor.movementSpentFeet == 5),
       assert(resolved.interruptedActor.movementSpentFeet == 0),
       assert(resolved.reactionWindow == NoReactionWindow),
     }

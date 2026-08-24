@@ -163,7 +163,7 @@ function createRuleCoreReactionDriver() {
       }
       if (!isRuleCoreReactionInvalidReason(result.reason)) {
         throw new Error(
-          `Unexpected rule-core Reaction MBT invalid reason: ${result.reason}`,
+          `Unexpected rule-core Reaction MBT invalid reason: ${result.reason}: ${result.message}`,
         );
       }
       lastResult = "invalid";
