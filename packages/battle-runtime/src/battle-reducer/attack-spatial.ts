@@ -84,20 +84,5 @@ export function attackTargetDistanceFeet(
       return fact.distanceFeet;
     }
   }
-  if (!("procedureRef" in attack)) return null;
-  const sameProcedureFacts = facts.filter(
-    (
-      fact,
-    ): fact is Extract<
-      BattleTargetSpatialFact,
-      { readonly kind: "attackTargetDistance" }
-    > =>
-      fact.kind === "attackTargetDistance" &&
-      fact.actorId === actorId &&
-      fact.targetId === targetId &&
-      fact.procedureRef === attack.procedureRef,
-  );
-  return sameProcedureFacts.length === 1
-    ? sameProcedureFacts[0].distanceFeet
-    : null;
+  return null;
 }

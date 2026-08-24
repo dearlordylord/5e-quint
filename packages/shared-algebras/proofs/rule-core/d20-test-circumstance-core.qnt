@@ -39,9 +39,13 @@ module d20TestCircumstanceCore {
 
   pure val proneAttackAdvantageDistanceFeet: ProneAttackRollDistance = 5
 
-  pure def validProneAttackRollDistance(
-    distance: ProneAttackRollDistance,
-  ): bool = distance >= 0
+  type ProneAttackRollSourceResult =
+    | ProneAttackRollSourceInvalidDistance
+    | ProneAttackRollSourceResolved({ sources: D20TestRollModeSources })
+
+  type ProneAttackRollModeResult =
+    | ProneAttackRollModeInvalidDistance
+    | ProneAttackRollModeResolved({ mode: D20TestRollMode })
 
   type TableD20TestCircumstanceSource =
     | TableGrantsAdvantage
@@ -93,22 +97,39 @@ module d20TestCircumstanceCore {
 
   pure def proneAttackRollSource(
     distance: ProneAttackRollDistance,
-  ): D20TestRollModeSources = {
-    advantage: validProneAttackRollDistance(distance)
-      and distance <= proneAttackAdvantageDistanceFeet,
-    disadvantage: distance > proneAttackAdvantageDistanceFeet,
-    }
+  ): ProneAttackRollSourceResult =
+    if (distance < 0) ProneAttackRollSourceInvalidDistance
+    else ProneAttackRollSourceResolved({
+      sources: {
+        advantage: distance <= proneAttackAdvantageDistanceFeet,
+        disadvantage: distance > proneAttackAdvantageDistanceFeet,
+      },
+    })
 
   pure def d20TestRollModeWithProneTarget(
     mechanicalSources: D20TestRollModeSources,
     distance: ProneAttackRollDistance,
-  ): D20TestRollMode = {
-    val proneSource = proneAttackRollSource(distance)
-    d20TestRollModeFromSources({
-      advantage: mechanicalSources.advantage or proneSource.advantage,
-      disadvantage: mechanicalSources.disadvantage or proneSource.disadvantage,
-    })
-  }
+  ): ProneAttackRollModeResult =
+    match proneAttackRollSource(distance) {
+      | ProneAttackRollSourceInvalidDistance =>
+        ProneAttackRollModeInvalidDistance
+      | ProneAttackRollSourceResolved(data) =>
+        ProneAttackRollModeResolved({
+          mode: d20TestRollModeFromSources({
+            advantage: mechanicalSources.advantage or data.sources.advantage,
+            disadvantage: mechanicalSources.disadvantage or data.sources.disadvantage,
+          }),
+        })
+    }
+
+  pure def proneAttackRollModeMatches(
+    result: ProneAttackRollModeResult,
+    expected: D20TestRollMode,
+  ): bool =
+    match result {
+      | ProneAttackRollModeInvalidDistance => false
+      | ProneAttackRollModeResolved(data) => data.mode == expected
+    }
 
   pure def tableD20TestCircumstanceDecisionMatches(
     pendingRequestRef: D20TestRequestRef,

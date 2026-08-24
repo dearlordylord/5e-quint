@@ -526,28 +526,31 @@ function reactionAttackTargetSpatialFacts(input: {
         "Opportunity Attack target distance must match the reach-leaving trigger distance.",
     };
   }
-  let facts: readonly BattleTargetSpatialFact[];
-  if (suppliedDistanceFeet !== null) {
-    facts = input.fillSet.targetSpatialFacts;
-  } else {
-    if (input.subject.command !== "opportunityAttack") {
-      return {
-        tag: "invalid",
-        message:
-          "Fixed-target reaction attacks require an exact attack target distance fact.",
-      };
-    }
-    const distanceFact: Extract<
-      BattleTargetSpatialFact,
-      { readonly kind: "attackTargetDistance" }
-    > = {
-      kind: "attackTargetDistance",
-      actorId: input.subject.reactorId,
-      targetId: input.subject.targetId,
-      ...attackExecutionSelectionForOption(input.attack),
-      distanceFeet: input.subject.distanceFeet,
+  const distanceFact =
+    input.subject.command === "opportunityAttack"
+      ? ({
+          kind: "attackTargetDistance",
+          actorId: input.subject.reactorId,
+          targetId: input.subject.targetId,
+          ...attackExecutionSelectionForOption(input.attack),
+          distanceFeet: input.subject.distanceFeet,
+        } satisfies Extract<
+          BattleTargetSpatialFact,
+          { readonly kind: "attackTargetDistance" }
+        >)
+      : undefined;
+  const facts =
+    suppliedDistanceFeet !== null
+      ? input.fillSet.targetSpatialFacts
+      : distanceFact === undefined
+        ? undefined
+        : [...input.fillSet.targetSpatialFacts, distanceFact];
+  if (facts === undefined) {
+    return {
+      tag: "invalid",
+      message:
+        "Fixed-target reaction attacks require an exact attack target distance fact.",
     };
-    facts = [...input.fillSet.targetSpatialFacts, distanceFact];
   }
   if (
     !attackTargetIsLegal(

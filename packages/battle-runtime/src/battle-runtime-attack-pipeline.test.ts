@@ -731,7 +731,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
     ).toBeUndefined();
   });
 
-  test("prefers an exact selection and safely reuses one same-procedure distance", () => {
+  test("requires an exact attack selection for target distance", () => {
     type AttackTargetDistanceFact = Extract<
       BattleTargetSpatialFact,
       { readonly kind: "attackTargetDistance" }
@@ -789,7 +789,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
         goblinId,
         characterAttack,
       ),
-    ).toEqual(movementFeet(100));
+    ).toBeNull();
     expect(
       attackTargetDistanceFeet(
         [conflictingCharacterAbility, conflictingCharacterDamage],
@@ -836,7 +836,10 @@ describe("battle runtime: attack pipeline boundaries", () => {
             distanceFeet: movementFeet(100),
           }
         : {
-            ...statBlockDistance,
+            kind: "attackTargetDistance",
+            actorId: skeletonId,
+            targetId: wizardId,
+            procedureRef: statBlockSelection.procedureRef,
             distanceFeet: movementFeet(100),
           };
     expect(
@@ -855,6 +858,14 @@ describe("battle runtime: attack pipeline boundaries", () => {
         statBlockAttack,
       ),
     ).toEqual(movementFeet(5));
+    expect(
+      attackTargetDistanceFeet(
+        [conflictingStatBlockNotation],
+        skeletonId,
+        wizardId,
+        statBlockAttack,
+      ),
+    ).toBeNull();
   });
 
   test("composes Prone distance with other attack-roll sources", () => {
