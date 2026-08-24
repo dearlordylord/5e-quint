@@ -40,13 +40,13 @@
 
 - `packageOwner`: `@dnd/character-creation-runtime`.
 - `closureKind`: `owner-evidence-only`.
-- Owner notes: `plans/unit-profile-coverage/character-creation-owner-evidence.json` records all 12 class-container rows against the existing character-creation boundary: `discoverInitialDraftHoles`, `CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions`, `executableSupportSelections`, `characterBuildUnitRefs`, and the package test that finalizes every supported level-1 SRD class-container source fact from Surface class records.
+- Owner notes: `plans/unit-profile-coverage/character-creation-owner-evidence.json` records all 12 class-container rows against the existing character-creation boundary: `discoverInitialDraftHoles`, `CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities`, `executableSupportSelections`, `characterBuildUnitRefs`, and the package test that finalizes every supported level-1 SRD class-container source fact from Surface class records.
 
 ## Decision
 
 Keep owner-evidence-only closure for `class-container`.
 
-Do not create `character-creation.class-progression-container` as a first-class Unit profile. The class container Unit is the Surface source record for a Class; its character-creation consequence is already the selected `CharacterProgression` and retained class Unit ref in the finalized `CharacterBuild`. Adding a profile would duplicate the same source facts and support-gate membership already represented by `CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions` and the row-level owner evidence.
+Do not create `character-creation.class-progression-container` as a first-class Unit profile. The class container Unit is the Surface source record for a Class; its character-creation consequence is already the selected `CharacterProgression` and retained class Unit ref in the finalized `CharacterBuild`. Adding a profile would duplicate the same source facts and support-gate membership already represented by `CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities` and the row-level owner evidence.
 
 Strict-report wording to preserve: class containers are installed Surface class source records with character-creation owner evidence for supported progression admission/finalization and `CharacterBuild` projection; their Unit profile lists remain empty because the class container has no standalone executable battle/runtime mechanics.
 
@@ -57,7 +57,7 @@ No new profile promotion is justified.
 The executable boundary exists, but it is already accounted for as owner evidence:
 
 - parser/admission path: `draft.progression.initial` is discovered from installed `class` Units;
-- support gate: `CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions`;
+- support gate: `CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities`;
 - finalization behavior: `executableSupportSelections`;
 - `CharacterBuild` projection: `characterBuildUnitRefs` retains the selected class Unit ref.
 

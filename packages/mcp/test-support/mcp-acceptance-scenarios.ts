@@ -163,19 +163,19 @@ const levelTenFighterProgression = sameClassProgression("class_fighter", 10);
 const levelTenFighterProgressionOptionId = progressionOptionId(
   levelTenFighterProgression,
 );
-const levelTenSupportedProgressions =
-  CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.some(
-    (progression) =>
-      progressionOptionId(progression) === levelTenFighterProgressionOptionId,
-  )
-    ? CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions
-    : [
-        ...CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions,
-        levelTenFighterProgression,
-      ];
+const levelTenSingleClassLevelFrontiers =
+  CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities.singleClassLevelFrontiers.map(
+    (frontier) =>
+      frontier.classUnitId === unitId("class_fighter")
+        ? { ...frontier, throughClassLevel: characterClassLevel(10) }
+        : frontier,
+  );
 export const LEVEL_TEN_FIGHTER_CHARACTER_CREATION_SUPPORT_PROFILE = {
   ...CHARACTER_CREATION_SUPPORT_PROFILE,
-  supportedProgressions: levelTenSupportedProgressions,
+  progressionCapabilities: {
+    ...CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities,
+    singleClassLevelFrontiers: levelTenSingleClassLevelFrontiers,
+  },
 } satisfies CharacterCreationSupportProfile;
 const levelTenFighterWeaponMasteries = [
   "weapon_longsword",

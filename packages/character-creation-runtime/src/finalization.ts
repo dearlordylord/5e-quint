@@ -1236,7 +1236,7 @@ function unsupportedFinalizationCauseMessage(
     Match.when(
       { tag: "unsupportedProgression" },
       () =>
-        "Finalized build progression must match a supported progression profile.",
+        "Finalized build progression must fall within the supported character-creation progression capabilities.",
     ),
     Match.when(
       { tag: "unsupportedAbilityScoreGeneration" },

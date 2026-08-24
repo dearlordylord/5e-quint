@@ -41,7 +41,10 @@ describe("model-facing creation holes", () => {
       characterCreationSupportProfile: {
         ...CHARACTER_CREATION_SUPPORT_PROFILE,
         backgroundUnitIds: [],
-        supportedProgressions: [],
+        progressionCapabilities: {
+          singleClassLevelFrontiers: [],
+          firstMulticlassLevelGains: [],
+        },
       },
     });
     const draft = createCharacterDraft({ unitLibrary: services.unitLibrary });

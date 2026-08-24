@@ -1,6 +1,7 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { SUPPORTED_ABILITY_SCORE_METHODS } from "@dnd/shared-algebras/ability-score-algebra";
 import { describe, expect, test } from "vitest";
+import { computeTotalLevel } from "./character-progression-types.ts";
 
 import {
   choiceHole,
@@ -43,6 +44,39 @@ import {
 } from "./support-gates.ts";
 
 describe("character creation support-profile boundaries", () => {
+  test.each([
+    ["class_barbarian", 3],
+    ["class_bard", 3],
+    ["class_cleric", 3],
+    ["class_druid", 3],
+    ["class_fighter", 5],
+    ["class_monk", 3],
+    ["class_paladin", 3],
+    ["class_ranger", 9],
+    ["class_rogue", 10],
+    ["class_sorcerer", 3],
+    ["class_warlock", 3],
+    ["class_wizard", 5],
+  ] as const)(
+    "derives every %s progression through its level-%i capability frontier",
+    (classUnitId, throughClassLevel) => {
+      expect(
+        supportedProgressionsForClass(
+          authoredUnitId(classUnitId),
+          CHARACTER_CREATION_SUPPORT_PROFILE,
+        )
+          .filter((progression) =>
+            progression.advancements.every(
+              (entry) => entry.classUnitId === progression.startingClass,
+            ),
+          )
+          .map(computeTotalLevel),
+      ).toEqual(
+        Array.from({ length: throughClassLevel }, (_, index) => index + 1),
+      );
+    },
+  );
+
   test("projects catalog admission sets from their single support-profile owners", () => {
     const supportedClasses = supportedClassUnitIds(
       CHARACTER_CREATION_SUPPORT_PROFILE,

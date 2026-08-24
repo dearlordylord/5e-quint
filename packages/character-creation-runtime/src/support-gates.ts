@@ -110,6 +110,7 @@ import {
   characterClassLevel,
   LANGUAGES,
   SURFACE_SKILLS,
+  type CharacterClassLevel,
 } from "@dnd/shared/game-facts";
 import {
   ARMOR_TRAINING_CATEGORIES,
@@ -161,83 +162,90 @@ export type CharacterCreationSupportProfile = {
     readonly languages: CharacterStartingLanguages;
     readonly alignment: CharacterAlignment;
   };
-  readonly supportedProgressions: readonly CharacterProgression[];
+  readonly progressionCapabilities: {
+    readonly singleClassLevelFrontiers: readonly SingleClassLevelFrontier[];
+    readonly firstMulticlassLevelGains: readonly FirstMulticlassLevelGain[];
+  };
   readonly characterBuildResourceUnitIds: readonly UnitRecord["id"][];
 };
 
-const SUPPORTED_PROGRESSIONS = [
-  ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map(supportedLevelOneProgression),
-  ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map((classUnitId) =>
-    supportedSameClassProgression(authoredUnitId(classUnitId), 3),
-  ),
-  supportedSameClassSecondLevelProgression(
-    authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
-  ),
-  supportedSameClassSecondLevelProgression(
-    authoredUnitId(SRD_BARD_CLASS_UNIT_ID),
-  ),
-  supportedSameClassSecondLevelProgression(
-    authoredUnitId(SRD_CLERIC_CLASS_UNIT_ID),
-  ),
-  supportedSameClassSecondLevelProgression(
-    authoredUnitId(SRD_DRUID_CLASS_UNIT_ID),
-  ),
-  supportedSameClassSecondLevelProgression(
-    authoredUnitId(SRD_MONK_CLASS_UNIT_ID),
-  ),
-  supportedSameClassSecondLevelProgression(
-    authoredUnitId(SRD_PALADIN_CLASS_UNIT_ID),
-  ),
-  supportedSameClassSecondLevelProgression(
-    authoredUnitId(SRD_RANGER_CLASS_UNIT_ID),
-  ),
-  supportedSameClassSecondLevelProgression(
-    authoredUnitId(SRD_SORCERER_CLASS_UNIT_ID),
-  ),
-  supportedSameClassSecondLevelProgression(
-    authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID),
-  ),
-  supportedSameClassProgression(
-    authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
-    5,
-  ),
-  supportedSameClassProgression(authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID), 4),
-  supportedSameClassProgression(authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID), 5),
-  supportedSameClassProgression(authoredUnitId(SRD_RANGER_CLASS_UNIT_ID), 9),
-  supportedSameClassProgression(authoredUnitId(SRD_ROGUE_CLASS_UNIT_ID), 6),
-  supportedSameClassProgression(authoredUnitId(SRD_ROGUE_CLASS_UNIT_ID), 10),
+type SingleClassLevelFrontier = {
+  readonly classUnitId: UnitRecord["id"];
+  readonly throughClassLevel: CharacterClassLevel;
+};
+
+type FirstMulticlassLevelGain = {
+  readonly startingClassUnitId: UnitRecord["id"];
+  readonly gainedClassUnitId: UnitRecord["id"];
+};
+
+const SINGLE_CLASS_LEVEL_FRONTIERS = [
+  {
+    classUnitId: authoredUnitId("class_barbarian"),
+    throughClassLevel: characterClassLevel(3),
+  },
+  {
+    classUnitId: authoredUnitId(SRD_BARD_CLASS_UNIT_ID),
+    throughClassLevel: characterClassLevel(3),
+  },
+  {
+    classUnitId: authoredUnitId(SRD_CLERIC_CLASS_UNIT_ID),
+    throughClassLevel: characterClassLevel(3),
+  },
+  {
+    classUnitId: authoredUnitId(SRD_DRUID_CLASS_UNIT_ID),
+    throughClassLevel: characterClassLevel(3),
+  },
+  {
+    classUnitId: authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+    throughClassLevel: characterClassLevel(5),
+  },
+  {
+    classUnitId: authoredUnitId(SRD_MONK_CLASS_UNIT_ID),
+    throughClassLevel: characterClassLevel(3),
+  },
+  {
+    classUnitId: authoredUnitId(SRD_PALADIN_CLASS_UNIT_ID),
+    throughClassLevel: characterClassLevel(3),
+  },
+  {
+    classUnitId: authoredUnitId(SRD_RANGER_CLASS_UNIT_ID),
+    throughClassLevel: characterClassLevel(9),
+  },
+  {
+    classUnitId: authoredUnitId(SRD_ROGUE_CLASS_UNIT_ID),
+    throughClassLevel: characterClassLevel(10),
+  },
+  {
+    classUnitId: authoredUnitId(SRD_SORCERER_CLASS_UNIT_ID),
+    throughClassLevel: characterClassLevel(3),
+  },
+  {
+    classUnitId: authoredUnitId("class_warlock"),
+    throughClassLevel: characterClassLevel(3),
+  },
+  {
+    classUnitId: authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID),
+    throughClassLevel: characterClassLevel(5),
+  },
+] as const satisfies ReadonlyArray<SingleClassLevelFrontier>;
+
+const FIRST_MULTICLASS_LEVEL_GAINS = [
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
     (classUnitId) => classUnitId !== PHASE1_CLASS_FIGHTER_UNIT_ID,
-  ).map((classUnitId) =>
-    supportedTwoClassSecondLevelProgression(
-      authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
-      classUnitId,
-    ),
-  ),
-  supportedTwoClassSecondLevelProgression(
-    authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID),
-    authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
-  ),
-] as const satisfies ReadonlyArray<CharacterProgression>;
-
-function supportedLevelOneProgression(
-  supportedClassUnitId: UnitRecord["id"],
-): CharacterProgression {
-  return {
-    startingClass: classUnitId(supportedClassUnitId),
-    advancements: [],
-  };
-}
-
-function supportedSameClassSecondLevelProgression(
-  supportedClassUnitId: UnitRecord["id"],
-): CharacterProgression {
-  return supportedSameClassProgression(supportedClassUnitId, 2);
-}
+  ).map((gainedClassUnitId) => ({
+    startingClassUnitId: authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+    gainedClassUnitId,
+  })),
+  {
+    startingClassUnitId: authoredUnitId(WIDTH_CLASS_WIZARD_UNIT_ID),
+    gainedClassUnitId: authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+  },
+] as const satisfies ReadonlyArray<FirstMulticlassLevelGain>;
 
 function supportedSameClassProgression(
   supportedClassUnitId: UnitRecord["id"],
-  totalLevel: number,
+  totalLevel: CharacterClassLevel,
 ): CharacterProgression {
   const progressionClassUnitId = classUnitId(supportedClassUnitId);
   const advancements = Array.from({ length: totalLevel - 1 }, (_, index) => {
@@ -261,6 +269,29 @@ function supportedSameClassProgression(
     startingClass: progressionClassUnitId,
     advancements,
   };
+}
+
+export function supportedCharacterProgressions(
+  supportProfile: CharacterCreationSupportProfile,
+): readonly CharacterProgression[] {
+  return [
+    ...supportProfile.progressionCapabilities.singleClassLevelFrontiers.flatMap(
+      (frontier) =>
+        Array.from({ length: frontier.throughClassLevel }, (_, index) =>
+          supportedSameClassProgression(
+            frontier.classUnitId,
+            characterClassLevel(index + 1),
+          ),
+        ),
+    ),
+    ...supportProfile.progressionCapabilities.firstMulticlassLevelGains.map(
+      (gain) =>
+        supportedTwoClassSecondLevelProgression(
+          gain.startingClassUnitId,
+          gain.gainedClassUnitId,
+        ),
+    ),
+  ];
 }
 
 function supportedTwoClassSecondLevelProgression(
@@ -456,7 +487,10 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
     languages: PHASE1_CHARACTER_STARTING_LANGUAGES,
     alignment: PHASE1_CHARACTER_ALIGNMENT,
   },
-  supportedProgressions: SUPPORTED_PROGRESSIONS,
+  progressionCapabilities: {
+    singleClassLevelFrontiers: SINGLE_CLASS_LEVEL_FRONTIERS,
+    firstMulticlassLevelGains: FIRST_MULTICLASS_LEVEL_GAINS,
+  },
   characterBuildResourceUnitIds: CHARACTER_BUILD_RESOURCE_UNIT_IDS,
 } as const satisfies CharacterCreationSupportProfile;
 
@@ -548,7 +582,9 @@ export function supportedDraftOptionIds(
   supportProfile: CharacterCreationSupportProfile,
 ): readonly CreationChoiceOptionId[] | undefined {
   if (source.path === "draft.progression.initial") {
-    return supportProfile.supportedProgressions.map(progressionOptionId);
+    return supportedCharacterProgressions(supportProfile).map(
+      progressionOptionId,
+    );
   }
 
   if (source.path === "draft.background") {
@@ -632,7 +668,7 @@ export function supportedClassUnitIds(
   supportProfile: CharacterCreationSupportProfile,
 ): readonly UnitRecord["id"][] {
   return uniqueValues(
-    supportProfile.supportedProgressions.map((progression) =>
+    supportedCharacterProgressions(supportProfile).map((progression) =>
       startingClassUnitId(progression),
     ),
   );
@@ -687,7 +723,7 @@ export function isSupportedProgression(
   progression: CharacterProgression,
   supportProfile: CharacterCreationSupportProfile,
 ): boolean {
-  return supportProfile.supportedProgressions.some((supported) =>
+  return supportedCharacterProgressions(supportProfile).some((supported) =>
     sameProgression(supported, progression),
   );
 }
@@ -696,7 +732,7 @@ export function supportedProgressionsForClass(
   classUnitId: UnitRecord["id"],
   supportProfile: CharacterCreationSupportProfile,
 ): readonly CharacterProgression[] {
-  return supportProfile.supportedProgressions.filter(
+  return supportedCharacterProgressions(supportProfile).filter(
     (progression) => startingClassUnitId(progression) === classUnitId,
   );
 }
@@ -705,7 +741,7 @@ export function supportedProgressionForOptionId(
   optionId: CreationChoiceOptionId,
   supportProfile: CharacterCreationSupportProfile,
 ): CharacterProgression | undefined {
-  return supportProfile.supportedProgressions.find(
+  return supportedCharacterProgressions(supportProfile).find(
     (progression) => progressionOptionId(progression) === optionId,
   );
 }

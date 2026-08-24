@@ -97,7 +97,7 @@ No new profile promotion is justified.
 The executable boundaries already exist and are accounted for without duplicating source facts:
 
 - parser/admission path: `readClassCreationFacts` reads Primary Ability, Hit Point Die, Saving Throw Proficiencies, Skill Proficiencies, Weapon Proficiencies, Tool Proficiencies, and Armor Training from installed Surface class Units.
-- support gate: `CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions` admits the 12 level-1 class progressions, and `CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey` gates supported class skill, class tool, and proficiency-choice options.
+- support gate: `CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities` derives the 12 level-1 class progressions, and `CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey` gates supported class skill, class tool, and proficiency-choice options.
 - hole/fill boundary: `discoverClassGrantedHoles` creates class skill choice holes for every supported class; `classToolProficiencyChoiceHoles` creates tool choice holes for Bard and Monk; fixed tool grants such as Druid Herbalism Kit and Rogue Thieves' Tools do not require a choice hole.
 - finalization behavior: `executableSupportSelections` rejects unsupported finalized choices, and `buildCharacterBuild` retains the selected class progression for downstream projection.
 - `CharacterBuild` projection: `characterBuildHitPoints`, `characterBuildProficiencies`, and `characterBuildArmorTraining` derive Hit Dice, Saving Throw proficiencies, skill choices, weapon categories/property filters, tool proficiencies, and armor training from the selected class source facts and choices.

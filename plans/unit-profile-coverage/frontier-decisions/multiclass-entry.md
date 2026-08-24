@@ -67,7 +67,7 @@
 - Multiclass entry grants:
   - `packageOwner`: `@dnd/character-creation-runtime`.
   - `closureKind`: `owner-evidence-only`.
-  - Owner notes: `readClassCreationFacts` reads `multiclassProficiencies`, Hit Point Die, armor training, and feature grants from the installed Surface class record. `discoverAdditionalClassGrantedHoles` exposes post-start feature and multiclass proficiency holes. `CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions` admits supported post-start class progressions, and `unitOptionIdsByChoiceKey` gates Bard, Ranger, and Rogue multiclass proficiency choices. `executableSupportSelections` and the source-shaped finalization checks keep finalized drafts inside the supported progression and choice boundary. `characterBuildHitPoints`, `characterBuildProficiencies`, `characterBuildArmorTraining`, and `characterBuildFeatureUnitIds` expose projections from the finalized `CharacterBuild` plus the same class source record.
+  - Owner notes: `readClassCreationFacts` reads `multiclassProficiencies`, Hit Point Die, armor training, and feature grants from the installed Surface class record. `discoverAdditionalClassGrantedHoles` exposes post-start feature and multiclass proficiency holes. `CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities` derives supported post-start class progressions, and `unitOptionIdsByChoiceKey` gates Bard, Ranger, and Rogue multiclass proficiency choices. `executableSupportSelections` and the source-shaped finalization checks keep finalized drafts inside the supported progression and choice boundary. `characterBuildHitPoints`, `characterBuildProficiencies`, `characterBuildArmorTraining`, and `characterBuildFeatureUnitIds` expose projections from the finalized `CharacterBuild` plus the same class source record.
 
 ## Decision
 
@@ -90,7 +90,7 @@ The executable boundaries already exist and are accounted for without duplicatin
 
 - parser/admission path: Surface class records carry `primaryAbilities`, `hitPointDie`, `multiclassProficiencies`, `armorTraining`, and `featureGrants`; `readClassCreationFacts` projects those facts for downstream owners.
 - shared-algebra support boundary: `multiclassPrerequisiteFromPrimaryAbilities`, `MULTICLASS_PREREQUISITES`, `meetsMulticlassPrerequisite`, and `canMulticlass` derive and evaluate prerequisite checks from installed class source facts.
-- support gate: `CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions` admits supported level-2 multiclass progressions, and `unitOptionIdsByChoiceKey` gates supported multiclass skill and tool choices for Bard, Ranger, and Rogue.
+- support gate: `CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities` derives supported level-2 multiclass progressions, and `unitOptionIdsByChoiceKey` gates supported multiclass skill and tool choices for Bard, Ranger, and Rogue.
 - hole/fill boundary: `discoverAdditionalClassGrantedHoles` and finalization's `multiclassProficiencyChoiceHoles` derive the required post-start choice holes from each new class's source facts.
 - finalization behavior: `executableSupportSelections` and source-shaped finalization checks reject unsupported completed drafts before a `CharacterBuild` is produced.
 - `CharacterBuild` projection: `characterBuildHitPoints`, `characterBuildProficiencies`, `characterBuildArmorTraining`, and `characterBuildFeatureUnitIds` derive multiclass Hit Dice, fixed and chosen proficiencies, armor training, and level-1 feature refs from the finalized progression plus class source facts.

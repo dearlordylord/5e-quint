@@ -75,7 +75,7 @@ No profile promotion is justified.
 The relevant boundaries already exist elsewhere:
 
 - parser/admission path: installed Surface class records are the authored source for class facts, while the table row itself is not a separate source record.
-- support gate: `CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions` admits the level-1 class progressions through class container Units, not through table-summary rows.
+- support gate: `CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities` derives the level-1 class progressions through class container Units, not through table-summary rows.
 - hole/fill and finalization boundaries: class choices, proficiencies, equipment, spell access, and feature choices are discovered and finalized from the class container source facts and narrower feature/source rows.
 - `CharacterBuild` projection: `characterBuildUnitRefs` and the character-creation projections retain selected class, feature, spellcasting, equipment, proficiency, armor-training, and Hit Die facts without storing a copy of the table row.
 - report taxonomy: `scripts/srd-unit-inventory.cjs` already distinguishes `non-runtime-table-summary` rows from class-container-owned source facts and from battle/runtime support pressure.

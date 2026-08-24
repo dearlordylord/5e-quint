@@ -117,9 +117,11 @@ Key boundary terms:
 
 ## Implemented Behavior
 
-This package supports these character-creation profiles:
+This package supports these character-creation capabilities:
 
-- SRD level-1 class-container source facts for starting class progression;
+- contiguous single-class creation through level 3 for every SRD class, through
+  level 5 for Fighter and Wizard, through level 9 for Ranger, and through level
+  10 for Rogue;
 - level-2 Fighter progression and supported level-2 multiclass-entry
   progression facts;
 - level-1 Wizard spellcasting creation facts and non-Wizard list-prepared Spell
@@ -151,10 +153,12 @@ Support gates are package-private runtime narrowings. They must not become
 public Surface classifications or new source rules. The current
 `src/support-gates.ts` support profile owns the supported
 class/background/species ids, Unit choice keys, option ids, purchasable
-equipment, selected-equipment loadout slots, supported progression profiles, and
-remaining fixed origin facts. Legal Surface options can be discovered outside
-that profile, but fill validation rejects them at this one runtime boundary
-until widening work adds support-profile entries and projection logic.
+equipment, selected-equipment loadout slots, single-class level frontiers,
+first multiclass level-gain capabilities, and remaining fixed origin facts.
+Complete Character Progressions are derived from those capabilities; they are
+not stored as endpoint presets. Legal Surface options can be discovered outside
+that support boundary, but fill validation rejects them until widening work adds
+the required capability and projection logic.
 
 ## State Ownership Rules
 
@@ -197,9 +201,9 @@ subclass choices, class-feature feat grants including Ability Score Improvement
 and Epic Boon ability-score increases, proficiency choices, Eldritch Invocation
 options, Wizard spellcasting choices, loadout refs, and equipment item ids are
 projected from accepted draft selections and Unit readers, not reauthored as
-parallel constants. The remaining finalization gate rejects complete drafts whose
-progression profile, origin facts, choices, or equipment are outside the support
-profile. `CharacterBuild` does not carry current HP, Temporary Hit Points,
+parallel constants. The remaining finalization gate rejects complete drafts
+whose progression, origin facts, choices, or equipment are outside the support
+capabilities. `CharacterBuild` does not carry current HP, Temporary Hit Points,
 expended resources or Spell Slots, Hit Dice remaining, or battle creature-init
 types.
 

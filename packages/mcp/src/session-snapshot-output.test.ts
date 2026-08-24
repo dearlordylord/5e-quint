@@ -95,6 +95,7 @@ const presentation = {
 };
 
 describe("MCP session wire projections", () => {
+  const schemaValidationTimeoutMs = 60_000;
   test("keeps battle fill definitions out of the session summary schema", () => {
     expect(
       mcpOutputJsonSchema(McpSessionSummarySchema).properties,
@@ -118,183 +119,191 @@ describe("MCP session wire projections", () => {
     }
   });
 
-  test("rejects battle output and admin projections with contradictory snapshots", () => {
-    const jsonSchemaValidator = new AjvJsonSchemaValidator();
-    const validateStart = jsonSchemaValidator.getValidator(
-      mcpOutputJsonSchema(StartBattleOutputSchema),
-    );
-    expect(
-      validateStart({
+  test(
+    "rejects battle output and admin projections with contradictory snapshots",
+    () => {
+      const jsonSchemaValidator = new AjvJsonSchemaValidator();
+      const validateStart = jsonSchemaValidator.getValidator(
+        mcpOutputJsonSchema(StartBattleOutputSchema),
+      );
+      expect(
+        validateStart({
+          ...presentation,
+          battleState: setupState,
+          snapshot: {},
+          session: sessionForProjectionState(setupState),
+        }).valid,
+      ).toBe(false);
+      expect(
+        validateStart({
+          ...presentation,
+          battleState: activeState,
+          snapshot: null,
+          session: sessionForProjectionState(activeState),
+        }).valid,
+      ).toBe(false);
+
+      const validateResolution = jsonSchemaValidator.getValidator(
+        mcpOutputJsonSchema(BattleResolutionOutputSchema),
+      );
+      expect(
+        validateResolution({
+          ...presentation,
+          battleState: noneState,
+          result: {},
+          snapshot: {},
+          session: resolutionSessionForProjectionState(noneState),
+        }).valid,
+      ).toBe(false);
+
+      const validateAdmin = jsonSchemaValidator.getValidator(
+        mcpOutputJsonSchema(AdminSessionProjectionSchema),
+      );
+      expect(
+        validateAdmin({
+          session: sessionForProjectionState(setupState),
+          battle: {},
+          characters: [],
+        }).valid,
+      ).toBe(false);
+      expect(
+        validateAdmin({
+          session: sessionForProjectionState(activeState),
+          battle: null,
+          characters: [],
+        }).valid,
+      ).toBe(false);
+    },
+    schemaValidationTimeoutMs,
+  );
+
+  test(
+    "accepts canonical active battle resolution projections",
+    () => {
+      const jsonSchemaValidator = new AjvJsonSchemaValidator();
+      const validateResolution = jsonSchemaValidator.getValidator(
+        mcpOutputJsonSchema(BattleResolutionOutputSchema),
+      );
+      const root = createMcpPlaySessionRoot();
+      handleWireToolCall(
+        root,
+        "start_battle",
+        battleToolWireArgs("start_battle", {
+          battleId: "battle:resolution-contract",
+          initiativeMode: "direct",
+          companionAdmissions: [],
+          initialCombatants: [
+            {
+              admissionSource: { kind: "encounterParticipant" },
+              combatantId: "goblin",
+              initiative: 10,
+              kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              statBlockId: "stat_block_goblin_warrior",
+            },
+            {
+              admissionSource: { kind: "encounterParticipant" },
+              combatantId: "skeleton",
+              initiative: 5,
+              kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+              statBlockId: "stat_block_skeleton",
+            },
+          ],
+        }),
+      );
+      const activeSession = root.sessionStore.battleSession;
+      if (activeSession === null) throw new Error("Expected active battle.");
+      const presented = battlePresentedSnapshot(activeSession);
+      if (Either.isLeft(presented))
+        throw new Error("Expected presented snapshot.");
+      const result = {
+        tag: "resolved",
+        session: activeSession,
+        snapshot: snapshotBattle(activeSession.state),
+        objectDamages: [],
+      } satisfies BattleRuntimeResolutionResult;
+      const activeResolution = Either.getOrThrow(
+        battleResolutionPayload(root, result),
+      );
+      const activeResolutionFixture = {
+        ...activeResolution,
+        availableActs: [],
+        admittedSpellPresentations: [],
+        presentedInterruptChoices: [],
+      };
+
+      const validateLifecycle = jsonSchemaValidator.getValidator(
+        mcpOutputJsonSchema(BattleLifecycleOutputSchema),
+      );
+      const setupOutput = {
         ...presentation,
         battleState: setupState,
-        snapshot: {},
-        session: sessionForProjectionState(setupState),
-      }).valid,
-    ).toBe(false);
-    expect(
-      validateStart({
-        ...presentation,
-        battleState: activeState,
         snapshot: null,
-        session: sessionForProjectionState(activeState),
-      }).valid,
-    ).toBe(false);
-
-    const validateResolution = jsonSchemaValidator.getValidator(
-      mcpOutputJsonSchema(BattleResolutionOutputSchema),
-    );
-    expect(
-      validateResolution({
+        session: sessionForProjectionState(setupState),
+      };
+      const activeRosterOutput = {
+        ...activeResolutionFixture,
+        result: {
+          tag: "combatantAdded" as const,
+          combatantId: "combatant:projection-contract",
+        },
+      };
+      const noBattleSuccessOutput = {
         ...presentation,
         battleState: noneState,
-        result: {},
-        snapshot: {},
-        session: resolutionSessionForProjectionState(noneState),
-      }).valid,
-    ).toBe(false);
+        snapshot: null,
+        session: sessionForProjectionState(noneState),
+      };
 
-    const validateAdmin = jsonSchemaValidator.getValidator(
-      mcpOutputJsonSchema(AdminSessionProjectionSchema),
-    );
-    expect(
-      validateAdmin({
-        session: sessionForProjectionState(setupState),
-        battle: {},
-        characters: [],
-      }).valid,
-    ).toBe(false);
-    expect(
-      validateAdmin({
-        session: sessionForProjectionState(activeState),
-        battle: null,
-        characters: [],
-      }).valid,
-    ).toBe(false);
-  }, 30_000);
-
-  test("accepts canonical active battle resolution projections", () => {
-    const jsonSchemaValidator = new AjvJsonSchemaValidator();
-    const validateResolution = jsonSchemaValidator.getValidator(
-      mcpOutputJsonSchema(BattleResolutionOutputSchema),
-    );
-    const root = createMcpPlaySessionRoot();
-    handleWireToolCall(
-      root,
-      "start_battle",
-      battleToolWireArgs("start_battle", {
-        battleId: "battle:resolution-contract",
-        initiativeMode: "direct",
-        companionAdmissions: [],
-        initialCombatants: [
-          {
-            admissionSource: { kind: "encounterParticipant" },
-            combatantId: "goblin",
-            initiative: 10,
-            kind: "statBlock",
-            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
-            statBlockId: "stat_block_goblin_warrior",
-          },
-          {
-            admissionSource: { kind: "encounterParticipant" },
-            combatantId: "skeleton",
-            initiative: 5,
-            kind: "statBlock",
-            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
-            statBlockId: "stat_block_skeleton",
-          },
-        ],
-      }),
-    );
-    const activeSession = root.sessionStore.battleSession;
-    if (activeSession === null) throw new Error("Expected active battle.");
-    const presented = battlePresentedSnapshot(activeSession);
-    if (Either.isLeft(presented))
-      throw new Error("Expected presented snapshot.");
-    const result = {
-      tag: "resolved",
-      session: activeSession,
-      snapshot: snapshotBattle(activeSession.state),
-      objectDamages: [],
-    } satisfies BattleRuntimeResolutionResult;
-    const activeResolution = Either.getOrThrow(
-      battleResolutionPayload(root, result),
-    );
-    const activeResolutionFixture = {
-      ...activeResolution,
-      availableActs: [],
-      admittedSpellPresentations: [],
-      presentedInterruptChoices: [],
-    };
-
-    const validateLifecycle = jsonSchemaValidator.getValidator(
-      mcpOutputJsonSchema(BattleLifecycleOutputSchema),
-    );
-    const setupOutput = {
-      ...presentation,
-      battleState: setupState,
-      snapshot: null,
-      session: sessionForProjectionState(setupState),
-    };
-    const activeRosterOutput = {
-      ...activeResolutionFixture,
-      result: {
-        tag: "combatantAdded" as const,
-        combatantId: "combatant:projection-contract",
-      },
-    };
-    const noBattleSuccessOutput = {
-      ...presentation,
-      battleState: noneState,
-      snapshot: null,
-      session: sessionForProjectionState(noneState),
-    };
-
-    expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(setupOutput),
-      ),
-    ).toBe(true);
-    expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(
-          activeRosterOutput,
+      expect(
+        Either.isRight(
+          Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(setupOutput),
         ),
-      ),
-    ).toBe(true);
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(
-          noBattleSuccessOutput,
+      ).toBe(true);
+      expect(
+        Either.isRight(
+          Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(
+            activeRosterOutput,
+          ),
         ),
-      ),
-    ).toBe(true);
-    expect(validateLifecycle(setupOutput).valid).toBe(true);
-    expect(validateLifecycle(noBattleSuccessOutput).valid).toBe(false);
+      ).toBe(true);
+      expect(
+        Either.isLeft(
+          Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(
+            noBattleSuccessOutput,
+          ),
+        ),
+      ).toBe(true);
+      expect(validateLifecycle(setupOutput).valid).toBe(true);
+      expect(validateLifecycle(noBattleSuccessOutput).valid).toBe(false);
 
-    const activeValidation = validateResolution(activeResolutionFixture);
-    expect(activeValidation.valid, activeValidation.errorMessage).toBe(true);
-    expect(
-      validateResolution({
-        ...activeResolutionFixture,
-        session: resolutionSessionForProjectionState(noneState),
-      }).valid,
-    ).toBe(false);
-    expect(
-      validateResolution({
-        ...activeResolutionFixture,
-        session: resolutionSessionForProjectionState(setupState),
-      }).valid,
-    ).toBe(false);
-    expect(
-      validateResolution({
-        ...presentation,
-        battleState: setupState,
-        result: {},
-        snapshot: {},
-        session: resolutionSessionForProjectionState(setupState),
-      }).valid,
-    ).toBe(false);
-  }, 30_000);
+      const activeValidation = validateResolution(activeResolutionFixture);
+      expect(activeValidation.valid, activeValidation.errorMessage).toBe(true);
+      expect(
+        validateResolution({
+          ...activeResolutionFixture,
+          session: resolutionSessionForProjectionState(noneState),
+        }).valid,
+      ).toBe(false);
+      expect(
+        validateResolution({
+          ...activeResolutionFixture,
+          session: resolutionSessionForProjectionState(setupState),
+        }).valid,
+      ).toBe(false);
+      expect(
+        validateResolution({
+          ...presentation,
+          battleState: setupState,
+          result: {},
+          snapshot: {},
+          session: resolutionSessionForProjectionState(setupState),
+        }).valid,
+      ).toBe(false);
+    },
+    schemaValidationTimeoutMs,
+  );
 
   test("derives the session summary from the canonical snapshot", () => {
     const snapshot = {

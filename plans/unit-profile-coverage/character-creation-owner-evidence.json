@@ -11,7 +11,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -32,7 +32,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -53,7 +53,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -74,7 +74,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -95,7 +95,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -116,7 +116,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -137,7 +137,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -158,7 +158,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -179,7 +179,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -200,7 +200,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -221,7 +221,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -242,7 +242,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverSubclassHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [
@@ -263,7 +263,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -283,7 +283,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -303,7 +303,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -323,7 +323,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -363,7 +363,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -403,7 +403,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -426,7 +426,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -446,7 +446,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -466,7 +466,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -486,7 +486,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -546,7 +546,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -586,7 +586,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -609,7 +609,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -629,7 +629,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -649,7 +649,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -669,7 +669,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -709,7 +709,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -749,7 +749,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -772,7 +772,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -792,7 +792,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -812,7 +812,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -832,7 +832,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -872,7 +872,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -892,7 +892,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -932,7 +932,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -955,7 +955,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -999,7 +999,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1019,7 +1019,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1039,7 +1039,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1081,7 +1081,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1192,7 +1192,7 @@
         "packages/character-creation-runtime/src/discovery.ts:selectedClassFeatureAcquisitionGrantChoiceHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey",
         "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
@@ -1221,7 +1221,7 @@
         "packages/character-creation-runtime/src/discovery.ts:languageGrantChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
@@ -1247,7 +1247,7 @@
         "packages/character-creation-runtime/src/discovery.ts:selectedClassFeatureAcquisitionGrantChoiceHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey",
         "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
@@ -1322,7 +1322,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedSelections",
@@ -1345,7 +1345,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1365,7 +1365,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1385,7 +1385,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1405,7 +1405,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1465,7 +1465,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1505,7 +1505,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1528,7 +1528,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1548,7 +1548,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1568,7 +1568,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1588,7 +1588,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1628,7 +1628,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1668,7 +1668,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1691,7 +1691,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1711,7 +1711,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1731,7 +1731,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1751,7 +1751,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1791,7 +1791,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1831,7 +1831,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1854,7 +1854,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1874,7 +1874,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1894,7 +1894,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1914,7 +1914,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1954,7 +1954,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1974,7 +1974,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2014,7 +2014,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2037,7 +2037,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2057,7 +2057,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2077,7 +2077,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2097,7 +2097,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2137,7 +2137,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2177,7 +2177,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2200,7 +2200,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2220,7 +2220,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2240,7 +2240,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2260,7 +2260,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2300,7 +2300,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2340,7 +2340,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2363,7 +2363,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2383,7 +2383,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2403,7 +2403,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2423,7 +2423,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2465,7 +2465,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:SUPPORTED_PROGRESSIONS"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2505,7 +2505,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverAdditionalClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2554,7 +2554,7 @@
         "packages/character-creation-runtime/src/discovery.ts:eligibleExpertiseSkills"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
@@ -2579,7 +2579,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2600,7 +2600,7 @@
         "packages/character-creation-runtime/src/discovery.ts:eligibleExpertiseSkills"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
@@ -2649,7 +2649,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2670,7 +2670,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2691,7 +2691,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2713,7 +2713,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.characterBuildResourceUnitIds"
       ],
       "finalization": [
@@ -2739,7 +2739,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2783,7 +2783,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2803,7 +2803,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.characterBuildResourceUnitIds"
       ],
       "finalization": [
@@ -2826,7 +2826,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2850,7 +2850,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2890,7 +2890,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2910,7 +2910,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions"
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2930,7 +2930,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverInitialDraftHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.characterBuildResourceUnitIds"
       ],
       "finalization": [
@@ -2955,7 +2955,7 @@
         "packages/character-creation-runtime/src/discovery.ts:sorcererMetamagicChoiceHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
+        "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities",
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.unitOptionIdsByChoiceKey"
       ],
       "finalization": [

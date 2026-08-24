@@ -3,6 +3,8 @@
 import {
   statBlockId as authoredStatBlockId,
   unitId as authoredUnitId,
+  characterClassLevel,
+  type CharacterClassLevel,
 } from "@dnd/shared/game-facts";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -144,6 +146,7 @@ import {
 import { qntLoadoutSlot } from "./qnt-loadout-bridge.test-support.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportedCharacterProgressions,
   supportedHoleOptionIds,
   type CharacterCreationSupportProfile,
   type SupportedLoadoutChoice,
@@ -731,6 +734,30 @@ function testProgression(
   return result.right;
 }
 
+function expectedSameClassProgressionOptionIds(
+  classUnitId: UnitRecord["id"],
+  throughClassLevel: CharacterClassLevel,
+): readonly CreationChoiceOptionId[] {
+  return Array.from({ length: throughClassLevel }, (_, index) =>
+    progressionOptionId(testProgression(classUnitId, index + 1)),
+  );
+}
+
+function expectedFirstMulticlassLevelGainOptionId(
+  startingClassUnitId: UnitRecord["id"],
+  gainedClassUnitId: UnitRecord["id"],
+): CreationChoiceOptionId {
+  return progressionOptionId({
+    startingClass: classUnitId(startingClassUnitId),
+    advancements: [
+      {
+        classUnitId: classUnitId(gainedClassUnitId),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+      },
+    ],
+  });
+}
+
 function unitChoiceKeyRight(value: string) {
   const result = unitChoiceKey(value);
   if (Either.isLeft(result)) {
@@ -1050,57 +1077,76 @@ describe("character creation hole discovery", () => {
         "choice",
         "cc:draft:draft.progression.initial",
         [
-          "15:class_barbarian:level_1:maximum_hit_die",
-          "15:class_barbarian|15:class_barbarian|15:class_barbarian:level_3:fixed_hp_gain",
-          "10:class_bard:level_1:maximum_hit_die",
-          "10:class_bard|10:class_bard|10:class_bard:level_3:fixed_hp_gain",
-          "10:class_bard|10:class_bard:level_2:fixed_hp_gain",
-          "12:class_cleric:level_1:maximum_hit_die",
-          "12:class_cleric|12:class_cleric|12:class_cleric:level_3:fixed_hp_gain",
-          "12:class_cleric|12:class_cleric:level_2:fixed_hp_gain",
-          "11:class_druid:level_1:maximum_hit_die",
-          "11:class_druid|11:class_druid|11:class_druid:level_3:fixed_hp_gain",
-          "11:class_druid|11:class_druid:level_2:fixed_hp_gain",
-          "13:class_fighter:level_1:maximum_hit_die",
-          "13:class_fighter|13:class_fighter|13:class_fighter:level_3:fixed_hp_gain",
-          "13:class_fighter|13:class_fighter:level_2:fixed_hp_gain",
-          "13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter|13:class_fighter:level_5:fixed_hp_gain",
-          "13:class_fighter|15:class_barbarian:level_2:fixed_hp_gain",
-          "13:class_fighter|10:class_bard:level_2:fixed_hp_gain",
-          "13:class_fighter|12:class_cleric:level_2:fixed_hp_gain",
-          "13:class_fighter|11:class_druid:level_2:fixed_hp_gain",
-          "13:class_fighter|10:class_monk:level_2:fixed_hp_gain",
-          "13:class_fighter|13:class_paladin:level_2:fixed_hp_gain",
-          "13:class_fighter|12:class_ranger:level_2:fixed_hp_gain",
-          "13:class_fighter|11:class_rogue:level_2:fixed_hp_gain",
-          "13:class_fighter|14:class_sorcerer:level_2:fixed_hp_gain",
-          "13:class_fighter|13:class_warlock:level_2:fixed_hp_gain",
-          "13:class_fighter|12:class_wizard:level_2:fixed_hp_gain",
-          "10:class_monk:level_1:maximum_hit_die",
-          "10:class_monk|10:class_monk|10:class_monk:level_3:fixed_hp_gain",
-          "10:class_monk|10:class_monk:level_2:fixed_hp_gain",
-          "13:class_paladin:level_1:maximum_hit_die",
-          "13:class_paladin|13:class_paladin|13:class_paladin:level_3:fixed_hp_gain",
-          "13:class_paladin|13:class_paladin:level_2:fixed_hp_gain",
-          "12:class_ranger:level_1:maximum_hit_die",
-          "12:class_ranger|12:class_ranger|12:class_ranger:level_3:fixed_hp_gain",
-          "12:class_ranger|12:class_ranger:level_2:fixed_hp_gain",
-          "12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger:level_9:fixed_hp_gain",
-          "11:class_rogue:level_1:maximum_hit_die",
-          "11:class_rogue|11:class_rogue|11:class_rogue:level_3:fixed_hp_gain",
-          "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_6:fixed_hp_gain",
-          "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_10:fixed_hp_gain",
-          "14:class_sorcerer:level_1:maximum_hit_die",
-          "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_3:fixed_hp_gain",
-          "14:class_sorcerer|14:class_sorcerer:level_2:fixed_hp_gain",
-          "13:class_warlock:level_1:maximum_hit_die",
-          "13:class_warlock|13:class_warlock|13:class_warlock:level_3:fixed_hp_gain",
-          "12:class_wizard:level_1:maximum_hit_die",
-          "12:class_wizard|12:class_wizard|12:class_wizard:level_3:fixed_hp_gain",
-          "12:class_wizard|12:class_wizard:level_2:fixed_hp_gain",
-          "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_4:fixed_hp_gain",
-          "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_5:fixed_hp_gain",
-          "12:class_wizard|13:class_fighter:level_2:fixed_hp_gain",
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_barbarian"),
+            characterClassLevel(3),
+          ),
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_bard"),
+            characterClassLevel(3),
+          ),
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_cleric"),
+            characterClassLevel(3),
+          ),
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_druid"),
+            characterClassLevel(3),
+          ),
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_fighter"),
+            characterClassLevel(5),
+          ),
+          ...[
+            "class_barbarian",
+            "class_bard",
+            "class_cleric",
+            "class_druid",
+            "class_monk",
+            "class_paladin",
+            "class_ranger",
+            "class_rogue",
+            "class_sorcerer",
+            "class_warlock",
+            "class_wizard",
+          ].map((gainedClassUnitId) =>
+            expectedFirstMulticlassLevelGainOptionId(
+              authoredUnitId("class_fighter"),
+              authoredUnitId(gainedClassUnitId),
+            ),
+          ),
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_monk"),
+            characterClassLevel(3),
+          ),
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_paladin"),
+            characterClassLevel(3),
+          ),
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_ranger"),
+            characterClassLevel(9),
+          ),
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_rogue"),
+            characterClassLevel(10),
+          ),
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_sorcerer"),
+            characterClassLevel(3),
+          ),
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_warlock"),
+            characterClassLevel(3),
+          ),
+          ...expectedSameClassProgressionOptionIds(
+            authoredUnitId("class_wizard"),
+            characterClassLevel(5),
+          ),
+          expectedFirstMulticlassLevelGainOptionId(
+            authoredUnitId("class_wizard"),
+            authoredUnitId("class_fighter"),
+          ),
         ],
       ],
       [
@@ -4665,6 +4711,40 @@ describe("character creation finalization", () => {
     }
   });
 
+  test("finalizes every single-class progression derived through its capability frontier", () => {
+    const singleClassProgressions = supportedCharacterProgressions(
+      CHARACTER_CREATION_SUPPORT_PROFILE,
+    ).filter((progression) =>
+      progression.advancements.every(
+        (entry) => entry.classUnitId === progression.startingClass,
+      ),
+    );
+
+    for (const progression of singleClassProgressions) {
+      const totalLevel = computeTotalLevel(progression);
+      const result = finalizeCharacterDraft({
+        draft: completeSupportedProgressionDraft({
+          draftId: `draft:single-class-${progression.startingClass}-${totalLevel}`,
+          progression,
+          standardArrayAssignment: testAbilityScoreAssignment({
+            str: 8,
+            dex: 15,
+            con: 14,
+            int: 13,
+            wis: 12,
+            cha: 10,
+          }),
+        }),
+        unitLibrary,
+      });
+
+      expect(
+        result.tag,
+        `${progressionOptionId(progression)}: ${JSON.stringify(result)}`,
+      ).toBe("ready");
+    }
+  });
+
   test("finalizes fixed class-feature language grants without changing origin languages", () => {
     const cases = [
       {
@@ -7743,12 +7823,12 @@ describe("character creation finalization", () => {
       }
       const classUnitId = `class_${subclassUnit.className}`;
       const classThree = testProgression(authoredUnitId(classUnitId), 3);
-      const isSupportedLevelThreeProgression =
-        CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.some(
-          (progression) =>
-            progressionOptionId(progression) ===
-            progressionOptionId(classThree),
-        );
+      const isSupportedLevelThreeProgression = supportedCharacterProgressions(
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ).some(
+        (progression) =>
+          progressionOptionId(progression) === progressionOptionId(classThree),
+      );
       if (!isSupportedLevelThreeProgression) {
         continue;
       }
@@ -7781,12 +7861,7 @@ describe("character creation finalization", () => {
 
   test("projects selected Ability Score Improvement feat choices into build ability scores", () => {
     const fighterFour = testProgression(authoredUnitId("class_fighter"), 4);
-    const supportProfile = supportProfileWith({
-      supportedProgressions: [
-        ...CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions,
-        fighterFour,
-      ],
-    });
+    const supportProfile = CHARACTER_CREATION_SUPPORT_PROFILE;
     const fighter = unitLibrary.requireUnit("class_fighter");
     const secondWind = unitLibrary.requireUnit("fighter_second_wind");
     const abilityScoreImprovement = {
@@ -8138,12 +8213,7 @@ describe("character creation finalization", () => {
 
   test("applies two-score Ability Score Improvement feat choices", () => {
     const fighterFour = testProgression(authoredUnitId("class_fighter"), 4);
-    const supportProfile = supportProfileWith({
-      supportedProgressions: [
-        ...CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions,
-        fighterFour,
-      ],
-    });
+    const supportProfile = CHARACTER_CREATION_SUPPORT_PROFILE;
     const fighter = unitLibrary.requireUnit("class_fighter");
     const secondWind = unitLibrary.requireUnit("fighter_second_wind");
     const abilityScoreImprovement = {
@@ -8230,12 +8300,10 @@ describe("character creation finalization", () => {
 
   test("rejects cumulative class-feature ability-score increases above their cap", () => {
     const fighterSix = testProgression(authoredUnitId("class_fighter"), 6);
-    const supportProfile = supportProfileWith({
-      supportedProgressions: [
-        ...CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions,
-        fighterSix,
-      ],
-    });
+    const supportProfile = supportProfileWithSingleClassLevelFrontier(
+      authoredUnitId("class_fighter"),
+      characterClassLevel(6),
+    );
     const fighter = unitLibrary.requireUnit("class_fighter");
     const secondWind = unitLibrary.requireUnit("fighter_second_wind");
     const abilityScoreImprovement = {
@@ -10578,7 +10646,7 @@ describe("character creation finalization", () => {
       ...complete,
       selections: {
         ...complete.selections,
-        progression: testProgression(authoredUnitId("class_fighter"), 4),
+        progression: testProgression(authoredUnitId("class_fighter"), 6),
         choices: [
           ...complete.selections.choices,
           selectedUnitChoice(
@@ -11704,6 +11772,7 @@ function completeSupportedProgressionDraft(input: {
   readonly draftId: string;
   readonly progression: CharacterProgression;
   readonly preferredOptionIdsBySource?: PreferredSupportedFillOptionIdsBySource;
+  readonly standardArrayAssignment?: AbilityScoreAssignment;
 }): CharacterDraft {
   let draft = createTestDraft(input.draftId);
   draft = requireAcceptedBatch(
@@ -11711,7 +11780,13 @@ function completeSupportedProgressionDraft(input: {
       draft,
       unitLibrary,
       expectedRevision: draft.revision,
-      fills: initialManifestFills(progressionOptionId(input.progression)),
+      fills: initialManifestFills(progressionOptionId(input.progression)).map(
+        (fill) =>
+          fill.kind === "abilityScores" &&
+          input.standardArrayAssignment !== undefined
+            ? { ...fill, value: input.standardArrayAssignment }
+            : fill,
+      ),
     }),
   );
 
@@ -11886,14 +11961,13 @@ function unitCatalogWithUnsupportedLanguageGrant(input: {
 function supportedMulticlassProgressionForClass(
   classUnitId: UnitRecord["id"],
 ): CharacterProgression {
-  const progression =
-    CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions.find(
-      (candidate) =>
-        startingClassUnitId(candidate) !== classUnitId &&
-        candidate.advancements.some(
-          (entry) => entry.classUnitId === classUnitId,
-        ),
-    );
+  const progression = supportedCharacterProgressions(
+    CHARACTER_CREATION_SUPPORT_PROFILE,
+  ).find(
+    (candidate) =>
+      startingClassUnitId(candidate) !== classUnitId &&
+      candidate.advancements.some((entry) => entry.classUnitId === classUnitId),
+  );
   if (progression == null) {
     throw new Error(`No supported multiclass progression for ${classUnitId}.`);
   }
@@ -13322,6 +13396,28 @@ function supportProfileWith(
   overrides: Partial<CharacterCreationSupportProfile>,
 ): CharacterCreationSupportProfile {
   return { ...CHARACTER_CREATION_SUPPORT_PROFILE, ...overrides };
+}
+
+function supportProfileWithSingleClassLevelFrontier(
+  classUnitId: UnitRecord["id"],
+  throughClassLevel: CharacterClassLevel,
+): CharacterCreationSupportProfile {
+  const singleClassLevelFrontiers =
+    CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities.singleClassLevelFrontiers.map(
+      (frontier) =>
+        frontier.classUnitId === classUnitId
+          ? {
+              ...frontier,
+              throughClassLevel,
+            }
+          : frontier,
+    );
+  return supportProfileWith({
+    progressionCapabilities: {
+      ...CHARACTER_CREATION_SUPPORT_PROFILE.progressionCapabilities,
+      singleClassLevelFrontiers,
+    },
+  });
 }
 
 const HOLE_ID_TO_QNT_VARIANT = {
