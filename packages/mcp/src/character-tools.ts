@@ -54,6 +54,8 @@ import {
 } from "./model-facing-creation-holes.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
+
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export { characterToolDefinitions } from "./character-tool-definitions.ts";
 
 type CharacterSessionRitualAccess = Extract<

@@ -28,7 +28,6 @@ import {
   type ProtocolToolDefinition,
 } from "./tool-definition-contract.ts";
 
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
 export const characterToolDefinitions = [
   {
     name: characterToolNames.createCharacterDraft,
