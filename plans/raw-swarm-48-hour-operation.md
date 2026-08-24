@@ -137,11 +137,13 @@ health.
 For the first wave, verify that every checked-in identity is unused immediately
 before invocation. If one is occupied or an invocation must be retried, do not
 edit or reuse that configuration. Copy its semantic inputs to a new immutable
-configuration under the launch's durable `operator/configs/` directory and
-replace `campaignId`, `plannedScenarioId`, and `evidenceSetId` with fresh
-launch-prefixed identities. Strictly decode the copy, preserve it in the next
-archive checkpoint, and use it as the new invocation input. Apply the same
-procedure to every later-wave configuration.
+configuration under the repository-owned ignored
+`scripts/raw-swarm/out/<operation>/operator/configs/` directory and replace
+`campaignId`, `plannedScenarioId`, and `evidenceSetId` with fresh
+launch-prefixed identities. Strictly decode the copy and use that contained
+path as the new invocation input. Preserve it in the next durable archive
+checkpoint; the external archive remains storage, never an authoring input.
+Apply the same procedure to every later-wave configuration.
 
 ## Durability and recovery
 
