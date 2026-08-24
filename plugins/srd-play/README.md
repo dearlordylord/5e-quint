@@ -92,6 +92,7 @@ owns current permissions, releases, networking, and command details.
    profile_dir="$git_common_dir/tunnel-client/profiles"
    profile_name=srd-play-local
    runtime_alias=srd-play-local
+   mcp_command="$repository_root/node_modules/.bin/tsx $repository_root/packages/mcp/src/index.ts"
 
    set -a
    . "$environment_file"
@@ -104,7 +105,7 @@ owns current permissions, releases, networking, and command details.
      --profile "$profile_name" \
      --profile-dir "$profile_dir" \
      --tunnel-id "$CONTROL_PLANE_TUNNEL_ID" \
-     --mcp-command "pnpm --dir $repository_root --filter @dnd/mcp dev"
+     --mcp-command "$mcp_command"
 
    tunnel-client doctor \
      --profile "$profile_name" \
@@ -120,6 +121,11 @@ owns current permissions, releases, networking, and command details.
    client version, use that option to set `<repository-root>` rather than
    relying on the caller's current directory.
 
+   Launch the `tsx` executable directly for this stdio boundary. Do not wrap it
+   in `pnpm --filter @dnd/mcp dev`: pnpm writes lifecycle banners to stdout,
+   while tunnel-client requires stdout to contain only newline-delimited MCP
+   JSON-RPC messages.
+
    For a long-lived local runtime operated by Codex or another automation
    agent, use the client's managed runtime instead of `nohup` or `disown`:
 
@@ -130,7 +136,7 @@ owns current permissions, releases, networking, and command details.
      --profile-dir "$profile_dir" \
      --tunnel-id "$CONTROL_PLANE_TUNNEL_ID" \
      --runtime-api-key env:CONTROL_PLANE_API_KEY \
-     --mcp-command "pnpm --dir $repository_root --filter @dnd/mcp dev"
+     --mcp-command "$mcp_command"
 
    tunnel-client runtimes status "$runtime_alias" --json
    ```
