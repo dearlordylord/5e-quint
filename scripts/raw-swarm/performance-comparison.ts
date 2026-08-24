@@ -1058,6 +1058,16 @@ export function readControlledPerformance(
       return false;
     }
   };
+  const sameAuthoritySet = (
+    actual: readonly ArtifactAuthority[],
+    expected: readonly ArtifactAuthority[],
+  ): boolean => {
+    const key = (authority: ArtifactAuthority): string =>
+      `${authority.path}\u0000${String(authority.byteLength)}\u0000${authority.sha256}`;
+    const actualKeys = actual.map(key).sort();
+    const expectedKeys = expected.map(key).sort();
+    return JSON.stringify(actualKeys) === JSON.stringify(expectedKeys);
+  };
   const equal = (left: number, right: number) => Math.abs(left - right) < 1e-9;
   const phaseElapsed = MODEL_INVOCATION_PHASES.reduce(
     (total, phase) => total + run.phases[phase].elapsedMilliseconds,
@@ -1098,6 +1108,9 @@ export function readControlledPerformance(
     run.sources.invocationLedgers.some((source) => !sourceMatches(source)) ||
     run.sources.invocationEvents.length === 0 ||
     run.sources.invocationEvents.some((source) => !sourceMatches(source)) ||
+    run.sources.invocationRawArtifacts.some(
+      (source) => !sourceMatches(source),
+    ) ||
     !sourceMatches(run.sources.continuationObservations) ||
     !sourceMatches(run.sources.supervisorTimings) ||
     !sourceMatches(run.sources.reportingTiming) ||
@@ -1165,6 +1178,16 @@ export function readControlledPerformance(
     reportingTimingPath: run.sources.reportingTiming.path,
     reportingManifestPath: run.sources.reportingManifest.path,
   });
+  if (
+    !sameAuthoritySet(
+      run.sources.invocationRawArtifacts,
+      recomputed.sources.invocationRawArtifacts,
+    )
+  ) {
+    fail(
+      `Controlled performance evidence ${path} has raw invocation artifact authorities that do not match its review invocation manifest.`,
+    );
+  }
   if (JSON.stringify(recomputed) !== JSON.stringify(run)) {
     fail(`Controlled performance evidence ${path} changed from its sources.`);
   }
