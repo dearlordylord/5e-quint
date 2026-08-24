@@ -4,7 +4,7 @@
   "recordedAt": "2026-08-24",
   "scope": "Installed ChatGPT developer-mode MCP connection and tool selection, Skill activation, and complete-plugin newcomer journey",
   "environment": { "tag": "notObserved" },
-  "pendingReason": "The operator reports that the ChatGPT developer-mode connection was added and invoked tools, but this repository process has no authorized way to inspect that conversation or recover case-level prompts, selections, results, confirmations, and Skill activation. Local protocol, tunnel transport logs, and static forward tests cannot establish the remaining installed observations.",
+  "pendingReason": "The operator-provided public snapshot at https://chatgpt.com/share/6a8c4a47-e610-83ea-9163-450272c9606e was inspected. It observes explicit app activation, an attempted Fighter creation that encountered the pre-fix language/alignment option-projection defect, and a completed Goblin Warrior versus Imp battle. The snapshot redacts app call payloads and did not use the evaluation-inventory prompts, so it cannot establish the required case-level tool names and arguments, automatic Skill activation, negative routing, or complete Character Session journey. Those installed cases remain pending.",
   "promptOwner": "plugins/srd-play/evals/evaluation-inventory.json",
   "capabilityMatrix": "plugins/srd-play/evals/capability-matrix.json",
   "canonicalMcpEvidence": {
