@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 import { spawnSync } from "node:child_process";
 import { constants } from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -19,11 +20,13 @@ import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   BattleSnapshotSchema,
-  endBattleRuntimeTurn,
+  endBattleRuntimeTurnWithTableD20TestCircumstances,
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
+  resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
   snapshotBattle,
   type BattleRuntimeResolutionResult,
+  type BattleRuntimeTableD20TestResolutionResult,
 } from "../../../packages/battle-runtime/src/index.ts";
 import { Either, Match, Schema } from "effect";
 
@@ -32,6 +35,7 @@ import type {
   PlayerContinuationOutcome,
   PlayerSdk,
   ScenarioBattleResolutionResult,
+  ScenarioTableD20TestResolutionResult,
 } from "./continuation-contract.ts";
 import { authoredAttemptBody } from "./attempt-source.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
@@ -48,6 +52,10 @@ import {
   scenarioObjectAttackFills,
   scenarioTableSpatialFactFills,
   scenarioCreatureSpellTargetFills,
+  scenarioBattleResultWithD20TestCircumstances,
+  scenarioD20TestCircumstancePreparation,
+  scenarioD20TestResolutionId,
+  scenarioSessionAfterD20TestCircumstanceResolution,
   scenarioSessionWithBattleResult,
   scenarioTokenId,
   type ScenarioSession,
@@ -397,7 +405,19 @@ const byResolutionTag = Match.discriminator("tag");
 
 function retainScenarioBattlefield(
   session: ScenarioSession,
+  result: BattleRuntimeTableD20TestResolutionResult,
+  cancelInvalidMovement?: false,
+): ScenarioTableD20TestResolutionResult;
+function retainScenarioBattlefield(
+  session: ScenarioSession,
   result: BattleRuntimeResolutionResult,
+  cancelInvalidMovement?: boolean,
+): ScenarioBattleResolutionResult;
+function retainScenarioBattlefield(
+  session: ScenarioSession,
+  result:
+    | BattleRuntimeResolutionResult
+    | BattleRuntimeTableD20TestResolutionResult,
   cancelInvalidMovement = false,
 ): ScenarioBattleResolutionResult {
   return Match.value(result).pipe(
@@ -560,12 +580,52 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
           value: result,
         };
       }
-      const battleResult = resolveBattleRuntimeSubject({
-        session: session.battle,
+      const preliminaryBattleResult =
+        resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+          session: session.battle,
+          subject,
+          fills: creatureSpellProjectedFills.right,
+          d20TestResolutionId: scenarioD20TestResolutionId(session),
+          tableD20TestCircumstanceDecisions:
+            session.tableD20TestCircumstances.activeDecisions,
+        });
+      const preparation = scenarioD20TestCircumstancePreparation({
+        session,
         subject,
         fills: creatureSpellProjectedFills.right,
+        requests:
+          preliminaryBattleResult.tag === "needsHoles"
+            ? preliminaryBattleResult.d20TestCircumstanceRequests
+            : [],
       });
-      const result = retainScenarioBattlefield(session, battleResult);
+      const battleResult =
+        preparation.decisions.length ===
+        session.tableD20TestCircumstances.activeDecisions.length
+          ? preliminaryBattleResult
+          : resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+              session: session.battle,
+              subject,
+              fills: creatureSpellProjectedFills.right,
+              d20TestResolutionId: scenarioD20TestResolutionId(session),
+              tableD20TestCircumstanceDecisions: preparation.decisions,
+            });
+      const projectedBattleResult =
+        scenarioBattleResultWithD20TestCircumstances({
+          result: battleResult,
+          decisions: preparation.decisions,
+        });
+      const retainedResult = retainScenarioBattlefield(
+        session,
+        projectedBattleResult,
+      );
+      const result = {
+        ...retainedResult,
+        session: scenarioSessionAfterD20TestCircumstanceResolution({
+          session: retainedResult.session,
+          state: preparation.state,
+          resolutionTag: projectedBattleResult.tag,
+        }),
+      };
       return {
         operation: "resolveBattleRuntimeSubject" as const,
         session: result.session,
@@ -622,11 +682,58 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
       };
     }),
     byOperation("endBattleRuntimeTurn", ({ input }) => {
-      const battleResult = endBattleRuntimeTurn({
-        session: session.battle,
-        ...input,
+      const fills = input.fills ?? [];
+      const preliminaryBattleResult =
+        endBattleRuntimeTurnWithTableD20TestCircumstances({
+          session: session.battle,
+          actorId: input.actorId,
+          fills,
+          d20TestResolutionId: scenarioD20TestResolutionId(session),
+          tableD20TestCircumstanceDecisions:
+            session.tableD20TestCircumstances.activeDecisions,
+        });
+      const subject = {
+        tag: "runtimeCommand" as const,
+        command: "endTurn" as const,
+        actorId: input.actorId,
+      };
+      const preparation = scenarioD20TestCircumstancePreparation({
+        session,
+        subject,
+        fills,
+        requests:
+          preliminaryBattleResult.tag === "needsHoles"
+            ? preliminaryBattleResult.d20TestCircumstanceRequests
+            : [],
       });
-      const result = retainScenarioBattlefield(session, battleResult);
+      const battleResult =
+        preparation.decisions.length ===
+        session.tableD20TestCircumstances.activeDecisions.length
+          ? preliminaryBattleResult
+          : endBattleRuntimeTurnWithTableD20TestCircumstances({
+              session: session.battle,
+              actorId: input.actorId,
+              fills,
+              d20TestResolutionId: scenarioD20TestResolutionId(session),
+              tableD20TestCircumstanceDecisions: preparation.decisions,
+            });
+      const projectedBattleResult =
+        scenarioBattleResultWithD20TestCircumstances({
+          result: battleResult,
+          decisions: preparation.decisions,
+        });
+      const retainedResult = retainScenarioBattlefield(
+        session,
+        projectedBattleResult,
+      );
+      const result = {
+        ...retainedResult,
+        session: scenarioSessionAfterD20TestCircumstanceResolution({
+          session: retainedResult.session,
+          state: preparation.state,
+          resolutionTag: projectedBattleResult.tag,
+        }),
+      };
       return {
         operation: "endBattleRuntimeTurn" as const,
         session: result.session,

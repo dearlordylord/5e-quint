@@ -34,6 +34,7 @@ import type { ScenarioSetupContext } from "./scenario-setup-contract.ts";
 import { isJsonValue, jsonValue } from "./json-value.ts";
 import {
   createScenarioSession,
+  scenarioSessionWithTableD20TestCircumstance,
   scenarioDistanceFeet,
   isScenarioSession,
   scenarioTableSpatialFingerprint,
@@ -118,6 +119,7 @@ function setupContext(
               hp: Hp,
               movementFeet,
               createScenarioSession,
+              scenarioSessionWithTableD20TestCircumstance,
               scenarioDistanceFeet,
               scenarioTableSpatialFingerprint,
               scenarioSessionIssueMessage,

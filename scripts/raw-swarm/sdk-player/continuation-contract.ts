@@ -1,13 +1,14 @@
 import type {
-  AvailableBattleAct,
   BattleFill,
   BattleObjectId,
   BattleMovementSpeedKind,
   BattleRuntimeResolutionResult,
+  BattleRuntimeTableD20TestResolutionResult,
   BattleSubject,
   CombatantId,
 } from "@dnd/battle-runtime";
 import type { ScenarioSession } from "./scenario-session.ts";
+import type { ScenarioAvailableBattleAct } from "./scenario-session.ts";
 import type { ScenarioSessionUpdateIssue } from "./scenario-session.ts";
 import type { ScenarioRelationResult } from "./scenario-session.ts";
 import type { CoordinateInput } from "../../../packages/tactical-space/src/index.ts";
@@ -20,6 +21,7 @@ import type { CoordinateInput } from "../../../packages/tactical-space/src/index
 export const PLAYER_CONTINUATION_PROTOCOL_REMINDER = [
   "discoverBattleActs(context.session) returns the readonly act array directly; do not read an .acts property from it.",
   "Resolve an ordinary surfaced subject with resolveBattleRuntimeSubject({ session, subject, fills }).",
+  "A D20 Test is exactly an Ability Check, Saving Throw, or attack roll. For each rolled pending test, use the surfaced rollMode (normal, advantage, or disadvantage); d20TestCircumstanceRequests identify the exact occurrence and saving-throw target after mechanical and Table circumstances are combined.",
   'Start surfaced movement with resolveScenarioMovement({ kind: "route", session, subject, route, speedKind, fills }); there is no movement field.',
   'Continue surfaced movement holes with resolveScenarioMovement({ kind: "continue", session, fills }).',
   "Every continue and playerConcluded outcome must include a tacticalNote string; playerConcluded also requires a nonempty conclusion.",
@@ -42,6 +44,17 @@ export type ScenarioBattleResolutionResult =
       readonly message: string;
     };
 
+export type ScenarioTableD20TestResolutionResult =
+  | (BattleRuntimeTableD20TestResolutionResult extends infer Result
+      ? Result extends BattleRuntimeTableD20TestResolutionResult
+        ? Omit<Result, "session"> & { readonly session: ScenarioSession }
+        : never
+      : never)
+  | Extract<
+      ScenarioBattleResolutionResult,
+      { readonly tag: "scenarioSessionConflict" }
+    >;
+
 export type EndBattleRuntimeTurnInput = {
   readonly session: ScenarioSession;
   readonly actorId: CombatantId;
@@ -56,7 +69,7 @@ export type PlayerSdk = {
   }) => ScenarioRelationResult;
   readonly discoverBattleActs: (
     session: ScenarioSession,
-  ) => readonly AvailableBattleAct[];
+  ) => readonly ScenarioAvailableBattleAct[];
   readonly resolveScenarioMovement: (
     input:
       | {
@@ -80,14 +93,14 @@ export type PlayerSdk = {
     readonly session: ScenarioSession;
     readonly subject: BattleSubject;
     readonly fills: readonly BattleFill[];
-  }) => ScenarioBattleResolutionResult;
+  }) => ScenarioTableD20TestResolutionResult;
   readonly resolveBattleRuntimeInterrupt: (input: {
     readonly session: ScenarioSession;
     readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
   }) => ScenarioBattleResolutionResult;
   readonly endBattleRuntimeTurn: (
     input: EndBattleRuntimeTurnInput,
-  ) => ScenarioBattleResolutionResult;
+  ) => ScenarioTableD20TestResolutionResult;
 };
 
 export type JsonValue =

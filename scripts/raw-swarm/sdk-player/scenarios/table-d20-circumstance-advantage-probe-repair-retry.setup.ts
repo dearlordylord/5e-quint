@@ -89,16 +89,35 @@ export const setupScenario: ScenarioSetup = (context) => {
     };
   }
 
+  const tableCircumstance = sdk.scenarioSessionWithTableD20TestCircumstance({
+    session: session.right,
+    binding: {
+      selection: {
+        kind: "nextD20TestForActor",
+        testKind: "attackRoll",
+        actorId: wolfId,
+      },
+      targetId: ridingHorseId,
+      source: "disadvantage",
+    },
+  });
+  if (sdk.isLeft(tableCircumstance)) {
+    return {
+      kind: "obstructed",
+      obstruction: tableCircumstance.left.message,
+      observation: { stage: "table-d20-test-circumstance-binding" },
+    };
+  }
+
   return {
-    kind: "obstructed",
-    obstruction:
-      "The public scenario setup surface cannot apply the Table's circumstance Disadvantage to exactly the Wolf's first Bite attack-roll D20 Test. Geometry-derived pursuit, movement, targeting, Bite, Hooves, and ordinary attack resolution are representable, but returning the otherwise complete session as ready would silently omit the scenario's required issue #279 ruling or invent an unsupported per-test witness.",
+    kind: "ready",
+    session: tableCircumstance.right,
     observation: {
       issue: 279,
       capability: "table-authored-per-test-circumstance-disadvantage",
       requiredTest: "Wolf's first Bite attack roll against the Riding Horse",
       owner: "Table",
-      status: "unsupported-by-public-setup-surface",
+      status: "bound-to-next-matching-d20-test",
     },
   };
 };

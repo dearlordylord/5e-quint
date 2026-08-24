@@ -625,26 +625,35 @@ export function interruptShortRest(input: {
 }
 
 export function interruptLongRest(
-  input: Omit<Parameters<typeof interruptLongRestCore>[0], "rest"> & {
+  input: Omit<
+    Parameters<typeof interruptLongRestCore>[0],
+    "rest" | "timing"
+  > & {
     readonly sheet: CharacterSheet;
-    readonly timing?: CharacterSheetLongRestStartTiming;
+    readonly startTiming?: CharacterSheetLongRestStartTiming;
+    readonly restedTicks: ElapsedTimeTicks;
     readonly interruptionsIncludingThisOne?: unknown;
     readonly interruption: CharacterSheetLongRestInterruption;
   },
 ) {
   const {
     sheet,
-    timing,
+    startTiming,
+    restedTicks,
     interruptionsIncludingThisOne: _unused,
     ...interruption
   } = input;
   void _unused;
   return interruptLongRestCore({
     ...interruption,
+    timing: {
+      cumulativeRestedTicks: restedTicks,
+      elapsedSincePreviousInterruptionTicks: restedTicks,
+    },
     rest: requireRight(
       startLongRest({
         sheet,
-        timing: timing ?? { tag: "noPriorLongRest" },
+        timing: startTiming ?? { tag: "noPriorLongRest" },
       }),
     ),
   });

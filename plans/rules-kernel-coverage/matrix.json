@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 144,
-    "covered": 136,
+    "total": 145,
+    "covered": 137,
     "open": 2,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 110,
+      "battle": 111,
       "character-creation": 16,
       "character-sheet": 13,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 136,
+      "covered": 137,
       "needs-qnt-owner": 2,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -5126,6 +5126,42 @@
         ".references/srd-5.2.1/Character-Creation.md#Choose Starting Equipment"
       ],
       "title": "Character Creation starting coin grants, catalog purchase costs, and exact remaining currency"
+    },
+    {
+      "id": "BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/d20-test-circumstance.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
+      ],
+      "reason": "The semantic core owns the three D20 Test kinds, binary nonstacking source combination, cancellation, and exact request equality. Battle Runtime derives exact occurrence-and-target requests from canonical hole identity plus the accepted prefix and rejects stale, mismatched, duplicate, or contradictory decisions. ScenarioSession owns replay-stable resolution ordinals and one-shot Table bindings. withoutRoll outcomes are excluded at consumption because no D20 Test roll occurs.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/d20-test-circumstance.ts",
+        "packages/battle-runtime/src/battle-session-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "scripts/raw-swarm/sdk-player/scenario-session.ts",
+        "scripts/raw-swarm/sdk-player/supervisor-cli.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#D20-Tests",
+        ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage",
+        "UBIQUITOUS_LANGUAGE.md#D20-Rolls",
+        "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage",
+        "UBIQUITOUS_LANGUAGE.md#Table-Decisions"
+      ],
+      "title": "Each pending rolled D20 Test can consume one exact Table-authored Advantage or Disadvantage circumstance and combine it with mechanical sources"
     }
   ],
   "battleHoleFrontier": [
@@ -11009,6 +11045,18 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/starting-currency-finalization-tests.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns the RAW three-kind D20 Test vocabulary, Advantage/Disadvantage source combination and cancellation, and exact pending-request equality independently of battle or authored identity.",
+      "obligationIds": ["BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Executable closed examples cover the source-combination matrix and exact-request mismatch dimensions for the D20 Test circumstance core.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -12257,6 +12305,16 @@
       "classification": "exempt",
       "evidence": "Shared creature size order leaf imported by registered movement and Unit feature procedure owners.",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/creature-size-order.qnt"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -16973,6 +17031,28 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/starting-currency-finalization.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "comparison",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
       ],
       "status": "generation-subset-clean"
     }

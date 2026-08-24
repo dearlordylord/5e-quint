@@ -218,7 +218,7 @@
       "module/binding:releaseGlyphExplosiveRune": 10
     },
     "packages/battle-runtime/src/battle-reducer/hole-helpers.ts": {
-      "module/binding:requiredAbilityCheckRollMode": 14
+      "module/binding:requiredAbilityCheckRollMode": 12
     },
     "packages/battle-runtime/src/battle-reducer/interrupt-continuation.ts": {
       "module/binding:attackDamageContinuationCunningStrikeFillSet": 9,
@@ -716,7 +716,7 @@
       "module/binding:resolveWebRestraintHazardSpellAct": 24
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts": {
-      "module/binding:resolveAttackBurstSaveDamageSpell": 126
+      "module/binding:resolveAttackBurstSaveDamageSpellAct": 120
     },
     "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts": {
       "module/binding:resolveSpellAttackSequenceAct": 20,
@@ -1219,7 +1219,7 @@
       "module/binding:handleAdminMirrorRequest": 20
     },
     "packages/mcp/src/battle-tools.ts": {
-      "module/binding:handleBattleToolCall/call:Match.when:argument-1:selector-808174cea28e": 13
+      "module/binding:handleBattleToolCall/call:Match.when:argument-1:selector-808174cea28e": 12
     },
     "packages/mcp/src/character-session-sheet-rebuild.ts": {
       "module/binding:rebuildCharacterSheetForOperation": 9

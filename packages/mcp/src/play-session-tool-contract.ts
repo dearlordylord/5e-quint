@@ -18,7 +18,7 @@ import type { McpObjectInputSchema, McpOutputSchema } from "./schema-codec.ts";
 import { mcpObjectJsonSchema, mcpOutputJsonSchema } from "./schema-codec.ts";
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 import {
-  CREATE_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   type ProtocolToolDefinition,
 } from "./tool-definition-contract.ts";
@@ -75,7 +75,7 @@ export const playSessionToolDefinitions = [
     description:
       "Create an isolated process-lifetime Play Session and return the handle required by every stateful operation.",
     inputSchema: emptyInputSchema,
-    annotations: CREATE_CLOSED_WORLD_TOOL_ANNOTATIONS,
+    annotations: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: playSessionLifecycleOutputSchema(
       playSessionToolNames.create,
       "playSessionCreated",

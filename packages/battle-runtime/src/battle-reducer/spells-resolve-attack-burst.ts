@@ -16,9 +16,11 @@ import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleAfterDamageEvent,
+  type BattleCreatureState,
   type BattleFill,
   type BattleHoleId,
   type BattleResolutionResult,
+  type BattleState,
   type BonusActionSpellBattleResolutionInput,
   type BattleExecutableSpellInvocation,
 } from "../battle-state-execution.ts";
@@ -109,7 +111,7 @@ import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
-export function resolveAttackBurstSaveDamageSpellAct(input: {
+function resolveOrdinaryAttackBurstSaveDamageSpellAct(input: {
   readonly input:
     | ActionSpellBattleResolutionInput
     | BonusActionSpellBattleResolutionInput;
@@ -122,11 +124,13 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly CharacterBattleMetamagicOptionFact[];
 }): BattleResolutionResult {
-  return resolveAttackBurstSaveDamageSpell({
+  return resolveAttackBurstSaveDamageSpellAct({
     ...input,
     release: { kind: "ordinaryCast" },
   });
 }
+
+export { resolveOrdinaryAttackBurstSaveDamageSpellAct as resolveAttackBurstSaveDamageSpellAct };
 
 export function resolveStoredGlyphAttackBurstSaveDamageSpellRelease(input: {
   readonly input: ActionSpellBattleResolutionInput;
@@ -138,7 +142,7 @@ export function resolveStoredGlyphAttackBurstSaveDamageSpellRelease(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
   readonly triggeringTargetId: CombatantId;
 }): BattleResolutionResult {
-  return resolveAttackBurstSaveDamageSpell({
+  return resolveAttackBurstSaveDamageSpellAct({
     ...input,
     release: {
       kind: "storedGlyphRelease",
@@ -147,7 +151,61 @@ export function resolveStoredGlyphAttackBurstSaveDamageSpellRelease(input: {
   });
 }
 
-function resolveAttackBurstSaveDamageSpell(input: {
+function attackBurstFillShapeIsValid(
+  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
+): boolean {
+  return (
+    fillSet.targetList === undefined &&
+    fillSet.skillChoice === undefined &&
+    fillSet.targetAbilityChoices === undefined
+  );
+}
+
+function storedGlyphTargetMatches(input: {
+  readonly release:
+    | { readonly kind: "ordinaryCast" }
+    | {
+        readonly kind: "storedGlyphRelease";
+        readonly triggeringTargetId: CombatantId;
+      };
+  readonly targetId: CombatantId | undefined;
+}): boolean {
+  return (
+    input.release.kind === "ordinaryCast" ||
+    input.targetId === input.release.triggeringTargetId
+  );
+}
+
+function attackBurstTargetIsLegal(
+  target: BattleCreatureState | undefined,
+  input: {
+    readonly state: BattleState;
+    readonly actorId: CombatantId;
+    readonly invocation: Extract<
+      BattleExecutableSpellInvocation,
+      { readonly procedure: "attackBurstSaveDamage" }
+    >;
+    readonly releaseKind: "ordinaryCast" | "storedGlyphRelease";
+    readonly spatialFacts: Extract<
+      SpellFillSet,
+      { readonly tag: "ok" }
+    >["targetSpatialFacts"];
+  },
+): target is BattleCreatureState {
+  return (
+    target !== undefined &&
+    (input.releaseKind === "storedGlyphRelease" ||
+      spellTargetIsLegal(
+        input.state,
+        input.actorId,
+        target.combatantId,
+        input.invocation,
+        input.spatialFacts,
+      ))
+  );
+}
+
+function resolveAttackBurstSaveDamageSpellAct(input: {
   readonly input:
     | ActionSpellBattleResolutionInput
     | BonusActionSpellBattleResolutionInput;
@@ -167,11 +225,7 @@ function resolveAttackBurstSaveDamageSpell(input: {
       };
 }): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.fillSet.targetList !== undefined ||
-    input.fillSet.skillChoice !== undefined ||
-    input.fillSet.targetAbilityChoices !== undefined
-  ) {
+  if (!attackBurstFillShapeIsValid(input.fillSet)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
@@ -182,8 +236,10 @@ function resolveAttackBurstSaveDamageSpell(input: {
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Malformed resolution input: stored Glyph release prepends the canonical triggering creature as the target fill. */
   if (
-    input.release.kind === "storedGlyphRelease" &&
-    input.fillSet.targetId !== input.release.triggeringTargetId
+    !storedGlyphTargetMatches({
+      release: input.release,
+      targetId: input.fillSet.targetId,
+    })
   ) {
     return invalidResult(
       input.input.state,
@@ -200,15 +256,13 @@ function resolveAttackBurstSaveDamageSpell(input: {
   const target = input.input.state.combatants.get(input.fillSet.targetId);
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    target === undefined ||
-    (input.release.kind === "ordinaryCast" &&
-      !spellTargetIsLegal(
-        input.input.state,
-        input.actorId,
-        target.combatantId,
-        input.invocation,
-        input.fillSet.targetSpatialFacts,
-      ))
+    !attackBurstTargetIsLegal(target, {
+      state: input.input.state,
+      actorId: input.actorId,
+      invocation: input.invocation,
+      releaseKind: input.release.kind,
+      spatialFacts: input.fillSet.targetSpatialFacts,
+    })
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
@@ -263,14 +317,13 @@ function resolveAttackBurstSaveDamageSpell(input: {
       );
       /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
-        replacementTarget === undefined ||
-        !spellTargetIsLegal(
-          input.input.state,
-          input.actorId,
-          replacementTarget.combatantId,
-          input.invocation,
-          sanctuaryCheck.spatialFacts,
-        )
+        !attackBurstTargetIsLegal(replacementTarget, {
+          state: input.input.state,
+          actorId: input.actorId,
+          invocation: input.invocation,
+          releaseKind: "ordinaryCast",
+          spatialFacts: sanctuaryCheck.spatialFacts,
+        })
       ) {
         /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(

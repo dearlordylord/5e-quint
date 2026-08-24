@@ -26,6 +26,7 @@ import type {
   scenarioDistanceFeet,
   scenarioTableSpatialFingerprint,
   scenarioSessionIssueMessage,
+  scenarioSessionWithTableD20TestCircumstance,
   tableAuthoredSpatialDecision,
   ScenarioSession,
 } from "./scenario-session.ts";
@@ -81,6 +82,7 @@ export type ScenarioSetupSdk = {
   readonly scenarioTableSpatialFingerprint: typeof scenarioTableSpatialFingerprint;
   readonly scenarioSessionIssueMessage: typeof scenarioSessionIssueMessage;
   readonly tableAuthoredSpatialDecision: typeof tableAuthoredSpatialDecision;
+  readonly scenarioSessionWithTableD20TestCircumstance: typeof scenarioSessionWithTableD20TestCircumstance;
   readonly isLeft: typeof Either.isLeft;
 };
 

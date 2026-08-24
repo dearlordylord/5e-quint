@@ -373,9 +373,14 @@ function interruptLongRestBeforeOneHourNoSlotBenefitProjection(): SlotProjection
         startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
       ),
       unitLibrary,
-      restedTicks: elapsedTimeTicks(
-        Number(CHARACTER_SHEET_SHORT_REST_TICKS) - 1,
-      ),
+      timing: {
+        cumulativeRestedTicks: elapsedTimeTicks(
+          Number(CHARACTER_SHEET_SHORT_REST_TICKS) - 1,
+        ),
+        elapsedSincePreviousInterruptionTicks: elapsedTimeTicks(
+          Number(CHARACTER_SHEET_SHORT_REST_TICKS) - 1,
+        ),
+      },
       interruption: "castNonCantripSpell",
     }),
   );
@@ -394,7 +399,10 @@ function interruptLongRestWithShortRestSlotBenefitsProjection(): SlotProjection 
         startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
       ),
       unitLibrary,
-      restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
+      timing: {
+        cumulativeRestedTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
+        elapsedSincePreviousInterruptionTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
+      },
       interruption: "rollInitiative",
     }),
   );

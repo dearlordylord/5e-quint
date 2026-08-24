@@ -2599,6 +2599,9 @@ const BattleHolePayloadUnionSchema = Schema.Union(
     kind: Schema.Literal("deathSavingThrow"),
     label: Schema.String,
     combatantId: CombatantId,
+    rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+      exact: true,
+    }),
     ...D20TestNaturalOneRerollHoleOptionsSchema,
   }),
   Schema.Struct({
@@ -2673,6 +2676,9 @@ const BattleHolePayloadUnionSchema = Schema.Union(
     kind: Schema.Literal("spellcastingAbilityCheck"),
     label: Schema.String,
     dc: DifficultyClass,
+    rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+      exact: true,
+    }),
     spellcastingAbilityCheck: Schema.Struct({
       casterId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,

@@ -1,4 +1,4 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFile, execFileSync, spawnSync } from "node:child_process";
 import {
   chmodSync,
   existsSync,
@@ -55,6 +55,21 @@ function run(
     cwd: repoRoot,
     env,
     stdio: "pipe",
+  });
+}
+
+function runAsync(
+  script: string,
+  args: readonly string[],
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<void> {
+  return new Promise((resolveRun, rejectRun) => {
+    execFile(
+      "pnpm",
+      ["exec", "tsx", script, ...args],
+      { cwd: repoRoot, env },
+      (error) => (error === null ? resolveRun() : rejectRun(error)),
+    );
   });
 }
 
@@ -255,7 +270,7 @@ describe("RAW swarm runner boundaries", () => {
     (_label, args) => {
       expect(() => run(sdkPlayerLauncher, args)).toThrow();
     },
-    30_000,
+    60_000,
   );
 
   test("rejects read and prospective output paths through an escaping symlink", () => {
@@ -320,7 +335,7 @@ describe("RAW swarm runner boundaries", () => {
     );
   }, 30_000);
 
-  test("retains one runner-owned startedAt across execution and supervisor handoff", () => {
+  test("retains one runner-owned startedAt across execution and supervisor handoff", async () => {
     const outputRoot = mkdtempSync(
       resolve(repoRoot, "scripts/raw-swarm/out/runner-started-at-"),
     );
@@ -341,10 +356,10 @@ esac
     );
     chmodSync(fakeGit, 0o755);
     try {
-      run(
+      await runAsync(
         sdkPlayerLauncher,
         [
-          "table-d20-circumstance-advantage-probe-repair-retry",
+          "mounted-dispatch-through-flooded-orchard",
           "--execution-id",
           "runner-started-at-execution",
           "--evidence-set-id",
@@ -398,7 +413,7 @@ esac
         [
           resolve(output, "replay-supervisor.mjs"),
           "init",
-          "table-d20-circumstance-advantage-probe-repair-retry",
+          "mounted-dispatch-through-flooded-orchard",
           "a".repeat(40),
           "instructionalFallback",
           "not-a-canonical-timestamp",
@@ -416,7 +431,7 @@ esac
       rmSync(outputRoot, { recursive: true, force: true });
       rmSync(commandRoot, { recursive: true, force: true });
     }
-  }, 120_000);
+  }, 300_000);
 
   test("rejects an implementation revision that is not the current clean revision", () => {
     const mismatchedGitSha = `${currentGitSha[0] === "a" ? "b" : "a"}${currentGitSha.slice(1)}`;

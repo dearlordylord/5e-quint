@@ -668,7 +668,10 @@ export function interruptLongRest(
   if (physicalExertionIssue !== null) {
     return characterSheetIssue(physicalExertionIssue);
   }
-  if (Number(input.restedTicks) >= Number(input.rest.requiredRestTicks)) {
+  if (
+    Number(input.timing.cumulativeRestedTicks) >=
+    Number(input.rest.requiredRestTicks)
+  ) {
     return characterSheetIssue(
       "Long Rest interruption requires rested time before the required Long Rest duration.",
     );
@@ -681,7 +684,10 @@ export function interruptLongRest(
     sheet: input.rest.sheet,
     requiredRestTicks: requiredLongRestTicks,
   });
-  if (Number(input.restedTicks) < Number(CHARACTER_SHEET_SHORT_REST_TICKS)) {
+  if (
+    Number(input.timing.elapsedSincePreviousInterruptionTicks) <
+    Number(CHARACTER_SHEET_SHORT_REST_TICKS)
+  ) {
     if (
       input.spendHitDice !== undefined ||
       input.arcaneRecovery !== undefined ||

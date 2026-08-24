@@ -1193,7 +1193,10 @@ export type CharacterSheetWeaponMasteryReselectionRouteResult =
 export type CharacterSheetLongRestInterruptionInput = {
   readonly rest: CharacterSheetLongRestStart;
   readonly unitLibrary: UnitCatalog;
-  readonly restedTicks: ElapsedTimeTicks;
+  readonly timing: {
+    readonly cumulativeRestedTicks: ElapsedTimeTicks;
+    readonly elapsedSincePreviousInterruptionTicks: ElapsedTimeTicks;
+  };
   readonly interruption: CharacterSheetLongRestInterruption;
   readonly spendHitDice?: readonly CharacterSheetHitDieSpend[];
   readonly arcaneRecovery?: {

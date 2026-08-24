@@ -196,7 +196,11 @@ export function applyInterruptLongRestOperation(
     const interrupted = interruptLongRest({
       rest,
       unitLibrary: root.unitLibrary,
-      restedTicks: segmentBoundary.right.elapsedSincePreviousBoundaryTicks,
+      timing: {
+        cumulativeRestedTicks: segmentBoundary.right.cumulativeRestedTicks,
+        elapsedSincePreviousInterruptionTicks:
+          segmentBoundary.right.elapsedSincePreviousBoundaryTicks,
+      },
       interruption: longRestInterruptionFromTool(segment.interruption),
       ...restRecoveryFromTool(segment),
     });

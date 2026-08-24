@@ -30,7 +30,7 @@ export const READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS = {
   openWorldHint: false,
 } as const satisfies McpToolAnnotations;
 
-export const CREATE_CLOSED_WORLD_TOOL_ANNOTATIONS = {
+export const NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS = {
   readOnlyHint: false,
   destructiveHint: false,
   idempotentHint: false,

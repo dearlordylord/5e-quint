@@ -5830,6 +5830,7 @@ export type BattleDeathSavingThrowHole = {
   readonly kind: "deathSavingThrow";
   readonly label: string;
   readonly combatantId: CombatantId;
+  readonly rollMode?: AttackRollMode;
   readonly d20TestNaturalOneRerolls?: readonly BattleD20TestNaturalOneRerollOption[];
 };
 export type BattleStatBlockRechargeRollHole = {
@@ -5921,6 +5922,7 @@ export type BattleSpellcastingAbilityCheckHole = {
   readonly kind: "spellcastingAbilityCheck";
   readonly label: string;
   readonly dc: DifficultyClass;
+  readonly rollMode?: AttackRollMode;
   readonly spellcastingAbilityCheck: {
     readonly casterId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;

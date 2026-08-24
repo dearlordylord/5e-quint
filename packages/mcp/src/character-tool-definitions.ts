@@ -20,10 +20,10 @@ import {
 } from "./character-tool-output.ts";
 import { mcpOutputJsonSchema } from "./schema-codec.ts";
 import {
-  CREATE_CLOSED_WORLD_TOOL_ANNOTATIONS,
   DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   type ProtocolToolDefinition,
 } from "./tool-definition-contract.ts";
@@ -35,7 +35,7 @@ export const characterToolDefinitions = [
     description:
       "Create and store a character draft, then return its current creation holes and finalization status.",
     inputSchema: createCharacterDraftInputSchema,
-    annotations: CREATE_CLOSED_WORLD_TOOL_ANNOTATIONS,
+    annotations: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),
   },
   {

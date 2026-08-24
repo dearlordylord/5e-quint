@@ -5397,6 +5397,47 @@ describe("MCP server route", () => {
     expect(root.sessionStore.characters.get(characterId)).toBe(before);
   });
 
+  test("rejects an interruption after cumulative resumed rest reaches its required duration", () => {
+    const root = createMcpPlaySessionRoot();
+    const draftId = "draft:mcp-long-rest-late-second-interruption";
+    createFinalizedFighterSheet(root, draftId);
+    const characterId = testCharacterId(draftId);
+    const before = root.sessionStore.characters.get(characterId);
+    const rejected = readPayload(
+      handleToolCall(root, "apply_character_session_operation", {
+        characterId,
+        operation: {
+          kind: "interruptLongRest",
+          timing: { tag: "noPriorLongRest" },
+          interruptionSegments: [
+            {
+              cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+              interruption: "takeDamage",
+            },
+            {
+              cumulativeRestedTicks:
+                ELAPSED_TIME_TICKS_PER_HOUR * 9 +
+                ELAPSED_TIME_TICKS_PER_HOUR / 2,
+              interruption: "rollInitiative",
+            },
+          ],
+          completion: {
+            cumulativeRestedTicks: ELAPSED_TIME_TICKS_PER_HOUR * 10,
+          },
+        },
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "CHARACTER_SESSION_OPERATION_INVALID",
+        message:
+          "Long Rest interruption requires rested time before the required Long Rest duration.",
+      },
+    });
+    expect(root.sessionStore.characters.get(characterId)).toBe(before);
+  });
+
   test.each([
     ["repeated", [1, 1]],
     ["decreasing", [2, 1]],
