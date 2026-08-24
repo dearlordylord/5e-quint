@@ -76,11 +76,19 @@ One wave contains three Scenario Campaigns and up to three Executions.
    [`SCENARIO_AUTHORING.md`](../scripts/raw-swarm/SCENARIO_AUTHORING.md) and
    [`SCENARIO_EXECUTION.md`](../scripts/raw-swarm/SCENARIO_EXECUTION.md).
 4. Freeze the wave revision. Create one clean linked worktree per admitted
-   Scenario at that revision. Record lane ownership before starting players.
+   Scenario at that revision. Preserve the expected full Git SHA in the
+   launch's durable `operator/waves/<wave>/expected-git-sha` record. Record lane
+   ownership before starting players.
 5. Execute up to three Scenarios concurrently with unique Execution and
-   Evidence Set identities. Do not run two players against one Evidence Set.
-6. Replay each completed or diagnostic Execution before review. Run independent
-   review against the bounded packet and exact named sequence reads.
+   Evidence Set identities. Every runner invocation must pass the preserved
+   wave SHA through `--implementation-git-sha`. Do not run two players against
+   one Evidence Set.
+6. Before replay, require each lane's
+   `evidence/execution-start.json.gitSha` to equal the preserved wave SHA. A
+   mismatch stops the wave and cannot be reviewed, indexed, or exported as
+   campaign evidence. Replay each completed or diagnostic Execution before
+   review. Run independent review against the bounded packet and exact named
+   sequence reads.
 7. After each lane is idle, copy its complete Evidence Set into the same
    repository-relative path under the coordinator's ignored `out/` directory.
    Verify the copied authority hashes before removing the lane worktree.
@@ -188,4 +196,8 @@ retained terminal disposition or precise obstruction, every published
 transcript to have a replay result and independent review, every promoted
 fingerprint to be linked, a stable portable export, and a final report that
 separates completed Executions, diagnostic obstructions, player failures,
-review classifications, confirmed defects, and untested limits.
+review classifications, confirmed defects, and untested limits. After durable
+outcomes have been promoted to their owning documents, tests, or issues, close
+issue `#332`, delete this one-off plan in the cleanup commit required by
+`plans/README.md`, and integrate that cleanup before declaring the operation
+administratively complete.
