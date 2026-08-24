@@ -8,7 +8,7 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 import { Either } from "effect";
 import {
-  BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET,
+  GRAPPLE_TARGET_REACH_FEET,
   battleAttackExecutionScopeRef,
   battleAttackProcedureExecutionRef,
   battleActSpellPresentation,
@@ -66,6 +66,8 @@ import {
   scenarioBattleSubject,
   scenarioCreatureSpellTargetFills,
   scenarioTableSpatialFactFills,
+  scenarioTableSpatialFactDistanceWithinLimit,
+  scenarioRangedAttackEnemyWithinProximity,
   scenarioAttackTargetFills,
   scenarioRelation,
   scenarioEnemyWithinFiveFeetCanSeeAttacker,
@@ -86,7 +88,85 @@ import type {
 
 const TRACER_SCENARIO_ID = "goblin-warrior-skeleton-tracer";
 
+const spatialFactBoundaryCases: readonly {
+  readonly name: string;
+  readonly accepts: (distanceFeet: ReturnType<typeof movementFeet>) => boolean;
+}[] = [
+  {
+    name: "Grapple",
+    accepts: (distanceFeet) =>
+      scenarioTableSpatialFactDistanceWithinLimit(
+        {
+          kind: "grappleTarget",
+          grapplerId: combatantId("boundary-grappler"),
+          targetId: combatantId("boundary-target"),
+        },
+        distanceFeet,
+      ),
+  },
+  {
+    name: "Shove",
+    accepts: (distanceFeet) =>
+      scenarioTableSpatialFactDistanceWithinLimit(
+        {
+          kind: "shoveTarget",
+          shoverId: combatantId("boundary-shover"),
+          targetId: combatantId("boundary-target"),
+        },
+        distanceFeet,
+      ),
+  },
+  {
+    name: "Sleep wake",
+    accepts: (distanceFeet) =>
+      scenarioTableSpatialFactDistanceWithinLimit(
+        {
+          kind: "sleepShakeAwakeTarget",
+          actorId: combatantId("boundary-waker"),
+          targetId: combatantId("boundary-sleeping"),
+        },
+        distanceFeet,
+      ),
+  },
+  {
+    name: "Hypnotic wake",
+    accepts: (distanceFeet) =>
+      scenarioTableSpatialFactDistanceWithinLimit(
+        {
+          kind: "hypnoticPatternShakeAwakeTarget",
+          actorId: combatantId("boundary-waker"),
+          targetId: combatantId("boundary-hypnotized"),
+        },
+        distanceFeet,
+      ),
+  },
+  {
+    name: "Help",
+    accepts: (distanceFeet) =>
+      scenarioTableSpatialFactDistanceWithinLimit(
+        {
+          kind: "helpAttackTarget",
+          helperId: combatantId("boundary-helper"),
+          targetEnemyId: combatantId("boundary-enemy"),
+        },
+        distanceFeet,
+      ),
+  },
+  {
+    name: "Ranged proximity",
+    accepts: scenarioRangedAttackEnemyWithinProximity,
+  },
+];
+
 describe("scenario setup public-SDK boundary", () => {
+  test.each(spatialFactBoundaryCases)(
+    "$name accepts exactly 5 feet and rejects 6 feet",
+    ({ accepts }) => {
+      expect(accepts(movementFeet(5))).toBe(true);
+      expect(accepts(movementFeet(6))).toBe(false);
+    },
+  );
+
   test("rejects fractional table-authored distances instead of truncating them", () => {
     expect(scenarioDistanceFeet(5.5)).toMatchObject({
       _tag: "Left",
@@ -350,9 +430,7 @@ describe("scenario setup public-SDK boundary", () => {
       });
     };
 
-    const atLimit = tableSessionAtDistance(
-      Number(BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET),
-    );
+    const atLimit = tableSessionAtDistance(Number(GRAPPLE_TARGET_REACH_FEET));
     expect(atLimit).toMatchObject({ _tag: "Right" });
     if (atLimit === undefined || Either.isLeft(atLimit)) return;
     expect(
@@ -374,7 +452,7 @@ describe("scenario setup public-SDK boundary", () => {
     });
 
     const beyondLimit = tableSessionAtDistance(
-      Number(BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET) + 1,
+      Number(GRAPPLE_TARGET_REACH_FEET) + 1,
     );
     expect(beyondLimit).toMatchObject({ _tag: "Right" });
     if (beyondLimit === undefined || Either.isLeft(beyondLimit)) return;
@@ -3580,7 +3658,7 @@ describe("scenario setup public-SDK boundary", () => {
     expect(attackAnswer.tag).toBe("relation");
     if (attackAnswer.tag !== "relation") return;
     const authoredAttackDistance = scenarioDistanceFeet(
-      Number(BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET),
+      Number(GRAPPLE_TARGET_REACH_FEET),
     );
     expect(Either.isRight(authoredAttackDistance)).toBe(true);
     if (Either.isLeft(authoredAttackDistance)) return;

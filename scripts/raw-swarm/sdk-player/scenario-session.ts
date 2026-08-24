@@ -33,7 +33,12 @@ import type {
   D20TestResolutionId,
 } from "@dnd/battle-runtime";
 import {
-  BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET,
+  GRAPPLE_TARGET_REACH_FEET,
+  HELP_ATTACK_TARGET_ADJACENCY_FEET,
+  HYPNOTIC_PATTERN_SHAKE_AWAKE_ADJACENCY_FEET,
+  RANGED_ATTACK_ENEMY_PROXIMITY_FEET,
+  SLEEP_SHAKE_AWAKE_ADJACENCY_FEET,
+  SHOVE_TARGET_REACH_FEET,
   battleTablePositionId,
   battleRuntimeSessionFollows,
   combatantEffectiveSize,
@@ -458,8 +463,10 @@ export function projectGeometryTargetHoles(input: {
       );
       return (
         relation.tag === "relation" &&
-        Number(relation.relation.distanceFeet) <=
-          scenarioTableSpatialFactDistanceLimitFeet(question)
+        scenarioTableSpatialFactDistanceWithinLimit(
+          question,
+          relation.relation.distanceFeet,
+        )
       );
     });
     const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
@@ -2338,7 +2345,7 @@ export type ScenarioTableSpatialFactProjectionIssue = Readonly<{
   readonly message: string;
 }>;
 
-type ScenarioTableSpatialFactQuestion = Extract<
+export type ScenarioTableSpatialFactQuestion = Extract<
   ScenarioSpatialDecisionQuestion,
   | { readonly kind: "grappleTarget" }
   | { readonly kind: "shoveTarget" }
@@ -2355,31 +2362,35 @@ type ScenarioTableSpatialFactQuestionForSubject = Extract<
   | { readonly kind: "hypnoticPatternShakeAwakeTarget" }
 >;
 
-function scenarioTableSpatialFactDistanceLimitFeet(
+export function scenarioTableSpatialFactDistanceLimitFeet(
   question: ScenarioTableSpatialFactQuestion,
-): typeof BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET {
+): MovementFeet {
   return Match.value(question).pipe(
-    Match.when(
-      { kind: "grappleTarget" },
-      () => BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET,
-    ),
-    Match.when(
-      { kind: "shoveTarget" },
-      () => BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET,
-    ),
+    Match.when({ kind: "grappleTarget" }, () => GRAPPLE_TARGET_REACH_FEET),
+    Match.when({ kind: "shoveTarget" }, () => SHOVE_TARGET_REACH_FEET),
     Match.when(
       { kind: "sleepShakeAwakeTarget" },
-      () => BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET,
+      () => SLEEP_SHAKE_AWAKE_ADJACENCY_FEET,
     ),
     Match.when(
       { kind: "hypnoticPatternShakeAwakeTarget" },
-      () => BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET,
+      () => HYPNOTIC_PATTERN_SHAKE_AWAKE_ADJACENCY_FEET,
     ),
     Match.when(
       { kind: "helpAttackTarget" },
-      () => BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET,
+      () => HELP_ATTACK_TARGET_ADJACENCY_FEET,
     ),
     Match.exhaustive,
+  );
+}
+
+export function scenarioTableSpatialFactDistanceWithinLimit(
+  question: ScenarioTableSpatialFactQuestion,
+  distanceFeet: MovementFeet | DistanceFeet,
+): boolean {
+  return (
+    Number(distanceFeet) <=
+    Number(scenarioTableSpatialFactDistanceLimitFeet(question))
   );
 }
 
@@ -2525,12 +2536,14 @@ export function scenarioTableSpatialFactFills(input: {
         });
       }
       if (
-        Number(relation.relation.distanceFeet) >
-        scenarioTableSpatialFactDistanceLimitFeet(targetQuestion)
+        !scenarioTableSpatialFactDistanceWithinLimit(
+          targetQuestion,
+          relation.relation.distanceFeet,
+        )
       ) {
         return Either.left({
           tag: "table-spatial-fact-projection",
-          message: `The helpAttackTarget spatial witness is outside the supported ${BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET}-foot adjacency boundary.`,
+          message: `The helpAttackTarget spatial witness is outside the supported ${HELP_ATTACK_TARGET_ADJACENCY_FEET}-foot adjacency boundary.`,
         });
       }
       // The helper's adjacency is a Table-owned fact.  The player may choose
@@ -2585,12 +2598,14 @@ export function scenarioTableSpatialFactFills(input: {
       });
     }
     if (
-      Number(relation.relation.distanceFeet) >
-      scenarioTableSpatialFactDistanceLimitFeet(targetQuestion)
+      !scenarioTableSpatialFactDistanceWithinLimit(
+        targetQuestion,
+        relation.relation.distanceFeet,
+      )
     ) {
       return Either.left({
         tag: "table-spatial-fact-projection",
-        message: `The ${targetQuestion.kind} spatial witness is outside the supported ${BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET}-foot reach/adjacency boundary.`,
+        message: `The ${targetQuestion.kind} spatial witness is outside the supported ${scenarioTableSpatialFactDistanceLimitFeet(targetQuestion)}-foot reach/adjacency boundary.`,
       });
     }
     const fact = scenarioTableSpatialFactForQuestion(targetQuestion);
@@ -3287,9 +3302,16 @@ export function scenarioEnemyWithinFiveFeetCanSeeAttacker(
     });
     return (
       relation.tag === "relation" &&
-      Number(relation.relation.distanceFeet) <=
-        Number(BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET) &&
+      scenarioRangedAttackEnemyWithinProximity(
+        relation.relation.distanceFeet,
+      ) &&
       relation.relation.attackerCanSeeTarget
     );
   });
+}
+
+export function scenarioRangedAttackEnemyWithinProximity(
+  distanceFeet: MovementFeet | DistanceFeet,
+): boolean {
+  return Number(distanceFeet) <= Number(RANGED_ATTACK_ENEMY_PROXIMITY_FEET);
 }

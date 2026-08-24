@@ -236,7 +236,7 @@ import {
   spendEscapeGrappleActionResource,
 } from "./action-resource-kinds.ts";
 import { spellDamageRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
-import { BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET } from "./domain-constants.ts";
+import { SHOVE_PUSH_DISTANCE_FEET } from "./domain-constants.ts";
 import {
   helpAttackAllyChoices,
   helpAttackAllyHole,
@@ -1855,11 +1855,8 @@ export function abilityCheckFill(
 function validateShovePushDisposition(
   disposition: BattleShovePushOutcome["disposition"],
 ): string | null {
-  if (
-    Number(disposition.distanceFeet) !==
-    Number(BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET)
-  ) {
-    return `Shove push disposition must use the action's ${BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET}-foot distance.`;
+  if (Number(disposition.distanceFeet) !== Number(SHOVE_PUSH_DISTANCE_FEET)) {
+    return `Shove push disposition must use the action's ${SHOVE_PUSH_DISTANCE_FEET}-foot distance.`;
   }
   if (disposition.provokesOpportunityAttacks !== false) {
     return "Shove push disposition must not provoke Opportunity Attacks.";

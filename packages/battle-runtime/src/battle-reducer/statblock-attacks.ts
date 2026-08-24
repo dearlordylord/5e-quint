@@ -61,7 +61,7 @@ import {
   ongoingFeatureProfileIsRecklessAttackForFrenzy,
 } from "./barbarian-frenzy.ts";
 import { supportedStatBlockAttackDamage } from "../statblock-attack-damage-support.ts";
-import { BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET } from "./domain-constants.ts";
+import { STANDARD_CREATURE_MELEE_REACH_FEET } from "./domain-constants.ts";
 import {
   FRENZY_DAMAGE_TYPE_HOLE_ID,
   FRENZY_DAMAGE_TYPE_HOLE_INSTANCE,
@@ -125,7 +125,7 @@ export function attackTargetConstraint(
     ),
     Match.when({ kind: "unarmedStrike" }, () => ({
       kind: "meleeReach" as const,
-      reachFeet: BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET,
+      reachFeet: STANDARD_CREATURE_MELEE_REACH_FEET,
     })),
     Match.exhaustive,
   );
@@ -161,7 +161,7 @@ export function weaponTargetConstraint(
     kind: "meleeReach",
     reachFeet: properties.some((property) => property.kind === "reach")
       ? movementFeet(10)
-      : BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET,
+      : STANDARD_CREATURE_MELEE_REACH_FEET,
   };
 }
 
