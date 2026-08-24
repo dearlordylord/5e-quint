@@ -17,9 +17,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
       observation: {
         scenarioId: "prone-target-roll-mode-distance-probe",
         missingStatBlocks: [
-          ...(goblinWarrior === undefined
-            ? ["stat_block_goblin_warrior"]
-            : []),
+          ...(goblinWarrior === undefined ? ["stat_block_goblin_warrior"] : []),
           ...(wolf === undefined ? ["stat_block_wolf"] : []),
         ],
       },
