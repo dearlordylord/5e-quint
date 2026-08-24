@@ -27,6 +27,7 @@ const InspectCatalogUnitOutputSchema = Schema.Struct({
 
 export const inspectCatalogUnitToolDefinition = {
   name: inspectCatalogUnitToolName,
+  title: "Inspect Catalog Unit",
   description:
     "Return the canonical installed redistributable SRD Unit record as unitRecordJson for one catalog id. Parse that JSON for the complete authored detail; catalog detail is not a claim of source executability in any particular workflow.",
   inputSchema: mcpObjectJsonSchema(InspectCatalogUnitInputSchema),

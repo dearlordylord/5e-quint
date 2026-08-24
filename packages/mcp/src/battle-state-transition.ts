@@ -11,12 +11,23 @@ export function completeBattleStateTransition<A>(input: {
   readonly output: () => A;
 }): A | ReturnType<typeof errorContent> {
   if (Either.isLeft(input.transition)) {
-    return errorContent("Battle state transition failed.", {
-      code: "BATTLE_STATE_TRANSITION_INVALID",
-      transition: input.transition.left,
-    });
+    return battleStateTransitionErrorContent(input.transition.left);
   }
   input.root.sessionStore.pendingBattleFills = null;
   publishAdminProjectionBestEffort(input.root);
   return input.output();
+}
+
+export function battleStateTransitionErrorContent(
+  issue: McpBattleStateTransitionIssue,
+) {
+  return errorContent("Battle state transition failed.", {
+    code: "BATTLE_STATE_TRANSITION_INVALID",
+    transition: issue,
+    recovery: {
+      tag: "battleAndCharacterSessionsUnchanged",
+      guidance:
+        "No Battle or Character Session was committed; correct the reported conflict and retry the operation.",
+    },
+  });
 }

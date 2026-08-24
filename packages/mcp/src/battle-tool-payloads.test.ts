@@ -12,6 +12,10 @@ import {
   type BattleRuntimeResolutionResult,
 } from "@dnd/battle-runtime";
 import { NonNegativeInteger } from "@dnd/shared/types";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -105,6 +109,15 @@ describe("battle tool payload boundaries", () => {
       pendingBattleFillsContent(
         {
           fills: [],
+          holes: [
+            {
+              holeInstanceKey: holeInstanceKey("payload-pending:instance"),
+              holeId: holeId("payload-pending"),
+              kind: "targetChoice",
+              label: "Pending target",
+              choices: [combatantId("pending-target")],
+            },
+          ],
           subject: {
             tag: "runtimeCommand",
             actorId: combatantId("pending-actor"),
@@ -205,6 +218,8 @@ function startedStatBlockBattle() {
   const root = createMcpPlaySessionRoot();
   handleToolCall(root, "start_battle", {
     battleId: "battle:payload-boundaries",
+    initiativeMode: "direct",
+    companionAdmissions: [],
     initialCombatants: [
       {
         admissionSource: { kind: "encounterParticipant" },

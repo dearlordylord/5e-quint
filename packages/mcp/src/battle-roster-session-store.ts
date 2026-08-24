@@ -9,13 +9,11 @@ import {
   removeBattleRuntimeCombatants,
 } from "@dnd/battle-runtime";
 import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
-import type { CharacterSheetId } from "@dnd/character-sheet-runtime";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Match } from "effect";
 
 import type {
-  CharacterSession,
   CharacterSessionRegistry,
   PendingBattleFillSession,
 } from "./session-store.ts";
@@ -24,12 +22,11 @@ import {
   type ActiveBattleRosterTransitionPlan,
   type ActiveBattleRosterTransitionPlanData,
   type ActiveBattleRosterTransitionPreview,
+  type CharacterSessionBattleTransition,
   type McpBattleRosterOperation,
   type McpBattleRosterTransitionIssue,
 } from "./battle-roster-session-types.ts";
 import { projectCharacterSessionInBattle } from "./character-session-occupancy.ts";
-
-type CharacterId = CharacterSheetId;
 
 const activeBattleRosterTransitionPlanData = new WeakMap<
   ActiveBattleRosterTransitionPlan,
@@ -86,25 +83,37 @@ export function createBattleRosterTransitionPlanner(input: {
       if (pendingBattleFills !== data.pendingBattleFills) {
         return Either.left({ tag: "battleRosterPlanFillsChanged" });
       }
-      const changedCharacterIds = data.affectedCharacterSessions
+      const misalignedCharacterIds = data.characterSessionTransitions
+        .filter((transition) => !transitionCharacterIdsAlign(transition))
+        .flatMap(transitionCharacterIds);
+      if (misalignedCharacterIds.length > 0) {
+        return Either.left({
+          tag: "battleRosterPlanCharacterChanged",
+          characterIds: [...new Set(misalignedCharacterIds)],
+        });
+      }
+      const changedCharacterIds = data.characterSessionTransitions
         .filter(
-          ({ characterId, session }) =>
-            input.characters.get(characterId) !== session,
+          (transition) =>
+            input.characters.get(transitionCharacterId(transition)) !==
+            transition.expected,
         )
-        .map(({ characterId }) => characterId);
+        .map(transitionCharacterId);
       if (changedCharacterIds.length > 0) {
         return Either.left({
           tag: "battleRosterPlanCharacterChanged",
           characterIds: changedCharacterIds,
         });
       }
-      const committed = input.characters.setAll(data.nextCharacterSessions);
+      const committed = input.characters.setAll(
+        data.characterSessionTransitions.map(({ next }) => next),
+      );
       if (Either.isLeft(committed)) {
         return Either.left({
           tag: "battleStateCharacterSessionRegistryConflict",
           registryIssue: committed.left,
-          affectedCharacterIds: data.affectedCharacterSessions.map(
-            ({ characterId }) => characterId,
+          affectedCharacterIds: data.characterSessionTransitions.map(
+            transitionCharacterId,
           ),
         });
       }
@@ -183,13 +192,16 @@ function planAddCharacterBattleCombatant(input: {
     activeBattleRosterTransitionPlan({
       storeIdentity: input.storeIdentity,
       activeBattle: input.activeBattle,
-      nextCharacterSessions: [
-        projectCharacterSessionInBattle({
-          session: currentSession,
-          battleId: input.activeBattle.state.battleId,
-        }),
+      characterSessionTransitions: [
+        {
+          kind: "enterBattle",
+          expected: currentSession,
+          next: projectCharacterSessionInBattle({
+            session: currentSession,
+            battleId: input.activeBattle.state.battleId,
+          }),
+        },
       ],
-      affectedCharacterSessions: [{ characterId, session: currentSession }],
       pendingBattleFills: null,
       result: { kind: "add", prospectiveBattle: admitted.right },
     }),
@@ -222,8 +234,7 @@ function planAddStatBlockBattleCombatant(input: {
     activeBattleRosterTransitionPlan({
       storeIdentity: input.storeIdentity,
       activeBattle: input.activeBattle,
-      nextCharacterSessions: [],
-      affectedCharacterSessions: [],
+      characterSessionTransitions: [],
       pendingBattleFills: null,
       result: { kind: "add", prospectiveBattle: admitted.right },
     }),
@@ -284,8 +295,7 @@ function planRemoveBattleCombatant(input: {
     activeBattleRosterTransitionPlan({
       storeIdentity: input.storeIdentity,
       activeBattle: input.activeBattle,
-      nextCharacterSessions: settled.right.nextCharacterSessions,
-      affectedCharacterSessions: settled.right.affectedCharacterSessions,
+      characterSessionTransitions: settled.right,
       pendingBattleFills: null,
       result: {
         kind: "remove",
@@ -303,20 +313,11 @@ function settledCharacterSessionForBattleRemoval(input: {
   readonly statBlockCatalog: StatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<
-  {
-    readonly nextCharacterSessions: readonly CharacterSession[];
-    readonly affectedCharacterSessions: readonly {
-      readonly characterId: CharacterId;
-      readonly session: CharacterSession;
-    }[];
-  },
+  ActiveBattleRosterTransitionPlanData["characterSessionTransitions"],
   McpBattleRosterTransitionIssue
 > {
   if (input.combatant.origin.kind !== "character") {
-    return Either.right({
-      nextCharacterSessions: [],
-      affectedCharacterSessions: [],
-    });
+    return Either.right([]);
   }
   const characterId = input.combatant.origin.characterId;
   const session = input.characters.get(characterId);
@@ -356,10 +357,46 @@ function settledCharacterSessionForBattleRemoval(input: {
       message: settled.left.message,
     });
   }
-  return Either.right({
-    nextCharacterSessions: [settled.right],
-    affectedCharacterSessions: [{ characterId, session }],
-  });
+  return Either.right([
+    {
+      kind: "leaveBattle",
+      expected: session,
+      next: settled.right,
+    },
+  ]);
+}
+
+function transitionCharacterId(transition: CharacterSessionBattleTransition) {
+  return Match.value(transition).pipe(
+    Match.when({ kind: "enterBattle" }, ({ expected }) => expected.characterId),
+    Match.when(
+      { kind: "leaveBattle" },
+      ({ expected }) => expected.sheet.characterId,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function transitionCharacterIds(transition: CharacterSessionBattleTransition) {
+  return Match.value(transition).pipe(
+    Match.when({ kind: "enterBattle" }, ({ expected, next }) => [
+      expected.characterId,
+      next.sheet.characterId,
+    ]),
+    Match.when({ kind: "leaveBattle" }, ({ expected, next }) => [
+      expected.sheet.characterId,
+      next.characterId,
+    ]),
+    Match.exhaustive,
+  );
+}
+
+function transitionCharacterIdsAlign(
+  transition: CharacterSessionBattleTransition,
+): boolean {
+  const [expectedCharacterId, nextCharacterId] =
+    transitionCharacterIds(transition);
+  return expectedCharacterId === nextCharacterId;
 }
 
 function activeBattleRosterTransitionPlan(

@@ -113,6 +113,7 @@ type ContentToolCall =
 export const contentToolDefinitions = [
   {
     name: contentToolNames.describeMcpWorkflow,
+    title: "Describe MCP Workflow",
     description:
       "Return the agent-facing workflow guide, accepted fill shapes, result paths, supported intent aliases, and recovery rules for this MCP.",
     inputSchema: emptyInputSchema,
@@ -121,6 +122,7 @@ export const contentToolDefinitions = [
   },
   {
     name: contentToolNames.listStatBlocks,
+    title: "List Stat Blocks",
     description:
       "List every installed redistributable SRD Stat Block with ids, display names, attacks, defenses, and damage modifiers. Catalog presence does not imply that every source is executable in every workflow.",
     inputSchema: emptyInputSchema,
@@ -129,6 +131,7 @@ export const contentToolDefinitions = [
   },
   {
     name: contentToolNames.listCatalogUnits,
+    title: "List Catalog Units",
     description:
       "List every installed redistributable SRD Unit id grouped by kind. This reports catalog presence only; legal and executable sources still come from the consuming workflow's canonical discovery result.",
     inputSchema: emptyInputSchema,

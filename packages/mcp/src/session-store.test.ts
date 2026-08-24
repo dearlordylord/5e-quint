@@ -177,6 +177,235 @@ describe("MCP character sessions", () => {
     expect(store.characters.get(second.characterId)).toBe(second);
   });
 
+  test("commits Battle and Character Session occupancy as one store transition", () => {
+    const root = createMcpPlaySessionRoot();
+    const store = createMcpSessionStore({
+      statBlockCatalog: root.statBlockCatalog,
+      unitLibrary: root.unitLibrary,
+    });
+    const character = expectRight(
+      availableCharacterSession({
+        characterId: characterSheetId("character:mcp-atomic-battle"),
+        build: druidWildShapeBuild(),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary,
+        druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      }),
+    );
+    const characterInit = expectRight(
+      characterSheetBattleInit({
+        combatantId: combatantId("mcp-atomic-battle-character"),
+        displayName: "Atomic Character",
+        sheet: character,
+        initiative: initiativeScore(12),
+        ammunitionStocks: [],
+        unitLibrary,
+        statBlockCatalog: root.statBlockCatalog,
+      }),
+    );
+    const active = expectRight(
+      startBattle({
+        battleId: battleId("battle:mcp-atomic-store"),
+        combatants: [characterInit],
+      }),
+    );
+    store.characters.set(character);
+
+    const replacement = { ...character };
+    store.characters.set(replacement);
+    const beforeRejectedStart = deepStoreState(store);
+    expect(
+      store.commitBattleStart({
+        nextBattleState: { tag: "activeBattle", session: active },
+        characterSessions: [character],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateCharacterSessionChanged",
+        affectedCharacterIds: [character.characterId],
+      }),
+    );
+    expect(deepStoreState(store)).toEqual(beforeRejectedStart);
+
+    expect(
+      store.commitBattleStart({
+        nextBattleState: { tag: "activeBattle", session: active },
+        characterSessions: [replacement],
+      }),
+    ).toEqual(Either.right(undefined));
+    expect(
+      store.commitBattleStart({
+        nextBattleState: { tag: "activeBattle", session: active },
+        characterSessions: [replacement],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "invalidBattleStateTransition",
+        from: "activeBattle",
+        to: "activeBattle",
+      }),
+    );
+    const expectedInBattle = store.characters.get(character.characterId);
+    if (expectedInBattle?.tag !== "inBattle") {
+      throw new Error("Expected committed in-Battle Character Session.");
+    }
+    const interveningInBattle = { ...expectedInBattle };
+    store.characters.set(interveningInBattle);
+    const beforeRejectedEnd = deepStoreState(store);
+    expect(
+      store.commitBattleEnd({
+        battleSession: active,
+        characterSettlements: [
+          { expected: expectedInBattle, next: replacement },
+        ],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateCharacterSessionChanged",
+        affectedCharacterIds: [character.characterId],
+      }),
+    );
+    expect(deepStoreState(store)).toEqual(beforeRejectedEnd);
+
+    const foreignSessionIdentity = expectRight(
+      startBattle({
+        battleId: active.state.battleId,
+        combatants: [characterInit],
+      }),
+    );
+    expect(
+      store.commitBattleEnd({
+        battleSession: foreignSessionIdentity,
+        characterSettlements: [
+          { expected: interveningInBattle, next: replacement },
+        ],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateSessionChanged",
+        battleId: active.state.battleId,
+      }),
+    );
+    const mismatchedSettlement = expectRight(
+      availableCharacterSession({
+        characterId: characterSheetId("character:mcp-atomic-mismatched-next"),
+        build: druidWildShapeBuild(),
+        currentHp: Hp(15),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary,
+        druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
+      }),
+    );
+    expect(
+      store.commitBattleEnd({
+        battleSession: active,
+        characterSettlements: [
+          { expected: interveningInBattle, next: mismatchedSettlement },
+        ],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateCharacterSettlementMismatch",
+        expectedCharacterId: character.characterId,
+        nextCharacterId: mismatchedSettlement.characterId,
+      }),
+    );
+    expect(
+      store.commitBattleEnd({
+        battleSession: active,
+        characterSettlements: [],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateCharacterRosterMismatch",
+        battleCharacterIds: [character.characterId],
+        transitionCharacterIds: [],
+      }),
+    );
+
+    store.characters.set(expectedInBattle);
+    expect(
+      store.commitBattleEnd({
+        battleSession: active,
+        characterSettlements: [
+          { expected: expectedInBattle, next: replacement },
+        ],
+      }),
+    ).toEqual(Either.right(undefined));
+    expect(store.battleState).toEqual({ tag: "none" });
+    expect(store.characters.get(character.characterId)).toBe(replacement);
+    expect(
+      store.commitBattleEnd({
+        battleSession: active,
+        characterSettlements: [],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "invalidBattleStateTransition",
+        from: "none",
+        to: "none",
+      }),
+    );
+    expect(
+      store.commitBattleStart({
+        nextBattleState: { tag: "activeBattle", session: active },
+        characterSessions: [],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateCharacterRosterMismatch",
+        battleCharacterIds: [character.characterId],
+        transitionCharacterIds: [],
+      }),
+    );
+
+    const duplicateCharacterInit = expectRight(
+      characterSheetBattleInit({
+        combatantId: combatantId("mcp-atomic-battle-character-duplicate"),
+        displayName: "Duplicate Atomic Character",
+        sheet: replacement,
+        initiative: initiativeScore(11),
+        ammunitionStocks: [],
+        unitLibrary,
+        statBlockCatalog: root.statBlockCatalog,
+      }),
+    );
+    const duplicateCharacterBattle = expectRight(
+      startBattle({
+        battleId: battleId("battle:mcp-atomic-store-duplicate"),
+        combatants: [characterInit, duplicateCharacterInit],
+      }),
+    );
+    store.characters.set(mismatchedSettlement);
+    const beforeDuplicateRoster = deepStoreState(store);
+    expect(
+      store.commitBattleStart({
+        nextBattleState: {
+          tag: "activeBattle",
+          session: duplicateCharacterBattle,
+        },
+        characterSessions: [replacement, mismatchedSettlement],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateCharacterRosterMismatch",
+        battleCharacterIds: [character.characterId, character.characterId],
+        transitionCharacterIds: [
+          character.characterId,
+          mismatchedSettlement.characterId,
+        ],
+      }),
+    );
+    expect(deepStoreState(store)).toEqual(beforeDuplicateRoster);
+  });
+
   test("keeps owned battle setup transitions atomic across owners", () => {
     const root = createMcpPlaySessionRoot();
     const store = createMcpSessionStore({
@@ -202,6 +431,20 @@ describe("MCP character sessions", () => {
         combatants: [combatant],
       }),
     );
+    const atomicSetupStore = createMcpSessionStore({
+      statBlockCatalog: root.statBlockCatalog,
+      unitLibrary: root.unitLibrary,
+    });
+    expect(
+      atomicSetupStore.commitBattleStart({
+        nextBattleState: { tag: "initialInitiativeSetup", setup: ownedSetup },
+        characterSessions: [],
+      }),
+    ).toEqual(Either.right(undefined));
+    expect(atomicSetupStore.battleState).toEqual({
+      tag: "initialInitiativeSetup",
+      setup: ownedSetup,
+    });
     expect(store.storeInitialInitiativeSetup(ownedSetup)).toEqual(
       Either.right(undefined),
     );
@@ -479,13 +722,18 @@ describe("MCP character sessions", () => {
         combatant: skeleton,
       }),
     );
-    const subject = discoverBattleActs(active)[0]?.subject;
-    if (subject === undefined) {
+    const subjectAct = discoverBattleActs(active)[0];
+    if (subjectAct === undefined) {
       throw new Error("Expected an active battle subject for pending fills.");
     }
+    const pendingHole = subjectAct.initialHoles[0];
+    if (pendingHole === undefined) {
+      throw new Error("Expected a current pending battle hole.");
+    }
     store.pendingBattleFills = {
-      subject,
+      subject: subjectAct.subject,
       fills: [],
+      holes: [pendingHole],
       baseSession: active,
     };
     const beforeCommit = deepStoreState(store);

@@ -1231,8 +1231,7 @@
       "module/binding:nextOperationsFrom": 10
     },
     "packages/mcp/src/start-battle-tool.ts": {
-      "module/binding:admitCompanionAdmissions": 9,
-      "module/binding:handleStartBattleToolCall": 9
+      "module/binding:admitCompanionAdmissions": 9
     },
     "packages/shared-algebras/src/ability-score-algebra.ts": {
       "module/binding:pointBuyCost": 9

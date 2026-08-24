@@ -55,7 +55,6 @@ export function handleCreatePlaySession(
   if (Either.isLeft(created)) {
     return errorContent("Unable to create a Play Session.", {
       code: "PLAY_SESSION_CREATION_FAILED",
-      message: created.left.message,
     });
   }
   return availableEnvelope({
@@ -206,11 +205,27 @@ function availableEnvelope(input: {
   readonly projection: McpSessionSnapshot;
   readonly hasAvailableCharacterSession?: boolean;
   readonly isError?: boolean;
-}): PlaySessionProtocolResult {
-  const unresolvedInputs = unresolvedInputsFrom(
-    input.operationName,
-    input.operationResult,
-  );
+}): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
+  const projection = mcpSessionSummary(input.projection);
+  const unresolvedInputsResult =
+    projection.pendingBattleHoles !== null
+      ? Either.right<readonly UnresolvedInputGroup[]>([
+          {
+            sourcePath: "$.projection.pendingBattleHoles",
+            inputs: projection.pendingBattleHoles,
+          },
+        ])
+      : input.isError === true
+        ? Either.right<readonly UnresolvedInputGroup[]>([])
+        : unresolvedInputsFrom(input.operationName, input.operationResult);
+  if (Either.isLeft(unresolvedInputsResult)) {
+    return errorContent("MCP operation output projection failed.", {
+      code: "INVALID_OPERATION_OUTPUT",
+      operationName: input.operationName,
+      projectionIssue: unresolvedInputsResult.left,
+    });
+  }
+  const unresolvedInputs = unresolvedInputsResult.right;
   const payload = jsonSerializablePayload({
     tag: "playSessionAvailable",
     playSessionId: input.playSessionId,
@@ -218,11 +233,11 @@ function availableEnvelope(input: {
       name: input.operationName,
       result: input.operationResult,
     },
-    projection: mcpSessionSummary(input.projection),
+    projection,
     unresolvedInputs,
     nextOperations: nextOperationsFrom(
       input.operationName,
-      input.projection,
+      projection,
       unresolvedInputs,
       input.hasAvailableCharacterSession === true,
     ),
@@ -268,6 +283,9 @@ export function nextOperationsFrom(
     return [battleToolNames.battleLifecycle, battleToolNames.readBattleState];
   }
   if (projection.battleState.tag === "activeBattle") {
+    if (unresolvedInputs.length > 0) {
+      return [battleToolNames.fillBattleHole, battleToolNames.readBattleState];
+    }
     if (operationName === playSessionToolNames.read) {
       return [
         battleToolNames.discoverBattleActs,
@@ -275,14 +293,12 @@ export function nextOperationsFrom(
         battleToolNames.battleLifecycle,
       ];
     }
-    return unresolvedInputs.length > 0
-      ? [battleToolNames.fillBattleHole, battleToolNames.readBattleState]
-      : [
-          battleToolNames.discoverBattleActs,
-          battleToolNames.readBattleState,
-          battleToolNames.battleLifecycle,
-          battleToolNames.endBattle,
-        ];
+    return [
+      battleToolNames.discoverBattleActs,
+      battleToolNames.readBattleState,
+      battleToolNames.battleLifecycle,
+      battleToolNames.endBattle,
+    ];
   }
   if (projection.draftIds.length > 0) {
     if (operationName === playSessionToolNames.read) {

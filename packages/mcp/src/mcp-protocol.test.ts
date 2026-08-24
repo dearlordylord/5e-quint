@@ -3,7 +3,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { describe, expect, test } from "vitest";
-import { Either } from "effect";
+import { Either, Random } from "effect";
 import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import { characterId, combatantId } from "@dnd/battle-runtime";
 import {
@@ -133,10 +133,10 @@ describe("MCP protocol server", () => {
         );
       }
       const validateStartOutput = new AjvJsonSchemaValidator().getValidator(
-        startBattleTool.outputSchema as JsonSchemaType,
+        ajvJsonSchema(startBattleTool.outputSchema),
       );
       const validateLifecycleOutput = new AjvJsonSchemaValidator().getValidator(
-        battleLifecycleTool.outputSchema as JsonSchemaType,
+        ajvJsonSchema(battleLifecycleTool.outputSchema),
       );
 
       const modeSession = await createPlaySession(client);
@@ -161,6 +161,7 @@ describe("MCP protocol server", () => {
           playSessionId: modeSession,
           battleId: "battle:initiative-modes",
           initiativeMode: "initialSetup",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "characterSession",
@@ -284,6 +285,7 @@ describe("MCP protocol server", () => {
           playSessionId: swapSession,
           battleId: "battle:initiative-swap",
           initiativeMode: "initialSetup",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "characterSession",
@@ -555,7 +557,7 @@ describe("MCP protocol server", () => {
           throw new Error("list_characters omitted its output schema.");
         }
         const validateOutput = new AjvJsonSchemaValidator().getValidator(
-          listCharactersDefinition.outputSchema as JsonSchemaType,
+          ajvJsonSchema(listCharactersDefinition.outputSchema),
         );
         const listedOperation = listedCharacters.operation;
         if (!isJsonObject(listedOperation)) {
@@ -622,6 +624,91 @@ describe("MCP protocol server", () => {
     FULL_ACCEPTANCE_TEST_TIMEOUT_MS,
   );
 
+  test("gives each fresh Play Session its own deterministic Random stream", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const randomStreams = [Random.fixed([1, 3]), Random.fixed([2, 4])];
+    const { server } = createDndMcpProtocolServer(
+      createMcpApplicationServices(),
+      undefined,
+      {
+        playSessionRandomFactory: () => {
+          const stream = randomStreams.shift();
+          if (stream === undefined) {
+            throw new Error("Unexpected Play Session construction.");
+          }
+          return stream;
+        },
+      },
+    );
+    const client = new Client({
+      name: "play-session-random-protocol-client",
+      version: "0.1.0",
+    });
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const first = await createPlaySession(client);
+      const second = await createPlaySession(client);
+
+      const firstRoll = await callStructuredTool(client, {
+        name: "roll_dice",
+        arguments: {
+          playSessionId: first,
+          groups: [{ dice: 1, dieSize: 6 }],
+        },
+      });
+      const secondRoll = await callStructuredTool(client, {
+        name: "roll_dice",
+        arguments: {
+          playSessionId: second,
+          groups: [{ dice: 1, dieSize: 6 }],
+        },
+      });
+      const firstRollAgain = await callStructuredTool(client, {
+        name: "roll_dice",
+        arguments: {
+          playSessionId: first,
+          groups: [{ dice: 1, dieSize: 6 }],
+        },
+      });
+      const secondRollAgain = await callStructuredTool(client, {
+        name: "roll_dice",
+        arguments: {
+          playSessionId: second,
+          groups: [{ dice: 1, dieSize: 6 }],
+        },
+      });
+
+      expect(operationResult(firstRoll)).toMatchObject({
+        groups: [{ dieSize: 6, results: [1] }],
+      });
+      expect(operationResult(secondRoll)).toMatchObject({
+        groups: [{ dieSize: 6, results: [2] }],
+      });
+      expect(operationResult(firstRollAgain)).toMatchObject({
+        groups: [{ dieSize: 6, results: [3] }],
+      });
+      expect(operationResult(secondRollAgain)).toMatchObject({
+        groups: [{ dieSize: 6, results: [4] }],
+      });
+
+      const firstCharacters = await callStructuredTool(client, {
+        name: "list_characters",
+        arguments: { playSessionId: first },
+      });
+      const secondCharacters = await callStructuredTool(client, {
+        name: "list_characters",
+        arguments: { playSessionId: second },
+      });
+      expect(operationResult(firstCharacters).characters).toEqual([]);
+      expect(operationResult(secondCharacters).characters).toEqual([]);
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  });
+
   test("character-class-level-advancement-protocol", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
@@ -649,7 +736,7 @@ describe("MCP protocol server", () => {
         );
       }
       const validateOutput = new AjvJsonSchemaValidator().getValidator(
-        applyOperationTool.outputSchema as JsonSchemaType,
+        ajvJsonSchema(applyOperationTool.outputSchema),
       );
 
       const accepted = await client.callTool({
@@ -783,7 +870,7 @@ describe("MCP protocol server", () => {
         throw new Error("Expected resource operation output schema.");
       }
       const validateOutput = new AjvJsonSchemaValidator().getValidator(
-        operationTool.outputSchema as JsonSchemaType,
+        ajvJsonSchema(operationTool.outputSchema),
       );
       const rawDiceRaw = await client.callTool({
         name: "roll_dice",
@@ -1450,6 +1537,7 @@ describe("MCP protocol server", () => {
           arguments: {
             playSessionId,
             battleId: "battle:row-coverage-mixed-companion",
+            initiativeMode: "direct",
             initialCombatants: [
               {
                 kind: "characterSession",
@@ -1513,6 +1601,8 @@ describe("MCP protocol server", () => {
           arguments: {
             playSessionId,
             battleId: "battle:row-coverage-interrupt",
+            initiativeMode: "direct",
+            companionAdmissions: [],
             initialCombatants: [
               {
                 kind: "statBlock",
@@ -1579,7 +1669,7 @@ describe("MCP protocol server", () => {
             ? { attackDamageType: attackSubject.attackDamageType }
             : {}),
         };
-        const afterTarget = await callStructuredTool(client, {
+        await callStructuredTool(client, {
           name: "fill_battle_hole",
           arguments: {
             playSessionId,
@@ -1599,7 +1689,6 @@ describe("MCP protocol server", () => {
             },
           },
         });
-        const afterTargetResult = operationResult(afterTarget);
         const pendingTurn = await client.callTool({
           name: "end_turn",
           arguments: { playSessionId, actorId: "row-shield-goblin" },
@@ -1613,7 +1702,41 @@ describe("MCP protocol server", () => {
         });
         expect(pendingTurn.structuredContent).toMatchObject({
           restoration: { tag: "retained" },
-          nextOperations: expect.arrayContaining(["discover_battle_acts"]),
+          unresolvedInputs: [
+            {
+              sourcePath: "$.projection.pendingBattleHoles",
+              inputs: [expect.objectContaining({ kind: "attackRoll" })],
+            },
+          ],
+          nextOperations: ["fill_battle_hole", "read_battle_state"],
+        });
+        const resumed = await callStructuredTool(client, {
+          name: "read_play_session",
+          arguments: { playSessionId },
+        });
+        expect(objectField(resumed, "projection")).toMatchObject({
+          pendingBattleHoles: [expect.objectContaining({ kind: "attackRoll" })],
+        });
+        expect(resumed).toMatchObject({
+          unresolvedInputs: [
+            {
+              sourcePath: "$.projection.pendingBattleHoles",
+              inputs: [expect.objectContaining({ kind: "attackRoll" })],
+            },
+          ],
+          nextOperations: ["fill_battle_hole", "read_battle_state"],
+        });
+        const resumedBattleState = await callStructuredTool(client, {
+          name: "read_battle_state",
+          arguments: { playSessionId },
+        });
+        expect(
+          objectField(
+            objectField(operationResult(resumedBattleState), "session"),
+            "transientBattleFills",
+          ),
+        ).toMatchObject({
+          holes: [expect.objectContaining({ kind: "attackRoll" })],
         });
         const stillPending = operationResult(
           await callStructuredTool(client, {
@@ -1623,13 +1746,12 @@ describe("MCP protocol server", () => {
         );
         expect(stillPending).toMatchObject({
           snapshot: { currentActorId: "row-shield-goblin" },
-          session: {
-            transientBattleFills: objectField(afterTargetResult, "session")
-              .transientBattleFills,
-          },
         });
         const attackRollHole = jsonObjectArrayAt(
-          objectField(afterTargetResult, "result"),
+          objectField(
+            objectField(stillPending, "session"),
+            "transientBattleFills",
+          ),
           "holes",
         ).find((hole) => hole.kind === "attackRoll");
         if (!attackRollHole || typeof attackRollHole.holeId !== "string") {
@@ -1774,10 +1896,10 @@ describe("MCP protocol server", () => {
         throw new Error("Expected start_battle and end_battle output schemas.");
       }
       const validateStartOutput = new AjvJsonSchemaValidator().getValidator(
-        startBattleTool.outputSchema as JsonSchemaType,
+        ajvJsonSchema(startBattleTool.outputSchema),
       );
       const validateEndOutput = new AjvJsonSchemaValidator().getValidator(
-        endBattleTool.outputSchema as JsonSchemaType,
+        ajvJsonSchema(endBattleTool.outputSchema),
       );
       const playSessionId = await createPlaySession(client);
       const decoded = decodePlaySessionId(playSessionId);
@@ -1810,6 +1932,8 @@ describe("MCP protocol server", () => {
         arguments: {
           playSessionId,
           battleId: "battle:protocol-gh324-round-trip",
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "characterSession",
@@ -1855,6 +1979,8 @@ describe("MCP protocol server", () => {
         arguments: {
           playSessionId,
           battleId: "battle:protocol-gh324-second",
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "characterSession",
@@ -2007,6 +2133,8 @@ describe("MCP protocol server", () => {
         arguments: {
           playSessionId,
           battleId: "battle:lifecycle-protocol",
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "characterSession",
@@ -2034,7 +2162,7 @@ describe("MCP protocol server", () => {
         throw new Error("Expected Battle lifecycle output schema.");
       }
       const validateOutput = new AjvJsonSchemaValidator().getValidator(
-        lifecycleTool.outputSchema as JsonSchemaType,
+        ajvJsonSchema(lifecycleTool.outputSchema),
       );
 
       const addedStatBlock = await callStructuredTool(client, {
@@ -2709,7 +2837,7 @@ describe("MCP protocol server", () => {
         throw new Error("Expected healing operation output schema.");
       }
       const validateOutput = new AjvJsonSchemaValidator().getValidator(
-        applyTool.outputSchema as JsonSchemaType,
+        ajvJsonSchema(applyTool.outputSchema),
       );
       await installHealingSessions(host, playSessionId, {
         source: {
@@ -2772,7 +2900,7 @@ describe("MCP protocol server", () => {
         throw new Error("Expected healing operation output schema.");
       }
       const validateOutput = new AjvJsonSchemaValidator().getValidator(
-        applyTool.outputSchema as JsonSchemaType,
+        ajvJsonSchema(applyTool.outputSchema),
       );
       await installHealingSessions(host, playSessionId, {
         source: {
@@ -3339,6 +3467,15 @@ function isJsonObject(
   value: unknown,
 ): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function ajvJsonSchema(schema: unknown): JsonSchemaType {
+  if (!isJsonObject(schema)) {
+    throw new Error("Expected an MCP JSON Schema object.");
+  }
+  // The MCP client has already protocol-decoded this object as a JSON Schema;
+  // the assertion only bridges the SDK's readonly tool type to AJV's mutable alias.
+  return schema as JsonSchemaType;
 }
 
 function operationResult(

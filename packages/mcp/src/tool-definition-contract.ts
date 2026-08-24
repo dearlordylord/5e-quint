@@ -17,6 +17,7 @@ export type McpToolAnnotations = Readonly<
 
 export type ProtocolToolDefinition = {
   readonly name: string;
+  readonly title: string;
   readonly description: string;
   readonly inputSchema: McpObjectInputSchema;
   readonly outputSchema?: McpOutputSchema;

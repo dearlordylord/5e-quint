@@ -294,12 +294,7 @@ function expectedInstalledCaseIds(
     ),
     Match.when(
       "installedCompleteWorkflow",
-      () =>
-        new Set(
-          inventory.skillActivation
-            .filter(({ kind }) => kind === "indirect" || kind === "followUp")
-            .map(({ id }) => id),
-        ),
+      () => new Set(inventory.completeWorkflow.map(({ id }) => id)),
     ),
     Match.exhaustive,
   );

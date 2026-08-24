@@ -1,11 +1,13 @@
 import {
   BattleId as BattleIdSchema,
   battleAmmunitionStock,
+  battleTablePositionId,
   characterId,
   combatantId,
   initiativeScore,
   type BattleId,
   type BattleAmmunitionStock,
+  type BattleTablePositionId,
   type CharacterId,
   type CombatantId,
   type InitiativeScore,
@@ -121,11 +123,9 @@ const StartBattleToolArgsSchema = Schema.Struct({
   battleId: BattleIdSchema.annotations({
     description: "Caller-chosen durable battle id.",
   }),
-  initiativeMode: Schema.optionalWith(InitiativeStartModeSchema, {
-    exact: true,
-  }).annotations({
+  initiativeMode: InitiativeStartModeSchema.annotations({
     description:
-      "Use direct for an already supplied Initiative score or initialSetup to retain the SDK-owned setup for supported swaps and finalization.",
+      "Use direct for an already supplied Initiative score or initialSetup to retain the SDK-owned setup for supported swaps and finalization. This field is required.",
   }),
   initialCombatants: Schema.NonEmptyArray(
     BattleCombatantArgsSchema,
@@ -133,10 +133,10 @@ const StartBattleToolArgsSchema = Schema.Struct({
     description:
       "Non-empty initial combatant roster. Each combatant comes from a finalized character session or an ordinary SRD Stat Block.",
   }),
-  companionAdmissions: Schema.optionalWith(
-    Schema.Array(CompanionAdmissionArgsSchema),
-    { exact: true },
-  ),
+  companionAdmissions: Schema.Array(CompanionAdmissionArgsSchema).annotations({
+    description:
+      "Explicit retained-companion admissions. Use an empty array when no retained companion enters the battle.",
+  }),
 }).annotations({
   description:
     "Start a battle session from an initial combatant roster. Provide caller-supplied Initiative for every combatant.",
@@ -189,7 +189,7 @@ export type CompanionAdmissionToolInput = {
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly companionCombatantId?: CombatantId;
   readonly initiative?: InitiativeScore;
-  readonly positionId?: string;
+  readonly positionId?: BattleTablePositionId;
 };
 
 export function decodeStartBattleArgs(
@@ -204,28 +204,26 @@ export function decodeStartBattleArgs(
 
   return Either.right({
     battleId: record.right.battleId,
-    initiativeMode: record.right.initiativeMode ?? "direct",
+    initiativeMode: record.right.initiativeMode,
     initialCombatants: decodeBattleCombatants(record.right.initialCombatants),
-    companionAdmissions: (record.right.companionAdmissions ?? []).map(
-      (admission) => ({
-        ownerCharacterId: characterId(admission.ownerCharacterId),
-        ammunitionStocks: admission.ammunitionStocks.map(
-          ({ ammunition, remaining }) =>
-            battleAmmunitionStock(ammunition, remaining),
-        ),
-        ...(admission.companionCombatantId === undefined
-          ? {}
-          : {
-              companionCombatantId: combatantId(admission.companionCombatantId),
-            }),
-        ...(admission.initiative === undefined
-          ? {}
-          : { initiative: initiativeScore(admission.initiative) }),
-        ...(admission.positionId === undefined
-          ? {}
-          : { positionId: admission.positionId }),
-      }),
-    ),
+    companionAdmissions: record.right.companionAdmissions.map((admission) => ({
+      ownerCharacterId: characterId(admission.ownerCharacterId),
+      ammunitionStocks: admission.ammunitionStocks.map(
+        ({ ammunition, remaining }) =>
+          battleAmmunitionStock(ammunition, remaining),
+      ),
+      ...(admission.companionCombatantId === undefined
+        ? {}
+        : {
+            companionCombatantId: combatantId(admission.companionCombatantId),
+          }),
+      ...(admission.initiative === undefined
+        ? {}
+        : { initiative: initiativeScore(admission.initiative) }),
+      ...(admission.positionId === undefined
+        ? {}
+        : { positionId: battleTablePositionId(admission.positionId) }),
+    })),
   });
 }
 

@@ -35,6 +35,7 @@ import {
 export const battleToolDefinitions = [
   {
     name: battleToolNames.selectStatBlock,
+    title: "Select Stat Block",
     description:
       "Select an SRD Stat Block for the battle session. This stores only the Stat Block id in the MCP session.",
     inputSchema: selectStatBlockInputSchema,
@@ -43,6 +44,7 @@ export const battleToolDefinitions = [
   },
   {
     name: battleToolNames.startBattle,
+    title: "Start Battle",
     description:
       "Start a battle session from finalized Character Builds and the selected SRD Stat Block. The caller must provide Initiative scores for every combatant; choose initialSetup to keep the SDK-owned Initiative setup open for the battle_lifecycle surface.",
     inputSchema: startBattleInputSchema,
@@ -51,6 +53,7 @@ export const battleToolDefinitions = [
   },
   {
     name: battleToolNames.battleLifecycle,
+    title: "Update Battle Lifecycle",
     description:
       "Apply one Battle lifecycle operation: swap Initiative with a willing ally or finalize initial setup, or atomically add/remove a supported Character Session or installed Stat Block combatant while the Battle is active.",
     inputSchema: battleLifecycleInputSchema,
@@ -59,6 +62,7 @@ export const battleToolDefinitions = [
   },
   {
     name: battleToolNames.readBattleState,
+    title: "Read Battle State",
     description:
       "Return the current battle-runtime snapshot, including discoverable battle acts, and the MCP session summary.",
     inputSchema: readBattleStateInputSchema,
@@ -67,6 +71,7 @@ export const battleToolDefinitions = [
   },
   {
     name: battleToolNames.discoverBattleActs,
+    title: "Discover Battle Acts",
     description:
       "Return the current battle snapshot and runtime-discovered available acts for the current combatant.",
     inputSchema: discoverBattleActsInputSchema,
@@ -75,6 +80,7 @@ export const battleToolDefinitions = [
   },
   {
     name: battleToolNames.fillBattleHole,
+    title: "Fill Battle Hole",
     description:
       "Fill one hole for a selected battle act subject. MCP stores transient fills until the battle runtime has enough table facts to resolve the act.",
     inputSchema: fillBattleHoleInputSchema,
@@ -83,6 +89,7 @@ export const battleToolDefinitions = [
   },
   {
     name: battleToolNames.resolveBattleAct,
+    title: "Resolve Battle Act",
     description:
       "Resolve a selected battle act subject that does not need holes, such as Action Surge.",
     inputSchema: resolveBattleActInputSchema,
@@ -91,6 +98,7 @@ export const battleToolDefinitions = [
   },
   {
     name: battleToolNames.endTurn,
+    title: "End Turn",
     description:
       "Resolve the current actor's End Turn runtime command and store the updated battle session.",
     inputSchema: endTurnInputSchema,
@@ -99,6 +107,7 @@ export const battleToolDefinitions = [
   },
   {
     name: battleToolNames.endBattle,
+    title: "End Battle",
     description:
       "Finalize the stored battle session and hand character-owned post-battle facts, including current HP, back to durable character session state.",
     inputSchema: endBattleInputSchema,

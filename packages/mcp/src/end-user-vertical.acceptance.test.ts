@@ -149,6 +149,8 @@ describe("end-user MCP vertical", () => {
 
     const started = callTool(root, "start_battle", {
       battleId: "battle:accepted-vertical",
+      initiativeMode: "direct",
+      companionAdmissions: [],
       initialCombatants: [
         {
           kind: "characterSession",
@@ -347,6 +349,8 @@ describe("end-user MCP vertical", () => {
 
     const started = callTool(root, "start_battle", {
       battleId: "battle:post5-width",
+      initiativeMode: "direct",
+      companionAdmissions: [],
       initialCombatants: [
         {
           kind: "characterSession",
@@ -795,6 +799,8 @@ describe("end-user MCP vertical", () => {
 
     const started = callTool(root, "start_battle", {
       battleId: "battle:mcp-demo-scenario",
+      initiativeMode: "direct",
+      companionAdmissions: [],
       initialCombatants: [
         statBlockCombatant("goblin-a", "stat_block_goblin_warrior", 22, [
           { ammunition: "arrow", remaining: 20 },
@@ -1084,6 +1090,8 @@ describe("end-user MCP vertical", () => {
 
     const started = callTool(root, "start_battle", {
       battleId: "battle:mcp-selected-light-identity",
+      initiativeMode: "direct",
+      companionAdmissions: [],
       initialCombatants: [
         characterCombatant(wizardDraftId, wizardCombatantId, 18),
         statBlockCombatant(goblinCombatantId, "stat_block_goblin_warrior", 7, [

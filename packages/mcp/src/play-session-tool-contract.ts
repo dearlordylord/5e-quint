@@ -14,8 +14,16 @@ import {
   PLAY_SESSION_RESTORATION_GUIDANCE,
   PlaySessionIdSchema,
 } from "./play-session.ts";
+import {
+  modelFacingSessionProjectionSchema,
+  modelFacingUnresolvedInputsSchema,
+} from "./play-session-model-facing-schema.ts";
 import type { McpObjectInputSchema, McpOutputSchema } from "./schema-codec.ts";
-import { mcpObjectJsonSchema, mcpOutputJsonSchema } from "./schema-codec.ts";
+import {
+  mcpModelOutputJsonSchema,
+  mcpObjectJsonSchema,
+  mcpOutputJsonSchema,
+} from "./schema-codec.ts";
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 import {
   NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
@@ -61,8 +69,8 @@ const playSessionIdInputPropertySchema = objectPropertySchema(
   "playSessionId",
 );
 const playSessionIdJsonSchema = mcpOutputJsonSchema(PlaySessionIdSchema);
-const sessionProjectionJsonSchema = mcpOutputJsonSchema(
-  McpSessionSummarySchema,
+const sessionProjectionJsonSchema = modelFacingSessionProjectionSchema(
+  mcpModelOutputJsonSchema(McpSessionSummarySchema),
 );
 const routedOutputSchemas = new Map<
   PlaySessionOperationName,
@@ -72,6 +80,7 @@ const routedOutputSchemas = new Map<
 export const playSessionToolDefinitions = [
   {
     name: playSessionToolNames.create,
+    title: "Create Play Session",
     description:
       "Create an isolated process-lifetime Play Session and return the handle required by every stateful operation.",
     inputSchema: emptyInputSchema,
@@ -83,6 +92,7 @@ export const playSessionToolDefinitions = [
   },
   {
     name: playSessionToolNames.read,
+    title: "Read Play Session",
     description:
       "Resume a live Play Session by returning its current projection, unresolved inputs, and relevant next operations.",
     inputSchema: playSessionInputSchema,
@@ -97,6 +107,7 @@ export const playSessionToolDefinitions = [
 export function statefulPlaySessionToolDefinition<
   Definition extends {
     readonly name: string;
+    readonly title: string;
     readonly description: string;
     readonly inputSchema: McpObjectInputSchema;
     readonly outputSchema?: McpOutputSchema;
@@ -246,7 +257,7 @@ function availableResultSchema(input: {
       playSessionId: input.playSessionId,
       operation: operationSchema(input.operationName, input.operationResult),
       projection: input.projection,
-      unresolvedInputs: unresolvedInputsSchema(),
+      unresolvedInputs: modelFacingUnresolvedInputsSchema(),
       nextOperations: {
         type: "array",
         items: { enum: PLAY_SESSION_NEXT_OPERATION_NAMES },
@@ -313,21 +324,6 @@ function operationSchema(
     },
     required: ["name", "result"],
     additionalProperties: false,
-  };
-}
-
-function unresolvedInputsSchema(): McpOutputSchema {
-  return {
-    type: "array",
-    items: {
-      type: "object",
-      properties: {
-        sourcePath: { type: "string" },
-        inputs: { type: "array", items: {} },
-      },
-      required: ["sourcePath", "inputs"],
-      additionalProperties: false,
-    },
   };
 }
 

@@ -40,8 +40,8 @@
     {
       "step": "newcomer-journey",
       "evidenceKind": "installedCompleteWorkflow",
-      "instructions": "Using the installed Skill and separately created developer-mode MCP connection, request one SRD discovery-to-character-to-battle journey. Preserve the Play Session handle, choose only returned Creation Hole options, stop for meaningful choices, use returned Battle Acts/Holes and optional raw dice, end the Battle, and record the resulting Character Session list as installed workflow observations.",
-      "requiredCases": ["skill-natural", "skill-continuation"]
+      "instructions": "Using the installed Skill and separately created developer-mode MCP connection, run the explicit complete workflow prompt from the evaluation inventory. Preserve the Play Session handle, choose only returned Creation Hole options, stop for meaningful choices, use returned Battle Acts/Holes and optional raw dice, end the Battle, and record the resulting Character Session list as installed workflow observations.",
+      "requiredCases": ["complete-newcomer-journey"]
     }
   ],
   "caseResults": [
@@ -91,12 +91,7 @@
       "status": "pending"
     },
     {
-      "caseId": "skill-natural",
-      "evidenceKind": "installedCompleteWorkflow",
-      "status": "pending"
-    },
-    {
-      "caseId": "skill-continuation",
+      "caseId": "complete-newcomer-journey",
       "evidenceKind": "installedCompleteWorkflow",
       "status": "pending"
     }

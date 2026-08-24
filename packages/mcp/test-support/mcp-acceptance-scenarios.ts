@@ -458,18 +458,13 @@ export async function verifyToolContract(client: Client) {
   assert.deepEqual(toolNames, [...expectedTools].sort());
   for (const tool of listed.tools) {
     assert.ok(tool.inputSchema, `${tool.name} must expose inputSchema`);
-    assert.ok(
-      (tool as { readonly outputSchema?: unknown }).outputSchema,
-      `${tool.name} must expose outputSchema`,
-    );
+    assert.ok(tool.outputSchema, `${tool.name} must expose outputSchema`);
   }
 
   const startBattle = listed.tools.find((tool) => tool.name === "start_battle");
   assert.ok(startBattle, "start_battle tool must be registered");
   const schemaText = JSON.stringify(startBattle.inputSchema);
-  const startBattleOutputSchemaText = JSON.stringify(
-    (startBattle as { readonly outputSchema?: unknown }).outputSchema,
-  );
+  const startBattleOutputSchemaText = JSON.stringify(startBattle.outputSchema);
   assert.match(schemaText, /initialCombatants/);
   assert.match(schemaText, /characterSession/);
   assert.match(schemaText, /statBlockId/);
@@ -483,10 +478,7 @@ export async function verifyToolContract(client: Client) {
   assert.match(startBattleOutputSchemaText, /session/);
 
   const validateStartBattleOutput = new AjvJsonSchemaValidator().getValidator(
-    requireJsonSchema(
-      (startBattle as { readonly outputSchema: unknown }).outputSchema,
-      "start_battle outputSchema",
-    ),
+    requireJsonSchema(startBattle.outputSchema, "start_battle outputSchema"),
   );
   const emptyStartBattleProjection = {
     snapshot: null,
@@ -498,6 +490,7 @@ export async function verifyToolContract(client: Client) {
       characterIds: [],
       selectedStatBlockId: null,
       battleState: { tag: "none" },
+      pendingBattleHoles: null,
     },
   };
   for (const battleState of [
@@ -571,7 +564,7 @@ export async function verifyToolContract(client: Client) {
     characterSessionQuery.inputSchema,
   );
   const characterSessionQueryOutputSchemaText = JSON.stringify(
-    (characterSessionQuery as { readonly outputSchema?: unknown }).outputSchema,
+    characterSessionQuery.outputSchema,
   );
   assert.match(characterSessionQuerySchemaText, /abilityCheckAbility/);
   assert.match(characterSessionQuerySchemaText, /spellInvocation/);
@@ -594,6 +587,8 @@ export async function verifyToolContract(client: Client) {
 
   await expectToolError(client, "start_battle", {
     battleId: "battle:empty-rejected",
+    initiativeMode: "direct",
+    companionAdmissions: [],
     initialCombatants: [],
   });
 
@@ -810,6 +805,8 @@ export async function verifyBaselineVertical(
 
   const started = await callTool(client, "start_battle", {
     battleId: "battle:stdio-accepted-vertical",
+    initiativeMode: "direct",
+    companionAdmissions: [],
     initialCombatants: [
       {
         kind: "characterSession",
@@ -1031,13 +1028,22 @@ export async function verifyCompleteNewcomerJourney(client: Client) {
     operation: {
       kind: "completeShortRest",
       restedTicks: ELAPSED_TIME_TICKS_PER_HOUR,
+      spendHitDice: [{ classUnitId: "class_fighter", roll: 3 }],
     },
   });
   assert.equal(get(rested, "result.tag"), "shortRestCompleted");
 
-  // This boundary is intentionally exercised as a typed exclusion: the
+  const healedAfterRest = await callTool(client, "list_characters", {});
+  const healedCharacter = jsonObjectArrayAt(healedAfterRest, "characters").find(
+    (row) => row.characterId === characterId,
+  );
+  assert.ok(healedCharacter, "Short Rest must retain the Character Session.");
+  assert.equal(get(healedCharacter, "hitPoints.current"), 10);
+  assert.equal(get(healedCharacter, "hitDice.0.spent"), 1);
+
+  // This boundary remains intentionally exercised as a typed exclusion: the
   // baseline Fighter does not own Lay On Hands, so the caller must not invent
-  // a healing capability merely because the operation is advertised.
+  // a feature capability merely because the operation is advertised.
   await expectToolError(client, "apply_character_session_operation", {
     characterId,
     operation: {
@@ -1077,6 +1083,7 @@ export async function verifyCompleteNewcomerJourney(client: Client) {
   const setup = await callTool(client, "start_battle", {
     battleId: "battle:stdio-complete-newcomer-setup",
     initiativeMode: "initialSetup",
+    companionAdmissions: [],
     initialCombatants: [
       {
         kind: "characterSession",
@@ -1158,6 +1165,13 @@ export async function verifyCompleteNewcomerJourney(client: Client) {
       (row) => row.characterId === rangerId && row.status === "available",
     ),
   );
+
+  return {
+    shortRestHealing: {
+      currentHp: get(healedCharacter, "hitPoints.current"),
+      spentHitDice: get(healedCharacter, "hitDice.0.spent"),
+    },
+  };
 }
 
 export async function verifyWidthVertical(client: Client) {
@@ -1212,6 +1226,8 @@ export async function verifyWidthVertical(client: Client) {
 
   const started = await callTool(client, "start_battle", {
     battleId: "battle:stdio-post5-width",
+    initiativeMode: "direct",
+    companionAdmissions: [],
     initialCombatants: [
       {
         kind: "characterSession",
@@ -1542,6 +1558,8 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
 
   const started = await callTool(client, "start_battle", {
     battleId: "battle:stdio-level-three-scorching-ray",
+    initiativeMode: "direct",
+    companionAdmissions: [],
     initialCombatants: [
       {
         kind: "characterSession",
@@ -1702,6 +1720,8 @@ export async function verifyLevelFourWizardVertical(client: Client) {
 
   const started = await callTool(client, "start_battle", {
     battleId: "battle:stdio-level-four-wizard-asi",
+    initiativeMode: "direct",
+    companionAdmissions: [],
     initialCombatants: [
       {
         kind: "characterSession",
@@ -1841,6 +1861,8 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
 
   const started = await callTool(client, "start_battle", {
     battleId: levelFiveWizardFireballBattleId,
+    initiativeMode: "direct",
+    companionAdmissions: [],
     initialCombatants: [
       {
         kind: "characterSession",
@@ -1963,6 +1985,8 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
 
   const started = await callTool(client, "start_battle", {
     battleId: iceKnifeBattleId,
+    initiativeMode: "direct",
+    companionAdmissions: [],
     initialCombatants: [
       {
         kind: "characterSession",
@@ -2175,6 +2199,8 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
 
   const started = await callTool(client, "start_battle", {
     battleId: levelSixRogueExpertiseBattleId,
+    initiativeMode: "direct",
+    companionAdmissions: [],
     initialCombatants: [
       {
         kind: "characterSession",
@@ -2361,6 +2387,8 @@ export async function verifyLevelNineRangerExpertiseBattleHandoff(
 
   const started = await callTool(client, "start_battle", {
     battleId: levelNineRangerExpertiseBattleId,
+    initiativeMode: "direct",
+    companionAdmissions: [],
     initialCombatants: [
       {
         kind: "characterSession",
@@ -2496,6 +2524,8 @@ export async function verifyLevelTenFighterChampionBattleHandoff(
 
   const started = await callTool(client, "start_battle", {
     battleId: levelTenFighterChampionBattleId,
+    initiativeMode: "direct",
+    companionAdmissions: [],
     initialCombatants: [
       {
         kind: "characterSession",

@@ -85,6 +85,9 @@ describe("local SRD Play plugin evaluation seams", () => {
     expect(new Set(inventory.skillActivation.map(({ kind }) => kind))).toEqual(
       new Set(["direct", "indirect", "followUp", "negative", "boundary"]),
     );
+    expect(inventory.completeWorkflow.map(({ id }) => id)).toEqual([
+      "complete-newcomer-journey",
+    ]);
     assertFollowUpsReferenceEarlierCases(inventory.mcpToolSelection);
     assertFollowUpsReferenceEarlierCases(inventory.skillActivation);
     expect(inventory.evidenceOwners.installedChatGpt).toMatchObject({

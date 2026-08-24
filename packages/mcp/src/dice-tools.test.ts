@@ -47,7 +47,7 @@ describe("structured MCP bulk dice roller", () => {
 
   test("enforces bounded per-group and aggregate work before allocation", () => {
     const validateInput = new AjvJsonSchemaValidator().getValidator(
-      rollDiceInputSchema as JsonSchemaType,
+      ajvJsonSchema(rollDiceInputSchema),
     );
     const tooManyInOneGroup = {
       groups: [{ dice: MAX_DICE_PER_GROUP + 1, dieSize: 6 }],
@@ -202,18 +202,20 @@ describe("structured MCP bulk dice roller", () => {
         throw new Error("roll_dice omitted outputSchema");
       }
       const validateOutput = new AjvJsonSchemaValidator().getValidator(
-        definition.outputSchema as JsonSchemaType,
+        ajvJsonSchema(definition.outputSchema),
       );
 
       const created = await client.callTool({
         name: "create_play_session",
         arguments: {},
       });
-      const playSessionId = (
-        created.structuredContent as {
-          readonly playSessionId: string;
-        }
-      ).playSessionId;
+      if (
+        !isJsonObject(created.structuredContent) ||
+        typeof created.structuredContent.playSessionId !== "string"
+      ) {
+        throw new Error("create_play_session returned no Play Session id.");
+      }
+      const playSessionId = created.structuredContent.playSessionId;
       const valid = await client.callTool({
         name: "roll_dice",
         arguments: { playSessionId, groups: [{ dice: 2, dieSize: 6 }] },
@@ -287,3 +289,18 @@ describe("structured MCP bulk dice roller", () => {
     }
   }, 30_000);
 });
+
+function isJsonObject(
+  value: unknown,
+): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function ajvJsonSchema(schema: unknown): JsonSchemaType {
+  if (!isJsonObject(schema)) {
+    throw new Error("Expected an MCP JSON Schema object.");
+  }
+  // The MCP client has already protocol-decoded this object as a JSON Schema;
+  // the assertion only bridges the SDK's readonly tool type to AJV's mutable alias.
+  return schema as JsonSchemaType;
+}

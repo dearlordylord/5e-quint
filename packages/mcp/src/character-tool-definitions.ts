@@ -31,6 +31,7 @@ import {
 export const characterToolDefinitions = [
   {
     name: characterToolNames.createCharacterDraft,
+    title: "Create Character Draft",
     description:
       "Create and store a character draft, then return its current creation holes and finalization status.",
     inputSchema: createCharacterDraftInputSchema,
@@ -39,6 +40,7 @@ export const characterToolDefinitions = [
   },
   {
     name: characterToolNames.discoverCreationHoles,
+    title: "Discover Creation Holes",
     description:
       "Return the current supported fillable creation holes, draft revision, and finalization status for a stored character draft. Every returned choice option is admitted by this server's active execution support profile.",
     inputSchema: draftIdInputSchema,
@@ -47,6 +49,7 @@ export const characterToolDefinitions = [
   },
   {
     name: characterToolNames.fillCreationHoles,
+    title: "Fill Creation Holes",
     description:
       "Submit an atomic batch of creation fills for a stored draft using option ids returned by its current holes. Accepted batches replace the stored draft; rejected batches leave it unchanged.",
     inputSchema: fillCreationHolesInputSchema,
@@ -55,6 +58,7 @@ export const characterToolDefinitions = [
   },
   {
     name: characterToolNames.finalizeCharacter,
+    title: "Finalize Character",
     description:
       "Finalize a complete supported character draft. A ready finalization stores the resulting in-play record by characterId and removes the active draft. Druid Wild Shape drafts require selected known Beast Stat Block ids.",
     inputSchema: finalizeCharacterInputSchema,
@@ -63,6 +67,7 @@ export const characterToolDefinitions = [
   },
   {
     name: characterToolNames.applyCharacterSessionOperation,
+    title: "Apply Character Operation",
     description:
       "Apply a supported durable character-session operation. Class-level advancement and Druid known-form replacement delegate existing level-gain and Wild Shape support facts to the runtime; companion creation, Lay On Hands and spell-based rest healing, atomic Short/Long Rest completion, composed Long Rest interruption/resumption with strictly increasing cumulativeRestedTicks boundaries, calendar-time Stable recovery, and feature-resource mutations delegate validation and state transitions to the Character Sheet runtime; MCP retains no rest intermediate state.",
     inputSchema: applyCharacterSessionOperationInputSchema,
@@ -71,6 +76,7 @@ export const characterToolDefinitions = [
   },
   {
     name: characterToolNames.listCharacters,
+    title: "List Characters",
     description:
       "List durable character-session display rows. Rows include build-derived HP, Hit Dice, Spell Slot, Pact Slot, and resource capacities plus mutable sheet state.",
     inputSchema: emptyInputSchema,
@@ -79,6 +85,7 @@ export const characterToolDefinitions = [
   },
   {
     name: characterToolNames.inspectCharacterSession,
+    title: "Inspect Character Session",
     description:
       "Inspect one selected Character Session as its canonical stored session plus core build-derived Hit Point, Hit Dice, Spell Slot, Pact Slot, and resource facts.",
     inputSchema: characterSessionIdInputSchema,
@@ -87,6 +94,7 @@ export const characterToolDefinitions = [
   },
   {
     name: characterToolNames.queryCharacterSession,
+    title: "Query Character Session",
     description:
       "Query one available Character Session through the existing Character Sheet ability, movement, defense, Spell Access, form, ritual, and Weapon Mastery projections.",
     inputSchema: queryCharacterSessionInputSchema,

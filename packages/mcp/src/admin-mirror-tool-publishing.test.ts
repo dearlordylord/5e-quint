@@ -59,6 +59,8 @@ describe("Admin Mirror MCP tool publishing", () => {
 
     handleToolCall(root, "start_battle", {
       battleId: "battle:mirror-publish",
+      initiativeMode: "direct",
+      companionAdmissions: [],
       initialCombatants: [
         {
           admissionSource: { kind: "encounterParticipant" },
@@ -82,6 +84,8 @@ describe("Admin Mirror MCP tool publishing", () => {
 
     handleToolCall(root, "start_battle", {
       battleId: "battle:mirror-rejected",
+      initiativeMode: "direct",
+      companionAdmissions: [],
       initialCombatants: [
         {
           admissionSource: { kind: "encounterParticipant" },

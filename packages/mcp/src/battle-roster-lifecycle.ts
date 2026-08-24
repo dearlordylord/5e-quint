@@ -267,12 +267,6 @@ function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
         transition: matched,
       }),
     ),
-    Match.when({ tag: "battleStateBattleOwnershipConflict" }, (matched) =>
-      battleLifecycleError("Battle state transition failed.", {
-        code: "BATTLE_STATE_TRANSITION_INVALID",
-        transition: matched,
-      }),
-    ),
     Match.when(
       { tag: "battleStateCharacterSessionRegistryConflict" },
       (matched) =>
@@ -280,12 +274,6 @@ function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
           code: "CHARACTER_SESSION_COMMIT_INVALID",
           transition: matched,
         }),
-    ),
-    Match.when({ tag: "initialInitiativeSwapRejected" }, (matched) =>
-      battleLifecycleError("Battle lifecycle commit failed.", {
-        code: "BATTLE_STATE_TRANSITION_INVALID",
-        transition: matched,
-      }),
     ),
     Match.exhaustive,
   );

@@ -8,10 +8,11 @@ import type {
 import type { CharacterSheetId } from "@dnd/character-sheet-runtime";
 
 import type {
-  CharacterSession,
+  AvailableCharacterSession,
+  InBattleCharacterSession,
   McpBattleStateTransitionIssue,
   PendingBattleFillSession,
-} from "./session-store.ts";
+} from "./session-store-types.ts";
 
 type CharacterId = CharacterSheetId;
 
@@ -93,17 +94,32 @@ export type ActiveBattleRosterTransitionPlanResult =
 export type ActiveBattleRosterTransitionPlanData = {
   readonly storeIdentity: object;
   readonly activeBattle: BattleRuntimeSession;
-  readonly nextCharacterSessions: readonly CharacterSession[];
-  readonly affectedCharacterSessions: readonly {
-    readonly characterId: CharacterId;
-    readonly session: CharacterSession;
-  }[];
+  readonly characterSessionTransitions: readonly CharacterSessionBattleTransition[];
   readonly pendingBattleFills: PendingBattleFillSession | null;
   readonly result: ActiveBattleRosterTransitionPlanResult;
 };
 
+export type CharacterSessionBattleTransition =
+  | {
+      readonly kind: "enterBattle";
+      readonly expected: AvailableCharacterSession;
+      readonly next: InBattleCharacterSession;
+    }
+  | {
+      readonly kind: "leaveBattle";
+      readonly expected: InBattleCharacterSession;
+      readonly next: AvailableCharacterSession;
+    };
+
 export type McpBattleRosterTransitionIssue =
-  | McpBattleStateTransitionIssue
+  | Extract<
+      McpBattleStateTransitionIssue,
+      {
+        readonly tag:
+          | "invalidBattleStateTransition"
+          | "battleStateCharacterSessionRegistryConflict";
+      }
+    >
   | {
       readonly tag: "battleRosterPendingBattleFills";
       readonly pendingSubject: BattleSubject;

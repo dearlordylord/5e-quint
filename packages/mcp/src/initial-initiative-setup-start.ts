@@ -5,10 +5,6 @@ import {
 import { Either } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
-import {
-  admitCharacterSessionsToBattle,
-  characterSessionBattleAdmissionErrorContent,
-} from "./character-session-battle-admission.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
 import { initialInitiativeSetupStartPayload } from "./battle-tool-payloads.ts";
 import type { StartBattleToolInput } from "./start-battle-tool-input.ts";
@@ -42,18 +38,17 @@ export function startInitialInitiativeSetup(
     });
   }
 
-  const committed = admitCharacterSessionsToBattle({
-    registry: root.sessionStore.characters,
-    battleId: input.battleId,
-    sessions: combatants.characterSessions.map(({ session }) => session),
-  });
-  if (Either.isLeft(committed)) {
-    return characterSessionBattleAdmissionErrorContent(committed.left);
-  }
-
   return completeBattleStateTransition({
     root,
-    transition: root.sessionStore.storeInitialInitiativeSetup(setup.right),
+    transition: root.sessionStore.commitBattleStart({
+      nextBattleState: {
+        tag: "initialInitiativeSetup",
+        setup: setup.right,
+      },
+      characterSessions: combatants.characterSessions.map(
+        ({ session }) => session,
+      ),
+    }),
     output: () =>
       schemaJsonContent(
         StartBattleOutputSchema,

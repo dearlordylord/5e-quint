@@ -11,8 +11,7 @@ import {
   snapshotBattle,
   type BattleRuntimeResolutionResult,
 } from "@dnd/battle-runtime";
-import { DieRollResult, NonNegativeInteger } from "@dnd/shared/types";
-import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { NonNegativeInteger } from "@dnd/shared/types";
 import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
@@ -76,6 +75,7 @@ function sessionForProjectionState(battleState: ProjectionBattleState) {
     characterIds: [],
     selectedStatBlockId: null,
     battleState,
+    pendingBattleHoles: null,
   };
 }
 
@@ -183,6 +183,8 @@ describe("MCP session wire projections", () => {
       "start_battle",
       battleToolWireArgs("start_battle", {
         battleId: "battle:resolution-contract",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             admissionSource: { kind: "encounterParticipant" },
@@ -304,20 +306,7 @@ describe("MCP session wire projections", () => {
         battleId: battleId("battle-projection-test"),
         currentActorId: combatantId("combatant:projection-test"),
       },
-      transientBattleFills: {
-        subject: {
-          tag: "runtimeCommand",
-          actorId: combatantId("combatant:projection-test"),
-          command: "endTurn",
-        },
-        fills: [
-          {
-            kind: "attackRoll",
-            holeId: holeId("battle:projection-test:attack-roll"),
-            value: { total: 12, naturalD20: DieRollResult(10) },
-          },
-        ],
-      },
+      transientBattleFills: null,
     } satisfies McpSessionSnapshot;
 
     expect(
@@ -336,6 +325,7 @@ describe("MCP session wire projections", () => {
           battleId: "battle-projection-test",
           currentActorId: "combatant:projection-test",
         },
+        pendingBattleHoles: null,
       },
     });
   });

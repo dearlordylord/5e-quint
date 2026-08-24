@@ -6,26 +6,52 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { DieRollResult, difficultyClass } from "@dnd/shared/types";
+import { DieRollResult, classLevel, difficultyClass } from "@dnd/shared/types";
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { combatantId } from "./identity.ts";
 import type { BattleFill, BattleHole } from "./battle-state-execution.ts";
+import type { BattleActiveEffect } from "./battle-state-execution.ts";
+import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 import {
   resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
+  resolveBattleRuntimeSubject,
   endBattleRuntimeTurnWithTableD20TestCircumstances,
+  endBattleRuntimeTurn,
 } from "./battle-session-execution.ts";
 import {
   attackRollFill,
   battleId,
+  battleProcedureExecutionRefForTest,
+  characterBattleFeatureInitForTest,
   characterSeed,
+  damageRollFillWithGroups,
+  elapsedTimeTicks,
   fighterAttackSubject,
   fighterId,
   goblinId,
+  discoverBattleActs,
+  findHole,
+  requireCharacterUnitProcedureRefForTest,
+  savingThrowOutcomeFill,
   startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
+  secondSkeletonId,
+  skeletonId,
+  wizardVsSkeletonBattle,
+  wizardSpellcasting,
+  testCharacterD20Statistics,
+  unitLibrary,
 } from "./battle-runtime.test-support.ts";
-import { battleRuntimeSessionFollows } from "./battle-runtime-context.ts";
+import { battleUnitRefWithSupportProfiles } from "./unit-profile-admission.test-support.ts";
+import { battleMagicActionSaveGatedConditionSupportForUnit } from "./unit-feature-support.ts";
+import {
+  battleRuntimeSessionFollows,
+  battleRuntimeSessionWithState,
+} from "./battle-runtime-context.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { attackRollHasAdvantageSource } from "./battle-reducer/attack-roll.ts";
+import { uniqueSavingThrowRollModeProjections } from "./battle-reducer/saving-throw-roll-mode-projections.ts";
 import {
   D20_TEST_KINDS,
   admitTableD20TestCircumstanceDecisions,
@@ -154,6 +180,118 @@ describe("Table-authored per-test D20 circumstances", () => {
     expect(new Set(requests.map(({ requestRef }) => requestRef))).toHaveLength(
       2,
     );
+  });
+
+  test("uses an attack relationship request and an ability roll-mode projection", () => {
+    const attackHole = syntheticBattleHole({
+      kind: "attackRoll",
+      holeId: holeId("synthetic-relationship-attack"),
+      holeInstanceKey: holeInstanceKey(
+        "synthetic-relationship-attack-instance",
+      ),
+      label: "Synthetic relationship attack",
+      relationshipFactRequest: {
+        kind: "attackRollTargetIsEnemy",
+        attackerId: firstTargetId,
+        targetId: secondTargetId,
+      },
+      rollMode: "normal",
+    });
+    expect(
+      battleD20TestCircumstanceRequests({
+        resolutionId,
+        holes: [attackHole],
+        resolvedFills: [],
+      }),
+    ).toMatchObject([{ testKind: "attackRoll", targetId: secondTargetId }]);
+
+    const abilityHole = syntheticBattleHole({
+      kind: "abilityCheck",
+      holeId: holeId("synthetic-ability-roll-mode"),
+      holeInstanceKey: holeInstanceKey("synthetic-ability-roll-mode-instance"),
+      label: "Synthetic ability check",
+      ability: "dex",
+      skill: "acrobatics",
+      dc: difficultyClass(12),
+      rollMode: "advantage",
+    });
+    expect(
+      battleD20TestCircumstanceRequests({
+        resolutionId,
+        holes: [abilityHole],
+        resolvedFills: [],
+      }),
+    ).toMatchObject([
+      {
+        testKind: "abilityCheck",
+        mechanicalSources: { advantage: true, disadvantage: false },
+      },
+    ]);
+  });
+
+  test("projects concentration and shove saving throws with their own roll modes", () => {
+    const concentrationHole = syntheticBattleHole({
+      kind: "concentrationSavingThrow",
+      holeId: holeId("synthetic-concentration-save"),
+      holeInstanceKey: holeInstanceKey("synthetic-concentration-save-instance"),
+      label: "Synthetic concentration save",
+      combatantId: firstTargetId,
+      dc: difficultyClass(10),
+      damageAmount: 4,
+      targetFlatBonuses: [],
+      rollMode: "advantage",
+    });
+    const shoveHole = syntheticBattleHole({
+      kind: "shoveOutcome",
+      holeId: holeId("synthetic-shove-save"),
+      holeInstanceKey: holeInstanceKey("synthetic-shove-save-instance"),
+      label: "Synthetic shove save",
+      actorId: firstTargetId,
+      targetId: secondTargetId,
+      ability: "str",
+      dc: difficultyClass(12),
+      rollMode: "disadvantage",
+    });
+
+    expect(
+      battleD20TestCircumstanceRequests({
+        resolutionId,
+        holes: [concentrationHole, shoveHole],
+        resolvedFills: [],
+      }),
+    ).toMatchObject([
+      {
+        testKind: "savingThrow",
+        targetId: firstTargetId,
+        mechanicalSources: { advantage: true, disadvantage: false },
+      },
+      {
+        testKind: "savingThrow",
+        targetId: secondTargetId,
+        mechanicalSources: { advantage: false, disadvantage: true },
+      },
+    ]);
+  });
+
+  test("returns no saving-throw request when no accepted prefix supplies a target", () => {
+    const hole = syntheticBattleHole({
+      kind: "savingThrowOutcome",
+      holeId: holeId("synthetic-no-save-target"),
+      holeInstanceKey: holeInstanceKey("synthetic-no-save-target-instance"),
+      label: "Synthetic targetless save",
+      ability: "dex",
+      dc: { kind: "fixed", dc: difficultyClass(14) },
+      targetIds: [],
+      targetRollModes: [],
+      targetFlatBonuses: [],
+    });
+    expect(
+      battleD20TestCircumstanceRequests({
+        resolutionId,
+        holes: [hole],
+        resolvedFills: [],
+      }),
+    ).toEqual([]);
   });
 
   test("uses the canonical accepted prefix for a normal single-target spell save", () => {
@@ -491,6 +629,21 @@ describe("Table-authored per-test D20 circumstances", () => {
       targetId: goblinId,
     });
     if (request === undefined) return;
+    const withoutTableDecision =
+      resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+        session,
+        subject,
+        fills: [
+          selectedTarget,
+          attackRollFill(findHole(preliminary.holes, "attackRoll"), {
+            total: 30,
+            naturalD20: 18,
+          }),
+        ],
+        d20TestResolutionId: resolutionId,
+        tableD20TestCircumstanceDecisions: [],
+      });
+    expect(withoutTableDecision.tag).toBe("needsHoles");
     const tableDecision = decision(request, "advantage");
     const admitted = admitTableD20TestCircumstanceDecisions({
       requests: [request],
@@ -555,5 +708,438 @@ describe("Table-authored per-test D20 circumstances", () => {
     if (ended.tag === "resolved") {
       expect(battleRuntimeSessionFollows(ended.session, session)).toBe(true);
     }
+  });
+
+  test("keeps no-roll concentration saves out of Table circumstance requests", () => {
+    const baseSession = startBattleSessionRight({
+      battleId: battleId("synthetic-table-no-roll-concentration"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const target = baseSession.state.combatants.get(goblinId);
+    if (target === undefined) {
+      throw new Error("Expected Goblin target.");
+    }
+    const session = battleRuntimeSessionWithState(baseSession, {
+      ...baseSession.state,
+      combatants: new Map(baseSession.state.combatants).set(goblinId, {
+        ...target,
+        concentration: {
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            "synthetic-concentration",
+          ),
+          effectKind: "spellEffect" as const,
+        },
+      }),
+    });
+    const subject = fighterAttackSubject(session.state);
+    const initial = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+      session,
+      subject,
+      fills: [],
+      d20TestResolutionId: d20TestResolutionId("no-roll-concentration"),
+      tableD20TestCircumstanceDecisions: [],
+    });
+    expect(initial.tag).toBe("needsHoles");
+    if (initial.tag !== "needsHoles") return;
+    const targetHole = initial.holes.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    if (targetHole === undefined) throw new Error("Expected target choice.");
+    const targetSelection = targetFill(targetHole, goblinId);
+    const attackStage = resolveBattleRuntimeSubject({
+      session,
+      subject,
+      fills: [targetSelection],
+    });
+    expect(attackStage.tag).toBe("needsHoles");
+    if (attackStage.tag !== "needsHoles") return;
+    const attackHole = attackStage.holes.find(
+      (hole) => hole.kind === "attackRoll",
+    );
+    if (attackHole === undefined) throw new Error("Expected attack roll.");
+    const attack = attackRollFill(attackHole, {
+      total: 20,
+      naturalD20: 12,
+    });
+    const damageStage = resolveBattleRuntimeSubject({
+      session,
+      subject,
+      fills: [targetSelection, attack],
+    });
+    expect(damageStage.tag).toBe("needsHoles");
+    if (damageStage.tag !== "needsHoles") return;
+    const damageHole = damageStage.holes.find(
+      (hole) => hole.kind === "rolledDice",
+    );
+    if (damageHole === undefined) throw new Error("Expected damage roll.");
+    const damage = damageRollFillWithGroups(damageHole, [[4]]);
+    const concentrationStage = resolveBattleRuntimeSubject({
+      session,
+      subject,
+      fills: [targetSelection, attack, damage],
+    });
+    expect(concentrationStage.tag).toBe("needsHoles");
+    if (concentrationStage.tag !== "needsHoles") return;
+    const concentrationHole = concentrationStage.holes.find(
+      (hole) => hole.kind === "concentrationSavingThrow",
+    );
+    if (concentrationHole === undefined) {
+      throw new Error("Expected concentration save.");
+    }
+    const noRoll = {
+      kind: "concentrationSavingThrow" as const,
+      holeId: concentrationHole.holeId,
+      value: { succeeded: true, withoutRoll: true as const },
+    };
+    const resolved = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+      session,
+      subject,
+      fills: [targetSelection, attack, damage, noRoll],
+      d20TestResolutionId: d20TestResolutionId("no-roll-concentration"),
+      tableD20TestCircumstanceDecisions: [],
+    });
+    expect(resolved.tag).toBe("resolved");
+  });
+
+  test("keeps only rolled targets from a mixed multi-target saving throw", () => {
+    const session = wizardVsSkeletonBattle({
+      extraCombatants: [
+        statBlockCreatureInit({
+          combatantId: secondSkeletonId,
+          displayName: "Second Skeleton",
+          initiative: 8,
+        }),
+      ],
+    });
+    const act = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "acid_splash",
+    );
+    if (act === undefined) throw new Error("Expected Acid Splash act.");
+    const subject = act.subject;
+    const initial = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+      session,
+      subject,
+      fills: [],
+      d20TestResolutionId: d20TestResolutionId("mixed-save-outcomes"),
+      tableD20TestCircumstanceDecisions: [],
+    });
+    expect(initial.tag).toBe("needsHoles");
+    if (initial.tag !== "needsHoles") return;
+    const saveHole = findHole(initial.holes, "savingThrowOutcome");
+    expect(initial.d20TestCircumstanceRequests).toEqual([]);
+    const mixedSave = savingThrowOutcomeFill(saveHole, [
+      { targetId: skeletonId, succeeded: true, withoutRoll: true },
+      { targetId: secondSkeletonId, succeeded: false, naturalD20: 12 },
+    ]);
+    const next = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+      session,
+      subject,
+      fills: [mixedSave],
+      d20TestResolutionId: d20TestResolutionId("mixed-save-outcomes"),
+      tableD20TestCircumstanceDecisions: [],
+    });
+    expect(next.tag).toBe("needsHoles");
+    if (next.tag !== "needsHoles") return;
+    expect(next.holes).toEqual(
+      expect.arrayContaining([expect.objectContaining({ kind: "rolledDice" })]),
+    );
+    expect(next.d20TestCircumstanceRequests).toEqual([]);
+  });
+
+  test("deduplicates repeated Table requests while preserving each save target", () => {
+    const unit = unitLibrary.requireUnit("paladin_abjure_foes");
+    const paladinChannelDivinity = unitLibrary.requireUnit(
+      "paladin_channel_divinity",
+    );
+    const paladinLevel = classLevel(9);
+    const classLevels = [
+      { className: "paladin" as const, level: paladinLevel },
+    ] as const satisfies CharacterBattleClassLevelInits;
+    const unitRef = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: parseSharedUnitId("paladin_abjure_foes") },
+      unit,
+      classLevels,
+    });
+    expect(Either.isRight(unitRef)).toBe(true);
+    if (Either.isLeft(unitRef)) return;
+    const support = battleMagicActionSaveGatedConditionSupportForUnit(
+      unit,
+      classLevels,
+    );
+    expect(support).not.toBe(null);
+    expect(support).not.toBe("unsupported");
+    if (support === null || support === "unsupported") return;
+    const session = startBattleSessionRight({
+      battleId: battleId("synthetic-table-multi-target-feature"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Synthetic Paladin",
+          initiative: 20,
+          classLevels,
+          d20Statistics: testCharacterD20Statistics({ cha: 16, wis: 10 }),
+          characterUnitRefs: [unitRef.right],
+          unitFeatures: [characterBattleFeatureInitForTest(unit, classLevels)],
+          resources: [{ unit: paladinChannelDivinity, usesRemaining: 2 }],
+          spellcasting: {
+            ...wizardSpellcasting(),
+            spellcastingSource: {
+              tag: "classSpellcasting" as const,
+              className: "paladin" as const,
+              abilityModifier: 3,
+            },
+          },
+          attack: null,
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Synthetic First Target",
+          initiative: 10,
+          attack: null,
+        }),
+        characterSeed({
+          combatantId: secondTargetId,
+          displayName: "Synthetic Second Target",
+          initiative: 9,
+          attack: null,
+        }),
+      ],
+    });
+    const subject = {
+      tag: "unitFeature" as const,
+      actorId: fighterId,
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        session,
+        fighterId,
+        "paladin_abjure_foes",
+      ),
+    };
+    const result = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+      session,
+      subject,
+      fills: [],
+      d20TestResolutionId: d20TestResolutionId("multi-target-feature"),
+      tableD20TestCircumstanceDecisions: [],
+    });
+    expect(result.tag).toBe("needsHoles");
+    if (result.tag !== "needsHoles") return;
+    expect(result.d20TestCircumstanceRequests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          testKind: "savingThrow",
+          targetId: goblinId,
+        }),
+        expect.objectContaining({
+          testKind: "savingThrow",
+          targetId: secondTargetId,
+        }),
+      ]),
+    );
+    expect(result.d20TestCircumstanceRequests).toHaveLength(3);
+  });
+
+  test("rejects a stale subject fill before collecting Table circumstance requests", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("synthetic-table-stale-fill"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const subject = fighterAttackSubject(session.state);
+    const initial = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+      session,
+      subject,
+      fills: [],
+      d20TestResolutionId: d20TestResolutionId("stale-fill"),
+      tableD20TestCircumstanceDecisions: [],
+    });
+    expect(initial.tag).toBe("needsHoles");
+    if (initial.tag !== "needsHoles") return;
+    const targetHole = initial.holes.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    if (targetHole === undefined) throw new Error("Expected target choice.");
+    const stale = {
+      ...targetFill(targetHole, goblinId),
+      holeId: holeId("stale-target-hole"),
+    };
+    expect(
+      resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+        session,
+        subject,
+        fills: [stale],
+        d20TestResolutionId: d20TestResolutionId("stale-fill"),
+        tableD20TestCircumstanceDecisions: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+  });
+
+  test("collects and validates Table D20 decisions at an End Turn death save frontier", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("synthetic-table-death-save"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: secondTargetId,
+          initiative: 10,
+          currentHp: 0,
+          attack: null,
+        }),
+      ],
+    });
+    const resolutionId = d20TestResolutionId("end-turn-death-save");
+    const pending = endBattleRuntimeTurnWithTableD20TestCircumstances({
+      session,
+      actorId: fighterId,
+      fills: [],
+      d20TestResolutionId: resolutionId,
+      tableD20TestCircumstanceDecisions: [],
+    });
+    expect(pending.tag).toBe("needsHoles");
+    if (pending.tag !== "needsHoles") return;
+    const request = pending.d20TestCircumstanceRequests[0];
+    expect(request).toMatchObject({ testKind: "savingThrow" });
+    if (request === undefined) return;
+    const invalid = endBattleRuntimeTurnWithTableD20TestCircumstances({
+      session,
+      actorId: fighterId,
+      fills: [],
+      d20TestResolutionId: resolutionId,
+      tableD20TestCircumstanceDecisions: [
+        decision(request, "advantage", "attackRoll"),
+      ],
+    });
+    expect(invalid).toMatchObject({
+      tag: "invalid",
+      tableD20TestCircumstanceDecisionIssue: {
+        issues: [{ tag: "d20-test-kind-mismatch" }],
+      },
+    });
+  });
+
+  test("deduplicates distinct simultaneous End Turn saving-throw requests", () => {
+    const baseSession = startBattleSessionRight({
+      battleId: battleId("synthetic-table-end-turn-save-requests"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const firstTurn = endBattleRuntimeTurn({
+      session: baseSession,
+      actorId: fighterId,
+    });
+    expect(firstTurn.tag).toBe("resolved");
+    if (firstTurn.tag !== "resolved") return;
+    const goblin = firstTurn.session.state.combatants.get(goblinId);
+    if (goblin === undefined) throw new Error("Expected Goblin.");
+    const effect = (
+      procedureName: string,
+    ): Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellConditionEndTurnSave" }
+    > => ({
+      kind: "spellConditionEndTurnSave",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(procedureName),
+      sourceCombatantId: fighterId,
+      condition: "frightened",
+      conditionHadNonSpellSource: false,
+      heightenedSpellTargetDisadvantage: null,
+      save: { ability: "wis", dc: { kind: "fixed", dc: difficultyClass(12) } },
+      expiresAt: {
+        kind: "concentration",
+        combatantId: fighterId,
+        durationTicks: elapsedTimeTicks(10),
+      },
+    });
+    const session = battleRuntimeSessionWithState(firstTurn.session, {
+      ...firstTurn.session.state,
+      combatants: new Map(firstTurn.session.state.combatants).set(goblinId, {
+        ...goblin,
+        activeEffects: [effect("end-turn-save-a"), effect("end-turn-save-b")],
+      }),
+    });
+    const result = endBattleRuntimeTurnWithTableD20TestCircumstances({
+      session,
+      actorId: goblinId,
+      fills: [],
+      d20TestResolutionId: d20TestResolutionId("end-turn-save-requests"),
+      tableD20TestCircumstanceDecisions: [],
+    });
+    expect(result.tag).toBe("needsHoles");
+    if (result.tag !== "needsHoles") return;
+    expect(result.d20TestCircumstanceRequests).toHaveLength(2);
+    const requestRefs = new Set(
+      result.d20TestCircumstanceRequests.map(({ requestRef }) => requestRef),
+    );
+    expect(requestRefs.size).toBe(2);
+  });
+
+  test("emits one projection per target while combining saving throw modes", () => {
+    expect(uniqueSavingThrowRollModeProjections([])).toEqual([]);
+    expect(
+      uniqueSavingThrowRollModeProjections([
+        { targetId: firstTargetId, rollMode: "advantage" },
+        { targetId: firstTargetId, rollMode: "disadvantage" },
+        { targetId: secondTargetId, rollMode: "normal" },
+      ]),
+    ).toEqual([
+      { targetId: firstTargetId, rollMode: "normal" },
+      { targetId: secondTargetId, rollMode: "normal" },
+    ]);
+  });
+
+  test("projects authored modes onto only matching holes", () => {
+    const savingHole = syntheticBattleHole({
+      kind: "savingThrowOutcome",
+      holeId: holeId("synthetic-project-save"),
+      holeInstanceKey: holeInstanceKey("synthetic-project-save-instance"),
+      label: "Synthetic projection save",
+      ability: "dex",
+      dc: { kind: "fixed", dc: difficultyClass(14) },
+      targetIds: [firstTargetId],
+      targetRollModes: [],
+      targetFlatBonuses: [],
+    });
+    const unrelatedHole = syntheticBattleHole({
+      kind: "abilityCheck",
+      holeId: holeId("synthetic-project-ability"),
+      holeInstanceKey: holeInstanceKey("synthetic-project-ability-instance"),
+      label: "Synthetic projection ability",
+      ability: "dex",
+      skill: "acrobatics",
+      dc: difficultyClass(12),
+    });
+    const request = battleD20TestCircumstanceRequests({
+      resolutionId,
+      holes: [savingHole],
+      resolvedFills: [],
+    })[0];
+    if (request === undefined) throw new Error("Expected saving request.");
+    const admitted = new Map([
+      [request.requestRef, decision(request, "advantage")],
+    ]);
+    const untouched = battleHolesWithTableD20TestCircumstances({
+      holes: [unrelatedHole],
+      requests: [],
+      admitted,
+    });
+    expect(untouched).toEqual([unrelatedHole]);
+    expect(
+      battleHolesWithTableD20TestCircumstances({
+        holes: [savingHole],
+        requests: [request],
+        admitted,
+      }),
+    ).toMatchObject([
+      { targetRollModes: [{ targetId: firstTargetId, rollMode: "advantage" }] },
+    ]);
   });
 });

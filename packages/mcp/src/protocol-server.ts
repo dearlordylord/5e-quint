@@ -3,6 +3,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { Random } from "effect";
 
 import {
   createMcpApplicationServices,
@@ -32,6 +33,7 @@ import { isDiceToolName } from "./dice-tool-input.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
 import type { CharacterToolName } from "./character-tool-input.ts";
 import type { DiceToolName } from "./dice-tool-input.ts";
+import { projectModelOutputJsonSchema } from "./model-output-json-schema.ts";
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
 
 export type {
@@ -41,30 +43,58 @@ export type {
 
 export type McpProtocolServerOptions = {
   readonly playSessionIdFactory?: PlaySessionIdFactory;
+  readonly playSessionRandomFactory?: () => Random.Random;
 };
+
+export function buildAdvertisedToolDefinitions(
+  definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
+): readonly ProtocolToolDefinition[] {
+  return [
+    ...playSessionToolDefinitions,
+    ...definitions.map((definition) => {
+      const advertisedDefinition =
+        definition.outputSchema === undefined
+          ? definition
+          : {
+              ...definition,
+              outputSchema: {
+                ...projectModelOutputJsonSchema(definition.outputSchema),
+                type: "object",
+              },
+            };
+      return isStatefulToolName(advertisedDefinition.name)
+        ? statefulPlaySessionToolDefinition(
+            advertisedDefinition,
+            advertisedDefinition.name,
+          )
+        : advertisedDefinition;
+    }),
+  ];
+}
 
 export function createDndMcpProtocolServer(
   applicationServices: McpApplicationServices = createMcpApplicationServices(),
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
   options: McpProtocolServerOptions = {},
 ) {
-  const protocolDefinitions = [
-    ...playSessionToolDefinitions,
-    ...definitions.map((definition) =>
-      isStatefulToolName(definition.name)
-        ? statefulPlaySessionToolDefinition(definition, definition.name)
-        : definition,
-    ),
-  ];
+  const protocolDefinitions = buildAdvertisedToolDefinitions(definitions);
   const advertisedToolNames = new Set(
     protocolDefinitions.map((definition) => definition.name),
   );
   const playSessions = createPlaySessionRegistry({
-    createRoot: (playSessionId) =>
-      createMcpPlaySessionRoot(
-        applicationServices,
-        adminMirrorSessionId(playSessionId),
-      ),
+    createRoot: (playSessionId) => {
+      const random = options.playSessionRandomFactory?.();
+      return random === undefined
+        ? createMcpPlaySessionRoot(
+            applicationServices,
+            adminMirrorSessionId(playSessionId),
+          )
+        : createMcpPlaySessionRoot(
+            applicationServices,
+            adminMirrorSessionId(playSessionId),
+            random,
+          );
+    },
     ...(options.playSessionIdFactory === undefined
       ? {}
       : { playSessionIdFactory: options.playSessionIdFactory }),

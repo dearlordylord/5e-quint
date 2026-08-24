@@ -1,5 +1,4 @@
 import {
-  battleTablePositionId,
   battlePresentedSnapshot,
   battleAdmittedSpellPresentations,
   discoverBattleActs,
@@ -17,10 +16,6 @@ import {
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { Either, Match, Option } from "effect";
 
-import {
-  admitCharacterSessionsToBattle,
-  characterSessionBattleAdmissionErrorContent,
-} from "./character-session-battle-admission.ts";
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { type AvailableCharacterSession } from "./session-store.ts";
@@ -129,18 +124,14 @@ export function handleStartBattleToolCall(
     return battleSnapshotPresentationIssueContent(snapshot.left);
   }
 
-  const committed = admitCharacterSessionsToBattle({
-    registry: root.sessionStore.characters,
-    battleId: input.battleId,
-    sessions: combatants.right.characterSessions.map(({ session }) => session),
-  });
-  if (Either.isLeft(committed)) {
-    return characterSessionBattleAdmissionErrorContent(committed.left);
-  }
-
   return completeBattleStateTransition({
     root,
-    transition: root.sessionStore.storeActiveBattle(admittedSession),
+    transition: root.sessionStore.commitBattleStart({
+      nextBattleState: { tag: "activeBattle", session: admittedSession },
+      characterSessions: combatants.right.characterSessions.map(
+        ({ session }) => session,
+      ),
+    }),
     output: () => {
       const session = root.sessionStore.snapshot();
       const battleState = battleStateSnapshot(root.sessionStore.battleState);
@@ -378,7 +369,7 @@ function admitCompanionAdmissions(input: {
           ? { kind: "unoccupiedSpaceWithinSpellRange" }
           : {
               kind: "unoccupiedSpaceWithinSpellRange",
-              positionId: battleTablePositionId(admission.positionId),
+              positionId: admission.positionId,
             },
       initialCombatantOrder: input.initialCombatantOrder,
       statBlockCatalog: input.root.statBlockCatalog,

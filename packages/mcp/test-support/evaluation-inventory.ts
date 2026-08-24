@@ -65,6 +65,12 @@ export const SkillEvaluationCaseSchema = Schema.Union(
   }),
 );
 
+export const CompleteWorkflowEvaluationCaseSchema = Schema.Struct({
+  ...SkillEvaluationCaseBase,
+  kind: Schema.Literal("completeWorkflow"),
+  expectedActivation: Schema.Literal("activate"),
+});
+
 export const EvaluationInventorySchema = Schema.Struct({
   officialGuidance: Schema.Literal(
     "https://developers.openai.com/plugins/deploy/connect-chatgpt",
@@ -90,6 +96,7 @@ export const EvaluationInventorySchema = Schema.Struct({
   }),
   mcpToolSelection: Schema.Array(McpEvaluationCaseSchema),
   skillActivation: Schema.Array(SkillEvaluationCaseSchema),
+  completeWorkflow: Schema.NonEmptyArray(CompleteWorkflowEvaluationCaseSchema),
 });
 
 export type EvaluationInventory = typeof EvaluationInventorySchema.Type;

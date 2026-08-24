@@ -68,6 +68,7 @@ import {
   startBattleFromCharacterBuildAndStatBlock,
   toolDefinitions,
 } from "./server.ts";
+import { buildAdvertisedToolDefinitions } from "./protocol-server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
@@ -432,6 +433,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:list-in-battle",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -625,7 +628,7 @@ describe("MCP server route", () => {
           kind: "spellInvocation",
           spellId: "detect_magic",
           invocation: { kind: "nonRitual" },
-        } as unknown,
+        },
       }),
     );
     expect(rejectedNonRitual).toMatchObject({
@@ -976,6 +979,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(invalidCatalogRoot, "start_battle", {
           battleId: "battle:invalid-character-catalog",
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "characterSession",
@@ -2040,9 +2045,22 @@ describe("MCP server route", () => {
   });
 
   test("keeps registered tool metadata within the ChatGPT app-version storage limit", () => {
+    const advertisedDefinitions = buildAdvertisedToolDefinitions();
+    expect(advertisedDefinitions.map((tool) => tool.name)).toEqual([
+      "create_play_session",
+      "read_play_session",
+      ...toolDefinitions.map((tool) => tool.name),
+    ]);
     expect(
-      Buffer.byteLength(JSON.stringify(toolDefinitions), "utf8"),
+      Buffer.byteLength(JSON.stringify(advertisedDefinitions), "utf8"),
     ).toBeLessThan(CHATGPT_APP_VERSION_STORAGE_LIMIT_BYTES);
+    const readPlaySession = advertisedDefinitions.find(
+      (tool) => tool.name === "read_play_session",
+    );
+    const readPlaySessionSchema = JSON.stringify(readPlaySession?.outputSchema);
+    expect(readPlaySessionSchema).toContain('"pendingBattleHoles"');
+    expect(readPlaySessionSchema).toContain('"holeId"');
+    expect(readPlaySessionSchema).toContain('"holeInstanceKey"');
   });
 
   test("describes MCP workflow and lists discoverable catalogs through tools", () => {
@@ -2245,6 +2263,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:missing-presentation-context",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "statBlock",
@@ -2315,6 +2335,8 @@ describe("MCP server route", () => {
 
     const startResponse = handleToolCall(root, "start_battle", {
       battleId: "battle:mcp-shell",
+      initiativeMode: "direct",
+      companionAdmissions: [],
       initialCombatants: [
         {
           kind: "characterSession",
@@ -2461,6 +2483,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-multiattack-continuation",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -2562,6 +2586,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-movement",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -2615,6 +2641,8 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-character-roster",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -2668,6 +2696,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-active-battle-first",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -2693,6 +2723,8 @@ describe("MCP server route", () => {
     const rejected = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-active-battle-second",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -2789,6 +2821,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-fighter-flow",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -3356,6 +3390,8 @@ describe("MCP server route", () => {
     const rejected = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-shell-missing-initiative",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -3394,6 +3430,8 @@ describe("MCP server route", () => {
     );
     const baseStart = {
       battleId: "battle:mcp-start-exact-character-input",
+      initiativeMode: "direct",
+      companionAdmissions: [],
       initialCombatants: [
         {
           kind: "statBlock",
@@ -3410,6 +3448,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(root, "start_battle", {
           ...baseStart,
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [],
         }),
       ),
@@ -3422,6 +3462,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(root, "start_battle", {
           ...baseStart,
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "characterSession",
@@ -3455,6 +3497,8 @@ describe("MCP server route", () => {
     const rejected = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-missing-additional",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -3523,6 +3567,8 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-stat-block-roster",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "statBlock",
@@ -3581,6 +3627,7 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-find-familiar-admission",
+        initiativeMode: "direct",
         initialCombatants: [
           {
             kind: "characterSession",
@@ -3674,6 +3721,7 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-find-familiar-reappearance-fills",
+        initiativeMode: "direct",
         initialCombatants: [
           {
             kind: "characterSession",
@@ -3809,6 +3857,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(root, "start_battle", {
           battleId: `battle:${draftId}`,
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "characterSession",
@@ -3908,6 +3958,7 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:gh324-round-trip",
+        initiativeMode: "direct",
         initialCombatants: [
           {
             kind: "characterSession",
@@ -4038,6 +4089,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:gh324-atomic",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -4070,14 +4123,11 @@ describe("MCP server route", () => {
       ...root,
       sessionStore: {
         ...root.sessionStore,
-        characters: {
-          ...root.sessionStore.characters,
-          setAll: () =>
-            Either.left({
-              tag: "unknownCharacterSession" as const,
-              characterId: firstCharacterId,
-            }),
-        },
+        commitBattleEnd: () =>
+          Either.left({
+            tag: "battleStateCharacterSessionChanged" as const,
+            affectedCharacterIds: [firstCharacterId, secondCharacterId],
+          }),
       },
     };
 
@@ -4085,13 +4135,11 @@ describe("MCP server route", () => {
       readPayload(handleToolCall(failingRoot, "end_battle", {})),
     ).toMatchObject({
       details: {
-        code: "CHARACTER_SESSION_COMMIT_INVALID",
-        registryIssue: {
-          tag: "unknownCharacterSession",
-          characterId: firstCharacterId,
+        code: "BATTLE_STATE_TRANSITION_INVALID",
+        transition: {
+          tag: "battleStateCharacterSessionChanged",
+          affectedCharacterIds: [firstCharacterId, secondCharacterId],
         },
-        affectedCharacterIds: [firstCharacterId, secondCharacterId],
-        recovery: { tag: "characterSessionsUnchanged" },
       },
     });
     expect(failingRoot.sessionStore.battleSession).toBe(battleBefore);
@@ -4126,20 +4174,19 @@ describe("MCP server route", () => {
       ...root,
       sessionStore: {
         ...root.sessionStore,
-        characters: {
-          ...root.sessionStore.characters,
-          setAll: () =>
-            Either.left({
-              tag: "unknownCharacterSession" as const,
-              characterId: firstCharacterId,
-            }),
-        },
+        commitBattleStart: () =>
+          Either.left({
+            tag: "battleStateCharacterSessionChanged" as const,
+            affectedCharacterIds: [firstCharacterId, secondCharacterId],
+          }),
       },
     };
     expect(
       readPayload(
         handleToolCall(failingRoot, "start_battle", {
           battleId: "battle:gh324-start-atomic",
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "characterSession",
@@ -4160,12 +4207,11 @@ describe("MCP server route", () => {
       ),
     ).toMatchObject({
       details: {
-        code: "CHARACTER_SESSION_COMMIT_INVALID",
-        registryIssue: {
-          tag: "unknownCharacterSession",
-          characterId: firstCharacterId,
+        code: "BATTLE_STATE_TRANSITION_INVALID",
+        transition: {
+          tag: "battleStateCharacterSessionChanged",
+          affectedCharacterIds: [firstCharacterId, secondCharacterId],
         },
-        recovery: { tag: "characterSessionsUnchanged" },
       },
     });
     expect(root.sessionStore.battleSession).toBeNull();
@@ -4181,6 +4227,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(root, "start_battle", {
           battleId: "battle:gh324-start-atomic",
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "characterSession",
@@ -4215,6 +4263,7 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(duplicateOwnerRoot, "start_battle", {
           battleId: "battle:duplicate-companion-owner",
+          initiativeMode: "direct",
           initialCombatants: [
             {
               kind: "statBlock",
@@ -4248,6 +4297,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(unknownStatBlockRoot, "start_battle", {
           battleId: "battle:unknown-stat-block",
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "statBlock",
@@ -4284,6 +4335,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(inBattleRoot, "start_battle", {
           battleId: "battle:new",
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "characterSession",
@@ -4311,6 +4364,7 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(companionRoot, "start_battle", {
           battleId: "battle:missing-retained-companion",
+          initiativeMode: "direct",
           initialCombatants: [
             {
               kind: "characterSession",
@@ -4343,6 +4397,7 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(defaultCompanionIdRoot, "start_battle", {
           battleId: "battle:missing-retained-companion-default-id",
+          initiativeMode: "direct",
           initialCombatants: [
             {
               kind: "characterSession",
@@ -4378,6 +4433,8 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(hpRoot, "start_battle", {
         battleId: "battle:stat-block-temp-hp",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "statBlock",
@@ -4401,6 +4458,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(invalidHpRoot, "start_battle", {
           battleId: "battle:stat-block-invalid-hp",
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "statBlock",
@@ -4444,6 +4503,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(invalidMechanicsRoot, "start_battle", {
           battleId: "battle:stat-block-invalid-mechanics",
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "statBlock",
@@ -4480,6 +4541,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(invalidDisplayRoot, "start_battle", {
           battleId: "battle:stat-block-invalid-display",
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             {
               kind: "statBlock",
@@ -4509,6 +4572,7 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-find-familiar-touch-delivery-fills",
+        initiativeMode: "direct",
         initialCombatants: [
           {
             kind: "characterSession",
@@ -4664,6 +4728,7 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-find-familiar-spellbook-ritual-admission",
+        initiativeMode: "direct",
         initialCombatants: [
           {
             kind: "characterSession",
@@ -5800,6 +5865,7 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-find-familiar-tie-order",
+        initiativeMode: "direct",
         initialCombatants: [
           {
             kind: "characterSession",
@@ -5837,6 +5903,7 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-find-familiar-permanent-dismiss-handoff",
+        initiativeMode: "direct",
         initialCombatants: [
           {
             kind: "characterSession",
@@ -5903,6 +5970,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-find-familiar-never-admitted-handoff",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -5942,6 +6011,7 @@ describe("MCP server route", () => {
     const rejected = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-find-familiar-missing-owner",
+        initiativeMode: "direct",
         initialCombatants: [
           {
             kind: "statBlock",
@@ -5977,6 +6047,7 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(withoutExplicitCompanionId, "start_battle", {
           battleId: "battle:mcp-find-familiar-missing-owner-default-id",
+          initiativeMode: "direct",
           initialCombatants: [
             {
               kind: "statBlock",
@@ -6040,6 +6111,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-battle-subject-boundary",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -6167,6 +6240,8 @@ describe("MCP server route", () => {
 
     const baseStart = {
       battleId: "battle:mcp-duplicates",
+      initiativeMode: "direct",
+      companionAdmissions: [],
       initialCombatants: [
         {
           kind: "characterSession",
@@ -6197,6 +6272,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(root, "start_battle", {
           ...baseStart,
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             ...baseStart.initialCombatants,
             { ...secondCharacter, characterId: testCharacterId(firstDraftId) },
@@ -6213,6 +6290,8 @@ describe("MCP server route", () => {
       readPayload(
         handleToolCall(root, "start_battle", {
           ...baseStart,
+          initiativeMode: "direct",
+          companionAdmissions: [],
           initialCombatants: [
             ...baseStart.initialCombatants,
             { ...secondCharacter, combatantId: "goblin" },
@@ -6369,6 +6448,8 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-full-vertical",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -6779,6 +6860,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-stable-zero-hp-closeout",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -6885,6 +6968,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-knocked-out-closeout",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -7051,6 +7136,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-positive-unconscious-closeout",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -7120,6 +7207,8 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-knocked-out-start",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -7208,6 +7297,8 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-stable-zero-hp-start",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "statBlock",
@@ -7272,6 +7363,8 @@ describe("MCP server route", () => {
     const started = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-dead-zero-hp-start",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "statBlock",
@@ -7376,6 +7469,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-dead-zero-hp-closeout",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",
@@ -8384,6 +8479,8 @@ describe("MCP server route", () => {
     readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:spare-the-dying-mcp",
+        initiativeMode: "direct",
+        companionAdmissions: [],
         initialCombatants: [
           {
             kind: "characterSession",

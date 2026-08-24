@@ -6,7 +6,12 @@ import {
   battleId,
   battleProcedureExecutionRef,
   combatantId,
+  type BattleHole,
 } from "@dnd/battle-runtime";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   battleRuntimeContextForTest,
   battleRuntimeSessionForTest,
@@ -114,6 +119,7 @@ describe("Admin Mirror publisher", () => {
     );
     const pendingProjection = projectionWithTransientBattleFills({
       fills: [],
+      holes: [pendingTargetHole(actorId, "bonus")],
       subject: {
         tag: "bonusActionSpell",
         actorId,
@@ -165,6 +171,7 @@ describe("Admin Mirror publisher", () => {
     );
     const pendingProjection = projectionWithTransientBattleFills({
       fills: [],
+      holes: [pendingTargetHole(actorId, "attack")],
       subject: {
         tag: "action",
         action: "attack",
@@ -215,6 +222,8 @@ describe("Admin Mirror publisher", () => {
     };
     handleToolCall(root, "start_battle", {
       battleId: "battle:invalid-admin-projection",
+      initiativeMode: "direct",
+      companionAdmissions: [],
       initialCombatants: [
         {
           admissionSource: { kind: "encounterParticipant" },
@@ -278,5 +287,18 @@ function projectionWithTransientBattleFills(
       selectedStatBlockId: null,
       transientBattleFills,
     },
+  };
+}
+
+function pendingTargetHole(
+  actorId: ReturnType<typeof combatantId>,
+  suffix: string,
+): Extract<BattleHole, { readonly kind: "targetChoice" }> {
+  return {
+    holeInstanceKey: holeInstanceKey(`admin-pending:${suffix}:instance`),
+    holeId: holeId(`admin-pending:${suffix}`),
+    kind: "targetChoice",
+    label: "Pending target",
+    choices: [actorId],
   };
 }

@@ -41,6 +41,33 @@ const expectedAnnotations = {
   roll_dice: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
 } as const;
 const expectedAnnotationByName = new Map(Object.entries(expectedAnnotations));
+const expectedTitles = {
+  create_play_session: "Create Play Session",
+  read_play_session: "Read Play Session",
+  describe_mcp_workflow: "Describe MCP Workflow",
+  list_stat_blocks: "List Stat Blocks",
+  list_catalog_units: "List Catalog Units",
+  inspect_catalog_unit: "Inspect Catalog Unit",
+  create_character_draft: "Create Character Draft",
+  discover_creation_holes: "Discover Creation Holes",
+  fill_creation_holes: "Fill Creation Holes",
+  finalize_character: "Finalize Character",
+  apply_character_session_operation: "Apply Character Operation",
+  list_characters: "List Characters",
+  inspect_character_session: "Inspect Character Session",
+  query_character_session: "Query Character Session",
+  select_stat_block: "Select Stat Block",
+  start_battle: "Start Battle",
+  battle_lifecycle: "Update Battle Lifecycle",
+  read_battle_state: "Read Battle State",
+  discover_battle_acts: "Discover Battle Acts",
+  fill_battle_hole: "Fill Battle Hole",
+  resolve_battle_act: "Resolve Battle Act",
+  end_turn: "End Turn",
+  end_battle: "End Battle",
+  roll_dice: "Roll Dice",
+} as const;
+const expectedTitleByName = new Map(Object.entries(expectedTitles));
 
 describe("MCP tool annotations", () => {
   test("tools/list publishes complete side-effect classifications for every tool", async () => {
@@ -60,7 +87,12 @@ describe("MCP tool annotations", () => {
       expect(listedTools.map((tool) => tool.name)).toEqual(
         Object.keys(expectedAnnotations),
       );
+      expect(new Set(listedTools.map((tool) => tool.title)).size).toBe(
+        listedTools.length,
+      );
       for (const tool of listedTools) {
+        expect(tool.title, tool.name).toBe(expectedTitleByName.get(tool.name));
+        expect(tool.title?.trim().length ?? 0, tool.name).toBeGreaterThan(0);
         expect(tool.annotations, tool.name).toEqual(
           expectedAnnotationByName.get(tool.name),
         );

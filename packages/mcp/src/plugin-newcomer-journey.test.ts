@@ -1,6 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { describe, test } from "vitest";
+import { describe, expect, test } from "vitest";
 
 import { verifyCompleteNewcomerJourney } from "../test-support/mcp-acceptance-scenarios.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
@@ -22,7 +22,11 @@ describe("SRD Play headless newcomer journey", () => {
       try {
         await server.connect(serverTransport);
         await client.connect(clientTransport);
-        await verifyCompleteNewcomerJourney(client);
+        const journey = await verifyCompleteNewcomerJourney(client);
+        expect(journey.shortRestHealing).toEqual({
+          currentHp: 10,
+          spentHitDice: 1,
+        });
       } finally {
         await Promise.allSettled([client.close(), server.close()]);
       }

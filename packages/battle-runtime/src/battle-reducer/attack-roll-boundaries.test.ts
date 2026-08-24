@@ -16,6 +16,7 @@ import {
 import { combatantId } from "../identity.ts";
 import {
   activeEffectGrantsAttackRollMode,
+  attackRollModeMatches,
   attackRollOngoingFeatureActivationProfile,
   consumeSelfAttackRollEffects,
   extendAttackRollOngoingFeatures,
@@ -27,6 +28,7 @@ import {
   tacticalMasterReplacementDecisionHole,
   weaponMasteryCleaveDamageHole,
 } from "./attack-roll.ts";
+import { retainAdmittedAttackRollTableSource } from "../d20-test-circumstance.ts";
 import { battleStateWithSyntheticWeakeningEndTurnSave } from "../command-delegated-end-turn.test-support.ts";
 
 describe("attack-roll reducer boundaries", () => {
@@ -197,5 +199,17 @@ describe("attack-roll reducer boundaries", () => {
         { attack: testUnarmedStrikeDamageAttack() },
       ),
     ).toBe(true);
+  });
+
+  test("matches an attack roll against an admitted Table circumstance source", () => {
+    const roll = {
+      total: 18,
+      naturalD20: DieRollResult(15),
+      rollMode: "normal" as const,
+    };
+    expect(attackRollModeMatches(roll, "disadvantage")).toBe(false);
+
+    retainAdmittedAttackRollTableSource(roll, "advantage");
+    expect(attackRollModeMatches(roll, "disadvantage")).toBe(true);
   });
 });

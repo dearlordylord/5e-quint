@@ -74,5 +74,13 @@
       "prompt": "Can this SRD engine accept a custom executable monster I wrote and use it in battle?",
       "expectedActivation": "activate"
     }
+  ],
+  "completeWorkflow": [
+    {
+      "id": "complete-newcomer-journey",
+      "kind": "completeWorkflow",
+      "prompt": "Use SRD Play to inspect the installed SRD character options and help me build a supported character using only choices returned by the current creation holes. Stop whenever I must make a meaningful choice. After finalization, start a battle with that Character Session and an installed SRD Goblin Warrior, follow only returned Battle Acts and Runtime Holes, end the battle only when no fill is pending, and finish by listing my Character Sessions.",
+      "expectedActivation": "activate"
+    }
   ]
 }

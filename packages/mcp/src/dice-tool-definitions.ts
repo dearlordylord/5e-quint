@@ -14,6 +14,7 @@ import {
 export const diceToolDefinitions = [
   {
     name: diceToolNames.rollDice,
+    title: "Roll Dice",
     description:
       "Roll an ordered, non-empty batch of structured dice groups and return visible raw faces. This independent roller never reads Battle Holes, derives modifiers or outcomes, or fills a Hole; copy its faces into an ordinary typed fill only when the current runtime Hole supplies the required facts.",
     inputSchema: rollDiceInputSchema,

@@ -4,18 +4,63 @@ import { describe, expect, test } from "vitest";
 import { battleToolNames } from "./battle-tool-input.ts";
 import { CharacterSessionQueryOutputSchema } from "./character-session-query-tool-output.ts";
 import { characterToolNames } from "./character-tool-input.ts";
-import { createMcpPlaySessionRoot } from "./composition-root.ts";
+import {
+  createMcpApplicationServices,
+  createMcpPlaySessionRoot,
+} from "./composition-root.ts";
+import { adminMirrorSessionId } from "./admin-mirror-contract.ts";
 import {
   McpSessionSummarySchema,
   type McpSessionSummary,
 } from "./session-snapshot-output.ts";
 import { handleToolCall } from "./server.ts";
 import {
+  handleCreatePlaySession,
   nextOperationsFrom,
   unresolvedInputsFrom,
 } from "./play-session-protocol.ts";
+import {
+  createPlaySessionRegistry,
+  decodePlaySessionId,
+} from "./play-session.ts";
+import { jsonContentPayload } from "./tool-content.ts";
 
 describe("Play Session operation projection", () => {
+  test("returns a typed issue when a success payload drifts from its operation schema", () => {
+    expect(
+      unresolvedInputsFrom(characterToolNames.createCharacterDraft, {}),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { tag: "operationProjectionDecodeIssue" },
+    });
+  });
+
+  test("keeps Play Session collision details out of the public creation error", () => {
+    const decoded = decodePlaySessionId(
+      "play-session:00000000-0000-4000-8000-000000000000",
+    );
+    if (Either.isLeft(decoded)) throw new Error(decoded.left);
+    const applicationServices = createMcpApplicationServices();
+    const registry = createPlaySessionRegistry({
+      createRoot: (playSessionId) =>
+        createMcpPlaySessionRoot(
+          applicationServices,
+          adminMirrorSessionId(playSessionId),
+        ),
+      playSessionIdFactory: () => decoded.right,
+    });
+
+    expect(Either.isRight(registry.create())).toBe(true);
+    const publicFailure = handleCreatePlaySession(registry, undefined);
+
+    expect(publicFailure.isError).toBe(true);
+    expect(jsonContentPayload(publicFailure)).toEqual({
+      error: "Unable to create a Play Session.",
+      details: { code: "PLAY_SESSION_CREATION_FAILED" },
+    });
+    expect(JSON.stringify(publicFailure)).not.toContain("collision");
+  });
+
   test("does not treat Character Session qRoute metadata as Battle holes", () => {
     const session = activeBattleSummary();
     if (session === undefined) return;
@@ -58,11 +103,13 @@ describe("Play Session operation projection", () => {
       characterToolNames.queryCharacterSession,
       decoded.right,
     );
-    expect(unresolved).toEqual([]);
+    expect(Either.isRight(unresolved)).toBe(true);
+    if (Either.isLeft(unresolved)) return;
+    expect(unresolved.right).toEqual([]);
     const nextOperations = nextOperationsFrom(
       characterToolNames.queryCharacterSession,
       session,
-      unresolved,
+      unresolved.right,
       false,
     );
     expect(nextOperations).not.toContain(battleToolNames.fillBattleHole);
@@ -86,13 +133,15 @@ describe("Play Session operation projection", () => {
       characterToolNames.createCharacterDraft,
       created.structuredContent,
     );
-    expect(unresolved.length).toBeGreaterThan(0);
-    expect(unresolved[0]?.sourcePath).toBe("$.holes");
+    expect(Either.isRight(unresolved)).toBe(true);
+    if (Either.isLeft(unresolved)) return;
+    expect(unresolved.right.length).toBeGreaterThan(0);
+    expect(unresolved.right[0]?.sourcePath).toBe("$.holes");
     expect(
       nextOperationsFrom(
         characterToolNames.createCharacterDraft,
         sessionSummary(root),
-        unresolved,
+        unresolved.right,
         false,
       ),
     ).toContain(characterToolNames.fillCreationHoles);
@@ -102,6 +151,8 @@ describe("Play Session operation projection", () => {
     const root = createMcpPlaySessionRoot();
     const started = handleToolCall(root, battleToolNames.startBattle, {
       battleId: "battle:protocol-projection-battle",
+      initiativeMode: "direct",
+      companionAdmissions: [],
       initialCombatants: [
         {
           kind: "statBlock",
@@ -129,15 +180,17 @@ describe("Play Session operation projection", () => {
       battleToolNames.startBattle,
       started.structuredContent,
     );
-    expect(unresolved.length).toBeGreaterThan(0);
-    expect(unresolved[0]?.sourcePath).toMatch(
+    expect(Either.isRight(unresolved)).toBe(true);
+    if (Either.isLeft(unresolved)) return;
+    expect(unresolved.right.length).toBeGreaterThan(0);
+    expect(unresolved.right[0]?.sourcePath).toMatch(
       /^\$\.availableActs\[\d+\]\.initialHoles$/u,
     );
     expect(
       nextOperationsFrom(
         battleToolNames.startBattle,
         sessionSummary(root),
-        unresolved,
+        unresolved.right,
         false,
       ),
     ).toContain(battleToolNames.fillBattleHole);
@@ -154,6 +207,7 @@ function activeBattleSummary(): McpSessionSummary | undefined {
       battleId: "battle:unrelated",
       currentActorId: "unrelated-actor",
     },
+    pendingBattleHoles: null,
   });
   expect(Either.isRight(decoded)).toBe(true);
   return Either.isRight(decoded) ? decoded.right : undefined;
@@ -166,6 +220,10 @@ function sessionSummary(root: ReturnType<typeof createMcpPlaySessionRoot>) {
     characterIds: snapshot.characterIds,
     selectedStatBlockId: snapshot.selectedStatBlockId,
     battleState: snapshot.battleState,
+    pendingBattleHoles:
+      snapshot.transientBattleFills === null
+        ? null
+        : snapshot.transientBattleFills.holes,
   });
   if (Either.isLeft(decoded)) {
     throw new Error(decoded.left.message);

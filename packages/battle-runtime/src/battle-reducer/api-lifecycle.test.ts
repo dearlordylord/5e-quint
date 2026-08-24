@@ -188,7 +188,7 @@ describe("battle lifecycle admission issue aggregation", () => {
     }
   });
 
-  test("runtime add/remove keeps character context aligned with the combatant roster", () => {
+  test("runtime add/remove keeps authored context aligned with the combatant roster", () => {
     const started = startBattle({
       battleId: battleId("runtime-roster-context"),
       combatants: [baseCombatant],
@@ -213,9 +213,30 @@ describe("battle lifecycle admission issue aggregation", () => {
       true,
     );
 
-    const removed = removeBattleRuntimeCombatants({
+    const addedStatBlock = statBlockCreatureInit({
+      combatantId: combatantId("runtime-added-stat-block"),
+      initiative: 16,
+    });
+    const addedWithStatBlock = addBattleRuntimeCombatant({
       session: added.right,
-      combatantIds: [addedCombatant.combatantId],
+      combatant: addedStatBlock,
+    });
+    expect(Either.isRight(addedWithStatBlock)).toBe(true);
+    if (Either.isLeft(addedWithStatBlock)) return;
+    expect(
+      addedWithStatBlock.right.context.statBlocks.has(
+        addedStatBlock.combatantId,
+      ),
+    ).toBe(true);
+    expect(
+      addedWithStatBlock.right.context.characters.has(
+        addedCombatant.combatantId,
+      ),
+    ).toBe(true);
+
+    const removed = removeBattleRuntimeCombatants({
+      session: addedWithStatBlock.right,
+      combatantIds: [addedCombatant.combatantId, addedStatBlock.combatantId],
     });
     expect(Either.isRight(removed)).toBe(true);
     if (Either.isLeft(removed)) return;
@@ -224,6 +245,9 @@ describe("battle lifecycle admission issue aggregation", () => {
     );
     expect(
       removed.right.context.characters.has(addedCombatant.combatantId),
+    ).toBe(false);
+    expect(
+      removed.right.context.statBlocks.has(addedStatBlock.combatantId),
     ).toBe(false);
     expect(
       requiredInitiativeRollModeForCombatant(

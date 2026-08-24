@@ -3,10 +3,7 @@ import type {
   CharacterDraftId,
 } from "@dnd/character-creation-runtime";
 import type {
-  BattleFill,
-  BattleId,
   BattleRuntimeSession,
-  BattleSubject,
   InitialInitiativeSetup,
   InitiativeSwapCandidateWitness,
 } from "@dnd/battle-runtime";
@@ -15,19 +12,12 @@ import {
   battleStateInitIssueMessage,
   finishInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
-import type { snapshotBattle } from "@dnd/battle-runtime";
 import {
   characterSheetCurrentHp,
   characterSheetSpellSlots,
   rebuildCharacterSheet,
   characterSheetId,
-  type CharacterSheet,
   type CharacterSheetId,
-  type CharacterSheetHitPoints,
-  type CharacterSheetRebuildInput,
-  type CharacterSheetPositiveHpUnconscious,
-  type CharacterSheetZeroHpLifecycle,
-  type CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
 type CharacterId = CharacterSheetId;
 import type {
@@ -46,6 +36,21 @@ import type {
   McpBattleRosterTransitionIssue,
 } from "./battle-roster-session-types.ts";
 import { createCharacterSessionRegistry } from "./character-session-registry.ts";
+import {
+  commitBattleEndTransition,
+  commitBattleStartTransition,
+} from "./battle-session-store-commit.ts";
+import type { BattleCharacterSessionSettlement } from "./battle-handoff.ts";
+import type {
+  AvailableCharacterSession,
+  AvailableCharacterSessionInput,
+  CharacterSessionRegistry,
+  CharacterSessionIssue,
+  McpBattleState,
+  McpBattleStateTransitionIssue,
+  McpSessionSnapshot,
+  PendingBattleFillSession,
+} from "./session-store-types.ts";
 
 export type {
   ActiveBattleRosterTransitionPlan,
@@ -53,131 +58,22 @@ export type {
   McpBattleRosterOperation,
   McpBattleRosterTransitionIssue,
 } from "./battle-roster-session-types.ts";
+export type * from "./session-store-types.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
-export type AvailableCharacterSession = CharacterSheet;
-export type AvailableCharacterSessionInput = CharacterSheetRebuildInput;
-export type CharacterSessionIssue = {
-  readonly tag: "characterSessionIssue";
-  readonly message: string;
-};
-export type CharacterSessionHitPoints = CharacterSheetHitPoints;
-export type CharacterSessionPositiveHpUnconscious =
-  CharacterSheetPositiveHpUnconscious;
-export type CharacterSessionZeroHpLifecycle = CharacterSheetZeroHpLifecycle;
-export type CharacterSessionZeroHpLifecycleInput =
-  CharacterSheetZeroHpLifecycleInput;
-
-export type InBattleCharacterSession = {
-  readonly tag: "inBattle";
-  readonly sheet: AvailableCharacterSession;
-  readonly battleId: BattleId;
-};
-
-export type CharacterSession =
-  | AvailableCharacterSession
-  | InBattleCharacterSession;
-
-export type CharacterSessionRegistryIssue =
-  | {
-      readonly tag: "duplicateCharacterSession";
-      readonly characterId: CharacterId;
-    }
-  | {
-      readonly tag: "unknownCharacterSession";
-      readonly characterId: CharacterId;
-    };
-
-export type CharacterSessionRegistry = {
-  readonly size: number;
-  get(characterId: CharacterId): CharacterSession | undefined;
-  has(characterId: CharacterId): boolean;
-  set(session: CharacterSession): void;
-  setAll(
-    sessions: readonly CharacterSession[],
-  ): Either.Either<void, CharacterSessionRegistryIssue>;
-  entries(): IterableIterator<readonly [CharacterId, CharacterSession]>;
-  keys(): IterableIterator<CharacterId>;
-};
-
-export type BattleFillSession = {
-  readonly subject: BattleSubject;
-  readonly fills: readonly BattleFill[];
-};
-
-export type PendingBattleFillSession = BattleFillSession & {
-  readonly baseSession: BattleRuntimeSession;
-};
-
-export type McpBattleState =
-  | { readonly tag: "none" }
-  | {
-      readonly tag: "initialInitiativeSetup";
-      readonly setup: InitialInitiativeSetup;
-    }
-  | {
-      readonly tag: "activeBattle";
-      readonly session: BattleRuntimeSession;
-    };
-
-export type McpBattleStateTransitionIssue =
-  | {
-      readonly tag: "invalidBattleStateTransition";
-      readonly from: McpBattleState["tag"];
-      readonly to: McpBattleState["tag"];
-    }
-  | { readonly tag: "initialInitiativeSwapRejected"; readonly message: string }
-  | {
-      readonly tag: "battleStateBattleOwnershipConflict";
-      readonly expectedBattleId: BattleId;
-      readonly actualBattleId: BattleId;
-    }
-  | {
-      readonly tag: "battleStateCharacterSessionRegistryConflict";
-      readonly registryIssue: CharacterSessionRegistryIssue;
-      readonly affectedCharacterIds: readonly CharacterId[];
-    };
-
-export type McpBattleStateSnapshot =
-  | { readonly tag: "none" }
-  | {
-      readonly tag: "initialInitiativeSetup";
-      readonly battleId: BattleId;
-      readonly combatants: readonly McpInitialInitiativeCombatantSnapshot[];
-    }
-  | {
-      readonly tag: "activeBattle";
-      readonly battleId: BattleId;
-      readonly currentActorId: ReturnType<
-        typeof snapshotBattle
-      >["currentActorId"];
-    };
-
-export type McpInitialInitiativeCombatantSnapshot = {
-  readonly combatantId: ReturnType<typeof snapshotBattle>["turnOrder"][number];
-  readonly initiative: number;
-  readonly rollMode: "normal" | "advantage" | "disadvantage";
-};
-
-export type McpSessionSnapshot = {
-  readonly draftIds: readonly CharacterDraftId[];
-  readonly characterIds: readonly CharacterId[];
-  readonly selectedStatBlockId: StatBlockId | null;
-  readonly battleState: McpBattleStateSnapshot;
-  readonly transientBattleFills: BattleFillSession | null;
-};
-
-export type McpBattleSessionSnapshot = Extract<
-  McpBattleStateSnapshot,
-  { readonly tag: "activeBattle" }
->;
-
 export type McpSessionStore = {
   readonly drafts: Map<CharacterDraftId, CharacterDraft>;
   readonly characters: CharacterSessionRegistry;
   readonly battleState: McpBattleState;
-  /** Read-only active-session projection for battle-only composition helpers. */
   readonly battleSession: BattleRuntimeSession | null;
+  commitBattleStart(input: {
+    readonly nextBattleState: Exclude<McpBattleState, { readonly tag: "none" }>;
+    readonly characterSessions: readonly AvailableCharacterSession[];
+  }): Either.Either<void, McpBattleStateTransitionIssue>;
+  commitBattleEnd(input: {
+    readonly battleSession: BattleRuntimeSession;
+    readonly characterSettlements: readonly BattleCharacterSessionSettlement[];
+  }): Either.Either<void, McpBattleStateTransitionIssue>;
   storeActiveBattle(
     session: BattleRuntimeSession,
   ): Either.Either<void, McpBattleStateTransitionIssue>;
@@ -213,7 +109,6 @@ export type McpSessionStore = {
     BattleRuntimeSession,
     McpBattleStateTransitionIssue
   >;
-  clearBattle(): Either.Either<void, McpBattleStateTransitionIssue>;
   pendingBattleFills: PendingBattleFillSession | null;
   clearSelectedStatBlock(): void;
   getSelectedStatBlock(): StatBlockRecord | null;
@@ -297,7 +192,10 @@ export function createMcpSessionStore(input: {
     McpBattleRosterTransitionIssue
   > {
     if (battleState.tag !== "activeBattle") {
-      return invalidBattleStateTransition(battleState.tag, "activeBattle");
+      return invalidBattleRosterStateTransition(
+        battleState.tag,
+        "activeBattle",
+      );
     }
     return battleRosterPlanner.plan(
       operation,
@@ -314,6 +212,30 @@ export function createMcpSessionStore(input: {
     },
     get battleSession(): BattleRuntimeSession | null {
       return battleState.tag === "activeBattle" ? battleState.session : null;
+    },
+    commitBattleStart({ nextBattleState, characterSessions }) {
+      const committed = commitBattleStartTransition({
+        currentBattleState: battleState,
+        nextBattleState,
+        characterSessions,
+        characters,
+      });
+      if (Either.isLeft(committed)) return committed;
+      battleState = committed.right;
+      pendingBattleFills = null;
+      return Either.right(undefined);
+    },
+    commitBattleEnd({ battleSession, characterSettlements }) {
+      const committed = commitBattleEndTransition({
+        currentBattleState: battleState,
+        battleSession,
+        characterSettlements,
+        characters,
+      });
+      if (Either.isLeft(committed)) return committed;
+      battleState = committed.right;
+      pendingBattleFills = null;
+      return Either.right(undefined);
     },
     storeActiveBattle(session) {
       if (battleState.tag === "initialInitiativeSetup") {
@@ -335,7 +257,10 @@ export function createMcpSessionStore(input: {
     planActiveBattleRosterTransition,
     commitActiveBattleRosterTransition(plan) {
       if (battleState.tag !== "activeBattle") {
-        return invalidBattleStateTransition(battleState.tag, "activeBattle");
+        return invalidBattleRosterStateTransition(
+          battleState.tag,
+          "activeBattle",
+        );
       }
       const committed = battleRosterPlanner.commit(
         plan,
@@ -383,13 +308,6 @@ export function createMcpSessionStore(input: {
       battleState = { tag: "activeBattle", session };
       return Either.right(session);
     },
-    clearBattle() {
-      if (battleState.tag !== "activeBattle") {
-        return invalidBattleStateTransition(battleState.tag, "none");
-      }
-      battleState = { tag: "none" };
-      return Either.right(undefined);
-    },
     get pendingBattleFills(): PendingBattleFillSession | null {
       return pendingBattleFills;
     },
@@ -425,6 +343,7 @@ export function createMcpSessionStore(input: {
             : {
                 subject: store.pendingBattleFills.subject,
                 fills: store.pendingBattleFills.fills,
+                holes: store.pendingBattleFills.holes,
               },
       };
     },
@@ -442,4 +361,17 @@ function invalidBattleStateTransition(
     from,
     to,
   });
+}
+
+function invalidBattleRosterStateTransition(
+  from: McpBattleState["tag"],
+  to: McpBattleState["tag"],
+): Either.Either<
+  never,
+  Extract<
+    McpBattleRosterTransitionIssue,
+    { readonly tag: "invalidBattleStateTransition" }
+  >
+> {
+  return Either.left({ tag: "invalidBattleStateTransition", from, to });
 }

@@ -1,12 +1,10 @@
 import {
   battleInitiativePosition,
   discoverBattleActs,
-  battleSubjectPresentation,
   openCreatureFallsRuntimeInterruptWindow,
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
   sameBattleSubject,
-  type BattleFill,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
 } from "@dnd/battle-runtime";
@@ -19,7 +17,10 @@ export {
   battleToolDefinitions,
   isBattleToolName,
 } from "./battle-tool-definitions.ts";
-import { finalizeCharacterSessionsFromBattle } from "./battle-handoff.ts";
+import {
+  characterSessionHandoffErrorContent,
+  settleCharacterSessionsFromBattle,
+} from "./battle-handoff.ts";
 import {
   BattleResolutionOutputSchema,
   BattleSessionOutputSchema,
@@ -28,6 +29,7 @@ import {
 } from "./battle-tool-output.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
 import { handleBattleLifecycleToolCall } from "./battle-lifecycle-tool.ts";
+import { pendingTransactionForResult } from "./battle-pending-transaction.ts";
 import {
   battleResolutionPayload,
   battleSessionPayload,
@@ -38,13 +40,13 @@ import {
   unknownStatBlockContent,
 } from "./battle-tool-payloads.ts";
 import type {
-  BattleFillSession,
   McpBattleStateTransitionIssue,
   PendingBattleFillSession,
 } from "./session-store.ts";
 import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
+import { battleStateTransitionErrorContent } from "./battle-state-transition.ts";
 
 export type BattleToolResult =
   | ReturnType<typeof schemaJsonContent>
@@ -239,16 +241,17 @@ export function handleBattleToolCall(
       );
       if (Either.isLeft(state)) return state.left;
 
-      const handoff = finalizeCharacterSessionsFromBattle(root, state.right);
-      if (handoff !== null) return handoff;
-      const cleared = root.sessionStore.clearBattle();
-      if (Either.isLeft(cleared)) {
-        return errorContent("Battle state transition failed.", {
-          code: "BATTLE_STATE_TRANSITION_INVALID",
-          transition: cleared.left,
-        });
+      const handoff = settleCharacterSessionsFromBattle(root, state.right);
+      if (Either.isLeft(handoff)) {
+        return characterSessionHandoffErrorContent(handoff.left);
       }
-      root.sessionStore.pendingBattleFills = null;
+      const committed = root.sessionStore.commitBattleEnd({
+        battleSession: state.right,
+        characterSettlements: handoff.right,
+      });
+      if (Either.isLeft(committed)) {
+        return battleStateTransitionErrorContent(committed.left);
+      }
       publishAdminProjectionBestEffort(root);
 
       return schemaJsonContent(EndBattleOutputSchema, {
@@ -350,45 +353,6 @@ function storedBattleResolutionContent(
     publishAdminProjectionBestEffort(root);
   }
   return battleResolutionContent(root, result);
-}
-
-function pendingTransactionForResult({
-  result,
-  filledSubject,
-  previous,
-  fills,
-  replaySession,
-  isInterruptDecision,
-}: {
-  readonly result: BattleRuntimeResolutionResult;
-  readonly filledSubject: BattleFillSession["subject"];
-  readonly previous: PendingBattleFillSession | null;
-  readonly fills: readonly BattleFill[];
-  readonly replaySession: BattleRuntimeSession;
-  readonly isInterruptDecision: boolean;
-}): PendingBattleFillSession | null {
-  if (result.tag !== "needsHoles") return null;
-  const resultPresentation = battleSubjectPresentation(
-    result.session,
-    result.subject,
-  );
-  if (resultPresentation === undefined) return null;
-  if (
-    isInterruptDecision &&
-    previous !== null &&
-    sameBattleSubject(result.subject, filledSubject)
-  ) {
-    return {
-      baseSession: previous.baseSession,
-      subject: result.subject,
-      fills: previous.fills,
-    };
-  }
-  return {
-    baseSession: isInterruptDecision ? result.session : replaySession,
-    subject: result.subject,
-    fills: isInterruptDecision ? [] : fills,
-  };
 }
 
 function activeBattleWithoutPendingFills(
