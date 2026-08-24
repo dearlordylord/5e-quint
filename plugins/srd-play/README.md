@@ -67,26 +67,51 @@ owns current permissions, releases, networking, and command details.
    the latest public release. Keep the client on a host that can reach the
    private server and permit outbound HTTPS to `api.openai.com:443` (or the
    configured mTLS endpoint). No inbound firewall port is required.
-3. Start the repository's stdio MCP server through a named tunnel profile. Use
-   the actual absolute repository path for the working directory; the command
-   below is a template and does not contain a project-specific tunnel id or
-   secret:
+3. Put the runtime credential and tunnel id in the main repository checkout's
+   root `.env`, which is git-ignored. Linked worktrees share that file through
+   the Git common directory rather than copying the secret into every
+   worktree. `CONTROL_PLANE_API_KEY` is the tunnel-client control-plane
+   credential; `CONTROL_PLANE_TUNNEL_ID` identifies the selected tunnel. They
+   are separate from the MCP/app authentication setting above. Never commit
+   either value or expose the runtime key as a user-facing API key.
 
-   ```sh
-   export CONTROL_PLANE_API_KEY="<runtime-api-key>"
-   tunnel-client init \
-     --sample sample_mcp_stdio_local \
-     --profile srd-play-local \
-     --tunnel-id "<tunnel-id>" \
-     --mcp-command "pnpm --dir <repository-root> --filter @dnd/mcp dev"
-
-   tunnel-client doctor --profile srd-play-local --explain
-   tunnel-client run --profile srd-play-local
+   ```dotenv
+   CONTROL_PLANE_API_KEY=<runtime-api-key>
+   CONTROL_PLANE_TUNNEL_ID=<tunnel-id>
    ```
 
-   `CONTROL_PLANE_API_KEY` is the tunnel-client control-plane runtime
-   credential. It is separate from the MCP/app authentication setting above;
-   do not expose it as a user-facing API key.
+4. Start the repository's stdio MCP server through a named tunnel profile. Run
+   these commands from a trusted checkout because sourcing `.env` executes its
+   shell syntax. The Git-derived paths keep the credential in the main checkout
+   while running the MCP server from the current main checkout or worktree:
+
+   ```sh
+   repository_root="$(git rev-parse --show-toplevel)"
+   git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
+   environment_file="$(dirname "$git_common_dir")/.env"
+   profile_dir="$git_common_dir/tunnel-client/profiles"
+   profile_name=srd-play-local
+   runtime_alias=srd-play-local
+
+   set -a
+   . "$environment_file"
+   set +a
+
+   mkdir -p "$profile_dir"
+   # Initialize this profile once; reruns can start at doctor.
+   tunnel-client init \
+     --sample sample_mcp_stdio_local \
+     --profile "$profile_name" \
+     --profile-dir "$profile_dir" \
+     --tunnel-id "$CONTROL_PLANE_TUNNEL_ID" \
+     --mcp-command "pnpm --dir $repository_root --filter @dnd/mcp dev"
+
+   tunnel-client doctor \
+     --profile "$profile_name" \
+     --profile-dir "$profile_dir" \
+     --explain
+   tunnel-client run --profile "$profile_name" --profile-dir "$profile_dir"
+   ```
 
    Keep `tunnel-client run` running while ChatGPT discovers tools and executes
    calls. Confirm the client is healthy and ready with its local health/admin
@@ -95,7 +120,26 @@ owns current permissions, releases, networking, and command details.
    client version, use that option to set `<repository-root>` rather than
    relying on the caller's current directory.
 
-4. In ChatGPT Plugins, create a developer-mode connection, choose **Tunnel**,
+   For a long-lived local runtime operated by Codex or another automation
+   agent, use the client's managed runtime instead of `nohup` or `disown`:
+
+   ```sh
+   tunnel-client runtimes connect \
+     --alias "$runtime_alias" \
+     --profile "$profile_name" \
+     --profile-dir "$profile_dir" \
+     --tunnel-id "$CONTROL_PLANE_TUNNEL_ID" \
+     --runtime-api-key env:CONTROL_PLANE_API_KEY \
+     --mcp-command "pnpm --dir $repository_root --filter @dnd/mcp dev"
+
+   tunnel-client runtimes status "$runtime_alias" --json
+   ```
+
+   Treat the runtime as available only when the structured status reports the
+   process running, healthy, and ready. The status output also gives the local
+   admin UI and log locations for troubleshooting.
+
+5. In ChatGPT Plugins, create a developer-mode connection, choose **Tunnel**,
    and select the associated tunnel or enter its `tunnel_id`. Review discovered
    metadata, then run the MCP evaluation cases.
 
