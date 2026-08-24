@@ -18,6 +18,7 @@ import { Either, Match, Schema } from "effect";
 import {
   decodeToolArgs,
   mcpObjectJsonSchema,
+  mcpObjectJsonSchemaWithCopiedObjects,
   type ToolInputResult,
 } from "./schema-codec.ts";
 import {
@@ -70,11 +71,20 @@ export const selectStatBlockInputSchema = mcpObjectJsonSchema(
 export const readBattleStateInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 export const discoverBattleActsInputSchema =
   mcpObjectJsonSchema(EmptyArgsSchema);
-export const fillBattleHoleInputSchema = mcpObjectJsonSchema(
+export const fillBattleHoleInputSchema = mcpObjectJsonSchemaWithCopiedObjects(
   FillBattleHoleArgsSchema,
+  {
+    subject:
+      "Copy the exact subject object returned by discover_battle_acts or the preceding needsHoles result.",
+    fill: "Build one fill object from the current returned hole, preserving its kind and holeId. The server validates the complete fill against the canonical battle contract.",
+  },
 );
-export const resolveBattleActInputSchema = mcpObjectJsonSchema(
+export const resolveBattleActInputSchema = mcpObjectJsonSchemaWithCopiedObjects(
   ResolveBattleActArgsSchema,
+  {
+    subject:
+      "Copy the exact subject object returned by discover_battle_acts for an act with no holes.",
+  },
 );
 export const endTurnInputSchema = mcpObjectJsonSchema(EndTurnArgsSchema);
 export const endBattleInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);

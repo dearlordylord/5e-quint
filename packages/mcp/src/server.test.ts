@@ -2023,6 +2023,7 @@ describe("MCP server route", () => {
     expect(inputSchema?.properties?.fill).toBeDefined();
     expect(inputSchema?.properties?.subjectJson).toBeUndefined();
     expect(inputSchema?.properties?.fillJson).toBeUndefined();
+    expect(inputSchema).not.toHaveProperty("$defs");
   });
 
   test("omits redundant impossible properties from registered tool schemas", () => {

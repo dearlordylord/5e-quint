@@ -50,6 +50,42 @@ export function mcpObjectJsonSchema<A, I>(
   };
 }
 
+export function mcpObjectJsonSchemaWithCopiedObjects<A, I>(
+  schema: Schema.Schema<A, I, never>,
+  copiedObjectDescriptions: Readonly<Record<string, string>>,
+): McpObjectInputSchema {
+  const generated = mcpObjectJsonSchema(schema);
+  const generatedProperties = isJsonObject(generated.properties)
+    ? generated.properties
+    : {};
+  const missingPropertyNames = Object.keys(copiedObjectDescriptions).filter(
+    (propertyName) => !(propertyName in generatedProperties),
+  );
+  if (missingPropertyNames.length > 0) {
+    throw new Error(
+      `Copied MCP object properties are absent from the generated schema: ${missingPropertyNames.join(", ")}`,
+    );
+  }
+
+  return omitUnreferencedDefinitions({
+    ...generated,
+    properties: {
+      ...generatedProperties,
+      ...Object.fromEntries(
+        Object.entries(copiedObjectDescriptions).map(
+          ([propertyName, description]) => [
+            propertyName,
+            {
+              type: "object",
+              description,
+            },
+          ],
+        ),
+      ),
+    },
+  });
+}
+
 export function omitRedundantImpossibleProperties(
   value: McpOutputSchema,
 ): McpOutputSchema;
@@ -154,6 +190,60 @@ function isJsonObject(
 function isImpossibleJsonSchema(value: unknown): boolean {
   if (!isJsonObject(value) || !isJsonObject(value.not)) return false;
   return Object.keys(value.not).length === 0;
+}
+
+function omitUnreferencedDefinitions(
+  schema: McpObjectInputSchema,
+): McpObjectInputSchema {
+  if (!isJsonObject(schema.$defs)) return schema;
+
+  const { $defs: definitions, ...schemaWithoutDefinitions } = schema;
+  const referencedDefinitionNames = new Set<string>();
+  collectDefinitionNames(schemaWithoutDefinitions, referencedDefinitionNames);
+  const pendingDefinitionNames = [...referencedDefinitionNames];
+
+  for (const definitionName of pendingDefinitionNames) {
+    const definition = definitions[definitionName];
+    if (definition === undefined) continue;
+
+    const before = referencedDefinitionNames.size;
+    collectDefinitionNames(definition, referencedDefinitionNames);
+    if (referencedDefinitionNames.size > before) {
+      pendingDefinitionNames.push(
+        ...[...referencedDefinitionNames].filter(
+          (candidate) => !pendingDefinitionNames.includes(candidate),
+        ),
+      );
+    }
+  }
+
+  const retainedDefinitions = Object.fromEntries(
+    Object.entries(definitions).filter(([definitionName]) =>
+      referencedDefinitionNames.has(definitionName),
+    ),
+  );
+  return Object.keys(retainedDefinitions).length === 0
+    ? schemaWithoutDefinitions
+    : { ...schemaWithoutDefinitions, $defs: retainedDefinitions };
+}
+
+function collectDefinitionNames(value: unknown, names: Set<string>): void {
+  if (Array.isArray(value)) {
+    for (const entry of value) collectDefinitionNames(entry, names);
+    return;
+  }
+  if (!isJsonObject(value)) return;
+
+  if (typeof value.$ref === "string" && value.$ref.startsWith("#/$defs/")) {
+    const [encodedDefinitionName = ""] = value.$ref
+      .slice("#/$defs/".length)
+      .split("/", 1);
+    names.add(
+      encodedDefinitionName.replaceAll("~1", "/").replaceAll("~0", "~"),
+    );
+  }
+  for (const entry of Object.values(value))
+    collectDefinitionNames(entry, names);
 }
 
 function objectSchemaBranch(
