@@ -49,6 +49,9 @@ is reused.
 
 ## Roles and non-overlap
 
+The root agent remains the Coordinator for the full operation and delegates
+only bounded role work.
+
 | Role                    | Ownership                                                                                                                           |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | Coordinator             | Deadline, work assignment, Git integration, single SQLite writer, issue deduplication, archive checkpoints, and status reports.     |
