@@ -8,6 +8,7 @@ import {
   CurrentScenarioCompositeReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
   ScenarioCompositeReviewSchema,
+  scenarioCompositeReviewSchemaFromOutputJsonSchema,
 } from "./scenario-campaign.ts";
 import { modelInvocationEvidenceFromEvents } from "./model-telemetry.ts";
 import {
@@ -122,7 +123,11 @@ export function validateRetainedScenarioReviewInvocation(input: {
   const historicalOutputSchema = codexOutputJsonSchema(
     HistoricalScenarioCompositeReviewSchema,
   );
+  const currentSchema = scenarioCompositeReviewSchemaFromOutputJsonSchema(
+    retained.outputJsonSchema,
+  );
   if (
+    Either.isLeft(currentSchema) &&
     canonicalJson(retained.outputJsonSchema) !==
       canonicalJson(currentOutputSchema) &&
     canonicalJson(retained.outputJsonSchema) !==

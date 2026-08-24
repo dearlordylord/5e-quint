@@ -27,6 +27,8 @@ import {
   RejectedScenarioCandidateReviewSchema,
   CurrentScenarioCompositeReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
+  scenarioCompositeReviewSchemaForIntents,
+  scenarioCompositeReviewSchemaFromOutputJsonSchema,
   verifyFinalScenarioReview,
   type ContentAvailabilityIntent,
   type ScenarioCampaignCandidateRejection,
@@ -558,8 +560,12 @@ Produce exactly ${input.candidateCount} materially different candidate objects. 
       contentAvailabilityIntent,
       sdkCapabilityIntent,
       catalogueComparison,
-    }) =>
-      runCodexJson(
+    }) => {
+      const reviewSchema = scenarioCompositeReviewSchemaForIntents({
+        contentAvailabilityIntent,
+        sdkCapabilityIntent,
+      });
+      return runCodexJson(
         `Perform one ${finalReview ? "final pre-play" : "milestone"} review invocation with five mandatory, independently scoped assessments. Do not produce an aggregate verdict and do not merge their evidence or responsibilities.
 
 RAW: use only .references/srd-5.2.1/ and ASSUMPTIONS.md. Check legality, coherence, executability, and missing Table Decisions. Do not choose tactics, predict an outcome, rewrite prose, or decide artifact policy.
@@ -596,7 +602,7 @@ ${capabilityContextForRole("review")}
 
 Scenario:
 ${scenario}`,
-        CurrentScenarioCompositeReviewSchema,
+        reviewSchema,
         {
           ...reviewerExecution,
           subject: {
@@ -613,7 +619,8 @@ ${scenario}`,
             reviewStage: finalReview ? "final" : "milestone",
           },
         },
-      ),
+      );
+    },
     compareCandidate: async ({
       scenario,
       candidateIndex,
@@ -655,6 +662,10 @@ export async function replayRetainedScenarioReview(input: {
       "Historical Scenario review input is readable evidence but is not a current executable review subject.",
     );
   }
+  const intentSpecificSchema =
+    scenarioCompositeReviewSchemaFromOutputJsonSchema(
+      input.retainedInput.outputJsonSchema,
+    );
   const currentOutputSchema = codexOutputJsonSchema(
     CurrentScenarioCompositeReviewSchema,
   );
@@ -662,14 +673,15 @@ export async function replayRetainedScenarioReview(input: {
     HistoricalScenarioCompositeReviewSchema,
   );
   const isCurrent =
+    Either.isRight(intentSpecificSchema) ||
     canonicalJson(input.retainedInput.outputJsonSchema) ===
-    canonicalJson(currentOutputSchema);
+      canonicalJson(currentOutputSchema);
   const isHistorical =
     canonicalJson(input.retainedInput.outputJsonSchema) ===
     canonicalJson(historicalOutputSchema);
   if (!isCurrent && !isHistorical) {
     fail(
-      "Retained scenario review input does not use the production composite-review schema.",
+      "Retained scenario review input does not use a production composite-review schema.",
     );
   }
   const execution = {
@@ -685,17 +697,17 @@ export async function replayRetainedScenarioReview(input: {
       reviewStage: input.retainedInput.reviewStage,
     },
   } as const;
-  return isCurrent
-    ? await runCodexJson(
-        input.retainedInput.prompt,
-        CurrentScenarioCompositeReviewSchema,
-        execution,
-      )
-    : await runCodexJson(
-        input.retainedInput.prompt,
-        HistoricalScenarioCompositeReviewSchema,
-        execution,
-      );
+  if (isCurrent) {
+    const schema = Either.isRight(intentSpecificSchema)
+      ? intentSpecificSchema.right
+      : CurrentScenarioCompositeReviewSchema;
+    return await runCodexJson(input.retainedInput.prompt, schema, execution);
+  }
+  return await runCodexJson(
+    input.retainedInput.prompt,
+    HistoricalScenarioCompositeReviewSchema,
+    execution,
+  );
 }
 
 function verifyRetainedScenario(

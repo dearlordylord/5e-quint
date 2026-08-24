@@ -20,6 +20,8 @@ import {
   retentionRevisionMatches,
   ScenarioCampaignConfigSchema,
   ScenarioRawReviewSchema,
+  scenarioCompositeReviewSchemaForIntents,
+  scenarioCompositeReviewSchemaFromOutputJsonSchema,
   verifyFinalScenarioReview,
   type ScenarioCampaignAgents,
   type ScenarioCampaignConfig,
@@ -1151,6 +1153,162 @@ describe("scenario generation campaign", () => {
         critiques: ["Add and explicitly name the intended availability probe."],
       },
     });
+  });
+
+  test("restricts model-facing review classifications to both campaign intents", () => {
+    const review = (input: {
+      readonly contentAvailability: object;
+      readonly sdkCapability: object;
+    }) => ({
+      raw: {
+        classification: "supported" as const,
+        evidence: "Synthetic RAW evidence.",
+      },
+      contentAvailability: input.contentAvailability,
+      sdkCapability: input.sdkCapability,
+      artifactPolicy: {
+        classification: "safe" as const,
+        evidence: "Synthetic policy evidence.",
+      },
+      scenarioQuality: {
+        classification: "ready" as const,
+        evidence: "Synthetic quality evidence.",
+      },
+    });
+    const supportedContent = {
+      classification: "supplied" as const,
+      evidence: "The selected records are available.",
+    };
+    const unavailableProbeContent = {
+      classification: "explicitUnavailableProbe" as const,
+      evidence: "The unavailable record is the declared probe.",
+    };
+    const supportedSdk = {
+      classification: "supported" as const,
+      evidence: "The required operations are documented.",
+    };
+    const unsupportedProbeSdk = {
+      classification: "explicitUnsupportedProbe" as const,
+      evidence: "The undocumented operation is the declared probe.",
+    };
+    const decode = (
+      contentAvailabilityIntent: "availableOnly" | "probeUnavailableContent",
+      sdkCapabilityIntent: "supportedOnly" | "probeUnsupportedCapability",
+      value: unknown,
+    ) =>
+      Schema.decodeUnknownEither(
+        scenarioCompositeReviewSchemaForIntents({
+          contentAvailabilityIntent,
+          sdkCapabilityIntent,
+        }),
+        { onExcessProperty: "error" },
+      )(value);
+
+    expect(
+      Either.isRight(
+        decode("availableOnly", "supportedOnly", {
+          ...review({
+            contentAvailability: supportedContent,
+            sdkCapability: supportedSdk,
+          }),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode("availableOnly", "supportedOnly", {
+          ...review({
+            contentAvailability: unavailableProbeContent,
+            sdkCapability: supportedSdk,
+          }),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode("availableOnly", "supportedOnly", {
+          ...review({
+            contentAvailability: supportedContent,
+            sdkCapability: {
+              classification: "missingUnsupportedProbe",
+              evidence: "The capability is absent.",
+              critique: "Declare the unsupported capability probe.",
+            },
+          }),
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isRight(
+        decode("probeUnavailableContent", "probeUnsupportedCapability", {
+          ...review({
+            contentAvailability: unavailableProbeContent,
+            sdkCapability: unsupportedProbeSdk,
+          }),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isRight(
+        decode("probeUnavailableContent", "probeUnsupportedCapability", {
+          ...review({
+            contentAvailability: {
+              classification: "missingUnavailableProbe",
+              evidence: "The unavailable selection was not named as the probe.",
+              critique: "Name the unavailable content probe.",
+            },
+            sdkCapability: {
+              classification: "missingUnsupportedProbe",
+              evidence: "The unsupported operation was not named as the probe.",
+              critique: "Name the unsupported capability probe.",
+            },
+          }),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode("probeUnavailableContent", "probeUnsupportedCapability", {
+          ...review({
+            contentAvailability: supportedContent,
+            sdkCapability: unsupportedProbeSdk,
+          }),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode("probeUnavailableContent", "probeUnsupportedCapability", {
+          ...review({
+            contentAvailability: unavailableProbeContent,
+            sdkCapability: supportedSdk,
+          }),
+        }),
+      ),
+    ).toBe(true);
+
+    for (const contentAvailabilityIntent of [
+      "availableOnly",
+      "probeUnavailableContent",
+    ] as const) {
+      for (const sdkCapabilityIntent of [
+        "supportedOnly",
+        "probeUnsupportedCapability",
+      ] as const) {
+        const schema = scenarioCompositeReviewSchemaForIntents({
+          contentAvailabilityIntent,
+          sdkCapabilityIntent,
+        });
+        expect(
+          Either.isRight(
+            scenarioCompositeReviewSchemaFromOutputJsonSchema(
+              codexOutputJsonSchema(schema),
+            ),
+          ),
+        ).toBe(true);
+      }
+    }
   });
 
   test("rejects malformed reviews and mismatched retained artifact identity", () => {

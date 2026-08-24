@@ -44,6 +44,7 @@ import {
   FinalScenarioReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
   ScenarioCompositeReviewSchema,
+  scenarioCompositeReviewSchemaFromOutputJsonSchema,
 } from "./scenario-campaign.ts";
 import {
   reviewEvidenceCatalogForPacket,
@@ -620,16 +621,28 @@ function deriveManifest(input: {
       retainedScenarioReviewScenarioReference(sourceInput);
     const replayScenarioReference =
       retainedScenarioReviewScenarioReference(replayInput);
-    const expectedOutputJsonSchema =
+    const currentSchema =
       sourceInput.schemaVersion === 2
-        ? codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema)
-        : codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema);
-    if (
-      canonicalJson(sourceInput.outputJsonSchema) !==
-      canonicalJson(expectedOutputJsonSchema)
-    ) {
+        ? Either.left("historical" as const)
+        : scenarioCompositeReviewSchemaFromOutputJsonSchema(
+            sourceInput.outputJsonSchema,
+          );
+    const currentOutputSchema = codexOutputJsonSchema(
+      CurrentScenarioCompositeReviewSchema,
+    );
+    const historicalOutputSchema = codexOutputJsonSchema(
+      HistoricalScenarioCompositeReviewSchema,
+    );
+    const outputSchemaMatches =
+      sourceInput.schemaVersion === 2
+        ? canonicalJson(sourceInput.outputJsonSchema) ===
+          canonicalJson(historicalOutputSchema)
+        : Either.isRight(currentSchema) ||
+          canonicalJson(sourceInput.outputJsonSchema) ===
+            canonicalJson(currentOutputSchema);
+    if (!outputSchemaMatches) {
       fail(
-        `Retained ${reviewStage} source input does not use the canonical composite-review schema.`,
+        `Retained ${reviewStage} source input does not use a canonical composite-review schema.`,
       );
     }
     if (

@@ -4,6 +4,7 @@ import { Either, JSONSchema, Match, Schema } from "effect";
 import {
   GitShaSchema,
   ScenarioIdSchema,
+  canonicalJson,
   type ScenarioId,
 } from "./transcript.ts";
 import {
@@ -101,6 +102,15 @@ const InvalidUnavailableSelectionReviewSchema = Schema.Struct({
   evidence: Schema.NonEmptyTrimmedString,
   critique: Schema.NonEmptyTrimmedString,
 });
+const AvailableOnlyScenarioContentReviewSchema = Schema.Union(
+  SuppliedScenarioContentReviewSchema,
+  InvalidUnavailableSelectionReviewSchema,
+);
+const ProbeUnavailableContentScenarioContentReviewSchema = Schema.Union(
+  ExplicitUnavailableProbeReviewSchema,
+  MissingUnavailableProbeReviewSchema,
+  InvalidUnavailableSelectionReviewSchema,
+);
 export const ScenarioContentReviewSchema = Schema.Union(
   SuppliedScenarioContentReviewSchema,
   ExplicitUnavailableProbeReviewSchema,
@@ -121,18 +131,11 @@ export type ContentAvailabilityIntent =
 export const ScenarioContentAdmissionSchema = Schema.Union(
   Schema.Struct({
     contentAvailabilityIntent: Schema.Literal("availableOnly"),
-    contentReview: Schema.Union(
-      SuppliedScenarioContentReviewSchema,
-      InvalidUnavailableSelectionReviewSchema,
-    ),
+    contentReview: AvailableOnlyScenarioContentReviewSchema,
   }),
   Schema.Struct({
     contentAvailabilityIntent: Schema.Literal("probeUnavailableContent"),
-    contentReview: Schema.Union(
-      ExplicitUnavailableProbeReviewSchema,
-      MissingUnavailableProbeReviewSchema,
-      InvalidUnavailableSelectionReviewSchema,
-    ),
+    contentReview: ProbeUnavailableContentScenarioContentReviewSchema,
   }),
 );
 
@@ -163,6 +166,15 @@ const MissingUnsupportedSdkCapabilityProbeReviewSchema = Schema.Struct({
   evidence: Schema.NonEmptyTrimmedString,
   critique: Schema.NonEmptyTrimmedString,
 });
+const SupportedOnlyScenarioSdkCapabilityReviewSchema = Schema.Union(
+  SupportedScenarioSdkCapabilityReviewSchema,
+  UnsupportedScenarioSdkCapabilityReviewSchema,
+);
+const ProbeUnsupportedCapabilityScenarioSdkCapabilityReviewSchema =
+  Schema.Union(
+    ExplicitUnsupportedSdkCapabilityProbeReviewSchema,
+    MissingUnsupportedSdkCapabilityProbeReviewSchema,
+  );
 export const ScenarioSdkCapabilityReviewSchema = Schema.Union(
   SupportedScenarioSdkCapabilityReviewSchema,
   UnsupportedScenarioSdkCapabilityReviewSchema,
@@ -173,17 +185,12 @@ export const ScenarioSdkCapabilityReviewSchema = Schema.Union(
 export const ScenarioSdkCapabilityAdmissionSchema = Schema.Union(
   Schema.Struct({
     sdkCapabilityIntent: Schema.Literal("supportedOnly"),
-    sdkCapabilityReview: Schema.Union(
-      SupportedScenarioSdkCapabilityReviewSchema,
-      UnsupportedScenarioSdkCapabilityReviewSchema,
-    ),
+    sdkCapabilityReview: SupportedOnlyScenarioSdkCapabilityReviewSchema,
   }),
   Schema.Struct({
     sdkCapabilityIntent: Schema.Literal("probeUnsupportedCapability"),
-    sdkCapabilityReview: Schema.Union(
-      ExplicitUnsupportedSdkCapabilityProbeReviewSchema,
-      MissingUnsupportedSdkCapabilityProbeReviewSchema,
-    ),
+    sdkCapabilityReview:
+      ProbeUnsupportedCapabilityScenarioSdkCapabilityReviewSchema,
   }),
 );
 
@@ -243,6 +250,29 @@ export type ScenarioCompositeReview = Schema.Schema.Type<
 export type CurrentScenarioCompositeReview = Schema.Schema.Type<
   typeof CurrentScenarioCompositeReviewSchema
 >;
+
+type ScenarioContentReviewForIntent<Intent extends ContentAvailabilityIntent> =
+  Intent extends "availableOnly"
+    ? Schema.Schema.Type<typeof AvailableOnlyScenarioContentReviewSchema>
+    : Schema.Schema.Type<
+        typeof ProbeUnavailableContentScenarioContentReviewSchema
+      >;
+type ScenarioSdkCapabilityReviewForIntent<Intent extends SdkCapabilityIntent> =
+  Intent extends "supportedOnly"
+    ? Schema.Schema.Type<typeof SupportedOnlyScenarioSdkCapabilityReviewSchema>
+    : Schema.Schema.Type<
+        typeof ProbeUnsupportedCapabilityScenarioSdkCapabilityReviewSchema
+      >;
+export type ScenarioCompositeReviewForIntents<
+  ContentIntent extends ContentAvailabilityIntent,
+  SdkIntent extends SdkCapabilityIntent,
+> = Omit<
+  CurrentScenarioCompositeReview,
+  "contentAvailability" | "sdkCapability"
+> & {
+  readonly contentAvailability: ScenarioContentReviewForIntent<ContentIntent>;
+  readonly sdkCapability: ScenarioSdkCapabilityReviewForIntent<SdkIntent>;
+};
 
 const ScenarioSha256Schema = Schema.String.pipe(
   Schema.pattern(/^[0-9a-f]{64}$/),
@@ -344,6 +374,80 @@ export type ScenarioContentAdmission = Schema.Schema.Type<
 export type ScenarioSdkCapabilityAdmission = Schema.Schema.Type<
   typeof ScenarioSdkCapabilityAdmissionSchema
 >;
+
+/**
+ * Select the review output schema from the decoded campaign intents. The
+ * returned schema is the model-facing boundary; its classification unions
+ * contain only the outcomes that can belong to the selected intent.
+ */
+export function scenarioCompositeReviewSchemaForIntents<
+  ContentIntent extends ContentAvailabilityIntent,
+  SdkIntent extends SdkCapabilityIntent,
+>(input: {
+  readonly contentAvailabilityIntent: ContentIntent;
+  readonly sdkCapabilityIntent: SdkIntent;
+}): Schema.Schema<ScenarioCompositeReviewForIntents<ContentIntent, SdkIntent>>;
+export function scenarioCompositeReviewSchemaForIntents(input: {
+  readonly contentAvailabilityIntent: ContentAvailabilityIntent;
+  readonly sdkCapabilityIntent: SdkCapabilityIntent;
+}): Schema.Any {
+  return Schema.Struct({
+    raw: ScenarioRawReviewSchema,
+    contentAvailability:
+      input.contentAvailabilityIntent === "availableOnly"
+        ? AvailableOnlyScenarioContentReviewSchema
+        : ProbeUnavailableContentScenarioContentReviewSchema,
+    sdkCapability:
+      input.sdkCapabilityIntent === "supportedOnly"
+        ? SupportedOnlyScenarioSdkCapabilityReviewSchema
+        : ProbeUnsupportedCapabilityScenarioSdkCapabilityReviewSchema,
+    artifactPolicy: ScenarioPolicyReviewSchema,
+    scenarioQuality: ScenarioQualityReviewSchema,
+  });
+}
+
+/**
+ * Resolve a retained current-review output schema to its canonical intent
+ * specific schema. Retained inputs store the exact JSON Schema but not a
+ * second copy of the campaign configuration, so replay matches that schema
+ * against the four canonical intent combinations.
+ */
+export function scenarioCompositeReviewSchemaFromOutputJsonSchema(
+  outputJsonSchema: unknown,
+): Either.Either<
+  ReturnType<typeof scenarioCompositeReviewSchemaForIntents>,
+  string
+> {
+  const candidates = CONTENT_AVAILABILITY_INTENTS.flatMap(
+    (contentAvailabilityIntent) =>
+      SDK_CAPABILITY_INTENTS.map(
+        (sdkCapabilityIntent) =>
+          [contentAvailabilityIntent, sdkCapabilityIntent] as const,
+      ),
+  );
+  const matching = candidates.find(
+    ([contentAvailabilityIntent, sdkCapabilityIntent]) =>
+      canonicalJson(outputJsonSchema) ===
+      canonicalJson(
+        codexOutputJsonSchema(
+          scenarioCompositeReviewSchemaForIntents({
+            contentAvailabilityIntent,
+            sdkCapabilityIntent,
+          }),
+        ),
+      ),
+  );
+  return matching === undefined
+    ? Either.left(
+        "Retained current scenario review does not use a canonical intent-specific output schema.",
+      )
+    : Either.right(
+        scenarioCompositeReviewSchemaForIntents({
+          contentAvailabilityIntent: matching[0],
+          sdkCapabilityIntent: matching[1],
+        }),
+      );
+}
 
 type ScenarioAdmissionReviews = Schema.Schema.Type<
   typeof FinalScenarioReviewSchema
