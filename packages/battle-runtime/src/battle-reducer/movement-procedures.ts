@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard spell.invocation-jump-movement-replacement unit-feature.acrobatic-movement unit-feature.creature-space-movement-permission
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
 import { optionalProperty } from "../optional-property.ts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
@@ -20,7 +21,11 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
 import { Match } from "effect";
-import { attackExecutionSelectionKey } from "../battle-action-options.ts";
+import {
+  attackExecutionSelectionForOption,
+  attackExecutionSelectionKey,
+  type BoundSupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
   AdmittedBattleResolutionInput,
@@ -45,6 +50,7 @@ import type {
   BattleResolvedMovement,
   BattleSpikeGrowthMovementDamageRollHole,
   BattleState,
+  BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import {
@@ -95,6 +101,7 @@ import { invalidResult } from "./result-helpers.ts";
 import { applyPreparedSlotSpellDamage } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
+import { attackTargetIsLegal } from "./attack-spatial.ts";
 
 const MOVEMENT_PROCEDURE_COMMANDS = [
   "move",
@@ -698,11 +705,17 @@ export function parseBattleMovement(
     }
     /* v8 ignore stop -- @preserve */
     /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (attackTargetConstraint(attack).kind !== "meleeReach") {
+    const attackIssue = opportunityAttackThreatAttackIssue(
+      state,
+      moverId,
+      reactorId,
+      threat,
+      attack,
+    );
+    if (attackIssue !== null) {
       return {
         tag: "invalid",
-        message:
-          "Movement Opportunity Attack threat must name a melee attack option.",
+        message: attackIssue,
       };
     }
     /* v8 ignore stop -- @preserve */
@@ -748,6 +761,31 @@ export function parseBattleMovement(
       ...optionalProperty("levitatedMovement", fill.value.levitatedMovement),
     },
   };
+}
+
+function opportunityAttackThreatAttackIssue(
+  state: BattleState,
+  moverId: CombatantId,
+  reactorId: CombatantId,
+  threat: BattleOpportunityAttackThreat,
+  attack: BoundSupportedAttackActionOption,
+): string | null {
+  if (attackTargetConstraint(attack).kind !== "meleeReach") {
+    return "Movement Opportunity Attack threat must name a melee attack option.";
+  }
+  const distanceFact: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "attackTargetDistance" }
+  > = {
+    kind: "attackTargetDistance",
+    actorId: reactorId,
+    targetId: moverId,
+    ...attackExecutionSelectionForOption(attack),
+    distanceFeet: threat.distanceFeet,
+  };
+  return attackTargetIsLegal(state, reactorId, moverId, attack, [distanceFact])
+    ? null
+    : "Movement Opportunity Attack threat distance is outside the selected attack's reach.";
 }
 
 function opportunityAttackThreatIdentityKey(

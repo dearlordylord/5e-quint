@@ -34,6 +34,7 @@ import {
   rollbackScenarioAdmissionBundle,
   rollbackScenarioRejectionBundle,
   publishScenarioRejectionBundle,
+  retainCodexInvocationArtifacts,
 } from "./generate-scenario.ts";
 import { openArtifactIndex } from "./artifact-index.ts";
 import {
@@ -416,6 +417,74 @@ const readyQuality = {
 };
 
 describe("scenario generation campaign", () => {
+  test("retains a settled failed-invocation sidecar beside the Campaign event stream", () => {
+    const root = mkdtempSync(resolve(tmpdir(), "scenario-retained-sidecar-"));
+    const sourceDirectory = resolve(root, "source");
+    const retainedDirectory = resolve(root, "retained");
+    mkdirSync(sourceDirectory);
+    const eventPath = resolve(sourceDirectory, "events.jsonl");
+    const rawPath = `${eventPath}.codex-raw`;
+    const rawContents = Buffer.from("settled failed output\n", "utf8");
+    writeFileSync(rawPath, rawContents);
+    writeFileSync(
+      eventPath,
+      `${JSON.stringify({
+        type: "raw-swarm.invocation.codex-raw-retained",
+        source: "settledSidecar",
+        reason: "failedInvocation",
+        rawContentsSha256: createHash("sha256")
+          .update(rawContents)
+          .digest("hex"),
+        rawContentsByteLength: rawContents.byteLength,
+      })}\n`,
+    );
+    const retainedEventPath = resolve(retainedDirectory, "failed.events.jsonl");
+    try {
+      retainCodexInvocationArtifacts({ eventPath, retainedEventPath });
+      expect(readFileSync(`${retainedEventPath}.codex-raw`)).toEqual(
+        rawContents,
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("retains an unreaped immutable snapshot beside the Campaign event stream", () => {
+    const root = mkdtempSync(resolve(tmpdir(), "scenario-retained-snapshot-"));
+    const sourceDirectory = resolve(root, "source");
+    const retainedDirectory = resolve(root, "retained");
+    mkdirSync(sourceDirectory);
+    const eventPath = resolve(sourceDirectory, "events.jsonl");
+    const snapshotPath = `${eventPath}.codex-raw.snapshot`;
+    const snapshotContents = Buffer.from("observed unreaped bytes\n", "utf8");
+    writeFileSync(snapshotPath, snapshotContents);
+    writeFileSync(
+      eventPath,
+      `${JSON.stringify({
+        type: "raw-swarm.invocation.codex-raw-retained",
+        source: "observedImmutableSnapshot",
+        reason: "unreapedProcess",
+        snapshotPathSuffix: ".codex-raw.snapshot",
+        snapshotSha256: createHash("sha256")
+          .update(snapshotContents)
+          .digest("hex"),
+        snapshotByteLength: snapshotContents.byteLength,
+      })}\n`,
+    );
+    const retainedEventPath = resolve(
+      retainedDirectory,
+      "unreaped.events.jsonl",
+    );
+    try {
+      retainCodexInvocationArtifacts({ eventPath, retainedEventPath });
+      expect(readFileSync(`${retainedEventPath}.codex-raw.snapshot`)).toEqual(
+        snapshotContents,
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("decodes every checked-in campaign configuration strictly", () => {
     for (const path of [
       "scripts/raw-swarm/scenario-campaign.example.json",

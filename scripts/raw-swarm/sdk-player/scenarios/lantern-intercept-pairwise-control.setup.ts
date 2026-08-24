@@ -53,12 +53,14 @@ export const setupScenario: ScenarioSetup = (context) => {
       statBlock: context.statBlockCatalog.requireStatBlock("stat_block_wolf"),
       initiative: sdk.initiativeScore(15),
       ammunitionStocks: [],
+      conditions: [],
     },
     {
       combatantId: hawkId,
       statBlock: context.statBlockCatalog.requireStatBlock("stat_block_hawk"),
       initiative: sdk.initiativeScore(13),
       ammunitionStocks: [],
+      conditions: [],
     },
     {
       combatantId: skeletonId,
@@ -67,6 +69,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       ),
       initiative: sdk.initiativeScore(10),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     },
   ] as const;
 

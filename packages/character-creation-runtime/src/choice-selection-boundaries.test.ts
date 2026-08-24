@@ -132,6 +132,36 @@ describe("choice-selection structural equality", () => {
     );
     expect(
       startingEquipmentLabel({
+        id: "synthetic_adventuring_bundle",
+        kind: "item_bundle",
+        items: [
+          { kind: "unit_ref", unitId: authoredUnitId("synthetic_rope") },
+          {
+            kind: "unit_ref",
+            unitId: authoredUnitId("synthetic_ration"),
+            quantity: 3,
+          },
+          {
+            kind: "unit_ref_with_spellcasting_focus",
+            authoredItemId: "synthetic_focus",
+            unitId: authoredUnitId("synthetic_focus"),
+            spellcastingFocusKind: "arcane",
+          },
+          {
+            kind: "unit_ref_with_spellcasting_focus",
+            authoredItemId: "synthetic_symbol",
+            unitId: authoredUnitId("synthetic_symbol"),
+            spellcastingFocusKind: "arcane",
+            quantity: 2,
+          },
+          { kind: "draft_owned_item", itemName: "Synthetic Keepsake" },
+        ],
+      }),
+    ).toBe(
+      "synthetic_adventuring_bundle — equipment package: synthetic_rope, 3 × synthetic_ration, synthetic_focus (arcane focus), 2 × synthetic_symbol (arcane focus), Synthetic Keepsake",
+    );
+    expect(
+      startingEquipmentLabel({
         id: "synthetic_currency",
         kind: "coin_grant",
         coinsGp: 50,

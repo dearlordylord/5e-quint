@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "scenarioId": "prone-target-roll-mode-distance-probe",
+  "title": "Prone target roll-mode distance probe",
+  "purpose": "Run an explicitly named capability probe for both SRD 5.2.1 Prone target attack-roll branches through the public player SDK: an initially Prone target is attacked before it can act, once within 5 feet and once beyond 5 feet, with all other roll-mode sources neutral.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/prone-target-roll-mode-distance-probe.md",
+    "byteLength": 1644,
+    "sha256": "49ab6035845f1f09423d7f98ffab81c40a81fbcab340f830a7ff2abda46f4ff9"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/prone-target-roll-mode-distance-probe.md.scenario-review.json",
+    "byteLength": 10126,
+    "sha256": "383446105c6be9d6a95465e7f8b40ad36400a2743ab5f385f33635c0597106f3"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/prone-target-roll-mode-distance-probe.md.stage-facts.json",
+    "byteLength": 783,
+    "sha256": "522411fee7a9d1296b2cb6a05865a871515ab5592d623b33150d4c8b25153389"
+  },
+  "predecessorScenarioIds": [
+    "four-way-crank-control-cycle",
+    "goblin-warrior-skeleton-tracer",
+    "lantern-intercept-pairwise-control",
+    "mounted-dispatch-through-flooded-orchard",
+    "open-grid-wolf-skeleton-pursuit",
+    "orc-fighter-rogue-close-interception",
+    "sand-band-four-skeleton-skirmish",
+    "synthetic-beacon-eight-round-defense",
+    "table-authored-shove-then-grapple",
+    "table-authored-three-shove-cycle",
+    "table-d20-circumstance-advantage-probe-repair-retry",
+    "two-goblins-pursue-skeleton"
+  ]
+}

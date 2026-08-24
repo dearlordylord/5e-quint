@@ -133,7 +133,10 @@ import { applyInitialZeroHpLifecycle } from "./damage-apply.ts";
 import { statBlockExecutionAdmissionCohort } from "../stat-block-execution.ts";
 import { druidWildShapeAvailableFormsIssueForProfile } from "./druid-wild-shape.ts";
 import { admitCharacterAttackExecution } from "../attack-execution.ts";
-import { admitBattleStatBlockCombatantSource } from "../stat-block-combatant-admission.ts";
+import {
+  admitBattleStatBlockCombatantSource,
+  statBlockInitialConditionImmunityIssue,
+} from "../stat-block-combatant-admission.ts";
 import {
   statBlockLanguagePresentation,
   statBlockProcedurePresentations,
@@ -230,10 +233,13 @@ export function battleCreatureStateAdmissionFromInit(
       ],
     };
   }
-  const maxHp =
-    creatureInit.kind === "character"
-      ? creatureInit.maxHp
-      : Hp(creatureInit.source.statBlock.hp.value);
+  const maxHp = Match.value(creatureInit).pipe(
+    Match.when({ kind: "character" }, ({ maxHp }) => maxHp),
+    Match.when({ kind: "statBlock" }, ({ source }) =>
+      Hp(source.statBlock.hp.value),
+    ),
+    Match.exhaustive,
+  );
   if (creatureInit.currentHp > maxHp) {
     return {
       tag: "invalid",
@@ -254,13 +260,19 @@ export function battleCreatureStateAdmissionFromInit(
     };
   }
   const zeroHpLifecycle = zeroHpLifecycleResult.right;
+  const initialConditionImmunityIssue =
+    initialConditionImmunityIssueForCreatureInit(creatureInit);
+  if (initialConditionImmunityIssue !== null) {
+    return {
+      tag: "invalid",
+      issues: [initialConditionImmunityIssue],
+    };
+  }
   const initialConditions =
-    creatureInit.kind === "character"
-      ? (creatureInit.conditions?.reduce(
-          (conditions, condition) => applyCondition(conditions, condition),
-          EMPTY_CONDITION_STATE,
-        ) ?? EMPTY_CONDITION_STATE)
-      : EMPTY_CONDITION_STATE;
+    creatureInit.conditions?.reduce(
+      (conditions, condition) => applyCondition(conditions, condition),
+      EMPTY_CONDITION_STATE,
+    ) ?? EMPTY_CONDITION_STATE;
   const base = {
     combatantId: input.combatantId,
     initiative: input.initiative,
@@ -573,6 +585,18 @@ export function battleCreatureStateAdmissionFromInit(
       }),
     },
   };
+}
+
+function initialConditionImmunityIssueForCreatureInit(
+  creatureInit: BattleCreatureInit["creatureInit"],
+): BattleStateInitLeafIssue | null {
+  return Match.value(creatureInit).pipe(
+    Match.when({ kind: "character" }, () => null),
+    Match.when({ kind: "statBlock" }, ({ source, conditions }) =>
+      statBlockInitialConditionImmunityIssue(source, conditions),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function hidePrerequisitesReferenceCombatantsIssue(

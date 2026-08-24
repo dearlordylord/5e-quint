@@ -518,6 +518,7 @@ function rayOfEnfeeblementProjection(
         spellTargetId,
         spellCasterId,
         zeroAbilityWeaponAttack("weapon_longsword"),
+        [],
       ) === "disadvantage",
     strAbilityCheckDisadvantage:
       requiredAbilityCheckRollMode(state.battle.state, spellTargetId, "str") ===

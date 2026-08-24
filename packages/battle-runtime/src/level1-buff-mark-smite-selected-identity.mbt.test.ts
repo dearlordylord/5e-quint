@@ -2733,6 +2733,7 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
       currentHp: maxHp,
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+      conditions: [],
     },
   };
 }
@@ -2969,9 +2970,10 @@ function attackTargetFill(
     value: targetId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: casterId,
         targetId,
+        distanceFeet: movementFeet(5),
         ...hole.attack.selection,
       },
     ],

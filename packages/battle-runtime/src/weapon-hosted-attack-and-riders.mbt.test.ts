@@ -1141,16 +1141,20 @@ function fillTrueStrikeRadiantTarget(
     throw new Error("Expected pending True Strike choices.");
   }
   const damageType = requireHole(state.holes, "damageTypeChoice");
-  const target = requireHole(state.holes, "targetChoice");
-  const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
-  const damageTypeFill: Extract<
-    BattleFill,
-    { readonly kind: "damageTypeChoice" }
-  > = {
-    kind: "damageTypeChoice",
-    holeId: damageType.holeId,
-    value: "radiant",
-  };
+  const damageTypeFill = radiantDamageTypeChoiceFill(damageType);
+  const damageTypeResult = requireNeedsHoles(
+    resolveBattleSubject({
+      state: state.battle.state,
+      subject: state.pending.subject,
+      fills: [damageTypeFill],
+    }),
+    "Expected True Strike target choice after damage type choice.",
+  );
+  const targetFill = attackTargetFill(
+    requireHole(damageTypeResult.holes, "targetChoice"),
+    spellCasterId,
+    spellTargetId,
+  );
   const attack = requireResultHole(
     resolveBattleSubject({
       state: state.battle.state,

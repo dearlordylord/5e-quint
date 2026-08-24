@@ -6,7 +6,7 @@ import { Schema } from "effect";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
-import { NonNegativeInteger } from "@dnd/shared/types";
+import { movementFeet, NonNegativeInteger } from "@dnd/shared/types";
 import {
   battleObjectId,
   combatantId,
@@ -93,6 +93,7 @@ describe("BattleSubject identity", () => {
       opportunityAttack: {
         reactorId: targetId,
         targetId: actorId,
+        distanceFeet: movementFeet(5),
         procedureRef: attackProcedureRef,
         attackAbility: "str",
         attackDamageType: "slashing",

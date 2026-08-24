@@ -127,18 +127,21 @@ export const setupScenario: ScenarioSetup = (context) => {
       statBlock: wolfStatBlock,
       initiative: sdk.initiativeScore(18),
       ammunitionStocks: [],
+      conditions: [],
     }),
     sdk.battleCreatureInitFromStatBlock({
       combatantId: skeletonId,
       statBlock: skeletonStatBlock,
       initiative: sdk.initiativeScore(12),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     }),
     sdk.battleCreatureInitFromStatBlock({
       combatantId: goblinId,
       statBlock: goblinStatBlock,
       initiative: sdk.initiativeScore(6),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     }),
   ];
   const invalidCombatant = combatantInits.find(sdk.isLeft);

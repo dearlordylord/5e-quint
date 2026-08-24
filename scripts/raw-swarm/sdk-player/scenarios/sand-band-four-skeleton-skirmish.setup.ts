@@ -85,6 +85,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       currentHp: sdk.hp(13),
       tempHp: sdk.hp(0),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     }),
   );
   for (const projected of skeletonInits) {

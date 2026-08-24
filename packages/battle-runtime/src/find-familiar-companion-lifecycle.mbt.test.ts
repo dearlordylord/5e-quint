@@ -20,6 +20,7 @@ import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra
 import {
   abilityModifier,
   DieRollResult,
+  movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
 import {
@@ -1004,9 +1005,10 @@ function familiarAttackTargetFill(
     value: targetId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: familiarId,
         targetId,
+        distanceFeet: movementFeet(5),
         ...hole.attack.selection,
       },
     ],

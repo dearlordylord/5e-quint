@@ -1868,6 +1868,7 @@ function startOpportunityAttack(state: BattleState, attackName: string) {
         provokedOpportunityAttacks: [
           {
             reactorId: goblinId,
+            distanceFeet: movementFeet(5),
             ...attackExecutionSelectionForSubjectForTest(
               characterAttackSubjectForTest(state, goblinId, attackName),
             ),

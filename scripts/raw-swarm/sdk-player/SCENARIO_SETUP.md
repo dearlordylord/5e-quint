@@ -10,8 +10,14 @@ You are the neutral setup author. Edit only `setup.ts`. Export one
 supplied through its context to construct the closest faithful initial
 `ScenarioSession`. Start the canonical battle, then call
 `createScenarioSession` once with its ambient Illumination, stat-block damage
-notation, vertical environment facts, and scenario-fixed objects. Tactical-space
-is optional, but its source is one coherent choice: either supply both the
+notation, vertical environment facts, and scenario-fixed objects.
+Stat-block initialization requires one explicit `conditions` collection. Use
+`[]` when the scenario fixes no supported initial condition, or the typed public
+value when it does; the initializer rejects conditions the Stat Block is immune
+to. Do not simulate an initial condition with a later act or a duplicate state
+field.
+
+Tactical-space is optional, but its source is one coherent choice: either supply both the
 five-foot arena and initial placements for a `geometryDerived`
 `session.battlefield.spatial`, or omit both and supply Table-authored
 `spatialDecisions` for the exact spatial questions the scenario fixes. A

@@ -74,6 +74,7 @@ export {
   combineD20TestRollMode,
   mechanicalD20TestRollModeSources,
   mechanicalD20TestRollMode,
+  proneAttackRollModeSources,
   effectiveD20TestRollMode,
   d20TestResolutionId,
   type BattleD20TestCircumstanceRequest,
@@ -371,10 +372,12 @@ export type {
   CharacterBattleWeaponMasterySelection,
   StatBlockBattleCreatureInit,
   StatBlockBattleInitInput,
+  StatBlockInitialCondition,
 } from "./battle-init.ts";
 
 export {
   KNOCKED_OUT_UNCONSCIOUS,
+  STAT_BLOCK_INITIAL_CONDITIONS,
   battleAvailableDruidWildShapeKnownForms,
   characterBattleCreatureInitWeaponAttack,
 } from "./battle-init.ts";
@@ -630,6 +633,16 @@ export {
   resolveBardicInspirationFailedD20Test,
 } from "./battle-reducer/unit-features.ts";
 export {
+  GRAPPLE_TARGET_REACH_FEET,
+  HELP_ATTACK_TARGET_ADJACENCY_FEET,
+  HYPNOTIC_PATTERN_SHAKE_AWAKE_ADJACENCY_FEET,
+  PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET,
+  RANGED_ATTACK_ENEMY_PROXIMITY_FEET,
+  SHOVE_PUSH_DISTANCE_FEET,
+  SHOVE_TARGET_REACH_FEET,
+  SLEEP_SHAKE_AWAKE_ADJACENCY_FEET,
+  STANDARD_CREATURE_MELEE_REACH_FEET,
+  SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET,
   SELF_TRANSFORMATION_MODE_KINDS,
   type SelfTransformationModeKind,
 } from "./battle-reducer/domain-constants.ts";
@@ -704,6 +717,7 @@ export {
 export {
   opportunityAttackExecutionCandidates,
   opportunityAttackLeavesReach,
+  opportunityAttackThreatIdentityEqual,
   opportunityAttackThreatEqual,
   type BattleOpportunityAttackExecutionCandidate,
 } from "./battle-reducer/movement-speed.ts";

@@ -7,7 +7,7 @@
 // - .references/srd-5.2.1/Rules-Glossary.md:738-740 (Opportunity Attacks)
 // - .references/srd-5.2.1/Rules-Glossary.md:814-816 (Reaction reset)
 
-import { Hp } from "@dnd/shared/types";
+import { Hp, movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
   attackExecutionSelectionForSubjectForTest,
@@ -65,6 +65,7 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
           provokedOpportunityAttacks: [
             {
               reactorId: skeletonId,
+              distanceFeet: movementFeet(5),
               ...attackExecutionSelectionForSubjectForTest(skeletonAttack),
             },
           ],
@@ -215,6 +216,7 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
           provokedOpportunityAttacks: [
             {
               reactorId: goblinId,
+              distanceFeet: movementFeet(5),
               ...attackExecutionSelectionForSubjectForTest(firstGoblinAttack),
             },
           ],
@@ -332,6 +334,7 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
           provokedOpportunityAttacks: [
             {
               reactorId: goblinId,
+              distanceFeet: movementFeet(5),
               ...attackExecutionSelectionForSubjectForTest(secondGoblinAttack),
             },
           ],

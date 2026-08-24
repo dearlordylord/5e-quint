@@ -18,6 +18,7 @@ type BuildPlan = {
   >;
   readonly draftChoices: Readonly<Record<string, readonly string[]>>;
   readonly unitChoices: Readonly<Record<string, readonly string[]>>;
+  readonly unitChoiceOptionIds: Readonly<Record<string, readonly string[]>>;
   readonly loadoutChoices: Readonly<Record<string, readonly string[]>>;
 };
 
@@ -44,14 +45,16 @@ const fighterPlan: BuildPlan = {
     class_skill_proficiency_choice: ["Perception", "Survival"],
     class_feature_feat_choice: ["Defense"],
     weapon_mastery_options: ["Longsword", "Spear", "Flail"],
-    class_equipment_choice: ["option_c (155 GP)"],
     background_ability_score_increase: ["+2 CON, +1 INT"],
     background_tool_choice: ["calligraphers_supplies"],
-    background_equipment_choice: ["option_b (50 GP)"],
     origin_feat_magic_initiate_cantrip_choice: ["Fire Bolt", "Ray of Frost"],
     origin_feat_magic_initiate_level_one_spell_choice: ["Magic Missile"],
     origin_feat_magic_initiate_spellcasting_ability_choice: ["int"],
     equipment_purchase: ["Chain Mail", "Longsword", "Shield"],
+  },
+  unitChoiceOptionIds: {
+    class_equipment_choice: ["option_c"],
+    background_equipment_choice: ["option_b"],
   },
   loadoutChoices: {
     armor: ["Worn"],
@@ -79,16 +82,18 @@ const roguePlan: BuildPlan = {
       "Stealth",
     ],
     weapon_mastery_options: ["Shortsword", "Dagger"],
-    class_equipment_choice: ["option_a (8 GP)"],
     background_ability_score_increase: ["+2 WIS, +1 INT"],
     background_tool_choice: ["calligraphers_supplies"],
-    background_equipment_choice: ["option_b (50 GP)"],
     origin_feat_magic_initiate_cantrip_choice: ["Guidance", "Sacred Flame"],
     origin_feat_magic_initiate_level_one_spell_choice: ["Healing Word"],
     origin_feat_magic_initiate_spellcasting_ability_choice: ["wis"],
     class_feature_proficiency_choice: ["Perception", "Stealth"],
     class_feature_language_choice: ["Undercommon"],
     equipment_purchase: ["Leather Armor", "Shortsword", "Shortbow"],
+  },
+  unitChoiceOptionIds: {
+    class_equipment_choice: ["option_a"],
+    background_equipment_choice: ["option_b"],
   },
   loadoutChoices: {
     armor: ["Worn"],
@@ -114,6 +119,43 @@ function choiceFill(
   plan: BuildPlan,
   hole: Extract<CreationHole, { readonly kind: "choice" }>,
 ): CreationFill | CompositionFailure {
+  const requestedOptionIds =
+    hole.source.tag === "unitChoice"
+      ? plan.unitChoiceOptionIds[hole.source.choiceKey]
+      : undefined;
+  if (requestedOptionIds !== undefined) {
+    const optionIds = requestedOptionIds.map(
+      (requestedOptionId) =>
+        hole.options.find(
+          ({ optionId }) => String(optionId) === requestedOptionId,
+        )?.optionId,
+    );
+    const missingOptionIds = requestedOptionIds.filter(
+      (_optionId, index) => optionIds[index] === undefined,
+    );
+    if (missingOptionIds.length > 0) {
+      return {
+        obstruction: `Requested choice option ids were not surfaced for hole ${hole.holeId}.`,
+        observation: {
+          characterId: plan.characterId,
+          holeId: hole.holeId,
+          missingOptionIds,
+          options: hole.options.map(({ optionId, label }) => ({
+            optionId,
+            label,
+          })),
+        },
+      };
+    }
+    return {
+      kind: "choice",
+      holeId: hole.holeId,
+      optionIds: optionIds.filter(
+        (optionId): optionId is NonNullable<typeof optionId> =>
+          optionId !== undefined,
+      ),
+    };
+  }
   const labels = labelsForHole(plan, hole);
   if (labels === undefined) {
     return {

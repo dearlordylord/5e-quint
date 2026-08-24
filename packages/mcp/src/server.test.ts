@@ -1,3 +1,4 @@
+import { movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { Either, Option, Schema } from "effect";
 
@@ -167,7 +168,7 @@ function startBattleFromCharacterBuildAndStatBlockRight(
       Parameters<
         typeof startBattleFromCharacterBuildAndStatBlock
       >[0]["statBlockBattleInput"],
-      "ammunitionStocks"
+      "ammunitionStocks" | "conditions"
     >;
   },
 ): BattleRuntimeSession {
@@ -177,6 +178,7 @@ function startBattleFromCharacterBuildAndStatBlockRight(
     statBlockBattleInput: {
       ...input.statBlockBattleInput,
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     },
   });
   if (Either.isLeft(result)) {
@@ -2915,9 +2917,10 @@ describe("MCP server route", () => {
           value: "goblin",
           spatialFacts: [
             {
-              kind: "attackTargetInMeleeReach",
+              kind: "attackTargetDistance",
               actorId: "fighter",
               targetId: "goblin",
+              distanceFeet: movementFeet(5),
               ...fighterAttackSelection,
             },
           ],
@@ -3162,11 +3165,11 @@ describe("MCP server route", () => {
         value: "fighter",
         spatialFacts: [
           {
-            kind: "attackTargetInRangedRange",
+            kind: "attackTargetDistance",
             actorId: "goblin",
             targetId: "fighter",
             ...shortbowSelection,
-            rangeBand: "long",
+            distanceFeet: movementFeet(100),
           },
         ],
       },
@@ -3183,8 +3186,8 @@ describe("MCP server route", () => {
           kind: "targetChoice",
           spatialFacts: [
             {
-              kind: "attackTargetInRangedRange",
-              rangeBand: "long",
+              kind: "attackTargetDistance",
+              distanceFeet: movementFeet(100),
             },
           ],
         },
@@ -3237,18 +3240,18 @@ describe("MCP server route", () => {
         value: "fighter",
         spatialFacts: [
           {
-            kind: "attackTargetInRangedRange",
+            kind: "attackTargetDistance",
             actorId: "goblin",
             targetId: "fighter",
             ...shortbowSelection,
-            rangeBand: "normal",
+            distanceFeet: movementFeet(5),
           },
           {
-            kind: "attackTargetInRangedRange",
+            kind: "attackTargetDistance",
             actorId: "goblin",
             targetId: "fighter",
             ...shortbowSelection,
-            rangeBand: "long",
+            distanceFeet: movementFeet(10),
           },
         ],
       },
@@ -3259,7 +3262,7 @@ describe("MCP server route", () => {
       tag: "invalid",
       reason: "invalidFill",
       message:
-        "Attack target range facts must contain at most one range band for each actor, target, and attack.",
+        "Attack target distance facts must contain at most one distance for each actor, target, and attack.",
     });
   });
 
@@ -7025,9 +7028,10 @@ describe("MCP server route", () => {
           value: "fighter",
           spatialFacts: [
             {
-              kind: "attackTargetInMeleeReach",
+              kind: "attackTargetDistance",
               actorId: "goblin",
               targetId: "fighter",
+              distanceFeet: movementFeet(5),
               ...battleAttackSelection(goblinScimitar, "Scimitar"),
             },
           ],
@@ -8828,11 +8832,11 @@ describe("MCP server route", () => {
           value: "fighter",
           spatialFacts: [
             {
-              kind: "attackTargetInRangedRange",
+              kind: "attackTargetDistance",
               actorId: "goblin",
               targetId: "fighter",
               ...battleAttackSelection(goblinAttack, "Shortbow"),
-              rangeBand: "normal",
+              distanceFeet: movementFeet(5),
             },
           ],
         },
@@ -9597,17 +9601,18 @@ function fillBattleHoleThroughTool(
           spatialFacts: [
             attackName === "Shortbow"
               ? {
-                  kind: "attackTargetInRangedRange",
+                  kind: "attackTargetDistance",
                   actorId,
                   targetId: String(fill.value),
                   ...attackSelection,
-                  rangeBand: "normal",
+                  distanceFeet: movementFeet(5),
                 }
               : {
-                  kind: "attackTargetInMeleeReach",
+                  kind: "attackTargetDistance",
                   actorId,
                   targetId: String(fill.value),
                   ...attackSelection,
+                  distanceFeet: movementFeet(5),
                 },
             {
               kind: "attackerAllyWithin5FeetOfTarget",

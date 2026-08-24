@@ -64,6 +64,7 @@ import {
   Hp,
   NonNegativeInteger,
   PositiveInteger,
+  movementFeet,
 } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
@@ -1142,6 +1143,7 @@ export function monsterBattleInput(
     statBlock,
     initiative: initiativeScore(initiative),
     ammunitionStocks: testAmmunitionStocksForStatBlock(statBlock),
+    conditions: [],
     ...(input.tempHp === undefined ? {} : { tempHp: Hp(input.tempHp) }),
   };
 }
@@ -1253,9 +1255,10 @@ export function attackTargetFill(
       : {}),
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId,
         targetId,
+        distanceFeet: movementFeet(5),
         ...selection,
       },
       ...extraSpatialFacts,

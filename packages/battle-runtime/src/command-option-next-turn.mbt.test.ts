@@ -623,6 +623,7 @@ function commandFleeOpportunityAttackWindow(): Extract<
         provokedOpportunityAttacks: [
           {
             reactorId: spellCasterId,
+            distanceFeet: movementFeet(5),
             ...attackExecutionSelectionForSubjectForTest(
               characterAttackSubjectForTest(
                 targetTurn,

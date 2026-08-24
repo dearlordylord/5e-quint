@@ -131,6 +131,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
           provokedOpportunityAttacks: [
             {
               reactorId: commandApproachThreatId,
+              distanceFeet: movementFeet(5),
               ...attackExecutionSelectionForSubjectForTest(
                 characterAttackSubjectForTest(
                   targetTurn.state,
@@ -741,6 +742,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       provokedOpportunityAttacks: [
         {
           reactorId: spellCasterId,
+          distanceFeet: movementFeet(5),
           ...attackExecutionSelectionForSubjectForTest(
             characterAttackSubjectForTest(
               committedState,

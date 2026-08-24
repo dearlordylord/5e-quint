@@ -422,6 +422,7 @@ describe("MCP character sessions", () => {
         initiative: initiativeScore(10),
         currentHp: Hp(10),
         tempHp: Hp(0),
+        conditions: [],
         ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       }),
     );
@@ -500,6 +501,7 @@ describe("MCP character sessions", () => {
         initiative: initiativeScore(10),
         currentHp: Hp(10),
         tempHp: Hp(0),
+        conditions: [],
         ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       }),
     );
@@ -511,6 +513,7 @@ describe("MCP character sessions", () => {
           initiative: initiativeScore(8),
           currentHp: Hp(10),
           tempHp: Hp(0),
+          conditions: [],
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         }),
       ),
@@ -523,6 +526,7 @@ describe("MCP character sessions", () => {
           initiative: initiativeScore(6),
           currentHp: Hp(10),
           tempHp: Hp(0),
+          conditions: [],
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         }),
       ),
@@ -535,6 +539,7 @@ describe("MCP character sessions", () => {
           initiative: initiativeScore(4),
           currentHp: Hp(10),
           tempHp: Hp(0),
+          conditions: [],
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         }),
       ),
@@ -630,6 +635,7 @@ describe("MCP character sessions", () => {
         initiative: initiativeScore(8),
         currentHp: Hp(10),
         tempHp: Hp(0),
+        conditions: [],
         ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       }),
     );
@@ -692,6 +698,7 @@ describe("MCP character sessions", () => {
         initiative: initiativeScore(10),
         currentHp: Hp(10),
         tempHp: Hp(0),
+        conditions: [],
         ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       }),
     );
@@ -705,6 +712,7 @@ describe("MCP character sessions", () => {
           initiative: initiativeScore(6),
           currentHp: Hp(10),
           tempHp: Hp(0),
+          conditions: [],
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         }),
       ),

@@ -648,9 +648,10 @@ describe("manual MCP battle surface coverage", () => {
         value: "fighter",
         spatialFacts: [
           {
-            kind: "attackTargetInMeleeReach",
+            kind: "attackTargetDistance",
             actorId: "goblin",
             targetId: "fighter",
+            distanceFeet: movementFeet(5),
             procedureRef: goblinAttack.subject.procedureRef,
           },
           {
@@ -1273,6 +1274,7 @@ function statBlock(
       currentHp: Hp(10),
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     }),
   );
   return { ...init, displayName: input.displayName ?? init.displayName };
@@ -1753,7 +1755,13 @@ function attackTargetFill(
     holeId,
     value: targetId,
     spatialFacts: [
-      { kind: "attackTargetInMeleeReach", actorId, targetId, ...selection },
+      {
+        kind: "attackTargetDistance",
+        actorId,
+        targetId,
+        distanceFeet: movementFeet(5),
+        ...selection,
+      },
       ...(cleaveSecondTargetId === undefined
         ? []
         : [

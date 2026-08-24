@@ -14,10 +14,15 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
 import { Match, Schema } from "effect";
 import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
-import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
+import {
+  MovementFeet,
+  SpellSlotLevel,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import { AbilitySchema, DamageTypeSchema } from "@dnd/surface/surface/schema";
 import type { DamageType } from "@dnd/surface/surface/types";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "./battle-interrupt-triggers.ts";
@@ -946,6 +951,7 @@ export const BattleSubjectSchema = Schema.Union(
       command: Schema.Literal("opportunityAttack"),
       reactorId: CombatantId,
       targetId: CombatantId,
+      distanceFeet: MovementFeet,
     }),
     BattleInterruptAttackExecutionSelectionSchema,
   ),

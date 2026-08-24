@@ -1,0 +1,102 @@
+{
+  "scenarioId": "prone-target-roll-mode-distance-probe",
+  "scenarioSha256": "49ab6035845f1f09423d7f98ffab81c40a81fbcab340f830a7ff2abda46f4ff9",
+  "gitSha": "7eee18915e4b6027ce517dab42213fbc2980c3e2",
+  "admitReviewedUnsupported": true,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "The SRD stat blocks print Goblin Warrior Scimitar reach 5 feet and Shortbow range 80/320 feet. The Prone and attack rules produce Advantage for the 5-foot attack and Disadvantage for the 30-foot attack, while the stated initiative totals are legal Dexterity-check totals and establish the required order. The stated conditions leave no additional RAW choice unresolved, and ASSUMPTIONS.md adds no conflicting assumption."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The scenario uses canonical SRD identities and independently authored generic scenario language. It contains no PHB+ identity, protected expression, source crosswalk, or public PHB+ provenance."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicyQuality",
+  "scenarioQuality": {
+    "classification": "ready",
+    "evidence": "The exact close-melee and distant-ranged attacks make the encounter mechanically meaningful. The Wolf seriously pursues crossing the line, and both Goblins seriously pursue their shared prevention objective. Fixed setup and required attacks fit the compact known-gap retry, while later legal play is delegated to surfaced acts. The retained comparison covers all 12 admitted Scenario projections, supplies complete dimension evidence, and records a meaningfullyDistinct conclusion with material differentiators."
+  },
+  "catalogueComparison": {
+    "schemaVersion": 1,
+    "conclusion": "meaningfullyDistinct",
+    "comparedScenarioIds": [
+      "four-way-crank-control-cycle",
+      "goblin-warrior-skeleton-tracer",
+      "lantern-intercept-pairwise-control",
+      "mounted-dispatch-through-flooded-orchard",
+      "open-grid-wolf-skeleton-pursuit",
+      "orc-fighter-rogue-close-interception",
+      "sand-band-four-skeleton-skirmish",
+      "synthetic-beacon-eight-round-defense",
+      "table-authored-shove-then-grapple",
+      "table-authored-three-shove-cycle",
+      "table-d20-circumstance-advantage-probe-repair-retry",
+      "two-goblins-pursue-skeleton"
+    ],
+    "closestMatches": [
+      {
+        "scenarioId": "table-d20-circumstance-advantage-probe-repair-retry",
+        "reason": "Shares the explicit unsupported-capability-probe framing and Advantage/Disadvantage focus, but probes a different boundary: initial Prone setup combined with caller-supplied Initiative totals, followed by two required printed attacks."
+      },
+      {
+        "scenarioId": "two-goblins-pursue-skeleton",
+        "reason": "Shares two Goblin Warriors, a third hostile creature, pursuit, and a stat-block-only composition, but differs in the Wolf target, passive line-crossing objective, initial Prone state, fixed initiative order, attack-specific sequence, and open no-Cover arena."
+      },
+      {
+        "scenarioId": "goblin-warrior-skeleton-tracer",
+        "reason": "Shares canonical Goblin stat-block combat on open geometry and direct SDK attack play, but the Candidate adds a second Goblin, a Wolf objective pursuit, initial Prone, caller-supplied Initiative totals, and a prescribed melee/ranged sequence."
+      }
+    ],
+    "materialDifferentiators": [
+      "The Candidate's central exploratory purpose is the combined unsupported-capability probe for initial Prone setup and caller-supplied Initiative totals; no admitted Scenario combines those setup requirements.",
+      "It requires the melee Goblin to attack first with Scimitar from 5 feet and the ranged Goblin to attack second with Shortbow from 30 feet without moving, exposing different Prone-related attack-roll circumstances while requiring both attacks to resolve.",
+      "Two Goblin Warriors share the strategy-bearing objective of stopping a seriously pursuing Wolf from crossing a passive painted line, rather than pursuing separate targets, controlling a crank, escaping a passage, or defending a supplied object.",
+      "The Candidate uses only canonical stat blocks and requires no mount, object transfer, Character Sheets, difficult terrain, cover, barriers, or Shove/Grapple procedure; its meaningful interaction is the fixed melee-to-ranged interception before the Wolf can act.",
+      "The Wolf may continue its legal line-crossing pursuit after the required attacks, so the scenario combines a bounded setup-and-attack probe with a conditional objective pursuit rather than ending at a single control act or a fixed round boundary."
+    ],
+    "basis": {
+      "tag": "compared",
+      "batches": [
+        {
+          "batchIndex": 0,
+          "comparedScenarioIds": [
+            "four-way-crank-control-cycle",
+            "goblin-warrior-skeleton-tracer",
+            "lantern-intercept-pairwise-control",
+            "mounted-dispatch-through-flooded-orchard",
+            "open-grid-wolf-skeleton-pursuit",
+            "orc-fighter-rogue-close-interception",
+            "sand-band-four-skeleton-skirmish",
+            "synthetic-beacon-eight-round-defense",
+            "table-authored-shove-then-grapple",
+            "table-authored-three-shove-cycle",
+            "table-d20-circumstance-advantage-probe-repair-retry",
+            "two-goblins-pursue-skeleton"
+          ],
+          "dimensions": {
+            "exploratoryPurpose": "The Candidate asks whether initial Prone and caller-supplied Initiative totals can be admitted while two Goblin Warriors execute a prescribed melee/ranged interception before a Wolf pursues a crossing objective. The admitted purposes instead cover a four-combatant Shove control cycle, a minimal Goblin/Skeleton tracer, pillar-based interception, mounted dispatch, Wolf/Skeleton pursuit and Opportunity Attacks, Character Sheet authoring, difficult-terrain combat, beacon defense, Shove/Grapple branches, a three-Shove cycle, a per-test D20 circumstance probe, or Goblin/Skeleton passage pursuit.",
+            "materiallyRelevantMechanics": "The Candidate requires initial Prone, caller-supplied Initiative totals, Prone-related Advantage/Disadvantage on two differently ranged attacks, exact Scimitar and Shortbow use, no movement before the Shortbow attack, and public-SDK resolution of both attacks. The admitted mechanics center on Shove/Grapple, Opportunity Attacks, Character Sheets, delegated builds, cover, difficult terrain, objective damage, mounted/object/elevation transfer, or one exact Table circumstance modifier; none reproduces this mechanic combination.",
+            "encounterComposition": "The Candidate has exactly two hostile Goblin Warriors and one hostile Wolf, with the Goblins sharing an anti-crossing objective and having distinct forced melee and ranged roles. This differs from the four-combatant crank cycle, the two-combatant Goblin/Skeleton tracer, the Wolf/Skeleton pursuit, the Wolf/Skeleton/Hawk interception, the Character Sheet encounters, the mounted/object encounter, the Shove-only groups, and the two-Goblin/Skeleton passage pursuit.",
+            "interactionSequence": "Initiative is fixed as melee Goblin, ranged Goblin, then Wolf. The first Goblin must make the 5-foot Scimitar attack; the second must make the 30-foot Shortbow attack without moving; both resolve before any Wolf action, after which the Wolf and Goblins continue only through surfaced acts. The admitted sequences instead use changing Shove targets, direct open-ended combat, route and pillar decisions, mounted dispatch and transfer, pursuit/OA lane changes, Character Sheet tactics, difficult-terrain and ranged-pressure choices, eight-round defense, Shove followed by Grapple, three independent Shoves, one D20 circumstance, or portcullis pursuit.",
+            "tacticalQuestion": "The Candidate tests whether coordinated melee and ranged interception can exploit or expose Prone and Initiative setup support before a seriously pursuing Wolf crosses the line, while preserving a later Wolf action if available. The admitted tactical questions concern control of a crank, basic combat, pillar routing, passage of a cylinder, Wolf/Skeleton pursuit, prism or beacon defense, difficult-terrain combat, Shove/Grapple outcomes, per-test circumstance application, or cover-owned pursuit.",
+            "sdkSupportBoundary": "The Candidate explicitly probes initial-Prone setup together with caller-supplied Initiative totals and warns that neither should be assumed documented by the public SDK. This is materially different from the admitted mounted/object/elevation probe and the admitted issue-279 per-test circumstance Disadvantage probe; supported-only and not-assessed entries do not target either Candidate capability.",
+            "spatialContext": {
+              "tag": "supporting",
+              "evidence": "The 100-foot-square flat, brightly illuminated, open no-Cover arena, passive edge-to-edge line, and exact 5-foot and 30-foot separations establish the crossing boundary and the two attack ranges while removing cover, visibility, terrain, and other situational explanations. Spatial context supports the interception question but is not the primary differentiator from the admitted geometry-assisted and table-authored scenarios."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "Wolf and Goblin Warrior both appear in the supplied canonical availability list. The selected identities therefore satisfy the availableOnly intent."
+  },
+  "sdkCapabilityIntent": "probeUnsupportedCapability",
+  "sdkCapabilityReview": {
+    "classification": "explicitUnsupportedProbe",
+    "evidence": "The public capability projection documents canonical stat-block setup and surfaced attack, roll, damage, movement, and continuation operations, but does not document initial-Prone setup or caller-supplied Initiative totals. The scenario explicitly names both facts as the unsupported-capability probe."
+  }
+}

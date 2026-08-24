@@ -323,6 +323,7 @@ function statBlockCreature(input: {
       currentHp: Hp(12),
       tempHp: Hp(0),
       ammunitionStocks: [],
+      conditions: [],
     },
   };
 }
@@ -450,7 +451,8 @@ function projectRuleCoreStatBlockControlState(input: {
     attackActionAvailable: snapshot.turn.actionResources.some(
       (resource) => resource.source === "turn",
     ),
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable:
+      input.state.currentTurnResources.currentHasBonusAction,
     pendingPrimaryDispatches: dispatches.filter(
       (resource) => resource.attackProcedureRef === primaryAttackRef,
     ).length,
@@ -512,19 +514,20 @@ function attackTargetFill(
       attackName === secondaryAttackName
         ? [
             {
-              kind: "attackTargetInRangedRange",
+              kind: "attackTargetDistance",
               actorId,
               targetId,
               ...hole.attack.selection,
-              rangeBand: "normal",
+              distanceFeet: movementFeet(5),
             },
           ]
         : [
             {
-              kind: "attackTargetInMeleeReach",
+              kind: "attackTargetDistance",
               actorId,
               targetId,
               ...hole.attack.selection,
+              distanceFeet: movementFeet(5),
             },
           ],
   };

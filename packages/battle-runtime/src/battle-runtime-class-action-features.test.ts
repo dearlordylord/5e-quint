@@ -60,6 +60,7 @@ import {
   goblinId,
   wizardId,
   unitLibrary,
+  SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS,
   applyCondition,
   battleId,
   cantripSpellInvocationRef,
@@ -3104,36 +3105,40 @@ describe("battle runtime: class action features", () => {
     ]);
   });
 
-  test("Surface rejects malformed same-family Brutal Strike mechanics", () => {
-    const unit = unitLibrary.requireUnit("barbarian_brutal_strike");
-    if (
-      unit.kind !== "class_feature" ||
-      unit.mechanics.family !== "brutal_strike"
-    ) {
-      throw new Error("Expected Brutal Strike mechanics.");
-    }
-    const mechanics = unit.mechanics;
+  test(
+    "Surface rejects malformed same-family Brutal Strike mechanics",
+    () => {
+      const unit = unitLibrary.requireUnit("barbarian_brutal_strike");
+      if (
+        unit.kind !== "class_feature" ||
+        unit.mechanics.family !== "brutal_strike"
+      ) {
+        throw new Error("Expected Brutal Strike mechanics.");
+      }
+      const mechanics = unit.mechanics;
 
-    expect(() =>
-      decodeUnitRecordSync({
-        ...unit,
-        id: "synthetic_brutal_strike_wrong_push_distance",
-        mechanics: {
-          ...mechanics,
-          options: [
-            {
-              ...mechanics.options[0],
-              forcedMovement: {
-                ...mechanics.options[0].forcedMovement,
-                feet: 10,
+      expect(() =>
+        decodeUnitRecordSync({
+          ...unit,
+          id: "synthetic_brutal_strike_wrong_push_distance",
+          mechanics: {
+            ...mechanics,
+            options: [
+              {
+                ...mechanics.options[0],
+                forcedMovement: {
+                  ...mechanics.options[0].forcedMovement,
+                  feet: 10,
+                },
               },
-            },
-            mechanics.options[1],
-          ],
-        },
-      }),
-    ).toThrow();
-  });
+              mechanics.options[1],
+            ],
+          },
+        }),
+      ).toThrow();
+    },
+    SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS,
+  );
 
   test("Brutal Strike forgoes Reckless Advantage and adds same-type damage on a Strength hit", () => {
     const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");

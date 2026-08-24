@@ -1,3 +1,4 @@
+import { movementFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 import { createMcpPlaySessionRoot, handleToolCall } from "./server.ts";
@@ -870,7 +871,7 @@ describe("end-user MCP vertical", () => {
       targetId: "skeleton-a",
       total: 18,
       naturalD20: 15,
-      damageResults: [1],
+      damageGroups: [[1]],
     });
     expect(combatant(root, "skeleton-a")).toMatchObject({ hp: 5 });
     resolveUnitFeatureAct(root, "fighter", "fighter_action_surge");
@@ -880,7 +881,7 @@ describe("end-user MCP vertical", () => {
       targetId: "skeleton-a",
       total: 18,
       naturalD20: 15,
-      damageResults: [1],
+      damageGroups: [[1]],
     });
     expect(combatant(root, "skeleton-a")).toMatchObject({
       hp: 0,
@@ -909,7 +910,7 @@ describe("end-user MCP vertical", () => {
       targetId: "bard",
       total: 16,
       naturalD20: 12,
-      damageResults: [4],
+      damageGroups: [[4]],
     });
     expect(combatant(root, "bard")).toMatchObject({ hp: 4 });
     endTurn(root, "goblin-b");
@@ -921,7 +922,7 @@ describe("end-user MCP vertical", () => {
       targetId: "bard",
       total: 18,
       naturalD20: 15,
-      damageResults: [5],
+      damageGroups: [[5]],
     });
     expect(combatant(root, "bard")).toMatchObject({ hp: 0 });
     endTurn(root, "skeleton-b");
@@ -937,7 +938,7 @@ describe("end-user MCP vertical", () => {
       targetId: "skeleton-b",
       total: 18,
       naturalD20: 15,
-      damageResults: [1],
+      damageGroups: [[1]],
     });
     expect(combatant(root, "skeleton-b")).toMatchObject({ hp: 5 });
     endTurn(root, "fighter");
@@ -959,7 +960,7 @@ describe("end-user MCP vertical", () => {
       targetId: "bard",
       total: 16,
       naturalD20: 12,
-      damageResults: [2],
+      damageGroups: [[2], [1]],
     });
     expect(combatant(root, "bard").zeroHpLifecycle).toMatchObject({
       deathSaves: { failures: 2, successes: 0 },
@@ -973,7 +974,7 @@ describe("end-user MCP vertical", () => {
       targetId: "bard",
       total: 18,
       naturalD20: 15,
-      damageResults: [4],
+      damageGroups: [[4]],
     });
     expect(combatant(root, "bard").zeroHpLifecycle).toMatchObject({
       deathSaves: { failures: 3, successes: 0 },
@@ -989,7 +990,7 @@ describe("end-user MCP vertical", () => {
       targetId: "skeleton-b",
       total: 18,
       naturalD20: 15,
-      damageResults: [1],
+      damageGroups: [[1]],
     });
     expect(combatant(root, "skeleton-b")).toMatchObject({
       hp: 0,
@@ -1014,7 +1015,7 @@ describe("end-user MCP vertical", () => {
       targetId: "fighter",
       total: 20,
       naturalD20: 18,
-      damageResults: [5],
+      damageGroups: [[5]],
     });
     expect(combatant(root, "fighter")).toMatchObject({ hp: 13 });
     endTurn(root, "goblin-b");
@@ -1031,7 +1032,7 @@ describe("end-user MCP vertical", () => {
       targetId: "goblin-b",
       total: 18,
       naturalD20: 15,
-      damageResults: [1],
+      damageGroups: [[1]],
     });
     expect(callTool(root, "read_battle_state", {}).snapshot.combatants).toEqual(
       expect.arrayContaining([
@@ -2170,7 +2171,7 @@ function resolveWeaponAttack(
     readonly targetId: string;
     readonly total: number;
     readonly naturalD20: number;
-    readonly damageResults: readonly number[];
+    readonly damageGroups: readonly (readonly number[])[];
   },
 ) {
   const act = requireAttackAct(root, input.actorId, input.attackName);
@@ -2200,7 +2201,7 @@ function resolveWeaponAttack(
     {
       kind: "rolledDice",
       holeId: damage.holeId,
-      value: [{ results: input.damageResults }],
+      value: input.damageGroups.map((results) => ({ results })),
     },
   );
   if (afterDamage.result?.tag !== "needsHoles") return afterDamage;
@@ -2388,9 +2389,10 @@ function fillBattleSubject(
               : subject.tag === "action" && procedureRef !== null
                 ? [
                     {
-                      kind: "attackTargetInMeleeReach",
+                      kind: "attackTargetDistance",
                       actorId: subject.actorId,
                       targetId: String(fill.value),
+                      distanceFeet: movementFeet(5),
                       procedureRef,
                       ...(!("attackAbility" in subject) ||
                       subject.attackAbility === undefined

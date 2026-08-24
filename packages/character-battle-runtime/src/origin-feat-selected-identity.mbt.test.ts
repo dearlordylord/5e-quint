@@ -403,6 +403,7 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
       initiative: initiativeScore(10),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: [],
     },
   });
   if (Either.isLeft(entry)) {

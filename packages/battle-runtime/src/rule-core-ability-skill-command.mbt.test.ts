@@ -728,6 +728,7 @@ function commandFleeOpportunityAttackScenario(): Projection {
         provokedOpportunityAttacks: [
           {
             reactorId: spellCasterId,
+            distanceFeet: movementFeet(5),
             ...attackExecutionSelectionForSubjectForTest(
               characterAttackSubjectForTest(
                 targetTurn,

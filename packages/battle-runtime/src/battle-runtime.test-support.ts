@@ -1,5 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 
+export const SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS = 10_000;
+
 export type MembersOf<Owner, Members extends Owner> = Members;
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.grappler unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-independent-attack-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
@@ -63,6 +65,7 @@ import {
   proficiencyBonus,
   resourceCount,
   type Condition,
+  type MovementFeet,
 } from "@dnd/shared/types";
 import {
   statBlockId,
@@ -1761,13 +1764,20 @@ export function attackDamageHoleAfterHit(
   if (targetHole.kind !== "targetChoice") {
     throw new Error("Expected targetChoice hole.");
   }
+  const target = state.combatants.get(targetId);
+  const attackRollWithExpectedProneMode =
+    attackRoll.rollMode === undefined &&
+    target !== undefined &&
+    hasCondition(target.conditions, "prone")
+      ? { ...attackRoll, rollMode: "advantage" as const }
+      : attackRoll;
   return requireHole(
     resolveBattleSubject({
       state,
       subject,
       fills: [
         attackTargetFill(targetHole, subject.actorId, targetId),
-        attackRollFill(rollHole, attackRoll),
+        attackRollFill(rollHole, attackRollWithExpectedProneMode),
       ],
     }),
     "rolledDice",
@@ -1784,13 +1794,22 @@ export function criticalAttackDamageResult(
     total: 20,
     naturalD20: 20,
   });
+  const target = state.combatants.get(targetId);
+  const rollMode =
+    target !== undefined && hasCondition(target.conditions, "prone")
+      ? ("advantage" as const)
+      : undefined;
 
   return resolveBattleSubject({
     state,
     subject: fighterAttackSubject(state, "Longsword"),
     fills: [
       targetFill(targetHole, targetId),
-      attackRollFill(rollHole, { total: 20, naturalD20: 20 }),
+      attackRollFill(rollHole, {
+        total: 20,
+        naturalD20: 20,
+        ...(rollMode === undefined ? {} : { rollMode }),
+      }),
       damageRollFillWithGroups(damageHole, [[4, 4]]),
     ],
   });
@@ -2461,6 +2480,30 @@ export function shakeAwakeGoblinFromSleep(state: BattleState): BattleState {
 }
 
 export function targetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  targetId: CombatantId,
+  spatialFacts?: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["spatialFacts"],
+  relationshipFacts?: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["relationshipFacts"],
+): Extract<BattleFill, { readonly kind: "targetChoice" }>;
+export function targetFill(
+  hole: BattleHole,
+  targetId: CombatantId,
+  spatialFacts?: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["spatialFacts"],
+  relationshipFacts?: Extract<
+    BattleFill,
+    { readonly kind: "targetChoice" }
+  >["relationshipFacts"],
+): BattleFill;
+export function targetFill(
   hole: BattleHole,
   targetId: CombatantId,
   spatialFacts?: Extract<
@@ -2501,13 +2544,11 @@ export function targetFill(
           ...(hole.attack === undefined
             ? []
             : [
-                attackTargetSpatialFact(
+                attackTargetDistanceSpatialFact(
                   hole.attack.actorId,
                   targetId,
                   hole.attack.selection,
-                  hole.attack.targetConstraint.kind === "rangedRange"
-                    ? "normal"
-                    : undefined,
+                  movementFeet(5),
                 ),
               ]),
           ...(hole.spellTargetSpatialFactRequest === undefined
@@ -2693,23 +2734,21 @@ export function attackTargetFill(
     BattleFill,
     { readonly kind: "targetChoice" }
   >["spatialFacts"] = [],
-): BattleFill {
-  const boundSelection =
-    hole.kind === "targetChoice" && hole.attack !== undefined
-      ? hole.attack.selection
-      : attackSelection;
+  targetDistanceFeet: MovementFeet = movementFeet(5),
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  if (hole.kind !== "targetChoice") {
+    throw new Error("Expected targetChoice hole.");
+  }
+  const boundSelection = hole.attack?.selection ?? attackSelection;
   if (boundSelection === undefined) {
     throw new Error("Expected a bound attack execution selection.");
   }
   return targetFill(hole, targetId, [
-    attackTargetSpatialFact(
+    attackTargetDistanceSpatialFact(
       actorId,
       targetId,
       boundSelection,
-      hole.kind === "targetChoice" &&
-        hole.attack?.targetConstraint.kind === "rangedRange"
-        ? "normal"
-        : undefined,
+      targetDistanceFeet,
     ),
     ...commonAdjacentAllySpatialFacts(actorId, targetId),
     ...(extraFacts ?? []),
@@ -2720,25 +2759,39 @@ export function attackTargetSpatialFact(
   actorId: CombatantId,
   targetId: CombatantId,
   attackSelection: BattleAttackExecutionSelection,
-  rangeBand?: "normal" | "long",
-): NonNullable<
-  Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
->[number] {
-  const isRanged = rangeBand !== undefined;
-  return isRanged
-    ? {
-        kind: "attackTargetInRangedRange" as const,
-        actorId,
-        targetId,
-        ...attackSelection,
-        rangeBand: rangeBand ?? ("normal" as const),
-      }
-    : {
-        kind: "attackTargetInMeleeReach" as const,
-        actorId,
-        targetId,
-        ...attackSelection,
-      };
+  distanceFeet: MovementFeet = movementFeet(5),
+): Extract<
+  NonNullable<
+    Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
+  >[number],
+  { readonly kind: "attackTargetDistance" }
+> {
+  return attackTargetDistanceSpatialFact(
+    actorId,
+    targetId,
+    attackSelection,
+    distanceFeet,
+  );
+}
+
+export function attackTargetDistanceSpatialFact(
+  actorId: CombatantId,
+  targetId: CombatantId,
+  attackSelection: BattleAttackExecutionSelection,
+  distanceFeet: MovementFeet,
+): Extract<
+  NonNullable<
+    Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
+  >[number],
+  { readonly kind: "attackTargetDistance" }
+> {
+  return {
+    kind: "attackTargetDistance",
+    actorId,
+    targetId,
+    ...attackSelection,
+    distanceFeet,
+  };
 }
 
 function commonAdjacentAllySpatialFacts(
@@ -3975,6 +4028,7 @@ export function statBlockCreatureInit(input: {
       currentHp: Hp(input.currentHp ?? maxHp),
       tempHp: Hp(input.tempHp ?? 0),
       ammunitionStocks,
+      conditions: [],
     },
   };
 }
@@ -4152,6 +4206,7 @@ export function skeletonCreatureInit(input: {
       currentHp: Hp(13),
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+      conditions: [],
     },
   };
 }
@@ -4185,6 +4240,7 @@ export function resistantSkeletonCreatureInit(input: {
       currentHp: Hp(13),
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+      conditions: [],
     },
   };
 }

@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdtempSync,
@@ -110,7 +111,6 @@ describe("fixed scenario benchmark boundary", () => {
         "medium",
         "Review the synthetic source.",
         undefined,
-        undefined,
         "workspace-write",
       ),
     ).toContain("--skip-git-repo-check");
@@ -152,6 +152,36 @@ describe("fixed scenario benchmark boundary", () => {
       expect(() =>
         retainBenchmarkReviewReplayEvents(eventPath, replayPath),
       ).toThrow();
+    } finally {
+      rmSync(temporaryRoot, { recursive: true });
+    }
+  });
+
+  test("retains a review replay raw sibling when the invocation failed", () => {
+    const temporaryRoot = mkdtempSync(resolve(tmpdir(), "dnd-fixed-raw-"));
+    const eventPath = resolve(temporaryRoot, "invocation.events.jsonl");
+    const replayPath = resolve(temporaryRoot, "milestone.input.json");
+    const rawPath = `${eventPath}.codex-raw`;
+    const rawContents = Buffer.from("failed benchmark output\n", "utf8");
+    try {
+      writeFileSync(rawPath, rawContents);
+      writeFileSync(
+        eventPath,
+        `${JSON.stringify({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          source: "settledSidecar",
+          reason: "failedInvocation",
+          rawContentsSha256: createHash("sha256")
+            .update(rawContents)
+            .digest("hex"),
+          rawContentsByteLength: rawContents.byteLength,
+        })}\n`,
+      );
+      const retainedPath = retainBenchmarkReviewReplayEvents(
+        eventPath,
+        replayPath,
+      );
+      expect(readFileSync(`${retainedPath}.codex-raw`)).toEqual(rawContents);
     } finally {
       rmSync(temporaryRoot, { recursive: true });
     }

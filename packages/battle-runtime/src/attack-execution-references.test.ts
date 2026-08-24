@@ -1,3 +1,4 @@
+import { movementFeet } from "@dnd/shared/types";
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { Schema } from "effect";
@@ -438,11 +439,11 @@ describe("character attack execution references", () => {
       value: goblinId,
       spatialFacts: [
         {
-          kind: "attackTargetInRangedRange",
+          kind: "attackTargetDistance",
           actorId: fighterId,
           targetId: goblinId,
           ...selection,
-          rangeBand: "normal",
+          distanceFeet: movementFeet(5),
         },
       ],
     });
@@ -456,7 +457,9 @@ describe("character attack execution references", () => {
       value: {
         speedKind: "walk",
         movementCostFeet: 5,
-        provokedOpportunityAttacks: [{ reactorId: fighterId, ...selection }],
+        provokedOpportunityAttacks: [
+          { reactorId: fighterId, distanceFeet: movementFeet(5), ...selection },
+        ],
       },
     });
     expect(movement).toMatchObject({

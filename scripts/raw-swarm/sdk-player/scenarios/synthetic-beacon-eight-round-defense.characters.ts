@@ -204,12 +204,10 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
       class_feature_feat_choice: ["Ability Score Improvement"],
       class_feature_ability_score_increase_choice: ["DEX +1, INT +1"],
       class_subclass_choice: ["Evoker"],
-      class_equipment_choice: ["option_a (5 GP)"],
       wizard_cantrip_choices: plan.cantrips,
       wizard_prepared_spell_choices: plan.prepared,
       background_ability_score_increase: ["+2 INT, +1 CON"],
       background_tool_choice: ["calligraphers_supplies"],
-      background_equipment_choice: ["option_b (50 GP)"],
       origin_feat_magic_initiate_cantrip_choice: ["Fire Bolt", "Light"],
       origin_feat_magic_initiate_level_one_spell_choice: ["Shield"],
       origin_feat_magic_initiate_spellcasting_ability_choice: ["int"],
@@ -222,6 +220,18 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
     return choices[hole.source.choiceKey];
   };
 
+  const wantedOptionIds = (hole: Hole): readonly string[] | undefined => {
+    if (hole.kind !== "choice" || hole.source.tag !== "unitChoice")
+      return undefined;
+    const optionIdsByChoiceKey: Partial<
+      Record<typeof hole.source.choiceKey, readonly string[]>
+    > = {
+      class_equipment_choice: ["option_a"],
+      background_equipment_choice: ["option_b"],
+    };
+    return optionIdsByChoiceKey[hole.source.choiceKey];
+  };
+
   const fillForHole = (hole: Hole, plan: CharacterPlan): Fill | string => {
     if (hole.kind === "abilityScores") {
       return {
@@ -229,6 +239,27 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
         holeId: hole.holeId,
         method: "standardArray",
         value: abilityScores.right,
+      };
+    }
+    const requestedOptionIds = wantedOptionIds(hole);
+    if (requestedOptionIds !== undefined) {
+      const optionIds = requestedOptionIds.map(
+        (requestedOptionId) =>
+          hole.options.find(
+            ({ optionId }) =>
+              optionId === sdk.creationChoiceOptionId(requestedOptionId),
+          )?.optionId,
+      );
+      const missing = requestedOptionIds.filter(
+        (_, index) => optionIds[index] === undefined,
+      );
+      if (missing.length > 0) {
+        return `The public hole ${hole.holeId} did not surface the planned option id(s): ${missing.join(", ")}.`;
+      }
+      return {
+        kind: "choice",
+        holeId: hole.holeId,
+        optionIds: optionIds.filter((id) => id !== undefined),
       };
     }
     const labels = wantedLabels(hole, plan);

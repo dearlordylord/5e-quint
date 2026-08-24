@@ -130,6 +130,7 @@ export const setupScenario: ScenarioSetup = ({
         choice.statBlockId === "stat_block_goblin_warrior"
           ? [sdk.battleAmmunitionStock("arrow", 20)]
           : [],
+      conditions: [],
     });
     if (sdk.isLeft(projected)) {
       return {

@@ -171,7 +171,6 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
       class_feature_proficiency_choice: [plan.scholarSkill],
       class_feature_feat_choice: ["Ability Score Improvement"],
       class_subclass_choice: ["Evoker"],
-      class_equipment_choice: ["option_a (5 GP)"],
       wizard_cantrip_choices: plan.cantrips,
       wizard_spellbook_choices: plan.spellbook,
       wizard_prepared_spell_choices: plan.preparedSpells,
@@ -184,7 +183,6 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
       ],
       background_ability_score_increase: [plan.backgroundIncrease],
       background_tool_choice: ["calligraphers_supplies"],
-      background_equipment_choice: ["option_a (8 GP)"],
     };
     const buildResult = sdk.fillCreationHoles({
       draft: originResult.draft,
@@ -199,6 +197,16 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
             value: abilityScores.right,
           };
         }
+        const optionIdsByChoiceKey: Readonly<
+          Partial<Record<string, readonly string[]>>
+        > = {
+          class_equipment_choice: ["option_a"],
+          background_equipment_choice: ["option_a"],
+        };
+        const requestedOptionIds =
+          hole.source.tag === "unitChoice"
+            ? optionIdsByChoiceKey[hole.source.choiceKey]
+            : undefined;
         const labels =
           hole.source.tag === "unitChoice"
             ? buildLabels[hole.source.choiceKey]
@@ -207,7 +215,15 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
           kind: "choice" as const,
           holeId: hole.holeId,
           optionIds: hole.options
-            .filter(({ label }) => labels?.includes(label))
+            .filter(({ optionId, label }) =>
+              requestedOptionIds === undefined
+                ? labels?.includes(label)
+                : requestedOptionIds.some(
+                    (requestedOptionId) =>
+                      optionId ===
+                      sdk.creationChoiceOptionId(requestedOptionId),
+                  ),
+            )
             .map(({ optionId }) => optionId),
         };
       }),

@@ -22,6 +22,10 @@ export const ScenarioCampaignManifestSchema = Schema.Struct({
   configSha256: HashSchema,
 });
 
+export type ScenarioCampaignManifest = Schema.Schema.Type<
+  typeof ScenarioCampaignManifestSchema
+>;
+
 export const ExecutionStartRecordSchema = Schema.Struct({
   type: Schema.Literal("raw-swarm-execution-start"),
   schemaVersion: Schema.Literal(1),

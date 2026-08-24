@@ -1,0 +1,15 @@
+{
+  "campaignId": "prone-target-roll-mode-distance-probe-authoring-retry",
+  "plannedScenarioId": "prone-target-roll-mode-distance-probe",
+  "scenarioTitle": "Prone target roll-mode distance probe",
+  "scenarioPurpose": "Run an explicitly named capability probe for both SRD 5.2.1 Prone target attack-roll branches through the public player SDK: an initially Prone target is attacked before it can act, once within 5 feet and once beyond 5 feet, with all other roll-mode sources neutral.",
+  "evidenceSetId": "prone-target-roll-mode-distance-probe-authoring-retry-evidence",
+  "distributionPreference": "Known-gap-guided retry after the retained candidate-689b3cfc rejection. Generate compact scenarios using only canonical Goblin Warrior, Skeleton, Wolf, or Riding Horse stat blocks and only attacks printed on those stat blocks; do not add monster gear. Use a sufficiently large bright open arena with no Cover. Initialize one target Prone, assign RAW-legal Initiative totals so two hostile attackers act before it, and give those attackers an explicit shared strategy-bearing objective such as preventing the target from crossing a passive painted line. One attacker must use a printed melee attack from exactly 5 feet and the other a printed ranged attack from more than 5 feet without moving. State that Prone is the only active Advantage or Disadvantage source and require both attacks to resolve through the public SDK before conclusion. Treat initial-Prone setup and caller-supplied Initiative as the explicitly named capability probe; do not fabricate documented support. Do not use PHB+ identity or prose.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "probeUnsupportedCapability",
+  "minimumIterations": 2,
+  "maximumIterations": 3,
+  "candidatesPerIteration": 2,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": true
+}

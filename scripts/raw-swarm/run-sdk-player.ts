@@ -14,6 +14,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   benchmarkContextDeliveryForRole,
@@ -65,7 +66,12 @@ import {
   type ScenarioId,
 } from "./transcript.ts";
 import { Either, Match, Schema } from "effect";
-import { runCodexInvocation } from "./model-telemetry.ts";
+import {
+  runCodexInvocation,
+  terminateOwnedProcess,
+  type ModelInvocationRun,
+  type SpawnedCodexProcess,
+} from "./model-telemetry.ts";
 import {
   PlayerExecutionStateSchema,
   playerContinuationEvidence,
@@ -188,6 +194,87 @@ function emitExecutionFindings(output: string): void {
     projection,
     path: findingsCheckpointArtifactPath(output),
   });
+}
+
+export type SdkPlayerExecutionFailure = Readonly<{
+  readonly kind: "unreapedSupervisorCleanup" | "evidenceRetentionFailure";
+  readonly reason: string;
+}>;
+
+export type SdkPlayerExecutionFinalization =
+  | Readonly<{
+      readonly tag: "reaped";
+    }>
+  | Readonly<{
+      readonly tag: "failed";
+      readonly failure: SdkPlayerExecutionFailure;
+    }>;
+
+export type SdkPlayerExecutionDirectories = Readonly<{
+  readonly scratch: string;
+  readonly trusted: string;
+  readonly codexHome: string;
+  readonly output: string;
+}>;
+
+function removeSdkPlayerTemporaryDirectories(
+  directories: SdkPlayerExecutionDirectories,
+): void {
+  rmSync(directories.scratch, { recursive: true });
+  rmSync(directories.trusted, { recursive: true });
+  rmSync(directories.codexHome, { recursive: true });
+}
+
+/**
+ * Settle the runner-owned SDK supervisor before finalizing evidence and
+ * deciding whether diagnostics may be removed.  The reaped callback owns the
+ * success artifact path and runs before temporary roots are removed.  An
+ * unreaped supervisor or failed evidence retention is a fatal execution
+ * failure; temporary roots and partial output remain available for post-mortem
+ * evidence.
+ */
+export async function finalizeSdkPlayerExecution(input: {
+  readonly supervisorProcess: SpawnedCodexProcess | undefined;
+  readonly detached: boolean;
+  readonly directories: SdkPlayerExecutionDirectories;
+  readonly onReaped: () => void;
+}): Promise<SdkPlayerExecutionFinalization> {
+  const termination =
+    input.supervisorProcess === undefined
+      ? ({ tag: "reaped" } as const)
+      : await terminateOwnedProcess(input.supervisorProcess, {
+          detached: input.detached,
+        });
+  if (termination.tag === "reaped") {
+    try {
+      input.onReaped();
+    } catch (error: unknown) {
+      const failure: SdkPlayerExecutionFailure = {
+        kind: "evidenceRetentionFailure",
+        reason: error instanceof Error ? error.message : String(error),
+      };
+      return {
+        tag: "failed",
+        failure,
+      };
+    }
+    removeSdkPlayerTemporaryDirectories(input.directories);
+    return { tag: "reaped" };
+  }
+  const failure: SdkPlayerExecutionFailure = {
+    kind: "unreapedSupervisorCleanup",
+    reason: termination.reason,
+  };
+  return {
+    tag: "failed",
+    failure,
+  };
+}
+
+function sdkPlayerExecutionFailureMessage(
+  failure: SdkPlayerExecutionFailure,
+): string {
+  return `${failure.kind}: ${failure.reason}`;
 }
 
 function emitTranscriptlessFindings(input: {
@@ -351,6 +438,55 @@ function playerEvidenceState(
     ),
     Match.exhaustive,
   );
+}
+
+export type PlayerInvocationDisposition =
+  | Readonly<{
+      readonly tag: "completed";
+      readonly output: string;
+    }>
+  | Readonly<{
+      readonly tag: "obstructed";
+      readonly obstruction: Extract<
+        PlayerEvidenceState,
+        { readonly tag: "obstructed" }
+      >["obstruction"];
+      readonly recordedContinuations: number;
+    }>;
+
+/**
+ * Reconcile process lifecycle and frozen player evidence before choosing a
+ * disposition.  A terminal SDK obstruction is diagnostic success even when
+ * Codex exits nonzero or cannot retain its final message.
+ */
+export function reconcilePlayerInvocation(
+  lifecycle: ModelInvocationRun<string, "expectedLastMessage">,
+  evidence: PlayerEvidenceState,
+): Either.Either<PlayerInvocationDisposition, string> {
+  if (lifecycle.tag === "failed") {
+    return evidence.tag === "obstructed"
+      ? Either.right({
+          tag: "obstructed",
+          obstruction: evidence.obstruction,
+          recordedContinuations: evidence.recordedContinuations,
+        })
+      : Either.left(
+          `Player agent invocation failed: ${lifecycle.cause.reason}`,
+        );
+  }
+  if (evidence.tag === "active") {
+    return Either.left(
+      `Player agent exited after ${String(evidence.recordedContinuations)} continuations without a recorded conclusion.`,
+    );
+  }
+  if (evidence.tag === "obstructed") {
+    return Either.right({
+      tag: "obstructed",
+      obstruction: evidence.obstruction,
+      recordedContinuations: evidence.recordedContinuations,
+    });
+  }
+  return Either.right({ tag: "completed", output: lifecycle.output.value });
 }
 
 async function main(args: readonly string[]): Promise<void> {
@@ -895,6 +1031,17 @@ async function main(args: readonly string[]): Promise<void> {
   let supervisorProcess: ReturnType<typeof spawn> | undefined;
   let supervisorLog: number | undefined;
   let preparationFailure: string | undefined;
+  const directories: SdkPlayerExecutionDirectories = {
+    scratch,
+    trusted,
+    codexHome,
+    output,
+  };
+  const closeSupervisorLog = (): void => {
+    if (supervisorLog === undefined) return;
+    closeSync(supervisorLog);
+    supervisorLog = undefined;
+  };
   try {
     buildConsumerDistribution({
       destination: scratch,
@@ -969,6 +1116,7 @@ async function main(args: readonly string[]): Promise<void> {
         cwd: trusted,
         env: { ...process.env, RAW_SWARM_PLAYER_ROOT: scratch },
         stdio: ["ignore", supervisorLog, supervisorLog],
+        detached: process.platform !== "win32",
       },
     );
 
@@ -976,7 +1124,8 @@ async function main(args: readonly string[]): Promise<void> {
       ? ([] as const)
       : (["--dangerously-bypass-approvals-and-sandbox"] as const);
     const agentLogPath = resolve(trusted, "agent.log");
-    const result = runCodexInvocation({
+    const agentFinalPath = resolve(trusted, "evidence/agent-final.txt");
+    const result = await runCodexInvocation({
       args: [
         "exec",
         "-C",
@@ -991,8 +1140,6 @@ async function main(args: readonly string[]): Promise<void> {
         PLAYER_MODEL,
         "-c",
         `model_reasoning_effort="${PLAYER_REASONING_EFFORT}"`,
-        "--output-last-message",
-        resolve(trusted, "evidence/agent-final.txt"),
         [
           `Read ${deliveredContextFileName}, PLAYER.md, SCENARIO.md, OBSERVATION.json, and attempt.ts.`,
           "Act as the player described there and continue until the SDK supervisor accepts a playerConcluded outcome or returns a terminalObstruction. Stop immediately after a terminalObstruction; it is retained evidence.",
@@ -1021,111 +1168,111 @@ async function main(args: readonly string[]): Promise<void> {
       fallbackInvocationId: randomUUID(),
       model: PLAYER_MODEL,
       reasoningEffort: PLAYER_REASONING_EFFORT,
+      operation: {
+        tag: "expectedLastMessage",
+        expected: {
+          path: agentFinalPath,
+          decode: (contents) => Either.right(contents),
+        },
+      },
     });
-    if (result.error !== undefined) throw result.error;
-    if (result.signal !== null)
-      fail(`Player agent stopped by ${result.signal}.`);
     const evidenceState = playerEvidenceState(trusted, scratch);
-    if (result.status !== 0 && evidenceState.tag !== "obstructed") {
-      fail(`Player agent exited with status ${String(result.status)}.`);
-    }
-    if (evidenceState.tag === "active") {
-      fail(
-        `Player agent exited after ${String(evidenceState.recordedContinuations)} continuations without a recorded conclusion.`,
-      );
-    }
-    if (evidenceState.tag === "obstructed") {
+    const disposition = reconcilePlayerInvocation(result, evidenceState);
+    if (Either.isLeft(disposition)) fail(disposition.left);
+    if (disposition.right.tag === "obstructed") {
       console.log(
-        `Player Execution retained a player-protocol obstruction after ${String(evidenceState.recordedContinuations)} continuations: ${evidenceState.obstruction.message}`,
+        `Player Execution retained a player-protocol obstruction after ${String(disposition.right.recordedContinuations)} continuations: ${disposition.right.obstruction.message}`,
       );
     }
   } catch (error: unknown) {
     preparationFailure = error instanceof Error ? error.message : String(error);
     throw error;
   } finally {
-    try {
-      if (supervisorProcess !== undefined) {
-        const runningSupervisor = supervisorProcess;
-        const stopped = new Promise<void>((resolveStopped) => {
-          if (runningSupervisor.exitCode !== null) {
-            resolveStopped();
-            return;
+    const finalization = await finalizeSdkPlayerExecution({
+      supervisorProcess,
+      detached: process.platform !== "win32",
+      directories,
+      onReaped: () => {
+        closeSupervisorLog();
+        if (existsSync(resolve(trusted, "evidence/sdk-calls.jsonl"))) {
+          const agentLogPath = resolve(trusted, "agent.log");
+          if (existsSync(agentLogPath)) {
+            copyFileSync(agentLogPath, resolve(scratch, "agent.log"));
           }
-          runningSupervisor.once("exit", () => resolveStopped());
-        });
-        runningSupervisor.kill("SIGTERM");
-        await stopped;
-      }
-      if (supervisorLog !== undefined) closeSync(supervisorLog);
-      if (existsSync(resolve(trusted, "evidence/sdk-calls.jsonl"))) {
-        const agentLogPath = resolve(trusted, "agent.log");
-        if (existsSync(agentLogPath)) {
-          copyFileSync(agentLogPath, resolve(scratch, "agent.log"));
+          retainRun(scratch, trusted, output);
+          emitExecutionFindings(output);
+          copyFileSync(
+            resolve(trusted, "supervisor.mjs"),
+            resolve(output, "replay-supervisor.mjs"),
+          );
+        } else {
+          emitTranscriptlessFindings({
+            output,
+            executionStartPath,
+            scenarioId: acceptedScenarioId,
+            gitSha,
+            startedAt,
+            stage: "setup-authoring",
+            category: "experiment-boundary-obstruction",
+            kind: "setup-obstruction",
+            summary: "SDK player preparation did not produce a transcript.",
+            detail:
+              preparationFailure ??
+              "SDK player preparation ended before a canonical transcript was written.",
+            authorityPaths: [
+              { role: "scenario", path: scenarioPath },
+              { role: "scenarioReview", path: scenarioReviewPath },
+              ...(existsSync(stagePlanPath)
+                ? [{ role: "stagePlan", path: stagePlanPath }]
+                : []),
+              ...(existsSync(stagePlanFindingsPath)
+                ? [
+                    {
+                      role: "stagePlanFindings",
+                      path: stagePlanFindingsPath,
+                    },
+                  ]
+                : []),
+              ...(existsSync(retainedScenarioStageFactsPath(scenarioPath))
+                ? [
+                    {
+                      role: "stageFacts",
+                      path: retainedScenarioStageFactsPath(scenarioPath),
+                    },
+                  ]
+                : []),
+              ...(existsSync(charactersPath)
+                ? [{ role: "characters", path: charactersPath }]
+                : []),
+              ...(existsSync(setupPath)
+                ? [{ role: "setup", path: setupPath }]
+                : []),
+            ],
+            pointerAuthorityRole: existsSync(stagePlanPath)
+              ? "stagePlan"
+              : "scenario",
+          });
         }
-        retainRun(scratch, trusted, output);
-        emitExecutionFindings(output);
-        copyFileSync(
-          resolve(trusted, "supervisor.mjs"),
-          resolve(output, "replay-supervisor.mjs"),
-        );
-      } else {
-        emitTranscriptlessFindings({
-          output,
-          executionStartPath,
-          scenarioId: acceptedScenarioId,
-          gitSha,
-          startedAt,
-          stage: "setup-authoring",
-          category: "experiment-boundary-obstruction",
-          kind: "setup-obstruction",
-          summary: "SDK player preparation did not produce a transcript.",
-          detail:
-            preparationFailure ??
-            "SDK player preparation ended before a canonical transcript was written.",
-          authorityPaths: [
-            { role: "scenario", path: scenarioPath },
-            { role: "scenarioReview", path: scenarioReviewPath },
-            ...(existsSync(stagePlanPath)
-              ? [{ role: "stagePlan", path: stagePlanPath }]
-              : []),
-            ...(existsSync(stagePlanFindingsPath)
-              ? [
-                  {
-                    role: "stagePlanFindings",
-                    path: stagePlanFindingsPath,
-                  },
-                ]
-              : []),
-            ...(existsSync(retainedScenarioStageFactsPath(scenarioPath))
-              ? [
-                  {
-                    role: "stageFacts",
-                    path: retainedScenarioStageFactsPath(scenarioPath),
-                  },
-                ]
-              : []),
-            ...(existsSync(charactersPath)
-              ? [{ role: "characters", path: charactersPath }]
-              : []),
-            ...(existsSync(setupPath)
-              ? [{ role: "setup", path: setupPath }]
-              : []),
-          ],
-          pointerAuthorityRole: existsSync(stagePlanPath)
-            ? "stagePlan"
-            : "scenario",
-        });
-      }
-    } finally {
-      rmSync(scratch, { recursive: true });
-      rmSync(trusted, { recursive: true });
-      rmSync(codexHome, { recursive: true });
+      },
+    });
+    if (finalization.tag === "failed") {
+      closeSupervisorLog();
+      const failureMessage = sdkPlayerExecutionFailureMessage(
+        finalization.failure,
+      );
+      console.error(failureMessage);
+      throw new Error(failureMessage);
     }
   }
   console.log(`SDK player evidence: ${output}`);
 }
 
-main(process.argv.slice(2)).catch((error: unknown) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (
+  process.argv[1] !== undefined &&
+  fileURLToPath(import.meta.url) === resolve(process.argv[1])
+) {
+  main(process.argv.slice(2)).catch((error: unknown) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}

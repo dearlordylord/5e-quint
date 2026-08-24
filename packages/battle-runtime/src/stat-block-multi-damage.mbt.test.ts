@@ -1,3 +1,4 @@
+import { movementFeet } from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
@@ -442,6 +443,7 @@ function statBlockCreature(input: {
       currentHp: Hp(12),
       tempHp: Hp(0),
       ammunitionStocks: [],
+      conditions: [],
     },
   };
 }
@@ -542,11 +544,11 @@ function targetChoiceFill(
     value: targetId,
     spatialFacts: [
       {
-        kind: "attackTargetInRangedRange",
+        kind: "attackTargetDistance",
         actorId,
         targetId,
         ...hole.attack.selection,
-        rangeBand: "normal",
+        distanceFeet: movementFeet(5),
       },
     ],
   };

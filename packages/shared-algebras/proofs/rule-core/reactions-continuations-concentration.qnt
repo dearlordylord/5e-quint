@@ -365,8 +365,7 @@ module reactionsContinuationsConcentration {
     facts: MovementSpendFacts
   ): MovementGrappleState =
     if (not(canSpendReadiedReactionMovement(reactor, facts))) reactor
-    else reactor
-      .with("turn", reactor.turn.with("readiedMovementHeld", false))
+    else reactor.with("turn", reactor.turn.with("readiedMovementHeld", false))
 
   pure def concentrationForActor(
     concentration: ActorConcentrationState,

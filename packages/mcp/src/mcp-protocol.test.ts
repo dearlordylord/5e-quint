@@ -1680,9 +1680,10 @@ describe("MCP protocol server", () => {
               value: "row-shield-wizard",
               spatialFacts: [
                 {
-                  kind: "attackTargetInMeleeReach",
+                  kind: "attackTargetDistance",
                   actorId: attackSubject.actorId,
                   targetId: "row-shield-wizard",
+                  distanceFeet: 5,
                   ...targetSelection,
                 },
               ],

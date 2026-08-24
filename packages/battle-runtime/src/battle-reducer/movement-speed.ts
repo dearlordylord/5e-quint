@@ -9,6 +9,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
 import {
   difficultyClass,
@@ -31,7 +32,6 @@ import {
 } from "../battle-action-options.ts";
 import {
   type BattleAttackHitTriggerKind,
-  type BattleAttackExecutionSelection,
   type BattleAttackKindForRedirect,
   type BattleCreatureState,
   type BattleGrappleLink,
@@ -55,6 +55,7 @@ import {
   grappledBy,
 } from "./creature-state-leaves.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { GRAPPLE_TARGET_REACH_FEET } from "./domain-constants.ts";
 import {
   activeDruidWildShapeForm,
   combatantD20AbilityModifier,
@@ -77,6 +78,7 @@ export {
 } from "./movement-speed-facts.ts";
 export {
   attackExecutionSelectionMatchesOption,
+  attackTargetDistanceFeet,
   attackTargetIsLegal,
   attackTargetRangeBand,
 } from "./attack-spatial.ts";
@@ -274,17 +276,6 @@ export function interruptAttackExecutionSelectionMatchesOption(
   return boundAttackExecutionSelectionMatchesOption(selection, attack);
 }
 
-export function attackExecutionSelectionsEqual(
-  left: BattleAttackExecutionSelection,
-  right: BattleAttackExecutionSelection,
-): boolean {
-  return (
-    left.procedureRef !== undefined &&
-    right.procedureRef !== undefined &&
-    attackExecutionSelectionIdentitiesEqual(left, right)
-  );
-}
-
 export function interruptAttackExecutionSelectionsEqual(
   left: BattleInterruptAttackExecutionSelection,
   right: BattleInterruptAttackExecutionSelection,
@@ -336,6 +327,16 @@ export type BattleOpportunityAttackExecutionCandidate = Readonly<{
 }>;
 
 export function opportunityAttackThreatEqual(
+  left: BattleOpportunityAttackThreat,
+  right: BattleOpportunityAttackThreat,
+): boolean {
+  return (
+    opportunityAttackThreatIdentityEqual(left, right) &&
+    Number(left.distanceFeet) === Number(right.distanceFeet)
+  );
+}
+
+export function opportunityAttackThreatIdentityEqual(
   left: BattleOpportunityAttackThreat,
   right: BattleOpportunityAttackThreat,
 ): boolean {
@@ -492,7 +493,7 @@ export function grappleLinkForTarget(
       grapplerId,
       targetId,
       escapeDc: unarmedStrikeSaveDc(grappler),
-      reachFeet: movementFeet(5),
+      reachFeet: GRAPPLE_TARGET_REACH_FEET,
       hand,
     },
   };

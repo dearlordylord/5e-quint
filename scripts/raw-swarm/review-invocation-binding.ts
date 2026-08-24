@@ -9,16 +9,11 @@ import {
   HistoricalScenarioCompositeReviewSchema,
   ScenarioCompositeReviewSchema,
 } from "./scenario-campaign.ts";
-import {
-  modelInvocationEvidenceFromEvents,
-  modelInvocationScenarioReference,
-  readCodexEvents,
-  type ModelInvocationLedgerEntry,
-} from "./model-telemetry.ts";
+import { modelInvocationEvidenceFromEvents } from "./model-telemetry.ts";
 import {
   RetainedScenarioReviewInputSchema,
-  retainedScenarioReviewSubject,
   type RetainedScenarioReviewInput,
+  type RetainedScenarioReviewReplayBinding,
 } from "./scenario-review-input.ts";
 import { canonicalJson, repoRoot } from "./transcript.ts";
 
@@ -84,46 +79,41 @@ export function finalAgentMessage(events: readonly unknown[]): unknown {
 }
 
 /**
- * Validate the immutable identity available at the retained-review boundary.
- * This module deliberately has no artifact-index dependency: callers own the
- * path authority hash and pass it in, avoiding the artifact-index/findings
- * import cycle.
+ * Validate event output against an already successful replay binding. The
+ * replay boundary parses and validates the envelope and ledger exactly once;
+ * this module only reads the separately-authoritative event stream and binds
+ * its metadata/result to those parsed values.
  */
 export function validateRetainedScenarioReviewInvocation(input: {
-  readonly retainedInputPath: string;
-  readonly eventPath: string;
+  readonly binding: RetainedScenarioReviewReplayBinding;
   readonly eventSha256: string;
-  readonly reviewStage: "milestone" | "final";
-  readonly ledgerEntry: ModelInvocationLedgerEntry;
+  /** Parsed from the same bytes whose hash is passed above. */
+  readonly events: readonly unknown[];
 }): void {
-  const retained = retainedReviewInput(
-    input.retainedInputPath,
-    input.reviewStage,
-  );
-  if (input.ledgerEntry.schemaVersion !== 4) {
-    fail("Retained original composite reviews require v4 ledger evidence.");
-  }
-  if (input.eventSha256 !== input.ledgerEntry.eventsSha256) {
+  const { binding } = input;
+  const retained = binding.retainedInput;
+  const ledgerEntry = binding.ledgerEntry;
+  const reviewStage = retained.reviewStage;
+  if (input.eventSha256 !== ledgerEntry.eventsSha256) {
     fail(
-      `Retained ${input.reviewStage} review input does not match its ledger event hash.`,
+      `Retained ${reviewStage} review input does not match its ledger event hash.`,
     );
   }
-  const parsedEvents = readCodexEvents(resolve(repoRoot, input.eventPath));
-  if (parsedEvents.tag === "invalid") {
-    fail(parsedEvents.message);
-  }
-  const derived = modelInvocationEvidenceFromEvents(parsedEvents.events);
-  if (derived.tag === "invalid" || derived.entry.schemaVersion !== 4) {
+  const derived = modelInvocationEvidenceFromEvents(input.events);
+  if (
+    derived.tag === "invalid" ||
+    derived.entry.schemaVersion !== ledgerEntry.schemaVersion
+  ) {
     fail(
-      `Retained ${input.reviewStage} review input event stream is not valid v4 invocation evidence.`,
+      `Retained ${reviewStage} review input event stream does not match its bound invocation evidence.`,
     );
   }
   const withoutEventsHash = Object.fromEntries(
-    Object.entries(input.ledgerEntry).filter(([key]) => key !== "eventsSha256"),
+    Object.entries(ledgerEntry).filter(([key]) => key !== "eventsSha256"),
   );
   if (canonicalJson(derived.entry) !== canonicalJson(withoutEventsHash)) {
     fail(
-      `Retained ${input.reviewStage} review input does not match its invocation event metadata.`,
+      `Retained ${reviewStage} review input does not match its invocation event metadata.`,
     );
   }
   const currentOutputSchema = codexOutputJsonSchema(
@@ -139,34 +129,19 @@ export function validateRetainedScenarioReviewInvocation(input: {
       canonicalJson(historicalOutputSchema)
   ) {
     fail(
-      `Retained ${input.reviewStage} review input has an unsupported output schema.`,
-    );
-  }
-  if (
-    retained.invocationId !== input.ledgerEntry.invocationId ||
-    (retained.schemaVersion === 2
-      ? retained.scenarioId !==
-        modelInvocationScenarioReference(input.ledgerEntry)
-      : canonicalJson(retainedScenarioReviewSubject(retained)) !==
-        canonicalJson(input.ledgerEntry.subject)) ||
-    retained.sourceGitSha !== input.ledgerEntry.gitSha ||
-    retained.model !== input.ledgerEntry.model ||
-    retained.reasoningEffort !== input.ledgerEntry.reasoningEffort
-  ) {
-    fail(
-      `Retained ${input.reviewStage} review input does not match its original invocation identity.`,
+      `Retained ${reviewStage} review input has an unsupported output schema.`,
     );
   }
   const output = Schema.decodeUnknownEither(
     Schema.Struct({ result: ScenarioCompositeReviewSchema }),
     { onExcessProperty: "error" },
-  )(finalAgentMessage(parsedEvents.events));
+  )(finalAgentMessage(input.events));
   if (
     Either.isLeft(output) ||
     canonicalJson(output.right.result) !== canonicalJson(retained.result)
   ) {
     fail(
-      `Retained ${input.reviewStage} review input result does not match its invocation event output.`,
+      `Retained ${reviewStage} review input result does not match its invocation event output.`,
     );
   }
 }

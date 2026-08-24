@@ -1,4 +1,5 @@
 // Pure leaf constants with no dependency on reducer implementation helpers.
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
 import {
   holeId,
@@ -16,6 +17,16 @@ import type {
 
 export const CRITICAL_HIT_THRESHOLDS = [19, 20] as const;
 export const BATTLE_ATTACK_RANGE_BANDS = ["normal", "long"] as const;
+/** Ordinary creature melee reach from the SRD default reach rule. */
+export const STANDARD_CREATURE_MELEE_REACH_FEET = movementFeet(5);
+export const GRAPPLE_TARGET_REACH_FEET = movementFeet(5);
+export const SHOVE_TARGET_REACH_FEET = movementFeet(5);
+export const SHOVE_PUSH_DISTANCE_FEET = movementFeet(5);
+export const PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET = movementFeet(5);
+export const SLEEP_SHAKE_AWAKE_ADJACENCY_FEET = movementFeet(5);
+export const HYPNOTIC_PATTERN_SHAKE_AWAKE_ADJACENCY_FEET = movementFeet(5);
+export const HELP_ATTACK_TARGET_ADJACENCY_FEET = movementFeet(5);
+export const RANGED_ATTACK_ENEMY_PROXIMITY_FEET = movementFeet(5);
 export const BATTLE_D20_ROLL_MODIFIER_DIE_SIZES = [1, 4] as const;
 export const SPELL_CREATED_HELD_OBJECT_MELEE_REACH_FEET = movementFeet(5);
 export const BATTLE_D20_ROLL_MODIFIER_KINDS = [

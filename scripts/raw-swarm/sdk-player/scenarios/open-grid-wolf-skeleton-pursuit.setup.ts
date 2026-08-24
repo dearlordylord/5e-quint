@@ -29,6 +29,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     initiative: sdk.initiativeScore(19),
     currentHp: sdk.hp(11),
     ammunitionStocks: [],
+    conditions: [],
   });
   if (sdk.isLeft(wolfInit)) {
     return {
@@ -44,6 +45,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
     initiative: sdk.initiativeScore(9),
     currentHp: sdk.hp(13),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 0)],
+    conditions: [],
   });
   if (sdk.isLeft(skeletonInit)) {
     return {

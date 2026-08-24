@@ -14,6 +14,7 @@ import {
   pointerForSource,
   readSourceRecord,
   sourcePath,
+  unresolvedSource,
   validateFindingsProjection,
   RAW_SWARM_FINDINGS_SCHEMA_VERSION,
   type Finding,
@@ -39,9 +40,22 @@ import {
   sha256Canonical,
   type ScenarioId,
 } from "./transcript.ts";
-import { FindingsManifestSchema } from "./evidence-manifests.ts";
+import {
+  FindingsManifestSchema,
+  ScenarioCampaignManifestSchema,
+  type ScenarioCampaignManifest,
+} from "./evidence-manifests.ts";
 import { RejectedScenarioCandidateRecordSchema } from "./scenario-catalogue.ts";
 import { RejectedScenarioCandidateReviewSchema } from "./scenario-campaign.ts";
+import { artifactAuthorityForBytes } from "./artifact-authority.ts";
+import {
+  codexRawRetentionEventFromEvents,
+  modelInvocationEvidenceFromEvents,
+  parseModelInvocationLedgerEntry,
+  readCodexRawRetentionArtifact,
+  readCodexEventsWithSource,
+  type ModelInvocationLedgerEntry,
+} from "./model-telemetry.ts";
 
 type WithoutTranscriptState<A> = A extends FindingsSubject
   ? Omit<A, "sdkCalls">
@@ -54,6 +68,8 @@ type GenerationFindingsProjectionCommonInput = {
     readonly path: string;
   }[];
   readonly generationLedgerPaths: readonly string[];
+  /** Retained canonical event streams for Campaign-owned model invocations. */
+  readonly generationEventPaths?: readonly string[];
   readonly pointerAuthorityRole?: string;
 };
 
@@ -113,6 +129,135 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
+function generationLedgerEntries(
+  paths: readonly string[],
+): readonly ModelInvocationLedgerEntry[] {
+  return paths.flatMap((path) => {
+    const canonical = sourcePath(path);
+    return readFileSync(resolve(repoRoot, canonical), "utf8")
+      .split("\n")
+      .flatMap((line, index) => {
+        if (line.trim().length === 0) return [];
+        let value: unknown;
+        try {
+          value = JSON.parse(line) as unknown;
+        } catch {
+          fail(
+            `Generation ledger ${canonical} line ${String(index + 1)} is invalid JSON.`,
+          );
+        }
+        const decoded = parseModelInvocationLedgerEntry(value);
+        if (Either.isLeft(decoded)) {
+          fail(
+            `Generation ledger ${canonical} line ${String(index + 1)} is malformed: ${decoded.left.message}`,
+          );
+        }
+        return [decoded.right];
+      });
+  });
+}
+
+/**
+ * Admit retained Campaign invocation events and their canonical raw siblings.
+ * The event stream hash remains the join to the ledger; the retention event is
+ * the sole source of raw artifact metadata and the sibling path is fixed by
+ * model-telemetry's parser.
+ */
+function addGenerationInvocationAuthorities(input: {
+  readonly sources: Source[];
+  readonly generationLedgerPaths: readonly string[];
+  readonly generationEventPaths: readonly string[] | undefined;
+}): void {
+  if (input.generationEventPaths === undefined) return;
+  const eventPaths = input.generationEventPaths;
+  if (new Set(eventPaths).size !== eventPaths.length) {
+    fail("Generation invocation event authorities must have unique paths.");
+  }
+  const ledgerEntries = generationLedgerEntries(input.generationLedgerPaths);
+  if (eventPaths.length !== ledgerEntries.length) {
+    fail(
+      `Generation invocation retention requires one event stream per ledger entry (received ${String(eventPaths.length)} for ${String(ledgerEntries.length)}).`,
+    );
+  }
+  const eventHashes = new Set<string>();
+  for (const [index, path] of eventPaths.entries()) {
+    const canonical = sourcePath(path);
+    const parsed = readCodexEventsWithSource(resolve(repoRoot, canonical));
+    if (parsed.tag === "invalid") {
+      fail(
+        `Generation invocation events are invalid: ${canonical}: ${parsed.message}`,
+      );
+    }
+    const authority = artifactAuthorityForBytes(canonical, parsed.rawContents);
+    if (eventHashes.has(authority.sha256)) {
+      fail("Generation invocation event authorities must have unique hashes.");
+    }
+    eventHashes.add(authority.sha256);
+    const matchingEntries = ledgerEntries.filter(
+      ({ eventsSha256 }) => eventsSha256 === authority.sha256,
+    );
+    if (matchingEntries.length !== 1) {
+      fail(
+        `Generation invocation event authority does not match exactly one ledger entry: ${canonical}.`,
+      );
+    }
+    const derived = modelInvocationEvidenceFromEvents(parsed.events);
+    if (derived.tag === "invalid") {
+      fail(
+        `Generation invocation events cannot rederive their ledger: ${derived.message}`,
+      );
+    }
+    const entry = matchingEntries[0]!;
+    if (
+      canonicalJson(derived.entry) !==
+      canonicalJson(
+        Object.fromEntries(
+          Object.entries(entry).filter(([key]) => key !== "eventsSha256"),
+        ),
+      )
+    ) {
+      fail(
+        `Generation invocation ledger does not match its event stream: ${canonical}.`,
+      );
+    }
+    const eventRole = addSource(
+      input.sources,
+      canonical,
+      `generationInvocationEvents-${String(index + 1)}`,
+    );
+    if (eventRole === undefined) {
+      fail(
+        `Generation invocation event authority is unreadable: ${canonical}.`,
+      );
+    }
+    const retention = codexRawRetentionEventFromEvents(parsed.events);
+    if (retention.tag === "invalid") fail(retention.message);
+    const requiresRetention =
+      entry.schemaVersion === 5 && entry.result.tag === "failed";
+    if (requiresRetention !== (retention.event !== undefined)) {
+      fail(
+        `Generation invocation ${entry.invocationId} must retain exactly one raw sidecar or immutable snapshot when failed.`,
+      );
+    }
+    if (retention.event !== undefined) {
+      const artifact = readCodexRawRetentionArtifact({
+        eventPath: resolve(repoRoot, canonical),
+        event: retention.event,
+      });
+      if (Either.isLeft(artifact)) fail(artifact.left);
+      const rawPath = sourcePath(artifact.right.path);
+      const rawRole = addSource(
+        input.sources,
+        rawPath,
+        `generationInvocationRawArtifact-${String(index + 1)}`,
+      );
+      if (rawRole === undefined) {
+        fail(`Generation invocation raw artifact is unreadable: ${rawPath}.`);
+      }
+    }
+  }
+}
+
 function sourceFindingsFromScenarioReview(
   path: string,
   role: string,
@@ -169,6 +314,24 @@ function findingsManifestIdentity(
     ),
     Match.exhaustive,
   );
+}
+
+function campaignManifestFromSources(
+  sources: readonly Source[],
+): ScenarioCampaignManifest {
+  const source = sources.find((candidate) => candidate.role === "campaign");
+  if (source === undefined) {
+    fail("Campaign findings require a Campaign manifest authority.");
+  }
+  const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+    onExcessProperty: "error",
+  })(readSourceRecord(source.path));
+  if (Either.isLeft(decoded)) {
+    fail(
+      `Campaign manifest authority is invalid: ${source.path}: ${decoded.left.message}`,
+    );
+  }
+  return decoded.right;
 }
 
 function authoredScenarioIdentity(identity: FindingsManifestIdentity) {
@@ -277,6 +440,10 @@ export function projectGenerationFindings(
   }
   const manifestIdentity = findingsManifestIdentity(sources);
   const authoredIdentity = authoredScenarioIdentity(manifestIdentity);
+  const campaignManifest =
+    manifestIdentity.tag === "scenarioCampaign"
+      ? campaignManifestFromSources(sources)
+      : undefined;
   if (input.disposition.tag === "campaignFailure") {
     const pointerRole =
       input.pointerAuthorityRole === undefined
@@ -320,7 +487,9 @@ export function projectGenerationFindings(
         scenarioId: admittedScenarioIdentity(manifestIdentity),
         gitSha: authoredIdentity.gitSha,
         scenarioSha256: authorityFor(scenarioSource).sha256,
-        scenarioReviewSha256: authorityFor({ role, path: canonical }).sha256,
+        scenarioReviewSha256: authorityFor(
+          unresolvedSource({ role, path: canonical }),
+        ).sha256,
       };
       sourceFindingsFromScenarioReview(
         canonical,
@@ -340,23 +509,27 @@ export function projectGenerationFindings(
     if (role !== undefined) {
       sourceFindings.push(
         ...findingsFromGenerationLedger(
-          { role, path: canonical },
+          unresolvedSource({ role, path: canonical }),
           {
             scenarioId: authoredIdentity.scenarioId,
             gitSha: authoredIdentity.gitSha,
-            ...(manifestIdentity.tag === "scenarioCampaign"
-              ? {
-                  campaign: {
-                    campaignId: manifestIdentity.campaignId,
-                    evidenceSetId: manifestIdentity.evidenceSetId,
-                  },
-                }
-              : {}),
+            owner:
+              campaignManifest !== undefined
+                ? {
+                    tag: "campaign" as const,
+                    campaign: campaignManifest,
+                  }
+                : { tag: "scenario" as const },
           },
         ),
       );
     }
   }
+  addGenerationInvocationAuthorities({
+    sources,
+    generationLedgerPaths: input.generationLedgerPaths,
+    generationEventPaths: input.generationEventPaths,
+  });
   const scenarioSource = sources.find(
     (source) =>
       source.role === "scenario" ||
@@ -541,7 +714,7 @@ export function projectGenerationFindings(
       }
       sourceFindings.push(
         ...findingsFromStagePlanSource(
-          { role, path: canonical },
+          unresolvedSource({ role, path: canonical }),
           retainedPlan.identity,
         ),
       );

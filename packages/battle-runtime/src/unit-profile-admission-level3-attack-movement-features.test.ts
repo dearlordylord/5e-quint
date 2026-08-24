@@ -79,6 +79,7 @@ import {
   endTurn,
   requireCharacterUnitProcedureRefForTest,
   requireResolved,
+  SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS,
 } from "./battle-runtime.test-support.ts";
 
 const remarkableAthleteActorId = combatantId("remarkable-athlete-actor");
@@ -1424,6 +1425,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
             provokedOpportunityAttacks: [
               {
                 reactorId: remarkableAthleteTargetId,
+                distanceFeet: movementFeet(5),
                 ...attackExecutionSelectionForSubjectForTest(
                   characterAttackSubjectForTest(
                     state,
@@ -1626,53 +1628,61 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     );
   });
 
-  test("Steady Aim schema rejects a mismatched speed duration", () => {
-    const steadyAim = unitLibrary.requireUnit(rogueSteadyAimUnitId);
-    if (
-      steadyAim.kind !== "class_feature" ||
-      steadyAim.mechanics.family !== "steady_aim"
-    ) {
-      throw new Error("Expected Steady Aim mechanics.");
-    }
-    const steadyAimMechanics = steadyAim.mechanics;
-    expect(() =>
-      decodeUnitRecordSync({
-        ...steadyAim,
-        id: "synthetic_rogue_steady_aim_wrong_speed_duration",
-        mechanics: {
-          ...steadyAimMechanics,
-          speed: {
-            ...steadyAimMechanics.speed,
-            until: "start_of_next_turn",
+  test(
+    "Steady Aim schema rejects a mismatched speed duration",
+    () => {
+      const steadyAim = unitLibrary.requireUnit(rogueSteadyAimUnitId);
+      if (
+        steadyAim.kind !== "class_feature" ||
+        steadyAim.mechanics.family !== "steady_aim"
+      ) {
+        throw new Error("Expected Steady Aim mechanics.");
+      }
+      const steadyAimMechanics = steadyAim.mechanics;
+      expect(() =>
+        decodeUnitRecordSync({
+          ...steadyAim,
+          id: "synthetic_rogue_steady_aim_wrong_speed_duration",
+          mechanics: {
+            ...steadyAimMechanics,
+            speed: {
+              ...steadyAimMechanics.speed,
+              until: "start_of_next_turn",
+            },
           },
-        },
-      }),
-    ).toThrow();
-  });
+        }),
+      ).toThrow();
+    },
+    SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS,
+  );
 
-  test("Potent Cantrip schema rejects a mismatched cantrip target", () => {
-    const potentCantrip = unitLibrary.requireUnit(wizardPotentCantripUnitId);
-    if (
-      potentCantrip.kind !== "class_feature" ||
-      potentCantrip.mechanics.family !== "potent_cantrip"
-    ) {
-      throw new Error("Expected Potent Cantrip mechanics.");
-    }
-    const potentCantripMechanics = potentCantrip.mechanics;
-    expect(() =>
-      decodeUnitRecordSync({
-        ...potentCantrip,
-        id: "synthetic_wizard_potent_cantrip_wrong_target",
-        mechanics: {
-          ...potentCantripMechanics,
-          trigger: {
-            ...potentCantripMechanics.trigger,
-            cantripKind: "any",
+  test(
+    "Potent Cantrip schema rejects a mismatched cantrip target",
+    () => {
+      const potentCantrip = unitLibrary.requireUnit(wizardPotentCantripUnitId);
+      if (
+        potentCantrip.kind !== "class_feature" ||
+        potentCantrip.mechanics.family !== "potent_cantrip"
+      ) {
+        throw new Error("Expected Potent Cantrip mechanics.");
+      }
+      const potentCantripMechanics = potentCantrip.mechanics;
+      expect(() =>
+        decodeUnitRecordSync({
+          ...potentCantrip,
+          id: "synthetic_wizard_potent_cantrip_wrong_target",
+          mechanics: {
+            ...potentCantripMechanics,
+            trigger: {
+              ...potentCantripMechanics.trigger,
+              cantripKind: "any",
+            },
           },
-        },
-      }),
-    ).toThrow();
-  });
+        }),
+      ).toThrow();
+    },
+    SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS,
+  );
 
   test("level-3 feature readers ignore an unrelated Unit", () => {
     const unrelatedUnit = unitLibrary.requireUnit(fighterSecondWindUnitId);

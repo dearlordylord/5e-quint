@@ -983,19 +983,20 @@ function targetFill(input: {
     holeId: input.hole.holeId,
     value: input.targetId,
     spatialFacts: input.spatialFacts ?? [
-      attackTargetInMeleeReachFact(input.hole, input.targetId),
+      attackTargetDistanceFact(input.hole, input.targetId),
     ],
   };
 }
 
-function attackTargetInMeleeReachFact(hole: BattleHole, targetId: CombatantId) {
+function attackTargetDistanceFact(hole: BattleHole, targetId: CombatantId) {
   if (hole.kind !== "targetChoice" || hole.attack === undefined) {
     throw new Error("Expected bound Weapon Mastery attack selection.");
   }
   return {
-    kind: "attackTargetInMeleeReach" as const,
+    kind: "attackTargetDistance" as const,
     actorId: attackerId,
     targetId,
+    distanceFeet: movementFeet(5),
     ...hole.attack.selection,
   };
 }

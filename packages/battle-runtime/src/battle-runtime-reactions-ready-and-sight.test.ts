@@ -1,12 +1,13 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
-import { damageAmount } from "@dnd/shared/types";
+import { damageAmount, movementFeet } from "@dnd/shared/types";
 import type { BattleState } from "./battle-runtime.test-support.ts";
 import type { BattleAfterDamageEvent } from "./battle-state-execution.ts";
 import {
   applyCondition,
   attackDamageHoleAfterHit,
   attackExecutionSelectionForSubjectForTest,
+  attackTargetDistanceSpatialFact,
   attackInitialTargetHole,
   attackRollFill,
   attackRollHoleAfterTarget,
@@ -19,6 +20,7 @@ import {
   damageRollFill,
   Either,
   fighterAttackSubject,
+  fighterId,
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
   fighterTurnWithReadiedRay,
   findHole,
@@ -45,6 +47,7 @@ import {
   wizardVsSkeletonBattle,
 } from "./battle-runtime.test-support.ts";
 import { openAfterDamageSequenceInterruptWindow } from "./battle-reducer/interrupt-execution.ts";
+import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 
 function readiedSpellAttackHitPending() {
   const state = fighterTurnWithReadiedRay("attackHit");
@@ -1007,6 +1010,18 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     const selection = attackExecutionSelectionForSubjectForTest(
       fighterAttackSubject(fighterTurnWithReadiedRay("attackHit"), "Longsword"),
     );
+    const targetSpatialFacts = {
+      kind: "targetSpatialFacts" as const,
+      holeId: ATTACK_TARGET_HOLE_ID,
+      spatialFacts: [
+        attackTargetDistanceSpatialFact(
+          fighterId,
+          goblinId,
+          selection,
+          movementFeet(5),
+        ),
+      ],
+    };
     const decision = {
       kind: "interruptDecision",
       holeId: "battle:interrupt:decision",
@@ -1017,7 +1032,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           kind: "retaliationAttack",
           reactorId: "synthetic-retaliator",
           selection,
-          fills: [],
+          fills: [targetSpatialFacts],
         },
       },
     };

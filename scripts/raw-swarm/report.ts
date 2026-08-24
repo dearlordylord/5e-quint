@@ -954,6 +954,13 @@ function controlledReporting(args: readonly string[]): void {
       path,
       mediaType: "application/x-ndjson",
     })),
+    ...reviewInvocationEvidence.invocationRawArtifacts.map(
+      ({ path }, index) => ({
+        role: `modelInvocationRawArtifact-${index + 1}`,
+        path,
+        mediaType: "application/octet-stream",
+      }),
+    ),
   ];
   const runId = ingestArtifactRunWithArtifacts({
     transcriptPath,

@@ -3,18 +3,22 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
+  BattleFillSchema,
   BattleHoleSchema,
   BattleSnapshotSchema,
+  attackTargetDistanceSpatialFact,
   battleId,
   characterAttackSubjectForTest,
   characterSeed,
   combatantId,
+  discoverBattleActs,
   endTurn,
   fighterId,
   fighterVsGoblinBattle,
   findAct,
   goblinId,
   interruptDecisionFill,
+  movementFeet,
   monsterMultiattackStatBlock,
   readyDeclarationFillForTest,
   requireHole,
@@ -35,6 +39,8 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
+import type { BattleSubject } from "./battle-subjects.ts";
 import {
   battleAreaId,
   battleLineDirectionId,
@@ -214,6 +220,70 @@ const left = (name: string, holeValue: EncodedHole): CodecCase => ({
   expected: "Left",
   hole: holeValue,
 });
+
+function codecStaticDartStatBlock() {
+  const base = monsterMultiattackStatBlock();
+  const shortbow = base.statBlock.actions?.attacks?.find(
+    (attack) => attack.name === "Shortbow",
+  );
+  if (shortbow === undefined) {
+    throw new Error("Expected the static codec Shortbow fixture.");
+  }
+  return {
+    ...base,
+    name: "Codec Static Dart Monster",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Codec Static Dart Monster",
+      actions: {
+        ...base.statBlock.actions,
+        attacks: [
+          {
+            ...shortbow,
+            onHit: [
+              {
+                kind: "damage" as const,
+                damageType: "piercing" as const,
+                amount: {
+                  kind: "fixed" as const,
+                  expr: { dice: 1, dieSize: 4 },
+                  static: 3,
+                },
+              },
+            ] as const,
+          },
+        ] as const,
+      },
+    },
+  };
+}
+
+function staticDartSubject(
+  session: ReturnType<typeof startBattleSessionRight>,
+): Extract<
+  BattleSubject,
+  {
+    readonly tag: "action";
+    readonly action: "attack";
+    readonly statBlockDamageNotation: "static";
+  }
+> {
+  const subject = discoverBattleActs(session).find(
+    ({ subject: candidate }) =>
+      candidate.tag === "action" &&
+      candidate.action === "attack" &&
+      candidate.actorId === goblinId &&
+      candidate.statBlockDamageNotation === "static",
+  )?.subject;
+  if (
+    subject?.tag !== "action" ||
+    subject.action !== "attack" ||
+    subject.statBlockDamageNotation !== "static"
+  ) {
+    throw new Error("Expected a discovered static Stat Block attack.");
+  }
+  return subject;
+}
 
 const savingThrowCases: readonly CodecCase[] = [
   right(
@@ -551,6 +621,171 @@ describe("battle codec execution-reference boundaries", () => {
 });
 
 describe("battle codec act ownership boundaries", () => {
+  test("preserves static Stat Block distance identity for an ordinary attack", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-static-distance-ordinary"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          statBlock: codecStaticDartStatBlock(),
+          initiative: 20,
+        }),
+        characterSeed({ combatantId: fighterId, initiative: 10 }),
+      ],
+    });
+    const state = session.state;
+    const subject = staticDartSubject(session);
+    const targetHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const target = targetFill(targetHole, fighterId, [
+      attackTargetDistanceSpatialFact(
+        goblinId,
+        fighterId,
+        {
+          procedureRef: subject.procedureRef,
+          statBlockDamageNotation: "static",
+        },
+        movementFeet(5),
+      ),
+    ]);
+    const decoded = Schema.decodeUnknownSync(BattleFillSchema)(
+      Schema.encodeSync(BattleFillSchema)(target),
+    );
+    expect(decoded).toMatchObject({
+      kind: "targetChoice",
+      spatialFacts: [
+        {
+          kind: "attackTargetDistance",
+          procedureRef: subject.procedureRef,
+          statBlockDamageNotation: "static",
+        },
+      ],
+    });
+    expect(
+      resolveBattleSubject({ state, subject, fills: [decoded] }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "attackRoll" }],
+    });
+  });
+
+  test("preserves static Stat Block distance identity for a fixed readied target", () => {
+    const state = startBattleSessionRight({
+      battleId: battleId("codec-static-distance-readied"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          statBlock: codecStaticDartStatBlock(),
+          initiative: 20,
+        }),
+        characterSeed({ combatantId: fighterId, initiative: 10 }),
+      ],
+    }).state;
+    const readySubject = {
+      tag: "action" as const,
+      actorId: goblinId,
+      action: "ready" as const,
+    };
+    const declarationHole = findAct(state, readySubject).initialHoles[0];
+    if (declarationHole?.kind !== "readyDeclaration") {
+      throw new Error("Expected a Ready declaration hole.");
+    }
+    const attackResponse = declarationHole.responseChoices.find(
+      (response) =>
+        response.kind === "attack" &&
+        "statBlockDamageNotation" in response.selection &&
+        response.selection.statBlockDamageNotation === "static",
+    );
+    if (attackResponse?.kind !== "attack") {
+      throw new Error("Expected the static Stat Block Ready response.");
+    }
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: readySubject,
+        fills: [
+          readyDeclarationFillForTest(
+            declarationHole,
+            "the fighter enters range",
+            attackResponse,
+          ),
+        ],
+      }),
+    );
+    const fighterTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: goblinId }),
+    );
+    const reported = resolveBattleSubject({
+      state: fighterTurn.state,
+      subject: {
+        tag: "runtimeCommand" as const,
+        actorId: fighterId,
+        command: "reportReadyTrigger" as const,
+        readiedActorId: goblinId,
+      },
+      fills: [],
+    });
+    if (reported.tag !== "needsHoles") {
+      throw new Error("Expected a reported Ready trigger interrupt.");
+    }
+    const choice = reported.snapshot.pendingInterrupt?.choices.find(
+      (candidate) =>
+        candidate.kind === "releaseReadiedAttack" &&
+        candidate.subject.targetId === fighterId,
+    );
+    if (choice?.kind !== "releaseReadiedAttack") {
+      throw new Error("Expected a fixed-target readied attack choice.");
+    }
+    const targetSpatialFacts = {
+      kind: "targetSpatialFacts" as const,
+      holeId: ATTACK_TARGET_HOLE_ID,
+      spatialFacts: [
+        attackTargetDistanceSpatialFact(
+          goblinId,
+          fighterId,
+          attackResponse.selection,
+          movementFeet(5),
+        ),
+      ],
+    };
+    const decoded = Schema.decodeUnknownSync(BattleFillSchema)(
+      Schema.encodeSync(BattleFillSchema)(targetSpatialFacts),
+    );
+    expect(decoded).toMatchObject({
+      kind: "targetSpatialFacts",
+      spatialFacts: [
+        {
+          kind: "attackTargetDistance",
+          statBlockDamageNotation: "static",
+        },
+      ],
+    });
+    expect(
+      resolveBattleInterrupt({
+        state: reported.state,
+        fill: interruptDecisionFill(
+          requireHole(reported, "interruptDecision"),
+          {
+            kind: "resolve",
+            responderId: goblinId,
+            choice: {
+              kind: "releaseReadiedAttack",
+              reactorId: goblinId,
+              targetId: fighterId,
+              procedureRef: attackResponse.selection.procedureRef,
+              fills: [decoded],
+            },
+          },
+        ),
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "attackRoll" }],
+    });
+  });
+
   test("round-trips a pending release of a readied ordinary action", () => {
     const state = fighterVsGoblinBattle();
     const readySubject = {

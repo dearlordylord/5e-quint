@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 import type {
   AttackTargetConstraint,
   BattleIllumination,
@@ -11,6 +12,8 @@ import type {
   BattleOrdinaryMovementRouteOccupant,
   BattleOpportunityAttackThreat,
   BattleFill,
+  BattleHole,
+  BattleTargetChoiceHole,
   BattleMovementSpeedKind,
   BattleProcedureExecutionRef,
   BattleReadyResponse,
@@ -30,6 +33,12 @@ import type {
   D20TestResolutionId,
 } from "@dnd/battle-runtime";
 import {
+  GRAPPLE_TARGET_REACH_FEET,
+  HELP_ATTACK_TARGET_ADJACENCY_FEET,
+  HYPNOTIC_PATTERN_SHAKE_AWAKE_ADJACENCY_FEET,
+  RANGED_ATTACK_ENEMY_PROXIMITY_FEET,
+  SLEEP_SHAKE_AWAKE_ADJACENCY_FEET,
+  SHOVE_TARGET_REACH_FEET,
   battleTablePositionId,
   battleRuntimeSessionFollows,
   combatantEffectiveSize,
@@ -38,6 +47,7 @@ import {
   isBattleRuntimeSession,
   opportunityAttackExecutionCandidates,
   opportunityAttackLeavesReach,
+  opportunityAttackThreatIdentityEqual,
   opportunityAttackThreatEqual,
   resolveBattleRuntimeSubject,
   admitTableD20TestCircumstanceDecisions,
@@ -363,7 +373,11 @@ export function scenarioBattleActs(
       });
     })
     .map((act) => {
-      const initialHoles = act.initialHoles.map((hole) =>
+      const initialHoles = projectGeometryTargetHoles({
+        session,
+        subject: act.subject,
+        holes: act.initialHoles,
+      }).map((hole) =>
         hole.kind === "readyDeclaration"
           ? {
               ...hole,
@@ -406,6 +420,59 @@ export function scenarioBattleActs(
         d20TestCircumstanceRequests: requests,
       };
     });
+}
+
+export function projectGeometryTargetHoles(input: {
+  readonly session: ScenarioSession;
+  readonly subject: BattleSubject;
+  readonly holes: readonly BattleHole[];
+}): readonly BattleHole[] {
+  if (input.session.battlefield.spatial.kind !== "geometryDerived") {
+    return input.holes;
+  }
+  return input.holes.map((hole) => {
+    if (hole.kind !== "targetChoice") {
+      return hole;
+    }
+    if (hole.attack !== undefined) {
+      const attack = hole.attack;
+      const choices = hole.choices.filter((targetId) => {
+        const eligibility = scenarioAttackTargetEligibility({
+          session: input.session,
+          attack,
+          targetId,
+        });
+        return (
+          Either.isRight(eligibility) && eligibility.right.tag === "eligible"
+        );
+      });
+      const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
+        hole;
+      return { ...geometryHole, choices };
+    }
+    const targetQuestionForSubject =
+      scenarioTableSpatialFactQuestionFactoryForSubject(input.subject);
+    if (targetQuestionForSubject === undefined) {
+      return hole;
+    }
+    const choices = hole.choices.filter((targetId) => {
+      const question = targetQuestionForSubject(targetId);
+      const relation = scenarioRelationForSpatialQuestion(
+        input.session,
+        question,
+      );
+      return (
+        relation.tag === "relation" &&
+        scenarioTableSpatialFactDistanceWithinLimit(
+          question,
+          relation.relation.distanceFeet,
+        )
+      );
+    });
+    const { requiresTableSpatialFact: _tableSpatialFact, ...geometryHole } =
+      hole;
+    return { ...geometryHole, choices };
+  });
 }
 
 export function scenarioBattleFills(
@@ -1997,10 +2064,6 @@ export function planScenarioMovement(input: {
         moverId: input.subject.actorId,
       });
       for (const candidate of candidates) {
-        const threat = {
-          reactorId: candidate.reactorId,
-          ...candidate.selection,
-        };
         const before = scenarioRelationInSpace(
           input.session,
           routeState,
@@ -2027,10 +2090,18 @@ export function planScenarioMovement(input: {
             reachFeet: candidate.reachFeet,
           })
         ) {
+          const threat = {
+            reactorId: candidate.reactorId,
+            distanceFeet: movementFeet(Number(before.relation.distanceFeet)),
+            ...candidate.selection,
+          };
           if (
             provokedOpportunityAttacks.some((threat) =>
-              opportunityAttackThreatEqual(threat, {
+              opportunityAttackThreatIdentityEqual(threat, {
                 reactorId: candidate.reactorId,
+                distanceFeet: movementFeet(
+                  Number(before.relation.distanceFeet),
+                ),
                 ...candidate.selection,
               }),
             )
@@ -2274,7 +2345,7 @@ export type ScenarioTableSpatialFactProjectionIssue = Readonly<{
   readonly message: string;
 }>;
 
-type ScenarioTableSpatialFactQuestion = Extract<
+export type ScenarioTableSpatialFactQuestion = Extract<
   ScenarioSpatialDecisionQuestion,
   | { readonly kind: "grappleTarget" }
   | { readonly kind: "shoveTarget" }
@@ -2282,6 +2353,46 @@ type ScenarioTableSpatialFactQuestion = Extract<
   | { readonly kind: "hypnoticPatternShakeAwakeTarget" }
   | { readonly kind: "helpAttackTarget" }
 >;
+
+type ScenarioTableSpatialFactQuestionForSubject = Extract<
+  ScenarioTableSpatialFactQuestion,
+  | { readonly kind: "grappleTarget" }
+  | { readonly kind: "shoveTarget" }
+  | { readonly kind: "sleepShakeAwakeTarget" }
+  | { readonly kind: "hypnoticPatternShakeAwakeTarget" }
+>;
+
+export function scenarioTableSpatialFactDistanceLimitFeet(
+  question: ScenarioTableSpatialFactQuestion,
+): MovementFeet {
+  return Match.value(question).pipe(
+    Match.when({ kind: "grappleTarget" }, () => GRAPPLE_TARGET_REACH_FEET),
+    Match.when({ kind: "shoveTarget" }, () => SHOVE_TARGET_REACH_FEET),
+    Match.when(
+      { kind: "sleepShakeAwakeTarget" },
+      () => SLEEP_SHAKE_AWAKE_ADJACENCY_FEET,
+    ),
+    Match.when(
+      { kind: "hypnoticPatternShakeAwakeTarget" },
+      () => HYPNOTIC_PATTERN_SHAKE_AWAKE_ADJACENCY_FEET,
+    ),
+    Match.when(
+      { kind: "helpAttackTarget" },
+      () => HELP_ATTACK_TARGET_ADJACENCY_FEET,
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function scenarioTableSpatialFactDistanceWithinLimit(
+  question: ScenarioTableSpatialFactQuestion,
+  distanceFeet: MovementFeet | DistanceFeet,
+): boolean {
+  return (
+    Number(distanceFeet) <=
+    Number(scenarioTableSpatialFactDistanceLimitFeet(question))
+  );
+}
 
 function scenarioTableSpatialFactForQuestion(
   question: ScenarioTableSpatialFactQuestion,
@@ -2319,40 +2430,60 @@ function scenarioTableSpatialFactForQuestion(
   );
 }
 
-function scenarioTableSpatialFactQuestionForSubject(
-  subject: BattleSubject,
+type ScenarioTableSpatialFactQuestionFactory = (
   targetId: CombatantId,
-): ScenarioTableSpatialFactQuestion | undefined {
+) => ScenarioTableSpatialFactQuestionForSubject;
+
+function scenarioTableSpatialFactQuestionFactoryForSubject(
+  subject: BattleSubject,
+): ScenarioTableSpatialFactQuestionFactory | undefined {
   if (subject.tag !== "action") return undefined;
   return Match.value(subject).pipe(
-    Match.when({ tag: "action", action: "grapple" }, ({ actorId }) => ({
-      kind: "grappleTarget" as const,
-      grapplerId: actorId,
-      targetId,
-    })),
-    Match.when({ tag: "action", action: "shove" }, ({ actorId }) => ({
-      kind: "shoveTarget" as const,
-      shoverId: actorId,
-      targetId,
-    })),
+    Match.when(
+      { tag: "action", action: "grapple" },
+      ({ actorId }) =>
+        (targetId: CombatantId) => ({
+          kind: "grappleTarget" as const,
+          grapplerId: actorId,
+          targetId,
+        }),
+    ),
+    Match.when(
+      { tag: "action", action: "shove" },
+      ({ actorId }) =>
+        (targetId: CombatantId) => ({
+          kind: "shoveTarget" as const,
+          shoverId: actorId,
+          targetId,
+        }),
+    ),
     Match.when(
       { tag: "action", action: "shakeAwakeFromSleep" },
-      ({ actorId }) => ({
-        kind: "sleepShakeAwakeTarget" as const,
-        actorId,
-        targetId,
-      }),
+      ({ actorId }) =>
+        (targetId: CombatantId) => ({
+          kind: "sleepShakeAwakeTarget" as const,
+          actorId,
+          targetId,
+        }),
     ),
     Match.when(
       { tag: "action", action: "shakeAwakeFromHypnoticPattern" },
-      ({ actorId }) => ({
-        kind: "hypnoticPatternShakeAwakeTarget" as const,
-        actorId,
-        targetId,
-      }),
+      ({ actorId }) =>
+        (targetId: CombatantId) => ({
+          kind: "hypnoticPatternShakeAwakeTarget" as const,
+          actorId,
+          targetId,
+        }),
     ),
     Match.orElse(() => undefined),
   );
+}
+
+function scenarioTableSpatialFactQuestionForSubject(
+  subject: BattleSubject,
+  targetId: CombatantId,
+): ScenarioTableSpatialFactQuestionForSubject | undefined {
+  return scenarioTableSpatialFactQuestionFactoryForSubject(subject)?.(targetId);
 }
 
 /**
@@ -2404,11 +2535,15 @@ export function scenarioTableSpatialFactFills(input: {
           message: relation.message,
         });
       }
-      if (relation.relation.distanceFeet > 5) {
+      if (
+        !scenarioTableSpatialFactDistanceWithinLimit(
+          targetQuestion,
+          relation.relation.distanceFeet,
+        )
+      ) {
         return Either.left({
           tag: "table-spatial-fact-projection",
-          message:
-            "The helpAttackTarget spatial witness is outside the supported 5-foot adjacency boundary.",
+          message: `The helpAttackTarget spatial witness is outside the supported ${HELP_ATTACK_TARGET_ADJACENCY_FEET}-foot adjacency boundary.`,
         });
       }
       // The helper's adjacency is a Table-owned fact.  The player may choose
@@ -2462,10 +2597,15 @@ export function scenarioTableSpatialFactFills(input: {
         message: relation.message,
       });
     }
-    if (Number(relation.relation.distanceFeet) > 5) {
+    if (
+      !scenarioTableSpatialFactDistanceWithinLimit(
+        targetQuestion,
+        relation.relation.distanceFeet,
+      )
+    ) {
       return Either.left({
         tag: "table-spatial-fact-projection",
-        message: `The ${targetQuestion.kind} spatial witness is outside the supported 5-foot reach/adjacency boundary.`,
+        message: `The ${targetQuestion.kind} spatial witness is outside the supported ${scenarioTableSpatialFactDistanceLimitFeet(targetQuestion)}-foot reach/adjacency boundary.`,
       });
     }
     const fact = scenarioTableSpatialFactForQuestion(targetQuestion);
@@ -2528,6 +2668,56 @@ function scenarioAttackRange(input: {
   );
 }
 
+type ScenarioAttackTargetEligibility =
+  | Readonly<{
+      readonly tag: "eligible";
+      readonly relation: ScenarioSpatialRelation;
+      readonly range: ScenarioAttackRange;
+    }>
+  | Readonly<{
+      readonly tag: "out-of-range";
+      readonly message: string;
+    }>;
+
+function scenarioAttackTargetEligibility(input: {
+  readonly session: ScenarioSession;
+  readonly attack: NonNullable<BattleTargetChoiceHole["attack"]>;
+  readonly targetId: CombatantId;
+}): Either.Either<
+  ScenarioAttackTargetEligibility,
+  ScenarioAttackTargetProjectionIssue
+> {
+  const relation = scenarioRelationForSpatialQuestion(input.session, {
+    kind: "attackTarget",
+    actorId: input.attack.actorId,
+    targetId: input.targetId,
+    sourceProcedureRef: input.attack.selection.procedureRef,
+    targetConstraint: input.attack.targetConstraint.kind,
+  });
+  if (relation.tag !== "relation") {
+    return Either.left({
+      tag: "attack-target-projection",
+      message: relation.message,
+    });
+  }
+  const range = scenarioAttackRange({
+    constraint: input.attack.targetConstraint,
+    distanceFeet: Number(relation.relation.distanceFeet),
+    targetLabel: "Target",
+  });
+  if (Either.isLeft(range)) {
+    return Either.right({
+      tag: "out-of-range",
+      message: range.left,
+    });
+  }
+  return Either.right({
+    tag: "eligible",
+    relation: relation.relation,
+    range: range.right,
+  });
+}
+
 export function scenarioAttackTargetFills(input: {
   readonly session: ScenarioSession;
   readonly subject: BattleSubject;
@@ -2558,48 +2748,32 @@ export function scenarioAttackTargetFills(input: {
       continue;
     }
     const attack = targetHole.attack;
-    const relation = scenarioRelationForSpatialQuestion(input.session, {
-      kind: "attackTarget",
+    const eligibility = scenarioAttackTargetEligibility({
+      session: input.session,
+      attack,
+      targetId: fill.value,
+    });
+    if (Either.isLeft(eligibility)) {
+      return Either.left({
+        tag: "attack-target-projection",
+        message: eligibility.left.message,
+      });
+    }
+    if (eligibility.right.tag === "out-of-range") {
+      return Either.left({
+        tag: "attack-target-projection",
+        message: eligibility.right.message,
+      });
+    }
+    const { relation } = eligibility.right;
+    const distanceFact = {
+      kind: "attackTargetDistance" as const,
       actorId: attack.actorId,
       targetId: fill.value,
-      sourceProcedureRef: attack.selection.procedureRef,
-      targetConstraint: attack.targetConstraint.kind,
-    });
-    if (relation.tag !== "relation") {
-      return Either.left({
-        tag: "attack-target-projection",
-        message: relation.message,
-      });
-    }
-    const distanceFeet = Number(relation.relation.distanceFeet);
-    const range = scenarioAttackRange({
-      constraint: attack.targetConstraint,
-      distanceFeet,
-      targetLabel: "Target",
-    });
-    if (Either.isLeft(range)) {
-      return Either.left({
-        tag: "attack-target-projection",
-        message: range.left,
-      });
-    }
-    const rangeFact = Match.value(range.right).pipe(
-      Match.when({ kind: "meleeReach" }, () => ({
-        kind: "attackTargetInMeleeReach" as const,
-        actorId: attack.actorId,
-        targetId: fill.value,
-        ...attack.selection,
-      })),
-      Match.when({ kind: "rangedRange" }, ({ band }) => ({
-        kind: "attackTargetInRangedRange" as const,
-        actorId: attack.actorId,
-        targetId: fill.value,
-        ...attack.selection,
-        rangeBand: band,
-      })),
-      Match.exhaustive,
-    );
-    const canonicalSightFact = relation.relation.attackerCanSeeTarget
+      ...attack.selection,
+      distanceFeet: movementFeet(Number(relation.distanceFeet)),
+    };
+    const canonicalSightFact = relation.attackerCanSeeTarget
       ? undefined
       : {
           kind: "attackAttackerCannotSeeTarget" as const,
@@ -2611,12 +2785,11 @@ export function scenarioAttackTargetFills(input: {
       spatialFacts: [
         ...(fill.spatialFacts ?? []).filter(
           (fact) =>
-            fact.kind !== "attackTargetInMeleeReach" &&
-            fact.kind !== "attackTargetInRangedRange" &&
+            fact.kind !== "attackTargetDistance" &&
             fact.kind !== "attackAttackerCannotSeeTarget" &&
             fact.kind !== "attackTargetCannotSeeAttacker",
         ),
-        rangeFact,
+        distanceFact,
         ...(canonicalSightFact === undefined ? [] : [canonicalSightFact]),
       ],
     });
@@ -3129,8 +3302,16 @@ export function scenarioEnemyWithinFiveFeetCanSeeAttacker(
     });
     return (
       relation.tag === "relation" &&
-      Number(relation.relation.distanceFeet) <= 5 &&
+      scenarioRangedAttackEnemyWithinProximity(
+        relation.relation.distanceFeet,
+      ) &&
       relation.relation.attackerCanSeeTarget
     );
   });
+}
+
+export function scenarioRangedAttackEnemyWithinProximity(
+  distanceFeet: MovementFeet | DistanceFeet,
+): boolean {
+  return Number(distanceFeet) <= Number(RANGED_ATTACK_ENEMY_PROXIMITY_FEET);
 }

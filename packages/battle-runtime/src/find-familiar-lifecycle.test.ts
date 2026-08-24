@@ -256,6 +256,7 @@ function startFixtureBattle(
           ammunitionStocks: [
             { ammunition: "arrow" as const, remaining: resourceCount(20) },
           ],
+          conditions: [],
         },
       },
       ...(input.includeEnemy === true
@@ -277,6 +278,7 @@ function startFixtureBattle(
                     remaining: resourceCount(20),
                   },
                 ],
+                conditions: [],
               },
             },
           ]
@@ -301,6 +303,7 @@ function startFixtureBattle(
                     remaining: resourceCount(20),
                   },
                 ],
+                conditions: [],
               },
             },
           ]),
@@ -951,9 +954,10 @@ function familiarAttackTargetFill(
     value: enemyId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: familiarId,
         targetId: enemyId,
+        distanceFeet: movementFeet(5),
         ...hole.attack.selection,
       },
     ],
@@ -2229,6 +2233,7 @@ describe("Find Familiar lifecycle", () => {
             ammunitionStocks: [
               { ammunition: "arrow", remaining: resourceCount(20) },
             ],
+            conditions: [],
           },
         },
         {
@@ -2243,6 +2248,7 @@ describe("Find Familiar lifecycle", () => {
             ammunitionStocks: [
               { ammunition: "arrow", remaining: resourceCount(7) },
             ],
+            conditions: [],
           },
         },
       ],

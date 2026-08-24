@@ -1267,6 +1267,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       provokedOpportunityAttacks: [
         {
           reactorId: spellCasterId,
+          distanceFeet: movementFeet(5),
           ...attackExecutionSelectionForSubjectForTest(
             characterAttackSubjectForTest(
               state,

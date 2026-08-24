@@ -3,6 +3,7 @@ import {
   existsSync,
   mkdtempSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   renameSync,
   rmSync,
@@ -65,6 +66,10 @@ import {
 } from "./transcript.ts";
 import {
   invocationIdFromCodexEvents,
+  codexRawRetentionArtifactPath,
+  codexRawRetentionEventFromEvents,
+  jsonModelInvocationLastMessageDecoder,
+  readCodexRawRetentionArtifact,
   readCodexEvents,
   runCodexInvocation,
   type CurrentModelInvocationSubject,
@@ -89,16 +94,70 @@ import type {
   ScenarioCampaignId,
 } from "./raw-swarm-identities.ts";
 
-const FAILURE_LOG_TAIL_CHARACTERS = 64 * 1024;
-
 function fail(message: string): never {
   throw new Error(message);
+}
+
+function retainedGenerationEventPaths(
+  directories: readonly string[],
+): readonly string[] {
+  return [
+    ...new Set(
+      directories.flatMap((directory) => {
+        if (!existsSync(directory)) return [];
+        return readdirSync(directory, { withFileTypes: true })
+          .filter(
+            (entry) => entry.isFile() && entry.name.endsWith(".events.jsonl"),
+          )
+          .map((entry) => resolve(directory, entry.name));
+      }),
+    ),
+  ].sort();
 }
 
 export type ScenarioAdmissionPublication = readonly (readonly [
   staged: string,
   admitted: string,
 ])[];
+
+/**
+ * Retain a canonical invocation stream together with the runner-owned raw
+ * sibling named by its strict retention event. This operation runs before the
+ * invocation temporary directory is removed.
+ */
+export function retainCodexInvocationArtifacts(input: {
+  readonly eventPath: string;
+  readonly retainedEventPath: string;
+}): void {
+  mkdirSync(dirname(resolve(input.retainedEventPath)), { recursive: true });
+  writeFileSync(input.retainedEventPath, readFileSync(input.eventPath), {
+    flag: "wx",
+  });
+  const retainedEvents = readCodexEvents(input.eventPath);
+  if (retainedEvents.tag === "invalid") return;
+  const retention = codexRawRetentionEventFromEvents(retainedEvents.events);
+  if (retention.tag === "invalid") {
+    fail(
+      `Retained invocation event stream has an invalid raw-retention fact: ${retention.message}`,
+    );
+  }
+  if (retention.event === undefined) return;
+  const artifact = readCodexRawRetentionArtifact({
+    eventPath: input.eventPath,
+    event: retention.event,
+  });
+  if (Either.isLeft(artifact)) fail(artifact.left);
+  const retainedArtifactPath = codexRawRetentionArtifactPath(
+    input.retainedEventPath,
+    retention.event,
+  );
+  writeFileSync(retainedArtifactPath, artifact.right.contents, { flag: "wx" });
+  const retainedArtifact = readCodexRawRetentionArtifact({
+    eventPath: input.retainedEventPath,
+    event: retention.event,
+  });
+  if (Either.isLeft(retainedArtifact)) fail(retainedArtifact.left);
+}
 
 export function rollbackScenarioAdmissionBundle(
   publication: ScenarioAdmissionPublication,
@@ -272,7 +331,7 @@ function isCandidateRejection(
   return "tag" in value && value.tag === "candidateRejected";
 }
 
-function runCodexJson<A, I>(
+async function runCodexJson<A, I>(
   prompt: string,
   schema: Schema.Schema<A, I>,
   execution: {
@@ -290,7 +349,7 @@ function runCodexJson<A, I>(
       readonly reviewStage?: "milestone" | "final";
     };
   },
-): A {
+): Promise<A> {
   const outputSchema = Schema.Struct({ result: schema });
   const temporary = mkdtempSync(resolve(tmpdir(), "dnd-scenario-campaign-"));
   const schemaPath = resolve(temporary, "schema.json");
@@ -301,9 +360,9 @@ function runCodexJson<A, I>(
     const outputJsonSchema = codexOutputJsonSchema(schema);
     writeFileSync(schemaPath, `${JSON.stringify(outputJsonSchema, null, 2)}\n`);
     const fallbackInvocationId = randomUUID();
-    const result = (() => {
+    const result = await (async () => {
       try {
-        return runCodexInvocation({
+        return await runCodexInvocation({
           args: [
             "exec",
             "-C",
@@ -320,8 +379,6 @@ function runCodexJson<A, I>(
             `model_reasoning_effort=${JSON.stringify(execution.reasoningEffort)}`,
             "--output-schema",
             schemaPath,
-            "--output-last-message",
-            outputPath,
             prompt,
           ],
           cwd: repoRoot,
@@ -336,19 +393,24 @@ function runCodexJson<A, I>(
           fallbackInvocationId,
           model: execution.model,
           reasoningEffort: execution.reasoningEffort,
+          operation: {
+            tag: "expectedLastMessage",
+            expected: {
+              path: outputPath,
+              decode: jsonModelInvocationLastMessageDecoder(outputSchema),
+            },
+          },
         });
       } finally {
         if (execution.retention !== undefined && existsSync(eventPath)) {
-          mkdirSync(execution.retention.directory, { recursive: true });
           const retainedStem = `${execution.phase}-${fallbackInvocationId}`;
-          writeFileSync(
-            resolve(
+          retainCodexInvocationArtifacts({
+            eventPath,
+            retainedEventPath: resolve(
               execution.retention.directory,
               `${retainedStem}.events.jsonl`,
             ),
-            readFileSync(eventPath),
-            { flag: "wx" },
-          );
+          });
         }
       }
     })();
@@ -358,24 +420,10 @@ function runCodexJson<A, I>(
       codexEvents,
       fallbackInvocationId,
     );
-    if (result.error !== undefined) throw result.error;
-    if (result.signal !== null)
-      fail(`Scenario agent stopped by ${result.signal}.`);
-    if (result.status !== 0) {
-      const failureLog = readFileSync(agentLogPath, "utf8");
-      fail(
-        failureLog.slice(-FAILURE_LOG_TAIL_CHARACTERS) ||
-          "Scenario agent failed.",
-      );
+    if (result.tag === "failed") {
+      fail(`Scenario agent invocation failed: ${result.cause.reason}`);
     }
-    const decoded = Schema.decodeUnknownEither(outputSchema, {
-      onExcessProperty: "error",
-    })(JSON.parse(readFileSync(outputPath, "utf8")));
-    if (Either.isLeft(decoded)) {
-      return fail(
-        `Scenario agent returned invalid output: ${decoded.left.message}`,
-      );
-    }
+    const decoded = result.output.value;
     if (
       execution.retention?.reviewStage !== undefined &&
       execution.retention !== undefined
@@ -395,7 +443,7 @@ function runCodexJson<A, I>(
             reasoningEffort: execution.reasoningEffort,
             prompt,
             outputJsonSchema,
-            result: decoded.right.result,
+            result: decoded.result,
           },
           null,
           2,
@@ -403,7 +451,7 @@ function runCodexJson<A, I>(
         { flag: "wx" },
       );
     }
-    return decoded.right.result;
+    return decoded.result;
   } finally {
     rmSync(temporary, { recursive: true });
   }
@@ -589,11 +637,11 @@ ${scenario}`,
   };
 }
 
-export function replayRetainedScenarioReview(input: {
+export async function replayRetainedScenarioReview(input: {
   readonly retainedInput: RetainedScenarioReviewInput;
   readonly ledgerPath: string;
   readonly gitSha: GitSha;
-}): ScenarioCompositeReview {
+}): Promise<ScenarioCompositeReview> {
   if (input.retainedInput.schemaVersion === 2) {
     fail(
       "Historical Scenario review input is readable evidence but is not a current executable review subject.",
@@ -630,12 +678,12 @@ export function replayRetainedScenarioReview(input: {
     },
   } as const;
   return isCurrent
-    ? runCodexJson(
+    ? await runCodexJson(
         input.retainedInput.prompt,
         CurrentScenarioCompositeReviewSchema,
         execution,
       )
-    : runCodexJson(
+    : await runCodexJson(
         input.retainedInput.prompt,
         HistoricalScenarioCompositeReviewSchema,
         execution,
@@ -892,6 +940,10 @@ async function main(args: readonly string[]): Promise<void> {
       ...evidence.authorityPaths,
       { role: "generationLedger", path: ledgerPath },
     ];
+    const generationEventPaths = retainedGenerationEventPaths([
+      resolve(campaignEvidenceDirectory, "invocation-events"),
+      `${ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
+    ]);
     const pointerAuthorityRole =
       evidence.stagePlanFindingsPaths[0] !== undefined &&
       existsSync(evidence.stagePlanFindingsPaths[0])
@@ -908,6 +960,7 @@ async function main(args: readonly string[]): Promise<void> {
     const projectionInput = {
       authorityPaths,
       generationLedgerPaths: existsSync(ledgerPath) ? [ledgerPath] : [],
+      generationEventPaths,
       stagePlanFindingsPaths: evidence.stagePlanFindingsPaths,
       stagePlanPaths: evidence.stagePlanPaths,
       pointerAuthorityRole,
@@ -931,6 +984,7 @@ async function main(args: readonly string[]): Promise<void> {
         projectGenerationFindings({
           authorityPaths,
           generationLedgerPaths: projectionInput.generationLedgerPaths,
+          generationEventPaths,
           pointerAuthorityRole,
           disposition,
         }),
@@ -939,6 +993,7 @@ async function main(args: readonly string[]): Promise<void> {
         projectGenerationFindings({
           authorityPaths,
           generationLedgerPaths: projectionInput.generationLedgerPaths,
+          generationEventPaths,
           pointerAuthorityRole,
           disposition,
         }),

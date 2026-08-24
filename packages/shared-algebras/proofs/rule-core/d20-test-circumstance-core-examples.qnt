@@ -60,6 +60,31 @@ module d20TestCircumstanceCoreExamples {
       cancellingMechanicalSources,
       TableImposesDisadvantage,
     ) == NormalD20TestRoll),
+    assert(proneAttackRollModeMatches(
+      d20TestRollModeWithProneTarget(noMechanicalSources, 5),
+      AdvantageD20TestRoll,
+    )),
+    assert(proneAttackRollModeMatches(
+      d20TestRollModeWithProneTarget(noMechanicalSources, 6),
+      DisadvantageD20TestRoll,
+    )),
+    assert(proneAttackRollModeMatches(
+      d20TestRollModeWithProneTarget(mechanicalDisadvantage, 5),
+      NormalD20TestRoll,
+    )),
+    assert(proneAttackRollModeMatches(
+      d20TestRollModeWithProneTarget(mechanicalAdvantage, 6),
+      NormalD20TestRoll,
+    )),
+    assert(proneAttackRollModeMatches(
+      d20TestRollModeWithProneTarget(cancellingMechanicalSources, 5),
+      NormalD20TestRoll,
+    )),
+    assert(proneAttackRollSource(-1) == ProneAttackRollSourceInvalidDistance),
+    assert(d20TestRollModeWithProneTarget(
+      noMechanicalSources,
+      -1,
+    ) == ProneAttackRollModeInvalidDistance),
   }
 
   run d20TestCircumstanceExactRequestBinding = {

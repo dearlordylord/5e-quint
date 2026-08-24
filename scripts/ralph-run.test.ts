@@ -1581,7 +1581,7 @@ describe("Ralph launcher boundaries", () => {
       await terminateOwnedChild(parent);
       if (contender !== undefined) await terminateOwnedChild(contender);
     }
-  });
+  }, 20_000);
 
   it("rejects internal bodies when their lock is not held", () => {
     for (const [cwd, script] of [

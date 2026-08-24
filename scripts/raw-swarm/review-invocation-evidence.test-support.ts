@@ -24,7 +24,12 @@ import {
 } from "./sdk-player/sdk-review-packet.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { reprojectSdkTranscriptTurns } from "./sdk-player/player-turn-projection.ts";
-import { repoRoot, sha256Canonical, sha256Text } from "./transcript.ts";
+import {
+  isJsonRecord,
+  repoRoot,
+  sha256Canonical,
+  sha256Text,
+} from "./transcript.ts";
 import { ScenarioIdSchema } from "./transcript.ts";
 import {
   planAdmittedScenarioStages,
@@ -49,6 +54,7 @@ export function controlledReviewEvidenceFixture(input: {
     CurrentModelInvocationLedgerEntry,
     "subject" | "gitSha" | "eventsSha256"
   >[];
+  readonly retainFailedRawArtifacts?: boolean;
 }) {
   if (
     input.eventEntries !== undefined &&
@@ -114,6 +120,19 @@ export function controlledReviewEvidenceFixture(input: {
       scenarioId: "same",
       gitSha: transcriptGitSha,
       startedAt: "2026-08-14T00:00:00.000Z",
+    })}\n`,
+  );
+  writeFileSync(
+    resolve(input.directory, "campaign.json"),
+    `${JSON.stringify({
+      type: "raw-swarm-scenario-campaign",
+      schemaVersion: 1,
+      campaignId: "fixture-campaign",
+      plannedScenarioId: "same",
+      evidenceSetId: "fixture-evidence",
+      gitSha: scenarioSourceGitSha,
+      startedAt: "2026-08-14T00:00:00.000Z",
+      configSha256: "c".repeat(64),
     })}\n`,
   );
   const scenarioCompositeResults = [0, 1].map(() => ({
@@ -408,24 +427,47 @@ export function controlledReviewEvidenceFixture(input: {
   );
   const invocationSubject = (
     phase: CurrentModelInvocationLedgerEntry["phase"],
+    index: number,
   ) =>
-    phase === "player" || phase === "postPlayReview"
+    phase === "scenarioCompositeReview"
       ? {
-          tag: "execution" as const,
-          executionId: "fixture-execution",
+          tag: "scenarioCandidate" as const,
+          campaignId: "fixture-campaign",
           evidenceSetId: "fixture-evidence",
-          scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+          candidateId: `fixture-candidate-${String(index + 1)}`,
+          candidateScenarioSha256:
+            index === 0 ? "b".repeat(64) : sha256Text(scenario),
+          plannedScenarioId: "same",
         }
-      : {
-          tag: "scenario" as const,
-          scenarioId: input.ledgerScenarioId ?? header.scenarioId,
-        };
+      : phase === "player" || phase === "postPlayReview"
+        ? {
+            tag: "execution" as const,
+            executionId: "fixture-execution",
+            evidenceSetId: "fixture-evidence",
+            scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+          }
+        : {
+            tag: "scenario" as const,
+            scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+          };
   ledgerEntryInputs.forEach((entry, index) => {
     const eventEntry = eventEntryInputs[index]!;
+    const completionResult =
+      eventEntry.result ??
+      (eventEntry.exit.tag === "exited" && eventEntry.exit.status === 0
+        ? { tag: "succeeded" as const }
+        : {
+            tag: "failed" as const,
+            reason: "The fixture invocation exited unsuccessfully.",
+          });
+    const retainedRawContents = Buffer.from(
+      `fixture raw output for ${eventEntry.invocationId}\n`,
+      "utf8",
+    );
     const events = [
       eventValue(
         modelInvocationStartedEvent({
-          subject: invocationSubject(eventEntry.phase),
+          subject: invocationSubject(eventEntry.phase, index),
           gitSha: invocationGitSha,
           phase: eventEntry.phase,
           stagePlanReason:
@@ -494,23 +536,44 @@ export function controlledReviewEvidenceFixture(input: {
             },
           ]
         : []),
+      ...(input.retainFailedRawArtifacts === true &&
+      completionResult.tag === "failed"
+        ? [
+            {
+              type: "raw-swarm.invocation.codex-raw-retained",
+              source: "settledSidecar" as const,
+              reason: "failedInvocation" as const,
+              rawContentsSha256: sha256Text(
+                retainedRawContents.toString("utf8"),
+              ),
+              rawContentsByteLength: retainedRawContents.byteLength,
+            },
+          ]
+        : []),
       eventValue(
         modelInvocationCompletedEvent({
           elapsedMilliseconds: eventEntry.elapsedMilliseconds,
           exit: eventEntry.exit,
-          result:
-            eventEntry.result ??
-            (eventEntry.exit.tag === "exited" && eventEntry.exit.status === 0
-              ? { tag: "succeeded" }
-              : {
-                  tag: "failed",
-                  reason: "The fixture invocation exited unsuccessfully.",
-                }),
+          result: completionResult,
         }),
       ),
     ];
-    const eventBytes = `${events.map((event) => JSON.stringify(event)).join("\n")}\n`;
+    const normalizedEvents = events.map((event) =>
+      eventEntry.schemaVersion === 5 &&
+      isJsonRecord(event) &&
+      (event.type === "raw-swarm.invocation.started" ||
+        event.type === "raw-swarm.invocation.completed")
+        ? { ...event, schemaVersion: 5 }
+        : event,
+    );
+    const eventBytes = `${normalizedEvents.map((event) => JSON.stringify(event)).join("\n")}\n`;
     writeFileSync(eventPaths[index]!, eventBytes);
+    if (
+      input.retainFailedRawArtifacts === true &&
+      completionResult.tag === "failed"
+    ) {
+      writeFileSync(`${eventPaths[index]!}.codex-raw`, retainedRawContents);
+    }
     const replayInputPath = replayPrePlayReviewInputPaths[index];
     if (replayInputPath !== undefined) {
       writeFileSync(
@@ -521,7 +584,7 @@ export function controlledReviewEvidenceFixture(input: {
   });
   const ledgerEntries = ledgerEntryInputs.map((entry, index) => ({
     ...entry,
-    subject: invocationSubject(entry.phase),
+    subject: invocationSubject(entry.phase, index),
     gitSha: invocationGitSha,
     eventsSha256: invocationEventsSha256(eventPaths[index]!),
   }));

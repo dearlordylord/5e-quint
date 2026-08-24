@@ -16,6 +16,11 @@ export type ProofModule = {
   readonly runNames: NonEmptyReadonlyArray<string>;
 };
 
+export type ProofShard = {
+  readonly index: number;
+  readonly count: number;
+};
+
 export type InductiveProofModule = {
   readonly modulePath: string;
   readonly invariantName: string;
@@ -32,6 +37,11 @@ export type ProofModuleOutcome =
 
 export type ProofModuleDiscoveryConfig = QntModuleDiscoveryConfig & {
   readonly runNamePrefix?: string;
+};
+
+type ProofShardEnvironment = {
+  readonly QNT_PROOF_SHARD_INDEX?: string;
+  readonly QNT_PROOF_SHARD_COUNT?: string;
 };
 
 export type ProofModuleRunConfig = {
@@ -62,6 +72,53 @@ const runBlockPattern = /^[ \t]*run\s+([A-Za-z_][A-Za-z0-9_]*)\b/gm;
 export const proofModuleTimeoutMs = 360_000;
 const proofProgressIntervalMs = 60_000;
 const apalacheJavaBin = `${process.env.HOME ?? ""}/.local/java/jdk-17.0.18+8-jre/bin`;
+
+function nonEmptyEnvironmentValue(
+  value: string | undefined,
+): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed === "" ? undefined : trimmed;
+}
+
+export function parseProofShardEnvironment(
+  env: ProofShardEnvironment = process.env,
+): ProofShard | undefined {
+  const indexValue = nonEmptyEnvironmentValue(env.QNT_PROOF_SHARD_INDEX);
+  const countValue = nonEmptyEnvironmentValue(env.QNT_PROOF_SHARD_COUNT);
+  if (indexValue === undefined && countValue === undefined) return undefined;
+  if (indexValue === undefined || countValue === undefined) {
+    throw new Error(
+      "QNT proof shard configuration requires both index and count.",
+    );
+  }
+
+  const index = Number(indexValue);
+  const count = Number(countValue);
+  if (
+    !Number.isSafeInteger(index) ||
+    !Number.isSafeInteger(count) ||
+    count < 1 ||
+    index < 0
+  ) {
+    throw new Error(
+      "QNT proof shard index and count must be non-negative safe integers, with count at least one.",
+    );
+  }
+  if (index >= count) {
+    throw new Error("QNT proof shard index must be less than count.");
+  }
+  return { index, count };
+}
+
+export function selectProofModulesForShard<T>(
+  modules: readonly T[],
+  shard: ProofShard | undefined,
+): readonly T[] {
+  if (shard === undefined) return modules;
+  return modules.filter(
+    (_, moduleIndex) => moduleIndex % shard.count === shard.index,
+  );
+}
 
 function asDirectoryPath(path: string): string {
   return path === "" || path.endsWith("/") ? path : `${path}/`;

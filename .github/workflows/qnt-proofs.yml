@@ -35,9 +35,53 @@ concurrency:
 
 jobs:
   proofs:
-    name: Bounded QNT proof lane
+    name: QNT proof lane (${{ matrix.lane }})
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include:
+          # Battle-runtime proof modules are serial within one Vitest worker.
+          # Round-robin shards keep the measured expensive modules distributed
+          # while preserving complete, deterministic module coverage.
+          - lane: battle-runtime-0
+            package: "@dnd/battle-runtime"
+            script: test:qnt-proofs
+            shard_index: "0"
+            shard_count: "4"
+            timing: true
+          - lane: battle-runtime-1
+            package: "@dnd/battle-runtime"
+            script: test:qnt-proofs
+            shard_index: "1"
+            shard_count: "4"
+            timing: true
+          - lane: battle-runtime-2
+            package: "@dnd/battle-runtime"
+            script: test:qnt-proofs
+            shard_index: "2"
+            shard_count: "4"
+            timing: true
+          - lane: battle-runtime-3
+            package: "@dnd/battle-runtime"
+            script: test:qnt-proofs
+            shard_index: "3"
+            shard_count: "4"
+            timing: true
+          - lane: shared-algebras
+            package: "@dnd/shared-algebras"
+            script: proof:quint
+            shard_index: ""
+            shard_count: ""
+            timing: true
+          - lane: character-creation-slice
+            package: "@dnd/character-creation-runtime"
+            script: test:qnt-slice
+            shard_index: ""
+            shard_count: ""
+            timing: false
 
     steps:
       - name: Check out repository
@@ -61,9 +105,11 @@ jobs:
           pnpm exec quint --version
 
       - name: Download previous successful timing artifact
+        if: matrix.timing
         id: previous
         env:
           GH_TOKEN: ${{ github.token }}
+          TIMING_ARTIFACT_NAME: qnt-proof-timings-${{ matrix.lane }}
         run: |
           set -euo pipefail
           mkdir -p proof-artifacts/previous
@@ -87,7 +133,7 @@ jobs:
             fi
             if test -n "$previous_run_id" && \
               gh run download "$previous_run_id" \
-                --name qnt-proof-timings \
+                --name "$TIMING_ARTIFACT_NAME" \
                 --dir proof-artifacts/previous; then
               echo "run_id=$previous_run_id" >> "$GITHUB_OUTPUT"
               exit 0
@@ -95,16 +141,26 @@ jobs:
           done
           echo "run_id=" >> "$GITHUB_OUTPUT"
 
+      - name: Run QNT inventory and closure checks
+        run: |
+          set -euo pipefail
+          pnpm check:qnt-inventory
+          pnpm check:mbt-driver-closure
+          pnpm check:qnt-proof-closure
+
       - name: Run bounded proof lane
         shell: bash
+        env:
+          QNT_PROOF_SHARD_INDEX: ${{ matrix.shard_index }}
+          QNT_PROOF_SHARD_COUNT: ${{ matrix.shard_count }}
         run: |
           set -euo pipefail
           mkdir -p proof-artifacts/current
-          pnpm proof:qnt \
+          pnpm --filter "${{ matrix.package }}" "${{ matrix.script }}" \
             2> >(tee proof-artifacts/current/qnt-proof-events.log >&2)
 
       - name: Build timing comparison
-        if: always()
+        if: always() && matrix.timing
         shell: bash
         run: |
           set -euo pipefail
@@ -122,10 +178,28 @@ jobs:
           cat proof-artifacts/current/qnt-proof-timings.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload proof events and timings
-        if: always()
+        if: always() && matrix.timing
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: qnt-proof-timings
+          name: qnt-proof-timings-${{ matrix.lane }}
           path: proof-artifacts/current/
           if-no-files-found: warn
           retention-days: 30
+
+  proof-gate:
+    name: Bounded QNT proof lane
+    if: always()
+    needs: proofs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Require every proof lane to pass
+        if: needs.proofs.result != 'success'
+        run: |
+          echo "::error::QNT proof matrix result was ${{ needs.proofs.result }}."
+          exit 1
+
+      - name: Confirm all proof lanes passed
+        if: needs.proofs.result == 'success'
+        run: echo "All QNT proof lanes passed."

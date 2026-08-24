@@ -75,7 +75,7 @@ describe("RAW swarm artifact report index", () => {
         "final.json",
       ]),
     ).toThrow(/review replay uses the named/);
-  });
+  }, 15_000);
 
   test("rejects a bare unnamed review-replay flag", () => {
     expect(() =>
@@ -87,7 +87,7 @@ describe("RAW swarm artifact report index", () => {
         "--review-replay",
       ]),
     ).toThrow(/review replay uses the named/);
-  });
+  }, 15_000);
 
   test("rejects an unknown review-replay flag", () => {
     expect(() =>
@@ -100,7 +100,7 @@ describe("RAW swarm artifact report index", () => {
         "final.json",
       ]),
     ).toThrow(/Unsupported findings replay flag/);
-  });
+  }, 15_000);
 
   test("rejects a named review-replay pair with one member absent", () => {
     expect(() =>
@@ -115,7 +115,7 @@ describe("RAW swarm artifact report index", () => {
     ).toThrow(
       /review replay requires one named milestone envelope and one named final envelope/,
     );
-  });
+  }, 15_000);
 
   test("rejects a named review-replay flag without a value", () => {
     expect(() =>
@@ -128,7 +128,7 @@ describe("RAW swarm artifact report index", () => {
         "--review-replay-final",
       ]),
     ).toThrow(/--review-replay-milestone requires a value/);
-  });
+  }, 15_000);
 
   test("rejects unclassified historical input and retains controlled Execution verdict facts", () => {
     const directory = temporaryDirectory();

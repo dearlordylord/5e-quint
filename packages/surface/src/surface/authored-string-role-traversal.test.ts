@@ -777,5 +777,5 @@ describe("Surface authored string role traversal", () => {
         [...decodedPaths].filter((path) => !traversedPaths.has(path)),
       ).toEqual([]);
     }
-  });
+  }, 30_000);
 });

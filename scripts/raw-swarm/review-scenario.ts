@@ -24,7 +24,7 @@ function retainedInput(path: string) {
     : fail(`Invalid retained scenario review input: ${decoded.left.message}`);
 }
 
-function main(args: readonly string[]): void {
+async function main(args: readonly string[]): Promise<void> {
   const [retainedInputPath, outputInput, ledgerInput, ...unexpected] = args;
   if (
     retainedInputPath === undefined ||
@@ -48,7 +48,7 @@ function main(args: readonly string[]): void {
   if (existsSync(outputPath)) {
     fail(`Refusing to overwrite scenario review output: ${outputPath}`);
   }
-  const result = replayRetainedScenarioReview({
+  const result = await replayRetainedScenarioReview({
     retainedInput: retainedInput(inputPath),
     ledgerPath,
     gitSha: gitSha.right,
@@ -58,9 +58,7 @@ function main(args: readonly string[]): void {
   });
 }
 
-try {
-  main(process.argv.slice(2));
-} catch (error: unknown) {
+main(process.argv.slice(2)).catch((error: unknown) => {
   console.error(error);
   process.exitCode = 1;
-}
+});

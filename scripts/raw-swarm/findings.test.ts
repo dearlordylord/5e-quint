@@ -11,12 +11,16 @@ import {
 import { tmpdir } from "node:os";
 import { relative, resolve } from "node:path";
 
+import { Either, Schema } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
+  authorityFor,
+  findingsFromGenerationLedger,
   projectExecutionFindings,
   readFindingsProjection,
   makeFinding,
+  readSourceWithAuthority,
   validateFindingsProjection,
   writeFindingsProjection,
 } from "./findings.ts";
@@ -27,6 +31,7 @@ import {
   CurrentScenarioCompositeReviewSchema,
 } from "./scenario-campaign.ts";
 import {
+  exportArtifactIndex,
   ingestGenerationFindings,
   openArtifactIndex,
 } from "./artifact-index.ts";
@@ -37,6 +42,19 @@ import {
   planScenarioStages,
   scenarioStagePlanFindings,
 } from "./scenario-stage-plan.ts";
+import {
+  invocationEventsSha256,
+  modelInvocationEvidenceFromEvents,
+  parseModelInvocationLedgerEntry,
+} from "./model-telemetry.ts";
+import {
+  ScenarioCampaignManifestSchema,
+  type ScenarioCampaignManifest,
+} from "./evidence-manifests.ts";
+import {
+  RetainedScenarioReviewInputSchema,
+  retainedScenarioReviewMatchesReplayBinding,
+} from "./scenario-review-input.ts";
 
 const directories: string[] = [];
 const reportScript = resolve(repoRoot, "scripts/raw-swarm/report.ts");
@@ -276,6 +294,7 @@ function finalScenarioReview(input: {
 function retainedCompositeReviewInput(input: {
   readonly reviewStage: "milestone" | "final";
   readonly invocationId: string;
+  readonly scenarioQuality?: CompositeReviewScenarioQuality;
 }) {
   return {
     schemaVersion: 2 as const,
@@ -302,12 +321,25 @@ function retainedCompositeReviewInput(input: {
       },
       artifactPolicy: { classification: "safe" as const, evidence: "Policy." },
       scenarioQuality: {
-        classification: "ready" as const,
-        evidence: "Quality.",
+        ...(input.scenarioQuality ?? {
+          classification: "ready" as const,
+          evidence: "Quality.",
+        }),
       },
     },
   };
 }
+
+type CompositeReviewScenarioQuality =
+  | Readonly<{
+      readonly classification: "ready";
+      readonly evidence: string;
+    }>
+  | Readonly<{
+      readonly classification: "needsRevision";
+      readonly evidence: string;
+      readonly critique: string;
+    }>;
 
 type CompositeReviewFixtureSubject =
   | Readonly<{
@@ -316,11 +348,11 @@ type CompositeReviewFixtureSubject =
     }>
   | Readonly<{
       readonly tag: "scenarioCandidate";
-      readonly campaignId: "findings-campaign";
-      readonly evidenceSetId: "findings-campaign-evidence";
-      readonly candidateId: "findings-candidate";
+      readonly campaignId: string;
+      readonly evidenceSetId: string;
+      readonly candidateId: string;
       readonly candidateScenarioSha256: string;
-      readonly plannedScenarioId: "findings-example";
+      readonly plannedScenarioId: string;
     }>;
 
 const FINDINGS_REVIEW_SUBJECT = {
@@ -328,9 +360,18 @@ const FINDINGS_REVIEW_SUBJECT = {
   scenarioId: "findings-example",
 } as const satisfies CompositeReviewFixtureSubject;
 
+function findingsCampaignManifest(root: string): ScenarioCampaignManifest {
+  const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+    onExcessProperty: "error",
+  })(parseJsonRecord(readFileSync(resolve(root, "campaign.json"), "utf8")));
+  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
+  return decoded.right;
+}
+
 function retainedCandidateCompositeReviewInput(input: {
   readonly reviewStage: "milestone" | "final";
   readonly invocationId: string;
+  readonly scenarioQuality?: CompositeReviewScenarioQuality;
   readonly subject: Extract<
     CompositeReviewFixtureSubject,
     { readonly tag: "scenarioCandidate" }
@@ -345,69 +386,77 @@ function retainedCandidateCompositeReviewInput(input: {
   };
 }
 
+function retainedBenchmarkCompositeReviewInput(input: {
+  readonly reviewStage: "milestone" | "final";
+  readonly invocationId: string;
+  readonly subject: {
+    readonly tag: "benchmark";
+    readonly benchmarkId: string;
+    readonly profile: "documentDeclarationSet" | "boundedCapabilityProjection";
+    readonly scenarioId: "findings-example";
+  };
+}) {
+  const historical = retainedCompositeReviewInput(input);
+  const { scenarioId: _scenarioId, ...common } = historical;
+  return {
+    ...common,
+    schemaVersion: 3 as const,
+    model: "gpt-5.6-luna" as const,
+    reasoningEffort: "medium" as const,
+    subject: input.subject,
+    result: historical.result,
+  };
+}
+
+type CompositeReviewLedgerSpec = Readonly<{
+  readonly invocationId: string;
+  readonly reviewStage: "milestone" | "final";
+  readonly subject: CompositeReviewFixtureSubject;
+  readonly ledgerSchemaVersion?: 2 | 4 | 5;
+  readonly scenarioQuality?: CompositeReviewScenarioQuality;
+}>;
+
+type OrderedLedgerEntry =
+  | Readonly<{
+      readonly tag: "generation";
+      readonly invocationId: string;
+    }>
+  | Readonly<{
+      readonly tag: "review";
+      readonly review: CompositeReviewLedgerSpec;
+    }>;
+
 function retainedGenerationReviewLedger(
   root: string,
   subject: CompositeReviewFixtureSubject = FINDINGS_REVIEW_SUBJECT,
+  options: Readonly<{
+    readonly reviewEntries?: readonly CompositeReviewLedgerSpec[];
+    readonly generationInvocationIds?: readonly string[];
+    readonly orderedLedgerEntries?: readonly OrderedLedgerEntry[];
+    readonly campaignIdentity?: Readonly<{
+      readonly campaignId: string;
+      readonly evidenceSetId: string;
+      readonly plannedScenarioId: string;
+    }>;
+  }> = {},
 ): string {
   const path = resolve(root, "generation-invocations.jsonl");
-  const reviewResult = (invocationId: string) =>
-    retainedCompositeReviewInput({
-      reviewStage:
-        invocationId === "original-milestone" ? "milestone" : "final",
-      invocationId,
-    }).result;
-  const eventBytes = (invocationId: string): string =>
-    `${[
+  const reviewEntries =
+    options.reviewEntries ??
+    ([
       {
-        type: "raw-swarm.invocation.started",
-        schemaVersion: 4,
+        invocationId: "original-milestone",
+        reviewStage: "milestone",
         subject,
-        gitSha: "a".repeat(40),
-        phase: "scenarioCompositeReview",
-        stagePlanReason: "The campaign requires a composite review.",
-        fallbackInvocationId: invocationId,
-        model: "gpt-5.6-luna",
-        reasoningEffort: "max",
-        startedAt: "2026-08-18T00:00:00.000Z",
       },
       {
-        type: "thread.started",
-        thread_id: invocationId,
+        invocationId: "original-final",
+        reviewStage: "final",
+        subject,
       },
-      {
-        type: "item.completed",
-        item: {
-          type: "agent_message",
-          text: JSON.stringify({ result: reviewResult(invocationId) }),
-        },
-      },
-      {
-        type: "raw-swarm.invocation.completed",
-        schemaVersion: 4,
-        elapsedMilliseconds: 10,
-        exit: { tag: "exited", status: 0 },
-        result: { tag: "succeeded" },
-      },
-    ]
-      .map((value) => JSON.stringify(value))
-      .join("\n")}\n`;
-  const eventPath = (invocationId: string) =>
-    resolve(root, `${invocationId}.events.jsonl`);
-  for (const invocationId of ["original-milestone", "original-final"]) {
-    writeFileSync(eventPath(invocationId), eventBytes(invocationId));
-  }
-  const entry = (invocationId: string) => ({
-    schemaVersion: 4,
-    subject,
+    ] as const satisfies readonly CompositeReviewLedgerSpec[]);
+  const common = {
     gitSha: "a".repeat(40),
-    eventsSha256: createHash("sha256")
-      .update(readFileSync(eventPath(invocationId)))
-      .digest("hex"),
-    phase: "scenarioCompositeReview",
-    stagePlanReason: "The campaign requires a composite review.",
-    invocationId,
-    model: "gpt-5.6-luna",
-    reasoningEffort: "max",
     startedAt: "2026-08-18T00:00:00.000Z",
     elapsedMilliseconds: 10,
     exit: { tag: "exited", status: 0 },
@@ -417,10 +466,248 @@ function retainedGenerationReviewLedger(
       reason:
         "The first-party event stream exposed no turn.completed usage object.",
     },
+  } as const;
+  const eventPath = (invocationId: string) =>
+    resolve(root, `${invocationId}.events.jsonl`);
+  const eventBytes = (review: CompositeReviewLedgerSpec): string => {
+    const ledgerSchemaVersion =
+      review.ledgerSchemaVersion ?? (review.subject.tag === "scenario" ? 2 : 5);
+    return `${[
+      ...(ledgerSchemaVersion === 2
+        ? [
+            {
+              type: "raw-swarm.invocation.started",
+              schemaVersion: 2,
+              scenarioId: "findings-example",
+              gitSha: common.gitSha,
+              phase: "scenarioCompositeReview",
+              stagePlanReason: "The campaign requires a composite review.",
+              fallbackInvocationId: review.invocationId,
+              model: "gpt-5.6-luna",
+              reasoningEffort: "max",
+              startedAt: common.startedAt,
+            },
+          ]
+        : [
+            {
+              type: "raw-swarm.invocation.started",
+              schemaVersion: ledgerSchemaVersion,
+              subject: review.subject,
+              gitSha: common.gitSha,
+              phase: "scenarioCompositeReview",
+              stagePlanReason: "The campaign requires a composite review.",
+              fallbackInvocationId: review.invocationId,
+              model: "gpt-5.6-luna",
+              reasoningEffort: "max",
+              startedAt: common.startedAt,
+            },
+          ]),
+      { type: "thread.started", thread_id: review.invocationId },
+      {
+        type: "item.completed",
+        item: {
+          type: "agent_message",
+          text: JSON.stringify({
+            result: retainedCompositeReviewInput({
+              reviewStage: review.reviewStage,
+              invocationId: review.invocationId,
+              scenarioQuality: review.scenarioQuality,
+            }).result,
+          }),
+        },
+      },
+      ...(ledgerSchemaVersion === 5 ? [{ type: "turn.completed" }] : []),
+      {
+        type: "raw-swarm.invocation.completed",
+        schemaVersion: ledgerSchemaVersion,
+        elapsedMilliseconds: common.elapsedMilliseconds,
+        exit: common.exit,
+        result: common.result,
+      },
+    ]
+      .map((value) => JSON.stringify(value))
+      .join("\n")}\n`;
+  };
+  for (const review of reviewEntries) {
+    writeFileSync(eventPath(review.invocationId), eventBytes(review));
+  }
+  const reviewLedgerEntry = (review: CompositeReviewLedgerSpec) => {
+    const commonReview = {
+      invocationId: review.invocationId,
+      model: "gpt-5.6-luna" as const,
+      reasoningEffort: "max" as const,
+      phase: "scenarioCompositeReview" as const,
+      stagePlanReason: "The campaign requires a composite review.",
+      eventsSha256: createHash("sha256")
+        .update(readFileSync(eventPath(review.invocationId)))
+        .digest("hex"),
+      ...common,
+    };
+    const ledgerSchemaVersion =
+      review.ledgerSchemaVersion ?? (review.subject.tag === "scenario" ? 2 : 5);
+    return ledgerSchemaVersion === 2
+      ? {
+          schemaVersion: 2 as const,
+          scenarioId: "findings-example" as const,
+          ...commonReview,
+        }
+      : {
+          schemaVersion: ledgerSchemaVersion,
+          subject: review.subject,
+          ...commonReview,
+        };
+  };
+  const generationSubject = {
+    tag: "scenarioCampaign" as const,
+    campaignId: "findings-campaign" as const,
+    evidenceSetId: "findings-campaign-evidence" as const,
+    plannedScenarioId: "findings-example" as const,
+  };
+  const generationLedgerEntry = (invocationId: string) => ({
+    schemaVersion: 4 as const,
+    subject: generationSubject,
+    invocationId,
+    model: "gpt-5.6-sol",
+    reasoningEffort: "medium",
+    phase: "scenarioGeneration" as const,
+    stagePlanReason: "The campaign requires scenario generation.",
+    eventsSha256: "0".repeat(64),
+    ...common,
+  });
+  const orderedEntries = options.orderedLedgerEntries ?? [
+    ...(options.generationInvocationIds ?? []).map(
+      (invocationId): OrderedLedgerEntry => ({
+        tag: "generation",
+        invocationId,
+      }),
+    ),
+    ...reviewEntries.map(
+      (review): OrderedLedgerEntry => ({ tag: "review", review }),
+    ),
+  ];
+  const entries = orderedEntries.map((entry) =>
+    entry.tag === "generation"
+      ? generationLedgerEntry(entry.invocationId)
+      : reviewLedgerEntry(entry.review),
+  );
+  writeFileSync(
+    path,
+    `${entries.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
+  );
+  const campaignIdentity = options.campaignIdentity ?? {
+    campaignId: "findings-campaign",
+    evidenceSetId: "findings-campaign-evidence",
+    plannedScenarioId: "findings-example",
+  };
+  writeFileSync(
+    resolve(root, "campaign.json"),
+    `${JSON.stringify({
+      type: "raw-swarm-scenario-campaign",
+      schemaVersion: 1,
+      ...campaignIdentity,
+      gitSha: common.gitSha,
+      startedAt: common.startedAt,
+      configSha256: "c".repeat(64),
+    })}\n`,
+  );
+  return relative(repoRoot, path);
+}
+
+function retainedBenchmarkReviewLedger(
+  root: string,
+  subject: {
+    readonly tag: "benchmark";
+    readonly benchmarkId: string;
+    readonly profile: "documentDeclarationSet" | "boundedCapabilityProjection";
+    readonly scenarioId: "findings-example";
+  },
+): string {
+  const path = resolve(root, "benchmark-invocations.jsonl");
+  const common = {
+    gitSha: "a".repeat(40),
+    startedAt: "2026-08-18T00:00:00.000Z",
+    elapsedMilliseconds: 10,
+    exit: { tag: "exited" as const, status: 0 },
+    result: { tag: "succeeded" as const },
+    usage: {
+      tag: "unavailable" as const,
+      reason:
+        "The first-party event stream exposed no turn.completed usage object.",
+    },
+  };
+  const entries = [
+    {
+      invocationId: "benchmark-generation",
+      phase: "scenarioGeneration" as const,
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      stagePlanReason: "The fixed benchmark requires generation.",
+    },
+    {
+      invocationId: "benchmark-final",
+      phase: "scenarioCompositeReview" as const,
+      model: "gpt-5.6-luna",
+      reasoningEffort: "medium",
+      stagePlanReason: "The fixed benchmark requires a final review.",
+    },
+  ].map((entry) => {
+    const eventPath = resolve(root, `${entry.invocationId}.events.jsonl`);
+    const events = [
+      {
+        type: "raw-swarm.invocation.started",
+        schemaVersion: 5,
+        subject,
+        gitSha: common.gitSha,
+        phase: entry.phase,
+        stagePlanReason: entry.stagePlanReason,
+        fallbackInvocationId: entry.invocationId,
+        model: entry.model,
+        reasoningEffort: entry.reasoningEffort,
+        startedAt: common.startedAt,
+      },
+      { type: "thread.started", thread_id: entry.invocationId },
+      {
+        type: "item.completed",
+        item: {
+          type: "agent_message",
+          text: JSON.stringify({
+            result: retainedCompositeReviewInput({
+              reviewStage: "final",
+              invocationId: entry.invocationId,
+            }).result,
+          }),
+        },
+      },
+      { type: "turn.completed" },
+      {
+        type: "raw-swarm.invocation.completed",
+        schemaVersion: 5,
+        elapsedMilliseconds: common.elapsedMilliseconds,
+        exit: common.exit,
+        result: common.result,
+      },
+    ];
+    writeFileSync(
+      eventPath,
+      `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
+    );
+    return {
+      schemaVersion: 5 as const,
+      subject,
+      invocationId: entry.invocationId,
+      model: entry.model,
+      reasoningEffort: entry.reasoningEffort,
+      phase: entry.phase,
+      stagePlanReason: entry.stagePlanReason,
+      eventsSha256: createHash("sha256")
+        .update(readFileSync(eventPath))
+        .digest("hex"),
+      ...common,
+    };
   });
   writeFileSync(
     path,
-    `${JSON.stringify(entry("original-milestone"))}\n${JSON.stringify(entry("original-final"))}\n`,
+    `${entries.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
   );
   return relative(repoRoot, path);
 }
@@ -456,6 +743,931 @@ function reportCommand(args: readonly string[]): string {
 }
 
 describe("Raw Swarm findings projection", () => {
+  test("retains parsed source authority instead of rereading mutated bytes", () => {
+    const root = directory();
+    const path = resolve(root, "cached-authority.json");
+    writeFileSync(path, '{"value":"before"}\n');
+    const source = readSourceWithAuthority({
+      role: "replay-final",
+      path: relative(repoRoot, path),
+    });
+    expect(source._tag).toBe("Right");
+    if (Either.isLeft(source)) return;
+    const original = authorityFor(source.right);
+    writeFileSync(path, '{"value":"after"}\n');
+    expect(authorityFor(source.right)).toEqual(original);
+  });
+
+  test("public validation cannot substitute an arbitrary authority reader", () => {
+    const input = fixture();
+    const projection = projectExecutionFindings({
+      transcriptPath: input.transcriptRelative,
+      evidenceSetDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [],
+      issueLinks: [],
+    });
+    const originalBytes = new Map(
+      projection.authorities.map((authority) => [
+        authority.path,
+        readFileSync(resolve(repoRoot, authority.path)),
+      ]),
+    );
+    const executionAuthority = projection.authorities.find(
+      (authority) => authority.role === "executionStart",
+    );
+    expect(executionAuthority).toBeDefined();
+    if (executionAuthority === undefined) return;
+    const executionPath = resolve(repoRoot, executionAuthority.path);
+    writeFileSync(
+      executionPath,
+      `${originalBytes.get(executionAuthority.path)!.toString()}\n`,
+    );
+
+    const validation = Reflect.apply(validateFindingsProjection, undefined, [
+      projection,
+      {
+        readAuthorityBytes: (path: string) =>
+          Either.right(originalBytes.get(path) ?? new Uint8Array()),
+      },
+    ]);
+    expect(validation).toMatchObject({
+      tag: "invalid",
+      message: /authority hash does not match/,
+    });
+
+    writeFileSync(executionPath, originalBytes.get(executionAuthority.path)!);
+    const forgedSnapshot = Reflect.apply(
+      validateFindingsProjection,
+      undefined,
+      [projection, [{ path: executionAuthority.path }]],
+    );
+    expect(forgedSnapshot).toMatchObject({
+      tag: "invalid",
+      message: /snapshot is not canonical/,
+    });
+  });
+
+  test("projects a zero-exit invalid last message as a generation invocation failure", () => {
+    const root = directory();
+    const ledgerPath = retainedGenerationReviewLedger(root);
+    const absoluteLedgerPath = resolve(repoRoot, ledgerPath);
+    const rows = readFileSync(absoluteLedgerPath, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => parseJsonRecord(line));
+    const firstRow = rows[0];
+    if (firstRow === undefined) throw new Error("Missing fixture ledger row.");
+    const { scenarioId: _scenarioId, ...currentRow } = firstRow;
+    const failedRow = {
+      ...currentRow,
+      schemaVersion: 5,
+      subject: {
+        tag: "scenarioCampaign",
+        campaignId: "findings-campaign",
+        evidenceSetId: "findings-campaign-evidence",
+        plannedScenarioId: "findings-example",
+      },
+      phase: "scenarioGeneration",
+      invocationId: "missing-last-message",
+      eventsSha256: "c".repeat(64),
+      exit: { tag: "exited", status: 0 },
+      result: {
+        tag: "failed",
+        failureKind: "lastMessageMissing",
+        operation: "expectedLastMessage",
+        reason: "Expected Codex last-message output file does not exist.",
+      },
+    };
+    writeFileSync(
+      absoluteLedgerPath,
+      `${rows.map((row) => JSON.stringify(row)).join("\n")}\n${JSON.stringify(failedRow)}\n`,
+    );
+
+    const findings = findingsFromGenerationLedger(
+      { role: "generationLedger", path: ledgerPath },
+      {
+        scenarioId: "findings-example",
+        gitSha: "a".repeat(40),
+        owner: { tag: "scenario" },
+      },
+    );
+    expect(findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "generation-invocation-failure",
+          pointer: expect.objectContaining({ line: 3 }),
+        }),
+      ]),
+    );
+  });
+
+  test("retains the milestone Candidate after a three-iteration revision with a distinct final hash", () => {
+    const input = fixture();
+    const milestoneQuality = {
+      classification: "needsRevision" as const,
+      evidence: "The milestone Candidate is not ready for admission.",
+      critique: "Revise the Candidate before the final admission review.",
+    };
+    const finalQuality = {
+      classification: "ready" as const,
+      evidence: "The revised Candidate is ready for admission.",
+    };
+    const milestoneSubject = {
+      tag: "scenarioCandidate",
+      campaignId: "findings-campaign",
+      evidenceSetId: "findings-campaign-evidence",
+      candidateId: "findings-milestone-candidate",
+      candidateScenarioSha256: "b".repeat(64),
+      plannedScenarioId: "findings-example",
+    } as const satisfies CompositeReviewFixtureSubject;
+    const finalSubject = {
+      tag: "scenarioCandidate",
+      campaignId: "findings-campaign",
+      evidenceSetId: "findings-campaign-evidence",
+      candidateId: "findings-final-candidate",
+      candidateScenarioSha256: input.scenarioSha256,
+      plannedScenarioId: "findings-example",
+    } as const satisfies CompositeReviewFixtureSubject;
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      FINDINGS_REVIEW_SUBJECT,
+      {
+        reviewEntries: [
+          {
+            invocationId: "iteration-two-milestone",
+            reviewStage: "milestone",
+            subject: milestoneSubject,
+            scenarioQuality: milestoneQuality,
+          },
+          {
+            invocationId: "iteration-three-final",
+            reviewStage: "final",
+            subject: finalSubject,
+            scenarioQuality: finalQuality,
+          },
+        ],
+        orderedLedgerEntries: [
+          { tag: "generation", invocationId: "iteration-one-generation" },
+          { tag: "generation", invocationId: "iteration-two-revision" },
+          {
+            tag: "review",
+            review: {
+              invocationId: "iteration-two-milestone",
+              reviewStage: "milestone",
+              subject: milestoneSubject,
+            },
+          },
+          { tag: "generation", invocationId: "iteration-three-generation" },
+          {
+            tag: "review",
+            review: {
+              invocationId: "iteration-three-final",
+              reviewStage: "final",
+              subject: finalSubject,
+            },
+          },
+        ],
+        campaignIdentity: {
+          campaignId: "findings-campaign",
+          evidenceSetId: "findings-campaign-evidence",
+          plannedScenarioId: "findings-example",
+        },
+      },
+    );
+    const milestonePath = resolve(input.root, "iteration-two-milestone.json");
+    const finalPath = resolve(input.root, "iteration-three-final.json");
+    const milestoneInput = retainedCandidateCompositeReviewInput({
+      reviewStage: "milestone",
+      invocationId: "iteration-two-milestone",
+      subject: milestoneSubject,
+      scenarioQuality: milestoneQuality,
+    });
+    const finalInput = retainedCandidateCompositeReviewInput({
+      reviewStage: "final",
+      invocationId: "iteration-three-final",
+      subject: finalSubject,
+      scenarioQuality: finalQuality,
+    });
+    writeFileSync(milestonePath, `${JSON.stringify(milestoneInput)}\n`);
+    writeFileSync(finalPath, `${JSON.stringify(finalInput)}\n`);
+
+    expect(milestoneInput.result.scenarioQuality).toEqual(milestoneQuality);
+    expect(finalInput.result.scenarioQuality).toEqual(finalQuality);
+    expect(milestoneInput.result.scenarioQuality).toMatchObject({
+      classification: "needsRevision",
+      critique: expect.stringContaining("Revise the Candidate"),
+    });
+    expect(finalInput.result.scenarioQuality).toMatchObject({
+      classification: "ready",
+    });
+    expect(milestoneSubject.candidateId).not.toBe(finalSubject.candidateId);
+    expect(milestoneSubject.candidateScenarioSha256).not.toBe(
+      finalSubject.candidateScenarioSha256,
+    );
+    expect(finalSubject.candidateScenarioSha256).toBe(input.scenarioSha256);
+    expect(
+      readFileSync(resolve(repoRoot, generationLedgerRelative), "utf8")
+        .trim()
+        .split("\n")
+        .map((line) => parseJsonRecord(line).invocationId),
+    ).toEqual([
+      "iteration-one-generation",
+      "iteration-two-revision",
+      "iteration-two-milestone",
+      "iteration-three-generation",
+      "iteration-three-final",
+    ]);
+
+    const projection = projectExecutionFindings({
+      transcriptPath: input.transcriptRelative,
+      evidenceSetDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [generationLedgerRelative],
+      reviewReplay: {
+        tag: "milestoneAndFinal",
+        milestonePath: relative(repoRoot, milestonePath),
+        finalPath: relative(repoRoot, finalPath),
+      },
+      issueLinks: [],
+    });
+
+    expect(projection.authorities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ role: "replay-milestone" }),
+        expect.objectContaining({ role: "replay-final" }),
+        expect.objectContaining({
+          role: "campaign",
+          path: relative(repoRoot, resolve(input.root, "campaign.json")),
+        }),
+      ]),
+    );
+    expect(
+      projection.authorities.filter(({ role }) => role.startsWith("replay-")),
+    ).toHaveLength(2);
+    const finalLedgerValue = readFileSync(
+      resolve(repoRoot, generationLedgerRelative),
+      "utf8",
+    )
+      .trim()
+      .split("\n")
+      .map(parseJsonRecord)
+      .find(({ invocationId }) => invocationId === "iteration-three-final");
+    if (finalLedgerValue === undefined) {
+      throw new Error("Synthetic final Candidate ledger entry is incomplete.");
+    }
+    const finalLedgerEntry = parseModelInvocationLedgerEntry(finalLedgerValue);
+    const finalReplayInput = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(finalInput);
+    expect(Either.isRight(finalLedgerEntry)).toBe(true);
+    expect(Either.isRight(finalReplayInput)).toBe(true);
+    if (Either.isLeft(finalLedgerEntry) || Either.isLeft(finalReplayInput)) {
+      return;
+    }
+    const finalBinding = retainedScenarioReviewMatchesReplayBinding(
+      finalReplayInput.right,
+      finalLedgerEntry.right,
+      {
+        tag: "candidate",
+        reviewStage: "final",
+        scenarioId: "findings-example",
+        admittedScenarioSha256: input.scenarioSha256,
+        campaign: findingsCampaignManifest(input.root),
+      },
+    );
+    expect(Either.isRight(finalBinding)).toBe(true);
+    if (Either.isLeft(finalBinding)) return;
+    expect(finalBinding.right).toMatchObject({
+      tag: "candidate",
+      retainedInput: { subject: finalSubject },
+      ledgerEntry: { subject: finalSubject },
+    });
+    expect(finalBinding.right).not.toHaveProperty("candidateScenarioSha256");
+    expect(finalBinding.right).not.toHaveProperty("campaign");
+
+    const milestoneLedgerValue = readFileSync(
+      resolve(repoRoot, generationLedgerRelative),
+      "utf8",
+    )
+      .trim()
+      .split("\n")
+      .map(parseJsonRecord)
+      .find(({ invocationId }) => invocationId === "iteration-two-milestone");
+    if (milestoneLedgerValue === undefined) {
+      throw new Error(
+        "Synthetic milestone Candidate ledger entry is incomplete.",
+      );
+    }
+    const milestoneLedgerEntry =
+      parseModelInvocationLedgerEntry(milestoneLedgerValue);
+    const milestoneReplayInput = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(milestoneInput);
+    expect(Either.isRight(milestoneLedgerEntry)).toBe(true);
+    expect(Either.isRight(milestoneReplayInput)).toBe(true);
+    if (
+      Either.isLeft(milestoneLedgerEntry) ||
+      Either.isLeft(milestoneReplayInput)
+    ) {
+      return;
+    }
+    const milestoneBinding = retainedScenarioReviewMatchesReplayBinding(
+      milestoneReplayInput.right,
+      milestoneLedgerEntry.right,
+      {
+        tag: "candidate",
+        reviewStage: "milestone",
+        scenarioId: "findings-example",
+        campaign: findingsCampaignManifest(input.root),
+      },
+    );
+    expect(Either.isRight(milestoneBinding)).toBe(true);
+    if (Either.isLeft(milestoneBinding)) return;
+    expect(milestoneBinding.right).toMatchObject({
+      tag: "candidate",
+      retainedInput: { subject: milestoneSubject },
+      ledgerEntry: { subject: milestoneSubject },
+    });
+    expect(milestoneBinding.right).not.toHaveProperty(
+      "candidateScenarioSha256",
+    );
+  });
+
+  test("accepts an exact historical v2 composite-review ledger row", () => {
+    const input = fixture();
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      FINDINGS_REVIEW_SUBJECT,
+      {
+        reviewEntries: [
+          {
+            invocationId: "historical-final",
+            reviewStage: "final",
+            subject: FINDINGS_REVIEW_SUBJECT,
+            ledgerSchemaVersion: 2,
+          },
+        ],
+      },
+    );
+    const finalPath = resolve(input.root, "historical-final.json");
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "historical-final",
+        }),
+      )}\n`,
+    );
+
+    const projection = projectExecutionFindings({
+      transcriptPath: input.transcriptRelative,
+      evidenceSetDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [generationLedgerRelative],
+      reviewReplay: {
+        tag: "finalOnly",
+        finalPath: relative(repoRoot, finalPath),
+      },
+      issueLinks: [],
+    });
+
+    expect(
+      projection.authorities.some(({ role }) => role === "replay-final"),
+    ).toBe(true);
+    const retained = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(parseJsonRecord(readFileSync(finalPath, "utf8")));
+    const ledgerEntry = parseModelInvocationLedgerEntry(
+      parseJsonRecord(
+        readFileSync(resolve(repoRoot, generationLedgerRelative), "utf8"),
+      ),
+    );
+    expect(Either.isRight(retained)).toBe(true);
+    expect(Either.isRight(ledgerEntry)).toBe(true);
+    if (Either.isLeft(retained) || Either.isLeft(ledgerEntry)) return;
+    const binding = retainedScenarioReviewMatchesReplayBinding(
+      retained.right,
+      ledgerEntry.right,
+      {
+        tag: "historicalScenario",
+        reviewStage: "final",
+        scenarioId: "findings-example",
+        admittedScenarioSha256: input.scenarioSha256,
+        campaign: findingsCampaignManifest(input.root),
+      },
+    );
+    expect(Either.isRight(binding)).toBe(true);
+    if (Either.isLeft(binding)) return;
+    expect(binding.right).toMatchObject({
+      tag: "historicalScenario",
+      retainedInput: { scenarioId: "findings-example" },
+      ledgerEntry: {
+        schemaVersion: 2,
+        scenarioId: "findings-example",
+      },
+    });
+    expect(binding.right).not.toHaveProperty("scenarioId");
+    expect(binding.right).not.toHaveProperty("envelopeSubject");
+    expect(binding.right).not.toHaveProperty("ledgerSchemaVersion");
+    expect(binding.right).not.toHaveProperty("campaign");
+  });
+
+  test("binds a current v5 fixed-benchmark replay to benchmark lifecycle ownership", () => {
+    const benchmarkSubject = {
+      tag: "benchmark" as const,
+      benchmarkId: "synthetic-fixed-benchmark",
+      profile: "boundedCapabilityProjection" as const,
+      scenarioId: "findings-example",
+    };
+    const ledger = parseModelInvocationLedgerEntry({
+      schemaVersion: 5,
+      subject: benchmarkSubject,
+      invocationId: "benchmark-final",
+      model: "gpt-5.6-luna",
+      reasoningEffort: "medium",
+      phase: "scenarioCompositeReview",
+      stagePlanReason: "The fixed benchmark requires a final review.",
+      gitSha: "a".repeat(40),
+      eventsSha256: "b".repeat(64),
+      startedAt: "2026-08-18T00:00:00.000Z",
+      elapsedMilliseconds: 10,
+      exit: { tag: "exited", status: 0 },
+      result: { tag: "succeeded" },
+      usage: { tag: "unavailable", reason: "synthetic" },
+    });
+    const replay = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )({
+      schemaVersion: 3,
+      phase: "scenarioCompositeReview",
+      reviewStage: "final",
+      sourceGitSha: "a".repeat(40),
+      invocationId: "benchmark-final",
+      model: "gpt-5.6-luna",
+      reasoningEffort: "medium",
+      prompt: "Synthetic fixed benchmark final review.",
+      outputJsonSchema: codexOutputJsonSchema(
+        CurrentScenarioCompositeReviewSchema,
+      ),
+      result: {
+        raw: { classification: "supported", evidence: "RAW." },
+        contentAvailability: {
+          classification: "supplied",
+          evidence: "Catalog.",
+        },
+        sdkCapability: { classification: "supported", evidence: "SDK." },
+        artifactPolicy: { classification: "safe", evidence: "Policy." },
+        scenarioQuality: { classification: "ready", evidence: "Quality." },
+      },
+      subject: benchmarkSubject,
+    });
+    expect(Either.isRight(ledger)).toBe(true);
+    expect(Either.isRight(replay)).toBe(true);
+    if (Either.isLeft(ledger) || Either.isLeft(replay)) return;
+    const binding = retainedScenarioReviewMatchesReplayBinding(
+      replay.right,
+      ledger.right,
+      {
+        tag: "benchmark",
+        reviewStage: "final",
+        scenarioId: "findings-example",
+        benchmark: {
+          benchmarkId: "synthetic-fixed-benchmark",
+          profile: "boundedCapabilityProjection",
+        },
+      },
+    );
+    expect(Either.isRight(binding)).toBe(true);
+    if (Either.isLeft(binding)) return;
+    expect(binding.right).toMatchObject({
+      tag: "benchmark",
+      retainedInput: { subject: benchmarkSubject },
+      ledgerEntry: { schemaVersion: 5, subject: benchmarkSubject },
+    });
+  });
+
+  test("projects a fresh v5 fixed-benchmark replay without a Campaign manifest", () => {
+    const input = fixture();
+    const subject = {
+      tag: "benchmark" as const,
+      benchmarkId: "synthetic-fixed-benchmark",
+      profile: "boundedCapabilityProjection" as const,
+      scenarioId: "findings-example" as const,
+    };
+    const generationLedgerRelative = retainedBenchmarkReviewLedger(
+      input.root,
+      subject,
+    );
+    const finalPath = resolve(input.root, "benchmark-final.json");
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedBenchmarkCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "benchmark-final",
+          subject,
+        }),
+      )}\n`,
+    );
+
+    const projection = projectExecutionFindings({
+      transcriptPath: input.transcriptRelative,
+      evidenceSetDirectory: input.runRelative,
+      reviewPaths: [input.reviewRelative],
+      scenarioReviewPaths: [],
+      generationLedgerPaths: [generationLedgerRelative],
+      reviewReplay: {
+        tag: "finalOnly",
+        finalPath: relative(repoRoot, finalPath),
+      },
+      issueLinks: [],
+    });
+
+    expect(projection.authorities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ role: "replay-final" }),
+        expect.objectContaining({
+          role: "prePlayReviewReplayEvents-final",
+        }),
+      ]),
+    );
+    expect(projection.authorities.some(({ role }) => role === "campaign")).toBe(
+      false,
+    );
+  });
+
+  test("accepts a historical envelope paired with migrated v4 Candidate ownership", () => {
+    const input = fixture();
+    const candidateSubject = {
+      tag: "scenarioCandidate",
+      campaignId: "findings-campaign",
+      evidenceSetId: "findings-campaign-evidence",
+      candidateId: "findings-candidate",
+      candidateScenarioSha256: input.scenarioSha256,
+      plannedScenarioId: "findings-example",
+    } as const satisfies CompositeReviewFixtureSubject;
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      candidateSubject,
+      {
+        reviewEntries: [
+          {
+            invocationId: "historical-v4-candidate",
+            reviewStage: "final",
+            subject: candidateSubject,
+            ledgerSchemaVersion: 4,
+          },
+        ],
+      },
+    );
+    const retained = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(
+      retainedCompositeReviewInput({
+        reviewStage: "final",
+        invocationId: "historical-v4-candidate",
+      }),
+    );
+    const ledger = parseModelInvocationLedgerEntry(
+      parseJsonRecord(
+        readFileSync(resolve(repoRoot, generationLedgerRelative), "utf8"),
+      ),
+    );
+    expect(Either.isRight(retained)).toBe(true);
+    expect(Either.isRight(ledger)).toBe(true);
+    if (Either.isLeft(retained) || Either.isLeft(ledger)) return;
+    const binding = retainedScenarioReviewMatchesReplayBinding(
+      retained.right,
+      ledger.right,
+      {
+        tag: "historicalScenario",
+        reviewStage: "final",
+        scenarioId: "findings-example",
+        admittedScenarioSha256: input.scenarioSha256,
+        campaign: findingsCampaignManifest(input.root),
+      },
+    );
+    expect(Either.isRight(binding)).toBe(true);
+    if (Either.isLeft(binding)) return;
+    expect(binding.right).toMatchObject({
+      tag: "historicalScenario",
+      retainedInput: { scenarioId: "findings-example" },
+      ledgerEntry: { schemaVersion: 4, subject: candidateSubject },
+    });
+    expect(binding.right).not.toHaveProperty("scenarioId");
+    expect(binding.right).not.toHaveProperty("envelopeSubject");
+    expect(binding.right).not.toHaveProperty("campaign");
+
+    const sameOwnerWrongHashLedger = {
+      ...ledger.right,
+      subject: {
+        ...candidateSubject,
+        candidateScenarioSha256: "f".repeat(64),
+      },
+    };
+    const sameOwnerWrongHashBinding =
+      retainedScenarioReviewMatchesReplayBinding(
+        retained.right,
+        sameOwnerWrongHashLedger,
+        {
+          tag: "historicalScenario",
+          reviewStage: "final",
+          scenarioId: "findings-example",
+          admittedScenarioSha256: input.scenarioSha256,
+          campaign: findingsCampaignManifest(input.root),
+        },
+      );
+    expect(Either.isLeft(sameOwnerWrongHashBinding)).toBe(true);
+    if (Either.isRight(sameOwnerWrongHashBinding)) return;
+    expect(sameOwnerWrongHashBinding.left).toContain(
+      "admitted Scenario source hash",
+    );
+
+    const foreignLedger = {
+      ...ledger.right,
+      subject: {
+        ...candidateSubject,
+        campaignId: "foreign-campaign",
+        evidenceSetId: "foreign-evidence",
+      },
+    };
+    const foreignBinding = retainedScenarioReviewMatchesReplayBinding(
+      retained.right,
+      foreignLedger,
+      {
+        tag: "historicalScenario",
+        reviewStage: "final",
+        scenarioId: "findings-example",
+        admittedScenarioSha256: input.scenarioSha256,
+        campaign: findingsCampaignManifest(input.root),
+      },
+    );
+    expect(Either.isLeft(foreignBinding)).toBe(true);
+    if (Either.isRight(foreignBinding)) return;
+    expect(foreignBinding.left).toMatch(/Campaign, Evidence Set/);
+  });
+
+  test("rejects a current same-name Scenario replay under Campaign ownership", () => {
+    const input = fixture();
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      FINDINGS_REVIEW_SUBJECT,
+      {
+        reviewEntries: [
+          {
+            invocationId: "current-same-name",
+            reviewStage: "final",
+            subject: FINDINGS_REVIEW_SUBJECT,
+            ledgerSchemaVersion: 5,
+          },
+        ],
+      },
+    );
+    const historical = retainedCompositeReviewInput({
+      reviewStage: "final",
+      invocationId: "current-same-name",
+    });
+    const { scenarioId: _scenarioId, ...common } = historical;
+    const currentInput = {
+      ...common,
+      schemaVersion: 3 as const,
+      outputJsonSchema: codexOutputJsonSchema(
+        CurrentScenarioCompositeReviewSchema,
+      ),
+      subject: FINDINGS_REVIEW_SUBJECT,
+    };
+    const finalPath = resolve(input.root, "current-same-name.json");
+    writeFileSync(finalPath, `${JSON.stringify(currentInput)}\n`);
+
+    expect(() =>
+      projectExecutionFindings({
+        transcriptPath: input.transcriptRelative,
+        evidenceSetDirectory: input.runRelative,
+        reviewPaths: [input.reviewRelative],
+        scenarioReviewPaths: [],
+        generationLedgerPaths: [generationLedgerRelative],
+        reviewReplay: {
+          tag: "finalOnly",
+          finalPath: relative(repoRoot, finalPath),
+        },
+        issueLinks: [],
+      }),
+    ).toThrow(
+      /lifecycle scenario, not expected candidate|different findings identity/,
+    );
+  });
+
+  test("preserves a revised Candidate hash at the historical milestone", () => {
+    const input = fixture();
+    const candidateSubject = {
+      tag: "scenarioCandidate",
+      campaignId: "findings-campaign",
+      evidenceSetId: "findings-campaign-evidence",
+      candidateId: "findings-milestone-candidate",
+      candidateScenarioSha256: "f".repeat(64),
+      plannedScenarioId: "findings-example",
+    } as const satisfies CompositeReviewFixtureSubject;
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      candidateSubject,
+      {
+        reviewEntries: [
+          {
+            invocationId: "historical-v4-milestone",
+            reviewStage: "milestone",
+            subject: candidateSubject,
+            ledgerSchemaVersion: 4,
+          },
+        ],
+      },
+    );
+    const retained = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(
+      retainedCompositeReviewInput({
+        reviewStage: "milestone",
+        invocationId: "historical-v4-milestone",
+      }),
+    );
+    const ledger = parseModelInvocationLedgerEntry(
+      parseJsonRecord(
+        readFileSync(resolve(repoRoot, generationLedgerRelative), "utf8"),
+      ),
+    );
+    expect(Either.isRight(retained)).toBe(true);
+    expect(Either.isRight(ledger)).toBe(true);
+    if (Either.isLeft(retained) || Either.isLeft(ledger)) return;
+    const binding = retainedScenarioReviewMatchesReplayBinding(
+      retained.right,
+      ledger.right,
+      {
+        tag: "historicalScenario",
+        reviewStage: "milestone",
+        scenarioId: "findings-example",
+        campaign: findingsCampaignManifest(input.root),
+      },
+    );
+    expect(Either.isRight(binding)).toBe(true);
+  });
+
+  test("rejects replay when the generation Campaign manifest is missing", () => {
+    const input = fixture();
+    const generationLedgerRelative = retainedGenerationReviewLedger(input.root);
+    rmSync(resolve(input.root, "campaign.json"), { force: true });
+    const finalPath = resolve(input.root, "original-final.json");
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "original-final",
+        }),
+      )}\n`,
+    );
+
+    expect(() =>
+      projectExecutionFindings({
+        transcriptPath: input.transcriptRelative,
+        evidenceSetDirectory: input.runRelative,
+        reviewPaths: [input.reviewRelative],
+        scenarioReviewPaths: [],
+        generationLedgerPaths: [generationLedgerRelative],
+        reviewReplay: {
+          tag: "finalOnly",
+          finalPath: relative(repoRoot, finalPath),
+        },
+        issueLinks: [],
+      }),
+    ).toThrow(/Campaign manifest|required Campaign identity/);
+  });
+
+  test("rejects a historical milestone envelope with a foreign scenario identity", () => {
+    const input = fixture();
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      FINDINGS_REVIEW_SUBJECT,
+      {
+        reviewEntries: [
+          {
+            invocationId: "historical-milestone",
+            reviewStage: "milestone",
+            subject: FINDINGS_REVIEW_SUBJECT,
+            ledgerSchemaVersion: 2,
+          },
+          {
+            invocationId: "historical-final",
+            reviewStage: "final",
+            subject: FINDINGS_REVIEW_SUBJECT,
+            ledgerSchemaVersion: 2,
+          },
+        ],
+      },
+    );
+    const foreignMilestone = {
+      ...retainedCompositeReviewInput({
+        reviewStage: "milestone",
+        invocationId: "historical-milestone",
+      }),
+      scenarioId: "foreign-scenario",
+    };
+    const finalInput = retainedCompositeReviewInput({
+      reviewStage: "final",
+      invocationId: "historical-final",
+    });
+    const milestonePath = resolve(input.root, "historical-milestone.json");
+    const finalPath = resolve(input.root, "historical-final.json");
+    writeFileSync(milestonePath, `${JSON.stringify(foreignMilestone)}\n`);
+    writeFileSync(finalPath, `${JSON.stringify(finalInput)}\n`);
+
+    expect(() =>
+      projectExecutionFindings({
+        transcriptPath: input.transcriptRelative,
+        evidenceSetDirectory: input.runRelative,
+        reviewPaths: [input.reviewRelative],
+        scenarioReviewPaths: [],
+        generationLedgerPaths: [generationLedgerRelative],
+        reviewReplay: {
+          tag: "milestoneAndFinal",
+          milestonePath: relative(repoRoot, milestonePath),
+          finalPath: relative(repoRoot, finalPath),
+        },
+        issueLinks: [],
+      }),
+    ).toThrow(/Historical review invocation .*expected scenario/);
+  });
+
+  test("rejects a cross-campaign Candidate replay with the same scenario hash", () => {
+    const input = fixture();
+    const expectedSubject = {
+      tag: "scenarioCandidate",
+      campaignId: "findings-campaign",
+      evidenceSetId: "findings-campaign-evidence",
+      candidateId: "findings-final-candidate",
+      candidateScenarioSha256: input.scenarioSha256,
+      plannedScenarioId: "findings-example",
+    } as const satisfies CompositeReviewFixtureSubject;
+    const generationLedgerRelative = retainedGenerationReviewLedger(
+      input.root,
+      expectedSubject,
+      {
+        reviewEntries: [
+          {
+            invocationId: "cross-campaign-final",
+            reviewStage: "final",
+            subject: expectedSubject,
+          },
+        ],
+        campaignIdentity: {
+          campaignId: "findings-campaign",
+          evidenceSetId: "findings-campaign-evidence",
+          plannedScenarioId: "findings-example",
+        },
+      },
+    );
+    const foreignSubject = {
+      ...expectedSubject,
+      campaignId: "foreign-campaign",
+      evidenceSetId: "foreign-evidence",
+    } as const;
+    const finalPath = resolve(input.root, "cross-campaign-final.json");
+    writeFileSync(
+      finalPath,
+      `${JSON.stringify(
+        retainedCandidateCompositeReviewInput({
+          reviewStage: "final",
+          invocationId: "cross-campaign-final",
+          subject: foreignSubject,
+        }),
+      )}\n`,
+    );
+
+    expect(() =>
+      projectExecutionFindings({
+        transcriptPath: input.transcriptRelative,
+        evidenceSetDirectory: input.runRelative,
+        reviewPaths: [input.reviewRelative],
+        scenarioReviewPaths: [],
+        generationLedgerPaths: [generationLedgerRelative],
+        reviewReplay: {
+          tag: "finalOnly",
+          finalPath: relative(repoRoot, finalPath),
+        },
+        issueLinks: [],
+      }),
+    ).toThrow(/Campaign and Evidence Set|lifecycle subject/);
+  });
+
   test("retains original milestone/final composite-review envelopes as replay authorities without ledger rows", () => {
     const input = fixture();
     const generationLedgerRelative = retainedGenerationReviewLedger(input.root);
@@ -1108,6 +2320,128 @@ describe("Raw Swarm findings projection", () => {
       tag: "invalid",
       message: /transcript-free subject cannot have a transcript authority/,
     });
+  });
+
+  test("admits only a verified adjacent Campaign raw-retention artifact", () => {
+    const root = directory();
+    const campaign = resolve(root, "campaign.json");
+    const ledger = resolve(root, "generation.jsonl");
+    const eventsPath = resolve(root, "scenarioGeneration-failed.events.jsonl");
+    const rawPath = `${eventsPath}.codex-raw`;
+    writeFileSync(
+      campaign,
+      `${JSON.stringify({
+        type: "raw-swarm-scenario-campaign",
+        schemaVersion: 1,
+        campaignId: "generation-campaign",
+        plannedScenarioId: "generation-example",
+        evidenceSetId: "generation-evidence",
+        gitSha: "a".repeat(40),
+        startedAt: "2026-08-18T00:00:00.000Z",
+        configSha256: "c".repeat(64),
+      })}\n`,
+    );
+    const rawContents = Buffer.from("failed Campaign raw output\n", "utf8");
+    writeFileSync(rawPath, rawContents);
+    const events = [
+      {
+        type: "raw-swarm.invocation.started",
+        schemaVersion: 5,
+        subject: {
+          tag: "scenarioCampaign",
+          campaignId: "generation-campaign",
+          evidenceSetId: "generation-evidence",
+          plannedScenarioId: "generation-example",
+        },
+        gitSha: "a".repeat(40),
+        phase: "scenarioGeneration",
+        stagePlanReason: "The Campaign requires scenario generation.",
+        fallbackInvocationId: "failed-generation",
+        model: "gpt-5.6-sol",
+        reasoningEffort: "medium",
+        startedAt: "2026-08-18T00:00:00.000Z",
+      },
+      {
+        type: "raw-swarm.invocation.codex-raw-retained",
+        source: "settledSidecar",
+        reason: "failedInvocation",
+        rawContentsSha256: createHash("sha256")
+          .update(rawContents)
+          .digest("hex"),
+        rawContentsByteLength: rawContents.byteLength,
+      },
+      {
+        type: "raw-swarm.invocation.completed",
+        schemaVersion: 5,
+        elapsedMilliseconds: 2,
+        exit: { tag: "exited", status: 7 },
+        result: { tag: "failed", reason: "Synthetic Campaign failure." },
+      },
+    ] as const;
+    writeFileSync(
+      eventsPath,
+      `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
+    );
+    const derived = modelInvocationEvidenceFromEvents(events);
+    if (derived.tag === "invalid") throw new Error(derived.message);
+    writeFileSync(
+      ledger,
+      `${JSON.stringify({
+        ...derived.entry,
+        eventsSha256: invocationEventsSha256(eventsPath),
+      })}\n`,
+    );
+    const input = {
+      disposition: {
+        tag: "campaignFailure" as const,
+        reason: "The Campaign retained a failed generation invocation.",
+      },
+      authorityPaths: [
+        { role: "campaign", path: relative(repoRoot, campaign) },
+        { role: "generationLedger", path: relative(repoRoot, ledger) },
+      ],
+      generationLedgerPaths: [relative(repoRoot, ledger)],
+      generationEventPaths: [eventsPath],
+      scenarioReviewPaths: [],
+      stagePlanPaths: [],
+      stagePlanFindingsPaths: [],
+    } as const;
+    const projection = projectGenerationFindings(input);
+    expect(projection.authorities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: relative(repoRoot, rawPath) }),
+      ]),
+    );
+    const findingsPath = resolve(root, "findings.json");
+    writeFindingsProjection({
+      projection,
+      path: relative(repoRoot, findingsPath),
+    });
+    const dbPath = resolve(root, "generation.sqlite");
+    expect(
+      ingestGenerationFindings({
+        findingsPath: relative(repoRoot, findingsPath),
+        dbPath: relative(repoRoot, dbPath),
+      }),
+    ).toBe(1);
+    const portablePath = resolve(root, "portable");
+    const portable = exportArtifactIndex({ dbPath, destination: portablePath });
+    expect(portable.artifacts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sha256: createHash("sha256").update(rawContents).digest("hex"),
+          byteLength: rawContents.byteLength,
+        }),
+      ]),
+    );
+    writeFileSync(rawPath, "substituted\n");
+    expect(() => projectGenerationFindings(input)).toThrow(
+      /does not match its canonical event/,
+    );
+    rmSync(rawPath);
+    expect(() => projectGenerationFindings(input)).toThrow(
+      /Raw retention artifact is missing/,
+    );
   });
 
   test("projects and indexes a generation rejection without inventing a transcript", () => {

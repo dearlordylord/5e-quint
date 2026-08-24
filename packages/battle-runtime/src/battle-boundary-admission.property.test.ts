@@ -1584,7 +1584,11 @@ describe("battle boundary admission owners", () => {
     }
     expect(
       opportunityAttackReactionChoices(setup.result.state, goblinId, [
-        { reactorId: fighterId, ...meleeSelection },
+        {
+          reactorId: fighterId,
+          distanceFeet: movementFeet(5),
+          ...meleeSelection,
+        },
       ]),
     ).toMatchObject([
       {
@@ -2148,7 +2152,11 @@ describe("battle boundary admission owners", () => {
     if (meleeThreat === undefined) {
       throw new Error("Expected canonical melee opportunity threat.");
     }
-    const threat = { reactorId: fighterId, ...meleeThreat };
+    const threat = {
+      reactorId: fighterId,
+      distanceFeet: movementFeet(5),
+      ...meleeThreat,
+    };
     const withThreat = simpleMovementFill(movementHoleValue, {
       provokedOpportunityAttacks: [threat],
     });

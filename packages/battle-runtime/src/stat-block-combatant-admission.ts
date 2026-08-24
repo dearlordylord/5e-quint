@@ -1,4 +1,5 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import type { Condition } from "@dnd/shared/game-facts";
 import { Hp, type Size } from "@dnd/shared/types";
 import type { StatBlockMechanics } from "@dnd/surface/surface/types";
 import { Brand } from "effect";
@@ -13,6 +14,7 @@ import {
 import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
 
 const AdmittedBattleStatBlockCombatant =
   Brand.nominal<AdmittedBattleStatBlockCombatant>();
@@ -35,6 +37,21 @@ export type BattleStatBlockCombatantSource = {
 
 const BattleStatBlockCombatantSource =
   Brand.nominal<BattleStatBlockCombatantSource>();
+
+export function statBlockInitialConditionImmunityIssue(
+  source: BattleStatBlockCombatantSource,
+  conditions: readonly Condition[],
+): BattleStateInitLeafIssue | null {
+  const immuneInitialCondition = conditions.find((condition) =>
+    source.statBlock.immunities?.conditions?.includes(condition),
+  );
+  return immuneInitialCondition === undefined
+    ? null
+    : {
+        tag: "battleStateInitIssue",
+        message: `Stat Block combatant is immune to initial ${immuneInitialCondition} condition.`,
+      };
+}
 
 export function admitBattleStatBlockCombatant(input: {
   readonly battleId: Parameters<typeof statBlockExecutionAdmissionCohort>[0];

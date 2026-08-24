@@ -241,6 +241,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
             provokedOpportunityAttacks: [
               {
                 reactorId: skeletonId,
+                distanceFeet: movementFeet(5),
                 ...attackExecutionSelectionForSubjectForTest(
                   characterAttackSubjectForTest(
                     fighterTurn,

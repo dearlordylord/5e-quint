@@ -55,6 +55,7 @@ import {
   scenarioBattleResultWithD20TestCircumstances,
   scenarioD20TestCircumstancePreparation,
   scenarioD20TestResolutionId,
+  projectGeometryTargetHoles,
   scenarioSessionAfterD20TestCircumstanceResolution,
   scenarioSessionWithBattleResult,
   scenarioTokenId,
@@ -447,7 +448,15 @@ function retainScenarioBattlefield(
             session,
             issue: updated.left,
           }
-        : { ...needsHoles, session: updated.right };
+        : {
+            ...needsHoles,
+            holes: projectGeometryTargetHoles({
+              session,
+              subject: needsHoles.subject,
+              holes: needsHoles.holes,
+            }),
+            session: updated.right,
+          };
     }),
     byResolutionTag("invalid", (invalid) => {
       const updated =

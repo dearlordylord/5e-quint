@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 
 import { afterEach, describe, expect, test } from "vitest";
 
+import { artifactAuthority } from "./artifact-authority.ts";
 import {
   compareControlledExecutions,
   readControlledPerformance,
@@ -309,6 +310,32 @@ describe("whole-path performance evidence", () => {
     const summaryPath = resolve(directory, "summary.json");
     writeFileSync(summaryPath, `${JSON.stringify(summary)}\n`);
     expect(readControlledPerformance(summaryPath)).toEqual(summary);
+
+    const rawPath = resolve(directory, "unmanifested-invocation.codex-raw");
+    const rawContents = "synthetic raw invocation output\n";
+    writeFileSync(rawPath, rawContents);
+    const rawAuthority = artifactAuthority(rawPath);
+    const summaryWithRawAuthority = {
+      ...summary,
+      sources: {
+        ...summary.sources,
+        invocationRawArtifacts: [rawAuthority],
+      },
+    };
+    writeFileSync(summaryPath, `${JSON.stringify(summaryWithRawAuthority)}\n`);
+    rmSync(rawPath);
+    expect(() => readControlledPerformance(summaryPath)).toThrow(
+      /inconsistent derivations/,
+    );
+    writeFileSync(rawPath, rawContents);
+    expect(() => readControlledPerformance(summaryPath)).toThrow(
+      /raw invocation artifact authorities that do not match its review invocation manifest/,
+    );
+    writeFileSync(rawPath, "tampered raw invocation output\n");
+    expect(() => readControlledPerformance(summaryPath)).toThrow(
+      /inconsistent derivations/,
+    );
+    writeFileSync(summaryPath, `${JSON.stringify(summary)}\n`);
     writeFileSync(
       summaryPath,
       `${JSON.stringify({

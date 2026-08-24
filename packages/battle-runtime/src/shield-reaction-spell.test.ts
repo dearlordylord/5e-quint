@@ -357,6 +357,7 @@ describe("Shield Reaction spell", () => {
           provokedOpportunityAttacks: [
             {
               reactorId: attackerThreeId,
+              distanceFeet: movementFeet(5),
               ...unarmedStrikeSelection(casterTurn, attackerThreeId),
             },
           ],
@@ -1168,10 +1169,11 @@ function attackTargetFill(
     value: targetId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId,
         targetId,
         ...hole.attack.selection,
+        distanceFeet: movementFeet(5),
       },
     ],
   };

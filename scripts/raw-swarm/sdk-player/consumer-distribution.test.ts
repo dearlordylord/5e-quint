@@ -21,7 +21,7 @@ import { buildSync } from "esbuild";
 
 import { capabilityContextForRole } from "../capability-projection.ts";
 import { benchmarkContextForRole } from "../benchmark-context.ts";
-import { repoRoot } from "../transcript.ts";
+import { isJsonRecord, repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import {
   assertPublicDeclarationBundle,
@@ -31,6 +31,7 @@ import {
 } from "./consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
+import { parseSdkTranscript } from "./sdk-transcript.ts";
 
 const CONSUMER_SCENARIO_ID = "ready-mixed-consumer";
 const SUPERVISOR_HANDOFF_STARTED_AT = "2026-08-21T08:00:00.000Z";
@@ -1134,6 +1135,174 @@ export const continueBattle: PlayerContinuation = (context) => {
           conclusion:
             "The retained Table movement transcript reached terminal resolution.",
         });
+        expect(
+          execFileSync(process.execPath, [supervisor, "replay"], {
+            cwd: trustedDestination,
+            encoding: "utf8",
+          }),
+        ).toContain("2 call(s) matched");
+      } finally {
+        rmSync(destination, { recursive: true, force: true });
+        rmSync(trustedDestination, { recursive: true, force: true });
+      }
+    },
+    CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
+  );
+
+  test(
+    "projects the geometry attack target frontier through a supervisor continuation",
+    async () => {
+      const destination = mkdtempSync(join(tmpdir(), "dnd-player-attack-"));
+      const trustedDestination = mkdtempSync(
+        join(tmpdir(), "dnd-player-attack-supervisor-"),
+      );
+      try {
+        await execFileAsync(
+          "pnpm",
+          [
+            "exec",
+            "tsx",
+            "scripts/raw-swarm/sdk-player/consumer-distribution-cli.ts",
+            destination,
+            trustedDestination,
+            resolve(
+              repoRoot,
+              "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
+            ),
+          ],
+          {
+            cwd: repoRoot,
+            timeout: CONSUMER_DISTRIBUTION_TEST_TIMEOUT_MILLISECONDS,
+          },
+        );
+        mkdirSync(join(trustedDestination, "evidence"), {
+          recursive: true,
+        });
+        copyFileSync(
+          resolve(
+            repoRoot,
+            "scripts/raw-swarm/sdk-player/test-fixtures/ready-fighter.characters.ts",
+          ),
+          join(trustedDestination, "evidence/characters.ts"),
+        );
+        copyFileSync(
+          resolve(
+            repoRoot,
+            "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.setup.ts",
+          ),
+          join(trustedDestination, "evidence/setup.ts"),
+        );
+        writeFileSync(
+          join(destination, "attempt.ts"),
+          attemptSource(`  const attack = context.sdk
+    .discoverBattleActs(context.session)
+    .find(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.action === "attack" &&
+        subject.actorId === "external-fighter",
+    );
+  if (
+    attack === undefined ||
+    attack.subject.tag !== "action" ||
+    attack.subject.action !== "attack"
+  ) {
+    throw new Error("Expected External Fighter attack");
+  }
+  const awaitingTarget = context.sdk.resolveBattleRuntimeSubject({
+    session: context.session,
+    subject: attack.subject,
+    fills: [],
+  });
+  if (awaitingTarget.tag !== "needsHoles") {
+    throw new Error("Expected an attack target frontier");
+  }
+  const targetHole = awaitingTarget.holes.find(
+    (hole) => hole.kind === "targetChoice" && hole.attack !== undefined,
+  );
+  if (targetHole?.kind !== "targetChoice") {
+    throw new Error("Expected an attack target hole");
+  }
+  if (targetHole.requiresTableSpatialFact !== undefined) {
+    throw new Error("Geometry attack target retained a Table spatial hole");
+  }
+  if (
+    targetHole.choices.length !== 1 ||
+    targetHole.choices[0] !== "external-skeleton"
+  ) {
+    throw new Error("Expected only the in-reach Skeleton target");
+  }
+  return {
+    kind: "continue",
+    session: awaitingTarget.session,
+    tacticalNote: "Geometry attack target frontier retained the in-reach target.",
+  };`),
+        );
+
+        const supervisor = join(trustedDestination, "supervisor.mjs");
+        const supervisorOptions = {
+          cwd: trustedDestination,
+          env: { ...process.env, RAW_SWARM_PLAYER_ROOT: destination },
+          stdio: "pipe" as const,
+        };
+        execFileSync(
+          process.execPath,
+          [
+            supervisor,
+            "init",
+            "geometry-target-frontier",
+            "a".repeat(40),
+            "instructionalFallback",
+            SUPERVISOR_HANDOFF_STARTED_AT,
+            "b".repeat(64),
+            "c".repeat(64),
+            "d".repeat(64),
+          ],
+          supervisorOptions,
+        );
+        execFileSync(
+          process.execPath,
+          [supervisor, "attempt", join(destination, "attempt.ts")],
+          supervisorOptions,
+        );
+
+        const transcriptRecords = readFileSync(
+          join(trustedDestination, "evidence/sdk-calls.jsonl"),
+          "utf8",
+        )
+          .trim()
+          .split("\n")
+          .map((line): unknown => JSON.parse(line));
+        const parsedTranscript = parseSdkTranscript(transcriptRecords);
+        expect(parsedTranscript.tag).toBe("valid");
+        if (parsedTranscript.tag !== "valid") {
+          throw new Error(parsedTranscript.message);
+        }
+        expect(parsedTranscript.value.calls).toHaveLength(2);
+        const targetCall = parsedTranscript.value.calls[1];
+        expect(targetCall).toMatchObject({
+          operation: "resolveBattleRuntimeSubject",
+          outcome: "returned",
+          result: { tag: "needsHoles" },
+        });
+        if (targetCall === undefined || targetCall.outcome !== "returned") {
+          throw new Error("Expected projected battle resolution call");
+        }
+        const result = targetCall.result;
+        if (!isJsonRecord(result)) {
+          throw new Error("Expected projected battle resolution result");
+        }
+        const holes = result.holes;
+        if (!Array.isArray(holes)) {
+          throw new Error("Expected projected battle resolution holes");
+        }
+        const targetHole = holes.find(
+          (hole) => isJsonRecord(hole) && hole.kind === "targetChoice",
+        );
+        expect(targetHole).toMatchObject({
+          choices: ["external-skeleton"],
+        });
+        expect(targetHole).not.toHaveProperty("requiresTableSpatialFact");
         expect(
           execFileSync(process.execPath, [supervisor, "replay"], {
             cwd: trustedDestination,

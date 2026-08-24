@@ -301,6 +301,7 @@ export function statBlockCreature(input: {
       ammunitionStocks: requiredAmmunitionKinds(attacks).map((ammunition) =>
         battleAmmunitionStock(ammunition, 20),
       ),
+      conditions: [],
     },
   };
 }
@@ -697,20 +698,13 @@ export function attackTargetFill(
         }
       : {}),
     spatialFacts: [
-      hole.attack.targetConstraint.kind === "rangedRange"
-        ? {
-            kind: "attackTargetInRangedRange",
-            actorId,
-            targetId,
-            ...hole.attack.selection,
-            rangeBand: "normal",
-          }
-        : {
-            kind: "attackTargetInMeleeReach",
-            actorId,
-            targetId,
-            ...hole.attack.selection,
-          },
+      {
+        kind: "attackTargetDistance",
+        actorId,
+        targetId,
+        ...hole.attack.selection,
+        distanceFeet: movementFeet(5),
+      },
       ...extraSpatialFacts,
     ],
   };

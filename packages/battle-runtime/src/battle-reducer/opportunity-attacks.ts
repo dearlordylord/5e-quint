@@ -1,7 +1,11 @@
 import { Match } from "effect";
-import type { BoundSupportedAttackActionOption } from "../battle-action-options.ts";
+import {
+  attackExecutionSelectionForOption,
+  type BoundSupportedAttackActionOption,
+} from "../battle-action-options.ts";
 import { spendAmmunitionForAcceptedAttackPendingContinuation } from "../battle-ammunition.ts";
 // Opportunity attack resolution owns the movement-triggered Reaction procedure.
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
@@ -90,9 +94,11 @@ import {
 import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
+  attackTargetDistanceFeet,
   meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
+import { attackTargetIsLegal } from "./attack-spatial.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -117,6 +123,7 @@ import type {
   BattleResolutionInputForSubject,
   BattleResolutionResult,
   BattleState,
+  BattleTargetSpatialFact,
   WeaponDamageDiceRollChoiceFill,
 } from "../battle-state-execution.ts";
 import {
@@ -172,6 +179,7 @@ type ReactionAttackCommandContext = {
   readonly target: BattleCreatureState;
   readonly attack: BoundSupportedAttackActionOption;
   readonly fillSet: ResolvedAttackFillSet;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
 };
 
 type ReactionAttackRollPreparation =
@@ -326,7 +334,7 @@ function prepareReactionAttackRoll(
     input.input.subject.reactorId,
     input.input.subject.targetId,
     input.attack,
-    input.fillSet.targetSpatialFacts,
+    input.targetSpatialFacts,
   );
   const attackRoll = input.fillSet.attackRoll;
   if (attackRoll == null) {
@@ -461,12 +469,27 @@ function resolveReactionAttackCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
+  const targetSpatialFacts = reactionAttackTargetSpatialFacts({
+    state: input.state,
+    commandLabel,
+    subject,
+    attack,
+    fillSet,
+  });
+  if (targetSpatialFacts.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      targetSpatialFacts.message,
+    );
+  }
   const context: ReactionAttackCommandContext = {
     input,
     commandLabel,
     target,
     attack,
     fillSet,
+    targetSpatialFacts: targetSpatialFacts.facts,
   };
   const rollPreparation = prepareReactionAttackRoll(context);
   if (rollPreparation.tag === "result") return rollPreparation.result;
@@ -475,6 +498,89 @@ function resolveReactionAttackCommand(
     pendingAttackDamageReductions,
     rollPreparation,
   });
+}
+
+function reactionAttackTargetSpatialFacts(input: {
+  readonly state: BattleState;
+  readonly commandLabel: string;
+  readonly subject: OpportunityAttackResolutionInput["subject"];
+  readonly attack: BoundSupportedAttackActionOption;
+  readonly fillSet: ResolvedAttackFillSet;
+}):
+  | { readonly tag: "ok"; readonly facts: readonly BattleTargetSpatialFact[] }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const suppliedDistanceFeet = attackTargetDistanceFeet(
+    input.fillSet.targetSpatialFacts,
+    input.subject.reactorId,
+    input.subject.targetId,
+    input.attack,
+  );
+  if (
+    input.subject.command === "opportunityAttack" &&
+    suppliedDistanceFeet !== null &&
+    Number(suppliedDistanceFeet) !== Number(input.subject.distanceFeet)
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Opportunity Attack target distance must match the reach-leaving trigger distance.",
+    };
+  }
+  const distanceFact = reactionAttackDistanceFact({
+    subject: input.subject,
+    attack: input.attack,
+  });
+  const facts =
+    suppliedDistanceFeet !== null
+      ? input.fillSet.targetSpatialFacts
+      : distanceFact === undefined
+        ? undefined
+        : [...input.fillSet.targetSpatialFacts, distanceFact];
+  if (facts === undefined) {
+    return {
+      tag: "invalid",
+      message:
+        "Fixed-target reaction attacks require an exact attack target distance fact.",
+    };
+  }
+  if (
+    !attackTargetIsLegal(
+      input.state,
+      input.subject.reactorId,
+      input.subject.targetId,
+      input.attack,
+      facts,
+    )
+  ) {
+    return {
+      tag: "invalid",
+      message: `${input.commandLabel} target distance is outside the selected attack's legal range.`,
+    };
+  }
+  return {
+    tag: "ok",
+    facts,
+  };
+}
+
+function reactionAttackDistanceFact(input: {
+  readonly subject: OpportunityAttackResolutionInput["subject"];
+  readonly attack: BoundSupportedAttackActionOption;
+}):
+  | Extract<BattleTargetSpatialFact, { readonly kind: "attackTargetDistance" }>
+  | undefined {
+  return Match.value(input.subject).pipe(
+    Match.when({ command: "opportunityAttack" }, (subject) => ({
+      kind: "attackTargetDistance" as const,
+      actorId: subject.reactorId,
+      targetId: subject.targetId,
+      ...attackExecutionSelectionForOption(input.attack),
+      distanceFeet: subject.distanceFeet,
+    })),
+    Match.when({ command: "retaliationAttack" }, () => undefined),
+    Match.when({ command: "releaseReadiedAttack" }, () => undefined),
+    Match.exhaustive,
+  );
 }
 
 function resolveReactionAttackAfterRoll(afterRollInput: {
@@ -882,6 +988,7 @@ function resolveReactionAttackFixedDamage(
   return resolveReactionAttackDamageTransaction({
     resolutionInput,
     fillSet,
+    targetSpatialFacts: context.targetSpatialFacts,
     preConsumptionState: attackRolledState,
     target: input.target,
     attack: input.attack,
@@ -1026,6 +1133,7 @@ function resolveReactionAttackRolledDamage(
   return resolveReactionAttackDamageTransaction({
     resolutionInput,
     fillSet,
+    targetSpatialFacts: context.targetSpatialFacts,
     preConsumptionState: attackRolledState,
     target: input.target,
     attack: input.attack,
@@ -1048,6 +1156,7 @@ function resolveReactionAttackRolledDamage(
 function resolveReactionAttackDamageTransaction(input: {
   readonly resolutionInput: OpportunityAttackResolutionInput;
   readonly fillSet: ResolvedAttackFillSet;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
   readonly preConsumptionState: BattleState;
   readonly target: BattleCreatureState;
   readonly attack: BoundSupportedAttackActionOption;
@@ -1059,6 +1168,7 @@ function resolveReactionAttackDamageTransaction(input: {
   const {
     resolutionInput,
     fillSet,
+    targetSpatialFacts,
     preConsumptionState,
     target,
     attack,
@@ -1180,7 +1290,7 @@ function resolveReactionAttackDamageTransaction(input: {
               damageDisposition: fillSet.damageDisposition,
             },
           ],
-    spatialFacts: fillSet.targetSpatialFacts,
+    spatialFacts: targetSpatialFacts,
     decisionsByRelationshipHole: fillSet.damageRelationshipDecisions,
   });
 
@@ -1235,7 +1345,7 @@ function resolveReactionAttackDamageTransaction(input: {
       continuation: attackDamageInterruptionFrame({
         participant: resolutionInput.subject,
         targetId: subject.targetId,
-        targetSpatialFacts: fillSet.targetSpatialFacts,
+        targetSpatialFacts,
         attackResult: effectiveAttackRoll,
         damageInput: reducedDamageEventAfterSpellReduction,
         critical,
@@ -1337,7 +1447,7 @@ function resolveReactionAttackDamageTransaction(input: {
     hideousLaughterDamageRepeatSaves: fillSet.hideousLaughterDamageRepeatSaves,
     wardingBondDamageShareConcentrationSavingThrows:
       fillSet.concentrationSavingThrows,
-    spatialFacts: fillSet.targetSpatialFacts,
+    spatialFacts: targetSpatialFacts,
     relationshipDecisions: relationshipCheck.decisions,
   });
 
@@ -1386,7 +1496,7 @@ function resolveReactionAttackDamageTransaction(input: {
       damagedId: subject.targetId,
       damageAmount: reducedDamageAmount,
       reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-        facts: fillSet.targetSpatialFacts,
+        facts: targetSpatialFacts,
         damagedId: subject.targetId,
         damageSourceId: subject.reactorId,
       }),

@@ -91,7 +91,12 @@ module reactionsContinuationsConcentrationExamples {
   run test_readied_movement_reaction_spends_reaction_and_movement = {
     val readyTurn = resolveReadyMovement(initialTurnProcedureState, true)
     val readied = initialReactionProtocolState
-      .with("reactor", initialMovementGrappleState.with("turn", readyTurn))
+      .with(
+        "reactor",
+        initialMovementGrappleState
+          .with("turn", readyTurn)
+          .with("movementSpentFeet", 5)
+      )
       .with(
       "reactionWindow",
       offerReactionWindow(
@@ -106,7 +111,7 @@ module reactionsContinuationsConcentrationExamples {
     all {
       assert(not(resolved.reactor.turn.reactionAvailable)),
       assert(not(resolved.reactor.turn.readiedMovementHeld)),
-      assert(resolved.reactor.movementSpentFeet == 10),
+      assert(resolved.reactor.movementSpentFeet == 5),
       assert(resolved.interruptedActor.movementSpentFeet == 0),
       assert(resolved.reactionWindow == NoReactionWindow),
     }

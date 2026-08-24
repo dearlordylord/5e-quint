@@ -47,6 +47,7 @@ import {
   parseBenchmarkModelInvocationLedgerEntry,
   parseModelInvocationLedgerEntry,
   firstPartyCodexFailureReason,
+  jsonModelInvocationLastMessageDecoder,
   readCodexEvents,
   runBenchmarkAuxiliaryInvocation,
   runCodexInvocation,
@@ -54,6 +55,7 @@ import {
   type BenchmarkAuxiliaryInvocationKind,
   type CurrentModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
+import { retainCodexInvocationArtifacts } from "./generate-scenario.ts";
 import {
   BENCHMARK_IMPLEMENTATION_PROFILES,
   benchmarkReviewReasoningEffort,
@@ -81,6 +83,7 @@ import {
 import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewScenarioId,
+  retainedScenarioReviewSubject,
 } from "./scenario-review-input.ts";
 import {
   buildScenarioCharacterDistribution,
@@ -555,7 +558,6 @@ export function fixedBenchmarkCodexArgs(
   reasoningEffort: string,
   prompt: string,
   schemaPath: string | undefined,
-  outputPath: string | undefined,
   sandbox: "workspace-write" | "danger-full-access",
 ): readonly [string, ...string[]] {
   return [
@@ -574,7 +576,6 @@ export function fixedBenchmarkCodexArgs(
     "-c",
     "model_reasoning_effort=" + JSON.stringify(reasoningEffort),
     ...(schemaPath === undefined ? [] : ["--output-schema", schemaPath]),
-    ...(outputPath === undefined ? [] : ["--output-last-message", outputPath]),
     prompt,
   ];
 }
@@ -1104,7 +1105,7 @@ type StructuredCallResult<A> = Readonly<{
   readonly auxiliaryEntry?: BenchmarkAuxiliaryModelInvocationLedgerEntry;
 }>;
 
-function runStructuredCall<A, I>(input: {
+async function runStructuredCall<A, I>(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
   readonly preparation: FixedBenchmarkPreparationState;
   readonly contextPath: string;
@@ -1122,7 +1123,7 @@ function runStructuredCall<A, I>(input: {
   readonly stagePlanReason: string;
   readonly gitSha: GitSha;
   readonly scenarioId: ScenarioId;
-}): StructuredCallResult<A> {
+}): Promise<StructuredCallResult<A>> {
   assertPreparationState(input.preparation, input.profilePaths);
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-benchmark-call-"));
   const local = copyBenchmarkCallInputs({
@@ -1142,7 +1143,7 @@ function runStructuredCall<A, I>(input: {
   const readableFiles = scratchNamedFiles(scratch);
   const namedInputs = readableFiles.map((path) => resolve(scratch, path));
   try {
-    const result = runCodexInvocation({
+    const result = await runCodexInvocation({
       args: fixedBenchmarkCodexArgs(
         scratch,
         input.model,
@@ -1154,7 +1155,6 @@ function runStructuredCall<A, I>(input: {
           local,
         }),
         schemaPath,
-        outputPath,
         FIXED_BENCHMARK_PREPARATION_SANDBOX,
       ),
       cwd: scratch,
@@ -1175,27 +1175,25 @@ function runStructuredCall<A, I>(input: {
         input.scenarioId + "-" + input.phase + "-" + String(input.ordinal),
       model: input.model,
       reasoningEffort: input.reasoningEffort,
+      operation: {
+        tag: "expectedLastMessage",
+        expected: {
+          path: outputPath,
+          decode: jsonModelInvocationLastMessageDecoder(
+            Schema.Struct({ result: input.schema }),
+          ),
+        },
+      },
     });
     assertBenchmarkPreparationEventStream({
       eventPath: events,
       scratch,
       namedInputs,
     });
-    if (result.error !== undefined) throw result.error;
-    if (result.signal !== null) fail("Codex stopped by " + result.signal + ".");
-    if (result.status !== 0) {
-      fail(
-        input.phase +
-          " Codex invocation exited with status " +
-          String(result.status) +
-          ".",
-      );
+    if (result.tag === "failed") {
+      fail(input.phase + " Codex invocation failed: " + result.cause.reason);
     }
-    const decoded = Schema.decodeUnknownEither(
-      Schema.Struct({ result: input.schema }),
-      { onExcessProperty: "error" },
-    )(JSON.parse(readFileSync(outputPath, "utf8")));
-    if (Either.isLeft(decoded)) fail(decoded.left.message);
+    const decoded = result.output.value;
     appendCopiedLedgerEntry(
       input.profilePaths.currentLedger,
       input.profilePaths.benchmarkLedger,
@@ -1203,11 +1201,14 @@ function runStructuredCall<A, I>(input: {
     const row = readJsonLines(input.profilePaths.currentLedger).at(-1);
     if (row === undefined) fail("Current invocation row was not retained.");
     const entry = parseModelInvocationLedgerEntry(row);
-    if (Either.isLeft(entry) || entry.right.schemaVersion !== 4) {
-      fail("Current invocation row is not schema v4.");
+    if (
+      Either.isLeft(entry) ||
+      (entry.right.schemaVersion !== 4 && entry.right.schemaVersion !== 5)
+    ) {
+      fail("Current invocation row is not a current schema version.");
     }
     return {
-      value: decoded.right.result,
+      value: decoded.result,
       eventPath: events,
       currentEntry: entry.right,
     };
@@ -1217,7 +1218,7 @@ function runStructuredCall<A, I>(input: {
   }
 }
 
-function runCompositeReviewCall(input: {
+async function runCompositeReviewCall(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
   readonly preparation: FixedBenchmarkPreparationState;
   readonly ordinal: number;
@@ -1226,7 +1227,7 @@ function runCompositeReviewCall(input: {
   readonly bundle: FixedScenarioCanonicalBundle;
   readonly prompt: string;
   readonly gitSha: GitSha;
-}): StructuredCallResult<unknown> {
+}): Promise<StructuredCallResult<unknown>> {
   const reasoningEffort = benchmarkReviewReasoningEffort(input.profile);
   const common = {
     profilePaths: input.profilePaths,
@@ -1243,17 +1244,17 @@ function runCompositeReviewCall(input: {
     scenarioId: fixedScenarioId(),
   };
   return input.profile === "documentDeclarationSet"
-    ? runStructuredCall({
+    ? await runStructuredCall({
         ...common,
         schema: HistoricalScenarioCompositeReviewSchema,
       })
-    : runStructuredCall({
+    : await runStructuredCall({
         ...common,
         schema: CurrentScenarioCompositeReviewSchema,
       });
 }
 
-function runAuxiliaryStructuredCall<A, I>(input: {
+async function runAuxiliaryStructuredCall<A, I>(input: {
   readonly profilePaths: FixedBenchmarkProfilePaths;
   readonly preparation: FixedBenchmarkPreparationState;
   readonly contextPath: string;
@@ -1264,7 +1265,7 @@ function runAuxiliaryStructuredCall<A, I>(input: {
   readonly prompt: string;
   readonly gitSha: GitSha;
   readonly scenarioId: ScenarioId;
-}): StructuredCallResult<A> {
+}): Promise<StructuredCallResult<A>> {
   assertPreparationState(input.preparation, input.profilePaths);
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-benchmark-aux-"));
   const local = copyBenchmarkCallInputs({
@@ -1288,7 +1289,7 @@ function runAuxiliaryStructuredCall<A, I>(input: {
       ? { model: "gpt-5.6-luna", reasoningEffort: "max" }
       : { model: "gpt-5.6-sol", reasoningEffort: "medium" };
   try {
-    const result = runBenchmarkAuxiliaryInvocation({
+    const result = await runBenchmarkAuxiliaryInvocation({
       args: fixedBenchmarkCodexArgs(
         scratch,
         execution.model,
@@ -1300,7 +1301,6 @@ function runAuxiliaryStructuredCall<A, I>(input: {
           local,
         }),
         schemaPath,
-        outputPath,
         FIXED_BENCHMARK_PREPARATION_SANDBOX,
       ),
       cwd: scratch,
@@ -1319,6 +1319,15 @@ function runAuxiliaryStructuredCall<A, I>(input: {
         input.scenarioId + "-" + input.kind.phase + "-" + String(input.ordinal),
       model: execution.model,
       reasoningEffort: execution.reasoningEffort,
+      operation: {
+        tag: "expectedLastMessage",
+        expected: {
+          path: outputPath,
+          decode: jsonModelInvocationLastMessageDecoder(
+            Schema.Struct({ result: input.schema }),
+          ),
+        },
+      },
     });
     assertBenchmarkPreparationEventStream({
       eventPath: events,
@@ -1326,22 +1335,14 @@ function runAuxiliaryStructuredCall<A, I>(input: {
       namedInputs,
     });
     if (Either.isLeft(result)) fail(result.left);
-    if (result.right.error !== undefined) throw result.right.error;
-    if (result.right.signal !== null)
-      fail("Codex stopped by " + result.right.signal + ".");
-    if (result.right.status !== 0) {
+    if (result.right.tag === "failed") {
       fail(
         input.kind.phase +
-          " Codex invocation exited with status " +
-          String(result.right.status) +
-          ".",
+          " Codex invocation failed: " +
+          result.right.cause.reason,
       );
     }
-    const decoded = Schema.decodeUnknownEither(
-      Schema.Struct({ result: input.schema }),
-      { onExcessProperty: "error" },
-    )(JSON.parse(readFileSync(outputPath, "utf8")));
-    if (Either.isLeft(decoded)) fail(decoded.left.message);
+    const decoded = result.right.output.value;
     appendCopiedLedgerEntry(
       input.profilePaths.auxiliaryLedger,
       input.profilePaths.benchmarkLedger,
@@ -1351,7 +1352,7 @@ function runAuxiliaryStructuredCall<A, I>(input: {
     const entry = parseBenchmarkModelInvocationLedgerEntry(row);
     if (Either.isLeft(entry)) fail(entry.left.message);
     return {
-      value: decoded.right.result,
+      value: decoded.result,
       eventPath: events,
       auxiliaryEntry: entry.right,
     };
@@ -1593,19 +1594,39 @@ function retainReviewEnvelope(input: {
     outputJsonSchema,
   });
   if (Either.isLeft(valid)) fail(valid.left);
-  const envelope = {
-    schemaVersion: 2 as const,
-    phase: "scenarioCompositeReview" as const,
-    reviewStage: input.stage,
-    scenarioId: fixedScenarioId(),
-    sourceGitSha: input.entry.gitSha,
-    invocationId: input.entry.invocationId,
-    model: input.entry.model,
-    reasoningEffort: input.entry.reasoningEffort,
-    prompt: input.prompt,
-    outputJsonSchema,
-    result: input.result,
-  };
+  const envelope =
+    input.profile === "documentDeclarationSet"
+      ? {
+          schemaVersion: 2 as const,
+          phase: "scenarioCompositeReview" as const,
+          reviewStage: input.stage,
+          scenarioId: fixedScenarioId(),
+          sourceGitSha: input.entry.gitSha,
+          invocationId: input.entry.invocationId,
+          model: input.entry.model,
+          reasoningEffort: input.entry.reasoningEffort,
+          prompt: input.prompt,
+          outputJsonSchema,
+          result: input.result,
+        }
+      : {
+          schemaVersion: 3 as const,
+          phase: "scenarioCompositeReview" as const,
+          reviewStage: input.stage,
+          sourceGitSha: input.entry.gitSha,
+          invocationId: input.entry.invocationId,
+          model: input.entry.model,
+          reasoningEffort: input.entry.reasoningEffort,
+          prompt: input.prompt,
+          outputJsonSchema,
+          result: input.result,
+          subject: {
+            tag: "benchmark" as const,
+            benchmarkId: input.profilePaths.benchmarkId,
+            profile: input.profile,
+            scenarioId: fixedScenarioId(),
+          },
+        };
   const parsed = Schema.decodeUnknownEither(RetainedScenarioReviewInputSchema, {
     onExcessProperty: "error",
   })(envelope);
@@ -1624,7 +1645,10 @@ export function retainBenchmarkReviewReplayEvents(
   replayPath: string,
 ): string {
   const retainedPath = benchmarkReviewReplayEventsPath(replayPath);
-  copyFileSync(eventPath, retainedPath, constants.COPYFILE_EXCL);
+  retainCodexInvocationArtifacts({
+    eventPath,
+    retainedEventPath: retainedPath,
+  });
   return retainedPath;
 }
 
@@ -1664,14 +1688,14 @@ function retainReadinessEnvelope(input: {
   return path;
 }
 
-function characterSourceCall(input: {
+async function characterSourceCall(input: {
   readonly paths: FixedBenchmarkProfilePaths;
   readonly preparation: FixedBenchmarkPreparationState;
   readonly ordinal: number;
   readonly profile: FixedBenchmarkProfile;
   readonly bundle: FixedScenarioCanonicalBundle;
   readonly gitSha: GitSha;
-}): string {
+}): Promise<string> {
   const scratch = mkdtempSync(
     resolve(tmpdir(), "dnd-fixed-benchmark-characters-"),
   );
@@ -1696,9 +1720,9 @@ function characterSourceCall(input: {
     const readableFiles = scratchNamedFiles(scratch);
     const namedInputs = readableFiles.map((path) => resolve(scratch, path));
     assertPreparationState(input.preparation, input.paths);
-    const result = (() => {
+    const result = await (async () => {
       try {
-        return runBenchmarkAuxiliaryInvocation({
+        return await runBenchmarkAuxiliaryInvocation({
           args: fixedBenchmarkCodexArgs(
             scratch,
             "gpt-5.6-sol",
@@ -1709,7 +1733,6 @@ function characterSourceCall(input: {
               taskPrompt:
                 FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS.scenarioCharacterAuthoring,
             }),
-            undefined,
             undefined,
             FIXED_BENCHMARK_PREPARATION_SANDBOX,
           ),
@@ -1734,6 +1757,7 @@ function characterSourceCall(input: {
             FIXED_SCENARIO_ID + "-redundant-character-" + String(input.ordinal),
           model: "gpt-5.6-sol",
           reasoningEffort: "medium",
+          operation: { tag: "noOutput" },
         });
       } finally {
         assertPreparationState(input.preparation, input.paths);
@@ -1745,8 +1769,12 @@ function characterSourceCall(input: {
       namedInputs,
     });
     if (Either.isLeft(result)) fail(result.left);
-    if (result.right.status !== 0)
-      fail("Redundant character preparation failed.");
+    if (result.right.tag === "failed") {
+      fail(
+        "Redundant character preparation invocation failed: " +
+          result.right.cause.reason,
+      );
+    }
     if (
       readFileSync(sourcePath).compare(
         readFileSync(input.bundle.paths.characters),
@@ -1772,7 +1800,7 @@ function characterSourceCall(input: {
   }
 }
 
-function setupSourceCalls(input: {
+async function setupSourceCalls(input: {
   readonly paths: FixedBenchmarkProfilePaths;
   readonly preparation: FixedBenchmarkPreparationState;
   readonly profile: FixedBenchmarkProfile;
@@ -1783,7 +1811,7 @@ function setupSourceCalls(input: {
     ScenarioCharacterEvaluation,
     { readonly tag: "ready" }
   >;
-}): void {
+}): Promise<void> {
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-fixed-benchmark-setup-"));
   try {
     const statBlocks = scenarioSetupStatBlocks();
@@ -1808,18 +1836,18 @@ function setupSourceCalls(input: {
     );
     const readableFiles = scratchNamedFiles(scratch);
     const namedInputs = readableFiles.map((path) => resolve(scratch, path));
-    const run = (
+    const run = async (
       ordinal: number,
       phase:
         | "scenarioSetupNeutralAuthoring"
         | "scenarioSetupControllerAuthoring",
       prompt: string,
-    ): void => {
+    ): Promise<void> => {
       const events = eventPath(input.paths, ordinal, phase);
       assertPreparationState(input.preparation, input.paths);
-      const result = (() => {
+      const result = await (async () => {
         try {
-          return runCodexInvocation({
+          return await runCodexInvocation({
             args: fixedBenchmarkCodexArgs(
               scratch,
               "gpt-5.6-sol",
@@ -1829,7 +1857,6 @@ function setupSourceCalls(input: {
                 readableFiles,
                 taskPrompt: prompt,
               }),
-              undefined,
               undefined,
               FIXED_BENCHMARK_PREPARATION_SANDBOX,
             ),
@@ -1855,6 +1882,7 @@ function setupSourceCalls(input: {
             fallbackInvocationId: FIXED_SCENARIO_ID + "-" + phase,
             model: "gpt-5.6-sol",
             reasoningEffort: "medium",
+            operation: { tag: "noOutput" },
           });
         } finally {
           assertPreparationState(input.preparation, input.paths);
@@ -1865,7 +1893,9 @@ function setupSourceCalls(input: {
         scratch,
         namedInputs,
       });
-      if (result.status !== 0) fail(phase + " authoring failed.");
+      if (result.tag === "failed") {
+        fail(phase + " authoring invocation failed: " + result.cause.reason);
+      }
       appendCopiedLedgerEntry(
         input.paths.currentLedger,
         input.paths.benchmarkLedger,
@@ -1883,12 +1913,12 @@ function setupSourceCalls(input: {
         constants.COPYFILE_EXCL,
       );
     };
-    run(
+    await run(
       input.firstOrdinal,
       "scenarioSetupNeutralAuthoring",
       FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS.scenarioSetupNeutralAuthoring,
     );
-    run(
+    await run(
       input.firstOrdinal + 1,
       "scenarioSetupControllerAuthoring",
       FIXED_BENCHMARK_SOURCE_REVIEW_PROMPTS.scenarioSetupControllerAuthoring,
@@ -2015,7 +2045,7 @@ async function prepareProfile(input: {
     "scenarioGeneration.md",
   );
   for (const ordinal of [1, 2] as const) {
-    const result = runStructuredCall({
+    const result = await runStructuredCall({
       profilePaths: paths,
       preparation,
       contextPath: generationContext,
@@ -2044,7 +2074,7 @@ async function prepareProfile(input: {
   }
   const reviewContext = resolve(paths.contextDirectory, "scenarioReview.md");
   if (input.profile === "documentDeclarationSet") {
-    const milestone = runCompositeReviewCall({
+    const milestone = await runCompositeReviewCall({
       profilePaths: paths,
       preparation,
       ordinal: 3,
@@ -2067,7 +2097,7 @@ async function prepareProfile(input: {
     });
   }
   if (input.profile === "documentDeclarationSet") {
-    const readiness = runAuxiliaryStructuredCall({
+    const readiness = await runAuxiliaryStructuredCall({
       profilePaths: paths,
       preparation,
       contextPath: reviewContext,
@@ -2102,7 +2132,7 @@ async function prepareProfile(input: {
     );
   }
   const finalOrdinal = input.profile === "documentDeclarationSet" ? 5 : 3;
-  const final = runCompositeReviewCall({
+  const final = await runCompositeReviewCall({
     profilePaths: paths,
     preparation,
     ordinal: finalOrdinal,
@@ -2128,7 +2158,7 @@ async function prepareProfile(input: {
   if (characterResult.tag !== "ready")
     fail("Tracked characters are not ready.");
   if (input.profile === "documentDeclarationSet") {
-    characterSourceCall({
+    await characterSourceCall({
       paths,
       preparation,
       ordinal: 6,
@@ -2136,7 +2166,7 @@ async function prepareProfile(input: {
       bundle,
       gitSha: gitSha.right,
     });
-    characterSourceCall({
+    await characterSourceCall({
       paths,
       preparation,
       ordinal: 7,
@@ -2145,7 +2175,7 @@ async function prepareProfile(input: {
       gitSha: gitSha.right,
     });
   }
-  setupSourceCalls({
+  await setupSourceCalls({
     paths,
     preparation,
     profile: input.profile,
@@ -2187,10 +2217,14 @@ function eventAuthorityForHash(
 
 function validateRetainedReviewAuthority(
   profile: FixedBenchmarkProfile,
-  path: string,
+  profilePaths: FixedBenchmarkProfilePaths,
   stage: "milestone" | "final",
   implementationGitSha: GitSha,
 ): void {
+  const path =
+    stage === "milestone"
+      ? profilePaths.milestoneReviewInput
+      : profilePaths.finalReviewInput;
   if (!existsSync(path)) fail("Missing retained " + stage + " review input.");
   const parsed = Schema.decodeUnknownEither(RetainedScenarioReviewInputSchema, {
     onExcessProperty: "error",
@@ -2206,6 +2240,20 @@ function validateRetainedReviewAuthority(
     fail(
       "Retained review input is bound to a different scenario, stage, or implementation revision.",
     );
+  }
+  const subject = retainedScenarioReviewSubject(parsed.right);
+  if (profile === "boundedCapabilityProjection") {
+    if (
+      parsed.right.schemaVersion !== 3 ||
+      subject.tag !== "benchmark" ||
+      subject.benchmarkId !== profilePaths.benchmarkId ||
+      subject.profile !== profile ||
+      subject.scenarioId !== FIXED_SCENARIO_ID
+    ) {
+      fail(
+        "Bounded benchmark replay input must retain its typed benchmark lifecycle identity.",
+      );
+    }
   }
   const valid = validateBenchmarkReviewAuthority({
     profile,
@@ -2440,9 +2488,7 @@ function assembleProfile(
   for (const stage of reviewStages) {
     validateRetainedReviewAuthority(
       profile,
-      stage === "milestone"
-        ? paths.milestoneReviewInput
-        : paths.finalReviewInput,
+      paths,
       stage,
       executionProfileDescriptor.right.implementationGitSha,
     );
@@ -2473,7 +2519,10 @@ function assembleProfile(
     (value): readonly FixedBenchmarkInvocation[] => {
       const current = parseModelInvocationLedgerEntry(value);
       if (Either.isRight(current)) {
-        if (current.right.schemaVersion !== 4) {
+        if (
+          current.right.schemaVersion !== 4 &&
+          current.right.schemaVersion !== 5
+        ) {
           return fail(
             "Historical invocation rows cannot enter schema-3 assembly.",
           );
@@ -2549,7 +2598,7 @@ function assembleProfile(
       ? (() => {
           const readinessInvocation = invocations.find(
             (invocation) =>
-              invocation.schemaVersion === 3 &&
+              "responsibility" in invocation &&
               invocation.responsibility === "scenarioQuality",
           );
           if (readinessInvocation === undefined) {
@@ -2644,7 +2693,7 @@ function assembleProfile(
           invocations: nonEmpty(
             retainedInvocations.filter(
               (invocation): invocation is CurrentModelInvocationLedgerEntry =>
-                invocation.schemaVersion === 4,
+                !("responsibility" in invocation),
             ),
             "bounded invocations",
           ),

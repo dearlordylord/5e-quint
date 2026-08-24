@@ -482,8 +482,13 @@ export type ScenarioSpatialWitness<A> = Readonly<{
   readonly value: A;
 }>;
 
-function isFiniteNonNegativeNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+function isFiniteNonNegativeInteger(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    Number.isInteger(value) &&
+    value >= 0
+  );
 }
 
 function isScenarioDirection(value: unknown): value is ScenarioDirection {
@@ -519,11 +524,11 @@ export function scenarioTableSpatialFingerprint(
 export function scenarioDistanceFeet(
   value: number,
 ): Either.Either<DistanceFeet, ScenarioSpatialDistanceFeetIssue> {
-  if (!isFiniteNonNegativeNumber(value)) {
+  if (!isFiniteNonNegativeInteger(value)) {
     return Either.left({
       tag: "invalid-spatial-distance-feet",
       value,
-      message: "A spatial distance must be a finite non-negative number.",
+      message: "A spatial distance must be a finite non-negative integer.",
     });
   }
   return Either.right(value as DistanceFeet);
@@ -1115,7 +1120,7 @@ function parseRelationAnswer(
       "traversal",
     ]) ||
     !isScenarioDirection(value.direction) ||
-    !isFiniteNonNegativeNumber(value.distanceFeet) ||
+    !isFiniteNonNegativeInteger(value.distanceFeet) ||
     typeof value.attackerCanSeeTarget !== "boolean" ||
     (value.cover !== "none" &&
       value.cover !== "half" &&
@@ -1125,7 +1130,7 @@ function parseRelationAnswer(
   ) {
     return malformedDecision(
       input,
-      "A non-movement spatial answer requires finite distance, boolean sight, and supported Cover and traversal values.",
+      "A non-movement spatial answer requires a finite non-negative integer distance, boolean sight, and supported Cover and traversal values.",
     );
   }
   return Either.right({
@@ -1144,6 +1149,7 @@ function parseOpportunityAttackThreatInput(
     !isRecord(value) ||
     !hasOnlyKeys(value, [
       "reactorId",
+      "distanceFeet",
       "procedureRef",
       "attackAbility",
       "attackDamageType",
@@ -1151,6 +1157,8 @@ function parseOpportunityAttackThreatInput(
       "statBlockDamageNotation",
     ]) ||
     !isNonEmptyTrimmedString(value.reactorId) ||
+    !isFiniteNonNegativeInteger(value.distanceFeet) ||
+    !Number.isInteger(value.distanceFeet) ||
     !isNonEmptyTrimmedString(value.procedureRef)
   ) {
     return undefined;
@@ -1180,6 +1188,7 @@ function parseOpportunityAttackThreatInput(
     return undefined;
   }
   const reactorId = combatantId(value.reactorId);
+  const distanceFeet = movementFeet(value.distanceFeet);
   if (hasAttackAbility && hasAttackDamageType) {
     const procedureRef = Schema.decodeUnknownEither(
       BattleAttackProcedureExecutionRef,
@@ -1187,6 +1196,7 @@ function parseOpportunityAttackThreatInput(
     if (Either.isLeft(procedureRef)) return undefined;
     return {
       reactorId,
+      distanceFeet,
       procedureRef: procedureRef.right,
       attackAbility,
       attackDamageType,
@@ -1199,10 +1209,11 @@ function parseOpportunityAttackThreatInput(
   return selection.statBlockDamageNotation === "static"
     ? {
         reactorId,
+        distanceFeet,
         procedureRef: procedureRef.right,
         statBlockDamageNotation: "static",
       }
-    : { reactorId, procedureRef: procedureRef.right };
+    : { reactorId, distanceFeet, procedureRef: procedureRef.right };
 }
 
 function parseCreatureSpaceTraversal(
@@ -1327,7 +1338,7 @@ function parseMovementAnswer(
       "postMoveSpatialState",
     ]) ||
     value.kind !== "movementRoute" ||
-    !isFiniteNonNegativeNumber(value.movementCostFeet) ||
+    !isFiniteNonNegativeInteger(value.movementCostFeet) ||
     !Number.isInteger(value.movementCostFeet)
   ) {
     return malformedDecision(
@@ -1511,7 +1522,7 @@ function validateSpatialDecisionInput(
         );
       }
     }
-    if (!isFiniteNonNegativeNumber(input.answer.movementCostFeet)) {
+    if (!isFiniteNonNegativeInteger(input.answer.movementCostFeet)) {
       return spatialDecisionIssue(
         "invalid-spatial-decision",
         decisionId,
@@ -1577,7 +1588,7 @@ function validateSpatialDecisionInput(
       `Spatial decision ${decisionId} has an unsupported direction.`,
     );
   }
-  if (!isFiniteNonNegativeNumber(input.answer.distanceFeet)) {
+  if (!isFiniteNonNegativeInteger(input.answer.distanceFeet)) {
     return spatialDecisionIssue(
       "invalid-spatial-decision",
       decisionId,

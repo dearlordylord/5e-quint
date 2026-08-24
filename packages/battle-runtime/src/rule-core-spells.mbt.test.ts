@@ -2016,9 +2016,10 @@ function attackTargetFill(hole: BattleHole): BattleFill {
     value: casterId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: targetId,
         targetId: casterId,
+        distanceFeet: movementFeet(5),
         ...hole.attack.selection,
       },
     ],

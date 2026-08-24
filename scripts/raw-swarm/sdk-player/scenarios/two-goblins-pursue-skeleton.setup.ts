@@ -12,18 +12,21 @@ export const setupScenario: ScenarioSetup = (context) => {
     statBlock: statBlockCatalog.requireStatBlock("stat_block_goblin_warrior"),
     initiative: sdk.initiativeScore(18),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+    conditions: [],
   });
   const skeleton = sdk.battleCreatureInitFromStatBlock({
     combatantId: skeletonId,
     statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+    conditions: [],
   });
   const fartherGoblin = sdk.battleCreatureInitFromStatBlock({
     combatantId: fartherGoblinId,
     statBlock: statBlockCatalog.requireStatBlock("stat_block_goblin_warrior"),
     initiative: sdk.initiativeScore(9),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
+    conditions: [],
   });
 
   const creatureInits = [nearerGoblin, skeleton, fartherGoblin] as const;

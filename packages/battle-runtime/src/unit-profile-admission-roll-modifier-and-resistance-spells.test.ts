@@ -28,7 +28,7 @@ import baneInput from "../../surface/content/bane.json";
 import protectionFromEnergyInput from "../../surface/content/protection_from_energy.json";
 import protectionFromPoisonInput from "../../surface/content/protection_from_poison.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import type { DamageType } from "@dnd/shared/types";
+import { movementFeet, type DamageType } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   baneUnitId,
@@ -1886,6 +1886,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       command: "opportunityAttack",
       reactorId: spellCasterId,
       targetId: spellTargetId,
+      distanceFeet: movementFeet(5),
       ...attackExecutionSelectionForSubjectForTest(
         characterAttackSubjectForTest(state, spellCasterId, "Longsword"),
       ),

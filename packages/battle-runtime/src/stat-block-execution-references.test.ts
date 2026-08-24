@@ -2,7 +2,11 @@ import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
-import { NonNegativeInteger, resourceCount } from "@dnd/shared/types";
+import {
+  NonNegativeInteger,
+  movementFeet,
+  resourceCount,
+} from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
@@ -1296,7 +1300,11 @@ describe("Stat Block execution references", () => {
       throw new Error("Expected admitted melee attack procedure.");
     }
     const choice = opportunityAttackReactionChoices(battle, fighterId, [
-      { reactorId: actorId, procedureRef: attack.procedureRef },
+      {
+        reactorId: actorId,
+        distanceFeet: movementFeet(5),
+        procedureRef: attack.procedureRef,
+      },
     ])[0];
     if (
       choice?.kind !== "opportunityAttack" ||
@@ -1382,10 +1390,11 @@ describe("Stat Block execution references", () => {
           value: fighterId,
           spatialFacts: [
             {
-              kind: "attackTargetInMeleeReach",
+              kind: "attackTargetDistance",
               actorId,
               targetId: fighterId,
               ...targetHole.attack.selection,
+              distanceFeet: movementFeet(5),
             },
           ],
         },

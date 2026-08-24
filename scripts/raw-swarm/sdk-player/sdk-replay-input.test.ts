@@ -7,6 +7,7 @@ import {
   battleStatBlockExecutionScopeRef,
   combatantId,
 } from "../../../packages/battle-runtime/src/index.ts";
+import { movementFeet } from "../../../packages/shared/src/types.ts";
 import {
   canonicalSdkCallInput,
   decodeSdkCallInput,
@@ -126,11 +127,11 @@ describe("SDK replay input", () => {
             value: targetId,
             spatialFacts: [
               {
-                kind: "attackTargetInRangedRange",
+                kind: "attackTargetDistance",
                 actorId,
                 targetId,
                 procedureRef,
-                rangeBand: "normal",
+                distanceFeet: movementFeet(5),
                 attackAbility: undefined,
                 attackDamageType: undefined,
               },

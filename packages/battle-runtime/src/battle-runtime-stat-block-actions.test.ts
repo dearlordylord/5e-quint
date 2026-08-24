@@ -394,9 +394,10 @@ function biteMeleeReachFact(
 ) {
   return [
     {
-      kind: "attackTargetInMeleeReach" as const,
+      kind: "attackTargetDistance" as const,
       actorId: goblinId,
       targetId,
+      distanceFeet: movementFeet(5),
       procedureRef,
     },
   ];
@@ -484,11 +485,11 @@ function venomDartTargetFill(hole: BattleHole) {
   }
   return targetFill(hole, fighterId, [
     {
-      kind: "attackTargetInRangedRange",
+      kind: "attackTargetDistance",
       actorId: goblinId,
       targetId: fighterId,
       ...hole.attack.selection,
-      rangeBand: "normal",
+      distanceFeet: movementFeet(5),
     },
   ]);
 }

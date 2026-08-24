@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -7,6 +8,7 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 import { Either } from "effect";
 import {
+  GRAPPLE_TARGET_REACH_FEET,
   battleAttackExecutionScopeRef,
   battleAttackProcedureExecutionRef,
   battleActSpellPresentation,
@@ -26,7 +28,11 @@ import {
   battleRuntimeSessionWithRetainedCompanionTransition,
   battleRuntimeSessionWithState,
 } from "../../../packages/battle-runtime/src/battle-runtime-context.ts";
-import { applyCondition } from "../../../packages/shared-algebras/src/conditions-algebra.ts";
+import {
+  applyCondition,
+  hasCondition,
+} from "../../../packages/shared-algebras/src/conditions-algebra.ts";
+import { initiativeEntries } from "../../../packages/shared-algebras/src/initiative-algebra.ts";
 
 import { FIGHTER_EXAMPLE_DRAFT } from "../../../packages/app/src/components/character-creation/characterCreationPresets.ts";
 import { finalizeCharacterDraft } from "../../../packages/character-creation-runtime/src/index.ts";
@@ -60,6 +66,8 @@ import {
   scenarioBattleSubject,
   scenarioCreatureSpellTargetFills,
   scenarioTableSpatialFactFills,
+  scenarioTableSpatialFactDistanceWithinLimit,
+  scenarioRangedAttackEnemyWithinProximity,
   scenarioAttackTargetFills,
   scenarioRelation,
   scenarioEnemyWithinFiveFeetCanSeeAttacker,
@@ -80,7 +88,121 @@ import type {
 
 const TRACER_SCENARIO_ID = "goblin-warrior-skeleton-tracer";
 
+const spatialFactBoundaryCases: readonly {
+  readonly name: string;
+  readonly accepts: (distanceFeet: ReturnType<typeof movementFeet>) => boolean;
+}[] = [
+  {
+    name: "Grapple",
+    accepts: (distanceFeet) =>
+      scenarioTableSpatialFactDistanceWithinLimit(
+        {
+          kind: "grappleTarget",
+          grapplerId: combatantId("boundary-grappler"),
+          targetId: combatantId("boundary-target"),
+        },
+        distanceFeet,
+      ),
+  },
+  {
+    name: "Shove",
+    accepts: (distanceFeet) =>
+      scenarioTableSpatialFactDistanceWithinLimit(
+        {
+          kind: "shoveTarget",
+          shoverId: combatantId("boundary-shover"),
+          targetId: combatantId("boundary-target"),
+        },
+        distanceFeet,
+      ),
+  },
+  {
+    name: "Sleep wake",
+    accepts: (distanceFeet) =>
+      scenarioTableSpatialFactDistanceWithinLimit(
+        {
+          kind: "sleepShakeAwakeTarget",
+          actorId: combatantId("boundary-waker"),
+          targetId: combatantId("boundary-sleeping"),
+        },
+        distanceFeet,
+      ),
+  },
+  {
+    name: "Hypnotic wake",
+    accepts: (distanceFeet) =>
+      scenarioTableSpatialFactDistanceWithinLimit(
+        {
+          kind: "hypnoticPatternShakeAwakeTarget",
+          actorId: combatantId("boundary-waker"),
+          targetId: combatantId("boundary-hypnotized"),
+        },
+        distanceFeet,
+      ),
+  },
+  {
+    name: "Help",
+    accepts: (distanceFeet) =>
+      scenarioTableSpatialFactDistanceWithinLimit(
+        {
+          kind: "helpAttackTarget",
+          helperId: combatantId("boundary-helper"),
+          targetEnemyId: combatantId("boundary-enemy"),
+        },
+        distanceFeet,
+      ),
+  },
+  {
+    name: "Ranged proximity",
+    accepts: scenarioRangedAttackEnemyWithinProximity,
+  },
+];
+
 describe("scenario setup public-SDK boundary", () => {
+  test.each(spatialFactBoundaryCases)(
+    "$name accepts exactly 5 feet and rejects 6 feet",
+    ({ accepts }) => {
+      expect(accepts(movementFeet(5))).toBe(true);
+      expect(accepts(movementFeet(6))).toBe(false);
+    },
+  );
+
+  test("rejects fractional table-authored distances instead of truncating them", () => {
+    expect(scenarioDistanceFeet(5.5)).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "invalid-spatial-distance-feet",
+        value: 5.5,
+      },
+    });
+  });
+
+  test("retains a supported initial Stat Block condition", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios/prone-target-roll-mode-distance-probe.setup.ts",
+      ),
+      [],
+    );
+
+    expect(setup.tag).toBe("ready");
+    if (setup.tag !== "ready") return;
+    const wolf = setup.session.battle.state.combatants.get(combatantId("wolf"));
+    expect(wolf).toBeDefined();
+    if (wolf === undefined) return;
+    expect(hasCondition(wolf.conditions, "prone")).toBe(true);
+    expect(
+      initiativeEntries(setup.session.battle.state.initiative).map(
+        ({ creature, initiative }) => [creature, initiative],
+      ),
+    ).toEqual([
+      [combatantId("melee-goblin-warrior"), 18],
+      [combatantId("ranged-goblin-warrior"), 14],
+      [combatantId("wolf"), 7],
+    ]);
+  });
+
   test("passes controller-authored Character Sheets into neutral setup", async () => {
     const directory = mkdtempSync(
       resolve(tmpdir(), "dnd-scenario-characters-"),
@@ -236,6 +358,351 @@ describe("scenario setup public-SDK boundary", () => {
       ).toBe(true);
     }
   }, 120_000);
+
+  test("uses the Battle Runtime five-foot projection for table reach facts", async () => {
+    const result = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.setup.ts`,
+      ),
+      [],
+    );
+    expect(result.tag).toBe("ready");
+    if (result.tag !== "ready") return;
+
+    const grappleAct = discoverBattleActs(result.session.battle).find(
+      ({ subject }) => subject.tag === "action" && subject.action === "grapple",
+    );
+    expect(grappleAct).toBeDefined();
+    if (grappleAct === undefined || grappleAct.subject.tag !== "action") {
+      return;
+    }
+    const frontier = resolveBattleRuntimeSubject({
+      session: result.session.battle,
+      subject: grappleAct.subject,
+      fills: [],
+    });
+    expect(frontier.tag).toBe("needsHoles");
+    if (frontier.tag !== "needsHoles") return;
+    const targetHole = frontier.holes.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    expect(targetHole?.kind).toBe("targetChoice");
+    if (targetHole?.kind !== "targetChoice") return;
+    const targetId = targetHole.choices[0];
+    expect(targetId).toBeDefined();
+    if (targetId === undefined) return;
+    const relation = scenarioRelation({
+      session: result.session,
+      sourceId: grappleAct.subject.actorId,
+      targetId,
+    });
+    expect(relation.tag).toBe("relation");
+    if (relation.tag !== "relation") return;
+
+    const tableSessionAtDistance = (distanceFeet: number) => {
+      const authoredDistance = scenarioDistanceFeet(distanceFeet);
+      expect(Either.isRight(authoredDistance)).toBe(true);
+      if (Either.isLeft(authoredDistance)) return undefined;
+      return createScenarioSession({
+        battle: result.session.battle,
+        ...result.session.battlefield,
+        spatial: {
+          kind: "tableAuthored",
+          spatialDecisions: [
+            {
+              decisionId: `table-grapple-${distanceFeet}`,
+              question: {
+                kind: "grappleTarget" as const,
+                grapplerId: grappleAct.subject.actorId,
+                targetId,
+              },
+              answer: {
+                direction: relation.relation.direction,
+                distanceFeet: authoredDistance.right,
+                attackerCanSeeTarget: relation.relation.attackerCanSeeTarget,
+                cover: relation.relation.cover,
+                traversal: relation.relation.traversal,
+              },
+            },
+          ],
+        },
+      });
+    };
+
+    const atLimit = tableSessionAtDistance(Number(GRAPPLE_TARGET_REACH_FEET));
+    expect(atLimit).toMatchObject({ _tag: "Right" });
+    if (atLimit === undefined || Either.isLeft(atLimit)) return;
+    expect(
+      scenarioTableSpatialFactFills({
+        session: atLimit.right,
+        subject: grappleAct.subject,
+        fills: [
+          {
+            kind: "targetChoice",
+            holeId: targetHole.holeId,
+            value: targetId,
+            spatialFacts: [],
+          },
+        ],
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: [{ spatialFacts: [{ kind: "grappleTargetWithinReach" }] }],
+    });
+
+    const beyondLimit = tableSessionAtDistance(
+      Number(GRAPPLE_TARGET_REACH_FEET) + 1,
+    );
+    expect(beyondLimit).toMatchObject({ _tag: "Right" });
+    if (beyondLimit === undefined || Either.isLeft(beyondLimit)) return;
+    expect(
+      scenarioTableSpatialFactFills({
+        session: beyondLimit.right,
+        subject: grappleAct.subject,
+        fills: [
+          {
+            kind: "targetChoice",
+            holeId: targetHole.holeId,
+            value: targetId,
+            spatialFacts: [],
+          },
+        ],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: expect.stringContaining("outside the supported 5-foot"),
+      },
+    });
+  });
+
+  test("projects geometry-derived melee target candidates from current reach", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios/lantern-intercept-pairwise-control.setup.ts",
+      ),
+      [],
+    );
+    expect(setup).toMatchObject({ tag: "ready" });
+    if (setup.tag !== "ready") return;
+
+    const wolf = combatantId("wolf");
+    const hawk = combatantId("hawk");
+    const skeleton = combatantId("skeleton");
+    expect(
+      scenarioRelation({
+        session: setup.session,
+        sourceId: wolf,
+        targetId: hawk,
+      }),
+    ).toMatchObject({
+      tag: "relation",
+      relation: { distanceFeet: 30 },
+    });
+    expect(
+      scenarioRelation({
+        session: setup.session,
+        sourceId: wolf,
+        targetId: skeleton,
+      }),
+    ).toMatchObject({
+      tag: "relation",
+      relation: { distanceFeet: 55 },
+    });
+
+    const attackActs = scenarioBattleActs(setup.session).filter(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.actorId === wolf &&
+        subject.action === "attack",
+    );
+    expect(attackActs.map(({ presentation }) => presentation)).toEqual([
+      expect.objectContaining({ name: "Bite" }),
+      expect.objectContaining({ name: "Unarmed Strike" }),
+    ]);
+    for (const attackAct of attackActs) {
+      const targetHole = attackAct.initialHoles.find(
+        (hole) => hole.kind === "targetChoice",
+      );
+      expect(targetHole).toMatchObject({
+        kind: "targetChoice",
+        choices: [],
+      });
+      expect(targetHole).not.toHaveProperty("requiresTableSpatialFact");
+    }
+
+    const adjacentScenario = createScenarioSession({
+      battle: setup.session.battle,
+      spatial: {
+        kind: "geometryDerived",
+        arena: {
+          cells: Array.from({ length: 12 }, (_, x) => ({
+            x,
+            y: 0,
+            terrain: "ordinary" as const,
+          })),
+          boundaries: [],
+        },
+        placements: [
+          { tokenId: wolf, coordinate: { x: 0, y: 0 } },
+          { tokenId: hawk, coordinate: { x: 1, y: 0 } },
+          { tokenId: skeleton, coordinate: { x: 11, y: 0 } },
+        ],
+        spatialDecisions: [],
+      },
+      ambientIllumination: setup.session.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        setup.session.battlefield.statBlockDamageNotation,
+      environment: {
+        overhead: setup.session.battlefield.environment.overhead,
+        barrierHeights: [],
+      },
+      initialRangedAttackEnemyRelationships:
+        setup.session.battlefield.initialRangedAttackEnemyRelationships,
+      movementAllyRelationships:
+        setup.session.battlefield.movementAllyRelationships,
+      opportunityAttackEnemyRelationships:
+        setup.session.battlefield.opportunityAttackEnemyRelationships,
+      objects: setup.session.battlefield.objects,
+    });
+    expect(Either.isRight(adjacentScenario)).toBe(true);
+    if (Either.isLeft(adjacentScenario)) return;
+
+    const adjacentAttackActs = scenarioBattleActs(
+      adjacentScenario.right,
+    ).filter(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.actorId === wolf &&
+        subject.action === "attack",
+    );
+    for (const attackAct of adjacentAttackActs) {
+      const targetHole = attackAct.initialHoles.find(
+        (hole) => hole.kind === "targetChoice",
+      );
+      expect(targetHole).toMatchObject({
+        kind: "targetChoice",
+        choices: [hawk],
+      });
+      expect(targetHole).not.toHaveProperty("requiresTableSpatialFact");
+    }
+  });
+
+  test("projects geometry-derived Grapple and Shove target candidates from current reach", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios/open-grid-wolf-skeleton-pursuit.setup.ts",
+      ),
+      [],
+    );
+    expect(setup).toMatchObject({ tag: "ready" });
+    if (setup.tag !== "ready") return;
+
+    const wolf = combatantId("wolf");
+    const skeleton = combatantId("skeleton");
+    const geometryActs = scenarioBattleActs(setup.session).filter(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.actorId === wolf &&
+        (subject.action === "grapple" || subject.action === "shove"),
+    );
+    expect(geometryActs).toHaveLength(2);
+    for (const act of geometryActs) {
+      const targetHole = act.initialHoles.find(
+        (hole) => hole.kind === "targetChoice",
+      );
+      expect(targetHole).toMatchObject({
+        kind: "targetChoice",
+        choices: [],
+      });
+      expect(targetHole).not.toHaveProperty("requiresTableSpatialFact");
+    }
+
+    const adjacentScenario = createScenarioSession({
+      battle: setup.session.battle,
+      spatial: {
+        kind: "geometryDerived",
+        arena: {
+          cells: Array.from({ length: 7 * 7 }, (_, index) => ({
+            x: index % 7,
+            y: Math.floor(index / 7),
+            terrain: "ordinary" as const,
+          })),
+          boundaries: [],
+        },
+        placements: [
+          { tokenId: wolf, coordinate: { x: 3, y: 3 } },
+          { tokenId: skeleton, coordinate: { x: 3, y: 4 } },
+        ],
+        spatialDecisions: [],
+      },
+      ambientIllumination: setup.session.battlefield.ambientIllumination,
+      statBlockDamageNotation:
+        setup.session.battlefield.statBlockDamageNotation,
+      environment: setup.session.battlefield.environment,
+      initialRangedAttackEnemyRelationships:
+        setup.session.battlefield.initialRangedAttackEnemyRelationships,
+      movementAllyRelationships:
+        setup.session.battlefield.movementAllyRelationships,
+      opportunityAttackEnemyRelationships:
+        setup.session.battlefield.opportunityAttackEnemyRelationships,
+      objects: setup.session.battlefield.objects,
+    });
+    expect(Either.isRight(adjacentScenario)).toBe(true);
+    if (Either.isLeft(adjacentScenario)) return;
+
+    const adjacentActs = scenarioBattleActs(adjacentScenario.right).filter(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.actorId === wolf &&
+        (subject.action === "grapple" || subject.action === "shove"),
+    );
+    expect(adjacentActs).toHaveLength(2);
+    for (const act of adjacentActs) {
+      const targetHole = act.initialHoles.find(
+        (hole) => hole.kind === "targetChoice",
+      );
+      expect(targetHole).toMatchObject({
+        kind: "targetChoice",
+        choices: [skeleton],
+      });
+      expect(targetHole).not.toHaveProperty("requiresTableSpatialFact");
+    }
+
+    const tableSetup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios/four-way-crank-control-cycle.setup.ts",
+      ),
+      [],
+    );
+    expect(tableSetup).toMatchObject({ tag: "ready" });
+    if (tableSetup.tag !== "ready") return;
+    const tableActs = scenarioBattleActs(tableSetup.session).filter(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.actorId === combatantId("brine") &&
+        (subject.action === "grapple" || subject.action === "shove"),
+    );
+    expect(tableActs).toHaveLength(2);
+    for (const act of tableActs) {
+      const targetHole = act.initialHoles.find(
+        (hole) => hole.kind === "targetChoice",
+      );
+      expect(targetHole).toMatchObject({
+        kind: "targetChoice",
+        requiresTableSpatialFact: true,
+        choices: [
+          combatantId("rivet"),
+          combatantId("soot"),
+          combatantId("tangle"),
+        ],
+      });
+    }
+  });
 
   test("binds the issue 279 Table decision to the Wolf's exact first attack-roll test", async () => {
     const setup = await evaluateScenarioSetup(
@@ -562,10 +1029,6 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(Either.isRight(projectedAttack)).toBe(true);
     if (Either.isLeft(projectedAttack)) return;
-    const expectedAttackFactKind =
-      attackTargetHole.attack.targetConstraint.kind === "meleeReach"
-        ? "attackTargetInMeleeReach"
-        : "attackTargetInRangedRange";
     expect(projectedAttack.right).toEqual([
       expect.objectContaining({
         kind: "targetChoice",
@@ -573,9 +1036,10 @@ describe("scenario setup public-SDK boundary", () => {
         value: attackTarget,
         spatialFacts: [
           expect.objectContaining({
-            kind: expectedAttackFactKind,
+            kind: "attackTargetDistance",
             actorId: attackTargetHole.attack.actorId,
             targetId: attackTarget,
+            distanceFeet: authoredDistance.right,
           }),
         ],
       }),
@@ -2702,6 +3166,7 @@ describe("scenario setup public-SDK boundary", () => {
         moverId: twoThreatMoverId,
       }).map(({ reactorId: candidateReactorId, selection }) => ({
         reactorId: candidateReactorId,
+        distanceFeet: movementFeet(5),
         ...selection,
       })),
     );
@@ -3192,7 +3657,9 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(attackAnswer.tag).toBe("relation");
     if (attackAnswer.tag !== "relation") return;
-    const authoredAttackDistance = scenarioDistanceFeet(5);
+    const authoredAttackDistance = scenarioDistanceFeet(
+      Number(GRAPPLE_TARGET_REACH_FEET),
+    );
     expect(Either.isRight(authoredAttackDistance)).toBe(true);
     if (Either.isLeft(authoredAttackDistance)) return;
 
@@ -3492,8 +3959,9 @@ describe("scenario setup public-SDK boundary", () => {
     expect(projectedAttack.right[0]).toMatchObject({
       spatialFacts: [
         expect.objectContaining({
-          kind: expect.stringMatching(/^attackTargetIn/),
+          kind: "attackTargetDistance",
           targetId: attackTarget,
+          distanceFeet: authoredAttackDistance.right,
         }),
       ],
     });

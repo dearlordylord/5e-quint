@@ -95,7 +95,7 @@
       "module/binding:activeEffectGrantsAttackRollMode/call:target?.activeEffects.some:argument-0": 17,
       "module/binding:applyWeaponMasteryToppleSavingThrow": 9,
       "module/binding:attackRollOngoingFeatureActivationProfile": 13,
-      "module/binding:attackRollSourceFlags": 33,
+      "module/binding:attackRollSourceFlags": 26,
       "module/binding:tacticalMasterReplacementSelection": 9
     },
     "packages/battle-runtime/src/battle-reducer/attack-routes.ts": {
@@ -152,7 +152,7 @@
       "module/binding:combatantHandUses": 18
     },
     "packages/battle-runtime/src/battle-reducer/creature-state.ts": {
-      "module/binding:battleCreatureStateAdmissionFromInit": 34
+      "module/binding:battleCreatureStateAdmissionFromInit": 33
     },
     "packages/battle-runtime/src/battle-reducer/cunning-strike.ts": {
       "module/binding:eligibleCunningStrikeContexts/call:execution.procedureBindings.flatMap:argument-0": 10,

@@ -1,5 +1,6 @@
 import { Hp } from "@dnd/shared/types";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -14,13 +15,16 @@ import {
 } from "./identity.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { startBattle } from "./battle-reducer/api-lifecycle.ts";
 import {
   characterSeed,
   fighterId,
   removeBattleCombatantsRight,
   startBattleRight,
+  statBlockCreatureInit,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
 
 describe("Stat Block combatant admission capability", () => {
   const admittedCombatantId = combatantId("admitted-stat-block");
@@ -121,6 +125,7 @@ describe("Stat Block combatant admission capability", () => {
       combatantId: admittedCombatantId,
       initiative: initiativeScore(10),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: [],
       statBlock: {
         ...source,
         statBlock: {
@@ -135,6 +140,109 @@ describe("Stat Block combatant admission capability", () => {
         ? battleStateInitIssueMessage(initialized.left)
         : "initialized",
     ).toBe("Battle runtime requires literal Stat Block Armor Class.");
+  });
+
+  test("retains caller-supplied initial conditions for Stat Block creatures", () => {
+    const source = statBlockRecord();
+    const initialized = battleCreatureInitFromStatBlock({
+      combatantId: admittedCombatantId,
+      initiative: initiativeScore(10),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: ["prone"],
+      statBlock: source,
+    });
+    expect(Either.isRight(initialized)).toBe(true);
+    if (Either.isLeft(initialized)) return;
+
+    const started = startBattle({
+      battleId: battleId("initial-stat-block-condition"),
+      combatants: [initialized.right],
+    });
+    expect(Either.isRight(started)).toBe(true);
+    if (Either.isLeft(started)) return;
+
+    const combatant = started.right.state.combatants.get(admittedCombatantId);
+    expect(combatant).toBeDefined();
+    if (combatant === undefined) return;
+    expect(hasCondition(combatant.conditions, "prone")).toBe(true);
+  });
+
+  test("startBattle rejects copied Stat Block initialization with an immune condition", () => {
+    const source = statBlockRecord();
+    const init = statBlockCreatureInit({
+      initiative: 10,
+      statBlock: {
+        ...source,
+        statBlock: {
+          ...source.statBlock,
+          immunities: { conditions: ["prone"] },
+        },
+      },
+    });
+    const directInit = {
+      ...init,
+      creatureInit: {
+        ...init.creatureInit,
+        conditions: ["prone"] as const,
+      },
+    };
+
+    const result = startBattle({
+      battleId: battleId("direct-stat-block-condition-immunity"),
+      combatants: [directInit],
+    });
+
+    expect(
+      Either.isLeft(result)
+        ? battleStateInitIssueMessage(result.left)
+        : "started",
+    ).toBe("Stat Block combatant is immune to initial prone condition.");
+  });
+
+  test("startBattle admits copied Stat Block initialization with a valid condition", () => {
+    const init = statBlockCreatureInit({ initiative: 10 });
+    const directInit = {
+      ...init,
+      creatureInit: {
+        ...init.creatureInit,
+        conditions: ["prone"] as const,
+      },
+    };
+
+    const result = startBattle({
+      battleId: battleId("direct-stat-block-condition-valid"),
+      combatants: [directInit],
+    });
+
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isLeft(result)) return;
+    const combatant = result.right.state.combatants.get(directInit.combatantId);
+    expect(combatant).toBeDefined();
+    if (combatant === undefined) return;
+    expect(hasCondition(combatant.conditions, "prone")).toBe(true);
+  });
+
+  test("rejects an initial condition forbidden by the Stat Block", () => {
+    const source = statBlockRecord();
+    const initialized = battleCreatureInitFromStatBlock({
+      combatantId: admittedCombatantId,
+      initiative: initiativeScore(10),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: ["prone"],
+      statBlock: {
+        ...source,
+        statBlock: {
+          ...source.statBlock,
+          immunities: { conditions: ["prone"] },
+        },
+      },
+    });
+
+    expect(
+      Either.isLeft(initialized)
+        ? battleStateInitIssueMessage(initialized.left)
+        : "initialized",
+    ).toBe("Stat Block combatant is immune to initial prone condition.");
   });
 
   test("retains only authored-free mechanics and execution bindings", () => {

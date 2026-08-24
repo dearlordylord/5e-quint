@@ -193,6 +193,7 @@ function createRuleCoreMovementDriver() {
                 ? [
                     {
                       reactorId: observerId,
+                      distanceFeet: movementFeet(5),
                       ...attackExecutionSelectionForSubjectForTest(
                         characterAttackSubjectForTest(
                           state,

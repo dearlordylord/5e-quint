@@ -4375,9 +4375,10 @@ function attackTargetFill(
     value: observerId,
     spatialFacts: [
       {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: casterId,
         targetId: observerId,
+        distanceFeet: movementFeet(5),
         ...hole.attack.selection,
       },
     ],

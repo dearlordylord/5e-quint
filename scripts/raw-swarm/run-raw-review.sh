@@ -138,9 +138,6 @@ if [[ -n "${RAW_REVIEW_CONTEXT_PATH:-}" && "$RAW_REVIEW_CONTEXT_PROFILE" == "doc
   RAW_REVIEW_RENDERED+="- $RAW_REVIEW_CONTEXT_PATH_JSON (${RAW_REVIEW_CONTEXT_BYTES} bytes, SHA-256 $RAW_REVIEW_CONTEXT_SHA256)"
   RAW_REVIEW_RENDERED+=$'\nThe only permitted context access is at least one direct read/search command against that exact path, using the strict read-only operations `cat`, `head`, `tail`, `sed` with a numeric print range, `sha256sum`, `wc`, `od`, or `rg`. The retained first-party telemetry may contain client-truncated command output, so review only the output actually visible to you and do not claim that the entire authority was ingested. Do not read the transcript, packet path, repository, parent directories, hidden files, or any other path. Do not write files, execute another command, use a pipeline, redirection, shell expansion, or another tool.\n'
 fi
-RAW_REVIEW_STARTED_AT=$(node -e 'process.stdout.write(new Date().toISOString())')
-RAW_REVIEW_STARTED_MS=$(date +%s%3N)
-
 {
   printf '%s\n\n<SDK_REVIEW_PACKET path="%s" bytes="%s" sha256="%s">\n' \
     "$RAW_REVIEW_RENDERED" "$RAW_REVIEW_PACKET" "$RAW_REVIEW_PACKET_BYTES" "$RAW_REVIEW_PACKET_SHA256"
@@ -180,20 +177,24 @@ case "${RAW_REVIEW_CONTEXT_PROFILE:-}" in
 esac
 
 set +e
-codex exec \
-  -C "$RAW_REVIEW_ROOT" \
-  --sandbox danger-full-access \
-  --ephemeral \
-  --json \
-  -m gpt-5.6-luna \
-  -c "model_reasoning_effort=\"$RAW_REVIEW_REASONING_EFFORT\"" \
-  --output-schema "$RAW_REVIEW_SCHEMA" \
-  --output-last-message "$RAW_REVIEW_OUTPUT" \
-  - \
-  <"$RAW_REVIEW_REQUEST" \
-  >"$RAW_REVIEW_EVENTS" 2>"$RAW_REVIEW_LOG"
+pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/model-telemetry-cli.ts" \
+  run \
+  --root "$RAW_REVIEW_ROOT" \
+  --input "$RAW_REVIEW_REQUEST" \
+  --output "$RAW_REVIEW_OUTPUT" \
+  --schema "$RAW_REVIEW_SCHEMA" \
+  --events "$RAW_REVIEW_EVENTS" \
+  --log "$RAW_REVIEW_LOG" \
+  --ledger "$RAW_REVIEW_LEDGER" \
+  --phase postPlayReview \
+  --scenario-id "$RAW_REVIEW_SCENARIO_ID" \
+  --execution-id "$RAW_REVIEW_EXECUTION_ID" \
+  --evidence-set-id "$RAW_REVIEW_EVIDENCE_SET_ID" \
+  --git-sha "$RAW_REVIEW_INVOCATION_GIT_SHA" \
+  --model gpt-5.6-luna \
+  --reasoning-effort "$RAW_REVIEW_REASONING_EFFORT" \
+  --stage-plan-reason 'The Execution reached its independent post-play review stage.'
 RAW_REVIEW_STATUS=$?
-RAW_REVIEW_ELAPSED_MS=$(($(date +%s%3N) - RAW_REVIEW_STARTED_MS))
 RAW_REVIEW_OUTPUT_STATUS=0
 if [[ "$RAW_REVIEW_STATUS" -eq 0 ]]; then
   pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/review-output-validation.ts" \
@@ -220,31 +221,5 @@ fi
 if [[ "$RAW_REVIEW_EFFECTIVE_STATUS" -eq 0 && "$RAW_REVIEW_POLICY_STATUS" -ne 0 ]]; then
   RAW_REVIEW_EFFECTIVE_STATUS=$RAW_REVIEW_POLICY_STATUS
 fi
-# The shellStatus field records the effective launcher result. The raw Codex
-# event stream and process status remain separate authorities.
-pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/model-telemetry-cli.ts" \
-  --phase postPlayReview \
-  --scenario-id "$RAW_REVIEW_SCENARIO_ID" \
-  --execution-id "$RAW_REVIEW_EXECUTION_ID" \
-  --evidence-set-id "$RAW_REVIEW_EVIDENCE_SET_ID" \
-  --git-sha "$RAW_REVIEW_INVOCATION_GIT_SHA" \
-  --events "$RAW_REVIEW_EVENTS" \
-  --ledger "$RAW_REVIEW_LEDGER" \
-  --model gpt-5.6-luna \
-  --reasoning-effort "$RAW_REVIEW_REASONING_EFFORT" \
-  --stage-plan-reason 'The Execution reached its independent post-play review stage.' \
-  --started-at "$RAW_REVIEW_STARTED_AT" \
-  --elapsed-ms "$RAW_REVIEW_ELAPSED_MS" \
-  --shell-status "$RAW_REVIEW_EFFECTIVE_STATUS"
-RAW_REVIEW_TELEMETRY_STATUS=$?
 set -e
-if [[ "$RAW_REVIEW_STATUS" -ne 0 ]]; then
-  exit "$RAW_REVIEW_STATUS"
-fi
-if [[ "$RAW_REVIEW_OUTPUT_STATUS" -ne 0 ]]; then
-  exit "$RAW_REVIEW_OUTPUT_STATUS"
-fi
-if [[ "$RAW_REVIEW_POLICY_STATUS" -ne 0 ]]; then
-  exit "$RAW_REVIEW_POLICY_STATUS"
-fi
-exit "$RAW_REVIEW_TELEMETRY_STATUS"
+exit "$RAW_REVIEW_EFFECTIVE_STATUS"

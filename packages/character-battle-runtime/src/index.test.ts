@@ -115,6 +115,7 @@ import {
   classLevel,
   DieRollResult,
   difficultyClass,
+  movementFeet,
   proficiencyBonus,
   resourceCount,
   spellSlotLevel,
@@ -168,13 +169,14 @@ import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-suppor
 function battleCreatureInitFromStatBlock(
   input: Omit<
     Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks"
+    "ammunitionStocks" | "conditions"
   >,
 ) {
   return expectRight(
     parseBattleCreatureInitFromStatBlock({
       ...input,
       ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+      conditions: [],
     }),
   );
 }
@@ -326,6 +328,7 @@ describe("Character Sheet battle handoff", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -858,6 +861,7 @@ describe("Character Sheet battle handoff", () => {
         statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
         initiative: initiativeScore(10),
         ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        conditions: [],
       },
     });
 
@@ -937,6 +941,7 @@ describe("Character Sheet battle handoff", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
       }),
     ).toMatchObject({
@@ -975,6 +980,7 @@ describe("Character Sheet battle handoff", () => {
           },
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
       }),
     ).toMatchObject({
@@ -4043,6 +4049,7 @@ describe("Character Sheet battle handoff", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(5),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
       }),
     ).toMatchObject({
@@ -6604,6 +6611,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(5),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -6631,6 +6639,7 @@ describe("Character Build battle projection", () => {
           },
           initiative: initiativeScore(5),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -7898,6 +7907,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -8079,6 +8089,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(5),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
       }),
     );
@@ -8556,6 +8567,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -8618,6 +8630,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -8750,6 +8763,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -8826,6 +8840,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -9094,6 +9109,7 @@ describe("Character Build battle projection", () => {
           ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -9188,6 +9204,7 @@ describe("Character Build battle projection", () => {
           ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -9675,6 +9692,7 @@ describe("Character Build battle projection", () => {
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
         },
         unitLibrary,
       }),
@@ -10525,19 +10543,21 @@ function attackMeleeReachFact(
   NonNullable<
     Extract<BattleFill, { readonly kind: "targetChoice" }>["spatialFacts"]
   >[number],
-  { readonly kind: "attackTargetInMeleeReach" }
+  { readonly kind: "attackTargetDistance" }
 > {
   return subject.attackAbility === undefined
     ? {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: subject.actorId,
         targetId,
+        distanceFeet: movementFeet(5),
         procedureRef: subject.procedureRef,
       }
     : {
-        kind: "attackTargetInMeleeReach",
+        kind: "attackTargetDistance",
         actorId: subject.actorId,
         targetId,
+        distanceFeet: movementFeet(5),
         procedureRef: subject.procedureRef,
         attackAbility: subject.attackAbility,
         attackDamageType: subject.attackDamageType,

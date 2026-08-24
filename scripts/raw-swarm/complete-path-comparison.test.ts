@@ -3,7 +3,12 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 
 import { Either, Schema } from "effect";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
+
+vi.mock("node:fs", async (importOriginal) => {
+  const original = await importOriginal<typeof import("node:fs")>();
+  return { ...original, readFileSync: vi.fn(original.readFileSync) };
+});
 
 import {
   assembleCompletePathMeasurement,
@@ -173,7 +178,7 @@ function invocation(
             campaignId: "synthetic-complete-path-campaign",
             evidenceSetId: "synthetic-complete-path-evidence",
             candidateId: "synthetic-complete-path-candidate",
-            candidateScenarioSha256: "a".repeat(64),
+            candidateScenarioSha256: scenarioSha256,
             plannedScenarioId: scenarioId,
           }
         : values.phase === "player" || values.phase === "postPlayReview"
@@ -598,6 +603,20 @@ function findingsProjection(
       startedAt: subject.startedAt,
     })}\n`,
   );
+  const campaign = writeAuthority(
+    root,
+    "campaign.json",
+    `${JSON.stringify({
+      type: "raw-swarm-scenario-campaign",
+      schemaVersion: 1,
+      campaignId: "synthetic-complete-path-campaign",
+      plannedScenarioId: scenarioId,
+      evidenceSetId: "synthetic-complete-path-evidence",
+      gitSha,
+      startedAt: "2026-08-14T00:00:00.000Z",
+      configSha256: "c".repeat(64),
+    })}\n`,
+  );
   return {
     type: "raw-swarm-findings",
     schemaVersion: 2,
@@ -617,6 +636,7 @@ function findingsProjection(
       { role: "frozenPrefix", ...frozenPrefix },
       { role: "final", ...finalArtifact },
       { role: "executionStart", ...executionStart },
+      { role: "campaign", ...campaign },
     ],
     findings,
   };
@@ -1513,6 +1533,90 @@ describe("complete Raw Swarm path comparison", () => {
       _tag: "Left",
       left: expect.stringContaining("setup authority"),
     });
+  }, 120_000);
+
+  test("rejects a historical benchmark Candidate from a foreign Campaign, Evidence Set, or planned Scenario", () => {
+    const source = benchmarkMeasurement("documentDeclarationSet");
+    const candidateIndex = source.invocations.findIndex(
+      ({ invocationId }) => invocationId === "composite-final",
+    );
+    const candidate = source.invocations[candidateIndex];
+    const eventAuthority = source.invocationEvents[candidateIndex];
+    if (
+      candidate === undefined ||
+      eventAuthority === undefined ||
+      candidate.schemaVersion !== 4 ||
+      candidate.phase !== "scenarioCompositeReview" ||
+      candidate.subject.tag !== "scenarioCandidate"
+    ) {
+      throw new Error("Synthetic historical Candidate evidence is incomplete.");
+    }
+    const root = resolve(repoRoot, source.invocationLedgers[0]!.path, "..");
+    const foreignSubject = {
+      ...candidate.subject,
+      campaignId:
+        "foreign-benchmark-campaign" as typeof candidate.subject.campaignId,
+      evidenceSetId:
+        "foreign-benchmark-evidence" as typeof candidate.subject.evidenceSetId,
+      plannedScenarioId:
+        "foreign-benchmark-scenario" as typeof candidate.subject.plannedScenarioId,
+    };
+    const foreignEvents = readFileSync(
+      resolve(repoRoot, eventAuthority.path),
+      "utf8",
+    )
+      .trim()
+      .split("\n")
+      .map(parseJsonRecord)
+      .map((event, index) =>
+        index === 0 ? { ...event, subject: foreignSubject } : event,
+      );
+    const foreignEventAuthority = writeAuthority(
+      root,
+      "events/foreign-composite-final.jsonl",
+      `${foreignEvents.map((event) => JSON.stringify(event)).join("\n")}\n`,
+    );
+    const foreignCandidate = {
+      ...candidate,
+      subject: foreignSubject,
+      eventsSha256: foreignEventAuthority.sha256,
+    };
+    const foreignInvocations = source.invocations.map((invocation, index) =>
+      index === candidateIndex ? foreignCandidate : invocation,
+    );
+    const foreignLedgerAuthority = writeAuthority(
+      root,
+      "foreign-benchmark-invocations.jsonl",
+      `${foreignInvocations.map((invocation) => JSON.stringify(invocation)).join("\n")}\n`,
+    );
+    const foreignFindings = {
+      ...source.findings,
+      authorities: source.findings.authorities.map((authority) =>
+        authority.role === "prePlayReviewReplayEvents-final"
+          ? { role: authority.role, ...foreignEventAuthority }
+          : authority,
+      ),
+    };
+    const foreignFindingsAuthority = writeAuthority(
+      root,
+      "foreign-benchmark-findings.json",
+      `${JSON.stringify(foreignFindings)}\n`,
+    );
+    const validation = validateCompletePathMeasurement({
+      ...source,
+      invocations: foreignInvocations,
+      invocationLedgers: [foreignLedgerAuthority],
+      invocationEvents: source.invocationEvents.map((authority, index) =>
+        index === candidateIndex ? foreignEventAuthority : authority,
+      ),
+      findings: foreignFindings,
+      findingsAuthority: foreignFindingsAuthority,
+    });
+    expect(Either.isLeft(validation)).toBe(true);
+    if (Either.isRight(validation)) return;
+    expect(validation.left).toMatch(
+      /Campaign, Evidence Set|admitted Scenario source hash/,
+    );
   }, 120_000);
 
   test("retains player obstruction evidence, rejects zero-call conclusion, and blocks comparison", () => {
@@ -2700,6 +2804,69 @@ describe("complete Raw Swarm path comparison", () => {
     });
   });
 
+  test("rejects a mutated current invocation event authority", () => {
+    const source = measurement();
+    const authority = source.invocationEvents[0];
+    if (authority === undefined) throw new Error("Missing invocation event.");
+    const path = resolve(repoRoot, authority.path);
+    writeFileSync(path, `${readFileSync(path, "utf8")}\n{"tampered":true}\n`);
+    const validation = validateCompletePathMeasurement(source);
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining("event authority hash is not canonical"),
+    });
+  });
+
+  test("rejects a mutated benchmark invocation event authority", () => {
+    const source = benchmarkMeasurement("boundedCapabilityProjection");
+    const authority = source.invocationEvents[0];
+    if (authority === undefined) throw new Error("Missing invocation event.");
+    const path = resolve(repoRoot, authority.path);
+    writeFileSync(path, `${readFileSync(path, "utf8")}\n{"tampered":true}\n`);
+    const validation = validateCompletePathMeasurement(source);
+    expect(validation).toMatchObject({
+      _tag: "Left",
+      left: expect.stringContaining(
+        "Benchmark invocation event authority hash is not canonical",
+      ),
+    });
+  });
+
+  test.each([
+    ["current", () => measurement()],
+    ["benchmark", () => benchmarkMeasurement("boundedCapabilityProjection")],
+  ])(
+    "reads each %s invocation event authority once across validation",
+    (_label, createMeasurement) => {
+      const source = createMeasurement();
+      const authority = source.invocationEvents[1];
+      if (authority === undefined) throw new Error("Missing invocation event.");
+      const absolutePath = resolve(repoRoot, authority.path);
+      const reads = vi.mocked(readFileSync);
+      reads.mockClear();
+      const originalRead = reads.getMockImplementation();
+      if (originalRead === undefined) throw new Error("Missing read mock.");
+      let eventReadCount = 0;
+      reads.mockImplementation((...args) => {
+        const result = originalRead(...args);
+        if (args[0] === absolutePath && eventReadCount++ === 0) {
+          writeFileSync(
+            absolutePath,
+            `${result.toString()}\n{"tamperedAfterSnapshot":true}\n`,
+          );
+        }
+        return result;
+      });
+      const validation = validateCompletePathMeasurement(source);
+      const eventReads = reads.mock.calls.filter(
+        ([path]) => path === absolutePath,
+      );
+      reads.mockImplementation(originalRead);
+      expect(validation._tag).toBe("Right");
+      expect(eventReads).toHaveLength(1);
+    },
+  );
+
   test("keeps historical baseline review fields separate from readiness and rejects readiness on the bounded profile", () => {
     const baseline = benchmarkMeasurement("documentDeclarationSet");
     const baselineReplay = baseline.findings.authorities.find(
@@ -3300,6 +3467,205 @@ describe("complete Raw Swarm path comparison", () => {
     expect(Either.isLeft(malformed)).toBe(true);
     if (Either.isRight(malformed)) return;
     expect(malformed.left).toContain("Findings authority");
+  });
+
+  test("retains a revised Candidate milestone while final replay binds admission", () => {
+    const source = measurement();
+    if (source.stagePlan.identity.tag !== "admitted")
+      throw new Error("Synthetic stage plan is not admitted.");
+    const root = resolve(repoRoot, source.stagePlanAuthority.path, "..");
+    const milestone = source.invocations.find(
+      ({ invocationId }) => invocationId === "composite-milestone",
+    );
+    const final = source.invocations.find(
+      ({ invocationId }) => invocationId === "composite-final",
+    );
+    if (
+      milestone === undefined ||
+      final === undefined ||
+      milestone.subject.tag !== "scenarioCandidate" ||
+      final.subject.tag !== "scenarioCandidate"
+    ) {
+      throw new Error("Synthetic composite-review invocations are incomplete.");
+    }
+    const milestoneSubject = {
+      ...milestone.subject,
+      candidateScenarioSha256: "b".repeat(64),
+    };
+    const finalSubject = {
+      ...final.subject,
+      candidateScenarioSha256: source.stagePlan.identity.scenarioSha256,
+    };
+    const revisedEntries = source.invocations.map((entry) =>
+      entry.invocationId === milestone.invocationId
+        ? { ...entry, subject: milestoneSubject }
+        : entry.invocationId === final.invocationId
+          ? { ...entry, subject: finalSubject }
+          : entry,
+    );
+    const retained = revisedEntries.map((entry) =>
+      retainInvocation(root, entry),
+    );
+    const retainedMilestone = retained.find(
+      ({ entry }) => entry.invocationId === milestone.invocationId,
+    );
+    const retainedFinal = retained.find(
+      ({ entry }) => entry.invocationId === final.invocationId,
+    );
+    if (retainedMilestone === undefined || retainedFinal === undefined) {
+      throw new Error("Synthetic revised invocation evidence is incomplete.");
+    }
+    const invocationLedger = writeAuthority(
+      root,
+      "revised-invocations.jsonl",
+      `${retained.map(({ entry }) => JSON.stringify(entry)).join("\n")}\n`,
+    );
+    const replayInput = (
+      reviewStage: "milestone" | "final",
+      invocationId: string,
+      subject: typeof milestoneSubject,
+    ) => ({
+      schemaVersion: 3 as const,
+      phase: "scenarioCompositeReview" as const,
+      reviewStage,
+      subject,
+      sourceGitSha: gitSha,
+      invocationId,
+      model: "gpt-5.6-luna" as const,
+      reasoningEffort: "max" as const,
+      prompt: `Synthetic ${reviewStage} review prompt.`,
+      outputJsonSchema: codexOutputJsonSchema(
+        CurrentScenarioCompositeReviewSchema,
+      ),
+      result: syntheticCompositeReview(),
+    });
+    const replayMilestone = writeAuthority(
+      root,
+      "revised-replay-milestone.json",
+      `${JSON.stringify(replayInput("milestone", milestone.invocationId, milestoneSubject))}\n`,
+    );
+    const replayFinal = writeAuthority(
+      root,
+      "revised-replay-final.json",
+      `${JSON.stringify(replayInput("final", final.invocationId, finalSubject))}\n`,
+    );
+    const replayAuthorityReplacements = new Map([
+      ["replay-milestone", replayMilestone],
+      ["replay-final", replayFinal],
+      ["prePlayReviewReplayEvents-milestone", retainedMilestone.authority],
+      ["prePlayReviewReplayEvents-final", retainedFinal.authority],
+    ]);
+    const revisedFindings = {
+      ...source.findings,
+      authorities: source.findings.authorities.map((authority) => {
+        const replacement = replayAuthorityReplacements.get(authority.role);
+        return replacement === undefined
+          ? authority
+          : { role: authority.role, ...replacement };
+      }),
+    };
+    const revised = withRetainedFindings(
+      {
+        ...source,
+        invocationLedgers: [invocationLedger],
+        invocations: retained.map(({ entry }) => entry),
+        invocationEvents: retained.map(({ authority }) => authority),
+      },
+      revisedFindings,
+    );
+
+    const validation = validateCompletePathMeasurement(revised);
+    expect(Either.isRight(validation)).toBe(true);
+  });
+
+  test("rejects swapped named replay authorities even when each path and hash is valid", () => {
+    const source = measurement();
+    const milestone = source.findings.authorities.find(
+      ({ role }) => role === "replay-milestone",
+    );
+    const final = source.findings.authorities.find(
+      ({ role }) => role === "replay-final",
+    );
+    if (milestone === undefined || final === undefined) {
+      throw new Error("Synthetic named replay authorities are incomplete.");
+    }
+    const swappedFindings = {
+      ...source.findings,
+      authorities: source.findings.authorities.map((authority) =>
+        authority.role === "replay-milestone"
+          ? {
+              role: authority.role,
+              path: final.path,
+              sha256: final.sha256,
+              byteLength: final.byteLength,
+            }
+          : authority.role === "replay-final"
+            ? {
+                role: authority.role,
+                path: milestone.path,
+                sha256: milestone.sha256,
+                byteLength: milestone.byteLength,
+              }
+            : authority,
+      ),
+    };
+    const invalid = validateCompletePathMeasurement(
+      withRetainedFindings(source, swappedFindings),
+    );
+    expect(Either.isLeft(invalid)).toBe(true);
+    if (Either.isRight(invalid)) return;
+    expect(invalid.left).toContain("Replay authority role replay-milestone");
+  });
+
+  test("rejects numbered replay authorities without milestone/final stage names", () => {
+    const source = measurement();
+    const numberedFindings = {
+      ...source.findings,
+      authorities: source.findings.authorities.map((authority) =>
+        authority.role === "replay-milestone"
+          ? { ...authority, role: "replay-1" }
+          : authority.role === "replay-final"
+            ? { ...authority, role: "replay-2" }
+            : authority,
+      ),
+    };
+    const invalid = validateCompletePathMeasurement(
+      withRetainedFindings(source, numberedFindings),
+    );
+    expect(Either.isLeft(invalid)).toBe(true);
+    if (Either.isRight(invalid)) return;
+    expect(invalid.left).toMatch(
+      /replay-(?:1|2)|retained milestone and one final/,
+    );
+  });
+
+  test("rejects the legacy unnumbered replay authority role", () => {
+    const source = measurement();
+    const milestone = source.findings.authorities.find(
+      ({ role }) => role === "replay-milestone",
+    );
+    if (milestone === undefined) {
+      throw new Error("Synthetic milestone replay authority is incomplete.");
+    }
+    const root = resolve(repoRoot, milestone.path, "..");
+    const legacy = writeAuthority(
+      root,
+      "legacy-replay.json",
+      readFileSync(resolve(repoRoot, milestone.path), "utf8"),
+    );
+    const legacyFindings = {
+      ...source.findings,
+      authorities: [
+        ...source.findings.authorities,
+        { role: "replay", ...legacy },
+      ],
+    };
+    const invalid = validateCompletePathMeasurement(
+      withRetainedFindings(source, legacyFindings),
+    );
+    expect(Either.isLeft(invalid)).toBe(true);
+    if (Either.isRight(invalid)) return;
+    expect(invalid.left).toContain("role is not closed: replay");
   });
 
   test("assembles and writes a current measurement from canonical authorities", () => {

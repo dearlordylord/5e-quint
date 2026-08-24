@@ -976,7 +976,13 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       requiredAbilityCheckRollMode(resolved.state, spellTargetId, "wis"),
     ).toBe("disadvantage");
     expect(
-      requiredAttackRollMode(resolved.state, spellTargetId, spellCasterId),
+      requiredAttackRollMode(
+        resolved.state,
+        spellTargetId,
+        spellCasterId,
+        undefined,
+        [],
+      ),
     ).toBe("disadvantage");
 
     const concentrationBroken = breakBattleConcentration(
@@ -1012,7 +1018,13 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     });
     expect(attackRoll).toMatchObject({ rollMode: "disadvantage" });
     expect(
-      requiredAttackRollMode(afterMiss, spellTargetId, spellCasterId),
+      requiredAttackRollMode(
+        afterMiss,
+        spellTargetId,
+        spellCasterId,
+        undefined,
+        [],
+      ),
     ).toBe("disadvantage");
     const casterTurn = endTurn({
       state: afterMiss,
@@ -1025,7 +1037,13 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       requiredAbilityCheckRollMode(casterTurn.state, spellTargetId, "str"),
     ).toBeUndefined();
     expect(
-      requiredAttackRollMode(casterTurn.state, spellTargetId, spellCasterId),
+      requiredAttackRollMode(
+        casterTurn.state,
+        spellTargetId,
+        spellCasterId,
+        undefined,
+        [],
+      ),
     ).toBeUndefined();
   });
 
@@ -1137,7 +1155,13 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       throw new Error("Expected Heat Metal failed save drop to resolve.");
     }
     expect(
-      requiredAttackRollMode(resolved.state, spellTargetId, spellCasterId),
+      requiredAttackRollMode(
+        resolved.state,
+        spellTargetId,
+        spellCasterId,
+        undefined,
+        [],
+      ),
     ).toBeUndefined();
     expect(
       requireCombatant(resolved.state, spellTargetId).activeEffects,

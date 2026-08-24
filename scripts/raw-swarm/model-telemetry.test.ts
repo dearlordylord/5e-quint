@@ -1,5 +1,7 @@
-import { spawnSync } from "node:child_process";
+import { EventEmitter } from "node:events";
 import {
+  appendFileSync,
+  chmodSync,
   existsSync,
   mkdtempSync,
   readFileSync,
@@ -16,6 +18,9 @@ import { Either, Schema } from "effect";
 import {
   codexInvocationMetadataMatchesArgs,
   codexJsonArgs,
+  codexRawRetentionArtifactPath,
+  codexRawRetentionEventFromEvents,
+  createCodexRawSnapshot,
   benchmarkModelInvocationCompletedEvent,
   benchmarkModelInvocationEvidenceFromEvents,
   benchmarkModelInvocationStartedEvent,
@@ -26,22 +31,1013 @@ import {
   modelUsageFromCodexEvents,
   parseModelInvocationLedgerEntry,
   parseBenchmarkModelInvocationLedgerEntry,
+  jsonModelInvocationLastMessageDecoder,
+  readCodexEvents,
+  readCodexRawRetentionArtifact,
+  invocationEventsSha256,
   CurrentModelInvocationLedgerEntrySchema,
+  CurrentModelInvocationLedgerEntryV4Schema,
+  CurrentModelInvocationLedgerEntryV5Schema,
+  runCodexInvocation,
+  signalOwnedProcess,
+  terminateOwnedProcess,
+  type SpawnOwnedCodexProcess,
+  writeAllSync,
 } from "./model-telemetry.ts";
 import {
   decodeHistoricalScenarioId,
   decodeScenarioId,
   GitShaSchema,
-  repoRoot,
   ScenarioIdSchema,
 } from "./transcript.ts";
 
-const modelTelemetryCli = resolve(
-  repoRoot,
-  "scripts/raw-swarm/model-telemetry-cli.ts",
-);
-
 describe("Raw Swarm model invocation telemetry", () => {
+  async function waitForFile(path: string, timeoutMilliseconds = 1_000) {
+    const deadline = Date.now() + timeoutMilliseconds;
+    while (!existsSync(path) && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (!existsSync(path)) {
+      throw new Error(`Timed out waiting for readiness file: ${path}`);
+    }
+  }
+
+  function fakeInvocationInput(root: string, timeoutMilliseconds?: number) {
+    const events = resolve(root, "events.jsonl");
+    const log = resolve(root, "agent.log");
+    const ledger = resolve(root, "ledger.jsonl");
+    const output = resolve(root, "output.json");
+    return {
+      args: [
+        "exec",
+        "-m",
+        "gpt-5.6-sol",
+        "-c",
+        'model_reasoning_effort="medium"',
+      ] as const,
+      cwd: root,
+      env: { ...process.env, PATH: `${root}:${process.env.PATH ?? ""}` },
+      eventPath: events,
+      logPath: log,
+      ledgerPath: ledger,
+      phase: "scenarioGeneration" as const,
+      stagePlanReason: "The campaign requires scenario generation.",
+      subject: {
+        tag: "scenarioCampaign" as const,
+        campaignId: "synthetic-campaign",
+        evidenceSetId: "synthetic-evidence",
+        plannedScenarioId: "synthetic-scenario",
+      },
+      gitSha: Schema.decodeUnknownSync(GitShaSchema)("a".repeat(40)),
+      fallbackInvocationId: "synthetic-fallback",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      timeoutMilliseconds,
+      operation: {
+        tag: "expectedLastMessage" as const,
+        expected: {
+          path: output,
+          decode: (contents: string) => {
+            try {
+              return Either.right(JSON.parse(contents));
+            } catch {
+              return Either.left({
+                tag: "malformed",
+                message: "synthetic malformed JSON",
+              });
+            }
+          },
+        },
+      },
+    };
+  }
+
+  function expectLedgerRereadsFromEvents(
+    eventPath: string,
+    ledgerPath: string,
+  ): void {
+    const events = readCodexEvents(eventPath);
+    const ledger = parseModelInvocationLedgerEntry(
+      JSON.parse(readFileSync(ledgerPath, "utf8")),
+    );
+    expect(events.tag).toBe("valid");
+    expect(ledger._tag).toBe("Right");
+    if (events.tag !== "valid" || Either.isLeft(ledger)) return;
+    const reread = modelInvocationEvidenceFromEvents(events.events);
+    expect(reread.tag).toBe("valid");
+    if (reread.tag !== "valid") return;
+    const ledgerEntry = Object.fromEntries(
+      Object.entries(ledger.right).filter(([key]) => key !== "eventsSha256"),
+    );
+    expect(reread.entry).toEqual(ledgerEntry);
+    expect(invocationEventsSha256(eventPath)).toBe(ledger.right.eventsSha256);
+  }
+
+  test("completes canonical byte writes when the writer returns short chunks", () => {
+    const contents = Buffer.from("canonical authority bytes", "utf8");
+    const chunks: Buffer[] = [];
+    const positions: Array<number | null> = [];
+    writeAllSync(17, contents, 0, (_fd, buffer, offset, length, position) => {
+      const written = Math.min(3, length);
+      chunks.push(Buffer.from(buffer.subarray(offset, offset + written)));
+      positions.push(position);
+      return written;
+    });
+    expect(Buffer.concat(chunks)).toEqual(contents);
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(positions).toEqual(chunks.map((_chunk, index) => index * 3));
+  });
+
+  test("retains timeout telemetry and a failed result when a child stalls without output", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-timeout-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      `#!/bin/sh\nexec ${JSON.stringify(process.execPath)} -e 'setTimeout(() => {}, 1000)'\n`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root, 25);
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: {
+          tag: "timedOut",
+          timeoutMilliseconds: 25,
+          termination: {
+            tag: "reaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGTERM" },
+          },
+        },
+      });
+      const events = readCodexEvents(input.eventPath);
+      expect(events.tag).toBe("valid");
+      if (events.tag === "valid") {
+        expect(events.events.at(-1)).toMatchObject({
+          type: "raw-swarm.invocation.completed",
+          exit: {
+            tag: "timedOut",
+            timeoutMilliseconds: 25,
+            termination: {
+              tag: "reaped",
+              signalDelivery: { tag: "confirmed", signal: "SIGTERM" },
+            },
+          },
+          result: { tag: "failed" },
+        });
+      }
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: {
+            tag: "timedOut",
+            timeoutMilliseconds: 25,
+            termination: {
+              tag: "reaped",
+              signalDelivery: { tag: "confirmed", signal: "SIGTERM" },
+            },
+          },
+          result: { tag: "failed" },
+        },
+      });
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("retains typed timeout evidence when a child leaves a partial JSONL line", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-partial-timeout-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      `#!/bin/sh
+printf '{"type":"turn.started"}\n{"type":"turn.completed"'
+exec ${process.execPath} -e 'setTimeout(() => {}, 1000)'
+`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root, 25);
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: { tag: "timedOut", timeoutMilliseconds: 25 },
+        cause: { tag: "codex" },
+      });
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          schemaVersion: 5,
+          exit: { tag: "timedOut", timeoutMilliseconds: 25 },
+          result: { tag: "failed", failureKind: "codexEvent" },
+        },
+      });
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-event-failure",
+          line: 3,
+          message: "Codex event line 3 is malformed JSON.",
+          rawLineBase64: Buffer.from('{"type":"turn.completed"').toString(
+            "base64",
+          ),
+        });
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          source: "settledSidecar",
+          reason: "malformedJsonl",
+          rawContentsSha256: invocationEventsSha256(
+            `${input.eventPath}.codex-raw`,
+          ),
+          rawContentsByteLength: readFileSync(`${input.eventPath}.codex-raw`)
+            .byteLength,
+        });
+      }
+      expect(existsSync(`${input.eventPath}.codex-raw`)).toBe(true);
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("canonicalizes a full malformed JSONL line before hashing evidence", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-full-malformed-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      `#!/bin/sh
+printf '{"type":"turn.started"}\nnot-json\n{"type":"turn.completed"}\n'
+exit 7
+`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: { tag: "exited", status: 7 },
+        cause: { tag: "codex" },
+      });
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-event-failure",
+          line: 3,
+          message: "Codex event line 3 is malformed JSON.",
+          rawLineBase64: Buffer.from("not-json").toString("base64"),
+        });
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          source: "settledSidecar",
+          reason: "malformedJsonl",
+          rawContentsSha256: invocationEventsSha256(
+            `${input.eventPath}.codex-raw`,
+          ),
+          rawContentsByteLength: readFileSync(`${input.eventPath}.codex-raw`)
+            .byteLength,
+        });
+      }
+      const rawEventContents = readFileSync(`${input.eventPath}.codex-raw`);
+      const rawEventPrefixLength = rawEventContents.indexOf(0x0a) + 1;
+      expect(rawEventPrefixLength).toBeGreaterThan(0);
+      expect(rawEventContents.subarray(rawEventPrefixLength)).toEqual(
+        Buffer.from(
+          '{"type":"turn.started"}\nnot-json\n{"type":"turn.completed"}\n',
+        ),
+      );
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("records a typed current event-decode failure without a timeout", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-partial-exit-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      `#!/bin/sh
+printf '{"type":"turn.completed"'
+exit 7
+`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: { tag: "exited", status: 7 },
+        cause: { tag: "codex" },
+      });
+      expect(
+        parseModelInvocationLedgerEntry(
+          JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+        ),
+      ).toMatchObject({
+        _tag: "Right",
+        right: {
+          schemaVersion: 5,
+          exit: { tag: "exited", status: 7 },
+          result: { tag: "failed", failureKind: "codexEvent" },
+        },
+      });
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("escalates a TERM-ignoring child to KILL without leaving a process behind", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-term-ignore-"));
+    const codex = resolve(root, "codex");
+    const pidPath = resolve(root, "child.pid");
+    const readyPath = resolve(root, "child-ready");
+    writeFileSync(
+      codex,
+      `#!/bin/sh
+exec ${process.execPath} -e 'process.on("SIGTERM", () => {}); require("node:fs").writeFileSync(process.env.RAW_CHILD_PID, String(process.pid)); require("node:fs").writeFileSync(process.env.RAW_CHILD_READY, "ready"); setInterval(() => {}, 10000)'
+`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root, 1_000);
+      input.env.RAW_CHILD_PID = pidPath;
+      input.env.RAW_CHILD_READY = readyPath;
+      const invocation = runCodexInvocation(input);
+      await waitForFile(readyPath);
+      const startedMilliseconds = Date.now();
+      const result = await invocation;
+      expect(Date.now() - startedMilliseconds).toBeLessThan(2_000);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: {
+          tag: "timedOut",
+          timeoutMilliseconds: 1_000,
+          termination: {
+            tag: "reaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          },
+        },
+        cause: { tag: "process" },
+      });
+      const childPid = Number(readFileSync(pidPath, "utf8"));
+      expect(Number.isInteger(childPid)).toBe(true);
+      expect(() => process.kill(childPid, 0)).toThrow();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  test("keeps supervising a TERM-exiting leader until its ignored descendant is gone", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-group-term-ignore-"));
+    const codex = resolve(root, "codex");
+    const leaderPath = resolve(root, "leader.cjs");
+    const descendantPidPath = resolve(root, "descendant.pid");
+    const leaderReadyPath = resolve(root, "leader-ready");
+    const leaderExitedPath = resolve(root, "leader-exited");
+    const leader = `
+const fs = require("node:fs");
+const { spawn } = require("node:child_process");
+const descendant = spawn(process.execPath, ["-e", "process.on('SIGTERM', () => {}); setInterval(() => {}, 10000)"], { stdio: "ignore" });
+fs.writeFileSync(process.env.RAW_DESCENDANT_PID, String(descendant.pid));
+process.on("SIGTERM", () => { fs.writeFileSync(process.env.RAW_LEADER_EXITED, "yes"); process.exit(0); });
+fs.writeFileSync(process.env.RAW_LEADER_READY, "yes");
+setInterval(() => {}, 10000);
+`;
+    writeFileSync(leaderPath, leader);
+    writeFileSync(codex, `#!/bin/sh\nexec ${process.execPath} ${leaderPath}\n`);
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root, 1_000);
+      input.env.RAW_DESCENDANT_PID = descendantPidPath;
+      input.env.RAW_LEADER_READY = leaderReadyPath;
+      input.env.RAW_LEADER_EXITED = leaderExitedPath;
+      const invocation = runCodexInvocation(input);
+      await waitForFile(leaderReadyPath, 900);
+      const result = await invocation;
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: {
+          tag: "timedOut",
+          termination: {
+            tag: "reaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          },
+        },
+        cause: { tag: "process" },
+      });
+      expect(readFileSync(leaderExitedPath, "utf8")).toBe("yes");
+      const descendantPid = Number(readFileSync(descendantPidPath, "utf8"));
+      expect(Number.isInteger(descendantPid)).toBe(true);
+      const deadline = Date.now() + 1_000;
+      while (Date.now() < deadline) {
+        try {
+          process.kill(descendantPid, 0);
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        } catch {
+          break;
+        }
+      }
+      expect(() => process.kill(descendantPid, 0)).toThrow();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  test("settles on a disappeared group even when Node has not emitted exit", async () => {
+    if (process.platform === "win32") return;
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-group-gone-"));
+    let killCount = 0;
+    const child = Object.assign(new EventEmitter(), {
+      pid: 99_999_999,
+      exitCode: null,
+      signalCode: null,
+      kill: () => {
+        killCount += 1;
+        return true;
+      },
+    });
+    const spawnProcess: SpawnOwnedCodexProcess = () => child;
+    try {
+      const input = fakeInvocationInput(root, 10);
+      const result = await runCodexInvocation({ ...input, spawnProcess });
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: {
+          tag: "timedOut",
+          termination: {
+            tag: "reaped",
+            signalDelivery: {
+              tag: "notDelivered",
+              reason: "Owned process group no longer exists.",
+            },
+          },
+        },
+      });
+      expect(killCount).toBe(0);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("waits for a normal leader exit to clean an ignored descendant before reading evidence", async () => {
+    const root = mkdtempSync(
+      resolve(tmpdir(), "dnd-model-normal-group-cleanup-"),
+    );
+    const codex = resolve(root, "codex");
+    const leaderPath = resolve(root, "leader.cjs");
+    const descendantPidPath = resolve(root, "descendant.pid");
+    const leaderReadyPath = resolve(root, "leader-ready");
+    const leader = `
+const fs = require("node:fs");
+const { spawn } = require("node:child_process");
+const descendant = spawn(process.execPath, ["-e", "process.on('SIGTERM', () => {}); setInterval(() => {}, 10000)"], { stdio: "ignore" });
+fs.writeFileSync(process.env.RAW_DESCENDANT_PID, String(descendant.pid));
+fs.writeFileSync(process.env.RAW_LEADER_READY, "yes");
+fs.writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ result: "ready" }));
+process.stdout.write('{"type":"turn.completed"}\\n');
+process.exit(0);
+`;
+    writeFileSync(leaderPath, leader);
+    writeFileSync(codex, `#!/bin/sh\nexec ${process.execPath} ${leaderPath}\n`);
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root, 1_000);
+      input.env.RAW_DESCENDANT_PID = descendantPidPath;
+      input.env.RAW_LEADER_READY = leaderReadyPath;
+      input.env.RAW_OUTPUT_PATH = input.operation.expected.path;
+      const invocation = runCodexInvocation(input);
+      await waitForFile(leaderReadyPath);
+      const result = await invocation;
+      expect(result).toEqual({
+        tag: "succeeded",
+        operation: "expectedLastMessage",
+        process: { tag: "exited", status: 0 },
+        output: { tag: "decoded", value: { result: "ready" } },
+      });
+      const descendantPid = Number(readFileSync(descendantPidPath, "utf8"));
+      expect(Number.isInteger(descendantPid)).toBe(true);
+      expect(() => process.kill(descendantPid, 0)).toThrow();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  test("records an unreaped normal-exit cleanup in canonical evidence", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-normal-unreaped-"));
+    const child = Object.assign(new EventEmitter(), {
+      pid: undefined,
+      exitCode: null,
+      signalCode: null,
+      kill: () => true,
+    });
+    const spawnProcess: SpawnOwnedCodexProcess = () => {
+      queueMicrotask(() => child.emit("exit", 0, null));
+      return child;
+    };
+    const terminateAfterExit: typeof terminateOwnedProcess = async () => ({
+      tag: "unreaped",
+      signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+      reason: "Synthetic normal-exit cleanup did not settle.",
+    });
+    try {
+      const input = fakeInvocationInput(root, 1_000);
+      const result = await runCodexInvocation({
+        ...input,
+        spawnProcess,
+        terminateOwnedProcess: terminateAfterExit,
+      });
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: {
+          tag: "cleanupUnreaped",
+          leader: { tag: "exited", status: 0 },
+          signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          reason: "Synthetic normal-exit cleanup did not settle.",
+        },
+        cause: { tag: "process" },
+      });
+      const rawEventPath = `${input.eventPath}.codex-raw`;
+      const snapshotPath = `${rawEventPath}.snapshot`;
+      expect(existsSync(rawEventPath)).toBe(true);
+      expect(existsSync(snapshotPath)).toBe(true);
+      expect(readFileSync(snapshotPath)).toEqual(readFileSync(rawEventPath));
+      expect(readCodexEvents(input.eventPath)).toMatchObject({ tag: "valid" });
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: {
+            tag: "cleanupUnreaped",
+            leader: { tag: "exited", status: 0 },
+          },
+          result: { tag: "failed" },
+        },
+      });
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("bounds a supervisor whose child never emits a settlement event", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-no-settlement-"));
+    let killCount = 0;
+    const child = Object.assign(new EventEmitter(), {
+      pid: undefined,
+      exitCode: null,
+      signalCode: null,
+      kill: () => {
+        killCount += 1;
+        return true;
+      },
+    });
+    const spawnProcess: SpawnOwnedCodexProcess = () => child;
+    try {
+      const input = fakeInvocationInput(root, 10);
+      const startedMilliseconds = Date.now();
+      const result = await runCodexInvocation({ ...input, spawnProcess });
+      expect(Date.now() - startedMilliseconds).toBeLessThan(1_000);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: {
+          tag: "timedOut",
+          termination: {
+            tag: "unreaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          },
+        },
+      });
+      expect(killCount).toBe(2);
+      const rawEventPath = `${input.eventPath}.codex-raw`;
+      const snapshotPath = `${rawEventPath}.snapshot`;
+      expect(existsSync(rawEventPath)).toBe(true);
+      expect(existsSync(snapshotPath)).toBe(true);
+      expect(readFileSync(snapshotPath)).toEqual(readFileSync(rawEventPath));
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          source: "observedImmutableSnapshot",
+          reason: "unreapedProcess",
+          snapshotPathSuffix: ".codex-raw.snapshot",
+          snapshotSha256: invocationEventsSha256(`${rawEventPath}.snapshot`),
+          snapshotByteLength: readFileSync(`${rawEventPath}.snapshot`)
+            .byteLength,
+        });
+      }
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: {
+            tag: "timedOut",
+            termination: { tag: "unreaped" },
+          },
+          result: { tag: "failed" },
+        },
+      });
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("keeps an observed raw snapshot stable if the live sidecar grows", () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-raw-snapshot-"));
+    const rawEventPath = resolve(root, "events.jsonl.codex-raw");
+    const observed = Buffer.from('{"type":"turn.started"}\npartial', "utf8");
+    writeFileSync(rawEventPath, observed);
+    try {
+      const snapshot = createCodexRawSnapshot(rawEventPath);
+      appendFileSync(rawEventPath, Buffer.from("\nlate-suffix", "utf8"));
+      expect(readFileSync(snapshot.path)).toEqual(observed);
+      expect(readFileSync(rawEventPath)).toEqual(
+        Buffer.concat([observed, Buffer.from("\nlate-suffix", "utf8")]),
+      );
+      expect(snapshot.event).toEqual({
+        type: "raw-swarm.invocation.codex-raw-retained",
+        source: "observedImmutableSnapshot",
+        reason: "unreapedProcess",
+        snapshotPathSuffix: ".codex-raw.snapshot",
+        snapshotSha256: invocationEventsSha256(snapshot.path),
+        snapshotByteLength: observed.byteLength,
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("resolves and verifies only the adjacent canonical retention artifact", () => {
+    const root = mkdtempSync(
+      resolve(tmpdir(), "dnd-model-retention-admission-"),
+    );
+    const eventPath = resolve(root, "retained.events.jsonl");
+    const rawPath = `${eventPath}.codex-raw`;
+    const contents = Buffer.from("settled raw bytes\n", "utf8");
+    writeFileSync(rawPath, contents);
+    const event = {
+      type: "raw-swarm.invocation.codex-raw-retained",
+      source: "settledSidecar",
+      reason: "failedInvocation",
+      rawContentsSha256: invocationEventsSha256(rawPath),
+      rawContentsByteLength: contents.byteLength,
+    } as const;
+    try {
+      const decoded = codexRawRetentionEventFromEvents([event]);
+      expect(decoded).toEqual({ tag: "valid", event });
+      if (decoded.tag !== "valid" || decoded.event === undefined) return;
+      expect(codexRawRetentionArtifactPath(eventPath, decoded.event)).toBe(
+        rawPath,
+      );
+      const retained = readCodexRawRetentionArtifact({
+        eventPath,
+        event: decoded.event,
+      });
+      expect(retained).toMatchObject({
+        _tag: "Right",
+        right: { path: rawPath, contents },
+      });
+      writeFileSync(rawPath, "substituted\n");
+      expect(
+        readCodexRawRetentionArtifact({ eventPath, event: decoded.event }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: expect.stringContaining("does not match"),
+      });
+      rmSync(rawPath);
+      expect(
+        readCodexRawRetentionArtifact({ eventPath, event: decoded.event }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: expect.stringContaining("missing"),
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("retains a failed result when a child exits zero without creating output", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-missing-output-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      '#!/bin/sh\nprintf \'{"type":"turn.completed"}\\n\'\nexit 0\n',
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        cause: {
+          tag: "lastMessage",
+          failureKind: "lastMessageMissing",
+          reason: expect.stringContaining("does not exist"),
+        },
+      });
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: { tag: "exited", status: 0 },
+          result: {
+            tag: "failed",
+            reason: expect.stringContaining("does not exist"),
+          },
+        },
+      });
+      const rawEventPath = `${input.eventPath}.codex-raw`;
+      expect(existsSync(rawEventPath)).toBe(true);
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          source: "settledSidecar",
+          reason: "failedInvocation",
+          rawContentsSha256: invocationEventsSha256(rawEventPath),
+          rawContentsByteLength: readFileSync(rawEventPath).byteLength,
+        });
+      }
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("records a typed failure when a zero-exit stream fails analysis", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-analysis-failure-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      '#!/bin/sh\nprintf \'{"type":"turn.started"}\\n\'\nexit 0\n',
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: { tag: "exited", status: 0 },
+        cause: { tag: "codex" },
+      });
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        expect(events.events.at(-1)).toMatchObject({
+          type: "raw-swarm.invocation.completed",
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "failed", failureKind: "codexEvent" },
+        });
+      }
+      expect(
+        parseModelInvocationLedgerEntry(
+          JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+        ),
+      ).toMatchObject({
+        _tag: "Right",
+        right: {
+          schemaVersion: 5,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "failed", failureKind: "codexEvent" },
+        },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects a preexisting expected output before starting the child", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-stale-output-"));
+    const codex = resolve(root, "codex");
+    const startedPath = resolve(root, "started");
+    writeFileSync(
+      codex,
+      `#!/bin/sh\nprintf '%s' started > ${JSON.stringify(startedPath)}\nexit 0\n`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      writeFileSync(input.operation.expected.path, '{"result":"stale"}\n');
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        cause: {
+          tag: "process",
+          reason: expect.stringContaining(
+            "claimed exclusively before invocation",
+          ),
+        },
+      });
+      expect(existsSync(startedPath)).toBe(false);
+      expect(
+        parseModelInvocationLedgerEntry(
+          JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+        ),
+      ).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: { tag: "failedToStart" },
+          result: { tag: "failed" },
+        },
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects a non-positive timeout instead of disabling the boundary", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-invalid-timeout-"));
+    try {
+      await expect(
+        runCodexInvocation(fakeInvocationInput(root, 0)),
+      ).rejects.toThrow("positive integer");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("binds output flags to operations before spawning", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-no-output-flag-"));
+    try {
+      const input = fakeInvocationInput(root);
+      await expect(
+        runCodexInvocation({
+          ...input,
+          args: [
+            ...input.args,
+            "--output-last-message",
+            input.operation.expected.path,
+          ] as const,
+        }),
+      ).rejects.toThrow("expected-last-message operation owns");
+      await expect(
+        runCodexInvocation({
+          ...input,
+          args: [
+            ...input.args,
+            "--output-last-message",
+            input.operation.expected.path,
+          ] as const,
+          operation: { tag: "noOutput" as const },
+        }),
+      ).rejects.toThrow("no-output invocation cannot include");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("separates completion telemetry from a final JSON event without a newline", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-event-separator-"));
+    const codex = resolve(root, "codex");
+    writeFileSync(
+      codex,
+      `#!/bin/sh\nprintf '{"type":"turn.started"}\n{"type":"turn.completed"}'\n`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        cause: { tag: "lastMessage", failureKind: "lastMessageMissing" },
+      });
+      expect(readCodexEvents(input.eventPath)).toMatchObject({ tag: "valid" });
+      expect(existsSync(input.ledgerPath)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("retains a schema-decoded last message before recording success", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-valid-output-"));
+    const codex = resolve(root, "codex");
+    const argsPath = resolve(root, "args.txt");
+    writeFileSync(
+      codex,
+      `#!/bin/sh
+printf '%s\\n' "$@" > "$RAW_ARGS_PATH"
+printf '{"type":"turn.completed"}\n'
+exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({result:"ready"}))'
+`,
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      input.env.RAW_OUTPUT_PATH = input.operation.expected.path;
+      input.env.RAW_ARGS_PATH = argsPath;
+      input.operation.expected.decode = jsonModelInvocationLastMessageDecoder(
+        Schema.Struct({ result: Schema.Literal("ready") }),
+      );
+      const result = await runCodexInvocation(input);
+      expect(result).toEqual({
+        tag: "succeeded",
+        operation: "expectedLastMessage",
+        process: { tag: "exited", status: 0 },
+        output: { tag: "decoded", value: { result: "ready" } },
+      });
+      const invocationArgs = readFileSync(argsPath, "utf8")
+        .trimEnd()
+        .split("\n");
+      expect(
+        invocationArgs.filter((arg) => arg === "--output-last-message"),
+      ).toHaveLength(1);
+      expect(invocationArgs.at(-1)).toBe(input.operation.expected.path);
+      const ledger = parseModelInvocationLedgerEntry(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+      );
+      expect(ledger).toMatchObject({
+        _tag: "Right",
+        right: {
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+        },
+      });
+      expect(existsSync(`${input.eventPath}.codex-raw`)).toBe(false);
+      expect(existsSync(`${input.eventPath}.codex-raw.snapshot`)).toBe(false);
+      expect(
+        JSON.parse(readFileSync(input.ledgerPath, "utf8")).eventsSha256,
+      ).toBe(invocationEventsSha256(input.eventPath));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test.each([
+    ["empty", "", "lastMessageEmpty"],
+    ["malformed", "{", "lastMessageMalformed"],
+    ["schema-invalid", '{"unexpected":true}', "lastMessageSchemaInvalid"],
+  ] as const)(
+    "classifies %s output as a typed invocation failure",
+    async (_label, contents, failureKind) => {
+      const root = mkdtempSync(resolve(tmpdir(), "dnd-model-output-failure-"));
+      try {
+        const input = fakeInvocationInput(root);
+        input.env.RAW_OUTPUT_PATH = input.operation.expected.path;
+        input.env.RAW_OUTPUT_CONTENT = contents;
+        input.operation.expected.decode = (value: string) => {
+          try {
+            const parsed: unknown = JSON.parse(value);
+            if (
+              typeof parsed !== "object" ||
+              parsed === null ||
+              !("result" in parsed)
+            ) {
+              return Either.left({
+                tag: "schemaInvalid",
+                message: "result is required",
+              });
+            }
+            return Either.right(parsed);
+          } catch (error: unknown) {
+            return Either.left({
+              tag: "malformed",
+              message: error instanceof Error ? error.message : String(error),
+            });
+          }
+        };
+        writeFileSync(
+          resolve(root, "codex"),
+          `#!/bin/sh\nprintf '{"type":"turn.completed"}\n'\nexec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, process.env.RAW_OUTPUT_CONTENT)'\n`,
+        );
+        chmodSync(resolve(root, "codex"), 0o755);
+        const result = await runCodexInvocation(input);
+        expect(result).toMatchObject({
+          tag: "failed",
+          cause: { tag: "lastMessage", failureKind },
+        });
+        const ledger = parseModelInvocationLedgerEntry(
+          JSON.parse(readFileSync(input.ledgerPath, "utf8")),
+        );
+        expect(ledger).toMatchObject({
+          _tag: "Right",
+          right: { result: { tag: "failed", failureKind } },
+        });
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+  );
+
   test("requires a candidate authority for composite comparison ledger rows", () => {
     const common = {
       schemaVersion: 4 as const,
@@ -85,6 +1081,39 @@ describe("Raw Swarm model invocation telemetry", () => {
           plannedScenarioId: "synthetic-scenario",
         },
       }),
+    ).toMatchObject({ _tag: "Right" });
+    const timedOut = {
+      ...common,
+      subject: {
+        tag: "scenarioCandidate" as const,
+        campaignId: "synthetic-campaign",
+        evidenceSetId: "synthetic-evidence",
+        candidateId: "synthetic-candidate",
+        candidateScenarioSha256: "c".repeat(64),
+        plannedScenarioId: "synthetic-scenario",
+      },
+      exit: {
+        tag: "timedOut" as const,
+        timeoutMilliseconds: 25,
+        termination: {
+          tag: "reaped" as const,
+          signalDelivery: {
+            tag: "confirmed" as const,
+            signal: "SIGKILL" as const,
+          },
+        },
+      },
+      result: { tag: "failed" as const, reason: "Synthetic timeout." },
+    };
+    expect(
+      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV4Schema, {
+        onExcessProperty: "error",
+      })(timedOut),
+    ).toMatchObject({ _tag: "Left" });
+    expect(
+      Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV5Schema, {
+        onExcessProperty: "error",
+      })({ ...timedOut, schemaVersion: 5 }),
     ).toMatchObject({ _tag: "Right" });
   });
 
@@ -130,6 +1159,152 @@ describe("Raw Swarm model invocation telemetry", () => {
     ).toMatchObject({ _tag: "Left" });
   });
 
+  test("rejects v5-only output failure detail in historical v2, v3, and v4 records", () => {
+    const failure = {
+      tag: "failed" as const,
+      reason: "The retained output was absent.",
+      failureKind: "lastMessageMissing" as const,
+    };
+    const currentOutputFailure = {
+      ...failure,
+      operation: "expectedLastMessage" as const,
+    };
+    const historicalCommon = {
+      scenarioId: "generated-battle-123",
+      invocationId: "historical-invocation",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      gitSha: "a".repeat(40),
+      eventsSha256: "b".repeat(64),
+      stagePlanReason: "Historical invocation stage.",
+      startedAt: "2026-08-14T00:00:00.000Z",
+      elapsedMilliseconds: 1,
+      exit: { tag: "exited" as const, status: 0 },
+      usage: { tag: "unavailable" as const, reason: "synthetic" },
+    };
+    expect(
+      Either.isLeft(
+        parseModelInvocationLedgerEntry({
+          schemaVersion: 2,
+          ...historicalCommon,
+          phase: "scenarioGeneration",
+          stagePlanReason: "Historical generation.",
+          result: failure,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        parseBenchmarkModelInvocationLedgerEntry({
+          schemaVersion: 3,
+          profile: "documentDeclarationSet",
+          responsibility: "scenarioQuality",
+          phase: "scenarioReadiness",
+          ...historicalCommon,
+          result: failure,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isRight(
+        parseBenchmarkModelInvocationLedgerEntry({
+          schemaVersion: 5,
+          profile: "documentDeclarationSet",
+          responsibility: "scenarioQuality",
+          phase: "scenarioReadiness",
+          scenarioId: "current-scenario",
+          ...historicalCommon,
+          result: currentOutputFailure,
+        }),
+      ),
+    ).toBe(true);
+
+    const currentCommon = {
+      schemaVersion: 4 as const,
+      subject: {
+        tag: "scenarioCampaign" as const,
+        campaignId: "synthetic-campaign",
+        evidenceSetId: "synthetic-evidence",
+        plannedScenarioId: "synthetic-scenario",
+      },
+      invocationId: "current-invocation",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      gitSha: "a".repeat(40),
+      eventsSha256: "b".repeat(64),
+      phase: "scenarioGeneration" as const,
+      stagePlanReason: "Current generation.",
+      startedAt: "2026-08-14T00:00:00.000Z",
+      elapsedMilliseconds: 1,
+      exit: { tag: "exited" as const, status: 0 },
+      result: failure,
+      usage: { tag: "unavailable" as const, reason: "synthetic" },
+    };
+    expect(Either.isLeft(parseModelInvocationLedgerEntry(currentCommon))).toBe(
+      true,
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV5Schema, {
+          onExcessProperty: "error",
+        })({
+          ...currentCommon,
+          schemaVersion: 5,
+          result: currentOutputFailure,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV5Schema, {
+          onExcessProperty: "error",
+        })({
+          ...currentCommon,
+          schemaVersion: 5,
+          result: { ...failure, failureKind: "unknown" },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(CurrentModelInvocationLedgerEntryV5Schema, {
+          onExcessProperty: "error",
+        })({
+          ...currentCommon,
+          schemaVersion: 5,
+          result: { ...failure, operation: "noOutput" },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("reports signal delivery failure instead of claiming termination", () => {
+    const falseDelivery = signalOwnedProcess(
+      { pid: undefined, kill: () => false },
+      "SIGTERM",
+    );
+    expect(falseDelivery).toEqual({
+      tag: "notDelivered",
+      signal: "SIGTERM",
+      reason: "ChildProcess.kill returned false.",
+    });
+
+    const thrownDelivery = signalOwnedProcess(
+      {
+        pid: undefined,
+        kill: () => {
+          throw new Error("synthetic signal failure");
+        },
+      },
+      "SIGKILL",
+    );
+    expect(thrownDelivery).toEqual({
+      tag: "notDelivered",
+      signal: "SIGKILL",
+      reason: "ChildProcess.kill threw: synthetic signal failure",
+    });
+  });
+
   test("retains the first-party failure reason instead of only the process status", () => {
     const failureEvents = [
       { type: "error", message: "Synthetic wrapper failure." },
@@ -165,7 +1340,14 @@ describe("Raw Swarm model invocation telemetry", () => {
       ),
     ).toEqual(
       Either.left(
-        "Codex emitted a terminal failure event but exited successfully.",
+        "Codex emitted a first-party failure event but exited successfully.",
+      ),
+    );
+    expect(
+      modelInvocationResultFromCodexEvents({ tag: "exited", status: 0 }, []),
+    ).toEqual(
+      Either.left(
+        "Codex exited successfully without a first-party turn.completed event.",
       ),
     );
     expect(
@@ -217,108 +1399,6 @@ describe("Raw Swarm model invocation telemetry", () => {
         },
       },
     });
-  });
-
-  test("binds the shell telemetry CLI to first-party failure semantics", () => {
-    const temporaryRoot = mkdtempSync(resolve(tmpdir(), "dnd-telemetry-cli-"));
-    const eventsPath = resolve(temporaryRoot, "events.jsonl");
-    const ledgerPath = resolve(temporaryRoot, "ledger.jsonl");
-    const args = (
-      status: number,
-      startedAt = "2026-08-19T00:00:00.000Z",
-      eventFile = eventsPath,
-      ledgerFile = ledgerPath,
-    ) => [
-      "exec",
-      "tsx",
-      modelTelemetryCli,
-      "--phase",
-      "postPlayReview",
-      "--scenario-id",
-      "synthetic-scenario",
-      "--execution-id",
-      "synthetic-execution",
-      "--evidence-set-id",
-      "synthetic-evidence",
-      "--git-sha",
-      "a".repeat(40),
-      "--events",
-      eventFile,
-      "--ledger",
-      ledgerFile,
-      "--model",
-      "gpt-5.6-luna",
-      "--reasoning-effort",
-      "max",
-      "--started-at",
-      startedAt,
-      "--elapsed-ms",
-      "10",
-      "--shell-status",
-      String(status),
-    ];
-    try {
-      writeFileSync(
-        eventsPath,
-        `${JSON.stringify({
-          type: "turn.failed",
-          error: { message: "Synthetic service capacity is exhausted." },
-        })}\n`,
-      );
-      const failed = spawnSync("pnpm", args(1), {
-        cwd: repoRoot,
-        encoding: "utf8",
-      });
-      expect(failed.status).toBe(0);
-      expect(JSON.parse(readFileSync(ledgerPath, "utf8"))).toMatchObject({
-        exit: { tag: "shellStatus", status: 1 },
-        result: {
-          tag: "failed",
-          reason: "Synthetic service capacity is exhausted.",
-        },
-      });
-
-      const invalidEventsPath = resolve(temporaryRoot, "invalid-events.jsonl");
-      const invalidLedgerPath = resolve(temporaryRoot, "invalid-ledger.jsonl");
-      writeFileSync(
-        invalidEventsPath,
-        `${JSON.stringify({
-          type: "turn.failed",
-          error: { message: "Synthetic malformed timestamp input." },
-        })}\n`,
-      );
-      const invalidStartedAt = spawnSync(
-        "pnpm",
-        args(1, "2026-08-19", invalidEventsPath, invalidLedgerPath),
-        {
-          cwd: repoRoot,
-          encoding: "utf8",
-        },
-      );
-      expect(invalidStartedAt.status).not.toBe(0);
-      expect(`${invalidStartedAt.stdout}${invalidStartedAt.stderr}`).toContain(
-        "startedAt must be a canonical ISO timestamp",
-      );
-      expect(existsSync(invalidLedgerPath)).toBe(false);
-
-      rmSync(eventsPath);
-      rmSync(ledgerPath);
-      writeFileSync(
-        eventsPath,
-        `${JSON.stringify({
-          type: "turn.failed",
-          error: { message: "Synthetic contradictory failure." },
-        })}\n`,
-      );
-      const contradictory = spawnSync("pnpm", args(0), {
-        cwd: repoRoot,
-        encoding: "utf8",
-      });
-      expect(contradictory.status).not.toBe(0);
-      expect(existsSync(ledgerPath)).toBe(false);
-    } finally {
-      rmSync(temporaryRoot, { recursive: true, force: true });
-    }
   });
 
   test("enforces JSON events for every Codex invocation", () => {
@@ -528,6 +1608,37 @@ describe("Raw Swarm model invocation telemetry", () => {
         }),
       ),
     ).toBe(true);
+    expect(
+      Either.isLeft(
+        parseModelInvocationLedgerEntry({
+          schemaVersion: 1,
+          ...common,
+          phase: "scenarioReadiness",
+          exit: {
+            tag: "timedOut",
+            timeoutMilliseconds: 25,
+            termination: "sigkill",
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        parseModelInvocationLedgerEntry({
+          schemaVersion: 2,
+          ...common,
+          phase: "scenarioCompositeReview",
+          stagePlanReason:
+            "Historical fixture retained before lifecycle subjects.",
+          result: { tag: "failed", reason: "timed out" },
+          exit: {
+            tag: "timedOut",
+            timeoutMilliseconds: 25,
+            termination: "sigkill",
+          },
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("rederives invocation identity and runner-owned timing from events", () => {
@@ -585,8 +1696,8 @@ describe("Raw Swarm model invocation telemetry", () => {
       },
     });
     const currentEvidence = modelInvocationEvidenceFromEvents(events);
-    if (Either.isRight(currentEvidence)) {
-      expect(currentEvidence.right.entry).toEqual(
+    if (currentEvidence.tag === "valid") {
+      expect(currentEvidence.entry).toEqual(
         expect.objectContaining({
           schemaVersion: 4,
           stagePlanReason: expect.any(String),
@@ -654,6 +1765,291 @@ describe("Raw Swarm model invocation telemetry", () => {
       message: expect.stringContaining(
         "Recognized raw-swarm.invocation.completed event",
       ),
+    });
+  });
+
+  test("requires one strict runner-owned retention event when one is present", () => {
+    const started = {
+      type: "raw-swarm.invocation.started",
+      schemaVersion: 5,
+      subject: {
+        tag: "execution",
+        executionId: "execution",
+        evidenceSetId: "evidence",
+        scenarioId: "scenario",
+      },
+      gitSha: "a".repeat(40),
+      phase: "postPlayReview",
+      stagePlanReason: "The admitted plan requires post-play review.",
+      fallbackInvocationId: "fallback",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt: "2026-08-14T00:00:00.000Z",
+    } as const;
+    const completed = {
+      type: "raw-swarm.invocation.completed",
+      schemaVersion: 5,
+      elapsedMilliseconds: 10,
+      exit: { tag: "exited", status: 7 },
+      result: { tag: "failed", reason: "Synthetic failure." },
+    } as const;
+    const retained = {
+      type: "raw-swarm.invocation.codex-raw-retained",
+      source: "settledSidecar",
+      reason: "failedInvocation",
+      rawContentsSha256: "b".repeat(64),
+      rawContentsByteLength: 10,
+    } as const;
+    const terminalEvents = [
+      started,
+      { type: "turn.completed" },
+      retained,
+      completed,
+    ];
+    expect(modelInvocationEvidenceFromEvents(terminalEvents)).toMatchObject({
+      tag: "valid",
+    });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        {
+          type: retained.type,
+          source: retained.source,
+          reason: retained.reason,
+          rawContentsByteLength: retained.rawContentsByteLength,
+        },
+        completed,
+      ]),
+    ).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("raw-retention event"),
+    });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        {
+          type: retained.type,
+          source: retained.source,
+          reason: retained.reason,
+          rawContentsSha256: retained.rawContentsSha256,
+        },
+        completed,
+      ]),
+    ).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("raw-retention event"),
+    });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        { ...retained, rawContentsSha256: "not-a-sha256" },
+        completed,
+      ]),
+    ).toMatchObject({
+      tag: "invalid",
+      message: expect.stringContaining("raw-retention event"),
+    });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        retained,
+        { ...retained, rawContentsByteLength: 11 },
+        completed,
+      ]),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Model invocation evidence may contain at most one runner raw-retention event.",
+    });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        {
+          type: "raw-swarm.invocation.codex-raw-retained",
+          source: "observedImmutableSnapshot",
+          reason: "unreapedProcess",
+          snapshotPathSuffix: ".codex-raw.snapshot",
+          snapshotSha256: "c".repeat(64),
+          snapshotByteLength: 10,
+        },
+        {
+          ...completed,
+          exit: {
+            tag: "cleanupUnreaped",
+            leader: { tag: "exited", status: 0 },
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+            reason: "Synthetic cleanup boundary.",
+          },
+        },
+      ]),
+    ).toMatchObject({ tag: "valid" });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.completed" },
+        retained,
+        {
+          ...completed,
+          result: { tag: "succeeded" },
+          exit: { tag: "exited", status: 0 },
+        },
+      ]),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Model invocation successful evidence cannot claim raw-retention.",
+    });
+  });
+
+  test("rejects a child-spoofed retention event without claiming it as authority", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-model-retention-spoof-"));
+    const codex = resolve(root, "codex");
+    const childScript = resolve(root, "child.cjs");
+    writeFileSync(
+      childScript,
+      [
+        'const fs = require("node:fs");',
+        "process.stdout.write(JSON.stringify({",
+        '  type: "raw-swarm.invocation.codex-raw-retained",',
+        '  source: "settledSidecar",',
+        '  reason: "failedInvocation",',
+        '  rawContentsSha256: "' + "b".repeat(64) + '",',
+        "  rawContentsByteLength: 10,",
+        '}) + "\\n");',
+        'process.stdout.write(JSON.stringify({ type: "turn.completed" }) + "\\n");',
+        'fs.writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ result: "ready" }));',
+      ].join("\n"),
+    );
+    writeFileSync(
+      codex,
+      "#!/bin/sh\nexec " + process.execPath + " " + childScript + "\n",
+    );
+    chmodSync(codex, 0o755);
+    try {
+      const input = fakeInvocationInput(root);
+      input.env.RAW_OUTPUT_PATH = input.operation.expected.path;
+      const result = await runCodexInvocation(input);
+      expect(result).toMatchObject({
+        tag: "failed",
+        process: { tag: "exited", status: 0 },
+        cause: { tag: "codex" },
+      });
+      const events = readCodexEvents(input.eventPath);
+      expect(events).toMatchObject({ tag: "valid" });
+      if (events.tag === "valid") {
+        const rawEventPath = input.eventPath + ".codex-raw";
+        expect(events.events).not.toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          source: "settledSidecar",
+          reason: "failedInvocation",
+          rawContentsSha256: "b".repeat(64),
+          rawContentsByteLength: 10,
+        });
+        expect(events.events).toContainEqual({
+          type: "raw-swarm.invocation.codex-raw-retained",
+          source: "settledSidecar",
+          reason: "failedInvocation",
+          rawContentsSha256: invocationEventsSha256(rawEventPath),
+          rawContentsByteLength: readFileSync(rawEventPath).byteLength,
+        });
+      }
+      expect(existsSync(input.eventPath + ".codex-raw")).toBe(true);
+      expectLedgerRereadsFromEvents(input.eventPath, input.ledgerPath);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("requires positive first-party terminal evidence for v5 success", () => {
+    const started = {
+      type: "raw-swarm.invocation.started",
+      schemaVersion: 5,
+      subject: {
+        tag: "execution",
+        executionId: "execution",
+        evidenceSetId: "evidence",
+        scenarioId: "scenario",
+      },
+      gitSha: "a".repeat(40),
+      phase: "postPlayReview",
+      stagePlanReason: "The admitted plan requires post-play review.",
+      fallbackInvocationId: "fallback",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt: "2026-08-14T00:00:00.000Z",
+    } as const;
+    const completed = {
+      type: "raw-swarm.invocation.completed",
+      schemaVersion: 5,
+      elapsedMilliseconds: 10,
+      exit: { tag: "exited", status: 0 },
+      result: { tag: "succeeded" },
+    } as const;
+    expect(modelInvocationEvidenceFromEvents([started, completed])).toEqual({
+      tag: "invalid",
+      message:
+        "Successful v5 invocation evidence requires a first-party turn.completed event.",
+    });
+    expect(
+      modelInvocationEvidenceFromEvents([
+        started,
+        { type: "turn.failed", error: { message: "Synthetic failure." } },
+        { type: "turn.completed" },
+        completed,
+      ]),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Successful v5 invocation evidence cannot include a first-party failure event.",
+    });
+
+    const benchmarkStarted = {
+      type: "raw-swarm.invocation.started",
+      schemaVersion: 5,
+      profile: "documentDeclarationSet",
+      responsibility: "scenarioQuality",
+      phase: "scenarioReadiness",
+      scenarioId: "scenario",
+      gitSha: "a".repeat(40),
+      stagePlanReason: "The retained benchmark quality pass.",
+      fallbackInvocationId: "benchmark-fallback",
+      model: "gpt-5.6-sol",
+      reasoningEffort: "medium",
+      startedAt: "2026-08-14T00:00:00.000Z",
+    } as const;
+    const benchmarkCompleted = {
+      type: "raw-swarm.invocation.completed",
+      schemaVersion: 5,
+      elapsedMilliseconds: 10,
+      exit: { tag: "exited", status: 0 },
+      result: { tag: "succeeded" },
+    } as const;
+    expect(
+      benchmarkModelInvocationEvidenceFromEvents([
+        benchmarkStarted,
+        benchmarkCompleted,
+      ]),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Successful v5 benchmark evidence requires a first-party turn.completed event.",
+    });
+    expect(
+      benchmarkModelInvocationEvidenceFromEvents([
+        benchmarkStarted,
+        { type: "turn.failed", error: { message: "Synthetic failure." } },
+        { type: "turn.completed" },
+        benchmarkCompleted,
+      ]),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Successful v5 benchmark evidence cannot include a first-party failure event.",
     });
   });
 
@@ -896,6 +2292,51 @@ describe("Raw Swarm model invocation telemetry", () => {
         invocationId: "benchmark-thread",
         result: { tag: "succeeded" },
         usage: { tag: "available", input: { count: 10 } },
+      },
+    });
+    const currentEvidence = benchmarkModelInvocationEvidenceFromEvents([
+      {
+        type: "raw-swarm.invocation.started",
+        schemaVersion: 5,
+        profile: "documentDeclarationSet",
+        responsibility: "scenarioQuality",
+        phase: "scenarioReadiness",
+        scenarioId: "scenario",
+        gitSha: "a".repeat(40),
+        stagePlanReason: "The current benchmark retained the quality pass.",
+        fallbackInvocationId: "current-fallback",
+        model: "gpt-5.6-luna",
+        reasoningEffort: "max",
+        startedAt: "2026-08-14T00:00:00.000Z",
+      },
+      {
+        type: "raw-swarm.invocation.completed",
+        schemaVersion: 5,
+        elapsedMilliseconds: 123,
+        exit: {
+          tag: "timedOut",
+          timeoutMilliseconds: 25,
+          termination: {
+            tag: "reaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          },
+        },
+        result: { tag: "failed", reason: "Synthetic timeout." },
+      },
+    ]);
+    expect(currentEvidence).toMatchObject({
+      tag: "valid",
+      entry: {
+        schemaVersion: 5,
+        responsibility: "scenarioQuality",
+        exit: {
+          tag: "timedOut",
+          termination: {
+            tag: "reaped",
+            signalDelivery: { tag: "confirmed", signal: "SIGKILL" },
+          },
+        },
+        result: { tag: "failed" },
       },
     });
   });

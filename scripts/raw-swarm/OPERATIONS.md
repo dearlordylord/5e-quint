@@ -549,8 +549,8 @@ Comparable same-scenario evidence gates packet-based post-play review tokens and
 time at a 50% reduction, comparable-path model tokens and wall time at a 40%
 reduction, and player tokens per continuation and call at a 40% reduction.
 For the broader #292 gate, the complete-path comparison exported by
-`performance-comparison.ts` composes the canonical stage plan, v2 invocation
-ledger, and findings projection. Each current projection is retained as a
+`performance-comparison.ts` composes the canonical stage plan, current v4
+invocation ledger, and findings projection. Each current projection is retained as a
 hash-linked authority and must decode to the inline typed projection; changing
 the inline reliability or actionable-finding evidence without changing its
 authority fails validation. It retains failures, corrections, stage-plan
@@ -705,9 +705,19 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts audit \
 The optional named --review-replay-milestone and --review-replay-final inputs
 are the two original composite-review
 envelopes, not new model invocations. When supplied, the pair must contain
-exactly one milestone and one final envelope, and each envelope must match
-one v2 composite-review row in the supplied generation ledger by invocation id,
-model, reasoning effort, scenario, and Git identity. Their bytes become
+exactly one milestone and one final envelope. Each envelope must match one
+historical v2 or current v4 `scenarioCompositeReview` row in the supplied
+generation ledger by invocation id, model, reasoning effort, scenario, and Git
+identity. The sibling `campaign.json` manifest is required for this replay
+boundary and supplies the expected Campaign, Evidence Set, and planned
+Scenario identity; a missing or malformed manifest rejects replay. A
+historical schema-2 envelope may use an exact v2 row (or a
+migrated v4 row) and retains only admitted Scenario identity; a current
+schema-3 Candidate envelope requires the matching v4 lifecycle subject,
+including its Candidate, Campaign, Evidence Set, and planned Scenario. The
+milestone envelope binds to the Candidate reviewed at that milestone; only
+the final envelope must bind its Candidate source hash to the admitted
+Scenario. Their bytes become
 replay-milestone and replay-final authorities in the findings projection;
 their adjacent retained event streams become
 prePlayReviewReplayEvents-milestone/final authorities, and they do not add

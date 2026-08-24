@@ -1,4 +1,5 @@
 // Runtime codecs for battle reducer public payloads.
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
@@ -650,26 +651,6 @@ type BattleAttackObjectTargetSpatialFactEncoded = Schema.Schema.Encoded<
 
 const BattleTargetSpatialFactSchema = Schema.Union(
   BattleAttackObjectTargetSpatialFactSchema,
-  Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("attackTargetInMeleeReach"),
-      actorId: CombatantId,
-      targetId: CombatantId,
-      procedureRef: BattleAttackProcedureExecutionRef,
-      attackAbility: BattleAttackExecutionAbilitySchema,
-      attackDamageType: DamageTypeSchema,
-      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("attackTargetInMeleeReach"),
-      actorId: CombatantId,
-      targetId: CombatantId,
-      procedureRef: BattleStatBlockProcedureExecutionRef,
-      attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-      attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-    }),
-  ),
   Schema.Struct({
     kind: Schema.Literal("retaliationDamagerWithinFiveFeet"),
     damagedId: CombatantId,
@@ -705,25 +686,41 @@ const BattleTargetSpatialFactSchema = Schema.Union(
   ),
   Schema.Union(
     Schema.Struct({
-      kind: Schema.Literal("attackTargetInRangedRange"),
+      kind: Schema.Literal("attackTargetDistance"),
       actorId: CombatantId,
       targetId: CombatantId,
       procedureRef: BattleAttackProcedureExecutionRef,
       attackAbility: BattleAttackExecutionAbilitySchema,
       attackDamageType: DamageTypeSchema,
       attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-      rangeBand: Schema.Literal(...BATTLE_ATTACK_RANGE_BANDS),
+      distanceFeet: MovementFeet,
     }),
-    Schema.Struct({
-      kind: Schema.Literal("attackTargetInRangedRange"),
-      actorId: CombatantId,
-      targetId: CombatantId,
-      procedureRef: BattleStatBlockProcedureExecutionRef,
-      attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-      attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-      attackName: Schema.optionalWith(Schema.Never, { exact: true }),
-      rangeBand: Schema.Literal(...BATTLE_ATTACK_RANGE_BANDS),
-    }),
+    Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("attackTargetDistance"),
+        actorId: CombatantId,
+        targetId: CombatantId,
+        procedureRef: BattleStatBlockProcedureExecutionRef,
+        attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+        attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
+        attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+        statBlockDamageNotation: Schema.optionalWith(Schema.Never, {
+          exact: true,
+        }),
+        distanceFeet: MovementFeet,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("attackTargetDistance"),
+        actorId: CombatantId,
+        targetId: CombatantId,
+        procedureRef: BattleStatBlockProcedureExecutionRef,
+        attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+        attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
+        attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+        statBlockDamageNotation: Schema.Literal("static"),
+        distanceFeet: MovementFeet,
+      }),
+    ),
   ),
   Schema.Struct({
     kind: Schema.Literal("attackAttackerCannotSeeTarget"),
@@ -4244,7 +4241,7 @@ const BattleMovementFillValueCommonSchemaFields = {
   movementCostFeet: MovementFeet,
   provokedOpportunityAttacks: Schema.Array(
     Schema.extend(
-      Schema.Struct({ reactorId: CombatantId }),
+      Schema.Struct({ reactorId: CombatantId, distanceFeet: MovementFeet }),
       BattleInterruptAttackExecutionSelectionSchema,
     ),
   ),

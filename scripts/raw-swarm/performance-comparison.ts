@@ -5,6 +5,7 @@ import { Either, Match, ParseResult, Schema } from "effect";
 
 import {
   artifactAuthority,
+  artifactAuthorityForBytes,
   ArtifactAuthoritySchema,
   readJsonLines,
   type ArtifactAuthority,
@@ -20,7 +21,7 @@ import {
   modelInvocationEvidenceFromEvents,
   modelInvocationScenarioReference,
   parseModelInvocationLedgerEntry,
-  readCodexEvents,
+  readCodexEventsWithSource,
   type ModelInvocationLedgerEntry,
   type CurrentModelInvocationLedgerEntry,
   type ModelInvocationPhase,
@@ -28,10 +29,12 @@ import {
   type TokenCount,
 } from "./model-telemetry.ts";
 import {
+  canonicalFindingAuthoritySnapshotForBytes,
   FindingsProjectionSchema,
   findingsSdkCallCount,
   findingsTranscriptSha256,
   validateFindingsProjection,
+  type CanonicalFindingAuthoritySnapshot,
   type Finding,
   type FindingsProjection,
 } from "./findings.ts";
@@ -57,8 +60,10 @@ export {
 };
 import {
   RetainedScenarioReviewInputSchema,
-  RetainedScenarioReviewReasoningEffortSchema,
-  retainedScenarioReviewMatchesAdmission,
+  retainedScenarioReviewMatchesReplayBinding,
+  retainedScenarioReviewSubject,
+  type RetainedScenarioReviewBenchmarkIdentity,
+  type RetainedScenarioReviewReplayBinding,
 } from "./scenario-review-input.ts";
 import {
   finalAgentMessage,
@@ -93,6 +98,10 @@ import {
   ScenarioStageFactsSchema,
   type ScenarioStagePlan,
 } from "./scenario-stage-plan.ts";
+import {
+  ScenarioCampaignManifestSchema,
+  type ScenarioCampaignManifest,
+} from "./evidence-manifests.ts";
 import {
   ScenarioExecutionIdentitySchema,
   type ScenarioCampaignId,
@@ -265,6 +274,7 @@ const ControlledExecutionPerformanceSchema = Schema.Struct({
     review: ArtifactAuthoritySchema,
     invocationLedgers: Schema.Tuple(ArtifactAuthoritySchema),
     invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+    invocationRawArtifacts: Schema.Array(ArtifactAuthoritySchema),
     continuationObservations: ArtifactAuthoritySchema,
     supervisorTimings: ArtifactAuthoritySchema,
     reportingTiming: ArtifactAuthoritySchema,
@@ -585,6 +595,7 @@ export function summarizeControlledExecution(
       review: reviewAuthority,
       invocationLedgers: [artifactAuthority(invocationLedgerPath)],
       invocationEvents: reviewInvocationEvidence.invocationEvents,
+      invocationRawArtifacts: reviewInvocationEvidence.invocationRawArtifacts,
       continuationObservations: artifactAuthority(
         input.continuationObservationPath,
       ),
@@ -1047,6 +1058,16 @@ export function readControlledPerformance(
       return false;
     }
   };
+  const sameAuthoritySet = (
+    actual: readonly ArtifactAuthority[],
+    expected: readonly ArtifactAuthority[],
+  ): boolean => {
+    const key = (authority: ArtifactAuthority): string =>
+      `${authority.path}\u0000${String(authority.byteLength)}\u0000${authority.sha256}`;
+    const actualKeys = actual.map(key).sort();
+    const expectedKeys = expected.map(key).sort();
+    return JSON.stringify(actualKeys) === JSON.stringify(expectedKeys);
+  };
   const equal = (left: number, right: number) => Math.abs(left - right) < 1e-9;
   const phaseElapsed = MODEL_INVOCATION_PHASES.reduce(
     (total, phase) => total + run.phases[phase].elapsedMilliseconds,
@@ -1087,6 +1108,9 @@ export function readControlledPerformance(
     run.sources.invocationLedgers.some((source) => !sourceMatches(source)) ||
     run.sources.invocationEvents.length === 0 ||
     run.sources.invocationEvents.some((source) => !sourceMatches(source)) ||
+    run.sources.invocationRawArtifacts.some(
+      (source) => !sourceMatches(source),
+    ) ||
     !sourceMatches(run.sources.continuationObservations) ||
     !sourceMatches(run.sources.supervisorTimings) ||
     !sourceMatches(run.sources.reportingTiming) ||
@@ -1154,6 +1178,16 @@ export function readControlledPerformance(
     reportingTimingPath: run.sources.reportingTiming.path,
     reportingManifestPath: run.sources.reportingManifest.path,
   });
+  if (
+    !sameAuthoritySet(
+      run.sources.invocationRawArtifacts,
+      recomputed.sources.invocationRawArtifacts,
+    )
+  ) {
+    fail(
+      `Controlled performance evidence ${path} has raw invocation artifact authorities that do not match its review invocation manifest.`,
+    );
+  }
   if (JSON.stringify(recomputed) !== JSON.stringify(run)) {
     fail(`Controlled performance evidence ${path} changed from its sources.`);
   }
@@ -2454,7 +2488,7 @@ function currentSemanticIssues(
   let previousPhaseOrder = -1;
   for (const invocation of measurement.invocations) {
     if (
-      invocation.schemaVersion === 4 &&
+      (invocation.schemaVersion === 4 || invocation.schemaVersion === 5) &&
       (invocation.phase === "player" || invocation.phase === "postPlayReview")
     ) {
       if (
@@ -2892,9 +2926,10 @@ function currentInvocationEntriesFromLedger(
           parsed.left.message,
       );
     }
-    if (parsed.right.schemaVersion !== 4) {
+    if (parsed.right.schemaVersion !== 4 && parsed.right.schemaVersion !== 5) {
       fail(
-        "Current complete-path assembly requires v4 ledger evidence: " + path,
+        "Current complete-path assembly requires current ledger evidence: " +
+          path,
       );
     }
     return parsed.right;
@@ -2946,8 +2981,18 @@ export function assembleCompletePathMeasurement(
           findingsDecoded.left.message,
       );
     }
+    const eventAuthorityCache = eventAuthoritySnapshotsForPaths([
+      ...descriptor.right.invocationEventPaths,
+      ...findingsDecoded.right.authorities
+        .filter(({ role }) => isPrePlayReviewEventsAuthorityRole(role))
+        .map(({ path }) => path),
+    ]);
     const findingsValidation = validateFindingsProjection(
       findingsDecoded.right,
+      findingAuthoritySnapshots(
+        eventAuthorityCache,
+        findingsDecoded.right.authorities,
+      ),
     );
     if (findingsValidation.tag === "invalid") {
       return Either.left(
@@ -2970,7 +3015,14 @@ export function assembleCompletePathMeasurement(
     );
     const eventAuthorities = mapNonEmpty(
       descriptor.right.invocationEventPaths,
-      artifactAuthority,
+      (path) => {
+        const snapshot = eventAuthoritySnapshotAtPath(
+          eventAuthorityCache,
+          path,
+        );
+        if (Either.isLeft(snapshot)) fail(snapshot.left);
+        return snapshot.right.authority;
+      },
     );
     const eventPaths = new Set(eventAuthorities.map(({ path }) => path));
     if (eventPaths.size !== eventAuthorities.length) {
@@ -2990,7 +3042,10 @@ export function assembleCompletePathMeasurement(
       findings: findingsValidation.projection,
       outcome: descriptor.right.outcome,
     };
-    return validateCompletePathMeasurement(measurement);
+    return validateParsedCompletePathMeasurement(
+      measurement,
+      eventAuthorityCache,
+    );
   } catch (error: unknown) {
     return Either.left(
       error instanceof Error
@@ -3024,6 +3079,109 @@ export function writeCompletePathMeasurement(input: {
 
 type FindingAuthority = FindingsProjection["authorities"][number];
 
+type ParsedEventAuthority = Readonly<{
+  readonly authority: ArtifactAuthority;
+  readonly events: readonly unknown[];
+  readonly rawContents: Buffer;
+}>;
+
+type EventAuthorityCacheEntry = Readonly<{
+  readonly rawContents: Either.Either<Buffer, string>;
+  readonly parsed: Either.Either<ParsedEventAuthority, string>;
+}>;
+
+type EventAuthoritySnapshotCache = ReadonlyMap<
+  string,
+  EventAuthorityCacheEntry
+>;
+
+function eventAuthorityCacheKey(path: string): string {
+  return resolve(repoRoot, path);
+}
+
+function readEventAuthorityAtPath(path: string): EventAuthorityCacheEntry {
+  try {
+    const parsed = readCodexEventsWithSource(resolve(repoRoot, path));
+    const rawContents = Either.right(parsed.rawContents);
+    const parsedResult =
+      parsed.tag === "invalid"
+        ? Either.left(parsed.message)
+        : Either.right({
+            authority: artifactAuthorityForBytes(path, parsed.rawContents),
+            events: parsed.events,
+            rawContents: parsed.rawContents,
+          });
+    return { rawContents, parsed: parsedResult };
+  } catch {
+    const message = `Authority ${path} is unreadable or malformed JSONL.`;
+    return {
+      rawContents: Either.left(message),
+      parsed: Either.left(message),
+    };
+  }
+}
+
+function eventAuthoritySnapshotsForPaths(
+  paths: readonly string[],
+): EventAuthoritySnapshotCache {
+  const snapshots = new Map<string, EventAuthorityCacheEntry>();
+  for (const path of paths) {
+    const key = eventAuthorityCacheKey(path);
+    if (!snapshots.has(key)) {
+      snapshots.set(key, readEventAuthorityAtPath(path));
+    }
+  }
+  return snapshots;
+}
+
+function eventAuthoritySnapshot(
+  snapshots: EventAuthoritySnapshotCache,
+  authority: FindingAuthority | ArtifactAuthority,
+): Either.Either<ParsedEventAuthority, string> {
+  return eventAuthoritySnapshotAtPath(snapshots, authority.path);
+}
+
+function eventAuthoritySnapshotAtPath(
+  snapshots: EventAuthoritySnapshotCache,
+  path: string,
+): Either.Either<ParsedEventAuthority, string> {
+  const entry = snapshots.get(eventAuthorityCacheKey(path));
+  return entry === undefined
+    ? Either.left(`Event authority is not retained: ${path}.`)
+    : entry.parsed;
+}
+
+function findingAuthoritySnapshots(
+  snapshots: EventAuthoritySnapshotCache,
+  authorities: readonly FindingAuthority[],
+): readonly CanonicalFindingAuthoritySnapshot[] {
+  return authorities.flatMap((authority) => {
+    const entry = snapshots.get(eventAuthorityCacheKey(authority.path));
+    if (entry === undefined || Either.isLeft(entry.rawContents)) return [];
+    const snapshot = canonicalFindingAuthoritySnapshotForBytes(
+      authority,
+      entry.rawContents.right,
+    );
+    return Either.isRight(snapshot) ? [snapshot.right] : [];
+  });
+}
+
+function eventAuthorityPathsForMeasurement(
+  measurement: CompletePathMeasurement,
+): readonly string[] {
+  return measurement.schemaVersion === 2 ||
+    measurement.schemaVersion === 3 ||
+    measurement.schemaVersion === 4 ||
+    measurement.schemaVersion === 5
+    ? [
+        ...measurement.invocationEvents.map(({ path }) => path),
+        ...measurement.findings.authorities
+          .filter(({ role }) => isPrePlayReviewEventsAuthorityRole(role))
+          .map(({ path }) => path),
+      ]
+    : [];
+}
+
 function numberedAuthorityRole(role: string, prefix: string): boolean {
   if (role === prefix) return true;
   const suffix = role.slice(prefix.length + 1);
@@ -3050,7 +3208,6 @@ function isPostPlayReviewAuthorityRole(role: string): boolean {
 
 function isReplayAuthorityRole(role: string): boolean {
   return (
-    numberedAuthorityRole(role, "replay") ||
     namedReviewStageAuthorityRole(role, "replay") ||
     namedReviewStageAuthorityRole(role, "prePlayReviewReplayInput")
   );
@@ -3137,9 +3294,80 @@ function readAuthorityJsonLines(
   }
 }
 
+type CandidateReplayInvocation = CurrentModelInvocationLedgerEntry & {
+  readonly phase: "scenarioCompositeReview";
+  readonly subject: Extract<
+    CurrentModelInvocationLedgerEntry["subject"],
+    { readonly tag: "scenarioCandidate" }
+  >;
+};
+
+function candidateReplayInvocations(
+  invocations: readonly BenchmarkInvocation[],
+): readonly CandidateReplayInvocation[] {
+  return invocations.filter(
+    (invocation): invocation is CandidateReplayInvocation =>
+      !("responsibility" in invocation) &&
+      invocation.phase === "scenarioCompositeReview" &&
+      invocation.subject.tag === "scenarioCandidate",
+  );
+}
+
+type BenchmarkReplayInvocation = CurrentModelInvocationLedgerEntry &
+  Readonly<{
+    readonly phase: "scenarioCompositeReview";
+    readonly subject: Extract<
+      CurrentModelInvocationLedgerEntry["subject"],
+      { readonly tag: "benchmark" }
+    >;
+  }>;
+
+function benchmarkReplayInvocations(
+  invocations: readonly BenchmarkInvocation[],
+): readonly BenchmarkReplayInvocation[] {
+  return invocations.filter(
+    (invocation): invocation is BenchmarkReplayInvocation =>
+      !("responsibility" in invocation) &&
+      invocation.phase === "scenarioCompositeReview" &&
+      invocation.subject.tag === "benchmark",
+  );
+}
+
+function replayBenchmarkIdentityForMeasurement(measurement: {
+  readonly invocations: readonly BenchmarkInvocation[];
+}): RetainedScenarioReviewBenchmarkIdentity | undefined {
+  const invocation = benchmarkReplayInvocations(measurement.invocations)[0];
+  return invocation === undefined
+    ? undefined
+    : {
+        benchmarkId: invocation.subject.benchmarkId,
+        profile: invocation.subject.profile,
+      };
+}
+
+function replayCampaignManifestForFindings(
+  findings: FindingsProjection,
+  issues: string[],
+): ScenarioCampaignManifest | undefined {
+  const authority = findings.authorities.find(
+    ({ role }) => role === "campaign" || role.startsWith("campaign-"),
+  );
+  if (authority === undefined) return undefined;
+  const value = benchmarkAuthorityJson(authority, "campaign", issues);
+  const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+    onExcessProperty: "error",
+  })(value);
+  if (Either.isLeft(decoded)) {
+    issues.push(`Campaign authority is invalid: ${decoded.left.message}`);
+    return undefined;
+  }
+  return decoded.right;
+}
+
 function currentAuthorityContentIssues(
   measurement: CompletePathMeasurementWithCurrentEvidence,
   findings: FindingsProjection,
+  eventAuthorityCache: EventAuthoritySnapshotCache,
 ): readonly string[] {
   const issues: string[] = [];
   if (findings.subject.tag !== "execution") {
@@ -3150,6 +3378,10 @@ function currentAuthorityContentIssues(
     scenarioIdentity.tag === "admitted"
       ? scenarioIdentity.scenarioSha256
       : scenarioIdentity.candidateScenarioSha256;
+  const expectedReplayCampaign = replayCampaignManifestForFindings(
+    findings,
+    issues,
+  );
   const expectedOutputJsonSchema = codexOutputJsonSchema(
     CurrentScenarioCompositeReviewSchema,
   );
@@ -3291,9 +3523,9 @@ function currentAuthorityContentIssues(
   }
   const replayStages = new Map<string, string>();
   const replayAuthoritiesByStage = new Map<string, FindingAuthority>();
-  const replayInvocationsByStage = new Map<
+  const replayBindingsByStage = new Map<
     string,
-    CurrentModelInvocationLedgerEntry
+    RetainedScenarioReviewReplayBinding
   >();
   for (const authority of replayAuthorities) {
     const value = readAuthorityJson(authority);
@@ -3312,15 +3544,16 @@ function currentAuthorityContentIssues(
       continue;
     }
     const replay = decoded.right;
-    const replayAdmission = retainedScenarioReviewMatchesAdmission(replay, {
-      scenarioId: findings.subject.scenarioId,
-      scenarioSha256: expectedScenarioSha256,
-    });
-    if (Either.isLeft(replayAdmission)) {
+    const namedReplayStage =
+      reviewStageForAuthorityRole(authority.role, "replay") ??
+      reviewStageForAuthorityRole(authority.role, "prePlayReviewReplayInput");
+    if (
+      namedReplayStage !== undefined &&
+      replay.reviewStage !== namedReplayStage
+    ) {
       issues.push(
-        `Replay authority ${authority.role} is not bound to the admitted Scenario identity: ${replayAdmission.left}`,
+        `Replay authority role ${authority.role} is bound to ${namedReplayStage}, but its envelope is ${replay.reviewStage}.`,
       );
-      continue;
     }
     const currentResult = Schema.decodeUnknownEither(
       CurrentScenarioCompositeReviewSchema,
@@ -3338,23 +3571,102 @@ function currentAuthorityContentIssues(
     const invocation = measurement.invocations.find(
       ({ invocationId }) => invocationId === replay.invocationId,
     );
-    const invocationSubjectMatches =
-      replay.schemaVersion === 2
-        ? invocation !== undefined &&
-          modelInvocationScenarioReference(invocation) ===
-            findings.subject.scenarioId
-        : invocation?.schemaVersion === 4 &&
-          canonicalJson(invocation.subject) === canonicalJson(replay.subject);
-    if (
-      invocation === undefined ||
-      invocation.phase !== "scenarioCompositeReview" ||
-      !invocationSubjectMatches ||
-      replay.sourceGitSha !== invocation.gitSha ||
-      invocation.model !== replay.model ||
-      invocation.reasoningEffort !== replay.reasoningEffort
-    ) {
+    const expectedReplayStage =
+      reviewStageForAuthorityRole(authority.role, "replay") ??
+      reviewStageForAuthorityRole(authority.role, "prePlayReviewReplayInput") ??
+      replay.reviewStage;
+    const binding =
+      invocation === undefined
+        ? Either.left("No matching composite-review invocation was retained.")
+        : (() => {
+            if (
+              "responsibility" in invocation ||
+              invocation.phase !== "scenarioCompositeReview" ||
+              replay.sourceGitSha !== invocation.gitSha ||
+              invocation.model !== replay.model ||
+              invocation.reasoningEffort !== replay.reasoningEffort
+            ) {
+              return Either.left(
+                "No matching composite-review invocation was retained.",
+              );
+            }
+            if (replay.schemaVersion === 2) {
+              return expectedReplayCampaign === undefined
+                ? retainedScenarioReviewMatchesReplayBinding(
+                    replay,
+                    invocation,
+                    {
+                      tag: "scenario",
+                      reviewStage: expectedReplayStage,
+                      scenarioId: findings.subject.scenarioId,
+                    },
+                  )
+                : expectedReplayStage === "final"
+                  ? retainedScenarioReviewMatchesReplayBinding(
+                      replay,
+                      invocation,
+                      {
+                        tag: "historicalScenario",
+                        reviewStage: "final",
+                        scenarioId: findings.subject.scenarioId,
+                        admittedScenarioSha256: expectedScenarioSha256,
+                        campaign: expectedReplayCampaign,
+                      },
+                    )
+                  : retainedScenarioReviewMatchesReplayBinding(
+                      replay,
+                      invocation,
+                      {
+                        tag: "historicalScenario",
+                        reviewStage: "milestone",
+                        scenarioId: findings.subject.scenarioId,
+                        campaign: expectedReplayCampaign,
+                      },
+                    );
+            }
+            if (replay.subject.tag !== "scenarioCandidate") {
+              return retainedScenarioReviewMatchesReplayBinding(
+                replay,
+                invocation,
+                {
+                  tag: "scenario",
+                  reviewStage: expectedReplayStage,
+                  scenarioId: findings.subject.scenarioId,
+                },
+              );
+            }
+            if (expectedReplayCampaign === undefined) {
+              return Either.left(
+                "Current Candidate replay binding requires an expected Campaign and Evidence Set identity.",
+              );
+            }
+            if (expectedReplayStage === "final") {
+              return retainedScenarioReviewMatchesReplayBinding(
+                replay,
+                invocation,
+                {
+                  tag: "candidate",
+                  reviewStage: "final",
+                  scenarioId: findings.subject.scenarioId,
+                  admittedScenarioSha256: expectedScenarioSha256,
+                  campaign: expectedReplayCampaign,
+                },
+              );
+            }
+            return retainedScenarioReviewMatchesReplayBinding(
+              replay,
+              invocation,
+              {
+                tag: "candidate",
+                reviewStage: "milestone",
+                scenarioId: findings.subject.scenarioId,
+                campaign: expectedReplayCampaign,
+              },
+            );
+          })();
+    if (Either.isLeft(binding)) {
       issues.push(
-        `Replay authority ${authority.role} does not identify a matching composite-review invocation.`,
+        `Replay authority ${authority.role} does not identify a matching composite-review invocation: ${binding.left}`,
       );
     }
     if (replayStages.has(replay.reviewStage)) {
@@ -3364,8 +3676,8 @@ function currentAuthorityContentIssues(
     }
     replayStages.set(replay.reviewStage, replay.invocationId);
     replayAuthoritiesByStage.set(replay.reviewStage, authority);
-    if (invocation !== undefined) {
-      replayInvocationsByStage.set(replay.reviewStage, invocation);
+    if (Either.isRight(binding)) {
+      replayBindingsByStage.set(replay.reviewStage, binding.right);
     }
   }
   if (!replayStages.has("milestone"))
@@ -3430,8 +3742,8 @@ function currentAuthorityContentIssues(
     }
     replayEventStages.add(reviewStage);
     const replayAuthority = replayAuthoritiesByStage.get(reviewStage);
-    const invocation = replayInvocationsByStage.get(reviewStage);
-    if (replayAuthority === undefined || invocation === undefined) {
+    const binding = replayBindingsByStage.get(reviewStage);
+    if (replayAuthority === undefined || binding === undefined) {
       issues.push(
         `Replay event authority ${authority.role} has no matching retained ${reviewStage} envelope and invocation.`,
       );
@@ -3440,32 +3752,39 @@ function currentAuthorityContentIssues(
     const invocationEvent = measurement.invocationEvents.find(
       ({ path }) => path === authority.path,
     );
-    if (invocationEvent === undefined) {
-      issues.push(
-        `Replay event authority ${authority.role} is not included in the complete-path invocation event authorities.`,
-      );
+    const parsedEventAuthority = eventAuthoritySnapshot(
+      eventAuthorityCache,
+      authority,
+    );
+    if (Either.isLeft(parsedEventAuthority)) {
+      issues.push(parsedEventAuthority.left);
     } else if (
-      invocationEvent.sha256 !== authority.sha256 ||
-      invocationEvent.sha256 !== invocation.eventsSha256
+      parsedEventAuthority.right.authority.path !== authority.path ||
+      parsedEventAuthority.right.authority.byteLength !==
+        authority.byteLength ||
+      parsedEventAuthority.right.authority.sha256 !== authority.sha256 ||
+      invocationEvent === undefined ||
+      parsedEventAuthority.right.authority.sha256 !== invocationEvent.sha256 ||
+      parsedEventAuthority.right.authority.sha256 !==
+        binding.ledgerEntry.eventsSha256
     ) {
       issues.push(
         `Replay event authority ${authority.role} does not match its retained invocation event hash.`,
       );
-    }
-    try {
-      validateRetainedScenarioReviewInvocation({
-        retainedInputPath: replayAuthority.path,
-        eventPath: authority.path,
-        eventSha256: authority.sha256,
-        reviewStage,
-        ledgerEntry: invocation,
-      });
-    } catch (error: unknown) {
-      issues.push(
-        error instanceof Error
-          ? error.message
-          : `Replay event authority ${authority.role} is not bound to its retained invocation.`,
-      );
+    } else {
+      try {
+        validateRetainedScenarioReviewInvocation({
+          binding,
+          eventSha256: parsedEventAuthority.right.authority.sha256,
+          events: parsedEventAuthority.right.events,
+        });
+      } catch (error: unknown) {
+        issues.push(
+          error instanceof Error
+            ? error.message
+            : `Replay event authority ${authority.role} is not bound to its retained invocation.`,
+        );
+      }
     }
   }
   if (!replayEventStages.has("milestone")) {
@@ -3540,6 +3859,8 @@ function currentAuthorityContentIssues(
         !isScenarioReviewAuthorityRole(authority.role)) ||
       (authority.role.startsWith("review-") &&
         !isPostPlayReviewAuthorityRole(authority.role)) ||
+      authority.role === "replay" ||
+      authority.role === "prePlayReviewReplayInput" ||
       (authority.role.startsWith("replay-") &&
         !isReplayAuthorityRole(authority.role)) ||
       (authority.role.startsWith("prePlayReviewReplayInput-") &&
@@ -3555,6 +3876,7 @@ function currentAuthorityContentIssues(
 
 function currentAuthorityIssues(
   measurement: CompletePathMeasurementWithCurrentEvidence,
+  eventAuthorityCache: EventAuthoritySnapshotCache,
 ): readonly string[] {
   const issues: string[] = [];
   if (measurement.schemaVersion === 4) {
@@ -3566,7 +3888,13 @@ function currentAuthorityIssues(
       }),
     );
   }
-  const findingsValidation = validateFindingsProjection(measurement.findings);
+  const findingsValidation = validateFindingsProjection(
+    measurement.findings,
+    findingAuthoritySnapshots(
+      eventAuthorityCache,
+      measurement.findings.authorities,
+    ),
+  );
   if (findingsValidation.tag === "invalid") {
     issues.push(`Findings authority is invalid: ${findingsValidation.message}`);
     return issues;
@@ -3715,34 +4043,36 @@ function currentAuthorityIssues(
       );
       continue;
     }
-    let canonicalAuthority: ArtifactAuthority;
-    try {
-      canonicalAuthority = artifactAuthority(authority.path);
-    } catch {
+    const parsedEventAuthority = eventAuthoritySnapshot(
+      eventAuthorityCache,
+      authority,
+    );
+    if (Either.isLeft(parsedEventAuthority)) {
       issues.push(
-        `Invocation ${invocation.invocationId} event authority is unreadable.`,
+        `Invocation ${invocation.invocationId} event authority is unreadable: ${parsedEventAuthority.left}`,
       );
       continue;
     }
     if (
-      canonicalAuthority.path !== authority.path ||
-      canonicalAuthority.byteLength !== authority.byteLength ||
-      canonicalAuthority.sha256 !== authority.sha256
+      parsedEventAuthority.right.authority.path !== authority.path ||
+      parsedEventAuthority.right.authority.byteLength !==
+        authority.byteLength ||
+      parsedEventAuthority.right.authority.sha256 !== authority.sha256
     ) {
       issues.push(
         `Invocation ${invocation.invocationId} event authority hash is not canonical.`,
       );
       continue;
     }
-    const events = readCodexEvents(resolve(repoRoot, canonicalAuthority.path));
-    if (events.tag === "invalid") {
-      issues.push(events.message);
-      continue;
-    }
-    const evidence = modelInvocationEvidenceFromEvents(events.events);
-    if (evidence.tag === "invalid" || evidence.entry.schemaVersion !== 4) {
+    const evidence = modelInvocationEvidenceFromEvents(
+      parsedEventAuthority.right.events,
+    );
+    if (
+      evidence.tag === "invalid" ||
+      (evidence.entry.schemaVersion !== 4 && evidence.entry.schemaVersion !== 5)
+    ) {
       issues.push(
-        `Invocation ${invocation.invocationId} does not have valid current v4 event evidence.`,
+        `Invocation ${invocation.invocationId} does not have valid current event evidence.`,
       );
       continue;
     }
@@ -3782,7 +4112,13 @@ function currentAuthorityIssues(
       "A completed complete path cannot retain a failed model invocation.",
     );
   }
-  issues.push(...currentAuthorityContentIssues(measurement, findings));
+  issues.push(
+    ...currentAuthorityContentIssues(
+      measurement,
+      findings,
+      eventAuthorityCache,
+    ),
+  );
   return issues;
 }
 
@@ -3959,7 +4295,10 @@ function benchmarkInvocationEntriesFromAuthorities(
     for (const value of parsed.value) {
       const current = parseModelInvocationLedgerEntry(value);
       if (Either.isRight(current)) {
-        if (current.right.schemaVersion !== 4) {
+        if (
+          current.right.schemaVersion !== 4 &&
+          current.right.schemaVersion !== 5
+        ) {
           issues.push(
             `Benchmark invocation ledger ${authority.path} cannot use historical evidence.`,
           );
@@ -3985,7 +4324,7 @@ function canonicalBenchmarkInvocations(
   invocations: readonly BenchmarkInvocation[],
 ): readonly CurrentModelInvocationLedgerEntry[] {
   return invocations.flatMap((invocation) =>
-    invocation.schemaVersion === 4 ? [invocation] : [],
+    !("responsibility" in invocation) ? [invocation] : [],
   );
 }
 
@@ -4060,18 +4399,14 @@ function benchmarkReviewAuthorityByStage(
 }
 
 function benchmarkReadinessResultEventIssue(input: {
-  readonly authority: FindingAuthority;
+  readonly eventAuthority: ParsedEventAuthority;
   readonly expected: BenchmarkReadinessInput;
 }): string | undefined {
-  const parsedEvents = readCodexEvents(resolve(repoRoot, input.authority.path));
-  if (parsedEvents.tag === "invalid") {
-    return `Benchmark readiness event authority is invalid: ${parsedEvents.message}`;
-  }
   try {
     const output = Schema.decodeUnknownEither(
       Schema.Struct({ result: ScenarioQualityReviewSchema }),
       { onExcessProperty: "error" },
-    )(finalAgentMessage(parsedEvents.events));
+    )(finalAgentMessage(input.eventAuthority.events));
     if (
       Either.isLeft(output) ||
       canonicalJson(output.right.result) !==
@@ -4090,6 +4425,7 @@ function benchmarkReadinessResultEventIssue(input: {
 function benchmarkRetainedPrePlayReviewIssues(input: {
   readonly measurement: BenchmarkMeasurementWithCurrentEvidence;
   readonly findings: FindingsProjection;
+  readonly eventAuthorityCache: EventAuthoritySnapshotCache;
   readonly expectedReviewSchema:
     | typeof HistoricalScenarioCompositeReviewSchema
     | typeof CurrentScenarioCompositeReviewSchema;
@@ -4100,6 +4436,50 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     expectedReviewSchema === HistoricalScenarioCompositeReviewSchema
       ? codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema)
       : codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema);
+  const candidateInvocations = candidateReplayInvocations(
+    measurement.invocations,
+  );
+  const benchmarkInvocations = benchmarkReplayInvocations(
+    measurement.invocations,
+  );
+  const expectedReplayBenchmark =
+    replayBenchmarkIdentityForMeasurement(measurement);
+  const expectedReplayCampaign = replayCampaignManifestForFindings(
+    findings,
+    issues,
+  );
+  const expectedScenarioSha256 =
+    measurement.stagePlan.identity.tag === "admitted"
+      ? measurement.stagePlan.identity.scenarioSha256
+      : undefined;
+  for (const candidateInvocation of candidateInvocations) {
+    if (
+      expectedReplayCampaign === undefined ||
+      candidateInvocation.subject.campaignId !==
+        expectedReplayCampaign.campaignId ||
+      candidateInvocation.subject.evidenceSetId !==
+        expectedReplayCampaign.evidenceSetId ||
+      candidateInvocation.subject.plannedScenarioId !==
+        expectedReplayCampaign.plannedScenarioId
+    ) {
+      issues.push(
+        `Benchmark Candidate ${candidateInvocation.subject.candidateId} does not belong to one Campaign, Evidence Set, and planned Scenario identity.`,
+      );
+    }
+  }
+  for (const benchmarkInvocation of benchmarkInvocations) {
+    if (
+      expectedReplayBenchmark === undefined ||
+      benchmarkInvocation.subject.benchmarkId !==
+        expectedReplayBenchmark.benchmarkId ||
+      benchmarkInvocation.subject.profile !== expectedReplayBenchmark.profile ||
+      benchmarkInvocation.subject.scenarioId !== measurement.scenarioId
+    ) {
+      issues.push(
+        `Benchmark invocation ${benchmarkInvocation.invocationId} does not belong to the measured benchmark identity.`,
+      );
+    }
+  }
   const replayAuthorities = findings.authorities.filter(({ role }) =>
     isReplayAuthorityRole(role),
   );
@@ -4113,6 +4493,8 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
         `Benchmark finding authority role is retired and not permitted: ${authority.role}.`,
       );
     } else if (
+      authority.role === "replay" ||
+      authority.role === "prePlayReviewReplayInput" ||
       (authority.role.startsWith("replay-") &&
         !isReplayAuthorityRole(authority.role)) ||
       (authority.role.startsWith("prePlayReviewReplayInput-") &&
@@ -4127,19 +4509,6 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       );
     }
   }
-  const retainedReviewEnvelopeSchema = Schema.Struct({
-    schemaVersion: Schema.Literal(2),
-    phase: Schema.Literal("scenarioCompositeReview"),
-    reviewStage: Schema.Literal("milestone", "final"),
-    scenarioId: ScenarioIdSchema,
-    sourceGitSha: GitShaSchema,
-    invocationId: Schema.NonEmptyString,
-    model: Schema.Literal("gpt-5.6-luna"),
-    reasoningEffort: RetainedScenarioReviewReasoningEffortSchema,
-    prompt: Schema.NonEmptyString,
-    outputJsonSchema: Schema.Unknown,
-    result: expectedReviewSchema,
-  });
   if (replayAuthorities.length !== expectedStages.length) {
     issues.push(
       `Benchmark ${measurement.profile} profile requires ${String(expectedStages.length)} retained pre-play replay authorities, received ${String(replayAuthorities.length)}.`,
@@ -4188,18 +4557,41 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       issues.push(replayValue.message);
       continue;
     }
-    const replay = Schema.decodeUnknownEither(retainedReviewEnvelopeSchema, {
-      onExcessProperty: "error",
-    })(replayValue.value);
+    const replay = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(replayValue.value);
     if (Either.isLeft(replay)) {
       issues.push(
         `Benchmark ${reviewStage} pre-play review authority is not a retained review envelope.`,
       );
       continue;
     }
+    const currentResult =
+      expectedReviewSchema === HistoricalScenarioCompositeReviewSchema
+        ? Schema.decodeUnknownEither(HistoricalScenarioCompositeReviewSchema, {
+            onExcessProperty: "error",
+          })(replay.right.result)
+        : Schema.decodeUnknownEither(CurrentScenarioCompositeReviewSchema, {
+            onExcessProperty: "error",
+          })(replay.right.result);
+    if (Either.isLeft(currentResult)) {
+      issues.push(
+        `Benchmark ${reviewStage} pre-play review authority is not a retained review envelope.`,
+      );
+      continue;
+    }
+    const replaySubject = retainedScenarioReviewSubject(replay.right);
+    const replayScenarioId =
+      replaySubject.tag === "scenarioCandidate"
+        ? replaySubject.plannedScenarioId
+        : replaySubject.scenarioId;
+    const replayLifecycleValid =
+      (replay.right.schemaVersion === 2 || replaySubject.tag === "benchmark") &&
+      replay.right.reviewStage === reviewStage;
     const replayIdentityValid =
-      replay.right.reviewStage === reviewStage &&
-      replay.right.scenarioId === measurement.scenarioId &&
+      replayLifecycleValid &&
+      String(replayScenarioId) === String(measurement.scenarioId) &&
       replay.right.sourceGitSha === measurement.implementationGitSha &&
       canonicalJson(replay.right.outputJsonSchema) ===
         canonicalJson(expectedOutputJsonSchema);
@@ -4213,35 +4605,119 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     const eventAuthority = eventAuthoritiesByPath.get(
       replayEventsAuthority.path,
     );
-    if (
+    const candidateInvocation =
+      invocation !== undefined &&
+      (invocation.schemaVersion === 4 || invocation.schemaVersion === 5) &&
+      invocation.phase === "scenarioCompositeReview" &&
+      invocation.subject.tag === "scenarioCandidate"
+        ? invocation
+        : undefined;
+    const benchmarkInvocation =
+      invocation !== undefined &&
+      (invocation.schemaVersion === 4 || invocation.schemaVersion === 5) &&
+      invocation.phase === "scenarioCompositeReview" &&
+      invocation.subject.tag === "benchmark"
+        ? invocation
+        : undefined;
+    const binding =
       invocation === undefined ||
-      invocation.schemaVersion !== 4 ||
-      invocation.phase !== "scenarioCompositeReview" ||
-      invocation.gitSha !== replay.right.sourceGitSha ||
-      invocation.model !== replay.right.model ||
-      invocation.reasoningEffort !== replay.right.reasoningEffort ||
-      eventAuthority === undefined ||
-      eventAuthority.sha256 !== replayEventsAuthority.sha256 ||
-      eventAuthority.sha256 !== invocation.eventsSha256
-    ) {
+      "responsibility" in invocation ||
+      (invocation.schemaVersion !== 4 && invocation.schemaVersion !== 5) ||
+      invocation.phase !== "scenarioCompositeReview"
+        ? Either.left("No matching composite-review invocation was retained.")
+        : benchmarkInvocation !== undefined
+          ? expectedReplayBenchmark === undefined
+            ? Either.left(
+                "Benchmark replay requires a benchmark lifecycle identity.",
+              )
+            : retainedScenarioReviewMatchesReplayBinding(
+                replay.right,
+                invocation,
+                {
+                  tag: "benchmark",
+                  reviewStage,
+                  scenarioId: measurement.scenarioId,
+                  benchmark: expectedReplayBenchmark,
+                },
+              )
+          : candidateInvocation !== undefined
+            ? expectedReplayCampaign === undefined
+              ? Either.left(
+                  "Historical benchmark Candidate replay requires Campaign, Evidence Set, and planned Scenario identity.",
+                )
+              : expectedScenarioSha256 === undefined
+                ? Either.left(
+                    "Historical benchmark Candidate replay requires an admitted Scenario source hash.",
+                  )
+                : retainedScenarioReviewMatchesReplayBinding(
+                    replay.right,
+                    invocation,
+                    reviewStage === "final"
+                      ? {
+                          tag: "historicalScenario",
+                          reviewStage: "final",
+                          scenarioId: measurement.scenarioId,
+                          admittedScenarioSha256: expectedScenarioSha256,
+                          campaign: expectedReplayCampaign,
+                        }
+                      : {
+                          tag: "historicalScenario",
+                          reviewStage: "milestone",
+                          scenarioId: measurement.scenarioId,
+                          campaign: expectedReplayCampaign,
+                        },
+                  )
+            : retainedScenarioReviewMatchesReplayBinding(
+                replay.right,
+                invocation,
+                {
+                  tag: "scenario",
+                  reviewStage,
+                  scenarioId: measurement.scenarioId,
+                },
+              );
+    if (Either.isLeft(binding)) {
       issues.push(
-        `Benchmark ${reviewStage} pre-play replay event authority does not match its retained composite-review invocation.`,
+        `Benchmark ${reviewStage} pre-play replay event authority does not match its retained composite-review invocation: ${binding.left}`,
       );
-    } else if (invocation.schemaVersion === 4) {
-      try {
-        validateRetainedScenarioReviewInvocation({
-          retainedInputPath: replayAuthority.path,
-          eventPath: replayEventsAuthority.path,
-          eventSha256: replayEventsAuthority.sha256,
-          reviewStage,
-          ledgerEntry: invocation,
-        });
-      } catch (error: unknown) {
+    } else {
+      const parsedEventAuthority = eventAuthoritySnapshot(
+        input.eventAuthorityCache,
+        replayEventsAuthority,
+      );
+      if (Either.isLeft(parsedEventAuthority)) {
         issues.push(
-          error instanceof Error
-            ? error.message
-            : `Benchmark ${reviewStage} pre-play replay result is not bound to its invocation event output.`,
+          `Benchmark ${reviewStage} pre-play replay event authority is invalid: ${parsedEventAuthority.left}`,
         );
+      } else if (
+        parsedEventAuthority.right.authority.path !==
+          replayEventsAuthority.path ||
+        parsedEventAuthority.right.authority.byteLength !==
+          replayEventsAuthority.byteLength ||
+        parsedEventAuthority.right.authority.sha256 !==
+          replayEventsAuthority.sha256 ||
+        eventAuthority === undefined ||
+        parsedEventAuthority.right.authority.sha256 !== eventAuthority.sha256 ||
+        parsedEventAuthority.right.authority.sha256 !==
+          binding.right.ledgerEntry.eventsSha256
+      ) {
+        issues.push(
+          `Benchmark ${reviewStage} pre-play replay event authority does not match its retained composite-review invocation.`,
+        );
+      } else {
+        try {
+          validateRetainedScenarioReviewInvocation({
+            binding: binding.right,
+            eventSha256: parsedEventAuthority.right.authority.sha256,
+            events: parsedEventAuthority.right.events,
+          });
+        } catch (error: unknown) {
+          issues.push(
+            error instanceof Error
+              ? error.message
+              : `Benchmark ${reviewStage} pre-play replay result is not bound to its invocation event output.`,
+          );
+        }
       }
     }
   }
@@ -4283,7 +4759,7 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
     }
     const readinessInvocations = measurement.invocations.filter(
       (invocation) =>
-        invocation.schemaVersion === 3 &&
+        "responsibility" in invocation &&
         invocation.responsibility === "scenarioQuality",
     );
     if (readinessInvocations.length !== 1) {
@@ -4376,10 +4852,16 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
         "The document-declaration benchmark readiness events authority is not bound to its retained readiness invocation.",
       );
     } else if (readinessInput !== undefined) {
-      const outputIssue = benchmarkReadinessResultEventIssue({
-        authority: readinessEventsAuthority,
-        expected: readinessInput,
-      });
+      const readinessEvent = eventAuthoritySnapshot(
+        input.eventAuthorityCache,
+        readinessEventsAuthority,
+      );
+      const outputIssue = Either.isLeft(readinessEvent)
+        ? `Benchmark readiness event authority is invalid: ${readinessEvent.left}`
+        : benchmarkReadinessResultEventIssue({
+            eventAuthority: readinessEvent.right,
+            expected: readinessInput,
+          });
       if (outputIssue !== undefined) issues.push(outputIssue);
     }
   } else if (retainedReadinessAuthorities.length !== 0) {
@@ -4556,6 +5038,7 @@ function benchmarkCompleteEvidenceIssues(input: {
 
 function benchmarkAuthorityIssues(
   measurement: BenchmarkMeasurementWithCurrentEvidence,
+  eventAuthorityCache: EventAuthoritySnapshotCache,
 ): readonly string[] {
   const issues: string[] = [];
   const bundle = measurement.scenarioBundle;
@@ -4753,7 +5236,13 @@ function benchmarkAuthorityIssues(
     }
   }
 
-  const findingsValidation = validateFindingsProjection(measurement.findings);
+  const findingsValidation = validateFindingsProjection(
+    measurement.findings,
+    findingAuthoritySnapshots(
+      eventAuthorityCache,
+      measurement.findings.authorities,
+    ),
+  );
   if (findingsValidation.tag === "invalid") {
     issues.push(`Findings authority is invalid: ${findingsValidation.message}`);
   } else {
@@ -4836,6 +5325,7 @@ function benchmarkAuthorityIssues(
       ...benchmarkRetainedPrePlayReviewIssues({
         measurement,
         findings,
+        eventAuthorityCache,
         expectedReviewSchema:
           measurement.profile === "documentDeclarationSet"
             ? HistoricalScenarioCompositeReviewSchema
@@ -4873,7 +5363,7 @@ function benchmarkAuthorityIssues(
     }
     invocationIds.add(invocation.invocationId);
     const invocationScenarioId =
-      invocation.schemaVersion === 3
+      "responsibility" in invocation
         ? invocation.scenarioId
         : modelInvocationScenarioReference(invocation);
     if (invocationScenarioId !== measurement.scenarioId) {
@@ -4887,7 +5377,7 @@ function benchmarkAuthorityIssues(
       );
     }
     if (
-      invocation.schemaVersion === 3 &&
+      "responsibility" in invocation &&
       measurement.profile !== "documentDeclarationSet"
     ) {
       issues.push(
@@ -4931,27 +5421,52 @@ function benchmarkAuthorityIssues(
       "Benchmark invocation event authorities must form an exact bijection with invocation eventsSha256 values.",
     );
   }
+  const parsedEventAuthorities = new Map<string, ParsedEventAuthority>();
   for (const authority of measurement.invocationEvents) {
-    issues.push(...benchmarkAuthorityMatches(authority, "invocation event"));
+    const parsedEventAuthority = eventAuthoritySnapshot(
+      eventAuthorityCache,
+      authority,
+    );
+    if (Either.isLeft(parsedEventAuthority)) {
+      issues.push(
+        `Benchmark invocation event authority is unreadable: ${parsedEventAuthority.left}`,
+      );
+      continue;
+    }
+    if (
+      parsedEventAuthority.right.authority.path !== authority.path ||
+      parsedEventAuthority.right.authority.byteLength !==
+        authority.byteLength ||
+      parsedEventAuthority.right.authority.sha256 !== authority.sha256
+    ) {
+      issues.push(
+        "Benchmark invocation event authority hash is not canonical.",
+      );
+      continue;
+    }
+    parsedEventAuthorities.set(authority.sha256, parsedEventAuthority.right);
   }
   for (const invocation of measurement.invocations) {
-    const authority = eventAuthorities.get(invocation.eventsSha256);
-    if (authority === undefined) {
+    const parsedEventAuthority = parsedEventAuthorities.get(
+      invocation.eventsSha256,
+    );
+    if (parsedEventAuthority === undefined) {
       issues.push(
         `Benchmark invocation ${invocation.invocationId} has no matching event authority.`,
       );
       continue;
     }
-    const events = readCodexEvents(resolve(repoRoot, authority.path));
-    if (events.tag === "invalid") {
-      issues.push(events.message);
-      continue;
-    }
-    if (invocation.schemaVersion === 4) {
-      const evidence = modelInvocationEvidenceFromEvents(events.events);
-      if (evidence.tag === "invalid" || evidence.entry.schemaVersion !== 4) {
+    if (!("responsibility" in invocation)) {
+      const evidence = modelInvocationEvidenceFromEvents(
+        parsedEventAuthority.events,
+      );
+      if (
+        evidence.tag === "invalid" ||
+        (evidence.entry.schemaVersion !== 4 &&
+          evidence.entry.schemaVersion !== 5)
+      ) {
         issues.push(
-          `Benchmark invocation ${invocation.invocationId} does not have valid v4 event evidence.`,
+          `Benchmark invocation ${invocation.invocationId} does not have valid current event evidence.`,
         );
         continue;
       }
@@ -4960,12 +5475,12 @@ function benchmarkAuthorityIssues(
       );
       if (canonicalJson(evidence.entry) !== canonicalJson(withoutEventsHash)) {
         issues.push(
-          `Benchmark invocation ${invocation.invocationId} does not match its v4 event evidence.`,
+          `Benchmark invocation ${invocation.invocationId} does not match its current event evidence.`,
         );
       }
     } else {
       const evidence = benchmarkModelInvocationEvidenceFromEvents(
-        events.events,
+        parsedEventAuthority.events,
       );
       if (evidence.tag === "invalid") {
         issues.push(
@@ -5085,18 +5600,18 @@ function benchmarkSemanticIssues(
   ];
   const readiness = measurement.invocations.filter(
     (invocation) =>
-      invocation.schemaVersion === 3 &&
+      "responsibility" in invocation &&
       invocation.responsibility === "scenarioQuality",
   );
   const redundantCharacters = measurement.invocations.filter(
     (invocation) =>
-      invocation.schemaVersion === 3 &&
+      "responsibility" in invocation &&
       invocation.responsibility === "redundantCharacterPreparation",
   );
   const compositeReviewStages = benchmarkReviewPlan(measurement.profile).stages;
   const compositeReviewInvocations = measurement.invocations.filter(
     (invocation) =>
-      invocation.schemaVersion === 4 &&
+      !("responsibility" in invocation) &&
       invocation.phase === "scenarioCompositeReview",
   );
   if (compositeReviewInvocations.length !== compositeReviewStages.length) {
@@ -5109,7 +5624,7 @@ function benchmarkSemanticIssues(
   );
   for (const invocation of measurement.invocations) {
     if (
-      invocation.schemaVersion === 4 &&
+      !("responsibility" in invocation) &&
       (invocation.phase === "scenarioCompositeReview" ||
         invocation.phase === "postPlayReview") &&
       invocation.reasoningEffort !== expectedReviewReasoningEffort
@@ -5132,7 +5647,7 @@ function benchmarkSemanticIssues(
     }
     const compositeIndexes = measurement.invocations.flatMap(
       (invocation, index) =>
-        invocation.schemaVersion === 4 &&
+        !("responsibility" in invocation) &&
         invocation.phase === "scenarioCompositeReview"
           ? [index]
           : [],
@@ -5178,23 +5693,36 @@ function benchmarkSemanticIssues(
  * envelopes and pure schema tests; comparison inputs should come from this
  * validated boundary.
  */
+function validateParsedCompletePathMeasurement(
+  parsed: CompletePathMeasurement,
+  eventAuthorityCache: EventAuthoritySnapshotCache,
+): Either.Either<ValidatedCompletePathMeasurement, string> {
+  if (parsed.schemaVersion === 2 || parsed.schemaVersion === 4) {
+    const issues = currentAuthorityIssues(parsed, eventAuthorityCache);
+    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
+  }
+  if (parsed.schemaVersion === 3 || parsed.schemaVersion === 5) {
+    const issues = benchmarkAuthorityIssues(parsed, eventAuthorityCache);
+    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
+  }
+  return Either.right({
+    ...parsed,
+    [completePathMeasurementValidated]: true,
+  } as ValidatedCompletePathMeasurement);
+}
+
 export function validateCompletePathMeasurement(
   value: unknown,
 ): Either.Either<ValidatedCompletePathMeasurement, string> {
   const parsed = parseCompletePathMeasurement(value);
   if (Either.isLeft(parsed)) return Either.left(parsed.left.message);
-  if (parsed.right.schemaVersion === 2 || parsed.right.schemaVersion === 4) {
-    const issues = currentAuthorityIssues(parsed.right);
-    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
-  }
-  if (parsed.right.schemaVersion === 3 || parsed.right.schemaVersion === 5) {
-    const issues = benchmarkAuthorityIssues(parsed.right);
-    if (issues.length > 0) return Either.left([...new Set(issues)].join(" "));
-  }
-  return Either.right({
-    ...parsed.right,
-    [completePathMeasurementValidated]: true,
-  } as ValidatedCompletePathMeasurement);
+  const eventAuthorityCache = eventAuthoritySnapshotsForPaths(
+    eventAuthorityPathsForMeasurement(parsed.right),
+  );
+  return validateParsedCompletePathMeasurement(
+    parsed.right,
+    eventAuthorityCache,
+  );
 }
 
 export function readCompletePathMeasurement(

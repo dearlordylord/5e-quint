@@ -27,10 +27,12 @@ import {
   grappleEscapeDc,
   targetIsNoMoreThanOneSizeLarger,
 } from "./battle-reducer/movement-speed.ts";
+import { GRAPPLE_TARGET_REACH_FEET } from "./battle-reducer/domain-constants.ts";
 import type {
   BattleState,
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
+import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
   abilityCheckFill,
   applyCondition,
@@ -38,6 +40,7 @@ import {
   attackInitialTargetHole,
   attackRollFill,
   attackRollHoleAfterTarget,
+  attackTargetDistanceSpatialFact,
   attackTargetSpatialFact,
   battleAreaId,
   battleBonusActionStandardActionSupportForUnit,
@@ -385,6 +388,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       expect.objectContaining({
         grapplerId: fighterId,
         targetId: goblinId,
+        reachFeet: GRAPPLE_TARGET_REACH_FEET,
       }),
     ]);
     expect(
@@ -1947,6 +1951,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
     const goblinThreat = {
       reactorId: goblinId,
+      distanceFeet: movementFeet(5),
       ...attackExecutionSelectionForSubjectForTest(
         goblinAttackSubject(awaitingReaction.state, "Scimitar"),
       ),
@@ -2062,6 +2067,18 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     if (choice?.kind !== "releaseReadiedAttack") {
       throw new Error("Expected the chosen readied Attack response.");
     }
+    const targetSpatialFacts = {
+      kind: "targetSpatialFacts" as const,
+      holeId: ATTACK_TARGET_HOLE_ID,
+      spatialFacts: [
+        attackTargetDistanceSpatialFact(
+          fighterId,
+          goblinId,
+          attackResponse.selection,
+          movementFeet(5),
+        ),
+      ],
+    };
     const begun = resolveBattleInterrupt({
       state: reported.state,
       fill: interruptDecisionFill(requireHole(reported, "interruptDecision"), {
@@ -2072,7 +2089,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           reactorId: fighterId,
           targetId: goblinId,
           procedureRef: attackResponse.selection.procedureRef,
-          fills: [],
+          fills: [targetSpatialFacts],
         },
       }),
     });
@@ -2302,6 +2319,18 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     if (reported.tag !== "needsHoles") {
       throw new Error("Expected the nested Ready trigger frontier.");
     }
+    const targetSpatialFacts = {
+      kind: "targetSpatialFacts" as const,
+      holeId: ATTACK_TARGET_HOLE_ID,
+      spatialFacts: [
+        attackTargetDistanceSpatialFact(
+          fighterId,
+          goblinId,
+          attackResponse.selection,
+          movementFeet(5),
+        ),
+      ],
+    };
     const begun = resolveBattleInterrupt({
       state: reported.state,
       fill: interruptDecisionFill(requireHole(reported, "interruptDecision"), {
@@ -2312,7 +2341,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           reactorId: fighterId,
           targetId: goblinId,
           procedureRef: attackResponse.selection.procedureRef,
-          fills: [],
+          fills: [targetSpatialFacts],
         },
       }),
     });

@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
   opportunityAttackLeavesReach,
+  opportunityAttackThreatIdentityEqual,
+  opportunityAttackThreatEqual,
   type BattleInterruptProcedureSelection,
 } from "./index.ts";
 import { classLevel, movementFeet } from "@dnd/shared/types";
@@ -42,6 +44,7 @@ import {
   supportedBattleUnitRef,
   testLongswordAttack,
   targetFill,
+  attackTargetDistanceSpatialFact,
   unitLibrary,
   type BattleFill,
   type BattleState,
@@ -86,6 +89,115 @@ test("opportunity attacks are provoked only when movement leaves reach", () => {
       reachFeet: movementFeet(5),
     }),
   ).toBe(false);
+});
+
+test("movement rejects an Opportunity Attack threat outside the selected reach before opening an interrupt", () => {
+  const session = retaliationBoundarySession();
+  const skeletonTurn = requireResolved(
+    endTurn({ state: session.state, actorId: fighterId }),
+  ).state;
+  const moveSubject: BattleSubject = {
+    tag: "runtimeCommand",
+    actorId: skeletonId,
+    command: "move",
+  };
+  const movement = requireHole(
+    resolveBattleSubject({
+      state: skeletonTurn,
+      subject: moveSubject,
+      fills: [],
+    }),
+    "movement",
+  );
+  const fighterAttack = fighterAttackSubject(skeletonTurn, "Longsword");
+
+  expect(
+    resolveBattleSubject({
+      state: skeletonTurn,
+      subject: moveSubject,
+      fills: [
+        movementFill(movement, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: fighterId,
+              distanceFeet: movementFeet(10),
+              ...attackExecutionSelectionForSubjectForTest(fighterAttack),
+            },
+          ],
+        }),
+      ],
+    }),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "invalidFill",
+    message: expect.stringContaining("outside the selected attack's reach"),
+  });
+});
+
+test("a fixed Opportunity Attack rejects an out-of-range canonical distance before its roll", () => {
+  const session = retaliationBoundarySession();
+  const skeletonTurn = requireResolved(
+    endTurn({ state: session.state, actorId: fighterId }),
+  ).state;
+  const opportunity = startFighterOpportunityAttackAfterMovement(
+    skeletonTurn,
+    skeletonId,
+  );
+  if (
+    opportunity.subject.tag !== "runtimeCommand" ||
+    opportunity.subject.command !== "opportunityAttack"
+  ) {
+    throw new Error("Expected an Opportunity Attack subject.");
+  }
+  const outOfRangeSubject = {
+    ...opportunity.subject,
+    distanceFeet: movementFeet(10),
+  };
+  const selection = attackExecutionSelectionForSubjectForTest(
+    fighterAttackSubject(skeletonTurn, "Longsword"),
+  );
+  const targetSpatialFacts: BattleFill = {
+    kind: "targetSpatialFacts",
+    holeId: ATTACK_TARGET_HOLE_ID,
+    spatialFacts: [
+      attackTargetDistanceSpatialFact(
+        fighterId,
+        skeletonId,
+        selection,
+        movementFeet(10),
+      ),
+    ],
+  };
+
+  expect(
+    resolveBattleSubject({
+      state: opportunity.state,
+      subject: outOfRangeSubject,
+      fills: [targetSpatialFacts],
+    }),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "invalidFill",
+    message: expect.stringContaining(
+      "outside the selected attack's legal range",
+    ),
+  });
+});
+
+test("Opportunity Attack threat identity ignores replay distance while full equality preserves it", () => {
+  const session = retaliationBoundarySession();
+  const attack = fighterAttackSubject(session.state, "Longsword");
+  const selection = attackExecutionSelectionForSubjectForTest(attack);
+  const near = {
+    reactorId: fighterId,
+    distanceFeet: movementFeet(5),
+    ...selection,
+  };
+  const far = { ...near, distanceFeet: movementFeet(10) };
+
+  expect(opportunityAttackThreatIdentityEqual(near, far)).toBe(true);
+  expect(opportunityAttackThreatEqual(near, far)).toBe(false);
 });
 
 function retaliationBoundarySession(
@@ -138,6 +250,7 @@ function retaliationBoundarySession(
 
 function startRetaliationAfterSkeletonOpportunityAttack(
   session: ReturnType<typeof retaliationBoundarySession>,
+  retaliationDistanceFeet: ReturnType<typeof movementFeet> = movementFeet(5),
 ) {
   const rageSubject: BattleSubject = {
     tag: "unitFeature",
@@ -179,6 +292,7 @@ function startRetaliationAfterSkeletonOpportunityAttack(
         provokedOpportunityAttacks: [
           {
             reactorId: skeletonAttack.actorId,
+            distanceFeet: movementFeet(5),
             ...attackExecutionSelectionForSubjectForTest(skeletonAttack),
           },
         ],
@@ -257,13 +371,27 @@ function startRetaliationAfterSkeletonOpportunityAttack(
     throw new Error("Expected fighter Retaliation choice.");
   }
   const retaliationChoice = reactionChoiceWithSubject([rawRetaliationChoice]);
+  const retaliationAttack = fighterAttackSubject(
+    awaitingRetaliation.state,
+    "Longsword",
+  );
+  const retaliationTargetDistanceFact: BattleFill = {
+    kind: "targetSpatialFacts",
+    holeId: ATTACK_TARGET_HOLE_ID,
+    spatialFacts: [
+      attackTargetDistanceSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(retaliationAttack),
+        retaliationDistanceFeet,
+      ),
+    ],
+  };
   const selection: BattleInterruptProcedureSelection = {
     kind: "retaliationAttack",
     reactorId: fighterId,
-    selection: attackExecutionSelectionForSubjectForTest(
-      fighterAttackSubject(awaitingRetaliation.state, "Longsword"),
-    ),
-    fills: [],
+    selection: attackExecutionSelectionForSubjectForTest(retaliationAttack),
+    fills: [retaliationTargetDistanceFact],
   };
   const startedRetaliation = resolveBattleInterrupt({
     state: awaitingRetaliation.state,
@@ -274,7 +402,11 @@ function startRetaliationAfterSkeletonOpportunityAttack(
     }),
   });
   if (startedRetaliation.tag !== "needsHoles") {
-    throw new Error("Expected Retaliation attack-roll hole.");
+    throw new Error(
+      startedRetaliation.tag === "invalid"
+        ? startedRetaliation.message
+        : "Expected Retaliation attack-roll hole.",
+    );
   }
   return {
     state: startedRetaliation.state,
@@ -306,6 +438,7 @@ function startFighterOpportunityAttackAfterMovement(
         provokedOpportunityAttacks: [
           {
             reactorId: fighterAttack.actorId,
+            distanceFeet: movementFeet(5),
             ...attackExecutionSelectionForSubjectForTest(fighterAttack),
           },
         ],
@@ -346,6 +479,14 @@ function startFighterOpportunityAttackAfterMovement(
 }
 
 describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
+  test("retaliation rejects a fixed target beyond melee reach before creating an attack-roll hole", () => {
+    const session = retaliationBoundarySession();
+
+    expect(() =>
+      startRetaliationAfterSkeletonOpportunityAttack(session, movementFeet(10)),
+    ).toThrow("outside the selected attack's legal range");
+  });
+
   test("Rage retaliation asks for the enemy relationship fact at both attack-roll checkpoints", () => {
     const session = retaliationBoundarySession();
     const retaliation = startRetaliationAfterSkeletonOpportunityAttack(session);
@@ -721,6 +862,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
     const attack = attackRollFill(opportunity.attackRoll, {
       total: 30,
       naturalD20: 15,
+      rollMode: "advantage",
     });
     const damage = requireHole(
       resolveBattleSubject({
@@ -765,3 +907,4 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
     expect(completed).toMatchObject({ tag: "resolved" });
   });
 });
+// KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
