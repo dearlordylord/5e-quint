@@ -2116,7 +2116,7 @@ export function resolveSelectedAttackProcedure<
     !attackRollModeWasEstablishedBeforeReplay &&
     !brutalStrikeSelected &&
     fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined &&
-    fillSet.attackRoll.rollMode !== requiredRollMode
+    !attackRollModeMatches(fillSet.attackRoll, requiredRollMode)
   ) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(

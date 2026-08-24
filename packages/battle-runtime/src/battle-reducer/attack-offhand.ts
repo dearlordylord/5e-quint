@@ -355,7 +355,7 @@ function resolveBonusActionAttack(
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined &&
-    fillSet.attackRoll.rollMode !== requiredRollMode
+    !attackRollModeMatches(fillSet.attackRoll, requiredRollMode)
   ) {
     return invalidResult(
       input.state,
