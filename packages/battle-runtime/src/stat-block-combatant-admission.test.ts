@@ -21,6 +21,7 @@ import {
   fighterId,
   removeBattleCombatantsRight,
   startBattleRight,
+  statBlockCreatureInit,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
 
@@ -160,6 +161,61 @@ describe("Stat Block combatant admission capability", () => {
     if (Either.isLeft(started)) return;
 
     const combatant = started.right.state.combatants.get(admittedCombatantId);
+    expect(combatant).toBeDefined();
+    if (combatant === undefined) return;
+    expect(hasCondition(combatant.conditions, "prone")).toBe(true);
+  });
+
+  test("startBattle rejects copied Stat Block initialization with an immune condition", () => {
+    const source = statBlockRecord();
+    const init = statBlockCreatureInit({
+      initiative: 10,
+      statBlock: {
+        ...source,
+        statBlock: {
+          ...source.statBlock,
+          immunities: { conditions: ["prone"] },
+        },
+      },
+    });
+    const directInit = {
+      ...init,
+      creatureInit: {
+        ...init.creatureInit,
+        conditions: ["prone"] as const,
+      },
+    };
+
+    const result = startBattle({
+      battleId: battleId("direct-stat-block-condition-immunity"),
+      combatants: [directInit],
+    });
+
+    expect(
+      Either.isLeft(result)
+        ? battleStateInitIssueMessage(result.left)
+        : "started",
+    ).toBe("Stat Block combatant is immune to initial prone condition.");
+  });
+
+  test("startBattle admits copied Stat Block initialization with a valid condition", () => {
+    const init = statBlockCreatureInit({ initiative: 10 });
+    const directInit = {
+      ...init,
+      creatureInit: {
+        ...init.creatureInit,
+        conditions: ["prone"] as const,
+      },
+    };
+
+    const result = startBattle({
+      battleId: battleId("direct-stat-block-condition-valid"),
+      combatants: [directInit],
+    });
+
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isLeft(result)) return;
+    const combatant = result.right.state.combatants.get(directInit.combatantId);
     expect(combatant).toBeDefined();
     if (combatant === undefined) return;
     expect(hasCondition(combatant.conditions, "prone")).toBe(true);

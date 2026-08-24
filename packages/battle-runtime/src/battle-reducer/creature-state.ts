@@ -133,7 +133,10 @@ import { applyInitialZeroHpLifecycle } from "./damage-apply.ts";
 import { statBlockExecutionAdmissionCohort } from "../stat-block-execution.ts";
 import { druidWildShapeAvailableFormsIssueForProfile } from "./druid-wild-shape.ts";
 import { admitCharacterAttackExecution } from "../attack-execution.ts";
-import { admitBattleStatBlockCombatantSource } from "../stat-block-combatant-admission.ts";
+import {
+  admitBattleStatBlockCombatantSource,
+  statBlockInitialConditionImmunityIssue,
+} from "../stat-block-combatant-admission.ts";
 import {
   statBlockLanguagePresentation,
   statBlockProcedurePresentations,
@@ -254,6 +257,19 @@ export function battleCreatureStateAdmissionFromInit(
     };
   }
   const zeroHpLifecycle = zeroHpLifecycleResult.right;
+  const initialConditionImmunityIssue =
+    creatureInit.kind === "statBlock"
+      ? statBlockInitialConditionImmunityIssue(
+          creatureInit.source,
+          creatureInit.conditions,
+        )
+      : null;
+  if (initialConditionImmunityIssue !== null) {
+    return {
+      tag: "invalid",
+      issues: [initialConditionImmunityIssue],
+    };
+  }
   const initialConditions =
     creatureInit.conditions?.reduce(
       (conditions, condition) => applyCondition(conditions, condition),

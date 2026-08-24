@@ -53,9 +53,9 @@ import type {
 } from "./battle-state-execution.ts";
 import {
   battleStatBlockCombatantSource,
+  statBlockInitialConditionImmunityIssue,
   type BattleStatBlockCombatantSource,
 } from "./stat-block-combatant-admission.ts";
-import { battleStateInitIssue } from "./battle-reducer/domain-helpers.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
 import { statBlockActionSurfaceIsSupported } from "./statblock-action-support.ts";
 import {
@@ -340,13 +340,12 @@ export function battleCreatureInitFromStatBlock(
 ): Either.Either<BattleCreatureInit, BattleStateInitIssue> {
   const source = battleStatBlockCombatantSource(input.statBlock);
   if (Either.isLeft(source)) return Either.left(source.left);
-  const immuneInitialCondition = input.conditions.find((condition) =>
-    source.right.statBlock.immunities?.conditions?.includes(condition),
+  const initialConditionImmunityIssue = statBlockInitialConditionImmunityIssue(
+    source.right,
+    input.conditions,
   );
-  if (immuneInitialCondition !== undefined) {
-    return battleStateInitIssue(
-      `Stat Block combatant is immune to initial ${immuneInitialCondition} condition.`,
-    );
+  if (initialConditionImmunityIssue !== null) {
+    return Either.left(initialConditionImmunityIssue);
   }
   const maxHp = toHp(source.right.statBlock.hp.value);
   return Either.right({

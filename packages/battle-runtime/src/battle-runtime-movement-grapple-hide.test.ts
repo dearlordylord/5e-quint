@@ -27,6 +27,7 @@ import {
   grappleEscapeDc,
   targetIsNoMoreThanOneSizeLarger,
 } from "./battle-reducer/movement-speed.ts";
+import { GRAPPLE_TARGET_REACH_FEET } from "./battle-reducer/domain-constants.ts";
 import type {
   BattleState,
   BattleSubject,
@@ -387,6 +388,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       expect.objectContaining({
         grapplerId: fighterId,
         targetId: goblinId,
+        reachFeet: GRAPPLE_TARGET_REACH_FEET,
       }),
     ]);
     expect(
