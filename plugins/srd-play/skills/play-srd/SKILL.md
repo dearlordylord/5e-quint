@@ -26,9 +26,9 @@ or modifier context and does not fill anything automatically. Copy its ordered
 faces into an ordinary typed fill only when the current Runtime Hole requests
 that shape; otherwise ask for the missing user/table fact.
 
-Present relevant returned rules facts faithfully. Ask only for an unresolved user decision or requested roll. Synthetic names, situations, and narration may frame play, but must not create mechanics or reproduce non-SRD official content.
+Present relevant returned rules facts faithfully. Ask only for unresolved user decisions or requested rolls. When the current result contains multiple independent meaningful choices, present them together and let the user answer them in one reply; do not serialize independent current holes into one question per turn. Keep dependent choices for a later batch when their options have actually been returned. Apply forced single-option choices automatically and report them. Synthetic names, situations, and narration may frame play, but must not create mechanics or reproduce non-SRD official content.
 
-After every operation, report the envelope's typed operation result, relevant projection, unresolved inputs, next operations, and restoration status. Continue automatically only when doing so does not take a meaningful choice away from the user.
+After every operation, report the envelope's typed operation result, relevant projection, unresolved inputs, next operations, and restoration status. Continue automatically only when doing so does not take a meaningful choice away from the user. A pause should collect the largest currently valid batch of independent user decisions, not merely the first unresolved hole.
 
 When a Play Session is unavailable, explain that the live process does not contain the handle, follow the returned new-session restoration guidance, and never claim why it is absent or silently replace it.
 

@@ -88,6 +88,9 @@ describe("local SRD Play plugin evaluation seams", () => {
     expect(inventory.completeWorkflow.map(({ id }) => id)).toEqual([
       "complete-newcomer-journey",
     ]);
+    expect(inventory.completeWorkflow[0]?.prompt).toContain(
+      "group every currently returned independent meaningful choice",
+    );
     assertFollowUpsReferenceEarlierCases(inventory.mcpToolSelection);
     assertFollowUpsReferenceEarlierCases(inventory.skillActivation);
     expect(inventory.evidenceOwners.installedChatGpt).toMatchObject({

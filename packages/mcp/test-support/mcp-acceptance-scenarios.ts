@@ -205,7 +205,7 @@ const agentConversationScenarios = [
     agentReads:
       "The live Play Session envelope, Creation Holes, Character Session projections, Battle lifecycle state, Battle Acts, Runtime Holes, and typed operation results are the only workflow facts.",
     agentDecision:
-      "It retains the returned Play Session handle, stops for unresolved meaningful choices, copies returned ids and subjects exactly, optionally requests raw dice without deriving outcomes, and returns to list_characters after end_battle.",
+      "It retains the returned Play Session handle, batches concurrently available independent meaningful choices into one user turn, defers dependent choices until their holes are returned, copies returned ids and subjects exactly, optionally requests raw dice without deriving outcomes, and returns to list_characters after end_battle.",
     executableCoverage: "verifyCompleteNewcomerJourney",
     insufficiency:
       "The repository proves this headless MCP journey. Installed ChatGPT Skill activation and complete-plugin behavior require the separately statused external evidence artifact.",

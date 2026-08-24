@@ -29,9 +29,11 @@ import type {
   Ability,
   Skill,
   StartingEquipmentChoice,
+  StartingEquipmentItemRef,
   UnitRecord,
 } from "@dnd/surface/surface/types";
 import { ABILITIES } from "@dnd/shared/types";
+import { Match } from "effect";
 
 const BACKGROUND_ASI_ONE_EACH_OPTION_ID = "one_each";
 const BACKGROUND_ASI_TWO_AND_ONE_OPTION_PREFIX = "two_and_one";
@@ -222,9 +224,44 @@ export function selectedChoiceOption(
 export function startingEquipmentLabel(
   choice: StartingEquipmentChoice,
 ): string {
-  return choice.coinsGp == null
-    ? choice.id
-    : `${choice.id} (${choice.coinsGp} GP)`;
+  return Match.value(choice).pipe(
+    Match.when(
+      { kind: "coin_grant" },
+      ({ id, coinsGp }) =>
+        `${id} — ${coinsGp} GP instead of an equipment package`,
+    ),
+    Match.when({ kind: "item_bundle" }, ({ id, items, coinsGp }) => {
+      const itemSummary = items.map(startingEquipmentItemLabel).join(", ");
+      const coinSummary = coinsGp === undefined ? "" : `; plus ${coinsGp} GP`;
+      return `${id} — equipment package: ${itemSummary}${coinSummary}`;
+    }),
+    Match.exhaustive,
+  );
+}
+
+function startingEquipmentItemLabel(item: StartingEquipmentItemRef): string {
+  return Match.value(item).pipe(
+    Match.when({ kind: "unit_ref" }, ({ unitId, quantity }) =>
+      quantity === undefined ? unitId : `${quantity} × ${unitId}`,
+    ),
+    Match.when(
+      { kind: "unit_ref_with_spellcasting_focus" },
+      ({ authoredItemId, spellcastingFocusKind, quantity }) => {
+        const itemLabel = `${authoredItemId} (${spellcastingFocusKind} focus)`;
+        return quantity === undefined
+          ? itemLabel
+          : `${quantity} × ${itemLabel}`;
+      },
+    ),
+    Match.when(
+      { kind: "selected_tool_proficiency" },
+      () => "item matching the selected tool proficiency",
+    ),
+    Match.when({ kind: "draft_owned_item" }, ({ itemName, quantity }) =>
+      quantity === undefined ? itemName : `${quantity} × ${itemName}`,
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function abilityLabel(ability: Ability): string {

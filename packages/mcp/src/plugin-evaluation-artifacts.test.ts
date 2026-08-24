@@ -216,6 +216,15 @@ const ObservedCaseResultSchema = Schema.Union(
   ObservedConnectionCaseResultSchema,
   ObservedSkillCaseResultSchema,
 );
+const InstalledCaseResultSchema = Schema.Union(
+  PendingCaseResultSchema,
+  ObservedCaseResultSchema,
+);
+const ObservedEnvironmentSchema = Schema.Struct({
+  tag: Schema.Literal("observed"),
+  accountScope: Schema.String,
+  workspacePolicy: Schema.String,
+});
 const InstalledEvidenceCommonSchema = {
   schema: Schema.Literal("dnd.srd-play.installed-chatgpt-evidence.v2"),
   recordedAt: Schema.String,
@@ -249,23 +258,30 @@ const PendingInstalledEvidenceSchema = Schema.Struct({
   pendingReason: Schema.String,
   caseResults: Schema.Array(PendingCaseResultSchema),
 });
+const PartiallyObservedInstalledEvidenceSchema = Schema.Struct({
+  ...InstalledEvidenceCommonSchema,
+  status: Schema.Literal("partiallyObserved"),
+  environment: ObservedEnvironmentSchema,
+  pendingReason: Schema.String,
+  caseResults: Schema.NonEmptyArray(InstalledCaseResultSchema),
+});
 const ObservedInstalledEvidenceSchema = Schema.Struct({
   ...InstalledEvidenceCommonSchema,
   status: Schema.Literal("observed"),
-  environment: Schema.Struct({
-    tag: Schema.Literal("observed"),
-    accountScope: Schema.String,
-    workspacePolicy: Schema.String,
-  }),
+  environment: ObservedEnvironmentSchema,
   caseResults: Schema.NonEmptyArray(ObservedCaseResultSchema),
 });
 const InstalledEvidenceSchema = Schema.Union(
   PendingInstalledEvidenceSchema,
+  PartiallyObservedInstalledEvidenceSchema,
   ObservedInstalledEvidenceSchema,
 ).pipe(
   Schema.filter(installedEvidenceHasCompleteCoverage, {
     description:
       "installed evidence with every connection, activation, and workflow case",
+  }),
+  Schema.filter(installedEvidenceStatusMatchesCaseResults, {
+    description: "installed evidence status consistent with its case results",
   }),
 );
 type InstalledEvidence = typeof InstalledEvidenceSchema.Type;
@@ -324,6 +340,13 @@ type InstalledCoverageInput = {
   }>;
 };
 
+type InstalledEvidenceStatusInput = {
+  readonly status: "pending" | "partiallyObserved" | "observed";
+  readonly caseResults: ReadonlyArray<{
+    readonly status: "pending" | "observed";
+  }>;
+};
+
 type InstalledCoverageResult =
   | { readonly tag: "valid" }
   | { readonly tag: "invalid"; readonly reason: string };
@@ -333,6 +356,24 @@ function installedEvidenceHasCompleteCoverage(
 ): boolean {
   return (
     validateInstalledCaseCoverage(evidence, evaluationInventory).tag === "valid"
+  );
+}
+
+function installedEvidenceStatusMatchesCaseResults(
+  evidence: InstalledEvidenceStatusInput,
+): boolean {
+  const pendingCount = evidence.caseResults.filter(
+    ({ status }) => status === "pending",
+  ).length;
+  const observedCount = evidence.caseResults.length - pendingCount;
+  return Match.value(evidence.status).pipe(
+    Match.when("pending", () => observedCount === 0),
+    Match.when(
+      "partiallyObserved",
+      () => pendingCount > 0 && observedCount > 0,
+    ),
+    Match.when("observed", () => pendingCount === 0),
+    Match.exhaustive,
   );
 }
 
@@ -649,7 +690,7 @@ describe("SRD Play evaluation artifacts", () => {
         ),
       ),
     );
-    expect(installedEvidence.status).toBe("pending");
+    expect(installedEvidence.status).toBe("partiallyObserved");
     const journeySource = readFileSync(
       resolve(repoRoot, matrix.representativeHeadlessJourney.testPath),
       "utf8",
@@ -789,7 +830,7 @@ describe("SRD Play evaluation artifacts", () => {
     }
   }, 30_000);
 
-  test("keeps installed ChatGPT evidence pending without contradictory case states", () => {
+  test("records partial installed ChatGPT evidence without promoting pending cases", () => {
     const evidence = decodeInstalledEvidence(
       JSON.parse(
         readFileSync(
@@ -798,12 +839,21 @@ describe("SRD Play evaluation artifacts", () => {
         ),
       ),
     );
-    expect(evidence.status).toBe("pending");
-    if (evidence.status !== "pending") return;
-    expect(evidence.environment).toEqual({ tag: "notObserved" });
+    expect(evidence.status).toBe("partiallyObserved");
+    if (evidence.status !== "partiallyObserved") return;
+    expect(evidence.environment.tag).toBe("observed");
     expect(
-      evidence.caseResults.every(({ status }) => status === "pending"),
-    ).toBe(true);
+      evidence.caseResults.filter(({ status }) => status === "observed"),
+    ).toMatchObject([
+      {
+        caseId: "complete-newcomer-journey",
+        evidenceKind: "installedCompleteWorkflow",
+        result: "passed",
+      },
+    ]);
+    expect(
+      evidence.caseResults.filter(({ status }) => status === "pending"),
+    ).toHaveLength(9);
     expect(
       new Set(
         evidence.caseResults.map(
@@ -825,7 +875,7 @@ describe("SRD Play evaluation artifacts", () => {
   });
 
   test("accepts typed passed and failed installed observations only in observed state", () => {
-    const pending = decodeInstalledEvidence(
+    const partial = decodeInstalledEvidence(
       JSON.parse(
         readFileSync(
           resolve(evalRoot, "installed-chatgpt-evidence.json"),
@@ -833,19 +883,19 @@ describe("SRD Play evaluation artifacts", () => {
         ),
       ),
     );
-    if (pending.status !== "pending")
-      throw new Error("Expected pending fixture.");
-    const { pendingReason: _pendingReason, ...pendingWithoutReason } = pending;
+    if (partial.status !== "partiallyObserved")
+      throw new Error("Expected partially observed fixture.");
+    const { pendingReason: _pendingReason, ...partialWithoutReason } = partial;
     void _pendingReason;
     const observed = {
-      ...pendingWithoutReason,
+      ...partialWithoutReason,
       status: "observed",
       environment: {
         tag: "observed",
         accountScope: "developer-mode-account",
         workspacePolicy: "developer-mode-enabled",
       },
-      caseResults: pending.caseResults.map(({ caseId, evidenceKind }, index) =>
+      caseResults: partial.caseResults.map(({ caseId, evidenceKind }, index) =>
         evidenceKind === "connectionAndToolSelection"
           ? {
               caseId,
@@ -879,8 +929,8 @@ describe("SRD Play evaluation artifacts", () => {
     const contradictory = Schema.decodeUnknownEither(InstalledEvidenceSchema, {
       onExcessProperty: "error",
     })({
-      ...pending,
-      environment: { tag: "observed" },
+      ...partial,
+      environment: { tag: "notObserved" },
     });
     expect(Either.isLeft(contradictory)).toBe(true);
   });

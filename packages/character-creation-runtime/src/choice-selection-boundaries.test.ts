@@ -112,14 +112,31 @@ describe("choice-selection structural equality", () => {
     ).toBeUndefined();
   });
 
-  test("projects equipment labels and parses background increase option ids", () => {
+  test("projects complete equipment-package labels and parses background increase option ids", () => {
     expect(
       startingEquipmentLabel({
         id: "synthetic_bundle",
         kind: "item_bundle",
-        items: [{ kind: "draft_owned_item", itemName: "Synthetic Item" }],
+        items: [
+          {
+            kind: "draft_owned_item",
+            itemName: "Synthetic Item",
+            quantity: 2,
+          },
+          { kind: "selected_tool_proficiency" },
+        ],
+        coinsGp: 4,
       }),
-    ).toBe("synthetic_bundle");
+    ).toBe(
+      "synthetic_bundle — equipment package: 2 × Synthetic Item, item matching the selected tool proficiency; plus 4 GP",
+    );
+    expect(
+      startingEquipmentLabel({
+        id: "synthetic_currency",
+        kind: "coin_grant",
+        coinsGp: 50,
+      }),
+    ).toBe("synthetic_currency — 50 GP instead of an equipment package");
     expect(
       parseBackgroundAbilityScoreIncreaseOptionId(
         backgroundAbilityScoreIncreaseOptionId({ kind: "oneEach" }),
