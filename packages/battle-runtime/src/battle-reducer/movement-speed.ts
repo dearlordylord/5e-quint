@@ -55,6 +55,7 @@ import {
   grappledBy,
 } from "./creature-state-leaves.ts";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
+import { BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET } from "./domain-constants.ts";
 import {
   activeDruidWildShapeForm,
   combatantD20AbilityModifier,
@@ -492,7 +493,7 @@ export function grappleLinkForTarget(
       grapplerId,
       targetId,
       escapeDc: unarmedStrikeSaveDc(grappler),
-      reachFeet: movementFeet(5),
+      reachFeet: BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET,
       hand,
     },
   };

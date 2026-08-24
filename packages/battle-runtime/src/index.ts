@@ -633,6 +633,7 @@ export {
   resolveBardicInspirationFailedD20Test,
 } from "./battle-reducer/unit-features.ts";
 export {
+  BATTLE_STANDARD_FIVE_FOOT_DISTANCE_FEET,
   SELF_TRANSFORMATION_MODE_KINDS,
   type SelfTransformationModeKind,
 } from "./battle-reducer/domain-constants.ts";
