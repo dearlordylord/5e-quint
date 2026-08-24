@@ -13,9 +13,13 @@
     "supportPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
     "coverage": "representativeCrossLeafOnly"
   },
+  "apiMcpSelectionEvidence": {
+    "artifactPath": "plugins/dnd-srd-oracle/evals/api-mcp-selection-evidence.json",
+    "evidenceKinds": ["apiMcpToolSelection"]
+  },
   "installedChatGptEvidence": {
     "artifactPath": "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
-    "evidenceKind": "installedSkillActivation"
+    "evidenceKinds": ["installedSkillActivation", "installedCompleteWorkflow"]
   },
   "rows": [
     {

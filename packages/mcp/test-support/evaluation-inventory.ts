@@ -88,9 +88,20 @@ export const EvaluationInventorySchema = Schema.Struct({
         "plugins/dnd-srd-oracle/evals/forward-test-results.json",
       ),
     }),
+    apiMcpSelection: Schema.Struct({
+      kind: Schema.Literal("requiredExternalEvidence"),
+      issue: Schema.Literal(328),
+      artifactPath: Schema.Literal(
+        "plugins/dnd-srd-oracle/evals/api-mcp-selection-evidence.json",
+      ),
+      reason: Schema.String,
+    }),
     installedChatGpt: Schema.Struct({
       kind: Schema.Literal("requiredExternalEvidence"),
       issue: Schema.Literal(328),
+      artifactPath: Schema.Literal(
+        "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
+      ),
       reason: Schema.String,
     }),
   }),

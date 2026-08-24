@@ -9,10 +9,17 @@
       "kind": "independentStaticForwardTest",
       "resultPath": "plugins/dnd-srd-oracle/evals/forward-test-results.json"
     },
+    "apiMcpSelection": {
+      "kind": "requiredExternalEvidence",
+      "issue": 328,
+      "artifactPath": "plugins/dnd-srd-oracle/evals/api-mcp-selection-evidence.json",
+      "reason": "Model-driven MCP tool selection over the remote server is observed through the OpenAI Responses API with an OpenAI API credential. It is a different product surface from installed ChatGPT and cannot be inferred from local protocol tests."
+    },
     "installedChatGpt": {
       "kind": "requiredExternalEvidence",
       "issue": 328,
-      "reason": "Developer-mode connection, automatic activation, and installed-plugin behavior require an authorized ChatGPT installation and cannot be inferred from local protocol tests."
+      "artifactPath": "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
+      "reason": "Automatic Skill activation and installed-plugin behavior require an authorized ChatGPT installation driven through its own product surface and cannot be inferred from local protocol tests or from API tool-selection observations."
     }
   },
   "mcpToolSelection": [

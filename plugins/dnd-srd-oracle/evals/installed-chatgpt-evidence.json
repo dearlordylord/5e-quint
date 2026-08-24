@@ -1,14 +1,14 @@
 {
-  "schema": "dnd.srd-oracle.installed-chatgpt-evidence.v2",
+  "schema": "dnd.srd-oracle.installed-chatgpt-evidence.v3",
   "status": "partiallyObserved",
   "recordedAt": "2026-08-24",
-  "scope": "Installed ChatGPT developer-mode MCP connection and tool selection, Skill activation, and complete-plugin newcomer journey",
+  "scope": "Installed ChatGPT Skill activation and complete-plugin newcomer journey",
   "environment": {
     "tag": "observed",
     "accountScope": "operator-authorized ChatGPT account",
     "workspacePolicy": "Developer mode enabled with the then-named SRD Play Skill and separately connected no-auth MCP endpoint"
   },
-  "pendingReason": "The complete newcomer journey is observed from the operator-provided public snapshot at https://chatgpt.com/share/6a8c5b69-e658-83ea-8772-f057e3763ba4. The four dedicated MCP selection cases and five dedicated Skill activation cases remain pending. A 2026-08-24 execution attempt from the repository's Codex session found no authenticated ChatGPT Plugins or browser control surface, no installed browser profile, and no OpenAI API credential; the available CONTROL_PLANE_API_KEY is transport-only and cannot create fresh ChatGPT conversations or inspect installed Skill activation. The earlier snapshot at https://chatgpt.com/share/6a8c4a47-e610-83ea-9163-450272c9606e remains useful supplemental evidence for explicit app activation, the pre-fix language/alignment projection defect, and stat-block battle execution, but it did not use an inventory prompt. ChatGPT shared snapshots redact app tool names, arguments, and results, so observed tool-name lists remain empty unless the visible assistant response independently reports them.",
+  "pendingReason": "The complete newcomer journey is observed from the operator-provided public snapshot at https://chatgpt.com/share/6a8c5b69-e658-83ea-8772-f057e3763ba4. The five dedicated Skill activation cases remain pending. A 2026-08-24 host execution attempt found no dedicated evaluation browser profile authenticated to ChatGPT and no browser-control surface reaching the installed product, so no activation case was claimed. The earlier snapshot at https://chatgpt.com/share/6a8c4a47-e610-83ea-9163-450272c9606e remains useful supplemental evidence for explicit app activation, the pre-fix language/alignment projection defect, and stat-block battle execution, but it did not use an inventory prompt. ChatGPT shared snapshots redact app tool names, arguments, and results, so observed tool-name lists remain empty unless the visible assistant response independently reports them.",
   "promptOwner": "plugins/dnd-srd-oracle/evals/evaluation-inventory.json",
   "capabilityMatrix": "plugins/dnd-srd-oracle/evals/capability-matrix.json",
   "canonicalMcpEvidence": {
@@ -16,23 +16,16 @@
     "status": "observed",
     "evidenceKind": "mcpScenario"
   },
+  "apiMcpSelectionEvidence": {
+    "artifactPath": "plugins/dnd-srd-oracle/evals/api-mcp-selection-evidence.json",
+    "evidenceKind": "apiMcpToolSelection"
+  },
   "officialGuidance": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
   "operatorProtocol": [
     {
-      "step": "mcp-connection",
-      "evidenceKind": "connectionAndToolSelection",
-      "instructions": "In ChatGPT developer mode, connect the MCP server through a public HTTPS endpoint or Secure MCP Tunnel, review discovered tool metadata, and run the mcpToolSelection prompts from the evaluation inventory. Record a toolSelected success result or error details with confirmation, or a noToolSelected reason with confirmation, in these installed-evidence case results; keep this account/workspace observation separate from the local MCP protocol manifest.",
-      "requiredCases": [
-        "mcp-direct-catalog",
-        "mcp-indirect-catalog",
-        "mcp-follow-up-detail",
-        "mcp-unsupported-history"
-      ]
-    },
-    {
       "step": "complete-plugin",
       "evidenceKind": "installedSkillActivation",
-      "instructions": "With the separately created developer-mode MCP connection available, package and install the Skill-only plugin from a local source, start a new conversation with both enabled, and run the skillActivation prompts from the evaluation inventory. Record activation, tool calls, returned handles, meaningful-choice stops, and final results as installed Skill observations.",
+      "instructions": "With the separately created developer-mode MCP connection available, package and install the Skill-only plugin from a local source, start a new conversation with both enabled, and run the skillActivation prompts from the evaluation inventory. Record activation, tool calls, returned handles, meaningful-choice stops, and final results as installed Skill observations. MCP tool-selection behavior belongs to the API evidence artifact and must not be recorded here.",
       "requiredCases": [
         "skill-direct",
         "skill-natural",
@@ -49,26 +42,6 @@
     }
   ],
   "caseResults": [
-    {
-      "caseId": "mcp-direct-catalog",
-      "evidenceKind": "connectionAndToolSelection",
-      "status": "pending"
-    },
-    {
-      "caseId": "mcp-indirect-catalog",
-      "evidenceKind": "connectionAndToolSelection",
-      "status": "pending"
-    },
-    {
-      "caseId": "mcp-follow-up-detail",
-      "evidenceKind": "connectionAndToolSelection",
-      "status": "pending"
-    },
-    {
-      "caseId": "mcp-unsupported-history",
-      "evidenceKind": "connectionAndToolSelection",
-      "status": "pending"
-    },
     {
       "caseId": "skill-direct",
       "evidenceKind": "installedSkillActivation",
