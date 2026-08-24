@@ -29,6 +29,7 @@ import { projectGenerationFindings } from "./generation-findings.ts";
 import {
   codexOutputJsonSchema,
   CurrentScenarioCompositeReviewSchema,
+  HistoricalScenarioCompositeReviewSchema,
 } from "./scenario-campaign.ts";
 import {
   exportArtifactIndex,
@@ -294,7 +295,6 @@ function finalScenarioReview(input: {
 function retainedCompositeReviewInput(input: {
   readonly reviewStage: "milestone" | "final";
   readonly invocationId: string;
-  readonly scenarioQuality?: CompositeReviewScenarioQuality;
 }) {
   return {
     schemaVersion: 2 as const,
@@ -307,7 +307,7 @@ function retainedCompositeReviewInput(input: {
     reasoningEffort: "max" as const,
     prompt: `${input.reviewStage} prompt`,
     outputJsonSchema: codexOutputJsonSchema(
-      CurrentScenarioCompositeReviewSchema,
+      HistoricalScenarioCompositeReviewSchema,
     ),
     result: {
       raw: { classification: "supported" as const, evidence: "RAW." },
@@ -320,13 +320,32 @@ function retainedCompositeReviewInput(input: {
         evidence: "SDK.",
       },
       artifactPolicy: { classification: "safe" as const, evidence: "Policy." },
-      scenarioQuality: {
-        ...(input.scenarioQuality ?? {
-          classification: "ready" as const,
-          evidence: "Quality.",
-        }),
+    },
+  };
+}
+
+function currentCompositeReviewInput(input: {
+  readonly reviewStage: "milestone" | "final";
+  readonly invocationId: string;
+  readonly subject: CompositeReviewFixtureSubject;
+  readonly scenarioQuality?: CompositeReviewScenarioQuality;
+}) {
+  const historical = retainedCompositeReviewInput(input);
+  const { scenarioId: _scenarioId, ...common } = historical;
+  return {
+    ...common,
+    schemaVersion: 3 as const,
+    outputJsonSchema: codexOutputJsonSchema(
+      CurrentScenarioCompositeReviewSchema,
+    ),
+    result: {
+      ...historical.result,
+      scenarioQuality: input.scenarioQuality ?? {
+        classification: "ready" as const,
+        evidence: "Quality.",
       },
     },
+    subject: input.subject,
   };
 }
 
@@ -377,13 +396,7 @@ function retainedCandidateCompositeReviewInput(input: {
     { readonly tag: "scenarioCandidate" }
   >;
 }) {
-  const historical = retainedCompositeReviewInput(input);
-  const { scenarioId: _scenarioId, ...common } = historical;
-  return {
-    ...common,
-    schemaVersion: 3 as const,
-    subject: input.subject,
-  };
+  return currentCompositeReviewInput(input);
 }
 
 function retainedBenchmarkCompositeReviewInput(input: {
@@ -396,15 +409,10 @@ function retainedBenchmarkCompositeReviewInput(input: {
     readonly scenarioId: "findings-example";
   };
 }) {
-  const historical = retainedCompositeReviewInput(input);
-  const { scenarioId: _scenarioId, ...common } = historical;
   return {
-    ...common,
-    schemaVersion: 3 as const,
+    ...currentCompositeReviewInput(input),
     model: "gpt-5.6-luna" as const,
     reasoningEffort: "medium" as const,
-    subject: input.subject,
-    result: historical.result,
   };
 }
 
@@ -508,11 +516,10 @@ function retainedGenerationReviewLedger(
         item: {
           type: "agent_message",
           text: JSON.stringify({
-            result: retainedCompositeReviewInput({
-              reviewStage: review.reviewStage,
-              invocationId: review.invocationId,
-              scenarioQuality: review.scenarioQuality,
-            }).result,
+            result: (review.subject.tag === "scenario"
+              ? retainedCompositeReviewInput(review)
+              : currentCompositeReviewInput(review)
+            ).result,
           }),
         },
       },
@@ -671,9 +678,10 @@ function retainedBenchmarkReviewLedger(
         item: {
           type: "agent_message",
           text: JSON.stringify({
-            result: retainedCompositeReviewInput({
+            result: currentCompositeReviewInput({
               reviewStage: "final",
               invocationId: entry.invocationId,
+              subject,
             }).result,
           }),
         },
@@ -1433,19 +1441,11 @@ describe("Raw Swarm findings projection", () => {
         ],
       },
     );
-    const historical = retainedCompositeReviewInput({
+    const currentInput = currentCompositeReviewInput({
       reviewStage: "final",
       invocationId: "current-same-name",
-    });
-    const { scenarioId: _scenarioId, ...common } = historical;
-    const currentInput = {
-      ...common,
-      schemaVersion: 3 as const,
-      outputJsonSchema: codexOutputJsonSchema(
-        CurrentScenarioCompositeReviewSchema,
-      ),
       subject: FINDINGS_REVIEW_SUBJECT,
-    };
+    });
     const finalPath = resolve(input.root, "current-same-name.json");
     writeFileSync(finalPath, `${JSON.stringify(currentInput)}\n`);
 

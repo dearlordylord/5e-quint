@@ -30,6 +30,7 @@ import {
   type BenchmarkContextRole,
 } from "./benchmark-context.ts";
 import {
+  classifyScenarioReviewOutputSchema,
   codexOutputJsonSchema,
   CurrentScenarioCompositeReviewSchema,
   FinalScenarioReviewSchema,
@@ -1388,25 +1389,20 @@ export function validateBenchmarkReviewAuthority(input: {
       "The bounded capability-projection benchmark retains only its final composite review.",
     );
   }
-  const parsed =
-    input.profile === "documentDeclarationSet"
-      ? Schema.decodeUnknownEither(HistoricalScenarioCompositeReviewSchema, {
-          onExcessProperty: "error",
-        })(input.result)
-      : Schema.decodeUnknownEither(CurrentScenarioCompositeReviewSchema, {
-          onExcessProperty: "error",
-        })(input.result);
-  if (Either.isLeft(parsed)) return Either.left(parsed.left.message);
-  const expectedOutputJsonSchema =
-    input.profile === "documentDeclarationSet"
-      ? codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema)
-      : codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema);
-  if (
-    sha256Canonical(input.outputJsonSchema) !==
-    sha256Canonical(expectedOutputJsonSchema)
-  ) {
+  const compatibility = classifyScenarioReviewOutputSchema({
+    schemaVersion: input.profile === "documentDeclarationSet" ? 2 : 3,
+    outputJsonSchema: input.outputJsonSchema,
+  });
+  const expectedTag =
+    input.profile === "documentDeclarationSet" ? "historical" : "legacyCurrent";
+  if (Either.isLeft(compatibility)) {
+    return Either.left(compatibility.left);
+  }
+  if (compatibility.right.tag !== expectedTag) {
     return Either.left("Benchmark review retained the wrong output schema.");
   }
+  const parsed = compatibility.right.decodeResult(input.result);
+  if (Either.isLeft(parsed)) return Either.left(parsed.left.message);
   if (
     input.profile === "documentDeclarationSet" &&
     "scenarioQuality" in parsed.right

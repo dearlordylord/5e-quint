@@ -581,7 +581,12 @@ type ScenarioAdmissionReviews = Schema.Schema.Type<
   typeof FinalScenarioReviewSchema
 >;
 
-function decodeScenarioContentAdmission(input: {
+/**
+ * Defensive contract validation for custom campaign agents. The production
+ * model callback already returns the intent-specific schema; this boundary
+ * remains for injected agents that do not use that decoder.
+ */
+function validateScenarioContentAdmission(input: {
   readonly contentAvailabilityIntent: ContentAvailabilityIntent;
   readonly contentReview: ScenarioContentReview;
 }): Either.Either<ScenarioContentAdmission, string> {
@@ -612,7 +617,12 @@ function decodeScenarioContentAdmission(input: {
   );
 }
 
-function decodeScenarioSdkCapabilityAdmission(input: {
+/**
+ * Defensive contract validation for custom campaign agents. The production
+ * model callback already returns the intent-specific schema; this boundary
+ * remains for injected agents that do not use that decoder.
+ */
+function validateScenarioSdkCapabilityAdmission(input: {
   readonly sdkCapabilityIntent: SdkCapabilityIntent;
   readonly sdkCapabilityReview: ScenarioSdkCapabilityReview;
 }): Either.Either<ScenarioSdkCapabilityAdmission, string> {
@@ -1333,7 +1343,7 @@ export async function runScenarioCampaign(
       if (review.scenarioQuality.classification !== "ready") {
         critiques.push(review.scenarioQuality.critique);
       }
-      const contentAdmission = decodeScenarioContentAdmission({
+      const contentAdmission = validateScenarioContentAdmission({
         contentAvailabilityIntent: config.contentAvailabilityIntent,
         contentReview: review.contentAvailability,
       });
@@ -1356,7 +1366,7 @@ export async function runScenarioCampaign(
         ),
         Match.exhaustive,
       );
-      const sdkCapabilityAdmission = decodeScenarioSdkCapabilityAdmission({
+      const sdkCapabilityAdmission = validateScenarioSdkCapabilityAdmission({
         sdkCapabilityIntent: config.sdkCapabilityIntent,
         sdkCapabilityReview: review.sdkCapability,
       });
@@ -1426,14 +1436,14 @@ export async function runScenarioCampaign(
     sdkCapabilityIntent: config.sdkCapabilityIntent,
     catalogueComparison: draft.catalogueComparison,
   });
-  const finalContentAdmission = decodeScenarioContentAdmission({
+  const finalContentAdmission = validateScenarioContentAdmission({
     contentAvailabilityIntent: config.contentAvailabilityIntent,
     contentReview: finalReview.contentAvailability,
   });
   if (Either.isLeft(finalContentAdmission)) {
     return Either.left(finalContentAdmission.left);
   }
-  const finalSdkCapabilityAdmission = decodeScenarioSdkCapabilityAdmission({
+  const finalSdkCapabilityAdmission = validateScenarioSdkCapabilityAdmission({
     sdkCapabilityIntent: config.sdkCapabilityIntent,
     sdkCapabilityReview: finalReview.sdkCapability,
   });

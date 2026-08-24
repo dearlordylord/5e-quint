@@ -47,14 +47,14 @@ import {
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
 import {
   codexOutputJsonSchema,
-  CurrentScenarioCompositeReviewSchema,
+  classifyScenarioReviewOutputSchema,
   FinalScenarioReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
   ScenarioQualityReviewSchema,
 } from "./scenario-campaign.ts";
 export {
   codexOutputJsonSchema,
-  CurrentScenarioCompositeReviewSchema,
+  classifyScenarioReviewOutputSchema,
   FinalScenarioReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
 };
@@ -2173,14 +2173,16 @@ function benchmarkReviewResult(
       "Validated retained benchmark review envelope became unreadable.",
     );
   }
-  const decoded =
-    profile === "documentDeclarationSet"
-      ? Schema.decodeUnknownEither(HistoricalScenarioCompositeReviewSchema, {
-          onExcessProperty: "error",
-        })(envelope.right.result)
-      : Schema.decodeUnknownEither(CurrentScenarioCompositeReviewSchema, {
-          onExcessProperty: "error",
-        })(envelope.right.result);
+  const compatibility = classifyScenarioReviewOutputSchema({
+    schemaVersion: envelope.right.schemaVersion,
+    outputJsonSchema: envelope.right.outputJsonSchema,
+  });
+  const expectedTag =
+    profile === "documentDeclarationSet" ? "historical" : "legacyCurrent";
+  if (Either.isLeft(compatibility) || compatibility.right.tag !== expectedTag) {
+    return fail("Validated benchmark review authority became unreadable.");
+  }
+  const decoded = compatibility.right.decodeResult(envelope.right.result);
   if (Either.isLeft(decoded)) {
     return fail("Validated benchmark review authority became unreadable.");
   }
@@ -3382,9 +3384,6 @@ function currentAuthorityContentIssues(
     findings,
     issues,
   );
-  const expectedOutputJsonSchema = codexOutputJsonSchema(
-    CurrentScenarioCompositeReviewSchema,
-  );
   const transcriptAuthority = findings.authorities.find(
     ({ role }) => role === "transcript",
   );
@@ -3555,17 +3554,21 @@ function currentAuthorityContentIssues(
         `Replay authority role ${authority.role} is bound to ${namedReplayStage}, but its envelope is ${replay.reviewStage}.`,
       );
     }
-    const currentResult = Schema.decodeUnknownEither(
-      CurrentScenarioCompositeReviewSchema,
-      { onExcessProperty: "error" },
-    )(replay.result);
+    const compatibility = classifyScenarioReviewOutputSchema({
+      schemaVersion: replay.schemaVersion,
+      outputJsonSchema: replay.outputJsonSchema,
+    });
+    const retainedResult = Either.isRight(compatibility)
+      ? compatibility.right.decodeResult(replay.result)
+      : undefined;
     if (
-      canonicalJson(replay.outputJsonSchema) !==
-        canonicalJson(expectedOutputJsonSchema) ||
-      Either.isLeft(currentResult)
+      Either.isLeft(compatibility) ||
+      retainedResult === undefined ||
+      Either.isLeft(retainedResult) ||
+      compatibility.right.tag === "historical"
     ) {
       issues.push(
-        `Replay authority ${authority.role} is not bound to the current scenario review schema and identity.`,
+        `Replay authority ${authority.role} is not bound to a current scenario review schema and identity.`,
       );
     }
     const invocation = measurement.invocations.find(
@@ -4426,16 +4429,10 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
   readonly measurement: BenchmarkMeasurementWithCurrentEvidence;
   readonly findings: FindingsProjection;
   readonly eventAuthorityCache: EventAuthoritySnapshotCache;
-  readonly expectedReviewSchema:
-    | typeof HistoricalScenarioCompositeReviewSchema
-    | typeof CurrentScenarioCompositeReviewSchema;
+  readonly expectedReviewSchema: "historical" | "legacyCurrent";
 }): readonly string[] {
   const { measurement, findings, expectedReviewSchema } = input;
   const issues: string[] = [];
-  const expectedOutputJsonSchema =
-    expectedReviewSchema === HistoricalScenarioCompositeReviewSchema
-      ? codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema)
-      : codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema);
   const candidateInvocations = candidateReplayInvocations(
     measurement.invocations,
   );
@@ -4567,15 +4564,19 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       );
       continue;
     }
-    const currentResult =
-      expectedReviewSchema === HistoricalScenarioCompositeReviewSchema
-        ? Schema.decodeUnknownEither(HistoricalScenarioCompositeReviewSchema, {
-            onExcessProperty: "error",
-          })(replay.right.result)
-        : Schema.decodeUnknownEither(CurrentScenarioCompositeReviewSchema, {
-            onExcessProperty: "error",
-          })(replay.right.result);
-    if (Either.isLeft(currentResult)) {
+    const compatibility = classifyScenarioReviewOutputSchema({
+      schemaVersion: replay.right.schemaVersion,
+      outputJsonSchema: replay.right.outputJsonSchema,
+    });
+    const result = Either.isRight(compatibility)
+      ? compatibility.right.decodeResult(replay.right.result)
+      : undefined;
+    if (
+      Either.isLeft(compatibility) ||
+      result === undefined ||
+      Either.isLeft(result) ||
+      compatibility.right.tag !== expectedReviewSchema
+    ) {
       issues.push(
         `Benchmark ${reviewStage} pre-play review authority is not a retained review envelope.`,
       );
@@ -4593,8 +4594,8 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       replayLifecycleValid &&
       String(replayScenarioId) === String(measurement.scenarioId) &&
       replay.right.sourceGitSha === measurement.implementationGitSha &&
-      canonicalJson(replay.right.outputJsonSchema) ===
-        canonicalJson(expectedOutputJsonSchema);
+      Either.isRight(compatibility) &&
+      compatibility.right.tag === expectedReviewSchema;
     if (!replayIdentityValid) {
       issues.push(
         `Benchmark ${reviewStage} pre-play review authority is not bound to the ${measurement.profile} composite-review schema, scenario identity, implementation revision, and Git authority.`,
@@ -5328,8 +5329,8 @@ function benchmarkAuthorityIssues(
         eventAuthorityCache,
         expectedReviewSchema:
           measurement.profile === "documentDeclarationSet"
-            ? HistoricalScenarioCompositeReviewSchema
-            : CurrentScenarioCompositeReviewSchema,
+            ? "historical"
+            : "legacyCurrent",
       }),
     );
     issues.push(...benchmarkCompleteEvidenceIssues({ measurement, findings }));
