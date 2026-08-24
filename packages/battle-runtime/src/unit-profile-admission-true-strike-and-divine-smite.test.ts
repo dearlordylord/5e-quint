@@ -75,7 +75,6 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     });
     const act = spellAct({ session: state, spellId: trueStrikeUnitId });
     const damageType = requireHole(act.initialHoles, "damageTypeChoice");
-    const target = requireHole(act.initialHoles, "targetChoice");
 
     expect({
       ...act.subject,
@@ -92,29 +91,29 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     });
     expect(damageType.choices).toEqual(["radiant", "piercing"]);
 
-    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
-    const targetFirstDamageType = requireResultHole(
+    const damageTypeFill: Extract<
+      BattleFill,
+      { readonly kind: "damageTypeChoice" }
+    > = {
+      kind: "damageTypeChoice",
+      holeId: damageType.holeId,
+      value: "radiant",
+    };
+    const target = requireResultHole(
       resolveBattleSubject({
         state: state.state,
         subject: act.subject,
-        fills: [targetFill],
+        fills: [damageTypeFill],
       }),
-      "damageTypeChoice",
+      "targetChoice",
     );
-    expect(targetFirstDamageType.choices).toEqual(["radiant", "piercing"]);
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
 
     const attack = requireResultHole(
       resolveBattleSubject({
         state: state.state,
         subject: act.subject,
-        fills: [
-          {
-            kind: "damageTypeChoice",
-            holeId: damageType.holeId,
-            value: "radiant",
-          },
-          targetFill,
-        ],
+        fills: [damageTypeFill, targetFill],
       }),
       "attackRoll",
     );
