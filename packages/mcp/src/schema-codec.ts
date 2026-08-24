@@ -39,7 +39,7 @@ export function mcpObjectJsonSchema<A, I>(
   schema: Schema.Schema<A, I, never>,
 ): McpObjectInputSchema {
   const generated = parseMcpObjectInputSchema(
-    jsonSchemaFromCodec(schema),
+    omitRedundantImpossibleProperties(jsonSchemaFromCodec(schema)),
     "Effect JSON schema",
   );
   return {
@@ -50,13 +50,63 @@ export function mcpObjectJsonSchema<A, I>(
   };
 }
 
+export function omitRedundantImpossibleProperties(
+  value: McpOutputSchema,
+): McpOutputSchema;
+export function omitRedundantImpossibleProperties(value: unknown): unknown;
+export function omitRedundantImpossibleProperties(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => omitRedundantImpossibleProperties(entry));
+  }
+  if (!isJsonObject(value)) return value;
+
+  const requiredProperties = new Set(
+    Array.isArray(value.required)
+      ? value.required.filter(
+          (propertyName): propertyName is string =>
+            typeof propertyName === "string",
+        )
+      : [],
+  );
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => {
+      if (
+        key !== "properties" ||
+        value.additionalProperties !== false ||
+        !isJsonObject(entry)
+      ) {
+        return [key, omitRedundantImpossibleProperties(entry)];
+      }
+
+      return [
+        key,
+        Object.fromEntries(
+          Object.entries(entry)
+            .filter(
+              ([propertyName, propertySchema]) =>
+                requiredProperties.has(propertyName) ||
+                !isImpossibleJsonSchema(propertySchema),
+            )
+            .map(([propertyName, propertySchema]) => [
+              propertyName,
+              omitRedundantImpossibleProperties(propertySchema),
+            ]),
+        ),
+      ];
+    }),
+  );
+}
+
 export function mcpOutputJsonSchema<A, I>(
   schema: Schema.Schema<A, I, never>,
 ): McpOutputSchema {
   const cached = outputSchemaByCodec.get(schema);
   if (cached !== undefined) return cached;
 
-  const generated = jsonSchemaFromCodec(schema);
+  const generated = omitRedundantImpossibleProperties(
+    jsonSchemaFromCodec(schema),
+  );
   const identified = {
     $id: outputSchemaId(generated),
     ...generated,
@@ -99,6 +149,11 @@ function isJsonObject(
   value: unknown,
 ): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isImpossibleJsonSchema(value: unknown): boolean {
+  if (!isJsonObject(value) || !isJsonObject(value.not)) return false;
+  return Object.keys(value.not).length === 0;
 }
 
 function objectSchemaBranch(

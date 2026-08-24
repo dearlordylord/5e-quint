@@ -66,6 +66,7 @@ import {
   createMcpSessionStore,
   handleToolCall as handleWireToolCall,
   startBattleFromCharacterBuildAndStatBlock,
+  toolDefinitions,
 } from "./server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
@@ -2022,6 +2023,17 @@ describe("MCP server route", () => {
     expect(inputSchema?.properties?.fill).toBeDefined();
     expect(inputSchema?.properties?.subjectJson).toBeUndefined();
     expect(inputSchema?.properties?.fillJson).toBeUndefined();
+  });
+
+  test("omits redundant impossible properties from registered tool schemas", () => {
+    for (const tool of toolDefinitions) {
+      expect(JSON.stringify(tool.inputSchema), tool.name).not.toContain(
+        '"not":{}',
+      );
+      expect(JSON.stringify(tool.outputSchema), tool.name).not.toContain(
+        '"not":{}',
+      );
+    }
   });
 
   test("describes MCP workflow and lists discoverable catalogs through tools", () => {
