@@ -421,24 +421,35 @@ export function controlledReviewEvidenceFixture(input: {
   );
   const invocationSubject = (
     phase: CurrentModelInvocationLedgerEntry["phase"],
+    index: number,
   ) =>
-    phase === "player" || phase === "postPlayReview"
+    phase === "scenarioCompositeReview"
       ? {
-          tag: "execution" as const,
-          executionId: "fixture-execution",
+          tag: "scenarioCandidate" as const,
+          campaignId: "fixture-campaign",
           evidenceSetId: "fixture-evidence",
-          scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+          candidateId: `fixture-candidate-${String(index + 1)}`,
+          candidateScenarioSha256:
+            index === 0 ? "b".repeat(64) : sha256Text(scenario),
+          plannedScenarioId: "same",
         }
-      : {
-          tag: "scenario" as const,
-          scenarioId: input.ledgerScenarioId ?? header.scenarioId,
-        };
+      : phase === "player" || phase === "postPlayReview"
+        ? {
+            tag: "execution" as const,
+            executionId: "fixture-execution",
+            evidenceSetId: "fixture-evidence",
+            scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+          }
+        : {
+            tag: "scenario" as const,
+            scenarioId: input.ledgerScenarioId ?? header.scenarioId,
+          };
   ledgerEntryInputs.forEach((entry, index) => {
     const eventEntry = eventEntryInputs[index]!;
     const events = [
       eventValue(
         modelInvocationStartedEvent({
-          subject: invocationSubject(eventEntry.phase),
+          subject: invocationSubject(eventEntry.phase, index),
           gitSha: invocationGitSha,
           phase: eventEntry.phase,
           stagePlanReason:
@@ -534,7 +545,7 @@ export function controlledReviewEvidenceFixture(input: {
   });
   const ledgerEntries = ledgerEntryInputs.map((entry, index) => ({
     ...entry,
-    subject: invocationSubject(entry.phase),
+    subject: invocationSubject(entry.phase, index),
     gitSha: invocationGitSha,
     eventsSha256: invocationEventsSha256(eventPaths[index]!),
   }));

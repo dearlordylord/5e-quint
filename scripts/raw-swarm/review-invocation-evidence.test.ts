@@ -1,5 +1,5 @@
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 
 import { Either, Schema } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
@@ -23,7 +23,7 @@ import {
 } from "./scenario-campaign.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
-import { isJsonRecord, sha256Text } from "./transcript.ts";
+import { isJsonRecord, repoRoot, sha256Text } from "./transcript.ts";
 
 const directories: string[] = [];
 
@@ -113,6 +113,65 @@ function rewriteCurrentReviewSubject(
   );
 }
 
+function rewriteHistoricalLedgerSubject(
+  fixture: ControlledReviewEvidenceFixture,
+  index: 0 | 1,
+  subject: Record<string, unknown>,
+  ledgerSchemaVersion?: 4 | 5,
+): void {
+  const replayPath = fixture.replayPrePlayReviewInputPaths[index];
+  if (replayPath === undefined) {
+    throw new Error("Missing retained review input fixture.");
+  }
+  for (const path of [
+    fixture.eventPaths[index],
+    `${replayPath.slice(0, -".json".length)}.events.jsonl`,
+  ]) {
+    if (path === undefined) throw new Error("Missing review event fixture.");
+    const events = readFileSync(path, "utf8")
+      .trim()
+      .split("\n")
+      .map(parseJsonRecord);
+    const started = events[0];
+    if (started === undefined) throw new Error("Missing review start event.");
+    started.subject = subject;
+    if (ledgerSchemaVersion !== undefined) {
+      started.schemaVersion = ledgerSchemaVersion;
+      const completed = events.at(-1);
+      if (completed !== undefined)
+        completed.schemaVersion = ledgerSchemaVersion;
+      if (
+        ledgerSchemaVersion === 5 &&
+        !events.some((event) => event.type === "turn.completed") &&
+        completed !== undefined
+      ) {
+        events.splice(events.length - 1, 0, { type: "turn.completed" });
+      }
+    }
+    writeFileSync(
+      path,
+      `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
+    );
+  }
+  const ledger = readFileSync(fixture.ledgerPath, "utf8")
+    .trim()
+    .split("\n")
+    .map(parseJsonRecord);
+  const entry = ledger[index];
+  const eventPath = fixture.eventPaths[index];
+  if (entry === undefined || eventPath === undefined) {
+    throw new Error("Missing composite ledger fixture.");
+  }
+  entry.subject = subject;
+  if (ledgerSchemaVersion !== undefined)
+    entry.schemaVersion = ledgerSchemaVersion;
+  entry.eventsSha256 = invocationEventsSha256(eventPath);
+  writeFileSync(
+    fixture.ledgerPath,
+    `${ledger.map((value) => JSON.stringify(value)).join("\n")}\n`,
+  );
+}
+
 function writeControlledReviewManifest(
   fixture: ControlledReviewEvidenceFixture,
 ): void {
@@ -173,6 +232,14 @@ describe("review invocation evidence", () => {
     ).toMatchObject({
       type: "review-invocation-evidence",
       scenarioId: "same",
+      campaign: {
+        path: relative(repoRoot, resolve(directory, "campaign.json")),
+        byteLength: readFileSync(resolve(directory, "campaign.json"))
+          .byteLength,
+        sha256: sha256Text(
+          readFileSync(resolve(directory, "campaign.json"), "utf8"),
+        ),
+      },
       prePlayReviews: [{ reviewStage: "milestone" }, { reviewStage: "final" }],
     });
     writeFileSync(
@@ -638,6 +705,156 @@ describe("review invocation evidence", () => {
     );
   });
 
+  test("rejects a migrated v4/v5 Scenario row for a schema-v2 review envelope", () => {
+    const directory = rawSwarmTestOutputDirectory(
+      "review-migrated-scenario-row-test-",
+    );
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const sameNameSubject = { tag: "scenario", scenarioId: "same" };
+    rewriteHistoricalLedgerSubject(fixture, 0, sameNameSubject, 4);
+    rewriteHistoricalLedgerSubject(fixture, 1, sameNameSubject, 5);
+    rmSync(fixture.manifestPath, { force: true });
+
+    expect(() => writeControlledReviewManifest(fixture)).toThrow(
+      /requires a scenarioCandidate lifecycle row when migrated to ledger schema (4|5)/,
+    );
+  });
+
+  test("retains and validates the Campaign authority path and hash", () => {
+    const directory = rawSwarmTestOutputDirectory(
+      "review-campaign-authority-test-",
+    );
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const campaignPath = resolve(directory, "campaign.json");
+    const manifest = parseJsonRecord(
+      readFileSync(fixture.manifestPath, "utf8"),
+    );
+    const campaignAuthority = manifest.campaign;
+    if (!isJsonRecord(campaignAuthority)) {
+      throw new Error("Fixture manifest is missing Campaign authority.");
+    }
+    expect(campaignAuthority).toMatchObject({
+      path: relative(repoRoot, campaignPath),
+      byteLength: readFileSync(campaignPath).byteLength,
+      sha256: sha256Text(readFileSync(campaignPath, "utf8")),
+    });
+
+    writeFileSync(
+      campaignPath,
+      readFileSync(campaignPath, "utf8").replace(
+        `"configSha256":"${"c".repeat(64)}"`,
+        `"configSha256":"${"d".repeat(64)}"`,
+      ),
+    );
+    expect(() =>
+      readReviewInvocationEvidenceManifest(fixture.manifestPath),
+    ).toThrow(/changed from its hash-linked artifacts/);
+  });
+
+  test("rejects a tampered Campaign authority path or hash", () => {
+    const makeFixture = (suffix: string) => {
+      const directory = rawSwarmTestOutputDirectory(suffix);
+      directories.push(directory);
+      return controlledReviewEvidenceFixture({
+        directory,
+        ledgerEntries: [
+          {
+            schemaVersion: 4,
+            phase: "postPlayReview",
+            stagePlanReason: "The fixture stage requires post-play review.",
+            invocationId: "review",
+            model: "gpt-5.6-luna",
+            reasoningEffort: "max",
+            startedAt: "2026-08-17T00:00:00.000Z",
+            elapsedMilliseconds: 1,
+            exit: { tag: "exited", status: 0 },
+            result: { tag: "succeeded" },
+            usage: {
+              tag: "unavailable",
+              reason:
+                "The first-party event stream exposed no turn.completed usage object.",
+            },
+          },
+        ],
+      });
+    };
+    const pathFixture = makeFixture("review-campaign-path-tamper-test-");
+    const pathManifest = parseJsonRecord(
+      readFileSync(pathFixture.manifestPath, "utf8"),
+    );
+    if (!isJsonRecord(pathManifest.campaign)) {
+      throw new Error("Fixture manifest is missing Campaign authority.");
+    }
+    pathManifest.campaign.path = "tampered/campaign.json";
+    writeFileSync(
+      pathFixture.manifestPath,
+      `${JSON.stringify(pathManifest)}\n`,
+    );
+    expect(() =>
+      readReviewInvocationEvidenceManifest(pathFixture.manifestPath),
+    ).toThrow(/changed from its hash-linked artifacts/);
+
+    const hashFixture = makeFixture("review-campaign-hash-tamper-test-");
+    const hashManifest = parseJsonRecord(
+      readFileSync(hashFixture.manifestPath, "utf8"),
+    );
+    if (!isJsonRecord(hashManifest.campaign)) {
+      throw new Error("Fixture manifest is missing Campaign authority.");
+    }
+    hashManifest.campaign.sha256 = "0".repeat(64);
+    writeFileSync(
+      hashFixture.manifestPath,
+      `${JSON.stringify(hashManifest)}\n`,
+    );
+    expect(() =>
+      readReviewInvocationEvidenceManifest(hashFixture.manifestPath),
+    ).toThrow(/changed from its hash-linked artifacts/);
+  });
+
   test("validates event output from a parsed replay binding without rereading the envelope", () => {
     const directory = rawSwarmTestOutputDirectory(
       "review-parsed-binding-test-",
@@ -839,7 +1056,10 @@ describe("review invocation evidence", () => {
       .map((line) => {
         const entry = parseJsonRecord(line);
         const subject = parseJsonRecord(JSON.stringify(entry.subject));
-        entry.scenarioId = subject.scenarioId;
+        entry.scenarioId =
+          typeof subject.plannedScenarioId === "string"
+            ? subject.plannedScenarioId
+            : subject.scenarioId;
         delete entry.subject;
         delete entry.stagePlanReason;
         delete entry.result;

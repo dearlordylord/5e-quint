@@ -29,12 +29,10 @@ import {
 import { reviewInvocationPolicy } from "./review-invocation-policy.ts";
 import {
   RetainedScenarioReviewInputSchema,
-  retainedScenarioReviewCampaignIdentityFromAuthority,
   retainedScenarioReviewCampaignOwner,
   retainedScenarioReviewMatchesReplayBinding,
   retainedScenarioReviewReplayExpectation,
   retainedScenarioReviewSubject,
-  type RetainedScenarioReviewCampaignIdentity,
   type RetainedScenarioReviewReplayOwner,
   type RetainedScenarioReviewInput,
 } from "./scenario-review-input.ts";
@@ -66,7 +64,10 @@ import {
   canonicalRepositoryReadPath,
   canonicalRepositoryReadRelativePath,
 } from "./repository-path.ts";
-import { ScenarioCampaignManifestSchema } from "./evidence-manifests.ts";
+import {
+  ScenarioCampaignManifestSchema,
+  type ScenarioCampaignManifest,
+} from "./evidence-manifests.ts";
 
 // This manifest is the current tracer evidence shape: unlike the fixed
 // benchmark's historical documentDeclarationSet path, it retains the packet
@@ -87,6 +88,7 @@ export const ReviewInvocationEvidenceManifestSchema = Schema.Struct({
   review: ArtifactAuthoritySchema,
   audit: ArtifactAuthoritySchema,
   packet: ArtifactAuthoritySchema,
+  campaign: ArtifactAuthoritySchema,
   prePlayReviews: Schema.Tuple(
     Schema.Struct({
       reviewStage: Schema.Literal("milestone"),
@@ -165,9 +167,14 @@ function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
   });
 }
 
-function campaignIdentityForControlledReview(
+type ControlledCampaignAuthority = Readonly<{
+  readonly manifest: ScenarioCampaignManifest;
+  readonly authority: ArtifactAuthority;
+}>;
+
+function campaignAuthorityForControlledReview(
   retainedReviewInputPath: string,
-): RetainedScenarioReviewCampaignIdentity {
+): ControlledCampaignAuthority {
   const canonicalReviewInputPath = canonicalRepositoryReadPath(
     repoRoot,
     retainedReviewInputPath,
@@ -193,11 +200,10 @@ function campaignIdentityForControlledReview(
       `Controlled review invocations require the Campaign manifest adjacent to ${retainedReviewInputPath}: ${canonicalCampaignPath.left}`,
     );
   }
+  const bytes = readFileSync(canonicalCampaignPath.right);
   const value: unknown = (() => {
     try {
-      return JSON.parse(
-        readFileSync(canonicalCampaignPath.right, "utf8"),
-      ) as unknown;
+      return JSON.parse(bytes.toString("utf8")) as unknown;
     } catch {
       fail(
         `Controlled review Campaign manifest is malformed JSON: ${canonicalCampaignPath.right}`,
@@ -212,7 +218,15 @@ function campaignIdentityForControlledReview(
       `Controlled review Campaign manifest is invalid: ${decoded.left.message}`,
     );
   }
-  return retainedScenarioReviewCampaignIdentityFromAuthority(decoded.right);
+  const relativePath = canonicalRepositoryReadRelativePath(
+    repoRoot,
+    canonicalCampaignPath.right,
+  );
+  if (Either.isLeft(relativePath)) fail(relativePath.left);
+  return {
+    manifest: decoded.right,
+    authority: artifactAuthorityForBytes(relativePath.right, bytes),
+  };
 }
 
 type RetainedReviewInputArtifact = Readonly<{
@@ -448,6 +462,21 @@ function deriveManifest(input: {
     (entry): readonly CurrentModelInvocationLedgerEntry[] =>
       entry.schemaVersion === 4 || entry.schemaVersion === 5 ? [entry] : [],
   );
+  const retainedReviewInputPath = input.prePlayReviewPaths[0]?.sourceInputPath;
+  if (retainedReviewInputPath === undefined) {
+    fail("Controlled review invocations require a retained review input.");
+  }
+  const campaignAuthority = campaignAuthorityForControlledReview(
+    retainedReviewInputPath,
+  );
+  if (
+    String(campaignAuthority.manifest.plannedScenarioId) !==
+    String(audit.audit.header.scenarioId)
+  ) {
+    fail(
+      "Controlled review Campaign manifest does not match the audited Scenario identity.",
+    );
+  }
   const benchmarkSubjects = currentScenarioReviewEntries.flatMap(
     ({ subject }) => (subject.tag === "benchmark" ? [subject] : []),
   );
@@ -471,14 +500,7 @@ function deriveManifest(input: {
       }
       return { tag: "benchmark", benchmark };
     }
-    const retainedReviewInputPath =
-      input.prePlayReviewPaths[0]?.sourceInputPath;
-    if (retainedReviewInputPath === undefined) {
-      fail("Controlled review invocations require a retained review input.");
-    }
-    return retainedScenarioReviewCampaignOwner(
-      campaignIdentityForControlledReview(retainedReviewInputPath),
-    );
+    return retainedScenarioReviewCampaignOwner(campaignAuthority.manifest);
   })();
   const prePlayReviewArtifacts = input.prePlayReviewPaths.map(
     (paths, index) => {
@@ -646,6 +668,7 @@ function deriveManifest(input: {
     review: artifactAuthority(input.reviewPath),
     audit: artifactAuthority(input.auditPath),
     packet: packetAuthority,
+    campaign: campaignAuthority.authority,
     prePlayReviews: [prePlayReviews[0]!, prePlayReviews[1]!],
     invocationLedgers: [artifactAuthority(input.invocationLedgerPaths[0]!)],
     invocationEvents: [

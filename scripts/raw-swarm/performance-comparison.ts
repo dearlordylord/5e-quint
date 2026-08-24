@@ -62,7 +62,6 @@ import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
   retainedScenarioReviewSubject,
-  type RetainedScenarioReviewCampaignIdentity,
   type RetainedScenarioReviewBenchmarkIdentity,
   type RetainedScenarioReviewReplayBinding,
 } from "./scenario-review-input.ts";
@@ -99,7 +98,10 @@ import {
   ScenarioStageFactsSchema,
   type ScenarioStagePlan,
 } from "./scenario-stage-plan.ts";
-import { ScenarioCampaignManifestSchema } from "./evidence-manifests.ts";
+import {
+  ScenarioCampaignManifestSchema,
+  type ScenarioCampaignManifest,
+} from "./evidence-manifests.ts";
 import {
   ScenarioExecutionIdentitySchema,
   type ScenarioCampaignId,
@@ -3318,26 +3320,10 @@ function replayBenchmarkIdentityForMeasurement(measurement: {
       };
 }
 
-function replayCampaignIdentityForMeasurement(measurement: {
-  readonly invocations: readonly BenchmarkInvocation[];
-}): RetainedScenarioReviewCampaignIdentity | undefined {
-  const candidateInvocation = candidateReplayInvocations(
-    measurement.invocations,
-  )[0];
-  if (candidateInvocation === undefined) {
-    return undefined;
-  }
-  return {
-    campaignId: candidateInvocation.subject.campaignId,
-    evidenceSetId: candidateInvocation.subject.evidenceSetId,
-    plannedScenarioId: candidateInvocation.subject.plannedScenarioId,
-  };
-}
-
-function replayCampaignIdentityForFindings(
+function replayCampaignManifestForFindings(
   findings: FindingsProjection,
   issues: string[],
-): RetainedScenarioReviewCampaignIdentity | undefined {
+): ScenarioCampaignManifest | undefined {
   const authority = findings.authorities.find(
     ({ role }) => role === "campaign" || role.startsWith("campaign-"),
   );
@@ -3347,16 +3333,10 @@ function replayCampaignIdentityForFindings(
     onExcessProperty: "error",
   })(value);
   if (Either.isLeft(decoded)) {
-    issues.push(
-      `Benchmark campaign authority is invalid: ${decoded.left.message}`,
-    );
+    issues.push(`Campaign authority is invalid: ${decoded.left.message}`);
     return undefined;
   }
-  return {
-    campaignId: decoded.right.campaignId,
-    evidenceSetId: decoded.right.evidenceSetId,
-    plannedScenarioId: decoded.right.plannedScenarioId,
-  };
+  return decoded.right;
 }
 
 function currentAuthorityContentIssues(
@@ -3373,9 +3353,10 @@ function currentAuthorityContentIssues(
     scenarioIdentity.tag === "admitted"
       ? scenarioIdentity.scenarioSha256
       : scenarioIdentity.candidateScenarioSha256;
-  const expectedReplayCampaign =
-    replayCampaignIdentityForFindings(findings, issues) ??
-    replayCampaignIdentityForMeasurement(measurement);
+  const expectedReplayCampaign = replayCampaignManifestForFindings(
+    findings,
+    issues,
+  );
   const expectedOutputJsonSchema = codexOutputJsonSchema(
     CurrentScenarioCompositeReviewSchema,
   );
@@ -4438,9 +4419,10 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
   );
   const expectedReplayBenchmark =
     replayBenchmarkIdentityForMeasurement(measurement);
-  const expectedReplayCampaign =
-    replayCampaignIdentityForFindings(findings, issues) ??
-    replayCampaignIdentityForMeasurement(measurement);
+  const expectedReplayCampaign = replayCampaignManifestForFindings(
+    findings,
+    issues,
+  );
   const expectedScenarioSha256 =
     measurement.stagePlan.identity.tag === "admitted"
       ? measurement.stagePlan.identity.scenarioSha256

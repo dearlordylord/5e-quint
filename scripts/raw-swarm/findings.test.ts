@@ -43,6 +43,10 @@ import {
 } from "./scenario-stage-plan.ts";
 import { parseModelInvocationLedgerEntry } from "./model-telemetry.ts";
 import {
+  ScenarioCampaignManifestSchema,
+  type ScenarioCampaignManifest,
+} from "./evidence-manifests.ts";
+import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
 } from "./scenario-review-input.ts";
@@ -351,6 +355,14 @@ const FINDINGS_REVIEW_SUBJECT = {
   scenarioId: "findings-example",
 } as const satisfies CompositeReviewFixtureSubject;
 
+function findingsCampaignManifest(root: string): ScenarioCampaignManifest {
+  const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+    onExcessProperty: "error",
+  })(parseJsonRecord(readFileSync(resolve(root, "campaign.json"), "utf8")));
+  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
+  return decoded.right;
+}
+
 function retainedCandidateCompositeReviewInput(input: {
   readonly reviewStage: "milestone" | "final";
   readonly invocationId: string;
@@ -453,7 +465,8 @@ function retainedGenerationReviewLedger(
   const eventPath = (invocationId: string) =>
     resolve(root, `${invocationId}.events.jsonl`);
   const eventBytes = (review: CompositeReviewLedgerSpec): string => {
-    const ledgerSchemaVersion = review.ledgerSchemaVersion ?? 5;
+    const ledgerSchemaVersion =
+      review.ledgerSchemaVersion ?? (review.subject.tag === "scenario" ? 2 : 5);
     return `${[
       ...(ledgerSchemaVersion === 2
         ? [
@@ -525,7 +538,8 @@ function retainedGenerationReviewLedger(
         .digest("hex"),
       ...common,
     };
-    const ledgerSchemaVersion = review.ledgerSchemaVersion ?? 5;
+    const ledgerSchemaVersion =
+      review.ledgerSchemaVersion ?? (review.subject.tag === "scenario" ? 2 : 5);
     return ledgerSchemaVersion === 2
       ? {
           schemaVersion: 2 as const,
@@ -798,8 +812,19 @@ describe("Raw Swarm findings projection", () => {
       .trim()
       .split("\n")
       .map((line) => parseJsonRecord(line));
+    const firstRow = rows[0];
+    if (firstRow === undefined) throw new Error("Missing fixture ledger row.");
+    const { scenarioId: _scenarioId, ...currentRow } = firstRow;
     const failedRow = {
-      ...rows[0],
+      ...currentRow,
+      schemaVersion: 5,
+      subject: {
+        tag: "scenarioCampaign",
+        campaignId: "findings-campaign",
+        evidenceSetId: "findings-campaign-evidence",
+        plannedScenarioId: "findings-example",
+      },
+      phase: "scenarioGeneration",
       invocationId: "missing-last-message",
       eventsSha256: "c".repeat(64),
       exit: { tag: "exited", status: 0 },
@@ -1006,11 +1031,7 @@ describe("Raw Swarm findings projection", () => {
         reviewStage: "final",
         scenarioId: "findings-example",
         admittedScenarioSha256: input.scenarioSha256,
-        campaign: {
-          campaignId: "findings-campaign",
-          evidenceSetId: "findings-campaign-evidence",
-          plannedScenarioId: "findings-example",
-        },
+        campaign: findingsCampaignManifest(input.root),
       },
     );
     expect(Either.isRight(finalBinding)).toBe(true);
@@ -1057,11 +1078,7 @@ describe("Raw Swarm findings projection", () => {
         tag: "candidate",
         reviewStage: "milestone",
         scenarioId: "findings-example",
-        campaign: {
-          campaignId: "findings-campaign",
-          evidenceSetId: "findings-campaign-evidence",
-          plannedScenarioId: "findings-example",
-        },
+        campaign: findingsCampaignManifest(input.root),
       },
     );
     expect(Either.isRight(milestoneBinding)).toBe(true);
@@ -1139,11 +1156,7 @@ describe("Raw Swarm findings projection", () => {
         reviewStage: "final",
         scenarioId: "findings-example",
         admittedScenarioSha256: input.scenarioSha256,
-        campaign: {
-          campaignId: "findings-campaign",
-          evidenceSetId: "findings-campaign-evidence",
-          plannedScenarioId: "findings-example",
-        },
+        campaign: findingsCampaignManifest(input.root),
       },
     );
     expect(Either.isRight(binding)).toBe(true);
@@ -1336,11 +1349,7 @@ describe("Raw Swarm findings projection", () => {
         reviewStage: "final",
         scenarioId: "findings-example",
         admittedScenarioSha256: input.scenarioSha256,
-        campaign: {
-          campaignId: "findings-campaign",
-          evidenceSetId: "findings-campaign-evidence",
-          plannedScenarioId: "findings-example",
-        },
+        campaign: findingsCampaignManifest(input.root),
       },
     );
     expect(Either.isRight(binding)).toBe(true);
@@ -1370,11 +1379,7 @@ describe("Raw Swarm findings projection", () => {
           reviewStage: "final",
           scenarioId: "findings-example",
           admittedScenarioSha256: input.scenarioSha256,
-          campaign: {
-            campaignId: "findings-campaign",
-            evidenceSetId: "findings-campaign-evidence",
-            plannedScenarioId: "findings-example",
-          },
+          campaign: findingsCampaignManifest(input.root),
         },
       );
     expect(Either.isLeft(sameOwnerWrongHashBinding)).toBe(true);
@@ -1399,11 +1404,7 @@ describe("Raw Swarm findings projection", () => {
         reviewStage: "final",
         scenarioId: "findings-example",
         admittedScenarioSha256: input.scenarioSha256,
-        campaign: {
-          campaignId: "findings-campaign",
-          evidenceSetId: "findings-campaign-evidence",
-          plannedScenarioId: "findings-example",
-        },
+        campaign: findingsCampaignManifest(input.root),
       },
     );
     expect(Either.isLeft(foreignBinding)).toBe(true);
@@ -1422,6 +1423,7 @@ describe("Raw Swarm findings projection", () => {
             invocationId: "current-same-name",
             reviewStage: "final",
             subject: FINDINGS_REVIEW_SUBJECT,
+            ledgerSchemaVersion: 5,
           },
         ],
       },
@@ -1455,7 +1457,9 @@ describe("Raw Swarm findings projection", () => {
         },
         issueLinks: [],
       }),
-    ).toThrow(/lifecycle scenario, not expected candidate/);
+    ).toThrow(
+      /lifecycle scenario, not expected candidate|different findings identity/,
+    );
   });
 
   test("preserves a revised Candidate hash at the historical milestone", () => {
@@ -1506,11 +1510,7 @@ describe("Raw Swarm findings projection", () => {
         tag: "historicalScenario",
         reviewStage: "milestone",
         scenarioId: "findings-example",
-        campaign: {
-          campaignId: "findings-campaign",
-          evidenceSetId: "findings-campaign-evidence",
-          plannedScenarioId: "findings-example",
-        },
+        campaign: findingsCampaignManifest(input.root),
       },
     );
     expect(Either.isRight(binding)).toBe(true);

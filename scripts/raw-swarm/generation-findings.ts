@@ -40,7 +40,11 @@ import {
   sha256Canonical,
   type ScenarioId,
 } from "./transcript.ts";
-import { FindingsManifestSchema } from "./evidence-manifests.ts";
+import {
+  FindingsManifestSchema,
+  ScenarioCampaignManifestSchema,
+  type ScenarioCampaignManifest,
+} from "./evidence-manifests.ts";
 import { RejectedScenarioCandidateRecordSchema } from "./scenario-catalogue.ts";
 import { RejectedScenarioCandidateReviewSchema } from "./scenario-campaign.ts";
 
@@ -172,6 +176,24 @@ function findingsManifestIdentity(
   );
 }
 
+function campaignManifestFromSources(
+  sources: readonly Source[],
+): ScenarioCampaignManifest {
+  const source = sources.find((candidate) => candidate.role === "campaign");
+  if (source === undefined) {
+    fail("Campaign findings require a Campaign manifest authority.");
+  }
+  const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
+    onExcessProperty: "error",
+  })(readSourceRecord(source.path));
+  if (Either.isLeft(decoded)) {
+    fail(
+      `Campaign manifest authority is invalid: ${source.path}: ${decoded.left.message}`,
+    );
+  }
+  return decoded.right;
+}
+
 function authoredScenarioIdentity(identity: FindingsManifestIdentity) {
   return Match.value(identity).pipe(
     Match.when({ tag: "scenarioCampaign" }, (campaign) => ({
@@ -278,6 +300,10 @@ export function projectGenerationFindings(
   }
   const manifestIdentity = findingsManifestIdentity(sources);
   const authoredIdentity = authoredScenarioIdentity(manifestIdentity);
+  const campaignManifest =
+    manifestIdentity.tag === "scenarioCampaign"
+      ? campaignManifestFromSources(sources)
+      : undefined;
   if (input.disposition.tag === "campaignFailure") {
     const pointerRole =
       input.pointerAuthorityRole === undefined
@@ -348,14 +374,10 @@ export function projectGenerationFindings(
             scenarioId: authoredIdentity.scenarioId,
             gitSha: authoredIdentity.gitSha,
             owner:
-              manifestIdentity.tag === "scenarioCampaign"
+              campaignManifest !== undefined
                 ? {
                     tag: "campaign" as const,
-                    campaign: {
-                      campaignId: manifestIdentity.campaignId,
-                      evidenceSetId: manifestIdentity.evidenceSetId,
-                      plannedScenarioId: manifestIdentity.plannedScenarioId,
-                    },
+                    campaign: campaignManifest,
                   }
                 : { tag: "scenario" as const },
           },

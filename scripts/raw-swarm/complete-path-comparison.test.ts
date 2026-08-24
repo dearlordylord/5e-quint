@@ -603,6 +603,20 @@ function findingsProjection(
       startedAt: subject.startedAt,
     })}\n`,
   );
+  const campaign = writeAuthority(
+    root,
+    "campaign.json",
+    `${JSON.stringify({
+      type: "raw-swarm-scenario-campaign",
+      schemaVersion: 1,
+      campaignId: "synthetic-complete-path-campaign",
+      plannedScenarioId: scenarioId,
+      evidenceSetId: "synthetic-complete-path-evidence",
+      gitSha,
+      startedAt: "2026-08-14T00:00:00.000Z",
+      configSha256: "c".repeat(64),
+    })}\n`,
+  );
   return {
     type: "raw-swarm-findings",
     schemaVersion: 2,
@@ -622,6 +636,7 @@ function findingsProjection(
       { role: "frozenPrefix", ...frozenPrefix },
       { role: "final", ...finalArtifact },
       { role: "executionStart", ...executionStart },
+      { role: "campaign", ...campaign },
     ],
     findings,
   };

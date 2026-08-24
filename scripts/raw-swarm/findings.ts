@@ -45,12 +45,10 @@ import {
 } from "./transcript.ts";
 import {
   RetainedScenarioReviewInputSchema,
-  retainedScenarioReviewCampaignIdentityFromAuthority,
   retainedScenarioReviewCampaignOwner,
   retainedScenarioReviewMatchesReplayBinding,
   retainedScenarioReviewReplayExpectation,
   type RetainedScenarioReviewBenchmarkIdentity,
-  type RetainedScenarioReviewCampaignIdentity,
 } from "./scenario-review-input.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
 import { SdkReplayResultEvidenceSchema } from "./sdk-player/sdk-replay-result.ts";
@@ -70,6 +68,7 @@ import type { GitSha } from "./transcript.ts";
 import {
   ExecutionStartRecordSchema,
   ScenarioCampaignManifestSchema,
+  type ScenarioCampaignManifest,
 } from "./evidence-manifests.ts";
 import {
   canonicalRepositoryOutputPath,
@@ -1180,7 +1179,7 @@ export type GenerationLedgerOwner =
   | Readonly<{ readonly tag: "scenario" }>
   | Readonly<{
       readonly tag: "campaign";
-      readonly campaign: RetainedScenarioReviewCampaignIdentity;
+      readonly campaign: ScenarioCampaignManifest;
     }>
   | Readonly<{
       readonly tag: "benchmark";
@@ -1219,9 +1218,9 @@ export function findingsFromGenerationLedger(
           decoded.right.subject.plannedScenarioId !==
             expected.owner.campaign.plannedScenarioId)) ||
         (decoded.right.phase === "scenarioCompositeReview" &&
-          decoded.right.subject.tag === "scenarioCandidate" &&
-          (decoded.right.subject.campaignId !==
-            expected.owner.campaign.campaignId ||
+          (decoded.right.subject.tag !== "scenarioCandidate" ||
+            decoded.right.subject.campaignId !==
+              expected.owner.campaign.campaignId ||
             decoded.right.subject.evidenceSetId !==
               expected.owner.campaign.evidenceSetId ||
             decoded.right.subject.plannedScenarioId !==
@@ -1286,8 +1285,8 @@ export function findingsFromGenerationLedger(
 
 function expectedReplayCampaignIdentity(
   generationLedgerPaths: readonly string[],
-): RetainedScenarioReviewCampaignIdentity | undefined {
-  let expected: RetainedScenarioReviewCampaignIdentity | undefined;
+): ScenarioCampaignManifest | undefined {
+  let expected: ScenarioCampaignManifest | undefined;
   for (const path of generationLedgerPaths) {
     const ledgerPath = sourcePath(path);
     const manifestPath = replayCampaignManifestPath(ledgerPath);
@@ -1301,9 +1300,7 @@ function expectedReplayCampaignIdentity(
         `Generation Campaign manifest is invalid: ${canonicalManifestPath}: ${decoded.left.message}`,
       );
     }
-    const campaign = retainedScenarioReviewCampaignIdentityFromAuthority(
-      decoded.right,
-    );
+    const campaign = decoded.right;
     if (
       expected !== undefined &&
       canonicalJson(expected) !== canonicalJson(campaign)
@@ -1323,7 +1320,7 @@ function replayCampaignManifestPath(ledgerPath: string): string {
 
 function requiredReplayCampaignIdentity(
   generationLedgerPaths: readonly string[],
-): RetainedScenarioReviewCampaignIdentity {
+): ScenarioCampaignManifest {
   for (const path of generationLedgerPaths) {
     const ledgerPath = sourcePath(path);
     const manifestPath = replayCampaignManifestPath(ledgerPath);
