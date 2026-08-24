@@ -1,9 +1,9 @@
 ---
 name: dnd-srd-oracle
-description: Explore and use this project's redistributable SRD catalog through character creation, character sessions, and battles. Use for requests to inspect available SRD options, make or continue a character, start or continue a battle, ask what can happen next in an existing D&D SRD Oracle journey, or determine whether this engine can execute user-authored content; do not use for general D&D rules, history, lore, or other unrelated discussion.
+description: Explore and use this project's redistributable 5.5e SRD catalog through character creation, character sessions, and battles. Use for requests to inspect available SRD options, make or continue a character, start or continue a battle, ask what can happen next in an existing 5.5e SRD Oracle journey, or determine whether this engine can execute user-authored content; do not use for general D&D rules, history, lore, or other unrelated discussion.
 ---
 
-# Consult D&D SRD Oracle
+# Consult 5.5e SRD Oracle
 
 Establish the user's immediate goal. Use the relevant discovery or read operation before making a stateful choice unless the current MCP result already supplies the required facts.
 

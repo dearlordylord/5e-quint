@@ -46,7 +46,7 @@
     {
       "id": "skill-direct",
       "kind": "direct",
-      "prompt": "Use D&D SRD Oracle to show me the installed character options.",
+      "prompt": "Use 5.5e SRD Oracle to show me the installed character options.",
       "expectedActivation": "activate"
     },
     {
@@ -79,7 +79,7 @@
     {
       "id": "complete-newcomer-journey",
       "kind": "completeWorkflow",
-      "prompt": "Use D&D SRD Oracle to inspect the installed SRD character options and help me build a supported character using only choices returned by the current creation holes. At each stop, group every currently returned independent meaningful choice so I can answer them in one reply; keep dependent choices for later, and apply forced single-option choices automatically. After finalization, start a battle with that Character Session and an installed SRD Goblin Warrior, follow only returned Battle Acts and Runtime Holes, end the battle only when no fill is pending, and finish by listing my Character Sessions.",
+      "prompt": "Use 5.5e SRD Oracle to inspect the installed SRD character options and help me build a supported character using only choices returned by the current creation holes. At each stop, group every currently returned independent meaningful choice so I can answer them in one reply; keep dependent choices for later, and apply forced single-option choices automatically. After finalization, start a battle with that Character Session and an installed SRD Goblin Warrior, follow only returned Battle Acts and Runtime Holes, end the battle only when no fill is pending, and finish by listing my Character Sessions.",
       "expectedActivation": "activate"
     }
   ]

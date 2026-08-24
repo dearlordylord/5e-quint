@@ -1,7 +1,7 @@
 {
   "name": "dnd-srd-play",
   "interface": {
-    "displayName": "D&D SRD Oracle Development"
+    "displayName": "5.5e SRD Oracle Development"
   },
   "plugins": [
     {

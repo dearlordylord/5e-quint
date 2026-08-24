@@ -7,7 +7,7 @@ import { createDndMcpProtocolServer } from "./protocol-server.ts";
 
 const COMPLETE_NEWCOMER_JOURNEY_TIMEOUT_MS = 150_000;
 
-describe("D&D SRD Oracle headless newcomer journey", () => {
+describe("5.5e SRD Oracle headless newcomer journey", () => {
   test(
     "complete-newcomer-journey",
     async () => {

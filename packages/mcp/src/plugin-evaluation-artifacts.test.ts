@@ -517,7 +517,7 @@ const expectedLeafIssues = [
   325, 326, 324, 327, 327, 327,
 ] as const;
 
-describe("D&D SRD Oracle evaluation artifacts", () => {
+describe("5.5e SRD Oracle evaluation artifacts", () => {
   test("specializes query-kind metadata to the canonical capability and scenario", () => {
     const matrixPath = resolve(evalRoot, "capability-matrix.json");
     const rawMatrix = JSON.parse(readFileSync(matrixPath, "utf8"));

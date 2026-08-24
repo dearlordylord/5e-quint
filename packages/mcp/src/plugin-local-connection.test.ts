@@ -41,7 +41,7 @@ const InstalledPluginManifestSchema = Schema.Struct({
   name: Schema.Literal("dnd-srd-oracle"),
   skills: Schema.String,
   interface: Schema.Struct({
-    displayName: Schema.Literal("D&D SRD Oracle"),
+    displayName: Schema.Literal("5.5e SRD Oracle"),
   }),
   mcpServers: Schema.optionalWith(Schema.String, { exact: true }),
 });
@@ -65,7 +65,7 @@ const ForwardTestResultsSchema = Schema.Struct({
   }),
 });
 
-describe("local D&D SRD Oracle plugin evaluation seams", () => {
+describe("local 5.5e SRD Oracle plugin evaluation seams", () => {
   test("keeps the installed Skill package separate from the source MCP seam", () => {
     const manifest = decodeJsonFile(
       InstalledPluginManifestSchema,

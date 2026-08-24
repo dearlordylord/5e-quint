@@ -1,4 +1,4 @@
-# D&D SRD Oracle developer-mode runbook
+# 5.5e SRD Oracle developer-mode runbook
 
 This directory contains the `dnd-srd-oracle` Skill and evaluation artifacts. The MCP
 server remains the runtime composition owner in
@@ -36,7 +36,7 @@ mode. Follow the current [OpenAI plugin connection guide](https://developers.ope
 3. Open **Plugins**, choose **+**, enter the user-facing name and description,
    select the connection method, and create the connection. For a public
    endpoint, enter the full `/mcp` URL; for a tunnel, select **Tunnel** and
-   choose or enter its `tunnel_id`. For this private developer-mode D&D SRD Oracle
+   choose or enter its `tunnel_id`. For this private developer-mode 5.5e SRD Oracle
    evaluation, choose **No authentication** in the MCP/app authentication
    setting: do not configure OAuth or a user-facing API key. This no-auth
    choice is scoped to this private evaluation and is not a public
@@ -232,7 +232,7 @@ entry first with `codex plugin marketplace remove dnd-srd-play`. Register and
 install again from the replacement checkout before opening a new conversation.
 
 Restart or refresh the ChatGPT desktop app, open the Plugins Directory, select
-**D&D SRD Oracle Development**, and confirm that **D&D SRD Oracle** is installed and
+**5.5e SRD Oracle Development**, and confirm that **5.5e SRD Oracle** is installed and
 enabled. Keep the separately created developer-mode MCP connection enabled and
 start a new conversation. Run the direct, natural, follow-up, negative, and
 authoring-boundary prompts in the evaluation inventory. For a combined
@@ -243,9 +243,8 @@ final Character Session list.
 Use this copyable prompt for the complete journey; the Skill must pause for the
 operator's answers rather than choosing on the operator's behalf:
 
-> Use D&D SRD Oracle to inspect the installed SRD character options and help me
-> build
-> a supported character using only choices returned by the current creation
+> Use 5.5e SRD Oracle to inspect the installed SRD character options and help me
+> build a supported character using only choices returned by the current creation
 > holes. At each stop, group every currently returned independent meaningful
 > choice so I can answer them in one reply; keep dependent choices for later,
 > and apply forced single-option choices automatically. After finalization,
