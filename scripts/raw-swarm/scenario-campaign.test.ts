@@ -22,6 +22,8 @@ import {
   ScenarioRawReviewSchema,
   verifyFinalScenarioReview,
   type ScenarioCampaignAgents,
+  type ScenarioCampaignConfig,
+  type ScenarioStageFacts,
 } from "./scenario-campaign.ts";
 import {
   GitShaSchema,
@@ -393,7 +395,7 @@ const config = {
   admitReviewedUnsupported: false,
 };
 
-const stageFacts = {
+const stageFacts: ScenarioStageFacts = {
   schemaVersion: 1 as const,
   characterRequirement: {
     tag: "characterSheetsRequired" as const,
@@ -405,7 +407,7 @@ const stageFacts = {
   },
 };
 
-const candidate = (prose: string, facts = stageFacts) => ({
+const candidate = (prose: string, facts: ScenarioStageFacts = stageFacts) => ({
   prose,
   stageFacts: facts,
 });
@@ -745,11 +747,11 @@ describe("scenario generation campaign", () => {
   });
 
   test("gives quality review the configured purpose and Candidate facts", async () => {
-    const scenarioPurpose =
+    const scenarioPurpose: ScenarioCampaignConfig["scenarioPurpose"] =
       "Explore delegated Character Sheet choices during a synthetic rescue.";
     const reviewInputs: Array<{
-      readonly scenarioPurpose: string;
-      readonly characterRequirement: string;
+      readonly scenarioPurpose: ScenarioCampaignConfig["scenarioPurpose"];
+      readonly characterRequirement: ScenarioStageFacts["characterRequirement"]["tag"];
     }> = [];
     const result = await runScenarioCampaign(
       {
