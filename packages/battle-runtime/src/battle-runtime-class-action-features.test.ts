@@ -60,6 +60,7 @@ import {
   goblinId,
   wizardId,
   unitLibrary,
+  SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS,
   applyCondition,
   battleId,
   cantripSpellInvocationRef,
@@ -109,8 +110,6 @@ import {
   requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
-
-const SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS = 10_000;
 
 function requireRecklessAttackProcedureRef(state: BattleState) {
   const actor = state.combatants.get(fighterId);

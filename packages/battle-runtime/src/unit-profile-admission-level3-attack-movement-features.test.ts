@@ -79,9 +79,8 @@ import {
   endTurn,
   requireCharacterUnitProcedureRefForTest,
   requireResolved,
+  SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS,
 } from "./battle-runtime.test-support.ts";
-
-const SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS = 10_000;
 
 const remarkableAthleteActorId = combatantId("remarkable-athlete-actor");
 const remarkableAthleteTargetId = combatantId("remarkable-athlete-target");
