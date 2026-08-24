@@ -676,6 +676,49 @@ describe("battle runtime: attack pipeline boundaries", () => {
     },
   );
 
+  test("does not infer Prone attack-roll mode without its required runtime facts", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = state.combatants.get(fighterId);
+    const goblin = state.combatants.get(goblinId);
+    if (
+      fighter?.origin.kind !== "character" ||
+      fighter.origin.attack === null ||
+      goblin === undefined
+    ) {
+      throw new Error("Expected the fighter attack and goblin fixtures.");
+    }
+    const proneGoblin = battleCreatureStateWithKnockOutPreservedConditions(
+      goblin,
+      applyCondition(goblin.conditions, "prone"),
+    );
+    const proneState = {
+      ...state,
+      combatants: new Map(state.combatants).set(goblinId, proneGoblin),
+    };
+
+    expect(
+      requiredAttackRollMode(
+        proneState,
+        fighterId,
+        goblinId,
+        fighter.origin.attack,
+        [],
+      ),
+    ).toBeUndefined();
+    expect(
+      requiredAttackRollMode(proneState, fighterId, goblinId, undefined, []),
+    ).toBeUndefined();
+    expect(
+      requiredAttackRollMode(
+        proneState,
+        fighterId,
+        combatantId("absent-target"),
+        fighter.origin.attack,
+        [],
+      ),
+    ).toBeUndefined();
+  });
+
   test("prefers an exact selection and safely reuses one same-procedure distance", () => {
     type AttackTargetDistanceFact = Extract<
       BattleTargetSpatialFact,
