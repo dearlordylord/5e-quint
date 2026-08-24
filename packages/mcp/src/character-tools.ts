@@ -1,9 +1,7 @@
 import {
   createCharacterDraft,
-  discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
-  type CharacterDraft,
   type CharacterDraftId,
 } from "@dnd/character-creation-runtime";
 import {
@@ -15,6 +13,11 @@ import { Either, Match } from "effect";
 
 import { publishAdminProjectionBestEffort } from "./admin-mirror.ts";
 import { applyCharacterSessionOperation } from "./character-session-operation-tool.ts";
+import {
+  creationDraftPayload,
+  duplicateDraftIdContent,
+  invalidCreationSupportProfileContent,
+} from "./character-creation-tool-output.ts";
 import {
   characterListRows,
   characterSessionDetail,
@@ -53,6 +56,11 @@ import {
   ListCharactersOutputSchema,
 } from "./character-tool-output.ts";
 import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
+import {
+  discoverModelFacingCreationState,
+  projectModelFacingCreationFillResult,
+  projectModelFacingFinalization,
+} from "./model-facing-creation-holes.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
 
@@ -77,14 +85,14 @@ export const characterToolDefinitions = [
   {
     name: characterToolNames.discoverCreationHoles,
     description:
-      "Return the current fillable creation holes, draft revision, and finalization status for a stored character draft.",
+      "Return the current supported fillable creation holes, draft revision, and finalization status for a stored character draft. Every returned choice option is admitted by this server's active execution support profile.",
     inputSchema: draftIdInputSchema,
     outputSchema: mcpOutputJsonSchema(CreationDraftOutputSchema),
   },
   {
     name: characterToolNames.fillCreationHoles,
     description:
-      "Submit an atomic batch of creation fills for a stored draft. Accepted batches replace the stored draft; rejected batches leave it unchanged.",
+      "Submit an atomic batch of creation fills for a stored draft using option ids returned by its current holes. Accepted batches replace the stored draft; rejected batches leave it unchanged.",
     inputSchema: fillCreationHolesInputSchema,
     outputSchema: mcpOutputJsonSchema(FillCreationHolesOutputSchema),
   },
@@ -153,11 +161,19 @@ export function handleCharacterToolCall(
       ) {
         return duplicateDraftIdContent(draft.draftId, "finalizedSession");
       }
+      const projection = discoverModelFacingCreationState({
+        draft,
+        unitLibrary: root.unitLibrary,
+        supportProfile: root.characterCreationSupportProfile,
+      });
+      if (projection.tag === "invalidSupportProfile") {
+        return invalidCreationSupportProfileContent(projection.issues);
+      }
       root.sessionStore.drafts.set(draft.draftId, draft);
       publishAdminProjectionBestEffort(root);
       return schemaJsonContent(
         CreationDraftOutputSchema,
-        creationDraftPayload(root, draft),
+        creationDraftPayload(root, draft, projection.value),
       );
     }),
     Match.when(
@@ -165,9 +181,17 @@ export function handleCharacterToolCall(
       (matched) => {
         const draft = root.sessionStore.drafts.get(matched.args.draftId);
         if (draft == null) return unknownDraftContent(matched.args.draftId);
+        const projection = discoverModelFacingCreationState({
+          draft,
+          unitLibrary: root.unitLibrary,
+          supportProfile: root.characterCreationSupportProfile,
+        });
+        if (projection.tag === "invalidSupportProfile") {
+          return invalidCreationSupportProfileContent(projection.issues);
+        }
         return schemaJsonContent(
           CreationDraftOutputSchema,
-          creationDraftPayload(root, draft),
+          creationDraftPayload(root, draft, projection.value),
         );
       },
     ),
@@ -184,6 +208,13 @@ export function handleCharacterToolCall(
         expectedRevision: input.expectedRevision,
         fills: input.fills,
       });
+      const projection = projectModelFacingCreationFillResult(
+        result,
+        root.characterCreationSupportProfile,
+      );
+      if (projection.tag === "invalidSupportProfile") {
+        return invalidCreationSupportProfileContent(projection.issues);
+      }
 
       if (result.tag === "accepted") {
         root.sessionStore.drafts.set(result.draft.draftId, result.draft);
@@ -191,7 +222,7 @@ export function handleCharacterToolCall(
       }
 
       return schemaJsonContent(FillCreationHolesOutputSchema, {
-        result,
+        result: projection.value,
         storedDraft: result.tag === "accepted" ? result.draft : draft,
         session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
@@ -206,6 +237,13 @@ export function handleCharacterToolCall(
         unitLibrary: root.unitLibrary,
         supportProfile: root.characterCreationSupportProfile,
       });
+      const projection = projectModelFacingFinalization(
+        finalization,
+        root.characterCreationSupportProfile,
+      );
+      if (projection.tag === "invalidSupportProfile") {
+        return invalidCreationSupportProfileContent(projection.issues);
+      }
       const finalizedCharacterId = characterIdFromDraftId(draftId);
       if (finalization.tag === "ready") {
         const session = createFreshCharacterSheet({
@@ -235,7 +273,7 @@ export function handleCharacterToolCall(
 
       return schemaJsonContent(FinalizeCharacterOutputSchema, {
         draftId,
-        finalization,
+        finalization: projection.value,
         build: finalization.tag === "ready" ? finalization.build : null,
         session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
@@ -387,32 +425,4 @@ function unknownDraftContent(draftId: CharacterDraftId) {
     code: "UNKNOWN_CHARACTER_DRAFT",
     draftId,
   });
-}
-
-function duplicateDraftIdContent(
-  draftId: CharacterDraftId,
-  existingOwner: "activeDraft" | "finalizedSession",
-) {
-  return errorContent(`Character draft id already exists: ${draftId}`, {
-    code: "DUPLICATE_CHARACTER_DRAFT_ID",
-    draftId,
-    existingOwner,
-  });
-}
-
-function creationDraftPayload(root: McpPlaySessionRoot, draft: CharacterDraft) {
-  return {
-    draft,
-    holes: discoverCreationHoles({
-      draft,
-      unitLibrary: root.unitLibrary,
-      supportProfile: root.characterCreationSupportProfile,
-    }),
-    finalization: finalizeCharacterDraft({
-      draft,
-      unitLibrary: root.unitLibrary,
-      supportProfile: root.characterCreationSupportProfile,
-    }),
-    session: mcpSessionSummary(root.sessionStore.snapshot()),
-  };
 }

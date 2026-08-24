@@ -475,5 +475,6 @@ export {
 } from "./phase1-manifest.ts";
 export {
   CHARACTER_CREATION_SUPPORT_PROFILE,
+  supportedHoleOptionIds,
   type CharacterCreationSupportProfile,
 } from "./support-gates.ts";

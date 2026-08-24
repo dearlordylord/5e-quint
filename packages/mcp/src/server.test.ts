@@ -6168,8 +6168,39 @@ describe("MCP server route", () => {
       "cc:draft:draft.languages",
       "cc:draft:draft.alignment",
     ]);
+    expect(
+      created.holes.find(
+        (hole: CreationHole) => hole.holeId === "cc:draft:draft.languages",
+      ),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 2 },
+      options: [
+        { optionId: "Dwarvish", label: "Dwarvish" },
+        { optionId: "Goblin", label: "Goblin" },
+      ],
+    });
 
-    fillThroughTool(root, draftId, 0, initialManifestFills());
+    const afterInitial = fillThroughTool(
+      root,
+      draftId,
+      0,
+      initialManifestFills(),
+    );
+    expect(
+      afterInitial.result.holes.find(
+        (hole: CreationHole) =>
+          hole.holeId ===
+          unitHoleId("class_fighter", "class_skill_proficiency_choice"),
+      ),
+    ).toMatchObject({
+      kind: "choice",
+      cardinality: { tag: "exactly", count: 2 },
+      options: [
+        { optionId: "perception", label: "Perception" },
+        { optionId: "survival", label: "Survival" },
+      ],
+    });
     fillThroughTool(root, draftId, 1, manifestChoiceFills());
     fillThroughTool(root, draftId, 2, manifestPurchaseFills());
     const loadout = fillThroughTool(root, draftId, 3, manifestLoadoutFills());
