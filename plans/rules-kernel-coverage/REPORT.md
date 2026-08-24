@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 146
-- Covered obligations: 138
+- Total obligations: 147
+- Covered obligations: 139
 - Open transitional obligations: 2
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   138 |
+| covered                  |   139 |
 | needs-qnt-owner          |     2 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -23,7 +23,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | Runtime            | Count |
 | ------------------ | ----: |
 | shared-algebras    |     1 |
-| battle             |   112 |
+| battle             |   113 |
 | character-creation |    16 |
 | character-sheet    |    13 |
 | character-battle   |     4 |
@@ -178,6 +178,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION`               | character-creation | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION`                     | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE`                            | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY`                    | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Battle Hole Frontier
 
@@ -802,6 +803,8 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `packages/shared-algebras/proofs/rule-core/starting-currency-finalization-tests.qnt`                                | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt`                                          | semantic-core           | `BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE`, `BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt`                                 | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt`                               | semantic-core           | `BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity-tests.qnt`                         | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## QNT Registry
 
@@ -1115,6 +1118,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt`                                        | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt`                                       | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt`                                                 | qnt-owner-role | semantic-core                                                                                                                                                                                            |
+| `packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt`                               | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/uncanny-metabolism-resource.qnt`                                         | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core-examples.qnt`                             | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt`                                      | qnt-owner-role | semantic-core                                                                                                                                                                                            |
@@ -1358,6 +1362,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION`               | generation-subset-clean | `variant`, `record`, `pure-def`, `int`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `all-block`, `bool`, `boolean-connective`, `list`, `fold`                                                                                                                                                      |          |           |
 | `BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION`                     | generation-subset-clean | `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `comparison`, `pattern-match`                                                                                                                                                                                                    |          |           |
 | `BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE`                            | generation-subset-clean | `variant`, `record`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `pattern-match`, `all-block`                                                                                                                                                                  |          |           |
+| `BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY`                    | generation-subset-clean | `variant`, `record`, `pure-def`, `bool`, `comparison`, `boolean-connective`, `set`, `forall`, `membership`                                                                                                                                                                                                         |          |           |
 
 ### Generator Readiness Backlog
 

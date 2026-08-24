@@ -14,6 +14,7 @@ import {
 import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
 
 const AdmittedBattleStatBlockCombatant =
   Brand.nominal<AdmittedBattleStatBlockCombatant>();

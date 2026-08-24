@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 146,
-    "covered": 138,
+    "total": 147,
+    "covered": 139,
     "open": 2,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 112,
+      "battle": 113,
       "character-creation": 16,
       "character-sheet": 13,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 138,
+      "covered": 139,
       "needs-qnt-owner": 2,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -5218,6 +5218,33 @@
         "UBIQUITOUS_LANGUAGE.md#Advantage-and-Disadvantage"
       ],
       "title": "Canonical exact attack-target distance derives Prone roll mode and gates ordinary and fixed-target attack paths"
+    },
+    {
+      "id": "BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-combatant-admission.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt"
+      ],
+      "reason": "The Stat Block Immunities entry supplies condition immunity facts; canonical creature admission compares caller-supplied initial conditions against the source's condition immunities before building executable combatant state. The same predicate is reused by the Stat Block initializer and public startBattle admission, so copied public initializers cannot bypass it. The QNT owner models the identity-free matching rule for the supported initial-condition vocabulary against the full runtime condition-immunity vocabulary, and the contract witness covers direct copied-init rejection plus valid initial Prone admission.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/stat-block-combatant-admission.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Monsters/Overview.md#Immunities",
+        ".references/srd-5.2.1/Rules-Glossary.md#Immunity",
+        "UBIQUITOUS_LANGUAGE.md#Condition-Immunity",
+        "UBIQUITOUS_LANGUAGE.md#Conditions"
+      ],
+      "title": "Battle Stat Block admission rejects caller-supplied initial conditions listed in the creature's condition Immunities"
     }
   ],
   "battleHoleFrontier": [
@@ -11116,6 +11143,18 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt is the covered obligation QNT owner carrying the identity-free Stat Block initial-condition and condition-immunity admission matching predicate.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused run-block proofs cover matching condition-immunity rejection, nonmatching immunity acceptance, empty initial conditions, and unsupported initial-condition rejection.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity-tests.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -12679,6 +12718,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt",
       "role": "semantic-core"
     },
     {
@@ -17136,6 +17180,28 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/d20-test-circumstance-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "bool",
+        "comparison",
+        "boolean-connective",
+        "set",
+        "forall",
+        "membership"
+      ],
+      "obligationId": "BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-initial-condition-immunity.qnt"
       ],
       "status": "generation-subset-clean"
     }

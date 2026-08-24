@@ -24,6 +24,7 @@ import {
   statBlockCreatureInit,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
 
 describe("Stat Block combatant admission capability", () => {
   const admittedCombatantId = combatantId("admitted-stat-block");
