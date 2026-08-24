@@ -44,12 +44,64 @@ mode. Follow the current [OpenAI plugin connection guide](https://developers.ope
 4. Review the discovered tool names, descriptions, schemas, and annotations.
    Resolve transport, initialization, schema, or authentication errors before
    evaluating selection.
-5. Start a new conversation, add the separately created MCP connection from
-   the tools menu, and run the MCP cases in
-   [`evals/evaluation-inventory.json`](evals/evaluation-inventory.json).
-   Record selected tools, arguments, results, errors, and confirmation behavior
-   in the installed-evidence artifact; local tests do not establish these
-   account/workspace observations.
+5. Start a new conversation and add the separately created MCP connection from
+   the tools menu. This connection carries the installed Skill runs below; the
+   `mcpToolSelection` cases in
+   [`evals/evaluation-inventory.json`](evals/evaluation-inventory.json) are
+   observed through the Responses API instead, as described in
+   [Observe MCP tool selection from the Responses API](#observe-mcp-tool-selection-from-the-responses-api).
+
+## Evidence artifacts and their owners
+
+Two external product surfaces produce two distinct typed artifacts. Each
+artifact owns disjoint case ids from the evaluation inventory, and its schema
+rejects the other surface's cases:
+
+| Artifact                                                                         | Surface                                         | Evidence kind                                           | Inventory group                       |
+| -------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------- | ------------------------------------- |
+| [`evals/api-mcp-selection-evidence.json`](evals/api-mcp-selection-evidence.json) | OpenAI Responses API with the remote MCP server | `apiMcpToolSelection`                                   | `mcpToolSelection`                    |
+| [`evals/installed-chatgpt-evidence.json`](evals/installed-chatgpt-evidence.json) | Installed ChatGPT plugin                        | `installedSkillActivation`, `installedCompleteWorkflow` | `skillActivation`, `completeWorkflow` |
+
+The official OpenAI procedure draws the same line between raw MCP
+request/response testing and complete installed-plugin testing. An API
+observation is never recorded under an installed ChatGPT identity, and an
+installed conversation is never used to claim raw tool-selection facts.
+
+## Observe MCP tool selection from the Responses API
+
+Reach the same MCP server from the OpenAI Responses API with an
+`OPENAI_API_KEY`. `CONTROL_PLANE_API_KEY` authorizes Secure MCP Tunnel
+control-plane operations only and is not an OpenAI API credential. Use a public
+HTTPS `/mcp` endpoint or the Secure MCP Tunnel runtime below, then send each
+`mcpToolSelection` prompt as its own request, chaining the follow-up case with
+`previous_response_id`:
+
+```sh
+curl https://api.openai.com/v1/responses \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "gpt-5.6",
+    "tools": [
+      {
+        "type": "mcp",
+        "server_label": "dnd-srd-oracle",
+        "server_url": "https://<public-endpoint>/mcp",
+        "require_approval": "never"
+      }
+    ],
+    "input": "List the installed redistributable SRD character options."
+  }'
+```
+
+Record the model, response identifier, advertised server and tool metadata, the
+selected tool with its arguments and result or structured error or the
+confirmed absence of a tool call, the approval behavior, the observation time,
+and a conclusion against the inventory expectation in
+[`evals/api-mcp-selection-evidence.json`](evals/api-mcp-selection-evidence.json).
+Do not drive a browser for these cases. If the API is proven incapable of
+producing this evidence, retain the exact failure in that artifact's
+`pendingReason` rather than substituting another product surface.
 
 ## Secure MCP Tunnel for the private local server
 
@@ -256,10 +308,11 @@ Record those observations in
 [`evals/installed-chatgpt-evidence.json`](evals/installed-chatgpt-evidence.json)
 only after an authorized installation and conversation run. Its initial
 `pending` state is intentional when no authorized ChatGPT account/workspace is
-available; automated local MCP and static Skill-forward tests must not be
-promoted to installed evidence.
+available; automated local MCP tests, static Skill-forward tests, and Responses
+API tool-selection observations must not be promoted to installed evidence.
 
 For an operator-to-repository handoff, provide the redacted case-level prompt,
-selected tool and arguments/result summary, confirmation behavior, observed
-Skill activation, and observation time. A ChatGPT conversation UUID by itself
-is not readable by repository automation and cannot establish those facts.
+observed Skill activation, visible tool calls and results, the final visible
+response, and the observation time. A ChatGPT conversation UUID by itself is
+not readable by repository automation and cannot establish those facts, and a
+shared ChatGPT page redacts app tool names, arguments, and results.

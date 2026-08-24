@@ -120,9 +120,9 @@ function mcpManifestSchemaFor(matrix: CapabilityMatrix) {
     scopeAuditDecisions: Schema.Array(Schema.Any),
   });
 }
-const ConnectionOperatorStepSchema = Schema.Struct({
-  step: Schema.Literal("mcp-connection"),
-  evidenceKind: Schema.Literal("connectionAndToolSelection"),
+const ApiMcpSelectionOperatorStepSchema = Schema.Struct({
+  step: Schema.Literal("api-mcp-selection"),
+  evidenceKind: Schema.Literal("apiMcpToolSelection"),
   instructions: Schema.String,
   requiredCases: Schema.NonEmptyArray(Schema.String),
 });
@@ -138,9 +138,9 @@ const CompleteWorkflowOperatorStepSchema = Schema.Struct({
   instructions: Schema.String,
   requiredCases: Schema.NonEmptyArray(Schema.String),
 });
-const PendingConnectionCaseResultSchema = Schema.Struct({
+const PendingApiMcpSelectionCaseResultSchema = Schema.Struct({
   caseId: Schema.String,
-  evidenceKind: Schema.Literal("connectionAndToolSelection"),
+  evidenceKind: Schema.Literal("apiMcpToolSelection"),
   status: Schema.Literal("pending"),
 });
 const PendingSkillActivationCaseResultSchema = Schema.Struct({
@@ -153,8 +153,7 @@ const PendingWorkflowCaseResultSchema = Schema.Struct({
   evidenceKind: Schema.Literal("installedCompleteWorkflow"),
   status: Schema.Literal("pending"),
 });
-const PendingCaseResultSchema = Schema.Union(
-  PendingConnectionCaseResultSchema,
+const PendingInstalledCaseResultSchema = Schema.Union(
   PendingSkillActivationCaseResultSchema,
   PendingWorkflowCaseResultSchema,
 );
@@ -165,7 +164,7 @@ const ConfirmationBehaviorSchema = Schema.Union(
     outcome: Schema.Literal("accepted", "declined"),
   }),
 );
-const ConnectionObservationSchema = Schema.Union(
+const ApiToolSelectionObservationSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("toolSelected"),
     selectedTool: Schema.String,
@@ -189,16 +188,35 @@ const ConnectionObservationSchema = Schema.Union(
     confirmation: ConfirmationBehaviorSchema,
   }),
 );
-type ConnectionObservation = typeof ConnectionObservationSchema.Type;
-const ObservedConnectionCaseResultSchema = Schema.Struct({
+type ApiToolSelectionObservation =
+  typeof ApiToolSelectionObservationSchema.Type;
+const ServerAdvertisementSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("advertised"),
+    serverLabel: Schema.String,
+    toolNames: Schema.NonEmptyArray(Schema.String),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("notAdvertised"),
+    reason: Schema.String,
+  }),
+);
+const ObservedApiMcpSelectionCaseResultSchema = Schema.Struct({
   caseId: Schema.String,
-  evidenceKind: Schema.Literal("connectionAndToolSelection"),
+  evidenceKind: Schema.Literal("apiMcpToolSelection"),
   status: Schema.Literal("observed"),
-  observation: ConnectionObservationSchema,
+  model: Schema.String,
+  responseId: Schema.String,
+  serverAdvertisement: ServerAdvertisementSchema,
+  observation: ApiToolSelectionObservationSchema,
   promptRef: Schema.String,
   observedAt: Schema.String,
   resultSummary: Schema.String,
 });
+const ApiMcpSelectionCaseResultSchema = Schema.Union(
+  PendingApiMcpSelectionCaseResultSchema,
+  ObservedApiMcpSelectionCaseResultSchema,
+);
 const ObservedSkillCaseResultSchema = Schema.Struct({
   caseId: Schema.String,
   evidenceKind: Schema.Literal(
@@ -212,13 +230,9 @@ const ObservedSkillCaseResultSchema = Schema.Struct({
   resultSummary: Schema.String,
   observedToolNames: Schema.Array(Schema.String),
 });
-const ObservedCaseResultSchema = Schema.Union(
-  ObservedConnectionCaseResultSchema,
-  ObservedSkillCaseResultSchema,
-);
 const InstalledCaseResultSchema = Schema.Union(
-  PendingCaseResultSchema,
-  ObservedCaseResultSchema,
+  PendingInstalledCaseResultSchema,
+  ObservedSkillCaseResultSchema,
 );
 const ObservedEnvironmentSchema = Schema.Struct({
   tag: Schema.Literal("observed"),
@@ -226,7 +240,7 @@ const ObservedEnvironmentSchema = Schema.Struct({
   workspacePolicy: Schema.String,
 });
 const InstalledEvidenceCommonSchema = {
-  schema: Schema.Literal("dnd.srd-oracle.installed-chatgpt-evidence.v2"),
+  schema: Schema.Literal("dnd.srd-oracle.installed-chatgpt-evidence.v3"),
   recordedAt: Schema.String,
   scope: Schema.String,
   promptOwner: Schema.Literal(
@@ -242,11 +256,16 @@ const InstalledEvidenceCommonSchema = {
     status: Schema.Literal("observed"),
     evidenceKind: Schema.Literal("mcpScenario"),
   }),
+  apiMcpSelectionEvidence: Schema.Struct({
+    artifactPath: Schema.Literal(
+      "plugins/dnd-srd-oracle/evals/api-mcp-selection-evidence.json",
+    ),
+    evidenceKind: Schema.Literal("apiMcpToolSelection"),
+  }),
   officialGuidance: Schema.Literal(
     "https://developers.openai.com/plugins/deploy/connect-chatgpt",
   ),
   operatorProtocol: Schema.Tuple(
-    ConnectionOperatorStepSchema,
     SkillActivationOperatorStepSchema,
     CompleteWorkflowOperatorStepSchema,
   ),
@@ -256,7 +275,7 @@ const PendingInstalledEvidenceSchema = Schema.Struct({
   status: Schema.Literal("pending"),
   environment: Schema.Struct({ tag: Schema.Literal("notObserved") }),
   pendingReason: Schema.String,
-  caseResults: Schema.Array(PendingCaseResultSchema),
+  caseResults: Schema.Array(PendingInstalledCaseResultSchema),
 });
 const PartiallyObservedInstalledEvidenceSchema = Schema.Struct({
   ...InstalledEvidenceCommonSchema,
@@ -269,7 +288,7 @@ const ObservedInstalledEvidenceSchema = Schema.Struct({
   ...InstalledEvidenceCommonSchema,
   status: Schema.Literal("observed"),
   environment: ObservedEnvironmentSchema,
-  caseResults: Schema.NonEmptyArray(ObservedCaseResultSchema),
+  caseResults: Schema.NonEmptyArray(ObservedSkillCaseResultSchema),
 });
 const InstalledEvidenceSchema = Schema.Union(
   PendingInstalledEvidenceSchema,
@@ -277,31 +296,94 @@ const InstalledEvidenceSchema = Schema.Union(
   ObservedInstalledEvidenceSchema,
 ).pipe(
   Schema.filter(installedEvidenceHasCompleteCoverage, {
-    description:
-      "installed evidence with every connection, activation, and workflow case",
+    description: "installed evidence with every activation and workflow case",
   }),
-  Schema.filter(installedEvidenceStatusMatchesCaseResults, {
+  Schema.filter(evidenceStatusMatchesCaseResults, {
     description: "installed evidence status consistent with its case results",
   }),
 );
 type InstalledEvidence = typeof InstalledEvidenceSchema.Type;
 
+const ApiMcpSelectionEvidenceCommonSchema = {
+  schema: Schema.Literal("dnd.srd-oracle.api-mcp-selection-evidence.v1"),
+  recordedAt: Schema.String,
+  scope: Schema.String,
+  promptOwner: Schema.Literal(
+    "plugins/dnd-srd-oracle/evals/evaluation-inventory.json",
+  ),
+  officialGuidance: Schema.Literal(
+    "https://developers.openai.com/plugins/deploy/connect-chatgpt",
+  ),
+  operatorProtocol: Schema.Tuple(ApiMcpSelectionOperatorStepSchema),
+};
+const ObservedApiEnvironmentSchema = Schema.Struct({
+  tag: Schema.Literal("observed"),
+  apiEndpoint: Schema.String,
+  transport: Schema.Union(
+    Schema.Struct({
+      tag: Schema.Literal("publicHttps"),
+      serverUrl: Schema.String,
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("secureMcpTunnel"),
+      tunnelId: Schema.String,
+    }),
+  ),
+});
+const PendingApiMcpSelectionEvidenceSchema = Schema.Struct({
+  ...ApiMcpSelectionEvidenceCommonSchema,
+  status: Schema.Literal("pending"),
+  environment: Schema.Struct({ tag: Schema.Literal("notObserved") }),
+  pendingReason: Schema.String,
+  caseResults: Schema.Array(PendingApiMcpSelectionCaseResultSchema),
+});
+const PartiallyObservedApiMcpSelectionEvidenceSchema = Schema.Struct({
+  ...ApiMcpSelectionEvidenceCommonSchema,
+  status: Schema.Literal("partiallyObserved"),
+  environment: ObservedApiEnvironmentSchema,
+  pendingReason: Schema.String,
+  caseResults: Schema.NonEmptyArray(ApiMcpSelectionCaseResultSchema),
+});
+const ObservedApiMcpSelectionEvidenceSchema = Schema.Struct({
+  ...ApiMcpSelectionEvidenceCommonSchema,
+  status: Schema.Literal("observed"),
+  environment: ObservedApiEnvironmentSchema,
+  caseResults: Schema.NonEmptyArray(ObservedApiMcpSelectionCaseResultSchema),
+});
+const ApiMcpSelectionEvidenceSchema = Schema.Union(
+  PendingApiMcpSelectionEvidenceSchema,
+  PartiallyObservedApiMcpSelectionEvidenceSchema,
+  ObservedApiMcpSelectionEvidenceSchema,
+).pipe(
+  Schema.filter(apiMcpSelectionEvidenceHasCompleteCoverage, {
+    description: "API evidence with every MCP tool-selection case",
+  }),
+  Schema.filter(evidenceStatusMatchesCaseResults, {
+    description: "API evidence status consistent with its case results",
+  }),
+);
+type ApiMcpSelectionEvidence = typeof ApiMcpSelectionEvidenceSchema.Type;
+
 const evaluationInventory = decodeEvaluationInventory(
   resolve(evalRoot, "evaluation-inventory.json"),
 );
 
-type InstalledEvidenceKind =
-  | "connectionAndToolSelection"
-  | "installedSkillActivation"
-  | "installedCompleteWorkflow";
+const API_EVIDENCE_KIND_VALUES = ["apiMcpToolSelection"] as const;
+const INSTALLED_EVIDENCE_KIND_VALUES = [
+  "installedSkillActivation",
+  "installedCompleteWorkflow",
+] as const;
+type EvaluationEvidenceKind =
+  | (typeof API_EVIDENCE_KIND_VALUES)[number]
+  | (typeof INSTALLED_EVIDENCE_KIND_VALUES)[number];
 
-function expectedInstalledCaseIds(
+function expectedCaseIds(
   inventory: EvaluationInventory,
-  evidenceKind: InstalledEvidenceKind,
+  evidenceKind: EvaluationEvidenceKind,
 ): ReadonlySet<string> {
   return Match.value(evidenceKind).pipe(
     Match.when(
-      "connectionAndToolSelection",
+      "apiMcpToolSelection",
       () => new Set(inventory.mcpToolSelection.map(({ id }) => id)),
     ),
     Match.when(
@@ -327,11 +409,11 @@ function caseSetEquals(
   );
 }
 
-type InstalledCoverageInput = {
+type EvidenceCoverageInput = {
   readonly operatorProtocol: ReadonlyArray<{
     readonly step: string;
     readonly requiredCases: ReadonlyArray<string>;
-    readonly evidenceKind: InstalledEvidenceKind;
+    readonly evidenceKind: EvaluationEvidenceKind;
   }>;
   readonly caseResults: ReadonlyArray<{
     readonly caseId: string;
@@ -340,27 +422,43 @@ type InstalledCoverageInput = {
   }>;
 };
 
-type InstalledEvidenceStatusInput = {
+type EvidenceStatusInput = {
   readonly status: "pending" | "partiallyObserved" | "observed";
   readonly caseResults: ReadonlyArray<{
     readonly status: "pending" | "observed";
   }>;
 };
 
-type InstalledCoverageResult =
+type EvidenceCoverageResult =
   | { readonly tag: "valid" }
   | { readonly tag: "invalid"; readonly reason: string };
 
 function installedEvidenceHasCompleteCoverage(
-  evidence: InstalledCoverageInput,
+  evidence: EvidenceCoverageInput,
 ): boolean {
   return (
-    validateInstalledCaseCoverage(evidence, evaluationInventory).tag === "valid"
+    validateEvidenceCaseCoverage(
+      evidence,
+      evaluationInventory,
+      INSTALLED_EVIDENCE_KIND_VALUES,
+    ).tag === "valid"
   );
 }
 
-function installedEvidenceStatusMatchesCaseResults(
-  evidence: InstalledEvidenceStatusInput,
+function apiMcpSelectionEvidenceHasCompleteCoverage(
+  evidence: EvidenceCoverageInput,
+): boolean {
+  return (
+    validateEvidenceCaseCoverage(
+      evidence,
+      evaluationInventory,
+      API_EVIDENCE_KIND_VALUES,
+    ).tag === "valid"
+  );
+}
+
+function evidenceStatusMatchesCaseResults(
+  evidence: EvidenceStatusInput,
 ): boolean {
   const pendingCount = evidence.caseResults.filter(
     ({ status }) => status === "pending",
@@ -377,10 +475,11 @@ function installedEvidenceStatusMatchesCaseResults(
   );
 }
 
-function validateInstalledCaseCoverage(
-  evidence: InstalledCoverageInput,
+function validateEvidenceCaseCoverage(
+  evidence: EvidenceCoverageInput,
   inventory: EvaluationInventory,
-): InstalledCoverageResult {
+  ownedEvidenceKinds: ReadonlyArray<EvaluationEvidenceKind>,
+): EvidenceCoverageResult {
   const requiredCaseKeys = evidence.operatorProtocol.flatMap(
     ({ requiredCases, evidenceKind }) =>
       requiredCases.map((caseId) => `${caseId}:${evidenceKind}`),
@@ -395,10 +494,16 @@ function validateInstalledCaseCoverage(
     };
   }
   for (const step of evidence.operatorProtocol) {
+    if (!ownedEvidenceKinds.includes(step.evidenceKind)) {
+      return {
+        tag: "invalid",
+        reason: `${step.step} records an evidence kind owned by another artifact`,
+      };
+    }
     if (
       !caseSetEquals(
         step.requiredCases,
-        expectedInstalledCaseIds(inventory, step.evidenceKind),
+        expectedCaseIds(inventory, step.evidenceKind),
       )
     ) {
       return {
@@ -407,19 +512,12 @@ function validateInstalledCaseCoverage(
       };
     }
   }
-  for (const evidenceKind of [
-    "connectionAndToolSelection",
-    "installedSkillActivation",
-    "installedCompleteWorkflow",
-  ] as const) {
+  for (const evidenceKind of ownedEvidenceKinds) {
     const actualCaseIds = evidence.caseResults
       .filter((result) => result.evidenceKind === evidenceKind)
       .map(({ caseId }) => caseId);
     if (
-      !caseSetEquals(
-        actualCaseIds,
-        expectedInstalledCaseIds(inventory, evidenceKind),
-      )
+      !caseSetEquals(actualCaseIds, expectedCaseIds(inventory, evidenceKind))
     ) {
       return {
         tag: "invalid",
@@ -429,9 +527,9 @@ function validateInstalledCaseCoverage(
   }
   for (const result of evidence.caseResults) {
     if (
-      result.evidenceKind === "connectionAndToolSelection" &&
+      result.evidenceKind === "apiMcpToolSelection" &&
       result.observation !== undefined &&
-      !hasInventoryCompatibleConnectionObservation(
+      !hasInventoryCompatibleToolSelection(
         inventory,
         result.caseId,
         result.observation,
@@ -446,7 +544,7 @@ function validateInstalledCaseCoverage(
   return { tag: "valid" };
 }
 
-function hasInventoryCompatibleConnectionObservation(
+function hasInventoryCompatibleToolSelection(
   inventory: EvaluationInventory,
   caseId: string,
   observation: unknown,
@@ -467,10 +565,10 @@ function hasInventoryCompatibleConnectionObservation(
   );
 }
 
-function observedConnectionObservation(
+function observedToolSelectionObservation(
   caseId: string,
   index: number,
-): ConnectionObservation {
+): ApiToolSelectionObservation {
   const inventoryCase = evaluationInventory.mcpToolSelection.find(
     ({ id }) => id === caseId,
   );
@@ -691,6 +789,26 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
       ),
     );
     expect(installedEvidence.status).toBe("partiallyObserved");
+    expect(
+      installedEvidence.operatorProtocol.map((step) => step.evidenceKind),
+    ).toEqual(matrix.installedChatGptEvidence.evidenceKinds);
+    expect(
+      existsSync(
+        resolve(repoRoot, matrix.apiMcpSelectionEvidence.artifactPath),
+      ),
+    ).toBe(true);
+    const apiEvidence = decodeApiMcpSelectionEvidence(
+      JSON.parse(
+        readFileSync(
+          resolve(repoRoot, matrix.apiMcpSelectionEvidence.artifactPath),
+          "utf8",
+        ),
+      ),
+    );
+    expect(apiEvidence.status).toBe("pending");
+    expect(
+      apiEvidence.operatorProtocol.map((step) => step.evidenceKind),
+    ).toEqual(matrix.apiMcpSelectionEvidence.evidenceKinds);
     const journeySource = readFileSync(
       resolve(repoRoot, matrix.representativeHeadlessJourney.testPath),
       "utf8",
@@ -853,7 +971,7 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
     ]);
     expect(
       evidence.caseResults.filter(({ status }) => status === "pending"),
-    ).toHaveLength(9);
+    ).toHaveLength(5);
     expect(
       new Set(
         evidence.caseResults.map(
@@ -864,14 +982,163 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
     const inventory: EvaluationInventory = decodeEvaluationInventory(
       resolve(evalRoot, "evaluation-inventory.json"),
     );
-    expect(validateInstalledCaseCoverage(evidence, inventory)).toEqual({
-      tag: "valid",
-    });
+    expect(
+      validateEvidenceCaseCoverage(
+        evidence,
+        inventory,
+        INSTALLED_EVIDENCE_KIND_VALUES,
+      ),
+    ).toEqual({ tag: "valid" });
     expect(evidence.operatorProtocol.map(({ step }) => step)).toEqual([
-      "mcp-connection",
       "complete-plugin",
       "newcomer-journey",
     ]);
+  });
+
+  test("keeps API MCP-selection evidence in its own pending artifact", () => {
+    const evidence = decodeApiMcpSelectionEvidence(
+      JSON.parse(
+        readFileSync(
+          resolve(evalRoot, "api-mcp-selection-evidence.json"),
+          "utf8",
+        ),
+      ),
+    );
+    expect(evidence.status).toBe("pending");
+    expect(evidence.environment.tag).toBe("notObserved");
+    expect(evidence.operatorProtocol.map(({ step }) => step)).toEqual([
+      "api-mcp-selection",
+    ]);
+    const inventory: EvaluationInventory = decodeEvaluationInventory(
+      resolve(evalRoot, "evaluation-inventory.json"),
+    );
+    expect(
+      validateEvidenceCaseCoverage(
+        evidence,
+        inventory,
+        API_EVIDENCE_KIND_VALUES,
+      ),
+    ).toEqual({ tag: "valid" });
+    expect(
+      evidence.caseResults.every(
+        ({ evidenceKind }) => evidenceKind === "apiMcpToolSelection",
+      ),
+    ).toBe(true);
+  });
+
+  test("refuses API MCP-selection cases inside the installed ChatGPT artifact", () => {
+    const installed = JSON.parse(
+      readFileSync(
+        resolve(evalRoot, "installed-chatgpt-evidence.json"),
+        "utf8",
+      ),
+    );
+    const apiEvidence = JSON.parse(
+      readFileSync(
+        resolve(evalRoot, "api-mcp-selection-evidence.json"),
+        "utf8",
+      ),
+    );
+    const merged = {
+      ...installed,
+      operatorProtocol: [
+        ...apiEvidence.operatorProtocol,
+        ...installed.operatorProtocol,
+      ],
+      caseResults: [...apiEvidence.caseResults, ...installed.caseResults],
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(InstalledEvidenceSchema, {
+          onExcessProperty: "error",
+        })(merged),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(ApiMcpSelectionEvidenceSchema, {
+          onExcessProperty: "error",
+        })(installed),
+      ),
+    ).toBe(true);
+  });
+
+  test("accepts typed API tool-selection observations only in observed state", () => {
+    const pending = decodeApiMcpSelectionEvidence(
+      JSON.parse(
+        readFileSync(
+          resolve(evalRoot, "api-mcp-selection-evidence.json"),
+          "utf8",
+        ),
+      ),
+    );
+    if (pending.status !== "pending")
+      throw new Error("Expected pending API fixture.");
+    const { pendingReason: _pendingReason, ...pendingWithoutReason } = pending;
+    void _pendingReason;
+    const observed = {
+      ...pendingWithoutReason,
+      status: "observed",
+      environment: {
+        tag: "observed",
+        apiEndpoint: "https://api.openai.com/v1/responses",
+        transport: {
+          tag: "secureMcpTunnel",
+          tunnelId: "tunnel_synthetic_observation",
+        },
+      },
+      caseResults: pending.caseResults.map(
+        ({ caseId, evidenceKind }, index) => ({
+          caseId,
+          evidenceKind,
+          status: "observed" as const,
+          model: "synthetic-observation-model",
+          responseId: `resp_synthetic_${index}`,
+          serverAdvertisement: {
+            tag: "advertised" as const,
+            serverLabel: "dnd-srd-oracle",
+            toolNames: ["list_catalog_units", "inspect_catalog_unit"],
+          },
+          observation: observedToolSelectionObservation(caseId, index),
+          promptRef: caseId,
+          observedAt: `2026-08-21T00:${String(index).padStart(2, "0")}:00Z`,
+          resultSummary:
+            index === 1
+              ? "The observed case failed its expected behavior."
+              : "The observed case produced the expected behavior.",
+        }),
+      ),
+    };
+    expect(decodeApiMcpSelectionEvidence(observed).status).toBe("observed");
+    const contradictory = Schema.decodeUnknownEither(
+      ApiMcpSelectionEvidenceSchema,
+      { onExcessProperty: "error" },
+    )({ ...observed, environment: { tag: "notObserved" } });
+    expect(Either.isLeft(contradictory)).toBe(true);
+    const outsideInventory = Schema.decodeUnknownEither(
+      ApiMcpSelectionEvidenceSchema,
+      { onExcessProperty: "error" },
+    )({
+      ...observed,
+      caseResults: observed.caseResults.map((result) =>
+        result.caseId === "mcp-follow-up-detail"
+          ? {
+              ...result,
+              observation: {
+                tag: "toolSelected",
+                selectedTool: "list_catalog_units",
+                arguments: {},
+                outcome: {
+                  tag: "success",
+                  result: { tag: "ok" },
+                  confirmation: { tag: "notRequested" },
+                },
+              },
+            }
+          : result,
+      ),
+    });
+    expect(Either.isLeft(outsideInventory)).toBe(true);
   });
 
   test("accepts typed passed and failed installed observations only in observed state", () => {
@@ -895,33 +1162,20 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
         accountScope: "developer-mode-account",
         workspacePolicy: "developer-mode-enabled",
       },
-      caseResults: partial.caseResults.map(({ caseId, evidenceKind }, index) =>
-        evidenceKind === "connectionAndToolSelection"
-          ? {
-              caseId,
-              evidenceKind,
-              status: "observed" as const,
-              observation: observedConnectionObservation(caseId, index),
-              promptRef: caseId,
-              observedAt: `2026-08-21T00:${String(index).padStart(2, "0")}:00Z`,
-              resultSummary:
-                index === 1
-                  ? "The observed case failed its expected behavior."
-                  : "The observed case produced the expected behavior.",
-            }
-          : {
-              caseId,
-              evidenceKind,
-              status: "observed" as const,
-              result: index === 1 ? ("failed" as const) : ("passed" as const),
-              promptRef: caseId,
-              observedAt: `2026-08-21T00:${String(index).padStart(2, "0")}:00Z`,
-              resultSummary:
-                index === 1
-                  ? "The observed case failed its expected behavior."
-                  : "The observed case produced the expected behavior.",
-              observedToolNames: [],
-            },
+      caseResults: partial.caseResults.map(
+        ({ caseId, evidenceKind }, index) => ({
+          caseId,
+          evidenceKind,
+          status: "observed" as const,
+          result: index === 1 ? ("failed" as const) : ("passed" as const),
+          promptRef: caseId,
+          observedAt: `2026-08-21T00:${String(index).padStart(2, "0")}:00Z`,
+          resultSummary:
+            index === 1
+              ? "The observed case failed its expected behavior."
+              : "The observed case produced the expected behavior.",
+          observedToolNames: [],
+        }),
       ),
     };
     const decoded = decodeInstalledEvidence(observed);
@@ -937,7 +1191,7 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
 
   test("couples observed MCP selections to inventory expectations", () => {
     expect(
-      hasInventoryCompatibleConnectionObservation(
+      hasInventoryCompatibleToolSelection(
         evaluationInventory,
         "mcp-direct-catalog",
         {
@@ -947,7 +1201,7 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
       ),
     ).toBe(true);
     expect(
-      hasInventoryCompatibleConnectionObservation(
+      hasInventoryCompatibleToolSelection(
         evaluationInventory,
         "mcp-follow-up-detail",
         {
@@ -957,7 +1211,7 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
       ),
     ).toBe(false);
     expect(
-      hasInventoryCompatibleConnectionObservation(
+      hasInventoryCompatibleToolSelection(
         evaluationInventory,
         "mcp-follow-up-detail",
         {
@@ -967,14 +1221,14 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
       ),
     ).toBe(true);
     expect(
-      hasInventoryCompatibleConnectionObservation(
+      hasInventoryCompatibleToolSelection(
         evaluationInventory,
         "mcp-direct-catalog",
         { tag: "noToolSelected" },
       ),
     ).toBe(false);
     expect(
-      hasInventoryCompatibleConnectionObservation(
+      hasInventoryCompatibleToolSelection(
         evaluationInventory,
         "mcp-unsupported-history",
         { tag: "noToolSelected" },
@@ -985,6 +1239,14 @@ describe("5.5e SRD Oracle evaluation artifacts", () => {
 
 function decodeInstalledEvidence(value: unknown): InstalledEvidence {
   return Schema.decodeUnknownSync(InstalledEvidenceSchema, {
+    onExcessProperty: "error",
+  })(value);
+}
+
+function decodeApiMcpSelectionEvidence(
+  value: unknown,
+): ApiMcpSelectionEvidence {
+  return Schema.decodeUnknownSync(ApiMcpSelectionEvidenceSchema, {
     onExcessProperty: "error",
   })(value);
 }

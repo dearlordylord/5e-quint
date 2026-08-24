@@ -100,11 +100,20 @@ export const CapabilityMatrixSchema = Schema.Struct({
     ),
     coverage: Schema.Literal("representativeCrossLeafOnly"),
   }),
+  apiMcpSelectionEvidence: Schema.Struct({
+    artifactPath: Schema.Literal(
+      "plugins/dnd-srd-oracle/evals/api-mcp-selection-evidence.json",
+    ),
+    evidenceKinds: Schema.Tuple(Schema.Literal("apiMcpToolSelection")),
+  }),
   installedChatGptEvidence: Schema.Struct({
     artifactPath: Schema.Literal(
       "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
     ),
-    evidenceKind: Schema.Literal("installedSkillActivation"),
+    evidenceKinds: Schema.Tuple(
+      Schema.Literal("installedSkillActivation"),
+      Schema.Literal("installedCompleteWorkflow"),
+    ),
   }),
   rows: Schema.NonEmptyArray(CapabilityRowSchema),
 });

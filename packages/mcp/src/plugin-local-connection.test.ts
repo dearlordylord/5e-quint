@@ -97,10 +97,21 @@ describe("local 5.5e SRD Oracle plugin evaluation seams", () => {
     );
     assertFollowUpsReferenceEarlierCases(inventory.mcpToolSelection);
     assertFollowUpsReferenceEarlierCases(inventory.skillActivation);
+    expect(inventory.evidenceOwners.apiMcpSelection).toMatchObject({
+      kind: "requiredExternalEvidence",
+      issue: 328,
+      artifactPath:
+        "plugins/dnd-srd-oracle/evals/api-mcp-selection-evidence.json",
+    });
     expect(inventory.evidenceOwners.installedChatGpt).toMatchObject({
       kind: "requiredExternalEvidence",
       issue: 328,
+      artifactPath:
+        "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
     });
+    expect(inventory.evidenceOwners.apiMcpSelection.artifactPath).not.toBe(
+      inventory.evidenceOwners.installedChatGpt.artifactPath,
+    );
 
     const forwardTest = decodeJsonFile(
       ForwardTestResultsSchema,
