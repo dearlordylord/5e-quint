@@ -10,7 +10,7 @@
   "notes": [
     "This gate is RAW-backed for level <4 choice targets and non-strict by default.",
     "It expands category grants that the older level reports could miss.",
-    "Run with --strict only after the Ralph closure lanes land."
+    "Run with --strict only after the dedicated closure issues land."
   ],
   "selectableSources": {
     "fightingStyleSelectableIds": [

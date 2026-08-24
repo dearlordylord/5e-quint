@@ -164,7 +164,7 @@ Do not write to the memory system unless explicitly asked.
 
 - Quint proofs, focused QNT, or battle MBT:
   [`docs/agents/QNT-MBT.md`](docs/agents/QNT-MBT.md)
-- Ralph harness work: [`docs/tooling/ralph/README.md`](docs/tooling/ralph/README.md)
+- Retired Ralph harness history: [`docs/tooling/ralph/README.md`](docs/tooling/ralph/README.md)
 - GitHub Issues and Wayfinder maps:
   [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md)
 - Domain-doc consumption: [`docs/agents/domain.md`](docs/agents/domain.md)

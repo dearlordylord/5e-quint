@@ -1,43 +1,28 @@
-# Dalph relocation
+# Retired Ralph harness
 
-Ralph's graph-native orchestration architecture, accepted specification,
-Wayfinder decisions, prototypes, and implementation tickets moved to the
-[Dalph repository](https://github.com/dearlordylord/dalph).
+The repository-local Ralph delivery harness was retired by
+[issue #334](https://github.com/dearlordylord/5e-quint/issues/334). No tracked
+entrypoint, public package script, current delivery workflow, or active
+canonical plan depends on it. Git history is the archive for its runner,
+runbook, tests, lane entrypoint, and level 1–12 task index.
+Existing ignored `.ralph/` runtime artifacts and `.ralphrc` files are local
+history only; no repository command reads or maintains them.
 
-## Historical-harness boundary
+Ralph's graph-native successor is owned by the separate
+[Dalph repository](https://github.com/dearlordylord/dalph). This repository does
+not contain Dalph architecture, a compatibility layer, a fallback scheduler,
+or a replacement orchestrator.
 
-The local [`scripts/ralph-run.sh`](../../../scripts/ralph-run.sh) remains a
-repository-specific D&D delivery harness. It is not Dalph architecture, a
-compatibility baseline, a migration source, a fallback scheduler, or a runtime
-substrate. Its checked-in plans and runbook govern only repository-local D&D
-deliveries and carry no authority beyond that role.
+Useful product evidence was not retired with the harness. Generated SRD mining
+and coverage evidence remains under
+[`plans/unit-profile-coverage/`](../../../plans/unit-profile-coverage/) and
+[`plans/rules-kernel-coverage/`](../../../plans/rules-kernel-coverage/). Parked,
+non-runnable QNT research remains in
+[`plans/QNT_GENERATOR_READINESS_BACKLOG.md`](../../../plans/QNT_GENERATOR_READINESS_BACKLOG.md)
+and must be reopened through a tracker-authoritative delivery issue.
 
-The tracked [`.ralph/`](../../../.ralph/README.md) directory exposes
-repository-local lane entrypoints for this harness. It deliberately contains
-no copied task graph or runtime state; each entrypoint selects a canonical plan
-from [`plans/`](../../../plans/) and delegates to `scripts/ralph-run.sh`.
-
-Canonical Dalph terminology and architecture now live in
-[`docs/CONTEXT.md`](https://github.com/dearlordylord/dalph/blob/master/docs/CONTEXT.md)
-and
-[`docs/ARCHITECTURE.md`](https://github.com/dearlordylord/dalph/blob/master/docs/ARCHITECTURE.md).
-The accepted implementation specification is
-[Dalph issue #24](https://github.com/dearlordylord/dalph/issues/24).
-
-## Repository Agent Rules
-
-Read this section only when launching or reviewing work performed by the local
-Ralph delivery harness.
-
-Ralph task worktrees use the task's declared Base SHA, which need not be
-`master`. Before task work begins, log the declared base, log `HEAD`, and run:
-
-```sh
-git merge-base --is-ancestor <Base SHA> HEAD
-```
-
-If the check fails, stop and report the branch-base mismatch. The harness owns
-branch repair; task agents must not rebase the branch against `master`.
-
-Do not turn an observation about the local historical harness into a Dalph
-orchestrator requirement without an explicit owning decision or specification.
+The shared broad/MBT resource wrappers remain repository infrastructure. New
+checkouts coordinate on `dnd-heavy-verification.lock`; the wrappers also acquire
+the three retired `ralph-*.lock` filenames so older linked worktrees in the same
+Git common directory cannot overlap current verification. Those files are
+cross-revision lock aliases only and carry no harness or Dalph semantics.

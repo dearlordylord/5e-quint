@@ -30,9 +30,7 @@ const SELECTED_IDENTITY_VOCABULARY_SCOPES = [
     include: /\.md$/,
   },
 ];
-const SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PREFIXES = [
-  "plans/ralph-artifacts/",
-];
+const SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PREFIXES = [];
 const FORBIDDEN_SELECTED_IDENTITY_VOCABULARY = [
   {
     pattern: /selected-identity-mbt/,

@@ -37,7 +37,7 @@ valid if their own requirements are met.
 
 ## Ownership Shape
 
-This should start as direct Codex work, not Ralph.
+This should start as one direct architecture slice.
 
 Reason: the first slice is an architecture split, not repeated mechanic
 grinding. We need to separate three facts before parallel work is safe:
@@ -47,10 +47,10 @@ grinding. We need to separate three facts before parallel work is safe:
   records available to a runtime boundary;
 - each selected form has Surface action shapes, some admitted and some not.
 
-After that split, Ralph can grind repeated vertical action-shape slices if the
-inventory shows enough independent work. Codex should act as workflow
-orchestrator only after the first slice proves the shape and the follow-on
-tasks are mechanically parallel.
+After that split, repeated vertical action-shape slices can use isolated
+worktrees if the inventory shows enough independent work. Parallel delivery is
+appropriate only after the first slice proves the shape and the follow-on tasks
+are mechanically independent.
 
 ## Phase 1 - Codex Direct Slice
 
@@ -103,7 +103,7 @@ Completion notes:
   they do not make the whole battle invalid and do not execute unsupported
   mechanics.
 
-## Phase 2 - Codex Inventory, Then Decide Ralph
+## Phase 2 - Inventory, Then Decide Parallelism
 
 Status: inventory helper complete in `fe06c6f12`; decision is to defer the
 vertical mechanic slices to Phase 3.
@@ -122,8 +122,8 @@ Tasks:
    - action sections outside admitted attacks.
 3. Use recommended forms only as sanity examples of categories, never as the
    category owner.
-4. Decide whether the remaining inventory is small enough for Codex direct
-   work or repetitive enough for Ralph lanes.
+4. Decide whether the remaining inventory is small enough for one direct change
+   or repetitive enough for parallel issue-owned worktrees.
 
 Acceptance:
 
@@ -168,11 +168,11 @@ Likely slices, after Phase 2 confirms scope:
 
 ## Recommended Execution Mode
 
-- Phase 1: Codex direct.
-- Phase 2: Codex direct, producing a decision.
-- Phase 3: Ralph only if Phase 2 yields multiple independent, same-shaped
-  tracer bullets. Otherwise Codex direct is cheaper and safer.
+- Phase 1: one direct change.
+- Phase 2: one direct inventory change, producing a decision.
+- Phase 3: parallel issue-owned worktrees only if Phase 2 yields multiple
+  independent, same-shaped tracer bullets. Otherwise keep one direct owner.
 
-Codex workflow-orchestrator mode becomes useful only after Phase 2, if we have
-at least two independent action-shape slices that can run in parallel without
-editing the same reducer/proof files.
+Parallel integration becomes useful only after Phase 2, if there are at least
+two independent action-shape slices that can run without editing the same
+reducer/proof files.

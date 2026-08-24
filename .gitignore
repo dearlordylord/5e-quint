@@ -16,9 +16,7 @@ node_modules
 .vinxi/
 .claude/*
 !.claude/review-rules.md
-.ralph/*
-!.ralph/README.md
-!.ralph/run-srd-level1-12.sh
+.ralph/
 .ralphrc
 .ralph_backup_*
 coverage/

@@ -1,12 +1,11 @@
 # QNT Generator Readiness Backlog
 
-This is the parked task queue for work removed from the active Ralph A/B lane
-plans when those lanes were drained on 2026-05-25. It is not an active Ralph
-plan: do not run `ralph-run.sh` against this file directly. When reopening this
-work, split a small coherent group into tracker-authoritative delivery issues
-under the then-current orchestrator, with reviewer-loop verification and
-current checker-owned inputs. Do not reuse the historical harness's plan-index
-or run-directory conventions.
+This is the parked task queue for work removed from the former A/B delivery
+plans when those lanes were drained on 2026-05-25. It is not an active plan.
+When reopening this work, split a small coherent group into
+tracker-authoritative delivery issues with reviewer-loop verification and
+current checker-owned inputs. Do not reuse the retired harness's plan-index or
+run-directory conventions.
 
 The drained A/B lane plans were merged, then deleted. Their remaining
 not-yet-runnable work is parked here so future lanes can reopen it deliberately.
@@ -20,7 +19,7 @@ cleanroom-specific `AGENTS.md` implementation guidance.
 
 ## Parked Metamagic Generator Tasks
 
-Former source lane: Ralph lane A, deleted after merge.
+Former source: delivery lane A, deleted after merge.
 
 | Original task                            | Title                                                    | Depends on   | Output                                                                                                                                                                                 |
 | ---------------------------------------- | -------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -36,7 +35,7 @@ Former source lane: Ralph lane A, deleted after merge.
 
 ## Parked Battle Runtime Readiness Tasks
 
-Former source lane: Ralph lane B, deleted after merge.
+Former source: delivery lane B, deleted after merge.
 
 | Original task                       | Title                                            | Input                                                                                                                                         | Output                                                                                                                       |
 | ----------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |

@@ -496,57 +496,15 @@ function validateRequiredStringArray(value, context) {
   return validateStringArray(value, context);
 }
 
-const ralphFollowUpTaskIdPattern =
-  /^(?:[ABC][0-9]+|BPK-B[0-9]+|PPW-T[0-9]+)-[A-Z0-9-]+$/;
-
 function validFollowUpTaskId(taskId) {
-  return (
-    /^RKBC-[A-Z0-9-]+$/.test(taskId) || ralphFollowUpTaskIdPattern.test(taskId)
-  );
+  return /^RKBC-[A-Z0-9-]+$/.test(taskId);
 }
 
-function readKnownRalphTaskIds(rootPath) {
-  const taskIds = new Set();
-  const taskHeadingPattern =
-    /^### Task [0-9]+ - ((?:[ABC][0-9]+|BPK-B[0-9]+|PPW-T[0-9]+)-[A-Z0-9-]+) - /gm;
-  const plansPath = path.join(rootPath, "plans");
-  const planNames = fs.existsSync(plansPath)
-    ? fs
-        .readdirSync(plansPath)
-        .filter((planName) => /^RALPH_LANE_.*\.md$/.test(planName))
-    : [];
-  let foundAnyPlan = false;
-  for (const planName of planNames) {
-    const planPath = path.join(rootPath, "plans", planName);
-    if (!fs.existsSync(planPath)) continue;
-    foundAnyPlan = true;
-    const text = fs.readFileSync(planPath, "utf8");
-    for (
-      let match = taskHeadingPattern.exec(text);
-      match !== null;
-      match = taskHeadingPattern.exec(text)
-    ) {
-      taskIds.add(match[1]);
-    }
-  }
-  return foundAnyPlan ? taskIds : undefined;
-}
-
-function validateFollowUpTaskIds(taskIds, context, knownRalphTaskIds) {
+function validateFollowUpTaskIds(taskIds, context) {
   const issues = [];
   for (const taskId of taskIds) {
     if (!validFollowUpTaskId(taskId)) {
       issues.push(`${context}.followUpTaskIds has invalid task id ${taskId}.`);
-      continue;
-    }
-    if (
-      knownRalphTaskIds !== undefined &&
-      ralphFollowUpTaskIdPattern.test(taskId) &&
-      !knownRalphTaskIds.has(taskId)
-    ) {
-      issues.push(
-        `${context}.followUpTaskIds references unknown Ralph task id ${taskId}.`,
-      );
     }
   }
   return issues;
@@ -1114,13 +1072,7 @@ function validateObligationShape(obligation) {
   return issues;
 }
 
-function validateProfileMapping(
-  mapping,
-  index,
-  obligationIds,
-  profilesById,
-  knownRalphTaskIds,
-) {
+function validateProfileMapping(mapping, index, obligationIds, profilesById) {
   const issues = [];
   const context = `profile-obligations row ${index + 1}`;
   if (!isRecord(mapping)) return [`${context} must be an object.`];
@@ -1212,13 +1164,7 @@ function validateProfileMapping(
       for (const duplicate of duplicateStrings(mapping.followUpTaskIds)) {
         issues.push(`${context}.followUpTaskIds repeats ${duplicate}.`);
       }
-      issues.push(
-        ...validateFollowUpTaskIds(
-          mapping.followUpTaskIds,
-          context,
-          knownRalphTaskIds,
-        ),
-      );
+      issues.push(...validateFollowUpTaskIds(mapping.followUpTaskIds, context));
     }
     if (typeof mapping.reason !== "string" || mapping.reason.length === 0) {
       issues.push(`${context}.reason must be a non-empty string.`);
@@ -1603,7 +1549,6 @@ function validateGeneratorReadiness(
   obligationsById,
   qntOwnerRolesByPath,
   semanticCoreRunBlocksByPath,
-  knownRalphTaskIds,
   generatorSubsetAuditObligationIds,
 ) {
   const issues = [];
@@ -1651,9 +1596,7 @@ function validateGeneratorReadiness(
     for (const duplicate of duplicateStrings(readiness.followUpTaskIds)) {
       issues.push(`${context}.followUpTaskIds repeats ${duplicate}.`);
     }
-    issues.push(
-      ...validateFollowUpTaskIds(followUpTaskIds, context, knownRalphTaskIds),
-    );
+    issues.push(...validateFollowUpTaskIds(followUpTaskIds, context));
   }
   for (const construct of generatorSubset) {
     if (!generatorSubsetConstructs.has(construct)) {
@@ -2903,7 +2846,6 @@ function buildKernelCoverage({
   const expectedBattleFrontier = extractBattleFrontierSource(rootPath);
   const scanned = scanClaimFiles(rootPath);
   const markerIndex = buildMarkerIndex(scanned.markers);
-  const knownRalphTaskIds = readKnownRalphTaskIds(rootPath);
   const issues = [];
   issues.push(...witnessKindCatalogIssues());
   issues.push(...generatorReadinessBlockerCatalogIssues());
@@ -2947,13 +2889,7 @@ function buildKernelCoverage({
   const mappedProfileIds = new Set();
   for (const [index, mapping] of profileObligations.entries()) {
     issues.push(
-      ...validateProfileMapping(
-        mapping,
-        index,
-        obligationIds,
-        profilesById,
-        knownRalphTaskIds,
-      ),
+      ...validateProfileMapping(mapping, index, obligationIds, profilesById),
     );
     if (isRecord(mapping) && typeof mapping.profileId === "string") {
       if (mappedProfileIds.has(mapping.profileId)) {
@@ -3095,7 +3031,6 @@ function buildKernelCoverage({
         obligationsById,
         qntOwnerRolesByPath,
         semanticCoreRunBlocksByPath,
-        knownRalphTaskIds,
         generatorSubsetAuditObligationIds,
       ),
     );

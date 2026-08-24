@@ -2684,7 +2684,7 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant"
       ],
       "nextAction": "Refresh spell Unit inventory metrics after the runtime-ready spell batch, then choose the next concrete frontier among installed unsupported spell evidence, missing Detect spell authoring, and remaining Spell Surface blockers; split any future task with multiple execution invariants before marking it runnable.",
-      "acceptance": "The next review records spell-runtime metrics and appends Ralph-sized follow-up work rather than a passive backlog list or omnibus runtime task."
+      "acceptance": "The next review records spell-runtime metrics and appends small coherent follow-up work rather than a passive backlog list or omnibus runtime task."
     },
     {
       "id": "SRDINV34",
@@ -2755,7 +2755,7 @@
         "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_sleep",
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_sleep"
       ],
-      "nextAction": "Design the point-origin target set, initial Wisdom save, next-turn repeat save, Incapacitated and Unconscious application, wake-up damage/help lifecycle, sleep-immunity and Exhaustion-immunity auto-success, and Concentration cleanup; split implementation if the save loop and condition lifecycle do not fit one Ralph task.",
+      "nextAction": "Design the point-origin target set, initial Wisdom save, next-turn repeat save, Incapacitated and Unconscious application, wake-up damage/help lifecycle, sleep-immunity and Exhaustion-immunity auto-success, and Concentration cleanup; split implementation if the save loop and condition lifecycle do not fit one delivery issue.",
       "acceptance": "Sleep is either split into implementable vertical slices with no support claim, or has promoted runtime evidence for its save loop and condition lifecycle together."
     },
     {
@@ -3309,7 +3309,7 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant"
       ],
       "nextAction": "Refresh spell Unit inventory metrics after SRDINV42-SRDINV47, inspect remaining Surface blockers and deferred partial-support findings, and append the next concrete batch by execution invariant.",
-      "acceptance": "The next review records refreshed metrics and appends Ralph-sized follow-up work rather than an omnibus spell backlog."
+      "acceptance": "The next review records refreshed metrics and appends small coherent follow-up work rather than an omnibus spell backlog."
     },
     {
       "id": "SRDINV49",
@@ -3337,7 +3337,7 @@
         "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command"
       ],
       "nextAction": "Design the failed-save next-turn command effect, per-option execution boundaries, turn-ending clauses, held-item drop fact, and caller-supplied route facts for Approach and Flee.",
-      "acceptance": "Command is either split into Ralph-sized executable option tasks or has a precise runtime support contract that keeps route/pathfinding ownership table-supplied."
+      "acceptance": "Command is either split into small executable option tasks or has a precise runtime support contract that keeps route/pathfinding ownership table-supplied."
     },
     {
       "id": "SRDINV51",
@@ -3615,7 +3615,7 @@
         "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant"
       ],
       "nextAction": "Refresh spell Unit metrics after SRDINV49-SRDINV54, inspect remaining owner-evidence-required and Surface-widening rows, and append the next concrete batch by execution invariant.",
-      "acceptance": "The review records refreshed metrics and appends Ralph-sized follow-up work rather than collapsing remaining spell pressure into one backlog."
+      "acceptance": "The review records refreshed metrics and appends small coherent follow-up work rather than collapsing remaining spell pressure into one backlog."
     }
   ],
   "rows": [

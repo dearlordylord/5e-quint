@@ -35,16 +35,6 @@ function runSelfTest() {
     '{"id":"spell.sample","profileKind":"spell-invocation"}\n',
   );
   writeFile(
-    path.join(root, "plans", "RALPH_LANE_SELF_TEST.md"),
-    [
-      "| 99 | A99-SAMPLE-FIXTURE-SPLIT - Split sample fixture | ready-for-research | none | Self-test follow-up. |",
-      "",
-      "### Task 99 - A99-SAMPLE-FIXTURE-SPLIT - Split sample fixture",
-      "",
-      "Status: `ready-for-research`",
-    ].join("\n") + "\n",
-  );
-  writeFile(
     path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
     [
       JSON.stringify({
@@ -536,7 +526,7 @@ function runSelfTest() {
     sampleProfileObligationsPath,
     JSON.stringify({
       profileId: "spell.sample",
-      followUpTaskIds: ["A99-SAMPLE-FIXTURE-SPLIT"],
+      followUpTaskIds: ["RKBC-SAMPLE-FIXTURE-SPLIT"],
       reason: "sample profile still needs a semantic obligation join",
     }) + "\n",
   );
@@ -544,7 +534,7 @@ function runSelfTest() {
   assert.deepEqual(profileGapResult.issues, []);
   assert.deepEqual(profileGapResult.matrix.profileObligations, [
     {
-      followUpTaskIds: ["A99-SAMPLE-FIXTURE-SPLIT"],
+      followUpTaskIds: ["RKBC-SAMPLE-FIXTURE-SPLIT"],
       profileId: "spell.sample",
       reason: "sample profile still needs a semantic obligation join",
     },
@@ -874,7 +864,7 @@ function runSelfTest() {
       proofOnly: [],
       generatorSubset: ["record"],
       blockedBy: ["fixture-world-coupled"],
-      followUpTaskIds: ["A99-SAMPLE-FIXTURE-SPLIT"],
+      followUpTaskIds: ["RKBC-SAMPLE-FIXTURE-SPLIT"],
     }) + "\n",
   );
   const fixtureBoundMissingRunBlockResult = buildKernelCoverage({ root });
@@ -914,12 +904,12 @@ function runSelfTest() {
       followUpTaskIds: ["A100-MISSING-FIXTURE-SPLIT"],
     }) + "\n",
   );
-  const fixtureBoundUnknownFollowUpResult = buildKernelCoverage({ root });
+  const fixtureBoundInvalidFollowUpResult = buildKernelCoverage({ root });
   assert.ok(
-    fixtureBoundUnknownFollowUpResult.issues.includes(
-      "generator-readiness row 1.followUpTaskIds references unknown Ralph task id A100-MISSING-FIXTURE-SPLIT.",
+    fixtureBoundInvalidFollowUpResult.issues.includes(
+      "generator-readiness row 1.followUpTaskIds has invalid task id A100-MISSING-FIXTURE-SPLIT.",
     ),
-    `Expected fixture-bound unknown follow-up issue, got ${JSON.stringify(fixtureBoundUnknownFollowUpResult.issues)}`,
+    `Expected fixture-bound invalid follow-up issue, got ${JSON.stringify(fixtureBoundInvalidFollowUpResult.issues)}`,
   );
   writeFile(
     sampleGeneratorReadinessPath,
@@ -930,7 +920,7 @@ function runSelfTest() {
       proofOnly: [],
       generatorSubset: ["record"],
       blockedBy: [runBlockBlocker],
-      followUpTaskIds: ["A99-SAMPLE-FIXTURE-SPLIT"],
+      followUpTaskIds: ["RKBC-SAMPLE-FIXTURE-SPLIT"],
     }) + "\n",
   );
   const fixtureBoundRunBlockResult = buildKernelCoverage({ root });
@@ -1128,7 +1118,7 @@ function runSelfTest() {
       proofOnly: [],
       generatorSubset: ["record"],
       blockedBy: ["run-block-coupledd"],
-      followUpTaskIds: ["A99-SAMPLE-FIXTURE-SPLIT"],
+      followUpTaskIds: ["RKBC-SAMPLE-FIXTURE-SPLIT"],
     }) + "\n",
   );
   const misspelledBlockerResult = buildKernelCoverage({ root });

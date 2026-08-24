@@ -97,8 +97,8 @@ BattleHole/BattleFill/BattleSubject protocol inventory. The checker parses
 `battle-subject-kind` row for every procedure-family fold over the
 schema-derived `BattleSubject` protocol kinds. Boundary/table-owned rows must
 point at a non-semantic rules-kernel
-obligation; semantic rows must point at a covered obligation or at the Ralph
-follow-up task that will add the missing QNT/parity ownership. A semantic row
+obligation; semantic rows must point at a covered obligation or at the
+rules-kernel follow-up task that will add the missing QNT/parity ownership. A semantic row
 may also point at a non-semantic boundary obligation when the same hole, fill,
 or subject carries caller/table facts, but that boundary coverage never
 substitutes for reducer-semantic ownership.
@@ -190,10 +190,9 @@ scope.
   generation-subset-clean. `fixture-bound` and `blocked` rows require at least
   one blocker; other statuses use an empty array for no known blockers. Omitted
   arrays are invalid.
-- `followUpTaskIds`: optional Ralph or rules-kernel follow-up task ids that own
+- `followUpTaskIds`: optional `RKBC-*` rules-kernel follow-up task ids that own
   blocker resolution. `fixture-bound` and `blocked` rows require at least one
-  follow-up task id so blocker rows cannot leave future work untracked. Ralph
-  task ids are checked against the active A/B lane plans in `plans/`.
+  follow-up task id so blocker rows cannot leave future work untracked.
 
 `generatorSubset` and `blockedBy` values are checked vocabularies documented in
 `scripts/rules-kernel-coverage-config.cjs`. Keep the token catalog there so

@@ -408,9 +408,9 @@ exists, whether current Surface can author it, whether authored Surface content
 exists, whether it is installed in the SRD Unit catalog, and what explicit
 disposition closes the row for planning.
 
-The generated report also emits `Recommended Ralph Batches`. These are mirrored
-in the active delivery as the `SRDINV*` queue when the SRD inventory frontier
-is active. This lane is not QMBT unless a later batch deliberately promotes
+The generated report also emits `Recommended Delivery Batches`. These become
+tracker-authoritative `SRDINV*` issues only when the SRD inventory frontier is
+active. This inventory is not QMBT unless a later issue deliberately promotes
 battle-runtime behavior.
 
 Installed SRD inventory rows distinguish catalog admission from operational

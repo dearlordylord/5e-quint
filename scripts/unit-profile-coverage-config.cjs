@@ -195,7 +195,6 @@ const completedRuntimeParityKinds = new Set([
 ]);
 const skippedClaimScanDirs = new Set([
   ".git",
-  ".ralph",
   ".turbo",
   ".worktrees",
   "coverage",

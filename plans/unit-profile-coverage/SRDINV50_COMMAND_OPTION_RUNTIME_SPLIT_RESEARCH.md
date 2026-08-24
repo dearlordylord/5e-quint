@@ -53,7 +53,7 @@ future implementation:
 
 ## Split Decision
 
-Command should not be promoted in one Ralph task. Its options have different
+Command should not be promoted in one delivery issue. Its options have different
 execution invariants and different ownership boundaries:
 
 - the cast/save/pending-effect shell is shared by all options;

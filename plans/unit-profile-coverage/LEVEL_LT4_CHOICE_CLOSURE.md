@@ -1,6 +1,6 @@
 # Level <4 Choice Closure Gate
 
-Status: generated, non-strict until the Ralph closure lanes land.
+Status: generated, non-strict until the dedicated closure issues land.
 
 ## Summary
 
@@ -15,35 +15,35 @@ None.
 
 ## Target Rows
 
-| Unit | Domain | Cataloged | Selectable | Claim | Closure | RAW anchor |
-| --- | --- | --- | --- | --- | --- | --- |
-| `feat_archery` | fighting-style-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:91-97 |
-| `defense` | fighting-style-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:99-103 |
-| `feat_great_weapon_fighting` | fighting-style-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:105-109 |
-| `feat_two_weapon_fighting` | fighting-style-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:111-115 |
-| `alert` | human-origin-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:23-31 |
-| `feat_magic_initiate_cleric` | human-origin-feat-target | yes | yes | unsupported-profile | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45 |
-| `feat_magic_initiate_druid` | human-origin-feat-target | yes | yes | unsupported-profile | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45 |
-| `feat_magic_initiate_wizard` | human-origin-feat-target | yes | yes | unsupported-profile | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45 |
-| `feat_savage_attacker` | human-origin-feat-target | yes | yes | supported-profile |  | .references/srd-5.2.1/Feats.md:47-51 |
-| `feat_skilled` | human-origin-feat-target | yes | yes | supported-profile | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:53-59 |
-| `species_dragonborn` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:99-127 |
-| `species_dwarf` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:129-145 |
-| `species_elf` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:147-175 |
-| `species_gnome` | srd-species-target | yes | yes | profile-subset-supported | selection-grant-container | .references/srd-5.2.1/Character-Origins.md:177-193 |
-| `species_goliath` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:194-213 |
-| `species_halfling` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:215-229 |
-| `species_human` | srd-species-target | yes | yes | unsupported-profile | selection-grant-container | .references/srd-5.2.1/Character-Origins.md:231-243 |
-| `species_orc` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:245-259 |
-| `species_tiefling` | srd-species-target | yes | yes | unsupported-profile |  | .references/srd-5.2.1/Character-Origins.md:261-274 |
+| Unit                         | Domain                     | Cataloged | Selectable | Claim                    | Closure                                   | RAW anchor                                         |
+| ---------------------------- | -------------------------- | --------- | ---------- | ------------------------ | ----------------------------------------- | -------------------------------------------------- |
+| `feat_archery`               | fighting-style-feat-target | yes       | yes        | supported-profile        |                                           | .references/srd-5.2.1/Feats.md:91-97               |
+| `defense`                    | fighting-style-feat-target | yes       | yes        | supported-profile        |                                           | .references/srd-5.2.1/Feats.md:99-103              |
+| `feat_great_weapon_fighting` | fighting-style-feat-target | yes       | yes        | supported-profile        |                                           | .references/srd-5.2.1/Feats.md:105-109             |
+| `feat_two_weapon_fighting`   | fighting-style-feat-target | yes       | yes        | supported-profile        |                                           | .references/srd-5.2.1/Feats.md:111-115             |
+| `alert`                      | human-origin-feat-target   | yes       | yes        | supported-profile        |                                           | .references/srd-5.2.1/Feats.md:23-31               |
+| `feat_magic_initiate_cleric` | human-origin-feat-target   | yes       | yes        | unsupported-profile      | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45               |
+| `feat_magic_initiate_druid`  | human-origin-feat-target   | yes       | yes        | unsupported-profile      | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45               |
+| `feat_magic_initiate_wizard` | human-origin-feat-target   | yes       | yes        | unsupported-profile      | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45               |
+| `feat_savage_attacker`       | human-origin-feat-target   | yes       | yes        | supported-profile        |                                           | .references/srd-5.2.1/Feats.md:47-51               |
+| `feat_skilled`               | human-origin-feat-target   | yes       | yes        | supported-profile        | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:53-59               |
+| `species_dragonborn`         | srd-species-target         | yes       | yes        | unsupported-profile      |                                           | .references/srd-5.2.1/Character-Origins.md:99-127  |
+| `species_dwarf`              | srd-species-target         | yes       | yes        | unsupported-profile      |                                           | .references/srd-5.2.1/Character-Origins.md:129-145 |
+| `species_elf`                | srd-species-target         | yes       | yes        | unsupported-profile      |                                           | .references/srd-5.2.1/Character-Origins.md:147-175 |
+| `species_gnome`              | srd-species-target         | yes       | yes        | profile-subset-supported | selection-grant-container                 | .references/srd-5.2.1/Character-Origins.md:177-193 |
+| `species_goliath`            | srd-species-target         | yes       | yes        | unsupported-profile      |                                           | .references/srd-5.2.1/Character-Origins.md:194-213 |
+| `species_halfling`           | srd-species-target         | yes       | yes        | unsupported-profile      |                                           | .references/srd-5.2.1/Character-Origins.md:215-229 |
+| `species_human`              | srd-species-target         | yes       | yes        | unsupported-profile      | selection-grant-container                 | .references/srd-5.2.1/Character-Origins.md:231-243 |
+| `species_orc`                | srd-species-target         | yes       | yes        | unsupported-profile      |                                           | .references/srd-5.2.1/Character-Origins.md:245-259 |
+| `species_tiefling`           | srd-species-target         | yes       | yes        | unsupported-profile      |                                           | .references/srd-5.2.1/Character-Origins.md:261-274 |
 
 ## Magic Initiate Spell Access Closure
 
-| Unit | Spell list | Character-creation retained fact | Selected cantrips owner | Selected level 1 spell owner | Spellcasting ability owner | Selected Spell Definition owner | Spell Invocation runtime owner |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `feat_magic_initiate_cleric` | cleric | character-creation-runtime: selected Origin feat Unit ref | future character-sheet spell-access owner: Magic Initiate selected cantrip choices | future character-sheet spell-access owner: Magic Initiate selected level-1 Spell Access choice | future character-sheet spell-access owner: Magic Initiate spellcasting ability choice | selected Spell Definition profiles: static execution/profile facts | spell invocation runtime boundary: runtime Spell Invocation |
-| `feat_magic_initiate_druid` | druid | character-creation-runtime: selected Origin feat Unit ref | future character-sheet spell-access owner: Magic Initiate selected cantrip choices | future character-sheet spell-access owner: Magic Initiate selected level-1 Spell Access choice | future character-sheet spell-access owner: Magic Initiate spellcasting ability choice | selected Spell Definition profiles: static execution/profile facts | spell invocation runtime boundary: runtime Spell Invocation |
-| `feat_magic_initiate_wizard` | wizard | character-creation-runtime: selected Origin feat Unit ref | future character-sheet spell-access owner: Magic Initiate selected cantrip choices | future character-sheet spell-access owner: Magic Initiate selected level-1 Spell Access choice | future character-sheet spell-access owner: Magic Initiate spellcasting ability choice | selected Spell Definition profiles: static execution/profile facts | spell invocation runtime boundary: runtime Spell Invocation |
+| Unit                         | Spell list | Character-creation retained fact                          | Selected cantrips owner                                                            | Selected level 1 spell owner                                                                   | Spellcasting ability owner                                                            | Selected Spell Definition owner                                    | Spell Invocation runtime owner                              |
+| ---------------------------- | ---------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------- |
+| `feat_magic_initiate_cleric` | cleric     | character-creation-runtime: selected Origin feat Unit ref | future character-sheet spell-access owner: Magic Initiate selected cantrip choices | future character-sheet spell-access owner: Magic Initiate selected level-1 Spell Access choice | future character-sheet spell-access owner: Magic Initiate spellcasting ability choice | selected Spell Definition profiles: static execution/profile facts | spell invocation runtime boundary: runtime Spell Invocation |
+| `feat_magic_initiate_druid`  | druid      | character-creation-runtime: selected Origin feat Unit ref | future character-sheet spell-access owner: Magic Initiate selected cantrip choices | future character-sheet spell-access owner: Magic Initiate selected level-1 Spell Access choice | future character-sheet spell-access owner: Magic Initiate spellcasting ability choice | selected Spell Definition profiles: static execution/profile facts | spell invocation runtime boundary: runtime Spell Invocation |
+| `feat_magic_initiate_wizard` | wizard     | character-creation-runtime: selected Origin feat Unit ref | future character-sheet spell-access owner: Magic Initiate selected cantrip choices | future character-sheet spell-access owner: Magic Initiate selected level-1 Spell Access choice | future character-sheet spell-access owner: Magic Initiate spellcasting ability choice | selected Spell Definition profiles: static execution/profile facts | spell invocation runtime boundary: runtime Spell Invocation |
 
 ## Verification
 
@@ -52,4 +52,3 @@ None.
 - Non-strict check: `pnpm level-lt4-choice-closure:check`.
 - Regenerate: `pnpm level-lt4-choice-closure:check -- --write`.
 - Strict activation after closure lanes: `pnpm level-lt4-choice-closure:check -- --strict`.
-

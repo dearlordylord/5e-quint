@@ -3962,44 +3962,6 @@ function makeBatch({
   };
 }
 
-function readActivePlanTaskStatuses(root) {
-  const activePlanPath = path.join(root, "plans/ACTIVE_PLAN.md");
-  if (!fs.existsSync(activePlanPath)) {
-    return new Map();
-  }
-  const content = fs.readFileSync(activePlanPath, "utf8");
-  const match = content.match(/<!-- ralph-task-index\s*([\s\S]*?)\s*-->/m);
-  if (match == null) {
-    return new Map();
-  }
-  try {
-    const parsed = JSON.parse(match[1]);
-    if (!Array.isArray(parsed.tasks)) {
-      return new Map();
-    }
-    return new Map(
-      parsed.tasks
-        .filter(
-          (task) =>
-            task != null &&
-            typeof task.id === "string" &&
-            typeof task.status === "string",
-        )
-        .map((task) => [task.id, task.status]),
-    );
-  } catch {
-    return new Map();
-  }
-}
-
-function withActivePlanStatuses(batches, activePlanTaskStatuses) {
-  return batches.map((batch) => ({
-    ...batch,
-    suggestedStatus:
-      activePlanTaskStatuses.get(batch.id) ?? batch.suggestedStatus,
-  }));
-}
-
 const srdinv8ClassContainerBlockerIds = [
   "srd521:classes/bard:level-1:class-container:bard_class_container",
   "srd521:classes/druid:level-1:class-container:druid_class_container",
@@ -4067,7 +4029,7 @@ function hasRequiredOwnerEvidence(row, owner) {
   );
 }
 
-function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
+function buildRecommendedBatches(rows) {
   const levelOne = rows.filter((row) => row.levelBand === "level-1");
   const spellPressure = rows.filter((row) =>
     levelOneSpellPressureLevelBands.has(row.levelBand),
@@ -4965,7 +4927,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
       nextAction:
         "Refresh spell Unit inventory metrics after the runtime-ready spell batch, then choose the next concrete frontier among installed unsupported spell evidence, missing Detect spell authoring, and remaining Spell Surface blockers; split any future task with multiple execution invariants before marking it runnable.",
       acceptance:
-        "The next review records spell-runtime metrics and appends Ralph-sized follow-up work rather than a passive backlog list or omnibus runtime task.",
+        "The next review records spell-runtime metrics and appends small coherent follow-up work rather than a passive backlog list or omnibus runtime task.",
     }),
     makeBatch({
       id: "SRDINV34",
@@ -5023,7 +4985,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
         "Research and split Sleep's save loop and Incapacitated/Unconscious lifecycle before claiming installed support.",
       rows: srdinv38SleepRows,
       nextAction:
-        "Design the point-origin target set, initial Wisdom save, next-turn repeat save, Incapacitated and Unconscious application, wake-up damage/help lifecycle, sleep-immunity and Exhaustion-immunity auto-success, and Concentration cleanup; split implementation if the save loop and condition lifecycle do not fit one Ralph task.",
+        "Design the point-origin target set, initial Wisdom save, next-turn repeat save, Incapacitated and Unconscious application, wake-up damage/help lifecycle, sleep-immunity and Exhaustion-immunity auto-success, and Concentration cleanup; split implementation if the save loop and condition lifecycle do not fit one delivery issue.",
       acceptance:
         "Sleep is either split into implementable vertical slices with no support claim, or has promoted runtime evidence for its save loop and condition lifecycle together.",
     }),
@@ -5145,7 +5107,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
       nextAction:
         "Refresh spell Unit inventory metrics after SRDINV42-SRDINV47, inspect remaining Surface blockers and deferred partial-support findings, and append the next concrete batch by execution invariant.",
       acceptance:
-        "The next review records refreshed metrics and appends Ralph-sized follow-up work rather than an omnibus spell backlog.",
+        "The next review records refreshed metrics and appends small coherent follow-up work rather than an omnibus spell backlog.",
     }),
     makeBatch({
       id: "SRDINV49",
@@ -5169,7 +5131,7 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
       nextAction:
         "Design the failed-save next-turn command effect, per-option execution boundaries, turn-ending clauses, held-item drop fact, and caller-supplied route facts for Approach and Flee.",
       acceptance:
-        "Command is either split into Ralph-sized executable option tasks or has a precise runtime support contract that keeps route/pathfinding ownership table-supplied.",
+        "Command is either split into small executable option tasks or has a precise runtime support contract that keeps route/pathfinding ownership table-supplied.",
     }),
     makeBatch({
       id: "SRDINV51",
@@ -5229,10 +5191,10 @@ function buildRecommendedBatches(rows, activePlanTaskStatuses = new Map()) {
       nextAction:
         "Refresh spell Unit metrics after SRDINV49-SRDINV54, inspect remaining owner-evidence-required and Surface-widening rows, and append the next concrete batch by execution invariant.",
       acceptance:
-        "The review records refreshed metrics and appends Ralph-sized follow-up work rather than collapsing remaining spell pressure into one backlog.",
+        "The review records refreshed metrics and appends small coherent follow-up work rather than collapsing remaining spell pressure into one backlog.",
     }),
   ];
-  return withActivePlanStatuses(batches, activePlanTaskStatuses);
+  return batches;
 }
 
 function buildSrdUnitInventory({
@@ -5495,10 +5457,7 @@ function buildSrdUnitInventory({
           row.finalDisposition === "missing-authored-record",
       ).length,
     },
-    recommendedBatches: buildRecommendedBatches(
-      rows,
-      readActivePlanTaskStatuses(root),
-    ),
+    recommendedBatches: buildRecommendedBatches(rows),
     rows,
   };
 }
@@ -6787,9 +6746,9 @@ function renderSrdUnitInventory(report) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
-    "## Recommended Ralph Batches",
+    "## Recommended Delivery Batches",
     "",
-    "These batches are generated planning recommendations for a separate SRD inventory Ralph run. Status values mirror `plans/ACTIVE_PLAN.md` when that task is present. They are not QMBT tasks unless a later batch explicitly promotes battle-runtime behavior.",
+    "These batches are generated planning recommendations for future tracker-authoritative delivery issues. They are not QMBT tasks unless a later issue explicitly promotes battle-runtime behavior.",
     "",
     "| Batch | Status | Rows | Intent | Next action | Acceptance |",
     "|---|---|---:|---|---|---|",

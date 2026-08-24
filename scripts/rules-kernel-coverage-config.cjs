@@ -424,7 +424,6 @@ const markerKinds = new Set([
 const skippedScanDirs = new Set([
   ".codex-worktrees",
   ".git",
-  ".ralph",
   ".turbo",
   ".worktrees",
   "coverage",

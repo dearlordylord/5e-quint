@@ -5,8 +5,6 @@ architecture, domain glossary, executable coverage registry, or issue tracker.
 
 ## Finding Current Work
 
-- Active local Ralph deliveries are the plans selected by tracked `.ralph/`
-  entrypoints.
 - Active product requirements live in the configured issue tracker and accepted
   specifications linked from those issues.
 - `plans/rules-kernel-coverage/`, `plans/unit-profile-coverage/`, and
@@ -29,7 +27,6 @@ copies in the working tree.
 A plan or delivery Markdown file belongs in the working tree only while at
 least one of these is true:
 
-- a tracked `.ralph/` entrypoint selects it;
 - an open issue links it as the accepted specification;
 - it is an executable registry contract or generated report owned by one of
   the coverage directories above;
@@ -46,11 +43,5 @@ work is open. After convergence, retain only findings that changed an owning
 document, executable registry, test, or implementation; commit and issue
 history preserve the review transcript.
 
-## Historical Ralph task indexes
-
-Every checked-in `ralph-task-index` belongs to the one-off shell harness. While
-its delivery is active, it is a harness input rather than a compatibility
-requirement for the Ralph orchestrator. Delete it with the completed delivery
-plan after durable outcomes have moved to their owners.
-See the
-[Dalph relocation and historical-harness boundary](../docs/tooling/ralph/README.md#historical-harness-boundary).
+The retired repository-local Ralph harness has no active plan format or task
+index. See the [archival note](../docs/tooling/ralph/README.md).

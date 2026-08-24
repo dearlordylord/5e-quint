@@ -3334,7 +3334,7 @@
       "parityWitnesses": [],
       "profiles": [],
       "qntOwners": [],
-      "reason": "Boundary registry-validation row. The checker validates plans/rules-kernel-coverage/battle-hole-frontier.jsonl against current BattleHole, BattleFill, and BattleSubject protocol unions; BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY is the covered QNT owner for the semantic vocabulary leaves and executable TS join. Semantic frontier rows either point to existing covered reducer obligations or name the Ralph follow-up task that must add ordering or runtime parity ownership.",
+      "reason": "Boundary registry-validation row. The checker validates plans/rules-kernel-coverage/battle-hole-frontier.jsonl against current BattleHole, BattleFill, and BattleSubject protocol unions; BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY is the covered QNT owner for the semantic vocabulary leaves and executable TS join. Semantic frontier rows either point to existing covered reducer obligations or name the rules-kernel follow-up task that must add ordering or runtime parity ownership.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"

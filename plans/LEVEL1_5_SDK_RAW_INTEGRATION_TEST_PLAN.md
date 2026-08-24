@@ -5,7 +5,8 @@ Status: in progress
 This plan covers the large follow-up from the initial level-5 SDK tracer bullets:
 build the rest of the character-level 1 through 5 SDK integration tests against
 local RAW. The intent is broad confidence through the real repo SDK path, not a
-new Ralph lane and not a replacement for focused runtime, QNT, or MBT parity.
+new orchestration lane and not a replacement for focused runtime, QNT, or MBT
+parity.
 
 The current seed files are
 `packages/character-battle-runtime/src/level5-sdk-tracer-bullets.test.ts` and
@@ -450,8 +451,8 @@ Current generated findings:
   gap to fix or a documented non-executable closure.
 - Keep deterministic tests cheap. Use focused package tests and typechecks as
   the normal gate.
-- If a task is split into actual Ralph tasks later, include the Ralph task-base
-  check in every spawned task prompt.
+- If a task is split into parallel worktrees later, include the declared-base
+  ancestry check in every spawned task prompt.
 
 ## DAG / Queue Order
 
@@ -873,7 +874,7 @@ MBT scarcity protocol in `AGENTS.md`.
 
 ## Expected Split
 
-This should be planned as multiple PRs or Ralph-style task worktrees:
+This should be planned as multiple PRs or isolated task worktrees:
 
 1. inventory plus harness;
 2. level 1;

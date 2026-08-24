@@ -5,7 +5,6 @@ const path = require("node:path");
 
 const root = process.cwd();
 const skippedDirectories = new Set([
-  ".ralph",
   ".git",
   ".turbo",
   ".worktrees",

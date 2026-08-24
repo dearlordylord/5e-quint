@@ -443,7 +443,7 @@ function buildReport() {
     notes: [
       "This gate is RAW-backed for level <4 choice targets and non-strict by default.",
       "It expands category grants that the older level reports could miss.",
-      "Run with --strict only after the Ralph closure lanes land.",
+      "Run with --strict only after the dedicated closure issues land.",
     ],
     selectableSources: {
       fightingStyleSelectableIds,
@@ -459,7 +459,7 @@ function renderMarkdown(report) {
   const lines = [
     "# Level <4 Choice Closure Gate",
     "",
-    "Status: generated, non-strict until the Ralph closure lanes land.",
+    "Status: generated, non-strict until the dedicated closure issues land.",
     "",
     "## Summary",
     "",
