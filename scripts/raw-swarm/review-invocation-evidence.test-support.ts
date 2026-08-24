@@ -24,7 +24,12 @@ import {
 } from "./sdk-player/sdk-review-packet.ts";
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 import { reprojectSdkTranscriptTurns } from "./sdk-player/player-turn-projection.ts";
-import { repoRoot, sha256Canonical, sha256Text } from "./transcript.ts";
+import {
+  isJsonRecord,
+  repoRoot,
+  sha256Canonical,
+  sha256Text,
+} from "./transcript.ts";
 import { ScenarioIdSchema } from "./transcript.ts";
 import {
   planAdmittedScenarioStages,
@@ -49,6 +54,7 @@ export function controlledReviewEvidenceFixture(input: {
     CurrentModelInvocationLedgerEntry,
     "subject" | "gitSha" | "eventsSha256"
   >[];
+  readonly retainFailedRawArtifacts?: boolean;
 }) {
   if (
     input.eventEntries !== undefined &&
@@ -446,6 +452,18 @@ export function controlledReviewEvidenceFixture(input: {
           };
   ledgerEntryInputs.forEach((entry, index) => {
     const eventEntry = eventEntryInputs[index]!;
+    const completionResult =
+      eventEntry.result ??
+      (eventEntry.exit.tag === "exited" && eventEntry.exit.status === 0
+        ? { tag: "succeeded" as const }
+        : {
+            tag: "failed" as const,
+            reason: "The fixture invocation exited unsuccessfully.",
+          });
+    const retainedRawContents = Buffer.from(
+      `fixture raw output for ${eventEntry.invocationId}\n`,
+      "utf8",
+    );
     const events = [
       eventValue(
         modelInvocationStartedEvent({
@@ -518,23 +536,44 @@ export function controlledReviewEvidenceFixture(input: {
             },
           ]
         : []),
+      ...(input.retainFailedRawArtifacts === true &&
+      completionResult.tag === "failed"
+        ? [
+            {
+              type: "raw-swarm.invocation.codex-raw-retained",
+              source: "settledSidecar" as const,
+              reason: "failedInvocation" as const,
+              rawContentsSha256: sha256Text(
+                retainedRawContents.toString("utf8"),
+              ),
+              rawContentsByteLength: retainedRawContents.byteLength,
+            },
+          ]
+        : []),
       eventValue(
         modelInvocationCompletedEvent({
           elapsedMilliseconds: eventEntry.elapsedMilliseconds,
           exit: eventEntry.exit,
-          result:
-            eventEntry.result ??
-            (eventEntry.exit.tag === "exited" && eventEntry.exit.status === 0
-              ? { tag: "succeeded" }
-              : {
-                  tag: "failed",
-                  reason: "The fixture invocation exited unsuccessfully.",
-                }),
+          result: completionResult,
         }),
       ),
     ];
-    const eventBytes = `${events.map((event) => JSON.stringify(event)).join("\n")}\n`;
+    const normalizedEvents = events.map((event) =>
+      eventEntry.schemaVersion === 5 &&
+      isJsonRecord(event) &&
+      (event.type === "raw-swarm.invocation.started" ||
+        event.type === "raw-swarm.invocation.completed")
+        ? { ...event, schemaVersion: 5 }
+        : event,
+    );
+    const eventBytes = `${normalizedEvents.map((event) => JSON.stringify(event)).join("\n")}\n`;
     writeFileSync(eventPaths[index]!, eventBytes);
+    if (
+      input.retainFailedRawArtifacts === true &&
+      completionResult.tag === "failed"
+    ) {
+      writeFileSync(`${eventPaths[index]!}.codex-raw`, retainedRawContents);
+    }
     const replayInputPath = replayPrePlayReviewInputPaths[index];
     if (replayInputPath !== undefined) {
       writeFileSync(

@@ -202,6 +202,117 @@ afterEach(() => {
 });
 
 describe("review invocation evidence", () => {
+  test("admits and binds failed invocation raw sidecars", () => {
+    const directory = rawSwarmTestOutputDirectory("review-raw-retention-");
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      retainFailedRawArtifacts: true,
+      ledgerEntries: [
+        {
+          schemaVersion: 5,
+          phase: "player",
+          stagePlanReason: "The fixture player stage requires this invocation.",
+          invocationId: "failed-player",
+          model: "gpt-5.6-sol",
+          reasoningEffort: "medium",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 7 },
+          result: { tag: "failed", reason: "Synthetic failure." },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason:
+            "The fixture post-play stage requires this invocation.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:01.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const eventPath = fixture.eventPaths[2];
+    if (eventPath === undefined)
+      throw new Error("Missing failed event fixture.");
+    const rawPath = `${eventPath}.codex-raw`;
+    const manifest = readReviewInvocationEvidenceManifest(fixture.manifestPath);
+    expect(manifest.invocationRawArtifacts).toEqual([
+      expect.objectContaining({ path: relative(repoRoot, rawPath) }),
+    ]);
+    rmSync(rawPath);
+    expect(() =>
+      readReviewInvocationEvidenceManifest(fixture.manifestPath),
+    ).toThrow(/Raw retention artifact is missing/);
+  });
+
+  test("rejects a substituted failed invocation raw sidecar", () => {
+    const directory = rawSwarmTestOutputDirectory("review-raw-substitute-");
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      retainFailedRawArtifacts: true,
+      ledgerEntries: [
+        {
+          schemaVersion: 5,
+          phase: "player",
+          stagePlanReason: "The fixture player stage requires this invocation.",
+          invocationId: "failed-player",
+          model: "gpt-5.6-sol",
+          reasoningEffort: "medium",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 7 },
+          result: { tag: "failed", reason: "Synthetic failure." },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason:
+            "The fixture post-play stage requires this invocation.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:01.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const eventPath = fixture.eventPaths[2];
+    if (eventPath === undefined)
+      throw new Error("Missing failed event fixture.");
+    writeFileSync(`${eventPath}.codex-raw`, "substituted\n");
+    expect(() =>
+      readReviewInvocationEvidenceManifest(fixture.manifestPath),
+    ).toThrow(/does not match its canonical event/);
+  });
+
   test("binds exact review artifacts and rejects later substitution", () => {
     const directory = rawSwarmTestOutputDirectory("review-evidence-test-");
     directories.push(directory);

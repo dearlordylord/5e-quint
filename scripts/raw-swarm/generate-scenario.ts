@@ -3,6 +3,7 @@ import {
   existsSync,
   mkdtempSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   renameSync,
   rmSync,
@@ -65,7 +66,10 @@ import {
 } from "./transcript.ts";
 import {
   invocationIdFromCodexEvents,
+  codexRawRetentionArtifactPath,
+  codexRawRetentionEventFromEvents,
   jsonModelInvocationLastMessageDecoder,
+  readCodexRawRetentionArtifact,
   readCodexEvents,
   runCodexInvocation,
   type CurrentModelInvocationSubject,
@@ -94,10 +98,66 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
+function retainedGenerationEventPaths(
+  directories: readonly string[],
+): readonly string[] {
+  return [
+    ...new Set(
+      directories.flatMap((directory) => {
+        if (!existsSync(directory)) return [];
+        return readdirSync(directory, { withFileTypes: true })
+          .filter(
+            (entry) => entry.isFile() && entry.name.endsWith(".events.jsonl"),
+          )
+          .map((entry) => resolve(directory, entry.name));
+      }),
+    ),
+  ].sort();
+}
+
 export type ScenarioAdmissionPublication = readonly (readonly [
   staged: string,
   admitted: string,
 ])[];
+
+/**
+ * Retain a canonical invocation stream together with the runner-owned raw
+ * sibling named by its strict retention event. This operation runs before the
+ * invocation temporary directory is removed.
+ */
+export function retainCodexInvocationArtifacts(input: {
+  readonly eventPath: string;
+  readonly retainedEventPath: string;
+}): void {
+  mkdirSync(dirname(resolve(input.retainedEventPath)), { recursive: true });
+  writeFileSync(input.retainedEventPath, readFileSync(input.eventPath), {
+    flag: "wx",
+  });
+  const retainedEvents = readCodexEvents(input.eventPath);
+  if (retainedEvents.tag === "invalid") return;
+  const retention = codexRawRetentionEventFromEvents(retainedEvents.events);
+  if (retention.tag === "invalid") {
+    fail(
+      `Retained invocation event stream has an invalid raw-retention fact: ${retention.message}`,
+    );
+  }
+  if (retention.event === undefined) return;
+  const artifact = readCodexRawRetentionArtifact({
+    eventPath: input.eventPath,
+    event: retention.event,
+  });
+  if (Either.isLeft(artifact)) fail(artifact.left);
+  const retainedArtifactPath = codexRawRetentionArtifactPath(
+    input.retainedEventPath,
+    retention.event,
+  );
+  writeFileSync(retainedArtifactPath, artifact.right.contents, { flag: "wx" });
+  const retainedArtifact = readCodexRawRetentionArtifact({
+    eventPath: input.retainedEventPath,
+    event: retention.event,
+  });
+  if (Either.isLeft(retainedArtifact)) fail(retainedArtifact.left);
+}
 
 export function rollbackScenarioAdmissionBundle(
   publication: ScenarioAdmissionPublication,
@@ -343,16 +403,14 @@ async function runCodexJson<A, I>(
         });
       } finally {
         if (execution.retention !== undefined && existsSync(eventPath)) {
-          mkdirSync(execution.retention.directory, { recursive: true });
           const retainedStem = `${execution.phase}-${fallbackInvocationId}`;
-          writeFileSync(
-            resolve(
+          retainCodexInvocationArtifacts({
+            eventPath,
+            retainedEventPath: resolve(
               execution.retention.directory,
               `${retainedStem}.events.jsonl`,
             ),
-            readFileSync(eventPath),
-            { flag: "wx" },
-          );
+          });
         }
       }
     })();
@@ -882,6 +940,10 @@ async function main(args: readonly string[]): Promise<void> {
       ...evidence.authorityPaths,
       { role: "generationLedger", path: ledgerPath },
     ];
+    const generationEventPaths = retainedGenerationEventPaths([
+      resolve(campaignEvidenceDirectory, "invocation-events"),
+      `${ledgerPath.slice(0, -".jsonl".length)}-review-inputs`,
+    ]);
     const pointerAuthorityRole =
       evidence.stagePlanFindingsPaths[0] !== undefined &&
       existsSync(evidence.stagePlanFindingsPaths[0])
@@ -898,6 +960,7 @@ async function main(args: readonly string[]): Promise<void> {
     const projectionInput = {
       authorityPaths,
       generationLedgerPaths: existsSync(ledgerPath) ? [ledgerPath] : [],
+      generationEventPaths,
       stagePlanFindingsPaths: evidence.stagePlanFindingsPaths,
       stagePlanPaths: evidence.stagePlanPaths,
       pointerAuthorityRole,
@@ -921,6 +984,7 @@ async function main(args: readonly string[]): Promise<void> {
         projectGenerationFindings({
           authorityPaths,
           generationLedgerPaths: projectionInput.generationLedgerPaths,
+          generationEventPaths,
           pointerAuthorityRole,
           disposition,
         }),
@@ -929,6 +993,7 @@ async function main(args: readonly string[]): Promise<void> {
         projectGenerationFindings({
           authorityPaths,
           generationLedgerPaths: projectionInput.generationLedgerPaths,
+          generationEventPaths,
           pointerAuthorityRole,
           disposition,
         }),

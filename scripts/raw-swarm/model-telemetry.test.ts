@@ -18,6 +18,8 @@ import { Either, Schema } from "effect";
 import {
   codexInvocationMetadataMatchesArgs,
   codexJsonArgs,
+  codexRawRetentionArtifactPath,
+  codexRawRetentionEventFromEvents,
   createCodexRawSnapshot,
   benchmarkModelInvocationCompletedEvent,
   benchmarkModelInvocationEvidenceFromEvents,
@@ -31,6 +33,7 @@ import {
   parseBenchmarkModelInvocationLedgerEntry,
   jsonModelInvocationLastMessageDecoder,
   readCodexEvents,
+  readCodexRawRetentionArtifact,
   invocationEventsSha256,
   CurrentModelInvocationLedgerEntrySchema,
   CurrentModelInvocationLedgerEntryV4Schema,
@@ -675,6 +678,55 @@ process.exit(0);
         snapshotPathSuffix: ".codex-raw.snapshot",
         snapshotSha256: invocationEventsSha256(snapshot.path),
         snapshotByteLength: observed.byteLength,
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("resolves and verifies only the adjacent canonical retention artifact", () => {
+    const root = mkdtempSync(
+      resolve(tmpdir(), "dnd-model-retention-admission-"),
+    );
+    const eventPath = resolve(root, "retained.events.jsonl");
+    const rawPath = `${eventPath}.codex-raw`;
+    const contents = Buffer.from("settled raw bytes\n", "utf8");
+    writeFileSync(rawPath, contents);
+    const event = {
+      type: "raw-swarm.invocation.codex-raw-retained",
+      source: "settledSidecar",
+      reason: "failedInvocation",
+      rawContentsSha256: invocationEventsSha256(rawPath),
+      rawContentsByteLength: contents.byteLength,
+    } as const;
+    try {
+      const decoded = codexRawRetentionEventFromEvents([event]);
+      expect(decoded).toEqual({ tag: "valid", event });
+      if (decoded.tag !== "valid" || decoded.event === undefined) return;
+      expect(codexRawRetentionArtifactPath(eventPath, decoded.event)).toBe(
+        rawPath,
+      );
+      const retained = readCodexRawRetentionArtifact({
+        eventPath,
+        event: decoded.event,
+      });
+      expect(retained).toMatchObject({
+        _tag: "Right",
+        right: { path: rawPath, contents },
+      });
+      writeFileSync(rawPath, "substituted\n");
+      expect(
+        readCodexRawRetentionArtifact({ eventPath, event: decoded.event }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: expect.stringContaining("does not match"),
+      });
+      rmSync(rawPath);
+      expect(
+        readCodexRawRetentionArtifact({ eventPath, event: decoded.event }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: expect.stringContaining("missing"),
       });
     } finally {
       rmSync(root, { recursive: true, force: true });

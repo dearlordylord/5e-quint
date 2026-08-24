@@ -17,7 +17,9 @@ export {
 import {
   modelInvocationEvidenceFromEvents,
   modelInvocationScenarioReference,
+  codexRawRetentionEventFromEvents,
   parseModelInvocationLedgerEntry,
+  readCodexRawRetentionArtifact,
   readCodexEventsWithSource,
   type CurrentModelInvocationLedgerEntry,
   type ModelInvocationLedgerEntry,
@@ -103,6 +105,7 @@ export const ReviewInvocationEvidenceManifestSchema = Schema.Struct({
   ),
   invocationLedgers: Schema.Tuple(ArtifactAuthoritySchema),
   invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+  invocationRawArtifacts: Schema.Array(ArtifactAuthoritySchema),
 });
 
 export type ReviewInvocationEvidenceManifest = Schema.Schema.Type<
@@ -319,22 +322,45 @@ export function validateRetainedScenarioReviewInvocationEvidence(input: {
   return input.eventAuthority;
 }
 
-function readInvocationEventEvidence(path: string): {
+type InvocationEventEvidence = {
   readonly authority: ArtifactAuthority;
   readonly events: readonly unknown[];
-} {
+  readonly rawArtifact: ArtifactAuthority | undefined;
+};
+
+function readInvocationEventEvidence(path: string): InvocationEventEvidence {
   const canonicalPath = canonicalRepositoryReadPath(repoRoot, path);
   if (Either.isLeft(canonicalPath)) fail(canonicalPath.left);
   const parsed = readCodexEventsWithSource(canonicalPath.right);
   if (parsed.tag === "invalid") fail(parsed.message);
+  const retention = codexRawRetentionEventFromEvents(parsed.events);
+  if (retention.tag === "invalid") fail(retention.message);
   const repositoryPath = canonicalRepositoryReadRelativePath(repoRoot, path);
   if (Either.isLeft(repositoryPath)) fail(repositoryPath.left);
+  const rawArtifact = (() => {
+    if (retention.event === undefined) return undefined;
+    const artifact = readCodexRawRetentionArtifact({
+      eventPath: canonicalPath.right,
+      event: retention.event,
+    });
+    if (Either.isLeft(artifact)) fail(artifact.left);
+    const relativePath = canonicalRepositoryReadRelativePath(
+      repoRoot,
+      artifact.right.path,
+    );
+    if (Either.isLeft(relativePath)) fail(relativePath.left);
+    return artifactAuthorityForBytes(
+      relativePath.right,
+      artifact.right.contents,
+    );
+  })();
   return {
     authority: artifactAuthorityForBytes(
       repositoryPath.right,
       parsed.rawContents,
     ),
     events: parsed.events,
+    rawArtifact,
   };
 }
 
@@ -448,6 +474,37 @@ function deriveManifest(input: {
     })
   )
     fail("Review invocation ledgers do not match their Codex event streams.");
+  const rawArtifacts = eventEvidence.flatMap(({ rawArtifact }) =>
+    rawArtifact === undefined ? [] : [rawArtifact],
+  );
+  if (
+    new Set(rawArtifacts.map(({ path }) => path)).size !==
+      rawArtifacts.length ||
+    new Set(rawArtifacts.map(({ sha256 }) => sha256)).size !==
+      rawArtifacts.length
+  ) {
+    fail(
+      "Review invocation raw-retention artifacts must have unique authorities.",
+    );
+  }
+  for (const evidence of eventEvidence) {
+    const entry = entries.find(
+      ({ eventsSha256 }) => eventsSha256 === evidence.authority.sha256,
+    );
+    if (entry === undefined) {
+      fail(
+        "Review invocation raw-retention evidence has no matching ledger entry.",
+      );
+    }
+    if (
+      (entry.schemaVersion === 5 && entry.result.tag === "failed") !==
+      (evidence.rawArtifact !== undefined)
+    ) {
+      fail(
+        "Current failed invocation evidence must retain exactly one verified raw sidecar or immutable snapshot.",
+      );
+    }
+  }
   const invocationGitShas = new Set(entries.map(({ gitSha }) => gitSha));
   const invocationGitSha = entries[0]?.gitSha;
   if (invocationGitShas.size !== 1 || invocationGitSha === undefined)
@@ -675,6 +732,7 @@ function deriveManifest(input: {
       eventEvidence[0]!.authority,
       ...eventEvidence.slice(1).map(({ authority }) => authority),
     ],
+    invocationRawArtifacts: rawArtifacts,
   };
 }
 

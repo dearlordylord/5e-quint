@@ -31,6 +31,7 @@ import {
   CurrentScenarioCompositeReviewSchema,
 } from "./scenario-campaign.ts";
 import {
+  exportArtifactIndex,
   ingestGenerationFindings,
   openArtifactIndex,
 } from "./artifact-index.ts";
@@ -41,7 +42,11 @@ import {
   planScenarioStages,
   scenarioStagePlanFindings,
 } from "./scenario-stage-plan.ts";
-import { parseModelInvocationLedgerEntry } from "./model-telemetry.ts";
+import {
+  invocationEventsSha256,
+  modelInvocationEvidenceFromEvents,
+  parseModelInvocationLedgerEntry,
+} from "./model-telemetry.ts";
 import {
   ScenarioCampaignManifestSchema,
   type ScenarioCampaignManifest,
@@ -2315,6 +2320,128 @@ describe("Raw Swarm findings projection", () => {
       tag: "invalid",
       message: /transcript-free subject cannot have a transcript authority/,
     });
+  });
+
+  test("admits only a verified adjacent Campaign raw-retention artifact", () => {
+    const root = directory();
+    const campaign = resolve(root, "campaign.json");
+    const ledger = resolve(root, "generation.jsonl");
+    const eventsPath = resolve(root, "scenarioGeneration-failed.events.jsonl");
+    const rawPath = `${eventsPath}.codex-raw`;
+    writeFileSync(
+      campaign,
+      `${JSON.stringify({
+        type: "raw-swarm-scenario-campaign",
+        schemaVersion: 1,
+        campaignId: "generation-campaign",
+        plannedScenarioId: "generation-example",
+        evidenceSetId: "generation-evidence",
+        gitSha: "a".repeat(40),
+        startedAt: "2026-08-18T00:00:00.000Z",
+        configSha256: "c".repeat(64),
+      })}\n`,
+    );
+    const rawContents = Buffer.from("failed Campaign raw output\n", "utf8");
+    writeFileSync(rawPath, rawContents);
+    const events = [
+      {
+        type: "raw-swarm.invocation.started",
+        schemaVersion: 5,
+        subject: {
+          tag: "scenarioCampaign",
+          campaignId: "generation-campaign",
+          evidenceSetId: "generation-evidence",
+          plannedScenarioId: "generation-example",
+        },
+        gitSha: "a".repeat(40),
+        phase: "scenarioGeneration",
+        stagePlanReason: "The Campaign requires scenario generation.",
+        fallbackInvocationId: "failed-generation",
+        model: "gpt-5.6-sol",
+        reasoningEffort: "medium",
+        startedAt: "2026-08-18T00:00:00.000Z",
+      },
+      {
+        type: "raw-swarm.invocation.codex-raw-retained",
+        source: "settledSidecar",
+        reason: "failedInvocation",
+        rawContentsSha256: createHash("sha256")
+          .update(rawContents)
+          .digest("hex"),
+        rawContentsByteLength: rawContents.byteLength,
+      },
+      {
+        type: "raw-swarm.invocation.completed",
+        schemaVersion: 5,
+        elapsedMilliseconds: 2,
+        exit: { tag: "exited", status: 7 },
+        result: { tag: "failed", reason: "Synthetic Campaign failure." },
+      },
+    ] as const;
+    writeFileSync(
+      eventsPath,
+      `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
+    );
+    const derived = modelInvocationEvidenceFromEvents(events);
+    if (derived.tag === "invalid") throw new Error(derived.message);
+    writeFileSync(
+      ledger,
+      `${JSON.stringify({
+        ...derived.entry,
+        eventsSha256: invocationEventsSha256(eventsPath),
+      })}\n`,
+    );
+    const input = {
+      disposition: {
+        tag: "campaignFailure" as const,
+        reason: "The Campaign retained a failed generation invocation.",
+      },
+      authorityPaths: [
+        { role: "campaign", path: relative(repoRoot, campaign) },
+        { role: "generationLedger", path: relative(repoRoot, ledger) },
+      ],
+      generationLedgerPaths: [relative(repoRoot, ledger)],
+      generationEventPaths: [eventsPath],
+      scenarioReviewPaths: [],
+      stagePlanPaths: [],
+      stagePlanFindingsPaths: [],
+    } as const;
+    const projection = projectGenerationFindings(input);
+    expect(projection.authorities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: relative(repoRoot, rawPath) }),
+      ]),
+    );
+    const findingsPath = resolve(root, "findings.json");
+    writeFindingsProjection({
+      projection,
+      path: relative(repoRoot, findingsPath),
+    });
+    const dbPath = resolve(root, "generation.sqlite");
+    expect(
+      ingestGenerationFindings({
+        findingsPath: relative(repoRoot, findingsPath),
+        dbPath: relative(repoRoot, dbPath),
+      }),
+    ).toBe(1);
+    const portablePath = resolve(root, "portable");
+    const portable = exportArtifactIndex({ dbPath, destination: portablePath });
+    expect(portable.artifacts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sha256: createHash("sha256").update(rawContents).digest("hex"),
+          byteLength: rawContents.byteLength,
+        }),
+      ]),
+    );
+    writeFileSync(rawPath, "substituted\n");
+    expect(() => projectGenerationFindings(input)).toThrow(
+      /does not match its canonical event/,
+    );
+    rmSync(rawPath);
+    expect(() => projectGenerationFindings(input)).toThrow(
+      /Raw retention artifact is missing/,
+    );
   });
 
   test("projects and indexes a generation rejection without inventing a transcript", () => {

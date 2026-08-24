@@ -55,6 +55,7 @@ import {
   type BenchmarkAuxiliaryInvocationKind,
   type CurrentModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
+import { retainCodexInvocationArtifacts } from "./generate-scenario.ts";
 import {
   BENCHMARK_IMPLEMENTATION_PROFILES,
   benchmarkReviewReasoningEffort,
@@ -1644,7 +1645,10 @@ export function retainBenchmarkReviewReplayEvents(
   replayPath: string,
 ): string {
   const retainedPath = benchmarkReviewReplayEventsPath(replayPath);
-  copyFileSync(eventPath, retainedPath, constants.COPYFILE_EXCL);
+  retainCodexInvocationArtifacts({
+    eventPath,
+    retainedEventPath: retainedPath,
+  });
   return retainedPath;
 }
 

@@ -274,6 +274,7 @@ const ControlledExecutionPerformanceSchema = Schema.Struct({
     review: ArtifactAuthoritySchema,
     invocationLedgers: Schema.Tuple(ArtifactAuthoritySchema),
     invocationEvents: Schema.NonEmptyArray(ArtifactAuthoritySchema),
+    invocationRawArtifacts: Schema.Array(ArtifactAuthoritySchema),
     continuationObservations: ArtifactAuthoritySchema,
     supervisorTimings: ArtifactAuthoritySchema,
     reportingTiming: ArtifactAuthoritySchema,
@@ -594,6 +595,7 @@ export function summarizeControlledExecution(
       review: reviewAuthority,
       invocationLedgers: [artifactAuthority(invocationLedgerPath)],
       invocationEvents: reviewInvocationEvidence.invocationEvents,
+      invocationRawArtifacts: reviewInvocationEvidence.invocationRawArtifacts,
       continuationObservations: artifactAuthority(
         input.continuationObservationPath,
       ),

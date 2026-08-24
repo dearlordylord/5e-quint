@@ -11,6 +11,7 @@ import {
   unlinkSync,
   writeSync,
 } from "node:fs";
+import { basename, dirname, resolve } from "node:path";
 
 import { Either, Match, Option, ParseResult, Schema } from "effect";
 
@@ -1160,7 +1161,7 @@ const CodexRawRetentionEventSchema = Schema.Union(
     snapshotByteLength: NonNegativeIntegerSchema,
   }),
 );
-type CodexRawRetentionEvent = Schema.Schema.Type<
+export type CodexRawRetentionEvent = Schema.Schema.Type<
   typeof CodexRawRetentionEventSchema
 >;
 
@@ -1285,12 +1286,21 @@ function decodedInvocationEvents<A, I>(
   return { tag: "valid", events: decoded };
 }
 
-function decodedCodexRawRetentionEvent(events: readonly unknown[]):
+export type CodexRawRetentionEventDecode =
   | {
       readonly tag: "valid";
       readonly event: CodexRawRetentionEvent | undefined;
     }
-  | { readonly tag: "invalid"; readonly message: string } {
+  | { readonly tag: "invalid"; readonly message: string };
+
+/**
+ * Decode the single runner-owned retention fact from canonical invocation
+ * events. Evidence boundaries must use this parser rather than reinterpreting
+ * the reserved event shape independently.
+ */
+export function codexRawRetentionEventFromEvents(
+  events: readonly unknown[],
+): CodexRawRetentionEventDecode {
   const reserved = events.flatMap((event, index) =>
     isJsonRecord(event) && event.type === CODEX_RAW_RETENTION_EVENT_TYPE
       ? [{ event, index }]
@@ -1315,6 +1325,74 @@ function decodedCodexRawRetentionEvent(events: readonly unknown[]):
     };
   }
   return { tag: "valid", event: parsed.right };
+}
+
+export type CodexRawRetentionArtifact = Readonly<{
+  readonly path: string;
+  readonly contents: Buffer;
+  readonly event: CodexRawRetentionEvent;
+}>;
+
+function codexRawRetentionArtifactSuffix(
+  event: CodexRawRetentionEvent,
+): string {
+  return event.source === "settledSidecar"
+    ? CODEX_RAW_SIDECAR_SUFFIX
+    : `${CODEX_RAW_SIDECAR_SUFFIX}${CODEX_RAW_SNAPSHOT_SUFFIX}`;
+}
+
+/** Resolve the only accepted raw artifact: the exact sibling of the event file. */
+export function codexRawRetentionArtifactPath(
+  eventPath: string,
+  event: CodexRawRetentionEvent,
+): string {
+  return resolve(
+    dirname(eventPath),
+    `${basename(eventPath)}${codexRawRetentionArtifactSuffix(event)}`,
+  );
+}
+
+/**
+ * Read and verify the raw artifact named implicitly by a canonical retention
+ * event. The returned bytes are the authority used by callers to construct an
+ * ArtifactAuthority; missing, substituted, or relocated siblings fail here.
+ */
+export function readCodexRawRetentionArtifact(input: {
+  readonly eventPath: string;
+  readonly event: CodexRawRetentionEvent;
+}): Either.Either<CodexRawRetentionArtifact, string> {
+  const path = codexRawRetentionArtifactPath(input.eventPath, input.event);
+  const contents = (() => {
+    try {
+      return Either.right(readFileSync(path));
+    } catch {
+      return Either.left(`Raw retention artifact is missing: ${path}.`);
+    }
+  })();
+  if (Either.isLeft(contents)) return Either.left(contents.left);
+  const expected =
+    input.event.source === "settledSidecar"
+      ? {
+          sha256: input.event.rawContentsSha256,
+          byteLength: input.event.rawContentsByteLength,
+        }
+      : {
+          sha256: input.event.snapshotSha256,
+          byteLength: input.event.snapshotByteLength,
+        };
+  const observed = {
+    sha256: sha256Bytes(contents.right),
+    byteLength: contents.right.byteLength,
+  };
+  if (
+    observed.sha256 !== expected.sha256 ||
+    observed.byteLength !== expected.byteLength
+  ) {
+    return Either.left(
+      `Raw retention artifact does not match its canonical event: ${path}.`,
+    );
+  }
+  return Either.right({ path, contents: contents.right, event: input.event });
 }
 
 function runnerRawRetentionEventFromChild(
@@ -1368,7 +1446,7 @@ function rawRetentionEventValidationMessage(input: {
 export function modelInvocationEvidenceFromEvents(
   events: readonly unknown[],
 ): ModelInvocationEventEvidence {
-  const rawRetention = decodedCodexRawRetentionEvent(events);
+  const rawRetention = codexRawRetentionEventFromEvents(events);
   if (rawRetention.tag === "invalid") return rawRetention;
   const started = decodedInvocationEvents(
     ModelInvocationStartedEventSchema,
@@ -1568,7 +1646,7 @@ export function benchmarkModelInvocationEvidenceFromEvents(
       >;
     }
   | { readonly tag: "invalid"; readonly message: string } {
-  const rawRetention = decodedCodexRawRetentionEvent(events);
+  const rawRetention = codexRawRetentionEventFromEvents(events);
   if (rawRetention.tag === "invalid") return rawRetention;
   const started = decodedInvocationEvents(
     Schema.Union(
