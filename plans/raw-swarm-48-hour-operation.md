@@ -172,10 +172,11 @@ Apply the same procedure to every later-wave configuration.
 Stop all new launches immediately for an identity/hash/containment/replay
 defect, unreadable canonical catalogue, credential loss, disk exhaustion, or
 the resource-emergency conditions in `AGENTS.md`. Quiesce every affected active
-player, reviewer, and index writer at its next safe immutable boundary. Do not
-review, index, or export affected evidence until it has a precise disposition.
-Preserve the exact failure before repair. Do not describe a partial execution,
-replay, review, or broad test as complete.
+operation writer at its next safe immutable boundary, including Scenario
+generation/admission, character/setup authoring, players, reviewers, and the
+index writer. Do not review, index, or export affected evidence until it has a
+precise disposition. Preserve the exact failure before repair. Do not describe
+a partial execution, replay, review, or broad test as complete.
 
 For a substantial integrity repair:
 
