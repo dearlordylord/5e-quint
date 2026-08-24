@@ -4,16 +4,26 @@ import { resolve } from "node:path";
 import { Either, Schema } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
 
+import {
+  invocationEventsSha256,
+  parseModelInvocationLedgerEntry,
+} from "./model-telemetry.ts";
 import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
-import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
-import { parseModelInvocationLedgerEntry } from "./model-telemetry.ts";
+import {
+  readReviewInvocationEvidenceManifest,
+  writeReviewInvocationEvidenceManifest,
+} from "./review-invocation-evidence.ts";
 import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
 } from "./scenario-review-input.ts";
+import {
+  codexOutputJsonSchema,
+  CurrentScenarioCompositeReviewSchema,
+} from "./scenario-campaign.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
-import { isJsonRecord } from "./transcript.ts";
+import { isJsonRecord, sha256Text } from "./transcript.ts";
 
 const directories: string[] = [];
 
@@ -110,6 +120,193 @@ describe("review invocation evidence", () => {
     expect(() =>
       readReviewInvocationEvidenceManifest(fixture.manifestPath),
     ).toThrow(/Retained milestone source and replay inputs/);
+  });
+
+  test("retains revised Candidate milestone and admitted final manifest inputs", () => {
+    const directory = rawSwarmTestOutputDirectory(
+      "review-revised-candidate-evidence-test-",
+    );
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const admittedScenarioSha256 = sha256Text(
+      readFileSync(resolve(directory, "run/SCENARIO.md"), "utf8"),
+    );
+    const subjects = [
+      {
+        tag: "scenarioCandidate" as const,
+        campaignId: "fixture-campaign",
+        evidenceSetId: "fixture-evidence",
+        candidateId: "fixture-candidate-milestone",
+        candidateScenarioSha256: "b".repeat(64),
+        plannedScenarioId: "same",
+      },
+      {
+        tag: "scenarioCandidate" as const,
+        campaignId: "fixture-campaign",
+        evidenceSetId: "fixture-evidence",
+        candidateId: "fixture-candidate-final",
+        candidateScenarioSha256: admittedScenarioSha256,
+        plannedScenarioId: "same",
+      },
+    ] as const;
+    const resultWithQuality = (index: number) => ({
+      ...(parseJsonRecord(
+        readFileSync(fixture.replayPrePlayReviewInputPaths[index]!, "utf8"),
+      ).result as Record<string, unknown>),
+      scenarioQuality: {
+        classification: "ready",
+        evidence: "The revised Candidate is ready for admission.",
+      },
+    });
+    for (const [index, subject] of subjects.entries()) {
+      for (const path of [
+        fixture.sourcePrePlayReviewInputPaths[index]!,
+        fixture.replayPrePlayReviewInputPaths[index]!,
+      ]) {
+        const input = parseJsonRecord(readFileSync(path, "utf8"));
+        delete input.scenarioId;
+        input.schemaVersion = 3;
+        input.subject = subject;
+        input.outputJsonSchema = codexOutputJsonSchema(
+          CurrentScenarioCompositeReviewSchema,
+        );
+        input.result = resultWithQuality(index);
+        writeFileSync(path, `${JSON.stringify(input)}\n`);
+      }
+      const eventPaths = [
+        fixture.eventPaths[index]!,
+        `${fixture.replayPrePlayReviewInputPaths[index]!.slice(0, -".json".length)}.events.jsonl`,
+      ];
+      for (const path of eventPaths) {
+        const events = readFileSync(path, "utf8")
+          .trim()
+          .split("\n")
+          .map(parseJsonRecord);
+        const started = events[0];
+        if (started === undefined) throw new Error("Missing start event.");
+        started.subject = subject;
+        const message = events.find(
+          (event) =>
+            event.type === "item.completed" &&
+            isJsonRecord(event.item) &&
+            event.item.type === "agent_message",
+        );
+        if (message === undefined || !isJsonRecord(message.item)) {
+          throw new Error("Missing composite-review output event.");
+        }
+        message.item.text = JSON.stringify({
+          result: resultWithQuality(index),
+        });
+        writeFileSync(
+          path,
+          `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
+        );
+      }
+    }
+    const ledger = readFileSync(fixture.ledgerPath, "utf8")
+      .trim()
+      .split("\n")
+      .map(parseJsonRecord);
+    for (const [index, subject] of subjects.entries()) {
+      const entry = ledger[index];
+      if (entry === undefined) throw new Error("Missing composite ledger row.");
+      entry.subject = subject;
+      entry.eventsSha256 = invocationEventsSha256(fixture.eventPaths[index]!);
+    }
+    writeFileSync(
+      fixture.ledgerPath,
+      `${ledger.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
+    );
+    rmSync(fixture.manifestPath);
+    const manifest = writeReviewInvocationEvidenceManifest({
+      transcriptPath: fixture.transcriptPath,
+      reviewPath: fixture.reviewPath,
+      auditPath: fixture.auditPath,
+      packetPath: fixture.packetPath,
+      prePlayReviewPaths: [
+        {
+          sourceInputPath: fixture.sourcePrePlayReviewInputPaths[0],
+          replayInputPath: fixture.replayPrePlayReviewInputPaths[0],
+        },
+        {
+          sourceInputPath: fixture.sourcePrePlayReviewInputPaths[1],
+          replayInputPath: fixture.replayPrePlayReviewInputPaths[1],
+        },
+      ],
+      invocationLedgerPaths: [fixture.ledgerPath],
+      invocationEventPaths: fixture.eventPaths,
+      outputPath: fixture.manifestPath,
+    });
+    expect(manifest.prePlayReviews).toHaveLength(2);
+    expect(
+      readReviewInvocationEvidenceManifest(fixture.manifestPath),
+    ).toMatchObject({
+      prePlayReviews: [{ reviewStage: "milestone" }, { reviewStage: "final" }],
+    });
+    const wrongFinalSubject = {
+      ...subjects[1],
+      candidateScenarioSha256: "d".repeat(64),
+    };
+    for (const path of [
+      fixture.sourcePrePlayReviewInputPaths[1],
+      fixture.replayPrePlayReviewInputPaths[1],
+    ]) {
+      const input = parseJsonRecord(readFileSync(path, "utf8"));
+      input.subject = wrongFinalSubject;
+      writeFileSync(path, `${JSON.stringify(input)}\n`);
+    }
+    for (const path of [
+      fixture.eventPaths[1]!,
+      `${fixture.replayPrePlayReviewInputPaths[1].slice(0, -".json".length)}.events.jsonl`,
+    ]) {
+      const events = readFileSync(path, "utf8")
+        .trim()
+        .split("\n")
+        .map(parseJsonRecord);
+      const started = events[0];
+      if (started === undefined) throw new Error("Missing final start event.");
+      started.subject = wrongFinalSubject;
+      writeFileSync(
+        path,
+        `${events.map((event) => JSON.stringify(event)).join("\n")}\n`,
+      );
+    }
+    const tamperedLedger = readFileSync(fixture.ledgerPath, "utf8")
+      .trim()
+      .split("\n")
+      .map(parseJsonRecord);
+    const finalLedger = tamperedLedger[1];
+    if (finalLedger === undefined) throw new Error("Missing final ledger row.");
+    finalLedger.subject = wrongFinalSubject;
+    finalLedger.eventsSha256 = invocationEventsSha256(fixture.eventPaths[1]!);
+    writeFileSync(
+      fixture.ledgerPath,
+      `${tamperedLedger.map((entry) => JSON.stringify(entry)).join("\n")}\n`,
+    );
+    expect(() =>
+      readReviewInvocationEvidenceManifest(fixture.manifestPath),
+    ).toThrow(/source hash/);
   });
 
   test("validates event output from a parsed replay binding without rereading the envelope", () => {

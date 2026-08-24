@@ -29,7 +29,6 @@ import { reviewInvocationPolicy } from "./review-invocation-policy.ts";
 import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
-  retainedScenarioReviewScenarioId,
   retainedScenarioReviewSubject,
   type RetainedScenarioReviewInput,
 } from "./scenario-review-input.ts";
@@ -115,7 +114,11 @@ function json(path: string): unknown {
 
 function scenarioReviewIdentity(packet: {
   readonly executionArtifacts: readonly { readonly path: string }[];
-}): { readonly scenarioId: ScenarioId; readonly gitSha: GitSha } {
+}): {
+  readonly scenarioId: ScenarioId;
+  readonly scenarioSha256: string;
+  readonly gitSha: GitSha;
+} {
   const sources = packet.executionArtifacts.filter(({ path }) =>
     path.endsWith("/SCENARIO_REVIEW.json"),
   );
@@ -129,8 +132,20 @@ function scenarioReviewIdentity(packet: {
     fail(`Scenario review authority is invalid: ${decoded.left.message}`);
   return {
     scenarioId: decoded.right.scenarioId,
+    scenarioSha256: decoded.right.scenarioSha256,
     gitSha: decoded.right.gitSha,
   };
+}
+
+function retainedScenarioReviewScenarioReference(
+  input: RetainedScenarioReviewInput,
+): string {
+  const subject = retainedScenarioReviewSubject(input);
+  return String(
+    subject.tag === "scenarioCandidate"
+      ? subject.plannedScenarioId
+      : subject.scenarioId,
+  );
 }
 
 function ledgerEntries(path: string): readonly ModelInvocationLedgerEntry[] {
@@ -209,6 +224,8 @@ export function validateRetainedScenarioReviewInvocationEvidence(input: {
   readonly events: readonly unknown[];
   readonly reviewStage: "milestone" | "final";
   readonly ledgerEntry: ModelInvocationLedgerEntry;
+  /** The admitted Scenario hash used to close a final Candidate binding. */
+  readonly admittedScenarioSha256: string;
 }): ArtifactAuthority {
   const retained = input.retainedInput;
   const subject = retainedScenarioReviewSubject(retained);
@@ -238,7 +255,7 @@ export function validateRetainedScenarioReviewInvocationEvidence(input: {
                 tag: "candidate",
                 reviewStage: "final",
                 scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
-                admittedScenarioSha256: subject.candidateScenarioSha256,
+                admittedScenarioSha256: input.admittedScenarioSha256,
                 campaign: {
                   campaignId: subject.campaignId,
                   evidenceSetId: subject.evidenceSetId,
@@ -474,13 +491,10 @@ function deriveManifest(input: {
   ) => {
     const sourceInput = artifacts.source.input;
     const replayInput = artifacts.replay.input;
-    const sourceScenarioId = retainedScenarioReviewScenarioId(sourceInput);
-    const replayScenarioId = retainedScenarioReviewScenarioId(replayInput);
-    if (Either.isLeft(sourceScenarioId) || Either.isLeft(replayScenarioId)) {
-      fail(
-        `Retained ${reviewStage} source and replay inputs must both describe an admitted Scenario review.`,
-      );
-    }
+    const sourceScenarioReference =
+      retainedScenarioReviewScenarioReference(sourceInput);
+    const replayScenarioReference =
+      retainedScenarioReviewScenarioReference(replayInput);
     const expectedOutputJsonSchema =
       sourceInput.schemaVersion === 2
         ? codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema)
@@ -494,14 +508,16 @@ function deriveManifest(input: {
       );
     }
     if (
-      sourceScenarioId.right !== audit.audit.header.scenarioId ||
+      sourceScenarioReference !== String(audit.audit.header.scenarioId) ||
       sourceInput.sourceGitSha !== scenarioReview.gitSha ||
-      replayScenarioId.right !== audit.audit.header.scenarioId ||
+      replayScenarioReference !== String(audit.audit.header.scenarioId) ||
       replayInput.sourceGitSha !== invocationGitSha ||
       sourceInput.schemaVersion !== replayInput.schemaVersion ||
       canonicalJson(sourceInput.prompt) !== canonicalJson(replayInput.prompt) ||
       canonicalJson(sourceInput.outputJsonSchema) !==
-        canonicalJson(replayInput.outputJsonSchema)
+        canonicalJson(replayInput.outputJsonSchema) ||
+      canonicalJson(retainedScenarioReviewSubject(sourceInput)) !==
+        canonicalJson(retainedScenarioReviewSubject(replayInput))
     ) {
       fail(
         `Retained ${reviewStage} source and replay inputs do not describe the measured review.`,
@@ -527,6 +543,7 @@ function deriveManifest(input: {
         events: events.events,
         reviewStage,
         ledgerEntry: entry,
+        admittedScenarioSha256: scenarioReview.scenarioSha256,
       });
     }
     if (
