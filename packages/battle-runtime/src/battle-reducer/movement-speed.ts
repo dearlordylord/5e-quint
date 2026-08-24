@@ -32,7 +32,6 @@ import {
 } from "../battle-action-options.ts";
 import {
   type BattleAttackHitTriggerKind,
-  type BattleAttackExecutionSelection,
   type BattleAttackKindForRedirect,
   type BattleCreatureState,
   type BattleGrappleLink,
@@ -274,17 +273,6 @@ export function interruptAttackExecutionSelectionMatchesOption(
   attack: BoundSupportedAttackActionOption,
 ): boolean {
   return boundAttackExecutionSelectionMatchesOption(selection, attack);
-}
-
-export function attackExecutionSelectionsEqual(
-  left: BattleAttackExecutionSelection,
-  right: BattleAttackExecutionSelection,
-): boolean {
-  return (
-    left.procedureRef !== undefined &&
-    right.procedureRef !== undefined &&
-    attackExecutionSelectionIdentitiesEqual(left, right)
-  );
 }
 
 export function interruptAttackExecutionSelectionsEqual(
