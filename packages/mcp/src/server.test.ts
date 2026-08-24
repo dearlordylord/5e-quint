@@ -101,6 +101,8 @@ import {
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
 
+const CHATGPT_APP_VERSION_STORAGE_LIMIT_BYTES = 2_000_000;
+
 function handleToolCall(
   root: ReturnType<typeof createMcpPlaySessionRoot>,
   name: string,
@@ -2035,6 +2037,12 @@ describe("MCP server route", () => {
         '"not":{}',
       );
     }
+  });
+
+  test("keeps registered tool metadata within the ChatGPT app-version storage limit", () => {
+    expect(
+      Buffer.byteLength(JSON.stringify(toolDefinitions), "utf8"),
+    ).toBeLessThan(CHATGPT_APP_VERSION_STORAGE_LIMIT_BYTES);
   });
 
   test("describes MCP workflow and lists discoverable catalogs through tools", () => {

@@ -154,6 +154,16 @@ state ownership, or the installed-evidence record. If the tunnel is not listed,
 check workspace association and Tunnels **Read + Use**, then run
 `tunnel-client doctor --profile srd-play-local --explain` again.
 
+If ChatGPT reports that an `AppsSDKAppVersion` object exceeds the CosmosDB 2 MB
+limit, the tunnel has already completed discovery and schema validation. Run
+the MCP server tests before retrying; they measure the complete registered tool
+catalog and prevent capacity-rich battle result schemas from expanding the app
+version beyond that storage limit:
+
+```sh
+pnpm --filter @dnd/mcp test
+```
+
 ## Install and evaluate the plugin package
 
 After the MCP connection works, package the Skill-only plugin from this

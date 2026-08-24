@@ -7,6 +7,7 @@ import {
   jsonContent,
   jsonSerializablePayload,
 } from "./tool-content.ts";
+import { projectModelOutputJsonSchema } from "./model-output-json-schema.ts";
 
 export type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
   readonly type: "object";
@@ -17,6 +18,7 @@ export type ToolError = ReturnType<typeof errorContent>;
 export type ToolInputResult<A> = Either.Either<A, ToolError>;
 
 const outputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
+const modelOutputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
 
 export function decodeToolArgs<A, I>(
   schema: Schema.Schema<A, I, never>,
@@ -148,6 +150,24 @@ export function mcpOutputJsonSchema<A, I>(
     ...generated,
   } satisfies McpOutputSchema;
   outputSchemaByCodec.set(schema, identified);
+  return identified;
+}
+
+export function mcpModelOutputJsonSchema<A, I>(
+  schema: Schema.Schema<A, I, never>,
+): McpOutputSchema {
+  const cached = modelOutputSchemaByCodec.get(schema);
+  if (cached !== undefined) return cached;
+
+  const generated = omitRedundantImpossibleProperties(
+    jsonSchemaFromCodec(schema),
+  );
+  const projected = projectModelOutputJsonSchema(generated);
+  const identified = {
+    $id: outputSchemaId(projected),
+    ...projected,
+  } satisfies McpOutputSchema;
+  modelOutputSchemaByCodec.set(schema, identified);
   return identified;
 }
 

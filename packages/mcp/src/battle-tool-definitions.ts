@@ -18,7 +18,10 @@ import {
   SelectStatBlockOutputSchema,
   StartBattleOutputSchema,
 } from "./battle-tool-output.ts";
-import { mcpOutputJsonSchema } from "./schema-codec.ts";
+import {
+  mcpModelOutputJsonSchema,
+  mcpOutputJsonSchema,
+} from "./schema-codec.ts";
 import { battleLifecycleInputSchema } from "./battle-lifecycle-tool-input.ts";
 import { startBattleInputSchema } from "./start-battle-tool-input.ts";
 
@@ -35,49 +38,49 @@ export const battleToolDefinitions = [
     description:
       "Start a battle session from finalized Character Builds and the selected SRD Stat Block. The caller must provide Initiative scores for every combatant; choose initialSetup to keep the SDK-owned Initiative setup open for the battle_lifecycle surface.",
     inputSchema: startBattleInputSchema,
-    outputSchema: mcpOutputJsonSchema(StartBattleOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(StartBattleOutputSchema),
   },
   {
     name: battleToolNames.battleLifecycle,
     description:
       "Apply one Battle lifecycle operation: swap Initiative with a willing ally or finalize initial setup, or atomically add/remove a supported Character Session or installed Stat Block combatant while the Battle is active.",
     inputSchema: battleLifecycleInputSchema,
-    outputSchema: mcpOutputJsonSchema(BattleLifecycleOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(BattleLifecycleOutputSchema),
   },
   {
     name: battleToolNames.readBattleState,
     description:
       "Return the current battle-runtime snapshot, including discoverable battle acts, and the MCP session summary.",
     inputSchema: readBattleStateInputSchema,
-    outputSchema: mcpOutputJsonSchema(BattleSessionOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(BattleSessionOutputSchema),
   },
   {
     name: battleToolNames.discoverBattleActs,
     description:
       "Return the current battle snapshot and runtime-discovered available acts for the current combatant.",
     inputSchema: discoverBattleActsInputSchema,
-    outputSchema: mcpOutputJsonSchema(BattleSessionOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(BattleSessionOutputSchema),
   },
   {
     name: battleToolNames.fillBattleHole,
     description:
       "Fill one hole for a selected battle act subject. MCP stores transient fills until the battle runtime has enough table facts to resolve the act.",
     inputSchema: fillBattleHoleInputSchema,
-    outputSchema: mcpOutputJsonSchema(BattleResolutionOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(BattleResolutionOutputSchema),
   },
   {
     name: battleToolNames.resolveBattleAct,
     description:
       "Resolve a selected battle act subject that does not need holes, such as Action Surge.",
     inputSchema: resolveBattleActInputSchema,
-    outputSchema: mcpOutputJsonSchema(BattleResolutionOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(BattleResolutionOutputSchema),
   },
   {
     name: battleToolNames.endTurn,
     description:
       "Resolve the current actor's End Turn runtime command and store the updated battle session.",
     inputSchema: endTurnInputSchema,
-    outputSchema: mcpOutputJsonSchema(BattleResolutionOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(BattleResolutionOutputSchema),
   },
   {
     name: battleToolNames.endBattle,

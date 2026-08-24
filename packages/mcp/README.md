@@ -304,14 +304,18 @@ changes its identity automatically.
 
 Character-tool session outputs omit transient battle subjects and fills. That
 wire projection is derived from the canonical session snapshot; it does not add
-separate session state. Battle tool schemas remain wider than necessary because
-they repeat large snapshot, subject, hole, fill, and supported-procedure
-definitions. A future deepening may give battle-session and battle-resolution
-tools projections specific to their workflows, derived from existing canonical
-session and runtime state. It must not add shadow session state, weaken
-structured-output validation, or replace typed runtime facts with generic JSON.
-Measure that work against cold default-client `listTools()` schema-compilation
-time as well as the normal MCP acceptance suite.
+separate session state. The model-facing schemas for capacity-rich battle
+results retain each canonical result's root branches, fields, requiredness, and
+outer value types without repeating nested snapshot, subject, hole, fill, and
+supported-procedure definitions in every tool registration. The exact Effect
+Schema remains the response encoder and runtime boundary authority. The
+projection is derived from it and does not add a parallel result model or
+shadow session state.
+
+The complete registered tool catalog must remain below ChatGPT's 2 MB app-version
+storage limit. Protocol tests enforce that external constraint alongside schema
+validity, while the normal MCP acceptance suite verifies exact response
+encoding.
 
 Play Session envelopes content-address repeated generated subtrees into local
 `$defs` while preserving exact nested validation. The largest routed schema is

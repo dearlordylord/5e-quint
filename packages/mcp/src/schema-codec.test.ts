@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 import {
   mcpObjectJsonSchema,
   mcpObjectJsonSchemaWithCopiedObjects,
+  mcpModelOutputJsonSchema,
   mcpOutputJsonSchema,
   omitRedundantImpossibleProperties,
 } from "./schema-codec.ts";
@@ -147,5 +148,70 @@ describe("MCP output JSON Schema identity", () => {
         );
       }),
     );
+  });
+});
+
+describe("MCP model output JSON Schema", () => {
+  test("retains the root result contract without expanding nested definitions", () => {
+    const Nested = Schema.Struct({ hidden: Schema.String }).annotations({
+      identifier: "NestedResult",
+    });
+    const codec = Schema.Struct({
+      result: Nested,
+      outcomes: Schema.Array(Nested),
+      note: Schema.NullOr(Schema.String),
+    });
+
+    const advertised = mcpModelOutputJsonSchema(codec);
+
+    expect(advertised).toMatchObject({
+      type: "object",
+      properties: {
+        result: { type: "object" },
+        outcomes: { type: "array" },
+        note: { anyOf: [{ type: "string" }, { type: "null" }] },
+      },
+      required: ["result", "outcomes", "note"],
+      additionalProperties: false,
+    });
+    expect(JSON.stringify(advertised)).not.toContain("$defs");
+  });
+
+  test("retains distinct root and nested object branches within the bound", () => {
+    const codec = Schema.Union(
+      Schema.Struct({ value: Schema.Struct({ first: Schema.String }) }),
+      Schema.Struct({ value: Schema.Struct({ second: Schema.Number }) }),
+      Schema.Struct({ error: Schema.String }),
+    );
+
+    expect(mcpModelOutputJsonSchema(codec)).toMatchObject({
+      anyOf: [
+        {
+          type: "object",
+          properties: {
+            value: {
+              type: "object",
+              properties: { first: { type: "string" } },
+            },
+          },
+          required: ["value"],
+        },
+        {
+          type: "object",
+          properties: {
+            value: {
+              type: "object",
+              properties: { second: { type: "number" } },
+            },
+          },
+          required: ["value"],
+        },
+        {
+          type: "object",
+          properties: { error: { type: "string" } },
+          required: ["error"],
+        },
+      ],
+    });
   });
 });
