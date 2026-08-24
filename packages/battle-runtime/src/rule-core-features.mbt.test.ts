@@ -6,6 +6,7 @@ import {
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
 } from "./battle-runtime.test-support.ts";
+import { battleAmmunitionStock } from "./battle-ammunition.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE9-UNIT-FEATURE-PROFILES-001
@@ -2376,13 +2377,22 @@ function featureActor(input: {
       supportProfiles: [],
     });
   }
+  const ammunitionRequirement =
+    attack === null
+      ? undefined
+      : attack.weapon.properties.find(
+          (property) => property.kind === "ammunition",
+        );
   return {
     combatantId: input.combatantId ?? actorId,
     displayName: input.displayName ?? "Feature Actor",
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
-      ammunitionStocks: [],
+      ammunitionStocks:
+        ammunitionRequirement === undefined
+          ? []
+          : [battleAmmunitionStock(ammunitionRequirement.ammunition, 20)],
       characterId: characterId(`${input.combatantId ?? actorId}-character`),
       characterUnitRefs,
       classLevels: input.classLevels ?? [{ className: "fighter", level: 1 }],
