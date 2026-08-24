@@ -1,0 +1,15 @@
+{
+  "campaignId": "causeway-recovery-48h-authoring",
+  "plannedScenarioId": "synthetic-causeway-recovery",
+  "scenarioTitle": "Synthetic Causeway recovery",
+  "scenarioPurpose": "Explore a materially distinct supported recovery from zero Hit Points while hostile attacks, movement, and changing tactical choices continue.",
+  "evidenceSetId": "causeway-recovery-48h-authoring-evidence",
+  "distributionPreference": "Create a compact available-content scenario that explores supported zero-Hit-Point, recovery, attack, movement, and turn procedures. Make the recovery pressure and each combatant's objective concrete, but do not prescribe that a creature must reach zero Hit Points or predict an outcome. Compare against the complete admitted catalogue and revise any repeated purpose. Let the supplied capability projection determine representability; do not invent operations, create an encounter side, or give the player ownership of Table facts.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "supportedOnly",
+  "minimumIterations": 2,
+  "maximumIterations": 4,
+  "candidatesPerIteration": 4,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": false
+}

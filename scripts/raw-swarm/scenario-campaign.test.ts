@@ -3,6 +3,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -486,13 +487,17 @@ describe("scenario generation campaign", () => {
   });
 
   test("decodes every checked-in campaign configuration strictly", () => {
-    for (const path of [
-      "scripts/raw-swarm/scenario-campaign.example.json",
-      "scripts/raw-swarm/scenario-campaign-open-grid-wolf-skeleton-pursuit.json",
-    ]) {
+    const campaignDirectory = resolve(repoRoot, "scripts/raw-swarm");
+    const paths = readdirSync(campaignDirectory)
+      .filter(
+        (name) =>
+          name.startsWith("scenario-campaign") && name.endsWith(".json"),
+      )
+      .map((name) => resolve(campaignDirectory, name));
+    for (const path of paths) {
       const decoded = Schema.decodeUnknownEither(ScenarioCampaignConfigSchema, {
         onExcessProperty: "error",
-      })(JSON.parse(readFileSync(resolve(repoRoot, path), "utf8")));
+      })(JSON.parse(readFileSync(path, "utf8")));
       expect(Either.isRight(decoded), path).toBe(true);
     }
   });
