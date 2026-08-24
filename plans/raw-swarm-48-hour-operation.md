@@ -2,6 +2,9 @@
 
 Status: prepared, not launched.
 
+Accepted specification owner:
+[`#332`](https://github.com/dearlordylord/5e-quint/issues/332).
+
 This document is the accepted work-specific plan for one 48-hour Raw Swarm
 operation. It does not define another Raw Swarm domain object or procedure.
 Each authoring unit remains one Scenario Campaign, and the role procedures stay
@@ -38,7 +41,11 @@ existing GitHub issue lifecycle.
 - Searchable index: `scripts/raw-swarm/out/player-swarm.db`
 
 The launch timestamp supplies the operation directory name, Execution IDs, and
-Evidence Set IDs. No identity in a failed or completed artifact is reused.
+every identity in a launch-instantiated or later-wave Campaign configuration.
+The checked-in first-wave configurations are immutable first-attempt inputs;
+their identities may be used only after confirming that no matching Campaign,
+Scenario, or Evidence Set exists. No identity in a failed or completed artifact
+is reused.
 
 ## Roles and non-overlap
 
@@ -61,8 +68,9 @@ One wave contains three Scenario Campaigns and up to three Executions.
 
 1. Confirm a clean coordinator revision and render the complete canonical
    catalogue.
-2. Run the three Scenario Campaign configurations serially. Commit each
-   admission or retained rejection before starting the next Campaign.
+2. Strictly decode and preserve each Campaign configuration before invocation.
+   Run the three Scenario Campaign configurations serially. Commit each
+   admission or retain each rejection before starting the next Campaign.
 3. For each admitted Scenario, author and commit the character source, then
    author and commit the setup source. Follow
    [`SCENARIO_AUTHORING.md`](../scripts/raw-swarm/SCENARIO_AUTHORING.md) and
@@ -91,8 +99,9 @@ boundary. Every Execution in one wave uses the same frozen implementation SHA.
 Later authoring may advance the catalogue while earlier Execution worktrees
 remain pinned to their recorded wave revision.
 
-## Calibration wave
+## Calibration waves
 
+Calibration keeps the three-lane capacity but does not increase concurrency.
 The first wave uses these three ordinary Scenario Campaign configurations:
 
 1. `scenario-campaign-48h-riverstone-relief.json` — supported delegated rescue
@@ -104,8 +113,27 @@ The first wave uses these three ordinary Scenario Campaign configurations:
 
 The canonical generator may revise or reject a Candidate. A configured title or
 purpose does not authorize admission, expected behavior, or a fabricated SDK
-operation. Later wave configurations must be written only after reading the
-then-current catalogue and the first wave's retained findings.
+operation.
+
+The second calibration wave is the next wave of exactly three Scenario
+Campaigns. After the first wave is fully replayed, reviewed, indexed, and
+archived, render the then-current complete catalogue and read its retained
+findings. Author three materially distinct configurations from that evidence,
+with fresh launch-prefixed Campaign, planned Scenario, and authoring Evidence
+Set identities. Strictly decode and preserve those configurations before
+invocation. Keep at most three execution lanes through this second wave. Only
+after its quiescent checkpoint may the coordinator reduce active lanes or keep
+all three, based on observed completion time, resource headroom, and provider
+health.
+
+For the first wave, verify that every checked-in identity is unused immediately
+before invocation. If one is occupied or an invocation must be retried, do not
+edit or reuse that configuration. Copy its semantic inputs to a new immutable
+configuration under the launch's durable `operator/configs/` directory and
+replace `campaignId`, `plannedScenarioId`, and `evidenceSetId` with fresh
+launch-prefixed identities. Strictly decode the copy, preserve it in the next
+archive checkpoint, and use it as the new invocation input. Apply the same
+procedure to every later-wave configuration.
 
 ## Durability and recovery
 

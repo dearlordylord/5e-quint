@@ -488,12 +488,19 @@ describe("scenario generation campaign", () => {
 
   test("decodes every checked-in campaign configuration strictly", () => {
     const campaignDirectory = resolve(repoRoot, "scripts/raw-swarm");
-    const paths = readdirSync(campaignDirectory)
-      .filter(
-        (name) =>
-          name.startsWith("scenario-campaign") && name.endsWith(".json"),
-      )
-      .map((name) => resolve(campaignDirectory, name));
+    const campaignConfigurationNames = readdirSync(campaignDirectory).filter(
+      (name) => name.startsWith("scenario-campaign") && name.endsWith(".json"),
+    );
+    expect(campaignConfigurationNames).toEqual(
+      expect.arrayContaining([
+        "scenario-campaign-48h-causeway-recovery.json",
+        "scenario-campaign-48h-riverstone-relief.json",
+        "scenario-campaign-48h-watchfire-rotation.json",
+      ]),
+    );
+    const paths = campaignConfigurationNames.map((name) =>
+      resolve(campaignDirectory, name),
+    );
     for (const path of paths) {
       const decoded = Schema.decodeUnknownEither(ScenarioCampaignConfigSchema, {
         onExcessProperty: "error",
