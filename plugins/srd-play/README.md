@@ -36,7 +36,11 @@ mode. Follow the current [OpenAI plugin connection guide](https://developers.ope
 3. Open **Plugins**, choose **+**, enter the user-facing name and description,
    select the connection method, and create the connection. For a public
    endpoint, enter the full `/mcp` URL; for a tunnel, select **Tunnel** and
-   choose or enter its `tunnel_id`.
+   choose or enter its `tunnel_id`. For this private developer-mode SRD Play
+   evaluation, choose **No authentication** in the MCP/app authentication
+   setting: do not configure OAuth or a user-facing API key. This no-auth
+   choice is scoped to this private evaluation and is not a public
+   multi-user deployment configuration.
 4. Review the discovered tool names, descriptions, schemas, and annotations.
    Resolve transport, initialization, schema, or authentication errors before
    evaluating selection.
@@ -79,6 +83,10 @@ owns current permissions, releases, networking, and command details.
    tunnel-client doctor --profile srd-play-local --explain
    tunnel-client run --profile srd-play-local
    ```
+
+   `CONTROL_PLANE_API_KEY` is the tunnel-client control-plane runtime
+   credential. It is separate from the MCP/app authentication setting above;
+   do not expose it as a user-facing API key.
 
    Keep `tunnel-client run` running while ChatGPT discovers tools and executes
    calls. Confirm the client is healthy and ready with its local health/admin
