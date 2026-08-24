@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { Either, JSONSchema, Match, Schema } from "effect";
+import { Either, JSONSchema, Match, ParseResult, Schema } from "effect";
 
 import {
   GitShaSchema,
@@ -128,15 +128,17 @@ export const ContentAvailabilityIntentSchema = Schema.Literal(
 export type ContentAvailabilityIntent =
   (typeof CONTENT_AVAILABILITY_INTENTS)[number];
 
+const AvailableOnlyScenarioContentAdmissionSchema = Schema.Struct({
+  contentAvailabilityIntent: Schema.Literal("availableOnly"),
+  contentReview: AvailableOnlyScenarioContentReviewSchema,
+});
+const ProbeUnavailableContentScenarioContentAdmissionSchema = Schema.Struct({
+  contentAvailabilityIntent: Schema.Literal("probeUnavailableContent"),
+  contentReview: ProbeUnavailableContentScenarioContentReviewSchema,
+});
 export const ScenarioContentAdmissionSchema = Schema.Union(
-  Schema.Struct({
-    contentAvailabilityIntent: Schema.Literal("availableOnly"),
-    contentReview: AvailableOnlyScenarioContentReviewSchema,
-  }),
-  Schema.Struct({
-    contentAvailabilityIntent: Schema.Literal("probeUnavailableContent"),
-    contentReview: ProbeUnavailableContentScenarioContentReviewSchema,
-  }),
+  AvailableOnlyScenarioContentAdmissionSchema,
+  ProbeUnavailableContentScenarioContentAdmissionSchema,
 );
 
 export const SDK_CAPABILITY_INTENTS = [
@@ -182,16 +184,19 @@ export const ScenarioSdkCapabilityReviewSchema = Schema.Union(
   MissingUnsupportedSdkCapabilityProbeReviewSchema,
 );
 
-export const ScenarioSdkCapabilityAdmissionSchema = Schema.Union(
-  Schema.Struct({
-    sdkCapabilityIntent: Schema.Literal("supportedOnly"),
-    sdkCapabilityReview: SupportedOnlyScenarioSdkCapabilityReviewSchema,
-  }),
+const SupportedOnlyScenarioSdkCapabilityAdmissionSchema = Schema.Struct({
+  sdkCapabilityIntent: Schema.Literal("supportedOnly"),
+  sdkCapabilityReview: SupportedOnlyScenarioSdkCapabilityReviewSchema,
+});
+const ProbeUnsupportedCapabilityScenarioSdkCapabilityAdmissionSchema =
   Schema.Struct({
     sdkCapabilityIntent: Schema.Literal("probeUnsupportedCapability"),
     sdkCapabilityReview:
       ProbeUnsupportedCapabilityScenarioSdkCapabilityReviewSchema,
-  }),
+  });
+export const ScenarioSdkCapabilityAdmissionSchema = Schema.Union(
+  SupportedOnlyScenarioSdkCapabilityAdmissionSchema,
+  ProbeUnsupportedCapabilityScenarioSdkCapabilityAdmissionSchema,
 );
 
 const SafeScenarioPolicyReviewSchema = Schema.Struct({
@@ -273,7 +278,6 @@ export type ScenarioCompositeReviewForIntents<
   readonly contentAvailability: ScenarioContentReviewForIntent<ContentIntent>;
   readonly sdkCapability: ScenarioSdkCapabilityReviewForIntent<SdkIntent>;
 };
-
 const ScenarioSha256Schema = Schema.String.pipe(
   Schema.pattern(/^[0-9a-f]{64}$/),
   Schema.brand("RawSwarmScenarioSha256"),
@@ -390,34 +394,125 @@ export function scenarioCompositeReviewSchemaForIntents<
 export function scenarioCompositeReviewSchemaForIntents(input: {
   readonly contentAvailabilityIntent: ContentAvailabilityIntent;
   readonly sdkCapabilityIntent: SdkCapabilityIntent;
-}): Schema.Any {
+}): Schema.Schema<CurrentScenarioCompositeReview> {
   return Schema.Struct({
     raw: ScenarioRawReviewSchema,
-    contentAvailability:
-      input.contentAvailabilityIntent === "availableOnly"
-        ? AvailableOnlyScenarioContentReviewSchema
-        : ProbeUnavailableContentScenarioContentReviewSchema,
-    sdkCapability:
-      input.sdkCapabilityIntent === "supportedOnly"
-        ? SupportedOnlyScenarioSdkCapabilityReviewSchema
-        : ProbeUnsupportedCapabilityScenarioSdkCapabilityReviewSchema,
+    contentAvailability: Match.value(input.contentAvailabilityIntent).pipe(
+      Match.when(
+        "availableOnly",
+        () => AvailableOnlyScenarioContentReviewSchema,
+      ),
+      Match.when(
+        "probeUnavailableContent",
+        () => ProbeUnavailableContentScenarioContentReviewSchema,
+      ),
+      Match.exhaustive,
+    ),
+    sdkCapability: Match.value(input.sdkCapabilityIntent).pipe(
+      Match.when(
+        "supportedOnly",
+        () => SupportedOnlyScenarioSdkCapabilityReviewSchema,
+      ),
+      Match.when(
+        "probeUnsupportedCapability",
+        () => ProbeUnsupportedCapabilityScenarioSdkCapabilityReviewSchema,
+      ),
+      Match.exhaustive,
+    ),
     artifactPolicy: ScenarioPolicyReviewSchema,
     scenarioQuality: ScenarioQualityReviewSchema,
   });
 }
 
+type ScenarioReviewResultDecoder<Result> = (
+  value: unknown,
+) => Either.Either<Result, ParseResult.ParseError>;
+type ScenarioReviewOutputDecoder<Result> = ScenarioReviewResultDecoder<{
+  readonly result: Result;
+}>;
+
+function scenarioReviewResultDecoder<A, I>(
+  schema: Schema.Schema<A, I>,
+): ScenarioReviewResultDecoder<A> {
+  const decode = Schema.decodeUnknownEither(schema, {
+    onExcessProperty: "error",
+  });
+  return (value) => decode(value);
+}
+
+function scenarioReviewOutputDecoder<A, I>(
+  schema: Schema.Schema<A, I>,
+): ScenarioReviewOutputDecoder<A> {
+  return scenarioReviewResultDecoder(Schema.Struct({ result: schema }));
+}
+
+type ScenarioReviewSchemaCompatibility<
+  Tag extends string,
+  Result,
+  Encoded,
+> = Readonly<{
+  readonly tag: Tag;
+  readonly schema: Schema.Schema<Result, Encoded>;
+  readonly decodeResult: ScenarioReviewResultDecoder<Result>;
+  readonly decodeOutput: ScenarioReviewOutputDecoder<Result>;
+}>;
+
+function scenarioReviewSchemaCompatibility<Tag extends string, Result, Encoded>(
+  tag: Tag,
+  schema: Schema.Schema<Result, Encoded>,
+): ScenarioReviewSchemaCompatibility<Tag, Result, Encoded> {
+  return {
+    tag,
+    schema,
+    decodeResult: scenarioReviewResultDecoder(schema),
+    decodeOutput: scenarioReviewOutputDecoder(schema),
+  };
+}
+
+export type ScenarioReviewOutputSchemaCompatibility =
+  | ScenarioReviewSchemaCompatibility<
+      "historical",
+      Schema.Schema.Type<typeof HistoricalScenarioCompositeReviewSchema>,
+      Schema.Schema.Encoded<typeof HistoricalScenarioCompositeReviewSchema>
+    >
+  | ScenarioReviewSchemaCompatibility<
+      "legacyCurrent",
+      Schema.Schema.Type<typeof CurrentScenarioCompositeReviewSchema>,
+      Schema.Schema.Encoded<typeof CurrentScenarioCompositeReviewSchema>
+    >
+  | (ScenarioReviewSchemaCompatibility<
+      "intentSpecificCurrent",
+      ScenarioCompositeReviewForIntents<
+        ContentAvailabilityIntent,
+        SdkCapabilityIntent
+      >,
+      ScenarioCompositeReviewForIntents<
+        ContentAvailabilityIntent,
+        SdkCapabilityIntent
+      >
+    > &
+      Readonly<{
+        readonly contentAvailabilityIntent: ContentAvailabilityIntent;
+        readonly sdkCapabilityIntent: SdkCapabilityIntent;
+      }>);
+
 /**
- * Resolve a retained current-review output schema to its canonical intent
- * specific schema. Retained inputs store the exact JSON Schema but not a
- * second copy of the campaign configuration, so replay matches that schema
- * against the four canonical intent combinations.
+ * Classify the retained model-output schema once, including its evidence
+ * version policy. Current strict envelopes carry an intent-specific schema;
+ * the generic current schema remains readable only as an explicit legacy
+ * compatibility branch.
  */
-export function scenarioCompositeReviewSchemaFromOutputJsonSchema(
-  outputJsonSchema: unknown,
-): Either.Either<
-  ReturnType<typeof scenarioCompositeReviewSchemaForIntents>,
-  string
-> {
+export function classifyScenarioReviewOutputSchema(input: {
+  readonly schemaVersion: 2 | 3;
+  readonly outputJsonSchema: unknown;
+}): Either.Either<ScenarioReviewOutputSchemaCompatibility, string> {
+  const outputJson = canonicalJson(input.outputJsonSchema);
+  const historicalJson = canonicalJson(
+    codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema),
+  );
+  const currentJson = canonicalJson(
+    codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema),
+  );
   const candidates = CONTENT_AVAILABILITY_INTENTS.flatMap(
     (contentAvailabilityIntent) =>
       SDK_CAPABILITY_INTENTS.map(
@@ -427,7 +522,7 @@ export function scenarioCompositeReviewSchemaFromOutputJsonSchema(
   );
   const matching = candidates.find(
     ([contentAvailabilityIntent, sdkCapabilityIntent]) =>
-      canonicalJson(outputJsonSchema) ===
+      outputJson ===
       canonicalJson(
         codexOutputJsonSchema(
           scenarioCompositeReviewSchemaForIntents({
@@ -437,16 +532,49 @@ export function scenarioCompositeReviewSchemaFromOutputJsonSchema(
         ),
       ),
   );
-  return matching === undefined
-    ? Either.left(
-        "Retained current scenario review does not use a canonical intent-specific output schema.",
-      )
-    : Either.right(
-        scenarioCompositeReviewSchemaForIntents({
+  return Match.value(input.schemaVersion).pipe(
+    Match.when(2, () => {
+      if (outputJson === historicalJson) {
+        return Either.right({
+          ...scenarioReviewSchemaCompatibility(
+            "historical" as const,
+            HistoricalScenarioCompositeReviewSchema,
+          ),
+        });
+      }
+      return Either.left(
+        "Historical scenario review input does not use the historical composite-review schema.",
+      );
+    }),
+    Match.when(3, () => {
+      if (matching !== undefined) {
+        const schema = scenarioCompositeReviewSchemaForIntents({
           contentAvailabilityIntent: matching[0],
           sdkCapabilityIntent: matching[1],
-        }),
+        });
+        return Either.right({
+          ...scenarioReviewSchemaCompatibility(
+            "intentSpecificCurrent" as const,
+            schema,
+          ),
+          contentAvailabilityIntent: matching[0],
+          sdkCapabilityIntent: matching[1],
+        });
+      }
+      if (outputJson === currentJson) {
+        return Either.right({
+          ...scenarioReviewSchemaCompatibility(
+            "legacyCurrent" as const,
+            CurrentScenarioCompositeReviewSchema,
+          ),
+        });
+      }
+      return Either.left(
+        "Current scenario review input does not use a canonical intent-specific or legacy composite-review schema.",
       );
+    }),
+    Match.exhaustive,
+  );
 }
 
 type ScenarioAdmissionReviews = Schema.Schema.Type<
@@ -457,29 +585,62 @@ function decodeScenarioContentAdmission(input: {
   readonly contentAvailabilityIntent: ContentAvailabilityIntent;
   readonly contentReview: ScenarioContentReview;
 }): Either.Either<ScenarioContentAdmission, string> {
-  const decoded = Schema.decodeUnknownEither(ScenarioContentAdmissionSchema, {
-    onExcessProperty: "error",
-  })(input);
-  return Either.isRight(decoded)
-    ? Either.right(decoded.right)
-    : Either.left(
-        "Scenario content reviewer returned a result inconsistent with the campaign intent.",
-      );
+  return Match.value(input.contentAvailabilityIntent).pipe(
+    Match.when("availableOnly", () => {
+      const decoded = Schema.decodeUnknownEither(
+        AvailableOnlyScenarioContentAdmissionSchema,
+        { onExcessProperty: "error" },
+      )(input);
+      return Either.isRight(decoded)
+        ? Either.right(decoded.right)
+        : Either.left(
+            "Scenario content reviewer returned a result inconsistent with the campaign intent.",
+          );
+    }),
+    Match.when("probeUnavailableContent", () => {
+      const decoded = Schema.decodeUnknownEither(
+        ProbeUnavailableContentScenarioContentAdmissionSchema,
+        { onExcessProperty: "error" },
+      )(input);
+      return Either.isRight(decoded)
+        ? Either.right(decoded.right)
+        : Either.left(
+            "Scenario content reviewer returned a result inconsistent with the campaign intent.",
+          );
+    }),
+    Match.exhaustive,
+  );
 }
 
 function decodeScenarioSdkCapabilityAdmission(input: {
   readonly sdkCapabilityIntent: SdkCapabilityIntent;
   readonly sdkCapabilityReview: ScenarioSdkCapabilityReview;
 }): Either.Either<ScenarioSdkCapabilityAdmission, string> {
-  const decoded = Schema.decodeUnknownEither(
-    ScenarioSdkCapabilityAdmissionSchema,
-    { onExcessProperty: "error" },
-  )(input);
-  return Either.isRight(decoded)
-    ? Either.right(decoded.right)
-    : Either.left(
-        "Scenario SDK capability reviewer returned a result inconsistent with the campaign intent.",
-      );
+  return Match.value(input.sdkCapabilityIntent).pipe(
+    Match.when("supportedOnly", () => {
+      const decoded = Schema.decodeUnknownEither(
+        SupportedOnlyScenarioSdkCapabilityAdmissionSchema,
+        { onExcessProperty: "error" },
+      )(input);
+      return Either.isRight(decoded)
+        ? Either.right(decoded.right)
+        : Either.left(
+            "Scenario SDK capability reviewer returned a result inconsistent with the campaign intent.",
+          );
+    }),
+    Match.when("probeUnsupportedCapability", () => {
+      const decoded = Schema.decodeUnknownEither(
+        ProbeUnsupportedCapabilityScenarioSdkCapabilityAdmissionSchema,
+        { onExcessProperty: "error" },
+      )(input);
+      return Either.isRight(decoded)
+        ? Either.right(decoded.right)
+        : Either.left(
+            "Scenario SDK capability reviewer returned a result inconsistent with the campaign intent.",
+          );
+    }),
+    Match.exhaustive,
+  );
 }
 
 function rawDisposition(
@@ -806,6 +967,24 @@ export type ScenarioGenerationInput = {
   readonly candidateCount: number;
 };
 
+export type ScenarioReviewInput<
+  ContentIntent extends ContentAvailabilityIntent = ContentAvailabilityIntent,
+  SdkIntent extends SdkCapabilityIntent = SdkCapabilityIntent,
+> = {
+  readonly scenario: string;
+  readonly scenarioPurpose: ScenarioCampaignConfig["scenarioPurpose"];
+  readonly campaignId: ScenarioCampaignId;
+  readonly candidateId: ScenarioCandidateId;
+  readonly candidateScenarioSha256: string;
+  readonly plannedScenarioId: PlannedScenarioId;
+  readonly finalReview: boolean;
+  readonly distributionPreference: string;
+  readonly stageFacts: ScenarioStageFacts;
+  readonly contentAvailabilityIntent: ContentIntent;
+  readonly sdkCapabilityIntent: SdkIntent;
+  readonly catalogueComparison: ScenarioCatalogueComparisonEvidence;
+};
+
 export type ScenarioCatalogueComparisonContext =
   | Readonly<{ readonly tag: "notConfigured" }>
   | Readonly<{
@@ -836,20 +1015,12 @@ export interface ScenarioCampaignAgents {
   readonly generate: (
     input: ScenarioGenerationInput,
   ) => Promise<ScenarioCandidateBatch>;
-  readonly reviewScenario: (input: {
-    readonly scenario: string;
-    readonly scenarioPurpose: ScenarioCampaignConfig["scenarioPurpose"];
-    readonly campaignId: ScenarioCampaignId;
-    readonly candidateId: ScenarioCandidateId;
-    readonly candidateScenarioSha256: string;
-    readonly plannedScenarioId: PlannedScenarioId;
-    readonly finalReview: boolean;
-    readonly distributionPreference: string;
-    readonly stageFacts: ScenarioStageFacts;
-    readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
-    readonly sdkCapabilityIntent: ScenarioCampaignConfig["sdkCapabilityIntent"];
-    readonly catalogueComparison: ScenarioCatalogueComparisonEvidence;
-  }) => Promise<CurrentScenarioCompositeReview>;
+  readonly reviewScenario: <
+    ContentIntent extends ContentAvailabilityIntent,
+    SdkIntent extends SdkCapabilityIntent,
+  >(
+    input: ScenarioReviewInput<ContentIntent, SdkIntent>,
+  ) => Promise<ScenarioCompositeReviewForIntents<ContentIntent, SdkIntent>>;
   readonly compareCandidate?: (input: {
     readonly scenario: string;
     readonly candidateIndex: number;

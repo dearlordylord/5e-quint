@@ -25,17 +25,16 @@ import {
   ScenarioCandidateBatchSchema,
   ScenarioCampaignConfigSchema,
   RejectedScenarioCandidateReviewSchema,
-  CurrentScenarioCompositeReviewSchema,
-  HistoricalScenarioCompositeReviewSchema,
+  classifyScenarioReviewOutputSchema,
   scenarioCompositeReviewSchemaForIntents,
-  scenarioCompositeReviewSchemaFromOutputJsonSchema,
   verifyFinalScenarioReview,
   type ContentAvailabilityIntent,
   type ScenarioCampaignCandidateRejection,
   type ScenarioCampaignAgents,
   type ScenarioCampaignResult,
   type ScenarioCatalogueAdmissionContext,
-  type ScenarioCompositeReview,
+  type ScenarioReviewInput,
+  type CurrentScenarioCompositeReview,
   type SdkCapabilityIntent,
 } from "./scenario-campaign.ts";
 import {
@@ -58,7 +57,6 @@ import {
 import { RAW_SWARM_STAGE_PLAN_REASONS } from "./scenario-stage-plan.ts";
 import { scenarioSetupStatBlocks } from "./sdk-player/scenario-setup-runtime.ts";
 import {
-  canonicalJson,
   currentGitRevision,
   GitShaSchema,
   repoRoot,
@@ -547,7 +545,10 @@ Produce exactly ${input.candidateCount} materially different candidate objects. 
           retention: { directory: eventDirectory },
         },
       ),
-    reviewScenario: async ({
+    reviewScenario: async <
+      ContentIntent extends ContentAvailabilityIntent,
+      SdkIntent extends SdkCapabilityIntent,
+    >({
       scenario,
       campaignId,
       candidateId,
@@ -560,7 +561,7 @@ Produce exactly ${input.candidateCount} materially different candidate objects. 
       contentAvailabilityIntent,
       sdkCapabilityIntent,
       catalogueComparison,
-    }) => {
+    }: ScenarioReviewInput<ContentIntent, SdkIntent>) => {
       const reviewSchema = scenarioCompositeReviewSchemaForIntents({
         contentAvailabilityIntent,
         sdkCapabilityIntent,
@@ -656,32 +657,25 @@ export async function replayRetainedScenarioReview(input: {
   readonly retainedInput: RetainedScenarioReviewInput;
   readonly ledgerPath: string;
   readonly gitSha: GitSha;
-}): Promise<ScenarioCompositeReview> {
+}): Promise<CurrentScenarioCompositeReview> {
   if (input.retainedInput.schemaVersion === 2) {
     fail(
       "Historical Scenario review input is readable evidence but is not a current executable review subject.",
     );
   }
-  const intentSpecificSchema =
-    scenarioCompositeReviewSchemaFromOutputJsonSchema(
-      input.retainedInput.outputJsonSchema,
-    );
-  const currentOutputSchema = codexOutputJsonSchema(
-    CurrentScenarioCompositeReviewSchema,
+  const compatibility = classifyScenarioReviewOutputSchema({
+    schemaVersion: input.retainedInput.schemaVersion,
+    outputJsonSchema: input.retainedInput.outputJsonSchema,
+  });
+  if (Either.isLeft(compatibility)) {
+    fail(compatibility.left);
+  }
+  const retainedResult = compatibility.right.decodeResult(
+    input.retainedInput.result,
   );
-  const historicalOutputSchema = codexOutputJsonSchema(
-    HistoricalScenarioCompositeReviewSchema,
-  );
-  const isCurrent =
-    Either.isRight(intentSpecificSchema) ||
-    canonicalJson(input.retainedInput.outputJsonSchema) ===
-      canonicalJson(currentOutputSchema);
-  const isHistorical =
-    canonicalJson(input.retainedInput.outputJsonSchema) ===
-    canonicalJson(historicalOutputSchema);
-  if (!isCurrent && !isHistorical) {
+  if (Either.isLeft(retainedResult)) {
     fail(
-      "Retained scenario review input does not use a production composite-review schema.",
+      "Retained scenario review result does not match its canonical output schema.",
     );
   }
   const execution = {
@@ -697,17 +691,17 @@ export async function replayRetainedScenarioReview(input: {
       reviewStage: input.retainedInput.reviewStage,
     },
   } as const;
-  if (isCurrent) {
-    const schema = Either.isRight(intentSpecificSchema)
-      ? intentSpecificSchema.right
-      : CurrentScenarioCompositeReviewSchema;
-    return await runCodexJson(input.retainedInput.prompt, schema, execution);
-  }
-  return await runCodexJson(
-    input.retainedInput.prompt,
-    HistoricalScenarioCompositeReviewSchema,
-    execution,
+  const schema = Match.value(compatibility.right).pipe(
+    Match.when({ tag: "intentSpecificCurrent" }, ({ schema }) => schema),
+    Match.when({ tag: "legacyCurrent" }, ({ schema }) => schema),
+    Match.when({ tag: "historical" }, () =>
+      fail(
+        "Historical Scenario review input is readable evidence but is not a current executable review subject.",
+      ),
+    ),
+    Match.exhaustive,
   );
+  return await runCodexJson(input.retainedInput.prompt, schema, execution);
 }
 
 function verifyRetainedScenario(

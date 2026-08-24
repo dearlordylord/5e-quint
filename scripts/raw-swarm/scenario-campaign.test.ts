@@ -20,11 +20,12 @@ import {
   retentionRevisionMatches,
   ScenarioCampaignConfigSchema,
   ScenarioRawReviewSchema,
+  classifyScenarioReviewOutputSchema,
   scenarioCompositeReviewSchemaForIntents,
-  scenarioCompositeReviewSchemaFromOutputJsonSchema,
   verifyFinalScenarioReview,
   type ScenarioCampaignAgents,
   type ScenarioCampaignConfig,
+  type ScenarioGenerationInput,
   type ScenarioStageFacts,
 } from "./scenario-campaign.ts";
 import {
@@ -1302,12 +1303,87 @@ describe("scenario generation campaign", () => {
         });
         expect(
           Either.isRight(
-            scenarioCompositeReviewSchemaFromOutputJsonSchema(
-              codexOutputJsonSchema(schema),
-            ),
+            classifyScenarioReviewOutputSchema({
+              schemaVersion: 3,
+              outputJsonSchema: codexOutputJsonSchema(schema),
+            }),
           ),
         ).toBe(true);
       }
+    }
+    const strictOutputJsonSchema = codexOutputJsonSchema(
+      scenarioCompositeReviewSchemaForIntents({
+        contentAvailabilityIntent: "availableOnly",
+        sdkCapabilityIntent: "supportedOnly",
+      }),
+    );
+    const strictCurrent = classifyScenarioReviewOutputSchema({
+      schemaVersion: 3,
+      outputJsonSchema: strictOutputJsonSchema,
+    });
+    expect(Either.isRight(strictCurrent)).toBe(true);
+    if (Either.isRight(strictCurrent)) {
+      expect(strictCurrent.right.tag).toBe("intentSpecificCurrent");
+    }
+    expect(
+      Either.isLeft(
+        classifyScenarioReviewOutputSchema({
+          schemaVersion: 2,
+          outputJsonSchema: strictOutputJsonSchema,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects a cross-intent reviewer result at the campaign boundary", async () => {
+    const invalidReview = {
+      raw: {
+        classification: "supported" as const,
+        evidence: "Synthetic RAW evidence.",
+      },
+      contentAvailability: {
+        classification: "supplied" as const,
+        evidence: "Synthetic content evidence.",
+      },
+      sdkCapability: {
+        classification: "missingUnsupportedProbe" as const,
+        evidence: "The operation is not documented.",
+        critique: "Declare the unsupported capability probe.",
+      },
+      artifactPolicy: {
+        classification: "safe" as const,
+        evidence: "Synthetic policy evidence.",
+      },
+      scenarioQuality: {
+        classification: "ready" as const,
+        evidence: "Synthetic quality evidence.",
+      },
+    };
+    const maliciousAgents = {
+      generate: async (input: ScenarioGenerationInput) => ({
+        candidates: Array.from({ length: input.candidateCount }, (_, index) =>
+          candidate(`cross-intent ${input.iteration}-${index}`),
+        ),
+      }),
+      // This cast models an untrusted test double bypassing the production
+      // model-output decoder; the campaign must still reject its result.
+      reviewScenario: (async () => invalidReview) as unknown,
+    } as ScenarioCampaignAgents;
+    const result = await runScenarioCampaign(
+      {
+        ...config,
+        minimumIterations: 1,
+        maximumIterations: 2,
+        reviewMilestone: 1,
+      },
+      maliciousAgents,
+      { select: () => 0 },
+    );
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(result.left).toBe(
+        "Scenario SDK capability reviewer returned a result inconsistent with the campaign intent.",
+      );
     }
   });
 
