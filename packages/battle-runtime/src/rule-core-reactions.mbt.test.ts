@@ -81,6 +81,7 @@ const ruleCoreReactionTriggers = [
   "none",
   "opportunityAttack",
   "attackHit",
+  "reportedReadyTrigger",
 ] as const;
 type RuleCoreReactionTrigger = (typeof ruleCoreReactionTriggers)[number];
 

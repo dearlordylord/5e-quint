@@ -90,7 +90,7 @@ module ruleCoreReactionsMbt {
 
   pure def noPendingTrigger: str = "none"
   pure def opportunityAttackTrigger: str = "opportunityAttack"
-  pure def attackHitTrigger: str = "attackHit"
+  pure def reportedReadyTrigger: str = "reportedReadyTrigger"
   pure def movementResumeCostFeet: int = 10
   pure def opportunityAttackDamage: int = 1
   pure def initialHitPoints: int = 12
@@ -299,7 +299,7 @@ module ruleCoreReactionsMbt {
       qReactorReadiedMovementHeld,
       recordProtocolState(
         offered,
-        attackHitTrigger,
+        reportedReadyTrigger,
         Set("ReactionDecision"),
         WNeedsHoles,
         qInterruptedHitPoints
@@ -313,7 +313,7 @@ module ruleCoreReactionsMbt {
       .with("reactor", qReactor.with("turn", choice.turn))
       .with("reactionWindow", choice.reactionWindow)
     all {
-      qPendingTrigger == attackHitTrigger,
+      qPendingTrigger == reportedReadyTrigger,
       openHoles == Set("ReactionDecision"),
       recordProtocolState(
         declined,
@@ -331,7 +331,7 @@ module ruleCoreReactionsMbt {
       extraCostFeet: 0,
     })
     all {
-      qPendingTrigger == attackHitTrigger,
+      qPendingTrigger == reportedReadyTrigger,
       openHoles == Set("ReactionDecision"),
       recordProtocolState(
         resolved,
@@ -349,7 +349,7 @@ module ruleCoreReactionsMbt {
       extraCostFeet: 0,
     })
     all {
-      qPendingTrigger == attackHitTrigger,
+      qPendingTrigger == reportedReadyTrigger,
       openHoles == Set("ReactionDecision"),
       recordProtocolState(
         resolved,
@@ -362,7 +362,7 @@ module ruleCoreReactionsMbt {
   }
 
   action doRejectReadiedMovementZero = all {
-    qPendingTrigger == attackHitTrigger,
+    qPendingTrigger == reportedReadyTrigger,
     openHoles == Set("ReactionDecision"),
     recordInvalid(WInvalidFill),
   }
