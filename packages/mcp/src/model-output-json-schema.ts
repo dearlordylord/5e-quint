@@ -41,47 +41,70 @@ function projectValue(
   const resolved = resolveReference(schema, definitions);
   if (resolved === undefined) return {};
 
-  if (Array.isArray(resolved.anyOf)) {
-    const alternatives = resolved.anyOf.map((alternative) =>
-      projectValue(alternative, definitions, remainingDepth),
-    );
-    const mergedObjects =
-      remainingDepth <= 1 ? mergeObjectAlternatives(alternatives) : undefined;
-    return mergedObjects ?? distinctAlternatives(alternatives);
-  }
+  const projectedAlternatives = projectAlternatives(
+    resolved,
+    definitions,
+    remainingDepth,
+  );
+  if (projectedAlternatives !== undefined) return projectedAlternatives;
 
-  if ("const" in resolved) {
-    return { type: jsonValueType(resolved.const), const: resolved.const };
+  const projectedLiteral = projectLiteral(resolved);
+  if (projectedLiteral !== undefined) return projectedLiteral;
+
+  return projectTypedValue(resolved, definitions, remainingDepth);
+}
+
+function projectAlternatives(
+  schema: JsonSchema,
+  definitions: JsonSchema,
+  remainingDepth: number,
+): JsonSchema | undefined {
+  if (!Array.isArray(schema.anyOf)) return undefined;
+  const alternatives = schema.anyOf.map((alternative) =>
+    projectValue(alternative, definitions, remainingDepth),
+  );
+  const mergedObjects =
+    remainingDepth <= 1 ? mergeObjectAlternatives(alternatives) : undefined;
+  return mergedObjects ?? distinctAlternatives(alternatives);
+}
+
+function projectLiteral(schema: JsonSchema): JsonSchema | undefined {
+  if ("const" in schema) {
+    return { type: jsonValueType(schema.const), const: schema.const };
   }
-  if (Array.isArray(resolved.enum)) {
+  if (Array.isArray(schema.enum)) {
     return {
-      ...(typeof resolved.type === "string" ? { type: resolved.type } : {}),
-      enum: resolved.enum,
+      ...(typeof schema.type === "string" ? { type: schema.type } : {}),
+      enum: schema.enum,
     };
   }
-  if (resolved.type === "object") {
-    return projectObject(resolved, definitions, remainingDepth);
+  return undefined;
+}
+
+function projectTypedValue(
+  schema: JsonSchema,
+  definitions: JsonSchema,
+  remainingDepth: number,
+): JsonSchema {
+  if (schema.type === "object") {
+    return projectObject(schema, definitions, remainingDepth);
   }
-  if (resolved.type === "array") {
+  if (schema.type === "array") {
     return {
       type: "array",
       ...(remainingDepth > 0
         ? {
-            items: projectValue(
-              resolved.items,
-              definitions,
-              remainingDepth - 1,
-            ),
+            items: projectValue(schema.items, definitions, remainingDepth - 1),
           }
         : {}),
     };
   }
-  if (typeof resolved.type === "string") return { type: resolved.type };
+  if (typeof schema.type === "string") return { type: schema.type };
   if (
-    Array.isArray(resolved.type) &&
-    resolved.type.every((typeName) => typeof typeName === "string")
+    Array.isArray(schema.type) &&
+    schema.type.every((typeName) => typeof typeName === "string")
   ) {
-    return { type: resolved.type };
+    return { type: schema.type };
   }
   return {};
 }
@@ -89,13 +112,35 @@ function projectValue(
 function mergeObjectAlternatives(
   alternatives: readonly JsonSchema[],
 ): JsonSchema | undefined {
-  if (
-    alternatives.length === 0 ||
-    alternatives.some((alternative) => alternative.type !== "object")
-  ) {
-    return undefined;
-  }
+  if (!areObjectAlternatives(alternatives)) return undefined;
 
+  const propertiesByName = alternativePropertiesByName(alternatives);
+  const required = commonRequiredPropertyNames(alternatives);
+  return {
+    type: "object",
+    properties: Object.fromEntries(
+      [...propertiesByName].map(([propertyName, propertySchemas]) => [
+        propertyName,
+        distinctAlternatives(propertySchemas),
+      ]),
+    ),
+    ...(required.length > 0 ? { required } : {}),
+    ...(alternatives.every(hasClosedObjectShape)
+      ? { additionalProperties: false }
+      : {}),
+  };
+}
+
+function areObjectAlternatives(alternatives: readonly JsonSchema[]): boolean {
+  return (
+    alternatives.length > 0 &&
+    alternatives.every((alternative) => alternative.type === "object")
+  );
+}
+
+function alternativePropertiesByName(
+  alternatives: readonly JsonSchema[],
+): ReadonlyMap<string, readonly JsonSchema[]> {
   const propertiesByName = new Map<string, JsonSchema[]>();
   for (const alternative of alternatives) {
     if (!isJsonObject(alternative.properties)) continue;
@@ -108,7 +153,12 @@ function mergeObjectAlternatives(
       propertiesByName.set(propertyName, schemas);
     }
   }
+  return propertiesByName;
+}
 
+function commonRequiredPropertyNames(
+  alternatives: readonly JsonSchema[],
+): readonly string[] {
   const requiredSets = alternatives.map(
     (alternative) =>
       new Set(
@@ -120,24 +170,13 @@ function mergeObjectAlternatives(
           : [],
       ),
   );
-  const required = [...(requiredSets[0] ?? [])].filter((propertyName) =>
+  return [...(requiredSets[0] ?? [])].filter((propertyName) =>
     requiredSets.every((requiredSet) => requiredSet.has(propertyName)),
   );
-  return {
-    type: "object",
-    properties: Object.fromEntries(
-      [...propertiesByName].map(([propertyName, propertySchemas]) => [
-        propertyName,
-        distinctAlternatives(propertySchemas),
-      ]),
-    ),
-    ...(required.length > 0 ? { required } : {}),
-    ...(alternatives.every(
-      (alternative) => alternative.additionalProperties === false,
-    )
-      ? { additionalProperties: false }
-      : {}),
-  };
+}
+
+function hasClosedObjectShape(schema: JsonSchema): boolean {
+  return schema.additionalProperties === false;
 }
 
 function distinctAlternatives(alternatives: readonly JsonSchema[]): JsonSchema {
