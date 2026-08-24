@@ -8,6 +8,7 @@ import {
   type CreationBatchFillResult,
   type CreationFinalizationResult,
   type CreationHole,
+  type CreationHoleId,
   type NonEmptyReadonlyArray,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
@@ -15,7 +16,7 @@ import { Match } from "effect";
 
 export type ModelFacingCreationProjectionIssue = {
   readonly tag: "supportedOptionsBelowMinimum";
-  readonly holeId: string;
+  readonly holeId: CreationHoleId;
   readonly minimum: number;
   readonly supportedOptionCount: number;
 };

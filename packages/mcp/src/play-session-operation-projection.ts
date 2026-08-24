@@ -1,0 +1,245 @@
+import { Either, Match, Schema } from "effect";
+
+import { battleToolNames } from "./battle-tool-input.ts";
+import {
+  CharacterSessionOperationOutputSchema,
+  CreationDraftOutputSchema,
+  CreationFinalizationSchema,
+  FillCreationHolesOutputSchema,
+  FinalizeCharacterOutputSchema,
+} from "./character-tool-output.ts";
+import { characterToolNames } from "./character-tool-input.ts";
+import { diceToolNames } from "./dice-tool-input.ts";
+import { playSessionToolNames } from "./play-session-tool-contract.ts";
+import type { PlaySessionOperationName } from "./play-session-tool-contract.ts";
+
+export type UnresolvedInputGroup = {
+  readonly sourcePath: string;
+  readonly inputs: readonly unknown[];
+};
+
+/**
+ * Project only operation-owned executable inputs into the envelope.
+ *
+ * This is deliberately a bounded operation-name projection. Walking every
+ * object property named `holes` would treat diagnostic/query route metadata as
+ * an executable Battle or creation hole (for example, qRoute's
+ * `projectionChoice`). Each branch decodes the operation's own output schema
+ * before selecting the one or two contract-defined hole paths.
+ */
+export function unresolvedInputsFrom(
+  operationName: PlaySessionOperationName,
+  value: unknown,
+): readonly UnresolvedInputGroup[] {
+  return Match.value(operationName).pipe(
+    Match.when(characterToolNames.createCharacterDraft, () =>
+      creationDraftUnresolvedInputs(value),
+    ),
+    Match.when(characterToolNames.discoverCreationHoles, () =>
+      creationDraftUnresolvedInputs(value),
+    ),
+    Match.when(characterToolNames.fillCreationHoles, () =>
+      creationFillUnresolvedInputs(value),
+    ),
+    Match.when(characterToolNames.finalizeCharacter, () =>
+      finalizationUnresolvedInputs(value),
+    ),
+    Match.when(characterToolNames.applyCharacterSessionOperation, () =>
+      characterSessionOperationUnresolvedInputs(value),
+    ),
+    Match.when(battleToolNames.startBattle, () =>
+      startBattleUnresolvedInputs(value),
+    ),
+    Match.when(battleToolNames.battleLifecycle, () =>
+      battleLifecycleUnresolvedInputs(value),
+    ),
+    Match.when(battleToolNames.readBattleState, () =>
+      battleSessionUnresolvedInputs(value),
+    ),
+    Match.when(battleToolNames.discoverBattleActs, () =>
+      battleSessionUnresolvedInputs(value),
+    ),
+    Match.when(battleToolNames.fillBattleHole, () =>
+      battleResolutionUnresolvedInputs(value),
+    ),
+    Match.when(battleToolNames.resolveBattleAct, () =>
+      battleResolutionUnresolvedInputs(value),
+    ),
+    Match.when(battleToolNames.endTurn, () =>
+      battleResolutionUnresolvedInputs(value),
+    ),
+    Match.when(isNoHoleOperationName, () => []),
+    Match.exhaustive,
+  );
+}
+
+function creationDraftUnresolvedInputs(
+  value: unknown,
+): readonly UnresolvedInputGroup[] {
+  const decoded = Schema.decodeUnknownEither(CreationDraftOutputSchema)(value);
+  if (Either.isLeft(decoded)) return [];
+  return [
+    ...nonEmptyInputGroup("$.holes", decoded.right.holes),
+    ...finalizationHoleGroup(decoded.right.finalization),
+  ];
+}
+
+function creationFillUnresolvedInputs(
+  value: unknown,
+): readonly UnresolvedInputGroup[] {
+  const decoded = Schema.decodeUnknownEither(FillCreationHolesOutputSchema)(
+    value,
+  );
+  if (Either.isLeft(decoded)) return [];
+  return [
+    ...nonEmptyInputGroup("$.result.holes", decoded.right.result.holes),
+    ...finalizationHoleGroup(
+      decoded.right.result.finalization,
+      "$.result.finalization.holes",
+    ),
+  ];
+}
+
+function finalizationUnresolvedInputs(
+  value: unknown,
+): readonly UnresolvedInputGroup[] {
+  const decoded = Schema.decodeUnknownEither(FinalizeCharacterOutputSchema)(
+    value,
+  );
+  if (Either.isLeft(decoded)) return [];
+  return finalizationHoleGroup(decoded.right.finalization);
+}
+
+function characterSessionOperationUnresolvedInputs(
+  value: unknown,
+): readonly UnresolvedInputGroup[] {
+  const decoded = Schema.decodeUnknownEither(
+    CharacterSessionOperationOutputSchema,
+  )(value);
+  if (Either.isLeft(decoded)) return [];
+  if (!("result" in decoded.right) || decoded.right.result === undefined) {
+    return [];
+  }
+  return decoded.right.result.tag === "needsHoles"
+    ? nonEmptyInputGroup("$.result.holes", decoded.right.result.holes)
+    : [];
+}
+
+function startBattleUnresolvedInputs(
+  value: unknown,
+): readonly UnresolvedInputGroup[] {
+  const decoded = Schema.decodeUnknownEither(BattlePresentationInputSchema)(
+    value,
+  );
+  if (Either.isLeft(decoded)) return [];
+  return battlePresentationUnresolvedInputsFrom(decoded.right);
+}
+
+function battleLifecycleUnresolvedInputs(
+  value: unknown,
+): readonly UnresolvedInputGroup[] {
+  const decoded = Schema.decodeUnknownEither(BattlePresentationInputSchema)(
+    value,
+  );
+  if (Either.isLeft(decoded)) return [];
+  return battlePresentationUnresolvedInputsFrom(decoded.right);
+}
+
+function battleSessionUnresolvedInputs(
+  value: unknown,
+): readonly UnresolvedInputGroup[] {
+  const decoded = Schema.decodeUnknownEither(BattlePresentationInputSchema)(
+    value,
+  );
+  if (Either.isLeft(decoded)) return [];
+  return battlePresentationUnresolvedInputsFrom(decoded.right);
+}
+
+function battlePresentationUnresolvedInputsFrom(value: {
+  readonly availableActs: readonly {
+    readonly initialHoles: readonly unknown[];
+  }[];
+}): readonly UnresolvedInputGroup[] {
+  return value.availableActs.flatMap((act, index) =>
+    nonEmptyInputGroup(
+      `$.availableActs[${index}].initialHoles`,
+      act.initialHoles,
+    ),
+  );
+}
+
+function battleResolutionUnresolvedInputs(
+  value: unknown,
+): readonly UnresolvedInputGroup[] {
+  const decoded = Schema.decodeUnknownEither(BattleResolutionInputSchema)(
+    value,
+  );
+  if (Either.isLeft(decoded)) return [];
+  return [
+    ...(decoded.right.result.tag === "needsHoles"
+      ? nonEmptyInputGroup("$.result.holes", decoded.right.result.holes)
+      : []),
+    ...battlePresentationUnresolvedInputsFrom(decoded.right),
+  ];
+}
+
+const BattlePresentationInputSchema = Schema.Struct({
+  availableActs: Schema.Array(
+    Schema.Struct({ initialHoles: Schema.Array(Schema.Unknown) }),
+  ),
+});
+
+const BattleResolutionInputSchema = Schema.Struct({
+  result: Schema.Union(
+    Schema.Struct({
+      tag: Schema.Literal("needsHoles"),
+      holes: Schema.Array(Schema.Unknown),
+    }),
+    Schema.Struct({ tag: Schema.Literal("resolved") }),
+    Schema.Struct({ tag: Schema.Literal("invalid") }),
+  ),
+  availableActs: BattlePresentationInputSchema.fields.availableActs,
+});
+
+function finalizationHoleGroup(
+  finalization: Schema.Schema.Type<typeof CreationFinalizationSchema>,
+  sourcePath = "$.finalization.holes",
+): readonly UnresolvedInputGroup[] {
+  return finalization.tag === "incomplete"
+    ? nonEmptyInputGroup(sourcePath, finalization.holes)
+    : [];
+}
+
+function nonEmptyInputGroup(
+  sourcePath: string,
+  inputs: readonly unknown[],
+): readonly UnresolvedInputGroup[] {
+  return inputs.length === 0 ? [] : [{ sourcePath, inputs }];
+}
+
+type NoHoleOperationName =
+  | typeof battleToolNames.selectStatBlock
+  | typeof battleToolNames.endBattle
+  | typeof characterToolNames.listCharacters
+  | typeof characterToolNames.inspectCharacterSession
+  | typeof characterToolNames.queryCharacterSession
+  | typeof diceToolNames.rollDice
+  | typeof playSessionToolNames.create
+  | typeof playSessionToolNames.read;
+
+const NO_HOLE_OPERATION_NAMES = [
+  battleToolNames.selectStatBlock,
+  battleToolNames.endBattle,
+  characterToolNames.listCharacters,
+  characterToolNames.inspectCharacterSession,
+  characterToolNames.queryCharacterSession,
+  diceToolNames.rollDice,
+  playSessionToolNames.create,
+  playSessionToolNames.read,
+] as const satisfies readonly NoHoleOperationName[];
+
+function isNoHoleOperationName(
+  operationName: PlaySessionOperationName,
+): operationName is NoHoleOperationName {
+  return NO_HOLE_OPERATION_NAMES.some((name) => name === operationName);
+}

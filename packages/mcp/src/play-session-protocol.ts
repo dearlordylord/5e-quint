@@ -30,6 +30,15 @@ import {
   type PlaySessionNextOperationName,
   type PlaySessionOperationName,
 } from "./play-session-tool-contract.ts";
+import {
+  unresolvedInputsFrom,
+  type UnresolvedInputGroup,
+} from "./play-session-operation-projection.ts";
+
+export {
+  unresolvedInputsFrom,
+  type UnresolvedInputGroup,
+} from "./play-session-operation-projection.ts";
 
 export type PlaySessionProtocolResult = ReturnType<typeof jsonContent> & {
   readonly structuredContent: unknown;
@@ -198,7 +207,10 @@ function availableEnvelope(input: {
   readonly hasAvailableCharacterSession?: boolean;
   readonly isError?: boolean;
 }): PlaySessionProtocolResult {
-  const unresolvedInputs = unresolvedInputsFrom(input.operationResult);
+  const unresolvedInputs = unresolvedInputsFrom(
+    input.operationName,
+    input.operationResult,
+  );
   const payload = jsonSerializablePayload({
     tag: "playSessionAvailable",
     playSessionId: input.playSessionId,
@@ -246,42 +258,7 @@ function unavailableEnvelope(
   };
 }
 
-type UnresolvedInputGroup = {
-  readonly sourcePath: string;
-  readonly inputs: readonly unknown[];
-};
-
-function unresolvedInputsFrom(value: unknown): readonly UnresolvedInputGroup[] {
-  const groups: UnresolvedInputGroup[] = [];
-  collectUnresolvedInputs(value, "$", groups);
-  return groups;
-}
-
-function collectUnresolvedInputs(
-  value: unknown,
-  path: string,
-  groups: UnresolvedInputGroup[],
-): void {
-  if (Array.isArray(value)) {
-    value.forEach((entry, index) =>
-      collectUnresolvedInputs(entry, `${path}[${index}]`, groups),
-    );
-    return;
-  }
-  if (!isJsonObject(value)) return;
-
-  for (const [key, entry] of Object.entries(value)) {
-    const entryPath = `${path}.${key}`;
-    if ((key === "holes" || key === "initialHoles") && Array.isArray(entry)) {
-      if (entry.length > 0)
-        groups.push({ sourcePath: entryPath, inputs: entry });
-      continue;
-    }
-    collectUnresolvedInputs(entry, entryPath, groups);
-  }
-}
-
-function nextOperationsFrom(
+export function nextOperationsFrom(
   operationName: PlaySessionOperationName,
   projection: McpSessionSummary,
   unresolvedInputs: readonly UnresolvedInputGroup[],

@@ -17,6 +17,11 @@ import {
 import type { McpObjectInputSchema, McpOutputSchema } from "./schema-codec.ts";
 import { mcpObjectJsonSchema, mcpOutputJsonSchema } from "./schema-codec.ts";
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
+import {
+  CREATE_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  type ProtocolToolDefinition,
+} from "./tool-definition-contract.ts";
 
 export const playSessionToolNames = {
   create: "create_play_session",
@@ -70,6 +75,7 @@ export const playSessionToolDefinitions = [
     description:
       "Create an isolated process-lifetime Play Session and return the handle required by every stateful operation.",
     inputSchema: emptyInputSchema,
+    annotations: CREATE_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: playSessionLifecycleOutputSchema(
       playSessionToolNames.create,
       "playSessionCreated",
@@ -80,12 +86,13 @@ export const playSessionToolDefinitions = [
     description:
       "Resume a live Play Session by returning its current projection, unresolved inputs, and relevant next operations.",
     inputSchema: playSessionInputSchema,
+    annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: playSessionLifecycleOutputSchema(
       playSessionToolNames.read,
       "playSessionResumed",
     ),
   },
-] as const;
+] as const satisfies readonly ProtocolToolDefinition[];
 
 export function statefulPlaySessionToolDefinition<
   Definition extends {
@@ -93,6 +100,7 @@ export function statefulPlaySessionToolDefinition<
     readonly description: string;
     readonly inputSchema: McpObjectInputSchema;
     readonly outputSchema?: McpOutputSchema;
+    readonly annotations: ProtocolToolDefinition["annotations"];
   },
 >(
   definition: Definition,

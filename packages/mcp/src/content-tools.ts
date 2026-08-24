@@ -16,6 +16,10 @@ import {
   schemaJsonContent,
 } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
+import {
+  READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  type ProtocolToolDefinition,
+} from "./tool-definition-contract.ts";
 
 const EmptyArgsSchema = Schema.Struct({});
 const StringArraySchema = Schema.Array(Schema.String);
@@ -112,6 +116,7 @@ export const contentToolDefinitions = [
     description:
       "Return the agent-facing workflow guide, accepted fill shapes, result paths, supported intent aliases, and recovery rules for this MCP.",
     inputSchema: emptyInputSchema,
+    annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: workflowGuideOutputSchema,
   },
   {
@@ -119,6 +124,7 @@ export const contentToolDefinitions = [
     description:
       "List every installed redistributable SRD Stat Block with ids, display names, attacks, defenses, and damage modifiers. Catalog presence does not imply that every source is executable in every workflow.",
     inputSchema: emptyInputSchema,
+    annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: listStatBlocksOutputSchema,
   },
   {
@@ -126,10 +132,11 @@ export const contentToolDefinitions = [
     description:
       "List every installed redistributable SRD Unit id grouped by kind. This reports catalog presence only; legal and executable sources still come from the consuming workflow's canonical discovery result.",
     inputSchema: emptyInputSchema,
+    annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: listCatalogUnitsOutputSchema,
   },
   inspectCatalogUnitToolDefinition,
-] as const;
+] as const satisfies readonly ProtocolToolDefinition[];
 
 type StatBlockAttack = NonNullable<
   NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]

@@ -10,6 +10,10 @@ import {
   schemaJsonContent,
 } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
+import {
+  READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  type ProtocolToolDefinition,
+} from "./tool-definition-contract.ts";
 
 export const inspectCatalogUnitToolName = "inspect_catalog_unit";
 
@@ -26,8 +30,9 @@ export const inspectCatalogUnitToolDefinition = {
   description:
     "Return the canonical installed redistributable SRD Unit record as unitRecordJson for one catalog id. Parse that JSON for the complete authored detail; catalog detail is not a claim of source executability in any particular workflow.",
   inputSchema: mcpObjectJsonSchema(InspectCatalogUnitInputSchema),
+  annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   outputSchema: mcpOutputJsonSchema(InspectCatalogUnitOutputSchema),
-} as const;
+} as const satisfies ProtocolToolDefinition;
 
 export type InspectCatalogUnitArgs = Schema.Schema.Type<
   typeof InspectCatalogUnitInputSchema

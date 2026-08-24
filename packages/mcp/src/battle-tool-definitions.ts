@@ -24,6 +24,13 @@ import {
 } from "./schema-codec.ts";
 import { battleLifecycleInputSchema } from "./battle-lifecycle-tool-input.ts";
 import { startBattleInputSchema } from "./start-battle-tool-input.ts";
+import {
+  DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  type ProtocolToolDefinition,
+} from "./tool-definition-contract.ts";
 
 export const battleToolDefinitions = [
   {
@@ -31,6 +38,7 @@ export const battleToolDefinitions = [
     description:
       "Select an SRD Stat Block for the battle session. This stores only the Stat Block id in the MCP session.",
     inputSchema: selectStatBlockInputSchema,
+    annotations: IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(SelectStatBlockOutputSchema),
   },
   {
@@ -38,6 +46,7 @@ export const battleToolDefinitions = [
     description:
       "Start a battle session from finalized Character Builds and the selected SRD Stat Block. The caller must provide Initiative scores for every combatant; choose initialSetup to keep the SDK-owned Initiative setup open for the battle_lifecycle surface.",
     inputSchema: startBattleInputSchema,
+    annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(StartBattleOutputSchema),
   },
   {
@@ -45,6 +54,7 @@ export const battleToolDefinitions = [
     description:
       "Apply one Battle lifecycle operation: swap Initiative with a willing ally or finalize initial setup, or atomically add/remove a supported Character Session or installed Stat Block combatant while the Battle is active.",
     inputSchema: battleLifecycleInputSchema,
+    annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(BattleLifecycleOutputSchema),
   },
   {
@@ -52,6 +62,7 @@ export const battleToolDefinitions = [
     description:
       "Return the current battle-runtime snapshot, including discoverable battle acts, and the MCP session summary.",
     inputSchema: readBattleStateInputSchema,
+    annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(BattleSessionOutputSchema),
   },
   {
@@ -59,6 +70,7 @@ export const battleToolDefinitions = [
     description:
       "Return the current battle snapshot and runtime-discovered available acts for the current combatant.",
     inputSchema: discoverBattleActsInputSchema,
+    annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(BattleSessionOutputSchema),
   },
   {
@@ -66,6 +78,7 @@ export const battleToolDefinitions = [
     description:
       "Fill one hole for a selected battle act subject. MCP stores transient fills until the battle runtime has enough table facts to resolve the act.",
     inputSchema: fillBattleHoleInputSchema,
+    annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(BattleResolutionOutputSchema),
   },
   {
@@ -73,6 +86,7 @@ export const battleToolDefinitions = [
     description:
       "Resolve a selected battle act subject that does not need holes, such as Action Surge.",
     inputSchema: resolveBattleActInputSchema,
+    annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(BattleResolutionOutputSchema),
   },
   {
@@ -80,6 +94,7 @@ export const battleToolDefinitions = [
     description:
       "Resolve the current actor's End Turn runtime command and store the updated battle session.",
     inputSchema: endTurnInputSchema,
+    annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(BattleResolutionOutputSchema),
   },
   {
@@ -87,9 +102,10 @@ export const battleToolDefinitions = [
     description:
       "Finalize the stored battle session and hand character-owned post-battle facts, including current HP, back to durable character session state.",
     inputSchema: endBattleInputSchema,
+    annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(EndBattleOutputSchema),
   },
-] as const;
+] as const satisfies readonly ProtocolToolDefinition[];
 
 export function isBattleToolName(name: string): name is BattleToolName {
   return BATTLE_TOOL_NAMES.some((toolName) => toolName === name);

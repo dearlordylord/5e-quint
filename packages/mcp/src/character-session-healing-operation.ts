@@ -15,6 +15,12 @@ import { Either, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
+import {
+  healingTargetIssueCode,
+  lookupAvailableHealingTargetSession,
+  spellRestBenefitRecipientSessions,
+  type HealingTargetIssue,
+} from "./character-session-healing-targets.ts";
 import { CharacterSessionOperationOutputSchema } from "./character-tool-output.ts";
 import type { AvailableCharacterSession } from "./session-store.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
@@ -179,25 +185,20 @@ export function applySpellRestBenefitOperation(
     input.characterId,
     ...recipientIds,
   ]);
-  const recipientSheets: AvailableCharacterSession[] = [];
-  for (const [index, recipient] of input.operation.recipients.entries()) {
-    const session = availableTargetSession(root, {
+  const recipientSessions = spellRestBenefitRecipientSessions(root, {
+    recipients: input.operation.recipients,
+  });
+  if (Either.isLeft(recipientSessions)) {
+    return healingRecipientValidationFailure({
       operationKind: input.operation.kind,
       sourceCharacterId: input.characterId,
-      targetCharacterId: recipient.characterId,
-      recipientIndex: index,
       affectedCharacterIds,
+      issues: recipientSessions.left,
     });
-    if (Either.isLeft(session)) return session.left;
-    recipientSheets.push(session.right);
   }
   const recipientInputs = mapNonEmpty(
-    input.operation.recipients,
-    (recipient, index) =>
-      spellRestBenefitRecipientFromTool({
-        recipient,
-        sheet: recipientSheets[index],
-      }),
+    recipientSessions.right,
+    spellRestBenefitRecipientFromTool,
   );
 
   const result = applyCharacterSheetSpellRestBenefit({
@@ -293,43 +294,27 @@ function availableTargetSession(
     readonly affectedCharacterIds?: readonly CharacterId[];
   },
 ): Either.Either<AvailableCharacterSession, ReturnType<typeof errorContent>> {
-  const session = root.sessionStore.characters.get(input.targetCharacterId);
   const affectedCharacterIds = input.affectedCharacterIds ?? [
     input.sourceCharacterId,
     input.targetCharacterId,
   ];
-  if (session === undefined) {
+  const session = lookupAvailableHealingTargetSession(root, input);
+  if (Either.isLeft(session)) {
     return Either.left(
       healingOperationFailure({
         operationKind: input.operationKind,
         sourceCharacterId: input.sourceCharacterId,
         affectedCharacterIds,
-        targetCharacterId: input.targetCharacterId,
-        ...(input.recipientIndex === undefined
+        targetCharacterId: session.left.targetCharacterId,
+        ...(session.left.recipientIndex === undefined
           ? {}
-          : { recipientIndex: input.recipientIndex }),
-        issue: `Unknown target Character Session: ${input.targetCharacterId}.`,
-        code: "UNKNOWN_CHARACTER_SESSION",
+          : { recipientIndex: session.left.recipientIndex }),
+        issue: session.left.message,
+        code: healingTargetIssueCode(session.left),
       }),
     );
   }
-  if (session.tag === "inBattle") {
-    return Either.left(
-      healingOperationFailure({
-        operationKind: input.operationKind,
-        sourceCharacterId: input.sourceCharacterId,
-        affectedCharacterIds,
-        targetCharacterId: input.targetCharacterId,
-        ...(input.recipientIndex === undefined
-          ? {}
-          : { recipientIndex: input.recipientIndex }),
-        issue:
-          "Healing operation requires every affected Character Session to be available.",
-        code: "CHARACTER_SESSION_IN_BATTLE",
-      }),
-    );
-  }
-  return Either.right(session);
+  return Either.right(session.right);
 }
 
 function healingOperationFailure(input: {
@@ -362,6 +347,26 @@ function healingOperationFailure(input: {
       affectedCharacterIds: input.affectedCharacterIds,
       guidance:
         "No affected Character Session was committed; correct the operation and retry from the returned session state.",
+    },
+  });
+}
+
+function healingRecipientValidationFailure(input: {
+  readonly operationKind: "applySpellRestBenefit";
+  readonly sourceCharacterId: CharacterId;
+  readonly affectedCharacterIds: readonly CharacterId[];
+  readonly issues: readonly [HealingTargetIssue, ...HealingTargetIssue[]];
+}) {
+  return errorContent("Character session operation failed.", {
+    code: "CHARACTER_SESSION_RECIPIENTS_INVALID",
+    characterId: input.sourceCharacterId,
+    operationKind: input.operationKind,
+    issues: input.issues,
+    recovery: {
+      tag: "characterSessionsUnchanged",
+      affectedCharacterIds: input.affectedCharacterIds,
+      guidance:
+        "No affected Character Session was committed; correct every reported recipient and retry from the returned session state.",
     },
   });
 }

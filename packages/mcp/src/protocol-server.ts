@@ -13,7 +13,6 @@ import {
   type McpApplicationServices,
 } from "./server.ts";
 import { adminMirrorSessionId } from "./admin-mirror-contract.ts";
-import type { McpObjectInputSchema, McpOutputSchema } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 import {
   handleCreatePlaySession,
@@ -33,13 +32,12 @@ import { isDiceToolName } from "./dice-tool-input.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
 import type { CharacterToolName } from "./character-tool-input.ts";
 import type { DiceToolName } from "./dice-tool-input.ts";
+import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
 
-type ProtocolToolDefinition = {
-  readonly name: string;
-  readonly description: string;
-  readonly inputSchema: McpObjectInputSchema;
-  readonly outputSchema?: McpOutputSchema;
-};
+export type {
+  McpToolAnnotations,
+  ProtocolToolDefinition,
+} from "./tool-definition-contract.ts";
 
 export type McpProtocolServerOptions = {
   readonly playSessionIdFactory?: PlaySessionIdFactory;

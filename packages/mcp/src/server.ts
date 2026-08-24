@@ -25,6 +25,7 @@ import type {
 } from "./composition-root.ts";
 import { errorContent } from "./tool-content.ts";
 import { Either } from "effect";
+import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
 
 export {
   battleCreatureInitFromCharacterBuild,
@@ -78,7 +79,7 @@ export const toolDefinitions = [
   ...characterToolDefinitions,
   ...battleToolDefinitions,
   ...diceToolDefinitions,
-];
+] as const satisfies readonly ProtocolToolDefinition[];
 
 export function handleToolCall(
   root: McpPlaySessionRoot,

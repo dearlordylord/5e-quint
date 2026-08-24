@@ -8,9 +8,7 @@ import {
   startLongRest,
   startShortRest,
   type CharacterSheetIssue,
-  type CharacterSheetLongRestInterruption,
   type CharacterSheetLongRestStart,
-  type CharacterSheetLongRestStartTiming,
   type CharacterSheetId,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
@@ -23,6 +21,16 @@ import { Either, Schema } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { ApplyCharacterSessionOperationToolInput } from "./character-session-operation-tool-input.ts";
+import {
+  cumulativeRestBoundary,
+  longRestCompletionRestedTicks,
+  longRestCompletionResultTicks,
+  longRestInterruptionFromTool,
+  longRestTimingFromTool,
+  type LongRestCompletionToolInput,
+  type LongRestResumptionCompletionToolInput,
+  type RestBoundaryContext,
+} from "./character-session-rest-timing.ts";
 import {
   CharacterSessionOperationOutputSchema,
   CharacterSessionOperationResultSchema,
@@ -165,27 +173,30 @@ export function applyInterruptLongRestOperation(
   // RAW: .references/srd-5.2.1/Rules-Glossary.md#Long-Rest (lines 694-696)
   // grants Short Rest benefits after at least 1 hour before an interruption
   // and adds 1 hour to the resumed Long Rest for every interruption.
+  // Each tool boundary is total rested time. The runtime interruption owns
+  // benefits for the segment immediately before that interruption, while final
+  // completion compares cumulative time against the increased total duration.
   for (const [
     segmentIndex,
     segment,
   ] of input.operation.interruptionSegments.entries()) {
-    const segmentDelta = cumulativeRestDelta({
+    const segmentBoundary = cumulativeRestBoundary({
       boundary: "interruption",
       boundaryIndex: segmentIndex,
       previousCumulativeRestedTicks,
       cumulativeRestedTicks: segment.cumulativeRestedTicks,
     });
-    if (Either.isLeft(segmentDelta)) {
+    if (Either.isLeft(segmentBoundary)) {
       return characterSessionOperationFailure(
         input.characterId,
-        segmentDelta.left.issue,
-        segmentDelta.left.context,
+        segmentBoundary.left.issue,
+        segmentBoundary.left.context,
       );
     }
     const interrupted = interruptLongRest({
       rest,
       unitLibrary: root.unitLibrary,
-      restedTicks: segmentDelta.right,
+      restedTicks: segmentBoundary.right.elapsedSincePreviousBoundaryTicks,
       interruption: longRestInterruptionFromTool(segment.interruption),
       ...restRecoveryFromTool(segment),
     });
@@ -198,53 +209,38 @@ export function applyInterruptLongRestOperation(
     rest = interrupted.right.rest;
     previousCumulativeRestedTicks = segment.cumulativeRestedTicks;
   }
-  const completionDelta = cumulativeRestDelta({
+  const completionBoundary = cumulativeRestBoundary({
     boundary: "completion",
     previousCumulativeRestedTicks,
     cumulativeRestedTicks: input.operation.completion.cumulativeRestedTicks,
   });
-  if (Either.isLeft(completionDelta)) {
+  if (Either.isLeft(completionBoundary)) {
     return characterSessionOperationFailure(
       input.characterId,
-      completionDelta.left.issue,
-      completionDelta.left.context,
+      completionBoundary.left.issue,
+      completionBoundary.left.context,
     );
   }
   return completeStartedLongRestOperation(root, {
     characterId: input.characterId,
     rest,
-    completion: {
-      ...input.operation.completion,
-      restedTicks: input.operation.completion.cumulativeRestedTicks,
-      restedTicksDelta: completionDelta.right,
-    },
+    completion: input.operation.completion,
   });
 }
-
-type LongRestCompletionToolInput = Omit<
-  Extract<
-    ApplyCharacterSessionOperationToolInput["operation"],
-    { readonly kind: "completeLongRest" }
-  >,
-  "kind" | "timing"
->;
-type LongRestResumptionCompletionToolInput = LongRestCompletionToolInput & {
-  readonly restedTicksDelta?: ReturnType<typeof elapsedTimeTicks>;
-};
 
 function completeStartedLongRestOperation(
   root: McpPlaySessionRoot,
   input: {
     readonly characterId: CharacterSheetId;
     readonly rest: CharacterSheetLongRestStart;
-    readonly completion: LongRestResumptionCompletionToolInput;
+    readonly completion:
+      | LongRestCompletionToolInput
+      | LongRestResumptionCompletionToolInput;
   },
 ) {
   const completion = finishLongRest({
     rest: input.rest,
-    restedTicks:
-      input.completion.restedTicksDelta ??
-      elapsedTimeTicks(input.completion.restedTicks),
+    restedTicks: longRestCompletionRestedTicks(input.completion),
   });
   if (Either.isLeft(completion)) {
     return characterSessionOperationFailure(input.characterId, completion.left);
@@ -290,7 +286,7 @@ function completeStartedLongRestOperation(
     character: completed.right,
     result: {
       tag: "longRestCompleted",
-      restedTicks: input.completion.restedTicks,
+      restedTicks: longRestCompletionResultTicks(input.completion),
     },
   });
 }
@@ -306,28 +302,6 @@ function characterSessionOperationFailure(
     message: typeof issue === "string" ? issue : issue.message,
     ...(context === undefined ? {} : context),
   });
-}
-
-type RestBoundaryContext = {
-  readonly boundary: "interruption" | "completion";
-  readonly boundaryIndex?: number;
-  readonly previousCumulativeRestedTicks: number;
-  readonly cumulativeRestedTicks: number;
-};
-
-function cumulativeRestDelta(input: RestBoundaryContext) {
-  if (input.cumulativeRestedTicks <= input.previousCumulativeRestedTicks) {
-    return Either.left({
-      issue:
-        "Long Rest cumulativeRestedTicks must strictly increase at every boundary.",
-      context: input,
-    });
-  }
-  return Either.right(
-    elapsedTimeTicks(
-      input.cumulativeRestedTicks - input.previousCumulativeRestedTicks,
-    ),
-  );
 }
 
 function characterSessionOperationSuccess(
@@ -376,40 +350,6 @@ function restRecoveryFromTool(input: RestRecoveryToolInput) {
           },
         }),
   };
-}
-
-function longRestTimingFromTool(
-  input:
-    | { readonly tag: "noPriorLongRest" }
-    | {
-        readonly tag: "elapsedSinceLastLongRest";
-        readonly elapsedTicks: number;
-      },
-): CharacterSheetLongRestStartTiming {
-  return input.tag === "noPriorLongRest"
-    ? input
-    : {
-        tag: "elapsedSinceLastLongRest",
-        elapsedTicks: elapsedTimeTicks(input.elapsedTicks),
-      };
-}
-
-function longRestInterruptionFromTool(
-  input:
-    | "rollInitiative"
-    | "castNonCantripSpell"
-    | "takeDamage"
-    | {
-        readonly tag: "physicalExertion";
-        readonly durationTicks: number;
-      },
-): CharacterSheetLongRestInterruption {
-  return typeof input === "object"
-    ? {
-        tag: "physicalExertion",
-        durationTicks: elapsedTimeTicks(input.durationTicks),
-      }
-    : input;
 }
 
 function mapNonEmpty<T, U>(

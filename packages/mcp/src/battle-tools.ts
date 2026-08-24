@@ -39,6 +39,7 @@ import {
 } from "./battle-tool-payloads.ts";
 import type {
   BattleFillSession,
+  McpBattleStateTransitionIssue,
   PendingBattleFillSession,
 } from "./session-store.ts";
 import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
@@ -134,10 +135,7 @@ export function handleBattleToolCall(
         replaySession,
         isInterruptDecision,
       });
-      if (storeBattleResolution(root, result, pendingTransaction)) {
-        publishAdminProjectionBestEffort(root);
-      }
-      return battleResolutionContent(root, result);
+      return storedBattleResolutionContent(root, result, pendingTransaction);
     }),
     Match.when({ name: battleToolNames.resolveBattleAct }, (matched) => {
       const state = activeBattleWithoutPendingFills(
@@ -154,23 +152,18 @@ export function handleBattleToolCall(
           fallingCreatureId: matched.args.subject.fallingCreatureId,
           reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
         });
-        if (
-          storeBattleResolution(
-            root,
+        return storedBattleResolutionContent(
+          root,
+          result,
+          pendingTransactionForResult({
             result,
-            pendingTransactionForResult({
-              result,
-              filledSubject: matched.args.subject,
-              previous: null,
-              fills: [],
-              replaySession: state.right,
-              isInterruptDecision: false,
-            }),
-          )
-        ) {
-          publishAdminProjectionBestEffort(root);
-        }
-        return battleResolutionContent(root, result);
+            filledSubject: matched.args.subject,
+            previous: null,
+            fills: [],
+            replaySession: state.right,
+            isInterruptDecision: false,
+          }),
+        );
       }
       const availableAct = discoverBattleActs(state.right).find((act) =>
         sameBattleSubject(act.subject, matched.args.subject),
@@ -193,23 +186,18 @@ export function handleBattleToolCall(
         fills: [],
         statBlockCatalog: root.statBlockCatalog,
       });
-      if (
-        storeBattleResolution(
-          root,
+      return storedBattleResolutionContent(
+        root,
+        result,
+        pendingTransactionForResult({
           result,
-          pendingTransactionForResult({
-            result,
-            filledSubject: matched.args.subject,
-            previous: null,
-            fills: [],
-            replaySession: state.right,
-            isInterruptDecision: false,
-          }),
-        )
-      ) {
-        publishAdminProjectionBestEffort(root);
-      }
-      return battleResolutionContent(root, result);
+          filledSubject: matched.args.subject,
+          previous: null,
+          fills: [],
+          replaySession: state.right,
+          isInterruptDecision: false,
+        }),
+      );
     }),
     Match.when({ name: battleToolNames.endTurn }, (matched) => {
       const state = activeBattleWithoutPendingFills(
@@ -227,27 +215,22 @@ export function handleBattleToolCall(
         fills: [],
         statBlockCatalog: root.statBlockCatalog,
       });
-      if (
-        storeBattleResolution(
-          root,
+      return storedBattleResolutionContent(
+        root,
+        result,
+        pendingTransactionForResult({
           result,
-          pendingTransactionForResult({
-            result,
-            filledSubject: {
-              tag: "runtimeCommand",
-              actorId: matched.args.actorId,
-              command: "endTurn",
-            },
-            previous: null,
-            fills: [],
-            replaySession: state.right,
-            isInterruptDecision: false,
-          }),
-        )
-      ) {
-        publishAdminProjectionBestEffort(root);
-      }
-      return battleResolutionContent(root, result);
+          filledSubject: {
+            tag: "runtimeCommand",
+            actorId: matched.args.actorId,
+            command: "endTurn",
+          },
+          previous: null,
+          fills: [],
+          replaySession: state.right,
+          isInterruptDecision: false,
+        }),
+      );
     }),
     Match.when({ name: battleToolNames.endBattle }, () => {
       const state = activeBattleWithoutPendingFills(
@@ -318,21 +301,55 @@ export function storeBattleResolution(
   root: McpPlaySessionRoot,
   result: BattleRuntimeResolutionResult,
   pendingTransaction: PendingBattleFillSession | null,
-): boolean {
-  if (result.tag === "resolved") {
-    const stored = root.sessionStore.storeActiveBattle(result.session);
-    if (Either.isLeft(stored)) return false;
-    root.sessionStore.pendingBattleFills = null;
-    return true;
+): Either.Either<
+  { readonly tag: "stored" } | { readonly tag: "invalidResultNotStored" },
+  | McpBattleStateTransitionIssue
+  | { readonly tag: "pendingBattleFillTransactionMissing" }
+> {
+  return Match.value(result).pipe(
+    Match.when({ tag: "resolved" }, (resolved) =>
+      Either.map(root.sessionStore.storeActiveBattle(resolved.session), () => {
+        root.sessionStore.pendingBattleFills = null;
+        return { tag: "stored" } as const;
+      }),
+    ),
+    Match.when({ tag: "needsHoles" }, (needsHoles) => {
+      if (pendingTransaction === null) {
+        return Either.left({
+          tag: "pendingBattleFillTransactionMissing" as const,
+        });
+      }
+      return Either.map(
+        root.sessionStore.storeActiveBattle(needsHoles.session),
+        () => {
+          root.sessionStore.pendingBattleFills = pendingTransaction;
+          return { tag: "stored" } as const;
+        },
+      );
+    }),
+    Match.when({ tag: "invalid" }, () =>
+      Either.right({ tag: "invalidResultNotStored" } as const),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function storedBattleResolutionContent(
+  root: McpPlaySessionRoot,
+  result: BattleRuntimeResolutionResult,
+  pendingTransaction: PendingBattleFillSession | null,
+): BattleToolResult {
+  const stored = storeBattleResolution(root, result, pendingTransaction);
+  if (Either.isLeft(stored)) {
+    return errorContent("Battle state transition failed.", {
+      code: "BATTLE_STATE_TRANSITION_INVALID",
+      transition: stored.left,
+    });
   }
-  if (result.tag === "needsHoles") {
-    if (pendingTransaction === null) return false;
-    const stored = root.sessionStore.storeActiveBattle(result.session);
-    if (Either.isLeft(stored)) return false;
-    root.sessionStore.pendingBattleFills = pendingTransaction;
-    return true;
+  if (stored.right.tag === "stored") {
+    publishAdminProjectionBestEffort(root);
   }
-  return false;
+  return battleResolutionContent(root, result);
 }
 
 function pendingTransactionForResult({

@@ -194,7 +194,9 @@ describe("battle tool payload boundaries", () => {
     if (result.tag !== "needsHoles") {
       throw new Error("Expected the test battle act to need hole fills.");
     }
-    expect(storeBattleResolution(root, result, null)).toBe(false);
+    expect(storeBattleResolution(root, result, null)).toEqual(
+      Either.left({ tag: "pendingBattleFillTransactionMissing" }),
+    );
     expect(root.sessionStore.battleSession).toBe(session);
   });
 });
