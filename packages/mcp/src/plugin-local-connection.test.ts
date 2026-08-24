@@ -23,6 +23,8 @@ const pluginManifestPath = resolve(pluginRoot, ".codex-plugin/plugin.json");
 const LOCAL_PLUGIN_CONNECTION_TEST_TIMEOUT_MS = 90_000;
 const LOCAL_PLUGIN_WORKFLOW_DEADLINE_MS = 60_000;
 const PROCESS_TERMINATION_GRACE_MS = 100;
+const PROCESS_TERMINATION_POLL_MS = 50;
+const PROCESS_TERMINATION_DEADLINE_MS = 2_000;
 const PROC_STAT_START_TIME_INDEX_AFTER_COMMAND = 19;
 
 const LocalMcpConfigSchema = Schema.Struct({
@@ -206,16 +208,33 @@ async function closeLocalMcpProcessTree(
   signalMatchingProcesses(spawnedProcesses, "SIGTERM");
   await delay(PROCESS_TERMINATION_GRACE_MS);
   signalMatchingProcesses(spawnedProcesses, "SIGKILL");
-  await delay(PROCESS_TERMINATION_GRACE_MS);
-  const retainedProcess = spawnedProcesses.find(
-    (identity) =>
-      processIdentity(identity.pid)?.startTime === identity.startTime,
-  );
+  const retainedProcess = await waitForProcessTreeExit(spawnedProcesses);
   if (retainedProcess !== undefined) {
     throw new Error(
       `Local MCP process ${retainedProcess.pid} remained after teardown.`,
     );
   }
+}
+
+async function waitForProcessTreeExit(
+  processes: readonly SpawnedProcessIdentity[],
+): Promise<SpawnedProcessIdentity | undefined> {
+  const deadline = Date.now() + PROCESS_TERMINATION_DEADLINE_MS;
+  while (Date.now() < deadline) {
+    const retainedProcess = matchingProcess(processes);
+    if (retainedProcess === undefined) return undefined;
+    await delay(PROCESS_TERMINATION_POLL_MS);
+  }
+  return matchingProcess(processes);
+}
+
+function matchingProcess(
+  processes: readonly SpawnedProcessIdentity[],
+): SpawnedProcessIdentity | undefined {
+  return processes.find(
+    (identity) =>
+      processIdentity(identity.pid)?.startTime === identity.startTime,
+  );
 }
 
 function spawnedProcessTree(
