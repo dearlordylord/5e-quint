@@ -523,6 +523,9 @@ export function scenarioCampaignAgents(input: {
           capabilityContextForRole("generation"),
         )}
 
+Configured exploratory purpose:
+${input.scenarioPurpose}
+
 Distribution preference:
 ${input.distributionPreference}
 
@@ -549,7 +552,9 @@ Produce exactly ${input.candidateCount} materially different candidate objects. 
       candidateScenarioSha256,
       plannedScenarioId,
       finalReview,
+      scenarioPurpose,
       distributionPreference,
+      stageFacts,
       contentAvailabilityIntent,
       sdkCapabilityIntent,
       catalogueComparison,
@@ -565,11 +570,14 @@ SDK capability: compare required setup/play facts with the current public SDK do
 
 Artifact policy: apply docs/mushroom-playbook/AUTHORING.md only to public identity/expression safety. Do not judge mechanics or tactics.
 
-Scenario quality: independently classify the setup and encounter as ready only when it is mechanically meaningful, every represented combatant or group seriously pursues an authored strategy-bearing objective, and fixed versus delegated choices fit the campaign distribution preference. Do not impose generic balance: a deliberately loose or highly prescribed scenario can be ready. Do not choose tactics, predict an outcome, or rewrite prose. Return one concise critique when this quality responsibility needs a material revision.
+Scenario quality: independently classify the setup and encounter as ready only when it is mechanically meaningful, every represented combatant or group seriously pursues an authored strategy-bearing objective, fixed versus delegated choices fit the campaign distribution preference, and the Candidate's prose and typed stage facts align with the configured exploratory purpose. Treat a contradiction between the configured purpose and either authority as a material needsRevision finding; for example, a purpose requiring delegated Character Sheet choices cannot be ready with stageFacts.characterRequirement.tag set to statBlocksOnly. Use the supplied typed stage facts as controller evidence rather than inferring them from prose, and do not repair a contradiction by silently changing the configured purpose. Do not impose generic balance: a deliberately loose or highly prescribed scenario can be ready. Do not choose tactics, predict an outcome, or rewrite prose. Return one concise critique when this quality responsibility needs a material revision.
 
 Content-availability intent: ${contentAvailabilityIntent}
 SDK-capability intent: ${sdkCapabilityIntent}
+Configured exploratory purpose: ${scenarioPurpose}
 Campaign distribution preference: ${distributionPreference}
+Typed Candidate stage facts:
+${JSON.stringify(stageFacts, null, 2)}
 
 Catalogue comparison evidence supplied by the authoring operator:
 ${JSON.stringify(catalogueComparison, null, 2)}

@@ -744,6 +744,90 @@ describe("scenario generation campaign", () => {
     });
   });
 
+  test("gives quality review the configured purpose and Candidate facts", async () => {
+    const scenarioPurpose =
+      "Explore delegated Character Sheet choices during a synthetic rescue.";
+    const reviewInputs: Array<{
+      readonly scenarioPurpose: string;
+      readonly characterRequirement: string;
+    }> = [];
+    const result = await runScenarioCampaign(
+      {
+        ...config,
+        scenarioPurpose,
+        minimumIterations: 1,
+        maximumIterations: 2,
+        reviewMilestone: 1,
+      },
+      {
+        generate: async (input) => ({
+          candidates: Array.from({ length: input.candidateCount }, (_, index) =>
+            candidate(`purpose mismatch ${input.iteration}-${index}`, {
+              ...stageFacts,
+              characterRequirement: {
+                tag: "statBlocksOnly" as const,
+                evidence: "The Candidate uses only canonical stat blocks.",
+              },
+            }),
+          ),
+        }),
+        reviewScenario: async (input) => {
+          reviewInputs.push({
+            scenarioPurpose: input.scenarioPurpose,
+            characterRequirement: input.stageFacts.characterRequirement.tag,
+          });
+          const purposeContradiction =
+            input.scenarioPurpose === scenarioPurpose &&
+            input.stageFacts.characterRequirement.tag === "statBlocksOnly";
+          return {
+            raw: {
+              classification: "supported" as const,
+              evidence: "Synthetic RAW evidence.",
+            },
+            contentAvailability: {
+              classification: "supplied" as const,
+              evidence: "Synthetic content evidence.",
+            },
+            sdkCapability: {
+              classification: "supported" as const,
+              evidence: "Synthetic SDK evidence.",
+            },
+            artifactPolicy: {
+              classification: "safe" as const,
+              evidence: "Synthetic policy evidence.",
+            },
+            scenarioQuality: purposeContradiction
+              ? {
+                  classification: "needsRevision" as const,
+                  evidence:
+                    "The typed Candidate facts contradict the configured purpose.",
+                  critique:
+                    "Use Character Sheets when the configured purpose delegates Character Sheet choices.",
+                }
+              : readyQuality.scenarioQuality,
+          };
+        },
+      },
+      { select: () => 0 },
+    );
+
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isRight(result)) {
+      expect(finalScenarioDisposition(result.right)).toBe("rejected");
+      expect(result.right.scenarioQuality.classification).toBe("needsRevision");
+    }
+    expect(reviewInputs).toEqual([
+      {
+        scenarioPurpose,
+        characterRequirement: "statBlocksOnly",
+      },
+      {
+        scenarioPurpose,
+        characterRequirement: "statBlocksOnly",
+      },
+    ]);
+  });
+
   test("rejects invalid bounds and batches while preserving rejected final reviews", async () => {
     const reviewScenario = vi.fn(async () => ({
       raw: {

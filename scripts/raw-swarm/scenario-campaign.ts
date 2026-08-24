@@ -688,6 +688,7 @@ export type { ScenarioStageFacts };
 
 export type ScenarioGenerationInput = {
   readonly iteration: number;
+  readonly scenarioPurpose: ScenarioCampaignConfig["scenarioPurpose"];
   readonly distributionPreference: string;
   readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
   readonly sdkCapabilityIntent: ScenarioCampaignConfig["sdkCapabilityIntent"];
@@ -733,12 +734,14 @@ export interface ScenarioCampaignAgents {
   ) => Promise<ScenarioCandidateBatch>;
   readonly reviewScenario: (input: {
     readonly scenario: string;
+    readonly scenarioPurpose: ScenarioCampaignConfig["scenarioPurpose"];
     readonly campaignId: ScenarioCampaignId;
     readonly candidateId: ScenarioCandidateId;
     readonly candidateScenarioSha256: string;
     readonly plannedScenarioId: PlannedScenarioId;
     readonly finalReview: boolean;
     readonly distributionPreference: string;
+    readonly stageFacts: ScenarioStageFacts;
     readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
     readonly sdkCapabilityIntent: ScenarioCampaignConfig["sdkCapabilityIntent"];
     readonly catalogueComparison: ScenarioCatalogueComparisonEvidence;
@@ -862,6 +865,7 @@ export async function runScenarioCampaign(
   ) {
     const batch = await agents.generate({
       iteration,
+      scenarioPurpose: config.scenarioPurpose,
       distributionPreference: config.distributionPreference,
       contentAvailabilityIntent: config.contentAvailabilityIntent,
       sdkCapabilityIntent: config.sdkCapabilityIntent,
@@ -1036,12 +1040,14 @@ export async function runScenarioCampaign(
     if (config.reviewMilestone === iteration) {
       const review = await agents.reviewScenario({
         scenario: prose,
+        scenarioPurpose: config.scenarioPurpose,
         campaignId: config.campaignId,
         candidateId,
         candidateScenarioSha256,
         plannedScenarioId: config.plannedScenarioId,
         finalReview: false,
         distributionPreference: config.distributionPreference,
+        stageFacts: candidate.stageFacts,
         contentAvailabilityIntent: config.contentAvailabilityIntent,
         sdkCapabilityIntent: config.sdkCapabilityIntent,
         catalogueComparison: selectedCatalogueComparison,
@@ -1133,12 +1139,14 @@ export async function runScenarioCampaign(
   }
   const finalReview = await agents.reviewScenario({
     scenario: draft.prose,
+    scenarioPurpose: config.scenarioPurpose,
     campaignId: config.campaignId,
     candidateId: draft.candidateId,
     candidateScenarioSha256: scenarioContentSha256(draft.prose),
     plannedScenarioId: config.plannedScenarioId,
     finalReview: true,
     distributionPreference: config.distributionPreference,
+    stageFacts: draft.stageFacts,
     contentAvailabilityIntent: config.contentAvailabilityIntent,
     sdkCapabilityIntent: config.sdkCapabilityIntent,
     catalogueComparison: draft.catalogueComparison,
