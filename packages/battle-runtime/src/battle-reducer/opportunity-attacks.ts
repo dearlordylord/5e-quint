@@ -470,6 +470,8 @@ function resolveReactionAttackCommand(
   }
   /* v8 ignore stop */
   const targetSpatialFacts = reactionAttackTargetSpatialFacts({
+    state: input.state,
+    commandLabel,
     subject,
     attack,
     fillSet,
@@ -479,21 +481,6 @@ function resolveReactionAttackCommand(
       input.state,
       "invalidFill",
       targetSpatialFacts.message,
-    );
-  }
-  if (
-    !attackTargetIsLegal(
-      input.state,
-      subject.reactorId,
-      subject.targetId,
-      attack,
-      targetSpatialFacts.facts,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      `${commandLabel} target distance is outside the selected attack's legal range.`,
     );
   }
   const context: ReactionAttackCommandContext = {
@@ -514,6 +501,8 @@ function resolveReactionAttackCommand(
 }
 
 function reactionAttackTargetSpatialFacts(input: {
+  readonly state: BattleState;
+  readonly commandLabel: string;
   readonly subject: OpportunityAttackResolutionInput["subject"];
   readonly attack: BoundSupportedAttackActionOption;
   readonly fillSet: ResolvedAttackFillSet;
@@ -537,29 +526,46 @@ function reactionAttackTargetSpatialFacts(input: {
         "Opportunity Attack target distance must match the reach-leaving trigger distance.",
     };
   }
+  let facts: readonly BattleTargetSpatialFact[];
   if (suppliedDistanceFeet !== null) {
-    return { tag: "ok", facts: input.fillSet.targetSpatialFacts };
+    facts = input.fillSet.targetSpatialFacts;
+  } else {
+    if (input.subject.command !== "opportunityAttack") {
+      return {
+        tag: "invalid",
+        message:
+          "Fixed-target reaction attacks require an exact attack target distance fact.",
+      };
+    }
+    const distanceFact: Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "attackTargetDistance" }
+    > = {
+      kind: "attackTargetDistance",
+      actorId: input.subject.reactorId,
+      targetId: input.subject.targetId,
+      ...attackExecutionSelectionForOption(input.attack),
+      distanceFeet: input.subject.distanceFeet,
+    };
+    facts = [...input.fillSet.targetSpatialFacts, distanceFact];
   }
-  if (input.subject.command !== "opportunityAttack") {
+  if (
+    !attackTargetIsLegal(
+      input.state,
+      input.subject.reactorId,
+      input.subject.targetId,
+      input.attack,
+      facts,
+    )
+  ) {
     return {
       tag: "invalid",
-      message:
-        "Fixed-target reaction attacks require an exact attack target distance fact.",
+      message: `${input.commandLabel} target distance is outside the selected attack's legal range.`,
     };
   }
-  const distanceFact: Extract<
-    BattleTargetSpatialFact,
-    { readonly kind: "attackTargetDistance" }
-  > = {
-    kind: "attackTargetDistance",
-    actorId: input.subject.reactorId,
-    targetId: input.subject.targetId,
-    ...attackExecutionSelectionForOption(input.attack),
-    distanceFeet: input.subject.distanceFeet,
-  };
   return {
     tag: "ok",
-    facts: [...input.fillSet.targetSpatialFacts, distanceFact],
+    facts,
   };
 }
 

@@ -24,6 +24,7 @@ import { Match } from "effect";
 import {
   attackExecutionSelectionForOption,
   attackExecutionSelectionKey,
+  type BoundSupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
@@ -704,30 +705,17 @@ export function parseBattleMovement(
     }
     /* v8 ignore stop */
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (attackTargetConstraint(attack).kind !== "meleeReach") {
+    const attackIssue = opportunityAttackThreatAttackIssue(
+      state,
+      moverId,
+      reactorId,
+      threat,
+      attack,
+    );
+    if (attackIssue !== null) {
       return {
         tag: "invalid",
-        message:
-          "Movement Opportunity Attack threat must name a melee attack option.",
-      };
-    }
-    const distanceFact: Extract<
-      BattleTargetSpatialFact,
-      { readonly kind: "attackTargetDistance" }
-    > = {
-      kind: "attackTargetDistance",
-      actorId: reactorId,
-      targetId: moverId,
-      ...attackExecutionSelectionForOption(attack),
-      distanceFeet: threat.distanceFeet,
-    };
-    if (
-      !attackTargetIsLegal(state, reactorId, moverId, attack, [distanceFact])
-    ) {
-      return {
-        tag: "invalid",
-        message:
-          "Movement Opportunity Attack threat distance is outside the selected attack's reach.",
+        message: attackIssue,
       };
     }
     /* v8 ignore stop */
@@ -773,6 +761,31 @@ export function parseBattleMovement(
       ...optionalProperty("levitatedMovement", fill.value.levitatedMovement),
     },
   };
+}
+
+function opportunityAttackThreatAttackIssue(
+  state: BattleState,
+  moverId: CombatantId,
+  reactorId: CombatantId,
+  threat: BattleOpportunityAttackThreat,
+  attack: BoundSupportedAttackActionOption,
+): string | null {
+  if (attackTargetConstraint(attack).kind !== "meleeReach") {
+    return "Movement Opportunity Attack threat must name a melee attack option.";
+  }
+  const distanceFact: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "attackTargetDistance" }
+  > = {
+    kind: "attackTargetDistance",
+    actorId: reactorId,
+    targetId: moverId,
+    ...attackExecutionSelectionForOption(attack),
+    distanceFeet: threat.distanceFeet,
+  };
+  return attackTargetIsLegal(state, reactorId, moverId, attack, [distanceFact])
+    ? null
+    : "Movement Opportunity Attack threat distance is outside the selected attack's reach.";
 }
 
 function opportunityAttackThreatIdentityKey(

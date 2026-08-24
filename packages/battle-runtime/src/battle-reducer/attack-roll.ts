@@ -244,6 +244,42 @@ type AttackRollSourceFlags = {
   readonly hasDisadvantage: boolean;
 };
 
+function proneTargetAttackRollModeSources(
+  state: BattleState,
+  attackerId: CombatantId,
+  targetId: CombatantId,
+  attack: SupportedAttackActionOption | undefined,
+  targetSpatialFacts: readonly BattleTargetSpatialFact[],
+) {
+  const target = state.combatants.get(targetId);
+  if (
+    target === undefined ||
+    attack === undefined ||
+    !hasCondition(target.conditions, "prone")
+  ) {
+    return { advantage: false, disadvantage: false };
+  }
+  const distanceFeet = attackTargetDistanceFeet(
+    targetSpatialFacts,
+    attackerId,
+    targetId,
+    attack,
+  );
+  return distanceFeet === null
+    ? { advantage: false, disadvantage: false }
+    : proneAttackRollModeSources(distanceFeet);
+}
+
+function combatantHasHiddenAttackRollBenefit(
+  combatant: BattleCreatureState | undefined,
+): boolean {
+  return (
+    combatant?.hidden !== null &&
+    combatant?.hidden !== undefined &&
+    !combatantInvisibleBenefitDenied(combatant)
+  );
+}
+
 function attackRollSourceFlags(
   state: BattleState,
   attackerId: CombatantId,
@@ -254,10 +290,7 @@ function attackRollSourceFlags(
   const attacker = state.combatants.get(attackerId);
   const target = state.combatants.get(targetId);
   const grapple = grappledBy(state, attackerId);
-  const hiddenTargetDisadvantage =
-    target?.hidden !== null &&
-    target?.hidden !== undefined &&
-    !combatantInvisibleBenefitDenied(target);
+  const hiddenTargetDisadvantage = combatantHasHiddenAttackRollBenefit(target);
   const dodgeDisadvantage =
     attacker !== undefined &&
     target !== undefined &&
@@ -268,21 +301,13 @@ function attackRollSourceFlags(
     attack !== undefined &&
     attackTargetRangeBand(targetSpatialFacts, attackerId, targetId, attack) ===
       "long";
-  const proneTargetDistanceFeet =
-    attack === undefined
-      ? null
-      : attackTargetDistanceFeet(
-          targetSpatialFacts,
-          attackerId,
-          targetId,
-          attack,
-        );
-  const proneTargetRollModeSources =
-    target !== undefined &&
-    hasCondition(target.conditions, "prone") &&
-    proneTargetDistanceFeet !== null
-      ? proneAttackRollModeSources(proneTargetDistanceFeet)
-      : { advantage: false, disadvantage: false };
+  const proneTargetRollModeSources = proneTargetAttackRollModeSources(
+    state,
+    attackerId,
+    targetId,
+    attack,
+    targetSpatialFacts,
+  );
   const sightAdvantage = hasAttackSightFact(
     targetSpatialFacts,
     "attackTargetCannotSeeAttacker",
@@ -309,9 +334,7 @@ function attackRollSourceFlags(
     sightAdvantage ||
     proneTargetRollModeSources.advantage ||
     grapplerAttackAdvantage ||
-    (attacker?.hidden !== null &&
-      attacker?.hidden !== undefined &&
-      !combatantInvisibleBenefitDenied(attacker)) ||
+    combatantHasHiddenAttackRollBenefit(attacker) ||
     state.helpAttacks.some(
       (help) => help.allyId === attackerId && help.targetEnemyId === targetId,
     ) ||
