@@ -19,6 +19,7 @@ import {
   modelInvocationScenarioReference,
   parseModelInvocationLedgerEntry,
   readCodexEventsWithSource,
+  type CurrentModelInvocationLedgerEntry,
   type ModelInvocationLedgerEntry,
 } from "./model-telemetry.ts";
 import {
@@ -29,7 +30,9 @@ import { reviewInvocationPolicy } from "./review-invocation-policy.ts";
 import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
+  retainedScenarioReviewReplayExpectation,
   retainedScenarioReviewSubject,
+  type RetainedScenarioReviewReplayOwner,
   type RetainedScenarioReviewInput,
 } from "./scenario-review-input.ts";
 import {
@@ -226,66 +229,19 @@ export function validateRetainedScenarioReviewInvocationEvidence(input: {
   readonly ledgerEntry: ModelInvocationLedgerEntry;
   /** The admitted Scenario hash used to close a final Candidate binding. */
   readonly admittedScenarioSha256: string;
+  readonly replayOwner: RetainedScenarioReviewReplayOwner;
 }): ArtifactAuthority {
   const retained = input.retainedInput;
-  const subject = retainedScenarioReviewSubject(retained);
-  const binding =
-    (input.ledgerEntry.schemaVersion === 4 ||
-      input.ledgerEntry.schemaVersion === 5) &&
-    input.ledgerEntry.subject.tag === "benchmark"
-      ? retainedScenarioReviewMatchesReplayBinding(
-          retained,
-          input.ledgerEntry,
-          {
-            tag: "benchmark",
-            reviewStage: input.reviewStage,
-            scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
-            benchmark: {
-              benchmarkId: input.ledgerEntry.subject.benchmarkId,
-              profile: input.ledgerEntry.subject.profile,
-            },
-          },
-        )
-      : subject.tag === "scenarioCandidate"
-        ? input.reviewStage === "final"
-          ? retainedScenarioReviewMatchesReplayBinding(
-              retained,
-              input.ledgerEntry,
-              {
-                tag: "candidate",
-                reviewStage: "final",
-                scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
-                admittedScenarioSha256: input.admittedScenarioSha256,
-                campaign: {
-                  campaignId: subject.campaignId,
-                  evidenceSetId: subject.evidenceSetId,
-                  plannedScenarioId: subject.plannedScenarioId,
-                },
-              },
-            )
-          : retainedScenarioReviewMatchesReplayBinding(
-              retained,
-              input.ledgerEntry,
-              {
-                tag: "candidate",
-                reviewStage: "milestone",
-                scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
-                campaign: {
-                  campaignId: subject.campaignId,
-                  evidenceSetId: subject.evidenceSetId,
-                  plannedScenarioId: subject.plannedScenarioId,
-                },
-              },
-            )
-        : retainedScenarioReviewMatchesReplayBinding(
-            retained,
-            input.ledgerEntry,
-            {
-              tag: "scenario",
-              reviewStage: input.reviewStage,
-              scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
-            },
-          );
+  const binding = retainedScenarioReviewMatchesReplayBinding(
+    retained,
+    input.ledgerEntry,
+    retainedScenarioReviewReplayExpectation(retained, {
+      reviewStage: input.reviewStage,
+      scenarioId: modelInvocationScenarioReference(input.ledgerEntry),
+      admittedScenarioSha256: input.admittedScenarioSha256,
+      owner: input.replayOwner,
+    }),
+  );
   if (Either.isLeft(binding)) fail(binding.left);
   validateRetainedScenarioReviewInvocation({
     binding: binding.right,
@@ -434,6 +390,66 @@ function deriveManifest(input: {
   if (scenarioReviewEntries.length !== 2) {
     fail("Review invocation evidence requires two pre-play reviews.");
   }
+  const currentScenarioReviewEntries = scenarioReviewEntries.flatMap(
+    (entry): readonly CurrentModelInvocationLedgerEntry[] =>
+      entry.schemaVersion === 4 || entry.schemaVersion === 5 ? [entry] : [],
+  );
+  const candidateSubjects = currentScenarioReviewEntries.flatMap(
+    ({ subject }) => (subject.tag === "scenarioCandidate" ? [subject] : []),
+  );
+  const benchmarkSubjects = currentScenarioReviewEntries.flatMap(
+    ({ subject }) => (subject.tag === "benchmark" ? [subject] : []),
+  );
+  const replayOwner: RetainedScenarioReviewReplayOwner = (() => {
+    const candidate = candidateSubjects[0];
+    if (candidate !== undefined) {
+      if (candidateSubjects.length !== currentScenarioReviewEntries.length) {
+        fail(
+          "Scenario-review invocations must retain one Campaign lifecycle owner.",
+        );
+      }
+      if (
+        candidateSubjects.some(
+          (subject) =>
+            subject.campaignId !== candidate.campaignId ||
+            subject.evidenceSetId !== candidate.evidenceSetId ||
+            subject.plannedScenarioId !== candidate.plannedScenarioId,
+        )
+      ) {
+        fail(
+          "Scenario-review invocations must retain one Campaign, Evidence Set, and planned Scenario identity.",
+        );
+      }
+      return {
+        tag: "campaign",
+        campaign: {
+          campaignId: candidate.campaignId,
+          evidenceSetId: candidate.evidenceSetId,
+          plannedScenarioId: candidate.plannedScenarioId,
+        },
+      };
+    }
+    const benchmark = benchmarkSubjects[0];
+    if (benchmark !== undefined) {
+      if (benchmarkSubjects.length !== currentScenarioReviewEntries.length) {
+        fail(
+          "Scenario-review invocations must retain one benchmark lifecycle owner.",
+        );
+      }
+      if (
+        benchmarkSubjects.some(
+          (subject) =>
+            subject.benchmarkId !== benchmark.benchmarkId ||
+            subject.profile !== benchmark.profile ||
+            subject.scenarioId !== benchmark.scenarioId,
+        )
+      ) {
+        fail("Scenario-review invocations must retain one benchmark identity.");
+      }
+      return { tag: "benchmark", benchmark };
+    }
+    return { tag: "scenario" };
+  })();
   const prePlayReviewArtifacts = input.prePlayReviewPaths.map(
     (paths, index) => {
       const expectedStage = index === 0 ? "milestone" : "final";
@@ -544,6 +560,7 @@ function deriveManifest(input: {
         reviewStage,
         ledgerEntry: entry,
         admittedScenarioSha256: scenarioReview.scenarioSha256,
+        replayOwner,
       });
     }
     if (

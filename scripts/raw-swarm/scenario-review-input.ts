@@ -19,7 +19,12 @@ import {
   type PlannedScenarioId,
   type ScenarioCampaignId,
 } from "./raw-swarm-identities.ts";
-import { canonicalJson, GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
+import {
+  canonicalJson,
+  GitShaSchema,
+  ScenarioIdSchema,
+  type ScenarioId,
+} from "./transcript.ts";
 
 export const RETAINED_SCENARIO_REVIEW_REASONING_EFFORTS = [
   "medium",
@@ -222,6 +227,90 @@ export type RetainedScenarioReviewReplayExpectation =
       readonly scenarioId: RetainedScenarioReviewScenarioReference;
       readonly benchmark: RetainedScenarioReviewBenchmarkIdentity;
     }>;
+
+export type RetainedScenarioReviewReplayOwner =
+  | Readonly<{ readonly tag: "scenario" }>
+  | Readonly<{
+      readonly tag: "campaign";
+      readonly campaign: RetainedScenarioReviewCampaignIdentity;
+    }>
+  | Readonly<{
+      readonly tag: "benchmark";
+      readonly benchmark: RetainedScenarioReviewBenchmarkIdentity & {
+        readonly scenarioId: ScenarioId;
+      };
+    }>;
+
+/**
+ * Select the lifecycle expectation from one retained envelope and its owning
+ * replay identity. Schema-v2 has no subject, so a Campaign owner is required
+ * to preserve migrated Candidate ownership instead of silently becoming a
+ * plain Scenario expectation.
+ */
+export function retainedScenarioReviewReplayExpectation(
+  input: RetainedScenarioReviewInput,
+  expected: Readonly<{
+    readonly reviewStage: RetainedScenarioReviewStage;
+    readonly scenarioId: RetainedScenarioReviewScenarioReference;
+    /** Hash of the admitted Scenario, never a revised Candidate hash. */
+    readonly admittedScenarioSha256: string;
+    readonly owner: RetainedScenarioReviewReplayOwner;
+  }>,
+): RetainedScenarioReviewReplayExpectation {
+  if (expected.owner.tag === "benchmark") {
+    return {
+      tag: "benchmark",
+      reviewStage: expected.reviewStage,
+      scenarioId: expected.scenarioId,
+      benchmark: expected.owner.benchmark,
+    };
+  }
+  if (expected.owner.tag === "scenario") {
+    return {
+      tag: "scenario",
+      reviewStage: expected.reviewStage,
+      scenarioId: expected.scenarioId,
+    };
+  }
+  if (input.schemaVersion === 2) {
+    return expected.reviewStage === "final"
+      ? {
+          tag: "historicalScenario",
+          reviewStage: "final",
+          scenarioId: expected.scenarioId,
+          admittedScenarioSha256: expected.admittedScenarioSha256,
+          campaign: expected.owner.campaign,
+        }
+      : {
+          tag: "historicalScenario",
+          reviewStage: "milestone",
+          scenarioId: expected.scenarioId,
+          campaign: expected.owner.campaign,
+        };
+  }
+  const subject = retainedScenarioReviewSubject(input);
+  if (subject.tag !== "scenarioCandidate") {
+    return {
+      tag: "scenario",
+      reviewStage: expected.reviewStage,
+      scenarioId: expected.scenarioId,
+    };
+  }
+  return expected.reviewStage === "final"
+    ? {
+        tag: "candidate",
+        reviewStage: "final",
+        scenarioId: expected.scenarioId,
+        admittedScenarioSha256: expected.admittedScenarioSha256,
+        campaign: expected.owner.campaign,
+      }
+    : {
+        tag: "candidate",
+        reviewStage: "milestone",
+        scenarioId: expected.scenarioId,
+        campaign: expected.owner.campaign,
+      };
+}
 
 type CurrentRetainedScenarioReviewInput = Extract<
   RetainedScenarioReviewInput,

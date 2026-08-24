@@ -46,6 +46,7 @@ import {
 import {
   RetainedScenarioReviewInputSchema,
   retainedScenarioReviewMatchesReplayBinding,
+  retainedScenarioReviewReplayExpectation,
   type RetainedScenarioReviewBenchmarkIdentity,
   type RetainedScenarioReviewCampaignIdentity,
 } from "./scenario-review-input.ts";
@@ -1486,54 +1487,20 @@ function originalCompositeReviewInputs(
       );
     }
     const entry = matches[0]!;
-    const binding = (() => {
-      if (owner.tag === "benchmark") {
-        return retainedScenarioReviewMatchesReplayBinding(review, entry, {
-          tag: "benchmark",
-          reviewStage: expectedStage,
-          scenarioId: expectedScenario.scenarioId,
-          benchmark: owner.benchmark,
-        });
-      }
-      if (review.schemaVersion === 2) {
-        return expectedStage === "final"
-          ? retainedScenarioReviewMatchesReplayBinding(review, entry, {
-              tag: "historicalScenario",
-              reviewStage: "final",
-              scenarioId: expectedScenario.scenarioId,
-              admittedScenarioSha256: expectedScenario.scenarioSha256,
-              campaign: owner.campaign,
-            })
-          : retainedScenarioReviewMatchesReplayBinding(review, entry, {
-              tag: "historicalScenario",
-              reviewStage: "milestone",
-              scenarioId: expectedScenario.scenarioId,
-              campaign: owner.campaign,
-            });
-      }
-      if (review.subject.tag !== "scenarioCandidate") {
-        return retainedScenarioReviewMatchesReplayBinding(review, entry, {
-          tag: "scenario",
-          reviewStage: expectedStage,
-          scenarioId: expectedScenario.scenarioId,
-        });
-      }
-      if (expectedStage === "final") {
-        return retainedScenarioReviewMatchesReplayBinding(review, entry, {
-          tag: "candidate",
-          reviewStage: "final",
-          scenarioId: expectedScenario.scenarioId,
-          admittedScenarioSha256: expectedScenario.scenarioSha256,
-          campaign: owner.campaign,
-        });
-      }
-      return retainedScenarioReviewMatchesReplayBinding(review, entry, {
-        tag: "candidate",
-        reviewStage: "milestone",
+    const expectedOwner =
+      owner.tag === "benchmark"
+        ? { tag: "benchmark" as const, benchmark: owner.benchmark }
+        : { tag: "campaign" as const, campaign: owner.campaign };
+    const binding = retainedScenarioReviewMatchesReplayBinding(
+      review,
+      entry,
+      retainedScenarioReviewReplayExpectation(review, {
+        reviewStage: expectedStage,
         scenarioId: expectedScenario.scenarioId,
-        campaign: owner.campaign,
-      });
-    })();
+        admittedScenarioSha256: expectedScenario.scenarioSha256,
+        owner: expectedOwner,
+      }),
+    );
     if (Either.isLeft(binding)) {
       fail(
         `Review replay input ${canonical} does not match original composite-review invocation ${review.invocationId}: ${binding.left}`,
