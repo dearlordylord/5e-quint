@@ -25,6 +25,7 @@ import {
   requireHole,
   resolveBattleSubject,
   startBattleRight,
+  statBlockCatalog,
   statBlockCreatureInit,
 } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -35,6 +36,80 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 
 describe("battle runtime: ordinary object attack tail boundaries", () => {
+  test("a supported Stat Block Bite exposes and resolves an ordinary object target", () => {
+    const objectKey = "wolf-bite-object-target";
+    const objectId = battleObjectId(objectKey);
+    const state = startBattleRight({
+      battleId: battleId("battle-stat-block-bite-object-target"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: goblinId,
+          initiative: 20,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_wolf"),
+        }),
+        characterSeed({ combatantId: fighterId, initiative: 10 }),
+      ],
+    });
+    const biteAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state,
+        context: battleRuntimeContextForStateForTest(state),
+      }),
+    ).find(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "attack" &&
+        candidate.subject.statBlockDamageNotation === undefined &&
+        candidate.summary.includes("Bite"),
+    );
+    if (biteAct === undefined || biteAct.subject.tag !== "action") {
+      throw new Error("Expected the Wolf Bite action.");
+    }
+    expect(biteAct.initialHoles[0]).toMatchObject({
+      kind: "targetChoice",
+      attack: { acceptsObjectTarget: true },
+    });
+
+    const targetHole = requireHole(
+      resolveBattleSubject({ state, subject: biteAct.subject, fills: [] }),
+      "targetChoice",
+    );
+    const target = objectTargetFill(targetHole, goblinId, objectKey);
+    const rollHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: biteAct.subject,
+        fills: [target],
+      }),
+      "attackRoll",
+    );
+    const roll = attackRollFill(rollHole, { total: 20, naturalD20: 12 });
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: biteAct.subject,
+        fills: [target, roll],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: biteAct.subject,
+      fills: [target, roll, damageRollFill(damageHole, 1)],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      objectDamages: [
+        {
+          kind: "hitPoints",
+          objectId,
+          effectiveDamage: 3,
+        },
+      ],
+    });
+  });
+
   test("ordinary object attacks expose and validate a natural-one reroll decision", () => {
     const state = halflingObjectBattle();
     const subject = fighterAttackSubject(state, "Longsword");

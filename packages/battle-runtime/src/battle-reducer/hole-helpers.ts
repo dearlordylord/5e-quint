@@ -751,16 +751,7 @@ export function ordinaryObjectAttackOptionIsSupported(
       );
     }),
     Match.when({ kind: "unarmedStrike" }, () => false),
-    Match.when(
-      { kind: "statBlockAttack" },
-      (option) =>
-        option.traitAttackRollModes === undefined &&
-        option.attack.onHit.every(
-          (effect) =>
-            effect.kind === "damage" ||
-            effect.kind === "conditional_bonus_damage",
-        ),
-    ),
+    Match.when({ kind: "statBlockAttack" }, () => true),
     Match.exhaustive,
   );
 }
