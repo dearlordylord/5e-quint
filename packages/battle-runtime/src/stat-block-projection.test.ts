@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { statBlockId } from "@dnd/shared/game-facts";
