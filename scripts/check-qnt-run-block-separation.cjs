@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 
+const assert = require("node:assert/strict");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 
 const root = process.cwd();
+const selfTest = process.argv.includes("--self-test");
 const skippedDirectories = new Set([
+  ".ralph",
   ".git",
   ".turbo",
   ".worktrees",
@@ -37,24 +41,54 @@ function collectQntPaths(directory) {
   });
 }
 
-const findings = collectQntPaths(root)
-  .filter((relativePath) => !isQntTestModule(relativePath))
-  .flatMap((relativePath) => {
-    const source = fs.readFileSync(path.join(root, relativePath), "utf8");
-    if (!ownerMarkerPattern.test(source) || !runBlockPattern.test(source)) {
-      return [];
-    }
-    return [relativePath];
-  })
-  .sort((left, right) => left.localeCompare(right));
-
-if (findings.length > 0) {
-  console.error(
-    "QNT run-block separation check failed. Move run blocks out of owner " +
-      "modules into explicit test/example/MBT/proof-runner modules:",
+function runSelfTest() {
+  const fixtureRoot = fs.mkdtempSync(
+    path.join(os.tmpdir(), "qnt-run-block-separation-"),
   );
-  for (const finding of findings) console.error(`  - ${finding}`);
-  process.exit(1);
+  try {
+    fs.mkdirSync(path.join(fixtureRoot, ".ralph"), { recursive: true });
+    fs.writeFileSync(
+      path.join(fixtureRoot, ".ralph", "ignored.qnt"),
+      [
+        "module ignored {",
+        "// KERNEL-COVERAGE: qnt-owner IGNORED",
+        "run ignored = true",
+        "}",
+      ].join("\n") + "\n",
+    );
+    assert.deepEqual(
+      collectQntPaths(fixtureRoot),
+      [],
+      "ignored Ralph artifacts must not enter QNT scans",
+    );
+  } finally {
+    fs.rmSync(fixtureRoot, { recursive: true, force: true });
+  }
 }
 
-console.log("QNT run-block separation check passed.");
+if (selfTest) {
+  runSelfTest();
+  console.log("QNT run-block separation self-test passed.");
+} else {
+  const findings = collectQntPaths(root)
+    .filter((relativePath) => !isQntTestModule(relativePath))
+    .flatMap((relativePath) => {
+      const source = fs.readFileSync(path.join(root, relativePath), "utf8");
+      if (!ownerMarkerPattern.test(source) || !runBlockPattern.test(source)) {
+        return [];
+      }
+      return [relativePath];
+    })
+    .sort((left, right) => left.localeCompare(right));
+
+  if (findings.length > 0) {
+    console.error(
+      "QNT run-block separation check failed. Move run blocks out of owner " +
+        "modules into explicit test/example/MBT/proof-runner modules:",
+    );
+    for (const finding of findings) console.error(`  - ${finding}`);
+    process.exit(1);
+  }
+
+  console.log("QNT run-block separation check passed.");
+}

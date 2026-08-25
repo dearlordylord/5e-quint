@@ -31,6 +31,10 @@ function writeFile(filePath, text) {
 function runSelfTest() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "rules-kernel-coverage-"));
   writeFile(
+    path.join(root, ".ralph", "ignored.md"),
+    "# KERNEL-COVERAGE: qnt-owner IGNORED-RALPH-ARTIFACT\n",
+  );
+  writeFile(
     path.join(root, "plans", "unit-profile-coverage", "profiles.jsonl"),
     '{"id":"spell.sample","profileKind":"spell-invocation"}\n',
   );

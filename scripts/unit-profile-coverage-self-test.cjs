@@ -12,6 +12,7 @@ const {
   extractDeclaredReplayActionNames,
   extractReplayQntActionSet,
   extractSelectedUnitIdentityReplays,
+  scanClaimFiles,
 } = require("./unit-profile-coverage-claim-scan.cjs");
 const {
   hasExecutableMechanics,
@@ -1809,6 +1810,18 @@ function runSelfTest(root) {
     path.join(os.tmpdir(), "unit-profile-coverage-self-test-"),
   );
   try {
+    const ignoredRalphArtifactPath = path.join(tempDir, ".ralph", "ignored.md");
+    fs.mkdirSync(path.dirname(ignoredRalphArtifactPath), { recursive: true });
+    const ignoredProfileClaimMarker = ["UNIT", "PROFILE", "COVERAGE"].join("-");
+    fs.writeFileSync(
+      ignoredRalphArtifactPath,
+      `# ${ignoredProfileClaimMarker}: unsupported-profile IGNORED-RALPH-ARTIFACT\n`,
+    );
+    if (scanClaimFiles(tempDir).profileClaims.length !== 0) {
+      fail(
+        "Self-test failed: ignored Ralph artifacts entered profile claim scanning.",
+      );
+    }
     writeFixtureJson(tempDir, "packages/mcp/package.json", {
       scripts: {
         "test:mcp-scenario-evidence": "vitest run src/mcp-protocol.test.ts",

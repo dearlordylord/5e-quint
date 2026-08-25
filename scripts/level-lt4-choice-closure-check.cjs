@@ -178,7 +178,9 @@ function readJson(relativePath) {
 function extractStringConstants(source) {
   return new Map(
     Array.from(
-      source.matchAll(/const\s+([A-Z0-9_]+)\s*=\s*"([^"]+)"/g),
+      source.matchAll(
+        /const\s+([A-Z0-9_]+)\s*=\s*(?:authoredUnitId\(\s*)?"([^"]+)"(?:\s*\))?/g,
+      ),
       ([, name, value]) => [name, value],
     ),
   );
@@ -543,9 +545,15 @@ function writeOrCompare(filePath, content) {
   return actual === content ? [] : [`stale generated file ${filePath}`];
 }
 
+async function formatGeneratedMarkdown(filePath, content) {
+  const prettier = await import("prettier");
+  return prettier.format(content, { filepath: filePath });
+}
+
 function runSelfTest() {
   const source = `
     const FIRST = "alpha";
+    const WRAPPED = authoredUnitId("wrapped");
     export const VALUES = [
       FIRST,
       "beta",
@@ -553,6 +561,7 @@ function runSelfTest() {
     const CHOICE_UNITS = [
       "delta",
       "epsilon",
+      WRAPPED,
     ] as const;
     const CHOICES = [
       creationChoiceOptionId(FIRST),
@@ -571,15 +580,15 @@ function runSelfTest() {
   if (values.join(",") !== "alpha,beta") {
     issues.push(`expected VALUES alpha,beta; received ${values.join(",")}`);
   }
-  if (choices.join(",") !== "alpha,delta,epsilon,gamma") {
+  if (choices.join(",") !== "alpha,delta,epsilon,gamma,wrapped") {
     issues.push(
-      `expected CHOICES alpha,delta,epsilon,gamma; received ${choices.join(",")}`,
+      `expected CHOICES alpha,delta,epsilon,gamma,wrapped; received ${choices.join(",")}`,
     );
   }
   return issues;
 }
 
-function main() {
+async function main() {
   if (selfTest) {
     const issues = runSelfTest();
     for (const issue of issues)
@@ -589,7 +598,10 @@ function main() {
   }
   const report = buildReport();
   const json = `${JSON.stringify(report, null, 2)}\n`;
-  const markdown = renderMarkdown(report);
+  const markdown = await formatGeneratedMarkdown(
+    outputMarkdownPath,
+    renderMarkdown(report),
+  );
   const issues = [
     ...writeOrCompare(outputJsonPath, json),
     ...writeOrCompare(outputMarkdownPath, markdown),
@@ -604,4 +616,7 @@ function main() {
   process.exitCode = issues.length > 0 ? 1 : 0;
 }
 
-main();
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

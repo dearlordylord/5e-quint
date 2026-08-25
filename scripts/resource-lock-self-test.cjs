@@ -91,7 +91,7 @@ function logLines(logPath) {
     : [];
 }
 
-async function assertSerialized(holder, contender, logPath, releasePath) {
+async function assertSerialized(holder, contender, logPath) {
   try {
     await waitFor(
       () => logLines(logPath).includes("holder-start"),
@@ -99,7 +99,6 @@ async function assertSerialized(holder, contender, logPath, releasePath) {
     );
     await new Promise((resolve) => setTimeout(resolve, 120));
     assert.deepEqual(logLines(logPath), ["holder-start"]);
-    writeFileSync(releasePath, "release\n");
     assert.equal(await waitForExit(holder, "the holder"), 0);
     assert.equal(await waitForExit(contender, "the contender"), 0);
     assert.deepEqual(logLines(logPath), [
@@ -108,7 +107,6 @@ async function assertSerialized(holder, contender, logPath, releasePath) {
       "contender-start",
     ]);
   } finally {
-    writeFileSync(releasePath, "release\n");
     if (holder.exitCode === null) holder.kill("SIGTERM");
     if (contender.exitCode === null) contender.kill("SIGTERM");
   }
@@ -188,11 +186,9 @@ async function runSelfTest() {
     );
 
     const sharedLog = path.join(temporaryRoot, "shared.log");
-    const sharedRelease = path.join(temporaryRoot, "shared.release");
     const sharedHolder = guardedSpawn(root, "with-broad-workspace-lock.sh", [
       "holder",
       sharedLog,
-      sharedRelease,
     ]);
     await waitFor(
       () => logLines(sharedLog).includes("holder-start"),
@@ -202,12 +198,7 @@ async function runSelfTest() {
       "contender",
       sharedLog,
     ]);
-    await assertSerialized(
-      sharedHolder,
-      sharedContender,
-      sharedLog,
-      sharedRelease,
-    );
+    await assertSerialized(sharedHolder, sharedContender, sharedLog);
 
     const commonDir = run(
       "git",
@@ -216,10 +207,6 @@ async function runSelfTest() {
     );
     for (const retiredLockName of retiredLockNames) {
       const logPath = path.join(temporaryRoot, `${retiredLockName}.log`);
-      const releasePath = path.join(
-        temporaryRoot,
-        `${retiredLockName}.release`,
-      );
       const holder = spawn(
         "flock",
         [
@@ -228,7 +215,6 @@ async function runSelfTest() {
           probePath,
           "holder",
           logPath,
-          releasePath,
         ],
         { cwd: root, stdio: "ignore" },
       );
@@ -240,7 +226,7 @@ async function runSelfTest() {
         "contender",
         logPath,
       ]);
-      await assertSerialized(holder, contender, logPath, releasePath);
+      await assertSerialized(holder, contender, logPath);
     }
   } finally {
     if (existsSync(linked)) {

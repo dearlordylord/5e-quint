@@ -22,9 +22,9 @@ None.
 | `feat_great_weapon_fighting` | fighting-style-feat-target | yes       | yes        | supported-profile        |                                           | .references/srd-5.2.1/Feats.md:105-109             |
 | `feat_two_weapon_fighting`   | fighting-style-feat-target | yes       | yes        | supported-profile        |                                           | .references/srd-5.2.1/Feats.md:111-115             |
 | `alert`                      | human-origin-feat-target   | yes       | yes        | supported-profile        |                                           | .references/srd-5.2.1/Feats.md:23-31               |
-| `feat_magic_initiate_cleric` | human-origin-feat-target   | yes       | yes        | unsupported-profile      | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45               |
-| `feat_magic_initiate_druid`  | human-origin-feat-target   | yes       | yes        | unsupported-profile      | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45               |
-| `feat_magic_initiate_wizard` | human-origin-feat-target   | yes       | yes        | unsupported-profile      | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45               |
+| `feat_magic_initiate_cleric` | human-origin-feat-target   | yes       | yes        | supported-profile        | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45               |
+| `feat_magic_initiate_druid`  | human-origin-feat-target   | yes       | yes        | supported-profile        | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45               |
+| `feat_magic_initiate_wizard` | human-origin-feat-target   | yes       | yes        | supported-profile        | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:33-45               |
 | `feat_savage_attacker`       | human-origin-feat-target   | yes       | yes        | supported-profile        |                                           | .references/srd-5.2.1/Feats.md:47-51               |
 | `feat_skilled`               | human-origin-feat-target   | yes       | yes        | supported-profile        | character-fact-and-runtime-detached-split | .references/srd-5.2.1/Feats.md:53-59               |
 | `species_dragonborn`         | srd-species-target         | yes       | yes        | unsupported-profile      |                                           | .references/srd-5.2.1/Character-Origins.md:99-127  |
