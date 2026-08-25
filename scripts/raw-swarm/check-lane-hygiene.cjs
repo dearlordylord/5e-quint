@@ -213,9 +213,29 @@ function sourceCandidateObservation(path) {
   }
 }
 
-function hasSupportedSourceExtension(path) {
-  return SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS.some((extension) =>
+function supportedSourceExtension(path) {
+  return SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS.find((extension) =>
     path.endsWith(extension),
+  );
+}
+
+function hasSupportedSourceExtension(path) {
+  return supportedSourceExtension(path) !== undefined;
+}
+
+function sourceResolutionCandidates(candidate) {
+  return sourceResolutionSuffixes.flatMap((extension) => [
+    `${candidate}${extension}`,
+    join(candidate, `index${extension}`),
+  ]);
+}
+
+function sourceReplacementCandidates(candidate) {
+  const extension = supportedSourceExtension(candidate);
+  if (extension === undefined) return [];
+  const stem = candidate.slice(0, -extension.length);
+  return SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS.map(
+    (replacement) => `${stem}${replacement}`,
   );
 }
 
@@ -232,9 +252,7 @@ function sourcePathsFromResolutionCandidates(candidates, visited) {
         if (observation.kind === "file") return [path];
         if (observation.kind === "directory") {
           return sourcePathsFromResolutionCandidates(
-            sourceResolutionSuffixes.map((extension) =>
-              join(path, `index${extension}`),
-            ),
+            sourceResolutionCandidates(path),
             visited,
           );
         }
@@ -250,19 +268,10 @@ function sourcePathsForCandidate(candidate, visited = new Set()) {
   const observation = sourceCandidateObservation(candidate);
   if (observation.kind === "failure") throw new Error(observation.message);
   if (observation.kind === "file") return [candidate];
+  const candidates = sourceResolutionCandidates(candidate);
   if (observation.kind === "absent" && hasSupportedSourceExtension(candidate)) {
-    return [];
+    candidates.push(...sourceReplacementCandidates(candidate));
   }
-  const candidates =
-    observation.kind === "directory"
-      ? sourceResolutionSuffixes.flatMap((extension) => [
-          `${candidate}${extension}`,
-          join(candidate, `index${extension}`),
-        ])
-      : sourceResolutionSuffixes.flatMap((extension) => [
-          `${candidate}${extension}`,
-          join(candidate, `index${extension}`),
-        ]);
   return sourcePathsFromResolutionCandidates(candidates, visited);
 }
 

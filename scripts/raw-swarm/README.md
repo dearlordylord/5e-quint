@@ -49,10 +49,11 @@ and rejects any new unclassified test or quality command that reaches a public
 model lane. Its closed Vitest filename inventory expands Vitest's default
 include glob, `**/*.{test,spec}.?(c|m)[jt]s?(x)`, into every `.test` and `.spec`
 JavaScript/TypeScript form, including JSX/TSX and CJS/MJS/CTS/MTS variants.
-That same canonical extension inventory drives extensionless internal-import
-resolution during transitive capability scanning. The deterministic runner
-statically inventories reachable repository-owned sources, preloads a Node
-capability guard, and prepends
+That same canonical extension inventory drives conservative internal-import
+resolution, including extensionless and JS-family-to-TS replacement fallbacks,
+during transitive capability scanning. The deterministic runner statically
+inventories reachable repository-owned sources, preloads a Node capability
+guard, and prepends
 failing shims for known coding-agent and network CLI names. Model-telemetry
 tests inject controlled Node fixtures through the spawn seam; no stamped or
 forgeable coding-agent executable is admitted.

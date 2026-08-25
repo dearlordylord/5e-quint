@@ -2241,6 +2241,197 @@ describe("RAW swarm runner boundaries", () => {
     30_000,
   );
 
+  test.each([
+    [".js", ".ts"],
+    [".jsx", ".tsx"],
+    [".mjs", ".mts"],
+    [".cjs", ".cts"],
+    [".mjsx", ".mtsx"],
+    [".cjsx", ".ctsx"],
+  ] as const)(
+    "scans replacement source extension %s as %s",
+    (importExtension, replacementExtension) => {
+      const fixtureRoot = mkdtempSync(
+        resolve(rawSwarmOutputDirectory, "transitive-replacement-source-"),
+      );
+      const testPath = resolve(fixtureRoot, "fixture.test.ts");
+      const forbiddenSourcePath = resolve(
+        fixtureRoot,
+        `fixture${replacementExtension}`,
+      );
+      const forbiddenModule = ["node:", "http"].join("");
+      writeFileSync(testPath, `import "./fixture${importExtension}";\n`);
+      writeFileSync(
+        forbiddenSourcePath,
+        `require(${JSON.stringify(forbiddenModule)});\n`,
+      );
+      try {
+        const checked = spawnSync(
+          process.execPath,
+          [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+          { encoding: "utf8" },
+        );
+        expect(checked.status).not.toBe(0);
+        expect(`${checked.stdout}${checked.stderr}`).toContain(
+          relative(repoRoot, forbiddenSourcePath),
+        );
+      } finally {
+        rmSync(fixtureRoot, { recursive: true, force: true });
+      }
+    },
+    30_000,
+  );
+
+  test("keeps an existing exact source file authoritative", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-exact-source-file-"),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const exactSourcePath = resolve(fixtureRoot, "fixture.js");
+    const replacementSourcePath = resolve(fixtureRoot, "fixture.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    writeFileSync(testPath, 'import "./fixture.js";\n');
+    writeFileSync(exactSourcePath, "export const harmless = true;\n");
+    writeFileSync(
+      replacementSourcePath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test.each(["package", "tsconfig"] as const)(
+    "scans replacement sources through the %s owner",
+    (owner) => {
+      const fixtureRoot = mkdtempSync(
+        resolve(rawSwarmOutputDirectory, `transitive-${owner}-replacement-`),
+      );
+      const fixtureName = relative(rawSwarmOutputDirectory, fixtureRoot);
+      const packageDirectory = resolve(
+        repoRoot,
+        "packages",
+        `.raw-swarm-${owner}-replacement-${fixtureName}`,
+      );
+      const packageName = `@dnd/raw-swarm-${owner}-replacement-${fixtureName}`;
+      const packageSourcePath = resolve(packageDirectory, "src", "fixture.ts");
+      const entryPath =
+        owner === "package"
+          ? resolve(fixtureRoot, "package-entry.ts")
+          : resolve(packageDirectory, "src", "entry.test.ts");
+      const forbiddenModule = ["node:", "http"].join("");
+      mkdirSync(resolve(packageDirectory, "src"), { recursive: true });
+      writeFileSync(
+        resolve(packageDirectory, "package.json"),
+        `${JSON.stringify(
+          owner === "package"
+            ? {
+                name: packageName,
+                private: true,
+                exports: { ".": "./src/fixture.js" },
+              }
+            : { name: packageName, private: true },
+          null,
+          2,
+        )}\n`,
+      );
+      if (owner === "tsconfig") {
+        writeFileSync(
+          resolve(packageDirectory, "tsconfig.json"),
+          `${JSON.stringify(
+            {
+              compilerOptions: { paths: { [packageName]: ["src/fixture.js"] } },
+            },
+            null,
+            2,
+          )}\n`,
+        );
+      }
+      writeFileSync(entryPath, `import ${JSON.stringify(packageName)};\n`);
+      writeFileSync(
+        packageSourcePath,
+        `require(${JSON.stringify(forbiddenModule)});\n`,
+      );
+      try {
+        const checked = spawnSync(
+          process.execPath,
+          [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+          { encoding: "utf8" },
+        );
+        expect(checked.status).not.toBe(0);
+        expect(`${checked.stdout}${checked.stderr}`).toContain(
+          relative(repoRoot, packageSourcePath),
+        );
+      } finally {
+        rmSync(fixtureRoot, { recursive: true, force: true });
+        rmSync(packageDirectory, { recursive: true, force: true });
+      }
+    },
+    30_000,
+  );
+
+  test("confirms Vitest resolves JS-family imports to TS-family siblings", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-vite-replacement-confirmation-"),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const sourceModules = [
+      ["js", ".js", ".ts"],
+      ["jsx", ".jsx", ".tsx"],
+      ["mjs", ".mjs", ".mts"],
+      ["cjs", ".cjs", ".cts"],
+    ] as const;
+    for (const [name, , sourceExtension] of sourceModules) {
+      writeFileSync(
+        resolve(fixtureRoot, `${name}${sourceExtension}`),
+        `export const value = ${JSON.stringify(name)};\n`,
+      );
+    }
+    writeFileSync(
+      testPath,
+      `${sourceModules
+        .map(
+          ([name, importExtension]) =>
+            `import { value as ${name} } from "./${name}${importExtension}";`,
+        )
+        .join(
+          "\n",
+        )}\nimport { expect, test } from "vitest";\ntest("replacement imports", () => expect([${sourceModules.map(([name]) => name).join(", ")}]).toEqual(${JSON.stringify(sourceModules.map(([name]) => name))}));\n`,
+    );
+    try {
+      const checked = spawnSync(
+        "pnpm",
+        [
+          "exec",
+          "vitest",
+          "run",
+          "--root",
+          fixtureRoot,
+          "--config",
+          resolve(repoRoot, "vitest.config.ts"),
+          testPath,
+          "--pool=threads",
+          "--maxWorkers=1",
+        ],
+        {
+          cwd: repoRoot,
+          env: { ...process.env, NODE_OPTIONS: "" },
+          encoding: "utf8",
+        },
+      );
+      expect(checked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   test("scans every extensionless sibling instead of choosing one by order", () => {
     const fixtureRoot = mkdtempSync(
       resolve(rawSwarmOutputDirectory, "transitive-sibling-collision-"),
