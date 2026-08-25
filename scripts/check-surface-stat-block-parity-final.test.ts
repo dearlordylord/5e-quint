@@ -1,5 +1,5 @@
-import { mkdtempSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { join, relative } from "node:path";
 import { tmpdir } from "node:os";
 
 import { describe, expect, it } from "vitest";
@@ -63,6 +63,31 @@ function rejectedResult(
     throw new Error("Expected final parity gate rejection");
   }
   return result;
+}
+
+function repositoryPath(repositoryRoot: string, filePath: string): string {
+  return relative(repositoryRoot, filePath).split("\\").join("/");
+}
+
+function runFinalGateWithPortableCaseArtifact(
+  portableCasesPath: string,
+): SurfaceStatBlockParityFinalGateResult {
+  const contentDir = mkdtempSync(
+    join(tmpdir(), "surface-final-gate-portable-case-content-test-"),
+  );
+
+  try {
+    const options = surfaceStatBlockParityFinalOptions(process.cwd());
+    return runSurfaceStatBlockParityFinal({
+      repoRoot: options.repoRoot,
+      contentDir,
+      portableCasesPath,
+      portableCasesBuilder: () => Buffer.from("generated portable cases\n"),
+      compile: () => undefined,
+    });
+  } finally {
+    rmSync(contentDir, { force: true, recursive: true });
+  }
 }
 
 describe("Surface stat-block parity final gate", () => {
@@ -130,6 +155,56 @@ describe("Surface stat-block parity final gate", () => {
       });
     } finally {
       rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
+
+  it("reports a missing portable case artifact through the real final gate", () => {
+    const artifactDir = mkdtempSync(
+      join(tmpdir(), "surface-final-gate-missing-portable-case-test-"),
+    );
+    const portableCasesPath = join(artifactDir, "srd-surface-cases.json");
+
+    try {
+      const result = rejectedResult(
+        runFinalGateWithPortableCaseArtifact(portableCasesPath),
+      );
+
+      expect(result.blockers).toEqual(["publication-issues", "parity-issues"]);
+      expect(result.check.issues).toEqual([
+        {
+          kind: "missing-portable-case-artifact",
+          file: repositoryPath(process.cwd(), portableCasesPath),
+        },
+      ]);
+    } finally {
+      rmSync(artifactDir, { force: true, recursive: true });
+    }
+  });
+
+  it("reports a stale portable case artifact through the real final gate", () => {
+    const artifactDir = mkdtempSync(
+      join(tmpdir(), "surface-final-gate-stale-portable-case-test-"),
+    );
+    const portableCasesPath = join(artifactDir, "srd-surface-cases.json");
+    writeFileSync(
+      portableCasesPath,
+      Buffer.from("stale portable case artifact\n"),
+    );
+
+    try {
+      const result = rejectedResult(
+        runFinalGateWithPortableCaseArtifact(portableCasesPath),
+      );
+
+      expect(result.blockers).toEqual(["publication-issues", "parity-issues"]);
+      expect(result.check.issues).toEqual([
+        {
+          kind: "out-of-sync-portable-case-artifact",
+          file: repositoryPath(process.cwd(), portableCasesPath),
+        },
+      ]);
+    } finally {
+      rmSync(artifactDir, { force: true, recursive: true });
     }
   });
 
