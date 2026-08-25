@@ -666,4 +666,51 @@ in statBlock`,
       rmSync(contentDir, { force: true, recursive: true });
     }
   });
+
+  it("scopes source family to the requested sibling binding", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-sibling-binding-family-test-"),
+    );
+
+    try {
+      writeFileSync(
+        join(contentDir, "sibling-binding-stat-block.dhall"),
+        `let statBlock =
+      let helper : Type = { kind : Text }
+      in { kind = "statBlock" }
+let extra = { kind = "other" }
+in statBlock`,
+      );
+      writeFileSync(
+        join(contentDir, "sibling-binding-stat-block.json"),
+        validRecord,
+      );
+
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        compile: () => "synthetic compile failure",
+      });
+
+      expect(result.issues).toContainEqual({
+        kind: "peer-family-mismatch",
+        source: "sibling-binding-stat-block.dhall",
+        peer: "sibling-binding-stat-block.json",
+        expectedRecordKind: "statBlock",
+        actualRecordKind: "other",
+      });
+      expect(result.peerObservations).toContainEqual(
+        expect.objectContaining({
+          tag: "peer-family-mismatch",
+          role: "committed",
+          recordKind: "statBlock",
+          actualRecordKind: "other",
+          sourcePath: "sibling-binding-stat-block.dhall",
+          peerPath: "sibling-binding-stat-block.json",
+        }),
+      );
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
 });
