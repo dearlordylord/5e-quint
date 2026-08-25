@@ -2171,6 +2171,25 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 30_000);
 
+  test("lists the scenario catalogue identity and catalogue modules", () => {
+    const scenarioCatalogueTest = relative(
+      repoRoot,
+      resolve(repoRoot, "scripts/raw-swarm/scenario-catalogue.test.ts"),
+    );
+    const checked = spawnSync(
+      process.execPath,
+      [laneHygieneChecker, "--list-test-sources", scenarioCatalogueTest],
+      { encoding: "utf8" },
+    );
+    expect(checked.status).toBe(0);
+    expect(checked.stdout.split("\n")).toEqual(
+      expect.arrayContaining([
+        "scripts/raw-swarm/raw-swarm-identities.ts",
+        "scripts/raw-swarm/scenario-catalogue.ts",
+      ]),
+    );
+  }, 30_000);
+
   test("follows multiline imports and exports without reading comments or strings", () => {
     const fixtureRoot = mkdtempSync(
       resolve(rawSwarmOutputDirectory, "transitive-multiline-module-"),
@@ -2233,6 +2252,88 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 30_000);
 
+  test("collects AST module forms and ignores non-module syntax", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-ast-module-"),
+    );
+    const forbiddenModule = ["node:", "http"].join("");
+    const forbiddenSource = (path: string) =>
+      writeFileSync(path, `require(${JSON.stringify(forbiddenModule)});\n`);
+    const check = (entryPath: string) =>
+      spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+        { encoding: "utf8" },
+      );
+    const typeExportEntry = resolve(fixtureRoot, "type-export-entry.ts");
+    const typeExportTarget = resolve(fixtureRoot, "type-export-target.ts");
+    const importEqualsEntry = resolve(fixtureRoot, "import-equals-entry.ts");
+    const importEqualsTarget = resolve(fixtureRoot, "import-equals-target.ts");
+    const importTypeEntry = resolve(fixtureRoot, "import-type-entry.ts");
+    const importTypeTarget = resolve(fixtureRoot, "import-type-target.ts");
+    const templateEntry = resolve(fixtureRoot, "template-entry.ts");
+    const templateTarget = resolve(fixtureRoot, "template-target.ts");
+    const safeEntry = resolve(fixtureRoot, "safe-forms-entry.ts");
+    const regexTarget = resolve(fixtureRoot, "regex-target.ts");
+    const memberTarget = resolve(fixtureRoot, "member-target.ts");
+    const nonliteralTarget = resolve(fixtureRoot, "nonliteral-target.ts");
+    writeFileSync(
+      typeExportEntry,
+      'export type { value } from "./type-export-target.ts";\n',
+    );
+    forbiddenSource(typeExportTarget);
+    writeFileSync(
+      importEqualsEntry,
+      'import imported = require("./import-equals-target.ts");\nvoid imported;\n',
+    );
+    forbiddenSource(importEqualsTarget);
+    writeFileSync(
+      importTypeEntry,
+      'type Imported = import("./import-type-target.ts").Value;\nvoid (undefined as unknown as Imported);\n',
+    );
+    forbiddenSource(importTypeTarget);
+    writeFileSync(
+      templateEntry,
+      [
+        "void import(`./template-target.ts`);",
+        "void require(`./template-target.ts`);",
+      ].join("\n"),
+    );
+    forbiddenSource(templateTarget);
+    writeFileSync(
+      safeEntry,
+      [
+        'if (true) /require\\("\\.\\\\/regex-target\\.ts"\\)/;',
+        "const member = { require: (value: string) => value, import: (value: string) => value };",
+        'member.require("./member-target.ts");',
+        'member.import("./member-target.ts");',
+        'const specifier = "./nonliteral-target.ts";',
+        "require(specifier);",
+        "void import(specifier);",
+      ].join("\n"),
+    );
+    forbiddenSource(regexTarget);
+    forbiddenSource(memberTarget);
+    forbiddenSource(nonliteralTarget);
+    try {
+      for (const [entryPath, targetPath] of [
+        [typeExportEntry, typeExportTarget],
+        [importEqualsEntry, importEqualsTarget],
+        [importTypeEntry, importTypeTarget],
+        [templateEntry, templateTarget],
+      ] as const) {
+        const checked = check(entryPath);
+        expect(checked.status).not.toBe(0);
+        expect(`${checked.stdout}${checked.stderr}`).toContain(
+          relative(repoRoot, targetPath),
+        );
+      }
+      expect(check(safeEntry).status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   test("fails closed on malformed module source", () => {
     const fixtureRoot = mkdtempSync(
       resolve(rawSwarmOutputDirectory, "transitive-malformed-module-"),
@@ -2249,9 +2350,9 @@ describe("RAW swarm runner boundaries", () => {
         { encoding: "utf8" },
       );
       expect(checked.status).not.toBe(0);
-      expect(`${checked.stdout}${checked.stderr}`).toContain(
-        "unterminated block comment",
-      );
+      const output = `${checked.stdout}${checked.stderr}`;
+      expect(output).toContain(`${relative(repoRoot, testPath)}:2:16`);
+      expect(output).toContain("'*/' expected.");
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
