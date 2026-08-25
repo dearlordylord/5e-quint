@@ -105,7 +105,11 @@ type RecordFamilyLabel = "Unit" | "Stat Block";
 type DecodedMembers = {
   readonly units: readonly PublishedUnit[];
   readonly statBlocks: readonly PublishedStatBlock[];
+  readonly unitEntries: readonly DecodedMember<PublishedUnit>[];
+  readonly statBlockEntries: readonly DecodedMember<PublishedStatBlock>[];
 };
+
+type DecodedMember<T> = { readonly record: T; readonly index: number };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -193,110 +197,145 @@ type JsonScanResult = {
   readonly duplicateMembers: readonly JsonMemberScan[];
 };
 
-function scanJsonMembers(text: string): JsonScanResult {
-  let cursor = 0;
-  const duplicateMembers: JsonMemberScan[] = [];
+class JsonMemberScanner {
+  readonly #text: string;
+  #cursor = 0;
+  readonly #duplicateMembers: JsonMemberScan[] = [];
 
-  const skipWhitespace = () => {
-    while (/\s/.test(text[cursor] ?? "")) cursor += 1;
-  };
+  constructor(text: string) {
+    this.#text = text;
+  }
 
-  const parseString = (): string | undefined => {
-    const start = cursor;
-    if (text[cursor] !== '"') return undefined;
-    cursor += 1;
+  scan(): JsonScanResult {
+    const valid = this.parseValue("$");
+    this.skipWhitespace();
+    return {
+      valid: valid && this.#cursor === this.#text.length,
+      duplicateMembers: this.#duplicateMembers,
+    };
+  }
+
+  private skipWhitespace(): void {
+    while (/\s/.test(this.#text[this.#cursor] ?? "")) this.#cursor += 1;
+  }
+
+  private parseString(): string | undefined {
+    const start = this.#cursor;
+    if (this.#text[this.#cursor] !== '"') return undefined;
+    this.#cursor += 1;
     let escaped = false;
-    while (cursor < text.length) {
-      const character = text[cursor];
-      cursor += 1;
+    while (this.#cursor < this.#text.length) {
+      const character = this.#text[this.#cursor];
+      this.#cursor += 1;
       if (escaped) {
         escaped = false;
       } else if (character === "\\") {
         escaped = true;
       } else if (character === '"') {
-        const encoded = text.slice(start, cursor);
-        try {
-          const decoded: unknown = JSON.parse(encoded);
-          return typeof decoded === "string" ? decoded : undefined;
-        } catch {
-          return undefined;
-        }
+        return this.decodeString(this.#text.slice(start, this.#cursor));
       }
     }
     return undefined;
-  };
+  }
 
-  const parseValue = (path: string): boolean => {
-    skipWhitespace();
-    const character = text[cursor];
-    if (character === '"') return parseString() !== undefined;
-    if (character === "{") {
-      cursor += 1;
-      skipWhitespace();
-      const members = new Set<string>();
-      if (text[cursor] === "}") {
-        cursor += 1;
+  private decodeString(encoded: string): string | undefined {
+    try {
+      const decoded: unknown = JSON.parse(encoded);
+      return typeof decoded === "string" ? decoded : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private parseObject(path: string): boolean {
+    this.#cursor += 1;
+    this.skipWhitespace();
+    const members = new Set<string>();
+    if (this.#text[this.#cursor] === "}") {
+      this.#cursor += 1;
+      return true;
+    }
+    while (this.#cursor < this.#text.length) {
+      const result = this.parseObjectMember(path, members);
+      if (result === "invalid") return false;
+      if (result === "close") return true;
+    }
+    return false;
+  }
+
+  private parseObjectMember(
+    path: string,
+    members: Set<string>,
+  ): "close" | "comma" | "invalid" {
+    this.skipWhitespace();
+    const memberName = this.parseString();
+    if (memberName === undefined) return "invalid";
+    if (members.has(memberName)) {
+      this.#duplicateMembers.push({
+        path: `${path}.${memberName}`,
+        memberName,
+      });
+    }
+    members.add(memberName);
+    this.skipWhitespace();
+    if (this.#text[this.#cursor] !== ":") return "invalid";
+    this.#cursor += 1;
+    if (!this.parseValue(`${path}.${memberName}`)) return "invalid";
+    this.skipWhitespace();
+    if (this.#text[this.#cursor] === "}") {
+      this.#cursor += 1;
+      return "close";
+    }
+    if (this.#text[this.#cursor] !== ",") return "invalid";
+    this.#cursor += 1;
+    return "comma";
+  }
+
+  private parseArray(path: string): boolean {
+    this.#cursor += 1;
+    this.skipWhitespace();
+    if (this.#text[this.#cursor] === "]") {
+      this.#cursor += 1;
+      return true;
+    }
+    let index = 0;
+    while (this.#cursor < this.#text.length) {
+      if (!this.parseValue(`${path}[${index}]`)) return false;
+      index += 1;
+      this.skipWhitespace();
+      if (this.#text[this.#cursor] === "]") {
+        this.#cursor += 1;
         return true;
       }
-      while (cursor < text.length) {
-        skipWhitespace();
-        const memberName = parseString();
-        if (memberName === undefined) return false;
-        if (members.has(memberName)) {
-          duplicateMembers.push({
-            path: `${path}.${memberName}`,
-            memberName,
-          });
-        }
-        members.add(memberName);
-        skipWhitespace();
-        if (text[cursor] !== ":") return false;
-        cursor += 1;
-        if (!parseValue(`${path}.${memberName}`)) return false;
-        skipWhitespace();
-        if (text[cursor] === "}") {
-          cursor += 1;
-          return true;
-        }
-        if (text[cursor] !== ",") return false;
-        cursor += 1;
-      }
-      return false;
+      if (this.#text[this.#cursor] !== ",") return false;
+      this.#cursor += 1;
     }
-    if (character === "[") {
-      cursor += 1;
-      skipWhitespace();
-      if (text[cursor] === "]") {
-        cursor += 1;
-        return true;
-      }
-      let index = 0;
-      while (cursor < text.length) {
-        if (!parseValue(`${path}[${index}]`)) return false;
-        index += 1;
-        skipWhitespace();
-        if (text[cursor] === "]") {
-          cursor += 1;
-          return true;
-        }
-        if (text[cursor] !== ",") return false;
-        cursor += 1;
-      }
-      return false;
-    }
-    const start = cursor;
-    while (cursor < text.length && !/[\s,\]}]/.test(text[cursor] ?? "")) {
-      cursor += 1;
-    }
-    return cursor > start;
-  };
+    return false;
+  }
 
-  const valid = parseValue("$");
-  skipWhitespace();
-  return {
-    valid: valid && cursor === text.length,
-    duplicateMembers,
-  };
+  private parsePrimitive(): boolean {
+    const start = this.#cursor;
+    while (
+      this.#cursor < this.#text.length &&
+      !/[\s,\]}]/.test(this.#text[this.#cursor] ?? "")
+    ) {
+      this.#cursor += 1;
+    }
+    return this.#cursor > start;
+  }
+
+  private parseValue(path: string): boolean {
+    this.skipWhitespace();
+    const character = this.#text[this.#cursor];
+    if (character === '"') return this.parseString() !== undefined;
+    if (character === "{") return this.parseObject(path);
+    if (character === "[") return this.parseArray(path);
+    return this.parsePrimitive();
+  }
+}
+
+function scanJsonMembers(text: string): JsonScanResult {
+  return new JsonMemberScanner(text).scan();
 }
 
 export function decodePortableSrdSurfaceText(
@@ -325,47 +364,66 @@ export function decodePortableSrdSurfaceText(
   return decodePortableSrdSurface(parsed);
 }
 
+function unknownRootPropertyIssues(
+  raw: Record<string, unknown>,
+): PortableSrdSurfaceIssue[] {
+  return Object.keys(raw)
+    .filter((key) => key !== "kind" && key !== "units" && key !== "statBlocks")
+    .map((key) => ({
+      code: "schema" as const,
+      path: `$.${key}`,
+      message: `Unknown Surface aggregate property: ${key}`,
+    }));
+}
+
+function rootKindIssues(
+  raw: Record<string, unknown>,
+): PortableSrdSurfaceIssue[] {
+  return raw.kind === "srd-5.2.1-surface-catalog"
+    ? []
+    : [
+        shapeIssue(
+          "$.kind",
+          "Surface aggregate kind must be srd-5.2.1-surface-catalog",
+        ),
+      ];
+}
+
+function rootCollectionIssues(
+  raw: Record<string, unknown>,
+): PortableSrdSurfaceIssue[] {
+  return (["units", "statBlocks"] as const).flatMap((member) => {
+    const value = raw[member];
+    return Array.isArray(value) && value.length > 0
+      ? []
+      : [
+          shapeIssue(
+            `$.${member}`,
+            `Surface aggregate ${member} must be a non-empty array`,
+          ),
+        ];
+  });
+}
+
 function rootShapeIssues(raw: unknown): PortableSrdSurfaceIssue[] {
   if (!isRecord(raw)) {
     return [shapeIssue("$", "Surface aggregate must be a JSON object")];
   }
-
-  const issues: PortableSrdSurfaceIssue[] = [];
-  for (const key of Object.keys(raw)) {
-    if (key !== "kind" && key !== "units" && key !== "statBlocks") {
-      issues.push({
-        code: "schema",
-        path: `$.${key}`,
-        message: `Unknown Surface aggregate property: ${key}`,
-      });
-    }
-  }
-  if (raw.kind !== "srd-5.2.1-surface-catalog") {
-    issues.push(
-      shapeIssue(
-        "$.kind",
-        "Surface aggregate kind must be srd-5.2.1-surface-catalog",
-      ),
-    );
-  }
-  for (const member of ["units", "statBlocks"] as const) {
-    const value = raw[member];
-    if (!Array.isArray(value) || value.length === 0) {
-      issues.push(
-        shapeIssue(
-          `$.${member}`,
-          `Surface aggregate ${member} must be a non-empty array`,
-        ),
-      );
-    }
-  }
-  return issues;
+  return [
+    ...unknownRootPropertyIssues(raw),
+    ...rootKindIssues(raw),
+    ...rootCollectionIssues(raw),
+  ];
 }
 
 function decodeMembers(raw: unknown, issues: PortableSrdSurfaceIssue[]) {
   const units: PublishedUnit[] = [];
   const statBlocks: PublishedStatBlock[] = [];
-  if (!isRecord(raw)) return { units, statBlocks };
+  const unitEntries: DecodedMember<PublishedUnit>[] = [];
+  const statBlockEntries: DecodedMember<PublishedStatBlock>[] = [];
+  if (!isRecord(raw)) {
+    return { units, statBlocks, unitEntries, statBlockEntries };
+  }
 
   const rawUnits = raw.units;
   if (Array.isArray(rawUnits)) {
@@ -378,6 +436,7 @@ function decodeMembers(raw: unknown, issues: PortableSrdSurfaceIssue[]) {
         issues.push(schemaIssue(`$.units[${index}]`, decoded.left));
       } else {
         units.push(decoded.right);
+        unitEntries.push({ record: decoded.right, index });
       }
     });
   }
@@ -393,11 +452,12 @@ function decodeMembers(raw: unknown, issues: PortableSrdSurfaceIssue[]) {
         issues.push(schemaIssue(`$.statBlocks[${index}]`, decoded.left));
       } else {
         statBlocks.push(decoded.right);
+        statBlockEntries.push({ record: decoded.right, index });
       }
     });
   }
 
-  return { units, statBlocks };
+  return { units, statBlocks, unitEntries, statBlockEntries };
 }
 
 function duplicateIdentityIssues(
@@ -408,11 +468,11 @@ function duplicateIdentityIssues(
     { readonly family: RecordFamilyLabel; readonly path: string }
   >();
   const issues: PortableSrdSurfaceIssue[] = [];
-  for (const [family, records, member] of [
-    ["Unit", members.units, "units"] as const,
-    ["Stat Block", members.statBlocks, "statBlocks"] as const,
+  for (const [family, entries, member] of [
+    ["Unit", members.unitEntries, "units"] as const,
+    ["Stat Block", members.statBlockEntries, "statBlocks"] as const,
   ]) {
-    records.forEach((record, index) => {
+    entries.forEach(({ record, index }) => {
       const prior = seen.get(record.id);
       if (prior !== undefined) {
         issues.push(
@@ -451,6 +511,42 @@ function astChild(ast: SchemaAST.AST): SchemaAST.AST | undefined {
   return undefined;
 }
 
+const SUPPORTED_STRUCTURAL_AST_TAGS = new Set<SchemaAST.AST["_tag"]>([
+  "AnyKeyword",
+  "BigIntKeyword",
+  "BooleanKeyword",
+  "Declaration",
+  "Literal",
+  "NeverKeyword",
+  "NumberKeyword",
+  "ObjectKeyword",
+  "StringKeyword",
+  "SymbolKeyword",
+  "TupleType",
+  "TypeLiteral",
+  "UndefinedKeyword",
+  "Union",
+  "UnknownKeyword",
+  "VoidKeyword",
+]);
+
+const NON_LITERAL_AST_TAGS = new Set<SchemaAST.AST["_tag"]>([
+  "AnyKeyword",
+  "BigIntKeyword",
+  "BooleanKeyword",
+  "Declaration",
+  "NeverKeyword",
+  "NumberKeyword",
+  "ObjectKeyword",
+  "StringKeyword",
+  "SymbolKeyword",
+  "TupleType",
+  "TypeLiteral",
+  "UndefinedKeyword",
+  "UnknownKeyword",
+  "VoidKeyword",
+]);
+
 function structuralAst(ast: SchemaAST.AST): SchemaAST.AST {
   let current = ast;
   while (current._tag === "Transformation" || current._tag === "Refinement") {
@@ -459,27 +555,9 @@ function structuralAst(ast: SchemaAST.AST): SchemaAST.AST {
     current = child;
   }
   if (current._tag === "Suspend") return structuralAst(current.f());
-  switch (current._tag) {
-    case "AnyKeyword":
-    case "BigIntKeyword":
-    case "BooleanKeyword":
-    case "Declaration":
-    case "Literal":
-    case "NeverKeyword":
-    case "NumberKeyword":
-    case "ObjectKeyword":
-    case "StringKeyword":
-    case "SymbolKeyword":
-    case "TupleType":
-    case "TypeLiteral":
-    case "UndefinedKeyword":
-    case "Union":
-    case "UnknownKeyword":
-    case "VoidKeyword":
-      return current;
-    default:
-      return unsupportedSchemaAst(current);
-  }
+  return SUPPORTED_STRUCTURAL_AST_TAGS.has(current._tag)
+    ? current
+    : unsupportedSchemaAst(current);
 }
 
 function literalStrings(ast: SchemaAST.AST): readonly string[] {
@@ -490,25 +568,21 @@ function literalStrings(ast: SchemaAST.AST): readonly string[] {
   if (current._tag === "Union") {
     return current.types.flatMap(literalStrings);
   }
-  switch (current._tag) {
-    case "AnyKeyword":
-    case "BigIntKeyword":
-    case "BooleanKeyword":
-    case "Declaration":
-    case "NeverKeyword":
-    case "NumberKeyword":
-    case "ObjectKeyword":
-    case "StringKeyword":
-    case "SymbolKeyword":
-    case "TupleType":
-    case "TypeLiteral":
-    case "UndefinedKeyword":
-    case "UnknownKeyword":
-    case "VoidKeyword":
-      return [];
-    default:
-      return unsupportedSchemaAst(current);
-  }
+  return NON_LITERAL_AST_TAGS.has(current._tag)
+    ? []
+    : unsupportedSchemaAst(current);
+}
+
+function discriminatorPropertyMatches(
+  property: SchemaAST.PropertySignature,
+  value: Record<string, unknown>,
+): boolean | undefined {
+  if (property.isOptional) return undefined;
+  const literals = literalStrings(property.type);
+  if (literals.length === 0) return undefined;
+  return Object.hasOwn(value, property.name)
+    ? literals.includes(String(value[String(property.name)]))
+    : true;
 }
 
 function branchDiscriminatorMatches(
@@ -519,16 +593,10 @@ function branchDiscriminatorMatches(
   if (current._tag !== "TypeLiteral" || !isRecord(value)) return true;
   let hasDiscriminator = false;
   for (const property of current.propertySignatures) {
-    if (property.isOptional) continue;
-    const literals = literalStrings(property.type);
-    if (literals.length === 0) continue;
+    const propertyMatch = discriminatorPropertyMatches(property, value);
+    if (propertyMatch === undefined) continue;
     hasDiscriminator = true;
-    if (
-      Object.hasOwn(value, property.name) &&
-      !literals.includes(String(value[String(property.name)]))
-    ) {
-      return false;
-    }
+    if (!propertyMatch) return false;
   }
   return !hasDiscriminator || Object.keys(value).length > 0;
 }
@@ -543,6 +611,175 @@ function matchingUnionBranches(
   return matches.length > 0 ? matches : ast.types;
 }
 
+type DependencyWalkItem = {
+  readonly ast: SchemaAST.AST;
+  readonly value: unknown;
+  readonly path: string;
+  readonly inheritedRole: SurfaceSchemaFieldRole | undefined;
+};
+
+type DependencyWalkContext = {
+  readonly current: DependencyWalkItem;
+  readonly role: SurfaceSchemaFieldRole | undefined;
+  readonly pending: DependencyWalkItem[];
+  readonly dependencies: AuthoredDependency[];
+  readonly issues: PortableSrdSurfaceIssue[];
+};
+
+type DependencyNodeHandler = (context: DependencyWalkContext) => void;
+
+function dependencyKey(
+  path: string,
+  targetKind: "unit" | "statBlock",
+  targetId: string,
+  relation: string,
+): string {
+  return `${path}\u0000${targetKind}\u0000${targetId}\u0000${relation}`;
+}
+
+function handleStringDependency(context: DependencyWalkContext): void {
+  const { current, role, dependencies } = context;
+  if (typeof current.value !== "string" || role?.category !== "dependency") {
+    return;
+  }
+  const key = dependencyKey(
+    current.path,
+    role.targetKind,
+    current.value,
+    role.relation,
+  );
+  if (
+    dependencies.some(
+      (dependency) =>
+        dependencyKey(
+          dependency.path,
+          dependency.targetKind,
+          dependency.targetId,
+          dependency.relation,
+        ) === key,
+    )
+  ) {
+    return;
+  }
+  dependencies.push({
+    path: current.path,
+    targetKind: role.targetKind,
+    targetId: current.value,
+    relation: role.relation,
+  });
+}
+
+function handleNoop(): void {
+  // Primitive schema nodes do not contain authored dependencies.
+}
+
+function handleWrappedNode(context: DependencyWalkContext): void {
+  const child = astChild(context.current.ast);
+  if (child === undefined) return;
+  context.pending.push({
+    ...context.current,
+    ast: child,
+    inheritedRole: context.role,
+  });
+}
+
+function handleSuspendNode(context: DependencyWalkContext): void {
+  if (context.current.ast._tag !== "Suspend") return;
+  context.pending.push({
+    ...context.current,
+    ast: context.current.ast.f(),
+    inheritedRole: context.role,
+  });
+}
+
+function handleUnionNode(context: DependencyWalkContext): void {
+  if (context.current.ast._tag !== "Union") return;
+  for (const branch of matchingUnionBranches(
+    context.current.ast,
+    context.current.value,
+  )) {
+    context.pending.push({
+      ...context.current,
+      ast: branch,
+      inheritedRole: context.role,
+    });
+  }
+}
+
+function handleTupleNode(context: DependencyWalkContext): void {
+  if (
+    context.current.ast._tag !== "TupleType" ||
+    !Array.isArray(context.current.value)
+  ) {
+    return;
+  }
+  for (let index = context.current.value.length - 1; index >= 0; index -= 1) {
+    const element =
+      context.current.ast.elements[index] ??
+      context.current.ast.rest[0] ??
+      undefined;
+    if (element === undefined) continue;
+    context.pending.push({
+      ast: element.type,
+      value: context.current.value[index],
+      path: `${context.current.path}[${index}]`,
+      inheritedRole: context.role,
+    });
+  }
+}
+
+function handleTypeLiteralNode(context: DependencyWalkContext): void {
+  if (
+    context.current.ast._tag !== "TypeLiteral" ||
+    !isRecord(context.current.value)
+  ) {
+    return;
+  }
+  for (const property of context.current.ast.propertySignatures) {
+    const key = String(property.name);
+    if (!Object.hasOwn(context.current.value, key)) continue;
+    context.pending.push({
+      ast: property.type,
+      value: context.current.value[key],
+      path: `${context.current.path}.${key}`,
+      inheritedRole: context.role,
+    });
+  }
+}
+
+function handleUnsupportedNode(context: DependencyWalkContext): void {
+  context.issues.push(
+    unsupportedSchemaNodeIssue(context.current.path, context.current.ast._tag),
+  );
+}
+
+const DEPENDENCY_NODE_HANDLERS: Partial<
+  Record<SchemaAST.AST["_tag"], DependencyNodeHandler>
+> = {
+  Literal: handleStringDependency,
+  StringKeyword: handleStringDependency,
+  BooleanKeyword: handleNoop,
+  NumberKeyword: handleNoop,
+  NeverKeyword: handleNoop,
+  UnknownKeyword: handleNoop,
+  Refinement: handleWrappedNode,
+  Transformation: handleWrappedNode,
+  Suspend: handleSuspendNode,
+  Union: handleUnionNode,
+  TupleType: handleTupleNode,
+  TypeLiteral: handleTypeLiteralNode,
+  Declaration: handleUnsupportedNode,
+};
+
+function handleDependencyNode(context: DependencyWalkContext): void {
+  const handler = DEPENDENCY_NODE_HANDLERS[context.current.ast._tag];
+  if (handler === undefined) {
+    handleUnsupportedNode(context);
+    return;
+  }
+  handler(context);
+}
+
 function collectAuthoredDependencies(
   schema: Schema.Schema.AnyNoContext,
   value: unknown,
@@ -550,12 +787,9 @@ function collectAuthoredDependencies(
 ): AuthoredDependencyCollection {
   const dependencies: AuthoredDependency[] = [];
   const issues: PortableSrdSurfaceIssue[] = [];
-  const pending: Array<{
-    readonly ast: SchemaAST.AST;
-    readonly value: unknown;
-    readonly path: string;
-    readonly inheritedRole: SurfaceSchemaFieldRole | undefined;
-  }> = [{ ast: schema.ast, value, path: rootPath, inheritedRole: undefined }];
+  const pending: DependencyWalkItem[] = [
+    { ast: schema.ast, value, path: rootPath, inheritedRole: undefined },
+  ];
   const seenObjects = new WeakMap<SchemaAST.AST, WeakSet<object>>();
 
   while (pending.length > 0) {
@@ -569,132 +803,28 @@ function collectAuthoredDependencies(
       seen.add(current.value);
       seenObjects.set(current.ast, seen);
     }
-
-    switch (current.ast._tag) {
-      case "Literal":
-      case "StringKeyword": {
-        if (
-          typeof current.value === "string" &&
-          role?.category === "dependency"
-        ) {
-          const key = `${current.path}\u0000${role.targetKind}\u0000${current.value}\u0000${role.relation}`;
-          if (
-            !dependencies.some(
-              (dependency) =>
-                `${dependency.path}\u0000${dependency.targetKind}\u0000${dependency.targetId}\u0000${dependency.relation}` ===
-                key,
-            )
-          ) {
-            dependencies.push({
-              path: current.path,
-              targetKind: role.targetKind,
-              targetId: current.value,
-              relation: role.relation,
-            });
-          }
-        }
-        break;
-      }
-      case "BooleanKeyword":
-      case "NumberKeyword":
-      case "NeverKeyword":
-      case "UnknownKeyword":
-        break;
-      case "Refinement":
-      case "Transformation": {
-        const child = astChild(current.ast);
-        if (child !== undefined) {
-          pending.push({ ...current, ast: child, inheritedRole: role });
-        }
-        break;
-      }
-      case "Suspend":
-        pending.push({ ...current, ast: current.ast.f(), inheritedRole: role });
-        break;
-      case "Union":
-        for (const branch of matchingUnionBranches(
-          current.ast,
-          current.value,
-        )) {
-          pending.push({ ...current, ast: branch, inheritedRole: role });
-        }
-        break;
-      case "TupleType":
-        if (Array.isArray(current.value)) {
-          for (let index = current.value.length - 1; index >= 0; index -= 1) {
-            const element =
-              current.ast.elements[index] ?? current.ast.rest[0] ?? undefined;
-            if (element !== undefined) {
-              pending.push({
-                ast: element.type,
-                value: current.value[index],
-                path: `${current.path}[${index}]`,
-                inheritedRole: role,
-              });
-            }
-          }
-        }
-        break;
-      case "TypeLiteral":
-        if (isRecord(current.value)) {
-          for (const property of current.ast.propertySignatures) {
-            const key = String(property.name);
-            if (Object.hasOwn(current.value, key)) {
-              pending.push({
-                ast: property.type,
-                value: current.value[key],
-                path: `${current.path}.${key}`,
-                inheritedRole: role,
-              });
-            }
-          }
-        }
-        break;
-      case "Declaration":
-        issues.push(unsupportedSchemaNodeIssue(current.path, current.ast._tag));
-        break;
-      default:
-        issues.push(unsupportedSchemaNodeIssue(current.path, current.ast._tag));
-        break;
-    }
+    handleDependencyNode({ current, role, pending, dependencies, issues });
   }
 
   return { dependencies, issues };
 }
 
-function dependencyIssues(
-  members: DecodedMembers,
-  raw: unknown,
-): PortableSrdSurfaceIssue[] {
+function dependencyIssues(members: DecodedMembers): PortableSrdSurfaceIssue[] {
   const unitIds = new Set(members.units.map((record) => String(record.id)));
   const statBlockIds = new Set(
     members.statBlocks.map((record) => String(record.id)),
   );
-  if (isRecord(raw)) {
-    for (const [member, ids] of [
-      ["units", unitIds] as const,
-      ["statBlocks", statBlockIds] as const,
-    ]) {
-      const records = raw[member];
-      if (!Array.isArray(records)) continue;
-      for (const record of records) {
-        if (isRecord(record) && typeof record.id === "string") {
-          ids.add(record.id);
-        }
-      }
-    }
-  }
   const issues: PortableSrdSurfaceIssue[] = [];
 
-  for (const [member, records, schema] of [
-    ["units", members.units, PublishedSrdUnitRecordSchema] as const,
+  for (const [member, entries, schema] of [
+    ["units", members.unitEntries, PublishedSrdUnitRecordSchema] as const,
     [
       "statBlocks",
-      members.statBlocks,
+      members.statBlockEntries,
       PublishedSrdStatBlockRecordSchema,
     ] as const,
   ]) {
-    records.forEach((record, index) => {
+    entries.forEach(({ record, index }) => {
       const collected = collectAuthoredDependencies(
         schema,
         record,
@@ -741,17 +871,22 @@ export function derivePortableSrdDependencyFieldRoles(
   const members: DecodedMembers = {
     units: surface.units,
     statBlocks: surface.statBlocks,
+    unitEntries: surface.units.map((record, index) => ({ record, index })),
+    statBlockEntries: surface.statBlocks.map((record, index) => ({
+      record,
+      index,
+    })),
   };
   const roles = new Map<string, PortableSrdDependencyFieldRole>();
-  for (const [member, records, schema] of [
-    ["units", members.units, PublishedSrdUnitRecordSchema] as const,
+  for (const [member, entries, schema] of [
+    ["units", members.unitEntries, PublishedSrdUnitRecordSchema] as const,
     [
       "statBlocks",
-      members.statBlocks,
+      members.statBlockEntries,
       PublishedSrdStatBlockRecordSchema,
     ] as const,
   ]) {
-    records.forEach((record, index) => {
+    entries.forEach(({ record, index }) => {
       const collected = collectAuthoredDependencies(
         schema,
         record,
@@ -803,7 +938,7 @@ export function decodePortableSrdSurface(
   const issues = rootShapeIssues(raw);
   const members = decodeMembers(raw, issues);
   issues.push(...duplicateIdentityIssues(members));
-  issues.push(...dependencyIssues(members, raw));
+  issues.push(...dependencyIssues(members));
   if (issues.length > 0) return rejected(issues);
 
   const record = isRecord(raw) ? raw : undefined;

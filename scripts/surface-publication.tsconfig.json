@@ -4,6 +4,7 @@
     "check-surface-content-json-sync.test.ts",
     "generate-surface-publication.ts",
     "generate-surface-portable-cases.ts",
+    "surface-portable-case-oracle.ts",
     "srd-surface-publication-artifacts.ts"
   ],
   "compilerOptions": {

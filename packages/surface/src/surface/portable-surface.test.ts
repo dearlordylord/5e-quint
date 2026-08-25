@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -11,28 +10,65 @@ import {
   decodePortableSrdSurfaceText,
   derivePortableSrdDependencyFieldRoles,
   type PortableSrdSurfaceDecodeResult,
-  type PortableSrdSurfaceIssueCode,
+  type PortableSrdSurfaceIssue,
 } from "./portable-surface.ts";
 import {
   SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS,
   SURFACE_UNIT_DEPENDENCY_RELATIONS,
 } from "./schema-base.ts";
+import {
+  PortableSurfaceOracle,
+  type PortableCaseIssue,
+  type PortableCaseOutcome,
+  type PortableOracleResult,
+} from "../../../../scripts/surface-portable-case-oracle.ts";
 
-const issueCodeSchema = Schema.Literal(...PORTABLE_SURFACE_ISSUE_CODES);
 const dependencyRelationSchema = Schema.Literal(
   ...[
     ...SURFACE_UNIT_DEPENDENCY_RELATIONS,
     ...SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS,
   ],
 );
+const plainIssueSchema = Schema.Struct({
+  code: Schema.Literal("json", "shape", "schema"),
+  path: Schema.NonEmptyTrimmedString,
+});
+const duplicateJsonMemberIssueSchema = Schema.Struct({
+  code: Schema.Literal("duplicate-json-member"),
+  path: Schema.NonEmptyTrimmedString,
+  memberName: Schema.NonEmptyTrimmedString,
+});
+const duplicateIdentityIssueSchema = Schema.Struct({
+  code: Schema.Literal("duplicate-authored-identity"),
+  path: Schema.NonEmptyTrimmedString,
+  targetKind: Schema.Literal("unit", "statBlock"),
+  targetId: Schema.NonEmptyTrimmedString,
+  priorPath: Schema.NonEmptyTrimmedString,
+});
+const danglingDependencyIssueSchema = Schema.Struct({
+  code: Schema.Literal("dangling-authored-dependency"),
+  path: Schema.NonEmptyTrimmedString,
+  targetKind: Schema.Literal("unit", "statBlock"),
+  targetId: Schema.NonEmptyTrimmedString,
+  relation: dependencyRelationSchema,
+});
+const unsupportedSchemaNodeIssueSchema = Schema.Struct({
+  code: Schema.Literal("unsupported-schema-node"),
+  path: Schema.NonEmptyTrimmedString,
+  astTag: Schema.NonEmptyTrimmedString,
+});
+const issueSchema = Schema.Union(
+  plainIssueSchema,
+  duplicateJsonMemberIssueSchema,
+  duplicateIdentityIssueSchema,
+  danglingDependencyIssueSchema,
+  unsupportedSchemaNodeIssueSchema,
+);
 const outcomeSchema = Schema.Union(
-  Schema.Struct({
-    tag: Schema.Literal("accepted"),
-    issueCodes: Schema.Tuple(),
-  }),
+  Schema.Struct({ tag: Schema.Literal("accepted") }),
   Schema.Struct({
     tag: Schema.Literal("rejected"),
-    issueCodes: Schema.Array(issueCodeSchema),
+    issues: Schema.NonEmptyArray(issueSchema),
   }),
 );
 const dependencyRoleSchema = Schema.Struct({
@@ -42,62 +78,108 @@ const dependencyRoleSchema = Schema.Struct({
   targetKind: Schema.Literal("unit", "statBlock"),
   relation: dependencyRelationSchema,
 });
+const expectedSchema = Schema.Struct({
+  production: outcomeSchema,
+  independent: outcomeSchema,
+});
 const caseWithInputSchema = Schema.Struct({
   name: Schema.NonEmptyTrimmedString,
   input: Schema.Unknown,
-  expected: Schema.Struct({
-    production: outcomeSchema,
-    independent: outcomeSchema,
-  }),
-});
+  expected: expectedSchema,
+}).pipe(
+  Schema.filter(
+    (value) => value.input !== undefined && !Object.hasOwn(value, "inputText"),
+  ),
+);
 const caseWithTextSchema = Schema.Struct({
   name: Schema.NonEmptyTrimmedString,
   inputText: Schema.NonEmptyTrimmedString,
-  expected: Schema.Struct({
-    production: outcomeSchema,
-    independent: outcomeSchema,
-  }),
-});
+  expected: expectedSchema,
+}).pipe(
+  Schema.filter(
+    (value) =>
+      typeof value.inputText === "string" && !Object.hasOwn(value, "input"),
+  ),
+);
 const portableCaseSchema = Schema.Union(
   caseWithInputSchema,
   caseWithTextSchema,
 );
 const portableCaseDocumentSchema = Schema.Struct({
   version: Schema.Literal(1),
-  dependencyContract: Schema.Array(dependencyRoleSchema),
+  dependencyContract: Schema.NonEmptyArray(dependencyRoleSchema),
   cases: Schema.NonEmptyArray(portableCaseSchema),
+});
+const dependencyContractDocumentSchema = Schema.Struct({
+  version: Schema.Literal(1),
+  roles: Schema.NonEmptyArray(dependencyRoleSchema),
 });
 
 type PortableCaseDocument = Schema.Schema.Type<
   typeof portableCaseDocumentSchema
 >;
 type PortableCase = PortableCaseDocument["cases"][number];
+type DependencyContractDocument = Schema.Schema.Type<
+  typeof dependencyContractDocumentSchema
+>;
 
 const caseDocumentPath = fileURLToPath(
   new URL("../../portable-cases/srd-surface-cases.json", import.meta.url),
 );
+const dependencyContractPath = fileURLToPath(
+  new URL(
+    "../../portable-cases/srd-surface-dependency-contract.json",
+    import.meta.url,
+  ),
+);
+const schemaPath = fileURLToPath(
+  new URL("../../publication/srd-surface.schema.json", import.meta.url),
+);
 
-function readPortableCaseDocument(): PortableCaseDocument {
+function readPortableJson(path: string): unknown {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(readFileSync(caseDocumentPath, "utf8"));
+    parsed = JSON.parse(readFileSync(path, "utf8"));
   } catch (error) {
-    throw new Error(
-      `Portable case document is not valid JSON: ${String(error)}`,
-    );
+    throw new Error(`JSON input is not readable at ${path}: ${String(error)}`);
   }
-  const decoded = Schema.decodeUnknownEither(portableCaseDocumentSchema, {
+  return parsed;
+}
+
+function decodeDocument<T>(
+  schema: Schema.Schema<T>,
+  value: unknown,
+  path: string,
+): T {
+  const decoded = Schema.decodeUnknownEither(schema, {
     onExcessProperty: "error",
-  })(parsed);
+  })(value);
   if (Either.isLeft(decoded)) {
     throw new Error(
-      `Portable case document failed its schema: ${ParseResult.TreeFormatter.formatErrorSync(decoded.left)}`,
+      `JSON input failed its schema at ${path}: ${ParseResult.TreeFormatter.formatErrorSync(decoded.left)}`,
     );
   }
   return decoded.right;
 }
 
-const caseDocument = readPortableCaseDocument();
+const caseDocument = decodeDocument(
+  portableCaseDocumentSchema,
+  readPortableJson(caseDocumentPath),
+  caseDocumentPath,
+);
+const dependencyContractDocument = decodeDocument<DependencyContractDocument>(
+  dependencyContractDocumentSchema,
+  readPortableJson(dependencyContractPath),
+  dependencyContractPath,
+);
+const independentSchema = readPortableJson(schemaPath);
+const independentOracle = new PortableSurfaceOracle(independentSchema);
+
+function portableInput(portableCase: PortableCase) {
+  return "inputText" in portableCase
+    ? ({ inputText: portableCase.inputText } as const)
+    : ({ input: portableCase.input } as const);
+}
 
 function productionResultForCase(
   portableCase: PortableCase,
@@ -107,35 +189,216 @@ function productionResultForCase(
     : decodePortableSrdSurface(portableCase.input);
 }
 
-function expectedCodes(
-  outcome:
-    | { readonly tag: "accepted"; readonly issueCodes: readonly [] }
-    | {
-        readonly tag: "rejected";
-        readonly issueCodes: readonly PortableSrdSurfaceIssueCode[];
-      },
-): readonly PortableSrdSurfaceIssueCode[] {
-  return outcome.issueCodes;
+function impossible(value: never): never {
+  throw new Error(`Unexpected portable issue variant: ${String(value)}`);
+}
+
+function issueWithoutMessage(
+  issue: PortableSrdSurfaceIssue,
+): PortableCaseIssue {
+  switch (issue.code) {
+    case "json":
+    case "shape":
+    case "schema":
+      return { code: issue.code, path: issue.path };
+    case "duplicate-json-member":
+      return {
+        code: issue.code,
+        path: issue.path,
+        memberName: issue.memberName,
+      };
+    case "duplicate-authored-identity":
+      return {
+        code: issue.code,
+        path: issue.path,
+        targetKind: issue.targetKind,
+        targetId: issue.targetId,
+        priorPath: issue.priorPath,
+      };
+    case "dangling-authored-dependency":
+      return {
+        code: issue.code,
+        path: issue.path,
+        targetKind: issue.targetKind,
+        targetId: issue.targetId,
+        relation: issue.relation,
+      };
+    case "unsupported-schema-node":
+      return { code: issue.code, path: issue.path, astTag: issue.astTag };
+  }
+  return impossible(issue);
+}
+
+function normalizeIssues(
+  issues: readonly PortableCaseIssue[],
+): readonly PortableCaseIssue[] {
+  return [...issues].sort((left, right) =>
+    JSON.stringify(left).localeCompare(JSON.stringify(right)),
+  );
+}
+
+function expectProductionOutcome(
+  result: PortableSrdSurfaceDecodeResult,
+  expected: PortableCaseOutcome,
+): void {
+  expect(result.tag).toBe(expected.tag);
+  if (expected.tag === "accepted") {
+    expect(result).toHaveProperty("surface");
+    return;
+  }
+  expect(result).not.toHaveProperty("surface");
+  if (result.tag !== "rejected") return;
+  expect(normalizeIssues(result.issues.map(issueWithoutMessage))).toEqual(
+    normalizeIssues(expected.issues),
+  );
+}
+
+function expectIndependentOutcome(
+  result: PortableOracleResult,
+  expected: PortableCaseOutcome,
+): void {
+  expect(result.tag).toBe(expected.tag);
+  if (expected.tag === "accepted") {
+    expect(result).toHaveProperty("catalog");
+    return;
+  }
+  expect(result).not.toHaveProperty("catalog");
+  if (result.tag !== "rejected") return;
+  expect(normalizeIssues(result.issues)).toEqual(
+    normalizeIssues(expected.issues),
+  );
 }
 
 describe("portable SRD Surface boundary", () => {
-  test("case outcomes use the published typed issue vocabulary", () => {
-    const expectedCodeSet = new Set(
+  test("portable expected outcomes contain complete typed issue data", () => {
+    const expectedCodes = new Set(
       caseDocument.cases.flatMap((portableCase) => [
-        ...expectedCodes(portableCase.expected.production),
-        ...expectedCodes(portableCase.expected.independent),
+        ...(portableCase.expected.production.tag === "rejected"
+          ? portableCase.expected.production.issues.map((issue) => issue.code)
+          : []),
+        ...(portableCase.expected.independent.tag === "rejected"
+          ? portableCase.expected.independent.issues.map((issue) => issue.code)
+          : []),
       ]),
     );
     expect(
-      [...expectedCodeSet].every((code) =>
+      [...expectedCodes].every((code) =>
         PORTABLE_SURFACE_ISSUE_CODES.includes(code),
       ),
     ).toBe(true);
-    expect(PORTABLE_SURFACE_ISSUE_CODES).toContain("duplicate-json-member");
-    expect(PORTABLE_SURFACE_ISSUE_CODES).toContain("unsupported-schema-node");
+    for (const portableCase of caseDocument.cases) {
+      for (const outcome of [
+        portableCase.expected.production,
+        portableCase.expected.independent,
+      ]) {
+        if (outcome.tag !== "rejected") continue;
+        expect(outcome.issues.length).toBeGreaterThan(0);
+        for (const issue of outcome.issues) {
+          expect(issue.path.length).toBeGreaterThan(0);
+        }
+      }
+    }
   });
 
-  test("the dependency contract is derived from the canonical schema", () => {
+  test("portable case decoding requires one input representation and non-empty rejection issues", () => {
+    const acceptedExpected = {
+      production: { tag: "accepted" },
+      independent: { tag: "accepted" },
+    } as const;
+    const rejectedExpected = {
+      production: {
+        tag: "rejected",
+        issues: [{ code: "schema", path: "$.units[0]" }],
+      },
+      independent: {
+        tag: "rejected",
+        issues: [{ code: "schema", path: "$.units[0]" }],
+      },
+    } as const;
+    const withoutInput = {
+      name: "missing input",
+      expected: acceptedExpected,
+    };
+    const withBothInputs = {
+      name: "both inputs",
+      input: {},
+      inputText: "{}",
+      expected: acceptedExpected,
+    };
+    const withEmptyIssues = {
+      name: "empty issues",
+      input: {},
+      expected: {
+        production: { tag: "rejected", issues: [] },
+        independent: rejectedExpected.independent,
+      },
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(portableCaseSchema, {
+          onExcessProperty: "error",
+        })(withoutInput),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(portableCaseSchema, {
+          onExcessProperty: "error",
+        })(withBothInputs),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(portableCaseSchema, {
+          onExcessProperty: "error",
+        })(withEmptyIssues),
+      ),
+    ).toBe(true);
+  });
+
+  test.each([
+    [
+      "whitespace and nested values",
+      ' { "unknown": [true, null, "text", {}, []]} ',
+    ],
+    ["empty object", "{}"],
+    ["empty array", "[]"],
+    ["primitive root", "42"],
+    ["missing member name", "{1:2}"],
+    ["missing member colon", '{"unknown" 2}'],
+    ["missing member value", '{"unknown":}'],
+    ["missing member separator", '{"unknown":2 "other":3}'],
+    ["missing array value", "[1,]"],
+    ["missing array separator", "[1 2]"],
+    ["unterminated string", '{"unknown":"text}'],
+    ["invalid string escape", '{"unknown":"\\q"}'],
+    ["trailing value", "{} trailing"],
+  ])("JSON boundary scanner handles %s", (_name, inputText) => {
+    const result = decodePortableSrdSurfaceText(inputText);
+    expect(result.tag).toBe("rejected");
+  });
+
+  test("raw boundary reports non-object and malformed collection shapes", () => {
+    const cases: readonly unknown[] = [
+      null,
+      42,
+      { kind: "srd-5.2.1-surface-catalog", units: [], statBlocks: [] },
+      {
+        kind: "srd-5.2.1-surface-catalog",
+        units: "not-an-array",
+        statBlocks: "not-an-array",
+      },
+    ];
+    for (const input of cases) {
+      const result = decodePortableSrdSurface(input);
+      expect(result.tag).toBe("rejected");
+    }
+  });
+
+  test("the explicit dependency contract cross-checks the production schema walker", () => {
+    expect(caseDocument.dependencyContract).toEqual(
+      dependencyContractDocument.roles,
+    );
     const validCase = caseDocument.cases.find(
       (portableCase) => portableCase.name === "valid published aggregate",
     );
@@ -146,262 +409,46 @@ describe("portable SRD Surface boundary", () => {
     expect(result.tag).toBe("accepted");
     if (result.tag !== "accepted") return;
     expect(derivePortableSrdDependencyFieldRoles(result.surface)).toEqual(
-      caseDocument.dependencyContract,
+      dependencyContractDocument.roles,
     );
   });
 
-  test("issue variants carry only their code-specific metadata", () => {
-    const duplicateCase = caseDocument.cases.find(
-      (portableCase) => portableCase.name === "duplicate JSON member",
-    );
-    const danglingCase = caseDocument.cases.find(
-      (portableCase) => portableCase.name === "dangling authored dependency",
-    );
-    const schemaCase = caseDocument.cases.find(
+  test.each(caseDocument.cases)(
+    "$name — production boundary",
+    (portableCase) => {
+      expectProductionOutcome(
+        productionResultForCase(portableCase),
+        portableCase.expected.production,
+      );
+    },
+  );
+
+  test.each(caseDocument.cases)(
+    "$name — independent Draft 2020-12 boundary",
+    (portableCase) => {
+      const result = independentOracle.evaluateInput(
+        portableInput(portableCase),
+        caseDocument.dependencyContract,
+      );
+      expectIndependentOutcome(result, portableCase.expected.independent);
+    },
+    300_000,
+  );
+
+  test("independent rejection is atomic and never exposes a partial catalog", () => {
+    const rejectedCase = caseDocument.cases.find(
       (portableCase) => portableCase.name === "unknown field",
     );
-    if (
-      duplicateCase === undefined ||
-      danglingCase === undefined ||
-      schemaCase === undefined
-    ) {
-      throw new Error("Portable issue metadata cases are incomplete");
+    if (rejectedCase === undefined) {
+      throw new Error("Portable cases lost the atomic rejection fixture");
     }
-
-    const duplicate = productionResultForCase(duplicateCase);
-    const dangling = productionResultForCase(danglingCase);
-    const schema = productionResultForCase(schemaCase);
-    expect(duplicate.tag).toBe("rejected");
-    expect(dangling.tag).toBe("rejected");
-    expect(schema.tag).toBe("rejected");
-    if (
-      duplicate.tag !== "rejected" ||
-      dangling.tag !== "rejected" ||
-      schema.tag !== "rejected"
-    ) {
-      return;
-    }
-    expect(duplicate.issues[0]).toMatchObject({
-      code: "duplicate-json-member",
-      memberName: "units",
-    });
-    expect(duplicate.issues[0]).not.toHaveProperty("targetId");
-    expect(dangling.issues[0]).toMatchObject({
-      code: "dangling-authored-dependency",
-      targetKind: "statBlock",
-      targetId: "stat_block_bat",
-      relation: "stat-block-reference",
-    });
-    expect(dangling.issues[0]).not.toHaveProperty("memberName");
-    expect(schema.issues[0]).toMatchObject({ code: "schema" });
-    expect(schema.issues[0]).not.toHaveProperty("targetId");
-  });
-
-  test.each(caseDocument.cases)("$name", (portableCase) => {
-    const result = productionResultForCase(portableCase);
-    const expected = portableCase.expected.production;
-    expect(result.tag).toBe(expected.tag);
-    if (expected.tag === "accepted") {
-      expect(result).toEqual({ tag: "accepted", surface: expect.anything() });
-      return;
-    }
+    const result = independentOracle.evaluateInput(
+      portableInput(rejectedCase),
+      caseDocument.dependencyContract,
+    );
+    expect(result.tag).toBe("rejected");
     if (result.tag !== "rejected") return;
-    expect(result.issues.map((issue) => issue.code)).toEqual(
-      expected.issueCodes,
-    );
-    expect(result).not.toHaveProperty("surface");
+    expect(result).toEqual({ tag: "rejected", issues: result.issues });
+    expect(result).not.toHaveProperty("catalog");
   });
-
-  test("the same cases are atomic under an independent Draft 2020-12 implementation", () => {
-    const schemaPath = fileURLToPath(
-      new URL("../../publication/srd-surface.schema.json", import.meta.url),
-    );
-    const result = execFileSync(
-      process.execPath,
-      [
-        "--max-old-space-size=512",
-        "--input-type=module",
-        "--eval",
-        `
-          import { readFileSync } from "node:fs";
-          import Ajv2020 from "ajv/dist/2020.js";
-
-          const document = JSON.parse(readFileSync(0, "utf8"));
-          const schema = JSON.parse(readFileSync(${JSON.stringify(schemaPath)}, "utf8"));
-          const validate = new Ajv2020({
-            strict: false,
-            inlineRefs: false,
-            allErrors: true,
-            code: { optimize: 0 },
-          }).compile(schema);
-
-          const duplicateJsonMembers = (text) => {
-            let cursor = 0;
-            const duplicates = [];
-            const skipWhitespace = () => {
-              while (/\\s/.test(text[cursor] ?? "")) cursor += 1;
-            };
-            const parseString = () => {
-              if (text[cursor] !== '"') return undefined;
-              const start = cursor++;
-              let escaped = false;
-              while (cursor < text.length) {
-                const character = text[cursor++];
-                if (escaped) escaped = false;
-                else if (character === "\\\\") escaped = true;
-                else if (character === '"') {
-                  try {
-                    const value = JSON.parse(text.slice(start, cursor));
-                    return typeof value === "string" ? value : undefined;
-                  } catch {
-                    return undefined;
-                  }
-                }
-              }
-              return undefined;
-            };
-            const value = () => {
-              skipWhitespace();
-              if (text[cursor] === '"') return parseString() !== undefined;
-              if (text[cursor] === "{") {
-                cursor += 1;
-                skipWhitespace();
-                const names = new Set();
-                if (text[cursor] === "}") { cursor += 1; return true; }
-                while (cursor < text.length) {
-                  skipWhitespace();
-                  const name = parseString();
-                  if (name === undefined) return false;
-                  if (names.has(name)) duplicates.push(name);
-                  names.add(name);
-                  skipWhitespace();
-                  if (text[cursor++] !== ":" || !value()) return false;
-                  skipWhitespace();
-                  if (text[cursor] === "}") { cursor += 1; return true; }
-                  if (text[cursor++] !== ",") return false;
-                }
-                return false;
-              }
-              if (text[cursor] === "[") {
-                cursor += 1;
-                skipWhitespace();
-                if (text[cursor] === "]") { cursor += 1; return true; }
-                while (cursor < text.length) {
-                  if (!value()) return false;
-                  skipWhitespace();
-                  if (text[cursor] === "]") { cursor += 1; return true; }
-                  if (text[cursor++] !== ",") return false;
-                }
-                return false;
-              }
-              const start = cursor;
-              while (cursor < text.length && !/[\\s,\\]}]/.test(text[cursor] ?? "")) cursor += 1;
-              return cursor > start;
-            };
-            const valid = value();
-            skipWhitespace();
-            return valid && cursor === text.length ? duplicates : [];
-          };
-
-          const structuralIssueCodes = (input) => {
-            const structurallyValid = validate(input);
-            const paths = new Set();
-            for (const error of validate.errors ?? []) {
-              const recordPath = error.instancePath.match(/^\\/(?:units|statBlocks)\\/\\d+/)?.[0];
-              paths.add(recordPath ?? (error.instancePath || "$"));
-            }
-            return {
-              structurallyValid,
-              issueCodes: [...paths].map(() => "schema"),
-            };
-          };
-
-          const identityIssues = (aggregate) => {
-            const seen = new Set();
-            const issues = [];
-            for (const family of ["units", "statBlocks"]) {
-              for (const record of Array.isArray(aggregate[family]) ? aggregate[family] : []) {
-                if (seen.has(record.id)) issues.push("duplicate-authored-identity");
-                else seen.add(record.id);
-              }
-            }
-            return issues;
-          };
-
-          const dependencyIssues = (aggregate) => {
-            const unitIds = new Set((aggregate.units ?? []).map((record) => record.id));
-            const statBlockIds = new Set((aggregate.statBlocks ?? []).map((record) => record.id));
-            const issues = [];
-            const visit = (value, sourceKind, path) => {
-              if (Array.isArray(value)) {
-                for (const item of value) visit(item, sourceKind, path + "[]");
-                return;
-              }
-              if (value === null || typeof value !== "object") return;
-              for (const [key, member] of Object.entries(value)) {
-                const childPath = path === "" ? key : path + "." + key;
-                const roles = document.dependencyContract.filter((role) =>
-                  role.sourceKind === sourceKind && role.path === childPath,
-                );
-                if (typeof member === "string") {
-                  for (const role of roles) {
-                    const ids = role.targetKind === "unit" ? unitIds : statBlockIds;
-                    if (!ids.has(member)) issues.push("dangling-authored-dependency");
-                  }
-                }
-                visit(member, sourceKind, childPath);
-              }
-            };
-            for (const record of aggregate.units ?? []) visit(record, "unit", "");
-            for (const record of aggregate.statBlocks ?? []) visit(record, "statBlock", "");
-            return issues;
-          };
-
-          for (const portableCase of document.cases) {
-            if (portableCase.inputText !== undefined) {
-              if (duplicateJsonMembers(portableCase.inputText).length > 0) {
-                if (JSON.stringify(portableCase.expected.independent.issueCodes) !== JSON.stringify(["duplicate-json-member"])) {
-                  console.error(portableCase.name + " duplicate-member mismatch");
-                  process.exit(1);
-                }
-                continue;
-              }
-            }
-            let input = portableCase.input;
-            if (portableCase.inputText !== undefined) {
-              try {
-                input = JSON.parse(portableCase.inputText);
-              } catch {
-                if (
-                  JSON.stringify(portableCase.expected.independent.issueCodes) !==
-                  JSON.stringify(["json"])
-                ) {
-                  console.error(portableCase.name + " malformed-json mismatch");
-                  process.exit(1);
-                }
-                continue;
-              }
-            }
-            const structural = structuralIssueCodes(input);
-            const issueCodes = [
-              ...structural.issueCodes,
-              ...identityIssues(input ?? {}),
-              ...dependencyIssues(input ?? {}),
-            ];
-            if (JSON.stringify(issueCodes) !== JSON.stringify(portableCase.expected.independent.issueCodes)) {
-              console.error(portableCase.name + " mismatch: " + JSON.stringify(issueCodes));
-              process.exit(1);
-            }
-          }
-          console.log("portable cases accepted atomically");
-        `,
-      ],
-      {
-        input: JSON.stringify(caseDocument),
-        encoding: "utf8",
-        timeout: 120_000,
-      },
-    );
-    expect(result.trim()).toBe("portable cases accepted atomically");
-  }, 180_000);
 });
