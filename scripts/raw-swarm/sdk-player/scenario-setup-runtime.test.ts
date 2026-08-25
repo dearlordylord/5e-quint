@@ -5,6 +5,7 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
+import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import { Either } from "effect";
 import {
@@ -15,6 +16,8 @@ import {
   battleExecutionScopeOrdinal,
   battleId,
   battleObjectId,
+  battleProcedureExecutionRef,
+  battleStatBlockExecutionScopeRef,
   combatantId,
   discoverBattleActs,
   endBattleRuntimeTurn,
@@ -175,6 +178,72 @@ describe("scenario setup public-SDK boundary", () => {
         value: 5.5,
       },
     });
+  });
+
+  test("decodes canonical nested procedure refs and rejects malformed refs", () => {
+    const canonicalProcedureRef = battleAttackProcedureExecutionRef(
+      battleAttackExecutionScopeRef(
+        battleId("procedure-ref-boundary"),
+        combatantId("procedure-ref-attacker"),
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+    const decisionFor = (sourceProcedureRef: string) =>
+      tableAuthoredSpatialDecision({
+        decisionId: "procedure-ref-boundary",
+        question: {
+          kind: "attackTarget",
+          actorId: "procedure-ref-attacker",
+          targetId: "procedure-ref-target",
+          sourceProcedureRef,
+          targetConstraint: "meleeReach",
+        },
+        answer: {
+          direction: "north",
+          distanceFeet: 5,
+          attackerCanSeeTarget: true,
+          cover: "none",
+          traversal: "open",
+        },
+      });
+
+    expect(decisionFor(String(canonicalProcedureRef))).toMatchObject({
+      _tag: "Right",
+    });
+    const malformedNestedProcedureRef = JSON.stringify({
+      scopeRef: "not-a-canonical-scope",
+      kind: "procedure",
+      ordinal: 0,
+    });
+    expect(decisionFor(malformedNestedProcedureRef)).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "invalid-spatial-decision",
+        message: expect.stringContaining(
+          "canonical Battle procedure execution reference",
+        ),
+      },
+    });
+    fc.assert(
+      fc.property(
+        fc.string({ maxLength: 32 }).map((suffix) => `${suffix}x`),
+        (suffix) => {
+          expect(
+            decisionFor(`${String(canonicalProcedureRef)}${suffix}`),
+          ).toMatchObject({
+            _tag: "Left",
+            left: {
+              tag: "invalid-spatial-decision",
+              message: expect.stringContaining(
+                "canonical Battle procedure execution reference",
+              ),
+            },
+          });
+        },
+      ),
+      { numRuns: 64 },
+    );
   });
 
   test("retains a supported initial Stat Block condition", async () => {
@@ -1426,13 +1495,31 @@ describe("scenario setup public-SDK boundary", () => {
         message: expect.stringContaining("invalid occupied-space"),
       },
     });
+    const malformedPostMoveFingerprint = tableAuthoredSpatialDecision({
+      decisionId: "malformed-post-move-fingerprint",
+      question: tableMovementDecision.question,
+      answer: {
+        ...tableMovementDecision.answer,
+        postMoveSpatialState: {
+          ...tableMovementDecision.answer.postMoveSpatialState,
+          spatialFingerprint: "not-a-canonical-state-fingerprint",
+        },
+      },
+    });
+    expect(malformedPostMoveFingerprint).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "invalid-spatial-decision",
+        message: expect.stringContaining("tagged post-move state"),
+      },
+    });
     const trimmedProcedureRef = tableAuthoredSpatialDecision({
       decisionId: "trimmed-procedure-ref",
       question: {
         kind: "attackTarget",
         actorId: sourceId,
         targetId,
-        sourceProcedureRef: " attack-procedure ",
+        sourceProcedureRef: ` ${String(characterAttackProcedureRef)} `,
         targetConstraint: "meleeReach",
       },
       answer: {
@@ -1446,7 +1533,7 @@ describe("scenario setup public-SDK boundary", () => {
     expect(trimmedProcedureRef).toMatchObject({ _tag: "Right" });
     if (Either.isRight(trimmedProcedureRef)) {
       expect(trimmedProcedureRef.right.question).toMatchObject({
-        sourceProcedureRef: "attack-procedure",
+        sourceProcedureRef: String(characterAttackProcedureRef),
       });
     }
     const whitespaceProcedureRef = tableAuthoredSpatialDecision({
@@ -1470,7 +1557,9 @@ describe("scenario setup public-SDK boundary", () => {
       _tag: "Left",
       left: {
         tag: "invalid-spatial-decision",
-        message: expect.stringContaining("non-empty sourceProcedureRef"),
+        message: expect.stringContaining(
+          "canonical Battle procedure execution reference",
+        ),
       },
     });
     if (
@@ -2910,8 +2999,14 @@ describe("scenario setup public-SDK boundary", () => {
               kind: "spellTarget" as const,
               casterId: ordinaryRequest.casterId,
               targetId: visibleOrdinaryTarget,
-              sourceProcedureRef:
-                `${String(ordinaryRequest.sourceProcedureRef)}:wrong` as typeof ordinaryRequest.sourceProcedureRef,
+              sourceProcedureRef: battleProcedureExecutionRef(
+                battleStatBlockExecutionScopeRef(
+                  battleId("mismatched-spell-procedure"),
+                  ordinaryRequest.casterId,
+                  battleExecutionScopeOrdinal(0),
+                ),
+                NonNegativeInteger(0),
+              ),
             },
             answer: {
               direction: visibleRelation.relation.direction,

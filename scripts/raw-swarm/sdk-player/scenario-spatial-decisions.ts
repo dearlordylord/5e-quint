@@ -5,12 +5,12 @@ import type {
   BattleMovementSpeedKind,
   BattleObjectId,
   BattleOpportunityAttackThreat,
-  BattleProcedureExecutionRef,
   BattleTablePositionId,
   CombatantId,
 } from "@dnd/battle-runtime";
 import {
   BattleAttackProcedureExecutionRef,
+  BattleProcedureExecutionRef,
   BattleStatBlockProcedureExecutionRef,
   battleObjectId,
   battleTablePositionId,
@@ -37,11 +37,10 @@ import { Either, Match, Schema } from "effect";
 
 export type ScenarioTokenId = CombatantId | BattleObjectId;
 
-declare const scenarioSpatialDecisionIdBrand: unique symbol;
-
-export type ScenarioSpatialDecisionId = string & {
-  readonly [scenarioSpatialDecisionIdBrand]: true;
-};
+const ScenarioSpatialDecisionId = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("ScenarioSpatialDecisionId"),
+);
+export type ScenarioSpatialDecisionId = typeof ScenarioSpatialDecisionId.Type;
 
 const SCENARIO_DIRECTIONS = [
   "same-horizontal-position",
@@ -482,7 +481,7 @@ export type ScenarioSpatialWitness<A> = Readonly<{
   readonly value: A;
 }>;
 
-function isFiniteNonNegativeInteger(value: unknown): value is number {
+function isFiniteNonNegativeInteger(value: unknown): value is DistanceFeet {
   return (
     typeof value === "number" &&
     Number.isFinite(value) &&
@@ -494,7 +493,7 @@ function isFiniteNonNegativeInteger(value: unknown): value is number {
 function isScenarioDirection(value: unknown): value is ScenarioDirection {
   return (
     typeof value === "string" &&
-    (SCENARIO_DIRECTIONS as readonly string[]).includes(value)
+    SCENARIO_DIRECTIONS.some((direction) => direction === value)
   );
 }
 
@@ -518,7 +517,14 @@ export function scenarioTableSpatialFingerprint(
   const digest = createHash("sha256")
     .update(stableSpatialDecisionJson(value))
     .digest("hex");
-  return `sha256:${digest}` as StateFingerprint;
+  const fingerprint = `sha256:${digest}`;
+  // This assertion covers only the digest generated above; authored
+  // fingerprints cross the parser boundary and return a typed issue instead.
+  /* v8 ignore next -- @preserve -- SHA-256 hex encoding guarantees this shape. */
+  if (!isStateFingerprint(fingerprint)) {
+    throw new Error("SHA-256 digest did not produce a StateFingerprint.");
+  }
+  return fingerprint;
 }
 
 export function scenarioDistanceFeet(
@@ -531,7 +537,7 @@ export function scenarioDistanceFeet(
       message: "A spatial distance must be a finite non-negative integer.",
     });
   }
-  return Either.right(value as DistanceFeet);
+  return Either.right(value);
 }
 
 export function spatialQuestionKey(
@@ -621,10 +627,6 @@ export function spatialDecisionIssue(
   return { tag, decisionId, message };
 }
 
-function scenarioSpatialDecisionId(value: string): ScenarioSpatialDecisionId {
-  return value as ScenarioSpatialDecisionId;
-}
-
 export function isNonMovementSpatialDecision(
   decision: ScenarioSpatialDecision,
 ): decision is ScenarioNonMovementSpatialDecision {
@@ -689,6 +691,12 @@ function isMovementRouteSpatialDecisionInput(
   input: ScenarioSpatialDecisionInput,
 ): input is ScenarioMovementRouteSpatialDecisionInput {
   return input.question.kind === "movementRoute";
+}
+
+function isNonMovementSpatialDecisionInput(
+  input: ScenarioSpatialDecisionInput,
+): input is ScenarioNonMovementSpatialDecisionInput {
+  return input.question.kind !== "movementRoute";
 }
 
 function isRelationSpatialDecision(
@@ -850,14 +858,30 @@ function isNonEmptyTrimmedString(value: unknown): value is string {
   return isString(value) && value.length > 0 && value === value.trim();
 }
 
+function isStateFingerprint(value: unknown): value is StateFingerprint {
+  return isString(value) && /^sha256:[0-9a-f]{64}$/.test(value);
+}
+
 function parseProcedureRef(
   value: unknown,
-): BattleProcedureExecutionRef | undefined {
-  if (!isString(value)) return undefined;
+  input: unknown,
+): Either.Either<BattleProcedureExecutionRef, ScenarioSpatialDecisionIssue> {
+  if (!isString(value) || value.trim().length === 0) {
+    return malformedDecision(
+      input,
+      "A sourceProcedureRef must be a canonical Battle procedure execution reference.",
+    );
+  }
   const trimmed = value.trim();
-  return trimmed.length === 0
-    ? undefined
-    : (trimmed as BattleProcedureExecutionRef);
+  const decoded = Schema.decodeUnknownEither(BattleProcedureExecutionRef)(
+    trimmed,
+  );
+  return Either.isLeft(decoded)
+    ? malformedDecision(
+        input,
+        "A sourceProcedureRef must be a canonical Battle procedure execution reference.",
+      )
+    : Either.right(decoded.right);
 }
 
 function isCoordinateInput(value: unknown): value is CoordinateInput {
@@ -927,7 +951,6 @@ function parseSpatialQuestion(
     });
   }
   if (value.kind === "spellTarget") {
-    const sourceProcedureRef = parseProcedureRef(value.sourceProcedureRef);
     if (
       !hasOnlyKeys(value, [
         "kind",
@@ -936,13 +959,19 @@ function parseSpatialQuestion(
         "sourceProcedureRef",
       ]) ||
       !isNonEmptyTrimmedString(value.casterId) ||
-      !isNonEmptyTrimmedString(value.targetId) ||
-      sourceProcedureRef === undefined
+      !isNonEmptyTrimmedString(value.targetId)
     ) {
       return malformedDecision(
         input,
         "A spell-target question requires string casterId and targetId values and a non-empty sourceProcedureRef.",
       );
+    }
+    const sourceProcedureRef = parseProcedureRef(
+      value.sourceProcedureRef,
+      input,
+    );
+    if (Either.isLeft(sourceProcedureRef)) {
+      return Either.left(sourceProcedureRef.left);
     }
     return Either.right({
       kind: "spellTarget",
@@ -952,7 +981,6 @@ function parseSpatialQuestion(
     });
   }
   if (value.kind === "objectTarget") {
-    const sourceProcedureRef = parseProcedureRef(value.sourceProcedureRef);
     if (
       !hasOnlyKeys(value, [
         "kind",
@@ -961,13 +989,19 @@ function parseSpatialQuestion(
         "sourceProcedureRef",
       ]) ||
       !isNonEmptyTrimmedString(value.actorId) ||
-      !isNonEmptyTrimmedString(value.objectId) ||
-      sourceProcedureRef === undefined
+      !isNonEmptyTrimmedString(value.objectId)
     ) {
       return malformedDecision(
         input,
         "An object-target question requires string actorId and objectId values and a non-empty sourceProcedureRef.",
       );
+    }
+    const sourceProcedureRef = parseProcedureRef(
+      value.sourceProcedureRef,
+      input,
+    );
+    if (Either.isLeft(sourceProcedureRef)) {
+      return Either.left(sourceProcedureRef.left);
     }
     return Either.right({
       kind: "objectTarget",
@@ -977,7 +1011,6 @@ function parseSpatialQuestion(
     });
   }
   if (value.kind === "attackTarget") {
-    const sourceProcedureRef = parseProcedureRef(value.sourceProcedureRef);
     if (
       !hasOnlyKeys(value, [
         "kind",
@@ -988,7 +1021,6 @@ function parseSpatialQuestion(
       ]) ||
       !isNonEmptyTrimmedString(value.actorId) ||
       !isNonEmptyTrimmedString(value.targetId) ||
-      sourceProcedureRef === undefined ||
       (value.targetConstraint !== "meleeReach" &&
         value.targetConstraint !== "rangedRange")
     ) {
@@ -996,6 +1028,13 @@ function parseSpatialQuestion(
         input,
         "An attack-target question requires string actorId and targetId values, a non-empty sourceProcedureRef, and a supported targetConstraint.",
       );
+    }
+    const sourceProcedureRef = parseProcedureRef(
+      value.sourceProcedureRef,
+      input,
+    );
+    if (Either.isLeft(sourceProcedureRef)) {
+      return Either.left(sourceProcedureRef.left);
     }
     return Either.right({
       kind: "attackTarget",
@@ -1118,9 +1157,17 @@ function parseRelationAnswer(
       "attackerCanSeeTarget",
       "cover",
       "traversal",
-    ]) ||
+    ])
+  ) {
+    return malformedDecision(
+      input,
+      "A non-movement spatial answer requires a finite non-negative integer distance, boolean sight, and supported Cover and traversal values.",
+    );
+  }
+  const distanceFeet = value.distanceFeet;
+  if (
     !isScenarioDirection(value.direction) ||
-    !isFiniteNonNegativeInteger(value.distanceFeet) ||
+    !isFiniteNonNegativeInteger(distanceFeet) ||
     typeof value.attackerCanSeeTarget !== "boolean" ||
     (value.cover !== "none" &&
       value.cover !== "half" &&
@@ -1135,7 +1182,7 @@ function parseRelationAnswer(
   }
   return Either.right({
     direction: value.direction,
-    distanceFeet: value.distanceFeet as DistanceFeet,
+    distanceFeet,
     attackerCanSeeTarget: value.attackerCanSeeTarget,
     cover: value.cover,
     traversal: value.traversal,
@@ -1382,6 +1429,7 @@ function parseMovementAnswer(
     );
   }
   const postMove = value.postMoveSpatialState;
+  const spatialFingerprint = postMove.spatialFingerprint;
   if (
     postMove.kind !== "tableAuthored" ||
     !hasOnlyKeys(postMove, [
@@ -1389,8 +1437,7 @@ function parseMovementAnswer(
       "spatialFingerprint",
       "tableAuthoredDecisions",
     ]) ||
-    !isString(postMove.spatialFingerprint) ||
-    postMove.spatialFingerprint.length === 0 ||
+    !isStateFingerprint(spatialFingerprint) ||
     !Array.isArray(postMove.tableAuthoredDecisions)
   ) {
     return malformedDecision(
@@ -1408,13 +1455,13 @@ function parseMovementAnswer(
   for (const nestedInput of postMove.tableAuthoredDecisions) {
     const parsed = parseSpatialDecisionInput(nestedInput, true, seen);
     if (Either.isLeft(parsed)) return Either.left(parsed.left);
-    if (parsed.right.question.kind === "movementRoute") {
+    if (!isNonMovementSpatialDecisionInput(parsed.right)) {
       return malformedDecision(
         input,
         "A post-move spatial state cannot contain a movement-route decision.",
       );
     }
-    nested.push(parsed.right as ScenarioNonMovementSpatialDecisionInput);
+    nested.push(parsed.right);
   }
   return Either.right({
     kind: "movementRoute",
@@ -1423,7 +1470,7 @@ function parseMovementAnswer(
     creatureSpaceTraversal: traversal.right,
     postMoveSpatialState: {
       kind: "tableAuthored",
-      spatialFingerprint: postMove.spatialFingerprint as StateFingerprint,
+      spatialFingerprint,
       tableAuthoredDecisions: nested,
     },
   });
@@ -1478,6 +1525,9 @@ function parseSpatialDecisionInput(
   }
   const answer = parseRelationAnswer(input.answer, input);
   if (Either.isLeft(answer)) return Either.left(answer.left);
+  // Cast proof: question.right is narrowed to every non-movement question and
+  // answer.right is the shared relation-answer shape; TypeScript cannot retain
+  // that correlation across the independently parsed values.
   return Either.right({
     decisionId: input.decisionId,
     question: question.right,
@@ -1627,16 +1677,18 @@ function validateSpatialDecisionInput(
   return undefined;
 }
 
-function cloneAndFreeze<T>(value: T): T {
+/* parseSpatialDecisionInput rebuilds every object and array before this boundary. */
+function freezeParsedSpatialValue<T>(value: T): T {
   if (value === null || typeof value !== "object") return value;
   if (Array.isArray(value)) {
-    return Object.freeze(value.map((entry) => cloneAndFreeze(entry))) as T;
+    for (const entry of value) freezeParsedSpatialValue(entry);
+  } else {
+    for (const key of Object.keys(value)) {
+      freezeParsedSpatialValue(Reflect.get(value, key));
+    }
   }
-  const copy: Record<string, unknown> = {};
-  for (const key of Object.keys(value)) {
-    copy[key] = cloneAndFreeze(Reflect.get(value, key));
-  }
-  return Object.freeze(copy) as T;
+  Object.freeze(value);
+  return value;
 }
 
 function normalizeSpatialDecision(
@@ -1647,88 +1699,92 @@ function normalizeSpatialDecision(
   const input = parsed.right;
   const issue = validateSpatialDecisionInput(input);
   if (issue !== undefined) return Either.left(issue);
-  const decisionId = scenarioSpatialDecisionId(input.decisionId);
-  if (isRelationSpatialDecisionInput(input)) {
-    return Either.right(
-      cloneAndFreeze({
-        decisionId,
-        question: input.question,
-        answer: input.answer,
-      }) as ScenarioRelationSpatialDecision,
+  const decodedDecisionId = Schema.decodeUnknownEither(
+    ScenarioSpatialDecisionId,
+  )(input.decisionId);
+  if (Either.isLeft(decodedDecisionId)) {
+    return malformedDecision(
+      input,
+      "A Table-authored spatial decision requires a non-empty trimmed decision id.",
     );
+  }
+  if (isRelationSpatialDecisionInput(input)) {
+    const decision: ScenarioRelationSpatialDecision = {
+      decisionId: decodedDecisionId.right,
+      question: input.question,
+      answer: input.answer,
+    };
+    return Either.right(freezeParsedSpatialValue(decision));
   }
   if (isSpellTargetSpatialDecisionInput(input)) {
-    return Either.right(
-      cloneAndFreeze({
-        decisionId,
-        question: input.question,
-        answer: input.answer,
-      }) as ScenarioSpellTargetSpatialDecision,
-    );
+    const decision: ScenarioSpellTargetSpatialDecision = {
+      decisionId: decodedDecisionId.right,
+      question: input.question,
+      answer: input.answer,
+    };
+    return Either.right(freezeParsedSpatialValue(decision));
   }
   if (isObjectTargetSpatialDecisionInput(input)) {
-    return Either.right(
-      cloneAndFreeze({
-        decisionId,
-        question: input.question,
-        answer: input.answer,
-      }) as ScenarioObjectTargetSpatialDecision,
-    );
+    const decision: ScenarioObjectTargetSpatialDecision = {
+      decisionId: decodedDecisionId.right,
+      question: input.question,
+      answer: input.answer,
+    };
+    return Either.right(freezeParsedSpatialValue(decision));
   }
   if (isAttackTargetSpatialDecisionInput(input)) {
-    return Either.right(
-      cloneAndFreeze({
-        decisionId,
-        question: input.question,
-        answer: input.answer,
-      }) as ScenarioAttackTargetSpatialDecision,
-    );
+    const decision: ScenarioAttackTargetSpatialDecision = {
+      decisionId: decodedDecisionId.right,
+      question: input.question,
+      answer: input.answer,
+    };
+    return Either.right(freezeParsedSpatialValue(decision));
   }
   if (isGrappleTargetSpatialDecisionInput(input)) {
     const decision: ScenarioGrappleTargetSpatialDecision = {
-      decisionId,
+      decisionId: decodedDecisionId.right,
       question: input.question,
       answer: input.answer,
     };
-    return Either.right(cloneAndFreeze(decision));
+    return Either.right(freezeParsedSpatialValue(decision));
   }
   if (isShoveTargetSpatialDecisionInput(input)) {
     const decision: ScenarioShoveTargetSpatialDecision = {
-      decisionId,
+      decisionId: decodedDecisionId.right,
       question: input.question,
       answer: input.answer,
     };
-    return Either.right(cloneAndFreeze(decision));
+    return Either.right(freezeParsedSpatialValue(decision));
   }
   if (isSleepShakeAwakeTargetSpatialDecisionInput(input)) {
     const decision: ScenarioSleepShakeAwakeTargetSpatialDecision = {
-      decisionId,
+      decisionId: decodedDecisionId.right,
       question: input.question,
       answer: input.answer,
     };
-    return Either.right(cloneAndFreeze(decision));
+    return Either.right(freezeParsedSpatialValue(decision));
   }
   if (isHypnoticPatternShakeAwakeTargetSpatialDecisionInput(input)) {
     const decision: ScenarioHypnoticPatternShakeAwakeTargetSpatialDecision = {
-      decisionId,
+      decisionId: decodedDecisionId.right,
       question: input.question,
       answer: input.answer,
     };
-    return Either.right(cloneAndFreeze(decision));
+    return Either.right(freezeParsedSpatialValue(decision));
   }
   if (isHelpAttackTargetSpatialDecisionInput(input)) {
     const decision: ScenarioHelpAttackTargetSpatialDecision = {
-      decisionId,
+      decisionId: decodedDecisionId.right,
       question: input.question,
       answer: input.answer,
     };
-    return Either.right(cloneAndFreeze(decision));
+    return Either.right(freezeParsedSpatialValue(decision));
   }
   if (!isMovementRouteSpatialDecisionInput(input)) {
     return Either.left(
       spatialDecisionIssue(
         "invalid-spatial-decision",
-        decisionId,
+        decodedDecisionId.right,
         "A spatial decision question has no supported correlated answer variant.",
       ),
     );
@@ -1742,27 +1798,26 @@ function normalizeSpatialDecision(
       return Either.left(
         spatialDecisionIssue(
           "invalid-spatial-decision",
-          input.decisionId,
+          decodedDecisionId.right,
           "A post-move spatial state cannot contain another movement-route decision.",
         ),
       );
     }
     nestedDecisions.push(nested.right);
   }
-  return Either.right(
-    cloneAndFreeze({
-      decisionId,
-      question: input.question,
-      answer: {
-        ...input.answer,
-        postMoveSpatialState: Object.freeze({
-          kind: "tableAuthored" as const,
-          spatialFingerprint: postMoveSpatialState.spatialFingerprint,
-          tableAuthoredDecisions: Object.freeze(nestedDecisions),
-        }),
+  const decision: ScenarioMovementRouteSpatialDecision = {
+    decisionId: decodedDecisionId.right,
+    question: input.question,
+    answer: {
+      ...input.answer,
+      postMoveSpatialState: {
+        kind: "tableAuthored",
+        spatialFingerprint: postMoveSpatialState.spatialFingerprint,
+        tableAuthoredDecisions: nestedDecisions,
       },
-    }) as ScenarioMovementRouteSpatialDecision,
-  );
+    },
+  };
+  return Either.right(freezeParsedSpatialValue(decision));
 }
 
 export function tableAuthoredSpatialDecision(
