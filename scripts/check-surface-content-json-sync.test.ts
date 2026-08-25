@@ -14,6 +14,7 @@ import { describe, expect, it } from "vitest";
 import {
   checkDhallJsonCompilerVersion,
   runPublicationCheck,
+  runSurfacePublicationCheck,
   type PublicationIssue,
 } from "./check-surface-content-json-sync.ts";
 import dhallJsonToolchain from "../packages/surface/dhall-json-toolchain.json" with { type: "json" };
@@ -217,6 +218,26 @@ describe("Surface content publication checker", () => {
           .filter((issue) => issue.kind === "decode-failed")
           .every((issue) => issue.message.length < 5000),
       ).toBe(true);
+      expect(result.generatedPeerObservations).toEqual(
+        expect.arrayContaining([
+          {
+            tag: "missing",
+            sourcePath: "missing.dhall",
+            peerPath: "missing.json",
+          },
+          {
+            tag: "out-of-sync",
+            sourcePath: "drift.dhall",
+            peerPath: "drift.json",
+          },
+          {
+            tag: "unreadable",
+            path: "compile.dhall",
+            message: "Dhall compilation failed: synthetic compile failure",
+          },
+          { tag: "orphaned", peerPath: "orphan.json" },
+        ]),
+      );
     } finally {
       rmSync(contentDir, { force: true, recursive: true });
     }
@@ -288,6 +309,31 @@ describe("Surface content publication checker", () => {
         "missing-publication-artifact",
         "missing-publication-artifact",
       ]);
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
+
+  it("returns incomplete Stat Block parity separately from content-sync acceptance", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-parity-report-test-"),
+    );
+
+    try {
+      const result = runSurfacePublicationCheck({
+        repoRoot: process.cwd(),
+        contentDir,
+        compile: () => undefined,
+      });
+
+      expect(result.issues).toEqual([]);
+      expect(result.statBlockParity.sourceCoverage.tag).toBe("complete");
+      expect(result.statBlockParity.discovery.identities).toHaveLength(330);
+      expect(
+        result.statBlockParity.issues.filter(
+          (issue) => issue.kind === "missing",
+        ),
+      ).toHaveLength(309);
     } finally {
       rmSync(contentDir, { force: true, recursive: true });
     }

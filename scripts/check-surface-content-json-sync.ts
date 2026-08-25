@@ -24,6 +24,12 @@ import {
   type SurfacePublicationExcerptSource,
   type SurfacePublicationBuildIssue,
 } from "./srd-surface-publication-artifacts.ts";
+import {
+  readSrdStatBlockParity,
+  type SrdStatBlockGeneratedPeerObservation,
+  type SrdStatBlockParityReport,
+} from "./srd521-stat-block-parity.ts";
+import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 
 export type PublicationIssue =
   | {
@@ -85,6 +91,8 @@ export type PublicationCheckResult = {
   readonly issues: readonly PublicationIssue[];
   readonly sourceCount: number;
   readonly peerCount: number;
+  /** Every generated peer state observed by this content-sync owner. */
+  readonly generatedPeerObservations: readonly SrdStatBlockGeneratedPeerObservation[];
 };
 
 export function checkDhallJsonCompilerVersion(
@@ -269,6 +277,32 @@ function checkJsonFile(
   addDecodeIssues(issues, displayFile, parsed.value, context);
 }
 
+type PeerBytesResult =
+  | { readonly tag: "ok"; readonly bytes: Buffer }
+  | { readonly tag: "unreadable"; readonly message: string };
+
+function readPeerBytes(filePath: string): PeerBytesResult {
+  try {
+    return { tag: "ok", bytes: readFileSync(filePath) };
+  } catch (error) {
+    return {
+      tag: "unreadable",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+function decodeIssueMessages(
+  issues: readonly PublicationIssue[],
+  startIndex: number,
+): readonly string[] {
+  return issues
+    .slice(startIndex)
+    .flatMap((issue) =>
+      issue.kind === "decode-failed" ? [issue.message] : [],
+    );
+}
+
 type PublicationArtifactReadResult =
   | { readonly tag: "ok"; readonly bytes: Buffer }
   | { readonly tag: "missing" }
@@ -367,6 +401,7 @@ export function runPublicationCheck(
     sources.map((source) => source.replace(/\.dhall$/, ".json")),
   );
   const issues: PublicationIssue[] = [];
+  const generatedPeerObservations: SrdStatBlockGeneratedPeerObservation[] = [];
   const temporaryDirectory = mkdtempSync(join(tmpdir(), "surface-json-sync-"));
 
   try {
@@ -375,65 +410,143 @@ export function runPublicationCheck(
       const sourcePath = join(contentDir, source);
       const peerPath = join(contentDir, peer);
       const generatedPath = join(temporaryDirectory, peer);
+      const displaySource = repoPath(repoRoot, sourcePath);
+      const displayPeer = repoPath(repoRoot, peerPath);
+      const peerExists = peers.includes(peer);
+      let peerIsHealthy = peerExists;
 
-      if (!peers.includes(peer)) {
+      if (!peerExists) {
         issues.push({
           kind: "missing-json",
-          source: repoPath(repoRoot, sourcePath),
-          peer: repoPath(repoRoot, peerPath),
+          source: displaySource,
+          peer: displayPeer,
+        });
+        generatedPeerObservations.push({
+          tag: "missing",
+          sourcePath: displaySource,
+          peerPath: displayPeer,
         });
       }
 
       const compileError = compile(sourcePath, generatedPath);
       if (compileError !== undefined) {
+        peerIsHealthy = false;
         issues.push({
           kind: "compile-failed",
-          source: repoPath(repoRoot, sourcePath),
+          source: displaySource,
           message: compileError,
         });
+        generatedPeerObservations.push({
+          tag: "unreadable",
+          path: displaySource,
+          message: `Dhall compilation failed: ${compileError}`,
+        });
       } else {
+        const generatedIssueStart = issues.length;
         checkJsonFile(
           issues,
           generatedPath,
-          repoPath(repoRoot, peerPath),
-          `generated from ${repoPath(repoRoot, sourcePath)}`,
+          displayPeer,
+          `generated from ${displaySource}`,
         );
-        if (peers.includes(peer)) {
-          const generated = readFileSync(generatedPath);
-          const committed = readFileSync(peerPath);
-          if (!generated.equals(committed)) {
+        const generatedDecodeMessages = decodeIssueMessages(
+          issues,
+          generatedIssueStart,
+        );
+        if (generatedDecodeMessages.length > 0) {
+          peerIsHealthy = false;
+          generatedPeerObservations.push({
+            tag: "unreadable",
+            path: displayPeer,
+            message: generatedDecodeMessages.join("\n"),
+          });
+        }
+        if (peerExists) {
+          const generated = readPeerBytes(generatedPath);
+          const committed = readPeerBytes(peerPath);
+          if (generated.tag === "unreadable") {
+            peerIsHealthy = false;
+            generatedPeerObservations.push({
+              tag: "unreadable",
+              path: displayPeer,
+              message: `Generated peer could not be read: ${generated.message}`,
+            });
+          } else if (committed.tag === "unreadable") {
+            peerIsHealthy = false;
+            generatedPeerObservations.push({
+              tag: "unreadable",
+              path: displayPeer,
+              message: `Committed peer could not be read: ${committed.message}`,
+            });
+          } else if (!generated.bytes.equals(committed.bytes)) {
+            peerIsHealthy = false;
             issues.push({
               kind: "out-of-sync-json",
-              source: repoPath(repoRoot, sourcePath),
-              peer: repoPath(repoRoot, peerPath),
+              source: displaySource,
+              peer: displayPeer,
+            });
+            generatedPeerObservations.push({
+              tag: "out-of-sync",
+              sourcePath: displaySource,
+              peerPath: displayPeer,
             });
           }
         }
       }
 
-      if (peers.includes(peer)) {
+      if (peerExists) {
+        const committedIssueStart = issues.length;
         checkJsonFile(
           issues,
           peerPath,
-          repoPath(repoRoot, peerPath),
-          `committed peer for ${repoPath(repoRoot, sourcePath)}`,
+          displayPeer,
+          `committed peer for ${displaySource}`,
         );
+        const committedDecodeMessages = decodeIssueMessages(
+          issues,
+          committedIssueStart,
+        );
+        if (committedDecodeMessages.length > 0) {
+          peerIsHealthy = false;
+          generatedPeerObservations.push({
+            tag: "unreadable",
+            path: displayPeer,
+            message: committedDecodeMessages.join("\n"),
+          });
+        }
+      }
+
+      if (peerIsHealthy) {
+        generatedPeerObservations.push({
+          tag: "present",
+          sourcePath: displaySource,
+          peerPath: displayPeer,
+        });
       }
     }
 
     for (const peer of peers) {
       if (sourcePeers.has(peer)) continue;
       const peerPath = join(contentDir, peer);
+      const displayPeer = repoPath(repoRoot, peerPath);
       issues.push({
         kind: "orphaned-json",
-        peer: repoPath(repoRoot, peerPath),
+        peer: displayPeer,
       });
-      checkJsonFile(
-        issues,
-        peerPath,
-        repoPath(repoRoot, peerPath),
-        "orphaned JSON",
-      );
+      generatedPeerObservations.push({
+        tag: "orphaned",
+        peerPath: displayPeer,
+      });
+      const decodeIssueStart = issues.length;
+      checkJsonFile(issues, peerPath, displayPeer, "orphaned JSON");
+      const decodeMessages = decodeIssueMessages(issues, decodeIssueStart);
+      if (decodeMessages.length > 0) {
+        generatedPeerObservations.push({
+          tag: "unreadable",
+          path: displayPeer,
+          message: decodeMessages.join("\n"),
+        });
+      }
     }
   } finally {
     rmSync(temporaryDirectory, { force: true, recursive: true });
@@ -448,7 +561,47 @@ export function runPublicationCheck(
     );
   }
 
-  return { issues, sourceCount: sources.length, peerCount: peers.length };
+  return {
+    issues,
+    sourceCount: sources.length,
+    peerCount: peers.length,
+    generatedPeerObservations,
+  };
+}
+
+export type SurfacePublicationCheckResult = PublicationCheckResult & {
+  /** Source-derived stat-block parity is reported beside, not merged into, sync acceptance. */
+  readonly statBlockParity: SrdStatBlockParityReport;
+};
+
+function isStatBlockPeerObservation(
+  observation: SrdStatBlockGeneratedPeerObservation,
+): boolean {
+  const paths =
+    observation.tag === "orphaned" || observation.tag === "unreadable"
+      ? [
+          observation.tag === "orphaned"
+            ? observation.peerPath
+            : observation.path,
+        ]
+      : [observation.sourcePath, observation.peerPath];
+  return paths.some((path) =>
+    /(?:^|\/)stat_block_[^/]+\.(?:dhall|json)$/.test(path),
+  );
+}
+
+export function runSurfacePublicationCheck(
+  options: PublicationCheckOptions,
+): SurfacePublicationCheckResult {
+  const publication = runPublicationCheck(options);
+  const statBlockParity = readSrdStatBlockParity({
+    repoRoot: options.repoRoot,
+    installedStatBlocks: srdSurface.statBlocks,
+    generatedPeerObservations: publication.generatedPeerObservations.filter(
+      isStatBlockPeerObservation,
+    ),
+  });
+  return { ...publication, statBlockParity };
 }
 
 function main(): void {
@@ -472,12 +625,13 @@ function main(): void {
     return;
   }
 
-  const { issues, sourceCount, peerCount } = runPublicationCheck({
-    repoRoot,
-    contentDir,
-    publicationDir: join(repoRoot, "packages", "surface", "publication"),
-    compile: compileDhallToJson,
-  });
+  const { issues, sourceCount, peerCount, statBlockParity } =
+    runSurfacePublicationCheck({
+      repoRoot,
+      contentDir,
+      publicationDir: join(repoRoot, "packages", "surface", "publication"),
+      compile: compileDhallToJson,
+    });
 
   if (issues.length > 0) {
     console.error(
@@ -518,6 +672,9 @@ function main(): void {
 
   console.log(
     `Surface content publication passed: ${sourceCount} canonical Dhall sources and ${peerCount} generated JSON peers decoded and synchronized.`,
+  );
+  console.log(
+    `SRD stat-block parity report: ${statBlockParity.discovery.occurrences.length} source occurrences, ${statBlockParity.discovery.identities.length} source identities, ${statBlockParity.issues.length} report issues; parity acceptance remains a separate operation.`,
   );
 }
 
