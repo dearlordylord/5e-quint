@@ -240,7 +240,7 @@ function sourceResolutionCandidates(candidate) {
   ]);
 }
 
-function sourceReplacementCandidates(candidate) {
+function sourceReplacementFileCandidates(candidate) {
   const extension = supportedSourceExtension(candidate);
   const replacementExtensions =
     extension === undefined
@@ -251,12 +251,14 @@ function sourceReplacementCandidates(candidate) {
   return replacementExtensions.map((replacement) => `${stem}${replacement}`);
 }
 
-function sourceCandidatesForObservation(candidate, observation) {
-  const candidates = sourceResolutionCandidates(candidate);
-  if (observation.kind === "absent" || observation.kind === "directory") {
-    candidates.push(...sourceReplacementCandidates(candidate));
-  }
-  return [...new Set(candidates)];
+function sourceCandidateGroupsForObservation(candidate, observation) {
+  return {
+    ordinaryCandidates: sourceResolutionCandidates(candidate),
+    replacementFileCandidates:
+      observation.kind === "absent" || observation.kind === "directory"
+        ? sourceReplacementFileCandidates(candidate)
+        : [],
+  };
 }
 
 function sourcePathsFromResolutionCandidates(candidates, visited) {
@@ -271,8 +273,8 @@ function sourcePathsFromResolutionCandidates(candidates, visited) {
         }
         if (observation.kind === "file") return [path];
         if (observation.kind === "directory") {
-          return sourcePathsFromResolutionCandidates(
-            sourceCandidatesForObservation(path, observation),
+          return sourcePathsFromCandidateGroups(
+            sourceCandidateGroupsForObservation(path, observation),
             visited,
           );
         }
@@ -282,14 +284,45 @@ function sourcePathsFromResolutionCandidates(candidates, visited) {
   ];
 }
 
+function sourcePathsFromExactFileCandidates(candidates, visited) {
+  return [
+    ...new Set(
+      candidates.flatMap((path) => {
+        if (visited.has(path)) return [];
+        visited.add(path);
+        const observation = sourceCandidateObservation(path);
+        if (observation.kind === "failure") {
+          throw new Error(observation.message);
+        }
+        return observation.kind === "file" ? [path] : [];
+      }),
+    ),
+  ];
+}
+
+function sourcePathsFromCandidateGroups(candidateGroups, visited) {
+  return [
+    ...new Set([
+      ...sourcePathsFromResolutionCandidates(
+        candidateGroups.ordinaryCandidates,
+        visited,
+      ),
+      ...sourcePathsFromExactFileCandidates(
+        candidateGroups.replacementFileCandidates,
+        visited,
+      ),
+    ]),
+  ];
+}
+
 function sourcePathsForCandidate(candidate, visited = new Set()) {
   if (visited.has(candidate)) return [];
   visited.add(candidate);
   const observation = sourceCandidateObservation(candidate);
   if (observation.kind === "failure") throw new Error(observation.message);
   if (observation.kind === "file") return [candidate];
-  return sourcePathsFromResolutionCandidates(
-    sourceCandidatesForObservation(candidate, observation),
+  return sourcePathsFromCandidateGroups(
+    sourceCandidateGroupsForObservation(candidate, observation),
     visited,
   );
 }

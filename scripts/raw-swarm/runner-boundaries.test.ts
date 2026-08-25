@@ -2513,6 +2513,65 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 30_000);
 
+  test("keeps directory replacement candidates file-only for runtime and hygiene", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(
+        rawSwarmOutputDirectory,
+        "transitive-vite-directory-replacement-directory-",
+      ),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const candidateDirectory = resolve(fixtureRoot, "dir.js");
+    const replacementDirectory = resolve(fixtureRoot, "dir.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(candidateDirectory);
+    mkdirSync(replacementDirectory);
+    writeFileSync(
+      resolve(candidateDirectory, "index.ts"),
+      'export const value = "directory-index";\n',
+    );
+    writeFileSync(
+      resolve(replacementDirectory, "index.ts"),
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    writeFileSync(
+      testPath,
+      'import { expect, test } from "vitest";\nimport { value } from "./dir.js";\ntest("directory index wins over a directory replacement", () => expect(value).toBe("directory-index"));\n',
+    );
+    try {
+      const runtime = spawnSync(
+        "pnpm",
+        [
+          "exec",
+          "vitest",
+          "run",
+          "--root",
+          fixtureRoot,
+          "--config",
+          resolve(repoRoot, "vitest.config.ts"),
+          testPath,
+          "--pool=threads",
+          "--maxWorkers=1",
+        ],
+        {
+          cwd: repoRoot,
+          env: { ...process.env, NODE_OPTIONS: "" },
+          encoding: "utf8",
+        },
+      );
+      expect(runtime.status).toBe(0);
+
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   test("scans every extensionless sibling instead of choosing one by order", () => {
     const fixtureRoot = mkdtempSync(
       resolve(rawSwarmOutputDirectory, "transitive-sibling-collision-"),
