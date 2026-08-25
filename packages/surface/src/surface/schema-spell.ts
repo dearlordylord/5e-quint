@@ -4810,11 +4810,13 @@ export const AnchoredTriggerMechanicsSchema = Schema.extend(
   }),
 );
 
+export const StatBlockLiteralValueSchema = Schema.Struct({
+  kind: Schema.Literal("literal"),
+  value: Schema.Number,
+});
+
 export const StatBlockValueSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("literal"),
-    value: Schema.Number,
-  }),
+  StatBlockLiteralValueSchema,
   LinearPerLevelNumberSchema,
   Schema.Struct({
     kind: Schema.Literal("caster_derived"),
@@ -4859,10 +4861,16 @@ export const CreatureVulnerabilityListSchema = Schema.Struct({
   damageTypes: nonEmpty(DamageTypeSchema),
 });
 
-export const CreatureImmunityListSchema = Schema.Struct({
-  damageTypes: optionalExact(nonEmpty(DamageTypeSchema)),
-  conditions: optionalExact(nonEmpty(ConditionSchema)),
-});
+export const CreatureImmunityListSchema = Schema.Union(
+  Schema.Struct({
+    damageTypes: nonEmpty(DamageTypeSchema),
+    conditions: optionalExact(nonEmpty(ConditionSchema)),
+  }),
+  Schema.Struct({
+    damageTypes: optionalExact(nonEmpty(DamageTypeSchema)),
+    conditions: nonEmpty(ConditionSchema),
+  }),
+);
 
 export const CreatureSenseSchema = Schema.Struct({
   kind: Schema.Literal("darkvision", "blindsight", "tremorsense", "truesight"),
@@ -5826,10 +5834,32 @@ export const StandaloneStatBlockSizeSchema = Schema.Union(
   }),
 );
 
-/** A standalone SRD value is authored as a fixed number, not a caster choice. */
-export const StandaloneStatBlockValueSchema = Schema.Struct({
-  kind: Schema.Literal("literal"),
-  value: Schema.Number,
+const StandalonePositiveStatBlockValueSchema = StatBlockLiteralValueSchema.pipe(
+  Schema.filter(({ value }) => Number.isInteger(value) && value >= 1, {
+    message: () => "Standalone Stat Block values must be positive integers.",
+  }),
+);
+
+/** A standalone SRD value is authored as a positive fixed integer. */
+export const StandaloneStatBlockValueSchema =
+  StandalonePositiveStatBlockValueSchema;
+
+const NonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+);
+
+export const StatBlockInitiativeModifierSchema = Schema.Number.pipe(
+  Schema.int(),
+);
+
+/**
+ * RAW authors both values: some monsters add Proficiency Bonus to the
+ * modifier, so the printed score cannot be derived from that modifier.
+ */
+export const StatBlockInitiativeSchema = Schema.Struct({
+  modifier: StatBlockInitiativeModifierSchema,
+  score: NonNegativeIntegerSchema,
 });
 
 const StandaloneCreatureSpeedSchema = Schema.Struct({
@@ -5863,9 +5893,6 @@ export const StatBlockLanguageSetSchema = Schema.Union(
     kind: Schema.Literal("all"),
   }),
   Schema.Struct({
-    kind: Schema.Literal("none"),
-  }),
-  Schema.Struct({
     kind: Schema.Literal("named_plus_other_languages"),
     languages: nonEmpty(StatBlockLanguageNameSchema),
     additionalLanguages: PositiveIntegerSchema,
@@ -5888,26 +5915,34 @@ export const StatBlockTelepathySchema = Schema.Struct({
   requiresLanguageUnderstanding: optionalExact(StatBlockLanguageSetSchema),
 });
 
-export const StatBlockCommunicationSchema = Schema.Struct({
-  languages: Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("spoken_and_understood"),
-      languages: StatBlockLanguageSetSchema,
-      additionallyUnderstoodButCannotSpeak: optionalExact(
-        StatBlockLanguageSetSchema,
-      ),
-      speechRestriction: optionalExact(StatBlockSpeechRestrictionSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("understood_but_cannot_speak"),
-      languages: StatBlockLanguageSetSchema,
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("understands_commands_only"),
-    }),
-  ),
+const StatBlockCommunicationTelepathyFields = {
   telepathy: optionalExact(StatBlockTelepathySchema),
-});
+} as const;
+
+export const StatBlockCommunicationSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("none"),
+    ...StatBlockCommunicationTelepathyFields,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spoken_and_understood"),
+    languages: StatBlockLanguageSetSchema,
+    additionallyUnderstoodButCannotSpeak: optionalExact(
+      StatBlockLanguageSetSchema,
+    ),
+    speechRestriction: optionalExact(StatBlockSpeechRestrictionSchema),
+    ...StatBlockCommunicationTelepathyFields,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("understood_but_cannot_speak"),
+    languages: StatBlockLanguageSetSchema,
+    ...StatBlockCommunicationTelepathyFields,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("understands_commands_only"),
+    ...StatBlockCommunicationTelepathyFields,
+  }),
+);
 
 const CreatureStatBlockProjectionFields = {
   displayName: surfaceIdentity(Schema.String, "displayName"),
@@ -5920,7 +5955,7 @@ const CreatureStatBlockProjectionFields = {
   hp: StatBlockValueSchema,
   speeds: nonEmpty(CreatureSpeedSchema),
   abilityScores: SixAbilityScoresSchema,
-  initiativeModifier: optionalExact(Schema.Number.pipe(Schema.int())),
+  initiativeModifier: optionalExact(StatBlockInitiativeModifierSchema),
   savingThrowModifiers: optionalExact(
     nonEmpty(CreatureSavingThrowModifierSchema),
   ),
@@ -5968,7 +6003,6 @@ const StandaloneStatBlockProcedureFields = {
  * Hit Dice notation is deliberately not represented here yet.
  */
 const StandaloneStatBlockBaseSchema = Schema.Struct({
-  displayName: CreatureStatBlockProjectionFields.displayName,
   size: StandaloneStatBlockSizeSchema,
   creatureType: CreatureTypeSchema,
   creatureTypeTags: optionalExact(
@@ -5979,7 +6013,7 @@ const StandaloneStatBlockBaseSchema = Schema.Struct({
   hp: StandaloneStatBlockValueSchema,
   speeds: nonEmpty(StandaloneCreatureSpeedSchema),
   abilityScores: CreatureStatBlockProjectionFields.abilityScores,
-  initiativeModifier: CreatureStatBlockProjectionFields.initiativeModifier,
+  initiative: StatBlockInitiativeSchema,
   savingThrowModifiers: CreatureStatBlockProjectionFields.savingThrowModifiers,
   skillModifiers: CreatureStatBlockProjectionFields.skillModifiers,
   saveProficiencies: CreatureStatBlockProjectionFields.saveProficiencies,
@@ -5987,7 +6021,7 @@ const StandaloneStatBlockBaseSchema = Schema.Struct({
   resistances: CreatureStatBlockProjectionFields.resistances,
   immunities: CreatureStatBlockProjectionFields.immunities,
   senses: CreatureStatBlockProjectionFields.senses,
-  passivePerception: Schema.Number.pipe(Schema.int()),
+  passivePerception: NonNegativeIntegerSchema,
   gear: optionalExact(nonEmpty(StatBlockGearEntrySchema)),
   communication: StatBlockCommunicationSchema,
   ...StandaloneStatBlockProcedureFields,

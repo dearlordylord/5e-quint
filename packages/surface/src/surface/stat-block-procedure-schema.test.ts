@@ -11,7 +11,6 @@ const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
   Schema.decodeUnknownSync(schema, { onExcessProperty: "error" })(input);
 
 const syntheticStandaloneStatBlock = {
-  displayName: "Synthetic Procedure Warden",
   size: "medium",
   creatureType: "humanoid",
   alignment: { order: "lawful", morality: "neutral" },
@@ -19,13 +18,12 @@ const syntheticStandaloneStatBlock = {
   hp: { kind: "literal", value: 22 },
   speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
   abilityScores: { str: 12, dex: 14, con: 13, int: 10, wis: 11, cha: 9 },
+  initiative: { modifier: 2, score: 12 },
   senses: [{ kind: "darkvision", rangeFeet: 60 }],
   passivePerception: 13,
   communication: {
-    languages: {
-      kind: "spoken_and_understood",
-      languages: { kind: "named", languages: ["Common"] },
-    },
+    kind: "spoken_and_understood",
+    languages: { kind: "named", languages: ["Common"] },
   },
   resources: [
     {
