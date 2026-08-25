@@ -93,7 +93,10 @@ The runner starts each deterministic command asynchronously in its own Linux
 process group, captures and flushes its output, and forwards `SIGTERM`,
 `SIGINT`, or `SIGHUP` to that owned group. It waits for bounded settlement,
 escalates to `SIGKILL` when required, reaps the child, and only then removes
-temporary helper directories. `SIGKILL` cannot be handled by the runner, so an
+temporary helper directories. The one output-forwarding operation has the same
+bounded contract during normal completion and signal cleanup; a non-draining
+stdout or stderr sink fails the phase precisely after process cleanup instead
+of holding the lane open. `SIGKILL` cannot be handled by the runner, so an
 operator must remove any leftover temporary directory after an externally
 forced kill.
 

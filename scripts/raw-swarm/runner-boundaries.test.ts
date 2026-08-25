@@ -560,6 +560,144 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 10_000);
 
+  test("deterministic runner bounds normal output forwarding and cleans its group", async () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-runner-output-blocked-"),
+    );
+    const buildDirectory = resolve(fixtureRoot, "build");
+    const leaderPidPath = resolve(fixtureRoot, "leader.pid");
+    const findingPath = resolve(fixtureRoot, "finding");
+    const helperPath = resolve(fixtureRoot, "output-blocked-helper.cjs");
+    mkdirSync(buildDirectory);
+    writeFileSync(
+      helperPath,
+      `const { rmSync, writeFileSync } = require("node:fs"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(deterministicNetworkBoundary)}, buildDirectory: ${JSON.stringify(buildDirectory)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); process.stdout.write = () => false; process.stderr.write = () => false; const hold = setInterval(() => {}, 1000); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { writeFileSync } = require("node:fs"); writeFileSync(${JSON.stringify(leaderPidPath)}, String(process.pid)); process.stdout.write("normal-output"); process.stderr.write("normal-error");`)}]).then(() => { process.exitCode = 1; }).catch((error) => { writeFileSync(${JSON.stringify(findingPath)}, String(error)); process.exitCode = String(error).includes("timed out forwarding") ? 0 : 2; }).finally(() => { clearInterval(hold); rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }); });`,
+    );
+    const helper = spawn(process.execPath, [helperPath], {
+      env: { ...process.env, NODE_OPTIONS: "" },
+      stdio: "ignore",
+    });
+    const startedAt = Date.now();
+    try {
+      const result = await new Promise<number>(
+        (resolveResult, rejectResult) => {
+          helper.once("error", rejectResult);
+          helper.once("close", (status, signal) => {
+            if (signal !== null) {
+              rejectResult(
+                new Error(`Output-blocked helper stopped with ${signal}.`),
+              );
+            } else {
+              resolveResult(status ?? 1);
+            }
+          });
+        },
+      );
+      expect(result).toBe(0);
+      expect(Date.now() - startedAt).toBeLessThan(5_000);
+      expect(readFileSync(findingPath, "utf8")).toContain(
+        "timed out forwarding",
+      );
+      const leaderPid = Number(readFileSync(leaderPidPath, "utf8").trim());
+      expect(Number.isSafeInteger(leaderPid)).toBe(true);
+      expect(processIsLive(leaderPid)).toBe(false);
+      expect(existsSync(buildDirectory)).toBe(false);
+    } finally {
+      if (helper.exitCode === null) helper.kill("SIGKILL");
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  test("deterministic runner joins leader-exit descendant cleanup on signal", async () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-runner-leader-race-"),
+    );
+    const buildDirectory = resolve(fixtureRoot, "build");
+    const leaderExitPath = resolve(fixtureRoot, "leader-exited");
+    const descendantPidPath = resolve(fixtureRoot, "descendant.pid");
+    const helperPath = resolve(fixtureRoot, "leader-race-helper.cjs");
+    mkdirSync(buildDirectory);
+    writeFileSync(
+      helperPath,
+      `const { rmSync, writeFileSync } = require("node:fs"); const { spawn } = require("node:child_process"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const { installDeterministicCleanup } = require(${JSON.stringify(deterministicCleanupModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(deterministicNetworkBoundary)}, buildDirectory: ${JSON.stringify(buildDirectory)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); installDeterministicCleanup({ cleanup: () => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }), onSignal: async ({ cleanup, exitStatus, signal }) => { try { await runner.terminateActive(signal); } catch {} finally { cleanup(); } process.exit(exitStatus); } }); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { spawn } = require("node:child_process"); const { writeFileSync } = require("node:fs"); const descendant = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" }); descendant.unref(); writeFileSync(${JSON.stringify(descendantPidPath)}, String(descendant.pid)); writeFileSync(${JSON.stringify(leaderExitPath)}, "exited");`)}]).then((result) => { process.exitCode = result.status ?? 1; }).catch(() => { process.exitCode = 1; });`,
+    );
+    const helper = spawn(process.execPath, [helperPath], {
+      env: { ...process.env, NODE_OPTIONS: "" },
+      stdio: "ignore",
+    });
+    try {
+      await waitForFile(leaderExitPath);
+      await waitForFile(descendantPidPath);
+      const descendantPid = Number(
+        readFileSync(descendantPidPath, "utf8").trim(),
+      );
+      expect(Number.isSafeInteger(descendantPid)).toBe(true);
+      expect(processIsLive(descendantPid)).toBe(true);
+      const result = await new Promise<number>(
+        (resolveResult, rejectResult) => {
+          helper.once("error", rejectResult);
+          helper.once("close", (status, signal) => {
+            if (signal !== null) {
+              rejectResult(
+                new Error(`Leader-race helper stopped with ${signal}.`),
+              );
+            } else {
+              resolveResult(status ?? 1);
+            }
+          });
+          helper.kill("SIGTERM");
+        },
+      );
+      expect(result).toBe(143);
+      await waitForProcessExit(descendantPid);
+      expect(processIsLive(descendantPid)).toBe(false);
+      expect(existsSync(buildDirectory)).toBe(false);
+    } finally {
+      if (helper.exitCode === null) helper.kill("SIGKILL");
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  test("deterministic runner settles rapid descendant churn without live PIDs", async () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-runner-churn-"));
+    const buildDirectory = resolve(fixtureRoot, "build");
+    const descendantPidsPath = resolve(fixtureRoot, "descendants.json");
+    const helperPath = resolve(fixtureRoot, "churn-helper.cjs");
+    mkdirSync(buildDirectory);
+    writeFileSync(
+      helperPath,
+      `const { rmSync, writeFileSync } = require("node:fs"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(deterministicNetworkBoundary)}, buildDirectory: ${JSON.stringify(buildDirectory)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { spawn } = require("node:child_process"); const { writeFileSync } = require("node:fs"); const pids = []; for (let index = 0; index < 64; index += 1) { const descendant = spawn(process.execPath, ["-e", "setTimeout(() => {}, 5)"], { stdio: "ignore" }); descendant.unref(); pids.push(descendant.pid); } writeFileSync(${JSON.stringify(descendantPidsPath)}, JSON.stringify(pids)); setTimeout(() => {}, 100);`)}]).then((result) => { process.exitCode = result.status === 0 && result.signal === null ? 0 : 1; }).catch(() => { process.exitCode = 1; }).finally(() => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }));`,
+    );
+    const helper = spawn(process.execPath, [helperPath], {
+      env: { ...process.env, NODE_OPTIONS: "" },
+      stdio: "ignore",
+    });
+    try {
+      const result = await new Promise<number>(
+        (resolveResult, rejectResult) => {
+          helper.once("error", rejectResult);
+          helper.once("close", (status, signal) => {
+            if (signal !== null) {
+              rejectResult(new Error(`Churn helper stopped with ${signal}.`));
+            } else {
+              resolveResult(status ?? 1);
+            }
+          });
+        },
+      );
+      expect(result).toBe(0);
+      const descendantPids = JSON.parse(
+        readFileSync(descendantPidsPath, "utf8"),
+      ) as number[];
+      expect(descendantPids).toHaveLength(64);
+      expect(descendantPids.every((pid) => !processIsLive(pid))).toBe(true);
+      expect(existsSync(buildDirectory)).toBe(false);
+    } finally {
+      if (helper.exitCode === null) helper.kill("SIGKILL");
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 15_000);
+
   test("trusted boundary compilation ignores hostile PATH and CC", () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-hostile-cc-"));
     const fakeCompiler = resolve(fixtureRoot, "cc");

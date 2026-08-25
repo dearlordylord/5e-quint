@@ -2,9 +2,9 @@ const { spawn } = require("node:child_process");
 const { closeSync, openSync, readFileSync, readdirSync } = require("node:fs");
 const { join } = require("node:path");
 
-const SETTLEMENT_TIMEOUT_MILLISECONDS = 1_000;
-const SETTLEMENT_POLL_MILLISECONDS = 20;
-const OUTPUT_FLUSH_TIMEOUT_MILLISECONDS = 500;
+const PROCESS_GROUP_SETTLEMENT_TIMEOUT_MILLISECONDS = 1_000;
+const PROCESS_GROUP_SETTLEMENT_POLL_MILLISECONDS = 20;
+const OUTPUT_FORWARD_TIMEOUT_MILLISECONDS = 500;
 
 function delay(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -58,6 +58,7 @@ function observeProcessGroup(processGroup) {
     if (
       stat !== undefined &&
       stat.processGroup === processGroup &&
+      stat.state !== "Z" &&
       stat.state !== "X"
     ) {
       members.push({
@@ -73,21 +74,29 @@ function observeProcessGroup(processGroup) {
 
 async function waitForChildSettlement(active, timeoutMilliseconds) {
   const deadline = Date.now() + timeoutMilliseconds;
-  while (!active.closed && Date.now() < deadline) {
-    await delay(SETTLEMENT_POLL_MILLISECONDS);
+  while (!active.leaderClosed && Date.now() < deadline) {
+    await delay(PROCESS_GROUP_SETTLEMENT_POLL_MILLISECONDS);
   }
-  return active.closed;
+  return active.leaderClosed;
 }
 
 async function waitForProcessGroupSettlement(
   processGroup,
   timeoutMilliseconds,
+  recordObservation,
+  beforePoll,
 ) {
   const deadline = Date.now() + timeoutMilliseconds;
-  let members = observeProcessGroup(processGroup);
+  const observe = () => {
+    const members = observeProcessGroup(processGroup);
+    recordObservation?.(members);
+    return members;
+  };
+  let members = observe();
   while (members.length > 0 && Date.now() < deadline) {
-    await delay(SETTLEMENT_POLL_MILLISECONDS);
-    members = observeProcessGroup(processGroup);
+    await beforePoll?.(members);
+    await delay(PROCESS_GROUP_SETTLEMENT_POLL_MILLISECONDS);
+    members = observe();
   }
   return { settled: members.length === 0, members };
 }
@@ -112,7 +121,14 @@ async function forwardCapturedOutput(active) {
   }
 }
 
-function createActiveRun(boundary, command, args, environment, buildDirectory) {
+function createActiveRun(
+  boundary,
+  command,
+  args,
+  environment,
+  buildDirectory,
+  registerActive,
+) {
   const commandLabel = command.replace(/[^A-Za-z0-9_.-]/gu, "_");
   const stdoutPath = join(buildDirectory, `${commandLabel}.stdout`);
   const stderrPath = join(buildDirectory, `${commandLabel}.stderr`);
@@ -132,69 +148,46 @@ function createActiveRun(boundary, command, args, environment, buildDirectory) {
 
   const active = {
     child,
-    closed: false,
+    leaderClosed: false,
     commandLabel,
     closeResult: undefined,
-    groupVerified: false,
+    ownershipRegistered: child.pid !== undefined,
+    initialObservationError: undefined,
+    lastObservedMembers: [],
     processGroup: child.pid,
     processStartTime: undefined,
     stderrPath,
     stdoutPath,
   };
+  let resolveTerminationRequest;
+  active.terminationRequest = undefined;
+  active.terminationRequestPromise = new Promise((resolve) => {
+    resolveTerminationRequest = resolve;
+  });
+  active.resolveTerminationRequest = resolveTerminationRequest;
+  registerActive(active);
   active.closePromise = new Promise((resolve, reject) => {
     child.once("error", (error) => {
-      if (active.closed) return;
-      active.closed = true;
+      if (active.leaderClosed) return;
+      active.leaderClosed = true;
       reject(error);
     });
     child.once("close", (status, signal) => {
-      if (active.closed) return;
-      active.closed = true;
+      if (active.leaderClosed) return;
+      active.leaderClosed = true;
       active.closeResult = { status, signal };
       resolve(active.closeResult);
     });
   });
   if (process.platform === "linux" && child.pid !== undefined) {
-    const processStat = readProcessStat(child.pid);
-    active.processStartTime = processStat?.startTime;
-    active.groupVerified =
-      processStat !== undefined &&
-      processStat.state !== "Z" &&
-      processStat.state !== "X" &&
-      processStat.processGroup === active.processGroup;
+    try {
+      const processStat = readProcessStat(child.pid);
+      active.processStartTime = processStat?.startTime;
+    } catch (error) {
+      active.initialObservationError = error;
+    }
   }
-  active.outputPromise = active.closePromise.then(
-    () => forwardCapturedOutput(active),
-    (error) => ({ ok: false, error }),
-  );
   return active;
-}
-
-function ownsProcessGroup(active) {
-  if (
-    process.platform !== "linux" ||
-    active.child.pid === undefined ||
-    active.processStartTime === undefined
-  ) {
-    return process.platform !== "linux";
-  }
-  const processStat = readProcessStat(active.child.pid);
-  return (
-    processStat !== undefined &&
-    processStat.state !== "Z" &&
-    processStat.state !== "X" &&
-    processStat.processGroup === active.processGroup &&
-    processStat.startTime === active.processStartTime
-  );
-}
-
-async function waitForOwnedProcessGroup(active) {
-  const deadline = Date.now() + SETTLEMENT_TIMEOUT_MILLISECONDS;
-  while (!active.closed && Date.now() < deadline) {
-    if (ownsProcessGroup(active)) return true;
-    await delay(SETTLEMENT_POLL_MILLISECONDS);
-  }
-  return ownsProcessGroup(active);
 }
 
 function revalidateProcessGroupMembers(active, members) {
@@ -212,38 +205,92 @@ function revalidateProcessGroupMembers(active, members) {
   }
 }
 
-async function terminateVerifiedProcessGroup(active, initialObservation) {
-  if (!active.groupVerified) {
+function observeActiveProcessGroup(active) {
+  const members = observeProcessGroup(active.processGroup);
+  active.lastObservedMembers = members;
+  return members;
+}
+
+function requestTermination(active, signal) {
+  if (active.terminationRequest !== undefined) return;
+  active.terminationRequest = { signal, sent: false };
+  active.resolveTerminationRequest();
+}
+
+async function signalActiveProcessGroup(active, signal, observedMembers) {
+  if (process.platform !== "linux") {
+    if (!active.leaderClosed) active.child.kill(signal);
+    if (active.terminationRequest !== undefined) {
+      active.terminationRequest.sent = true;
+    }
+    return true;
+  }
+  if (!active.ownershipRegistered) {
     throw new Error(
-      `The deterministic child process group for PID ${String(active.child.pid)} lost its ownership proof before cleanup.`,
+      `The deterministic child process group for PID ${String(active.child.pid)} was not registered; refusing to signal an unowned group.`,
+    );
+  }
+  const members =
+    observedMembers === undefined
+      ? observeActiveProcessGroup(active)
+      : observedMembers;
+  active.lastObservedMembers = members;
+  if (members.length === 0) {
+    if (active.terminationRequest !== undefined) {
+      active.terminationRequest.sent = true;
+    }
+    return false;
+  }
+  revalidateProcessGroupMembers(active, members);
+  try {
+    process.kill(-active.processGroup, signal);
+    if (active.terminationRequest !== undefined) {
+      active.terminationRequest.sent = true;
+    }
+    return true;
+  } catch (error) {
+    if (error && typeof error === "object" && error.code === "ESRCH") {
+      if (active.terminationRequest !== undefined) {
+        active.terminationRequest.sent = true;
+      }
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function terminateVerifiedProcessGroup(
+  active,
+  initialObservation,
+  terminationSignal = "SIGTERM",
+) {
+  if (!active.ownershipRegistered) {
+    throw new Error(
+      `The deterministic child process group for PID ${String(active.child.pid)} lost its ownership registration before cleanup.`,
     );
   }
   let observation = initialObservation;
   if (observation.settled) return observation;
-  revalidateProcessGroupMembers(active, observation.members);
-  try {
-    process.kill(-active.processGroup, "SIGTERM");
-  } catch (error) {
-    if (!(error && typeof error === "object" && error.code === "ESRCH")) {
-      throw error;
-    }
-  }
+  await signalActiveProcessGroup(
+    active,
+    terminationSignal,
+    observation.members,
+  );
   observation = await waitForProcessGroupSettlement(
     active.processGroup,
-    SETTLEMENT_TIMEOUT_MILLISECONDS,
+    PROCESS_GROUP_SETTLEMENT_TIMEOUT_MILLISECONDS,
+    (members) => {
+      active.lastObservedMembers = members;
+    },
   );
   if (observation.settled) return observation;
-  revalidateProcessGroupMembers(active, observation.members);
-  try {
-    process.kill(-active.processGroup, "SIGKILL");
-  } catch (error) {
-    if (!(error && typeof error === "object" && error.code === "ESRCH")) {
-      throw error;
-    }
-  }
+  await signalActiveProcessGroup(active, "SIGKILL", observation.members);
   observation = await waitForProcessGroupSettlement(
     active.processGroup,
-    SETTLEMENT_TIMEOUT_MILLISECONDS,
+    PROCESS_GROUP_SETTLEMENT_TIMEOUT_MILLISECONDS,
+    (members) => {
+      active.lastObservedMembers = members;
+    },
   );
   if (!observation.settled) {
     throw new Error(
@@ -253,92 +300,213 @@ async function terminateVerifiedProcessGroup(active, initialObservation) {
   return observation;
 }
 
-async function ensureNormalProcessGroupSettlement(active) {
+async function settleOwnedProcessGroup(active) {
   if (process.platform !== "linux") return;
-  if (!active.groupVerified) {
-    throw new Error(
-      `The deterministic child process group for PID ${String(active.child.pid)} was not verified before normal completion.`,
-    );
-  }
   const observation = await waitForProcessGroupSettlement(
     active.processGroup,
-    SETTLEMENT_TIMEOUT_MILLISECONDS,
+    PROCESS_GROUP_SETTLEMENT_TIMEOUT_MILLISECONDS,
+    (members) => {
+      active.lastObservedMembers = members;
+    },
+    (members) => {
+      const request = active.terminationRequest;
+      if (request !== undefined && !request.sent) {
+        return signalActiveProcessGroup(active, request.signal, members);
+      }
+      return undefined;
+    },
   );
   if (observation.settled) return;
-  await terminateVerifiedProcessGroup(active, observation);
+  const terminationSignal = active.terminationRequest?.signal ?? "SIGTERM";
+  await terminateVerifiedProcessGroup(active, observation, terminationSignal);
+  if (active.terminationRequest !== undefined) return;
   throw new Error(
     `Deterministic command ${active.commandLabel} exited while descendant processes remained; the owned group was terminated before failing the phase.`,
   );
 }
 
-async function signalActiveProcessGroup(active, signal) {
-  if (active.closed) return false;
-  if (process.platform !== "linux") {
-    active.child.kill(signal);
-    return true;
-  }
-  if (!(await waitForOwnedProcessGroup(active))) {
+async function ensureNormalProcessGroupSettlement(active) {
+  if (process.platform !== "linux") return;
+  if (!active.ownershipRegistered) {
     throw new Error(
-      `The deterministic child process group for PID ${String(active.child.pid)} is not owned; refusing to signal an unverified group.`,
+      `The deterministic child process group for PID ${String(active.child.pid)} was not registered before normal completion.`,
     );
   }
-  active.groupVerified = true;
-  try {
-    process.kill(-active.processGroup, signal);
-    return true;
-  } catch (error) {
-    if (error && typeof error === "object" && error.code === "ESRCH") {
-      return false;
-    }
-    throw error;
+  await settleOwnedProcessGroup(active);
+}
+
+function ownedLeaderMember(active) {
+  if (
+    !active.ownershipRegistered ||
+    active.child.pid === undefined ||
+    active.processStartTime === undefined
+  ) {
+    return undefined;
+  }
+  const processStat = readProcessStat(active.child.pid);
+  if (
+    processStat === undefined ||
+    processStat.state === "Z" ||
+    processStat.state === "X" ||
+    processStat.processGroup !== active.processGroup ||
+    processStat.startTime !== active.processStartTime
+  ) {
+    return undefined;
+  }
+  return {
+    pid: active.child.pid,
+    processGroup: processStat.processGroup,
+    startTime: processStat.startTime,
+    state: processStat.state,
+  };
+}
+
+async function terminateKnownGroupAfterObservationError(active) {
+  if (!active.ownershipRegistered) return;
+  const members =
+    active.lastObservedMembers.length > 0
+      ? active.lastObservedMembers
+      : [ownedLeaderMember(active)].filter((member) => member !== undefined);
+  if (members.length === 0) return;
+  await signalActiveProcessGroup(active, "SIGTERM", members);
+  await signalActiveProcessGroup(active, "SIGKILL", members);
+  if (
+    !(await waitForChildSettlement(
+      active,
+      PROCESS_GROUP_SETTLEMENT_TIMEOUT_MILLISECONDS,
+    ))
+  ) {
+    throw new Error(
+      `The deterministic child process for PID ${String(active.child.pid)} did not reap after observation failure cleanup.`,
+    );
   }
 }
 
-async function terminateActiveRun(active, signal) {
-  if (active.closed) return;
-  await signalActiveProcessGroup(active, signal);
-  const settled = await waitForChildSettlement(
-    active,
-    SETTLEMENT_TIMEOUT_MILLISECONDS,
-  );
-  const groupObservation =
-    process.platform !== "linux" ||
-    (await waitForProcessGroupSettlement(
-      active.processGroup,
-      SETTLEMENT_TIMEOUT_MILLISECONDS,
-    ));
-  if (process.platform === "linux" && !groupObservation.settled) {
-    await terminateVerifiedProcessGroup(active, groupObservation);
+async function cleanupOwnedProcessGroup(active) {
+  if (process.platform !== "linux") {
+    if (!active.leaderClosed) active.child.kill("SIGKILL");
     if (
-      !(await waitForChildSettlement(active, SETTLEMENT_TIMEOUT_MILLISECONDS))
+      !(await waitForChildSettlement(
+        active,
+        PROCESS_GROUP_SETTLEMENT_TIMEOUT_MILLISECONDS,
+      ))
     ) {
-      throw new Error(
-        `The deterministic child process for PID ${String(active.child.pid)} did not reap after process-group termination.`,
-      );
-    }
-  } else if (!settled) {
-    if (process.platform === "linux") {
-      await signalActiveProcessGroup(active, "SIGKILL");
-    } else {
-      active.child.kill("SIGKILL");
-    }
-    const childSettled = await waitForChildSettlement(
-      active,
-      SETTLEMENT_TIMEOUT_MILLISECONDS,
-    );
-    if (!childSettled) {
       throw new Error(
         `The deterministic child process for PID ${String(active.child.pid)} did not settle after SIGKILL.`,
       );
     }
+    return;
+  }
+  try {
+    if (!active.ownershipRegistered) {
+      throw new Error(
+        `The deterministic child process group for PID ${String(active.child.pid)} is not registered; refusing cleanup without an ownership record.`,
+      );
+    }
+    const observation = await waitForProcessGroupSettlement(
+      active.processGroup,
+      PROCESS_GROUP_SETTLEMENT_TIMEOUT_MILLISECONDS,
+      (members) => {
+        active.lastObservedMembers = members;
+      },
+    );
+    if (!observation.settled) {
+      await terminateVerifiedProcessGroup(active, observation);
+    }
+  } catch (error) {
+    await terminateKnownGroupAfterObservationError(active);
+    throw error;
+  }
+  if (
+    !(await waitForChildSettlement(
+      active,
+      PROCESS_GROUP_SETTLEMENT_TIMEOUT_MILLISECONDS,
+    ))
+  ) {
+    throw new Error(
+      `The deterministic child process for PID ${String(active.child.pid)} did not reap after process-group termination.`,
+    );
   }
 }
 
+function describeError(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+async function settleActiveRun(active) {
+  let result;
+  let primaryError;
+  try {
+    if (active.initialObservationError !== undefined) {
+      throw active.initialObservationError;
+    }
+    const firstEvent = await Promise.race([
+      active.closePromise.then((closeResult) => ({
+        kind: "leader-closed",
+        closeResult,
+      })),
+      active.terminationRequestPromise.then(() => ({
+        kind: "termination-requested",
+      })),
+    ]);
+    if (
+      firstEvent.kind === "termination-requested" &&
+      active.terminationRequest !== undefined &&
+      !active.terminationRequest.sent
+    ) {
+      await signalActiveProcessGroup(active, active.terminationRequest.signal);
+    }
+    if (firstEvent.kind === "termination-requested") {
+      await settleOwnedProcessGroup(active);
+      if (
+        !(await waitForChildSettlement(
+          active,
+          PROCESS_GROUP_SETTLEMENT_TIMEOUT_MILLISECONDS,
+        ))
+      ) {
+        throw new Error(
+          `The deterministic child process for PID ${String(active.child.pid)} did not reap after process-group termination.`,
+        );
+      }
+      result = await active.closePromise;
+    } else {
+      result = firstEvent.closeResult;
+      await ensureNormalProcessGroupSettlement(active);
+    }
+    return result;
+  } catch (error) {
+    primaryError = error;
+    try {
+      await cleanupOwnedProcessGroup(active);
+    } catch (cleanupError) {
+      throw new Error(
+        `Deterministic command ${active.commandLabel} failed: ${describeError(primaryError)}; cleanup failed: ${describeError(cleanupError)}`,
+      );
+    }
+    throw primaryError;
+  }
+}
+
+async function forwardCapturedOutputWithinDeadline(active) {
+  const output = await Promise.race([
+    active.outputPromise,
+    delay(OUTPUT_FORWARD_TIMEOUT_MILLISECONDS).then(() => ({
+      ok: false,
+      timedOut: true,
+    })),
+  ]);
+  if (output.ok) return;
+  if (output.timedOut) {
+    throw new Error(
+      `Deterministic command ${active.commandLabel} timed out forwarding captured stdout/stderr.`,
+    );
+  }
+  throw output.error;
+}
+
 async function finishActiveRun(active) {
-  const result = await active.closePromise;
-  await ensureNormalProcessGroupSettlement(active);
-  const output = await active.outputPromise;
-  if (!output.ok) throw output.error;
+  const result = await active.settlementPromise;
+  await forwardCapturedOutputWithinDeadline(active);
   return result;
 }
 
@@ -352,8 +520,15 @@ function createDeterministicRunner({ boundary, environment, buildDirectory }) {
         args,
         environment,
         buildDirectory,
+        (registeredActive) => {
+          activeRun = registeredActive;
+        },
       );
-      activeRun = active;
+      active.settlementPromise = settleActiveRun(active);
+      active.outputPromise = active.settlementPromise.then(
+        () => forwardCapturedOutput(active),
+        (error) => ({ ok: false, error }),
+      );
       active.finished = finishActiveRun(active);
       try {
         return await active.finished;
@@ -364,14 +539,21 @@ function createDeterministicRunner({ boundary, environment, buildDirectory }) {
     async terminateActive(signal) {
       const active = activeRun;
       if (active === undefined) return;
-      await terminateActiveRun(active, signal);
-      await Promise.race([
-        active.outputPromise,
-        delay(OUTPUT_FLUSH_TIMEOUT_MILLISECONDS).then(() => ({
-          ok: false,
-          timedOut: true,
-        })),
-      ]);
+      requestTermination(active, signal);
+      let settlementError;
+      try {
+        await active.settlementPromise;
+      } catch (error) {
+        settlementError = error;
+      }
+      let outputError;
+      try {
+        await forwardCapturedOutputWithinDeadline(active);
+      } catch (error) {
+        outputError = error;
+      }
+      if (settlementError !== undefined) throw settlementError;
+      if (outputError !== undefined) throw outputError;
     },
   };
 }
