@@ -238,7 +238,7 @@ export async function finalizeSdkPlayerExecution(input: {
   readonly supervisorProcess: SpawnedCodexProcess | undefined;
   readonly detached: boolean;
   readonly directories: SdkPlayerExecutionDirectories;
-  readonly onReaped: () => void;
+  readonly onReaped: () => void | Promise<void>;
 }): Promise<SdkPlayerExecutionFinalization> {
   const termination =
     input.supervisorProcess === undefined
@@ -248,7 +248,7 @@ export async function finalizeSdkPlayerExecution(input: {
         });
   if (termination.tag === "reaped") {
     try {
-      input.onReaped();
+      await input.onReaped();
     } catch (error: unknown) {
       const failure: SdkPlayerExecutionFailure = {
         kind: "evidenceRetentionFailure",

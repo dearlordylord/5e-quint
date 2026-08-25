@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+printf '%s\n' 'Windsurf execution is forbidden in the deterministic Raw Swarm lane.' >&2
+exit 78

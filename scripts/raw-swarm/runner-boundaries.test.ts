@@ -45,6 +45,12 @@ const modelBackedRunner = resolve(
   repoRoot,
   "scripts/raw-swarm/run-model-backed.mjs",
 );
+const laneHygieneChecker = resolve(
+  repoRoot,
+  "scripts/raw-swarm/check-lane-hygiene.cjs",
+);
+const rawSwarmOutputDirectory = resolve(repoRoot, "scripts/raw-swarm/out");
+mkdirSync(rawSwarmOutputDirectory, { recursive: true });
 const currentGitSha = execFileSync("git", ["rev-parse", "HEAD"], {
   cwd: repoRoot,
   encoding: "utf8",
@@ -267,6 +273,60 @@ function modelLaneTestEnvironment(
 }
 
 describe("RAW swarm runner boundaries", () => {
+  test("rejects network and alternate coding-agent capabilities in deterministic source", () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-lane-capability-"));
+    const sourcePath = resolve(fixtureRoot, "forbidden.ts");
+    const networkModule = ["node", "http"].join(":");
+    const undiciModule = ["un", "dici"].join("");
+    const globalFetch = ["globalThis", "fetch"].join(".");
+    const agentExecutable = ["co", "dex"].join("");
+    writeFileSync(
+      sourcePath,
+      [
+        `import ${JSON.stringify(networkModule)};`,
+        `void ${undiciModule}.request("https://example.invalid");`,
+        `void ${globalFetch}("https://example.invalid");`,
+        `spawn(${JSON.stringify(agentExecutable)});`,
+      ].join("\n"),
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--source", sourcePath],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        "forbidden capabilities",
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("allows deterministic child-process boundary sources", () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-lane-capability-"));
+    const sourcePath = resolve(fixtureRoot, "allowed.ts");
+    const childProcessModule = ["node", "child_process"].join(":");
+    writeFileSync(
+      sourcePath,
+      [
+        `import { spawn } from ${JSON.stringify(childProcessModule)};`,
+        `spawn(process.execPath, ["-e", "process.exit(0)"]);`,
+      ].join("\n"),
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--source", sourcePath],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
   test.each([
     ["missing value", ["--transcript", "--scenario", "example"]],
     [
@@ -1123,6 +1183,7 @@ esac
     const output = resolve(outputRoot, "execution");
     const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-runner-git-"));
     const fakeGit = resolve(commandRoot, "git");
+    const fakeCodex = resolve(commandRoot, "codex");
     writeFileSync(
       fakeGit,
       String.raw`#!/bin/sh
@@ -1137,6 +1198,45 @@ esac
 `,
     );
     chmodSync(fakeGit, 0o755);
+    writeFileSync(
+      fakeCodex,
+      String.raw`#!/bin/sh
+set -eu
+printf '%s\n' "$$" > "$FAKE_CODEX_PID_PATH"
+if [ "$#" -gt 0 ] && [ "$1" = "sandbox" ]; then
+  shift
+  while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done
+  if [ "$#" -gt 0 ]; then shift; fi
+  exec "$@"
+fi
+cat > attempt.ts <<'EOF'
+import type { PlayerContinuation } from "@dnd/player-sdk";
+
+export const continueBattle: PlayerContinuation = async (context) => {
+  context.sdk.discoverBattleActs(context.session);
+  return {
+    kind: "playerConcluded",
+    session: context.session,
+    tacticalNote: "Synthetic deterministic boundary continuation.",
+    conclusion: "Synthetic deterministic boundary conclusion.",
+  };
+};
+EOF
+node player-client.mjs attempt.ts >/dev/null
+printf '%s\n' '{"type":"thread.started","thread_id":"synthetic-deterministic-thread"}'
+printf '%s\n' '{"type":"turn.completed"}'
+printf '%s\n' 'Synthetic deterministic player evidence.' > evidence/agent-final.txt
+`,
+    );
+    chmodSync(fakeCodex, 0o755);
+    const canonicalStagePlanPath = resolve(
+      rawSwarmOutputDirectory,
+      "mounted-dispatch-through-flooded-orchard-stage-plan.json",
+    );
+    const canonicalStagePlanFindingsPath = resolve(
+      rawSwarmOutputDirectory,
+      "mounted-dispatch-through-flooded-orchard-stage-plan-findings.json",
+    );
     try {
       await runAsync(
         sdkPlayerLauncher,
@@ -1153,8 +1253,14 @@ esac
         {
           ...modelEntryPointTestEnvironment,
           PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
+          FAKE_CODEX_PID_PATH: resolve(outputRoot, "fake-codex.pid"),
         },
       );
+      const fakeCodexPid = Number(
+        readFileSync(resolve(outputRoot, "fake-codex.pid"), "utf8").trim(),
+      );
+      expect(Number.isInteger(fakeCodexPid)).toBe(true);
+      expect(processIsLive(fakeCodexPid)).toBe(false);
       const executionStartInput: unknown = JSON.parse(
         readFileSync(resolve(output, "evidence/execution-start.json"), "utf8"),
       );
@@ -1212,6 +1318,8 @@ esac
     } finally {
       rmSync(outputRoot, { recursive: true, force: true });
       rmSync(commandRoot, { recursive: true, force: true });
+      rmSync(canonicalStagePlanPath, { force: true });
+      rmSync(canonicalStagePlanFindingsPath, { force: true });
     }
   }, 300_000);
 

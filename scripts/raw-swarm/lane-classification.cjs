@@ -105,10 +105,49 @@ const MODEL_BACKED_ENTRYPOINTS = Object.freeze(
   ].sort(),
 );
 
+// These implementation files are intentionally model-backed even when a
+// deterministic test exercises their process-lifecycle or evidence boundary.
+// The hygiene checker inventories them explicitly instead of treating an
+// imported model command as deterministic merely because its caller is a
+// quality-owned test.
+const MODEL_BACKED_SOURCE_FILES = Object.freeze(
+  [
+    ...MODEL_BACKED_ENTRYPOINTS,
+    "scripts/raw-swarm/model-telemetry.ts",
+    "scripts/raw-swarm/sdk-player/consumer-codex-profile.ts",
+  ].sort(),
+);
+
+// The MCP composition root carries an optional, disabled-by-default admin
+// mirror publisher. It is an explicit external capability boundary rather
+// than a deterministic Raw Swarm implementation dependency; quality tests
+// exercise the disabled projection path and never invoke its publisher.
+const DETERMINISTIC_TRANSITIVE_SCAN_BOUNDARIES = Object.freeze([
+  "packages/mcp/src/admin-mirror.ts",
+]);
+
+const CODING_AGENT_EXECUTABLES = Object.freeze([
+  "aider",
+  "amp",
+  "claude",
+  "cline",
+  "codex",
+  "copilot",
+  "cursor",
+  "gemini",
+  "goose",
+  "opencode",
+  "roo",
+  "windsurf",
+]);
+
 module.exports = {
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
   RAW_SWARM_TESTS_OUTSIDE_QUALITY,
   MODEL_BACKED_OPERATIONS,
   MODEL_BACKED_ENTRYPOINTS,
+  MODEL_BACKED_SOURCE_FILES,
+  DETERMINISTIC_TRANSITIVE_SCAN_BOUNDARIES,
   MODEL_BACKED_PROFILE_BUDGET_SECONDS,
+  CODING_AGENT_EXECUTABLES,
 };
