@@ -7,6 +7,7 @@ const {
   MODEL_BACKED_OPERATIONS,
   MODEL_BACKED_PROFILE_BUDGET_SECONDS,
 } = require("./lane-classification.cjs");
+const { assertModelLaneLock } = require("./model-lane-capability.cjs");
 
 function fail(message) {
   process.stderr.write(`${message}\n`);
@@ -46,11 +47,13 @@ if (operation === undefined) {
     `Unknown model-backed operation ${operationName}. Expected one of: ${Object.keys(MODEL_BACKED_OPERATIONS).join(", ")}.`,
   );
 }
-if (
-  !/^[123]$/.test(process.env.DND_RAW_SWARM_MODEL_LANE ?? "") ||
-  process.env.DND_RAW_SWARM_MODEL_LANE_GUARD !== "v1"
-) {
+if (process.env.DND_RAW_SWARM_MODEL_LANE_GUARD !== "v1") {
   fail("Raw Swarm model operations require the public model-lane lock.");
+}
+try {
+  assertModelLaneLock();
+} catch (error) {
+  fail(error instanceof Error ? error.message : String(error));
 }
 const expectedGitSha = process.env.RAW_SWARM_EXPECTED_GIT_SHA ?? "";
 if (!/^[0-9a-f]{40}$/.test(expectedGitSha)) {

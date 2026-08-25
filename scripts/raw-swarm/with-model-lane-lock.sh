@@ -65,6 +65,12 @@ owner_is_alive() {
 }
 
 git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir)
+model_lane_owner_pid=$$
+model_lane_owner_start_time=$(sed 's/^.*) //' "/proc/$model_lane_owner_pid/stat" | awk '{ print $20 }')
+if [[ ! "$model_lane_owner_start_time" =~ ^[0-9]+$ ]]; then
+  printf '%s\n' 'Raw Swarm model execution could not record its lane owner.' >&2
+  exit 125
+fi
 while true; do
   now_milliseconds=$(date +%s%3N)
   if (( now_milliseconds >= operation_deadline_milliseconds )); then
@@ -87,6 +93,10 @@ while true; do
       timeout_duration="${remaining_seconds}.$(printf '%03d' "$remaining_millis")s"
       export DND_RAW_SWARM_MODEL_LANE=$lane
       export DND_RAW_SWARM_MODEL_LANE_GUARD=v1
+      export DND_RAW_SWARM_MODEL_LANE_LOCK_PATH=$lock_path
+      export DND_RAW_SWARM_MODEL_LANE_FD=$lane_fd
+      export DND_RAW_SWARM_MODEL_LANE_OWNER_PID=$model_lane_owner_pid
+      export DND_RAW_SWARM_MODEL_LANE_OWNER_START_TIME=$model_lane_owner_start_time
       printf '[raw-swarm-model] acquired lane %s: %s\n' "$lane" "${1##*/}" >&2
       exec timeout --signal=TERM --kill-after=30s "$timeout_duration" "$@"
     fi

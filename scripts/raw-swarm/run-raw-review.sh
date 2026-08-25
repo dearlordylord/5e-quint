@@ -8,6 +8,10 @@ if [[ ! "${RAW_SWARM_EXPECTED_GIT_SHA:-}" =~ ^[0-9a-f]{40}$ ||
   printf '%s\n' 'Raw Swarm model-backed entrypoints must be launched through the public model wrapper.' >&2
   exit 64
 fi
+if ! node "$(dirname -- "$0")/model-lane-capability.cjs" --assert; then
+  printf '%s\n' 'Raw Swarm model-backed entrypoints must be launched through the public model wrapper.' >&2
+  exit 64
+fi
 
 RAW_REVIEW_ROOT=$(realpath -- "$(git rev-parse --show-toplevel)")
 RAW_REVIEW_PROMPT=${1:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}

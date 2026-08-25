@@ -1,9 +1,11 @@
-import { execFile, execFileSync, spawn, spawnSync } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import {
+  closeSync,
   chmodSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
+  openSync,
   readFileSync,
   rmSync,
   symlinkSync,
@@ -11,7 +13,7 @@ import {
 } from "node:fs";
 import { relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
-import { describe, expect, test } from "vitest";
+import { afterAll, describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
 
 import { ExecutionStartRecordSchema } from "./evidence-manifests.ts";
@@ -30,16 +32,54 @@ const modelLaneLock = resolve(
   repoRoot,
   "scripts/raw-swarm/with-model-lane-lock.sh",
 );
+const modelLaneCapability = resolve(
+  repoRoot,
+  "scripts/raw-swarm/model-lane-capability.cjs",
+);
 const currentGitSha = execFileSync("git", ["rev-parse", "HEAD"], {
   cwd: repoRoot,
   encoding: "utf8",
 }).trim();
+const modelLaneLockDirectory = mkdtempSync(
+  resolve(tmpdir(), "dnd-runner-model-lane-"),
+);
+const modelLaneLockPath = resolve(
+  modelLaneLockDirectory,
+  "raw-swarm-model-lane-1.lock",
+);
+const modelLaneLockFd = openSync(modelLaneLockPath, "a+");
+const modelLaneLockAcquisition = spawnSync(
+  "flock",
+  ["--exclusive", "--nonblock", "3"],
+  { stdio: ["ignore", "ignore", "ignore", modelLaneLockFd] },
+);
+if (modelLaneLockAcquisition.status !== 0) {
+  throw new Error("The runner-boundary test could not acquire its model lane.");
+}
+const modelLaneLockProbeFd = openSync(modelLaneLockPath, "a+");
+const modelLaneLockProbe = spawnSync(
+  "flock",
+  ["--exclusive", "--nonblock", "3"],
+  { stdio: ["ignore", "ignore", "ignore", modelLaneLockProbeFd] },
+);
+closeSync(modelLaneLockProbeFd);
+if (modelLaneLockProbe.status !== 1) {
+  throw new Error("The runner-boundary test did not retain its model lane.");
+}
+afterAll(() => {
+  closeSync(modelLaneLockFd);
+  rmSync(modelLaneLockDirectory, { recursive: true, force: true });
+});
 const modelEntryPointTestEnvironment: NodeJS.ProcessEnv = {
   ...process.env,
   RAW_SWARM_EXPECTED_GIT_SHA: currentGitSha,
   DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD: `v1:${currentGitSha}`,
   DND_RAW_SWARM_MODEL_LANE: "1",
   DND_RAW_SWARM_MODEL_LANE_GUARD: "v1",
+  DND_RAW_SWARM_MODEL_LANE_LOCK_PATH: modelLaneLockPath,
+  DND_RAW_SWARM_MODEL_LANE_FD: String(modelLaneLockFd),
+  DND_RAW_SWARM_MODEL_LANE_OWNER_PID: String(process.pid),
+  DND_RAW_SWARM_MODEL_LANE_OWNER_START_TIME: processStartTime(process.pid),
 };
 
 function guardedModelEnvironment(
@@ -51,7 +91,22 @@ function guardedModelEnvironment(
     DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD: `v1:${currentGitSha}`,
     DND_RAW_SWARM_MODEL_LANE: "1",
     DND_RAW_SWARM_MODEL_LANE_GUARD: "v1",
+    DND_RAW_SWARM_MODEL_LANE_LOCK_PATH: modelLaneLockPath,
+    DND_RAW_SWARM_MODEL_LANE_FD: String(modelLaneLockFd),
+    DND_RAW_SWARM_MODEL_LANE_OWNER_PID: String(process.pid),
+    DND_RAW_SWARM_MODEL_LANE_OWNER_START_TIME: processStartTime(process.pid),
   };
+}
+
+function inheritedModelLaneStdio(): Array<"ignore" | "pipe" | number> {
+  const stdio: Array<"ignore" | "pipe" | number> = Array.from(
+    { length: modelLaneLockFd + 1 },
+    () => "ignore",
+  );
+  stdio[1] = "pipe";
+  stdio[2] = "pipe";
+  stdio[modelLaneLockFd] = modelLaneLockFd;
+  return stdio;
 }
 
 function reviewTranscriptPath(testRoot: string): string {
@@ -74,11 +129,16 @@ function run(
   args: readonly string[],
   env: NodeJS.ProcessEnv = process.env,
 ): void {
-  execFileSync("pnpm", ["exec", "tsx", script, ...args], {
+  const result = spawnSync("pnpm", ["exec", "tsx", script, ...args], {
     cwd: repoRoot,
     env: guardedModelEnvironment(env),
-    stdio: "pipe",
+    encoding: "utf8",
+    stdio: inheritedModelLaneStdio(),
   });
+  if (result.error !== undefined) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`${result.stdout ?? ""}${result.stderr ?? ""}`);
+  }
 }
 
 function runAsync(
@@ -87,12 +147,25 @@ function runAsync(
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<void> {
   return new Promise((resolveRun, rejectRun) => {
-    execFile(
-      "pnpm",
-      ["exec", "tsx", script, ...args],
-      { cwd: repoRoot, env: guardedModelEnvironment(env) },
-      (error) => (error === null ? resolveRun() : rejectRun(error)),
-    );
+    const child = spawn("pnpm", ["exec", "tsx", script, ...args], {
+      cwd: repoRoot,
+      env: guardedModelEnvironment(env),
+      stdio: inheritedModelLaneStdio(),
+    });
+    const stderr: Buffer[] = [];
+    child.stdout?.resume();
+    child.stderr?.on("data", (chunk: Buffer) => stderr.push(chunk));
+    child.once("error", rejectRun);
+    child.once("close", (status, signal) => {
+      if (status === 0) resolveRun();
+      else {
+        rejectRun(
+          new Error(
+            `${Buffer.concat(stderr).toString("utf8")}Process stopped with ${signal ?? String(status)}.`,
+          ),
+        );
+      }
+    });
   });
 }
 
@@ -123,6 +196,10 @@ function modelLaneTestEnvironment(
   delete environment.DND_RAW_SWARM_MODEL_LANE;
   delete environment.DND_RAW_SWARM_MODEL_LANE_GUARD;
   delete environment.DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD;
+  delete environment.DND_RAW_SWARM_MODEL_LANE_LOCK_PATH;
+  delete environment.DND_RAW_SWARM_MODEL_LANE_FD;
+  delete environment.DND_RAW_SWARM_MODEL_LANE_OWNER_PID;
+  delete environment.DND_RAW_SWARM_MODEL_LANE_OWNER_START_TIME;
   return environment;
 }
 
@@ -405,6 +482,89 @@ describe("RAW swarm runner boundaries", () => {
       "must be launched through the public model wrapper",
     );
   }, 30_000);
+
+  test("rejects forged wrapper environment without a held canonical lane lock", () => {
+    const environment: NodeJS.ProcessEnv = {
+      ...modelEntryPointTestEnvironment,
+    };
+    delete environment.DND_RAW_SWARM_MODEL_LANE_FD;
+    delete environment.DND_RAW_SWARM_MODEL_LANE_OWNER_PID;
+    delete environment.DND_RAW_SWARM_MODEL_LANE_OWNER_START_TIME;
+    const result = spawnSync("pnpm", ["exec", "tsx", sdkPlayerLauncher], {
+      cwd: repoRoot,
+      env: environment,
+      encoding: "utf8",
+    });
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}${result.stderr}`).toContain(
+      "must be launched through the public model wrapper",
+    );
+  }, 30_000);
+
+  test("public wrapper supplies the locked lane capability", () => {
+    const commandRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-model-wrapper-git-"),
+    );
+    const commonRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-model-wrapper-common-"),
+    );
+    const fakeGit = resolve(commandRoot, "git");
+    writeFileSync(
+      fakeGit,
+      `#!/bin/sh
+set -eu
+case "$*" in
+  *--git-common-dir*) printf '%s\\n' '${commonRoot}' ;;
+  *) exit 1 ;;
+esac
+`,
+    );
+    chmodSync(fakeGit, 0o755);
+    try {
+      const result = spawnSync(
+        modelLaneLock,
+        ["trial", process.execPath, modelLaneCapability, "--assert"],
+        {
+          cwd: repoRoot,
+          env: modelLaneTestEnvironment(
+            commandRoot,
+            new Date(Date.now() + 60_000).toISOString(),
+          ),
+          encoding: "utf8",
+        },
+      );
+      expect(result.status).toBe(0);
+      expect(`${result.stdout}${result.stderr}`).toContain("acquired lane");
+    } finally {
+      rmSync(commandRoot, { recursive: true, force: true });
+      rmSync(commonRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("accepts a held canonical lane lock before direct-entrypoint validation", () => {
+    const result = spawnSync("pnpm", ["exec", "tsx", sdkPlayerLauncher], {
+      cwd: repoRoot,
+      env: modelEntryPointTestEnvironment,
+      stdio: inheritedModelLaneStdio(),
+      encoding: "utf8",
+    });
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}${result.stderr}`).toContain(
+      "Usage: run-sdk-player.ts",
+    );
+    expect(`${result.stdout}${result.stderr}`).not.toContain(
+      "must be launched through the public model wrapper",
+    );
+  }, 30_000);
+
+  test("routes freeplay through the canonical model invocation owner", () => {
+    const script = readFileSync(launcher, "utf8");
+    expect(script).toContain("runCodexInvocation");
+    expect(script).toContain('operation: { tag: "noOutput" }');
+    expect(script).toContain("invocationEventsPath");
+    expect(script).toContain("invocationLedgerPath");
+    expect(script).not.toMatch(/spawnSync\(\s*["']codex["']/);
+  });
 
   test("bounds model-lane acquisition by the campaign deadline", async () => {
     const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-lane-git-"));
@@ -720,6 +880,7 @@ printf '%s' '{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaa
           RAW_REVIEW_CONTEXT_ROLE: "postPlayReview",
           RAW_REVIEW_IMPLEMENTATION_GIT_SHA: currentGitSha,
         },
+        stdio: inheritedModelLaneStdio(),
         encoding: "utf8",
       },
     );
@@ -875,6 +1036,7 @@ printf '%s' '{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaa
           RAW_REVIEW_PNPM_CAPTURE: pnpmCapturePath,
           RAW_REVIEW_IMPLEMENTATION_GIT_SHA: currentGitSha,
         },
+        stdio: inheritedModelLaneStdio(),
         encoding: "utf8",
       },
     );
@@ -1005,6 +1167,7 @@ esac
           RAW_REVIEW_PNPM_CAPTURE: pnpmCapturePath,
           RAW_REVIEW_IMPLEMENTATION_GIT_SHA: currentGitSha,
         },
+        stdio: inheritedModelLaneStdio(),
         encoding: "utf8",
       },
     );
@@ -1060,6 +1223,7 @@ esac
           PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
           RAW_REVIEW_IMPLEMENTATION_GIT_SHA: "not-a-git-sha",
         },
+        stdio: inheritedModelLaneStdio(),
         encoding: "utf8",
       },
     );
@@ -1085,6 +1249,7 @@ esac
             PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
             RAW_REVIEW_IMPLEMENTATION_GIT_SHA: mismatchedGitSha,
           },
+          stdio: inheritedModelLaneStdio(),
           encoding: "utf8",
         },
       );

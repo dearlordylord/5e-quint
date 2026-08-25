@@ -910,7 +910,8 @@ generic sequencing DSL. Add another player experiment like this:
    `freeplay/<scenario-id>.prompt.txt`. Describe the setup and player/DM goal;
    do not prescribe internal SDK calls or declare the outcome the agent must
    obtain.
-3. Run `run-freeplay.ts <scenario-id>`, replay the transcript, and ingest it.
+3. Run `pnpm raw-swarm:model:trial -- freeplay <scenario-id>`, replay the
+   transcript, and ingest it.
 4. Add `reviews/<scenario-id>.prompt.txt` that tries to falsify the whole trace,
    then run and import the review.
 5. Inspect the summary and unlinked bug observations. Classify every non-pass as
