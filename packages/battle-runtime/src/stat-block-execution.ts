@@ -133,6 +133,34 @@ type AdmittedStatBlock = {
   readonly occurrences: AdmittedStatBlockOccurrences;
 };
 
+type UnsupportedStatBlockActionProjectionShape = Extract<
+  StatBlockActionProjectionShape,
+  "save" | "support" | "special"
+>;
+
+type UnsupportedActionProjectionSource =
+  | {
+      readonly shape: Extract<
+        UnsupportedStatBlockActionProjectionShape,
+        "save"
+      >;
+      readonly occurrences: CreatureActions["saves"];
+    }
+  | {
+      readonly shape: Extract<
+        UnsupportedStatBlockActionProjectionShape,
+        "support"
+      >;
+      readonly occurrences: CreatureActions["supports"];
+    }
+  | {
+      readonly shape: Extract<
+        UnsupportedStatBlockActionProjectionShape,
+        "special"
+      >;
+      readonly occurrences: CreatureActions["specials"];
+    };
+
 export function statBlockExecutionAdmissionCohort<
   TStatBlock extends BattleStatBlockExecutionSource,
 >(
@@ -357,30 +385,24 @@ function appendActionProjectionIssues(
     actions.multiattacks,
     admitted,
   );
-  appendUnsupportedActionProjectionIssues(
-    issues,
-    section,
-    actions.saves?.length ?? 0,
-    "save",
-  );
-  appendUnsupportedActionProjectionIssues(
-    issues,
-    section,
-    actions.supports?.length ?? 0,
-    "support",
-  );
+  appendUnsupportedActionProjectionIssues(issues, section, {
+    shape: "save",
+    occurrences: actions.saves,
+  });
+  appendUnsupportedActionProjectionIssues(issues, section, {
+    shape: "support",
+    occurrences: actions.supports,
+  });
   appendActionOptionProjectionIssues(
     issues,
     section,
     actions.actionOptions,
     admitted,
   );
-  appendUnsupportedActionProjectionIssues(
-    issues,
-    section,
-    actions.specials?.length ?? 0,
-    "special",
-  );
+  appendUnsupportedActionProjectionIssues(issues, section, {
+    shape: "special",
+    occurrences: actions.specials,
+  });
 }
 
 function appendAttackProjectionIssues(
@@ -434,12 +456,11 @@ function isAdmittedMultiattackInSection(
 function appendUnsupportedActionProjectionIssues(
   issues: StatBlockProjectionIssue[],
   section: StatBlockActionProjectionSection,
-  occurrenceCount: number,
-  shape: StatBlockActionProjectionShape,
+  source: UnsupportedActionProjectionSource,
 ): void {
-  for (let index = 0; index < occurrenceCount; index += 1) {
-    issues.push(actionProjectionIssue(section, shape));
-  }
+  source.occurrences?.forEach(() =>
+    issues.push(actionProjectionIssue(section, source.shape)),
+  );
 }
 
 function appendActionOptionProjectionIssues(
