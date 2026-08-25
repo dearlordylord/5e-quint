@@ -22,6 +22,7 @@
     "check:surface-publication-typecheck": "tsc -p scripts/surface-publication.tsconfig.json --noEmit",
     "check:surface-publication-self-test": "pnpm exec vitest run scripts/check-surface-content-json-sync.test.ts --pool=threads --maxWorkers=1",
     "generate:surface-publication": "pnpm exec tsx scripts/generate-surface-publication.ts",
+    "generate:surface-portable-cases": "pnpm exec tsx scripts/generate-surface-portable-cases.ts",
     "check:surface-class-json-sync": "pnpm check:surface-content-publication",
     "check:mbt-driver-closure": "node scripts/check-mbt-driver-closure.cjs",
     "check:qnt-proof-closure": "node scripts/check-qnt-proof-closure.cjs --self-test && node scripts/check-qnt-proof-closure.cjs",

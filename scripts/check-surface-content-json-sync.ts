@@ -24,6 +24,7 @@ import {
   type SurfacePublicationExcerptSource,
   type SurfacePublicationBuildIssue,
 } from "./srd-surface-publication-artifacts.ts";
+import { buildSrdSurfacePortableCases } from "./generate-surface-portable-cases.ts";
 
 export type PublicationIssue =
   | {
@@ -57,6 +58,21 @@ export type PublicationIssue =
       readonly file: string;
       readonly message: string;
     }
+  | { readonly kind: "missing-portable-case-artifact"; readonly file: string }
+  | {
+      readonly kind: "out-of-sync-portable-case-artifact";
+      readonly file: string;
+    }
+  | {
+      readonly kind: "unreadable-portable-case-artifact";
+      readonly file: string;
+      readonly message: string;
+    }
+  | {
+      readonly kind: "portable-case-generation-failed";
+      readonly file: string;
+      readonly message: string;
+    }
   | {
       readonly kind: "publication-schema-bound-exceeded";
       readonly measure: keyof typeof SRD_SURFACE_SCHEMA_BOUNDS;
@@ -74,6 +90,8 @@ export type PublicationCheckOptions = {
   readonly repoRoot: string;
   readonly contentDir: string;
   readonly publicationDir?: string;
+  readonly portableCasesPath?: string;
+  readonly portableCasesBuilder?: (repoRoot: string) => Buffer;
   readonly publicationExcerptSource?: SurfacePublicationExcerptSource;
   readonly compile: (
     sourcePath: string,
@@ -357,6 +375,46 @@ function checkSurfacePublicationArtifacts(
   }
 }
 
+function checkPortableCasesArtifact(
+  issues: PublicationIssue[],
+  repoRoot: string,
+  filePath: string,
+  builder: (repoRoot: string) => Buffer,
+): void {
+  const displayFile = repoPath(repoRoot, filePath);
+  const committed = readPublicationArtifact(filePath);
+  if (committed.tag === "missing") {
+    issues.push({ kind: "missing-portable-case-artifact", file: displayFile });
+    return;
+  }
+  if (committed.tag === "unreadable") {
+    issues.push({
+      kind: "unreadable-portable-case-artifact",
+      file: displayFile,
+      message: committed.message,
+    });
+    return;
+  }
+
+  let generated: Buffer;
+  try {
+    generated = builder(repoRoot);
+  } catch (error) {
+    issues.push({
+      kind: "portable-case-generation-failed",
+      file: displayFile,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return;
+  }
+  if (!committed.bytes.equals(generated)) {
+    issues.push({
+      kind: "out-of-sync-portable-case-artifact",
+      file: displayFile,
+    });
+  }
+}
+
 export function runPublicationCheck(
   options: PublicationCheckOptions,
 ): PublicationCheckResult {
@@ -447,6 +505,14 @@ export function runPublicationCheck(
       options.publicationExcerptSource,
     );
   }
+  if (options.portableCasesPath !== undefined) {
+    checkPortableCasesArtifact(
+      issues,
+      repoRoot,
+      options.portableCasesPath,
+      options.portableCasesBuilder ?? buildSrdSurfacePortableCases,
+    );
+  }
 
   return { issues, sourceCount: sources.length, peerCount: peers.length };
 }
@@ -476,6 +542,10 @@ function main(): void {
     repoRoot,
     contentDir,
     publicationDir: join(repoRoot, "packages", "surface", "publication"),
+    portableCasesPath: join(
+      repoRoot,
+      "packages/surface/portable-cases/srd-surface-cases.json",
+    ),
     compile: compileDhallToJson,
   });
 
@@ -501,6 +571,18 @@ function main(): void {
       } else if (issue.kind === "unreadable-publication-artifact") {
         console.error(
           `- unreadable-publication-artifact: ${issue.file}\n${issue.message}`,
+        );
+      } else if (issue.kind === "missing-portable-case-artifact") {
+        console.error(`- missing-portable-case-artifact: ${issue.file}`);
+      } else if (issue.kind === "out-of-sync-portable-case-artifact") {
+        console.error(`- out-of-sync-portable-case-artifact: ${issue.file}`);
+      } else if (issue.kind === "unreadable-portable-case-artifact") {
+        console.error(
+          `- unreadable-portable-case-artifact: ${issue.file}\n${issue.message}`,
+        );
+      } else if (issue.kind === "portable-case-generation-failed") {
+        console.error(
+          `- portable-case-generation-failed: ${issue.file}\n${issue.message}`,
         );
       } else if (issue.kind === "publication-generation-failed") {
         console.error(

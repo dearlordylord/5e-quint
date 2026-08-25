@@ -303,4 +303,34 @@ describe("Surface content publication checker", () => {
       rmSync(contentDir, { force: true, recursive: true });
     }
   });
+
+  it("detects drift in generated portable case evidence without rewriting it", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-portable-cases-test-"),
+    );
+    const portableCasesDir = join(contentDir, "portable-cases");
+    const portableCasesPath = join(portableCasesDir, "srd-surface-cases.json");
+
+    try {
+      mkdirSync(portableCasesDir, { recursive: true });
+      writeFileSync(portableCasesPath, "committed\n");
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        portableCasesPath,
+        portableCasesBuilder: () => Buffer.from("generated\n"),
+        compile: () => undefined,
+      });
+
+      expect(result.issues).toEqual([
+        {
+          kind: "out-of-sync-portable-case-artifact",
+          file: "portable-cases/srd-surface-cases.json",
+        },
+      ]);
+      expect(readFileSync(portableCasesPath, "utf8")).toBe("committed\n");
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
 });
