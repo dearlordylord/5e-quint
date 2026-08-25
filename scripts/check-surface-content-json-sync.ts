@@ -155,7 +155,7 @@ function canonicalDhallFiles(contentDir: string): readonly string[] {
   );
 }
 
-function compileDhallToJson(
+export function compileDhallToJson(
   sourcePath: string,
   outputPath: string,
 ): string | undefined {

@@ -2,6 +2,8 @@
   "include": [
     "check-surface-content-json-sync.ts",
     "check-surface-content-json-sync.test.ts",
+    "check-surface-stat-block-parity-final.ts",
+    "check-surface-stat-block-parity-final.test.ts",
     "generate-surface-publication.ts",
     "generate-surface-portable-cases.ts",
     "surface-portable-case-oracle.ts",
