@@ -1,26 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly dokku_host="49.13.172.86"
-readonly dokku_app="dnd-oracle"
-readonly dokku_remote="dokku-oracle"
-readonly dokku_remote_url="dokku@$dokku_host:$dokku_app"
-readonly public_origin="https://dnd-oracle.apps.loskutoff.com"
-readonly expected_dockerfile="operations/public-mcp/Dockerfile"
-readonly expected_storage_mount="-v /var/lib/dokku/data/storage/dnd-oracle:/var/lib/dnd-oracle"
+usage() {
+  echo "usage: $0 <staging|production>" >&2
+}
 
-if (( $# > 0 )); then
-  if [[ "$1" == "--help" && $# == 1 ]]; then
-    echo "usage: pnpm deploy:mcp:dokku-staging"
-    echo "Deploys clean master to the dnd-oracle Dokku staging app and runs the public smoke."
-    exit 0
-  fi
-  echo "usage: pnpm deploy:mcp:dokku-staging" >&2
+if (( $# != 1 )); then
+  usage
   exit 64
 fi
 
 directory="$(cd "$(dirname "$0")" && pwd)"
 repository_root="$(cd "$directory/../.." && pwd)"
+# shellcheck source=dokku-environment.sh
+source "$directory/dokku-environment.sh"
+if ! load_dokku_environment "$1"; then
+  usage
+  exit 64
+fi
 cd "$repository_root"
 
 for command in curl git jq pnpm ssh; do
@@ -31,7 +28,7 @@ for command in curl git jq pnpm ssh; do
 done
 
 [[ "$(git branch --show-current)" == master ]] || {
-  echo "Dokku staging deployments must run from master" >&2
+  echo "Dokku deployments must run from master" >&2
   exit 65
 }
 git diff --quiet && git diff --cached --quiet || {
@@ -65,14 +62,33 @@ configured_storage_mount="$(ssh "dokku@$dokku_host" storage:report "$dokku_app" 
   echo "$dokku_app storage mount differs from $expected_storage_mount" >&2
   exit 65
 }
+configured_database_path="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_PLAY_SESSION_DATABASE_PATH)"
+[[ "$configured_database_path" == /var/lib/dnd-oracle/play-sessions.sqlite ]] || {
+  echo "$dokku_app does not store Play Sessions in its persistent mount" >&2
+  exit 65
+}
 publisher_name="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_PUBLISHER_NAME)"
 publication_mode="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_PUBLICATION_MODE)"
 configured_environment="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_ENVIRONMENT)"
 openai_apps_challenge="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_OPENAI_APPS_CHALLENGE || true)"
-[[ -n "$publisher_name" && "$publication_mode" =~ ^(disabled|enabled)$ && "$configured_environment" == staging ]] || {
-  echo "$dokku_app has invalid public smoke configuration" >&2
+[[ -n "$publisher_name" && "$publication_mode" =~ ^(disabled|enabled)$ && "$configured_environment" == "$deployment_environment" ]] || {
+  echo "$dokku_app has invalid $deployment_environment smoke configuration" >&2
   exit 65
 }
+if [[ "$deployment_environment" == production ]]; then
+  [[ "$publication_mode" == enabled && "$publisher_name" != "5e Quint developers" && -n "$openai_apps_challenge" ]] || {
+    echo "Production requires publication mode, the verified publisher name, and the OpenAI domain challenge" >&2
+    exit 65
+  }
+  oauth_resource="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_OAUTH_RESOURCE_URL)"
+  oauth_authorization_server="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_OAUTH_AUTHORIZATION_SERVER)"
+  oauth_issuer="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_OAUTH_ISSUER)"
+  oauth_jwks_url="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_OAUTH_JWKS_URL)"
+  [[ "$oauth_resource" == "$public_origin/mcp" && -n "$oauth_authorization_server" && -n "$oauth_issuer" && -n "$oauth_jwks_url" ]] || {
+    echo "Production requires complete OAuth configuration for its exact MCP resource" >&2
+    exit 65
+  }
+fi
 previous_release="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_RELEASE)"
 [[ "$previous_release" =~ ^[0-9a-f]{40}$ ]] || {
   echo "$dokku_app has no valid configured release to restore" >&2
@@ -91,4 +107,4 @@ DND_MCP_PUBLISHER_NAME="$publisher_name" \
   DND_OPENAI_APPS_CHALLENGE="$openai_apps_challenge" \
   "$directory/smoke-origin.sh" "$public_origin" "$release" "$configured_environment"
 
-echo "Dokku staging deployment passed for $release at $public_origin."
+echo "Dokku $deployment_environment deployment passed for $release at $public_origin."

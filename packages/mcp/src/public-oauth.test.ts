@@ -16,7 +16,6 @@ describe("public MCP OAuth configuration", () => {
         DND_OAUTH_RESOURCE_URL: "",
         DND_OAUTH_AUTHORIZATION_SERVER: "",
         DND_OAUTH_ISSUER: "",
-        DND_OAUTH_AUDIENCE: "",
         DND_OAUTH_JWKS_URL: "",
       }),
     ).toEqual(Either.right(undefined));
@@ -38,7 +37,6 @@ describe("public MCP OAuth configuration", () => {
       DND_OAUTH_RESOURCE_URL: "https://oracle.example.test/mcp",
       DND_OAUTH_AUTHORIZATION_SERVER: "https://identity.example.test",
       DND_OAUTH_ISSUER: "https://identity.example.test",
-      DND_OAUTH_AUDIENCE: "dnd-oracle",
       DND_OAUTH_JWKS_URL: "https://identity.example.test/.well-known/jwks.json",
     });
     if (Either.isLeft(oauth) || oauth.right === undefined) {
@@ -75,7 +73,6 @@ describe("public MCP OAuth configuration", () => {
       DND_OAUTH_RESOURCE_URL: "https://oracle.example.test/mcp",
       DND_OAUTH_AUTHORIZATION_SERVER: "https://identity.example.test",
       DND_OAUTH_ISSUER: "https://issuer.example.test",
-      DND_OAUTH_AUDIENCE: "dnd-oracle",
       DND_OAUTH_JWKS_URL: jwksUrl.toString(),
     });
     if (Either.isLeft(oauth) || oauth.right === undefined) {
@@ -83,7 +80,7 @@ describe("public MCP OAuth configuration", () => {
     }
     try {
       const valid = await signedToken(privateKey, {
-        audience: "dnd-oracle",
+        audience: "https://oracle.example.test/mcp",
         expiresIn: "5m",
       });
       expect(await oauth.right.verifyAccessToken(valid)).toMatchObject({
@@ -99,7 +96,7 @@ describe("public MCP OAuth configuration", () => {
         left: { reason: "invalidToken" },
       });
       const expired = await signedToken(privateKey, {
-        audience: "dnd-oracle",
+        audience: "https://oracle.example.test/mcp",
         expiresIn: "-1s",
       });
       expect(await oauth.right.verifyAccessToken(expired)).toMatchObject({
@@ -107,7 +104,7 @@ describe("public MCP OAuth configuration", () => {
         left: { reason: "invalidToken" },
       });
       const missingScope = await signedToken(privateKey, {
-        audience: "dnd-oracle",
+        audience: "https://oracle.example.test/mcp",
         expiresIn: "5m",
         includeScope: false,
       });

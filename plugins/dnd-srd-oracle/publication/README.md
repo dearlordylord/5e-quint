@@ -13,16 +13,19 @@ production environment file used by deployment:
 
 ```sh
 node plugins/dnd-srd-oracle/publication/prepare-package.mjs \
-  --environment-file /etc/dnd-oracle/production.env \
+  --deployment-attestation .artifacts/dnd-srd-oracle/deployment-attestation.json \
   --publication-attestation /secure/dnd-oracle/publication-attestation.json \
   --registered-app-id plugin_asdk_app_REPLACE_WITH_REGISTERED_ID \
   --output .artifacts/dnd-srd-oracle-public
 ```
 
-The command runs the deployment-owned `verify-config.sh` against the environment
-file before parsing it for publication facts. It requires production publication
-mode, rejects reserved/placeholder domains, publisher placeholders, malformed
-registered application ids, endpoint paths that escape the configured origin,
+Generate the deployment attestation from the live production adapter. For the
+current Dokku host, run `pnpm verify:mcp:dokku-publication OUTPUT` as documented
+in the [public MCP operations runbook](../../../operations/public-mcp/README.md).
+The verifier writes no credentials. The package command requires a successful
+live production attestation whose release exactly matches the source checkout,
+and rejects reserved/placeholder origins, publisher placeholders, malformed
+registered application ids, endpoint paths that escape the verified origin,
 source-package targets, and non-empty output directories. It copies the manifest,
 Skill, brand assets, package README,
 LICENSE, and NOTICE; emits the registered remote-MCP `.app.json` mapping and
@@ -47,6 +50,12 @@ turn a configured name into a verified identity. Its exact shape is:
     "mfaRequired": false,
     "attestedAt": "2026-08-25T20:01:00Z",
     "attestedBy": "operator identity"
+  },
+  "domainVerification": {
+    "status": "verifiedInOpenAiPortal",
+    "origin": "https://dnd-oracle.apps.loskutoff.com",
+    "verifiedAt": "2026-08-25T20:02:00Z",
+    "attestedBy": "operator identity"
   }
 }
 ```
@@ -54,7 +63,8 @@ turn a configured name into a verified identity. Its exact shape is:
 Do not put credentials or tokens in this file; its closed shape has no field for
 them. Provision review credentials only in the secure portal field. Preparation
 fails unless the identity name exactly matches `DND_MCP_PUBLISHER_NAME`, both
-portal statuses are attested, and reviewer access needs no MFA.
+portal statuses are attested, the verified domain exactly matches the live
+production origin, and reviewer access needs no MFA.
 
 Before portal submission, validate the generated directory with the
 plugin-creator validator, deploy the matching release, run the public smoke,

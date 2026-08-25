@@ -47,27 +47,47 @@ name must be the verified publisher identity, not the development placeholder.
 Their response Content Security Policy permits no script, style, image, font,
 frame, form, or network source.
 
-## Current Dokku staging host
+## Current Dokku host
 
-The current public staging service is a separate Dokku application named
-`dnd-oracle` at <https://dnd-oracle.apps.loskutoff.com>. It uses the same
-canonical Node container boundary through `operations/public-mcp/Dockerfile`;
-Dokku is a deployment adapter, not an application dependency. The application
-stores SQLite state in the persistent `/var/lib/dnd-oracle` mount on the host.
+The current host uses two isolated Dokku applications. `dnd-oracle-staging`
+serves <https://dnd-oracle-staging.apps.loskutoff.com> for ordinary deployment
+and development checks. `dnd-oracle` serves the production origin at
+<https://dnd-oracle.apps.loskutoff.com> only after its publication prerequisites
+pass. Each application has its own host storage directory mounted at the
+container's canonical `/var/lib/dnd-oracle` path. Both use the same Node
+container boundary through `operations/public-mcp/Dockerfile`; Dokku is a
+deployment adapter, not an application dependency.
 
-Deploy the checked-out `master` release from the repository root with:
+Deploy a checked-out `master` release from the repository root with:
 
 ```sh
 pnpm deploy:mcp:dokku-staging
+pnpm deploy:mcp:dokku-production
 ```
 
-The command creates the local `dokku-oracle` remote when absent, updates the
-release build argument, pushes `HEAD` to the dedicated Dokku application, and
-requires the live HTTPS health, release, publisher pages, and complete guest
-newcomer journey to pass. It ignores untracked files but refuses uncommitted
-tracked changes or a branch other than `master`. The operator needs an SSH key
-accepted by `dokku@49.13.172.86` and a trusted host key. The metrics bearer
-token and any future publication credentials remain server configuration and
+The commands create their local `dokku-oracle-staging` or
+`dokku-oracle-production` remote when absent, update the release build argument,
+push `HEAD` to the dedicated application, and require live HTTPS health,
+release, publisher pages, and the complete guest newcomer journey to pass. They
+ignore untracked files but refuse uncommitted tracked changes or a branch other
+than `master`. Production additionally refuses to deploy until the application
+reports `production`, publication mode is enabled, the publisher is no longer
+the development placeholder, and the OpenAI domain challenge is configured.
+
+After a production deployment, create the non-secret live-deployment evidence
+consumed by the plugin package builder:
+
+```sh
+pnpm verify:mcp:dokku-publication \
+  .artifacts/dnd-srd-oracle/deployment-attestation.json
+```
+
+The verifier checks the exact challenge response, protected-resource metadata,
+authorization-server discovery, PKCE S256 and client registration support,
+JWKS, release/publisher identity, public pages, and guest journey before writing
+the attestation. It never writes the challenge, tokens, or OAuth credentials.
+The operator needs an SSH key accepted by `dokku@49.13.172.86` and a trusted
+host key. Metrics and publication credentials remain server configuration and
 must not be copied into Git.
 
 ## Rollback
