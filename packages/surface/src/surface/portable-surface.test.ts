@@ -189,6 +189,23 @@ function productionResultForCase(
     : decodePortableSrdSurface(portableCase.input);
 }
 
+function firstRecordId(input: unknown, family: "units" | "statBlocks"): string {
+  const isRecord = (value: unknown): value is Record<string, unknown> =>
+    typeof value === "object" && value !== null && !Array.isArray(value);
+  if (!isRecord(input)) {
+    throw new Error("Portable duplicate fixture input must be an object");
+  }
+  const records = input[family];
+  if (!Array.isArray(records) || records.length === 0) {
+    throw new Error(`Portable duplicate fixture ${family} must be non-empty`);
+  }
+  const record = records[0];
+  if (!isRecord(record) || typeof record.id !== "string") {
+    throw new Error(`Portable duplicate fixture ${family}[0] must have an id`);
+  }
+  return record.id;
+}
+
 function impossible(value: never): never {
   throw new Error(`Unexpected portable issue variant: ${String(value)}`);
 }
@@ -354,6 +371,32 @@ describe("portable SRD Surface boundary", () => {
         })(withEmptyIssues),
       ),
     ).toBe(true);
+  });
+
+  test("cross-family duplicate identity fixture duplicates the dependency-free unit", () => {
+    const duplicateCase = caseDocument.cases.find(
+      (portableCase) =>
+        portableCase.name === "duplicate identity across record families",
+    );
+    if (duplicateCase === undefined || !("input" in duplicateCase)) {
+      throw new Error("Portable cases lost the cross-family duplicate fixture");
+    }
+    const unitId = firstRecordId(duplicateCase.input, "units");
+    const statBlockId = firstRecordId(duplicateCase.input, "statBlocks");
+    expect(statBlockId).toBe(unitId);
+
+    const result = decodePortableSrdSurface(duplicateCase.input);
+    expect(result.tag).toBe("rejected");
+    if (result.tag !== "rejected") return;
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        code: "duplicate-authored-identity",
+        path: "$.statBlocks[0].id",
+        targetKind: "statBlock",
+        targetId: unitId,
+        priorPath: "$.units[0].id",
+      }),
+    );
   });
 
   test.each([

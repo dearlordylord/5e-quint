@@ -34089,7 +34089,7 @@
         ],
         "statBlocks": [
           {
-            "id": "class_barbarian",
+            "id": "species_dragonborn",
             "kind": "statBlock",
             "name": "Bat",
             "challengeRating": 0,
@@ -34180,10 +34180,28 @@
       "name": "duplicate identity across record families",
       "expected": {
         "production": {
-          "tag": "accepted"
+          "tag": "rejected",
+          "issues": [
+            {
+              "code": "duplicate-authored-identity",
+              "path": "$.statBlocks[0].id",
+              "targetKind": "statBlock",
+              "targetId": "species_dragonborn",
+              "priorPath": "$.units[0].id"
+            }
+          ]
         },
         "independent": {
-          "tag": "accepted"
+          "tag": "rejected",
+          "issues": [
+            {
+              "code": "duplicate-authored-identity",
+              "path": "$.statBlocks[0].id",
+              "targetKind": "statBlock",
+              "targetId": "species_dragonborn",
+              "priorPath": "$.units[0].id"
+            }
+          ]
         }
       }
     },

@@ -406,7 +406,7 @@ function buildDocument(repositoryRoot: string): PortableCaseDocument {
     }),
     makeCase(oracle, contract, "duplicate identity across record families", {
       input: withRecord(compactPublication, "statBlocks", [
-        { ...firstStatBlock, id: firstUnit.id },
+        { ...firstStatBlock, id: dependencyFreeUnit.id },
       ]),
     }),
     makeCase(oracle, contract, "dangling authored dependency", {
