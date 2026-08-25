@@ -54,8 +54,13 @@ function waitFor(predicate, description) {
   const startedAt = Date.now();
   return new Promise((resolve, reject) => {
     const poll = () => {
-      if (predicate()) {
-        resolve();
+      try {
+        if (predicate()) {
+          resolve();
+          return;
+        }
+      } catch (error) {
+        reject(error);
         return;
       }
       if (Date.now() - startedAt >= waitTimeoutMs) {
@@ -199,8 +204,9 @@ function assertFixtureChildRunning(child, description) {
 
 function waitForProbeLine(child, logPath, expectedLine, description) {
   return waitFor(() => {
+    if (logLines(logPath).includes(expectedLine)) return true;
     assertFixtureChildRunning(child, description);
-    return logLines(logPath).includes(expectedLine);
+    return false;
   }, description);
 }
 
