@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
 
-# Shared process lifecycle for wrappers that own a bounded command.  The
-# process group handles ordinary descendants; the inherited marker closes the
-# gap when a descendant creates a new session before the owner can clean up.
+set -euo pipefail
+
+# Shared lifecycle for wrappers that own a bounded command.  The native helper
+# is the sole process-tree owner: it is a Linux subreaper, tracks descendants
+# by parent lineage, and signals them even after a child creates a new session
+# or clears its environment.  The shell only owns the helper PID and waits for
+# its completion before releasing any resource lock.
 
 supervision_command_pid=""
 supervision_event_name=""
 supervision_deadline_milliseconds=""
-supervision_marker=""
-supervision_marker_pids_snapshot=""
 supervision_cleanup_in_progress=false
 supervision_command_reaped=false
 supervision_command_wait_status=0
 supervision_command_start_time=""
+supervision_helper_directory=""
+supervision_helper_path=""
 
 supervision_process_stat_fields() {
   local pid="$1" stat rest
@@ -45,13 +49,6 @@ supervision_process_identity_is_live() {
   [[ "$start_time" == "$expected_start_time" ]]
 }
 
-supervision_process_group() {
-  local pid="$1" stat_fields process_group
-  stat_fields="$(supervision_process_stat_fields "$pid")" || return 1
-  process_group="${stat_fields#* }"
-  printf '%s\n' "${process_group%% *}"
-}
-
 supervision_owner_is_alive() {
   local owner_pid="${DND_RESOURCE_LOCK_OWNER_PID:-}"
   local owner_start_time="${DND_RESOURCE_LOCK_OWNER_START_TIME:-}"
@@ -74,131 +71,30 @@ supervision_require_owner() {
   fi
 }
 
-supervision_group_exists() {
-  supervision_command_group_is_owned
-}
-
-supervision_command_group_is_owned() {
-  local process_group
-  [[ -n "$supervision_command_pid" ]] || return 1
-  supervision_process_identity_is_live \
-    "$supervision_command_pid" "$supervision_command_start_time" || return 1
-  process_group="$(supervision_process_group "$supervision_command_pid" || true)"
-  [[ "$process_group" == "$supervision_command_pid" ]] || return 1
-  kill -0 -- "-$supervision_command_pid" 2>/dev/null
-}
-
-supervision_pid_is_in_command_group() {
-  local pid="$1" start_time="$2" process_group
-  supervision_process_identity_is_live "$pid" "$start_time" || return 1
-  process_group="$(supervision_process_group "$pid" || true)"
-  [[ "$process_group" == "$supervision_command_pid" ]]
-}
-
-supervision_marker_process_pids() {
-  local environment_path pid start_time
-  [[ -n "$supervision_marker" ]] || return 0
-  while read -r environment_path; do
-    pid="${environment_path#/proc/}"
-    pid="${pid%/environ}"
-    [[ "$pid" != "$$" ]] || continue
-    start_time="$(supervision_process_start_time "$pid" 2>/dev/null || true)"
-    [[ "$start_time" =~ ^[0-9]+$ ]] || continue
-    supervision_process_identity_is_live "$pid" "$start_time" || continue
-    printf '%s %s\n' "$pid" "$start_time"
-  done < <(
-    grep -z -F -x -l -- \
-      "DND_PROCESS_SUPERVISION_MARKER=$supervision_marker" \
-      /proc/[0-9]*/environ 2>/dev/null || true
-  )
-}
-
-supervision_capture_marker_pids() {
-  supervision_marker_pids_snapshot="$(supervision_marker_process_pids)"
-}
-
-supervision_marker_snapshot_exists() {
-  local pid start_time
-  while read -r pid start_time; do
-    supervision_process_identity_is_live "$pid" "$start_time" && return 0
-  done <<<"$supervision_marker_pids_snapshot"
-  return 1
-}
-
 supervision_owned_processes_exist() {
-  supervision_group_exists && return 0
-  supervision_marker_snapshot_exists
-}
-
-supervision_signal_owned_group() {
-  local signal="$1" process_group
   [[ -n "$supervision_command_pid" ]] || return 1
   supervision_process_identity_is_live \
-    "$supervision_command_pid" "$supervision_command_start_time" || return 1
-  process_group="$(supervision_process_group "$supervision_command_pid" || true)"
-  [[ "$process_group" == "$supervision_command_pid" ]] || return 1
-  supervision_process_identity_is_live \
-    "$supervision_command_pid" "$supervision_command_start_time" || return 1
-  kill -"$signal" -- "-$supervision_command_pid" 2>/dev/null
-}
-
-supervision_signal_owned_pid() {
-  local signal="$1" pid="$2" start_time="$3"
-  supervision_process_identity_is_live "$pid" "$start_time" || return 0
-  kill -"$signal" "$pid" 2>/dev/null || true
+    "$supervision_command_pid" "$supervision_command_start_time"
 }
 
 supervision_signal_owned_processes() {
-  local signal="$1" pid start_time group_signal_sent=false
-  supervision_capture_marker_pids
-  if supervision_signal_owned_group "$signal"; then
-    group_signal_sent=true
-  fi
-  while read -r pid start_time; do
-    supervision_process_identity_is_live "$pid" "$start_time" || continue
-    if [[ "$group_signal_sent" == true ]] &&
-      supervision_pid_is_in_command_group "$pid" "$start_time"; then
-      continue
-    fi
-    supervision_signal_owned_pid "$signal" "$pid" "$start_time"
-  done <<<"$supervision_marker_pids_snapshot"
-}
-
-supervision_wait_for_settlement() {
-  local attempts="$1"
-  while (( attempts > 0 )); do
-    supervision_owned_processes_exist || break
-    if [[ -n "$supervision_command_pid" ]] &&
-      ! supervision_process_identity_is_live \
-        "$supervision_command_pid" "$supervision_command_start_time"; then
-      supervision_reap_command || true
-    fi
-    attempts=$((attempts - 1))
-    sleep 0.02
-  done
-  # A descendant may have detached between the first snapshot and the group
-  # leader's exit. One final marker read closes that hand-off without walking
-  # every process on every 20ms poll.
-  supervision_group_exists && return 1
-  supervision_capture_marker_pids
-  supervision_marker_snapshot_exists && return 1
-  return 0
+  local signal="$1"
+  supervision_process_identity_is_live \
+    "$supervision_command_pid" "$supervision_command_start_time" || return 0
+  kill -"$signal" "$supervision_command_pid" 2>/dev/null || true
 }
 
 supervision_terminate_owned_processes() {
-  [[ -n "$supervision_command_pid" || -n "$supervision_marker" ]] || return 0
+  [[ -n "$supervision_command_pid" ]] || return 0
   supervision_signal_owned_processes TERM
-  if supervision_wait_for_settlement 100; then
-    return 0
-  fi
-  printf '[%s] EMERGENCY: owned process set ignored SIGTERM; sending SIGKILL\n' \
-    "$supervision_event_name" >&2
-  supervision_signal_owned_processes KILL
-  if ! supervision_wait_for_settlement 100; then
-    printf '[%s] owned process set survived SIGKILL\n' \
-      "$supervision_event_name" >&2
-  fi
-  return 137
+  # The native supervisor is the only process that can discover and reap
+  # descendants after a child creates a new session. Never SIGKILL it here:
+  # killing that owner could reparent surviving descendants before this shell
+  # releases a resource lock. The native supervisor owns its bounded
+  # TERM-to-KILL escalation and exits only after its tree is settled.
+  while supervision_owned_processes_exist; do
+    sleep 0.02
+  done
 }
 
 supervision_reap_command() {
@@ -213,6 +109,14 @@ supervision_reap_command() {
   return "$wait_status"
 }
 
+supervision_remove_helper() {
+  if [[ -n "$supervision_helper_directory" ]]; then
+    rm -rf -- "$supervision_helper_directory"
+    supervision_helper_directory=""
+    supervision_helper_path=""
+  fi
+}
+
 supervision_cleanup_command() {
   [[ "$supervision_cleanup_in_progress" == false ]] || return 0
   supervision_cleanup_in_progress=true
@@ -222,19 +126,38 @@ supervision_cleanup_command() {
   supervision_reap_command
   local reap_status=$?
   set -e
+  supervision_remove_helper
   (( cleanup_status == 137 || reap_status == 137 )) && return 137
   return 0
 }
 
 supervision_reset_command() {
   supervision_command_pid=""
-  supervision_marker=""
-  supervision_marker_pids_snapshot=""
   supervision_deadline_milliseconds=""
   supervision_cleanup_in_progress=false
   supervision_command_reaped=false
   supervision_command_wait_status=0
   supervision_command_start_time=""
+  supervision_remove_helper
+}
+
+supervision_compile_helper() {
+  local script_directory="$1"
+  supervision_helper_directory="$(mktemp -d "${TMPDIR:-/tmp}/dnd-process-supervisor.XXXXXX")" || {
+    printf '[%s] could not allocate native supervisor directory\n' \
+      "$supervision_event_name" >&2
+    return 78
+  }
+  supervision_helper_path="$supervision_helper_directory/process-supervisor"
+  if ! env -i PATH=/usr/bin:/bin LC_ALL=C LANG=C /usr/bin/cc \
+    -std=c11 -O2 -Wall -Wextra -Werror \
+    "$script_directory/raw-swarm/process-supervisor.c" \
+    -o "$supervision_helper_path"; then
+    printf '[%s] could not compile the native process supervisor\n' \
+      "$supervision_event_name" >&2
+    supervision_remove_helper
+    return 78
+  fi
 }
 
 supervision_start_command() {
@@ -245,11 +168,13 @@ supervision_start_command() {
     printf '[%s] missing owned command\n' "$supervision_event_name" >&2
     return 64
   }
-  supervision_marker="dnd-supervision-$$-$(date +%s%N)-$RANDOM"
+  local script_directory
+  script_directory=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+  supervision_compile_helper "$script_directory" || return $?
   supervision_command_reaped=false
   supervision_command_wait_status=0
-  export DND_PROCESS_SUPERVISION_MARKER="$supervision_marker"
-  setsid -- "$@" & supervision_command_pid=$!
+  "$supervision_helper_path" --owner-pid "$$" --supervise-only "$@" &
+  supervision_command_pid=$!
   supervision_command_start_time="$(
     supervision_process_start_time "$supervision_command_pid" 2>/dev/null || true
   )"

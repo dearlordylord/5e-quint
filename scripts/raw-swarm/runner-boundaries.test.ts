@@ -22,6 +22,7 @@ import { PLAYER_CONTINUATION_PROTOCOL_REMINDER } from "./sdk-player/continuation
 import { SdkPlayerTranscriptHeaderSchema } from "./sdk-player/sdk-transcript.ts";
 import { compileTrustedCSource } from "./deterministic-toolchain.cjs";
 import { installDeterministicCleanup } from "./deterministic-cleanup.cjs";
+import { SUPPORTED_VITEST_TEST_FILE_SUFFIXES } from "./lane-classification.cjs";
 
 const recorder = resolve(repoRoot, "scripts/raw-swarm/mcp-recording-shim.ts");
 const launcher = resolve(repoRoot, "scripts/raw-swarm/run-freeplay.ts");
@@ -63,16 +64,16 @@ const deterministicCleanupModule = resolve(
   repoRoot,
   "scripts/raw-swarm/deterministic-cleanup.cjs",
 );
-const deterministicNetworkBoundarySource = resolve(
+const processSupervisorSource = resolve(
   repoRoot,
-  "scripts/raw-swarm/deterministic-network-boundary.c",
+  "scripts/raw-swarm/process-supervisor.c",
 );
-const deterministicNetworkBoundaryBuild = mkdtempSync(
-  resolve(tmpdir(), "dnd-network-boundary-test-"),
+const processSupervisorBuild = mkdtempSync(
+  resolve(tmpdir(), "dnd-process-supervisor-test-"),
 );
-const cleanupDeterministicNetworkBoundaryBuild = installDeterministicCleanup({
+const cleanupProcessSupervisorBuild = installDeterministicCleanup({
   cleanup: () =>
-    rmSync(deterministicNetworkBoundaryBuild, {
+    rmSync(processSupervisorBuild, {
       recursive: true,
       force: true,
     }),
@@ -81,18 +82,15 @@ const cleanupDeterministicNetworkBoundaryBuild = installDeterministicCleanup({
     process.exit(exitStatus);
   },
 });
-const deterministicNetworkBoundary = resolve(
-  deterministicNetworkBoundaryBuild,
-  "deterministic-network-boundary",
+const processSupervisor = resolve(processSupervisorBuild, "process-supervisor");
+const processSupervisorCompilation = compileTrustedCSource(
+  processSupervisorSource,
+  processSupervisor,
 );
-const deterministicNetworkBoundaryCompilation = compileTrustedCSource(
-  deterministicNetworkBoundarySource,
-  deterministicNetworkBoundary,
-);
-if (!deterministicNetworkBoundaryCompilation.ok) {
-  cleanupDeterministicNetworkBoundaryBuild();
+if (!processSupervisorCompilation.ok) {
+  cleanupProcessSupervisorBuild();
   throw new Error(
-    `The Linux deterministic network boundary could not be compiled: ${deterministicNetworkBoundaryCompilation.message}`,
+    `The Linux native process supervisor could not be compiled: ${processSupervisorCompilation.message}`,
   );
 }
 const rawSwarmOutputDirectory = resolve(repoRoot, "scripts/raw-swarm/out");
@@ -143,7 +141,7 @@ if (modelLaneLockProbe.status !== 1) {
 afterAll(() => {
   closeSync(modelLaneLockFd);
   rmSync(modelLaneLockDirectory, { recursive: true, force: true });
-  cleanupDeterministicNetworkBoundaryBuild();
+  cleanupProcessSupervisorBuild();
 });
 const modelEntryPointTestEnvironment: NodeJS.ProcessEnv = {
   ...process.env,
@@ -321,9 +319,7 @@ function runCapabilityGuardFixture(source: string) {
 }
 
 function runKernelBoundaryFixture(source: string) {
-  const fixtureRoot = mkdtempSync(
-    resolve(tmpdir(), "dnd-deterministic-network-boundary-"),
-  );
+  const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-process-supervisor-"));
   const sourcePath = resolve(fixtureRoot, "fixture.cjs");
   writeFileSync(sourcePath, source);
   try {
@@ -331,7 +327,7 @@ function runKernelBoundaryFixture(source: string) {
       "env",
       [
         "-i",
-        deterministicNetworkBoundary,
+        processSupervisor,
         "--owner-pid",
         String(process.pid),
         process.execPath,
@@ -345,8 +341,8 @@ function runKernelBoundaryFixture(source: string) {
 }
 
 function compileKernelBoundaryProbe(name: string, source: string): string {
-  const sourcePath = resolve(deterministicNetworkBoundaryBuild, `${name}.c`);
-  const binaryPath = resolve(deterministicNetworkBoundaryBuild, name);
+  const sourcePath = resolve(processSupervisorBuild, `${name}.c`);
+  const binaryPath = resolve(processSupervisorBuild, name);
   writeFileSync(sourcePath, source);
   const compilation = compileTrustedCSource(sourcePath, binaryPath);
   if (!compilation.ok) {
@@ -360,13 +356,7 @@ function compileKernelBoundaryProbe(name: string, source: string): string {
 function runKernelBoundaryProbe(binaryPath: string) {
   return spawnSync(
     "env",
-    [
-      "-i",
-      deterministicNetworkBoundary,
-      "--owner-pid",
-      String(process.pid),
-      binaryPath,
-    ],
+    ["-i", processSupervisor, "--owner-pid", String(process.pid), binaryPath],
     {
       encoding: "utf8",
       stdio: "ignore",
@@ -444,7 +434,7 @@ describe("RAW swarm runner boundaries", () => {
       mkdirSync(buildDirectory);
       writeFileSync(
         helperPath,
-        `const { rmSync, writeFileSync } = require("node:fs"); const { spawn } = require("node:child_process"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const { installDeterministicCleanup } = require(${JSON.stringify(deterministicCleanupModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(deterministicNetworkBoundary)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); installDeterministicCleanup({ cleanup: () => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }), onSignal: async ({ cleanup, exitStatus, signal }) => { try { await runner.terminateActive(signal); } catch {} finally { cleanup(); } process.exit(exitStatus); } }); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { writeFileSync } = require("node:fs"); const { spawn } = require("node:child_process"); process.stdout.write("blocking-output"); process.stderr.write("blocking-error"); writeFileSync(${JSON.stringify(childPidPath)}, String(process.pid)); const detached = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { detached: true, stdio: "ignore" }); writeFileSync(${JSON.stringify(detachedPidPath)}, String(detached.pid)); detached.on("error", () => {}); process.on("SIGTERM", () => {}); setInterval(() => {}, 1000);`)}]).then((result) => { process.exitCode = result.status ?? 1; }).catch(() => { process.exitCode = 1; });`,
+        `const { rmSync, writeFileSync } = require("node:fs"); const { spawn } = require("node:child_process"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const { installDeterministicCleanup } = require(${JSON.stringify(deterministicCleanupModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(processSupervisor)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); installDeterministicCleanup({ cleanup: () => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }), onSignal: async ({ cleanup, exitStatus, signal }) => { try { await runner.terminateActive(signal); } catch {} finally { cleanup(); } process.exit(exitStatus); } }); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { writeFileSync } = require("node:fs"); const { spawn } = require("node:child_process"); process.stdout.write("blocking-output"); process.stderr.write("blocking-error"); writeFileSync(${JSON.stringify(childPidPath)}, String(process.pid)); const detached = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { detached: true, stdio: "ignore" }); writeFileSync(${JSON.stringify(detachedPidPath)}, String(detached.pid)); detached.on("error", () => {}); process.on("SIGTERM", () => {}); setInterval(() => {}, 1000);`)}]).then((result) => { process.exitCode = result.status ?? 1; }).catch(() => { process.exitCode = 1; });`,
       );
       const helperStderrFd = openSync(helperStderrPath, "w");
       const helper = spawn(process.execPath, [helperPath], {
@@ -511,7 +501,7 @@ describe("RAW swarm runner boundaries", () => {
     mkdirSync(buildDirectory);
     writeFileSync(
       helperPath,
-      `const { rmSync } = require("node:fs"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(deterministicNetworkBoundary)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); void (async () => { const first = await runner.run(process.execPath, ["-e", "process.stdout.write('first-out'); process.stderr.write('first-err')"]); if (first.status !== 0 || first.signal !== null) process.exit(1); const second = await runner.run(process.execPath, ["-e", "process.stdout.write('second-out'); process.stderr.write('second-err')"]); if (second.status !== 0 || second.signal !== null) process.exit(2); })().catch((error) => { process.stderr.write(String(error)); process.exit(3); }).finally(() => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }));`,
+      `const { rmSync } = require("node:fs"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(processSupervisor)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); void (async () => { const first = await runner.run(process.execPath, ["-e", "process.stdout.write('first-out'); process.stderr.write('first-err')"]); if (first.status !== 0 || first.signal !== null) process.exit(1); const second = await runner.run(process.execPath, ["-e", "process.stdout.write('second-out'); process.stderr.write('second-err')"]); if (second.status !== 0 || second.signal !== null) process.exit(2); })().catch((error) => { process.stderr.write(String(error)); process.exit(3); }).finally(() => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }));`,
     );
     const stdoutFd = openSync(stdoutPath, "w");
     const stderrFd = openSync(stderrPath, "w");
@@ -552,7 +542,7 @@ describe("RAW swarm runner boundaries", () => {
     mkdirSync(buildDirectory);
     writeFileSync(
       helperPath,
-      `const { rmSync, writeFileSync } = require("node:fs"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(deterministicNetworkBoundary)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { spawn } = require("node:child_process"); const { writeFileSync } = require("node:fs"); const descendant = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" }); descendant.unref(); writeFileSync(${JSON.stringify(descendantPidPath)}, String(descendant.pid));`)}]).then((result) => { writeFileSync(${JSON.stringify(findingPath)}, JSON.stringify(result)); process.exitCode = result.status === 70 && result.signal === null ? 0 : 1; }).catch((error) => { writeFileSync(${JSON.stringify(findingPath)}, String(error)); process.exitCode = 2; }).finally(() => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }));`,
+      `const { rmSync, writeFileSync } = require("node:fs"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(processSupervisor)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { spawn } = require("node:child_process"); const { writeFileSync } = require("node:fs"); const descendant = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" }); descendant.unref(); writeFileSync(${JSON.stringify(descendantPidPath)}, String(descendant.pid));`)}]).then((result) => { writeFileSync(${JSON.stringify(findingPath)}, JSON.stringify(result)); process.exitCode = result.status === 70 && result.signal === null ? 0 : 1; }).catch((error) => { writeFileSync(${JSON.stringify(findingPath)}, String(error)); process.exitCode = 2; }).finally(() => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }));`,
     );
     const helperStderrFd = openSync(helperStderrPath, "w");
     const checked = spawn(process.execPath, [helperPath], {
@@ -606,7 +596,7 @@ describe("RAW swarm runner boundaries", () => {
     mkdirSync(buildDirectory);
     writeFileSync(
       helperPath,
-      `const { rmSync, writeFileSync } = require("node:fs"); const { spawn } = require("node:child_process"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const { installDeterministicCleanup } = require(${JSON.stringify(deterministicCleanupModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(deterministicNetworkBoundary)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); installDeterministicCleanup({ cleanup: () => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }), onSignal: async ({ cleanup, exitStatus, signal }) => { try { await runner.terminateActive(signal); } catch {} finally { cleanup(); } process.exit(exitStatus); } }); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { spawn } = require("node:child_process"); const { writeFileSync } = require("node:fs"); const descendant = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" }); descendant.unref(); writeFileSync(${JSON.stringify(descendantPidPath)}, String(descendant.pid)); writeFileSync(${JSON.stringify(leaderExitPath)}, "exited");`)}]).then((result) => { process.exitCode = result.status ?? 1; }).catch(() => { process.exitCode = 1; });`,
+      `const { rmSync, writeFileSync } = require("node:fs"); const { spawn } = require("node:child_process"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const { installDeterministicCleanup } = require(${JSON.stringify(deterministicCleanupModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(processSupervisor)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); installDeterministicCleanup({ cleanup: () => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }), onSignal: async ({ cleanup, exitStatus, signal }) => { try { await runner.terminateActive(signal); } catch {} finally { cleanup(); } process.exit(exitStatus); } }); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { spawn } = require("node:child_process"); const { writeFileSync } = require("node:fs"); const descendant = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" }); descendant.unref(); writeFileSync(${JSON.stringify(descendantPidPath)}, String(descendant.pid)); writeFileSync(${JSON.stringify(leaderExitPath)}, "exited");`)}]).then((result) => { process.exitCode = result.status ?? 1; }).catch(() => { process.exitCode = 1; });`,
     );
     const helper = spawn(process.execPath, [helperPath], {
       env: { ...process.env, NODE_OPTIONS: "" },
@@ -653,7 +643,7 @@ describe("RAW swarm runner boundaries", () => {
     mkdirSync(buildDirectory);
     writeFileSync(
       helperPath,
-      `const { rmSync, writeFileSync } = require("node:fs"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(deterministicNetworkBoundary)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { spawn } = require("node:child_process"); const { writeFileSync } = require("node:fs"); const pids = []; for (let index = 0; index < 64; index += 1) { const descendant = spawn(process.execPath, ["-e", "setTimeout(() => {}, 5)"], { stdio: "ignore" }); descendant.unref(); pids.push(descendant.pid); } writeFileSync(${JSON.stringify(descendantPidsPath)}, JSON.stringify(pids)); setTimeout(() => {}, 100);`)}]).then((result) => { process.exitCode = result.status === 0 && result.signal === null ? 0 : 1; }).catch(() => { process.exitCode = 1; }).finally(() => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }));`,
+      `const { rmSync, writeFileSync } = require("node:fs"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(processSupervisor)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { spawn } = require("node:child_process"); const { writeFileSync } = require("node:fs"); const pids = []; for (let index = 0; index < 64; index += 1) { const descendant = spawn(process.execPath, ["-e", "setTimeout(() => {}, 5)"], { stdio: "ignore" }); descendant.unref(); pids.push(descendant.pid); } writeFileSync(${JSON.stringify(descendantPidsPath)}, JSON.stringify(pids)); setTimeout(() => {}, 100);`)}]).then((result) => { process.exitCode = result.status === 0 && result.signal === null ? 0 : 1; }).catch(() => { process.exitCode = 1; }).finally(() => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }));`,
     );
     const helper = spawn(process.execPath, [helperPath], {
       env: { ...process.env, NODE_OPTIONS: "" },
@@ -836,7 +826,7 @@ describe("RAW swarm runner boundaries", () => {
       "preopened-network-check",
       `#include <errno.h>\n#include <sys/socket.h>\nint main(void) { struct sockaddr_storage address; socklen_t length = sizeof(address); errno = 0; return getsockname(3, (struct sockaddr *)&address, &length) == -1 && (errno == EBADF || errno == ENOTSOCK) ? 0 : 1; }\n`,
     );
-    const checked = spawnSync(launcher, [deterministicNetworkBoundary, probe], {
+    const checked = spawnSync(launcher, [processSupervisor, probe], {
       encoding: "utf8",
       stdio: "ignore",
     });
@@ -848,13 +838,9 @@ describe("RAW swarm runner boundaries", () => {
       "unix-standard-stdio-launcher",
       `#include <stdio.h>\n#include <sys/socket.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 3) return 64; int fd = socket(AF_UNIX, SOCK_STREAM, 0); if (fd < 0) return 1; if (fd != 0 && dup2(fd, 0) < 0) return 2; if (fd != 0) close(fd); char owner[32]; snprintf(owner, sizeof(owner), "%ld", (long)getppid()); char *boundary_argv[] = { argv[1], "--owner-pid", owner, argv[2], NULL }; execv(argv[1], boundary_argv); return 127; }\n`,
     );
-    const checked = spawnSync(
-      launcher,
-      [deterministicNetworkBoundary, "/bin/true"],
-      {
-        encoding: "utf8",
-      },
-    );
+    const checked = spawnSync(launcher, [processSupervisor, "/bin/true"], {
+      encoding: "utf8",
+    });
     expect(checked.status).toBe(78);
     expect(checked.stderr).toContain("standard descriptor 0");
   });
@@ -864,13 +850,9 @@ describe("RAW swarm runner boundaries", () => {
       "anon-inode-standard-stdio-launcher",
       `#include <stdio.h>\n#include <sys/eventfd.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 3) return 64; int fd = eventfd(0, 0); if (fd < 0) return 1; if (fd != 0 && dup2(fd, 0) < 0) return 2; if (fd != 0) close(fd); char owner[32]; snprintf(owner, sizeof(owner), "%ld", (long)getppid()); char *boundary_argv[] = { argv[1], "--owner-pid", owner, argv[2], NULL }; execv(argv[1], boundary_argv); return 127; }\n`,
     );
-    const checked = spawnSync(
-      launcher,
-      [deterministicNetworkBoundary, "/bin/true"],
-      {
-        encoding: "utf8",
-      },
-    );
+    const checked = spawnSync(launcher, [processSupervisor, "/bin/true"], {
+      encoding: "utf8",
+    });
     expect(checked.status).toBe(78);
     expect(checked.stderr).toContain("standard descriptor 0");
   });
@@ -880,13 +862,9 @@ describe("RAW swarm runner boundaries", () => {
       "non-tty-character-standard-stdio-launcher",
       `#include <fcntl.h>\n#include <stdio.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 3) return 64; int fd = open("/dev/zero", O_RDONLY); if (fd < 0) return 1; if (fd != 0 && dup2(fd, 0) < 0) return 2; if (fd != 0) close(fd); char owner[32]; snprintf(owner, sizeof(owner), "%ld", (long)getppid()); char *boundary_argv[] = { argv[1], "--owner-pid", owner, argv[2], NULL }; execv(argv[1], boundary_argv); return 127; }\n`,
     );
-    const checked = spawnSync(
-      launcher,
-      [deterministicNetworkBoundary, "/bin/true"],
-      {
-        encoding: "utf8",
-      },
-    );
+    const checked = spawnSync(launcher, [processSupervisor, "/bin/true"], {
+      encoding: "utf8",
+    });
     expect(checked.status).toBe(78);
     expect(checked.stderr).toContain("standard descriptor 0");
   });
@@ -937,7 +915,7 @@ describe("RAW swarm runner boundaries", () => {
   });
 
   test("Linux x86_64 boundary kills an x32 syscall ABI attempt", () => {
-    const source = readFileSync(deterministicNetworkBoundarySource, "utf8");
+    const source = readFileSync(processSupervisorSource, "utf8");
     expect(source).toContain("DND_X32_SYSCALL_BIT");
     expect(source).toContain("BPF_JSET");
     if (process.arch !== "x64") return;
@@ -951,7 +929,7 @@ describe("RAW swarm runner boundaries", () => {
   });
 
   test("kernel source kills an unexpected syscall architecture instead of weakening", () => {
-    const source = readFileSync(deterministicNetworkBoundarySource, "utf8");
+    const source = readFileSync(processSupervisorSource, "utf8");
     expect(source).toContain("DND_AUDIT_ARCH");
     expect(source).toContain("SECCOMP_RET_KILL_PROCESS");
     expect(source).toContain("DND_X32_SYSCALL_BIT");
@@ -984,23 +962,23 @@ describe("RAW swarm runner boundaries", () => {
   });
 
   test("native boundary owns process-tree lifecycle outside the child filter", () => {
-    const source = readFileSync(deterministicNetworkBoundarySource, "utf8");
+    const source = readFileSync(processSupervisorSource, "utf8");
     expect(source).toContain("PR_SET_CHILD_SUBREAPER");
     expect(source).toContain("PR_SET_PDEATHSIG");
     expect(source).toContain("waitpid(-1");
     expect(source).toContain("fork()");
-    expect(source).toContain("setpgid(0, 0)");
-    expect(source).toContain("kill(-process_group");
     expect(source).toContain("SIGKILL");
     expect(source).toContain("DND_SUPERVISOR_SETTLEMENT_TIMEOUT_MILLISECONDS");
-    expect(source).toContain("signal_owned_process");
+    expect(source).toContain("signal_owned_descendants");
+    expect(source).not.toContain("signal_owned_group");
     expect(source).toContain("getppid()");
     expect(source).toContain("waitpid(-1, &status, WNOHANG)");
     expect(source).toContain("could not poll ");
     expect(source).toContain("before leader wait");
     expect(source).not.toContain("waitpid(-1, &status, 0)");
-    expect(source).not.toContain('readdir("/proc"');
-    expect(source).not.toContain("saw_descendant");
+    expect(source).toContain('opendir("/proc")');
+    expect(source).toContain("process_is_descendant");
+    expect(source).not.toContain("DND_PROCESS_SUPERVISION_MARKER");
   });
 
   test("native supervisor parent-death signal terminates its command", async () => {
@@ -1009,7 +987,7 @@ describe("RAW swarm runner boundaries", () => {
     const helperStderrPath = resolve(fixtureRoot, "helper.stderr");
     const helperStderrFd = openSync(helperStderrPath, "w");
     const helper = spawn(
-      deterministicNetworkBoundary,
+      processSupervisor,
       [
         "--owner-pid",
         String(process.pid),
@@ -1052,7 +1030,7 @@ describe("RAW swarm runner boundaries", () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-rapid-signals-"));
     const leaderPidPath = resolve(fixtureRoot, "leader.pid");
     const helper = spawn(
-      deterministicNetworkBoundary,
+      processSupervisor,
       [
         "--owner-pid",
         String(process.pid),
@@ -1098,7 +1076,7 @@ describe("RAW swarm runner boundaries", () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-second-signal-"));
     const leaderPidPath = resolve(fixtureRoot, "leader.pid");
     const helper = spawn(
-      deterministicNetworkBoundary,
+      processSupervisor,
       [
         "--owner-pid",
         String(process.pid),
@@ -1150,7 +1128,7 @@ describe("RAW swarm runner boundaries", () => {
       for (let index = 0; index < 128; index += 1) {
         const leaderPidPath = resolve(fixtureRoot, `leader-${index}.pid`);
         const helper = spawn(
-          deterministicNetworkBoundary,
+          processSupervisor,
           [
             "--owner-pid",
             String(process.pid),
@@ -1213,7 +1191,7 @@ describe("RAW swarm runner boundaries", () => {
     const explicitCommand = `const { writeFileSync } = require("node:fs"); writeFileSync(${JSON.stringify(explicitLeaderPidPath)}, String(process.pid)); setInterval(() => {}, 1000);`;
     const explicitHelper = spawn(
       launcher,
-      [deterministicNetworkBoundary, process.execPath, "-e", explicitCommand],
+      [processSupervisor, process.execPath, "-e", explicitCommand],
       { env: { ...process.env, NODE_OPTIONS: "" }, stdio: "ignore" },
     );
     let explicitLeaderPid: number | undefined;
@@ -1252,7 +1230,7 @@ describe("RAW swarm runner boundaries", () => {
         [
           ownerScriptPath,
           launcher,
-          deterministicNetworkBoundary,
+          processSupervisor,
           ownerHelperPidPath,
           ownerLeaderPidPath,
         ],
@@ -1312,12 +1290,7 @@ describe("RAW swarm runner boundaries", () => {
         const leaderPidPath = resolve(fixtureRoot, `leader-${index}.pid`);
         const owner = spawn(
           process.execPath,
-          [
-            ownerScriptPath,
-            deterministicNetworkBoundary,
-            helperPidPath,
-            leaderPidPath,
-          ],
+          [ownerScriptPath, processSupervisor, helperPidPath, leaderPidPath],
           { env: { ...process.env, NODE_OPTIONS: "" }, stdio: "ignore" },
         );
         const ownerStatus = await new Promise<number>(
@@ -1592,7 +1565,7 @@ describe("RAW swarm runner boundaries", () => {
         [
           "-i",
           `PATH=${fixtureRoot}:/usr/bin:/bin`,
-          deterministicNetworkBoundary,
+          processSupervisor,
           "--owner-pid",
           String(process.pid),
           aliasPath,
@@ -1883,6 +1856,29 @@ describe("RAW swarm runner boundaries", () => {
       rmSync(tsconfigAliasEntryPath, { force: true });
     }
   });
+
+  test.each(SUPPORTED_VITEST_TEST_FILE_SUFFIXES)(
+    "rejects an unclassified supported Vitest test filename %s",
+    (suffix) => {
+      const fixturePath = resolve(
+        rawSwarmOutputDirectory,
+        `unclassified-lane${suffix}`,
+      );
+      writeFileSync(fixturePath, "void 0;\n");
+      try {
+        const checked = spawnSync(process.execPath, [laneHygieneChecker], {
+          encoding: "utf8",
+        });
+        expect(checked.status).not.toBe(0);
+        expect(`${checked.stdout}${checked.stderr}`).toContain(
+          "Every Raw Swarm test must be classified",
+        );
+      } finally {
+        rmSync(fixturePath, { force: true });
+      }
+    },
+    30_000,
+  );
 
   test.each([
     ["missing value", ["--transcript", "--scenario", "example"]],
@@ -2235,13 +2231,10 @@ describe("RAW swarm runner boundaries", () => {
           'source "$1"',
           "supervision_command_pid=$$",
           "supervision_command_start_time=0",
-          'supervision_marker_pids_snapshot="$$ 0"',
           "signal_called=false",
           "kill() { signal_called=true; return 0; }",
-          "if supervision_command_group_is_owned; then exit 10; fi",
-          "if supervision_marker_snapshot_exists; then exit 11; fi",
           "supervision_signal_owned_processes TERM",
-          'if [[ "$signal_called" == true ]]; then exit 12; fi',
+          'if [[ "$signal_called" == true ]]; then exit 10; fi',
           "exit 0",
         ].join("\n"),
         "stale-supervision-identity",
@@ -2429,6 +2422,99 @@ esac
       rmSync(commonRoot, { recursive: true, force: true });
     }
   }, 15_000);
+
+  test("keeps the model lane held while a setsid child with cleared environment settles", async () => {
+    const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-setsid-git-"));
+    const commonRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-model-setsid-common-"),
+    );
+    const fakeGit = resolve(commandRoot, "git");
+    const childPidPath = resolve(commandRoot, "detached-child.pid");
+    const termPath = resolve(commandRoot, "detached-child.term");
+    const exitPath = resolve(commandRoot, "detached-child.exit");
+    const acquiredPath = resolve(commandRoot, "contender.acquired");
+    const lanePath = resolve(commonRoot, "raw-swarm-model-lane-1.lock");
+    writeFileSync(
+      fakeGit,
+      `#!/bin/sh
+set -eu
+case "$*" in
+  *--git-common-dir*) printf '%s\\n' '${commonRoot}' ;;
+  *) exit 1 ;;
+esac
+`,
+    );
+    chmodSync(fakeGit, 0o755);
+    const detachedChildSource = [
+      'const fs = require("node:fs");',
+      `fs.writeFileSync(${JSON.stringify(childPidPath)}, String(process.pid));`,
+      `process.on("SIGTERM", () => { fs.writeFileSync(${JSON.stringify(termPath)}, "term"); setTimeout(() => { fs.writeFileSync(${JSON.stringify(exitPath)}, "exit"); process.exit(0); }, 1000); });`,
+      "setInterval(() => {}, 1000);",
+    ].join(" ");
+    const commandSource = [
+      'const { spawn } = require("node:child_process");',
+      `const detached = spawn(process.execPath, ["-e", ${JSON.stringify(detachedChildSource)}], { detached: true, env: {}, stdio: "ignore" });`,
+      "detached.unref();",
+      "setInterval(() => {}, 1000);",
+    ].join(" ");
+    let contender: ReturnType<typeof spawn> | undefined;
+    const wrapper = spawn(
+      modelLaneLock,
+      ["campaign", process.execPath, "-e", commandSource],
+      {
+        cwd: repoRoot,
+        env: {
+          ...modelLaneTestEnvironment(
+            commandRoot,
+            new Date(Date.now() + 1_200).toISOString(),
+          ),
+        },
+        stdio: "ignore",
+      },
+    );
+    try {
+      await waitForFile(childPidPath);
+      const childPid = Number(readFileSync(childPidPath, "utf8").trim());
+      expect(Number.isSafeInteger(childPid)).toBe(true);
+      expect(processIsLive(childPid)).toBe(true);
+
+      contender = spawn(
+        "bash",
+        [
+          "-c",
+          'set -euo pipefail; exec 9>"$1"; while ! flock --exclusive --nonblock 9; do sleep 0.01; done; printf acquired > "$2"',
+          "lane-contender",
+          lanePath,
+          acquiredPath,
+        ],
+        { stdio: "ignore" },
+      );
+
+      await waitForFile(termPath);
+      expect(processIsLive(childPid)).toBe(true);
+      expect(existsSync(acquiredPath)).toBe(false);
+
+      await waitForFile(exitPath, 3_000);
+      await waitForProcessExit(childPid, 3_000);
+      await waitForFile(acquiredPath, 3_000);
+      await waitForProcessExit(contender.pid, 3_000);
+      await waitForProcessExit(wrapper.pid, 3_000);
+      expect(wrapper.exitCode).not.toBe(0);
+    } finally {
+      if (wrapper.exitCode === null) wrapper.kill("SIGKILL");
+      if (contender !== undefined && contender.exitCode === null) {
+        contender.kill("SIGKILL");
+      }
+      if (existsSync(childPidPath)) {
+        const childPid = Number(readFileSync(childPidPath, "utf8").trim());
+        if (Number.isSafeInteger(childPid) && processIsLive(childPid)) {
+          process.kill(childPid, "SIGKILL");
+        }
+      }
+      rmSync(commandRoot, { recursive: true, force: true });
+      rmSync(commonRoot, { recursive: true, force: true });
+    }
+  }, 20_000);
 
   test("settles a detached model child before lane reacquisition at the campaign deadline", async () => {
     const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-lane-git-"));

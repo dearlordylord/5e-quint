@@ -22,7 +22,11 @@ const wrapperNames = [
   "with-broad-workspace-lock.sh",
   "with-mbt-lock.sh",
 ];
-const fixtureScriptNames = [...wrapperNames, "process-supervision.sh"];
+const fixtureScriptNames = [
+  ...wrapperNames,
+  "process-supervision.sh",
+  "raw-swarm/process-supervisor.c",
+];
 const retiredLockNames = [
   "ralph-heavy-verification.lock",
   "ralph-broad-workspace-check.lock",
@@ -229,6 +233,7 @@ async function runSelfTest() {
   try {
     for (const scriptName of fixtureScriptNames) {
       const destination = path.join(root, "scripts", scriptName);
+      mkdirSync(path.dirname(destination), { recursive: true });
       copyFileSync(
         path.join(repositoryRoot, "scripts", scriptName),
         destination,
@@ -294,6 +299,7 @@ async function runSelfTest() {
       "detached-probe.cjs",
     ]) {
       const destination = path.join(linked, "scripts", scriptName);
+      mkdirSync(path.dirname(destination), { recursive: true });
       copyFileSync(path.join(root, "scripts", scriptName), destination);
       chmodSync(destination, 0o755);
     }
