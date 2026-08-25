@@ -1499,7 +1499,7 @@ function makeNonMovementSpatialDecisionInput(
     { readonly kind: "movementRoute" }
   >,
   answer: ScenarioSpatialRelationAnswer,
-): ScenarioSpatialDecisionInput {
+): ScenarioNonMovementSpatialDecisionInput {
   return Match.value(question).pipe(
     Match.when({ kind: "relation" }, (question) => ({
       decisionId,
