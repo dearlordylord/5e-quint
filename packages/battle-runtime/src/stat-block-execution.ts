@@ -292,15 +292,6 @@ export function statBlockProjectionIssues(
   >,
 ): readonly StatBlockProjectionIssue[] {
   const admitted = admitStatBlock(statBlock).occurrences;
-  const admittedAttacks = new Set(
-    admitted.attacks.map((occurrence) => occurrence.source),
-  );
-  const admittedMultiattacks = new Set(
-    admitted.multiattacks.map((occurrence) => occurrence.source),
-  );
-  const admittedBonusActions = new Set(
-    admitted.bonusActions.map((occurrence) => occurrence.source),
-  );
   const issues: StatBlockProjectionIssue[] = [];
 
   for (const trait of statBlock.statBlock.traits ?? []) {
@@ -329,33 +320,25 @@ export function statBlockProjectionIssues(
     issues,
     "actions",
     statBlock.statBlock.actions,
-    admittedAttacks,
-    admittedMultiattacks,
-    new Set(),
+    admitted,
   );
   appendActionProjectionIssues(
     issues,
     "bonusActions",
     statBlock.statBlock.bonusActions,
-    admittedAttacks,
-    new Set(),
-    admittedBonusActions,
+    admitted,
   );
   appendActionProjectionIssues(
     issues,
     "reactions",
     statBlock.statBlock.reactions,
-    new Set(),
-    new Set(),
-    new Set(),
+    admitted,
   );
   appendActionProjectionIssues(
     issues,
     "legendaryActions",
     statBlock.statBlock.legendaryActions?.actions,
-    admittedAttacks,
-    new Set(),
-    new Set(),
+    admitted,
   );
   return issues;
 }
@@ -364,18 +347,26 @@ function appendActionProjectionIssues(
   issues: StatBlockProjectionIssue[],
   section: StatBlockActionProjectionSection,
   actions: CreatureActions | undefined,
-  admittedAttacks: ReadonlySet<CreatureNamedAttackRoll>,
-  admittedMultiattacks: ReadonlySet<CreatureNamedMultiattack>,
-  admittedBonusActions: ReadonlySet<CreatureNamedActionOption>,
+  admitted: AdmittedStatBlockOccurrences,
 ): void {
   if (actions === undefined) return;
   for (const attack of actions.attacks ?? []) {
-    if (!admittedAttacks.has(attack)) {
+    if (
+      !admitted.attacks.some(
+        (occurrence) =>
+          occurrence.section === section && occurrence.source === attack,
+      )
+    ) {
       issues.push(actionProjectionIssue(section, "attack"));
     }
   }
   for (const multiattack of actions.multiattacks ?? []) {
-    if (!admittedMultiattacks.has(multiattack)) {
+    if (
+      section !== "actions" ||
+      !admitted.multiattacks.some(
+        (occurrence) => occurrence.source === multiattack,
+      )
+    ) {
       issues.push(actionProjectionIssue(section, "multiattack"));
     }
   }
@@ -388,7 +379,12 @@ function appendActionProjectionIssues(
     issues.push(actionProjectionIssue(section, "support"));
   }
   for (const actionOption of actions.actionOptions ?? []) {
-    if (!admittedBonusActions.has(actionOption)) {
+    if (
+      section !== "bonusActions" ||
+      !admitted.bonusActions.some(
+        (occurrence) => occurrence.source === actionOption,
+      )
+    ) {
       issues.push(actionProjectionIssue(section, "actionOption"));
     }
   }

@@ -1,6 +1,7 @@
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { statBlockId } from "@dnd/shared/game-facts";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
 import {
   battleAmmunitionStock,
@@ -12,6 +13,7 @@ import {
   statBlockProjectionIssues,
   statBlockProjectionIssuesForActor,
   startBattle,
+  type StatBlockProjectionIssue,
 } from "./index.ts";
 import { statBlockRecord } from "./battle-runtime.test-support.ts";
 
@@ -62,6 +64,12 @@ function mechanicalProjection(session: ReturnType<typeof startedStatBlock>) {
   };
 }
 
+function firstProjectionIssue(
+  issues: ReadonlyNonEmptyArray<StatBlockProjectionIssue>,
+): StatBlockProjectionIssue {
+  return issues[0];
+}
+
 describe("generic Stat Block projection", () => {
   test("renamed equivalent mechanics project to the same creature facts and Acts", () => {
     const source = statBlockRecord();
@@ -92,6 +100,34 @@ describe("generic Stat Block projection", () => {
       discoverBattleActsWithStatBlockProjectionIssues(renamedSession)
         .statBlockProjectionIssues,
     ).toEqual([]);
+  });
+
+  test("does not admit a reused action attack in another action section", () => {
+    const source = statBlockRecord();
+    const actionAttack = source.statBlock.actions?.attacks?.[0];
+    if (actionAttack === undefined) {
+      throw new Error("Expected a fixture action attack.");
+    }
+    const reusedAcrossSections = {
+      ...source,
+      id: statBlockId("synthetic-reused-action-attack"),
+      statBlock: {
+        ...source.statBlock,
+        bonusActions: {
+          attacks: [actionAttack] as const,
+        },
+      },
+    };
+
+    expect(statBlockProjectionIssues(reusedAcrossSections)).toContainEqual({
+      tag: "statBlockProjectionIssue",
+      source: {
+        kind: "action",
+        section: "bonusActions",
+        shape: "attack",
+        nonExecutableReason: "unsupportedActionShape",
+      },
+    });
   });
 
   test("reports every represented unsupported trait and action shape as a typed issue", () => {
@@ -146,6 +182,12 @@ describe("generic Stat Block projection", () => {
 
     const session = startedStatBlock(unsupported);
     const actorId = combatantId("stat-block-projection-actor");
+    const discovery = discoverBattleActsWithStatBlockProjectionIssues(session);
+    for (const group of discovery.statBlockProjectionIssues) {
+      expect(firstProjectionIssue(group.issues).tag).toBe(
+        "statBlockProjectionIssue",
+      );
+    }
     expect(
       statBlockProjectionIssuesForActor(
         session.state,
@@ -153,10 +195,7 @@ describe("generic Stat Block projection", () => {
         actorId,
       ),
     ).toEqual(statBlockProjectionIssues(unsupported));
-    expect(
-      discoverBattleActsWithStatBlockProjectionIssues(session)
-        .statBlockProjectionIssues,
-    ).toEqual([
+    expect(discovery.statBlockProjectionIssues).toEqual([
       { combatantId: actorId, issues: statBlockProjectionIssues(unsupported) },
     ]);
   });

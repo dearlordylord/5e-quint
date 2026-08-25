@@ -8,6 +8,7 @@ import type {
 import type { AuthoredSelectedSpellInvocation } from "./character-execution-admission.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import { Either, Match } from "effect";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { isCharacterProcedureBattleSubject } from "./battle-subjects.ts";
 import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
@@ -100,7 +101,7 @@ export type BattleStatBlockActDiscovery = {
   readonly acts: readonly AvailableBattleAct[];
   readonly statBlockProjectionIssues: readonly {
     readonly combatantId: CombatantId;
-    readonly issues: readonly StatBlockProjectionIssue[];
+    readonly issues: ReadonlyNonEmptyArray<StatBlockProjectionIssue>;
   }[];
 };
 
@@ -115,9 +116,14 @@ export function discoverBattleActsWithStatBlockProjectionIssues(
         session.context,
         combatantId,
       );
-      return issues === null || issues.length === 0
-        ? []
-        : [{ combatantId, issues }];
+      if (issues === null) return [];
+      const [firstIssue, ...remainingIssues] = issues;
+      if (firstIssue === undefined) return [];
+      const nonEmptyIssues: ReadonlyNonEmptyArray<StatBlockProjectionIssue> = [
+        firstIssue,
+        ...remainingIssues,
+      ];
+      return [{ combatantId, issues: nonEmptyIssues }];
     },
   );
   return {
