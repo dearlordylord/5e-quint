@@ -952,6 +952,18 @@ function sourcePathsForQualityTest(testPath) {
   return paths;
 }
 
+function regularSourceFile(sourcePath, sourceKind, displayPath) {
+  const canonicalSourcePath = canonicalPathForOwnership(sourcePath);
+  const observation = sourceCandidateObservation(canonicalSourcePath);
+  if (observation.kind === "failure") throw new Error(observation.message);
+  if (observation.kind !== "file") {
+    throw new Error(
+      `${sourceKind} does not exist as a regular file: ${displayPath}`,
+    );
+  }
+  return canonicalSourcePath;
+}
+
 function repositoryOwnedSourceFile(pathArgument, sourceKind) {
   const sourcePath = resolve(root, pathArgument);
   if (!sourceCandidateOwnership(sourcePath)) {
@@ -959,26 +971,11 @@ function repositoryOwnedSourceFile(pathArgument, sourceKind) {
       `${sourceKind} path ${pathArgument} is outside the repository or enters node_modules`,
     );
   }
-  const canonicalSourcePath = canonicalPathForOwnership(sourcePath);
-  const observation = sourceCandidateObservation(canonicalSourcePath);
-  if (observation.kind === "failure") throw new Error(observation.message);
-  if (observation.kind !== "file") {
-    throw new Error(
-      `${sourceKind} does not exist as a regular file: ${pathArgument}`,
-    );
-  }
-  return canonicalSourcePath;
+  return regularSourceFile(sourcePath, sourceKind, pathArgument);
 }
 
 function standaloneSourceFile(pathArgument) {
-  const sourcePath = resolve(root, pathArgument);
-  const canonicalSourcePath = canonicalPathForOwnership(sourcePath);
-  const observation = sourceCandidateObservation(canonicalSourcePath);
-  if (observation.kind === "failure") throw new Error(observation.message);
-  if (observation.kind !== "file") {
-    throw new Error(`Source does not exist as a regular file: ${pathArgument}`);
-  }
-  return canonicalSourcePath;
+  return regularSourceFile(resolve(root, pathArgument), "Source", pathArgument);
 }
 
 function assertSourceCapabilities(sourcePath) {
