@@ -91,6 +91,7 @@ import {
 } from "./sdk-player/consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
 import { scenarioSetupStatBlocks } from "./sdk-player/scenario-setup-runtime.ts";
+import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
 import {
   currentGitRevision,
   decodeScenarioId,
@@ -1944,7 +1945,9 @@ export function benchmarkCommands(input: {
     resolve(input.paths.contextDirectory, "player.md"),
   );
   const player =
-    "pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts " +
+    "RAW_SWARM_EXPECTED_GIT_SHA=" +
+    input.implementationGitSha +
+    " pnpm raw-swarm:model:trial -- sdk-player " +
     FIXED_SCENARIO_ID +
     " --execution-id " +
     input.executionId +
@@ -1977,14 +1980,14 @@ export function benchmarkCommands(input: {
       "pnpm exec tsx scripts/raw-swarm/replay-sdk-player.ts " +
       repoRelative(input.paths.playerDirectory),
     postPlayReview:
-      "RAW_REVIEW_IMPLEMENTATION_GIT_SHA=" +
+      "RAW_SWARM_EXPECTED_GIT_SHA=" +
       input.implementationGitSha +
       " RAW_REVIEW_CONTEXT_PROFILE=" +
       input.profile +
       " RAW_REVIEW_CONTEXT_ROLE=postPlayReview" +
       " RAW_REVIEW_CONTEXT_PATH=" +
       repoRelative(resolve(input.paths.contextDirectory, "postPlayReview.md")) +
-      " scripts/raw-swarm/run-raw-review.sh scripts/raw-swarm/reviews/sdk-player.prompt.txt " +
+      " pnpm raw-swarm:model:trial -- post-play-review scripts/raw-swarm/reviews/sdk-player.prompt.txt " +
       repoRelative(input.paths.playerDirectory) +
       "/evidence/sdk-calls.jsonl " +
       repoRelative(input.paths.postPlayReview) +
@@ -2722,6 +2725,7 @@ async function main(args: readonly string[]): Promise<void> {
   const benchmarkId = args[1];
   const profileInput = args[2];
   if (command === "prepare") {
+    assertModelEntryPointGuard();
     if (benchmarkId === undefined || args.length > 3) {
       fail(
         "Usage: fixed-scenario-benchmark.ts prepare <benchmark-id> [profile]",

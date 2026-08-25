@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { Either, Schema } from "effect";
 
 import { replayRetainedScenarioReview } from "./generate-scenario.ts";
+import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
 import { RetainedScenarioReviewInputSchema } from "./scenario-review-input.ts";
 import { currentGitRevision, GitShaSchema, repoRoot } from "./transcript.ts";
 
@@ -25,6 +26,7 @@ function retainedInput(path: string) {
 }
 
 async function main(args: readonly string[]): Promise<void> {
+  assertModelEntryPointGuard();
   const [retainedInputPath, outputInput, ledgerInput, ...unexpected] = args;
   if (
     retainedInputPath === undefined ||

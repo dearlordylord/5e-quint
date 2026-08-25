@@ -10,12 +10,14 @@ import { spawnSync } from "node:child_process";
 import { Either } from "effect";
 
 import { decodeScenarioId, repoRoot } from "./transcript.ts";
+import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
 
 function fail(message: string): never {
   throw new Error(message);
 }
 
 function main(args: readonly string[]): void {
+  assertModelEntryPointGuard();
   const [scenarioIdInput, ...unexpected] = args;
   if (scenarioIdInput === undefined || unexpected.length > 0) {
     fail("Usage: run-freeplay.ts <scenario-id>");

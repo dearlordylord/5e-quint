@@ -88,6 +88,7 @@ import {
   RejectedScenarioCandidateRecordSchema,
 } from "./scenario-catalogue.ts";
 import { AdmittedScenarioRecordSchema } from "./scenario-admission.ts";
+import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
 import type {
   EvidenceSetId,
   PlannedScenarioId,
@@ -717,6 +718,7 @@ function verifyRetainedScenario(
 }
 
 async function main(args: readonly string[]): Promise<void> {
+  assertModelEntryPointGuard();
   const [configInput, ...options] = args;
   const dbFlagIndex = options.indexOf("--db");
   const dbPath =

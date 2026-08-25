@@ -13,6 +13,7 @@ import { resolve } from "node:path";
 import { Either, Schema } from "effect";
 
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
+import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
 import { runCodexInvocation } from "./model-telemetry.ts";
 import { RAW_SWARM_STAGE_PLAN_REASONS } from "./scenario-stage-plan.ts";
 import { retainAdmittedScenarioStagePlan } from "./stage-plan-authority.ts";
@@ -115,6 +116,7 @@ function typecheckSetup(scratch: string, phase: "neutral" | "retained"): void {
 }
 
 async function main(args: readonly string[]): Promise<void> {
+  assertModelEntryPointGuard();
   const [scenarioInput, ...unexpected] = args;
   const scenarioId = decodeScenarioId(scenarioInput);
   if (Either.isLeft(scenarioId) || unexpected.length > 0) {

@@ -46,10 +46,12 @@ if (operation === undefined) {
     `Unknown model-backed operation ${operationName}. Expected one of: ${Object.keys(MODEL_BACKED_OPERATIONS).join(", ")}.`,
   );
 }
-if (!/^[123]$/.test(process.env.DND_RAW_SWARM_MODEL_LANE ?? "")) {
+if (
+  !/^[123]$/.test(process.env.DND_RAW_SWARM_MODEL_LANE ?? "") ||
+  process.env.DND_RAW_SWARM_MODEL_LANE_GUARD !== "v1"
+) {
   fail("Raw Swarm model operations require the public model-lane lock.");
 }
-
 const expectedGitSha = process.env.RAW_SWARM_EXPECTED_GIT_SHA ?? "";
 if (!/^[0-9a-f]{40}$/.test(expectedGitSha)) {
   fail(
@@ -101,7 +103,10 @@ if (authentication.error !== undefined || authentication.status !== 0) {
 }
 
 const commandArguments = [...operation.fixedArguments, ...operationArguments];
-const environment = { ...process.env };
+const environment = {
+  ...process.env,
+  DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD: `v1:${expectedGitSha}`,
+};
 if (operationName === "sdk-player") {
   if (!commandArguments.includes("--implementation-git-sha")) {
     commandArguments.push("--implementation-git-sha", expectedGitSha);

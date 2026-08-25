@@ -97,6 +97,7 @@ import {
   canonicalRepositoryOutputPath,
   canonicalRepositoryReadPath,
 } from "./repository-path.ts";
+import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
 
 const PLAYER_MODEL = "gpt-5.6-sol";
 const PLAYER_REASONING_EFFORT = "medium";
@@ -490,6 +491,7 @@ export function reconcilePlayerInvocation(
 }
 
 async function main(args: readonly string[]): Promise<void> {
+  assertModelEntryPointGuard();
   const [scenarioId, ...options] = args;
   const decodedScenarioId = decodeScenarioId(scenarioId);
   const instructionalFallback = options.includes("--instructional-isolation");

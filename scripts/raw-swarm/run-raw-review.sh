@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ ! "${RAW_SWARM_EXPECTED_GIT_SHA:-}" =~ ^[0-9a-f]{40}$ ||
+  "${DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD:-}" != "v1:${RAW_SWARM_EXPECTED_GIT_SHA}" ||
+  ! "${DND_RAW_SWARM_MODEL_LANE:-}" =~ ^[123]$ ||
+  "${DND_RAW_SWARM_MODEL_LANE_GUARD:-}" != "v1" ]]; then
+  printf '%s\n' 'Raw Swarm model-backed entrypoints must be launched through the public model wrapper.' >&2
+  exit 64
+fi
+
 RAW_REVIEW_ROOT=$(realpath -- "$(git rev-parse --show-toplevel)")
 RAW_REVIEW_PROMPT=${1:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
 RAW_REVIEW_TRANSCRIPT=${2:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}

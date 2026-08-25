@@ -5,6 +5,7 @@ const { join, relative, resolve } = require("node:path");
 const {
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
   MODEL_BACKED_OPERATIONS,
+  MODEL_BACKED_ENTRYPOINTS,
   MODEL_BACKED_PROFILE_BUDGET_SECONDS,
   RAW_SWARM_TESTS_OUTSIDE_QUALITY,
 } = require("./lane-classification.cjs");
@@ -61,34 +62,44 @@ assert.match(
 );
 assert.equal(
   scripts["raw-swarm:model:trial"],
-  ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/raw-swarm/with-model-lane-lock.sh node scripts/raw-swarm/run-model-backed.mjs trial",
+  ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/raw-swarm/with-model-lane-lock.sh trial node scripts/raw-swarm/run-model-backed.mjs trial",
 );
 assert.equal(
   scripts["raw-swarm:model:campaign"],
-  ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/raw-swarm/with-model-lane-lock.sh node scripts/raw-swarm/run-model-backed.mjs campaign",
+  ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/raw-swarm/with-model-lane-lock.sh campaign node scripts/raw-swarm/run-model-backed.mjs campaign",
 );
 
 const qualityBody = scripts["quality:body"];
 assert.match(qualityBody, /pnpm check:raw-swarm-lane-hygiene/);
 assert.match(qualityBody, /pnpm check:raw-swarm-deterministic:body/);
 assert.doesNotMatch(qualityBody, /raw-swarm:model|check:raw-swarm-sdk-player/);
-
-const modelEntrypoints = new Set(
-  Object.values(MODEL_BACKED_OPERATIONS).map(({ command }) => command),
-);
+for (const entrypoint of MODEL_BACKED_ENTRYPOINTS) {
+  assert.doesNotMatch(
+    qualityBody,
+    new RegExp(entrypoint.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    `Quality must not invoke model-backed entrypoint ${entrypoint}.`,
+  );
+}
 assert.equal(
-  modelEntrypoints.size,
-  Object.keys(MODEL_BACKED_OPERATIONS).length,
+  new Set(MODEL_BACKED_ENTRYPOINTS).size,
+  MODEL_BACKED_ENTRYPOINTS.length,
 );
+assert.equal(Object.keys(MODEL_BACKED_OPERATIONS).length, 8);
 assert.deepEqual(MODEL_BACKED_PROFILE_BUDGET_SECONDS, {
   campaign: 28_800,
   trial: 7_200,
 });
-for (const path of modelEntrypoints) {
+for (const path of MODEL_BACKED_ENTRYPOINTS) {
   assert.equal(
     QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.includes(path),
     false,
     `Model entry point ${path} entered the deterministic inventory.`,
+  );
+  const source = readFileSync(join(root, path), "utf8");
+  assert.match(
+    source,
+    /assertModelEntryPointGuard\(\)|DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD/,
+    `Model entry point ${path} must enforce the public model-entrypoint guard.`,
   );
 }
 
@@ -107,7 +118,11 @@ assert.match(
   readFileSync(join(root, "scripts/raw-swarm/run-model-backed.mjs"), "utf8"),
   /MODEL_BACKED_PROFILE_BUDGET_SECONDS\[profile\]/,
 );
+assert.match(
+  readFileSync(join(root, "scripts/raw-swarm/run-model-backed.mjs"), "utf8"),
+  /DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD/,
+);
 
 process.stdout.write(
-  `Raw Swarm lane hygiene passed: ${QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.length} quality-owned deterministic tests, ${Object.keys(RAW_SWARM_TESTS_OUTSIDE_QUALITY).length} closed prototype exclusions, and ${modelEntrypoints.size} explicit model-backed operations.\n`,
+  `Raw Swarm lane hygiene passed: ${QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.length} quality-owned deterministic tests, ${Object.keys(RAW_SWARM_TESTS_OUTSIDE_QUALITY).length} closed prototype exclusions, and ${Object.keys(MODEL_BACKED_OPERATIONS).length} explicit model-backed operations.\n`,
 );

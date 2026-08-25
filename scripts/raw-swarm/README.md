@@ -23,6 +23,9 @@ the Codex CLI is not authenticated. Model work uses one of three repository
 model-lane locks; catalogue-writing operations additionally use the canonical
 one-at-a-time authoring protocol. The active #332 operation remains responsible
 for assigning distinct worktrees and Evidence Sets to its three lanes.
+The public commands are the only supported model entrypoints: they perform
+the lock, credential, revision, and configuration checks before handing off a
+guarded process. Direct model scripts reject invocation without that handoff.
 
 The model invocation owner enforces a 30-minute timeout for each model call.
 The public wrapper also caps a complete manual-trial operation at two hours and

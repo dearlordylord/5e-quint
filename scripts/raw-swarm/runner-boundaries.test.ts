@@ -1,4 +1,4 @@
-import { execFile, execFileSync, spawnSync } from "node:child_process";
+import { execFile, execFileSync, spawn, spawnSync } from "node:child_process";
 import {
   chmodSync,
   existsSync,
@@ -26,10 +26,33 @@ const sdkPlayerLauncher = resolve(
   repoRoot,
   "scripts/raw-swarm/run-sdk-player.ts",
 );
+const modelLaneLock = resolve(
+  repoRoot,
+  "scripts/raw-swarm/with-model-lane-lock.sh",
+);
 const currentGitSha = execFileSync("git", ["rev-parse", "HEAD"], {
   cwd: repoRoot,
   encoding: "utf8",
 }).trim();
+const modelEntryPointTestEnvironment: NodeJS.ProcessEnv = {
+  ...process.env,
+  RAW_SWARM_EXPECTED_GIT_SHA: currentGitSha,
+  DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD: `v1:${currentGitSha}`,
+  DND_RAW_SWARM_MODEL_LANE: "1",
+  DND_RAW_SWARM_MODEL_LANE_GUARD: "v1",
+};
+
+function guardedModelEnvironment(
+  env: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
+  return {
+    ...env,
+    RAW_SWARM_EXPECTED_GIT_SHA: currentGitSha,
+    DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD: `v1:${currentGitSha}`,
+    DND_RAW_SWARM_MODEL_LANE: "1",
+    DND_RAW_SWARM_MODEL_LANE_GUARD: "v1",
+  };
+}
 
 function reviewTranscriptPath(testRoot: string): string {
   const evidenceDirectory = resolve(testRoot, "evidence");
@@ -53,7 +76,7 @@ function run(
 ): void {
   execFileSync("pnpm", ["exec", "tsx", script, ...args], {
     cwd: repoRoot,
-    env,
+    env: guardedModelEnvironment(env),
     stdio: "pipe",
   });
 }
@@ -67,10 +90,40 @@ function runAsync(
     execFile(
       "pnpm",
       ["exec", "tsx", script, ...args],
-      { cwd: repoRoot, env },
+      { cwd: repoRoot, env: guardedModelEnvironment(env) },
       (error) => (error === null ? resolveRun() : rejectRun(error)),
     );
   });
+}
+
+function processStartTime(pid: number): string {
+  const stat = readFileSync(`/proc/${pid}/stat`, "utf8");
+  const fields = stat
+    .slice(stat.lastIndexOf(")") + 2)
+    .trim()
+    .split(/\s+/);
+  const startTime = fields[19];
+  if (startTime === undefined) throw new Error("Missing process start time.");
+  return startTime;
+}
+
+function modelLaneTestEnvironment(
+  commandRoot: string,
+  deadline: string,
+): NodeJS.ProcessEnv {
+  const environment: NodeJS.ProcessEnv = {
+    ...process.env,
+    PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
+    DND_RESOURCE_LOCK_OWNER_PID: String(process.pid),
+    DND_RESOURCE_LOCK_OWNER_START_TIME: processStartTime(process.pid),
+    RAW_SWARM_OPERATION_ID: "synthetic-campaign",
+    RAW_SWARM_OPERATION_DEADLINE_UTC: deadline,
+  };
+  delete environment.DND_RESOURCE_LOCK_KIND;
+  delete environment.DND_RAW_SWARM_MODEL_LANE;
+  delete environment.DND_RAW_SWARM_MODEL_LANE_GUARD;
+  delete environment.DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD;
+  return environment;
 }
 
 describe("RAW swarm runner boundaries", () => {
@@ -338,6 +391,114 @@ describe("RAW swarm runner boundaries", () => {
     );
   }, 30_000);
 
+  test("rejects a direct model entrypoint without the public wrapper guard", () => {
+    const environment = { ...process.env };
+    delete environment.DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD;
+    delete environment.DND_RAW_SWARM_MODEL_LANE;
+    const result = spawnSync("pnpm", ["exec", "tsx", sdkPlayerLauncher], {
+      cwd: repoRoot,
+      env: environment,
+      encoding: "utf8",
+    });
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}${result.stderr}`).toContain(
+      "must be launched through the public model wrapper",
+    );
+  }, 30_000);
+
+  test("bounds model-lane acquisition by the campaign deadline", async () => {
+    const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-lane-git-"));
+    const commonRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-lane-common-"));
+    const fakeGit = resolve(commandRoot, "git");
+    writeFileSync(
+      fakeGit,
+      `#!/bin/sh
+set -eu
+case "$*" in
+  *--git-common-dir*) printf '%s\\n' '${commonRoot}' ;;
+  *) exit 1 ;;
+esac
+`,
+    );
+    chmodSync(fakeGit, 0o755);
+    const holders = [1, 2, 3].map((lane) =>
+      spawn(
+        "flock",
+        [
+          "--exclusive",
+          resolve(commonRoot, `raw-swarm-model-lane-${lane}.lock`),
+          "sleep",
+          "5",
+        ],
+        { stdio: "ignore" },
+      ),
+    );
+    try {
+      await new Promise((resolveReady) => setTimeout(resolveReady, 100));
+      const result = spawnSync(modelLaneLock, ["campaign", "true"], {
+        cwd: repoRoot,
+        env: modelLaneTestEnvironment(
+          commandRoot,
+          new Date(Date.now() + 1_200).toISOString(),
+        ),
+        encoding: "utf8",
+      });
+      expect(result.status).toBe(124);
+      expect(`${result.stdout}${result.stderr}`).toContain(
+        "while acquiring a lane",
+      );
+    } finally {
+      await Promise.all(
+        holders.map(
+          (holder) =>
+            new Promise<void>((resolveExited) => {
+              if (holder.exitCode !== null) {
+                resolveExited();
+                return;
+              }
+              holder.once("exit", () => resolveExited());
+              holder.kill("SIGTERM");
+            }),
+        ),
+      );
+      rmSync(commandRoot, { recursive: true, force: true });
+      rmSync(commonRoot, { recursive: true, force: true });
+    }
+  }, 15_000);
+
+  test("caps model execution by the earlier campaign deadline", () => {
+    const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-lane-git-"));
+    const commonRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-lane-common-"));
+    const fakeGit = resolve(commandRoot, "git");
+    writeFileSync(
+      fakeGit,
+      `#!/bin/sh
+set -eu
+case "$*" in
+  *--git-common-dir*) printf '%s\\n' '${commonRoot}' ;;
+  *) exit 1 ;;
+esac
+`,
+    );
+    chmodSync(fakeGit, 0o755);
+    try {
+      const startedAt = Date.now();
+      const result = spawnSync(modelLaneLock, ["campaign", "sleep", "5"], {
+        cwd: repoRoot,
+        env: modelLaneTestEnvironment(
+          commandRoot,
+          new Date(Date.now() + 1_200).toISOString(),
+        ),
+        encoding: "utf8",
+      });
+      expect(result.status).toBe(124);
+      expect(Date.now() - startedAt).toBeLessThan(4_000);
+    } finally {
+      rmSync(commandRoot, { recursive: true, force: true });
+      rmSync(commonRoot, { recursive: true, force: true });
+    }
+  }, 15_000);
+
   test("retains one runner-owned startedAt across execution and supervisor handoff", async () => {
     const outputRoot = mkdtempSync(
       resolve(repoRoot, "scripts/raw-swarm/out/runner-started-at-"),
@@ -372,7 +533,7 @@ esac
           "--instructional-isolation",
         ],
         {
-          ...process.env,
+          ...modelEntryPointTestEnvironment,
           PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
         },
       );
@@ -466,7 +627,7 @@ esac
             mismatchedGitSha,
           ],
           {
-            ...process.env,
+            ...modelEntryPointTestEnvironment,
             PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
           },
         ),
@@ -551,7 +712,7 @@ printf '%s' '{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaa
       {
         cwd: repoRoot,
         env: {
-          ...process.env,
+          ...modelEntryPointTestEnvironment,
           PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
           RAW_REVIEW_CAPTURE: capturePath,
           RAW_REVIEW_CONTEXT_PATH: relative(repoRoot, contextPath),
@@ -704,7 +865,7 @@ printf '%s' '{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaa
       {
         cwd: repoRoot,
         env: {
-          ...process.env,
+          ...modelEntryPointTestEnvironment,
           PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
           RAW_REVIEW_CAPTURE: capturePath,
           RAW_REVIEW_CONTEXT_PATH: relative(repoRoot, contextPath),
@@ -839,7 +1000,7 @@ esac
       {
         cwd: repoRoot,
         env: {
-          ...process.env,
+          ...modelEntryPointTestEnvironment,
           PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
           RAW_REVIEW_PNPM_CAPTURE: pnpmCapturePath,
           RAW_REVIEW_IMPLEMENTATION_GIT_SHA: currentGitSha,
@@ -895,7 +1056,7 @@ esac
       {
         cwd: repoRoot,
         env: {
-          ...process.env,
+          ...modelEntryPointTestEnvironment,
           PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
           RAW_REVIEW_IMPLEMENTATION_GIT_SHA: "not-a-git-sha",
         },
@@ -920,7 +1081,7 @@ esac
         {
           cwd: repoRoot,
           env: {
-            ...process.env,
+            ...modelEntryPointTestEnvironment,
             PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
             RAW_REVIEW_IMPLEMENTATION_GIT_SHA: mismatchedGitSha,
           },

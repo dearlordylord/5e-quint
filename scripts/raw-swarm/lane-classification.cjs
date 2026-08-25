@@ -51,6 +51,7 @@ const MODEL_BACKED_OPERATIONS = Object.freeze({
   },
   "post-play-review": {
     command: "scripts/raw-swarm/run-raw-review.sh",
+    additionalEntrypoints: ["scripts/raw-swarm/model-telemetry-cli.ts"],
     fixedArguments: [],
     writesCatalogue: false,
   },
@@ -91,9 +92,23 @@ const MODEL_BACKED_PROFILE_BUDGET_SECONDS = Object.freeze({
   trial: 2 * 60 * 60,
 });
 
+const MODEL_BACKED_ENTRYPOINTS = Object.freeze(
+  [
+    ...new Set(
+      Object.values(MODEL_BACKED_OPERATIONS).flatMap(
+        ({ command, additionalEntrypoints = [] }) => [
+          command,
+          ...additionalEntrypoints,
+        ],
+      ),
+    ),
+  ].sort(),
+);
+
 module.exports = {
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
   RAW_SWARM_TESTS_OUTSIDE_QUALITY,
   MODEL_BACKED_OPERATIONS,
+  MODEL_BACKED_ENTRYPOINTS,
   MODEL_BACKED_PROFILE_BUDGET_SECONDS,
 };

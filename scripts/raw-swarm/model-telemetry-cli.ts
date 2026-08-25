@@ -8,6 +8,7 @@ import {
   runCodexInvocation,
   type ModelInvocationPhase,
 } from "./model-telemetry.ts";
+import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
 import { ReviewOutputSchema } from "./review-contract.ts";
 import { decodeScenarioId, GitShaSchema } from "./transcript.ts";
 import {
@@ -27,6 +28,7 @@ function flag(args: readonly string[], name: string): string {
 }
 
 async function runPostPlayInvocation(args: readonly string[]): Promise<number> {
+  assertModelEntryPointGuard();
   const root = flag(args, "--root");
   const inputPath = flag(args, "--input");
   const outputPath = flag(args, "--output");

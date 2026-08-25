@@ -14,6 +14,7 @@ import { resolve } from "node:path";
 import { Either, Match, Schema } from "effect";
 
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
+import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
 import { runCodexInvocation } from "./model-telemetry.ts";
 import {
   RAW_SWARM_STAGE_PLAN_REASONS,
@@ -41,6 +42,7 @@ function fail(message: string): never {
 }
 
 async function main(args: readonly string[]): Promise<void> {
+  assertModelEntryPointGuard();
   const [scenarioInput, ...unexpected] = args;
   const scenarioId = decodeScenarioId(scenarioInput);
   if (Either.isLeft(scenarioId) || unexpected.length > 0) {

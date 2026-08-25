@@ -836,7 +836,7 @@ declaration distribution remains in the deleted scratch directory.
 Run the focused executable gate with:
 
 ```sh
-mise exec -- pnpm check:raw-swarm-sdk-player
+mise exec -- pnpm check:raw-swarm-deterministic
 ```
 
 ## Run the existing MCP prototype
