@@ -402,6 +402,7 @@ static int validate_host_prerequisites(void) {
 #define DND_SUPERVISOR_SETTLEMENT_TIMEOUT_MILLISECONDS 1000LL
 #define DND_SUPERVISOR_POLL_NANOSECONDS 20000000L
 #define DND_SUPERVISOR_NON_CLEAN_EXIT 70
+#define DND_OWNER_PID_OPTION "--owner-pid"
 
 static volatile sig_atomic_t dnd_pending_signal = 0;
 
@@ -440,21 +441,64 @@ static int reset_child_signal_handlers(void) {
 }
 
 static int take_pending_signal(void) {
+  sigset_t handled_signals;
+  sigset_t previous_mask;
+  sigemptyset(&handled_signals);
+  sigaddset(&handled_signals, SIGHUP);
+  sigaddset(&handled_signals, SIGINT);
+  sigaddset(&handled_signals, SIGTERM);
+  if (sigprocmask(SIG_BLOCK, &handled_signals, &previous_mask) != 0) {
+    fprintf(stderr,
+            "Raw Swarm deterministic network boundary could not block "
+            "supervisor signals while taking a snapshot: %s\n",
+            strerror(errno));
+    return -1;
+  }
   const sig_atomic_t pending = dnd_pending_signal;
   dnd_pending_signal = 0;
+  if (sigprocmask(SIG_SETMASK, &previous_mask, NULL) != 0) {
+    fprintf(stderr,
+            "Raw Swarm deterministic network boundary could not restore "
+            "supervisor signal handling after a snapshot: %s\n",
+            strerror(errno));
+    return -1;
+  }
   return (int)pending;
 }
 
-static int configure_parent_death_signal(void) {
-  const pid_t expected_parent = getppid();
+static int parse_owner_pid(const char *value, pid_t *owner_pid) {
+  char *end = NULL;
+  errno = 0;
+  const long parsed = strtol(value, &end, 10);
+  if (errno != 0 || end == value || *end != '\0' || parsed <= 0 ||
+      parsed > INT_MAX) {
+    fprintf(stderr,
+            "Raw Swarm deterministic network boundary received an invalid "
+            "owner PID.\n");
+    return 1;
+  }
+  *owner_pid = (pid_t)parsed;
+  return 0;
+}
+
+static int configure_parent_death_signal(pid_t expected_parent) {
+  if (getppid() != expected_parent) {
+    fprintf(stderr,
+            "Raw Swarm deterministic network boundary owner PID no longer "
+            "matches its immediate parent.\n");
+    return 1;
+  }
   if (prctl(PR_SET_PDEATHSIG, SIGTERM, 0, 0, 0) != 0) {
     fprintf(stderr,
             "Raw Swarm deterministic network boundary could not configure "
-            "the parent-death signal: %s\n",
+            "the parent-death signal for its owner: %s\n",
             strerror(errno));
     return 1;
   }
   if (getppid() != expected_parent) {
+    fprintf(stderr,
+            "Raw Swarm deterministic network boundary owner exited while "
+            "the parent-death signal was being configured.\n");
     (void)kill(getpid(), SIGTERM);
     return 1;
   }
@@ -468,7 +512,7 @@ static long long monotonic_milliseconds(void) {
 }
 
 static int reap_available_children(pid_t leader_pid, bool *leader_reaped,
-                                   int *leader_status, bool *saw_descendant) {
+                                   int *leader_status) {
   for (;;) {
     int status = 0;
     const pid_t child_pid = waitpid(-1, &status, WNOHANG);
@@ -476,8 +520,6 @@ static int reap_available_children(pid_t leader_pid, bool *leader_reaped,
       if (child_pid == leader_pid) {
         *leader_reaped = true;
         *leader_status = status;
-      } else {
-        *saw_descendant = true;
       }
       continue;
     }
@@ -495,8 +537,7 @@ static int reap_available_children(pid_t leader_pid, bool *leader_reaped,
 /* Returns 0 when no owned children remain, 1 while children remain, 2 on a
  * bounded timeout, and -1 on an unrecoverable wait/clock error. */
 static int wait_for_owned_tree_empty(pid_t leader_pid, bool *leader_reaped,
-                                     int *leader_status, bool *saw_descendant,
-                                     int *interrupted_signal) {
+                                     int *leader_status, int *interrupted_signal) {
   const long long started = monotonic_milliseconds();
   if (started < 0) {
     fprintf(stderr,
@@ -508,15 +549,17 @@ static int wait_for_owned_tree_empty(pid_t leader_pid, bool *leader_reaped,
   const long long deadline =
       started + DND_SUPERVISOR_SETTLEMENT_TIMEOUT_MILLISECONDS;
   for (;;) {
-    const int reaped = reap_available_children(
-        leader_pid, leader_reaped, leader_status, saw_descendant);
+    const int reaped =
+        reap_available_children(leader_pid, leader_reaped, leader_status);
     if (reaped == 0) {
       const int pending_signal = take_pending_signal();
+      if (pending_signal < 0) return -1;
       if (pending_signal != 0) *interrupted_signal = pending_signal;
       return 0;
     }
     if (reaped == -1) return -1;
     const int pending_signal = take_pending_signal();
+    if (pending_signal < 0) return -1;
     if (pending_signal != 0) *interrupted_signal = pending_signal;
     const long long now = monotonic_milliseconds();
     if (now < 0) {
@@ -550,26 +593,32 @@ static int signal_owned_group(pid_t process_group, int signal_number) {
   return 1;
 }
 
+static int signal_owned_process(pid_t process_id, int signal_number) {
+  if (kill(process_id, signal_number) == 0 || errno == ESRCH) return 0;
+  fprintf(stderr,
+          "Raw Swarm deterministic network boundary could not send %s to "
+          "the owned leader: %s\n",
+          strsignal(signal_number), strerror(errno));
+  return 1;
+}
+
 /* The helper always attempts TERM, then KILL, and reaps after each bounded
  * window. Returning nonzero means the owned tree could not be proved settled. */
 static int terminate_owned_tree(pid_t process_group, pid_t leader_pid,
                                 bool *leader_reaped, int *leader_status,
-                                bool *saw_descendant, int initial_signal,
-                                int *observed_signal) {
+                                int initial_signal, int *observed_signal) {
   if (observed_signal != NULL) *observed_signal = 0;
   if (signal_owned_group(process_group, initial_signal) != 0) return 1;
   int interrupted_signal = 0;
   int settlement = wait_for_owned_tree_empty(
-      leader_pid, leader_reaped, leader_status, saw_descendant,
-      &interrupted_signal);
+      leader_pid, leader_reaped, leader_status, &interrupted_signal);
   if (observed_signal != NULL && interrupted_signal != 0)
     *observed_signal = interrupted_signal;
   if (settlement == 0) return 0;
   if (signal_owned_group(process_group, SIGKILL) != 0) return 1;
   interrupted_signal = 0;
   settlement = wait_for_owned_tree_empty(
-      leader_pid, leader_reaped, leader_status, saw_descendant,
-      &interrupted_signal);
+      leader_pid, leader_reaped, leader_status, &interrupted_signal);
   if (observed_signal != NULL && interrupted_signal != 0)
     *observed_signal = interrupted_signal;
   return settlement == 0 ? 0 : 1;
@@ -590,10 +639,11 @@ static int supervise_command(char **command_argv) {
             strerror(errno));
     return 78;
   }
-  if (configure_parent_death_signal() != 0) return 78;
   const int setup_signal = take_pending_signal();
+  if (setup_signal < 0) return 78;
   if (setup_signal != 0) return 128 + setup_signal;
 
+  const pid_t supervisor_pid = getpid();
   const pid_t leader_pid = fork();
   if (leader_pid < 0) {
     fprintf(stderr,
@@ -605,7 +655,7 @@ static int supervise_command(char **command_argv) {
   if (leader_pid == 0) {
     if (reset_child_signal_handlers() != 0) _exit(126);
     if (setpgid(0, 0) != 0) _exit(126);
-    if (configure_parent_death_signal() != 0) _exit(143);
+    if (configure_parent_death_signal(supervisor_pid) != 0) _exit(143);
     if (install_network_filter() != 0) _exit(78);
     execvp(command_argv[0], command_argv);
     fprintf(stderr,
@@ -617,7 +667,6 @@ static int supervise_command(char **command_argv) {
 
   bool leader_reaped = false;
   int leader_status = 0;
-  bool saw_descendant = false;
 
   /* The child sets its own group before filtering; this parent-side call
    * closes the fork/exec race while tolerating EACCES after that setup. */
@@ -628,15 +677,28 @@ static int supervise_command(char **command_argv) {
             "the owned process group: %s\n",
             strerror(errno));
     int ignored_signal = 0;
-    (void)terminate_owned_tree(leader_pid, leader_pid, &leader_reaped,
-                               &leader_status, &saw_descendant, SIGKILL,
-                               &ignored_signal);
+    const int leader_signal_failure =
+        signal_owned_process(leader_pid, SIGKILL);
+    const int tree_failure = terminate_owned_tree(
+        leader_pid, leader_pid, &leader_reaped, &leader_status,
+        SIGKILL, &ignored_signal);
+    if (leader_signal_failure != 0 || tree_failure != 0) {
+      fprintf(stderr,
+              "Raw Swarm deterministic network boundary could not prove "
+              "cleanup after process-group setup failed.\n");
+    }
     return 78;
   }
 
   int requested_signal = 0;
   while (!leader_reaped) {
     requested_signal = take_pending_signal();
+    if (requested_signal < 0) {
+      int ignored_signal = 0;
+      (void)terminate_owned_tree(leader_pid, leader_pid, &leader_reaped,
+                                 &leader_status, SIGTERM, &ignored_signal);
+      return 1;
+    }
     if (requested_signal != 0) break;
     int status = 0;
     const pid_t child_pid = waitpid(-1, &status, 0);
@@ -645,10 +707,7 @@ static int supervise_command(char **command_argv) {
       leader_status = status;
       break;
     }
-    if (child_pid > 0) {
-      saw_descendant = true;
-      continue;
-    }
+    if (child_pid > 0) continue;
     if (errno == EINTR) continue;
     if (errno == ECHILD) {
       fprintf(stderr,
@@ -666,8 +725,8 @@ static int supervise_command(char **command_argv) {
   if (requested_signal != 0) {
     int cleanup_signal = 0;
     if (terminate_owned_tree(leader_pid, leader_pid, &leader_reaped,
-                             &leader_status, &saw_descendant,
-                             requested_signal, &cleanup_signal) != 0) {
+                             &leader_status, requested_signal,
+                             &cleanup_signal) != 0) {
       fprintf(stderr,
               "Raw Swarm deterministic network boundary could not settle the "
               "owned process tree after %s.\n",
@@ -679,13 +738,12 @@ static int supervise_command(char **command_argv) {
 
   int interrupted_signal = 0;
   int settlement = wait_for_owned_tree_empty(
-      leader_pid, &leader_reaped, &leader_status, &saw_descendant,
-      &interrupted_signal);
+      leader_pid, &leader_reaped, &leader_status, &interrupted_signal);
   if (interrupted_signal != 0) {
     int cleanup_signal = 0;
     if (terminate_owned_tree(leader_pid, leader_pid, &leader_reaped,
-                             &leader_status, &saw_descendant,
-                             interrupted_signal, &cleanup_signal) != 0) {
+                             &leader_status, interrupted_signal,
+                             &cleanup_signal) != 0) {
       fprintf(stderr,
               "Raw Swarm deterministic network boundary could not settle the "
               "owned process tree after %s.\n",
@@ -697,10 +755,11 @@ static int supervise_command(char **command_argv) {
   }
   if (settlement == 0) {
     const int late_signal = take_pending_signal();
+    if (late_signal < 0) return 1;
     if (late_signal != 0) {
       int cleanup_signal = 0;
       if (terminate_owned_tree(leader_pid, leader_pid, &leader_reaped,
-                               &leader_status, &saw_descendant, late_signal,
+                               &leader_status, late_signal,
                                &cleanup_signal) != 0) {
         fprintf(stderr,
                 "Raw Swarm deterministic network boundary could not settle "
@@ -715,7 +774,7 @@ static int supervise_command(char **command_argv) {
   int cleanup_signal = 0;
   if (settlement < 0 ||
       terminate_owned_tree(leader_pid, leader_pid, &leader_reaped,
-                           &leader_status, &saw_descendant, SIGTERM,
+                           &leader_status, SIGTERM,
                            &cleanup_signal) != 0) {
     fprintf(stderr,
             "Raw Swarm deterministic network boundary could not settle the "
@@ -730,15 +789,19 @@ static int supervise_command(char **command_argv) {
 }
 
 int main(int argc, char **argv) {
-  if (argc < 2) {
+  if (argc < 4 || strcmp(argv[1], DND_OWNER_PID_OPTION) != 0) {
     fprintf(stderr,
-            "Usage: deterministic-network-boundary COMMAND [ARGUMENT ...]\n");
+            "Usage: deterministic-network-boundary --owner-pid PID COMMAND "
+            "[ARGUMENT ...]\n");
     return 64;
   }
+  pid_t owner_pid = 0;
+  if (parse_owner_pid(argv[2], &owner_pid) != 0) return 64;
+  if (configure_parent_death_signal(owner_pid) != 0) return 78;
   if (close_inherited_descriptors() != 0 ||
       validate_standard_descriptors() != 0) {
     return 78;
   }
   if (validate_host_prerequisites() != 0) return 78;
-  return supervise_command(&argv[1]);
+  return supervise_command(&argv[3]);
 }

@@ -56,31 +56,24 @@ async function main() {
   const cleanup = installDeterministicCleanup({
     cleanup: () => rmSync(buildDirectory, { recursive: true, force: true }),
     onSignal: async ({ cleanup: runCleanup, exitStatus, signal }) => {
+      let cleanupExitStatus = exitStatus;
       try {
         await runner?.terminateActive(signal);
       } catch (error) {
         process.stderr.write(
           `Raw Swarm deterministic verification could not settle its child process group: ${error instanceof Error ? error.message : String(error)}\n`,
         );
+        cleanupExitStatus = 1;
       } finally {
         runCleanup();
       }
-      process.exit(exitStatus);
+      process.exit(cleanupExitStatus);
     },
   });
 
   try {
-    let deterministicNetworkBoundary;
-    try {
-      deterministicNetworkBoundary =
-        compileDeterministicNetworkBoundary(buildDirectory);
-    } catch (error) {
-      process.stderr.write(
-        `${error instanceof Error ? error.message : String(error)}\n`,
-      );
-      process.exitCode = 78;
-      return;
-    }
+    const deterministicNetworkBoundary =
+      compileDeterministicNetworkBoundary(buildDirectory);
     const deterministicEnvironment = {
       ...process.env,
       PATH: `${resolve(__dirname, "deterministic-bin")}${delimiter}${process.env.PATH ?? ""}`,
@@ -125,6 +118,11 @@ async function main() {
         return;
       }
     }
+  } catch (error) {
+    process.stderr.write(
+      `${error instanceof Error ? error.message : String(error)}\n`,
+    );
+    process.exitCode = 78;
   } finally {
     cleanup();
   }

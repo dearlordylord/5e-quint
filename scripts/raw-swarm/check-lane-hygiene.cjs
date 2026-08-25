@@ -605,6 +605,11 @@ function runLaneHygiene() {
     "utf8",
   );
   assert.match(deterministicProcessRunner, /stdio: "inherit"/);
+  assert.match(
+    deterministicProcessRunner,
+    /--owner-pid[\s\S]*String\(process\.pid\)/,
+    "The native helper must receive the exact JavaScript owner PID.",
+  );
   assert.doesNotMatch(
     deterministicProcessRunner,
     /\/proc|readdirSync|readFileSync|capture/i,

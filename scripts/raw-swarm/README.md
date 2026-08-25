@@ -94,16 +94,20 @@ The native helper is also the lifecycle supervisor: it becomes a Linux
 subreaper, forks the command into a dedicated process group before applying
 seccomp, and uses `waitpid(-1, ...)` to reap the leader and every reparented
 descendant. The JavaScript runner only starts one helper at a time with
-inherited standard streams and waits for its close; it has no `/proc` process
-discovery, PID-member registry, output capture, or duplicate settlement state.
+inherited standard streams, passes its exact PID as the named owner argument,
+and waits for its close; it has no `/proc` process discovery, PID-member
+registry, output capture, or duplicate settlement state. The helper validates
+that owner identity before configuring `PDEATHSIG`; the supervisor captures
+its PID before `fork`, and the child configures its own immediate-owner signal
+against that captured identity.
 On normal leader exit, a surviving descendant causes bounded `SIGTERM` then
 `SIGKILL` cleanup and a non-clean phase status. `SIGTERM`, `SIGINT`, and
 `SIGHUP` are handled by the native supervisor, which forwards the signal to
 the owned process group, escalates when required, reaps the tree, and returns
-the corresponding signal status. The helper and command use parent-death
-signals so they cannot silently outlive their immediate owner. `SIGKILL`
-cannot be handled, so an operator must remove any leftover temporary directory
-after an externally forced kill.
+the corresponding signal status. Normal owner death and handled signals use
+the same bounded cleanup. The helper and command use parent-death signals for
+their immediate owners; a process forcibly killed with `SIGKILL` cannot run
+handlers, so descendant and temporary-directory cleanup cannot be guaranteed.
 
 The deterministic command is Linux-only and fails explicitly on unsupported
 platforms or toolchains. A process started outside the helper is not covered;

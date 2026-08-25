@@ -329,7 +329,14 @@ function runKernelBoundaryFixture(source: string) {
   try {
     return spawnSync(
       "env",
-      ["-i", deterministicNetworkBoundary, process.execPath, sourcePath],
+      [
+        "-i",
+        deterministicNetworkBoundary,
+        "--owner-pid",
+        String(process.pid),
+        process.execPath,
+        sourcePath,
+      ],
       { encoding: "utf8", stdio: "ignore" },
     );
   } finally {
@@ -351,10 +358,20 @@ function compileKernelBoundaryProbe(name: string, source: string): string {
 }
 
 function runKernelBoundaryProbe(binaryPath: string) {
-  return spawnSync("env", ["-i", deterministicNetworkBoundary, binaryPath], {
-    encoding: "utf8",
-    stdio: "ignore",
-  });
+  return spawnSync(
+    "env",
+    [
+      "-i",
+      deterministicNetworkBoundary,
+      "--owner-pid",
+      String(process.pid),
+      binaryPath,
+    ],
+    {
+      encoding: "utf8",
+      stdio: "ignore",
+    },
+  );
 }
 
 function modelLaneTestEnvironment(
@@ -813,7 +830,7 @@ describe("RAW swarm runner boundaries", () => {
   test("Linux kernel boundary closes inherited network descriptors before exec", () => {
     const launcher = compileKernelBoundaryProbe(
       "preopened-network-launcher",
-      `#define _GNU_SOURCE\n#include <sys/socket.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 2) return 64; int fd = socket(AF_INET, SOCK_DGRAM, 0); if (fd < 0) return 1; if (fd != 3 && dup2(fd, 3) < 0) return 2; if (fd != 3) close(fd); execv(argv[1], &argv[1]); return 127; }\n`,
+      `#define _GNU_SOURCE\n#include <stdio.h>\n#include <sys/socket.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 3) return 64; int fd = socket(AF_INET, SOCK_DGRAM, 0); if (fd < 0) return 1; if (fd != 3 && dup2(fd, 3) < 0) return 2; if (fd != 3) close(fd); char owner[32]; snprintf(owner, sizeof(owner), "%ld", (long)getppid()); char *boundary_argv[] = { argv[1], "--owner-pid", owner, argv[2], NULL }; execv(argv[1], boundary_argv); return 127; }\n`,
     );
     const probe = compileKernelBoundaryProbe(
       "preopened-network-check",
@@ -829,7 +846,7 @@ describe("RAW swarm runner boundaries", () => {
   test("Linux kernel boundary rejects an inherited AF_UNIX standard descriptor", () => {
     const launcher = compileKernelBoundaryProbe(
       "unix-standard-stdio-launcher",
-      `#include <sys/socket.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 2) return 64; int fd = socket(AF_UNIX, SOCK_STREAM, 0); if (fd < 0) return 1; if (fd != 0 && dup2(fd, 0) < 0) return 2; if (fd != 0) close(fd); execv(argv[1], &argv[1]); return 127; }\n`,
+      `#include <stdio.h>\n#include <sys/socket.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 3) return 64; int fd = socket(AF_UNIX, SOCK_STREAM, 0); if (fd < 0) return 1; if (fd != 0 && dup2(fd, 0) < 0) return 2; if (fd != 0) close(fd); char owner[32]; snprintf(owner, sizeof(owner), "%ld", (long)getppid()); char *boundary_argv[] = { argv[1], "--owner-pid", owner, argv[2], NULL }; execv(argv[1], boundary_argv); return 127; }\n`,
     );
     const checked = spawnSync(
       launcher,
@@ -845,7 +862,7 @@ describe("RAW swarm runner boundaries", () => {
   test("Linux kernel boundary rejects an inherited anon-inode standard descriptor", () => {
     const launcher = compileKernelBoundaryProbe(
       "anon-inode-standard-stdio-launcher",
-      `#include <sys/eventfd.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 2) return 64; int fd = eventfd(0, 0); if (fd < 0) return 1; if (fd != 0 && dup2(fd, 0) < 0) return 2; if (fd != 0) close(fd); execv(argv[1], &argv[1]); return 127; }\n`,
+      `#include <stdio.h>\n#include <sys/eventfd.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 3) return 64; int fd = eventfd(0, 0); if (fd < 0) return 1; if (fd != 0 && dup2(fd, 0) < 0) return 2; if (fd != 0) close(fd); char owner[32]; snprintf(owner, sizeof(owner), "%ld", (long)getppid()); char *boundary_argv[] = { argv[1], "--owner-pid", owner, argv[2], NULL }; execv(argv[1], boundary_argv); return 127; }\n`,
     );
     const checked = spawnSync(
       launcher,
@@ -861,7 +878,7 @@ describe("RAW swarm runner boundaries", () => {
   test("Linux kernel boundary rejects an inherited non-tty character descriptor", () => {
     const launcher = compileKernelBoundaryProbe(
       "non-tty-character-standard-stdio-launcher",
-      `#include <fcntl.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 2) return 64; int fd = open("/dev/zero", O_RDONLY); if (fd < 0) return 1; if (fd != 0 && dup2(fd, 0) < 0) return 2; if (fd != 0) close(fd); execv(argv[1], &argv[1]); return 127; }\n`,
+      `#include <fcntl.h>\n#include <stdio.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 3) return 64; int fd = open("/dev/zero", O_RDONLY); if (fd < 0) return 1; if (fd != 0 && dup2(fd, 0) < 0) return 2; if (fd != 0) close(fd); char owner[32]; snprintf(owner, sizeof(owner), "%ld", (long)getppid()); char *boundary_argv[] = { argv[1], "--owner-pid", owner, argv[2], NULL }; execv(argv[1], boundary_argv); return 127; }\n`,
     );
     const checked = spawnSync(
       launcher,
@@ -954,6 +971,9 @@ describe("RAW swarm runner boundaries", () => {
     expect(source).toContain("SYS_clone3");
     expect(source).toContain("SYS_prctl");
     expect(source).toContain("PR_SET_CHILD_SUBREAPER");
+    expect(source).toContain("DND_OWNER_PID_OPTION");
+    expect(source).toContain("parse_owner_pid");
+    expect(source).toContain("sigprocmask");
     expect(source).toContain("SYS_ioctl");
     expect(source).toContain("TUNSETIFF");
     expect(source).toContain("CAP_NET_ADMIN");
@@ -971,7 +991,10 @@ describe("RAW swarm runner boundaries", () => {
     expect(source).toContain("kill(-process_group");
     expect(source).toContain("SIGKILL");
     expect(source).toContain("DND_SUPERVISOR_SETTLEMENT_TIMEOUT_MILLISECONDS");
+    expect(source).toContain("signal_owned_process");
+    expect(source).toContain("getppid()");
     expect(source).not.toContain('readdir("/proc"');
+    expect(source).not.toContain("saw_descendant");
   });
 
   test("native supervisor parent-death signal terminates its command", async () => {
@@ -982,6 +1005,8 @@ describe("RAW swarm runner boundaries", () => {
     const helper = spawn(
       deterministicNetworkBoundary,
       [
+        "--owner-pid",
+        String(process.pid),
         process.execPath,
         "-e",
         `const { writeFileSync } = require("node:fs"); writeFileSync(${JSON.stringify(childPidPath)}, String(process.pid)); setInterval(() => {}, 1000);`,
@@ -1013,6 +1038,140 @@ describe("RAW swarm runner boundaries", () => {
       if (childPid !== undefined && processIsLive(childPid)) {
         process.kill(childPid, "SIGKILL");
       }
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  test("native supervisor handles rapid signals without losing cleanup", async () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-rapid-signals-"));
+    const leaderPidPath = resolve(fixtureRoot, "leader.pid");
+    const helper = spawn(
+      deterministicNetworkBoundary,
+      [
+        "--owner-pid",
+        String(process.pid),
+        process.execPath,
+        "-e",
+        `const { writeFileSync } = require("node:fs"); writeFileSync(${JSON.stringify(leaderPidPath)}, String(process.pid)); for (const signal of ["SIGHUP", "SIGINT", "SIGTERM"]) process.on(signal, () => {}); setInterval(() => {}, 1000);`,
+      ],
+      {
+        env: { ...process.env, NODE_OPTIONS: "" },
+        stdio: "ignore",
+      },
+    );
+    let leaderPid: number | undefined;
+    try {
+      await waitForFile(leaderPidPath);
+      leaderPid = Number(readFileSync(leaderPidPath, "utf8").trim());
+      expect(Number.isSafeInteger(leaderPid)).toBe(true);
+      for (let index = 0; index < 256; index += 1) {
+        helper.kill("SIGTERM");
+      }
+      const result = await new Promise<{
+        status: number | null;
+        signal: NodeJS.Signals | null;
+      }>((resolveResult, rejectResult) => {
+        helper.once("error", rejectResult);
+        helper.once("close", (status, signal) =>
+          resolveResult({ status, signal }),
+        );
+      });
+      expect(result).toEqual({ status: 143, signal: null });
+      await waitForProcessExit(leaderPid);
+      expect(processIsLive(leaderPid)).toBe(false);
+    } finally {
+      if (helper.exitCode === null) helper.kill("SIGKILL");
+      if (leaderPid !== undefined && processIsLive(leaderPid)) {
+        process.kill(leaderPid, "SIGKILL");
+      }
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  test("native supervisor does not leak across immediate owner death", async () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-owner-death-"));
+    const ownerScriptPath = resolve(fixtureRoot, "owner.cjs");
+    writeFileSync(
+      ownerScriptPath,
+      `const { spawn } = require("node:child_process"); const { writeFileSync } = require("node:fs"); const [boundaryPath, helperPidPath, leaderPidPath] = process.argv.slice(2); const helper = spawn(boundaryPath, ["--owner-pid", String(process.pid), process.execPath, "-e", "const { writeFileSync } = require('node:fs'); writeFileSync(process.env.DND_LEADER_PID_PATH, String(process.pid)); setInterval(() => {}, 1000);"], { env: { ...process.env, NODE_OPTIONS: "", DND_LEADER_PID_PATH: leaderPidPath }, stdio: "ignore" }); writeFileSync(helperPidPath, String(helper.pid)); process.exit(0);`,
+    );
+    try {
+      for (let index = 0; index < 16; index += 1) {
+        const helperPidPath = resolve(fixtureRoot, `helper-${index}.pid`);
+        const leaderPidPath = resolve(fixtureRoot, `leader-${index}.pid`);
+        const owner = spawn(
+          process.execPath,
+          [
+            ownerScriptPath,
+            deterministicNetworkBoundary,
+            helperPidPath,
+            leaderPidPath,
+          ],
+          { env: { ...process.env, NODE_OPTIONS: "" }, stdio: "ignore" },
+        );
+        const ownerStatus = await new Promise<number>(
+          (resolveResult, rejectResult) => {
+            owner.once("error", rejectResult);
+            owner.once("close", (status, signal) => {
+              if (signal !== null)
+                rejectResult(new Error(`Owner stopped with ${signal}.`));
+              else resolveResult(status ?? 1);
+            });
+          },
+        );
+        expect(ownerStatus).toBe(0);
+        await waitForFile(helperPidPath);
+        const helperPid = Number(readFileSync(helperPidPath, "utf8").trim());
+        expect(Number.isSafeInteger(helperPid)).toBe(true);
+        await waitForProcessExit(helperPid, 2_000);
+        expect(processIsLive(helperPid)).toBe(false);
+        if (existsSync(leaderPidPath)) {
+          const leaderPid = Number(readFileSync(leaderPidPath, "utf8").trim());
+          expect(Number.isSafeInteger(leaderPid)).toBe(true);
+          await waitForProcessExit(leaderPid, 2_000);
+          expect(processIsLive(leaderPid)).toBe(false);
+        }
+      }
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 20_000);
+
+  test("runner reports a helper cleanup failure during signal termination", async () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-runner-failure-"));
+    const boundaryPath = resolve(fixtureRoot, "fake-boundary.sh");
+    const findingPath = resolve(fixtureRoot, "finding");
+    const helperPath = resolve(fixtureRoot, "failure-helper.cjs");
+    writeFileSync(
+      boundaryPath,
+      "#!/bin/sh\ntrap 'exit 1' TERM INT HUP\nwhile :; do sleep 0.01; done\n",
+    );
+    chmodSync(boundaryPath, 0o755);
+    writeFileSync(
+      helperPath,
+      `const { writeFileSync } = require("node:fs"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(boundaryPath)}, environment: { ...process.env, NODE_OPTIONS: "" } }); const running = runner.run("ignored", []); setTimeout(async () => { let finding; try { await runner.terminateActive("SIGTERM"); finding = "unexpected success"; } catch (error) { finding = String(error); } writeFileSync(${JSON.stringify(findingPath)}, finding); await running; process.exit(finding.includes("cleanup") ? 0 : 1); }, 50);`,
+    );
+    const checked = spawn(process.execPath, [helperPath], {
+      env: { ...process.env, NODE_OPTIONS: "" },
+      stdio: "ignore",
+    });
+    try {
+      const result = await new Promise<number>(
+        (resolveResult, rejectResult) => {
+          checked.once("error", rejectResult);
+          checked.once("close", (status, signal) => {
+            if (signal !== null) {
+              rejectResult(new Error(`Failure helper stopped with ${signal}.`));
+            } else {
+              resolveResult(status ?? 1);
+            }
+          });
+        },
+      );
+      expect(result).toBe(0);
+      expect(readFileSync(findingPath, "utf8")).toContain("cleanup");
+    } finally {
+      if (checked.exitCode === null) checked.kill("SIGKILL");
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
   }, 10_000);
@@ -1180,6 +1339,8 @@ describe("RAW swarm runner boundaries", () => {
           "-i",
           `PATH=${fixtureRoot}:/usr/bin:/bin`,
           deterministicNetworkBoundary,
+          "--owner-pid",
+          String(process.pid),
           aliasPath,
         ],
         { encoding: "utf8", stdio: "ignore" },
