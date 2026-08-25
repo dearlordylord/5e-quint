@@ -1,13 +1,19 @@
 const { spawn } = require("node:child_process");
 
-const SIGNAL_EXIT_STATUS = Object.freeze({
-  SIGHUP: 129,
-  SIGINT: 130,
-  SIGTERM: 143,
-});
+const HANDLED_SIGNAL_EXIT_STATUSES = Object.freeze([129, 130, 143]);
 
 function describeError(error) {
   return error instanceof Error ? error.message : String(error);
+}
+
+async function awaitDeterministicHelperClose(closePromise, signal) {
+  try {
+    return await closePromise;
+  } catch (error) {
+    throw new Error(
+      `The deterministic helper cleanup failed during ${signal}: ${describeError(error)}`,
+    );
+  }
 }
 
 function createDeterministicRunner({ boundary, environment }) {
@@ -51,31 +57,20 @@ function createDeterministicRunner({ boundary, environment }) {
       const active = activeRun;
       if (active === undefined) return;
       active.child.kill(signal);
-      let result;
-      try {
-        result = await active.closePromise;
-      } catch (error) {
-        throw new Error(
-          `The deterministic helper cleanup failed during ${signal}: ${describeError(error)}`,
-        );
-      }
-      const expectedStatus = SIGNAL_EXIT_STATUS[signal];
+      const result = await awaitDeterministicHelperClose(
+        active.closePromise,
+        signal,
+      );
       if (
         result.signal === null &&
-        (result.status === 0 || result.status === expectedStatus)
+        (result.status === 0 ||
+          HANDLED_SIGNAL_EXIT_STATUSES.includes(result.status))
       ) {
         return result;
       }
-      if (
-        result.signal !== null ||
-        expectedStatus === undefined ||
-        result.status !== expectedStatus
-      ) {
-        throw new Error(
-          `The deterministic helper cleanup failed during ${signal}: exited with ${result.signal ?? String(result.status)}.`,
-        );
-      }
-      return result;
+      throw new Error(
+        `The deterministic helper cleanup failed during ${signal}: exited with ${result.signal ?? String(result.status)}.`,
+      );
     },
   };
 }

@@ -610,6 +610,11 @@ function runLaneHygiene() {
     /--owner-pid[\s\S]*String\(process\.pid\)/,
     "The native helper must receive the exact JavaScript owner PID.",
   );
+  assert.match(
+    deterministicProcessRunner,
+    /HANDLED_SIGNAL_EXIT_STATUSES[\s\S]*includes\(result\.status\)/,
+    "The runner must accept any native handled-signal completion status.",
+  );
   assert.doesNotMatch(
     deterministicProcessRunner,
     /\/proc|readdirSync|readFileSync|capture/i,

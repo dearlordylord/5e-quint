@@ -974,6 +974,8 @@ describe("RAW swarm runner boundaries", () => {
     expect(source).toContain("DND_OWNER_PID_OPTION");
     expect(source).toContain("parse_owner_pid");
     expect(source).toContain("sigprocmask");
+    expect(source).toContain("SIG_UNBLOCK");
+    expect(source).toContain("unblock_supervisor_signals");
     expect(source).toContain("SYS_ioctl");
     expect(source).toContain("TUNSETIFF");
     expect(source).toContain("CAP_NET_ADMIN");
@@ -1088,6 +1090,150 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 10_000);
 
+  test("native supervisor reports a later handled signal during cleanup", async () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-second-signal-"));
+    const leaderPidPath = resolve(fixtureRoot, "leader.pid");
+    const helper = spawn(
+      deterministicNetworkBoundary,
+      [
+        "--owner-pid",
+        String(process.pid),
+        process.execPath,
+        "-e",
+        `const { writeFileSync } = require("node:fs"); writeFileSync(${JSON.stringify(leaderPidPath)}, String(process.pid)); for (const signal of ["SIGHUP", "SIGINT", "SIGTERM"]) process.on(signal, () => {}); setInterval(() => {}, 1000);`,
+      ],
+      {
+        env: { ...process.env, NODE_OPTIONS: "" },
+        stdio: "ignore",
+      },
+    );
+    let leaderPid: number | undefined;
+    let secondSignal: NodeJS.Timeout | undefined;
+    try {
+      await waitForFile(leaderPidPath);
+      leaderPid = Number(readFileSync(leaderPidPath, "utf8").trim());
+      expect(Number.isSafeInteger(leaderPid)).toBe(true);
+      const resultPromise = new Promise<{
+        status: number | null;
+        signal: NodeJS.Signals | null;
+      }>((resolveResult, rejectResult) => {
+        helper.once("error", rejectResult);
+        helper.once("close", (status, signal) =>
+          resolveResult({ status, signal }),
+        );
+      });
+      helper.kill("SIGTERM");
+      secondSignal = setTimeout(() => helper.kill("SIGINT"), 200);
+      const result = await resultPromise;
+      expect(result).toEqual({ status: 130, signal: null });
+      await waitForProcessExit(leaderPid);
+      expect(processIsLive(leaderPid)).toBe(false);
+    } finally {
+      if (secondSignal !== undefined) clearTimeout(secondSignal);
+      if (helper.exitCode === null) helper.kill("SIGKILL");
+      if (leaderPid !== undefined && processIsLive(leaderPid)) {
+        process.kill(leaderPid, "SIGKILL");
+      }
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  test("native supervisor unblocks inherited signals for termination and owner death", async () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-blocked-signals-"));
+    const launcher = compileKernelBoundaryProbe(
+      "blocked-signal-launcher",
+      `#define _GNU_SOURCE\n#include <signal.h>\n#include <stdio.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 3) return 64; sigset_t blocked; sigemptyset(&blocked); sigaddset(&blocked, SIGHUP); sigaddset(&blocked, SIGINT); sigaddset(&blocked, SIGTERM); if (sigprocmask(SIG_BLOCK, &blocked, NULL) != 0) return 65; char owner[32]; snprintf(owner, sizeof(owner), "%ld", (long)getppid()); char *boundary_argv[argc + 2]; boundary_argv[0] = argv[1]; boundary_argv[1] = "--owner-pid"; boundary_argv[2] = owner; for (int index = 2; index < argc; index += 1) boundary_argv[index + 1] = argv[index]; boundary_argv[argc + 1] = NULL; execv(argv[1], boundary_argv); return 127; }\n`,
+    );
+    const explicitLeaderPidPath = resolve(fixtureRoot, "explicit-leader.pid");
+    const explicitCommand = `const { writeFileSync } = require("node:fs"); writeFileSync(${JSON.stringify(explicitLeaderPidPath)}, String(process.pid)); setInterval(() => {}, 1000);`;
+    const explicitHelper = spawn(
+      launcher,
+      [deterministicNetworkBoundary, process.execPath, "-e", explicitCommand],
+      { env: { ...process.env, NODE_OPTIONS: "" }, stdio: "ignore" },
+    );
+    let explicitLeaderPid: number | undefined;
+    let ownerProcess: ReturnType<typeof spawn> | undefined;
+    let ownerHelperPid: number | undefined;
+    try {
+      await waitForFile(explicitLeaderPidPath);
+      explicitLeaderPid = Number(
+        readFileSync(explicitLeaderPidPath, "utf8").trim(),
+      );
+      expect(Number.isSafeInteger(explicitLeaderPid)).toBe(true);
+      const explicitResult = await new Promise<{
+        status: number | null;
+        signal: NodeJS.Signals | null;
+      }>((resolveResult, rejectResult) => {
+        explicitHelper.once("error", rejectResult);
+        explicitHelper.once("close", (status, signal) =>
+          resolveResult({ status, signal }),
+        );
+        explicitHelper.kill("SIGTERM");
+      });
+      expect(explicitResult).toEqual({ status: 143, signal: null });
+      await waitForProcessExit(explicitLeaderPid);
+      expect(processIsLive(explicitLeaderPid)).toBe(false);
+
+      const ownerScriptPath = resolve(fixtureRoot, "blocked-owner.cjs");
+      const ownerHelperPidPath = resolve(fixtureRoot, "owner-helper.pid");
+      const ownerLeaderPidPath = resolve(fixtureRoot, "owner-leader.pid");
+      const ownerCommand = `const { writeFileSync } = require("node:fs"); writeFileSync(process.env.DND_LEADER_PID_PATH, String(process.pid)); setInterval(() => {}, 1000);`;
+      writeFileSync(
+        ownerScriptPath,
+        `const { existsSync, writeFileSync } = require("node:fs"); const { spawn } = require("node:child_process"); const [launcherPath, boundaryPath, helperPidPath, leaderPidPath] = process.argv.slice(2); const helper = spawn(launcherPath, [boundaryPath, process.execPath, "-e", ${JSON.stringify(ownerCommand)}], { env: { ...process.env, NODE_OPTIONS: "", DND_LEADER_PID_PATH: leaderPidPath }, stdio: "ignore" }); writeFileSync(helperPidPath, String(helper.pid)); const deadline = Date.now() + 2000; const waitForLeader = () => { if (existsSync(leaderPidPath)) { process.exit(0); } if (Date.now() >= deadline) { process.exit(2); } setTimeout(waitForLeader, 5); }; waitForLeader();`,
+      );
+      ownerProcess = spawn(
+        process.execPath,
+        [
+          ownerScriptPath,
+          launcher,
+          deterministicNetworkBoundary,
+          ownerHelperPidPath,
+          ownerLeaderPidPath,
+        ],
+        { env: { ...process.env, NODE_OPTIONS: "" }, stdio: "ignore" },
+      );
+      const ownerStatus = await new Promise<number>(
+        (resolveResult, rejectResult) => {
+          ownerProcess?.once("error", rejectResult);
+          ownerProcess?.once("close", (status, signal) => {
+            if (signal !== null) {
+              rejectResult(
+                new Error(`Blocked-signal owner stopped with ${signal}.`),
+              );
+            } else {
+              resolveResult(status ?? 1);
+            }
+          });
+        },
+      );
+      expect(ownerStatus).toBe(0);
+      await waitForFile(ownerHelperPidPath);
+      ownerHelperPid = Number(readFileSync(ownerHelperPidPath, "utf8").trim());
+      expect(Number.isSafeInteger(ownerHelperPid)).toBe(true);
+      await waitForProcessExit(ownerHelperPid, 2_000);
+      expect(processIsLive(ownerHelperPid)).toBe(false);
+      if (existsSync(ownerLeaderPidPath)) {
+        const ownerLeaderPid = Number(
+          readFileSync(ownerLeaderPidPath, "utf8").trim(),
+        );
+        expect(Number.isSafeInteger(ownerLeaderPid)).toBe(true);
+        await waitForProcessExit(ownerLeaderPid, 2_000);
+        expect(processIsLive(ownerLeaderPid)).toBe(false);
+      }
+    } finally {
+      if (explicitHelper.exitCode === null) explicitHelper.kill("SIGKILL");
+      if (ownerProcess?.exitCode === null) ownerProcess.kill("SIGKILL");
+      if (ownerHelperPid !== undefined && processIsLive(ownerHelperPid)) {
+        process.kill(ownerHelperPid, "SIGKILL");
+      }
+      if (explicitLeaderPid !== undefined && processIsLive(explicitLeaderPid)) {
+        process.kill(explicitLeaderPid, "SIGKILL");
+      }
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 15_000);
+
   test("native supervisor does not leak across immediate owner death", async () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-owner-death-"));
     const ownerScriptPath = resolve(fixtureRoot, "owner.cjs");
@@ -1170,6 +1316,49 @@ describe("RAW swarm runner boundaries", () => {
       );
       expect(result).toBe(0);
       expect(readFileSync(findingPath, "utf8")).toContain("cleanup");
+    } finally {
+      if (checked.exitCode === null) checked.kill("SIGKILL");
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 10_000);
+
+  test("runner accepts a different handled signal status during cleanup", async () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-runner-signal-status-"),
+    );
+    const boundaryPath = resolve(fixtureRoot, "handled-signal-boundary.sh");
+    const findingPath = resolve(fixtureRoot, "finding");
+    const helperPath = resolve(fixtureRoot, "handled-signal-helper.cjs");
+    writeFileSync(
+      boundaryPath,
+      "#!/bin/sh\ntrap 'exit 130' TERM\nwhile :; do sleep 0.01; done\n",
+    );
+    chmodSync(boundaryPath, 0o755);
+    writeFileSync(
+      helperPath,
+      `const { writeFileSync } = require("node:fs"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(boundaryPath)}, environment: { ...process.env, NODE_OPTIONS: "" } }); const running = runner.run("ignored", []); setTimeout(async () => { let finding; try { await runner.terminateActive("SIGTERM"); finding = "accepted"; } catch (error) { finding = String(error); } writeFileSync(${JSON.stringify(findingPath)}, finding); await running; process.exit(finding === "accepted" ? 0 : 1); }, 50);`,
+    );
+    const checked = spawn(process.execPath, [helperPath], {
+      env: { ...process.env, NODE_OPTIONS: "" },
+      stdio: "ignore",
+    });
+    try {
+      const result = await new Promise<number>(
+        (resolveResult, rejectResult) => {
+          checked.once("error", rejectResult);
+          checked.once("close", (status, signal) => {
+            if (signal !== null) {
+              rejectResult(
+                new Error(`Handled-signal helper stopped with ${signal}.`),
+              );
+            } else {
+              resolveResult(status ?? 1);
+            }
+          });
+        },
+      );
+      expect(result).toBe(0);
+      expect(readFileSync(findingPath, "utf8")).toBe("accepted");
     } finally {
       if (checked.exitCode === null) checked.kill("SIGKILL");
       rmSync(fixtureRoot, { recursive: true, force: true });

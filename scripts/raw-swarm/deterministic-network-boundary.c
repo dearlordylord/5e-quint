@@ -410,10 +410,28 @@ static void dnd_supervisor_signal_handler(int signal_number) {
   if (dnd_pending_signal == 0) dnd_pending_signal = signal_number;
 }
 
+static int make_supervisor_signal_set(sigset_t *signals) {
+  if (sigemptyset(signals) != 0 || sigaddset(signals, SIGHUP) != 0 ||
+      sigaddset(signals, SIGINT) != 0 || sigaddset(signals, SIGTERM) != 0) {
+    fprintf(stderr,
+            "Raw Swarm deterministic network boundary could not construct "
+            "its supervisor signal set: %s\n",
+            strerror(errno));
+    return 1;
+  }
+  return 0;
+}
+
 static int install_supervisor_signal_handlers(void) {
   struct sigaction action;
   memset(&action, 0, sizeof(action));
-  sigemptyset(&action.sa_mask);
+  if (sigemptyset(&action.sa_mask) != 0) {
+    fprintf(stderr,
+            "Raw Swarm deterministic network boundary could not prepare "
+            "supervisor signal handlers: %s\n",
+            strerror(errno));
+    return 1;
+  }
   action.sa_handler = dnd_supervisor_signal_handler;
   if (sigaction(SIGHUP, &action, NULL) != 0 ||
       sigaction(SIGINT, &action, NULL) != 0 ||
@@ -421,6 +439,19 @@ static int install_supervisor_signal_handlers(void) {
     fprintf(stderr,
             "Raw Swarm deterministic network boundary could not install "
             "supervisor signal handlers: %s\n",
+            strerror(errno));
+    return 1;
+  }
+  return 0;
+}
+
+static int unblock_supervisor_signals(void) {
+  sigset_t handled_signals;
+  if (make_supervisor_signal_set(&handled_signals) != 0) return 1;
+  if (sigprocmask(SIG_UNBLOCK, &handled_signals, NULL) != 0) {
+    fprintf(stderr,
+            "Raw Swarm deterministic network boundary could not unblock "
+            "supervisor signals before startup: %s\n",
             strerror(errno));
     return 1;
   }
@@ -442,12 +473,8 @@ static int reset_child_signal_handlers(void) {
 
 static int take_pending_signal(void) {
   sigset_t handled_signals;
-  sigset_t previous_mask;
-  sigemptyset(&handled_signals);
-  sigaddset(&handled_signals, SIGHUP);
-  sigaddset(&handled_signals, SIGINT);
-  sigaddset(&handled_signals, SIGTERM);
-  if (sigprocmask(SIG_BLOCK, &handled_signals, &previous_mask) != 0) {
+  if (make_supervisor_signal_set(&handled_signals) != 0) return -1;
+  if (sigprocmask(SIG_BLOCK, &handled_signals, NULL) != 0) {
     fprintf(stderr,
             "Raw Swarm deterministic network boundary could not block "
             "supervisor signals while taking a snapshot: %s\n",
@@ -456,10 +483,10 @@ static int take_pending_signal(void) {
   }
   const sig_atomic_t pending = dnd_pending_signal;
   dnd_pending_signal = 0;
-  if (sigprocmask(SIG_SETMASK, &previous_mask, NULL) != 0) {
+  if (sigprocmask(SIG_UNBLOCK, &handled_signals, NULL) != 0) {
     fprintf(stderr,
-            "Raw Swarm deterministic network boundary could not restore "
-            "supervisor signal handling after a snapshot: %s\n",
+            "Raw Swarm deterministic network boundary could not unblock "
+            "supervisor signals after a snapshot: %s\n",
             strerror(errno));
     return -1;
   }
@@ -631,7 +658,6 @@ static int status_for_reaped_leader(int status) {
 }
 
 static int supervise_command(char **command_argv) {
-  if (install_supervisor_signal_handlers() != 0) return 78;
   if (prctl(PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0) != 0) {
     fprintf(stderr,
             "Raw Swarm deterministic network boundary could not become the "
@@ -797,6 +823,10 @@ int main(int argc, char **argv) {
   }
   pid_t owner_pid = 0;
   if (parse_owner_pid(argv[2], &owner_pid) != 0) return 64;
+  if (install_supervisor_signal_handlers() != 0 ||
+      unblock_supervisor_signals() != 0) {
+    return 78;
+  }
   if (configure_parent_death_signal(owner_pid) != 0) return 78;
   if (close_inherited_descriptors() != 0 ||
       validate_standard_descriptors() != 0) {

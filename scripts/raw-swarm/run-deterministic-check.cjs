@@ -56,17 +56,19 @@ async function main() {
   const cleanup = installDeterministicCleanup({
     cleanup: () => rmSync(buildDirectory, { recursive: true, force: true }),
     onSignal: async ({ cleanup: runCleanup, exitStatus, signal }) => {
-      let cleanupExitStatus = exitStatus;
-      try {
-        await runner?.terminateActive(signal);
-      } catch (error) {
-        process.stderr.write(
-          `Raw Swarm deterministic verification could not settle its child process group: ${error instanceof Error ? error.message : String(error)}\n`,
-        );
-        cleanupExitStatus = 1;
-      } finally {
-        runCleanup();
-      }
+      const cleanupExitStatus = await (async () => {
+        try {
+          await runner?.terminateActive(signal);
+          return exitStatus;
+        } catch (error) {
+          process.stderr.write(
+            `Raw Swarm deterministic verification could not settle its child process group: ${error instanceof Error ? error.message : String(error)}\n`,
+          );
+          return 1;
+        } finally {
+          runCleanup();
+        }
+      })();
       process.exit(cleanupExitStatus);
     },
   });
