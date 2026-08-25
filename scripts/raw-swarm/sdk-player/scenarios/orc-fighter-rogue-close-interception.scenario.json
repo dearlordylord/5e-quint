@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "scenarioId": "orc-fighter-rogue-close-interception",
   "title": "Orc Fighter and Rogue close interception",
-  "purpose": "Explore constrained Character Sheet authoring and close-interception setup through supported public SDK choices.",
+  "purpose": "Probe issue #283 ordinary-object targeting during a constrained Character Sheet close interception.",
   "authoredSource": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/orc-fighter-rogue-close-interception.md",
     "byteLength": 4809,
@@ -10,8 +10,8 @@
   },
   "admissionReview": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/orc-fighter-rogue-close-interception.md.scenario-review.json",
-    "byteLength": 4873,
-    "sha256": "c5f0ace1f953b5f120ed454b88ba6764dec4aa588c04e388b6d264af6bd5d794"
+    "byteLength": 4506,
+    "sha256": "7e020736c05d53cdc21321d33ed65ead1ddf00bd2343b9c1bb8042f851e55e35"
   },
   "stageFacts": {
     "path": "scripts/raw-swarm/sdk-player/scenarios/orc-fighter-rogue-close-interception.md.stage-facts.json",
