@@ -40,16 +40,84 @@ mode. Follow the current [OpenAI plugin connection guide](https://developers.ope
    evaluation, choose **No authentication** in the MCP/app authentication
    setting: do not configure OAuth or a user-facing API key. This no-auth
    choice is scoped to this private evaluation and is not a public
-   multi-user deployment configuration.
+   multi-user deployment configuration. The provider-neutral public target is
+   owned by
+   [ADR 0007](../../docs/adr/0007-public-play-session-tenure-and-ownership.md):
+   guest play remains available without sign-in, while saving and recovery use
+   standard MCP OAuth. Do not apply that target to installed evidence until the
+   public persistence and authorization increments are executable.
 4. Review the discovered tool names, descriptions, schemas, and annotations.
    Resolve transport, initialization, schema, or authentication errors before
    evaluating selection.
 5. Start a new conversation, add the separately created MCP connection from
-   the tools menu, and run the MCP cases in
-   [`evals/evaluation-inventory.json`](evals/evaluation-inventory.json).
-   Record selected tools, arguments, results, errors, and confirmation behavior
-   in the installed-evidence artifact; local tests do not establish these
-   account/workspace observations.
+   the tools menu, and run the `mcpToolSelection` cases in
+   [`evals/evaluation-inventory.json`](evals/evaluation-inventory.json). Record
+   the model, conversation identifier, selected tool, arguments, result or
+   structured error, confirmation behavior, and the conclusion against the
+   inventory expectation under `installedConnectionToolSelection`.
+
+## Evidence artifacts and their owners
+
+Two external product surfaces produce two distinct typed artifacts. Each
+artifact owns disjoint evidence kinds, and each schema rejects the other
+surface's kinds:
+
+| Artifact                                                                         | Surface                                         | Evidence kinds                                                                              | Inventory groups                                          |
+| -------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [`evals/api-mcp-selection-evidence.json`](evals/api-mcp-selection-evidence.json) | OpenAI Responses API with the remote MCP server | `apiMcpToolSelection`                                                                       | `mcpToolSelection`                                        |
+| [`evals/installed-chatgpt-evidence.json`](evals/installed-chatgpt-evidence.json) | Installed ChatGPT plugin                        | `installedConnectionToolSelection`, `installedSkillActivation`, `installedCompleteWorkflow` | `mcpToolSelection`, `skillActivation`, `completeWorkflow` |
+
+The official OpenAI procedure draws the same line between raw MCP
+request/response testing and complete installed-plugin testing. The two
+artifacts may carry the same inventory prompts, because the same prompt behaves
+differently on each surface. What they may never do is borrow each other's
+identity: an API observation is never recorded under an installed ChatGPT
+identity, and an installed conversation never claims a Responses API fact.
+
+Every observed tool-selection case carries a `conclusion` of `metExpectation`
+or `missedExpectation`, and the schema rejects a conclusion that disagrees with
+the inventory's `expectedToolNames`. A run that selects the wrong tool is
+recorded as an observed miss, never as an absent observation.
+
+Each unobserved case is `pending` when it has simply not run yet, or `blocked`
+with a `blocker` naming the specific reason it cannot run in this environment.
+
+## Observe MCP tool selection from the Responses API
+
+Reach the same MCP server from the OpenAI Responses API with a funded
+`OPENAI_API_KEY`. `CONTROL_PLANE_API_KEY` authorizes Secure MCP Tunnel
+control-plane operations only and is not an OpenAI API credential. Use a public
+HTTPS `/mcp` endpoint or the Secure MCP Tunnel runtime below, then send each
+`mcpToolSelection` prompt as its own request, chaining the follow-up case with
+`previous_response_id`:
+
+```sh
+curl https://api.openai.com/v1/responses \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "gpt-5.6",
+    "tools": [
+      {
+        "type": "mcp",
+        "server_label": "dnd-srd-oracle",
+        "server_url": "https://<public-endpoint>/mcp",
+        "require_approval": "never"
+      }
+    ],
+    "input": "List the installed redistributable SRD character options."
+  }'
+```
+
+Record the model, response identifier, advertised server and tool metadata, the
+selected tool with its arguments and result or structured error or the
+confirmed absence of a tool call, the approval behavior, the observation time,
+and the conclusion in
+[`evals/api-mcp-selection-evidence.json`](evals/api-mcp-selection-evidence.json).
+Do not drive a browser for these cases. If the API cannot produce this
+evidence, retain the exact failure in each case's `blocker` and in the
+artifact's `unresolvedEvidenceReason` rather than substituting another product
+surface.
 
 ## Secure MCP Tunnel for the private local server
 
@@ -254,12 +322,19 @@ operator's answers rather than choosing on the operator's behalf:
 
 Record those observations in
 [`evals/installed-chatgpt-evidence.json`](evals/installed-chatgpt-evidence.json)
-only after an authorized installation and conversation run. Its initial
-`pending` state is intentional when no authorized ChatGPT account/workspace is
-available; automated local MCP and static Skill-forward tests must not be
-promoted to installed evidence.
+only after an authorized installation and conversation run. A `pending` or
+`blocked` case is intentional when no authorized ChatGPT account or workspace
+offers that surface; automated local MCP tests, static Skill-forward tests, and
+Responses API tool-selection observations must not be promoted to installed
+evidence.
+
+Skill activation requires an account that can install a Skill. On an account
+whose Skills surface is empty and gated to ChatGPT Work, the five
+`skillActivation` cases are recorded as `blocked` with that reason rather than
+inferred from the MCP connection's behavior.
 
 For an operator-to-repository handoff, provide the redacted case-level prompt,
-selected tool and arguments/result summary, confirmation behavior, observed
-Skill activation, and observation time. A ChatGPT conversation UUID by itself
-is not readable by repository automation and cannot establish those facts.
+observed Skill activation, visible tool calls and results, the final visible
+response, and the observation time. A ChatGPT conversation UUID by itself is
+not readable by repository automation and cannot establish those facts, and a
+shared ChatGPT page redacts app tool names, arguments, and results.
