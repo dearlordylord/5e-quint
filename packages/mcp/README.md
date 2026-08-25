@@ -47,8 +47,37 @@ signed-out journeys are temporary Guest Play Sessions, saving atomically makes
 the same session a single-principal Saved Play Session, and both use one
 canonical recoverable representation. Public persistence work must replace this
 in-memory registry directly rather than retain it beside a hosting-specific
-store. Until that work lands, tools and tests must continue to report only the
-process-lifetime facts the executable server can prove.
+store.
+
+The public HTTP composition has the first recoverable slice of that boundary.
+Its SQLite record contains one format version, the Play Session's random-stream
+seed, an optimistic storage revision, and the ordered non-read-only tool
+commands whose calls completed without an MCP error and are needed to
+reconstruct the application store. It does not store
+session summaries, Character Draft presentations, Admin Mirror projections, or
+other derived views. A routed operation reconstructs a candidate root from that
+record, applies the operation, and commits its input only if the expected
+storage revision still owns the record; a conflict reloads and retries against
+the new canonical history. Admin Mirror publication is disabled during replay
+and recreated from the committed current projection.
+
+The first public acceptance witness creates a Guest Play Session, creates and
+mutates one Character Draft, replaces the HTTP server and SQLite connection,
+and continues from revision 1 through `/mcp`. Finalized Character Sessions and
+Battle recovery require their later acceptance slices before they are claimed
+as public recovery coverage. Authentication, guest grants, retention, and
+deletion remain the later public-boundary increment defined by ADR 0007.
+
+Run the provider-neutral Node HTTP entrypoint with an explicit database path:
+
+```sh
+DND_PLAY_SESSION_DATABASE_PATH=/var/lib/dnd-oracle/play-sessions.sqlite \
+  pnpm --filter @dnd/mcp serve:http
+```
+
+`DND_MCP_HOST` defaults to `0.0.0.0` and `PORT` defaults to `8787`. Stdio
+development continues to use `pnpm --filter @dnd/mcp dev`; Secure MCP Tunnel
+continues to launch that stdio entrypoint rather than the public database.
 
 Stateful protocol results use one contextual envelope derived from the
 operation result and canonical session snapshot. It reports the typed operation

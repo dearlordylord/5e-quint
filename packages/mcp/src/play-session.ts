@@ -3,6 +3,9 @@ import { randomUUID } from "node:crypto";
 import { Either, Schema } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
+import type { BattleToolName } from "./battle-tool-input.ts";
+import type { CharacterToolName } from "./character-tool-input.ts";
+import type { DiceToolName } from "./dice-tool-input.ts";
 import type { McpSessionSnapshot } from "./session-store.ts";
 
 export const PLAY_SESSION_RESTORATION_GUIDANCE =
@@ -43,16 +46,43 @@ export type PlaySessionCreation = {
 
 export type PlaySessionCreationFailure = {
   readonly tag: "playSessionCreationFailed";
-  readonly reason: "playSessionIdCollision";
+  readonly reason: "playSessionIdCollision" | "storageUnavailable";
   readonly message: string;
 };
 
-export type PlaySessionRegistry = {
+export type PlaySessionStorageFailure = {
+  readonly tag: "playSessionStorageFailure";
+  readonly reason:
+    | "unreadable"
+    | "invalidStoredRecord"
+    | "closed"
+    | "concurrentWriteConflict";
+  readonly message: string;
+};
+
+export type PlaySessionAccessFailure =
+  | PlaySessionUnavailable
+  | PlaySessionStorageFailure;
+
+export type PlaySessionCommand = {
+  readonly name: CharacterToolName | BattleToolName | DiceToolName;
+  readonly args: Readonly<Record<string, unknown>>;
+};
+
+export type PlaySessionCommandRetention<A> = {
+  readonly command: PlaySessionCommand;
+  readonly retain: (result: A) => boolean;
+};
+
+export type PlaySessionRegistry<
+  AccessFailure extends PlaySessionAccessFailure = PlaySessionUnavailable,
+> = {
   create(): Either.Either<PlaySessionCreation, PlaySessionCreationFailure>;
   run<A>(
     playSessionId: PlaySessionId,
     operation: (root: McpPlaySessionRoot) => A | Promise<A>,
-  ): Promise<Either.Either<A, PlaySessionUnavailable>>;
+    commandRetention?: PlaySessionCommandRetention<A>,
+  ): Promise<Either.Either<A, AccessFailure>>;
 };
 
 export type PlaySessionIdFactory = () => PlaySessionId;
@@ -126,7 +156,7 @@ export function decodePlaySessionId(
   );
 }
 
-function generatedPlaySessionId(): PlaySessionId {
+export function generatedPlaySessionId(): PlaySessionId {
   for (;;) {
     const generated = Schema.decodeUnknownEither(PlaySessionIdSchema)(
       `play-session:${randomUUID()}`,

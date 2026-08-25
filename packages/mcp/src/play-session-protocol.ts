@@ -11,6 +11,7 @@ import type { DiceToolName } from "./dice-tool-input.ts";
 import {
   decodePlaySessionId,
   PLAY_SESSION_UNAVAILABLE,
+  type PlaySessionAccessFailure,
   type PlaySessionId,
   type PlaySessionRegistry,
 } from "./play-session.ts";
@@ -46,7 +47,7 @@ export type PlaySessionProtocolResult = ReturnType<typeof jsonContent> & {
 };
 
 export function handleCreatePlaySession(
-  registry: PlaySessionRegistry,
+  registry: PlaySessionRegistry<PlaySessionAccessFailure>,
   args: unknown,
 ): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
   const invalidArgs = noArgumentsError(args, playSessionToolNames.create, true);
@@ -69,7 +70,7 @@ export function handleCreatePlaySession(
 }
 
 export async function handleReadPlaySession(
-  registry: PlaySessionRegistry,
+  registry: PlaySessionRegistry<PlaySessionAccessFailure>,
   args: unknown,
 ): Promise<PlaySessionProtocolResult | ReturnType<typeof errorContent>> {
   const routed = decodePlaySessionRoutedArgs(args, playSessionToolNames.read);
@@ -86,23 +87,33 @@ export async function handleReadPlaySession(
       root.sessionStore.characters.entries(),
     ).some(([, session]) => session.tag !== "inBattle"),
   }));
-  return Either.isLeft(result)
-    ? unavailableEnvelope(routed.right.playSessionId, playSessionToolNames.read)
-    : availableEnvelope({
-        playSessionId: routed.right.playSessionId,
-        operationName: playSessionToolNames.read,
-        operationResult: {
-          tag: "playSessionResumed",
-          playSessionId: routed.right.playSessionId,
-        },
-        projection: result.right.projection,
-        hasAvailableCharacterSession: result.right.hasAvailableCharacterSession,
-      });
+  if (Either.isLeft(result)) {
+    return result.left.tag === "playSessionUnavailable"
+      ? unavailableEnvelope(
+          routed.right.playSessionId,
+          playSessionToolNames.read,
+        )
+      : errorContent("Play Session storage is unavailable.", {
+          code: "PLAY_SESSION_STORAGE_FAILURE",
+          reason: result.left.reason,
+        });
+  }
+  return availableEnvelope({
+    playSessionId: routed.right.playSessionId,
+    operationName: playSessionToolNames.read,
+    operationResult: {
+      tag: "playSessionResumed",
+      playSessionId: routed.right.playSessionId,
+    },
+    projection: result.right.projection,
+    hasAvailableCharacterSession: result.right.hasAvailableCharacterSession,
+  });
 }
 
 export async function handlePlaySessionOperation(input: {
-  readonly registry: PlaySessionRegistry;
+  readonly registry: PlaySessionRegistry<PlaySessionAccessFailure>;
   readonly operationName: CharacterToolName | BattleToolName | DiceToolName;
+  readonly recordOperation: boolean;
   readonly args: unknown;
   readonly handle: (
     root: McpPlaySessionRoot,
@@ -121,9 +132,25 @@ export async function handlePlaySessionOperation(input: {
         root.sessionStore.characters.entries(),
       ).some(([, session]) => session.tag !== "inBattle"),
     }),
+    input.recordOperation
+      ? {
+          command: {
+            name: input.operationName,
+            args: routed.right.operationArgs,
+          },
+          retain: (operation) =>
+            isToolContent(operation.operationContent) &&
+            operation.operationContent.isError !== true,
+        }
+      : undefined,
   );
   if (Either.isLeft(result)) {
-    return unavailableEnvelope(routed.right.playSessionId, input.operationName);
+    return result.left.tag === "playSessionUnavailable"
+      ? unavailableEnvelope(routed.right.playSessionId, input.operationName)
+      : errorContent("Play Session storage is unavailable.", {
+          code: "PLAY_SESSION_STORAGE_FAILURE",
+          reason: result.left.reason,
+        });
   }
 
   const operationContent = result.right.operationContent;
