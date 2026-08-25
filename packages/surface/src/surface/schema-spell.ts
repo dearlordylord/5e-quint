@@ -5046,6 +5046,259 @@ export const CreatureLegendaryActionsSchema = Schema.Struct({
   actions: CreatureActionsSchema,
 });
 
+export const StatBlockProcedureOrdinalSchema = PositiveIntegerSchema.pipe(
+  Schema.brand("StatBlockProcedureOrdinal"),
+);
+
+export const StatBlockProcedureResourceOrdinalSchema =
+  PositiveIntegerSchema.pipe(Schema.brand("StatBlockProcedureResourceOrdinal"));
+
+const STAT_BLOCK_TEXT_ONLY_REASONS = [
+  "unparsed_prose",
+  "unsupported_procedure_family",
+  "unsupported_action_shape",
+  "unsupported_spellcasting_restriction",
+  "required_table_adjudication",
+] as const;
+
+export const StatBlockTextOnlyReasonSchema = Schema.Literal(
+  ...STAT_BLOCK_TEXT_ONLY_REASONS,
+);
+
+export const StatBlockProcedureResourceLimitSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("daily"),
+    uses: PositiveIntegerSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("recharge"),
+    minimumRoll: CreatureRechargeMinimumRollSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("recharge_after_rest"),
+    rest: Schema.Literal("short_or_long"),
+  }),
+);
+
+/** A resource pool is shared by default or owned independently by each spell. */
+export const StatBlockProcedureResourceSchema = strictStruct({
+  ordinal: StatBlockProcedureResourceOrdinalSchema,
+  ownership: Schema.Literal("shared", "each"),
+  limit: StatBlockProcedureResourceLimitSchema,
+});
+
+const hasStrictlyIncreasingOrdinals = (
+  values: ReadonlyArray<{ readonly ordinal: number }>,
+): boolean =>
+  values.every(
+    (value, index) => index === 0 || value.ordinal > values[index - 1]!.ordinal,
+  );
+
+export const StatBlockProcedureResourcesSchema = nonEmpty(
+  StatBlockProcedureResourceSchema,
+).pipe(
+  Schema.filter(hasStrictlyIncreasingOrdinals, {
+    message: () =>
+      "Stat Block procedure resources must have strictly increasing ordinals.",
+  }),
+);
+
+export const StatBlockProcedureResourceRefsSchema = Schema.Array(
+  StatBlockProcedureResourceOrdinalSchema,
+).pipe(
+  Schema.filter((refs) => new Set(refs).size === refs.length, {
+    message: () =>
+      "A Stat Block procedure must not reference one resource more than once.",
+  }),
+);
+
+const AuthoredAttackRollProcedureSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("attack_roll"),
+    ...CreatureAttackRollMechanicsCommonFields,
+    attackType: Schema.Literal("melee"),
+    name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
+    description: optionalExact(surfaceExactProse(Schema.String)),
+  }),
+  strictStruct({
+    kind: Schema.Literal("attack_roll"),
+    ...CreatureAttackRollMechanicsCommonFields,
+    attackType: Schema.Literal("ranged"),
+    ammunition: optionalExact(AmmunitionKindSchema),
+    name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
+    description: optionalExact(surfaceExactProse(Schema.String)),
+  }),
+);
+
+const AuthoredSaveGateProcedureBaseFields = {
+  kind: Schema.Literal("save"),
+  name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
+  description: optionalExact(surfaceExactProse(Schema.String)),
+  ability: AbilitySchema,
+  dc: DcSourceSchema,
+  onFail: EffectAtomSchema,
+  onSuccess: SaveSuccessOutcomeSchema,
+  multiattackCount: optionalExact(StatBlockValueSchema),
+} as const;
+
+const AuthoredSaveGateProcedureSchema = Schema.Union(
+  strictStruct({
+    ...AuthoredSaveGateProcedureBaseFields,
+    area: AreaShapeDescriptorSchema,
+  }),
+  strictStruct({
+    ...AuthoredSaveGateProcedureBaseFields,
+    target: Schema.Struct({
+      kind: Schema.Literal("one_creature_in_range"),
+      rangeFeet: Schema.Number,
+    }),
+  }),
+);
+
+const AuthoredSupportProcedureSchema = strictStruct({
+  kind: Schema.Literal("support"),
+  name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
+  target: Schema.Literal("self", "ally_in_range"),
+  rangeFeet: optionalExact(Schema.Number),
+  effect: EffectAtomSchema,
+  multiattackCount: optionalExact(StatBlockValueSchema),
+});
+
+const AuthoredActionOptionProcedureSchema = strictStruct({
+  kind: Schema.Literal("action_option"),
+  name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
+  options: nonEmpty(StandardActionKindSchema),
+});
+
+const AuthoredMultiattackProcedureSchema = strictStruct({
+  kind: Schema.Literal("multiattack"),
+  name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
+  dispatches: nonEmpty(
+    strictStruct({
+      procedureOrdinal: StatBlockProcedureOrdinalSchema,
+      count: StatBlockValueSchema,
+    }),
+  ),
+});
+
+export const StatBlockSpellReferenceSchema = strictStruct({
+  spellId: surfaceReference(Schema.NonEmptyTrimmedString, "spell-reference"),
+  count: optionalExact(PositiveIntegerSchema),
+  castAtLevel: optionalExact(SpellLevelSchema),
+  restriction: optionalExact(surfaceExactProse(Schema.NonEmptyTrimmedString)),
+});
+
+export const StatBlockSpellcastingGroupSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("at_will"),
+    resourceRefs: Schema.Tuple(),
+    spells: nonEmpty(StatBlockSpellReferenceSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal("limited"),
+    resourceRefs: nonEmpty(StatBlockProcedureResourceOrdinalSchema),
+    spells: nonEmpty(StatBlockSpellReferenceSchema),
+  }),
+);
+
+export const StatBlockSpellcastingComponentsSchema = Schema.Struct({
+  v: Schema.Boolean,
+  s: Schema.Boolean,
+  m: Schema.Union(Schema.Literal(false), surfaceExactProse(Schema.String)),
+});
+
+const AuthoredSpellcastingProcedureSchema = strictStruct({
+  kind: Schema.Literal("spellcasting"),
+  name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
+  ability: AbilitySchema,
+  spellSaveDc: optionalExact(DcSourceSchema),
+  spellAttackBonus: optionalExact(StatBlockValueSchema),
+  components: optionalExact(StatBlockSpellcastingComponentsSchema),
+  groups: nonEmpty(StatBlockSpellcastingGroupSchema),
+});
+
+export const AuthoredExecutableProcedureSchema = Schema.Union(
+  AuthoredMultiattackProcedureSchema,
+  AuthoredAttackRollProcedureSchema,
+  AuthoredSaveGateProcedureSchema,
+  AuthoredSupportProcedureSchema,
+  AuthoredActionOptionProcedureSchema,
+  AuthoredSpellcastingProcedureSchema,
+);
+
+export const StatBlockProcedureEntrySchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("executable"),
+    procedureOrdinal: StatBlockProcedureOrdinalSchema,
+    procedure: AuthoredExecutableProcedureSchema,
+    resourceRefs: StatBlockProcedureResourceRefsSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("textOnly"),
+    procedureOrdinal: StatBlockProcedureOrdinalSchema,
+    name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
+    description: surfaceExactProse(Schema.NonEmptyTrimmedString),
+    reason: StatBlockTextOnlyReasonSchema,
+    resourceRefs: StatBlockProcedureResourceRefsSchema,
+  }),
+);
+
+type StatBlockProcedureEntry = Schema.Schema.Type<
+  typeof StatBlockProcedureEntrySchema
+>;
+
+const hasStrictlyIncreasingProcedureOrdinals = (
+  entries: ReadonlyArray<StatBlockProcedureEntry>,
+): boolean =>
+  entries.every(
+    (entry, index) =>
+      index === 0 ||
+      entry.procedureOrdinal > entries[index - 1]!.procedureOrdinal,
+  );
+
+const hasKnownMultiattackDispatches = (
+  entries: ReadonlyArray<StatBlockProcedureEntry>,
+): boolean => {
+  const ordinals = new Set(entries.map((entry) => entry.procedureOrdinal));
+  return entries.every(
+    (entry) =>
+      entry.kind !== "executable" ||
+      entry.procedure.kind !== "multiattack" ||
+      entry.procedure.dispatches.every(
+        (dispatch) =>
+          dispatch.procedureOrdinal !== entry.procedureOrdinal &&
+          ordinals.has(dispatch.procedureOrdinal),
+      ),
+  );
+};
+
+export const StatBlockProcedureSectionSchema = nonEmpty(
+  StatBlockProcedureEntrySchema,
+).pipe(
+  Schema.filter(hasStrictlyIncreasingProcedureOrdinals, {
+    message: () =>
+      "Stat Block procedure entries must have strictly increasing ordinals.",
+  }),
+  Schema.filter(hasKnownMultiattackDispatches, {
+    message: () =>
+      "Stat Block Multiattack dispatches must reference an authored procedure ordinal in the same section.",
+  }),
+);
+
+export const StatBlockActionSectionSchema = StatBlockProcedureSectionSchema;
+export const StatBlockBonusActionSectionSchema =
+  StatBlockProcedureSectionSchema;
+export const StatBlockReactionSectionSchema = StatBlockProcedureSectionSchema;
+
+export const StatBlockLegendaryActionSectionSchema = strictStruct({
+  uses: PositiveIntegerSchema,
+  entries: StatBlockProcedureSectionSchema,
+});
+
+type StatBlockProcedureSection = Schema.Schema.Type<
+  typeof StatBlockProcedureSectionSchema
+>;
+
 export const CreatureTraitEffectSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal(
@@ -5701,12 +5954,20 @@ export const CreatureStatBlockProjectionSchema = Schema.Struct(
  */
 export const CreatureStatBlockSchema = CreatureStatBlockProjectionSchema;
 
+const StandaloneStatBlockProcedureFields = {
+  resources: optionalExact(StatBlockProcedureResourcesSchema),
+  actions: optionalExact(StatBlockActionSectionSchema),
+  bonusActions: optionalExact(StatBlockBonusActionSectionSchema),
+  reactions: optionalExact(StatBlockReactionSectionSchema),
+  legendaryActions: optionalExact(StatBlockLegendaryActionSectionSchema),
+} as const;
+
 /**
  * Standalone authored Stat Block facts. This shape owns source-descriptive
  * facts that a spawned/runtime projection intentionally does not carry.
  * Hit Dice notation is deliberately not represented here yet.
  */
-export const StandaloneStatBlockSchema = Schema.Struct({
+const StandaloneStatBlockBaseSchema = Schema.Struct({
   displayName: CreatureStatBlockProjectionFields.displayName,
   size: StandaloneStatBlockSizeSchema,
   creatureType: CreatureTypeSchema,
@@ -5729,12 +5990,62 @@ export const StandaloneStatBlockSchema = Schema.Struct({
   passivePerception: Schema.Number.pipe(Schema.int()),
   gear: optionalExact(nonEmpty(StatBlockGearEntrySchema)),
   communication: StatBlockCommunicationSchema,
-  actions: CreatureStatBlockProjectionFields.actions,
-  bonusActions: CreatureStatBlockProjectionFields.bonusActions,
-  reactions: CreatureStatBlockProjectionFields.reactions,
-  legendaryActions: CreatureStatBlockProjectionFields.legendaryActions,
+  ...StandaloneStatBlockProcedureFields,
   traits: CreatureStatBlockProjectionFields.traits,
 });
+
+type StandaloneStatBlockProcedureFields = {
+  readonly actions?: StatBlockProcedureSection;
+  readonly bonusActions?: StatBlockProcedureSection;
+  readonly reactions?: StatBlockProcedureSection;
+  readonly legendaryActions?: Schema.Schema.Type<
+    typeof StatBlockLegendaryActionSectionSchema
+  >;
+};
+
+type StandaloneStatBlockBase = Schema.Schema.Type<
+  typeof StandaloneStatBlockBaseSchema
+>;
+
+const allProcedureEntries = (
+  block: Pick<
+    StandaloneStatBlockProcedureFields,
+    "actions" | "bonusActions" | "reactions" | "legendaryActions"
+  >,
+): ReadonlyArray<StatBlockProcedureEntry> => [
+  ...(block.actions ?? []),
+  ...(block.bonusActions ?? []),
+  ...(block.reactions ?? []),
+  ...(block.legendaryActions?.entries ?? []),
+];
+
+const hasKnownResourceRefs = (block: StandaloneStatBlockBase): boolean => {
+  const resourceOrdinals = new Set(
+    block.resources?.map((resource) => resource.ordinal) ?? [],
+  );
+
+  return allProcedureEntries(block).every((entry) => {
+    const procedureResourceRefs = [...entry.resourceRefs];
+    if (
+      entry.kind === "executable" &&
+      entry.procedure.kind === "spellcasting"
+    ) {
+      for (const group of entry.procedure.groups) {
+        procedureResourceRefs.push(...group.resourceRefs);
+      }
+    }
+    return procedureResourceRefs.every((resourceOrdinal) =>
+      resourceOrdinals.has(resourceOrdinal),
+    );
+  });
+};
+
+export const StandaloneStatBlockSchema = StandaloneStatBlockBaseSchema.pipe(
+  Schema.filter(hasKnownResourceRefs, {
+    message: () =>
+      "Every authored Stat Block procedure resource reference must resolve to a declared resource.",
+  }),
+);
 
 export const CreatureStatBlockOverridesSchema = Schema.Struct({
   creatureType: optionalExact(CreatureTypeSchema),
