@@ -612,6 +612,12 @@ export type CreatureImmunityList = Schema.Schema.Type<
 export type CreatureSense = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureSenseSchema
 >;
+export type StandaloneCreatureSense = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneCreatureSenseSchema
+>;
+export type StandaloneStatBlockAbilityScores = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockAbilityScoresSchema
+>;
 export type CreatureNamedAttackRoll = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureNamedAttackRollSchema
 >;

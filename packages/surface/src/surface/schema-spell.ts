@@ -5578,7 +5578,16 @@ export const StandaloneStatBlockSizeSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("alternatives"),
     options: nonEmpty(SizeSchema),
-  }),
+  }).pipe(
+    Schema.filter(
+      ({ options }) =>
+        options.length >= 2 && new Set(options).size === options.length,
+      {
+        message: () =>
+          "Standalone Stat Block size alternatives must contain at least two distinct sizes.",
+      },
+    ),
+  ),
 );
 
 const StandalonePositiveStatBlockValueSchema = StatBlockLiteralValueSchema.pipe(
@@ -5590,6 +5599,40 @@ const StandalonePositiveStatBlockValueSchema = StatBlockLiteralValueSchema.pipe(
 /** A standalone SRD value is authored as a positive fixed integer. */
 export const StandaloneStatBlockValueSchema =
   StandalonePositiveStatBlockValueSchema;
+
+/**
+ * UBIQUITOUS_LANGUAGE and the SRD bound authored ability scores to integral
+ * values from 1 through 30. Runtime projections intentionally remain broad
+ * because their values can be supplied by another rules source.
+ */
+const StandaloneStatBlockAbilityScoreSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(1, 30),
+);
+
+export const StandaloneStatBlockAbilityScoresSchema = Schema.Struct({
+  str: StandaloneStatBlockAbilityScoreSchema,
+  dex: StandaloneStatBlockAbilityScoreSchema,
+  con: StandaloneStatBlockAbilityScoreSchema,
+  int: StandaloneStatBlockAbilityScoreSchema,
+  wis: StandaloneStatBlockAbilityScoreSchema,
+  cha: StandaloneStatBlockAbilityScoreSchema,
+});
+
+/**
+ * The SRD 5.2.1 monster corpus uses special-sense ranges from 10 through
+ * 150 feet. Keep the authored boundary positive and bounded while leaving
+ * CreatureSenseSchema unchanged for reusable runtime projections.
+ */
+const StandaloneStatBlockSenseRangeFeetSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(1, 150),
+);
+
+export const StandaloneCreatureSenseSchema = Schema.Struct({
+  kind: CreatureSenseSchema.fields.kind,
+  rangeFeet: StandaloneStatBlockSenseRangeFeetSchema,
+});
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
@@ -5626,8 +5669,23 @@ export const StatBlockGearEntrySchema = Schema.Struct({
   quantity: optionalExact(PositiveIntegerSchema),
 });
 
+const RESERVED_STAT_BLOCK_LANGUAGE_NAMES = ["all", "none"] as const;
+
+/** Compare reserved labels after trimming and lower-casing, while preserving
+ * the authored spelling of every non-reserved language label. */
 const StatBlockLanguageNameSchema = surfaceIdentity(
-  Schema.NonEmptyTrimmedString,
+  Schema.NonEmptyTrimmedString.pipe(
+    Schema.filter(
+      (language) =>
+        !RESERVED_STAT_BLOCK_LANGUAGE_NAMES.some(
+          (reserved) => reserved === language.trim().toLowerCase(),
+        ),
+      {
+        message: () =>
+          "Named Stat Block languages must not use the reserved All or None values.",
+      },
+    ),
+  ),
   "label",
 );
 
@@ -5653,12 +5711,8 @@ const StatBlockSpeechRestrictionSchema = Schema.Struct({
 
 export const StatBlockTelepathySchema = Schema.Struct({
   rangeFeet: PositiveIntegerSchema,
-  response: optionalExact(
-    Schema.Literal(
-      "receiving_creature_can_respond",
-      "receiving_creature_cannot_respond",
-    ),
-  ),
+  /** Omitting response means that the receiving creature can respond. */
+  response: optionalExact(Schema.Literal("receiving_creature_cannot_respond")),
   requiresLanguageUnderstanding: optionalExact(StatBlockLanguageSetSchema),
 });
 
@@ -5751,7 +5805,7 @@ export const StandaloneStatBlockSchema = Schema.Struct({
   ac: StatBlockArmorClassSchema,
   hp: StandaloneStatBlockValueSchema,
   speeds: nonEmpty(StandaloneCreatureSpeedSchema),
-  abilityScores: CreatureStatBlockProjectionFields.abilityScores,
+  abilityScores: StandaloneStatBlockAbilityScoresSchema,
   initiative: StatBlockInitiativeSchema,
   savingThrowModifiers: CreatureStatBlockProjectionFields.savingThrowModifiers,
   skillModifiers: CreatureStatBlockProjectionFields.skillModifiers,
@@ -5759,7 +5813,7 @@ export const StandaloneStatBlockSchema = Schema.Struct({
   vulnerabilities: CreatureStatBlockProjectionFields.vulnerabilities,
   resistances: CreatureStatBlockProjectionFields.resistances,
   immunities: CreatureStatBlockProjectionFields.immunities,
-  senses: CreatureStatBlockProjectionFields.senses,
+  senses: optionalExact(nonEmpty(StandaloneCreatureSenseSchema)),
   passivePerception: NonNegativeIntegerSchema,
   gear: optionalExact(nonEmpty(StatBlockGearEntrySchema)),
   communication: StatBlockCommunicationSchema,

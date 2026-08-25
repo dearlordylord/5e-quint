@@ -57,6 +57,8 @@ export {
   CreatureStatBlockProjectionSchema,
   CreatureStatBlockOverridesSchema,
   CreatureStatBlockSchema,
+  StandaloneCreatureSenseSchema,
+  StandaloneStatBlockAbilityScoresSchema,
   StandaloneStatBlockSchema,
   StandaloneStatBlockSizeSchema,
   StandaloneStatBlockValueSchema,
