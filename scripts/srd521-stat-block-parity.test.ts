@@ -361,6 +361,40 @@ describe("SRD Stat Block source parity operation", () => {
     ).toEqual([]);
   });
 
+  test("does not validate a provenance anchor in an unreadable source path", () => {
+    const report = readSrdStatBlockParity({
+      repoRoot: process.cwd(),
+      readSource: (absolutePath) => {
+        if (absolutePath.endsWith("Monsters-P-S.md")) {
+          throw new Error("synthetic unreadable P-S source");
+        }
+        return readFileSync(absolutePath, "utf8");
+      },
+      installedStatBlocks: [
+        parityRecord({
+          id: statBlockId("stat_block_stone_giant"),
+          name: "Stone Giant",
+          provenance: {
+            kind: "srd-5.2.1",
+            section: "Monsters/Monsters-P-S.md:1567-1600",
+          },
+        }),
+      ],
+      generatedPeerObservations: [],
+    });
+
+    expect(report.issues).toContainEqual({
+      kind: "unreadable-source",
+      sourcePath: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+      message: "synthetic unreadable P-S source",
+    });
+    expect(
+      report.issues.filter(
+        (issue) => issue.kind === "provenance" && issue.name === "Stone Giant",
+      ),
+    ).toEqual([]);
+  });
+
   test("does not claim the full corpus when a source path is omitted", () => {
     const report = deriveSrdStatBlockParity({
       sourceFiles: [

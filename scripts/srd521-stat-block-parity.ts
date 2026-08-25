@@ -268,7 +268,7 @@ export function deriveSrdStatBlockParity(
   const installedCatalog = deriveInstalledCatalogIssues(
     input.installedStatBlocks,
     sourceIdentities,
-    sourceCoverage.tag,
+    sourceCoverage,
   );
   const issues = [
     ...sourceReadIssues.map((sourceReadIssue) => ({
@@ -378,7 +378,7 @@ function deriveDivergentSourceIssues(
 function deriveInstalledCatalogIssues(
   installedStatBlocks: readonly SrdStatBlockParityInstalledRecord[],
   sourceIdentities: ReadonlyMap<string, SrdStatBlockSourceIdentity>,
-  sourceIdentityCoverage: SrdStatBlockSourceCoverage["tag"],
+  sourceCoverage: SrdStatBlockSourceCoverage,
 ): {
   readonly installedNames: ReadonlySet<string>;
   readonly issues: readonly SrdStatBlockParityIssue[];
@@ -393,8 +393,8 @@ function deriveInstalledCatalogIssues(
     installedIds.add(statBlock.id);
     installedNames.add(normalizeIdentity(statBlock.name));
     issues.push(
-      ...deriveProvenanceIssues(statBlock, sourceIdentities),
-      ...(sourceIdentityCoverage === "complete"
+      ...deriveProvenanceIssues(statBlock, sourceIdentities, sourceCoverage),
+      ...(sourceCoverage.tag === "complete"
         ? deriveExtraIssue(statBlock, sourceIdentities)
         : []),
     );
@@ -415,6 +415,7 @@ function deriveDuplicateIdIssue(
 function deriveProvenanceIssues(
   statBlock: SrdStatBlockParityInstalledRecord,
   sourceIdentities: ReadonlyMap<string, SrdStatBlockSourceIdentity>,
+  sourceCoverage: SrdStatBlockSourceCoverage,
 ): readonly SrdStatBlockParityIssue[] {
   if (statBlock.provenance.kind !== "srd-5.2.1") {
     return [
@@ -434,6 +435,7 @@ function deriveProvenanceIssues(
   if (sourceIdentity === undefined) return [];
   const provenanceSection = statBlock.provenance.section;
   const claimedAnchor = parseSourceSection(provenanceSection);
+  if (!canValidateProvenanceAnchor(claimedAnchor, sourceCoverage)) return [];
   const hasSourceAnchor =
     claimedAnchor !== undefined &&
     sourceIdentity.occurrences.some((occurrence) =>
@@ -451,6 +453,22 @@ function deriveProvenanceIssues(
           actualSection: provenanceSection,
         },
       ];
+}
+
+function canValidateProvenanceAnchor(
+  claimedAnchor: ParsedSourceSection | undefined,
+  sourceCoverage: SrdStatBlockSourceCoverage,
+): boolean {
+  if (claimedAnchor === undefined) return sourceCoverage.tag === "complete";
+  const completePaths =
+    sourceCoverage.tag === "complete"
+      ? sourceCoverage.paths
+      : sourceCoverage.availablePaths.filter(
+          (sourcePath) => !sourceCoverage.incompletePaths.includes(sourcePath),
+        );
+  return completePaths.some((sourcePath) =>
+    sourcePathMatches(claimedAnchor.sourcePath, sourcePath),
+  );
 }
 
 type ParsedSourceSection = {

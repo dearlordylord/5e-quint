@@ -434,6 +434,16 @@ describe("Surface content publication checker", () => {
         join(contentDir, "creature.dhall"),
         `let nested = { kind = "fixed" }\nin { kind = "statBlock" }`,
       );
+      writeFileSync(
+        join(contentDir, "sphinx.dhall"),
+        readFileSync(
+          join(
+            process.cwd(),
+            "packages/surface/content/stat_block_sphinx_of_wonder.dhall",
+          ),
+          "utf8",
+        ),
+      );
       const result = runSurfacePublicationCheck({
         repoRoot: contentDir,
         contentDir,
@@ -449,6 +459,12 @@ describe("Surface content publication checker", () => {
         sourcePath: "creature.dhall",
         peerPath: "creature.json",
       });
+      expect(result.generatedPeerObservations).toContainEqual({
+        tag: "missing",
+        recordKind: "statBlock",
+        sourcePath: "sphinx.dhall",
+        peerPath: "sphinx.json",
+      });
       expect(result.statBlockParity.issues).toContainEqual({
         kind: "generated-peer",
         evidence: {
@@ -456,6 +472,15 @@ describe("Surface content publication checker", () => {
           recordKind: "statBlock",
           sourcePath: "creature.dhall",
           peerPath: "creature.json",
+        },
+      });
+      expect(result.statBlockParity.issues).toContainEqual({
+        kind: "generated-peer",
+        evidence: {
+          tag: "missing",
+          recordKind: "statBlock",
+          sourcePath: "sphinx.dhall",
+          peerPath: "sphinx.json",
         },
       });
     } finally {

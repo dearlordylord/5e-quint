@@ -214,7 +214,10 @@ function sourceRecordKind(sourcePath: string): SurfacePublicationRecordKind {
 function parseDhallRecordKind(contents: string): SurfacePublicationRecordKind {
   const tokens = tokenizeDhall(contents);
   const resultIndex = lastTopLevelTokenIndex(tokens, "in");
-  if (resultIndex === undefined) return "unknown";
+  if (resultIndex === undefined) {
+    const rootIndex = tokens.findIndex((token) => token.depth === 0);
+    return rootIndex < 0 ? "unknown" : recordKindFromResult(tokens, rootIndex);
+  }
   const result = tokens[resultIndex + 1];
   if (result === undefined) return "unknown";
   if (result.value === "{" || result.value === "[") {
