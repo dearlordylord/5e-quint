@@ -452,6 +452,12 @@ function coveragePaths(root) {
       "unit-profile-coverage",
       "profiles.jsonl",
     ),
+    taskClaims: path.join(
+      root,
+      "plans",
+      "unit-profile-coverage",
+      "task-claims.jsonl",
+    ),
   };
 }
 

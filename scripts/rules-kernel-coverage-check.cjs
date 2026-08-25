@@ -500,11 +500,15 @@ function validFollowUpTaskId(taskId) {
   return /^RKBC-[A-Z0-9-]+$/.test(taskId);
 }
 
-function validateFollowUpTaskIds(taskIds, context) {
+function validateFollowUpTaskIds(taskIds, context, canonicalFollowUpTaskIds) {
   const issues = [];
-  for (const taskId of taskIds) {
+  for (const taskId of Array.isArray(taskIds) ? taskIds : []) {
     if (!validFollowUpTaskId(taskId)) {
       issues.push(`${context}.followUpTaskIds has invalid task id ${taskId}.`);
+    } else if (!canonicalFollowUpTaskIds.has(taskId)) {
+      issues.push(
+        `${context}.followUpTaskIds references unknown follow-up task id ${taskId}.`,
+      );
     }
   }
   return issues;
@@ -987,7 +991,7 @@ function validateWitness(witness, context) {
   return issues;
 }
 
-function validateObligationShape(obligation) {
+function validateObligationShape(obligation, canonicalFollowUpTaskIds) {
   const issues = [];
   if (!isRecord(obligation)) return ["Obligation row must be an object."];
   for (const field of ["id", "title", "runtime", "kind", "status"]) {
@@ -1037,15 +1041,13 @@ function validateObligationShape(obligation) {
         `${obligation.id}.followUpTaskIds must name a follow-up task when present; omit the field when no follow-up is assigned.`,
       );
     }
-    if (Array.isArray(obligation.followUpTaskIds)) {
-      for (const taskId of obligation.followUpTaskIds) {
-        if (!validFollowUpTaskId(taskId)) {
-          issues.push(
-            `${obligation.id}.followUpTaskIds has invalid task id ${taskId}.`,
-          );
-        }
-      }
-    }
+    issues.push(
+      ...validateFollowUpTaskIds(
+        obligation.followUpTaskIds,
+        obligation.id,
+        canonicalFollowUpTaskIds,
+      ),
+    );
   }
   if (obligation.parityWitnesses !== undefined) {
     if (!Array.isArray(obligation.parityWitnesses)) {
@@ -1072,7 +1074,13 @@ function validateObligationShape(obligation) {
   return issues;
 }
 
-function validateProfileMapping(mapping, index, obligationIds, profilesById) {
+function validateProfileMapping(
+  mapping,
+  index,
+  obligationIds,
+  profilesById,
+  canonicalFollowUpTaskIds,
+) {
   const issues = [];
   const context = `profile-obligations row ${index + 1}`;
   if (!isRecord(mapping)) return [`${context} must be an object.`];
@@ -1164,7 +1172,13 @@ function validateProfileMapping(mapping, index, obligationIds, profilesById) {
       for (const duplicate of duplicateStrings(mapping.followUpTaskIds)) {
         issues.push(`${context}.followUpTaskIds repeats ${duplicate}.`);
       }
-      issues.push(...validateFollowUpTaskIds(mapping.followUpTaskIds, context));
+      issues.push(
+        ...validateFollowUpTaskIds(
+          mapping.followUpTaskIds,
+          context,
+          canonicalFollowUpTaskIds,
+        ),
+      );
     }
     if (typeof mapping.reason !== "string" || mapping.reason.length === 0) {
       issues.push(`${context}.reason must be a non-empty string.`);
@@ -1218,6 +1232,7 @@ function validateBattleFrontierRow(
   obligationIds,
   obligationsById,
   expectedBattleFrontier,
+  canonicalFollowUpTaskIds,
 ) {
   const issues = [];
   const context = `battle-hole-frontier row ${index + 1}`;
@@ -1341,11 +1356,13 @@ function validateBattleFrontierRow(
       );
     }
   }
-  for (const taskId of row.followUpTaskIds ?? []) {
-    if (!validFollowUpTaskId(taskId)) {
-      issues.push(`${context}.followUpTaskIds has invalid task id ${taskId}.`);
-    }
-  }
+  issues.push(
+    ...validateFollowUpTaskIds(
+      row.followUpTaskIds,
+      context,
+      canonicalFollowUpTaskIds,
+    ),
+  );
 
   const coveredByObligations = (row.coveredByObligationIds ?? [])
     .map((obligationId) => obligationsById.get(obligationId))
@@ -1550,6 +1567,7 @@ function validateGeneratorReadiness(
   qntOwnerRolesByPath,
   semanticCoreRunBlocksByPath,
   generatorSubsetAuditObligationIds,
+  canonicalFollowUpTaskIds,
 ) {
   const issues = [];
   const context = `generator-readiness row ${index + 1}`;
@@ -1596,7 +1614,13 @@ function validateGeneratorReadiness(
     for (const duplicate of duplicateStrings(readiness.followUpTaskIds)) {
       issues.push(`${context}.followUpTaskIds repeats ${duplicate}.`);
     }
-    issues.push(...validateFollowUpTaskIds(followUpTaskIds, context));
+    issues.push(
+      ...validateFollowUpTaskIds(
+        followUpTaskIds,
+        context,
+        canonicalFollowUpTaskIds,
+      ),
+    );
   }
   for (const construct of generatorSubset) {
     if (!generatorSubsetConstructs.has(construct)) {
@@ -2843,6 +2867,12 @@ function buildKernelCoverage({
   const generatorReadiness = readJsonl(rootPath, paths.generatorReadiness);
   const kernelIrBoundaries = readJsonl(rootPath, paths.kernelIrBoundaries);
   const profiles = readJsonl(rootPath, paths.unitProfiles);
+  const taskClaims = readJsonl(rootPath, paths.taskClaims);
+  const canonicalFollowUpTaskIds = new Set(
+    taskClaims.flatMap((claim) =>
+      isRecord(claim) && typeof claim.taskId === "string" ? [claim.taskId] : [],
+    ),
+  );
   const expectedBattleFrontier = extractBattleFrontierSource(rootPath);
   const scanned = scanClaimFiles(rootPath);
   const markerIndex = buildMarkerIndex(scanned.markers);
@@ -2858,7 +2888,7 @@ function buildKernelCoverage({
 
   for (const [index, obligation] of obligations.entries()) {
     issues.push(
-      ...validateObligationShape(obligation).map(
+      ...validateObligationShape(obligation, canonicalFollowUpTaskIds).map(
         (issue) => `obligations.jsonl:${index + 1}: ${issue}`,
       ),
     );
@@ -2889,7 +2919,13 @@ function buildKernelCoverage({
   const mappedProfileIds = new Set();
   for (const [index, mapping] of profileObligations.entries()) {
     issues.push(
-      ...validateProfileMapping(mapping, index, obligationIds, profilesById),
+      ...validateProfileMapping(
+        mapping,
+        index,
+        obligationIds,
+        profilesById,
+        canonicalFollowUpTaskIds,
+      ),
     );
     if (isRecord(mapping) && typeof mapping.profileId === "string") {
       if (mappedProfileIds.has(mapping.profileId)) {
@@ -2919,6 +2955,7 @@ function buildKernelCoverage({
         obligationIds,
         obligationsById,
         expectedBattleFrontier,
+        canonicalFollowUpTaskIds,
       ),
     );
     if (isRecord(row) && typeof row.id === "string") {
@@ -3032,6 +3069,7 @@ function buildKernelCoverage({
         qntOwnerRolesByPath,
         semanticCoreRunBlocksByPath,
         generatorSubsetAuditObligationIds,
+        canonicalFollowUpTaskIds,
       ),
     );
   }

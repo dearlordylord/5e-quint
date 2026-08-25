@@ -98,10 +98,10 @@ BattleHole/BattleFill/BattleSubject protocol inventory. The checker parses
 schema-derived `BattleSubject` protocol kinds. Boundary/table-owned rows must
 point at a non-semantic rules-kernel
 obligation; semantic rows must point at a covered obligation or at the
-rules-kernel follow-up task that will add the missing QNT/parity ownership. A semantic row
-may also point at a non-semantic boundary obligation when the same hole, fill,
-or subject carries caller/table facts, but that boundary coverage never
-substitutes for reducer-semantic ownership.
+rules-kernel follow-up task that will add the missing QNT/parity ownership. A
+semantic row may also point at a non-semantic boundary obligation when the same
+hole, fill, or subject carries caller/table facts, but that boundary coverage
+never substitutes for reducer-semantic ownership.
 
 `generator-readiness.jsonl` records the separate C-axis question defined in
 [Generator Readiness Source Of Truth](#generator-readiness-source-of-truth).
@@ -192,7 +192,11 @@ scope.
   arrays are invalid.
 - `followUpTaskIds`: optional `RKBC-*` rules-kernel follow-up task ids that own
   blocker resolution. `fixture-bound` and `blocked` rows require at least one
-  follow-up task id so blocker rows cannot leave future work untracked.
+  follow-up task id so blocker rows cannot leave future work untracked. Each id
+  must also be present in the canonical
+  [`task-claims.jsonl`](../unit-profile-coverage/task-claims.jsonl) ledger;
+  selected-identity evidence task ids are not follow-up owners. The checker
+  rejects syntactically valid ids that have no canonical task claim.
 
 `generatorSubset` and `blockedBy` values are checked vocabularies documented in
 `scripts/rules-kernel-coverage-config.cjs`. Keep the token catalog there so

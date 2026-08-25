@@ -56,6 +56,11 @@ Supported claim kinds are `qnt-owner`, `runtime-owner`,
 `verification-owner:qnt-proof`, `verification-owner:focused-mbt`,
 and `verification-owner:runtime-test`.
 
+`task-claims.jsonl` is the canonical task-owner ledger. Cross-lane rules-kernel
+follow-up references use the `RKBC-*` ids declared there; selected-identity
+evidence may name a task id for replay provenance without becoming a follow-up
+owner.
+
 `unit-evidence.jsonl` records concrete Unit identity evidence. The evidence row
 does not restate profile ids; the checker derives those from `unit-claims.jsonl`
 so profile classification stays single-source. Rows use exactly `unitId` plus

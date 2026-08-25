@@ -6459,19 +6459,19 @@
     {
       "classification": "table-owned-fact",
       "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
-      "followUpTaskIds": ["RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE"],
+      "followUpTaskIds": [],
       "holeKind": "objectContactTargets",
       "id": "BattleObjectContactTargetsHole",
-      "reason": "Heat Metal object-contact target identity, physical-contact witnesses, and later-turn object-within-range witness are caller/table facts. The reducer consumes selected combatant ids and object-contact witness facts without deriving inventory, map geometry, or object position state; the remaining work is Surface/profile join evidence, not runtime feature widening.",
+      "reason": "Heat Metal object-contact target identity, physical-contact witnesses, and later-turn object-within-range witness are caller/table facts. The reducer consumes selected combatant ids and object-contact witness facts without deriving inventory, map geometry, or object position state; Surface/profile join evidence is closed by the covered profile mapping.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "table-owned-fact",
       "coveredByObligationIds": ["BATTLE.TABLE.HOLE_FACT_BOUNDARIES"],
       "fillKind": "objectContactTargets",
-      "followUpTaskIds": ["RKBC-NONFEATURE-SURFACE-PROFILE-JOIN-EVIDENCE"],
+      "followUpTaskIds": [],
       "id": "objectContactTargets",
-      "reason": "Object-contact target fills supply selected contact creatures plus table-witnessed physical-contact and object-within-range facts for Heat Metal. Contact and range derivation stay at the caller/table boundary; the remaining work is Surface/profile join evidence, not runtime feature widening.",
+      "reason": "Object-contact target fills supply selected contact creatures plus table-witnessed physical-contact and object-within-range facts for Heat Metal. Contact and range derivation stay at the caller/table boundary; Surface/profile join evidence is closed by the covered profile mapping.",
       "subject": "battle-fill-kind"
     },
     {

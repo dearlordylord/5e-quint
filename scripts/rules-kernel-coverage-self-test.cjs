@@ -39,6 +39,15 @@ function runSelfTest() {
     '{"id":"spell.sample","profileKind":"spell-invocation"}\n',
   );
   writeFile(
+    path.join(root, "plans", "unit-profile-coverage", "task-claims.jsonl"),
+    JSON.stringify({
+      taskId: "RKBC-SAMPLE-FIXTURE-SPLIT",
+      claimKind: "accepted-follow-up-split",
+      profileIds: [],
+      note: "sample follow-up task owner",
+    }) + "\n",
+  );
+  writeFile(
     path.join(root, "plans", "rules-kernel-coverage", "obligations.jsonl"),
     [
       JSON.stringify({
@@ -543,6 +552,21 @@ function runSelfTest() {
       reason: "sample profile still needs a semantic obligation join",
     },
   ]);
+  writeFile(
+    sampleProfileObligationsPath,
+    JSON.stringify({
+      profileId: "spell.sample",
+      followUpTaskIds: ["RKBC-UNKNOWN-FIXTURE-SPLIT"],
+      reason: "sample profile still needs a semantic obligation join",
+    }) + "\n",
+  );
+  const unknownFollowUpTaskResult = buildKernelCoverage({ root });
+  assert.ok(
+    unknownFollowUpTaskResult.issues.includes(
+      "profile-obligations row 1.followUpTaskIds references unknown follow-up task id RKBC-UNKNOWN-FIXTURE-SPLIT.",
+    ),
+    `Expected unknown follow-up task issue, got ${JSON.stringify(unknownFollowUpTaskResult.issues)}`,
+  );
   writeFile(sampleProfileObligationsPath, initialProfileObligationsText);
 
   const sampleQntOwnerRolesPath = path.join(
