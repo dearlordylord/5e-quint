@@ -13,6 +13,11 @@ export const SURFACE_PUBLICATION_RECORD_KINDS = [
 export type SurfacePublicationRecordKind =
   (typeof SURFACE_PUBLICATION_RECORD_KINDS)[number];
 
+export type SurfacePublicationKnownRecordKind = Exclude<
+  SurfacePublicationRecordKind,
+  "unknown"
+>;
+
 type PublicationPeerObservationForKind<K extends SurfacePublicationRecordKind> =
   | {
       readonly tag: "present";
@@ -65,6 +70,15 @@ type PublicationPeerObservationForKind<K extends SurfacePublicationRecordKind> =
       readonly tag: "orphaned-peer-failed";
       readonly reason: "decode" | "read";
       readonly recordKind: K;
+      readonly peerPath: string;
+      readonly message: string;
+    }
+  | {
+      readonly tag: "peer-family-mismatch";
+      readonly role: "generated" | "committed";
+      readonly recordKind: K;
+      readonly actualRecordKind: SurfacePublicationKnownRecordKind;
+      readonly sourcePath: string;
       readonly peerPath: string;
       readonly message: string;
     };

@@ -31,6 +31,7 @@ import {
 import {
   projectSrdStatBlockPeerObservation,
   type SurfacePublicationPeerObservation,
+  type SurfacePublicationKnownRecordKind,
   type SurfacePublicationRecordKind,
 } from "./surface-publication-peer-observations.ts";
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
@@ -76,6 +77,13 @@ export type PublicationIssue =
   | {
       readonly kind: "publication-generation-failed";
       readonly issue: SurfacePublicationBuildIssue;
+    }
+  | {
+      readonly kind: "peer-family-mismatch";
+      readonly source: string;
+      readonly peer: string;
+      readonly expectedRecordKind: SurfacePublicationKnownRecordKind;
+      readonly actualRecordKind: SurfacePublicationKnownRecordKind;
     };
 
 type JsonDocument = unknown;
@@ -484,6 +492,62 @@ type JsonInspection =
       readonly message: string;
     };
 
+type PeerFamilyMismatch = {
+  readonly expectedRecordKind: SurfacePublicationKnownRecordKind;
+  readonly actualRecordKind: SurfacePublicationKnownRecordKind;
+};
+
+function ownedPeerRecordKind(
+  sourceKind: SurfacePublicationRecordKind,
+  peerKind: SurfacePublicationRecordKind,
+): SurfacePublicationRecordKind {
+  return sourceKind === "unknown" ? peerKind : sourceKind;
+}
+
+function peerFamilyMismatch(
+  expectedRecordKind: SurfacePublicationRecordKind,
+  actualRecordKind: SurfacePublicationRecordKind,
+): PeerFamilyMismatch | undefined {
+  if (
+    expectedRecordKind === "unknown" ||
+    actualRecordKind === "unknown" ||
+    expectedRecordKind === actualRecordKind
+  ) {
+    return undefined;
+  }
+  return { expectedRecordKind, actualRecordKind };
+}
+
+function reportPeerFamilyMismatch(
+  issues: PublicationIssue[],
+  observations: SurfacePublicationPeerObservation[],
+  role: "generated" | "committed",
+  sourcePath: string,
+  peerPath: string,
+  sourceKind: SurfacePublicationRecordKind,
+  inspection: JsonInspection,
+): boolean {
+  const mismatch = peerFamilyMismatch(sourceKind, inspection.recordKind);
+  if (mismatch === undefined) return false;
+  const message = `${role} peer ${peerPath} advertises ${mismatch.actualRecordKind}; source ${sourcePath} declares ${mismatch.expectedRecordKind}.`;
+  issues.push({
+    kind: "peer-family-mismatch",
+    source: sourcePath,
+    peer: peerPath,
+    ...mismatch,
+  });
+  observations.push({
+    tag: "peer-family-mismatch",
+    role,
+    recordKind: sourceKind,
+    actualRecordKind: mismatch.actualRecordKind,
+    sourcePath,
+    peerPath,
+    message,
+  });
+  return true;
+}
+
 function inspectJsonFile(
   issues: PublicationIssue[],
   filePath: string,
@@ -705,43 +769,69 @@ export function runPublicationCheck(
           `generated from ${displaySource}`,
           sourceKind,
         );
+        const generatedFamilyMismatch = reportPeerFamilyMismatch(
+          issues,
+          generatedPeerObservations,
+          "generated",
+          displaySource,
+          displayPeer,
+          sourceKind,
+          generatedInspection,
+        );
         if (generatedInspection.tag === "failed") {
           peerIsHealthy = false;
           generatedPeerObservations.push({
             tag: "generated-peer-failed",
             reason: generatedInspection.reason,
-            recordKind: generatedInspection.recordKind,
+            recordKind: ownedPeerRecordKind(
+              sourceKind,
+              generatedInspection.recordKind,
+            ),
             sourcePath: displaySource,
             peerPath: displayPeer,
             message: generatedInspection.message,
           });
+        } else if (generatedFamilyMismatch) {
+          peerIsHealthy = false;
         }
       }
 
       let committedInspection: JsonInspection | undefined;
       if (peerExists) {
-        const generatedKind =
-          generatedInspection?.recordKind === undefined ||
-          generatedInspection.recordKind === "unknown"
-            ? sourceKind
-            : generatedInspection.recordKind;
         committedInspection = inspectJsonFile(
           issues,
           peerPath,
           displayPeer,
           `committed peer for ${displaySource}`,
-          generatedKind,
+          ownedPeerRecordKind(
+            sourceKind,
+            generatedInspection?.recordKind ?? "unknown",
+          ),
+        );
+        const committedFamilyMismatch = reportPeerFamilyMismatch(
+          issues,
+          generatedPeerObservations,
+          "committed",
+          displaySource,
+          displayPeer,
+          sourceKind,
+          committedInspection,
         );
         if (committedInspection.tag === "failed") {
           peerIsHealthy = false;
           generatedPeerObservations.push({
             tag: "committed-peer-failed",
             reason: committedInspection.reason,
-            recordKind: committedInspection.recordKind,
+            recordKind: ownedPeerRecordKind(
+              sourceKind,
+              committedInspection.recordKind,
+            ),
             sourcePath: displaySource,
             peerPath: displayPeer,
             message: committedInspection.message,
           });
+        } else if (committedFamilyMismatch) {
+          peerIsHealthy = false;
         }
 
         if (
@@ -755,7 +845,10 @@ export function runPublicationCheck(
             generatedPeerObservations.push({
               tag: "generated-peer-failed",
               reason: "read",
-              recordKind: generatedInspection.recordKind,
+              recordKind: ownedPeerRecordKind(
+                sourceKind,
+                generatedInspection.recordKind,
+              ),
               sourcePath: displaySource,
               peerPath: displayPeer,
               message: `Generated peer could not be read: ${generated.message}`,
@@ -765,7 +858,10 @@ export function runPublicationCheck(
             generatedPeerObservations.push({
               tag: "committed-peer-failed",
               reason: "read",
-              recordKind: committedInspection.recordKind,
+              recordKind: ownedPeerRecordKind(
+                sourceKind,
+                committedInspection.recordKind,
+              ),
               sourcePath: displaySource,
               peerPath: displayPeer,
               message: `Committed peer could not be read: ${committed.message}`,
@@ -779,7 +875,10 @@ export function runPublicationCheck(
             });
             generatedPeerObservations.push({
               tag: "out-of-sync",
-              recordKind: generatedInspection.recordKind,
+              recordKind: ownedPeerRecordKind(
+                sourceKind,
+                generatedInspection.recordKind,
+              ),
               sourcePath: displaySource,
               peerPath: displayPeer,
             });
@@ -788,14 +887,15 @@ export function runPublicationCheck(
       }
 
       if (peerIsHealthy) {
+        const healthyPeerKind =
+          committedInspection?.tag === "ok"
+            ? committedInspection.recordKind
+            : generatedInspection?.tag === "ok"
+              ? generatedInspection.recordKind
+              : sourceKind;
         generatedPeerObservations.push({
           tag: "present",
-          recordKind:
-            committedInspection?.tag === "ok"
-              ? committedInspection.recordKind
-              : generatedInspection?.tag === "ok"
-                ? generatedInspection.recordKind
-                : sourceKind,
+          recordKind: ownedPeerRecordKind(sourceKind, healthyPeerKind),
           sourcePath: displaySource,
           peerPath: displayPeer,
         });
@@ -931,6 +1031,10 @@ function main(): void {
       } else if (issue.kind === "publication-generation-failed") {
         console.error(
           `- publication-generation-failed: ${describeSurfacePublicationBuildIssue(issue.issue)}`,
+        );
+      } else if (issue.kind === "peer-family-mismatch") {
+        console.error(
+          `- peer-family-mismatch: ${issue.peer} from ${issue.source} advertises ${issue.actualRecordKind}; expected ${issue.expectedRecordKind}`,
         );
       } else {
         console.error(

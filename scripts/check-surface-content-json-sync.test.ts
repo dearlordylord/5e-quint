@@ -487,4 +487,116 @@ describe("Surface content publication checker", () => {
       rmSync(contentDir, { force: true, recursive: true });
     }
   });
+
+  it("keeps the source family for mismatched committed peer failures", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-peer-family-mismatch-test-"),
+    );
+    const sourceContents = `{ kind = "statBlock" }`;
+    const sourceNames = [
+      "committed-decode",
+      "committed-read",
+      "committed-out-of-sync",
+    ];
+
+    try {
+      for (const sourceName of sourceNames) {
+        writeFileSync(join(contentDir, `${sourceName}.dhall`), sourceContents);
+      }
+      writeFileSync(
+        join(contentDir, "committed-decode.json"),
+        '{"kind":"unit"}',
+      );
+      writeFileSync(
+        join(contentDir, "committed-read.json"),
+        validStatBlockRecord,
+      );
+      writeFileSync(
+        join(contentDir, "committed-out-of-sync.json"),
+        validRecord,
+      );
+
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        compile: (sourcePath, outputPath) => {
+          if (sourcePath.endsWith("committed-read.dhall")) {
+            writeFileSync(outputPath, validRecord);
+            rmSync(join(contentDir, "committed-read.json"), { force: true });
+          } else {
+            writeFileSync(outputPath, validStatBlockRecord);
+          }
+          return undefined;
+        },
+      });
+
+      expect(result.issues).toEqual(
+        expect.arrayContaining([
+          {
+            kind: "peer-family-mismatch",
+            source: "committed-decode.dhall",
+            peer: "committed-decode.json",
+            expectedRecordKind: "statBlock",
+            actualRecordKind: "other",
+          },
+          {
+            kind: "peer-family-mismatch",
+            source: "committed-out-of-sync.dhall",
+            peer: "committed-out-of-sync.json",
+            expectedRecordKind: "statBlock",
+            actualRecordKind: "other",
+          },
+        ]),
+      );
+      expect(
+        result.generatedPeerObservations.filter(
+          (observation) =>
+            (observation.tag === "committed-peer-failed" ||
+              observation.tag === "out-of-sync") &&
+            observation.peerPath === "committed-decode.json",
+        ),
+      ).toEqual([
+        expect.objectContaining({
+          tag: "committed-peer-failed",
+          reason: "decode",
+          recordKind: "statBlock",
+        }),
+      ]);
+      expect(
+        result.generatedPeerObservations.filter(
+          (observation) =>
+            (observation.tag === "committed-peer-failed" ||
+              observation.tag === "out-of-sync") &&
+            observation.peerPath === "committed-read.json",
+        ),
+      ).toEqual([
+        expect.objectContaining({
+          tag: "committed-peer-failed",
+          reason: "read",
+          recordKind: "statBlock",
+        }),
+      ]);
+      expect(
+        result.generatedPeerObservations.filter(
+          (observation) =>
+            observation.tag === "out-of-sync" &&
+            observation.peerPath === "committed-out-of-sync.json",
+        ),
+      ).toEqual([
+        expect.objectContaining({
+          tag: "out-of-sync",
+          recordKind: "statBlock",
+        }),
+      ]);
+      expect(
+        result.generatedPeerObservations.filter(
+          (observation) =>
+            observation.tag === "peer-family-mismatch" &&
+            observation.role === "committed",
+        ),
+      ).toHaveLength(2);
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
 });
