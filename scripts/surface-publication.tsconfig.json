@@ -5,7 +5,9 @@
     "generate-surface-publication.ts",
     "generate-surface-portable-cases.ts",
     "surface-portable-case-oracle.ts",
-    "srd-surface-publication-artifacts.ts"
+    "srd-surface-publication-artifacts.ts",
+    "srd521-stat-block-parity.ts",
+    "srd521-stat-block-parity.test.ts"
   ],
   "compilerOptions": {
     "target": "ES2022",

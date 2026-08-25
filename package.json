@@ -14,7 +14,7 @@
     "check:cleanroom-provenance": "node scripts/check-cleanroom-provenance.cjs",
     "check:markdown-links": "node scripts/check-markdown-links.cjs --self-test && node scripts/check-markdown-links.cjs",
     "check:surface-publication-typecheck": "tsc -p scripts/surface-publication.tsconfig.json --noEmit",
-    "check:surface-publication-self-test": "pnpm exec vitest run scripts/check-surface-content-json-sync.test.ts --pool=threads --maxWorkers=1",
+    "check:surface-publication-self-test": "pnpm exec vitest run scripts/check-surface-content-json-sync.test.ts scripts/srd521-stat-block-parity.test.ts --pool=threads --maxWorkers=1",
     "generate:surface-publication": "pnpm exec tsx scripts/generate-surface-publication.ts",
     "generate:surface-portable-cases": "pnpm exec tsx scripts/generate-surface-portable-cases.ts",
     "check:surface-class-json-sync": "pnpm check:surface-content-publication",
