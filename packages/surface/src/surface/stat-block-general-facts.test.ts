@@ -38,6 +38,42 @@ const syntheticStandaloneStatBlock = {
   },
 } as const;
 
+type StandaloneProcedureFields = Schema.Schema.Type<
+  typeof StandaloneStatBlockSchema
+>;
+type GroupedProcedureMembers =
+  | "multiattacks"
+  | "attacks"
+  | "saves"
+  | "supports"
+  | "actionOptions"
+  | "specials";
+type ContainsGroupedProcedureMembers<Value> =
+  Extract<keyof Value, GroupedProcedureMembers> extends never
+    ? "actions" extends keyof Value
+      ? ContainsGroupedProcedureMembers<NonNullable<Value["actions"]>>
+      : false
+    : true;
+type StandaloneGroupedProcedureField = {
+  [Key in Extract<
+    keyof StandaloneProcedureFields,
+    "actions" | "bonusActions" | "reactions" | "legendaryActions"
+  >]: ContainsGroupedProcedureMembers<
+    NonNullable<StandaloneProcedureFields[Key]>
+  > extends true
+    ? Key
+    : never;
+}[Extract<
+  keyof StandaloneProcedureFields,
+  "actions" | "bonusActions" | "reactions" | "legendaryActions"
+>];
+type StandaloneGroupedProcedureFieldsAbsent = [
+  StandaloneGroupedProcedureField,
+] extends [never]
+  ? true
+  : false;
+const standaloneGroupedProcedureFieldsAbsent: StandaloneGroupedProcedureFieldsAbsent = true;
+
 describe("standalone Stat Block general facts", () => {
   test("decodes descriptive and communication facts without Hit Dice", () => {
     expect(
@@ -83,6 +119,34 @@ describe("standalone Stat Block general facts", () => {
       decode(StandaloneStatBlockSchema, {
         ...syntheticStandaloneStatBlock,
         displayName: "Synthetic Warden",
+      }),
+    ).toThrow();
+  });
+
+  test("leaves grouped procedure sections to the procedure schema", () => {
+    expect(standaloneGroupedProcedureFieldsAbsent).toBe(true);
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        actions: {},
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        bonusActions: {},
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        reactions: {},
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        legendaryActions: { uses: 1, actions: {} },
       }),
     ).toThrow();
   });
