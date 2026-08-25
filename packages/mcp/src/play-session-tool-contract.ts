@@ -69,7 +69,7 @@ export const playSessionToolDefinitions = [
     description:
       "Claim this temporary Guest Play Session for the authenticated user without copying it.",
     inputSchema: savePlaySessionInputSchema,
-    annotations: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
+    annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     securitySchemes: SAVED_PLAY_SESSION_SECURITY_SCHEMES,
     outputSchema: savedManagementOutputSchema("playSessionSaved"),
   },

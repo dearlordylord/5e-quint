@@ -1,0 +1,5 @@
+{
+  "guestInactivityRetentionMs": 604800000,
+  "guestPressureProtectionMs": 86400000,
+  "savedInactivityRetentionMs": 7776000000
+}

@@ -1,0 +1,44 @@
+{
+  "listing": {
+    "name": "5.5e SRD Oracle",
+    "shortDescription": "Create 5.5e SRD characters and play rules-backed battles.",
+    "longDescription": "Explore the redistributable 5.5e SRD catalog, create and continue characters, and play rule-faithful battles. Guest play needs no account; standard MCP OAuth is offered only when you choose to save or recover a session.",
+    "category": "Lifestyle",
+    "supportPath": "/support",
+    "privacyPath": "/privacy",
+    "termsPath": "/terms",
+    "websitePath": "/"
+  },
+  "mcp": {
+    "connectionType": "universal",
+    "path": "/mcp",
+    "authentication": "optionalOAuth",
+    "authenticationRationale": "Browsing and all guest character and battle play are anonymous. Standard MCP OAuth is requested only to save, list, resume, or permanently delete account-owned Play Sessions.",
+    "contentSecurityPolicy": {
+      "connectDomains": [],
+      "resourceDomains": []
+    }
+  },
+  "dataHandling": {
+    "contract": "docs/adr/0007-public-play-session-tenure-and-ownership.md",
+    "savedDeletion": "immediatePermanent",
+    "sharing": "singleOwnerOnly",
+    "telemetry": "boundedRedactedOperationalMetadata"
+  },
+  "availability": {
+    "proposal": "allPortalAvailableCountries",
+    "rationale": "The English-language SRD experience has no product-specific geographic dependency; the verified publisher must confirm countries it can legally support at submission time."
+  },
+  "submissionReviewCaseIds": [
+    "submission-browse-catalog",
+    "submission-create-guest-character",
+    "submission-resume-guest-session",
+    "submission-play-battle",
+    "submission-save-and-list",
+    "submission-unrelated-history",
+    "submission-unsupported-authored-content",
+    "submission-save-without-oauth"
+  ],
+  "releaseNotes": "Initial public release: anonymous SRD catalog, character, and battle journeys; recoverable guest sessions; optional OAuth-backed saved sessions; explicit retention and deletion controls.",
+  "contentBoundary": "Redistributable SRD and visibly synthetic content only; no PHB+ authored identity or protected expression."
+}

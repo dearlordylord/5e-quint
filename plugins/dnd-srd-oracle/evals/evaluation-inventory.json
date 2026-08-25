@@ -89,5 +89,74 @@
       "prompt": "Use 5.5e SRD Oracle to inspect the installed SRD character options and help me build a supported character using only choices returned by the current creation holes. At each stop, group every currently returned independent meaningful choice so I can answer them in one reply; keep dependent choices for later, and apply forced single-option choices automatically. After finalization, start a battle with that Character Session and an installed SRD Goblin Warrior, follow only returned Battle Acts and Runtime Holes, end the battle only when no fill is pending, and finish by listing my Character Sessions.",
       "expectedActivation": "activate"
     }
+  ],
+  "submissionReview": [
+    {
+      "id": "submission-browse-catalog",
+      "kind": "positive",
+      "prompt": "What redistributable SRD character options can I use here?",
+      "fixture": "Fresh conversation with the published plugin enabled; no authentication.",
+      "expectedBehavior": "Activate the Skill and browse the installed catalog without requesting sign-in.",
+      "expectedResultShape": "A grounded summary of list_catalog_units results with selectable installed record identities."
+    },
+    {
+      "id": "submission-create-guest-character",
+      "kind": "positive",
+      "prompt": "Help me create an SRD character as a guest, pausing when I have meaningful choices.",
+      "fixture": "Fresh conversation with the published plugin enabled; no authentication.",
+      "expectedBehavior": "Create a Guest Play Session, retain its opaque access grant without exposing it, and follow only returned creation holes and options.",
+      "expectedResultShape": "A temporary-session notice plus grouped current character choices, with no invented option or login requirement."
+    },
+    {
+      "id": "submission-resume-guest-session",
+      "kind": "positive",
+      "prompt": "Continue the character we were making in this temporary session.",
+      "fixture": "Follow-up turn after submission-create-guest-character in the same conversation, with the prior Play Session handle available to the agent.",
+      "expectedBehavior": "Read the same Guest Play Session and continue from its current projection rather than creating or selecting another session.",
+      "expectedResultShape": "The resumed session's current character projection and relevant next operations or choices."
+    },
+    {
+      "id": "submission-play-battle",
+      "kind": "positive",
+      "prompt": "Start a battle for my completed character against an installed SRD opponent and show me my legal actions.",
+      "fixture": "A Guest Play Session containing one finalized supported Character Session; no authentication.",
+      "expectedBehavior": "Use an installed SRD stat block, start the battle in the same Play Session, and surface only returned Battle Acts and Runtime Holes.",
+      "expectedResultShape": "A battle projection with current combatants, phase, and grounded legal actions or pending inputs."
+    },
+    {
+      "id": "submission-save-and-list",
+      "kind": "positive",
+      "prompt": "Save this temporary session to my account, then show me my saved sessions.",
+      "fixture": "A Guest Play Session plus a standard MCP OAuth principal authorized for the play-sessions scope.",
+      "expectedBehavior": "Use save_play_session once to atomically claim the same session, then list_saved_play_sessions for that principal.",
+      "expectedResultShape": "A saved-session result followed by an owned saved-session listing containing the same Play Session identity and no guest access grant."
+    },
+    {
+      "id": "submission-unrelated-history",
+      "kind": "negative",
+      "prompt": "Give me a spoiler-free overview of the history of D&D as a hobby.",
+      "fixture": "Fresh conversation with the published plugin enabled.",
+      "rejectionRationale": "The request is general hobby history rather than catalog exploration, character/session work, battle play, or an authored-content capability question.",
+      "expectedBehavior": "Do not activate the Skill or call an Oracle MCP tool because the request is outside catalog, character, session, and battle execution.",
+      "expectedResultShape": "A normal assistant response with no plugin tool call."
+    },
+    {
+      "id": "submission-unsupported-authored-content",
+      "kind": "negative",
+      "prompt": "Execute this custom monster I wrote in a battle even though it is not in the installed catalog.",
+      "fixture": "Fresh conversation; the user-authored monster is not an installed SRD or admitted synthetic record.",
+      "rejectionRationale": "Executing a record outside the installed redistributable catalog would require inventing or admitting unsupported mechanics and authored identity.",
+      "expectedBehavior": "Explain the authored-content boundary and do not invent, import, or execute unsupported mechanics.",
+      "expectedResultShape": "A boundary explanation and supported alternatives, with no start_battle call using fabricated authored identity."
+    },
+    {
+      "id": "submission-save-without-oauth",
+      "kind": "negative",
+      "prompt": "Save this guest session permanently, but do not connect my account.",
+      "fixture": "An anonymous Guest Play Session on the public OAuth-capable server, with no bearer token.",
+      "rejectionRationale": "A permanent account-owned save requires the user's standard MCP OAuth authorization; anonymous possession of a guest grant is not account ownership.",
+      "expectedBehavior": "Keep guest play available, clearly explain that the session remains temporary, and surface the standard MCP OAuth path only if the user chooses to save.",
+      "expectedResultShape": "No false saved-state claim; an OAuth authorization challenge or clear temporary-session response."
+    }
   ]
 }

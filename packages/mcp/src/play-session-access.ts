@@ -2,9 +2,33 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 import { Either, Schema } from "effect";
 
-export const GUEST_INACTIVITY_RETENTION_MS = 7 * 24 * 60 * 60 * 1_000;
-export const GUEST_PRESSURE_PROTECTION_MS = 24 * 60 * 60 * 1_000;
-export const SAVED_INACTIVITY_RETENTION_MS = 90 * 24 * 60 * 60 * 1_000;
+import publicPlaySessionPolicy from "./public-play-session-policy.json" with { type: "json" };
+
+const PublicPlaySessionPolicySchema = Schema.Struct({
+  guestInactivityRetentionMs: Schema.Number.pipe(
+    Schema.int(),
+    Schema.positive(),
+  ),
+  guestPressureProtectionMs: Schema.Number.pipe(
+    Schema.int(),
+    Schema.positive(),
+  ),
+  savedInactivityRetentionMs: Schema.Number.pipe(
+    Schema.int(),
+    Schema.positive(),
+  ),
+});
+const decodedPublicPlaySessionPolicy = Schema.decodeUnknownSync(
+  PublicPlaySessionPolicySchema,
+  { onExcessProperty: "error" },
+)(publicPlaySessionPolicy);
+
+export const GUEST_INACTIVITY_RETENTION_MS =
+  decodedPublicPlaySessionPolicy.guestInactivityRetentionMs;
+export const GUEST_PRESSURE_PROTECTION_MS =
+  decodedPublicPlaySessionPolicy.guestPressureProtectionMs;
+export const SAVED_INACTIVITY_RETENTION_MS =
+  decodedPublicPlaySessionPolicy.savedInactivityRetentionMs;
 export const DEFAULT_MAX_SAVED_PLAY_SESSIONS_PER_PRINCIPAL = 20;
 export const DEFAULT_MAX_RETAINED_COMMANDS_PER_PLAY_SESSION = 10_000;
 export const DEFAULT_MAX_GUEST_PLAY_SESSIONS = 1_000;

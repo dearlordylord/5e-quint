@@ -390,6 +390,16 @@ describe("public Play Session boundary", () => {
       ...rightValue(registry.listSaved(secondOwner)),
     ];
     expect(listed).toMatchObject([{ playSessionId: guest.playSessionId }]);
+    expect(
+      await registry.run(
+        guest.playSessionId,
+        { tag: "guest", guestAccessGrant: guest.guestAccessGrant },
+        () => undefined,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { tag: "playSessionUnavailable" },
+    });
     repository.close();
   });
 

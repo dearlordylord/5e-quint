@@ -38,6 +38,15 @@ submission contract requires the challenge response to contain only the token
 the application exposes it at `/.well-known/openai-apps-challenge` only when
 `DND_OPENAI_APPS_CHALLENGE` is configured.
 
+The same origin serves the provider-neutral publisher site at `/`, `/support`,
+`/privacy`, and `/terms`. Keeping those pages beside `/mcp` makes the verified
+publisher origin, public policy, and runtime release one deployment. The smoke
+checks all four pages and requires `/version` to report the exact
+`DND_MCP_PUBLISHER_NAME` configured for those pages. In publication mode that
+name must be the verified publisher identity, not the development placeholder.
+Their response Content Security Policy permits no script, style, image, font,
+frame, form, or network source.
+
 ## Rollback
 
 `deploy.sh` atomically promotes one release-history file only after the

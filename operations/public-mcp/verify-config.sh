@@ -17,7 +17,7 @@ case "${DND_MCP_ENVIRONMENT:-}" in
   *) echo "DND_MCP_ENVIRONMENT must be staging or production" >&2; exit 65 ;;
 esac
 
-required=(COMPOSE_PROJECT_NAME DND_MCP_DOMAIN DND_MCP_LOOPBACK_PORT DND_MCP_CADDY_CONFIG_DIRECTORY DND_MCP_OPERATIONS_DIRECTORY DND_MCP_SYSTEMD_DIRECTORY DND_MCP_IMAGE DND_MCP_RELEASE DND_MCP_STATE_DIRECTORY DND_MCP_RELEASE_DIRECTORY DND_MCP_METRICS_TOKEN DND_MCP_BUDGET_ALERT_RECIPIENT DND_MCP_FIXED_HOST_MONTHLY_USD DND_MCP_PUBLICATION_MODE)
+required=(COMPOSE_PROJECT_NAME DND_MCP_DOMAIN DND_MCP_PUBLISHER_NAME DND_MCP_LOOPBACK_PORT DND_MCP_CADDY_CONFIG_DIRECTORY DND_MCP_OPERATIONS_DIRECTORY DND_MCP_SYSTEMD_DIRECTORY DND_MCP_IMAGE DND_MCP_RELEASE DND_MCP_STATE_DIRECTORY DND_MCP_RELEASE_DIRECTORY DND_MCP_METRICS_TOKEN DND_MCP_BUDGET_ALERT_RECIPIENT DND_MCP_FIXED_HOST_MONTHLY_USD DND_MCP_PUBLICATION_MODE)
 for name in "${required[@]}"; do
   [[ -n "${!name:-}" ]] || { echo "$name is required" >&2; exit 65; }
 done
@@ -55,6 +55,18 @@ done
   exit 65
 }
 [[ "$DND_MCP_DOMAIN" =~ ^[a-z0-9.-]+$ ]] || { echo "DND_MCP_DOMAIN is invalid" >&2; exit 65; }
+[[ "$DND_MCP_PUBLISHER_NAME" == *[![:space:]]* ]] || {
+  echo "DND_MCP_PUBLISHER_NAME must contain a non-whitespace character" >&2
+  exit 65
+}
+[[ "$DND_MCP_PUBLISHER_NAME" =~ ^[^[:space:]](.*[^[:space:]])?$ ]] || {
+  echo "DND_MCP_PUBLISHER_NAME must not have surrounding whitespace" >&2
+  exit 65
+}
+[[ "$DND_MCP_PUBLISHER_NAME" != replace-with-* && "$DND_MCP_PUBLISHER_NAME" != *'<'* && "$DND_MCP_PUBLISHER_NAME" != *'>'* ]] || {
+  echo "DND_MCP_PUBLISHER_NAME must be the exact verified publisher identity" >&2
+  exit 65
+}
 [[ "$DND_MCP_LOOPBACK_PORT" =~ ^[0-9]+$ ]] && (( DND_MCP_LOOPBACK_PORT > 1024 && DND_MCP_LOOPBACK_PORT < 65536 )) || {
   echo "DND_MCP_LOOPBACK_PORT must be between 1025 and 65535" >&2
   exit 65
@@ -75,6 +87,7 @@ done
 case "$DND_MCP_PUBLICATION_MODE" in
   disabled) ;;
   enabled)
+    [[ "$DND_MCP_PUBLISHER_NAME" != "5e Quint developers" ]] || { echo "publication requires the verified publisher identity" >&2; exit 65; }
     [[ -n "${DND_OPENAI_APPS_CHALLENGE:-}" ]] || { echo "publication requires DND_OPENAI_APPS_CHALLENGE" >&2; exit 65; }
     oauth=(DND_OAUTH_RESOURCE_URL DND_OAUTH_AUTHORIZATION_SERVER DND_OAUTH_ISSUER DND_OAUTH_AUDIENCE DND_OAUTH_JWKS_URL)
     for name in "${oauth[@]}"; do

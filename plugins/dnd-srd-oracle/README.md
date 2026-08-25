@@ -5,6 +5,12 @@ server remains the runtime composition owner in
 [`packages/mcp/README.md`](../../packages/mcp/README.md); this document owns
 the developer-mode connection procedure.
 
+The public-release listing source and deterministic production-package builder
+are in [`publication/README.md`](publication/README.md). They require the real
+HTTPS origin and exact verified publisher identity before adding a production
+MCP connection, so this source package remains usable with local stdio and the
+Secure MCP Tunnel during development.
+
 ## Verify the local connection
 
 From the repository root, install the workspace with pnpm and run the existing

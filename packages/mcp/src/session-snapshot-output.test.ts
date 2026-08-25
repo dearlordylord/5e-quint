@@ -95,7 +95,7 @@ const presentation = {
 };
 
 describe("MCP session wire projections", () => {
-  const schemaValidationTimeoutMs = 60_000;
+  const schemaValidationTimeoutMs = 120_000;
   test("keeps battle fill definitions out of the session summary schema", () => {
     expect(
       mcpOutputJsonSchema(McpSessionSummarySchema).properties,

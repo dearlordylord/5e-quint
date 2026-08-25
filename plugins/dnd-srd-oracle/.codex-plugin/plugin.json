@@ -1,10 +1,15 @@
 {
   "name": "dnd-srd-oracle",
-  "version": "0.1.0+codex.20260824153518",
+  "version": "0.1.0+codex.20260825215243",
   "description": "Create 5.5e SRD characters and simulate rule-faithful battles through the SRD runtime.",
   "author": {
-    "name": "5e Quint developers"
+    "name": "5e Quint developers",
+    "url": "https://github.com/dearlordylord/5e-quint"
   },
+  "homepage": "https://github.com/dearlordylord/5e-quint/tree/master/plugins/dnd-srd-oracle",
+  "repository": "https://github.com/dearlordylord/5e-quint",
+  "license": "Apache-2.0",
+  "keywords": ["5.5e", "SRD", "character creation", "battle"],
   "skills": "./skills/",
   "interface": {
     "displayName": "5.5e SRD Oracle",
@@ -13,6 +18,14 @@
     "developerName": "5e Quint developers",
     "category": "Lifestyle",
     "capabilities": ["Interactive"],
-    "defaultPrompt": "Help me create an SRD character and start a battle."
+    "defaultPrompt": [
+      "Show me the SRD character options I can use.",
+      "Help me create an SRD character as a guest.",
+      "Start a rules-backed battle with my character."
+    ],
+    "brandColor": "#4F46E5",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/logo.svg",
+    "logoDark": "./assets/logo-dark.svg"
   }
 }

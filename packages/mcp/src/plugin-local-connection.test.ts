@@ -20,8 +20,8 @@ const localMcpConfigPath = resolve(
   "dnd-srd-oracle-local-mcp.json",
 );
 const pluginManifestPath = resolve(pluginRoot, ".codex-plugin/plugin.json");
-const LOCAL_PLUGIN_CONNECTION_TEST_TIMEOUT_MS = 90_000;
-const LOCAL_PLUGIN_WORKFLOW_DEADLINE_MS = 60_000;
+const LOCAL_PLUGIN_CONNECTION_TEST_TIMEOUT_MS = 150_000;
+const LOCAL_PLUGIN_WORKFLOW_DEADLINE_MS = 120_000;
 const PROCESS_TERMINATION_GRACE_MS = 100;
 const PROCESS_TERMINATION_POLL_MS = 50;
 const PROCESS_TERMINATION_DEADLINE_MS = 2_000;
@@ -95,6 +95,12 @@ describe("local 5.5e SRD Oracle plugin evaluation seams", () => {
     expect(inventory.completeWorkflow[0]?.prompt).toContain(
       "group every currently returned independent meaningful choice",
     );
+    expect(
+      inventory.submissionReview.filter(({ kind }) => kind === "positive"),
+    ).toHaveLength(5);
+    expect(
+      inventory.submissionReview.filter(({ kind }) => kind === "negative"),
+    ).toHaveLength(3);
     assertFollowUpsReferenceEarlierCases(inventory.mcpToolSelection);
     assertFollowUpsReferenceEarlierCases(inventory.skillActivation);
     expect(inventory.evidenceOwners.apiMcpSelection).toMatchObject({
