@@ -1,5 +1,11 @@
 const assert = require("node:assert/strict");
-const { existsSync, readdirSync, readFileSync, statSync } = require("node:fs");
+const {
+  existsSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+} = require("node:fs");
 const {
   basename,
   dirname,
@@ -181,9 +187,33 @@ function importSpecifiers(source) {
   });
 }
 
+function stripViteImportPostfix(specifier) {
+  const packageImportPrefixLength = specifier.startsWith("#") ? 1 : 0;
+  const postfixIndex = specifier
+    .slice(packageImportPrefixLength)
+    .search(/[?#]/u);
+  return postfixIndex < 0
+    ? specifier
+    : specifier.slice(0, packageImportPrefixLength + postfixIndex);
+}
+
 const sourceResolutionSuffixes = Object.freeze([
   "",
   ...SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
+]);
+
+/*
+ * Vite 7's default client package-entry order. The checker deliberately keeps
+ * every repository-owned candidate from this order: a static capability check
+ * must remain conservative when package conditions differ between runtime
+ * modes. `main` is the final fallback in Vite's resolver.
+ */
+const VITE7_CLIENT_PACKAGE_ENTRY_FIELDS = Object.freeze([
+  "browser",
+  "module",
+  "jsnext:main",
+  "jsnext",
+  "main",
 ]);
 
 function sourceCandidateObservation(path) {
@@ -211,6 +241,57 @@ function sourceCandidateObservation(path) {
       `Could not inspect deterministic source candidate ${path} (${code}): ${error instanceof Error ? error.message : String(error)}`,
     );
   }
+}
+
+function canonicalPathForOwnership(path) {
+  let candidate = resolve(path);
+  const missingSegments = [];
+  while (true) {
+    try {
+      return missingSegments.reduce(
+        (canonicalPath, segment) => join(canonicalPath, segment),
+        realpathSync(candidate),
+      );
+    } catch (error) {
+      if (
+        error !== null &&
+        typeof error === "object" &&
+        (error.code === "ENOENT" || error.code === "ENOTDIR")
+      ) {
+        const parent = dirname(candidate);
+        if (parent === candidate) return resolve(path);
+        missingSegments.unshift(basename(candidate));
+        candidate = parent;
+        continue;
+      }
+      const code =
+        error !== null && typeof error === "object" && "code" in error
+          ? String(error.code)
+          : "unknown";
+      throw new Error(
+        `Could not inspect deterministic source candidate ${path} (${code}): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+}
+
+function lexicallyRepositoryOwnedPath(path) {
+  const relativePath = relative(root, resolve(path));
+  return (
+    relativePath !== ".." &&
+    !relativePath.startsWith(`..${sep}`) &&
+    !relativePath.split(sep).includes("node_modules")
+  );
+}
+
+function sourceCandidateOwnership(path) {
+  if (repositoryOwnedPath(path)) return true;
+  if (lexicallyRepositoryOwnedPath(path)) {
+    throw new Error(
+      `Deterministic source candidate ${path} resolves outside the repository or into node_modules`,
+    );
+  }
+  return false;
 }
 
 function supportedSourceExtension(path) {
@@ -265,18 +346,17 @@ function sourcePathsFromResolutionCandidates(candidates, visited) {
   return [
     ...new Set(
       candidates.flatMap((path) => {
-        if (visited.has(path)) return [];
-        visited.add(path);
-        const observation = sourceCandidateObservation(path);
+        if (!sourceCandidateOwnership(path)) return [];
+        const candidateKey = canonicalPathForOwnership(path);
+        if (visited.has(candidateKey)) return [];
+        visited.add(candidateKey);
+        const observation = sourceCandidateObservation(candidateKey);
         if (observation.kind === "failure") {
           throw new Error(observation.message);
         }
-        if (observation.kind === "file") return [path];
+        if (observation.kind === "file") return [candidateKey];
         if (observation.kind === "directory") {
-          return sourcePathsFromCandidateGroups(
-            sourceCandidateGroupsForObservation(path, observation),
-            visited,
-          );
+          return sourcePathsFromDirectoryCandidate(candidateKey, visited);
         }
         return [];
       }),
@@ -288,13 +368,15 @@ function sourcePathsFromExactFileCandidates(candidates, visited) {
   return [
     ...new Set(
       candidates.flatMap((path) => {
-        if (visited.has(path)) return [];
-        visited.add(path);
-        const observation = sourceCandidateObservation(path);
+        if (!sourceCandidateOwnership(path)) return [];
+        const candidateKey = canonicalPathForOwnership(path);
+        if (visited.has(candidateKey)) return [];
+        visited.add(candidateKey);
+        const observation = sourceCandidateObservation(candidateKey);
         if (observation.kind === "failure") {
           throw new Error(observation.message);
         }
-        return observation.kind === "file" ? [path] : [];
+        return observation.kind === "file" ? [candidateKey] : [];
       }),
     ),
   ];
@@ -315,29 +397,271 @@ function sourcePathsFromCandidateGroups(candidateGroups, visited) {
   ];
 }
 
-function sourcePathsForCandidate(candidate, visited = new Set()) {
-  if (visited.has(candidate)) return [];
-  visited.add(candidate);
-  const observation = sourceCandidateObservation(candidate);
+function readPackageManifest(path) {
+  const observation = sourceCandidateObservation(path);
+  if (observation.kind === "absent") return undefined;
   if (observation.kind === "failure") throw new Error(observation.message);
-  if (observation.kind === "file") return [candidate];
-  return sourcePathsFromCandidateGroups(
-    sourceCandidateGroupsForObservation(candidate, observation),
-    visited,
+  try {
+    const source = readFileSync(path, "utf8").replace(/^\uFEFF/u, "");
+    const manifest = JSON.parse(source);
+    if (
+      manifest === null ||
+      typeof manifest !== "object" ||
+      Array.isArray(manifest)
+    ) {
+      throw new Error("package manifest must be a JSON object");
+    }
+    return manifest;
+  } catch (error) {
+    throw new Error(
+      `Could not read deterministic package manifest ${path}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function validPackageRelativeTarget(target) {
+  return (
+    typeof target === "string" &&
+    target.startsWith("./") &&
+    !target.includes("\\") &&
+    !target.split("/").includes("..")
   );
 }
 
-function resolveInternalImportPaths(sourcePath, specifier) {
+function assertPackageImportsValue(value, packageManifestPath) {
+  if (typeof value === "string" || value === null) return;
+  if (Array.isArray(value)) {
+    for (const candidate of value) {
+      assertPackageImportsValue(candidate, packageManifestPath);
+    }
+    return;
+  }
+  if (typeof value === "object") {
+    for (const candidate of Object.values(value)) {
+      assertPackageImportsValue(candidate, packageManifestPath);
+    }
+    return;
+  }
+  throw new Error(
+    `Could not resolve deterministic package imports in ${packageManifestPath}: invalid target value`,
+  );
+}
+
+function targetsFromPackageMap(mapValue, requestedKey, subpathPrefix) {
+  if (typeof mapValue === "string") return [mapValue];
+  if (Array.isArray(mapValue)) {
+    return [
+      ...new Set(
+        mapValue.flatMap((candidate) =>
+          targetsFromPackageMap(candidate, requestedKey, subpathPrefix),
+        ),
+      ),
+    ];
+  }
+  if (mapValue === null || typeof mapValue !== "object") {
+    return [];
+  }
+
+  const entries = Object.entries(mapValue);
+  const targets = [];
+  if (Object.hasOwn(mapValue, requestedKey)) {
+    targets.push(
+      ...targetsFromPackageMap(
+        mapValue[requestedKey],
+        requestedKey,
+        subpathPrefix,
+      ),
+    );
+  } else {
+    const hasSubpathEntries = entries.some(([key]) =>
+      key.startsWith(subpathPrefix),
+    );
+    if (!hasSubpathEntries) {
+      for (const value of Object.values(mapValue)) {
+        targets.push(
+          ...targetsFromPackageMap(value, requestedKey, subpathPrefix),
+        );
+      }
+    }
+  }
+  for (const [key, value] of entries) {
+    if (key.endsWith("/*") && requestedKey.startsWith(key.slice(0, -1))) {
+      const suffix = requestedKey.slice(key.length - 1);
+      targets.push(
+        ...targetsFromPackageMap(value, requestedKey, subpathPrefix).map(
+          (target) => target.replaceAll("*", suffix),
+        ),
+      );
+    }
+  }
+  return [...new Set(targets)];
+}
+
+function targetsFromPackageExports(exportsValue, subpath) {
+  return targetsFromPackageMap(exportsValue, subpath, ".");
+}
+
+function targetsFromPackageBrowser(browserField) {
+  if (typeof browserField === "string") return [browserField];
+  if (
+    browserField === null ||
+    typeof browserField !== "object" ||
+    Array.isArray(browserField)
+  ) {
+    return [];
+  }
+  return Object.entries(browserField).flatMap(([key, value]) => [
+    ...(validPackageRelativeTarget(key) ? [key] : []),
+    ...(typeof value === "string" ? [value] : []),
+  ]);
+}
+
+function targetsFromPackageManifest(manifest) {
+  const targets = [];
+  if (Object.hasOwn(manifest, "exports")) {
+    targets.push(
+      ...targetsFromPackageExports(manifest.exports, ".").filter(
+        validPackageRelativeTarget,
+      ),
+    );
+  }
+  for (const field of VITE7_CLIENT_PACKAGE_ENTRY_FIELDS) {
+    if (field === "browser") {
+      targets.push(...targetsFromPackageBrowser(manifest.browser));
+    } else if (typeof manifest[field] === "string" && manifest[field] !== "") {
+      targets.push(manifest[field]);
+    }
+  }
+  return [...new Set(targets)];
+}
+
+function sourcePathsFromPackageDirectory(directory, visited) {
+  const manifestPath = join(directory, "package.json");
+  const manifest = readPackageManifest(manifestPath);
+  if (manifest === undefined) return [];
+  const canonicalManifestPath = canonicalPathForOwnership(manifestPath);
+  const packageDirectory = dirname(canonicalManifestPath);
+  return [
+    ...new Set(
+      targetsFromPackageManifest(manifest).flatMap((target) =>
+        sourcePathsForPackageEntryTarget(packageDirectory, target, visited),
+      ),
+    ),
+  ];
+}
+
+function sourcePathsForPackageEntryTarget(packageDirectory, target, visited) {
+  if (typeof target !== "string") return [];
+  const candidate = resolve(packageDirectory, target);
+  if (!sourceCandidateOwnership(candidate)) {
+    throw new Error(
+      `Deterministic package entry ${target} from ${packageDirectory} escapes the repository or enters node_modules`,
+    );
+  }
+  return sourcePathsForCandidate(candidate, visited);
+}
+
+function nearestPackageManifest(sourcePath) {
+  let directory = dirname(canonicalPathForOwnership(sourcePath));
+  while (lexicallyRepositoryOwnedPath(directory)) {
+    const manifestPath = join(directory, "package.json");
+    const manifest = readPackageManifest(manifestPath);
+    if (manifest !== undefined) {
+      const canonicalManifestPath = canonicalPathForOwnership(manifestPath);
+      return {
+        manifest,
+        packageDirectory: dirname(canonicalManifestPath),
+        manifestPath: canonicalManifestPath,
+      };
+    }
+    if (directory === root) break;
+    const parent = dirname(directory);
+    if (parent === directory) break;
+    directory = parent;
+  }
+  return undefined;
+}
+
+function sourcePathsFromPackageImports(sourcePath, specifier, visited) {
+  if (!specifier.startsWith("#")) return [];
+  const packageData = nearestPackageManifest(sourcePath);
+  if (
+    packageData === undefined ||
+    !Object.hasOwn(packageData.manifest, "imports")
+  ) {
+    return [];
+  }
+  const importsValue = packageData.manifest.imports;
+  if (
+    importsValue === null ||
+    typeof importsValue !== "object" ||
+    Array.isArray(importsValue)
+  ) {
+    throw new Error(
+      `Could not resolve deterministic package imports in ${packageData.manifestPath}: imports must be an object`,
+    );
+  }
+  assertPackageImportsValue(importsValue, packageData.manifestPath);
+  const targets = targetsFromPackageMap(importsValue, specifier, "#").filter(
+    validPackageRelativeTarget,
+  );
+  return [
+    ...new Set(
+      targets.flatMap((target) =>
+        sourcePathsForPackageEntryTarget(
+          packageData.packageDirectory,
+          target,
+          visited,
+        ),
+      ),
+    ),
+  ];
+}
+
+function sourcePathsFromDirectoryCandidate(directory, visited) {
+  const observation = { kind: "directory" };
+  return [
+    ...new Set([
+      ...sourcePathsFromPackageDirectory(directory, visited),
+      ...sourcePathsFromCandidateGroups(
+        sourceCandidateGroupsForObservation(directory, observation),
+        visited,
+      ),
+    ]),
+  ];
+}
+
+function sourcePathsForCandidate(candidate, visited = new Set()) {
+  if (!sourceCandidateOwnership(candidate)) return [];
+  const candidateKey = canonicalPathForOwnership(candidate);
+  if (visited.has(candidateKey)) return [];
+  visited.add(candidateKey);
+  const observation = sourceCandidateObservation(candidateKey);
+  if (observation.kind === "failure") throw new Error(observation.message);
+  if (observation.kind === "file") return [candidateKey];
+  if (observation.kind === "absent") {
+    return sourcePathsFromCandidateGroups(
+      sourceCandidateGroupsForObservation(candidateKey, observation),
+      visited,
+    );
+  }
+  return sourcePathsFromDirectoryCandidate(candidateKey, visited);
+}
+
+function resolveInternalImportPaths(sourcePath, specifier, visited) {
   const candidate = resolve(dirname(sourcePath), specifier);
-  return sourcePathsForCandidate(candidate);
+  if (!sourceCandidateOwnership(candidate)) {
+    throw new Error(
+      `Deterministic relative import ${specifier} from ${sourcePath} escapes the repository or enters node_modules`,
+    );
+  }
+  return sourcePathsForCandidate(candidate, visited);
 }
 
 function repositoryOwnedPath(path) {
-  const relativePath = relative(root, path);
   return (
-    relativePath !== ".." &&
-    !relativePath.startsWith(`..${sep}`) &&
-    !relativePath.split(sep).includes("node_modules")
+    lexicallyRepositoryOwnedPath(path) &&
+    lexicallyRepositoryOwnedPath(canonicalPathForOwnership(path))
   );
 }
 
@@ -349,49 +673,15 @@ function readJsonFile(path) {
   }
 }
 
-function sourcePathsForTarget(target) {
+function sourcePathsForTarget(target, visited = new Set()) {
   if (typeof target !== "string") return [];
   const candidate = resolve(target);
-  if (!repositoryOwnedPath(candidate)) return [];
-  return sourcePathsForCandidate(candidate);
-}
-
-function targetsFromPackageExports(exportsValue, subpath) {
-  if (typeof exportsValue === "string") return [exportsValue];
-  if (Array.isArray(exportsValue)) {
-    return [
-      ...new Set(
-        exportsValue.flatMap((candidate) =>
-          targetsFromPackageExports(candidate, subpath),
-        ),
-      ),
-    ];
+  if (!sourceCandidateOwnership(candidate)) {
+    throw new Error(
+      `Deterministic package or alias target ${target} escapes the repository or enters node_modules`,
+    );
   }
-  if (exportsValue === null || typeof exportsValue !== "object") {
-    return [];
-  }
-  const targets = [];
-  if (Object.hasOwn(exportsValue, subpath)) {
-    targets.push(...targetsFromPackageExports(exportsValue[subpath], subpath));
-  }
-  for (const [key, value] of Object.entries(exportsValue)) {
-    if (key.endsWith("/*") && subpath.startsWith(key.slice(0, -1))) {
-      const suffix = subpath.slice(key.length - 1);
-      targets.push(
-        ...targetsFromPackageExports(value, subpath).map((target) =>
-          target.replaceAll("*", suffix),
-        ),
-      );
-    }
-  }
-  for (const condition of ["types", "import", "default", "node"]) {
-    if (Object.hasOwn(exportsValue, condition)) {
-      targets.push(
-        ...targetsFromPackageExports(exportsValue[condition], subpath),
-      );
-    }
-  }
-  return [...new Set(targets)];
+  return sourcePathsForCandidate(candidate, visited);
 }
 
 function workspacePackageRecords() {
@@ -401,7 +691,7 @@ function workspacePackageRecords() {
   for (const packageJsonPath of filesBelow(packagesDirectory).filter(
     (path) => basename(path) === "package.json",
   )) {
-    const packageJson = readJsonFile(packageJsonPath);
+    const packageJson = readPackageManifest(packageJsonPath);
     if (
       packageJson === undefined ||
       typeof packageJson.name !== "string" ||
@@ -419,7 +709,7 @@ function workspacePackageRecords() {
 
 const workspacePackages = workspacePackageRecords();
 
-function workspacePackageImportPaths(specifier) {
+function workspacePackageImportPaths(specifier, visited) {
   const sourcePaths = [];
   for (const [packageName, record] of workspacePackages) {
     if (specifier !== packageName && !specifier.startsWith(`${packageName}/`)) {
@@ -432,7 +722,9 @@ function workspacePackageImportPaths(specifier) {
       targets.push("./src/index.ts");
     }
     for (const target of targets) {
-      sourcePaths.push(...sourcePathsForTarget(resolve(record.root, target)));
+      sourcePaths.push(
+        ...sourcePathsForTarget(resolve(record.root, target), visited),
+      );
     }
   }
   return [...new Set(sourcePaths)];
@@ -468,7 +760,7 @@ function pathIsInside(path, directory) {
   );
 }
 
-function workspaceTsconfigImportPaths(sourcePath, specifier) {
+function workspaceTsconfigImportPaths(sourcePath, specifier, visited) {
   const config = workspaceTsconfigMaps
     .filter(({ directory }) => pathIsInside(sourcePath, directory))
     .sort((left, right) => right.directory.length - left.directory.length)[0];
@@ -488,6 +780,7 @@ function workspaceTsconfigImportPaths(sourcePath, specifier) {
       const targetPath = target.replaceAll("*", suffix);
       const targetSourcePaths = sourcePathsForTarget(
         resolve(config.directory, targetPath),
+        visited,
       );
       sourcePaths.push(...targetSourcePaths);
     }
@@ -495,11 +788,52 @@ function workspaceTsconfigImportPaths(sourcePath, specifier) {
   return [...new Set(sourcePaths)];
 }
 
-function workspaceImportPaths(sourcePath, specifier) {
-  const tsconfigPaths = workspaceTsconfigImportPaths(sourcePath, specifier);
+function workspaceImportPaths(sourcePath, specifier, visited) {
+  const packageImportPaths = sourcePathsFromPackageImports(
+    sourcePath,
+    specifier,
+    visited,
+  );
+  if (packageImportPaths.length > 0) return packageImportPaths;
+  const tsconfigPaths = workspaceTsconfigImportPaths(
+    sourcePath,
+    specifier,
+    visited,
+  );
   return tsconfigPaths.length > 0
     ? tsconfigPaths
-    : workspacePackageImportPaths(specifier);
+    : workspacePackageImportPaths(specifier, visited);
+}
+
+const SCENARIO_RUNTIME_SOURCE_PATHS = Object.freeze([
+  "scripts/raw-swarm/sdk-player/scenario-setup-runtime.ts",
+  "scripts/raw-swarm/sdk-player/scenario-character-runtime.ts",
+]);
+const TRACKED_SCENARIO_SOURCE_ROOTS = Object.freeze([
+  "scripts/raw-swarm/sdk-player/scenarios",
+  "scripts/raw-swarm/sdk-player/test-fixtures",
+]);
+
+function trackedScenarioModulePaths() {
+  return TRACKED_SCENARIO_SOURCE_ROOTS.flatMap((relativeDirectory) => {
+    const directory = resolve(root, relativeDirectory);
+    if (!existsSync(directory)) {
+      throw new Error(
+        `Could not inspect deterministic scenario source inventory ${directory}`,
+      );
+    }
+    return filesBelow(directory).filter(
+      (path) => path.endsWith(".setup.ts") || path.endsWith(".characters.ts"),
+    );
+  });
+}
+
+function sourcePathsFromScenarioRuntimeModules(sourcePath) {
+  const relativeSourcePath = relative(root, sourcePath);
+  if (!SCENARIO_RUNTIME_SOURCE_PATHS.includes(relativeSourcePath)) return [];
+  return trackedScenarioModulePaths().flatMap((path) =>
+    sourcePathsForCandidate(path, new Set()),
+  );
 }
 
 function sourcePathsForQualityTest(testPath) {
@@ -521,11 +855,13 @@ function sourcePathsForQualityTest(testPath) {
     ) {
       continue;
     }
+    pending.push(...sourcePathsFromScenarioRuntimeModules(sourcePath));
     const source = readFileSync(sourcePath, "utf8");
-    for (const specifier of importSpecifiers(source)) {
+    for (const rawSpecifier of importSpecifiers(source)) {
+      const specifier = stripViteImportPostfix(rawSpecifier);
       const importedPaths = specifier.startsWith(".")
-        ? resolveInternalImportPaths(sourcePath, specifier)
-        : workspaceImportPaths(sourcePath, specifier);
+        ? resolveInternalImportPaths(sourcePath, specifier, new Set())
+        : workspaceImportPaths(sourcePath, specifier, new Set());
       pending.push(...importedPaths);
     }
   }

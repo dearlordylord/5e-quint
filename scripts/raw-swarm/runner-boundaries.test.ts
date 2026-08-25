@@ -11,8 +11,10 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { relative, resolve, sep } from "node:path";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
+import { relative, resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 import { afterAll, describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
 
@@ -55,6 +57,7 @@ const laneHygieneChecker = resolve(
   repoRoot,
   "scripts/raw-swarm/check-lane-hygiene.cjs",
 );
+const testRequire = createRequire(import.meta.url);
 const deterministicCapabilityGuard = resolve(
   repoRoot,
   "scripts/raw-swarm/deterministic-capability-guard.cjs",
@@ -2508,6 +2511,744 @@ describe("RAW swarm runner boundaries", () => {
         },
       );
       expect(checked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("follows a relative directory package main before its index", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-package-main-resolution-"),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const packageDirectory = resolve(fixtureRoot, "dir");
+    const packageEntryPath = resolve(packageDirectory, "entry.ts");
+    const packageIndexPath = resolve(packageDirectory, "index.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(packageDirectory, { recursive: true });
+    writeFileSync(
+      resolve(packageDirectory, "package.json"),
+      `\uFEFF${JSON.stringify({ main: "./entry.ts" }, null, 2)}\n`,
+    );
+    writeFileSync(
+      packageEntryPath,
+      `export const value = "package-main";\nrequire(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    writeFileSync(packageIndexPath, 'export const value = "index";\n');
+    writeFileSync(
+      testPath,
+      'import { expect, test } from "vitest";\nimport { value } from "./dir";\ntest("package main wins over index", () => expect(value).toBe("package-main"));\n',
+    );
+    try {
+      const runtime = spawnSync(
+        "pnpm",
+        [
+          "exec",
+          "vitest",
+          "run",
+          "--root",
+          fixtureRoot,
+          "--config",
+          resolve(repoRoot, "vitest.config.ts"),
+          testPath,
+          "--pool=threads",
+          "--maxWorkers=1",
+        ],
+        {
+          cwd: repoRoot,
+          env: { ...process.env, NODE_OPTIONS: "" },
+          encoding: "utf8",
+        },
+      );
+      expect(runtime.status).toBe(0);
+
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, packageEntryPath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test.each(["?setup=cache-buster", "#scenario-fragment"] as const)(
+    "strips the Vite %s postfix before relative resolution",
+    (postfix) => {
+      const fixtureRoot = mkdtempSync(
+        resolve(rawSwarmOutputDirectory, "transitive-vite-postfix-"),
+      );
+      const testPath = resolve(fixtureRoot, "fixture.test.ts");
+      const forbiddenSourcePath = resolve(fixtureRoot, "fixture.ts");
+      const forbiddenModule = ["node:", "http"].join("");
+      writeFileSync(testPath, `import \"./fixture${postfix}\";\n`);
+      writeFileSync(
+        forbiddenSourcePath,
+        `require(${JSON.stringify(forbiddenModule)});\n`,
+      );
+      try {
+        const checked = spawnSync(
+          process.execPath,
+          [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+          { encoding: "utf8" },
+        );
+        expect(checked.status).not.toBe(0);
+        expect(`${checked.stdout}${checked.stderr}`).toContain(
+          relative(repoRoot, forbiddenSourcePath),
+        );
+      } finally {
+        rmSync(fixtureRoot, { recursive: true, force: true });
+      }
+    },
+    30_000,
+  );
+
+  test("matches Vite client package-entry fields and conditional branches", async () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-package-entry-forms-"),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    const packageCases = [
+      {
+        name: "exports",
+        manifest: {
+          exports: {
+            ".": {
+              browser: "./browser.ts",
+              import: "./import.ts",
+              default: "./default.ts",
+            },
+          },
+        },
+        selected: "browser.ts",
+        runtimeSelected: "import.ts",
+        candidates: ["browser.ts", "import.ts", "default.ts"],
+      },
+      {
+        name: "browser",
+        manifest: {
+          browser: "./browser.ts",
+          module: "./module.ts",
+          "jsnext:main": "./jsnext-main.ts",
+          jsnext: "./jsnext.ts",
+          main: "./main.ts",
+        },
+        selected: "browser.ts",
+        runtimeSelected: "main.ts",
+        candidates: [
+          "browser.ts",
+          "module.ts",
+          "jsnext-main.ts",
+          "jsnext.ts",
+          "main.ts",
+        ],
+      },
+      {
+        name: "browser-map",
+        manifest: {
+          browser: { "./src.ts": "./browser.ts" },
+          main: "./src.ts",
+        },
+        selected: "browser.ts",
+        runtimeSelected: "src.ts",
+        candidates: ["browser.ts", "src.ts"],
+      },
+      {
+        name: "module",
+        manifest: {
+          module: "./module.ts",
+          "jsnext:main": "./jsnext-main.ts",
+          jsnext: "./jsnext.ts",
+          main: "./main.ts",
+        },
+        selected: "module.ts",
+        runtimeSelected: "main.ts",
+        candidates: ["module.ts", "jsnext-main.ts", "jsnext.ts", "main.ts"],
+      },
+      {
+        name: "jsnext-main",
+        manifest: {
+          "jsnext:main": "./jsnext-main.ts",
+          jsnext: "./jsnext.ts",
+          main: "./main.ts",
+        },
+        selected: "jsnext-main.ts",
+        runtimeSelected: "main.ts",
+        candidates: ["jsnext-main.ts", "jsnext.ts", "main.ts"],
+      },
+      {
+        name: "jsnext",
+        manifest: { jsnext: "./jsnext.ts", main: "./main.ts" },
+        selected: "jsnext.ts",
+        runtimeSelected: "main.ts",
+        candidates: ["jsnext.ts", "main.ts"],
+      },
+      {
+        name: "main",
+        manifest: { main: "./main.ts" },
+        selected: "main.ts",
+        runtimeSelected: "main.ts",
+        candidates: ["main.ts"],
+      },
+      {
+        name: "index",
+        manifest: {},
+        selected: "index.ts",
+        runtimeSelected: "index.ts",
+        candidates: ["index.ts"],
+      },
+    ] as const;
+    for (const packageCase of packageCases) {
+      const packageDirectory = resolve(fixtureRoot, packageCase.name);
+      mkdirSync(packageDirectory, { recursive: true });
+      writeFileSync(
+        resolve(packageDirectory, "package.json"),
+        `${JSON.stringify(packageCase.manifest, null, 2)}\n`,
+      );
+      for (const candidate of packageCase.candidates) {
+        writeFileSync(
+          resolve(packageDirectory, candidate),
+          `export const value = ${JSON.stringify(packageCase.runtimeSelected === candidate ? packageCase.name : `unused-${candidate}`)};\n`,
+        );
+      }
+    }
+    writeFileSync(
+      testPath,
+      `${packageCases
+        .map(
+          ({ name }) =>
+            `import { value as ${name.replaceAll("-", "_")} } from "./${name}";`,
+        )
+        .join(
+          "\n",
+        )}\nimport { expect, test } from "vitest";\ntest("package entry forms", () => expect([${packageCases.map(({ name }) => name.replaceAll("-", "_")).join(", ")}]).toEqual(${JSON.stringify(packageCases.map(({ name }) => name))}));\n`,
+    );
+    try {
+      const runtime = spawnSync(
+        "pnpm",
+        [
+          "exec",
+          "vitest",
+          "run",
+          "--root",
+          fixtureRoot,
+          "--config",
+          resolve(repoRoot, "vitest.config.ts"),
+          testPath,
+          "--pool=threads",
+          "--maxWorkers=1",
+        ],
+        {
+          cwd: repoRoot,
+          env: { ...process.env, NODE_OPTIONS: "" },
+          encoding: "utf8",
+        },
+      );
+      expect(runtime.status).toBe(0);
+
+      const vitestPath = testRequire.resolve("vitest");
+      const vitePackageJsonPath = testRequire.resolve("vite/package.json", {
+        paths: [resolve(vitestPath, "..")],
+      });
+      const vite = await import(
+        pathToFileURL(resolve(vitePackageJsonPath, "../dist/node/index.js"))
+          .href
+      );
+      const server = await vite.createServer({
+        root: fixtureRoot,
+        configFile: false,
+        logLevel: "silent",
+        resolve: {
+          mainFields: ["browser", "module", "jsnext:main", "jsnext"],
+        },
+      });
+      try {
+        for (const packageCase of packageCases) {
+          const resolved = await server.pluginContainer.resolveId(
+            `./${packageCase.name}`,
+            testPath,
+          );
+          expect(resolved?.id).toBe(
+            resolve(fixtureRoot, packageCase.name, packageCase.selected),
+          );
+        }
+      } finally {
+        await server.close();
+      }
+
+      for (const packageCase of packageCases) {
+        const selectedPath = resolve(
+          fixtureRoot,
+          packageCase.name,
+          packageCase.selected,
+        );
+        writeFileSync(
+          selectedPath,
+          `require(${JSON.stringify(forbiddenModule)});\n`,
+        );
+        try {
+          const checked = spawnSync(
+            process.execPath,
+            [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+            { encoding: "utf8" },
+          );
+          expect(checked.status).not.toBe(0);
+          expect(`${checked.stdout}${checked.stderr}`).toContain(
+            relative(repoRoot, selectedPath),
+          );
+        } finally {
+          writeFileSync(
+            selectedPath,
+            `export const value = ${JSON.stringify(packageCase.name)};\n`,
+          );
+        }
+      }
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("follows nested package entries and terminates package-entry cycles", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-nested-package-entry-"),
+    );
+    const nestedEntryTestPath = resolve(fixtureRoot, "nested.test.ts");
+    const nestedPackageDirectory = resolve(fixtureRoot, "nested");
+    const nestedDirectory = resolve(nestedPackageDirectory, "child");
+    const nestedEntryPath = resolve(nestedDirectory, "entry.ts");
+    const cycleTestPath = resolve(fixtureRoot, "cycle.test.ts");
+    const cyclePackageDirectory = resolve(fixtureRoot, "cycle");
+    const cycleChildDirectory = resolve(cyclePackageDirectory, "child");
+    mkdirSync(nestedDirectory, { recursive: true });
+    mkdirSync(cycleChildDirectory, { recursive: true });
+    writeFileSync(
+      resolve(nestedPackageDirectory, "package.json"),
+      `${JSON.stringify({ main: "./child" }, null, 2)}\n`,
+    );
+    writeFileSync(
+      resolve(nestedDirectory, "package.json"),
+      `${JSON.stringify({ main: "./entry.ts" }, null, 2)}\n`,
+    );
+    writeFileSync(
+      nestedEntryPath,
+      `require(${JSON.stringify(["node:", "http"].join(""))});\n`,
+    );
+    writeFileSync(nestedEntryTestPath, 'import "./nested";\n');
+    writeFileSync(
+      resolve(cyclePackageDirectory, "package.json"),
+      `${JSON.stringify({ main: "./child" }, null, 2)}\n`,
+    );
+    writeFileSync(
+      resolve(cycleChildDirectory, "package.json"),
+      `${JSON.stringify({ main: ".." }, null, 2)}\n`,
+    );
+    writeFileSync(cycleTestPath, 'import "./cycle";\n');
+    try {
+      const nestedChecked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, nestedEntryTestPath)],
+        { encoding: "utf8" },
+      );
+      expect(nestedChecked.status).not.toBe(0);
+      expect(`${nestedChecked.stdout}${nestedChecked.stderr}`).toContain(
+        relative(repoRoot, nestedEntryPath),
+      );
+
+      const cycleChecked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, cycleTestPath)],
+        { encoding: "utf8" },
+      );
+      expect(cycleChecked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("follows package imports conditions, arrays, and patterns", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-package-imports-"),
+    );
+    const fixtureName = relative(rawSwarmOutputDirectory, fixtureRoot);
+    const packageDirectory = resolve(
+      repoRoot,
+      "packages",
+      `.raw-swarm-package-imports-${fixtureName}`,
+    );
+    const packageSourceDirectory = resolve(
+      packageDirectory,
+      "src",
+      "components",
+    );
+    const entryPath = resolve(packageDirectory, "src", "imports.test.ts");
+    const importSpecifier = "#/components/forbidden";
+    const forbiddenModule = ["node:", "http"].join("");
+    const candidatePaths = [
+      resolve(packageSourceDirectory, "forbidden-development.ts"),
+      resolve(packageSourceDirectory, "forbidden-default.ts"),
+      resolve(packageSourceDirectory, "forbidden-fallback.ts"),
+    ];
+    mkdirSync(packageSourceDirectory, { recursive: true });
+    writeFileSync(
+      resolve(packageDirectory, "package.json"),
+      `${JSON.stringify(
+        {
+          name: `raw-swarm-package-imports-${fixtureName}`,
+          private: true,
+          type: "module",
+          imports: {
+            "#/*": [
+              {
+                development: "./src/*-development.ts",
+                default: "./src/*-default.ts",
+              },
+              "./src/*-fallback.ts",
+            ],
+          },
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    for (const candidatePath of candidatePaths) {
+      writeFileSync(candidatePath, 'export const value = "development";\n');
+    }
+    writeFileSync(
+      entryPath,
+      `import { expect, test } from "vitest";
+import { value } from ${JSON.stringify(importSpecifier)};
+test("package imports", () => expect(value).toBe("development"));
+`,
+    );
+    try {
+      const runtime = spawnSync(
+        "pnpm",
+        [
+          "exec",
+          "vitest",
+          "run",
+          "--root",
+          packageDirectory,
+          "--config",
+          resolve(repoRoot, "vitest.config.ts"),
+          entryPath,
+          "--pool=threads",
+          "--maxWorkers=1",
+        ],
+        {
+          cwd: repoRoot,
+          env: { ...process.env, NODE_OPTIONS: "" },
+          encoding: "utf8",
+        },
+      );
+      expect(runtime.status).toBe(0);
+
+      for (const candidatePath of candidatePaths) {
+        writeFileSync(
+          candidatePath,
+          `require(${JSON.stringify(forbiddenModule)});\n`,
+        );
+        try {
+          const checked = spawnSync(
+            process.execPath,
+            [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+            { encoding: "utf8" },
+          );
+          expect(checked.status).not.toBe(0);
+          expect(`${checked.stdout}${checked.stderr}`).toContain(
+            relative(repoRoot, candidatePath),
+          );
+        } finally {
+          writeFileSync(candidatePath, 'export const value = "development";\n');
+        }
+      }
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+      rmSync(packageDirectory, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("fails closed on malformed package imports targets", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-invalid-package-imports-"),
+    );
+    const fixtureName = relative(rawSwarmOutputDirectory, fixtureRoot);
+    const packageDirectory = resolve(
+      repoRoot,
+      "packages",
+      `.raw-swarm-invalid-package-imports-${fixtureName}`,
+    );
+    const entryPath = resolve(packageDirectory, "src", "imports.test.ts");
+    mkdirSync(resolve(packageDirectory, "src"), { recursive: true });
+    writeFileSync(
+      resolve(packageDirectory, "package.json"),
+      `${JSON.stringify(
+        {
+          name: `raw-swarm-invalid-package-imports-${fixtureName}`,
+          private: true,
+          imports: { "#/*": 42 },
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    writeFileSync(entryPath, 'import "#/components/invalid";\n');
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        "Could not resolve deterministic package imports",
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+      rmSync(packageDirectory, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test.each(["setup", "characters"] as const)(
+    "scans tracked scenario %s modules loaded by the runtime owner",
+    (kind) => {
+      const fixtureRoot = mkdtempSync(
+        resolve(rawSwarmOutputDirectory, "transitive-scenario-runtime-"),
+      );
+      const runtimePath = resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player",
+        kind === "setup"
+          ? "scenario-setup-runtime.ts"
+          : "scenario-character-runtime.ts",
+      );
+      const scenarioRoot = resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios",
+      );
+      const syntheticScenarioPath = resolve(
+        scenarioRoot,
+        `raw-swarm-hygiene-${process.pid}-${Date.now()}.${kind}.ts`,
+      );
+      const testPath = resolve(fixtureRoot, "runtime.test.ts");
+      const forbiddenModule = ["node:", "http"].join("");
+      writeFileSync(
+        testPath,
+        `import ${JSON.stringify(relative(fixtureRoot, runtimePath))};\n`,
+      );
+      writeFileSync(
+        syntheticScenarioPath,
+        `require(${JSON.stringify(forbiddenModule)});\n`,
+      );
+      try {
+        const checked = spawnSync(
+          process.execPath,
+          [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+          { encoding: "utf8" },
+        );
+        expect(checked.status).not.toBe(0);
+        expect(`${checked.stdout}${checked.stderr}`).toContain(
+          relative(repoRoot, syntheticScenarioPath),
+        );
+      } finally {
+        rmSync(fixtureRoot, { recursive: true, force: true });
+        rmSync(syntheticScenarioPath, { force: true });
+      }
+    },
+    30_000,
+  );
+
+  test("fails closed on malformed or non-file package manifests", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-invalid-package-manifest-"),
+    );
+    const malformedTestPath = resolve(fixtureRoot, "malformed.test.ts");
+    const malformedDirectory = resolve(fixtureRoot, "malformed");
+    const nonFileTestPath = resolve(fixtureRoot, "non-file.test.ts");
+    const nonFileDirectory = resolve(fixtureRoot, "non-file");
+    mkdirSync(malformedDirectory, { recursive: true });
+    mkdirSync(nonFileDirectory, { recursive: true });
+    writeFileSync(resolve(malformedDirectory, "package.json"), "{\n");
+    mkdirSync(resolve(nonFileDirectory, "package.json"));
+    writeFileSync(malformedTestPath, 'import "./malformed";\n');
+    writeFileSync(nonFileTestPath, 'import "./non-file";\n');
+    try {
+      const malformedChecked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, malformedTestPath)],
+        { encoding: "utf8" },
+      );
+      expect(malformedChecked.status).not.toBe(0);
+      expect(`${malformedChecked.stdout}${malformedChecked.stderr}`).toContain(
+        "Could not read deterministic package manifest",
+      );
+
+      const nonFileChecked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, nonFileTestPath)],
+        { encoding: "utf8" },
+      );
+      expect(nonFileChecked.status).not.toBe(0);
+      expect(`${nonFileChecked.stdout}${nonFileChecked.stderr}`).toContain(
+        "Could not read deterministic package manifest",
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("fails closed on a package entry outside the repository", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-outside-package-entry-"),
+    );
+    const outsideRoot = mkdtempSync(resolve(tmpdir(), "dnd-outside-entry-"));
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const symlinkTestPath = resolve(fixtureRoot, "symlink.test.ts");
+    const symlinkSuffixTestPath = resolve(
+      fixtureRoot,
+      "symlink-suffix.test.ts",
+    );
+    const packageDirectory = resolve(fixtureRoot, "dir");
+    const symlinkPath = resolve(fixtureRoot, "linked-dir");
+    const outsideSourcePath = resolve(outsideRoot, "entry.ts");
+    mkdirSync(packageDirectory, { recursive: true });
+    writeFileSync(
+      resolve(packageDirectory, "package.json"),
+      `${JSON.stringify(
+        { main: relative(packageDirectory, outsideSourcePath) },
+        null,
+        2,
+      )}\n`,
+    );
+    writeFileSync(
+      outsideSourcePath,
+      `require(${JSON.stringify(["node:", "http"].join(""))});\n`,
+    );
+    writeFileSync(testPath, 'import "./dir";\n');
+    symlinkSync(outsideRoot, symlinkPath, "dir");
+    writeFileSync(symlinkTestPath, 'import "./linked-dir";\n');
+    writeFileSync(
+      symlinkSuffixTestPath,
+      'import "./linked-dir/missing-source";\n',
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        "escapes the repository",
+      );
+
+      const symlinkChecked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, symlinkTestPath)],
+        { encoding: "utf8" },
+      );
+      expect(symlinkChecked.status).not.toBe(0);
+      expect(`${symlinkChecked.stdout}${symlinkChecked.stderr}`).toContain(
+        "resolves outside the repository",
+      );
+
+      const symlinkSuffixChecked = spawnSync(
+        process.execPath,
+        [
+          laneHygieneChecker,
+          "--test",
+          relative(repoRoot, symlinkSuffixTestPath),
+        ],
+        { encoding: "utf8" },
+      );
+      expect(symlinkSuffixChecked.status).not.toBe(0);
+      expect(
+        `${symlinkSuffixChecked.stdout}${symlinkSuffixChecked.stderr}`,
+      ).toContain("resolves outside the repository");
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+      rmSync(outsideRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("does not treat a non-relative package export as a file path", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-invalid-package-export-"),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const packageDirectory = resolve(fixtureRoot, "dir");
+    const invalidTargetPath = resolve(packageDirectory, "invalid.ts");
+    mkdirSync(packageDirectory, { recursive: true });
+    writeFileSync(
+      resolve(packageDirectory, "package.json"),
+      `${JSON.stringify(
+        { exports: { ".": "invalid.ts" }, main: "./safe.ts" },
+        null,
+        2,
+      )}\n`,
+    );
+    writeFileSync(
+      invalidTargetPath,
+      `require(${JSON.stringify(["node:", "http"].join(""))});\n`,
+    );
+    writeFileSync(
+      resolve(packageDirectory, "safe.ts"),
+      "export const safe = true;\n",
+    );
+    writeFileSync(testPath, 'import "./dir";\n');
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("uses the canonical directory for an in-repository package symlink", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-symlink-package-entry-"),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const realContainer = resolve(fixtureRoot, "real");
+    const realPackageDirectory = resolve(realContainer, "package");
+    const linkedContainer = resolve(fixtureRoot, "linked");
+    const linkedPackageDirectory = resolve(linkedContainer, "package");
+    const canonicalEntryPath = resolve(realContainer, "entry.ts");
+    mkdirSync(realPackageDirectory, { recursive: true });
+    mkdirSync(linkedContainer, { recursive: true });
+    writeFileSync(
+      resolve(realPackageDirectory, "package.json"),
+      `${JSON.stringify({ main: "../entry.ts" }, null, 2)}\n`,
+    );
+    writeFileSync(
+      canonicalEntryPath,
+      `require(${JSON.stringify(["node:", "http"].join(""))});\n`,
+    );
+    writeFileSync(
+      resolve(linkedContainer, "entry.ts"),
+      "export const safe = true;\n",
+    );
+    symlinkSync(realPackageDirectory, linkedPackageDirectory, "dir");
+    writeFileSync(testPath, 'import "./linked/package";\n');
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, canonicalEntryPath),
+      );
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
