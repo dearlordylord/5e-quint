@@ -992,6 +992,11 @@ function sourceDependencyEdges(sourcePath) {
     sourceDependencyEdgeCache.set(canonicalSourcePath, edges);
     return edges;
   }
+  if (supportedSourceExtension(canonicalSourcePath) === undefined) {
+    const edges = [];
+    sourceDependencyEdgeCache.set(canonicalSourcePath, edges);
+    return edges;
+  }
 
   const edges = [
     ...sourcePathsFromScenarioRuntimeModules(canonicalSourcePath),

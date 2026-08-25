@@ -2190,6 +2190,40 @@ describe("RAW swarm runner boundaries", () => {
     );
   }, 30_000);
 
+  test("keeps non-code Vite assets as leaf dependencies", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-vite-asset-"),
+    );
+    const entryPath = resolve(fixtureRoot, "asset-entry.test.ts");
+    const assetPath = resolve(fixtureRoot, "styles.css");
+    writeFileSync(entryPath, 'import "./styles.css?inline";\n');
+    writeFileSync(assetPath, "body { color: red; }\n");
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).toBe(0);
+
+      const listed = spawnSync(
+        process.execPath,
+        [
+          laneHygieneChecker,
+          "--list-test-sources",
+          relative(repoRoot, entryPath),
+        ],
+        { encoding: "utf8" },
+      );
+      expect(listed.status).toBe(0);
+      expect(listed.stdout.split("\n")).toContain(
+        relative(repoRoot, assetPath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   test("follows multiline imports and exports without reading comments or strings", () => {
     const fixtureRoot = mkdtempSync(
       resolve(rawSwarmOutputDirectory, "transitive-multiline-module-"),
