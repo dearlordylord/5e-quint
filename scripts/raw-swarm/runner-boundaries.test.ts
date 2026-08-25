@@ -2089,6 +2089,104 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 30_000);
 
+  test("scans a package export directory ending in a supported extension", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "lane-package-extension-directory-"),
+    );
+    const fixtureName = relative(rawSwarmOutputDirectory, fixtureRoot);
+    const packageDirectory = resolve(
+      repoRoot,
+      "packages",
+      `.raw-swarm-package-extension-directory-${fixtureName}`,
+    );
+    const packageName = `@dnd/raw-swarm-package-extension-directory-${fixtureName}`;
+    const extensionDirectory = resolve(packageDirectory, "src", "dir.js");
+    const forbiddenSourcePath = resolve(extensionDirectory, "index.ts");
+    const entryPath = resolve(fixtureRoot, "package-entry.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(extensionDirectory, { recursive: true });
+    writeFileSync(
+      resolve(packageDirectory, "package.json"),
+      `${JSON.stringify(
+        {
+          name: packageName,
+          private: true,
+          exports: { ".": "./src/dir.js" },
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    writeFileSync(entryPath, `import ${JSON.stringify(packageName)};\n`);
+    writeFileSync(
+      forbiddenSourcePath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, forbiddenSourcePath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+      rmSync(packageDirectory, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("scans a tsconfig alias directory ending in a supported extension", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "lane-tsconfig-extension-directory-"),
+    );
+    const fixtureName = relative(rawSwarmOutputDirectory, fixtureRoot);
+    const packageDirectory = resolve(
+      repoRoot,
+      "packages",
+      `.raw-swarm-tsconfig-extension-directory-${fixtureName}`,
+    );
+    const packageName = `@dnd/raw-swarm-tsconfig-extension-directory-${fixtureName}`;
+    const extensionDirectory = resolve(packageDirectory, "src", "dir.js");
+    const forbiddenSourcePath = resolve(extensionDirectory, "index.ts");
+    const entryPath = resolve(packageDirectory, "src", "entry.test.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(extensionDirectory, { recursive: true });
+    writeFileSync(
+      resolve(packageDirectory, "package.json"),
+      `${JSON.stringify({ name: packageName, private: true }, null, 2)}\n`,
+    );
+    writeFileSync(
+      resolve(packageDirectory, "tsconfig.json"),
+      `${JSON.stringify(
+        { compilerOptions: { paths: { [packageName]: ["src/dir.js"] } } },
+        null,
+        2,
+      )}\n`,
+    );
+    writeFileSync(entryPath, `import ${JSON.stringify(packageName)};\n`);
+    writeFileSync(
+      forbiddenSourcePath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, forbiddenSourcePath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+      rmSync(packageDirectory, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   test.each(SUPPORTED_VITEST_TEST_FILE_SUFFIXES)(
     "rejects an unclassified supported Vitest test filename %s",
     (suffix) => {
@@ -2182,6 +2280,35 @@ describe("RAW swarm runner boundaries", () => {
     const forbiddenModule = ["node:", "http"].join("");
     mkdirSync(dottedDirectory, { recursive: true });
     writeFileSync(testPath, 'import "./dir.v2";\n');
+    writeFileSync(
+      forbiddenIndexPath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, forbiddenIndexPath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("scans a supported-extension directory index for extensionless imports", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-extension-directory-"),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const extensionDirectory = resolve(fixtureRoot, "dir.js");
+    const forbiddenIndexPath = resolve(extensionDirectory, "index.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(extensionDirectory, { recursive: true });
+    writeFileSync(testPath, 'import "./dir.js";\n');
     writeFileSync(
       forbiddenIndexPath,
       `require(${JSON.stringify(forbiddenModule)});\n`,

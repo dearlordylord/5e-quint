@@ -186,16 +186,22 @@ const sourceResolutionSuffixes = Object.freeze([
   ...SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
 ]);
 
-function isRegularFile(path) {
+function sourceCandidateObservation(path) {
   try {
-    return statSync(path).isFile();
+    const stats = statSync(path);
+    if (stats.isFile()) return { kind: "file" };
+    if (stats.isDirectory()) return { kind: "directory" };
+    return {
+      kind: "failure",
+      message: `Could not inspect deterministic source candidate ${path} (not a regular file or directory)`,
+    };
   } catch (error) {
     if (
       error !== null &&
       typeof error === "object" &&
       (error.code === "ENOENT" || error.code === "ENOTDIR")
     ) {
-      return false;
+      return { kind: "absent" };
     }
     const code =
       error !== null && typeof error === "object" && "code" in error
@@ -213,20 +219,55 @@ function hasSupportedSourceExtension(path) {
   );
 }
 
-function sourceCandidatesForPath(candidate) {
-  const candidates = sourceResolutionSuffixes.flatMap((extension) => [
-    `${candidate}${extension}`,
-    join(candidate, `index${extension}`),
-  ]);
-  return [...new Set(candidates)].filter(isRegularFile);
+function sourcePathsFromResolutionCandidates(candidates, visited) {
+  return [
+    ...new Set(
+      candidates.flatMap((path) => {
+        if (visited.has(path)) return [];
+        visited.add(path);
+        const observation = sourceCandidateObservation(path);
+        if (observation.kind === "failure") {
+          throw new Error(observation.message);
+        }
+        if (observation.kind === "file") return [path];
+        if (observation.kind === "directory") {
+          return sourcePathsFromResolutionCandidates(
+            sourceResolutionSuffixes.map((extension) =>
+              join(path, `index${extension}`),
+            ),
+            visited,
+          );
+        }
+        return [];
+      }),
+    ),
+  ];
 }
 
-function resolveInternalImport(sourcePath, specifier) {
-  const candidate = resolve(dirname(sourcePath), specifier);
-  if (hasSupportedSourceExtension(candidate)) {
-    return isRegularFile(candidate) ? [candidate] : [];
+function sourcePathsForCandidate(candidate, visited = new Set()) {
+  if (visited.has(candidate)) return [];
+  visited.add(candidate);
+  const observation = sourceCandidateObservation(candidate);
+  if (observation.kind === "failure") throw new Error(observation.message);
+  if (observation.kind === "file") return [candidate];
+  if (observation.kind === "absent" && hasSupportedSourceExtension(candidate)) {
+    return [];
   }
-  return sourceCandidatesForPath(candidate);
+  const candidates =
+    observation.kind === "directory"
+      ? sourceResolutionSuffixes.map((extension) =>
+          join(candidate, `index${extension}`),
+        )
+      : sourceResolutionSuffixes.flatMap((extension) => [
+          `${candidate}${extension}`,
+          join(candidate, `index${extension}`),
+        ]);
+  return sourcePathsFromResolutionCandidates(candidates, visited);
+}
+
+function resolveInternalImportPaths(sourcePath, specifier) {
+  const candidate = resolve(dirname(sourcePath), specifier);
+  return sourcePathsForCandidate(candidate);
 }
 
 function repositoryOwnedPath(path) {
@@ -250,19 +291,16 @@ function sourcePathsForTarget(target) {
   if (typeof target !== "string") return [];
   const candidate = resolve(target);
   if (!repositoryOwnedPath(candidate)) return [];
-  if (hasSupportedSourceExtension(candidate)) {
-    return isRegularFile(candidate) ? [candidate] : [];
-  }
-  return sourceCandidatesForPath(candidate);
+  return sourcePathsForCandidate(candidate);
 }
 
-function targetFromPackageExports(exportsValue, subpath) {
+function targetsFromPackageExports(exportsValue, subpath) {
   if (typeof exportsValue === "string") return [exportsValue];
   if (Array.isArray(exportsValue)) {
     return [
       ...new Set(
         exportsValue.flatMap((candidate) =>
-          targetFromPackageExports(candidate, subpath),
+          targetsFromPackageExports(candidate, subpath),
         ),
       ),
     ];
@@ -272,13 +310,13 @@ function targetFromPackageExports(exportsValue, subpath) {
   }
   const targets = [];
   if (Object.hasOwn(exportsValue, subpath)) {
-    targets.push(...targetFromPackageExports(exportsValue[subpath], subpath));
+    targets.push(...targetsFromPackageExports(exportsValue[subpath], subpath));
   }
   for (const [key, value] of Object.entries(exportsValue)) {
     if (key.endsWith("/*") && subpath.startsWith(key.slice(0, -1))) {
       const suffix = subpath.slice(key.length - 1);
       targets.push(
-        ...targetFromPackageExports(value, subpath).map((target) =>
+        ...targetsFromPackageExports(value, subpath).map((target) =>
           target.replaceAll("*", suffix),
         ),
       );
@@ -287,7 +325,7 @@ function targetFromPackageExports(exportsValue, subpath) {
   for (const condition of ["types", "import", "default", "node"]) {
     if (Object.hasOwn(exportsValue, condition)) {
       targets.push(
-        ...targetFromPackageExports(exportsValue[condition], subpath),
+        ...targetsFromPackageExports(exportsValue[condition], subpath),
       );
     }
   }
@@ -319,7 +357,7 @@ function workspacePackageRecords() {
 
 const workspacePackages = workspacePackageRecords();
 
-function workspacePackageImportPath(specifier) {
+function workspacePackageImportPaths(specifier) {
   const sourcePaths = [];
   for (const [packageName, record] of workspacePackages) {
     if (specifier !== packageName && !specifier.startsWith(`${packageName}/`)) {
@@ -327,7 +365,7 @@ function workspacePackageImportPath(specifier) {
     }
     const suffix = specifier.slice(packageName.length);
     const subpath = suffix.length === 0 ? "." : `.${suffix}`;
-    const targets = targetFromPackageExports(record.exports, subpath);
+    const targets = targetsFromPackageExports(record.exports, subpath);
     if (targets.length === 0 && subpath === ".") {
       targets.push("./src/index.ts");
     }
@@ -368,7 +406,7 @@ function pathIsInside(path, directory) {
   );
 }
 
-function workspaceTsconfigImportPath(sourcePath, specifier) {
+function workspaceTsconfigImportPaths(sourcePath, specifier) {
   const config = workspaceTsconfigMaps
     .filter(({ directory }) => pathIsInside(sourcePath, directory))
     .sort((left, right) => right.directory.length - left.directory.length)[0];
@@ -386,20 +424,20 @@ function workspaceTsconfigImportPath(sourcePath, specifier) {
     for (const target of targets) {
       if (typeof target !== "string") continue;
       const targetPath = target.replaceAll("*", suffix);
-      const sourceTargets = sourcePathsForTarget(
+      const targetSourcePaths = sourcePathsForTarget(
         resolve(config.directory, targetPath),
       );
-      sourcePaths.push(...sourceTargets);
+      sourcePaths.push(...targetSourcePaths);
     }
   }
   return [...new Set(sourcePaths)];
 }
 
-function workspaceImportPath(sourcePath, specifier) {
-  const tsconfigPaths = workspaceTsconfigImportPath(sourcePath, specifier);
+function workspaceImportPaths(sourcePath, specifier) {
+  const tsconfigPaths = workspaceTsconfigImportPaths(sourcePath, specifier);
   return tsconfigPaths.length > 0
     ? tsconfigPaths
-    : workspacePackageImportPath(specifier);
+    : workspacePackageImportPaths(specifier);
 }
 
 function sourcePathsForQualityTest(testPath) {
@@ -424,8 +462,8 @@ function sourcePathsForQualityTest(testPath) {
     const source = readFileSync(sourcePath, "utf8");
     for (const specifier of importSpecifiers(source)) {
       const importedPaths = specifier.startsWith(".")
-        ? resolveInternalImport(sourcePath, specifier)
-        : workspaceImportPath(sourcePath, specifier);
+        ? resolveInternalImportPaths(sourcePath, specifier)
+        : workspaceImportPaths(sourcePath, specifier);
       pending.push(...importedPaths);
     }
   }
