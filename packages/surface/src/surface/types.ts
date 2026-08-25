@@ -590,6 +590,9 @@ export type GlyphWardingMechanics = Schema.Schema.Type<
 export type StatBlockValue = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockValueSchema
 >;
+export type StatBlockLiteralValue = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockLiteralValueSchema
+>;
 export type Size = Schema.Schema.Type<typeof SurfaceSchema.SizeSchema>;
 export type SixAbilityScores = Schema.Schema.Type<
   typeof SurfaceSchema.SixAbilityScoresSchema
@@ -656,6 +659,12 @@ export type StandaloneStatBlock = Schema.Schema.Type<
 >;
 export type StandaloneStatBlockValue = Schema.Schema.Type<
   typeof SurfaceSchema.StandaloneStatBlockValueSchema
+>;
+export type StatBlockInitiativeModifier = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockInitiativeModifierSchema
+>;
+export type StatBlockInitiative = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockInitiativeSchema
 >;
 export type MonsterStatBlock = Schema.Schema.Type<
   typeof SurfaceSchema.MonsterStatBlockSchema
