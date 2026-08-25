@@ -604,9 +604,11 @@ function runLaneHygiene() {
     join(root, "scripts/raw-swarm/deterministic-runner.cjs"),
     "utf8",
   );
-  assert.match(
+  assert.match(deterministicProcessRunner, /stdio: "inherit"/);
+  assert.doesNotMatch(
     deterministicProcessRunner,
-    /stdio: \["ignore", stdoutFd, stderrFd\]/,
+    /\/proc|readdirSync|readFileSync|capture/i,
+    "Native supervision owns process lifecycle and inherited output; the JavaScript wrapper must not rediscover or capture it.",
   );
   assert.doesNotMatch(
     deterministicProcessRunner,

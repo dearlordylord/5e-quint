@@ -76,9 +76,10 @@ silently weakening the filter. Before installing it, the helper fails closed
 unless `/proc/self/status` proves that the host has no effective
 `CAP_NET_ADMIN`, `CAP_NET_RAW`, or `CAP_SYS_ADMIN`, and `/dev/net/tun` is not
 accessible. The filter additionally denies session/process-group and namespace
-escape syscalls (`setsid`, `setpgid`, `setns`, namespace-bearing `clone`, and
-`clone3`) plus `TUNSETIFF`; these checks complement, rather than replace, the
-trusted-host prerequisite. The JavaScript guard remains defense in depth
+escape syscalls (`setsid`, `setpgid`, `setns`, namespace-bearing `clone`,
+`clone3`, and changing the child-subreaper setting) plus `TUNSETIFF`; these
+checks complement, rather than replace, the trusted-host prerequisite. The
+JavaScript guard remains defense in depth
 for static/runtime capability inventory, browser globals, and known executable
 names; it is not the security boundary and does not trust module-origin or
 fixture-marker claims. A basename cannot prove a coding-agent identity: known
@@ -89,16 +90,20 @@ alias reached by admitted source still inherits the kernel communication
 denial. This is a deterministic-lane contract, not a hostile-root or
 untrusted-toolchain claim.
 
-The runner starts each deterministic command asynchronously in its own Linux
-process group, captures and flushes its output, and forwards `SIGTERM`,
-`SIGINT`, or `SIGHUP` to that owned group. It waits for bounded settlement,
-escalates to `SIGKILL` when required, reaps the child, and only then removes
-temporary helper directories. The one output-forwarding operation has the same
-bounded contract during normal completion and signal cleanup; a non-draining
-stdout or stderr sink fails the phase precisely after process cleanup instead
-of holding the lane open. `SIGKILL` cannot be handled by the runner, so an
-operator must remove any leftover temporary directory after an externally
-forced kill.
+The native helper is also the lifecycle supervisor: it becomes a Linux
+subreaper, forks the command into a dedicated process group before applying
+seccomp, and uses `waitpid(-1, ...)` to reap the leader and every reparented
+descendant. The JavaScript runner only starts one helper at a time with
+inherited standard streams and waits for its close; it has no `/proc` process
+discovery, PID-member registry, output capture, or duplicate settlement state.
+On normal leader exit, a surviving descendant causes bounded `SIGTERM` then
+`SIGKILL` cleanup and a non-clean phase status. `SIGTERM`, `SIGINT`, and
+`SIGHUP` are handled by the native supervisor, which forwards the signal to
+the owned process group, escalates when required, reaps the tree, and returns
+the corresponding signal status. The helper and command use parent-death
+signals so they cannot silently outlive their immediate owner. `SIGKILL`
+cannot be handled, so an operator must remove any leftover temporary directory
+after an externally forced kill.
 
 The deterministic command is Linux-only and fails explicitly on unsupported
 platforms or toolchains. A process started outside the helper is not covered;

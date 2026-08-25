@@ -89,7 +89,6 @@ async function main() {
     };
     runner = createDeterministicRunner({
       boundary: deterministicNetworkBoundary,
-      buildDirectory,
       environment: deterministicEnvironment,
     });
 
