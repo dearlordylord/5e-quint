@@ -65,19 +65,27 @@ workers, forks, shells, `env -i`, and custom launchers, independently of
 JavaScript environment variables.
 
 The filter allows only `AF_UNIX` socket and socket-pair creation, closes every
-inherited descriptor above standard error, rejects non-Unix standard sockets,
-denies connection, network-send, and descriptor-transfer syscalls (including
-`SCM_RIGHTS` paths), and denies all `io_uring` setup/submission syscalls. Its
-syscall-ABI check kills a process using an unexpected architecture instead of
-silently weakening the filter. The JavaScript guard remains defense in depth
+inherited descriptor above standard error, and allows only regular files,
+character devices, and FIFOs on standard descriptors. It rejects inherited
+sockets, anon-inodes, and unknown descriptor types, denies connection,
+network-send, and descriptor-transfer syscalls (including `SCM_RIGHTS` paths),
+and denies all `io_uring` setup/submission syscalls. Its syscall-ABI check kills
+a process using an unexpected architecture instead of silently weakening the
+filter. The JavaScript guard remains defense in depth
 for static/runtime capability inventory, browser globals, and known executable
 names; it is not the security boundary and does not trust module-origin or
 fixture-marker claims. A basename cannot prove a coding-agent identity: known
-names are categorically rejected, while an aliased executable is admitted only
-when it is part of the exact repository source inventory and still runs inside
-the kernel-denied route. That route blocks external communication even for an
-alias; this is a deterministic-lane contract, not a hostile-root or
+names are categorically rejected. The exact source inventory proves only that
+repository-owned source does not invoke a known coding-agent path; semantic
+identity of an arbitrary alias is outside the trusted-source threat model. Any
+alias reached by admitted source still inherits the kernel communication
+denial. This is a deterministic-lane contract, not a hostile-root or
 untrusted-toolchain claim.
+
+The runner and its boundary tests remove temporary helper directories on normal
+exit and on `SIGTERM`, `SIGINT`, or `SIGHUP`. `SIGKILL` cannot be handled, so an
+operator must remove any leftover temporary directory after an externally
+forced kill.
 
 The deterministic command is Linux-only and fails explicitly on unsupported
 platforms or toolchains. A process started outside the helper is not covered;

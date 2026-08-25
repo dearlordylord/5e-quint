@@ -560,6 +560,7 @@ function runLaneHygiene() {
   assert.match(deterministicRunner, /deterministic-capability-guard\.cjs/);
   assert.match(deterministicRunner, /deterministic-network-boundary\.c/);
   assert.match(deterministicRunner, /deterministic-toolchain\.cjs/);
+  assert.match(deterministicRunner, /stdio: \["ignore", stdoutFd, stderrFd\]/);
   assert.match(deterministicRunner, /NODE_OPTIONS: deterministicNodeOptions/);
   assert.doesNotMatch(
     deterministicRunner,

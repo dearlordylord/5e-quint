@@ -1,7 +1,14 @@
 const { spawnSync } = require("node:child_process");
-const { mkdtempSync, rmSync } = require("node:fs");
+const {
+  closeSync,
+  mkdtempSync,
+  openSync,
+  readFileSync,
+  rmSync,
+} = require("node:fs");
 const { delimiter, join, resolve } = require("node:path");
 const { tmpdir } = require("node:os");
+const { installDeterministicCleanup } = require("./deterministic-cleanup.cjs");
 const { compileTrustedCSource } = require("./deterministic-toolchain.cjs");
 
 const {
@@ -29,7 +36,7 @@ function compileDeterministicNetworkBoundary() {
     resolve(tmpdir(), "dnd-raw-swarm-seccomp-"),
   );
   const binaryPath = join(buildDirectory, "deterministic-network-boundary");
-  process.once("exit", () => {
+  installDeterministicCleanup(() => {
     rmSync(buildDirectory, { recursive: true, force: true });
   });
   const compilation = compileTrustedCSource(
@@ -61,10 +68,24 @@ const deterministicEnvironment = {
 const deterministicNetworkBoundary = compileDeterministicNetworkBoundary();
 
 function run(command, args) {
-  const result = spawnSync(deterministicNetworkBoundary, [command, ...args], {
-    env: deterministicEnvironment,
-    stdio: "inherit",
-  });
+  const buildDirectory = resolve(deterministicNetworkBoundary, "..");
+  const stdoutPath = join(buildDirectory, `${command}.stdout`);
+  const stderrPath = join(buildDirectory, `${command}.stderr`);
+  const stdoutFd = openSync(stdoutPath, "w");
+  const stderrFd = openSync(stderrPath, "w");
+  const result = (() => {
+    try {
+      return spawnSync(deterministicNetworkBoundary, [command, ...args], {
+        env: deterministicEnvironment,
+        stdio: ["ignore", stdoutFd, stderrFd],
+      });
+    } finally {
+      closeSync(stdoutFd);
+      closeSync(stderrFd);
+    }
+  })();
+  process.stdout.write(readFileSync(stdoutPath));
+  process.stderr.write(readFileSync(stderrPath));
   if (result.error !== undefined) throw result.error;
   if (result.signal !== null) {
     process.stderr.write(

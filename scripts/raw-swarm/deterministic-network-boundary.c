@@ -175,30 +175,19 @@ static int close_inherited_descriptors(void) {
   return 0;
 }
 
-static int reject_socket_standard_descriptors(void) {
+static int validate_standard_descriptors(void) {
   for (int descriptor = 0; descriptor <= 2; descriptor += 1) {
     struct stat metadata;
     if (fstat(descriptor, &metadata) == 0) {
-      if (S_ISSOCK(metadata.st_mode)) {
-        struct sockaddr_storage address;
-        socklen_t address_length = sizeof(address);
-        if (getsockname(descriptor, (struct sockaddr *)&address,
-                        &address_length) != 0) {
-          fprintf(stderr,
-                  "Raw Swarm deterministic network boundary could not "
-                  "inspect socket standard descriptor %d: %s\n",
-                  descriptor, strerror(errno));
-          return 1;
-        }
-        if (address.ss_family != AF_UNIX) {
-          fprintf(stderr,
-                  "Raw Swarm deterministic network boundary refuses a "
-                  "non-Unix socket on standard descriptor %d.\n",
-                  descriptor);
-          return 1;
-        }
+      if (S_ISREG(metadata.st_mode) || S_ISCHR(metadata.st_mode) ||
+          S_ISFIFO(metadata.st_mode)) {
+        continue;
       }
-      continue;
+      fprintf(stderr,
+              "Raw Swarm deterministic network boundary refuses an "
+              "unsupported standard descriptor %d.\n",
+              descriptor);
+      return 1;
     }
     if (errno != EBADF) {
       fprintf(stderr,
@@ -218,7 +207,7 @@ int main(int argc, char **argv) {
     return 64;
   }
   if (close_inherited_descriptors() != 0 ||
-      reject_socket_standard_descriptors() != 0) {
+      validate_standard_descriptors() != 0) {
     return 78;
   }
   if (install_network_filter() != 0) {
