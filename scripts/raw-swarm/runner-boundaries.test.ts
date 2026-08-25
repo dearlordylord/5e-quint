@@ -2363,7 +2363,7 @@ describe("RAW swarm runner boundaries", () => {
     writeFileSync(
       safeEntry,
       [
-        'if (true) /require\\("\\.\\\\/regex-target\\.ts"\\)/;',
+        String.raw`if (true) /require\("\.\/regex-target\.ts"\)/;`,
         "const member = { require: (value: string) => value, import: (value: string) => value };",
         'member.require("./member-target.ts");',
         'member.import("./member-target.ts");',
