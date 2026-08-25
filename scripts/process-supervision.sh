@@ -8,13 +8,13 @@ set -euo pipefail
 # or clears its environment.  The shell only owns the helper PID and waits for
 # its completion before releasing any resource lock.
 
-supervision_command_pid=""
+supervision_helper_pid=""
 supervision_event_name=""
 supervision_deadline_milliseconds=""
 supervision_cleanup_in_progress=false
-supervision_command_reaped=false
-supervision_command_wait_status=0
-supervision_command_start_time=""
+supervision_helper_reaped=false
+supervision_helper_wait_status=0
+supervision_helper_start_time=""
 supervision_helper_directory=""
 
 supervision_process_stat_fields() {
@@ -70,41 +70,41 @@ supervision_require_owner() {
   fi
 }
 
-supervision_owned_processes_exist() {
-  [[ -n "$supervision_command_pid" ]] || return 1
+supervision_helper_is_live() {
+  [[ -n "$supervision_helper_pid" ]] || return 1
   supervision_process_identity_is_live \
-    "$supervision_command_pid" "$supervision_command_start_time"
+    "$supervision_helper_pid" "$supervision_helper_start_time"
 }
 
-supervision_signal_owned_processes() {
+supervision_signal_helper() {
   local signal="$1"
   supervision_process_identity_is_live \
-    "$supervision_command_pid" "$supervision_command_start_time" || return 0
-  kill -"$signal" "$supervision_command_pid" 2>/dev/null || true
+    "$supervision_helper_pid" "$supervision_helper_start_time" || return 0
+  kill -"$signal" "$supervision_helper_pid" 2>/dev/null || true
 }
 
-supervision_terminate_owned_processes() {
-  [[ -n "$supervision_command_pid" ]] || return 0
-  supervision_signal_owned_processes TERM
+supervision_terminate_helper() {
+  [[ -n "$supervision_helper_pid" ]] || return 0
+  supervision_signal_helper TERM
   # The native supervisor is the only process that can discover and reap
   # descendants after a child creates a new session. Never SIGKILL it here:
   # killing that owner could reparent surviving descendants before this shell
   # releases a resource lock. The native supervisor owns its bounded
   # TERM-to-KILL escalation and exits only after its tree is settled.
-  while supervision_owned_processes_exist; do
+  while supervision_helper_is_live; do
     sleep 0.02
   done
 }
 
-supervision_reap_command() {
-  [[ -n "$supervision_command_pid" ]] || return 0
-  if [[ "$supervision_command_reaped" == true ]]; then
-    return "$supervision_command_wait_status"
+supervision_reap_helper() {
+  [[ -n "$supervision_helper_pid" ]] || return 0
+  if [[ "$supervision_helper_reaped" == true ]]; then
+    return "$supervision_helper_wait_status"
   fi
   local wait_status=0
-  wait "$supervision_command_pid" || wait_status=$?
-  supervision_command_reaped=true
-  supervision_command_wait_status=$wait_status
+  wait "$supervision_helper_pid" || wait_status=$?
+  supervision_helper_reaped=true
+  supervision_helper_wait_status=$wait_status
   return "$wait_status"
 }
 
@@ -120,13 +120,13 @@ supervision_helper_binary_path() {
   printf '%s/process-supervisor\n' "$supervision_helper_directory"
 }
 
-supervision_cleanup_command() {
+supervision_cleanup_helper() {
   [[ "$supervision_cleanup_in_progress" == false ]] || return 0
   supervision_cleanup_in_progress=true
   set +e
-  supervision_terminate_owned_processes
+  supervision_terminate_helper
   local cleanup_status=$?
-  supervision_reap_command
+  supervision_reap_helper
   local reap_status=$?
   set -e
   supervision_remove_helper
@@ -134,13 +134,13 @@ supervision_cleanup_command() {
   return 0
 }
 
-supervision_reset_command() {
-  supervision_command_pid=""
+supervision_reset_helper() {
+  supervision_helper_pid=""
   supervision_deadline_milliseconds=""
   supervision_cleanup_in_progress=false
-  supervision_command_reaped=false
-  supervision_command_wait_status=0
-  supervision_command_start_time=""
+  supervision_helper_reaped=false
+  supervision_helper_wait_status=0
+  supervision_helper_start_time=""
   supervision_remove_helper
 }
 
@@ -164,7 +164,7 @@ supervision_compile_helper() {
   fi
 }
 
-supervision_start_command() {
+supervision_start_helper() {
   supervision_event_name="$1"
   supervision_deadline_milliseconds="$2"
   shift 2
@@ -175,29 +175,29 @@ supervision_start_command() {
   local script_directory
   script_directory=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
   supervision_compile_helper "$script_directory" || return $?
-  supervision_command_reaped=false
-  supervision_command_wait_status=0
+  supervision_helper_reaped=false
+  supervision_helper_wait_status=0
   local helper_binary_path
   helper_binary_path="$(supervision_helper_binary_path)"
   "$helper_binary_path" --owner-pid "$$" --supervise-only "$@" &
-  supervision_command_pid=$!
-  supervision_command_start_time="$(
-    supervision_process_start_time "$supervision_command_pid" 2>/dev/null || true
+  supervision_helper_pid=$!
+  supervision_helper_start_time="$(
+    supervision_process_start_time "$supervision_helper_pid" 2>/dev/null || true
   )"
   supervision_cleanup_in_progress=false
 }
 
 supervision_run_command() {
-  supervision_start_command "$@" || return $?
+  supervision_start_helper "$@" || return $?
   local now_milliseconds command_status cleanup_status
   while supervision_process_identity_is_live \
-    "$supervision_command_pid" "$supervision_command_start_time"; do
+    "$supervision_helper_pid" "$supervision_helper_start_time"; do
     if ! supervision_owner_is_alive; then
       printf '[%s] canceled: original parent owner exited\n' \
         "$supervision_event_name" >&2
-      supervision_cleanup_command
+      supervision_cleanup_helper
       cleanup_status=$?
-      supervision_reset_command
+      supervision_reset_helper
       (( cleanup_status == 137 )) && return 137
       return 125
     fi
@@ -206,9 +206,9 @@ supervision_run_command() {
       if (( now_milliseconds >= supervision_deadline_milliseconds )); then
         printf '[%s] operation exceeded its execution deadline\n' \
           "$supervision_event_name" >&2
-        supervision_cleanup_command
+        supervision_cleanup_helper
         cleanup_status=$?
-        supervision_reset_command
+        supervision_reset_helper
         (( cleanup_status == 137 )) && return 137
         return 124
       fi
@@ -216,12 +216,12 @@ supervision_run_command() {
     sleep 0.1
   done
   set +e
-  supervision_reap_command
+  supervision_reap_helper
   command_status=$?
   set -e
-  supervision_cleanup_command
+  supervision_cleanup_helper
   cleanup_status=$?
-  supervision_reset_command
+  supervision_reset_helper
   (( cleanup_status == 137 )) && return 137
   return "$command_status"
 }

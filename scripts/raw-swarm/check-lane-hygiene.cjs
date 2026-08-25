@@ -643,7 +643,7 @@ function runLaneHygiene() {
   );
   assert.doesNotMatch(
     sharedProcessSupervision,
-    /supervision_signal_owned_processes KILL|kill -["']?KILL/,
+    /supervision_signal_helper KILL|kill -["']?KILL/,
     "The shell must not kill the native supervisor while its descendants may survive.",
   );
   const blockerDirectory = join(root, "scripts/raw-swarm/deterministic-bin");
