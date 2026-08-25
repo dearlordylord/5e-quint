@@ -1,0 +1,12 @@
+{
+  "window": "calendar-month",
+  "warningFraction": 0.8,
+  "limits": {
+    "requests": 1000000,
+    "cpuSeconds": 500000,
+    "peakMemoryBytes": 1073741824,
+    "storageBytes": 10737418240,
+    "bandwidthBytes": 107374182400,
+    "fixedHostCostUsd": 25
+  }
+}

@@ -152,6 +152,11 @@ DND_MCP_STAGING_URL=https://staging.example.test/mcp \
   pnpm --filter @dnd/mcp verify:staging
 ```
 
+The provider-neutral OCI image, isolated staging/production Compose boundary,
+deploy/rollback automation, redacted observability contract, budget dimensions,
+and incident procedures live in the
+[public MCP operations runbook](../../operations/public-mcp/README.md).
+
 Stateful protocol results use one contextual envelope derived from the
 operation result and canonical session snapshot. It reports the typed operation
 result, current projection, unresolved inputs, relevant next operations, and

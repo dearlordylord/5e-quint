@@ -99,11 +99,13 @@ export function createPublicMcpOAuthFromEnvironment(
   environment: Readonly<Record<string, string | undefined>>,
 ): Either.Either<PublicMcpOAuth | undefined, PublicMcpOAuthIssue> {
   const input = {
-    resource: environment.DND_OAUTH_RESOURCE_URL,
-    authorizationServer: environment.DND_OAUTH_AUTHORIZATION_SERVER,
-    issuer: environment.DND_OAUTH_ISSUER,
-    audience: environment.DND_OAUTH_AUDIENCE,
-    jwksUrl: environment.DND_OAUTH_JWKS_URL,
+    resource: nonEmptyEnvironmentValue(environment.DND_OAUTH_RESOURCE_URL),
+    authorizationServer: nonEmptyEnvironmentValue(
+      environment.DND_OAUTH_AUTHORIZATION_SERVER,
+    ),
+    issuer: nonEmptyEnvironmentValue(environment.DND_OAUTH_ISSUER),
+    audience: nonEmptyEnvironmentValue(environment.DND_OAUTH_AUDIENCE),
+    jwksUrl: nonEmptyEnvironmentValue(environment.DND_OAUTH_JWKS_URL),
   };
   if (Object.values(input).every((value) => value === undefined)) {
     return Either.right(undefined);
@@ -117,6 +119,12 @@ export function createPublicMcpOAuthFromEnvironment(
     });
   }
   return createPublicMcpOAuth(input);
+}
+
+function nonEmptyEnvironmentValue(
+  value: string | undefined,
+): string | undefined {
+  return value?.trim() === "" ? undefined : value;
 }
 
 function tokenScopes(scope: unknown, scp: unknown): readonly string[] {

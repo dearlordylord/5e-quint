@@ -1,0 +1,29 @@
+services:
+  mcp:
+    image: ${DND_MCP_IMAGE:?set DND_MCP_IMAGE to an immutable image digest}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      DND_MCP_ENVIRONMENT: ${DND_MCP_ENVIRONMENT:?set staging or production}
+      DND_MCP_HOST: 0.0.0.0
+      PORT: 8787
+      DND_PLAY_SESSION_DATABASE_PATH: /var/lib/dnd-oracle/play-sessions.sqlite
+      DND_OPENAI_APPS_CHALLENGE: ${DND_OPENAI_APPS_CHALLENGE:-}
+      DND_MCP_METRICS_TOKEN: ${DND_MCP_METRICS_TOKEN:?set a metrics bearer token}
+      DND_OAUTH_RESOURCE_URL: ${DND_OAUTH_RESOURCE_URL:-}
+      DND_OAUTH_AUTHORIZATION_SERVER: ${DND_OAUTH_AUTHORIZATION_SERVER:-}
+      DND_OAUTH_ISSUER: ${DND_OAUTH_ISSUER:-}
+      DND_OAUTH_AUDIENCE: ${DND_OAUTH_AUDIENCE:-}
+      DND_OAUTH_JWKS_URL: ${DND_OAUTH_JWKS_URL:-}
+    volumes:
+      - type: bind
+        source: ${DND_MCP_STATE_DIRECTORY:?set an environment-specific absolute state directory}
+        target: /var/lib/dnd-oracle
+    ports:
+      - "127.0.0.1:${DND_MCP_LOOPBACK_PORT:?set a unique loopback port}:8787"
+    deploy:
+      resources:
+        limits:
+          memory: ${DND_MCP_MEMORY_LIMIT:-1G}

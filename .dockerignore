@@ -1,0 +1,11 @@
+.git
+.references
+.turbo
+**/.turbo
+**/node_modules
+**/dist
+**/coverage
+**/*.sqlite
+**/*.sqlite-*
+.env
+.env.*

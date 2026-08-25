@@ -13,6 +13,49 @@ import type { PublicMcpOAuth } from "./public-oauth.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 
 describe("public HTTP boundary", () => {
+  test("serves health, release, exact domain challenge, and protected metrics", async () => {
+    const repository = openRepository();
+    const server = createDndMcpHttpServer({
+      playSessionRepository: repository,
+      operations: {
+        environment: "staging",
+        release: "git:0123456789abcdef",
+        openAiAppsChallenge: "openai-domain-verification-token",
+        metricsBearerToken: "metrics-secret",
+      },
+    });
+    const endpoint = await listen(server);
+    try {
+      const health = await fetch(new URL("/health", endpoint));
+      expect(await health.json()).toEqual({
+        status: "ok",
+        service: "dnd-srd-oracle",
+      });
+      const version = await fetch(new URL("/version", endpoint));
+      expect(await version.json()).toEqual({
+        service: "dnd-srd-oracle",
+        environment: "staging",
+        release: "git:0123456789abcdef",
+        storageFormatVersion: 2,
+      });
+      const challenge = await fetch(
+        new URL("/.well-known/openai-apps-challenge", endpoint),
+      );
+      expect(challenge.headers.get("content-type")).toContain("text/plain");
+      expect(await challenge.text()).toBe("openai-domain-verification-token");
+
+      expect((await fetch(new URL("/metrics", endpoint))).status).toBe(404);
+      const metrics = await fetch(new URL("/metrics", endpoint), {
+        headers: { authorization: "Bearer metrics-secret" },
+      });
+      expect(metrics.status).toBe(200);
+      expect(await metrics.text()).toContain("dnd_mcp_requests_total");
+    } finally {
+      await close(server);
+      repository.close();
+    }
+  });
+
   test("publishes OAuth metadata and creates saved sessions for a verified bearer", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({

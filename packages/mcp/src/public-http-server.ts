@@ -13,8 +13,22 @@ import {
 } from "./composition-root.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import type { PlaySessionRepository } from "./recoverable-play-session.ts";
+import { RECOVERABLE_PLAY_SESSION_FORMAT_VERSION } from "./play-session-repository.ts";
 import type { PublicMcpOAuth } from "./public-oauth.ts";
 import type { PlaySessionRequestIdentity } from "./play-session-protocol.ts";
+import {
+  authorizedForMetrics,
+  observePublicMcpRequest,
+  PUBLIC_MCP_SERVICE_NAME,
+  publicMcpMetrics,
+  publicMcpHttpMethod,
+  publicMcpOutcome,
+  publicMcpToolName,
+  publicMcpTraceContext,
+  type PublicMcpDiagnostic,
+  type PublicMcpRequestOutcome,
+  type PublicMcpServiceOperations,
+} from "./public-service-operations.ts";
 
 export const PUBLIC_MCP_MAX_REQUEST_BYTES = 1_048_576;
 
@@ -35,6 +49,7 @@ export function createDndMcpHttpServer(input: {
   readonly hostname?: string;
   readonly port?: number;
   readonly oauth?: PublicMcpOAuth;
+  readonly operations?: PublicMcpServiceOperations;
 }): DndMcpHttpServer {
   const applicationServices =
     input.applicationServices ?? createMcpApplicationServices();
@@ -48,6 +63,10 @@ export function createDndMcpHttpServer(input: {
       applicationServices,
       playSessionRepository: input.playSessionRepository,
       ...(input.oauth === undefined ? {} : { oauth: input.oauth }),
+      operations: input.operations ?? {
+        environment: "development",
+        release: "development",
+      },
     }).catch(() => {
       if (outgoing.headersSent) {
         outgoing.destroy();
@@ -121,66 +140,172 @@ async function handleNodeRequest(input: {
   readonly applicationServices: McpApplicationServices;
   readonly playSessionRepository: PlaySessionRepository;
   readonly oauth?: PublicMcpOAuth;
+  readonly operations: PublicMcpServiceOperations;
 }): Promise<void> {
+  const startedAt = performance.now();
+  const trace = publicMcpTraceContext();
   const pathname = new URL(
     input.incoming.url ?? "/",
     `http://${input.hostname}`,
   ).pathname;
-  if (
-    pathname === "/.well-known/oauth-protected-resource" &&
-    input.incoming.method === "GET" &&
-    input.oauth !== undefined
-  ) {
-    await writeResponse(
-      input.outgoing,
-      Response.json(input.oauth.protectedResourceMetadata),
-    );
-    return;
-  }
-  if (pathname !== "/mcp") {
-    await writeResponse(
-      input.outgoing,
-      new Response("Not found", { status: 404 }),
-    );
-    return;
-  }
-  const request = await webRequest(input.incoming, input.hostname);
-  if (Either.isLeft(request)) {
-    await writeResponse(
-      input.outgoing,
-      new Response("Request body is too large", { status: 413 }),
-    );
-    return;
-  }
-  const identity = await requestIdentity(request.right, input.oauth);
-  if (Either.isLeft(identity)) {
-    await writeResponse(
-      input.outgoing,
-      new Response("Unauthorized", {
-        status: 401,
-        headers: { "WWW-Authenticate": identity.left.challenge },
-      }),
-    );
-    return;
-  }
-  const host = createDndMcpProtocolServer(
-    input.applicationServices,
-    undefined,
-    {
-      playSessionRepository: input.playSessionRepository,
-      requestIdentity: identity.right,
-    },
-  );
-  const transport = new WebStandardStreamableHTTPServerTransport({
-    enableJsonResponse: true,
-  });
+  let status = 500;
+  let outcome: PublicMcpRequestOutcome = "failed";
+  let toolName: string | undefined;
+  let diagnostic: PublicMcpDiagnostic | undefined;
+  const finish = () =>
+    observePublicMcpRequest({
+      environment: input.operations.environment,
+      release: input.operations.release,
+      traceId: trace.traceId,
+      spanId: trace.spanId,
+      method: publicMcpHttpMethod(input.incoming.method),
+      route: publicRouteLabel(pathname),
+      status,
+      outcome,
+      durationMilliseconds: Math.round(performance.now() - startedAt),
+      ...(toolName === undefined ? {} : { toolName }),
+      ...(diagnostic === undefined ? {} : { diagnostic }),
+    });
   try {
-    await host.server.connect(transport);
-    const response = await transport.handleRequest(request.right);
-    await writeResponse(input.outgoing, response);
+    if (pathname === "/health" && input.incoming.method === "GET") {
+      status = 200;
+      outcome = "accepted";
+      await writeResponse(
+        input.outgoing,
+        Response.json({ status: "ok", service: PUBLIC_MCP_SERVICE_NAME }),
+      );
+      return;
+    }
+    if (pathname === "/version" && input.incoming.method === "GET") {
+      status = 200;
+      outcome = "accepted";
+      await writeResponse(
+        input.outgoing,
+        Response.json({
+          service: PUBLIC_MCP_SERVICE_NAME,
+          environment: input.operations.environment,
+          release: input.operations.release,
+          storageFormatVersion: RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
+        }),
+      );
+      return;
+    }
+    if (
+      pathname === "/.well-known/openai-apps-challenge" &&
+      input.incoming.method === "GET" &&
+      input.operations.openAiAppsChallenge !== undefined
+    ) {
+      status = 200;
+      outcome = "accepted";
+      await writeResponse(
+        input.outgoing,
+        new Response(input.operations.openAiAppsChallenge, {
+          headers: { "content-type": "text/plain; charset=utf-8" },
+        }),
+      );
+      return;
+    }
+    if (pathname === "/metrics" && input.incoming.method === "GET") {
+      const authorized = authorizedForMetrics(
+        input.incoming.headers.authorization ?? null,
+        input.operations.metricsBearerToken,
+      );
+      status = authorized ? 200 : 404;
+      outcome = authorized ? "accepted" : "rejected";
+      await writeResponse(
+        input.outgoing,
+        authorized
+          ? new Response(publicMcpMetrics(), {
+              headers: { "content-type": "text/plain; version=0.0.4" },
+            })
+          : new Response("Not found", { status: 404 }),
+      );
+      return;
+    }
+    if (
+      pathname === "/.well-known/oauth-protected-resource" &&
+      input.incoming.method === "GET" &&
+      input.oauth !== undefined
+    ) {
+      await writeResponse(
+        input.outgoing,
+        Response.json(input.oauth.protectedResourceMetadata),
+      );
+      status = 200;
+      outcome = "accepted";
+      return;
+    }
+    if (pathname !== "/mcp") {
+      await writeResponse(
+        input.outgoing,
+        new Response("Not found", { status: 404 }),
+      );
+      status = 404;
+      outcome = "rejected";
+      return;
+    }
+    const request = await webRequest(input.incoming, input.hostname);
+    if (Either.isLeft(request)) {
+      await writeResponse(
+        input.outgoing,
+        new Response("Request body is too large", { status: 413 }),
+      );
+      status = 413;
+      outcome = "rejected";
+      return;
+    }
+    toolName = await publicMcpToolName(request.right);
+    const identity = await requestIdentity(request.right, input.oauth);
+    if (Either.isLeft(identity)) {
+      await writeResponse(
+        input.outgoing,
+        new Response("Unauthorized", {
+          status: 401,
+          headers: { "WWW-Authenticate": identity.left.challenge },
+        }),
+      );
+      status = 401;
+      outcome = "rejected";
+      return;
+    }
+    const host = createDndMcpProtocolServer(
+      input.applicationServices,
+      undefined,
+      {
+        playSessionRepository: input.playSessionRepository,
+        requestIdentity: identity.right,
+      },
+    );
+    const transport = new WebStandardStreamableHTTPServerTransport({
+      enableJsonResponse: true,
+    });
+    try {
+      await host.server.connect(transport);
+      const response = await transport.handleRequest(request.right);
+      response.headers.set(
+        "traceparent",
+        `00-${trace.traceId}-${trace.spanId}-01`,
+      );
+      status = response.status;
+      const observedOutcome = await publicMcpOutcome(response);
+      outcome = observedOutcome.outcome;
+      diagnostic = observedOutcome.diagnostic;
+      await writeResponse(input.outgoing, response);
+    } finally {
+      await host.server.close();
+    }
   } finally {
-    await host.server.close();
+    finish();
   }
+}
+
+function publicRouteLabel(pathname: string): string {
+  if (pathname === "/mcp") return "/mcp";
+  if (pathname === "/health") return "/health";
+  if (pathname === "/version") return "/version";
+  if (pathname === "/metrics") return "/metrics";
+  if (pathname.startsWith("/.well-known/")) return "/.well-known/*";
+  return "other";
 }
 
 async function webRequest(

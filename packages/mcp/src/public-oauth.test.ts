@@ -11,6 +11,15 @@ describe("public MCP OAuth configuration", () => {
     expect(createPublicMcpOAuthFromEnvironment({})).toEqual(
       Either.right(undefined),
     );
+    expect(
+      createPublicMcpOAuthFromEnvironment({
+        DND_OAUTH_RESOURCE_URL: "",
+        DND_OAUTH_AUTHORIZATION_SERVER: "",
+        DND_OAUTH_ISSUER: "",
+        DND_OAUTH_AUDIENCE: "",
+        DND_OAUTH_JWKS_URL: "",
+      }),
+    ).toEqual(Either.right(undefined));
   });
 
   test("rejects partial configuration instead of silently weakening save auth", () => {

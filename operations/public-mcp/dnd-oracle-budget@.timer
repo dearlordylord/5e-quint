@@ -1,0 +1,10 @@
+[Unit]
+Description=Measure DND Oracle budget periodically
+
+[Timer]
+OnCalendar=*:0/5
+Persistent=true
+RandomizedDelaySec=30s
+
+[Install]
+WantedBy=timers.target
