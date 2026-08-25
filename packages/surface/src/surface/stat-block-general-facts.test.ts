@@ -6,7 +6,11 @@ import {
   CreatureStatBlockProjectionSchema,
   StatBlockCommunicationSchema,
   StatBlockInitiativeSchema,
+  StatBlockLanguageSetSchema,
+  StatBlockTelepathySchema,
+  StandaloneCreatureSenseSchema,
   StandaloneStatBlockSchema,
+  StandaloneStatBlockSizeSchema,
 } from "./schema.ts";
 
 const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
@@ -79,6 +83,12 @@ describe("standalone Stat Block general facts", () => {
     expect(
       decode(StandaloneStatBlockSchema, syntheticStandaloneStatBlock),
     ).toEqual(syntheticStandaloneStatBlock);
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        hitPointDice: { count: 3, faces: 8 },
+      }),
+    ).toThrow();
     expect("hitPointDice" in syntheticStandaloneStatBlock).toBe(false);
     expect("displayName" in syntheticStandaloneStatBlock).toBe(false);
   });
@@ -193,6 +203,102 @@ describe("standalone Stat Block general facts", () => {
         languages: { kind: "none" },
       }),
     ).toThrow();
+  });
+
+  test("reserves All and None for language-set variants", () => {
+    for (const language of ["All", "ALL", "none", "NONE"] as const) {
+      expect(() =>
+        decode(StatBlockLanguageSetSchema, {
+          kind: "named",
+          languages: [language],
+        }),
+      ).toThrow();
+      expect(() =>
+        decode(StatBlockLanguageSetSchema, {
+          kind: "named_plus_other_languages",
+          languages: [language],
+          additionalLanguages: 1,
+        }),
+      ).toThrow();
+    }
+    expect(decode(StatBlockLanguageSetSchema, { kind: "all" })).toEqual({
+      kind: "all",
+    });
+  });
+
+  test("uses absence as the default telepathy response", () => {
+    expect(decode(StatBlockTelepathySchema, { rangeFeet: 60 })).toEqual({
+      rangeFeet: 60,
+    });
+    expect(() =>
+      decode(StatBlockTelepathySchema, {
+        rangeFeet: 60,
+        response: "receiving_creature_can_respond",
+      }),
+    ).toThrow();
+  });
+
+  test("requires distinct alternatives when a size choice is authored", () => {
+    expect(
+      decode(StandaloneStatBlockSizeSchema, {
+        kind: "alternatives",
+        options: ["medium", "large"],
+      }),
+    ).toEqual({ kind: "alternatives", options: ["medium", "large"] });
+    expect(() =>
+      decode(StandaloneStatBlockSizeSchema, {
+        kind: "alternatives",
+        options: ["medium"],
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSizeSchema, {
+        kind: "alternatives",
+        options: ["medium", "medium"],
+      }),
+    ).toThrow();
+  });
+
+  test("bounds authored ability scores and sense ranges while keeping projections reusable", () => {
+    for (const value of [0, 31, 10.5] as const) {
+      expect(() =>
+        decode(StandaloneStatBlockSchema, {
+          ...syntheticStandaloneStatBlock,
+          abilityScores: {
+            ...syntheticStandaloneStatBlock.abilityScores,
+            str: value,
+          },
+        }),
+      ).toThrow();
+    }
+    for (const rangeFeet of [0, 151, 10.5] as const) {
+      expect(() =>
+        decode(StandaloneCreatureSenseSchema, {
+          kind: "darkvision",
+          rangeFeet,
+        }),
+      ).toThrow();
+      expect(() =>
+        decode(StandaloneStatBlockSchema, {
+          ...syntheticStandaloneStatBlock,
+          senses: [{ kind: "darkvision", rangeFeet }],
+        }),
+      ).toThrow();
+    }
+
+    const projection = {
+      displayName: "Synthetic Spirit",
+      size: "medium",
+      creatureType: "construct",
+      ac: { kind: "literal", value: 15 },
+      hp: { kind: "literal", value: 10 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      abilityScores: { str: 0, dex: 10, con: 10, int: 3, wis: 3, cha: 1 },
+      senses: [{ kind: "darkvision", rangeFeet: 0 }],
+    } as const;
+    expect(decode(CreatureStatBlockProjectionSchema, projection)).toEqual(
+      projection,
+    );
   });
 
   test("bounds authored numeric facts and rejects runtime-only values", () => {

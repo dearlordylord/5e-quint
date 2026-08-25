@@ -74,6 +74,8 @@ export {
   StatBlockSpellcastingComponentsSchema,
   StatBlockSpellcastingGroupSchema,
   StatBlockTextOnlyReasonSchema,
+  StandaloneCreatureSenseSchema,
+  StandaloneStatBlockAbilityScoresSchema,
   StandaloneStatBlockSchema,
   StandaloneStatBlockSizeSchema,
   StandaloneStatBlockValueSchema,
