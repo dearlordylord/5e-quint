@@ -9,12 +9,7 @@ const deterministicCapabilityGuard = resolve(
   __dirname,
   "deterministic-capability-guard.cjs",
 );
-const deterministicNodeOptions = [
-  process.env.NODE_OPTIONS,
-  `--require=${deterministicCapabilityGuard}`,
-]
-  .filter(Boolean)
-  .join(" ");
+const deterministicNodeOptions = `--require=${deterministicCapabilityGuard}`;
 
 if (process.env.DND_RESOURCE_LOCK_KIND !== "broad") {
   process.stderr.write(
@@ -27,6 +22,7 @@ const deterministicEnvironment = {
   ...process.env,
   PATH: `${resolve(__dirname, "deterministic-bin")}${delimiter}${process.env.PATH ?? ""}`,
   RAW_SWARM_EXECUTION_LANE: "deterministic",
+  NODE_OPTIONS: deterministicNodeOptions,
 };
 
 function run(command, args) {
@@ -55,8 +51,6 @@ run("mise", [
   "--",
   "pnpm",
   "exec",
-  "env",
-  `NODE_OPTIONS=${deterministicNodeOptions}`,
   resolve(__dirname, "../../node_modules/.bin/vitest"),
   "run",
   ...QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,

@@ -276,6 +276,22 @@ function runCapabilityGuardFixture(source: string) {
   }
 }
 
+function writeDeterministicCodexFixture(path: string, source: string): void {
+  const marker = "# dnd.raw-swarm.deterministic-fixture:codex";
+  const lines = source.split("\n");
+  const firstLine = lines[0] ?? "";
+  writeFileSync(
+    path,
+    [
+      firstLine.startsWith("#!") ? firstLine : undefined,
+      marker,
+      firstLine.startsWith("#!") ? lines.slice(1).join("\n") : source,
+    ]
+      .filter((line): line is string => line !== undefined)
+      .join("\n"),
+  );
+}
+
 function modelLaneTestEnvironment(
   commandRoot: string,
   deadline: string,
@@ -305,6 +321,8 @@ describe("RAW swarm runner boundaries", () => {
     const sourcePath = resolve(fixtureRoot, "forbidden.ts");
     const networkModule = ["node", "http"].join(":");
     const http2Module = ["node", "http2"].join(":");
+    const dgramModule = ["node", "dgram"].join(":");
+    const websocketModule = ["isomorphic", "-ws"].join("");
     const undiciModule = ["un", "dici"].join("");
     const globalFetch = ["globalThis", "fetch"].join(".");
     const websocketGlobal = ["Web", "Socket"].join("");
@@ -314,6 +332,10 @@ describe("RAW swarm runner boundaries", () => {
       [
         `import ${JSON.stringify(networkModule)};`,
         `require(${JSON.stringify(http2Module)});`,
+        `require(${JSON.stringify(dgramModule)});`,
+        `import(${JSON.stringify("ws")});`,
+        `import(${JSON.stringify("websocket")});`,
+        `import(${JSON.stringify(websocketModule)});`,
         `void ${undiciModule}.request("https://example.invalid");`,
         `void ${globalFetch}("https://example.invalid");`,
         `new ${websocketGlobal}("wss://example.invalid");`,
@@ -337,6 +359,28 @@ describe("RAW swarm runner boundaries", () => {
     }
   });
 
+  test.each(["node:dgram", "ws", "websocket", "isomorphic-ws"])(
+    "static checker rejects the catalog network module %s",
+    (networkModule) => {
+      const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-lane-module-"));
+      const sourcePath = resolve(fixtureRoot, "forbidden.ts");
+      writeFileSync(sourcePath, `import(${JSON.stringify(networkModule)});\n`);
+      try {
+        const checked = spawnSync(
+          process.execPath,
+          [laneHygieneChecker, "--source", sourcePath],
+          { encoding: "utf8" },
+        );
+        expect(checked.status).not.toBe(0);
+        expect(`${checked.stdout}${checked.stderr}`).toContain(
+          "forbidden capabilities",
+        );
+      } finally {
+        rmSync(fixtureRoot, { recursive: true, force: true });
+      }
+    },
+  );
+
   test("runtime capability guard rejects indirect http2 loading", () => {
     const networkModule = ["node", "http2"].join(":");
     const checked = runCapabilityGuardFixture(
@@ -351,8 +395,36 @@ describe("RAW swarm runner boundaries", () => {
     );
   });
 
+  test("runtime capability guard rejects indirect dgram loading", () => {
+    const networkModule = ["node", "dgram"].join(":");
+    const checked = runCapabilityGuardFixture(
+      [
+        `const moduleName = ${JSON.stringify(networkModule)};`,
+        "require(moduleName);",
+      ].join("\n"),
+    );
+    expect(checked.status).not.toBe(0);
+    expect(`${checked.stdout}${checked.stderr}`).toContain(
+      "network capability",
+    );
+  });
+
   test("runtime capability guard rejects indirect ESM http2 loading", () => {
     const networkModule = ["node", "http2"].join(":");
+    const checked = runCapabilityGuardFixture(
+      [
+        `const moduleName = ${JSON.stringify(networkModule)};`,
+        "import(moduleName).then(() => process.exit(0), (error) => { throw error; });",
+      ].join("\n"),
+    );
+    expect(checked.status).not.toBe(0);
+    expect(`${checked.stdout}${checked.stderr}`).toContain(
+      "network capability",
+    );
+  });
+
+  test("runtime capability guard rejects indirect ESM dgram loading", () => {
+    const networkModule = ["node", "dgram"].join(":");
     const checked = runCapabilityGuardFixture(
       [
         `const moduleName = ${JSON.stringify(networkModule)};`,
@@ -436,6 +508,113 @@ describe("RAW swarm runner boundaries", () => {
     );
     expect(checked.status).not.toBe(0);
     expect(`${checked.stdout}${checked.stderr}`).toContain("network CLI");
+  });
+
+  test("reinjects the deterministic guard when a Node child clears NODE_OPTIONS", () => {
+    const childSource = [
+      `require(${JSON.stringify("node:dgram")});`,
+      "process.exit(0);",
+    ].join(" ");
+    const checked = runCapabilityGuardFixture(
+      [
+        'const { spawnSync } = require("node:child_process");',
+        `const child = spawnSync(process.execPath, ["-e", ${JSON.stringify(childSource)}], {`,
+        '  env: { ...process.env, NODE_OPTIONS: "" },',
+        "});",
+        'if (child.status === 0 || !String(child.stderr).includes("network capability")) process.exit(1);',
+      ].join("\n"),
+    );
+    expect(checked.status).toBe(0);
+  });
+
+  test("reinjects the deterministic guard through nested Node descendants", () => {
+    const grandchildSource = [
+      `require(${JSON.stringify("node:dgram")});`,
+      "process.exit(0);",
+    ].join(" ");
+    const childSource = [
+      'const { spawnSync } = require("node:child_process");',
+      `const grandchild = spawnSync(process.execPath, ["-e", ${JSON.stringify(grandchildSource)}], {`,
+      '  env: { ...process.env, NODE_OPTIONS: "" },',
+      "});",
+      'if (grandchild.status === 0 || !String(grandchild.stderr).includes("network capability")) process.exit(1);',
+      "process.exit(0);",
+    ].join("\n");
+    const checked = runCapabilityGuardFixture(
+      [
+        'const { spawnSync } = require("node:child_process");',
+        `const child = spawnSync(process.execPath, ["-e", ${JSON.stringify(childSource)}], {`,
+        '  env: { ...process.env, NODE_OPTIONS: "" },',
+        "});",
+        "process.exit(child.status === 0 ? 0 : 1);",
+      ].join("\n"),
+    );
+    expect(checked.status).toBe(0);
+  });
+
+  test("rejects an unstamped coding-agent executable under the temporary root", () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-lane-agent-"));
+    const agentPath = resolve(fixtureRoot, "codex");
+    writeFileSync(agentPath, "#!/bin/sh\nexit 0\n");
+    chmodSync(agentPath, 0o755);
+    try {
+      const checked = runCapabilityGuardFixture(
+        [
+          'const { spawnSync } = require("node:child_process");',
+          "try {",
+          `  const result = spawnSync(${JSON.stringify(["co", "dex"].join(""))}, [], { env: { ...process.env, PATH: ${JSON.stringify(`${fixtureRoot}:`)} + (process.env.PATH ?? "") }, stdio: "ignore" });`,
+          "  process.exit(result.status === 0 ? 1 : 2);",
+          '} catch (error) { process.exit(String(error).includes("coding-agent capability") ? 0 : 3); }',
+        ].join("\n"),
+      );
+      expect(checked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects a temporary-root symlink to a coding-agent executable", () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-lane-agent-link-"));
+    const agentPath = resolve(fixtureRoot, "codex");
+    symlinkSync(process.execPath, agentPath);
+    try {
+      const checked = runCapabilityGuardFixture(
+        [
+          'const { spawnSync } = require("node:child_process");',
+          "try {",
+          `  const result = spawnSync(${JSON.stringify(["co", "dex"].join(""))}, ["-e", "process.exit(0)"], { env: { ...process.env, PATH: ${JSON.stringify(`${fixtureRoot}:`)} + (process.env.PATH ?? "") }, stdio: "ignore" });`,
+          "  process.exit(result.status === 0 ? 1 : 2);",
+          '} catch (error) { process.exit(String(error).includes("coding-agent capability") ? 0 : 3); }',
+        ].join("\n"),
+      );
+      expect(checked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("allows a canonical stamped coding-agent fixture", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-lane-agent-fixture-"),
+    );
+    const agentPath = resolve(fixtureRoot, "codex");
+    writeFileSync(
+      agentPath,
+      "#!/bin/sh\n# dnd.raw-swarm.deterministic-fixture:codex\nexit 0\n",
+    );
+    chmodSync(agentPath, 0o755);
+    try {
+      const checked = runCapabilityGuardFixture(
+        [
+          'const { spawnSync } = require("node:child_process");',
+          `const result = spawnSync(${JSON.stringify(agentPath)}, [], { stdio: "ignore" });`,
+          "process.exit(result.status === 0 ? 0 : 1);",
+        ].join("\n"),
+      );
+      expect(checked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
   });
 
   test("allows deterministic child-process boundary sources", () => {
@@ -992,7 +1171,7 @@ case "$*" in
 esac
 `,
     );
-    writeFileSync(fakeCodex, "#!/bin/sh\nexit 0\n");
+    writeDeterministicCodexFixture(fakeCodex, "#!/bin/sh\nexit 0\n");
     chmodSync(fakeGit, 0o755);
     chmodSync(fakeCodex, 0o755);
     try {
@@ -1434,7 +1613,7 @@ esac
 `,
     );
     chmodSync(fakeGit, 0o755);
-    writeFileSync(
+    writeDeterministicCodexFixture(
       fakeCodex,
       String.raw`#!/bin/sh
 set -eu
@@ -1649,7 +1828,7 @@ case "$*" in
 esac
 `,
     );
-    writeFileSync(
+    writeDeterministicCodexFixture(
       fakeCodex,
       String.raw`#!/bin/sh
 set -eu
@@ -1801,7 +1980,7 @@ printf '%s' '{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaa
         "",
       ].join("\n"),
     );
-    writeFileSync(
+    writeDeterministicCodexFixture(
       fakeCodex,
       [
         "#!/bin/sh",
@@ -1939,7 +2118,7 @@ esac
         "",
       ].join("\n"),
     );
-    writeFileSync(
+    writeDeterministicCodexFixture(
       fakeCodex,
       [
         "#!/bin/sh",

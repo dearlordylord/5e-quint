@@ -52,6 +52,11 @@ failing shims for known coding-agent and network CLI names. A test of model
 telemetry uses a fake local executable; it remains deterministic and does not
 authenticate or contact a provider.
 
+The deterministic body removes inherited `NODE_OPTIONS` before starting its
+guarded Node runner, then gives every verification phase the exact guard
+option. This keeps package-manager, compiler, test-runner, and descendant Node
+processes on the same process-level boundary.
+
 This is a process-level repository boundary, not OS-level network isolation.
 The contract covers Node and browser network capabilities plus known
 model/network executables in the guarded deterministic process tree; arbitrary

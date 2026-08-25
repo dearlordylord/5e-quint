@@ -12,6 +12,8 @@ const {
 const {
   CODING_AGENT_EXECUTABLES,
   DETERMINISTIC_BLOCKED_EXECUTABLES,
+  DETERMINISTIC_NETWORK_GLOBALS,
+  DETERMINISTIC_NETWORK_MODULES,
   DETERMINISTIC_TRANSITIVE_SCAN_BOUNDARIES,
   MODEL_BACKED_OPERATIONS,
   MODEL_BACKED_ENTRYPOINTS,
@@ -48,17 +50,37 @@ const networkCliAlternation =
   NETWORK_CLI_EXECUTABLES.map(escapeRegExp).join("|");
 const childProcessCallAlternation =
   "(?:spawn|spawnSync|exec|execSync|execFile|execFileSync)";
+const networkModuleAlternation =
+  DETERMINISTIC_NETWORK_MODULES.map(escapeRegExp).join("|");
+const networkApiAlternation = [
+  ...new Set(
+    DETERMINISTIC_NETWORK_MODULES.map(
+      (moduleName) => moduleName.replace(/^node:/u, "").split("/")[0],
+    ),
+  ),
+]
+  .map(escapeRegExp)
+  .join("|");
+const browserGlobalAlternation = DETERMINISTIC_NETWORK_GLOBALS.filter(
+  (name) => name !== "fetch",
+)
+  .map(escapeRegExp)
+  .join("|");
 
 const forbiddenCapabilityPatterns = Object.freeze([
   {
     kind: "network-module",
-    pattern:
-      /(?:\bfrom\s*|\bimport\s*\(|\brequire\s*\()\s*["'`](?:undici|(?:node:)?(?:http|https|http2|net|tls|dns)(?:\/promises)?|node:undici)["'`]/g,
+    pattern: new RegExp(
+      String.raw`(?:\bfrom\s*|\bimport\s*\(|\brequire\s*\()\s*["'\`](${networkModuleAlternation})["'\`]`,
+      "g",
+    ),
   },
   {
     kind: "network-api",
-    pattern:
-      /\b(?:undici|http|https|http2|net|tls|dns)\s*\.\s*(?:request|get|fetch|createConnection|connect|lookup|resolve|createServer)\s*\(/g,
+    pattern: new RegExp(
+      String.raw`\b(?:${networkApiAlternation})\s*\.\s*(?:request|get|fetch|createConnection|connect|lookup|resolve|createServer|createSocket)\s*\(`,
+      "g",
+    ),
   },
   {
     kind: "global-fetch",
@@ -66,8 +88,10 @@ const forbiddenCapabilityPatterns = Object.freeze([
   },
   {
     kind: "browser-network-global",
-    pattern:
-      /\b(?:new\s+)?(?:WebSocket|XMLHttpRequest|WebTransport|EventSource)\s*(?:\(|\[)|\b(?:globalThis|window)\s*(?:\.\s*(?:WebSocket|XMLHttpRequest|WebTransport|EventSource)|\[\s*["'`](?:WebSocket|XMLHttpRequest|WebTransport|EventSource)["'`]\s*\])/g,
+    pattern: new RegExp(
+      String.raw`\b(?:new\s+)?(?:${browserGlobalAlternation})\s*(?:\(|\[)|\b(?:globalThis|window)\s*(?:\.\s*(?:${browserGlobalAlternation})|\[\s*["'\`](?:${browserGlobalAlternation})["'\`]\s*\])`,
+      "g",
+    ),
   },
   {
     kind: "coding-agent-executable",
@@ -454,7 +478,7 @@ function runLaneHygiene() {
   const scripts = packageJson.scripts;
   assert.equal(
     scripts["check:raw-swarm-deterministic:body"],
-    "node scripts/raw-swarm/run-deterministic-check.cjs",
+    "env -u NODE_OPTIONS RAW_SWARM_EXECUTION_LANE=deterministic node --require=scripts/raw-swarm/deterministic-capability-guard.cjs scripts/raw-swarm/run-deterministic-check.cjs",
   );
   assert.match(
     scripts["check:raw-swarm-deterministic"],
@@ -516,6 +540,12 @@ function runLaneHygiene() {
     /RAW_SWARM_EXECUTION_LANE: "deterministic"/,
   );
   assert.match(deterministicRunner, /deterministic-capability-guard\.cjs/);
+  assert.match(deterministicRunner, /NODE_OPTIONS: deterministicNodeOptions/);
+  assert.doesNotMatch(
+    deterministicRunner,
+    /process\.env\.NODE_OPTIONS/,
+    "Deterministic phases must not inherit arbitrary NODE_OPTIONS values.",
+  );
   assert.equal(
     existsSync(
       join(root, "scripts/raw-swarm/deterministic-capability-guard.cjs"),

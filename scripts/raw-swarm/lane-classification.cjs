@@ -141,11 +141,51 @@ const CODING_AGENT_EXECUTABLES = Object.freeze([
   "windsurf",
 ]);
 
+// This catalog is the single capability vocabulary shared by the static
+// source checker, the CommonJS guard, and the ESM loader. Keep both bare and
+// node: forms because Node exposes the same built-in through either specifier.
+const NETWORK_NODE_BUILTIN_MODULES = Object.freeze([
+  "http",
+  "https",
+  "http2",
+  "net",
+  "tls",
+  "dns",
+  "dns/promises",
+  "dgram",
+]);
+const DETERMINISTIC_NETWORK_MODULES = Object.freeze([
+  ...NETWORK_NODE_BUILTIN_MODULES,
+  ...NETWORK_NODE_BUILTIN_MODULES.map((moduleName) => `node:${moduleName}`),
+  "undici",
+  "node:undici",
+  "ws",
+  "websocket",
+  "isomorphic-ws",
+]);
+const DETERMINISTIC_NETWORK_GLOBALS = Object.freeze([
+  "fetch",
+  "WebSocket",
+  "XMLHttpRequest",
+  "WebTransport",
+  "EventSource",
+]);
+
 const NETWORK_CLI_EXECUTABLES = Object.freeze(["curl", "wget"]);
 const DETERMINISTIC_BLOCKED_EXECUTABLES = Object.freeze(
   [
     ...new Set([...CODING_AGENT_EXECUTABLES, ...NETWORK_CLI_EXECUTABLES]),
   ].sort(),
+);
+const DETERMINISTIC_FIXTURE_MARKER_PREFIX =
+  "dnd.raw-swarm.deterministic-fixture";
+const DETERMINISTIC_FIXTURE_IDENTITIES = Object.freeze(
+  Object.fromEntries(
+    CODING_AGENT_EXECUTABLES.map((name) => [
+      name,
+      `${DETERMINISTIC_FIXTURE_MARKER_PREFIX}:${name}`,
+    ]),
+  ),
 );
 
 module.exports = {
@@ -157,6 +197,11 @@ module.exports = {
   DETERMINISTIC_TRANSITIVE_SCAN_BOUNDARIES,
   MODEL_BACKED_PROFILE_BUDGET_SECONDS,
   CODING_AGENT_EXECUTABLES,
+  NETWORK_NODE_BUILTIN_MODULES,
+  DETERMINISTIC_NETWORK_MODULES,
+  DETERMINISTIC_NETWORK_GLOBALS,
   NETWORK_CLI_EXECUTABLES,
   DETERMINISTIC_BLOCKED_EXECUTABLES,
+  DETERMINISTIC_FIXTURE_MARKER_PREFIX,
+  DETERMINISTIC_FIXTURE_IDENTITIES,
 };

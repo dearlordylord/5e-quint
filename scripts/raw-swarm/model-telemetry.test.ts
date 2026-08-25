@@ -52,6 +52,23 @@ import {
 } from "./transcript.ts";
 
 describe("Raw Swarm model invocation telemetry", () => {
+  const deterministicCodexFixtureMarker =
+    "# dnd.raw-swarm.deterministic-fixture:codex";
+
+  function writeDeterministicCodexFixture(path: string, source: string): void {
+    const [firstLine, ...remainingLines] = source.split("\n");
+    writeFileSync(
+      path,
+      [
+        firstLine?.startsWith("#!") ? firstLine : undefined,
+        deterministicCodexFixtureMarker,
+        firstLine?.startsWith("#!") ? remainingLines.join("\n") : source,
+      ]
+        .filter((line): line is string => line !== undefined)
+        .join("\n"),
+    );
+  }
+
   async function waitForFile(path: string, timeoutMilliseconds = 1_000) {
     const deadline = Date.now() + timeoutMilliseconds;
     while (!existsSync(path) && Date.now() < deadline) {
@@ -63,6 +80,25 @@ describe("Raw Swarm model invocation telemetry", () => {
   }
 
   function fakeInvocationInput(root: string, timeoutMilliseconds?: number) {
+    const codexPath = resolve(root, "codex");
+    if (existsSync(codexPath)) {
+      const codexSource = readFileSync(codexPath, "utf8");
+      if (!codexSource.includes(deterministicCodexFixtureMarker)) {
+        const [firstLine, ...remainingLines] = codexSource.split("\n");
+        writeFileSync(
+          codexPath,
+          [
+            firstLine?.startsWith("#!") ? firstLine : undefined,
+            deterministicCodexFixtureMarker,
+            firstLine?.startsWith("#!")
+              ? remainingLines.join("\n")
+              : codexSource,
+          ]
+            .filter((line): line is string => line !== undefined)
+            .join("\n"),
+        );
+      }
+    }
     const events = resolve(root, "events.jsonl");
     const log = resolve(root, "agent.log");
     const ledger = resolve(root, "ledger.jsonl");
@@ -1015,7 +1051,7 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
             });
           }
         };
-        writeFileSync(
+        writeDeterministicCodexFixture(
           resolve(root, "codex"),
           `#!/bin/sh\nprintf '{"type":"turn.completed"}\n'\nexec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, process.env.RAW_OUTPUT_CONTENT)'\n`,
         );

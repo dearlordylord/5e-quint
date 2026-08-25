@@ -1,4 +1,9 @@
-const { existsSync } = require("node:fs");
+const {
+  existsSync,
+  lstatSync,
+  readFileSync,
+  realpathSync,
+} = require("node:fs");
 const { basename, delimiter, resolve, sep } = require("node:path");
 const Module = require("node:module");
 const { register } = Module;
@@ -6,6 +11,9 @@ const { pathToFileURL } = require("node:url");
 
 const {
   CODING_AGENT_EXECUTABLES,
+  DETERMINISTIC_FIXTURE_IDENTITIES,
+  DETERMINISTIC_NETWORK_GLOBALS,
+  DETERMINISTIC_NETWORK_MODULES,
   NETWORK_CLI_EXECUTABLES,
 } = require("./lane-classification.cjs");
 
@@ -17,27 +25,7 @@ const guardMarker = Symbol.for("dnd.raw-swarm.deterministic-capability-guard");
 if (globalThis[guardMarker] === true) return;
 globalThis[guardMarker] = true;
 
-const NETWORK_MODULES = new Set([
-  "http",
-  "https",
-  "http2",
-  "net",
-  "tls",
-  "dns",
-  "dns/promises",
-  "undici",
-  "ws",
-  "websocket",
-  "isomorphic-ws",
-  "node:http",
-  "node:https",
-  "node:http2",
-  "node:net",
-  "node:tls",
-  "node:dns",
-  "node:dns/promises",
-  "node:undici",
-]);
+const NETWORK_MODULES = new Set(DETERMINISTIC_NETWORK_MODULES);
 
 const BLOCKED_EXECUTABLES = new Set([
   ...CODING_AGENT_EXECUTABLES,
@@ -45,6 +33,8 @@ const BLOCKED_EXECUTABLES = new Set([
 ]);
 const TEST_FIXTURE_DIRECTORY = resolve(require("node:os").tmpdir());
 const REPOSITORY_ROOT = resolve(__dirname, "../..");
+const DETERMINISTIC_GUARD_PATH = resolve(__filename);
+const DETERMINISTIC_NODE_OPTIONS = `--require=${DETERMINISTIC_GUARD_PATH}`;
 
 register(
   pathToFileURL(resolve(__dirname, "deterministic-capability-loader.mjs")),
@@ -66,7 +56,12 @@ function blockedCapability(kind, value) {
 function repositoryOwnedModule(parent) {
   const filename = parent?.filename;
   if (typeof filename !== "string") return true;
-  const path = resolve(filename);
+  let path;
+  try {
+    path = realpathSync(filename);
+  } catch {
+    path = resolve(filename);
+  }
   return (
     !path.includes(`${sep}node_modules${sep}`) &&
     (path.startsWith(`${REPOSITORY_ROOT}${sep}`) ||
@@ -84,7 +79,10 @@ function normalizeExecutable(value) {
 }
 
 function executablePath(command, environment) {
-  const commandText = String(command);
+  const commandText = String(command)
+    .trim()
+    .replace(/^['"`]+|['"`]+$/g, "")
+    .split(/\s+/u)[0];
   if (commandText.includes("/") || commandText.includes("\\")) {
     return resolve(commandText);
   }
@@ -96,13 +94,25 @@ function executablePath(command, environment) {
   return undefined;
 }
 
-// Boundary tests use generated local command stubs under the OS temp root.
-function isTestFixtureExecutable(path) {
+function isCanonicalFixtureExecutable(path, executableName) {
+  if (typeof path !== "string") return false;
   const candidate = resolve(path);
-  return (
+  const marker = DETERMINISTIC_FIXTURE_IDENTITIES[executableName];
+  if (typeof marker !== "string") return false;
+  if (
     candidate === TEST_FIXTURE_DIRECTORY ||
-    candidate.startsWith(`${TEST_FIXTURE_DIRECTORY}${sep}`)
-  );
+    !candidate.startsWith(`${TEST_FIXTURE_DIRECTORY}${sep}`)
+  ) {
+    return false;
+  }
+  try {
+    const stats = lstatSync(candidate);
+    if (!stats.isFile() || stats.isSymbolicLink()) return false;
+    if (realpathSync(candidate) !== candidate) return false;
+    return readFileSync(candidate, "utf8").includes(marker);
+  } catch {
+    return false;
+  }
 }
 
 function shellText(values) {
@@ -125,47 +135,92 @@ function blockedTokens(text) {
   );
 }
 
-function optionsEnvironment(values) {
-  const options = values.find(
+function childOptionsIndex(values) {
+  return values.findIndex(
     (value) =>
-      value !== null &&
-      typeof value === "object" &&
-      !Array.isArray(value) &&
-      Object.hasOwn(value, "env"),
+      value !== null && typeof value === "object" && !Array.isArray(value),
   );
+}
+
+function optionsEnvironment(values) {
+  const index = childOptionsIndex(values);
+  const options = index === -1 ? undefined : values[index];
   return options?.env ?? process.env;
 }
 
-function guardChildProcess(command, values) {
+function guardChildProcess(method, command, values) {
   const environment = optionsEnvironment(values);
   const executable = normalizeExecutable(command);
   const resolved = executablePath(command, environment);
-  if (NETWORK_CLI_EXECUTABLES.includes(executable)) {
+  if (method !== "fork" && NETWORK_CLI_EXECUTABLES.includes(executable)) {
     throw blockedCapability("network CLI", command);
   }
-  if (CODING_AGENT_EXECUTABLES.includes(executable)) {
-    if (resolved === undefined || !isTestFixtureExecutable(resolved)) {
+  if (method !== "fork" && CODING_AGENT_EXECUTABLES.includes(executable)) {
+    if (!isCanonicalFixtureExecutable(resolved, executable)) {
       throw blockedCapability("coding-agent capability", command);
     }
   }
   const shellCommand = shellText([command, ...values]);
   const tokens = blockedTokens(shellCommand);
-  if (NETWORK_CLI_EXECUTABLES.some((name) => tokens.has(name))) {
+  if (
+    method !== "fork" &&
+    NETWORK_CLI_EXECUTABLES.some((name) => tokens.has(name))
+  ) {
     throw blockedCapability("network CLI", shellCommand);
   }
-  if (CODING_AGENT_EXECUTABLES.some((name) => tokens.has(name))) {
+  if (
+    method !== "fork" &&
+    CODING_AGENT_EXECUTABLES.some((name) => tokens.has(name))
+  ) {
     const agentTokens = CODING_AGENT_EXECUTABLES.filter((name) =>
       tokens.has(name),
     );
     if (
       agentTokens.some(
         (name) =>
-          !isTestFixtureExecutable(executablePath(name, environment) ?? name),
+          !(
+            name === executable && isCanonicalFixtureExecutable(resolved, name)
+          ) &&
+          !isCanonicalFixtureExecutable(
+            executablePath(name, environment),
+            name,
+          ),
       )
     ) {
       throw blockedCapability("child-process capability", shellCommand);
     }
   }
+}
+
+function deterministicChildValues(method, values) {
+  const environment = {
+    ...optionsEnvironment(values),
+    RAW_SWARM_EXECUTION_LANE: "deterministic",
+    NODE_OPTIONS: DETERMINISTIC_NODE_OPTIONS,
+  };
+  const optionsIndex = childOptionsIndex(values);
+  if (optionsIndex !== -1) {
+    return values.map((value, index) =>
+      index === optionsIndex ? { ...value, env: environment } : value,
+    );
+  }
+  let insertionIndex = values.length;
+  if (
+    (method === "exec" || method === "execSync") &&
+    typeof values.at(-1) === "function"
+  ) {
+    insertionIndex = values.length - 1;
+  } else if (method === "execFile") {
+    const callbackIndex = values.findIndex(
+      (value) => typeof value === "function",
+    );
+    if (callbackIndex !== -1) insertionIndex = callbackIndex;
+  }
+  return [
+    ...values.slice(0, insertionIndex),
+    { env: environment },
+    ...values.slice(insertionIndex),
+  ];
 }
 
 const originalModuleLoad = Module._load;
@@ -199,8 +254,12 @@ for (const method of [
   const original = childProcess[method];
   if (typeof original !== "function") continue;
   childProcess[method] = function guardedChildProcess(command, ...values) {
-    guardChildProcess(command, values);
-    return original.call(this, command, ...values);
+    guardChildProcess(method, command, values);
+    return original.call(
+      this,
+      command,
+      ...deterministicChildValues(method, values),
+    );
   };
 }
 
@@ -208,13 +267,7 @@ function blockedNetworkGlobal(name) {
   return blockedCapability("network capability", name);
 }
 
-for (const name of [
-  "fetch",
-  "WebSocket",
-  "XMLHttpRequest",
-  "WebTransport",
-  "EventSource",
-]) {
+for (const name of DETERMINISTIC_NETWORK_GLOBALS) {
   if (!(name in globalThis)) continue;
   try {
     Object.defineProperty(globalThis, name, {
