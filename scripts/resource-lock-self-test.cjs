@@ -57,6 +57,64 @@ function waitFor(predicate, description) {
   });
 }
 
+function waitForResult(resultProvider, description) {
+  const startedAt = Date.now();
+  return new Promise((resolve, reject) => {
+    const poll = () => {
+      const result = resultProvider();
+      if (result !== undefined) {
+        resolve(result);
+        return;
+      }
+      if (Date.now() - startedAt >= waitTimeoutMs) {
+        reject(new Error(`Timed out waiting for ${description}.`));
+        return;
+      }
+      setTimeout(poll, 10);
+    };
+    poll();
+  });
+}
+
+async function assertDetachedSupervision(
+  supervised,
+  detachedPidPath,
+  linked,
+  temporaryRoot,
+) {
+  try {
+    const detachedIdentity = await waitForResult(() => {
+      if (!existsSync(detachedPidPath)) return undefined;
+      return processIdentity(
+        Number(readFileSync(detachedPidPath, "utf8").trim()),
+      );
+    }, "the detached supervised child");
+
+    try {
+      assert.ok(detachedIdentity, "the detached child has a live identity");
+      supervised.kill("SIGTERM");
+      await waitFor(
+        () => !processIdentityIsLive(detachedIdentity),
+        "the detached child to be terminated by shared supervision",
+      );
+
+      const reacquiredLog = path.join(temporaryRoot, "reacquired.log");
+      const reacquired = guardedSpawn(linked, "with-mbt-lock.sh", [
+        "contender",
+        reacquiredLog,
+      ]);
+      assert.equal(await waitForExit(reacquired, "the reacquirer"), 0);
+      assert.deepEqual(logLines(reacquiredLog), ["contender-start"]);
+    } finally {
+      if (supervised.exitCode === null) supervised.kill("SIGKILL");
+      signalProcessIdentity(detachedIdentity, "SIGKILL");
+    }
+  } catch (error) {
+    if (supervised.exitCode === null) supervised.kill("SIGKILL");
+    throw error;
+  }
+}
+
 function waitForExit(child, description) {
   if (child.exitCode !== null) return Promise.resolve(child.exitCode);
   return new Promise((resolve, reject) => {
@@ -228,6 +286,20 @@ async function runSelfTest() {
       ]);
       await assertSerialized(holder, contender, logPath);
     }
+    const detachedPidPath = path.join(temporaryRoot, "detached-child.pid");
+    const supervised = guardedCommandSpawn(
+      root,
+      "with-broad-workspace-lock.sh",
+      process.execPath,
+      ["scripts/detached-probe.cjs"],
+      { DETACHED_PID_PATH: detachedPidPath },
+    );
+    await assertDetachedSupervision(
+      supervised,
+      detachedPidPath,
+      linked,
+      temporaryRoot,
+    );
   } finally {
     if (existsSync(linked)) {
       spawnSync("git", ["worktree", "remove", "--force", linked], {
