@@ -740,7 +740,23 @@ static int supervise_command(char **command_argv) {
     }
     if (child_pid > 0) continue;
     if (child_pid == 0) {
-      if (sleep_supervisor_poll() != 0) return 1;
+      if (sleep_supervisor_poll() != 0) {
+        int cleanup_signal = 0;
+        const int cleanup_failure = terminate_owned_tree(
+            leader_pid, leader_pid, &leader_reaped, &leader_status, SIGTERM,
+            &cleanup_signal);
+        if (cleanup_failure != 0) {
+          fprintf(stderr,
+                  "Raw Swarm deterministic network boundary could not poll "
+                  "before leader wait, and cleanup also failed.\n");
+        } else {
+          fprintf(stderr,
+                  "Raw Swarm deterministic network boundary could not poll "
+                  "before leader wait; cleanup settled the owned process "
+                  "tree.\n");
+        }
+        return 1;
+      }
       continue;
     }
     if (errno == EINTR) continue;

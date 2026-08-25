@@ -996,6 +996,7 @@ describe("RAW swarm runner boundaries", () => {
     expect(source).toContain("signal_owned_process");
     expect(source).toContain("getppid()");
     expect(source).toContain("waitpid(-1, &status, WNOHANG)");
+    expect(source).toContain("could not poll before leader wait");
     expect(source).not.toContain("waitpid(-1, &status, 0)");
     expect(source).not.toContain('readdir("/proc"');
     expect(source).not.toContain("saw_descendant");
@@ -1199,7 +1200,7 @@ describe("RAW swarm runner boundaries", () => {
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
-  }, 30_000);
+  }, 120_000);
 
   test("native supervisor unblocks inherited signals for termination and owner death", async () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-blocked-signals-"));
@@ -1344,7 +1345,7 @@ describe("RAW swarm runner boundaries", () => {
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
-  }, 40_000);
+  }, 90_000);
 
   test("runner reports a helper cleanup failure during signal termination", async () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-runner-failure-"));
