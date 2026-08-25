@@ -219,9 +219,19 @@ function supportedSourceExtension(path) {
   );
 }
 
-function hasSupportedSourceExtension(path) {
-  return supportedSourceExtension(path) !== undefined;
-}
+/*
+ * Vite 7 source-replacement contract. The installed runtime's
+ * `knownTsOutputRE` and `tryCleanFsResolve` in
+ * node_modules/vite/dist/node/chunks/config.js are the authority for this
+ * finite mapping. Keep it separate from the broader source inventory: a
+ * supported source suffix is not, by itself, a runtime replacement.
+ */
+const VITE7_SOURCE_REPLACEMENT_EXTENSIONS = Object.freeze({
+  ".js": Object.freeze([".ts", ".tsx"]),
+  ".jsx": Object.freeze([".tsx"]),
+  ".mjs": Object.freeze([".mts"]),
+  ".cjs": Object.freeze([".cts"]),
+});
 
 function sourceResolutionCandidates(candidate) {
   return sourceResolutionSuffixes.flatMap((extension) => [
@@ -232,11 +242,21 @@ function sourceResolutionCandidates(candidate) {
 
 function sourceReplacementCandidates(candidate) {
   const extension = supportedSourceExtension(candidate);
-  if (extension === undefined) return [];
+  const replacementExtensions =
+    extension === undefined
+      ? undefined
+      : VITE7_SOURCE_REPLACEMENT_EXTENSIONS[extension];
+  if (replacementExtensions === undefined) return [];
   const stem = candidate.slice(0, -extension.length);
-  return SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS.map(
-    (replacement) => `${stem}${replacement}`,
-  );
+  return replacementExtensions.map((replacement) => `${stem}${replacement}`);
+}
+
+function sourceCandidatesForObservation(candidate, observation) {
+  const candidates = sourceResolutionCandidates(candidate);
+  if (observation.kind === "absent" || observation.kind === "directory") {
+    candidates.push(...sourceReplacementCandidates(candidate));
+  }
+  return [...new Set(candidates)];
 }
 
 function sourcePathsFromResolutionCandidates(candidates, visited) {
@@ -252,7 +272,7 @@ function sourcePathsFromResolutionCandidates(candidates, visited) {
         if (observation.kind === "file") return [path];
         if (observation.kind === "directory") {
           return sourcePathsFromResolutionCandidates(
-            sourceResolutionCandidates(path),
+            sourceCandidatesForObservation(path, observation),
             visited,
           );
         }
@@ -268,11 +288,10 @@ function sourcePathsForCandidate(candidate, visited = new Set()) {
   const observation = sourceCandidateObservation(candidate);
   if (observation.kind === "failure") throw new Error(observation.message);
   if (observation.kind === "file") return [candidate];
-  const candidates = sourceResolutionCandidates(candidate);
-  if (observation.kind === "absent" && hasSupportedSourceExtension(candidate)) {
-    candidates.push(...sourceReplacementCandidates(candidate));
-  }
-  return sourcePathsFromResolutionCandidates(candidates, visited);
+  return sourcePathsFromResolutionCandidates(
+    sourceCandidatesForObservation(candidate, observation),
+    visited,
+  );
 }
 
 function resolveInternalImportPaths(sourcePath, specifier) {

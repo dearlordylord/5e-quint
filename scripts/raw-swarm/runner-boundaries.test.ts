@@ -2243,13 +2243,12 @@ describe("RAW swarm runner boundaries", () => {
 
   test.each([
     [".js", ".ts"],
+    [".js", ".tsx"],
     [".jsx", ".tsx"],
     [".mjs", ".mts"],
     [".cjs", ".cts"],
-    [".mjsx", ".mtsx"],
-    [".cjsx", ".ctsx"],
   ] as const)(
-    "scans replacement source extension %s as %s",
+    "scans Vite replacement source extension %s as %s",
     (importExtension, replacementExtension) => {
       const fixtureRoot = mkdtempSync(
         resolve(rawSwarmOutputDirectory, "transitive-replacement-source-"),
@@ -2275,6 +2274,41 @@ describe("RAW swarm runner boundaries", () => {
         expect(`${checked.stdout}${checked.stderr}`).toContain(
           relative(repoRoot, forbiddenSourcePath),
         );
+      } finally {
+        rmSync(fixtureRoot, { recursive: true, force: true });
+      }
+    },
+    30_000,
+  );
+
+  test.each([
+    [".js", ".cjs"],
+    [".mjsx", ".mtsx"],
+    [".cjsx", ".ctsx"],
+  ] as const)(
+    "does not invent a Vite replacement from %s to %s",
+    (importExtension, unselectedExtension) => {
+      const fixtureRoot = mkdtempSync(
+        resolve(rawSwarmOutputDirectory, "transitive-unselected-replacement-"),
+      );
+      const testPath = resolve(fixtureRoot, "fixture.test.ts");
+      const unselectedSourcePath = resolve(
+        fixtureRoot,
+        `fixture${unselectedExtension}`,
+      );
+      const forbiddenModule = ["node:", "http"].join("");
+      writeFileSync(testPath, `import "./fixture${importExtension}";\n`);
+      writeFileSync(
+        unselectedSourcePath,
+        `require(${JSON.stringify(forbiddenModule)});\n`,
+      );
+      try {
+        const checked = spawnSync(
+          process.execPath,
+          [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+          { encoding: "utf8" },
+        );
+        expect(checked.status).toBe(0);
       } finally {
         rmSync(fixtureRoot, { recursive: true, force: true });
       }
@@ -2384,6 +2418,7 @@ describe("RAW swarm runner boundaries", () => {
     const testPath = resolve(fixtureRoot, "fixture.test.ts");
     const sourceModules = [
       ["js", ".js", ".ts"],
+      ["jsTsx", ".js", ".tsx"],
       ["jsx", ".jsx", ".tsx"],
       ["mjs", ".mjs", ".mts"],
       ["cjs", ".cjs", ".cts"],
@@ -2404,6 +2439,52 @@ describe("RAW swarm runner boundaries", () => {
         .join(
           "\n",
         )}\nimport { expect, test } from "vitest";\ntest("replacement imports", () => expect([${sourceModules.map(([name]) => name).join(", ")}]).toEqual(${JSON.stringify(sourceModules.map(([name]) => name))}));\n`,
+    );
+    try {
+      const checked = spawnSync(
+        "pnpm",
+        [
+          "exec",
+          "vitest",
+          "run",
+          "--root",
+          fixtureRoot,
+          "--config",
+          resolve(repoRoot, "vitest.config.ts"),
+          testPath,
+          "--pool=threads",
+          "--maxWorkers=1",
+        ],
+        {
+          cwd: repoRoot,
+          env: { ...process.env, NODE_OPTIONS: "" },
+          encoding: "utf8",
+        },
+      );
+      expect(checked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("confirms Vitest resolves a JS-family directory import to a TS sibling", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-vite-directory-replacement-confirmation-"),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const candidateDirectory = resolve(fixtureRoot, "dir.js");
+    mkdirSync(candidateDirectory);
+    writeFileSync(
+      resolve(candidateDirectory, "index.ts"),
+      'export const value = "directory-index";\n',
+    );
+    writeFileSync(
+      resolve(fixtureRoot, "dir.ts"),
+      'export const value = "replacement-sibling";\n',
+    );
+    writeFileSync(
+      testPath,
+      'import { expect, test } from "vitest";\nimport { value } from "./dir.js";\ntest("directory replacement import", () => expect(value).toBe("replacement-sibling"));\n',
     );
     try {
       const checked = spawnSync(
@@ -2564,6 +2645,40 @@ describe("RAW swarm runner boundaries", () => {
     const extensionDirectory = resolve(fixtureRoot, "dir.js");
     const harmlessIndexPath = resolve(extensionDirectory, "index.ts");
     const forbiddenSiblingPath = resolve(fixtureRoot, "dir.js.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(extensionDirectory, { recursive: true });
+    writeFileSync(testPath, 'import "./dir.js";\n');
+    writeFileSync(harmlessIndexPath, "export const harmless = true;\n");
+    writeFileSync(
+      forbiddenSiblingPath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, forbiddenSiblingPath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("scans the Vite JS-to-TS replacement beside a JS-family directory", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(
+        rawSwarmOutputDirectory,
+        "transitive-vite-directory-replacement-collision-",
+      ),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const extensionDirectory = resolve(fixtureRoot, "dir.js");
+    const harmlessIndexPath = resolve(extensionDirectory, "index.ts");
+    const forbiddenSiblingPath = resolve(fixtureRoot, "dir.ts");
     const forbiddenModule = ["node:", "http"].join("");
     mkdirSync(extensionDirectory, { recursive: true });
     writeFileSync(testPath, 'import "./dir.js";\n');

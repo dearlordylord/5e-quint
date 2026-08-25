@@ -58,6 +58,11 @@ failing shims for known coding-agent and network CLI names. Model-telemetry
 tests inject controlled Node fixtures through the spawn seam; no stamped or
 forgeable coding-agent executable is admitted.
 
+The named JS-family replacement contract follows the installed Vite 7
+resolver's `knownTsOutputRE` and `tryCleanFsResolve` implementation in
+`node_modules/vite/dist/node/chunks/config.js`; it is intentionally kept
+separate from the broader source-extension inventory.
+
 The deterministic body removes inherited `NODE_OPTIONS`, compiles the
 repository-owned `process-supervisor.c` helper with the validated
 `/usr/bin/cc` system compiler, and refuses to continue if that compiler or
