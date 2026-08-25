@@ -42,6 +42,57 @@ function run(command, args, options = {}) {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
+function buildModelCommandPlan(operation, profile, commandArguments) {
+  const operationCommand = operation.command.endsWith(".sh")
+    ? { executable: operation.command, args: commandArguments }
+    : {
+        executable: "node",
+        args: ["--import", "tsx", operation.command, ...commandArguments],
+      };
+  const lockedCommand = operation.writesCatalogue
+    ? (() => {
+        const commonDirectory = spawnSync(
+          "git",
+          ["rev-parse", "--path-format=absolute", "--git-common-dir"],
+          { encoding: "utf8" },
+        );
+        const commonDirectoryPath =
+          typeof commonDirectory.stdout === "string"
+            ? commonDirectory.stdout.trim()
+            : "";
+        if (
+          commonDirectory.error !== undefined ||
+          commonDirectory.signal !== null ||
+          commonDirectory.status !== 0 ||
+          commonDirectoryPath === ""
+        ) {
+          fail(
+            "Raw Swarm could not resolve the catalogue-writer lock directory.",
+          );
+        }
+        return {
+          executable: "flock",
+          args: [
+            "--exclusive",
+            resolve(commonDirectoryPath, "raw-swarm-catalogue-writer.lock"),
+            operationCommand.executable,
+            ...operationCommand.args,
+          ],
+        };
+      })()
+    : operationCommand;
+  return {
+    executable: "timeout",
+    args: [
+      "--signal=TERM",
+      "--kill-after=30s",
+      `${MODEL_BACKED_PROFILE_BUDGET_SECONDS[profile]}s`,
+      lockedCommand.executable,
+      ...lockedCommand.args,
+    ],
+  };
+}
+
 const [profile, ...profileArguments] = process.argv.slice(2);
 const modelArguments =
   profileArguments[0] === "--" ? profileArguments.slice(1) : profileArguments;
@@ -118,48 +169,25 @@ if (authentication.error !== undefined || authentication.status !== 0) {
   );
 }
 
-const commandArguments = [...operation.fixedArguments, ...operationArguments];
+const baseCommandArguments = [
+  ...operation.fixedArguments,
+  ...operationArguments,
+];
+const commandArguments =
+  operationName === "sdk-player" &&
+  !baseCommandArguments.includes("--implementation-git-sha")
+    ? [...baseCommandArguments, "--implementation-git-sha", expectedGitSha]
+    : baseCommandArguments;
 const environment = {
   ...process.env,
   DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD: `v1:${expectedGitSha}`,
+  ...(operationName === "post-play-review"
+    ? { RAW_REVIEW_IMPLEMENTATION_GIT_SHA: expectedGitSha }
+    : {}),
 };
-if (operationName === "sdk-player") {
-  if (!commandArguments.includes("--implementation-git-sha")) {
-    commandArguments.push("--implementation-git-sha", expectedGitSha);
-  }
-}
-if (operationName === "post-play-review") {
-  environment.RAW_REVIEW_IMPLEMENTATION_GIT_SHA = expectedGitSha;
-}
-
-let executable = operation.command.endsWith(".sh") ? operation.command : "node";
-let args = operation.command.endsWith(".sh")
-  ? commandArguments
-  : ["--import", "tsx", operation.command, ...commandArguments];
-if (operation.writesCatalogue) {
-  const commonDirectory = spawnSync(
-    "git",
-    ["rev-parse", "--path-format=absolute", "--git-common-dir"],
-    { encoding: "utf8" },
-  );
-  if (commonDirectory.error !== undefined) throw commonDirectory.error;
-  if (commonDirectory.status !== 0 || commonDirectory.stdout.trim() === "") {
-    fail("Raw Swarm could not resolve the catalogue-writer lock directory.");
-  }
-  args = [
-    "--exclusive",
-    resolve(commonDirectory.stdout.trim(), "raw-swarm-catalogue-writer.lock"),
-    executable,
-    ...args,
-  ];
-  executable = "flock";
-}
-args = [
-  "--signal=TERM",
-  "--kill-after=30s",
-  `${MODEL_BACKED_PROFILE_BUDGET_SECONDS[profile]}s`,
-  executable,
-  ...args,
-];
-executable = "timeout";
+const { executable, args } = buildModelCommandPlan(
+  operation,
+  profile,
+  commandArguments,
+);
 run(executable, args, { env: environment });

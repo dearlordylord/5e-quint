@@ -6,7 +6,7 @@ const {
   readlinkSync,
   realpathSync,
 } = require("node:fs");
-const { basename, isAbsolute, resolve } = require("node:path");
+const { isAbsolute, resolve } = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 function fail(message) {
@@ -41,6 +41,65 @@ function processStartTime(pid) {
 
 function inheritedDescriptorPath(pid, descriptor) {
   return realpathSync(readlinkSync(`/proc/${pid}/fd/${descriptor}`));
+}
+
+function canonicalLaneLockPath(expectedName) {
+  const commonDirectory = spawnSync(
+    "git",
+    ["rev-parse", "--path-format=absolute", "--git-common-dir"],
+    { encoding: "utf8" },
+  );
+  const commonDirectoryPath =
+    typeof commonDirectory.stdout === "string"
+      ? commonDirectory.stdout.trim()
+      : "";
+  if (
+    commonDirectory.error !== undefined ||
+    commonDirectory.signal !== null ||
+    commonDirectory.status !== 0 ||
+    !isAbsolute(commonDirectoryPath)
+  ) {
+    fail("Raw Swarm model operations require the canonical model-lane lock.");
+  }
+  try {
+    return realpathSync(resolve(commonDirectoryPath, expectedName));
+  } catch {
+    fail("Raw Swarm model operations require the canonical model-lane lock.");
+  }
+}
+
+function resolveLanePaths(ownerPid, laneFd, lockPathInput) {
+  try {
+    const lockPath = realpathSync(resolve(lockPathInput));
+    const inheritedLockPath = inheritedDescriptorPath(ownerPid, laneFd);
+    const currentDescriptorPath = inheritedDescriptorPath(process.pid, laneFd);
+    fstatSync(laneFd).isFile() ||
+      fail("Raw Swarm model operations require an inherited model-lane lock.");
+    return { lockPath, inheritedLockPath, currentDescriptorPath };
+  } catch {
+    fail("Raw Swarm model operations require the canonical model-lane lock.");
+  }
+}
+
+function assertHeldModelLaneLock(lockPath, laneFd) {
+  const probeDescriptor = (() => {
+    try {
+      return openSync(lockPath, "a+");
+    } catch {
+      fail("Raw Swarm model operations require a held model-lane lock.");
+    }
+  })();
+  try {
+    assertFlockResult(probeDescriptor, 1);
+    assertFlockResult(laneFd, 0);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Raw Swarm")) {
+      throw error;
+    }
+    fail("Raw Swarm model operations require a held model-lane lock.");
+  } finally {
+    closeSync(probeDescriptor);
+  }
 }
 
 function hasAncestorProcess(pid, expectedAncestorPid) {
@@ -90,40 +149,18 @@ function assertModelLaneLock(environment = process.env) {
     fail("Raw Swarm model operations require an inherited model-lane lock.");
   }
   const expectedName = `raw-swarm-model-lane-${lane}.lock`;
-  let lockPath;
-  let inheritedLockPath;
-  let currentDescriptorPath;
-  try {
-    lockPath = realpathSync(resolve(lockPathInput));
-    inheritedLockPath = inheritedDescriptorPath(ownerPid, laneFd);
-    currentDescriptorPath = inheritedDescriptorPath(process.pid, laneFd);
-    fstatSync(laneFd).isFile() ||
-      fail("Raw Swarm model operations require an inherited model-lane lock.");
-  } catch {
-    fail("Raw Swarm model operations require the canonical model-lane lock.");
-  }
+  const canonicalLockPath = canonicalLaneLockPath(expectedName);
+  const { lockPath, inheritedLockPath, currentDescriptorPath } =
+    resolveLanePaths(ownerPid, laneFd, lockPathInput);
   if (
-    basename(lockPath) !== expectedName ||
+    lockPath !== canonicalLockPath ||
     inheritedLockPath !== lockPath ||
     currentDescriptorPath !== lockPath ||
     !hasAncestorProcess(process.pid, ownerPid)
   ) {
     fail("Raw Swarm model operations require the canonical model-lane lock.");
   }
-
-  let probeDescriptor;
-  try {
-    probeDescriptor = openSync(lockPath, "a+");
-    assertFlockResult(probeDescriptor, 1);
-    assertFlockResult(laneFd, 0);
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("Raw Swarm")) {
-      throw error;
-    }
-    fail("Raw Swarm model operations require a held model-lane lock.");
-  } finally {
-    if (probeDescriptor !== undefined) closeSync(probeDescriptor);
-  }
+  assertHeldModelLaneLock(lockPath, laneFd);
 }
 
 module.exports = { assertModelLaneLock };

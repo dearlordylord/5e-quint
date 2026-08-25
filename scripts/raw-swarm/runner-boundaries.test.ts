@@ -36,6 +36,11 @@ const modelLaneCapability = resolve(
   repoRoot,
   "scripts/raw-swarm/model-lane-capability.cjs",
 );
+const processSupervision = resolve(
+  repoRoot,
+  "scripts",
+  "process-supervision.sh",
+);
 const modelBackedRunner = resolve(
   repoRoot,
   "scripts/raw-swarm/run-model-backed.mjs",
@@ -541,6 +546,77 @@ describe("RAW swarm runner boundaries", () => {
     );
   }, 30_000);
 
+  test("rejects a same-name lane lock outside the Git common directory", () => {
+    const forgedRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-forged-model-lane-lock-"),
+    );
+    const forgedLockPath = resolve(forgedRoot, "raw-swarm-model-lane-1.lock");
+    try {
+      const result = spawnSync(
+        "bash",
+        [
+          "-c",
+          [
+            "set -euo pipefail",
+            'exec 3>"$1"',
+            "flock --exclusive --nonblock 3",
+            "owner_pid=$$",
+            "owner_start_time=$(sed 's/^.*) //' \"/proc/$owner_pid/stat\" | awk '{ print $20 }')",
+            'export DND_RAW_SWARM_MODEL_LANE="1"',
+            'export DND_RAW_SWARM_MODEL_LANE_GUARD="v1"',
+            'export DND_RAW_SWARM_MODEL_LANE_LOCK_PATH="$1"',
+            'export DND_RAW_SWARM_MODEL_LANE_FD="3"',
+            'export DND_RAW_SWARM_MODEL_LANE_OWNER_PID="$owner_pid"',
+            'export DND_RAW_SWARM_MODEL_LANE_OWNER_START_TIME="$owner_start_time"',
+            'exec "$2" "$3" --assert',
+          ].join("\n"),
+          "forged-model-lane",
+          forgedLockPath,
+          process.execPath,
+          modelLaneCapability,
+        ],
+        {
+          cwd: repoRoot,
+          env: process.env,
+          encoding: "utf8",
+        },
+      );
+      expect(result.status).toBe(64);
+      expect(`${result.stdout}${result.stderr}`).toContain(
+        "canonical model-lane lock",
+      );
+    } finally {
+      rmSync(forgedRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("rejects stale supervision identities before signal decisions", () => {
+    const result = spawnSync(
+      "bash",
+      [
+        "-c",
+        [
+          "set -euo pipefail",
+          'source "$1"',
+          "supervision_command_pid=$$",
+          "supervision_command_start_time=0",
+          'supervision_marker_pids_snapshot="$$ 0"',
+          "signal_called=false",
+          "kill() { signal_called=true; return 0; }",
+          "if supervision_command_group_is_owned; then exit 10; fi",
+          "if supervision_marker_snapshot_exists; then exit 11; fi",
+          "supervision_signal_owned_processes TERM",
+          'if [[ "$signal_called" == true ]]; then exit 12; fi',
+          "exit 0",
+        ].join("\n"),
+        "stale-supervision-identity",
+        processSupervision,
+      ],
+      { cwd: repoRoot, encoding: "utf8" },
+    );
+    expect(result.status).toBe(0);
+  });
+
   test("public wrapper supplies the locked lane capability", () => {
     const commandRoot = mkdtempSync(
       resolve(tmpdir(), "dnd-model-wrapper-git-"),
@@ -827,9 +903,6 @@ esac
     const wrapperPidPath = resolve(commandRoot, "wrapper.pid");
     const childPidPath = resolve(commandRoot, "detached-child.pid");
     const firstDeadline = new Date(Date.now() + 3_000).toISOString();
-    let owner: ReturnType<typeof spawn> | undefined;
-    let wrapperPid: number | undefined;
-    let childPid: number | undefined;
     writeFileSync(
       fakeGit,
       `#!/bin/sh
@@ -856,33 +929,33 @@ wait "$wrapper_pid"
     );
     chmodSync(fakeGit, 0o755);
     chmodSync(ownerScript, 0o755);
+    const detachedChildSource = [
+      'const fs = require("node:fs");',
+      "fs.writeFileSync(process.env.RAW_SWARM_CHILD_PID, String(process.pid));",
+      'process.on("SIGTERM", () => {});',
+      "setInterval(() => {}, 1000);",
+    ].join(" ");
+    const childSource = [
+      'const { spawn } = require("node:child_process");',
+      `const detached = spawn(process.execPath, ["-e", ${JSON.stringify(detachedChildSource)}], { detached: true, stdio: "ignore" });`,
+      "detached.unref();",
+      "setInterval(() => {}, 1000);",
+    ].join(" ");
+    const owner = spawn(ownerScript, [process.execPath, "-e", childSource], {
+      cwd: repoRoot,
+      env: {
+        ...modelLaneTestEnvironment(commandRoot, firstDeadline),
+        RAW_SWARM_MODEL_LANE_LOCK: modelLaneLock,
+        RAW_SWARM_WRAPPER_PID: wrapperPidPath,
+        RAW_SWARM_CHILD_PID: childPidPath,
+      },
+      stdio: "ignore",
+    });
     try {
-      const detachedChildSource = [
-        'const fs = require("node:fs");',
-        "fs.writeFileSync(process.env.RAW_SWARM_CHILD_PID, String(process.pid));",
-        'process.on("SIGTERM", () => {});',
-        "setInterval(() => {}, 1000);",
-      ].join(" ");
-      const childSource = [
-        'const { spawn } = require("node:child_process");',
-        `const detached = spawn(process.execPath, ["-e", ${JSON.stringify(detachedChildSource)}], { detached: true, stdio: "ignore" });`,
-        "detached.unref();",
-        "setInterval(() => {}, 1000);",
-      ].join(" ");
-      owner = spawn(ownerScript, [process.execPath, "-e", childSource], {
-        cwd: repoRoot,
-        env: {
-          ...modelLaneTestEnvironment(commandRoot, firstDeadline),
-          RAW_SWARM_MODEL_LANE_LOCK: modelLaneLock,
-          RAW_SWARM_WRAPPER_PID: wrapperPidPath,
-          RAW_SWARM_CHILD_PID: childPidPath,
-        },
-        stdio: "ignore",
-      });
       await waitForFile(wrapperPidPath);
       await waitForFile(childPidPath);
-      wrapperPid = Number(readFileSync(wrapperPidPath, "utf8").trim());
-      childPid = Number(readFileSync(childPidPath, "utf8").trim());
+      const wrapperPid = Number(readFileSync(wrapperPidPath, "utf8").trim());
+      const childPid = Number(readFileSync(childPidPath, "utf8").trim());
       expect(Number.isSafeInteger(wrapperPid)).toBe(true);
       expect(Number.isSafeInteger(childPid)).toBe(true);
       expect(processIsLive(wrapperPid)).toBe(true);
@@ -909,14 +982,26 @@ wait "$wrapper_pid"
         "acquired lane",
       );
     } finally {
-      if (owner !== undefined && owner.exitCode === null) {
+      if (owner.exitCode === null) {
         owner.kill("SIGKILL");
       }
-      if (wrapperPid !== undefined && processIsLive(wrapperPid)) {
-        process.kill(wrapperPid, "SIGTERM");
+      const wrapperPidForCleanup = existsSync(wrapperPidPath)
+        ? Number(readFileSync(wrapperPidPath, "utf8").trim())
+        : undefined;
+      if (
+        wrapperPidForCleanup !== undefined &&
+        processIsLive(wrapperPidForCleanup)
+      ) {
+        process.kill(wrapperPidForCleanup, "SIGTERM");
       }
-      if (childPid !== undefined && processIsLive(childPid)) {
-        process.kill(childPid, "SIGKILL");
+      const childPidForCleanup = existsSync(childPidPath)
+        ? Number(readFileSync(childPidPath, "utf8").trim())
+        : undefined;
+      if (
+        childPidForCleanup !== undefined &&
+        processIsLive(childPidForCleanup)
+      ) {
+        process.kill(childPidForCleanup, "SIGKILL");
       }
       rmSync(commandRoot, { recursive: true, force: true });
       rmSync(commonRoot, { recursive: true, force: true });
