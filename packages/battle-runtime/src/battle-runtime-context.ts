@@ -15,6 +15,7 @@ import type {
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { WeaponId } from "@dnd/shared/game-facts";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
+import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
 import * as Either from "effect/Either";
 import type {
   FindFamiliarFormSelection,
@@ -71,6 +72,7 @@ export type BattleStatBlockProcedurePresentation =
 export type BattleStatBlockPresentationSource = {
   readonly displayName: string;
   readonly procedures: readonly BattleStatBlockProcedurePresentation[];
+  readonly projectionIssues: readonly StatBlockProjectionIssue[];
   readonly languages:
     | { readonly kind: "absentStatBlockLanguages" }
     | { readonly kind: "casterLanguagesReference" }

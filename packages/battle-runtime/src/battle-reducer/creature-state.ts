@@ -12,7 +12,10 @@ import {
   ammunitionStockIssues,
   missingRequiredAmmunitionKinds,
 } from "../battle-ammunition.ts";
-import { statBlockAttackActionOptions } from "../stat-block-execution.ts";
+import {
+  statBlockAttackActionOptions,
+  statBlockProjectionIssues,
+} from "../stat-block-execution.ts";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import { Either, Match } from "effect";
 import {
@@ -616,6 +619,7 @@ export function battleCreatureStateAdmissionFromInit(
         statBlock: creatureInit.source,
         execution: admission.right.origin.execution,
       }),
+      projectionIssues: statBlockProjectionIssues(creatureInit.source),
     },
   };
 }
