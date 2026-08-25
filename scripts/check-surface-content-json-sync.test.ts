@@ -889,6 +889,57 @@ in statBlock`,
     }
   });
 
+  it.each([
+    {
+      name: "a root parenthesized merge",
+      file: "root-merge",
+      source: '({ kind = "statBlock" } // { kind = "other" })',
+    },
+    {
+      name: "a let-bound parenthesized merge",
+      file: "let-merge",
+      source: [
+        'let record = ({ kind = "statBlock" } // { kind = "other" })',
+        "in record",
+      ].join("\n"),
+    },
+    {
+      name: "a parenthesized list element merge",
+      file: "list-element-merge",
+      source: '[({ kind = "statBlock" } // { kind = "other" })]',
+    },
+    {
+      name: "a list concatenation",
+      file: "list-concat",
+      source: '[{ kind = "statBlock" }] // [{ kind = "other" }]',
+    },
+  ])("does not infer a family from $name", ({ file, source }) => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-unconsumed-expression-test-"),
+    );
+
+    try {
+      writeFileSync(join(contentDir, `${file}.dhall`), source);
+      writeFileSync(join(contentDir, `${file}.json`), validRecord);
+
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        compile: () => "synthetic compile failure",
+      });
+
+      expect(result.issues).not.toContainEqual(
+        expect.objectContaining({
+          kind: "peer-family-mismatch",
+          source: `${file}.dhall`,
+          peer: `${file}.json`,
+        }),
+      );
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
+
   it("keeps known peer family ownership when source text is unresolved", () => {
     const contentDir = mkdtempSync(
       join(tmpdir(), "surface-unresolved-peer-family-test-"),

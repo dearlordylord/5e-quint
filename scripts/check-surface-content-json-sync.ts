@@ -228,11 +228,17 @@ function parseDhallRecordKind(contents: string): SurfacePublicationRecordKind {
   if (resultIndex !== undefined && firstToken?.value === "in") {
     const result = tokens[resultIndex + 1];
     return result?.value === "{" || result?.value === "["
-      ? recordKindFromResult(tokens, resultIndex + 1)
+      ? (resolveDhallExpressionWithinBounds(
+          tokens,
+          resultIndex + 1,
+          tokens.length,
+          new Map(),
+          new Set(),
+        )?.kind ?? "unknown")
       : "unknown";
   }
   return (
-    resolveDhallExpression(
+    resolveDhallExpressionWithinBounds(
       tokens,
       firstTokenIndex,
       tokens.length,
@@ -401,6 +407,23 @@ type DhallBinding = {
   readonly scope: ReadonlyMap<string, DhallBinding>;
 };
 
+function resolveDhallExpressionWithinBounds(
+  tokens: readonly DhallToken[],
+  startIndex: number,
+  limitIndex: number,
+  scope: ReadonlyMap<string, DhallBinding>,
+  aliasStack: ReadonlySet<number>,
+): DhallExpressionResolution | undefined {
+  const resolution = resolveDhallExpression(
+    tokens,
+    startIndex,
+    limitIndex,
+    scope,
+    aliasStack,
+  );
+  return resolution?.endIndex === limitIndex ? resolution : undefined;
+}
+
 function resolveDhallExpression(
   tokens: readonly DhallToken[],
   startIndex: number,
@@ -460,7 +483,7 @@ function resolveDhallExpression(
       limitIndex,
     );
     if (endIndex === undefined) return undefined;
-    const inner = resolveDhallExpression(
+    const inner = resolveDhallExpressionWithinBounds(
       tokens,
       startIndex + 1,
       endIndex - 1,
@@ -543,7 +566,7 @@ function resolveDhallBinding(
     return { kind: "unknown", shape: "unknown" };
   }
   const nextAliasStack = new Set(aliasStack).add(binding.expressionStart);
-  const resolution = resolveDhallExpression(
+  const resolution = resolveDhallExpressionWithinBounds(
     tokens,
     binding.expressionStart,
     binding.expressionEnd,
