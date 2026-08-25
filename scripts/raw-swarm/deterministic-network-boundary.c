@@ -561,6 +561,21 @@ static int reap_available_children(pid_t leader_pid, bool *leader_reaped,
   }
 }
 
+static int sleep_supervisor_poll(void) {
+  struct timespec pause_duration = {
+      .tv_sec = 0,
+      .tv_nsec = DND_SUPERVISOR_POLL_NANOSECONDS,
+  };
+  if (nanosleep(&pause_duration, NULL) != 0 && errno != EINTR) {
+    fprintf(stderr,
+            "Raw Swarm deterministic network boundary could not poll the "
+            "owned process tree: %s\n",
+            strerror(errno));
+    return 1;
+  }
+  return 0;
+}
+
 /* Returns 0 when no owned children remain, 1 while children remain, 2 on a
  * bounded timeout, and -1 on an unrecoverable wait/clock error. */
 static int wait_for_owned_tree_empty(pid_t leader_pid, bool *leader_reaped,
@@ -597,17 +612,7 @@ static int wait_for_owned_tree_empty(pid_t leader_pid, bool *leader_reaped,
       return -1;
     }
     if (now >= deadline) return 2;
-    struct timespec pause_duration = {
-        .tv_sec = 0,
-        .tv_nsec = DND_SUPERVISOR_POLL_NANOSECONDS,
-    };
-    if (nanosleep(&pause_duration, NULL) != 0 && errno != EINTR) {
-      fprintf(stderr,
-              "Raw Swarm deterministic network boundary could not poll the "
-              "owned process tree: %s\n",
-              strerror(errno));
-      return -1;
-    }
+    if (sleep_supervisor_poll() != 0) return -1;
   }
 }
 
@@ -727,13 +732,17 @@ static int supervise_command(char **command_argv) {
     }
     if (requested_signal != 0) break;
     int status = 0;
-    const pid_t child_pid = waitpid(-1, &status, 0);
+    const pid_t child_pid = waitpid(-1, &status, WNOHANG);
     if (child_pid == leader_pid) {
       leader_reaped = true;
       leader_status = status;
       break;
     }
     if (child_pid > 0) continue;
+    if (child_pid == 0) {
+      if (sleep_supervisor_poll() != 0) return 1;
+      continue;
+    }
     if (errno == EINTR) continue;
     if (errno == ECHILD) {
       fprintf(stderr,

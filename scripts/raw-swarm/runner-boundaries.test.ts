@@ -995,6 +995,8 @@ describe("RAW swarm runner boundaries", () => {
     expect(source).toContain("DND_SUPERVISOR_SETTLEMENT_TIMEOUT_MILLISECONDS");
     expect(source).toContain("signal_owned_process");
     expect(source).toContain("getppid()");
+    expect(source).toContain("waitpid(-1, &status, WNOHANG)");
+    expect(source).not.toContain("waitpid(-1, &status, 0)");
     expect(source).not.toContain('readdir("/proc"');
     expect(source).not.toContain("saw_descendant");
   });
@@ -1138,6 +1140,67 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 10_000);
 
+  test("native supervisor polls before leader wait across repeated termination windows", async () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-prewait-termination-"),
+    );
+    try {
+      for (let index = 0; index < 128; index += 1) {
+        const leaderPidPath = resolve(fixtureRoot, `leader-${index}.pid`);
+        const helper = spawn(
+          deterministicNetworkBoundary,
+          [
+            "--owner-pid",
+            String(process.pid),
+            process.execPath,
+            "-e",
+            `const { writeFileSync } = require("node:fs"); writeFileSync(${JSON.stringify(leaderPidPath)}, String(process.pid)); setInterval(() => {}, 1000);`,
+          ],
+          {
+            env: { ...process.env, NODE_OPTIONS: "" },
+            stdio: "ignore",
+          },
+        );
+        let leaderPid: number | undefined;
+        try {
+          await waitForFile(leaderPidPath);
+          leaderPid = Number(readFileSync(leaderPidPath, "utf8").trim());
+          expect(Number.isSafeInteger(leaderPid)).toBe(true);
+          const result = await new Promise<{
+            status: number | null;
+            signal: NodeJS.Signals | null;
+          }>((resolveResult, rejectResult) => {
+            const timeout = setTimeout(
+              () =>
+                rejectResult(
+                  new Error("Timed out waiting for pre-wait termination."),
+                ),
+              2_000,
+            );
+            helper.once("error", (error) => {
+              clearTimeout(timeout);
+              rejectResult(error);
+            });
+            helper.once("close", (status, signal) => {
+              clearTimeout(timeout);
+              resolveResult({ status, signal });
+            });
+            helper.kill("SIGTERM");
+          });
+          expect(result).toEqual({ status: 143, signal: null });
+          expect(processIsLive(leaderPid)).toBe(false);
+        } finally {
+          if (helper.exitCode === null) helper.kill("SIGKILL");
+          if (leaderPid !== undefined && processIsLive(leaderPid)) {
+            process.kill(leaderPid, "SIGKILL");
+          }
+        }
+      }
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   test("native supervisor unblocks inherited signals for termination and owner death", async () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-blocked-signals-"));
     const launcher = compileKernelBoundaryProbe(
@@ -1234,15 +1297,15 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 15_000);
 
-  test("native supervisor does not leak across immediate owner death", async () => {
+  test("native supervisor does not leak across owner death near leader wait", async () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-owner-death-"));
     const ownerScriptPath = resolve(fixtureRoot, "owner.cjs");
     writeFileSync(
       ownerScriptPath,
-      `const { spawn } = require("node:child_process"); const { writeFileSync } = require("node:fs"); const [boundaryPath, helperPidPath, leaderPidPath] = process.argv.slice(2); const helper = spawn(boundaryPath, ["--owner-pid", String(process.pid), process.execPath, "-e", "const { writeFileSync } = require('node:fs'); writeFileSync(process.env.DND_LEADER_PID_PATH, String(process.pid)); setInterval(() => {}, 1000);"], { env: { ...process.env, NODE_OPTIONS: "", DND_LEADER_PID_PATH: leaderPidPath }, stdio: "ignore" }); writeFileSync(helperPidPath, String(helper.pid)); process.exit(0);`,
+      `const { spawn } = require("node:child_process"); const { existsSync, writeFileSync } = require("node:fs"); const [boundaryPath, helperPidPath, leaderPidPath] = process.argv.slice(2); const helper = spawn(boundaryPath, ["--owner-pid", String(process.pid), process.execPath, "-e", "const { writeFileSync } = require('node:fs'); writeFileSync(process.env.DND_LEADER_PID_PATH, String(process.pid)); setInterval(() => {}, 1000);"], { env: { ...process.env, NODE_OPTIONS: "", DND_LEADER_PID_PATH: leaderPidPath }, stdio: "ignore" }); writeFileSync(helperPidPath, String(helper.pid)); const deadline = Date.now() + 2000; const waitForLeader = () => { if (existsSync(leaderPidPath)) { process.exit(0); } if (Date.now() >= deadline) { process.exit(2); } setTimeout(waitForLeader, 5); }; waitForLeader();`,
     );
     try {
-      for (let index = 0; index < 16; index += 1) {
+      for (let index = 0; index < 64; index += 1) {
         const helperPidPath = resolve(fixtureRoot, `helper-${index}.pid`);
         const leaderPidPath = resolve(fixtureRoot, `leader-${index}.pid`);
         const owner = spawn(
@@ -1281,7 +1344,7 @@ describe("RAW swarm runner boundaries", () => {
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
-  }, 20_000);
+  }, 40_000);
 
   test("runner reports a helper cleanup failure during signal termination", async () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-runner-failure-"));
