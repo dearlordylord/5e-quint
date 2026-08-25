@@ -1,12 +1,5 @@
 import { execFile } from "node:child_process";
-import {
-  chmod,
-  mkdir,
-  mkdtemp,
-  readFile,
-  rm,
-  writeFile,
-} from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
@@ -99,29 +92,25 @@ describe("public plugin publication package", () => {
     );
     generatedDirectories.push(temporaryDirectory);
     const output = join(temporaryDirectory, "package");
-    const environmentFile = await writeProductionEnvironment(
+    const release = await repositoryRelease();
+    const deploymentAttestation = await writeDeploymentAttestation(
       temporaryDirectory,
       "oracle.publisher.dev",
+      release,
     );
     const publicationAttestation =
       await writePublicationAttestation(temporaryDirectory);
-    const executionEnvironment =
-      await fakeDockerEnvironment(temporaryDirectory);
-    await execFileAsync(
-      process.execPath,
-      [
-        join(pluginRoot, "publication/prepare-package.mjs"),
-        "--environment-file",
-        environmentFile,
-        "--publication-attestation",
-        publicationAttestation,
-        "--registered-app-id",
-        "plugin_asdk_app_publication_test",
-        "--output",
-        output,
-      ],
-      { env: executionEnvironment },
-    );
+    await execFileAsync(process.execPath, [
+      join(pluginRoot, "publication/prepare-package.mjs"),
+      "--deployment-attestation",
+      deploymentAttestation,
+      "--publication-attestation",
+      publicationAttestation,
+      "--registered-app-id",
+      "plugin_asdk_app_publication_test",
+      "--output",
+      output,
+    ]);
 
     const manifest = JSON.parse(
       await readFile(join(output, ".codex-plugin/plugin.json"), "utf8"),
@@ -155,6 +144,11 @@ describe("public plugin publication package", () => {
     const submission = JSON.parse(
       await readFile(join(output, "portal-submission.json"), "utf8"),
     );
+    expect(submission.deployment).toEqual({
+      origin: "https://oracle.publisher.dev",
+      release,
+      verifiedAt: "2026-08-25T19:59:00Z",
+    });
     expect(submission.listing.supportURL).toBe(
       "https://oracle.publisher.dev/support",
     );
@@ -172,6 +166,10 @@ describe("public plugin publication package", () => {
       status: "provisionedInOpenAiPortal",
       mfaRequired: false,
     });
+    expect(submission.domainVerification).toMatchObject({
+      status: "verifiedInOpenAiPortal",
+      origin: "https://oracle.publisher.dev",
+    });
     expect(submission.dataHandling).toMatchObject({
       guestInactiveDays: GUEST_INACTIVITY_RETENTION_MS / DAY_MS,
       guestPressureCleanupMinimumInactiveHours:
@@ -186,33 +184,29 @@ describe("public plugin publication package", () => {
     );
     generatedDirectories.push(temporaryDirectory);
     const output = join(temporaryDirectory, "package");
-    const environmentFile = await writeProductionEnvironment(
+    const release = await repositoryRelease();
+    const deploymentAttestation = await writeDeploymentAttestation(
       temporaryDirectory,
       "oracle.example.test",
+      release,
     );
     const publicationAttestation =
       await writePublicationAttestation(temporaryDirectory);
-    const executionEnvironment =
-      await fakeDockerEnvironment(temporaryDirectory);
     await expect(
-      execFileAsync(
-        process.execPath,
-        [
-          join(pluginRoot, "publication/prepare-package.mjs"),
-          "--environment-file",
-          environmentFile,
-          "--publication-attestation",
-          publicationAttestation,
-          "--registered-app-id",
-          "plugin_asdk_app_publication_test",
-          "--output",
-          output,
-        ],
-        { env: executionEnvironment },
-      ),
+      execFileAsync(process.execPath, [
+        join(pluginRoot, "publication/prepare-package.mjs"),
+        "--deployment-attestation",
+        deploymentAttestation,
+        "--publication-attestation",
+        publicationAttestation,
+        "--registered-app-id",
+        "plugin_asdk_app_publication_test",
+        "--output",
+        output,
+      ]),
     ).rejects.toMatchObject({
       stderr: expect.stringContaining(
-        "Production configuration verification failed",
+        "deployment.origin must use a public non-placeholder hostname",
       ),
     });
   });
@@ -221,46 +215,42 @@ describe("public plugin publication package", () => {
 const HOUR_MS = 60 * 60 * 1_000;
 const DAY_MS = 24 * HOUR_MS;
 
-async function writeProductionEnvironment(
+async function writeDeploymentAttestation(
   directory: string,
   domain: string,
+  release: string,
 ): Promise<string> {
-  const path = join(directory, "production.env");
-  const stateDirectory = join(directory, "state/production");
-  const releaseDirectory = join(directory, "releases/production");
-  await mkdir(stateDirectory, { recursive: true });
-  await mkdir(releaseDirectory, { recursive: true });
+  const path = join(directory, "deployment-attestation.json");
   await writeFile(
     path,
-    [
-      "COMPOSE_PROJECT_NAME=dnd-oracle-production",
-      "DND_MCP_ENVIRONMENT=production",
-      `DND_MCP_DOMAIN=${domain}`,
-      "DND_MCP_PUBLISHER_NAME='Verified Publisher'",
-      "DND_MCP_LOOPBACK_PORT=28787",
-      `DND_MCP_CADDY_CONFIG_DIRECTORY=${join(directory, "caddy")}`,
-      `DND_MCP_OPERATIONS_DIRECTORY=${join(directory, "operations")}`,
-      `DND_MCP_SYSTEMD_DIRECTORY=${join(directory, "systemd")}`,
-      `DND_MCP_IMAGE=registry.publisher.dev/oracle@sha256:${"1".repeat(64)}`,
-      `DND_MCP_RELEASE=${"1".repeat(40)}`,
-      `DND_MCP_STATE_DIRECTORY=${stateDirectory}`,
-      `DND_MCP_RELEASE_DIRECTORY=${releaseDirectory}`,
-      "DND_MCP_MEMORY_LIMIT=1G",
-      "DND_MCP_METRICS_TOKEN=synthetic-test-token",
-      "DND_OPENAI_APPS_CHALLENGE=synthetic-domain-challenge",
-      `DND_OAUTH_RESOURCE_URL=https://${domain}/mcp`,
-      "DND_OAUTH_AUTHORIZATION_SERVER=https://auth.publisher.dev",
-      "DND_OAUTH_ISSUER=https://auth.publisher.dev",
-      "DND_OAUTH_AUDIENCE=dnd-oracle",
-      "DND_OAUTH_JWKS_URL=https://auth.publisher.dev/.well-known/jwks.json",
-      "DND_MCP_BUDGET_ALERT_RECIPIENT=operator@publisher.dev",
-      "DND_MCP_FIXED_HOST_MONTHLY_USD=12",
-      "DND_MCP_PUBLICATION_MODE=enabled",
-      "",
-    ].join("\n"),
+    `${JSON.stringify(
+      {
+        status: "verifiedLiveProduction",
+        environment: "production",
+        origin: `https://${domain}`,
+        publisherName: "Verified Publisher",
+        release,
+        domainChallenge: "servedExact",
+        oauthDiscovery: "verified",
+        publicSmoke: "passed",
+        verifiedAt: "2026-08-25T19:59:00Z",
+      },
+      null,
+      2,
+    )}\n`,
     "utf8",
   );
   return path;
+}
+
+async function repositoryRelease(): Promise<string> {
+  const { stdout } = await execFileAsync("git", [
+    "-C",
+    repositoryRoot,
+    "rev-parse",
+    "HEAD",
+  ]);
+  return stdout.trim();
 }
 
 async function writePublicationAttestation(directory: string): Promise<string> {
@@ -281,6 +271,12 @@ async function writePublicationAttestation(directory: string): Promise<string> {
           attestedAt: "2026-08-25T20:01:00Z",
           attestedBy: "synthetic-test-operator",
         },
+        domainVerification: {
+          status: "verifiedInOpenAiPortal",
+          origin: "https://oracle.publisher.dev",
+          verifiedAt: "2026-08-25T20:02:00Z",
+          attestedBy: "synthetic-test-operator",
+        },
       },
       null,
       2,
@@ -288,20 +284,6 @@ async function writePublicationAttestation(directory: string): Promise<string> {
     "utf8",
   );
   return path;
-}
-
-async function fakeDockerEnvironment(
-  directory: string,
-): Promise<NodeJS.ProcessEnv> {
-  const binaryDirectory = join(directory, "bin");
-  await mkdir(binaryDirectory, { recursive: true });
-  const docker = join(binaryDirectory, "docker");
-  await writeFile(docker, "#!/usr/bin/env bash\nexit 0\n", "utf8");
-  await chmod(docker, 0o755);
-  return {
-    ...process.env,
-    PATH: `${binaryDirectory}:${process.env.PATH ?? ""}`,
-  };
 }
 
 async function readJson(relativePath: string): Promise<unknown> {

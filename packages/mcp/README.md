@@ -126,13 +126,14 @@ provider-neutral OAuth configuration; a partial configuration fails startup:
 DND_OAUTH_RESOURCE_URL=https://oracle.example.test/mcp \
 DND_OAUTH_AUTHORIZATION_SERVER=https://identity.example.test \
 DND_OAUTH_ISSUER=https://identity.example.test \
-DND_OAUTH_AUDIENCE=dnd-oracle \
 DND_OAUTH_JWKS_URL=https://identity.example.test/.well-known/jwks.json \
 DND_PLAY_SESSION_DATABASE_PATH=/var/lib/dnd-oracle/play-sessions.sqlite \
   pnpm --filter @dnd/mcp serve:http
 ```
 
-The server publishes OAuth protected-resource metadata at
+The MCP resource URL is also the required access-token audience; it is one
+canonical resource identity rather than a separately configurable pair. The
+server publishes OAuth protected-resource metadata at
 `/.well-known/oauth-protected-resource`. It verifies token signature, issuer,
 audience, expiry, subject, and the `play-sessions` scope on every bearer
 request. The OAuth provider and hosting provider are not application owners and

@@ -89,7 +89,7 @@ case "$DND_MCP_PUBLICATION_MODE" in
   enabled)
     [[ "$DND_MCP_PUBLISHER_NAME" != "5e Quint developers" ]] || { echo "publication requires the verified publisher identity" >&2; exit 65; }
     [[ -n "${DND_OPENAI_APPS_CHALLENGE:-}" ]] || { echo "publication requires DND_OPENAI_APPS_CHALLENGE" >&2; exit 65; }
-    oauth=(DND_OAUTH_RESOURCE_URL DND_OAUTH_AUTHORIZATION_SERVER DND_OAUTH_ISSUER DND_OAUTH_AUDIENCE DND_OAUTH_JWKS_URL)
+    oauth=(DND_OAUTH_RESOURCE_URL DND_OAUTH_AUTHORIZATION_SERVER DND_OAUTH_ISSUER DND_OAUTH_JWKS_URL)
     for name in "${oauth[@]}"; do
       [[ -n "${!name:-}" ]] || { echo "publication requires $name" >&2; exit 65; }
     done

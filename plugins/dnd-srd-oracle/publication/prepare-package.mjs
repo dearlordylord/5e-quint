@@ -14,21 +14,16 @@ const HOUR_MS = 60 * 60 * 1_000;
 const DAY_MS = 24 * HOUR_MS;
 
 const options = parseOptions(process.argv.slice(2));
-const environmentFile = resolve(
-  requiredValue(options.environmentFile, "--environment-file"),
+const deployment = decodeDeploymentAttestation(
+  await readJson(
+    resolve(
+      requiredValue(options.deploymentAttestation, "--deployment-attestation"),
+    ),
+  ),
 );
-await verifyProductionConfiguration(environmentFile);
-const deployment = await readEnvironmentFile(environmentFile);
-if (
-  deployment.DND_MCP_ENVIRONMENT !== "production" ||
-  deployment.DND_MCP_PUBLICATION_MODE !== "enabled"
-) {
-  throw new Error(
-    "--environment-file must select production with publication mode enabled",
-  );
-}
-const origin = productionOrigin(deployment.DND_MCP_DOMAIN);
-const publisher = configuredPublisher(deployment.DND_MCP_PUBLISHER_NAME);
+await verifySourceRelease(deployment.release);
+const origin = productionOrigin(deployment.origin);
+const publisher = configuredPublisher(deployment.publisherName);
 const publicationAttestation = decodePublicationAttestation(
   await readJson(
     resolve(
@@ -42,6 +37,11 @@ const publicationAttestation = decodePublicationAttestation(
 if (publicationAttestation.publisherIdentity.name !== publisher) {
   throw new Error(
     "Attested publisher identity must exactly match DND_MCP_PUBLISHER_NAME",
+  );
+}
+if (publicationAttestation.domainVerification.origin !== deployment.origin) {
+  throw new Error(
+    "Portal-verified domain must exactly match the live production origin",
   );
 }
 const registeredAppId = registeredApplicationId(options.registeredAppId);
@@ -131,8 +131,14 @@ await writeJson(
   preparedManifest,
 );
 await writeJson(join(outputDirectory, "portal-submission.json"), {
+  deployment: {
+    origin: deployment.origin,
+    release: deployment.release,
+    verifiedAt: deployment.verifiedAt,
+  },
   publisherIdentity: publicationAttestation.publisherIdentity,
   reviewerAccess: publicationAttestation.reviewerAccess,
+  domainVerification: publicationAttestation.domainVerification,
   registeredAppId,
   listing: {
     ...source.listing,
@@ -161,7 +167,7 @@ process.stdout.write(`${outputDirectory}\n`);
 function parseOptions(args) {
   const parsed = {};
   const optionKeyByName = {
-    "--environment-file": "environmentFile",
+    "--deployment-attestation": "deploymentAttestation",
     "--publication-attestation": "publicationAttestation",
     "--registered-app-id": "registeredAppId",
     "--output": "output",
@@ -171,7 +177,7 @@ function parseOptions(args) {
     const value = args[index + 1];
     if (!(name in optionKeyByName) || value === undefined) {
       throw new Error(
-        "usage: prepare-package.mjs --environment-file FILE --publication-attestation FILE --registered-app-id ID --output DIRECTORY",
+        "usage: prepare-package.mjs --deployment-attestation FILE --publication-attestation FILE --registered-app-id ID --output DIRECTORY",
       );
     }
     parsed[optionKeyByName[name]] = value;
@@ -179,25 +185,11 @@ function parseOptions(args) {
   return parsed;
 }
 
-async function verifyProductionConfiguration(environmentFile) {
-  try {
-    await execFileAsync(
-      join(repositoryDirectory, "operations/public-mcp/verify-config.sh"),
-      [environmentFile],
-    );
-  } catch (error) {
-    const detail =
-      typeof error?.stderr === "string" && error.stderr.trim() !== ""
-        ? error.stderr.trim()
-        : "configuration verifier did not complete successfully";
-    throw new Error(`Production configuration verification failed: ${detail}`);
-  }
-}
-
 function decodePublicationAttestation(value) {
   const attestation = exactRecord(value, "publication attestation", [
     "publisherIdentity",
     "reviewerAccess",
+    "domainVerification",
   ]);
   const publisherIdentity = exactRecord(
     attestation.publisherIdentity,
@@ -208,6 +200,11 @@ function decodePublicationAttestation(value) {
     attestation.reviewerAccess,
     "reviewerAccess",
     ["status", "mfaRequired", "attestedAt", "attestedBy"],
+  );
+  const domainVerification = exactRecord(
+    attestation.domainVerification,
+    "domainVerification",
+    ["status", "origin", "verifiedAt", "attestedBy"],
   );
   return {
     publisherIdentity: {
@@ -246,7 +243,102 @@ function decodePublicationAttestation(value) {
         "reviewerAccess.attestedBy",
       ),
     },
+    domainVerification: {
+      status: literal(
+        domainVerification.status,
+        "verifiedInOpenAiPortal",
+        "domainVerification.status",
+      ),
+      origin: nonEmptyString(
+        domainVerification.origin,
+        "domainVerification.origin",
+      ),
+      verifiedAt: isoTimestamp(
+        domainVerification.verifiedAt,
+        "domainVerification.verifiedAt",
+      ),
+      attestedBy: nonEmptyString(
+        domainVerification.attestedBy,
+        "domainVerification.attestedBy",
+      ),
+    },
   };
+}
+
+function decodeDeploymentAttestation(value) {
+  const deployment = exactRecord(value, "deployment attestation", [
+    "status",
+    "environment",
+    "origin",
+    "publisherName",
+    "release",
+    "domainChallenge",
+    "oauthDiscovery",
+    "publicSmoke",
+    "verifiedAt",
+  ]);
+  return {
+    status: literal(
+      deployment.status,
+      "verifiedLiveProduction",
+      "deployment.status",
+    ),
+    environment: literal(
+      deployment.environment,
+      "production",
+      "deployment.environment",
+    ),
+    origin: nonEmptyString(deployment.origin, "deployment.origin"),
+    publisherName: nonEmptyString(
+      deployment.publisherName,
+      "deployment.publisherName",
+    ),
+    release: gitRelease(deployment.release, "deployment.release"),
+    domainChallenge: literal(
+      deployment.domainChallenge,
+      "servedExact",
+      "deployment.domainChallenge",
+    ),
+    oauthDiscovery: literal(
+      deployment.oauthDiscovery,
+      "verified",
+      "deployment.oauthDiscovery",
+    ),
+    publicSmoke: literal(
+      deployment.publicSmoke,
+      "passed",
+      "deployment.publicSmoke",
+    ),
+    verifiedAt: isoTimestamp(deployment.verifiedAt, "deployment.verifiedAt"),
+  };
+}
+
+async function verifySourceRelease(expectedRelease) {
+  const { stdout } = await execFileAsync("git", [
+    "-C",
+    repositoryDirectory,
+    "rev-parse",
+    "HEAD",
+  ]);
+  if (stdout.trim() !== expectedRelease) {
+    throw new Error(
+      "deployment.release must exactly match the package source checkout",
+    );
+  }
+  try {
+    await execFileAsync("git", [
+      "-C",
+      repositoryDirectory,
+      "diff",
+      "--quiet",
+      "HEAD",
+      "--",
+    ]);
+  } catch {
+    throw new Error(
+      "the package source checkout must have no uncommitted tracked changes",
+    );
+  }
 }
 
 function decodeSubmissionSource(value) {
@@ -542,10 +634,12 @@ function isoTimestamp(value, label) {
   return timestamp;
 }
 
-function productionOrigin(domain) {
-  const hostname = requiredValue(domain, "DND_MCP_DOMAIN").toLowerCase();
-  const url = new URL(`https://${hostname}`);
+function productionOrigin(value) {
+  const configuredOrigin = requiredValue(value, "deployment.origin");
+  const url = new URL(configuredOrigin);
+  const hostname = url.hostname.toLowerCase();
   if (
+    url.protocol !== "https:" ||
     url.hostname !== hostname ||
     url.username !== "" ||
     url.password !== "" ||
@@ -553,7 +647,7 @@ function productionOrigin(domain) {
     url.search !== "" ||
     url.hash !== ""
   ) {
-    throw new Error("DND_MCP_DOMAIN must contain only one HTTPS hostname");
+    throw new Error("deployment.origin must be one canonical HTTPS origin");
   }
   const reservedSuffixes = [
     ".test",
@@ -573,7 +667,9 @@ function productionOrigin(domain) {
         hostname === domainName || hostname.endsWith(`.${domainName}`),
     )
   ) {
-    throw new Error("DND_MCP_DOMAIN must be a public non-placeholder hostname");
+    throw new Error(
+      "deployment.origin must use a public non-placeholder hostname",
+    );
   }
   return url;
 }
@@ -602,7 +698,7 @@ function sameOriginEndpoint(path, origin) {
 }
 
 function configuredPublisher(value) {
-  const publisher = requiredValue(value, "DND_MCP_PUBLISHER_NAME");
+  const publisher = requiredValue(value, "deployment.publisherName");
   if (
     publisher === "5e Quint developers" ||
     publisher.startsWith("replace-with-") ||
@@ -610,10 +706,18 @@ function configuredPublisher(value) {
     publisher.includes(">")
   ) {
     throw new Error(
-      "DND_MCP_PUBLISHER_NAME must be the exact configured publisher identity",
+      "deployment.publisherName must be the exact verified publisher identity",
     );
   }
   return publisher;
+}
+
+function gitRelease(value, label) {
+  const release = nonEmptyString(value, label);
+  if (!/^[0-9a-f]{40}$/u.test(release)) {
+    throw new Error(`${label} must be a 40-character Git release`);
+  }
+  return release;
 }
 
 function registeredApplicationId(value) {
@@ -654,39 +758,6 @@ async function requireEmptyOutput(path) {
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, "utf8"));
-}
-
-async function readEnvironmentFile(path) {
-  const values = {};
-  for (const [index, rawLine] of (await readFile(path, "utf8"))
-    .split(/\r?\n/u)
-    .entries()) {
-    const line = rawLine.trim();
-    if (line === "" || line.startsWith("#")) continue;
-    const separator = line.indexOf("=");
-    if (separator < 1) {
-      throw new Error(`Invalid environment assignment at ${path}:${index + 1}`);
-    }
-    const name = line.slice(0, separator).trim();
-    if (!/^[A-Z][A-Z0-9_]*$/u.test(name) || name in values) {
-      throw new Error(
-        `Invalid or duplicate environment name at ${path}:${index + 1}`,
-      );
-    }
-    values[name] = unquoteEnvironmentValue(line.slice(separator + 1).trim());
-  }
-  return values;
-}
-
-function unquoteEnvironmentValue(value) {
-  if (
-    value.length >= 2 &&
-    ((value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'")))
-  ) {
-    return value.slice(1, -1);
-  }
-  return value;
 }
 
 async function writeJson(path, value) {

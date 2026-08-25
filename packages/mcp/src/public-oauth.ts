@@ -27,7 +27,6 @@ const PublicMcpOAuthConfigurationSchema = Schema.Struct({
   resource: Schema.URL,
   authorizationServer: Schema.URL,
   issuer: Schema.NonEmptyTrimmedString,
-  audience: Schema.NonEmptyTrimmedString,
   jwksUrl: Schema.URL,
 });
 
@@ -44,7 +43,7 @@ export function createPublicMcpOAuth(
       message: configuration.left.message,
     });
   }
-  const { resource, authorizationServer, issuer, audience, jwksUrl } =
+  const { resource, authorizationServer, issuer, jwksUrl } =
     configuration.right;
   const keySet = createRemoteJWKSet(jwksUrl);
   const resourceMetadataUrl = new URL(
@@ -61,7 +60,10 @@ export function createPublicMcpOAuth(
     },
     async verifyAccessToken(token) {
       try {
-        const verified = await jwtVerify(token, keySet, { issuer, audience });
+        const verified = await jwtVerify(token, keySet, {
+          issuer,
+          audience: resource.toString(),
+        });
         const principalId = oauthPrincipalId(issuer, verified.payload.sub);
         const scopes = tokenScopes(
           verified.payload.scope,
@@ -104,7 +106,6 @@ export function createPublicMcpOAuthFromEnvironment(
       environment.DND_OAUTH_AUTHORIZATION_SERVER,
     ),
     issuer: nonEmptyEnvironmentValue(environment.DND_OAUTH_ISSUER),
-    audience: nonEmptyEnvironmentValue(environment.DND_OAUTH_AUDIENCE),
     jwksUrl: nonEmptyEnvironmentValue(environment.DND_OAUTH_JWKS_URL),
   };
   if (Object.values(input).every((value) => value === undefined)) {

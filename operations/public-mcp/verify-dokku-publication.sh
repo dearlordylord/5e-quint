@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly expected_scope="play-sessions"
+
+if (( $# != 1 )); then
+  echo "usage: $0 <deployment-attestation-output>" >&2
+  exit 64
+fi
+
+output_file="$1"
+[[ ! -e "$output_file" ]] || {
+  echo "Refusing to replace deployment attestation: $output_file" >&2
+  exit 73
+}
+
+directory="$(cd "$(dirname "$0")" && pwd)"
+repository_root="$(cd "$directory/../.." && pwd)"
+# shellcheck source=dokku-environment.sh
+source "$directory/dokku-environment.sh"
+load_dokku_environment production
+readonly expected_resource="$public_origin/mcp"
+cd "$repository_root"
+
+for command in curl jq pnpm ssh; do
+  command -v "$command" >/dev/null || {
+    echo "Required command is unavailable: $command" >&2
+    exit 69
+  }
+done
+
+read_config() {
+  ssh "dokku@$dokku_host" config:get "$dokku_app" "$1"
+}
+
+environment="$(read_config DND_MCP_ENVIRONMENT)"
+publication_mode="$(read_config DND_MCP_PUBLICATION_MODE)"
+publisher_name="$(read_config DND_MCP_PUBLISHER_NAME)"
+release="$(read_config DND_MCP_RELEASE)"
+resource="$(read_config DND_OAUTH_RESOURCE_URL)"
+authorization_server="$(read_config DND_OAUTH_AUTHORIZATION_SERVER)"
+issuer="$(read_config DND_OAUTH_ISSUER)"
+jwks_url="$(read_config DND_OAUTH_JWKS_URL)"
+challenge="$(read_config DND_OPENAI_APPS_CHALLENGE)"
+
+[[ "$environment" == production && "$publication_mode" == enabled ]] || {
+  echo "$dokku_app is not in production publication mode" >&2
+  exit 65
+}
+[[ -n "$publisher_name" && "$publisher_name" != "5e Quint developers" ]] || {
+  echo "$dokku_app does not use a verified publisher name" >&2
+  exit 65
+}
+[[ "$release" =~ ^[0-9a-f]{40}$ && "$resource" == "$expected_resource" ]] || {
+  echo "$dokku_app has invalid release or resource identity" >&2
+  exit 65
+}
+[[ -n "$authorization_server" && -n "$issuer" && -n "$jwks_url" && -n "$challenge" ]] || {
+  echo "$dokku_app has incomplete OAuth or domain-challenge configuration" >&2
+  exit 65
+}
+
+protected_resource="$(curl --fail --silent --show-error "$public_origin/.well-known/oauth-protected-resource")"
+jq -e \
+  --arg resource "$expected_resource" \
+  --arg authorization_server "$authorization_server" \
+  --arg scope "$expected_scope" \
+  '.resource == $resource and
+   .authorization_servers == [$authorization_server] and
+   (.scopes_supported | index($scope) != null)' \
+  <<<"$protected_resource" >/dev/null
+
+authorization_server_base="${authorization_server%/}"
+authorization_metadata=""
+for metadata_path in /.well-known/oauth-authorization-server /.well-known/openid-configuration; do
+  if candidate="$(curl --fail --silent --show-error "$authorization_server_base$metadata_path" 2>/dev/null)"; then
+    if jq -e --arg issuer "$issuer" '.issuer == $issuer' <<<"$candidate" >/dev/null; then
+      authorization_metadata="$candidate"
+      break
+    fi
+  fi
+done
+[[ -n "$authorization_metadata" ]] || {
+  echo "Authorization server exposes no matching OAuth or OpenID metadata" >&2
+  exit 65
+}
+jq -e \
+  '(.authorization_endpoint | startswith("https://")) and
+   (.token_endpoint | startswith("https://")) and
+   (.code_challenge_methods_supported | index("S256") != null) and
+   (.scopes_supported | index("play-sessions") != null) and
+   ([.token_endpoint_auth_methods_supported[]] |
+      any(. == "none" or . == "private_key_jwt" or
+          . == "client_secret_post" or . == "client_secret_basic")) and
+   ((.client_id_metadata_document_supported == true) or
+    (.registration_endpoint | type == "string" and startswith("https://")))' \
+  <<<"$authorization_metadata" >/dev/null
+
+curl --fail --silent --show-error "$jwks_url" |
+  jq -e '.keys | type == "array" and length > 0' >/dev/null
+[[ "$(curl --fail --silent --show-error "$public_origin/.well-known/openai-apps-challenge")" == "$challenge" ]] || {
+  echo "OpenAI domain challenge response does not exactly match configuration" >&2
+  exit 65
+}
+
+DND_MCP_PUBLISHER_NAME="$publisher_name" \
+  DND_MCP_PUBLICATION_MODE="$publication_mode" \
+  DND_OPENAI_APPS_CHALLENGE="$challenge" \
+  "$directory/smoke-origin.sh" "$public_origin" "$release" "$environment"
+
+mkdir -p "$(dirname "$output_file")"
+jq -n \
+  --arg origin "$public_origin" \
+  --arg publisher_name "$publisher_name" \
+  --arg release "$release" \
+  --arg verified_at "$(date --utc +%Y-%m-%dT%H:%M:%SZ)" \
+  '{
+    status: "verifiedLiveProduction",
+    environment: "production",
+    origin: $origin,
+    publisherName: $publisher_name,
+    release: $release,
+    domainChallenge: "servedExact",
+    oauthDiscovery: "verified",
+    publicSmoke: "passed",
+    verifiedAt: $verified_at
+  }' >"$output_file"
+
+echo "Dokku publication verification passed; wrote $output_file without credentials."

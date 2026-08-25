@@ -2,7 +2,9 @@
   "private": true,
   "packageManager": "pnpm@10.29.3",
   "scripts": {
-    "deploy:mcp:dokku-staging": "operations/public-mcp/deploy-dokku-staging.sh",
+    "deploy:mcp:dokku-staging": "operations/public-mcp/deploy-dokku.sh staging",
+    "deploy:mcp:dokku-production": "operations/public-mcp/deploy-dokku.sh production",
+    "verify:mcp:dokku-publication": "operations/public-mcp/verify-dokku-publication.sh",
     "raw-swarm:catalogue": "mise exec -- pnpm exec tsx scripts/raw-swarm/scenario-catalogue-cli.ts",
     "prepare": "husky",
     "dev": "turbo dev --filter=@dnd/app",

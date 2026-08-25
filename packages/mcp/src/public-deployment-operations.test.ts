@@ -228,7 +228,7 @@ describe("public MCP deployment operations", () => {
       expect(
         runVerification(environmentFile, binaryDirectory, commandLog).status,
       ).toBe(65);
-      const completeOAuth = `${partialOAuth}DND_OAUTH_AUTHORIZATION_SERVER=https://identity.oracle.invalid\nDND_OAUTH_ISSUER=https://identity.oracle.invalid\nDND_OAUTH_AUDIENCE=dnd-oracle\nDND_OAUTH_JWKS_URL=https://identity.oracle.invalid/jwks\n`;
+      const completeOAuth = `${partialOAuth}DND_OAUTH_AUTHORIZATION_SERVER=https://identity.oracle.invalid\nDND_OAUTH_ISSUER=https://identity.oracle.invalid\nDND_OAUTH_JWKS_URL=https://identity.oracle.invalid/jwks\n`;
       writeFileSync(environmentFile, completeOAuth);
       expect(
         runVerification(environmentFile, binaryDirectory, commandLog).status,
@@ -282,6 +282,51 @@ describe("public MCP deployment operations", () => {
       expect(alert.stdout).toContain('"recipient":"operator@example.invalid"');
       writeFileSync(measurementPath, '{"requests":-1}\n');
       expect(runBudgetCheck(policyPath, measurementPath).status).toBe(1);
+    } finally {
+      rmSync(temporaryDirectory, { recursive: true, force: true });
+    }
+  });
+
+  test("emits a credential-free attestation after live Dokku publication checks", () => {
+    const temporaryDirectory = mkdtempSync(
+      join(tmpdir(), "dnd-dokku-publication-"),
+    );
+    const binaryDirectory = join(temporaryDirectory, "bin");
+    const commandLog = join(temporaryDirectory, "commands.log");
+    const attestationPath = join(
+      temporaryDirectory,
+      "deployment-attestation.json",
+    );
+    mkdirSync(binaryDirectory);
+    try {
+      installDokkuPublicationSsh(binaryDirectory, commandLog);
+      installDokkuPublicationCurl(binaryDirectory, commandLog);
+      installFakeCommand(binaryDirectory, "pnpm", commandLog);
+      const result = spawnSync(
+        join(operationsDirectory, "verify-dokku-publication.sh"),
+        [attestationPath],
+        {
+          cwd: repositoryRoot,
+          env: {
+            ...process.env,
+            PATH: `${binaryDirectory}:${process.env.PATH ?? ""}`,
+          },
+          encoding: "utf8",
+        },
+      );
+      expect(result).toMatchObject({ status: 0 });
+      const serialized = readFileSync(attestationPath, "utf8");
+      expect(JSON.parse(serialized)).toMatchObject({
+        status: "verifiedLiveProduction",
+        environment: "production",
+        origin: "https://dnd-oracle.apps.loskutoff.com",
+        publisherName: "Verified Publisher",
+        release: "1".repeat(40),
+        domainChallenge: "servedExact",
+        oauthDiscovery: "verified",
+        publicSmoke: "passed",
+      });
+      expect(serialized).not.toContain("synthetic-domain-challenge");
     } finally {
       rmSync(temporaryDirectory, { recursive: true, force: true });
     }
@@ -400,6 +445,65 @@ function installFakeCommand(
       ...(consumeInput ? ["cat >/dev/null"] : []),
       ...(output === "" ? [] : [`printf '%s\\n' '${output}'`]),
       `exit ${exitStatus}`,
+      "",
+    ].join("\n"),
+  );
+  chmodSync(path, 0o755);
+}
+
+function installDokkuPublicationSsh(
+  binaryDirectory: string,
+  commandLog: string,
+): void {
+  const path = join(binaryDirectory, "ssh");
+  writeFileSync(
+    path,
+    [
+      "#!/usr/bin/env bash",
+      "set -euo pipefail",
+      "printf '%s %s\\n' 'ssh' \"$*\" >>'" + commandLog + "'",
+      'case "$*" in',
+      "  *DND_MCP_ENVIRONMENT) value=production ;;",
+      "  *DND_MCP_PUBLICATION_MODE) value=enabled ;;",
+      "  *DND_MCP_PUBLISHER_NAME) value='Verified Publisher' ;;",
+      "  *DND_MCP_RELEASE) value='1111111111111111111111111111111111111111' ;;",
+      "  *DND_OAUTH_RESOURCE_URL) value='https://dnd-oracle.apps.loskutoff.com/mcp' ;;",
+      "  *DND_OAUTH_AUTHORIZATION_SERVER) value='https://identity.example.invalid' ;;",
+      "  *DND_OAUTH_ISSUER) value='https://identity.example.invalid' ;;",
+      "  *DND_OAUTH_JWKS_URL) value='https://identity.example.invalid/jwks' ;;",
+      "  *DND_OPENAI_APPS_CHALLENGE) value='synthetic-domain-challenge' ;;",
+      "  *) exit 1 ;;",
+      "esac",
+      "printf '%s\\n' \"$value\"",
+      "",
+    ].join("\n"),
+  );
+  chmodSync(path, 0o755);
+}
+
+function installDokkuPublicationCurl(
+  binaryDirectory: string,
+  commandLog: string,
+): void {
+  const path = join(binaryDirectory, "curl");
+  writeFileSync(
+    path,
+    [
+      "#!/usr/bin/env bash",
+      "set -euo pipefail",
+      "printf '%s %s\\n' 'curl' \"$*\" >>'" + commandLog + "'",
+      'url="${!#}"',
+      'case "$url" in',
+      '  */health) value=\'{"status":"ok"}\' ;;',
+      '  */version) value=\'{"environment":"production","release":"1111111111111111111111111111111111111111","publisher":"Verified Publisher"}\' ;;',
+      '  */.well-known/oauth-protected-resource) value=\'{"resource":"https://dnd-oracle.apps.loskutoff.com/mcp","authorization_servers":["https://identity.example.invalid"],"scopes_supported":["play-sessions"]}\' ;;',
+      '  */.well-known/oauth-authorization-server) value=\'{"issuer":"https://identity.example.invalid","authorization_endpoint":"https://identity.example.invalid/authorize","token_endpoint":"https://identity.example.invalid/token","registration_endpoint":"https://identity.example.invalid/register","code_challenge_methods_supported":["S256"],"token_endpoint_auth_methods_supported":["none"],"scopes_supported":["play-sessions"]}\' ;;',
+      '  */jwks) value=\'{"keys":[{"kty":"RSA"}]}\' ;;',
+      "  */.well-known/openai-apps-challenge) value='synthetic-domain-challenge' ;;",
+      "  */|*/support|*/privacy|*/terms) value='<html></html>' ;;",
+      "  *) exit 22 ;;",
+      "esac",
+      "printf '%s\\n' \"$value\"",
       "",
     ].join("\n"),
   );
