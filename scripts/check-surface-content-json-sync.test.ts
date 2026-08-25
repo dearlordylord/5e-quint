@@ -713,4 +713,112 @@ in statBlock`,
       rmSync(contentDir, { force: true, recursive: true });
     }
   });
+
+  it("resolves the latest visible shadowing binding", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-shadowed-binding-family-test-"),
+    );
+
+    try {
+      writeFileSync(
+        join(contentDir, "shadowed-stat-block.dhall"),
+        [
+          'let statBlock = { kind = "other" }',
+          'let statBlock = { kind = "statBlock" }',
+          "in statBlock",
+        ].join("\n"),
+      );
+      writeFileSync(join(contentDir, "shadowed-stat-block.json"), validRecord);
+
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        compile: () => "synthetic compile failure",
+      });
+
+      expect(result.issues).toContainEqual({
+        kind: "peer-family-mismatch",
+        source: "shadowed-stat-block.dhall",
+        peer: "shadowed-stat-block.json",
+        expectedRecordKind: "statBlock",
+        actualRecordKind: "other",
+      });
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
+
+  it("resolves parenthesized local aliases", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-aliased-binding-family-test-"),
+    );
+
+    try {
+      writeFileSync(
+        join(contentDir, "aliased-stat-block.dhall"),
+        [
+          'let record = ({ kind = "statBlock" })',
+          "let statBlock = record",
+          "in statBlock",
+        ].join("\n"),
+      );
+      writeFileSync(join(contentDir, "aliased-stat-block.json"), validRecord);
+
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        compile: () => "synthetic compile failure",
+      });
+
+      expect(result.issues).toContainEqual({
+        kind: "peer-family-mismatch",
+        source: "aliased-stat-block.dhall",
+        peer: "aliased-stat-block.json",
+        expectedRecordKind: "statBlock",
+        actualRecordKind: "other",
+      });
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
+
+  it("keeps known peer family ownership when source text is unresolved", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-unresolved-peer-family-test-"),
+    );
+
+    try {
+      writeFileSync(join(contentDir, "unresolved.dhall"), "unresolved");
+      writeFileSync(
+        join(contentDir, "unresolved.json"),
+        '{"kind":"statBlock"}',
+      );
+
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        compile: (_sourcePath, outputPath) => {
+          writeFileSync(outputPath, '{"kind":"statBlock"}');
+          return undefined;
+        },
+      });
+
+      expect(result.peerObservations).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            tag: "generated-peer-failed",
+            reason: "decode",
+            recordKind: "statBlock",
+          }),
+          expect.objectContaining({
+            tag: "committed-peer-failed",
+            reason: "decode",
+            recordKind: "statBlock",
+          }),
+        ]),
+      );
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
 });
