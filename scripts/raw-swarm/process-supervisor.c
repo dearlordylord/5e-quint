@@ -186,6 +186,7 @@ static bool dnd_test_inventory_failure_forever = false;
 static bool dnd_test_proof_failure_forever = false;
 static bool dnd_test_clock_failure_forever = false;
 static bool dnd_test_preflight_failure_forever = false;
+static bool dnd_test_cyclic_parent_forever = false;
 
 static int read_test_failure_count(const char *name) {
   const char *value = getenv(name);
@@ -220,6 +221,8 @@ static void configure_test_failure_injection(void) {
       test_failure_is_forever("DND_SUPERVISOR_TEST_CLOCK_FAILURES");
   dnd_test_preflight_failure_forever =
       test_failure_is_forever("DND_SUPERVISOR_TEST_PREFLIGHT_FAILURES");
+  dnd_test_cyclic_parent_forever =
+      test_failure_is_forever("DND_SUPERVISOR_TEST_CYCLIC_PARENT");
 }
 #endif
 
@@ -666,6 +669,10 @@ static bool process_vanished(pid_t process_id) {
 
 static int read_process_parent(pid_t process_id, pid_t *parent_id) {
 #ifdef DND_SUPERVISOR_TEST_HOOKS
+  if (dnd_test_command_launched && dnd_test_cyclic_parent_forever) {
+    *parent_id = process_id;
+    return 0;
+  }
   if (dnd_test_command_launched &&
       (dnd_test_proof_failure_forever || dnd_test_proof_failures_remaining > 0)) {
     if (dnd_test_proof_failures_remaining > 0)
@@ -725,8 +732,10 @@ static int process_is_descendant(pid_t process_id, pid_t supervisor_id) {
     /* A process whose parent is outside this PID namespace is reported with
      * PPid 0. It is a valid root relation, but cannot be below this positive
      * supervisor PID. */
-    if (parent_id == current || parent_id == 0)
-      return DND_PROCESS_NOT_DESCENDANT;
+    /* A process reporting itself as its own parent is malformed/cyclic
+     * evidence, not proof that it is unrelated to this supervisor. */
+    if (parent_id == current) return DND_PROCESS_PROOF_FAILURE;
+    if (parent_id == 0) return DND_PROCESS_NOT_DESCENDANT;
     current = parent_id;
   }
   return DND_PROCESS_PROOF_FAILURE;

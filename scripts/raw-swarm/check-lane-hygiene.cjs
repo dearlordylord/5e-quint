@@ -3,7 +3,6 @@ const { existsSync, readdirSync, readFileSync, statSync } = require("node:fs");
 const {
   basename,
   dirname,
-  extname,
   join,
   relative,
   resolve,
@@ -190,29 +189,44 @@ const sourceResolutionSuffixes = Object.freeze([
 function isRegularFile(path) {
   try {
     return statSync(path).isFile();
-  } catch {
-    return false;
+  } catch (error) {
+    if (
+      error !== null &&
+      typeof error === "object" &&
+      (error.code === "ENOENT" || error.code === "ENOTDIR")
+    ) {
+      return false;
+    }
+    const code =
+      error !== null && typeof error === "object" && "code" in error
+        ? String(error.code)
+        : "unknown";
+    throw new Error(
+      `Could not inspect deterministic source candidate ${path} (${code}): ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
-function extensionlessInternalImportCandidates(sourcePath, specifier) {
-  const candidate = resolve(dirname(sourcePath), specifier);
-  const candidates = [
-    candidate,
-    ...sourceResolutionSuffixes.flatMap((extension) => [
-      `${candidate}${extension}`,
-      join(candidate, `index${extension}`),
-    ]),
-  ];
-  return candidates.filter(isRegularFile);
+function hasSupportedSourceExtension(path) {
+  return SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS.some((extension) =>
+    path.endsWith(extension),
+  );
+}
+
+function sourceCandidatesForPath(candidate) {
+  const candidates = sourceResolutionSuffixes.flatMap((extension) => [
+    `${candidate}${extension}`,
+    join(candidate, `index${extension}`),
+  ]);
+  return [...new Set(candidates)].filter(isRegularFile);
 }
 
 function resolveInternalImport(sourcePath, specifier) {
   const candidate = resolve(dirname(sourcePath), specifier);
-  if (extname(candidate) !== "") {
+  if (hasSupportedSourceExtension(candidate)) {
     return isRegularFile(candidate) ? [candidate] : [];
   }
-  return extensionlessInternalImportCandidates(sourcePath, specifier);
+  return sourceCandidatesForPath(candidate);
 }
 
 function repositoryOwnedPath(path) {
@@ -232,49 +246,52 @@ function readJsonFile(path) {
   }
 }
 
-function sourcePathForTarget(target) {
-  if (typeof target !== "string") return undefined;
+function sourcePathsForTarget(target) {
+  if (typeof target !== "string") return [];
   const candidate = resolve(target);
-  if (!repositoryOwnedPath(candidate)) return undefined;
-  for (const extension of sourceResolutionSuffixes) {
-    const path = `${candidate}${extension}`;
-    if (existsSync(path)) return path;
+  if (!repositoryOwnedPath(candidate)) return [];
+  if (hasSupportedSourceExtension(candidate)) {
+    return isRegularFile(candidate) ? [candidate] : [];
   }
-  for (const extension of sourceResolutionSuffixes) {
-    const path = join(candidate, `index${extension}`);
-    if (existsSync(path)) return path;
-  }
-  return undefined;
+  return sourceCandidatesForPath(candidate);
 }
 
 function targetFromPackageExports(exportsValue, subpath) {
-  if (typeof exportsValue === "string") return exportsValue;
+  if (typeof exportsValue === "string") return [exportsValue];
   if (Array.isArray(exportsValue)) {
-    for (const candidate of exportsValue) {
-      const target = targetFromPackageExports(candidate, subpath);
-      if (target !== undefined) return target;
-    }
-    return undefined;
+    return [
+      ...new Set(
+        exportsValue.flatMap((candidate) =>
+          targetFromPackageExports(candidate, subpath),
+        ),
+      ),
+    ];
   }
   if (exportsValue === null || typeof exportsValue !== "object") {
-    return undefined;
+    return [];
   }
+  const targets = [];
   if (Object.hasOwn(exportsValue, subpath)) {
-    return targetFromPackageExports(exportsValue[subpath], subpath);
+    targets.push(...targetFromPackageExports(exportsValue[subpath], subpath));
   }
   for (const [key, value] of Object.entries(exportsValue)) {
     if (key.endsWith("/*") && subpath.startsWith(key.slice(0, -1))) {
-      const target = targetFromPackageExports(value, subpath);
-      return target?.replaceAll("*", subpath.slice(key.length - 1));
+      const suffix = subpath.slice(key.length - 1);
+      targets.push(
+        ...targetFromPackageExports(value, subpath).map((target) =>
+          target.replaceAll("*", suffix),
+        ),
+      );
     }
   }
   for (const condition of ["types", "import", "default", "node"]) {
     if (Object.hasOwn(exportsValue, condition)) {
-      const target = targetFromPackageExports(exportsValue[condition], subpath);
-      if (target !== undefined) return target;
+      targets.push(
+        ...targetFromPackageExports(exportsValue[condition], subpath),
+      );
     }
   }
-  return undefined;
+  return [...new Set(targets)];
 }
 
 function workspacePackageRecords() {
@@ -303,20 +320,22 @@ function workspacePackageRecords() {
 const workspacePackages = workspacePackageRecords();
 
 function workspacePackageImportPath(specifier) {
+  const sourcePaths = [];
   for (const [packageName, record] of workspacePackages) {
     if (specifier !== packageName && !specifier.startsWith(`${packageName}/`)) {
       continue;
     }
     const suffix = specifier.slice(packageName.length);
     const subpath = suffix.length === 0 ? "." : `.${suffix}`;
-    const target =
-      targetFromPackageExports(record.exports, subpath) ??
-      (subpath === "." ? "./src/index.ts" : undefined);
-    if (target === undefined) continue;
-    const sourcePath = sourcePathForTarget(resolve(record.root, target));
-    if (sourcePath !== undefined) return sourcePath;
+    const targets = targetFromPackageExports(record.exports, subpath);
+    if (targets.length === 0 && subpath === ".") {
+      targets.push("./src/index.ts");
+    }
+    for (const target of targets) {
+      sourcePaths.push(...sourcePathsForTarget(resolve(record.root, target)));
+    }
   }
-  return undefined;
+  return [...new Set(sourcePaths)];
 }
 
 function workspaceTsconfigPathMaps() {
@@ -353,7 +372,8 @@ function workspaceTsconfigImportPath(sourcePath, specifier) {
   const config = workspaceTsconfigMaps
     .filter(({ directory }) => pathIsInside(sourcePath, directory))
     .sort((left, right) => right.directory.length - left.directory.length)[0];
-  if (config === undefined) return undefined;
+  if (config === undefined) return [];
+  const sourcePaths = [];
   for (const [alias, targets] of Object.entries(config.paths)) {
     const aliasPrefix = alias.endsWith("/*") ? alias.slice(0, -1) : alias;
     const matches = alias.endsWith("/*")
@@ -366,20 +386,20 @@ function workspaceTsconfigImportPath(sourcePath, specifier) {
     for (const target of targets) {
       if (typeof target !== "string") continue;
       const targetPath = target.replaceAll("*", suffix);
-      const sourceTarget = sourcePathForTarget(
+      const sourceTargets = sourcePathsForTarget(
         resolve(config.directory, targetPath),
       );
-      if (sourceTarget !== undefined) return sourceTarget;
+      sourcePaths.push(...sourceTargets);
     }
   }
-  return undefined;
+  return [...new Set(sourcePaths)];
 }
 
 function workspaceImportPath(sourcePath, specifier) {
-  return (
-    workspaceTsconfigImportPath(sourcePath, specifier) ??
-    workspacePackageImportPath(specifier)
-  );
+  const tsconfigPaths = workspaceTsconfigImportPath(sourcePath, specifier);
+  return tsconfigPaths.length > 0
+    ? tsconfigPaths
+    : workspacePackageImportPath(specifier);
 }
 
 function sourcePathsForQualityTest(testPath) {
@@ -405,9 +425,7 @@ function sourcePathsForQualityTest(testPath) {
     for (const specifier of importSpecifiers(source)) {
       const importedPaths = specifier.startsWith(".")
         ? resolveInternalImport(sourcePath, specifier)
-        : [workspaceImportPath(sourcePath, specifier)].filter(
-            (path) => path !== undefined,
-          );
+        : workspaceImportPath(sourcePath, specifier);
       pending.push(...importedPaths);
     }
   }

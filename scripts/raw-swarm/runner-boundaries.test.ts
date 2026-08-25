@@ -1006,6 +1006,7 @@ describe("RAW swarm runner boundaries", () => {
     ["inventory", "DND_SUPERVISOR_TEST_INVENTORY_FAILURES"],
     ["proof", "DND_SUPERVISOR_TEST_PROOF_FAILURES"],
     ["clock", "DND_SUPERVISOR_TEST_CLOCK_FAILURES"],
+    ["cyclic parent", "DND_SUPERVISOR_TEST_CYCLIC_PARENT"],
   ])(
     "retains the native owner after a post-launch %s observation failure",
     async (failureKind, failureVariable) => {
@@ -1976,7 +1977,117 @@ describe("RAW swarm runner boundaries", () => {
       rmSync(packageDirectory, { recursive: true, force: true });
       rmSync(tsconfigAliasEntryPath, { force: true });
     }
-  });
+  }, 30_000);
+
+  test("scans every package export sibling instead of choosing one by order", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "lane-package-collision-"),
+    );
+    const fixtureName = relative(rawSwarmOutputDirectory, fixtureRoot);
+    const packageDirectory = resolve(
+      repoRoot,
+      "packages",
+      `.raw-swarm-package-collision-${fixtureName}`,
+    );
+    const packageName = `@dnd/raw-swarm-package-collision-${fixtureName}`;
+    const packageSourceDirectory = resolve(packageDirectory, "src");
+    const entryPath = resolve(fixtureRoot, "package-entry.ts");
+    const forbiddenSourcePath = resolve(packageSourceDirectory, "index.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(packageSourceDirectory, { recursive: true });
+    writeFileSync(
+      resolve(packageDirectory, "package.json"),
+      `${JSON.stringify(
+        {
+          name: packageName,
+          private: true,
+          exports: { ".": "./src/index" },
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    writeFileSync(entryPath, `import ${JSON.stringify(packageName)};\n`);
+    writeFileSync(
+      resolve(packageSourceDirectory, "index.js"),
+      "export const harmless = true;\n",
+    );
+    writeFileSync(
+      forbiddenSourcePath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, forbiddenSourcePath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+      rmSync(packageDirectory, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("scans every tsconfig alias sibling instead of choosing one by order", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "lane-tsconfig-collision-"),
+    );
+    const fixtureName = relative(rawSwarmOutputDirectory, fixtureRoot);
+    const packageDirectory = resolve(
+      repoRoot,
+      "packages",
+      `.raw-swarm-tsconfig-collision-${fixtureName}`,
+    );
+    const packageName = `@dnd/raw-swarm-tsconfig-collision-${fixtureName}`;
+    const packageSourceDirectory = resolve(packageDirectory, "src");
+    const entryPath = resolve(packageSourceDirectory, "entry.test.ts");
+    const forbiddenSourcePath = resolve(packageSourceDirectory, "index.ts");
+    const alias = `${packageName}/*`;
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(packageSourceDirectory, { recursive: true });
+    writeFileSync(
+      resolve(packageDirectory, "package.json"),
+      `${JSON.stringify({ name: packageName, private: true }, null, 2)}\n`,
+    );
+    writeFileSync(
+      resolve(packageDirectory, "tsconfig.json"),
+      `${JSON.stringify(
+        { compilerOptions: { paths: { [alias]: ["src/*"] } } },
+        null,
+        2,
+      )}\n`,
+    );
+    writeFileSync(
+      entryPath,
+      `import ${JSON.stringify(`${packageName}/index`)};\n`,
+    );
+    writeFileSync(
+      resolve(packageSourceDirectory, "index.js"),
+      "export const harmless = true;\n",
+    );
+    writeFileSync(
+      forbiddenSourcePath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, forbiddenSourcePath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+      rmSync(packageDirectory, { recursive: true, force: true });
+    }
+  }, 30_000);
 
   test.each(SUPPORTED_VITEST_TEST_FILE_SUFFIXES)(
     "rejects an unclassified supported Vitest test filename %s",
@@ -2057,6 +2168,62 @@ describe("RAW swarm runner boundaries", () => {
         relative(repoRoot, forbiddenSiblingPath),
       );
     } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("scans a dotted directory index for extensionless imports", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-dotted-directory-"),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const dottedDirectory = resolve(fixtureRoot, "dir.v2");
+    const forbiddenIndexPath = resolve(dottedDirectory, "index.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(dottedDirectory, { recursive: true });
+    writeFileSync(testPath, 'import "./dir.v2";\n');
+    writeFileSync(
+      forbiddenIndexPath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, forbiddenIndexPath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("fails precisely when a source candidate cannot be inspected", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-unreadable-candidate-"),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const blockedDirectory = resolve(fixtureRoot, "blocked");
+    mkdirSync(blockedDirectory);
+    writeFileSync(testPath, 'import "./blocked";\n');
+    chmodSync(blockedDirectory, 0o000);
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      const output = `${checked.stdout}${checked.stderr}`;
+      expect(output).toContain(
+        "Could not inspect deterministic source candidate",
+      );
+      expect(output).toContain("EACCES");
+    } finally {
+      chmodSync(blockedDirectory, 0o700);
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
   }, 30_000);
