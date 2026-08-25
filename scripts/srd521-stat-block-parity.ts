@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { StatBlockRecord } from "../packages/surface/src/surface/types.ts";
-import type { SrdStatBlockGeneratedPeerObservation } from "./surface-publication-peer-observations.ts";
+import type { SrdStatBlockPeerObservation } from "./surface-publication-peer-observations.ts";
 
 export const SRD_STAT_BLOCK_SOURCE_PATHS = [
   ".references/srd-5.2.1/Animals.md",
@@ -82,7 +82,7 @@ export type SrdStatBlockSourceDiscovery = {
   readonly issues: readonly SrdStatBlockSourceIssue[];
 };
 
-export type { SrdStatBlockGeneratedPeerObservation } from "./surface-publication-peer-observations.ts";
+export type { SrdStatBlockPeerObservation } from "./surface-publication-peer-observations.ts";
 
 export type SrdStatBlockParityIssue =
   | {
@@ -134,9 +134,9 @@ export type SrdStatBlockParityIssue =
       readonly message: string;
     }
   | {
-      readonly kind: "generated-peer";
+      readonly kind: "publication-peer";
       readonly evidence: Exclude<
-        SrdStatBlockGeneratedPeerObservation,
+        SrdStatBlockPeerObservation,
         { readonly tag: "present" }
       >;
     };
@@ -182,14 +182,14 @@ export type SrdStatBlockParityInput = {
   readonly sourceFiles: readonly SrdStatBlockSourceFile[];
   readonly installedStatBlocks: readonly SrdStatBlockParityInstalledRecord[];
   readonly sourceReadIssues: readonly SrdStatBlockSourceReadIssue[];
-  readonly generatedPeerObservations: readonly SrdStatBlockGeneratedPeerObservation[];
+  readonly peerObservations: readonly SrdStatBlockPeerObservation[];
 };
 
 export type ReadSrdStatBlockParityOptions = {
   readonly repoRoot: string;
   readonly installedStatBlocks: readonly SrdStatBlockParityInstalledRecord[];
   readonly readSource?: (absolutePath: string) => string;
-  readonly generatedPeerObservations: readonly SrdStatBlockGeneratedPeerObservation[];
+  readonly peerObservations: readonly SrdStatBlockPeerObservation[];
 };
 
 const ABILITY_NAMES = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] as const;
@@ -283,9 +283,9 @@ export function deriveSrdStatBlockParity(
     ...(sourceCoverage.tag === "complete"
       ? deriveMissingIssues(discovery, installedCatalog.installedNames)
       : []),
-    ...input.generatedPeerObservations
+    ...input.peerObservations
       .filter((evidence) => evidence.tag !== "present")
-      .map((evidence) => ({ kind: "generated-peer" as const, evidence })),
+      .map((evidence) => ({ kind: "publication-peer" as const, evidence })),
   ];
 
   return { scope: SRD_STAT_BLOCK_SCOPE, sourceCoverage, discovery, issues };
@@ -550,7 +550,7 @@ export function readSrdStatBlockParity(
     sourceFiles,
     installedStatBlocks: options.installedStatBlocks,
     sourceReadIssues,
-    generatedPeerObservations: options.generatedPeerObservations,
+    peerObservations: options.peerObservations,
   });
 }
 

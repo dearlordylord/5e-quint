@@ -90,11 +90,11 @@ export type SurfacePublicationPeerObservation =
       : never
     : never;
 
-export type SrdStatBlockGeneratedPeerObservation =
+export type SrdStatBlockPeerObservation =
   PublicationPeerObservationForKind<"statBlock">;
 
 export function projectSrdStatBlockPeerObservation(
   observation: SurfacePublicationPeerObservation,
-): SrdStatBlockGeneratedPeerObservation | undefined {
+): SrdStatBlockPeerObservation | undefined {
   return observation.recordKind === "statBlock" ? observation : undefined;
 }

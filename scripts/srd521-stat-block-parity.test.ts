@@ -55,7 +55,7 @@ describe("SRD Stat Block source parity operation", () => {
     const report = readSrdStatBlockParity({
       repoRoot: process.cwd(),
       installedStatBlocks: [],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(srdStatBlockSourceOccurrenceCount(report.discovery)).toBe(334);
@@ -112,7 +112,7 @@ describe("SRD Stat Block source parity operation", () => {
     const report = readSrdStatBlockParity({
       repoRoot: process.cwd(),
       installedStatBlocks: srdStatBlockCollection.statBlocks,
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(srdStatBlockSourceOccurrenceCount(report.discovery)).toBe(334);
@@ -134,7 +134,7 @@ describe("SRD Stat Block source parity operation", () => {
     ).toHaveLength(0);
   });
 
-  test("accumulates catalog, provenance, divergent-source, and generated-peer issues", () => {
+  test("accumulates catalog, provenance, divergent-source, and publication-peer issues", () => {
     const report = deriveSrdStatBlockParity({
       sourceFiles: completeSourceFiles([
         {
@@ -205,7 +205,7 @@ describe("SRD Stat Block source parity operation", () => {
         }),
       ],
       sourceReadIssues: [],
-      generatedPeerObservations: [
+      peerObservations: [
         {
           tag: "missing",
           recordKind: "statBlock",
@@ -265,7 +265,7 @@ describe("SRD Stat Block source parity operation", () => {
       ),
     ).toEqual([{ kind: "missing", name: "Beta" }]);
     expect(
-      report.issues.filter((issue) => issue.kind === "generated-peer"),
+      report.issues.filter((issue) => issue.kind === "publication-peer"),
     ).toHaveLength(4);
   });
 
@@ -290,7 +290,7 @@ describe("SRD Stat Block source parity operation", () => {
       ]),
       installedStatBlocks: [],
       sourceReadIssues: [],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(
@@ -310,7 +310,7 @@ describe("SRD Stat Block source parity operation", () => {
         return "";
       },
       installedStatBlocks: [],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(report.discovery.occurrences).toHaveLength(0);
@@ -346,7 +346,7 @@ describe("SRD Stat Block source parity operation", () => {
           },
         }),
       ],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(report.issues).toContainEqual({
@@ -380,7 +380,7 @@ describe("SRD Stat Block source parity operation", () => {
           },
         }),
       ],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(report.issues).toContainEqual({
@@ -406,7 +406,7 @@ describe("SRD Stat Block source parity operation", () => {
       ],
       sourceReadIssues: [],
       installedStatBlocks: [],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(report.sourceCoverage).toEqual({
@@ -453,7 +453,7 @@ describe("SRD Stat Block source parity operation", () => {
         }),
       ],
       sourceReadIssues: [],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(report.issues).toContainEqual({
@@ -486,7 +486,7 @@ describe("SRD Stat Block source parity operation", () => {
           },
         }),
       ],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(report.issues).toContainEqual({
@@ -507,7 +507,7 @@ describe("SRD Stat Block source parity operation", () => {
       })),
       sourceReadIssues: [],
       installedStatBlocks: [],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(report.discovery.occurrences).toHaveLength(0);
@@ -536,7 +536,7 @@ describe("SRD Stat Block source parity operation", () => {
       ]),
       installedStatBlocks: [],
       sourceReadIssues: [],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(
@@ -583,7 +583,7 @@ describe("SRD Stat Block source parity operation", () => {
       ],
       sourceReadIssues: [],
       installedStatBlocks: [],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(report.issues).toContainEqual({
@@ -618,7 +618,7 @@ describe("SRD Stat Block source parity operation", () => {
       ],
       sourceReadIssues: [],
       installedStatBlocks: [],
-      generatedPeerObservations: [],
+      peerObservations: [],
     });
 
     expect(report.issues).toContainEqual({

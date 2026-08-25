@@ -262,11 +262,11 @@ describe("Surface content publication checker", () => {
           .filter((issue) => issue.kind === "decode-failed")
           .every((issue) => issue.message.length < 5000),
       ).toBe(true);
-      expect(result.generatedPeerObservations).toEqual(
+      expect(result.peerObservations).toEqual(
         expect.arrayContaining([
           {
             tag: "missing",
-            recordKind: "unknown",
+            recordKind: "other",
             sourcePath: "missing.dhall",
             peerPath: "missing.json",
           },
@@ -287,7 +287,7 @@ describe("Surface content publication checker", () => {
           { tag: "orphaned", recordKind: "unknown", peerPath: "orphan.json" },
         ]),
       );
-      expect(result.generatedPeerObservations).toEqual(
+      expect(result.peerObservations).toEqual(
         expect.arrayContaining([
           {
             tag: "generated-peer-failed",
@@ -453,20 +453,20 @@ describe("Surface content publication checker", () => {
         },
       });
 
-      expect(result.generatedPeerObservations).toContainEqual({
+      expect(result.peerObservations).toContainEqual({
         tag: "missing",
         recordKind: "statBlock",
         sourcePath: "creature.dhall",
         peerPath: "creature.json",
       });
-      expect(result.generatedPeerObservations).toContainEqual({
+      expect(result.peerObservations).toContainEqual({
         tag: "missing",
         recordKind: "statBlock",
         sourcePath: "sphinx.dhall",
         peerPath: "sphinx.json",
       });
       expect(result.statBlockParity.issues).toContainEqual({
-        kind: "generated-peer",
+        kind: "publication-peer",
         evidence: {
           tag: "missing",
           recordKind: "statBlock",
@@ -475,13 +475,80 @@ describe("Surface content publication checker", () => {
         },
       });
       expect(result.statBlockParity.issues).toContainEqual({
-        kind: "generated-peer",
+        kind: "publication-peer",
         evidence: {
           tag: "missing",
           recordKind: "statBlock",
           sourcePath: "sphinx.dhall",
           peerPath: "sphinx.json",
         },
+      });
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
+
+  it("resolves source family through nested multi-let bindings", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-multi-let-family-test-"),
+    );
+
+    try {
+      writeFileSync(
+        join(contentDir, "multi-let-stat-block.dhall"),
+        `let statBlock =
+      let helper : Type = { kind : Text }
+      let nested = { kind = "fixed" }
+      in { kind = "statBlock" }
+in statBlock`,
+      );
+      writeFileSync(
+        join(contentDir, "multi-let-missing-stat-block.dhall"),
+        `let statBlock =
+      let helper : Type = { kind : Text }
+      let nested = { kind = "fixed" }
+      in { kind = "statBlock" }
+in statBlock`,
+      );
+      writeFileSync(
+        join(contentDir, "multi-let-stat-block.json"),
+        '{"kind":"unit"}',
+      );
+
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        compile: (_sourcePath, outputPath) => {
+          if (_sourcePath.endsWith("multi-let-stat-block.dhall")) {
+            return "synthetic compile failure";
+          }
+          writeFileSync(outputPath, validStatBlockRecord);
+          return undefined;
+        },
+      });
+
+      expect(result.issues).toContainEqual({
+        kind: "peer-family-mismatch",
+        source: "multi-let-stat-block.dhall",
+        peer: "multi-let-stat-block.json",
+        expectedRecordKind: "statBlock",
+        actualRecordKind: "other",
+      });
+      expect(result.peerObservations).toContainEqual(
+        expect.objectContaining({
+          tag: "peer-family-mismatch",
+          role: "committed",
+          recordKind: "statBlock",
+          actualRecordKind: "other",
+          sourcePath: "multi-let-stat-block.dhall",
+          peerPath: "multi-let-stat-block.json",
+        }),
+      );
+      expect(result.peerObservations).toContainEqual({
+        tag: "missing",
+        recordKind: "statBlock",
+        sourcePath: "multi-let-missing-stat-block.dhall",
+        peerPath: "multi-let-missing-stat-block.json",
       });
     } finally {
       rmSync(contentDir, { force: true, recursive: true });
@@ -549,7 +616,7 @@ describe("Surface content publication checker", () => {
         ]),
       );
       expect(
-        result.generatedPeerObservations.filter(
+        result.peerObservations.filter(
           (observation) =>
             (observation.tag === "committed-peer-failed" ||
               observation.tag === "out-of-sync") &&
@@ -563,7 +630,7 @@ describe("Surface content publication checker", () => {
         }),
       ]);
       expect(
-        result.generatedPeerObservations.filter(
+        result.peerObservations.filter(
           (observation) =>
             (observation.tag === "committed-peer-failed" ||
               observation.tag === "out-of-sync") &&
@@ -577,7 +644,7 @@ describe("Surface content publication checker", () => {
         }),
       ]);
       expect(
-        result.generatedPeerObservations.filter(
+        result.peerObservations.filter(
           (observation) =>
             observation.tag === "out-of-sync" &&
             observation.peerPath === "committed-out-of-sync.json",
@@ -589,7 +656,7 @@ describe("Surface content publication checker", () => {
         }),
       ]);
       expect(
-        result.generatedPeerObservations.filter(
+        result.peerObservations.filter(
           (observation) =>
             observation.tag === "peer-family-mismatch" &&
             observation.role === "committed",
