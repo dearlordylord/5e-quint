@@ -176,17 +176,544 @@ function deterministicCapabilityViolations(source) {
   );
 }
 
-const importPatterns = Object.freeze([
-  /\bimport\s+(?:type\s+)?(?:[^'"\n;]+?\s+from\s+)?["']([^"']+)["']/g,
-  /\bexport\s+(?:[^'"\n;]+?\s+from\s+)?["']([^"']+)["']/g,
-  /\b(?:require|import)\s*\(\s*["']([^"']+)["']\s*\)/g,
+const REGEX_LITERAL_PREFIXES = new Set([
+  "(",
+  "[",
+  "{",
+  ",",
+  ";",
+  ":",
+  "=",
+  "==",
+  "===",
+  "!=",
+  "!==",
+  "!",
+  "~",
+  "?",
+  "&&",
+  "||",
+  "??",
+  "=>",
+  "+=",
+  "-=",
+  "*=",
+  "/=",
+  "%=",
+  "&=",
+  "|=",
+  "^=",
+  "<<=",
+  ">>=",
+  ">>>=",
+  "return",
+  "throw",
+  "case",
+  "delete",
+  "void",
+  "typeof",
+  "new",
+  "in",
+  "of",
+  "yield",
+  "await",
+  "else",
+  "do",
+  "extends",
+  "instanceof",
+  "as",
+  "satisfies",
 ]);
 
+const OPERATOR_TOKENS = new Set([
+  "!",
+  "!=",
+  "!==",
+  "%",
+  "%=",
+  "&",
+  "&=",
+  "&&",
+  "&&=",
+  "(",
+  ")",
+  "*",
+  "*=",
+  "**",
+  "**=",
+  "+",
+  "+=",
+  "++",
+  ",",
+  "-",
+  "-=",
+  "--",
+  ".",
+  "...",
+  "/",
+  "/=",
+  ":",
+  ";",
+  "<",
+  "<=",
+  "<<",
+  "<<=",
+  "=",
+  "==",
+  "===",
+  "=>",
+  ">",
+  ">=",
+  ">>",
+  ">>=",
+  ">>>",
+  ">>>=",
+  "?",
+  "?.",
+  "??",
+  "??=",
+  "[",
+  "]",
+  "^",
+  "^=",
+  "{",
+  "|",
+  "|=",
+  "||",
+  "||=",
+  "~",
+]);
+
+function moduleSpecifierScanError(source, offset, message) {
+  const line = source.slice(0, offset).split("\n").length;
+  throw new Error(
+    `Could not scan deterministic module specifiers at line ${line}: ${message}`,
+  );
+}
+
+function identifierStart(character) {
+  return (
+    (character >= "a" && character <= "z") ||
+    (character >= "A" && character <= "Z") ||
+    character === "_" ||
+    character === "$"
+  );
+}
+
+function identifierPart(character) {
+  return identifierStart(character) || (character >= "0" && character <= "9");
+}
+
+function hexadecimalDigit(character) {
+  return (
+    (character >= "0" && character <= "9") ||
+    (character >= "a" && character <= "f") ||
+    (character >= "A" && character <= "F")
+  );
+}
+
+function readStringToken(source, start) {
+  const quote = source[start];
+  let index = start + 1;
+  let value = "";
+  while (index < source.length) {
+    const character = source[index];
+    if (character === quote) {
+      return { end: index + 1, value };
+    }
+    if (character === "\n" || character === "\r") {
+      moduleSpecifierScanError(source, index, "unterminated string literal");
+    }
+    if (character !== "\\") {
+      value += character;
+      index += 1;
+      continue;
+    }
+
+    index += 1;
+    if (index >= source.length) {
+      moduleSpecifierScanError(source, index, "unterminated string escape");
+    }
+    const escape = source[index];
+    if (escape === "\n") {
+      index += 1;
+      continue;
+    }
+    if (escape === "\r") {
+      index += 1;
+      if (source[index] === "\n") index += 1;
+      continue;
+    }
+    const simpleEscapes = {
+      0: "\0",
+      b: "\b",
+      f: "\f",
+      n: "\n",
+      r: "\r",
+      t: "\t",
+      v: "\v",
+    };
+    if (Object.hasOwn(simpleEscapes, escape)) {
+      value += simpleEscapes[escape];
+      index += 1;
+      continue;
+    }
+    if (escape === "x") {
+      const digits = source.slice(index + 1, index + 3);
+      if (
+        digits.length !== 2 ||
+        [...digits].some((digit) => !hexadecimalDigit(digit))
+      ) {
+        moduleSpecifierScanError(
+          source,
+          index,
+          "invalid hexadecimal string escape",
+        );
+      }
+      value += String.fromCodePoint(Number.parseInt(digits, 16));
+      index += 3;
+      continue;
+    }
+    if (escape === "u") {
+      if (source[index + 1] === "{") {
+        const closing = source.indexOf("}", index + 2);
+        const digits = source.slice(
+          index + 2,
+          closing < 0 ? source.length : closing,
+        );
+        const codePoint = Number.parseInt(digits, 16);
+        if (
+          closing < 0 ||
+          digits.length === 0 ||
+          digits.length > 6 ||
+          [...digits].some((digit) => !hexadecimalDigit(digit)) ||
+          !Number.isInteger(codePoint) ||
+          codePoint > 0x10ffff
+        ) {
+          moduleSpecifierScanError(
+            source,
+            index,
+            "invalid Unicode string escape",
+          );
+        }
+        value += String.fromCodePoint(codePoint);
+        index = closing + 1;
+        continue;
+      }
+      const digits = source.slice(index + 1, index + 5);
+      if (
+        digits.length !== 4 ||
+        [...digits].some((digit) => !hexadecimalDigit(digit))
+      ) {
+        moduleSpecifierScanError(
+          source,
+          index,
+          "invalid Unicode string escape",
+        );
+      }
+      value += String.fromCodePoint(Number.parseInt(digits, 16));
+      index += 5;
+      continue;
+    }
+    value += escape;
+    index += 1;
+  }
+  moduleSpecifierScanError(source, index, "unterminated string literal");
+}
+
+function regexLiteralEnd(source, start) {
+  let index = start + 1;
+  let inCharacterClass = false;
+  while (index < source.length) {
+    const character = source[index];
+    if (character === "\\") {
+      index += 2;
+      continue;
+    }
+    if (character === "\n" || character === "\r") return undefined;
+    if (character === "[") {
+      inCharacterClass = true;
+      index += 1;
+      continue;
+    }
+    if (character === "]") {
+      inCharacterClass = false;
+      index += 1;
+      continue;
+    }
+    if (character === "/" && !inCharacterClass) {
+      index += 1;
+      while (identifierPart(source[index])) index += 1;
+      return index;
+    }
+    index += 1;
+  }
+  return undefined;
+}
+
+function operatorToken(source, start) {
+  for (const length of [4, 3, 2]) {
+    const candidate = source.slice(start, start + length);
+    if (OPERATOR_TOKENS.has(candidate)) return candidate;
+  }
+  return source[start];
+}
+
+function isWhitespace(character) {
+  return (
+    character === " " ||
+    character === "\t" ||
+    character === "\n" ||
+    character === "\r" ||
+    character === "\f" ||
+    character === "\v"
+  );
+}
+
+function scanModuleTokens(source) {
+  const tokens = [];
+  let index = 0;
+  let previousToken;
+
+  const pushToken = (kind, value, start, end) => {
+    const token = { end, kind, start, value };
+    tokens.push(token);
+    previousToken = token;
+  };
+
+  const scanTemplateLiteral = () => {
+    index += 1;
+    while (index < source.length) {
+      const character = source[index];
+      if (character === "\\") {
+        index += 2;
+        if (source[index - 1] === "\r" && source[index] === "\n") index += 1;
+        continue;
+      }
+      if (character === "`") {
+        index += 1;
+        return;
+      }
+      if (character === "$" && source[index + 1] === "{") {
+        index += 2;
+        scanCode(true);
+        continue;
+      }
+      index += 1;
+    }
+    moduleSpecifierScanError(source, index, "unterminated template literal");
+  };
+
+  const scanCode = (stopAtBrace) => {
+    let braceDepth = 0;
+    while (index < source.length) {
+      const character = source[index];
+      if (isWhitespace(character)) {
+        index += 1;
+        continue;
+      }
+      if (stopAtBrace && character === "}" && braceDepth === 0) {
+        index += 1;
+        return;
+      }
+      if (character === "/" && source[index + 1] === "/") {
+        index += 2;
+        while (
+          index < source.length &&
+          source[index] !== "\n" &&
+          source[index] !== "\r"
+        ) {
+          index += 1;
+        }
+        continue;
+      }
+      if (character === "/" && source[index + 1] === "*") {
+        const closing = source.indexOf("*/", index + 2);
+        if (closing < 0) {
+          moduleSpecifierScanError(source, index, "unterminated block comment");
+        }
+        index = closing + 2;
+        continue;
+      }
+      if (character === "'" || character === '"') {
+        const start = index;
+        const token = readStringToken(source, start);
+        index = token.end;
+        pushToken("string", token.value, start, index);
+        continue;
+      }
+      if (character === "`") {
+        scanTemplateLiteral();
+        pushToken("other", "<template>", index - 1, index);
+        continue;
+      }
+      if (identifierStart(character)) {
+        const start = index;
+        index += 1;
+        while (identifierPart(source[index])) index += 1;
+        pushToken("identifier", source.slice(start, index), start, index);
+        continue;
+      }
+      if (character >= "0" && character <= "9") {
+        const start = index;
+        index += 1;
+        while (identifierPart(source[index]) || source[index] === ".")
+          index += 1;
+        pushToken("other", "<number>", start, index);
+        continue;
+      }
+      if (
+        character === "/" &&
+        source[index + 1] !== "/" &&
+        source[index + 1] !== "*" &&
+        (previousToken === undefined ||
+          REGEX_LITERAL_PREFIXES.has(previousToken.value))
+      ) {
+        const end = regexLiteralEnd(source, index);
+        if (end !== undefined) {
+          pushToken("other", "<regex>", index, end);
+          index = end;
+          continue;
+        }
+      }
+      const start = index;
+      const value = operatorToken(source, index);
+      index += value.length;
+      if (value === "{") braceDepth += 1;
+      if (value === "}" && braceDepth > 0) braceDepth -= 1;
+      pushToken("other", value, start, index);
+    }
+    if (stopAtBrace) {
+      moduleSpecifierScanError(
+        source,
+        index,
+        "unterminated template interpolation",
+      );
+    }
+  };
+
+  scanCode(false);
+  return tokens;
+}
+
+const importSpecifierCache = new Map();
+
 function importSpecifiers(source) {
-  return importPatterns.flatMap((pattern) => {
-    pattern.lastIndex = 0;
-    return [...source.matchAll(pattern)].map((match) => match[1]);
-  });
+  const cachedSpecifiers = importSpecifierCache.get(source);
+  if (cachedSpecifiers !== undefined) return cachedSpecifiers;
+
+  const tokens = scanModuleTokens(source);
+  const specifiers = [];
+  const seen = new Set();
+  const addSpecifier = (token) => {
+    if (token?.kind !== "string" || seen.has(token.value)) return;
+    seen.add(token.value);
+    specifiers.push(token.value);
+  };
+  const staticSpecifierAfterFrom = (startIndex) => {
+    let nesting = 0;
+    let hasEquals = false;
+    for (let index = startIndex + 1; index < tokens.length; index += 1) {
+      const token = tokens[index];
+      if (token.value === "{" || token.value === "(" || token.value === "[") {
+        nesting += 1;
+        continue;
+      }
+      if (token.value === "}" || token.value === ")" || token.value === "]") {
+        nesting = Math.max(0, nesting - 1);
+        if (nesting === 0 && tokens[index + 1]?.value !== "from") {
+          return { found: false, hasEquals };
+        }
+        continue;
+      }
+      if (nesting === 0 && token.value === ";") break;
+      if (nesting === 0 && token.value === "=") {
+        return { found: false, hasEquals: true };
+      }
+      if (nesting === 0 && token.value === "from") {
+        const target = tokens[index + 1];
+        if (target?.kind !== "string") {
+          moduleSpecifierScanError(
+            source,
+            token.start,
+            "static import/export declaration has no string module specifier",
+          );
+        }
+        addSpecifier(target);
+        return { found: true, hasEquals };
+      }
+      if (
+        nesting === 0 &&
+        index > startIndex + 1 &&
+        (token.value === "import" || token.value === "export")
+      ) {
+        break;
+      }
+    }
+    return { found: false, hasEquals };
+  };
+  const dynamicImportTarget = (startIndex) => {
+    let index = startIndex + 1;
+    if (tokens[index]?.value === "<") {
+      let nesting = 0;
+      do {
+        if (tokens[index]?.value === "<") nesting += 1;
+        if (tokens[index]?.value === ">") nesting -= 1;
+        index += 1;
+      } while (index < tokens.length && nesting > 0);
+    }
+    return tokens[index]?.value === "(" ? tokens[index + 1] : undefined;
+  };
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (token.kind !== "identifier") continue;
+    const next = tokens[index + 1];
+    if (token.value === "import") {
+      if (next?.kind === "string") {
+        addSpecifier(next);
+      } else if (next?.value === "(" || next?.value === "<") {
+        addSpecifier(dynamicImportTarget(index));
+      } else if (
+        next?.value !== "." &&
+        next?.value !== ":" &&
+        next?.value !== "," &&
+        next?.value !== "}" &&
+        next?.value !== "]"
+      ) {
+        const result = staticSpecifierAfterFrom(index);
+        if (!result.found && !result.hasEquals) {
+          moduleSpecifierScanError(
+            source,
+            token.start,
+            "static import declaration has no string module specifier",
+          );
+        }
+      }
+      continue;
+    }
+    if (token.value === "export") {
+      if (next?.value === "*" || next?.value === "{") {
+        const result = staticSpecifierAfterFrom(index);
+        if (next.value === "*" && !result.found) {
+          moduleSpecifierScanError(
+            source,
+            token.start,
+            "export-star declaration has no string module specifier",
+          );
+        }
+      }
+      continue;
+    }
+    if (token.value === "require") {
+      if (next?.value === "(") {
+        addSpecifier(tokens[index + 2]);
+      } else if (next?.value === "?." && tokens[index + 2]?.value === "(") {
+        addSpecifier(tokens[index + 3]);
+      }
+    }
+  }
+  importSpecifierCache.set(source, specifiers);
+  return specifiers;
 }
 
 function stripViteImportPostfix(specifier) {
@@ -917,6 +1444,49 @@ function sourcePathsFromScenarioRuntimeModules(sourcePath) {
   );
 }
 
+const sourceDependencyEdgeCache = new Map();
+
+function sourceDependencyEdges(sourcePath) {
+  const canonicalSourcePath = canonicalPathForOwnership(sourcePath);
+  const cachedEdges = sourceDependencyEdgeCache.get(canonicalSourcePath);
+  if (cachedEdges !== undefined) return cachedEdges;
+
+  const relativeSourcePath = relative(root, canonicalSourcePath);
+  if (
+    MODEL_BACKED_SOURCE_FILES.includes(relativeSourcePath) ||
+    DETERMINISTIC_TRANSITIVE_SCAN_BOUNDARIES.includes(relativeSourcePath)
+  ) {
+    const edges = [];
+    sourceDependencyEdgeCache.set(canonicalSourcePath, edges);
+    return edges;
+  }
+
+  const edges = [
+    ...sourcePathsFromScenarioRuntimeModules(canonicalSourcePath),
+    ...sourcePathsFromConsumerDistributionRuntimeEntries(canonicalSourcePath),
+  ];
+  const source = readFileSync(canonicalSourcePath, "utf8");
+  const resolutionVisited = new Set();
+  for (const rawSpecifier of importSpecifiers(source)) {
+    const specifier = stripViteImportPostfix(rawSpecifier);
+    edges.push(
+      ...(specifier.startsWith(".")
+        ? resolveInternalImportPaths(
+            canonicalSourcePath,
+            specifier,
+            resolutionVisited,
+          )
+        : workspaceImportPaths(
+            canonicalSourcePath,
+            specifier,
+            resolutionVisited,
+          )),
+    );
+  }
+  sourceDependencyEdgeCache.set(canonicalSourcePath, edges);
+  return edges;
+}
+
 function sourcePathsForQualityTest(testPath) {
   const pending = [resolve(root, testPath)];
   const visited = new Set();
@@ -926,28 +1496,7 @@ function sourcePathsForQualityTest(testPath) {
     if (sourcePath === undefined || visited.has(sourcePath)) continue;
     visited.add(sourcePath);
     paths.push(sourcePath);
-    const relativePath = relative(root, sourcePath);
-    // Model-backed modules are an explicit boundary. Their process and
-    // network capabilities are checked by model-entrypoint guards, while the
-    // deterministic test still owns lifecycle/evidence assertions around it.
-    if (
-      MODEL_BACKED_SOURCE_FILES.includes(relativePath) ||
-      DETERMINISTIC_TRANSITIVE_SCAN_BOUNDARIES.includes(relativePath)
-    ) {
-      continue;
-    }
-    pending.push(...sourcePathsFromScenarioRuntimeModules(sourcePath));
-    pending.push(
-      ...sourcePathsFromConsumerDistributionRuntimeEntries(sourcePath),
-    );
-    const source = readFileSync(sourcePath, "utf8");
-    for (const rawSpecifier of importSpecifiers(source)) {
-      const specifier = stripViteImportPostfix(rawSpecifier);
-      const importedPaths = specifier.startsWith(".")
-        ? resolveInternalImportPaths(sourcePath, specifier, new Set())
-        : workspaceImportPaths(sourcePath, specifier, new Set());
-      pending.push(...importedPaths);
-    }
+    pending.push(...sourceDependencyEdges(sourcePath));
   }
   return paths;
 }

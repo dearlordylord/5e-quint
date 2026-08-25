@@ -2171,6 +2171,92 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 30_000);
 
+  test("follows multiline imports and exports without reading comments or strings", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-multiline-module-"),
+    );
+    const commentOnlyPath = resolve(fixtureRoot, "comment-only.test.ts");
+    const entryPath = resolve(fixtureRoot, "multiline-entry.ts");
+    const reexportPath = resolve(fixtureRoot, "multiline-reexport.ts");
+    const forbiddenPath = resolve(fixtureRoot, "multiline-forbidden.ts");
+    const commentedPath = resolve(fixtureRoot, "commented-target.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    writeFileSync(
+      commentedPath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    writeFileSync(
+      commentOnlyPath,
+      [
+        `const comment = ${JSON.stringify('import "./commented-target.ts";')};`,
+        '/* export { value } from "./commented-target.ts"; */',
+        'const template = `require("./commented-target.ts")`;',
+        "void comment; void template;",
+      ].join("\n"),
+    );
+    writeFileSync(
+      entryPath,
+      [
+        "import {",
+        "  value,",
+        '} from "./multiline-reexport.ts";',
+        "export { value };",
+      ].join("\n"),
+    );
+    writeFileSync(
+      reexportPath,
+      ["export {", "  value,", '} from "./multiline-forbidden.ts";'].join("\n"),
+    );
+    writeFileSync(
+      forbiddenPath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const commentChecked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, commentOnlyPath)],
+        { encoding: "utf8" },
+      );
+      expect(commentChecked.status).toBe(0);
+
+      const multilineChecked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+        { encoding: "utf8" },
+      );
+      expect(multilineChecked.status).not.toBe(0);
+      expect(`${multilineChecked.stdout}${multilineChecked.stderr}`).toContain(
+        relative(repoRoot, forbiddenPath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("fails closed on malformed module source", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-malformed-module-"),
+    );
+    const testPath = resolve(fixtureRoot, "malformed.test.ts");
+    writeFileSync(
+      testPath,
+      'import { value } from "./missing.ts";\n/* unterminated',
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        "unterminated block comment",
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   test("scans every package export sibling instead of choosing one by order", () => {
     const fixtureRoot = mkdtempSync(
       resolve(rawSwarmOutputDirectory, "lane-package-collision-"),
