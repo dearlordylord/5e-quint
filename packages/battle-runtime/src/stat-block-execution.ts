@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import { optionalProperty } from "./optional-property.ts";
 import {
   NonNegativeInteger,
