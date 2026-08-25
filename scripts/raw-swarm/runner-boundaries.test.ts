@@ -11,10 +11,8 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { createRequire } from "node:module";
 import { relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
-import { pathToFileURL } from "node:url";
 import { afterAll, describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
 
@@ -55,31 +53,42 @@ const deterministicCapabilityGuard = resolve(
   repoRoot,
   "scripts/raw-swarm/deterministic-capability-guard.cjs",
 );
+const deterministicNetworkBoundarySource = resolve(
+  repoRoot,
+  "scripts/raw-swarm/deterministic-network-boundary.c",
+);
+const deterministicNetworkBoundaryBuild = mkdtempSync(
+  resolve(tmpdir(), "dnd-network-boundary-test-"),
+);
+const deterministicNetworkBoundary = resolve(
+  deterministicNetworkBoundaryBuild,
+  "deterministic-network-boundary",
+);
+const deterministicNetworkBoundaryCompilation = spawnSync(
+  "cc",
+  [
+    "-std=c11",
+    "-O2",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    deterministicNetworkBoundarySource,
+    "-o",
+    deterministicNetworkBoundary,
+  ],
+  { encoding: "utf8" },
+);
+if (
+  deterministicNetworkBoundaryCompilation.error !== undefined ||
+  deterministicNetworkBoundaryCompilation.status !== 0
+) {
+  rmSync(deterministicNetworkBoundaryBuild, { recursive: true, force: true });
+  throw new Error(
+    `The Linux deterministic network boundary could not be compiled: ${deterministicNetworkBoundaryCompilation.stderr ?? deterministicNetworkBoundaryCompilation.error?.message ?? "unknown compiler failure"}`,
+  );
+}
 const rawSwarmOutputDirectory = resolve(repoRoot, "scripts/raw-swarm/out");
 mkdirSync(rawSwarmOutputDirectory, { recursive: true });
-const laneClassification: unknown = createRequire(import.meta.url)(
-  "./lane-classification.cjs",
-);
-function canonicalFixtureMarker(executableName: string): string {
-  if (laneClassification === null || typeof laneClassification !== "object") {
-    throw new Error("The deterministic fixture catalog is not an object.");
-  }
-  const identities = Reflect.get(
-    laneClassification,
-    "DETERMINISTIC_FIXTURE_IDENTITIES",
-  );
-  if (identities === null || typeof identities !== "object") {
-    throw new Error("The deterministic fixture identities are not an object.");
-  }
-  const marker = Reflect.get(identities, executableName);
-  if (typeof marker !== "string") {
-    throw new Error(
-      `The deterministic fixture marker is missing for ${executableName}.`,
-    );
-  }
-  return marker;
-}
-const deterministicCodexFixtureMarker = canonicalFixtureMarker("codex");
 const currentGitSha = execFileSync("git", ["rev-parse", "HEAD"], {
   cwd: repoRoot,
   encoding: "utf8",
@@ -126,9 +135,11 @@ if (modelLaneLockProbe.status !== 1) {
 afterAll(() => {
   closeSync(modelLaneLockFd);
   rmSync(modelLaneLockDirectory, { recursive: true, force: true });
+  rmSync(deterministicNetworkBoundaryBuild, { recursive: true, force: true });
 });
 const modelEntryPointTestEnvironment: NodeJS.ProcessEnv = {
   ...process.env,
+  RAW_SWARM_EXECUTION_LANE: "model",
   PATH: `${modelLaneLockDirectory}:${process.env.PATH ?? ""}`,
   RAW_SWARM_EXPECTED_GIT_SHA: currentGitSha,
   DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD: `v1:${currentGitSha}`,
@@ -301,19 +312,21 @@ function runCapabilityGuardFixture(source: string) {
   }
 }
 
-function writeDeterministicCodexFixture(path: string, source: string): void {
-  const lines = source.split("\n");
-  const firstLine = lines[0] ?? "";
-  writeFileSync(
-    path,
-    [
-      firstLine.startsWith("#!") ? firstLine : undefined,
-      `# ${deterministicCodexFixtureMarker}`,
-      firstLine.startsWith("#!") ? lines.slice(1).join("\n") : source,
-    ]
-      .filter((line): line is string => line !== undefined)
-      .join("\n"),
+function runKernelBoundaryFixture(source: string) {
+  const fixtureRoot = mkdtempSync(
+    resolve(tmpdir(), "dnd-deterministic-network-boundary-"),
   );
+  const sourcePath = resolve(fixtureRoot, "fixture.cjs");
+  writeFileSync(sourcePath, source);
+  try {
+    return spawnSync(
+      "env",
+      ["-i", deterministicNetworkBoundary, process.execPath, sourcePath],
+      { encoding: "utf8" },
+    );
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
 }
 
 function modelLaneTestEnvironment(
@@ -383,7 +396,7 @@ describe("RAW swarm runner boundaries", () => {
     }
   });
 
-  test.each(["node:dgram", "ws", "websocket", "isomorphic-ws"])(
+  test.each([["node", "dgram"].join(":"), "ws", "websocket", "isomorphic-ws"])(
     "static checker rejects the catalog network module %s",
     (networkModule) => {
       const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-lane-module-"));
@@ -405,60 +418,81 @@ describe("RAW swarm runner boundaries", () => {
     },
   );
 
-  test("runtime capability guard rejects indirect http2 loading", () => {
-    const networkModule = ["node", "http2"].join(":");
-    const checked = runCapabilityGuardFixture(
-      [
-        `const moduleName = ${JSON.stringify(networkModule)};`,
-        "require(moduleName);",
-      ].join("\n"),
+  test.each([
+    ["AF_INET", "udp4", "127.0.0.1"],
+    ["AF_INET6", "udp6", "::1"],
+  ])(
+    "Linux kernel boundary denies %s socket creation",
+    (_label, type, address) => {
+      const dgramModule = ["node", "dgram"].join(":");
+      const createSocket = ["create", "Socket"].join("");
+      const checked = runKernelBoundaryFixture(
+        `const socket = require(${JSON.stringify(dgramModule)})[${JSON.stringify(createSocket)}](${JSON.stringify(type)});\nsocket.once("error", (error) => process.exit(error.code === "EPERM" ? 0 : 2));\nsocket.bind(0, ${JSON.stringify(address)});\nsetTimeout(() => process.exit(1), 500);\n`,
+      );
+      expect(checked.status).toBe(0);
+    },
+  );
+
+  test("Linux kernel boundary preserves AF_UNIX sockets", () => {
+    const netModule = ["node", "net"].join(":");
+    const createServer = ["create", "Server"].join("");
+    const socketPath = resolve(
+      tmpdir(),
+      `dnd-deterministic-af-unix-${process.pid}.sock`,
     );
-    expect(checked.status).not.toBe(0);
-    expect(`${checked.stdout}${checked.stderr}`).toContain(
-      "network capability",
+    const checked = runKernelBoundaryFixture(
+      `const server = require(${JSON.stringify(netModule)})[${JSON.stringify(createServer)}]();\nserver.once("error", () => process.exit(2));\nserver.listen(${JSON.stringify(socketPath)}, () => server.close(() => { require("node:fs").rmSync(${JSON.stringify(socketPath)}, { force: true }); process.exit(0); }));\nsetTimeout(() => process.exit(1), 500);\n`,
     );
+    expect(checked.status).toBe(0);
   });
 
-  test("runtime capability guard rejects indirect dgram loading", () => {
-    const networkModule = ["node", "dgram"].join(":");
-    const checked = runCapabilityGuardFixture(
+  test("Linux kernel boundary denies io_uring setup", () => {
+    const probeSource = resolve(
+      deterministicNetworkBoundaryBuild,
+      "io-uring-probe.c",
+    );
+    const probeBinary = resolve(
+      deterministicNetworkBoundaryBuild,
+      "io-uring-probe",
+    );
+    writeFileSync(
+      probeSource,
+      `#define _GNU_SOURCE\n#include <errno.h>\n#include <sys/syscall.h>\n#include <unistd.h>\nint main(void) { errno = 0; return syscall(SYS_io_uring_setup, 1, 0) < 0 && errno == EPERM ? 0 : 1; }\n`,
+    );
+    const compilation = spawnSync(
+      "cc",
       [
-        `const moduleName = ${JSON.stringify(networkModule)};`,
-        "require(moduleName);",
-      ].join("\n"),
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        probeSource,
+        "-o",
+        probeBinary,
+      ],
+      { encoding: "utf8" },
     );
-    expect(checked.status).not.toBe(0);
-    expect(`${checked.stdout}${checked.stderr}`).toContain(
-      "network capability",
+    expect(compilation.status).toBe(0);
+    const checked = spawnSync(
+      "env",
+      ["-i", deterministicNetworkBoundary, probeBinary],
+      { encoding: "utf8" },
     );
+    expect(checked.status).toBe(0);
   });
 
-  test("runtime capability guard rejects indirect ESM http2 loading", () => {
-    const networkModule = ["node", "http2"].join(":");
-    const checked = runCapabilityGuardFixture(
-      [
-        `const moduleName = ${JSON.stringify(networkModule)};`,
-        "import(moduleName).then(() => process.exit(0), (error) => { throw error; });",
-      ].join("\n"),
-    );
-    expect(checked.status).not.toBe(0);
-    expect(`${checked.stdout}${checked.stderr}`).toContain(
-      "network capability",
-    );
+  test("kernel source kills an unexpected syscall architecture instead of weakening", () => {
+    const source = readFileSync(deterministicNetworkBoundarySource, "utf8");
+    expect(source).toContain("DND_AUDIT_ARCH");
+    expect(source).toContain("SECCOMP_RET_KILL_PROCESS");
   });
 
-  test("runtime capability guard rejects indirect ESM dgram loading", () => {
-    const networkModule = ["node", "dgram"].join(":");
-    const checked = runCapabilityGuardFixture(
-      [
-        `const moduleName = ${JSON.stringify(networkModule)};`,
-        "import(moduleName).then(() => process.exit(0), (error) => { throw error; });",
-      ].join("\n"),
+  test("kernel boundary remains after an ESM dynamic import", () => {
+    const dgramModule = ["node", "dgram"].join(":");
+    const checked = runKernelBoundaryFixture(
+      `import(${JSON.stringify(dgramModule)}).then(({ createSocket }) => { const socket = createSocket("udp4"); socket.once("error", (error) => process.exit(error.code === "EPERM" ? 0 : 2)); socket.bind(0, "127.0.0.1"); }).catch(() => process.exit(3));\nsetTimeout(() => process.exit(1), 500);\n`,
     );
-    expect(checked.status).not.toBe(0);
-    expect(`${checked.stdout}${checked.stderr}`).toContain(
-      "network capability",
-    );
+    expect(checked.status).toBe(0);
   });
 
   test("rejects newly surfaced network and dynamic agent forms in deterministic source", () => {
@@ -562,47 +596,12 @@ describe("RAW swarm runner boundaries", () => {
     expect(checked.status).toBe(0);
   });
 
-  test("worker threads retain the deterministic guard after clearing execArgv and NODE_OPTIONS", () => {
-    const networkModule = ["node", "dgram"].join(":");
-    const workerSource = [
-      'const { parentPort } = require("node:worker_threads");',
-      "try {",
-      `  require(${JSON.stringify(networkModule)});`,
-      '  parentPort.postMessage("loaded");',
-      "} catch (error) {",
-      "  parentPort.postMessage(String(error));",
-      "}",
-    ].join(" ");
-    const checked = runCapabilityGuardFixture(
-      [
-        'const { Worker } = require("node:worker_threads");',
-        `const worker = new Worker(${JSON.stringify(workerSource)}, { eval: true, execArgv: [], env: { ...process.env, NODE_OPTIONS: "" } });`,
-        'worker.once("message", (message) => process.exit(String(message).includes("network capability") ? 0 : 1));',
-        'worker.once("error", () => process.exit(2));',
-      ].join("\n"),
-    );
-    expect(checked.status).toBe(0);
-  });
-
-  test("ESM worker-thread imports retain the deterministic guard", () => {
-    const networkModule = ["node", "dgram"].join(":");
-    const workerSource = [
-      'const { parentPort } = require("node:worker_threads");',
-      "try {",
-      `  require(${JSON.stringify(networkModule)});`,
-      '  parentPort.postMessage("loaded");',
-      "} catch (error) {",
-      "  parentPort.postMessage(String(error));",
-      "}",
-    ].join(" ");
-    const checked = runCapabilityGuardFixture(
-      [
-        'import("node:worker_threads").then(({ Worker }) => {',
-        `  const worker = new Worker(${JSON.stringify(workerSource)}, { eval: true, execArgv: [], env: { ...process.env, NODE_OPTIONS: "" } });`,
-        '  worker.once("message", (message) => process.exit(String(message).includes("network capability") ? 0 : 1));',
-        '  worker.once("error", () => process.exit(2));',
-        "}).catch(() => process.exit(3));",
-      ].join("\n"),
+  test("worker threads retain the kernel boundary after clearing execArgv and NODE_OPTIONS", () => {
+    const dgramModule = ["node", "dgram"].join(":");
+    const createSocket = ["create", "Socket"].join("");
+    const workerSource = `const { parentPort } = require("node:worker_threads"); const socket = require(${JSON.stringify(dgramModule)})[${JSON.stringify(createSocket)}]("udp4"); socket.once("error", (error) => parentPort.postMessage(error.code === "EPERM" ? "blocked" : "wrong")); socket.bind(0, "127.0.0.1");`;
+    const checked = runKernelBoundaryFixture(
+      `const { Worker } = require("node:worker_threads"); const worker = new Worker(${JSON.stringify(workerSource)}, { eval: true, execArgv: [], env: { NODE_OPTIONS: "" } }); worker.once("message", (message) => process.exit(message === "blocked" ? 0 : 1)); worker.once("error", () => process.exit(2)); setTimeout(() => process.exit(3), 500);`,
     );
     expect(checked.status).toBe(0);
   });
@@ -623,137 +622,28 @@ describe("RAW swarm runner boundaries", () => {
     },
   );
 
-  test("fork custom execPath cannot strip deterministic guard propagation", () => {
-    const checked = runCapabilityGuardFixture(
-      [
-        'const { fork } = require("node:child_process");',
-        "try {",
-        '  fork(process.execPath, [], { execPath: "env -u NODE_OPTIONS" });',
-        "  process.exit(1);",
-        '} catch (error) { process.exit(String(error).includes("guard propagation") ? 0 : 2); }',
-      ].join("\n"),
+  test("kernel boundary survives env, shell, and fork descendants after NODE_OPTIONS removal", () => {
+    const dgramModule = ["node", "dgram"].join(":");
+    const createSocket = ["create", "Socket"].join("");
+    const networkAttempt = `const socket = require(${JSON.stringify(dgramModule)})[${JSON.stringify(createSocket)}]("udp4"); socket.once("error", (error) => process.exit(error.code === "EPERM" ? 0 : 2)); socket.bind(0, "127.0.0.1"); setTimeout(() => process.exit(1), 500);`;
+    const checked = runKernelBoundaryFixture(
+      `const { spawnSync, fork } = require("node:child_process");\nif (process.argv[2] === "fork-child") { ${networkAttempt} } else { const envChild = spawnSync("env", ["-i", process.execPath, "-e", ${JSON.stringify(networkAttempt)}]); if (envChild.status !== 0) process.exit(1); const shellChild = spawnSync("sh", ["-c", ${JSON.stringify(`unset NODE_OPTIONS; exec ${process.execPath} -e '${networkAttempt}'`)}]); if (shellChild.status !== 0) process.exit(2); const forkChild = fork(__filename, ["fork-child"], { env: { NODE_OPTIONS: "" }, silent: true }); forkChild.once("exit", (status) => process.exit(status === 0 ? 0 : 3)); setTimeout(() => process.exit(4), 1000); }\n`,
     );
     expect(checked.status).toBe(0);
   });
 
-  test("deterministic guard rejects direct env removal of NODE_OPTIONS", () => {
-    const networkModule = ["node", "dgram"].join(":");
-    const childSource = [
-      `require(${JSON.stringify(networkModule)});`,
-      "process.exit(0);",
-    ].join(" ");
-    const checked = runCapabilityGuardFixture(
-      [
-        'const { spawnSync } = require("node:child_process");',
-        "try {",
-        `  spawnSync("env", ["-u", "NODE_OPTIONS", process.execPath, "-e", ${JSON.stringify(childSource)}]);`,
-        "  process.exit(1);",
-        '} catch (error) { process.exit(String(error).includes("guard propagation") ? 0 : 2); }',
-      ].join("\n"),
+  test("kernel boundary ignores forged Module._load parents and fake node_modules origins", () => {
+    const dgramModule = ["node", "dgram"].join(":");
+    const createSocket = ["create", "Socket"].join("");
+    const checked = runKernelBoundaryFixture(
+      `const { createRequire, _load } = require("node:module");\nconst bind = (dgram) => new Promise((resolve) => { const socket = dgram[${JSON.stringify(createSocket)}]("udp4"); socket.once("error", (error) => resolve(error.code === "EPERM")); socket.bind(0, "127.0.0.1"); });\nPromise.all([bind(_load(${JSON.stringify(dgramModule)}, { filename: "/tmp/node_modules/trusted.cjs" }, false)), bind(createRequire("/tmp/node_modules/forged.cjs")(${JSON.stringify(dgramModule)}))]).then((blocked) => process.exit(blocked.every(Boolean) ? 0 : 1));\nsetTimeout(() => process.exit(2), 500);\n`,
     );
     expect(checked.status).toBe(0);
-  });
-
-  test("deterministic guard rejects NODE_OPTIONS removal through pnpm", () => {
-    const networkModule = ["node", "dgram"].join(":");
-    const childSource = [
-      `require(${JSON.stringify(networkModule)});`,
-      "process.exit(0);",
-    ].join(" ");
-    const checked = runCapabilityGuardFixture(
-      [
-        'const { spawnSync } = require("node:child_process");',
-        "try {",
-        `  spawnSync("pnpm", ["exec", "env", "-u", "NODE_OPTIONS", process.execPath, "-e", ${JSON.stringify(childSource)}]);`,
-        "  process.exit(1);",
-        '} catch (error) { process.exit(String(error).includes("guard propagation") ? 0 : 2); }',
-      ].join("\n"),
-    );
-    expect(checked.status).toBe(0);
-  });
-
-  test("data URL modules retain deterministic capability provenance", () => {
-    const networkModule = ["node", "dgram"].join(":");
-    const dataSource = [
-      `import(${JSON.stringify(networkModule)}).then(() => process.exit(1), (error) => process.exit(String(error).includes("network capability") ? 0 : 2));`,
-    ].join(" ");
-    const checked = runCapabilityGuardFixture(
-      `import(${JSON.stringify(`data:text/javascript,${encodeURIComponent(dataSource)}`)});`,
-    );
-    expect(checked.status).toBe(0);
-  });
-
-  test("createRequire from an outside origin retains deterministic capability provenance", () => {
-    const checked = runCapabilityGuardFixture(
-      [
-        'const { createRequire } = require("node:module");',
-        'const outsideRequire = createRequire("/etc/dnd-raw-swarm-outside.cjs");',
-        "try {",
-        '  outsideRequire("node:dgram");',
-        "  process.exit(1);",
-        '} catch (error) { process.exit(String(error).includes("network capability") ? 0 : 2); }',
-      ].join("\n"),
-    );
-    expect(checked.status).toBe(0);
-  });
-
-  test("an outside file imported by deterministic code cannot load a network module", () => {
-    const networkModule = ["node", "dgram"].join(":");
-    const outsideRoot = mkdtempSync(resolve("/var/tmp", "dnd-raw-swarm-"));
-    const outsidePath = resolve(outsideRoot, "outside.mjs");
-    writeFileSync(
-      outsidePath,
-      [
-        'import { createRequire } from "node:module";',
-        `const outsideRequire = createRequire(import.meta.url);`,
-        `try { outsideRequire(${JSON.stringify(networkModule)}); process.exit(1); }`,
-        'catch (error) { process.exit(String(error).includes("network capability") ? 0 : 2); }',
-      ].join("\n"),
-    );
-    try {
-      const checked = runCapabilityGuardFixture(
-        `import(${JSON.stringify(pathToFileURL(outsidePath).href)});`,
-      );
-      expect(checked.status).toBe(0);
-    } finally {
-      rmSync(outsideRoot, { recursive: true, force: true });
-    }
-  });
-
-  test("legitimate node_modules dependencies retain their network capability", () => {
-    const networkModule = ["node", "dgram"].join(":");
-    const fixtureRoot = mkdtempSync(
-      resolve(tmpdir(), "dnd-deterministic-dependency-"),
-    );
-    const dependencyRoot = resolve(
-      fixtureRoot,
-      "node_modules",
-      "fixture-dependency",
-    );
-    mkdirSync(dependencyRoot, { recursive: true });
-    writeFileSync(
-      resolve(dependencyRoot, "index.cjs"),
-      [
-        'const { createRequire } = require("node:module");',
-        'module.exports = createRequire("/etc/dnd-raw-swarm-dependency.cjs")',
-        `  (${JSON.stringify(networkModule)});`,
-      ].join("\n"),
-    );
-    try {
-      const checked = runCapabilityGuardFixture(
-        `require(${JSON.stringify(resolve(dependencyRoot, "index.cjs"))}); process.exit(0);`,
-      );
-      expect(checked.status).toBe(0);
-    } finally {
-      rmSync(fixtureRoot, { recursive: true, force: true });
-    }
   });
 
   test("reinjects the deterministic guard when a Node child clears NODE_OPTIONS", () => {
-    const childSource = [
-      `require(${JSON.stringify("node:dgram")});`,
-      "process.exit(0);",
-    ].join(" ");
+    const fetchExpression = ["globalThis", "fetch"].join(".");
+    const childSource = `void ${fetchExpression}("https://example.invalid"); process.exit(0);`;
     const checked = runCapabilityGuardFixture(
       [
         'const { spawnSync } = require("node:child_process");',
@@ -767,10 +657,8 @@ describe("RAW swarm runner boundaries", () => {
   });
 
   test("reinjects the deterministic guard through nested Node descendants", () => {
-    const grandchildSource = [
-      `require(${JSON.stringify("node:dgram")});`,
-      "process.exit(0);",
-    ].join(" ");
+    const fetchExpression = ["globalThis", "fetch"].join(".");
+    const grandchildSource = `void ${fetchExpression}("https://example.invalid"); process.exit(0);`;
     const childSource = [
       'const { spawnSync } = require("node:child_process");',
       `const grandchild = spawnSync(process.execPath, ["-e", ${JSON.stringify(grandchildSource)}], {`,
@@ -832,25 +720,43 @@ describe("RAW swarm runner boundaries", () => {
     }
   });
 
-  test("allows a canonical stamped coding-agent fixture", () => {
+  test("rejects a forged coding-agent fixture marker", () => {
     const fixtureRoot = mkdtempSync(
       resolve(tmpdir(), "dnd-lane-agent-fixture-"),
     );
     const agentPath = resolve(fixtureRoot, "codex");
-    writeDeterministicCodexFixture(agentPath, "#!/bin/sh\nexit 0\n");
+    writeFileSync(
+      agentPath,
+      "#!/bin/sh\n# dnd.raw-swarm.deterministic-fixture:codex\nexit 0\n",
+    );
     chmodSync(agentPath, 0o755);
     try {
       const checked = runCapabilityGuardFixture(
         [
           'const { spawnSync } = require("node:child_process");',
-          `const result = spawnSync(${JSON.stringify(agentPath)}, [], { stdio: "ignore" });`,
-          "process.exit(result.status === 0 ? 0 : 1);",
+          `spawnSync(${JSON.stringify(agentPath)}, [], { stdio: "ignore" });`,
+          "process.exit(1);",
         ].join("\n"),
       );
-      expect(checked.status).toBe(0);
+      expect(checked.status).toBe(1);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        "coding-agent capability",
+      );
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
+  });
+
+  test("blocks a known coding-agent executable categorically", () => {
+    const codingAgent = ["co", "dex"].join("");
+    const checked = runCapabilityGuardFixture(
+      [
+        'const { spawnSync } = require("node:child_process");',
+        `try { spawnSync(${JSON.stringify(codingAgent)}, [], { stdio: "ignore" }); process.exit(1); }`,
+        'catch (error) { process.exit(String(error).includes("coding-agent capability") ? 0 : 2); }',
+      ].join("\n"),
+    );
+    expect(checked.status).toBe(0);
   });
 
   test("allows deterministic child-process boundary sources", () => {
@@ -1434,7 +1340,7 @@ case "$*" in
 esac
 `,
     );
-    writeDeterministicCodexFixture(fakeCodex, "#!/bin/sh\nexit 0\n");
+    writeFileSync(fakeCodex, "#!/bin/sh\nexit 0\n");
     chmodSync(fakeGit, 0o755);
     chmodSync(fakeCodex, 0o755);
     try {
@@ -1876,7 +1782,7 @@ esac
 `,
     );
     chmodSync(fakeGit, 0o755);
-    writeDeterministicCodexFixture(
+    writeFileSync(
       fakeCodex,
       String.raw`#!/bin/sh
 set -eu
@@ -2091,7 +1997,7 @@ case "$*" in
 esac
 `,
     );
-    writeDeterministicCodexFixture(
+    writeFileSync(
       fakeCodex,
       String.raw`#!/bin/sh
 set -eu
@@ -2243,7 +2149,7 @@ printf '%s' '{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaa
         "",
       ].join("\n"),
     );
-    writeDeterministicCodexFixture(
+    writeFileSync(
       fakeCodex,
       [
         "#!/bin/sh",
@@ -2381,7 +2287,7 @@ esac
         "",
       ].join("\n"),
     );
-    writeDeterministicCodexFixture(
+    writeFileSync(
       fakeCodex,
       [
         "#!/bin/sh",

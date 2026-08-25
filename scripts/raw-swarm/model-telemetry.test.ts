@@ -1,14 +1,13 @@
 import { EventEmitter } from "node:events";
+import { spawn } from "node:child_process";
 import {
   appendFileSync,
-  chmodSync,
   existsSync,
   mkdtempSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
@@ -53,43 +52,6 @@ import {
 } from "./transcript.ts";
 
 describe("Raw Swarm model invocation telemetry", () => {
-  const laneClassification: unknown = createRequire(import.meta.url)(
-    "./lane-classification.cjs",
-  );
-  const deterministicCodexFixtureMarker = (() => {
-    if (laneClassification === null || typeof laneClassification !== "object") {
-      throw new Error("The deterministic fixture catalog is not an object.");
-    }
-    const identities = Reflect.get(
-      laneClassification,
-      "DETERMINISTIC_FIXTURE_IDENTITIES",
-    );
-    if (identities === null || typeof identities !== "object") {
-      throw new Error(
-        "The deterministic fixture identities are not an object.",
-      );
-    }
-    const marker = Reflect.get(identities, "codex");
-    if (typeof marker !== "string") {
-      throw new Error("The deterministic codex fixture marker is missing.");
-    }
-    return `# ${marker}`;
-  })();
-
-  function writeDeterministicCodexFixture(path: string, source: string): void {
-    const [firstLine, ...remainingLines] = source.split("\n");
-    writeFileSync(
-      path,
-      [
-        firstLine?.startsWith("#!") ? firstLine : undefined,
-        deterministicCodexFixtureMarker,
-        firstLine?.startsWith("#!") ? remainingLines.join("\n") : source,
-      ]
-        .filter((line): line is string => line !== undefined)
-        .join("\n"),
-    );
-  }
-
   async function waitForFile(path: string, timeoutMilliseconds = 1_000) {
     const deadline = Date.now() + timeoutMilliseconds;
     while (!existsSync(path) && Date.now() < deadline) {
@@ -100,26 +62,18 @@ describe("Raw Swarm model invocation telemetry", () => {
     }
   }
 
+  function controlledNodeSpawn(fixturePath: string): SpawnOwnedCodexProcess {
+    return ({ args, cwd, env, stdinFd, eventFd, logFd, detached }) =>
+      spawn(process.execPath, [fixturePath, ...args], {
+        cwd,
+        env,
+        stdio: [stdinFd ?? "ignore", eventFd, logFd],
+        detached,
+      });
+  }
+
   function fakeInvocationInput(root: string, timeoutMilliseconds?: number) {
-    const codexPath = resolve(root, "codex");
-    if (existsSync(codexPath)) {
-      const codexSource = readFileSync(codexPath, "utf8");
-      if (!codexSource.includes(deterministicCodexFixtureMarker)) {
-        const [firstLine, ...remainingLines] = codexSource.split("\n");
-        writeFileSync(
-          codexPath,
-          [
-            firstLine?.startsWith("#!") ? firstLine : undefined,
-            deterministicCodexFixtureMarker,
-            firstLine?.startsWith("#!")
-              ? remainingLines.join("\n")
-              : codexSource,
-          ]
-            .filter((line): line is string => line !== undefined)
-            .join("\n"),
-        );
-      }
-    }
+    const fixturePath = resolve(root, "codex-fixture.cjs");
     const events = resolve(root, "events.jsonl");
     const log = resolve(root, "agent.log");
     const ledger = resolve(root, "ledger.jsonl");
@@ -166,6 +120,7 @@ describe("Raw Swarm model invocation telemetry", () => {
           },
         },
       },
+      spawnProcess: controlledNodeSpawn(fixturePath),
     };
   }
 
@@ -207,12 +162,10 @@ describe("Raw Swarm model invocation telemetry", () => {
 
   test("retains timeout telemetry and a failed result when a child stalls without output", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-timeout-"));
-    const codex = resolve(root, "codex");
     writeFileSync(
-      codex,
-      `#!/bin/sh\nexec ${JSON.stringify(process.execPath)} -e 'setTimeout(() => {}, 1000)'\n`,
+      resolve(root, "codex-fixture.cjs"),
+      "setTimeout(() => {}, 1000);\n",
     );
-    chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root, 25);
       const result = await runCodexInvocation(input);
@@ -268,15 +221,12 @@ describe("Raw Swarm model invocation telemetry", () => {
 
   test("retains typed timeout evidence when a child leaves a partial JSONL line", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-partial-timeout-"));
-    const codex = resolve(root, "codex");
     writeFileSync(
-      codex,
-      `#!/bin/sh
-printf '{"type":"turn.started"}\n{"type":"turn.completed"'
-exec ${process.execPath} -e 'setTimeout(() => {}, 1000)'
+      resolve(root, "codex-fixture.cjs"),
+      `process.stdout.write('{"type":"turn.started"}\\n{"type":"turn.completed"');
+setTimeout(() => {}, 1000);
 `,
     );
-    chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root, 25);
       const result = await runCodexInvocation(input);
@@ -327,15 +277,12 @@ exec ${process.execPath} -e 'setTimeout(() => {}, 1000)'
 
   test("canonicalizes a full malformed JSONL line before hashing evidence", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-full-malformed-"));
-    const codex = resolve(root, "codex");
     writeFileSync(
-      codex,
-      `#!/bin/sh
-printf '{"type":"turn.started"}\nnot-json\n{"type":"turn.completed"}\n'
-exit 7
+      resolve(root, "codex-fixture.cjs"),
+      `process.stdout.write('{"type":"turn.started"}\\nnot-json\\n{"type":"turn.completed"}\\n');
+process.exit(7);
 `,
     );
-    chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
       const result = await runCodexInvocation(input);
@@ -380,15 +327,12 @@ exit 7
 
   test("records a typed current event-decode failure without a timeout", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-partial-exit-"));
-    const codex = resolve(root, "codex");
     writeFileSync(
-      codex,
-      `#!/bin/sh
-printf '{"type":"turn.completed"'
-exit 7
+      resolve(root, "codex-fixture.cjs"),
+      `process.stdout.write('{"type":"turn.completed"');
+process.exit(7);
 `,
     );
-    chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
       const result = await runCodexInvocation(input);
@@ -417,16 +361,16 @@ exit 7
 
   test("escalates a TERM-ignoring child to KILL without leaving a process behind", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-term-ignore-"));
-    const codex = resolve(root, "codex");
     const pidPath = resolve(root, "child.pid");
     const readyPath = resolve(root, "child-ready");
     writeFileSync(
-      codex,
-      `#!/bin/sh
-exec ${process.execPath} -e 'process.on("SIGTERM", () => {}); require("node:fs").writeFileSync(process.env.RAW_CHILD_PID, String(process.pid)); require("node:fs").writeFileSync(process.env.RAW_CHILD_READY, "ready"); setInterval(() => {}, 10000)'
+      resolve(root, "codex-fixture.cjs"),
+      `process.on("SIGTERM", () => {});
+require("node:fs").writeFileSync(process.env.RAW_CHILD_PID, String(process.pid));
+require("node:fs").writeFileSync(process.env.RAW_CHILD_READY, "ready");
+setInterval(() => {}, 10000);
 `,
     );
-    chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root, 1_000);
       input.env.RAW_CHILD_PID = pidPath;
@@ -458,8 +402,6 @@ exec ${process.execPath} -e 'process.on("SIGTERM", () => {}); require("node:fs")
 
   test("keeps supervising a TERM-exiting leader until its ignored descendant is gone", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-group-term-ignore-"));
-    const codex = resolve(root, "codex");
-    const leaderPath = resolve(root, "leader.cjs");
     const descendantPidPath = resolve(root, "descendant.pid");
     const leaderReadyPath = resolve(root, "leader-ready");
     const leaderExitedPath = resolve(root, "leader-exited");
@@ -472,9 +414,7 @@ process.on("SIGTERM", () => { fs.writeFileSync(process.env.RAW_LEADER_EXITED, "y
 fs.writeFileSync(process.env.RAW_LEADER_READY, "yes");
 setInterval(() => {}, 10000);
 `;
-    writeFileSync(leaderPath, leader);
-    writeFileSync(codex, `#!/bin/sh\nexec ${process.execPath} ${leaderPath}\n`);
-    chmodSync(codex, 0o755);
+    writeFileSync(resolve(root, "codex-fixture.cjs"), leader);
     try {
       const input = fakeInvocationInput(root, 1_000);
       input.env.RAW_DESCENDANT_PID = descendantPidPath;
@@ -552,8 +492,6 @@ setInterval(() => {}, 10000);
     const root = mkdtempSync(
       resolve(tmpdir(), "dnd-model-normal-group-cleanup-"),
     );
-    const codex = resolve(root, "codex");
-    const leaderPath = resolve(root, "leader.cjs");
     const descendantPidPath = resolve(root, "descendant.pid");
     const leaderReadyPath = resolve(root, "leader-ready");
     const leader = `
@@ -566,9 +504,7 @@ fs.writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ result: "ready" }
 process.stdout.write('{"type":"turn.completed"}\\n');
 process.exit(0);
 `;
-    writeFileSync(leaderPath, leader);
-    writeFileSync(codex, `#!/bin/sh\nexec ${process.execPath} ${leaderPath}\n`);
-    chmodSync(codex, 0o755);
+    writeFileSync(resolve(root, "codex-fixture.cjs"), leader);
     try {
       const input = fakeInvocationInput(root, 1_000);
       input.env.RAW_DESCENDANT_PID = descendantPidPath;
@@ -792,12 +728,10 @@ process.exit(0);
 
   test("retains a failed result when a child exits zero without creating output", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-missing-output-"));
-    const codex = resolve(root, "codex");
     writeFileSync(
-      codex,
-      '#!/bin/sh\nprintf \'{"type":"turn.completed"}\\n\'\nexit 0\n',
+      resolve(root, "codex-fixture.cjs"),
+      'process.stdout.write(\'{"type":"turn.completed"}\\n\');\nprocess.exit(0);\n',
     );
-    chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
       const result = await runCodexInvocation(input);
@@ -843,12 +777,10 @@ process.exit(0);
 
   test("records a typed failure when a zero-exit stream fails analysis", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-analysis-failure-"));
-    const codex = resolve(root, "codex");
     writeFileSync(
-      codex,
-      '#!/bin/sh\nprintf \'{"type":"turn.started"}\\n\'\nexit 0\n',
+      resolve(root, "codex-fixture.cjs"),
+      'process.stdout.write(\'{"type":"turn.started"}\\n\');\nprocess.exit(0);\n',
     );
-    chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
       const result = await runCodexInvocation(input);
@@ -885,13 +817,11 @@ process.exit(0);
 
   test("rejects a preexisting expected output before starting the child", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-stale-output-"));
-    const codex = resolve(root, "codex");
     const startedPath = resolve(root, "started");
     writeFileSync(
-      codex,
-      `#!/bin/sh\nprintf '%s' started > ${JSON.stringify(startedPath)}\nexit 0\n`,
+      resolve(root, "codex-fixture.cjs"),
+      `require("node:fs").writeFileSync(${JSON.stringify(startedPath)}, "started");\nprocess.exit(0);\n`,
     );
-    chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
       writeFileSync(input.operation.expected.path, '{"result":"stale"}\n');
@@ -965,12 +895,10 @@ process.exit(0);
 
   test("separates completion telemetry from a final JSON event without a newline", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-event-separator-"));
-    const codex = resolve(root, "codex");
     writeFileSync(
-      codex,
-      `#!/bin/sh\nprintf '{"type":"turn.started"}\n{"type":"turn.completed"}'\n`,
+      resolve(root, "codex-fixture.cjs"),
+      `process.stdout.write('{"type":"turn.started"}\\n{"type":"turn.completed"}');\n`,
     );
-    chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
       const result = await runCodexInvocation(input);
@@ -987,17 +915,14 @@ process.exit(0);
 
   test("retains a schema-decoded last message before recording success", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-valid-output-"));
-    const codex = resolve(root, "codex");
     const argsPath = resolve(root, "args.txt");
     writeFileSync(
-      codex,
-      `#!/bin/sh
-printf '%s\\n' "$@" > "$RAW_ARGS_PATH"
-printf '{"type":"turn.completed"}\n'
-exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({result:"ready"}))'
+      resolve(root, "codex-fixture.cjs"),
+      `require("node:fs").writeFileSync(process.env.RAW_ARGS_PATH, process.argv.slice(2).join("\\n") + "\\n");
+process.stdout.write('{"type":"turn.completed"}\\n');
+require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ result: "ready" }));
 `,
     );
-    chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
       input.env.RAW_OUTPUT_PATH = input.operation.expected.path;
@@ -1072,11 +997,10 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
             });
           }
         };
-        writeDeterministicCodexFixture(
-          resolve(root, "codex"),
-          `#!/bin/sh\nprintf '{"type":"turn.completed"}\n'\nexec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, process.env.RAW_OUTPUT_CONTENT)'\n`,
+        writeFileSync(
+          resolve(root, "codex-fixture.cjs"),
+          `process.stdout.write('{"type":"turn.completed"}\\n');\nrequire("node:fs").writeFileSync(process.env.RAW_OUTPUT_PATH, process.env.RAW_OUTPUT_CONTENT);\n`,
         );
-        chmodSync(resolve(root, "codex"), 0o755);
         const result = await runCodexInvocation(input);
         expect(result).toMatchObject({
           tag: "failed",
@@ -1965,8 +1889,7 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
 
   test("rejects a child-spoofed retention event without claiming it as authority", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-retention-spoof-"));
-    const codex = resolve(root, "codex");
-    const childScript = resolve(root, "child.cjs");
+    const childScript = resolve(root, "codex-fixture.cjs");
     writeFileSync(
       childScript,
       [
@@ -1982,11 +1905,6 @@ exec ${process.execPath} -e 'require("node:fs").writeFileSync(process.env.RAW_OU
         'fs.writeFileSync(process.env.RAW_OUTPUT_PATH, JSON.stringify({ result: "ready" }));',
       ].join("\n"),
     );
-    writeFileSync(
-      codex,
-      "#!/bin/sh\nexec " + process.execPath + " " + childScript + "\n",
-    );
-    chmodSync(codex, 0o755);
     try {
       const input = fakeInvocationInput(root);
       input.env.RAW_OUTPUT_PATH = input.operation.expected.path;

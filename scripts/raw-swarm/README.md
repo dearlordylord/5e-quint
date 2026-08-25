@@ -47,26 +47,31 @@ check. The hygiene check preserves the classified quality-owned test inventory,
 classifies the two pre-existing MCP prototype tests in a closed exclusion list,
 and rejects any new unclassified test or quality command that reaches a public
 model lane. The deterministic runner statically inventories reachable
-repository-owned sources, preloads a Node/ESM capability guard, and prepends
-failing shims for known coding-agent and network CLI names. A test of model
-telemetry uses a fake local executable; it remains deterministic and does not
-authenticate or contact a provider.
+repository-owned sources, preloads a Node capability guard, and prepends
+failing shims for known coding-agent and network CLI names. Model-telemetry
+tests inject controlled Node fixtures through the spawn seam; no stamped or
+forgeable coding-agent executable is admitted.
 
-The deterministic body removes inherited `NODE_OPTIONS` before starting its
-guarded Node runner, then gives every verification phase the exact guard
-option. This keeps package-manager, compiler, test-runner, and descendant Node
-processes on the same process-level boundary.
+The deterministic body removes inherited `NODE_OPTIONS`, compiles the
+repository-owned `deterministic-network-boundary.c` helper with the host C
+compiler, and refuses to continue if Linux seccomp cannot be installed. The
+helper installs the filter before `pnpm`, `mise`, the compiler, or the test
+runner starts; the Linux kernel then inherits it across workers, forks, shells,
+`env -i`, and custom launchers, independently of JavaScript environment
+variables.
 
-That boundary also re-injects the guard into Node workers and forks, rejects
-shell or environment attempts to remove it, and carries deterministic
-capability provenance through data and outside-origin module trampolines.
-Dependencies under `node_modules` remain their own capability boundary.
+The filter denies `AF_INET` and `AF_INET6` socket and socket-pair creation,
+denies all `io_uring` setup/submission syscalls, and preserves `AF_UNIX`. Its
+syscall-ABI check kills a process using an unexpected architecture instead of
+silently weakening the filter. The JavaScript guard remains defense in depth
+for static/runtime capability inventory, browser globals, and known executable
+names; it is not the security boundary and does not trust module-origin or
+fixture-marker claims.
 
-This is a process-level repository boundary, not OS-level network isolation.
-The contract covers Node and browser network capabilities plus known
-model/network executables in the guarded deterministic process tree; arbitrary
-native binaries outside that boundary are outside this process-level guarantee
-and cannot be used as deterministic evidence dependencies.
+The deterministic command is Linux-only and fails explicitly on unsupported
+platforms or toolchains. A process started outside the helper is not covered;
+ordinary deterministic evidence must therefore use the public command, which
+owns compilation and boundary installation before any verification phase.
 
 ## Vocabulary
 

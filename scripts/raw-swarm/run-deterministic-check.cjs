@@ -1,5 +1,7 @@
 const { spawnSync } = require("node:child_process");
-const { delimiter, resolve } = require("node:path");
+const { mkdtempSync, rmSync } = require("node:fs");
+const { delimiter, join, resolve } = require("node:path");
+const { tmpdir } = require("node:os");
 
 const {
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
@@ -10,6 +12,47 @@ const deterministicCapabilityGuard = resolve(
   "deterministic-capability-guard.cjs",
 );
 const deterministicNodeOptions = `--require=${deterministicCapabilityGuard}`;
+const deterministicNetworkBoundarySource = resolve(
+  __dirname,
+  "deterministic-network-boundary.c",
+);
+
+function compileDeterministicNetworkBoundary() {
+  if (process.platform !== "linux") {
+    process.stderr.write(
+      "Raw Swarm deterministic verification requires Linux seccomp; refusing to run without the kernel boundary.\n",
+    );
+    process.exit(78);
+  }
+  const buildDirectory = mkdtempSync(
+    resolve(tmpdir(), "dnd-raw-swarm-seccomp-"),
+  );
+  const binaryPath = join(buildDirectory, "deterministic-network-boundary");
+  process.once("exit", () => {
+    rmSync(buildDirectory, { recursive: true, force: true });
+  });
+  const compilation = spawnSync(
+    "cc",
+    [
+      "-std=c11",
+      "-O2",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      deterministicNetworkBoundarySource,
+      "-o",
+      binaryPath,
+    ],
+    { stdio: "inherit" },
+  );
+  if (compilation.error !== undefined || compilation.status !== 0) {
+    process.stderr.write(
+      "Raw Swarm deterministic verification could not compile its Linux seccomp boundary; refusing to weaken the lane.\n",
+    );
+    process.exit(78);
+  }
+  return binaryPath;
+}
 
 if (process.env.DND_RESOURCE_LOCK_KIND !== "broad") {
   process.stderr.write(
@@ -24,9 +67,10 @@ const deterministicEnvironment = {
   RAW_SWARM_EXECUTION_LANE: "deterministic",
   NODE_OPTIONS: deterministicNodeOptions,
 };
+const deterministicNetworkBoundary = compileDeterministicNetworkBoundary();
 
 function run(command, args) {
-  const result = spawnSync(command, args, {
+  const result = spawnSync(deterministicNetworkBoundary, [command, ...args], {
     env: deterministicEnvironment,
     stdio: "inherit",
   });

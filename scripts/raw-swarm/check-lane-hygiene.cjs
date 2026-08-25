@@ -550,6 +550,7 @@ function runLaneHygiene() {
     /RAW_SWARM_EXECUTION_LANE: "deterministic"/,
   );
   assert.match(deterministicRunner, /deterministic-capability-guard\.cjs/);
+  assert.match(deterministicRunner, /deterministic-network-boundary\.c/);
   assert.match(deterministicRunner, /NODE_OPTIONS: deterministicNodeOptions/);
   assert.doesNotMatch(
     deterministicRunner,
@@ -565,10 +566,10 @@ function runLaneHygiene() {
   );
   assert.equal(
     existsSync(
-      join(root, "scripts/raw-swarm/deterministic-capability-loader.mjs"),
+      join(root, "scripts/raw-swarm/deterministic-network-boundary.c"),
     ),
     true,
-    "Deterministic lane is missing its ESM capability guard.",
+    "Deterministic lane is missing its Linux seccomp boundary source.",
   );
   const blockerDirectory = join(root, "scripts/raw-swarm/deterministic-bin");
   const commonBlockerPath = join(blockerDirectory, "forbidden-command");
