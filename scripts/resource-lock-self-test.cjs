@@ -32,10 +32,13 @@ const retiredLockNames = [
   "ralph-broad-workspace-check.lock",
   "ralph-mbt.lock",
 ];
-// Fixture wrappers compile the native supervisor before writing their probe
-// markers. Parallel workspace checks can delay that startup without changing
-// the lock protocol, so the self-test uses a generous diagnostic wait budget.
-const selfTestWaitTimeoutMs = 60_000;
+const waitTimeoutMs = 20_000;
+const resourceLockEnvironmentKeys = [
+  "DND_RESOURCE_LOCK_KIND",
+  "DND_RESOURCE_LOCK_OWNER_PID",
+  "DND_RESOURCE_LOCK_OWNER_START_TIME",
+];
+const childDiagnostics = new WeakMap();
 
 function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8" });
@@ -51,11 +54,16 @@ function waitFor(predicate, description) {
   const startedAt = Date.now();
   return new Promise((resolve, reject) => {
     const poll = () => {
-      if (predicate()) {
-        resolve();
+      try {
+        if (predicate()) {
+          resolve();
+          return;
+        }
+      } catch (error) {
+        reject(error);
         return;
       }
-      if (Date.now() - startedAt >= selfTestWaitTimeoutMs) {
+      if (Date.now() - startedAt >= waitTimeoutMs) {
         reject(new Error(`Timed out waiting for ${description}.`));
         return;
       }
@@ -74,7 +82,7 @@ function waitForResult(resultProvider, description) {
         resolve(result);
         return;
       }
-      if (Date.now() - startedAt >= selfTestWaitTimeoutMs) {
+      if (Date.now() - startedAt >= waitTimeoutMs) {
         reject(new Error(`Timed out waiting for ${description}.`));
         return;
       }
@@ -128,7 +136,7 @@ function waitForExit(child, description) {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error(`Timed out waiting for ${description} to exit.`));
-    }, selfTestWaitTimeoutMs);
+    }, waitTimeoutMs);
     child.once("exit", (code) => {
       clearTimeout(timeout);
       resolve(code);
@@ -146,7 +154,7 @@ function guardedSpawn(root, wrapperName, probeArgs) {
 }
 
 function guardedCommandSpawn(root, wrapperName, command, args, env) {
-  return spawn(
+  const child = spawn(
     "bash",
     [
       "-c",
@@ -158,10 +166,48 @@ function guardedCommandSpawn(root, wrapperName, command, args, env) {
     ],
     {
       cwd: root,
-      env: env === undefined ? process.env : { ...process.env, ...env },
+      env: independentFixtureEnvironment(env),
       stdio: ["ignore", "ignore", "pipe"],
     },
   );
+  const stderr = [];
+  child.stderr.setEncoding("utf8");
+  child.stderr.on("data", (chunk) => stderr.push(chunk));
+  childDiagnostics.set(child, stderr);
+  return child;
+}
+
+function independentFixtureEnvironment(overrides) {
+  const environment = { ...process.env };
+  for (const key of resourceLockEnvironmentKeys) delete environment[key];
+  return overrides === undefined
+    ? environment
+    : { ...environment, ...overrides };
+}
+
+function fixtureChildFailure(child, description) {
+  if (child.exitCode === null && child.signalCode === null) return undefined;
+  const status =
+    child.signalCode === null
+      ? `exit status ${child.exitCode}`
+      : `signal ${child.signalCode}`;
+  const stderr = childDiagnostics.get(child)?.join("").trim();
+  return `${description} exited before expected probe output (${status})${
+    stderr === undefined || stderr === "" ? "." : `:\n${stderr}`
+  }`;
+}
+
+function assertFixtureChildRunning(child, description) {
+  const failure = fixtureChildFailure(child, description);
+  if (failure !== undefined) throw new Error(failure);
+}
+
+function waitForProbeLine(child, logPath, expectedLine, description) {
+  return waitFor(() => {
+    if (logLines(logPath).includes(expectedLine)) return true;
+    assertFixtureChildRunning(child, description);
+    return false;
+  }, description);
 }
 
 function processIdentity(pid) {
@@ -193,13 +239,16 @@ function logLines(logPath) {
 
 async function assertSerialized(holder, contender, logPath) {
   try {
-    await waitFor(
-      () => logLines(logPath).includes("holder-start"),
-      "the holder to start",
-    );
+    await waitForProbeLine(holder, logPath, "holder-start", "the holder");
     await new Promise((resolve) => setTimeout(resolve, 120));
     assert.deepEqual(logLines(logPath), ["holder-start"]);
     assert.equal(await waitForExit(holder, "the holder"), 0);
+    await waitForProbeLine(
+      contender,
+      logPath,
+      "contender-start",
+      "the contender",
+    );
     assert.equal(await waitForExit(contender, "the contender"), 0);
     assert.deepEqual(logLines(logPath), [
       "holder-start",
@@ -324,8 +373,10 @@ async function runSelfTest() {
       "holder",
       sharedLog,
     ]);
-    await waitFor(
-      () => logLines(sharedLog).includes("holder-start"),
+    await waitForProbeLine(
+      sharedHolder,
+      sharedLog,
+      "holder-start",
       "the shared-lock holder",
     );
     const sharedContender = guardedSpawn(linked, "with-mbt-lock.sh", [
@@ -352,8 +403,10 @@ async function runSelfTest() {
         ],
         { cwd: root, stdio: "ignore" },
       );
-      await waitFor(
-        () => logLines(logPath).includes("holder-start"),
+      await waitForProbeLine(
+        holder,
+        logPath,
+        "holder-start",
         `${retiredLockName} holder`,
       );
       const contender = guardedSpawn(linked, "with-mbt-lock.sh", [
