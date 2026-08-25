@@ -2796,6 +2796,10 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
         }
       ],
       "profiles": ["stat-block.attack-control"],
@@ -2805,14 +2809,16 @@
         "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt",
         "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt"
       ],
-      "reason": "Stat Block scope includes authored action controls and named attacks. Multi-component attack damage is admitted by structured on-hit damage shape at the generic Stat Block support boundary and resolved component-by-component through the shared attack damage pipeline. Attack-hit target Size Prone riders are admitted only from typed Surface on-hit payloads that trail a supported base damage payload, applied through target effective Size facts, and withheld when the target is larger than the parsed Size gate or immune to Prone. Non-Prone size-gated condition riders such as Grappled/Restrained payloads stay closed until their condition-specific required facts are modeled. Monster authored identity remains selection/catalog identity rather than runtime dispatch.",
+      "reason": "Stat Block scope includes authored action controls and named attacks. Multi-component attack damage is admitted by structured on-hit damage shape at the generic Stat Block support boundary and resolved component-by-component through the shared attack damage pipeline. Attack-hit target Size Prone riders are admitted only from typed Surface on-hit payloads that trail a supported base damage payload, applied through target effective Size facts, and withheld when the target is larger than the parsed Size gate or immune to Prone. Non-Prone size-gated condition riders such as Grappled/Restrained payloads stay closed until their condition-specific required facts are modeled. The generic admission and projection owner in stat-block-execution.ts is exercised by the focused stat-block-projection runtime witness. battle-reducer/hole-helpers.ts owns the Stat Block-specific target-choice and ordinary-object-target admission branches; its existing ordinary-object obligation marker remains because that file also owns the separate generic object-target procedure, so this is not a duplicate claim. Monster authored identity remains selection/catalog identity rather than runtime dispatch.",
       "runtime": "battle",
       "runtimeOwners": [
+        "packages/battle-runtime/src/stat-block-execution.ts",
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/statblock-action-support.ts",
         "packages/battle-runtime/src/statblock-attack-damage-support.ts",
         "packages/battle-runtime/src/battle-reducer/statblock.ts",
         "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/damage-helpers.ts",
         "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
         "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts"
