@@ -11,6 +11,7 @@ import type { BattleResolutionResult } from "./battle-state-execution.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import { statBlockProjectionIssues } from "./stat-block-execution.ts";
 import {
   admitCompanionToBattle,
   castResolvedFindFamiliar,
@@ -273,6 +274,7 @@ function companionPresentationFromSource(input: {
         statBlock: input.statBlock,
         execution: combatant.origin.execution,
       }),
+      projectionIssues: statBlockProjectionIssues(input.statBlock),
     },
   });
 }

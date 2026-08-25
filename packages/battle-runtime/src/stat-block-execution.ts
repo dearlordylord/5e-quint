@@ -9,6 +9,7 @@ import {
 import { Brand, Match } from "effect";
 import * as Either from "effect/Either";
 import type {
+  CreatureActions,
   CreatureLimitedUse,
   CreatureNamedActionOption,
   CreatureNamedAttackRoll,
@@ -41,6 +42,9 @@ import {
 import {
   admittedStatBlockExecutionState,
   type BattleStatBlockExecutionSource,
+  type StatBlockActionProjectionSection,
+  type StatBlockActionProjectionShape,
+  type StatBlockProjectionIssue,
   type StatBlockAttackProcedure,
   type StatBlockExecutionState,
   type StatBlockExecutionAdmission,
@@ -185,7 +189,10 @@ export function statBlockExecutionAdmissionCohort<
 }
 
 function admitStatBlock(
-  statBlock: BattleStatBlockExecutionSource,
+  statBlock: Pick<
+    BattleStatBlockExecutionSource,
+    "challengeRating" | "statBlock"
+  >,
 ): AdmittedStatBlock {
   const attacks: AdmittedAttackOccurrence[] = [];
   const traitAttackRollModes = supportedStatBlockTraitAttackRollModes(
@@ -278,8 +285,139 @@ function admitStatBlock(
   };
 }
 
+export function statBlockProjectionIssues(
+  statBlock: Pick<
+    BattleStatBlockExecutionSource,
+    "challengeRating" | "statBlock"
+  >,
+): readonly StatBlockProjectionIssue[] {
+  const admitted = admitStatBlock(statBlock).occurrences;
+  const admittedAttacks = new Set(
+    admitted.attacks.map((occurrence) => occurrence.source),
+  );
+  const admittedMultiattacks = new Set(
+    admitted.multiattacks.map((occurrence) => occurrence.source),
+  );
+  const admittedBonusActions = new Set(
+    admitted.bonusActions.map((occurrence) => occurrence.source),
+  );
+  const issues: StatBlockProjectionIssue[] = [];
+
+  for (const trait of statBlock.statBlock.traits ?? []) {
+    if (trait.effect === undefined) {
+      issues.push({
+        tag: "statBlockProjectionIssue",
+        source: {
+          kind: "trait",
+          nonExecutableReason: "textOnlyTrait",
+        },
+      });
+      continue;
+    }
+    if (supportedStatBlockTraitAttackRollModes([trait]) === undefined) {
+      issues.push({
+        tag: "statBlockProjectionIssue",
+        source: {
+          kind: "trait",
+          nonExecutableReason: "unsupportedTraitEffect",
+        },
+      });
+    }
+  }
+
+  appendActionProjectionIssues(
+    issues,
+    "actions",
+    statBlock.statBlock.actions,
+    admittedAttacks,
+    admittedMultiattacks,
+    new Set(),
+  );
+  appendActionProjectionIssues(
+    issues,
+    "bonusActions",
+    statBlock.statBlock.bonusActions,
+    admittedAttacks,
+    new Set(),
+    admittedBonusActions,
+  );
+  appendActionProjectionIssues(
+    issues,
+    "reactions",
+    statBlock.statBlock.reactions,
+    new Set(),
+    new Set(),
+    new Set(),
+  );
+  appendActionProjectionIssues(
+    issues,
+    "legendaryActions",
+    statBlock.statBlock.legendaryActions?.actions,
+    admittedAttacks,
+    new Set(),
+    new Set(),
+  );
+  return issues;
+}
+
+function appendActionProjectionIssues(
+  issues: StatBlockProjectionIssue[],
+  section: StatBlockActionProjectionSection,
+  actions: CreatureActions | undefined,
+  admittedAttacks: ReadonlySet<CreatureNamedAttackRoll>,
+  admittedMultiattacks: ReadonlySet<CreatureNamedMultiattack>,
+  admittedBonusActions: ReadonlySet<CreatureNamedActionOption>,
+): void {
+  if (actions === undefined) return;
+  for (const attack of actions.attacks ?? []) {
+    if (!admittedAttacks.has(attack)) {
+      issues.push(actionProjectionIssue(section, "attack"));
+    }
+  }
+  for (const multiattack of actions.multiattacks ?? []) {
+    if (!admittedMultiattacks.has(multiattack)) {
+      issues.push(actionProjectionIssue(section, "multiattack"));
+    }
+  }
+  for (const save of actions.saves ?? []) {
+    void save;
+    issues.push(actionProjectionIssue(section, "save"));
+  }
+  for (const support of actions.supports ?? []) {
+    void support;
+    issues.push(actionProjectionIssue(section, "support"));
+  }
+  for (const actionOption of actions.actionOptions ?? []) {
+    if (!admittedBonusActions.has(actionOption)) {
+      issues.push(actionProjectionIssue(section, "actionOption"));
+    }
+  }
+  for (const special of actions.specials ?? []) {
+    void special;
+    issues.push(actionProjectionIssue(section, "special"));
+  }
+}
+
+function actionProjectionIssue(
+  section: StatBlockActionProjectionSection,
+  shape: StatBlockActionProjectionShape,
+): StatBlockProjectionIssue {
+  return {
+    tag: "statBlockProjectionIssue",
+    source: {
+      kind: "action",
+      section,
+      shape,
+      nonExecutableReason: "unsupportedActionShape",
+    },
+  };
+}
+
 function admittedUnarmedStrike(
-  statBlock: BattleStatBlockExecutionSource,
+  statBlock: Pick<
+    BattleStatBlockExecutionSource,
+    "challengeRating" | "statBlock"
+  >,
 ): AdmittedUnarmedStrikeOccurrence {
   const strengthModifier = abilityScoreToMod(
     statBlock.statBlock.abilityScores.str,
@@ -892,7 +1030,7 @@ function sameMembers<T>(actual: readonly T[], expected: readonly T[]): boolean {
 }
 
 function statBlockAttackSections(
-  statBlock: BattleStatBlockExecutionSource,
+  statBlock: Pick<BattleStatBlockExecutionSource, "statBlock">,
 ): readonly [StatBlockAttackSection, readonly CreatureNamedAttackRoll[]][] {
   return [
     ["actions", statBlock.statBlock.actions?.attacks ?? []],

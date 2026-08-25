@@ -21,7 +21,10 @@ import {
 } from "./battle-reducer/attack-damage-apply.ts";
 import { attackActionOptionPresentationName } from "./stat-block-presentation.ts";
 import { maxJumpMovementReplacementDistanceFeet } from "./battle-reducer/jump-movement-replacement.ts";
-import { statBlockProcedurePresentationsForActor } from "./stat-block-presentation.ts";
+import {
+  statBlockProcedurePresentationsForActor,
+  statBlockProjectionIssuesForActor,
+} from "./stat-block-presentation.ts";
 import type {
   BattleSubject,
   CharacterProcedureBattleSubject,
@@ -31,6 +34,7 @@ import type {
   BattleRuntimeContext,
   BattleRuntimeSession,
 } from "./battle-runtime-context.ts";
+import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
 import {
   BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY,
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
@@ -90,6 +94,36 @@ export function discoverBattleActs(
   session: BattleRuntimeSession,
 ): readonly AvailableBattleAct[] {
   return presentBattleActs(session, discoverBattleActCandidates(session.state));
+}
+
+export type BattleStatBlockActDiscovery = {
+  readonly acts: readonly AvailableBattleAct[];
+  readonly statBlockProjectionIssues: readonly {
+    readonly combatantId: CombatantId;
+    readonly issues: readonly StatBlockProjectionIssue[];
+  }[];
+};
+
+export function discoverBattleActsWithStatBlockProjectionIssues(
+  session: BattleRuntimeSession,
+): BattleStatBlockActDiscovery {
+  const statBlockProjectionIssues = [...session.state.combatants].flatMap(
+    ([combatantId, combatant]) => {
+      if (combatant.origin.kind !== "statBlock") return [];
+      const issues = statBlockProjectionIssuesForActor(
+        session.state,
+        session.context,
+        combatantId,
+      );
+      return issues === null || issues.length === 0
+        ? []
+        : [{ combatantId, issues }];
+    },
+  );
+  return {
+    acts: discoverBattleActs(session),
+    statBlockProjectionIssues,
+  };
 }
 
 export function presentBattleActs(

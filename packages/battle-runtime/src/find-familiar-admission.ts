@@ -23,6 +23,7 @@ import {
 } from "./identity.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import { statBlockProjectionIssues } from "./stat-block-execution.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   statBlockLanguagePresentation,
@@ -111,6 +112,7 @@ export function admitFindFamiliarReappearance(input: {
         statBlock,
         execution: combatantAdmission.right.origin.execution,
       }),
+      projectionIssues: statBlockProjectionIssues(statBlock),
     },
   });
 }
