@@ -408,8 +408,8 @@ function pureDamageObjectTargetStatBlock(): StatBlockRecord {
   if (scimitar === undefined) {
     throw new Error("Expected the pure-damage Stat Block attack fixture.");
   }
-  const baseDamage = scimitar.onHit[0];
-  if (baseDamage === undefined || baseDamage.kind !== "damage") {
+  const baseDamage = scimitar.onHit.find((effect) => effect.kind === "damage");
+  if (baseDamage === undefined) {
     throw new Error("Expected a base damage effect for the test attack.");
   }
   return {
