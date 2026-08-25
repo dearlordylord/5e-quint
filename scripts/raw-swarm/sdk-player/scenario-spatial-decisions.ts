@@ -977,7 +977,7 @@ function parseSpatialQuestion(
       kind: "spellTarget",
       casterId: combatantId(value.casterId),
       targetId: combatantId(value.targetId),
-      sourceProcedureRef,
+      sourceProcedureRef: sourceProcedureRef.right,
     });
   }
   if (value.kind === "objectTarget") {
@@ -1007,7 +1007,7 @@ function parseSpatialQuestion(
       kind: "objectTarget",
       actorId: combatantId(value.actorId),
       objectId: battleObjectId(value.objectId),
-      sourceProcedureRef,
+      sourceProcedureRef: sourceProcedureRef.right,
     });
   }
   if (value.kind === "attackTarget") {
@@ -1040,7 +1040,7 @@ function parseSpatialQuestion(
       kind: "attackTarget",
       actorId: combatantId(value.actorId),
       targetId: combatantId(value.targetId),
-      sourceProcedureRef,
+      sourceProcedureRef: sourceProcedureRef.right,
       targetConstraint: value.targetConstraint,
     });
   }

@@ -210,6 +210,11 @@ describe("scenario setup public-SDK boundary", () => {
 
     expect(decisionFor(String(canonicalProcedureRef))).toMatchObject({
       _tag: "Right",
+      right: {
+        question: {
+          sourceProcedureRef: String(canonicalProcedureRef),
+        },
+      },
     });
     const malformedNestedProcedureRef = JSON.stringify({
       scopeRef: "not-a-canonical-scope",
