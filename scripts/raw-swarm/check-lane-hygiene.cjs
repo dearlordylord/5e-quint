@@ -22,6 +22,8 @@ const {
   NETWORK_CLI_EXECUTABLES,
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
   RAW_SWARM_TESTS_OUTSIDE_QUALITY,
+  SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
+  isSupportedVitestTestFilename,
 } = require("./lane-classification.cjs");
 
 const root = resolve(__dirname, "../..");
@@ -179,11 +181,14 @@ function importSpecifiers(source) {
   });
 }
 
-const sourceExtensions = ["", ".ts", ".tsx", ".js", ".mjs", ".cjs"];
+const sourceResolutionSuffixes = Object.freeze([
+  "",
+  ...SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
+]);
 
 function resolveInternalImport(sourcePath, specifier) {
   const candidate = resolve(dirname(sourcePath), specifier);
-  const candidates = sourceExtensions.flatMap((extension) => [
+  const candidates = sourceResolutionSuffixes.flatMap((extension) => [
     `${candidate}${extension}`,
     join(candidate, `index${extension}`),
   ]);
@@ -211,12 +216,11 @@ function sourcePathForTarget(target) {
   if (typeof target !== "string") return undefined;
   const candidate = resolve(target);
   if (!repositoryOwnedPath(candidate)) return undefined;
-  const extensions = ["", ...sourceExtensions];
-  for (const extension of extensions) {
+  for (const extension of sourceResolutionSuffixes) {
     const path = `${candidate}${extension}`;
     if (existsSync(path)) return path;
   }
-  for (const extension of extensions) {
+  for (const extension of sourceResolutionSuffixes) {
     const path = join(candidate, `index${extension}`);
     if (existsSync(path)) return path;
   }
@@ -433,7 +437,7 @@ function runTestSourceCheck(testPathArgument) {
 
 function runLaneHygiene() {
   const discoveredTests = filesBelow(join(root, "scripts/raw-swarm"))
-    .filter((path) => /(?:\.test|\.property\.test)\.ts$/.test(path))
+    .filter((path) => isSupportedVitestTestFilename(path))
     .map((path) => relative(root, path))
     .sort();
 
@@ -558,7 +562,7 @@ function runLaneHygiene() {
     /RAW_SWARM_EXECUTION_LANE: "deterministic"/,
   );
   assert.match(deterministicRunner, /deterministic-capability-guard\.cjs/);
-  assert.match(deterministicRunner, /deterministic-network-boundary\.c/);
+  assert.match(deterministicRunner, /process-supervisor\.c/);
   assert.match(deterministicRunner, /deterministic-toolchain\.cjs/);
   assert.match(deterministicRunner, /deterministic-runner\.cjs/);
   assert.match(deterministicRunner, /NODE_OPTIONS: deterministicNodeOptions/);
@@ -575,11 +579,9 @@ function runLaneHygiene() {
     "Deterministic lane is missing its Node capability guard.",
   );
   assert.equal(
-    existsSync(
-      join(root, "scripts/raw-swarm/deterministic-network-boundary.c"),
-    ),
+    existsSync(join(root, "scripts/raw-swarm/process-supervisor.c")),
     true,
-    "Deterministic lane is missing its Linux seccomp boundary source.",
+    "Deterministic lane is missing its native process supervisor source.",
   );
   const deterministicToolchain = readFileSync(
     join(root, "scripts/raw-swarm/deterministic-toolchain.cjs"),
@@ -623,7 +625,26 @@ function runLaneHygiene() {
   assert.doesNotMatch(
     deterministicProcessRunner,
     /spawnSync/,
-    "Deterministic child lifecycle must use asynchronous process-group supervision.",
+    "Deterministic child lifecycle must use asynchronous native supervision.",
+  );
+  const sharedProcessSupervision = readFileSync(
+    join(root, "scripts/process-supervision.sh"),
+    "utf8",
+  );
+  assert.match(
+    sharedProcessSupervision,
+    /--supervise-only/,
+    "Resource and model wrappers must use the shared native supervisor.",
+  );
+  assert.doesNotMatch(
+    sharedProcessSupervision,
+    /DND_PROCESS_SUPERVISION_MARKER|\/proc\/\[0-9\]\*\/environ/,
+    "Process ownership must not rely on an inherited environment marker.",
+  );
+  assert.doesNotMatch(
+    sharedProcessSupervision,
+    /supervision_signal_helper KILL|kill -["']?KILL/,
+    "The shell must not kill the native supervisor while its descendants may survive.",
   );
   const blockerDirectory = join(root, "scripts/raw-swarm/deterministic-bin");
   const commonBlockerPath = join(blockerDirectory, "forbidden-command");

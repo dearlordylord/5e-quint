@@ -62,9 +62,9 @@ handle_signal() {
   fi
   status="$pending_signal_status"
   [[ "$supervision_cleanup_in_progress" == false ]] || return 0
-  if [[ -n "$supervision_command_pid" || -n "$supervision_marker" ]]; then
+  if [[ -n "$supervision_helper_pid" || -n "$supervision_helper_directory" ]]; then
     set +e
-    supervision_cleanup_command
+    supervision_cleanup_helper
     local cleanup_status=$?
     set -e
     release_lane

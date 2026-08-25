@@ -46,14 +46,19 @@ The quality gate runs `check:raw-swarm-lane-hygiene` before the deterministic
 check. The hygiene check preserves the classified quality-owned test inventory,
 classifies the two pre-existing MCP prototype tests in a closed exclusion list,
 and rejects any new unclassified test or quality command that reaches a public
-model lane. The deterministic runner statically inventories reachable
-repository-owned sources, preloads a Node capability guard, and prepends
+model lane. Its closed Vitest filename inventory expands Vitest's default
+include glob, `**/*.{test,spec}.?(c|m)[jt]s?(x)`, into every `.test` and `.spec`
+JavaScript/TypeScript form, including JSX/TSX and CJS/MJS/CTS/MTS variants.
+That same canonical extension inventory drives extensionless internal-import
+resolution during transitive capability scanning. The deterministic runner
+statically inventories reachable repository-owned sources, preloads a Node
+capability guard, and prepends
 failing shims for known coding-agent and network CLI names. Model-telemetry
 tests inject controlled Node fixtures through the spawn seam; no stamped or
 forgeable coding-agent executable is admitted.
 
 The deterministic body removes inherited `NODE_OPTIONS`, compiles the
-repository-owned `deterministic-network-boundary.c` helper with the validated
+repository-owned `process-supervisor.c` helper with the validated
 `/usr/bin/cc` system compiler, and refuses to continue if that compiler or
 Linux seccomp is unavailable. Compiler lookup ignores `PATH`, `CC`, and
 compiler-option environment variables and uses a small sanitized environment.
@@ -90,24 +95,33 @@ alias reached by admitted source still inherits the kernel communication
 denial. This is a deterministic-lane contract, not a hostile-root or
 untrusted-toolchain claim.
 
-The native helper is also the lifecycle supervisor: it becomes a Linux
-subreaper, forks the command into a dedicated process group before applying
-seccomp, and uses `waitpid(-1, ...)` to reap the leader and every reparented
-descendant. The JavaScript runner only starts one helper at a time with
-inherited standard streams, passes its exact PID as the named owner argument,
-and waits for its close; it has no `/proc` process discovery, PID-member
-registry, output capture, or duplicate settlement state. The helper validates
-that owner identity before configuring `PDEATHSIG`; the supervisor captures
-its PID before `fork`, and the child configures its own immediate-owner signal
-against that captured identity.
+The native process supervisor is the shared lifecycle owner for both
+deterministic and model lanes. It becomes a Linux subreaper, forks the command,
+and uses one parent-lineage ownership mechanism plus `waitpid(-1, ...)` to
+signal and reap the leader and every reparented descendant. A detached child
+cannot escape ownership by calling `setsid` or clearing its environment. The
+deterministic runner starts the supervisor with the seccomp filter; model
+wrappers start the same supervisor in
+`--supervise-only` mode, so model/API/coding-agent network access remains
+available. Both modes compile the repository-owned supervisor with the
+validated `/usr/bin/cc` system compiler and fail explicitly if the Linux
+toolchain or `/proc` ownership boundary is unavailable. The JavaScript and
+shell wrappers only start one supervisor at a time with inherited standard
+streams, pass its exact PID as the named owner argument, and wait for its
+close; no environment marker is used as an ownership boundary.
 On normal leader exit, a surviving descendant causes bounded `SIGTERM` then
-`SIGKILL` cleanup and a non-clean phase status. `SIGTERM`, `SIGINT`, and
+`SIGKILL` cleanup and a non-clean phase status. If the supervisor cannot prove
+that `SIGKILL` settled the tree, it retains ownership and retries rather than
+releasing a lock. `SIGTERM`, `SIGINT`, and
 `SIGHUP` are handled by the native supervisor, which forwards the signal to
-the owned process group, escalates when required, reaps the tree, and returns
-the corresponding signal status. Normal owner death and handled signals use
-the same bounded cleanup. The helper and command use parent-death signals for
-their immediate owners; a process forcibly killed with `SIGKILL` cannot run
-handlers, so descendant and temporary-directory cleanup cannot be guaranteed.
+each owned descendant, escalates when required, reaps the tree, and returns the
+corresponding signal status. Normal owner death and handled signals use
+the same bounded cleanup. The shell deliberately never escalates by killing
+the supervisor: it waits for the supervisor's own cleanup before releasing a
+resource or model-lane lock. The helper and command use parent-death signals
+for their immediate owners; a process forcibly killed with `SIGKILL` cannot run
+handlers, so external `SIGKILL` of the supervisor or wrapper remains outside
+the cleanup guarantee.
 
 The deterministic command is Linux-only and fails explicitly on unsupported
 platforms or toolchains. A process started outside the helper is not covered;

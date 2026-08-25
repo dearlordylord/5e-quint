@@ -1,3 +1,35 @@
+// This is the canonical source-extension inventory for Vitest's default
+// include glob: **/*.{test,spec}.?(c|m)[jt]s?(x). Test suffixes and the hygiene
+// checker's extensionless internal-import resolver both derive from it, so a
+// supported JavaScript or TypeScript form cannot be omitted by one path.
+const SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS = Object.freeze([
+  ".cjs",
+  ".cjsx",
+  ".cts",
+  ".ctsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".mjsx",
+  ".mts",
+  ".mtsx",
+  ".ts",
+  ".tsx",
+]);
+const SUPPORTED_VITEST_TEST_FILE_SUFFIXES = Object.freeze(
+  [".test", ".spec"].flatMap((testKind) =>
+    SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS.map(
+      (extension) => `${testKind}${extension}`,
+    ),
+  ),
+);
+
+function isSupportedVitestTestFilename(path) {
+  return SUPPORTED_VITEST_TEST_FILE_SUFFIXES.some((suffix) =>
+    path.endsWith(suffix),
+  );
+}
+
 const QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/artifact-index.test.ts",
   "scripts/raw-swarm/capability-projection.test.ts",
@@ -179,6 +211,9 @@ const DETERMINISTIC_BLOCKED_EXECUTABLES = Object.freeze(
   ].sort(),
 );
 module.exports = {
+  SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
+  SUPPORTED_VITEST_TEST_FILE_SUFFIXES,
+  isSupportedVitestTestFilename,
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
   RAW_SWARM_TESTS_OUTSIDE_QUALITY,
   MODEL_BACKED_OPERATIONS,

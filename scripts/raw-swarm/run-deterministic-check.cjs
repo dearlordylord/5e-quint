@@ -14,15 +14,12 @@ const deterministicCapabilityGuard = resolve(
   "deterministic-capability-guard.cjs",
 );
 const deterministicNodeOptions = `--require=${deterministicCapabilityGuard}`;
-const deterministicNetworkBoundarySource = resolve(
-  __dirname,
-  "deterministic-network-boundary.c",
-);
+const processSupervisorSource = resolve(__dirname, "process-supervisor.c");
 
-function compileDeterministicNetworkBoundary(buildDirectory) {
-  const binaryPath = join(buildDirectory, "deterministic-network-boundary");
+function compileProcessSupervisor(buildDirectory) {
+  const binaryPath = join(buildDirectory, "process-supervisor");
   const compilation = compileTrustedCSource(
-    deterministicNetworkBoundarySource,
+    processSupervisorSource,
     binaryPath,
   );
   if (!compilation.ok) {
@@ -62,7 +59,7 @@ async function main() {
           return exitStatus;
         } catch (error) {
           process.stderr.write(
-            `Raw Swarm deterministic verification could not settle its child process group: ${error instanceof Error ? error.message : String(error)}\n`,
+            `Raw Swarm deterministic verification could not settle its owned process tree: ${error instanceof Error ? error.message : String(error)}\n`,
           );
           return 1;
         } finally {
@@ -74,8 +71,7 @@ async function main() {
   });
 
   try {
-    const deterministicNetworkBoundary =
-      compileDeterministicNetworkBoundary(buildDirectory);
+    const processSupervisor = compileProcessSupervisor(buildDirectory);
     const deterministicEnvironment = {
       ...process.env,
       PATH: `${resolve(__dirname, "deterministic-bin")}${delimiter}${process.env.PATH ?? ""}`,
@@ -83,7 +79,7 @@ async function main() {
       NODE_OPTIONS: deterministicNodeOptions,
     };
     runner = createDeterministicRunner({
-      boundary: deterministicNetworkBoundary,
+      boundary: processSupervisor,
       environment: deterministicEnvironment,
     });
 
