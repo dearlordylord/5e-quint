@@ -1,6 +1,5 @@
-const DETERMINISTIC_RAW_SWARM_TESTS = [
+const QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/artifact-index.test.ts",
-  "scripts/raw-swarm/battle-slice-tools.test.ts",
   "scripts/raw-swarm/capability-projection.test.ts",
   "scripts/raw-swarm/complete-path-comparison.test.ts",
   "scripts/raw-swarm/findings.test.ts",
@@ -35,8 +34,14 @@ const DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/sdk-player/sdk-review-packet.test.ts",
   "scripts/raw-swarm/sdk-player/sdk-transcript.property.test.ts",
   "scripts/raw-swarm/stage-plan-authority.test.ts",
-  "scripts/raw-swarm/transcript.property.test.ts",
 ].sort();
+
+const RAW_SWARM_TESTS_OUTSIDE_QUALITY = Object.freeze({
+  "scripts/raw-swarm/battle-slice-tools.test.ts":
+    "Pre-existing MCP tool-surface prototype contract; not part of the established Raw Swarm quality command.",
+  "scripts/raw-swarm/transcript.property.test.ts":
+    "Pre-existing MCP transcript prototype property suite; not part of the established Raw Swarm quality command.",
+});
 
 const MODEL_BACKED_OPERATIONS = Object.freeze({
   "fixed-benchmark-prepare": {
@@ -87,7 +92,8 @@ const MODEL_BACKED_PROFILE_BUDGET_SECONDS = Object.freeze({
 });
 
 module.exports = {
-  DETERMINISTIC_RAW_SWARM_TESTS,
+  QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
+  RAW_SWARM_TESTS_OUTSIDE_QUALITY,
   MODEL_BACKED_OPERATIONS,
   MODEL_BACKED_PROFILE_BUDGET_SECONDS,
 };

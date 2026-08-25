@@ -3,9 +3,10 @@ const { readdirSync, readFileSync } = require("node:fs");
 const { join, relative, resolve } = require("node:path");
 
 const {
-  DETERMINISTIC_RAW_SWARM_TESTS,
+  QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
   MODEL_BACKED_OPERATIONS,
   MODEL_BACKED_PROFILE_BUDGET_SECONDS,
+  RAW_SWARM_TESTS_OUTSIDE_QUALITY,
 } = require("./lane-classification.cjs");
 
 const root = resolve(__dirname, "../..");
@@ -26,11 +27,21 @@ const discoveredTests = filesBelow(join(root, "scripts/raw-swarm"))
   .sort();
 
 assert.deepEqual(
-  DETERMINISTIC_RAW_SWARM_TESTS,
+  [
+    ...QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
+    ...Object.keys(RAW_SWARM_TESTS_OUTSIDE_QUALITY),
+  ].sort(),
   discoveredTests,
-  "Every Raw Swarm test must be classified in the deterministic inventory. Live model work belongs behind a public model command, not in a test file.",
+  "Every Raw Swarm test must be classified as quality-owned or an explicitly retained prototype exclusion. Live model work belongs behind a public model command, not in a test file.",
 );
-for (const testPath of DETERMINISTIC_RAW_SWARM_TESTS) {
+assert.equal(
+  QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.some((testPath) =>
+    Object.hasOwn(RAW_SWARM_TESTS_OUTSIDE_QUALITY, testPath),
+  ),
+  false,
+  "A Raw Swarm test cannot be both quality-owned and excluded from quality.",
+);
+for (const testPath of discoveredTests) {
   const source = readFileSync(join(root, testPath), "utf8");
   assert.doesNotMatch(
     source,
@@ -75,7 +86,7 @@ assert.deepEqual(MODEL_BACKED_PROFILE_BUDGET_SECONDS, {
 });
 for (const path of modelEntrypoints) {
   assert.equal(
-    DETERMINISTIC_RAW_SWARM_TESTS.includes(path),
+    QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.includes(path),
     false,
     `Model entry point ${path} entered the deterministic inventory.`,
   );
@@ -98,5 +109,5 @@ assert.match(
 );
 
 process.stdout.write(
-  `Raw Swarm lane hygiene passed: ${DETERMINISTIC_RAW_SWARM_TESTS.length} deterministic tests and ${modelEntrypoints.size} explicit model-backed operations.\n`,
+  `Raw Swarm lane hygiene passed: ${QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.length} quality-owned deterministic tests, ${Object.keys(RAW_SWARM_TESTS_OUTSIDE_QUALITY).length} closed prototype exclusions, and ${modelEntrypoints.size} explicit model-backed operations.\n`,
 );

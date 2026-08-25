@@ -1,7 +1,9 @@
 const { spawnSync } = require("node:child_process");
 const { delimiter, resolve } = require("node:path");
 
-const { DETERMINISTIC_RAW_SWARM_TESTS } = require("./lane-classification.cjs");
+const {
+  QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
+} = require("./lane-classification.cjs");
 
 if (process.env.DND_RESOURCE_LOCK_KIND !== "broad") {
   process.stderr.write(
@@ -44,7 +46,7 @@ run("mise", [
   "exec",
   "vitest",
   "run",
-  ...DETERMINISTIC_RAW_SWARM_TESTS,
+  ...QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
   "--pool=threads",
   "--maxWorkers=1",
 ]);

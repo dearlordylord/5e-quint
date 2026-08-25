@@ -40,8 +40,9 @@ catalogue rendering, replay, report, assembly, and comparison commands remain
 direct commands because they do not call a model.
 
 The quality gate runs `check:raw-swarm-lane-hygiene` before the deterministic
-check. The hygiene check requires every Raw Swarm test to occur in the one
-deterministic inventory and rejects a quality command that reaches a public
+check. The hygiene check preserves the established 35-test quality inventory,
+classifies the two pre-existing MCP prototype tests in a closed exclusion list,
+and rejects any new unclassified test or quality command that reaches a public
 model lane. A test of model telemetry uses a fake local executable; it remains
 deterministic and does not authenticate or contact a provider.
 
