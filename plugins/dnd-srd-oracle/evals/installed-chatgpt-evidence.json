@@ -1,14 +1,15 @@
 {
-  "schema": "dnd.srd-oracle.installed-chatgpt-evidence.v3",
+  "schema": "dnd.srd-oracle.installed-chatgpt-evidence.v4",
   "status": "partiallyObserved",
   "recordedAt": "2026-08-24",
-  "scope": "Installed ChatGPT Skill activation and complete-plugin newcomer journey",
+  "scope": "Installed ChatGPT MCP connection tool selection, Skill activation, and complete-plugin newcomer journey",
   "environment": {
     "tag": "observed",
-    "accountScope": "operator-authorized ChatGPT account",
-    "workspacePolicy": "Developer mode enabled with the then-named SRD Play Skill and separately connected no-auth MCP endpoint"
+    "accountScope": "operator-authorized ChatGPT Pro account",
+    "browserProfile": "The operator directed the run through their everyday Chrome profile over the Chrome DevTools Protocol rather than a dedicated evaluation profile; only chatgpt.com was driven.",
+    "workspacePolicy": "Developer mode enabled with the MCP connection published as 5e SRD Oracle. Skill creation is gated to ChatGPT Work on this account, so the Skills surface is empty."
   },
-  "pendingReason": "The complete newcomer journey is observed from the operator-provided public snapshot at https://chatgpt.com/share/6a8c5b69-e658-83ea-8772-f057e3763ba4. The five dedicated Skill activation cases remain pending. A 2026-08-24 host execution attempt found no dedicated evaluation browser profile authenticated to ChatGPT and no browser-control surface reaching the installed product, so no activation case was claimed. The earlier snapshot at https://chatgpt.com/share/6a8c4a47-e610-83ea-9163-450272c9606e remains useful supplemental evidence for explicit app activation, the pre-fix language/alignment projection defect, and stat-block battle execution, but it did not use an inventory prompt. ChatGPT shared snapshots redact app tool names, arguments, and results, so observed tool-name lists remain empty unless the visible assistant response independently reports them.",
+  "unresolvedEvidenceReason": "The five Skill activation cases are blocked: chatgpt.com/skills reports no skills and directs skill creation to ChatGPT Work, which this Pro account does not have, so no dnd-srd-oracle Skill can be installed or activated. The complete newcomer journey remains observed from the operator-provided public snapshot at https://chatgpt.com/share/6a8c5b69-e658-83ea-8772-f057e3763ba4. The earlier snapshot at https://chatgpt.com/share/6a8c4a47-e610-83ea-9163-450272c9606e remains supplemental evidence for explicit app activation, the pre-fix language/alignment projection defect, and stat-block battle execution, but it did not use an inventory prompt. ChatGPT shared snapshots redact app tool names, arguments, and results, so observed tool-name lists from snapshots remain empty.",
   "promptOwner": "plugins/dnd-srd-oracle/evals/evaluation-inventory.json",
   "capabilityMatrix": "plugins/dnd-srd-oracle/evals/capability-matrix.json",
   "canonicalMcpEvidence": {
@@ -23,9 +24,20 @@
   "officialGuidance": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
   "operatorProtocol": [
     {
+      "step": "mcp-connection",
+      "evidenceKind": "installedConnectionToolSelection",
+      "instructions": "In ChatGPT developer mode, connect the MCP server through a public HTTPS endpoint or Secure MCP Tunnel, then run the mcpToolSelection prompts from the evaluation inventory in installed conversations. Record the model, conversation identifier, advertised server and tool metadata, the selected tool with arguments and result or structured error, or the confirmed absence of an app tool call, the confirmation behavior, and whether the observation met the inventory expectation. These are installed-product observations and are never recorded as Responses API evidence.",
+      "requiredCases": [
+        "mcp-direct-catalog",
+        "mcp-indirect-catalog",
+        "mcp-follow-up-detail",
+        "mcp-unsupported-history"
+      ]
+    },
+    {
       "step": "complete-plugin",
       "evidenceKind": "installedSkillActivation",
-      "instructions": "With the separately created developer-mode MCP connection available, package and install the Skill-only plugin from a local source, start a new conversation with both enabled, and run the skillActivation prompts from the evaluation inventory. Record activation, tool calls, returned handles, meaningful-choice stops, and final results as installed Skill observations. MCP tool-selection behavior belongs to the API evidence artifact and must not be recorded here.",
+      "instructions": "With the separately created developer-mode MCP connection available, install the Skill-only plugin, start a new conversation with both enabled, and run the skillActivation prompts from the evaluation inventory. Record activation, tool calls, returned handles, meaningful-choice stops, and final results as installed Skill observations. MCP tool-selection behavior belongs to the mcp-connection step.",
       "requiredCases": [
         "skill-direct",
         "skill-natural",
@@ -43,29 +55,138 @@
   ],
   "caseResults": [
     {
+      "caseId": "mcp-direct-catalog",
+      "evidenceKind": "installedConnectionToolSelection",
+      "status": "observed",
+      "model": "gpt-5-6-thinking",
+      "conversationId": "6a8cd7e1-3b90-83ea-8699-1f66e50cfa55",
+      "serverAdvertisement": {
+        "tag": "notAdvertised",
+        "reason": "The installed conversation transcript exposes called tool paths but not the connection's advertised tool catalog."
+      },
+      "observation": {
+        "tag": "toolSelected",
+        "selectedTool": "list_catalog_units",
+        "arguments": {},
+        "alsoCalledTools": [],
+        "outcome": {
+          "tag": "success",
+          "result": {
+            "returnedKeys": ["unitsByKind", "naturalLanguagePolicy", "next"],
+            "reportedCounts": {
+              "classes": 12,
+              "backgrounds": 4,
+              "species": 9,
+              "subclasses": 12,
+              "feats": 13,
+              "weaponMasteries": 5
+            }
+          },
+          "confirmation": { "tag": "notRequested" }
+        }
+      },
+      "conclusion": "metExpectation",
+      "promptRef": "mcp-direct-catalog",
+      "observedAt": "2026-08-24T23:46:58.708Z",
+      "resultSummary": "With the app attached to the composer, the single tool call was list_catalog_units with empty arguments. No approval was requested, the call succeeded, and the visible answer enumerated the returned catalog counts and deferred authoritative choices to a character draft's creation holes."
+    },
+    {
+      "caseId": "mcp-indirect-catalog",
+      "evidenceKind": "installedConnectionToolSelection",
+      "status": "observed",
+      "model": "gpt-5-6-thinking",
+      "conversationId": "6a8cd8fc-ae08-83e9-9ca3-27ee72987a40",
+      "serverAdvertisement": {
+        "tag": "notAdvertised",
+        "reason": "The installed conversation transcript exposes called tool paths but not the connection's advertised tool catalog."
+      },
+      "observation": {
+        "tag": "toolSelected",
+        "selectedTool": "list_catalog_units",
+        "arguments": {},
+        "alsoCalledTools": ["create_play_session", "create_character_draft"],
+        "outcome": {
+          "tag": "success",
+          "result": {
+            "returnedKeys": ["unitsByKind", "naturalLanguagePolicy", "next"]
+          },
+          "confirmation": { "tag": "notRequested" }
+        }
+      },
+      "conclusion": "metExpectation",
+      "promptRef": "mcp-indirect-catalog",
+      "observedAt": "2026-08-24T23:51:54.932Z",
+      "resultSummary": "Without naming the app, the model discovered the connection, called list_catalog_units, and additionally created a Play Session and a character draft to report dependent creation choices. No approval was requested for any call."
+    },
+    {
+      "caseId": "mcp-follow-up-detail",
+      "evidenceKind": "installedConnectionToolSelection",
+      "status": "observed",
+      "model": "gpt-5-6-thinking",
+      "conversationId": "6a8cd7e1-3b90-83ea-8699-1f66e50cfa55",
+      "serverAdvertisement": {
+        "tag": "notAdvertised",
+        "reason": "The installed conversation transcript exposes called tool paths but not the connection's advertised tool catalog."
+      },
+      "observation": {
+        "tag": "noToolSelected",
+        "reason": "The model ran only connection resource discovery, then asked which option was meant instead of calling inspect_catalog_unit.",
+        "confirmation": { "tag": "notRequested" }
+      },
+      "conclusion": "missedExpectation",
+      "promptRef": "mcp-follow-up-detail",
+      "observedAt": "2026-08-24T23:53:38.695Z",
+      "resultSummary": "Continuing the mcp-direct-catalog conversation, the follow-up did not reach inspect_catalog_unit. The inventory premise is unsatisfiable as authored: mcp-direct-catalog only lists the catalog and selects no option, so 'the option I just selected' has no referent. The model declined to invent one and asked for the option name, which is the correct behavior for the unsatisfiable prompt but misses the inventory's expected tool."
+    },
+    {
+      "caseId": "mcp-unsupported-history",
+      "evidenceKind": "installedConnectionToolSelection",
+      "status": "observed",
+      "model": "gpt-5-6-thinking",
+      "conversationId": "6a8cd9a0-39ec-83e9-a037-5bcac162a43d",
+      "serverAdvertisement": {
+        "tag": "notAdvertised",
+        "reason": "The installed conversation transcript exposes called tool paths but not the connection's advertised tool catalog."
+      },
+      "observation": {
+        "tag": "noToolSelected",
+        "reason": "The request is unrelated to the installed MCP surface; the model answered from built-in web search and called no app tool.",
+        "confirmation": { "tag": "notRequested" }
+      },
+      "conclusion": "metExpectation",
+      "promptRef": "mcp-unsupported-history",
+      "observedAt": "2026-08-24T23:54:12.905Z",
+      "resultSummary": "The negative case selected no 5e SRD Oracle tool. The model used only the built-in web search tool and produced a prose history answer."
+    },
+    {
       "caseId": "skill-direct",
       "evidenceKind": "installedSkillActivation",
-      "status": "pending"
+      "status": "blocked",
+      "blocker": "No dnd-srd-oracle Skill can be installed: the account's Skills surface is empty and creation is gated to ChatGPT Work."
     },
     {
       "caseId": "skill-natural",
       "evidenceKind": "installedSkillActivation",
-      "status": "pending"
+      "status": "blocked",
+      "blocker": "No dnd-srd-oracle Skill can be installed: the account's Skills surface is empty and creation is gated to ChatGPT Work."
     },
     {
       "caseId": "skill-continuation",
       "evidenceKind": "installedSkillActivation",
-      "status": "pending"
+      "status": "blocked",
+      "blocker": "No dnd-srd-oracle Skill can be installed: the account's Skills surface is empty and creation is gated to ChatGPT Work."
     },
     {
       "caseId": "skill-unrelated-dnd",
       "evidenceKind": "installedSkillActivation",
-      "status": "pending"
+      "status": "blocked",
+      "blocker": "No dnd-srd-oracle Skill can be installed: the account's Skills surface is empty and creation is gated to ChatGPT Work."
     },
     {
       "caseId": "skill-authoring-boundary",
       "evidenceKind": "installedSkillActivation",
-      "status": "pending"
+      "status": "blocked",
+      "blocker": "No dnd-srd-oracle Skill can be installed: the account's Skills surface is empty and creation is gated to ChatGPT Work."
     },
     {
       "caseId": "complete-newcomer-journey",

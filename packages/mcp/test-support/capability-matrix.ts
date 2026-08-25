@@ -111,6 +111,7 @@ export const CapabilityMatrixSchema = Schema.Struct({
       "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
     ),
     evidenceKinds: Schema.Tuple(
+      Schema.Literal("installedConnectionToolSelection"),
       Schema.Literal("installedSkillActivation"),
       Schema.Literal("installedCompleteWorkflow"),
     ),

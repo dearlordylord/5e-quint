@@ -19,7 +19,11 @@
   },
   "installedChatGptEvidence": {
     "artifactPath": "plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json",
-    "evidenceKinds": ["installedSkillActivation", "installedCompleteWorkflow"]
+    "evidenceKinds": [
+      "installedConnectionToolSelection",
+      "installedSkillActivation",
+      "installedCompleteWorkflow"
+    ]
   },
   "rows": [
     {

@@ -1,19 +1,19 @@
 {
   "schema": "dnd.srd-oracle.api-mcp-selection-evidence.v1",
-  "status": "pending",
+  "status": "blocked",
   "recordedAt": "2026-08-24",
   "scope": "OpenAI Responses API remote-MCP tool selection against the dnd-srd-oracle MCP server",
   "environment": {
     "tag": "notObserved"
   },
-  "pendingReason": "A 2026-08-24 host execution attempt authenticated successfully against the OpenAI API (GET /v1/models returned 200) but every /v1/responses request was rejected: {\"error\":{\"message\":\"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"credit_balance_exhausted\"}}. The rejection is a billing state on the operator's OpenAI project, not a demonstrated incapability of the Responses API remote-MCP surface, so no case was substituted from another product surface. CONTROL_PLANE_API_KEY authorizes Secure MCP Tunnel control-plane operations only and is not an OpenAI API credential.",
+  "unresolvedEvidenceReason": "The operator states that this OpenAI API credential will not be funded, so no case in this artifact will be observed through the Responses API. A 2026-08-24 host attempt authenticated successfully (GET /v1/models returned 200) and every /v1/responses request was rejected with {\"error\":{\"message\":\"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"credit_balance_exhausted\"}}. Billing, not the remote-MCP surface, is the blocker, so no browser observation was substituted here. The same four inventory prompts were instead observed on the installed ChatGPT MCP connection and are recorded under installedConnectionToolSelection in plugins/dnd-srd-oracle/evals/installed-chatgpt-evidence.json. CONTROL_PLANE_API_KEY authorizes Secure MCP Tunnel control-plane operations only and is not an OpenAI API credential.",
   "promptOwner": "plugins/dnd-srd-oracle/evals/evaluation-inventory.json",
   "officialGuidance": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
   "operatorProtocol": [
     {
       "step": "api-mcp-selection",
       "evidenceKind": "apiMcpToolSelection",
-      "instructions": "Reach the dnd-srd-oracle MCP server from the OpenAI Responses API with an OPENAI_API_KEY, either through a public HTTPS streamable `/mcp` endpoint or the Secure MCP Tunnel runtime. Send each mcpToolSelection prompt from the evaluation inventory as its own request, chaining a follow-up case with previous_response_id. Record the model, response identifier, advertised MCP server and tool metadata, the selected tool with its arguments and result or structured error, or the confirmed absence of a tool call, and the approval/confirmation behavior. Do not use a browser for this step and do not record these observations as installed ChatGPT evidence.",
+      "instructions": "Reach the dnd-srd-oracle MCP server from the OpenAI Responses API with a funded OPENAI_API_KEY, either through a public HTTPS streamable `/mcp` endpoint or the Secure MCP Tunnel runtime. Send each mcpToolSelection prompt from the evaluation inventory as its own request, chaining a follow-up case with previous_response_id. Record the model, response identifier, advertised MCP server and tool metadata, the selected tool with its arguments and result or structured error, or the confirmed absence of a tool call, and the approval behavior. Do not use a browser for this step and do not record these observations as installed ChatGPT evidence.",
       "requiredCases": [
         "mcp-direct-catalog",
         "mcp-indirect-catalog",
@@ -26,22 +26,26 @@
     {
       "caseId": "mcp-direct-catalog",
       "evidenceKind": "apiMcpToolSelection",
-      "status": "pending"
+      "status": "blocked",
+      "blocker": "The OpenAI project has no credits and the operator will not fund it, so /v1/responses rejects every request with credit_balance_exhausted."
     },
     {
       "caseId": "mcp-indirect-catalog",
       "evidenceKind": "apiMcpToolSelection",
-      "status": "pending"
+      "status": "blocked",
+      "blocker": "The OpenAI project has no credits and the operator will not fund it, so /v1/responses rejects every request with credit_balance_exhausted."
     },
     {
       "caseId": "mcp-follow-up-detail",
       "evidenceKind": "apiMcpToolSelection",
-      "status": "pending"
+      "status": "blocked",
+      "blocker": "The OpenAI project has no credits and the operator will not fund it, so /v1/responses rejects every request with credit_balance_exhausted."
     },
     {
       "caseId": "mcp-unsupported-history",
       "evidenceKind": "apiMcpToolSelection",
-      "status": "pending"
+      "status": "blocked",
+      "blocker": "The OpenAI project has no credits and the operator will not fund it, so /v1/responses rejects every request with credit_balance_exhausted."
     }
   ]
 }
