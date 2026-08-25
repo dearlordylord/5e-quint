@@ -2224,6 +2224,32 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 30_000);
 
+  test("follows extensionless executable dependencies", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-extensionless-source-"),
+    );
+    const entryPath = resolve(fixtureRoot, "entry.test.ts");
+    const extensionlessPath = resolve(fixtureRoot, "extensionless-fixture");
+    const childPath = resolve(fixtureRoot, "extensionless-child.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    writeFileSync(entryPath, 'import "./extensionless-fixture";\n');
+    writeFileSync(extensionlessPath, 'import "./extensionless-child.ts";\n');
+    writeFileSync(childPath, `require(${JSON.stringify(forbiddenModule)});\n`);
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, childPath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   test("follows multiline imports and exports without reading comments or strings", () => {
     const fixtureRoot = mkdtempSync(
       resolve(rawSwarmOutputDirectory, "transitive-multiline-module-"),

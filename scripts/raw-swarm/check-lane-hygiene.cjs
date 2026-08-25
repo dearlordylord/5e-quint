@@ -10,6 +10,7 @@ const {
 const {
   basename,
   dirname,
+  extname,
   join,
   relative,
   resolve,
@@ -359,6 +360,11 @@ function supportedSourceExtension(path) {
   return SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS.find((extension) =>
     path.endsWith(extension),
   );
+}
+
+function isUnsupportedSourceAssetPath(path) {
+  const extension = extname(path);
+  return extension !== "" && supportedSourceExtension(path) === undefined;
 }
 
 /*
@@ -992,7 +998,7 @@ function sourceDependencyEdges(sourcePath) {
     sourceDependencyEdgeCache.set(canonicalSourcePath, edges);
     return edges;
   }
-  if (supportedSourceExtension(canonicalSourcePath) === undefined) {
+  if (isUnsupportedSourceAssetPath(canonicalSourcePath)) {
     const edges = [];
     sourceDependencyEdgeCache.set(canonicalSourcePath, edges);
     return edges;
