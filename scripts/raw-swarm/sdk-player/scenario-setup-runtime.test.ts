@@ -1515,7 +1515,7 @@ describe("scenario setup public-SDK boundary", () => {
       _tag: "Left",
       left: {
         tag: "invalid-spatial-decision",
-        message: expect.stringContaining("tagged post-move state"),
+        message: expect.stringContaining("canonical table spatial fingerprint"),
       },
     });
     const trimmedProcedureRef = tableAuthoredSpatialDecision({

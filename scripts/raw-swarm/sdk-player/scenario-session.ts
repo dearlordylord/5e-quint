@@ -126,6 +126,7 @@ export type {
   ScenarioSpatialDecisionQuestion,
   ScenarioSessionLineageId,
   ScenarioSpatialRelationAnswer,
+  ScenarioTableSpatialFingerprint,
   ScenarioSpatialWitness,
   ScenarioSpatialWitnessSource,
   ScenarioTableSpatialDecision,
@@ -1222,12 +1223,19 @@ export function createScenarioSession(input: {
   const decisionIds = new Set<string>();
   const sessionLineageId = newScenarioSessionLineageId();
   const battleRuntimeSessionIdentity = runtimeValueIdentity(input.battle);
-  const initialSpatialFingerprint =
-    space?.fingerprint ??
-    scenarioTableSpatialFingerprint({
-      kind: "initial-table-authored-spatial-state",
-      battleId: String(input.battle.state.battleId),
-    });
+  const spatialEvidence = Match.value(input.spatial).pipe(
+    Match.when({ kind: "geometryDerived" }, () => ({
+      kind: "geometryDerived" as const,
+    })),
+    Match.when({ kind: "tableAuthored" }, () => ({
+      kind: "tableAuthored" as const,
+      fingerprint: scenarioTableSpatialFingerprint({
+        kind: "initial-table-authored-spatial-state",
+        battleId: String(input.battle.state.battleId),
+      }),
+    })),
+    Match.exhaustive,
+  );
   for (const suppliedDecision of input.spatial.spatialDecisions) {
     const normalized = tableAuthoredSpatialDecision(suppliedDecision);
     if (Either.isLeft(normalized)) {
@@ -1235,7 +1243,7 @@ export function createScenarioSession(input: {
       continue;
     }
     const decision = normalized.right;
-    if (geometrySupplied) {
+    if (spatialEvidence.kind === "geometryDerived") {
       issues.push(
         spatialDecisionIssue(
           "contradictory-spatial-decision",
@@ -1245,6 +1253,7 @@ export function createScenarioSession(input: {
       );
       continue;
     }
+    const initialSpatialFingerprint = spatialEvidence.fingerprint;
     const unknownReference = scenarioSpatialDecisionEntityReferences(
       decision,
     ).find(
@@ -1316,7 +1325,7 @@ export function createScenarioSession(input: {
     return Either.left({ tag: "invalid-scenario-session", issues: invalid });
   }
   let spatial: ScenarioSpatialBoundary;
-  if (input.spatial.kind === "geometryDerived") {
+  if (spatialEvidence.kind === "geometryDerived") {
     if (arena === undefined || space === undefined) {
       return Either.left({
         tag: "invalid-scenario-session",
@@ -1338,7 +1347,7 @@ export function createScenarioSession(input: {
   } else {
     spatial = Object.freeze({
       kind: "tableAuthored" as const,
-      spatialFingerprint: initialSpatialFingerprint,
+      spatialFingerprint: spatialEvidence.fingerprint,
       tableAuthoredDecisions: Object.freeze(spatialDecisions),
     });
   }
@@ -1598,13 +1607,6 @@ function spatialBoundary(
     : undefined;
 }
 
-function currentSpatialFingerprint(session: ScenarioSession): StateFingerprint {
-  const spatial = session.battlefield.spatial;
-  return spatial.kind === "geometryDerived"
-    ? spatial.space.fingerprint
-    : spatial.spatialFingerprint;
-}
-
 function scenarioSpatialDecision(
   session: ScenarioSession,
   question: ScenarioSpatialDecisionQuestion,
@@ -1620,7 +1622,8 @@ function scenarioSpatialDecision(
   if (decision === undefined) return { tag: "none" };
   if (
     decision.lineage.battleId !== session.battle.state.battleId ||
-    decision.lineage.spatialFingerprint !== currentSpatialFingerprint(session)
+    decision.lineage.spatialFingerprint !==
+      session.battlefield.spatial.spatialFingerprint
   ) {
     return { tag: "stale", decision };
   }

@@ -54,6 +54,7 @@ export type {
   ScenarioSpatialWitness,
   ScenarioSpatialWitnessSource,
   ScenarioTableSpatialDecision,
+  ScenarioTableSpatialFingerprint,
   ScenarioTableSpatialPostMoveState,
   ScenarioTableSpatialPostMoveStateInput,
   ScenarioSession,

@@ -31,7 +31,6 @@ import {
   type CoordinateInput,
   type DistanceFeet,
   type SpatialSnapshot,
-  type StateFingerprint,
 } from "../../../packages/tactical-space/src/index.ts";
 import { Either, Match, Schema } from "effect";
 
@@ -41,6 +40,13 @@ const ScenarioSpatialDecisionId = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("ScenarioSpatialDecisionId"),
 );
 export type ScenarioSpatialDecisionId = typeof ScenarioSpatialDecisionId.Type;
+
+const ScenarioTableSpatialFingerprint = Schema.String.pipe(
+  Schema.pattern(/^sha256:[0-9a-f]{64}$/),
+  Schema.brand("ScenarioTableSpatialFingerprint"),
+);
+export type ScenarioTableSpatialFingerprint =
+  typeof ScenarioTableSpatialFingerprint.Type;
 
 const SCENARIO_DIRECTIONS = [
   "same-horizontal-position",
@@ -125,13 +131,13 @@ export type ScenarioSpatialDecisionQuestion =
 
 export type ScenarioTableSpatialPostMoveStateInput = Readonly<{
   readonly kind: "tableAuthored";
-  readonly spatialFingerprint: StateFingerprint;
+  readonly spatialFingerprint: ScenarioTableSpatialFingerprint;
   readonly tableAuthoredDecisions: readonly ScenarioNonMovementSpatialDecisionInput[];
 }>;
 
 export type ScenarioTableSpatialPostMoveState = Readonly<{
   readonly kind: "tableAuthored";
-  readonly spatialFingerprint: StateFingerprint;
+  readonly spatialFingerprint: ScenarioTableSpatialFingerprint;
   readonly tableAuthoredDecisions: readonly ScenarioNonMovementSpatialDecision[];
 }>;
 
@@ -423,7 +429,7 @@ export type ScenarioSpatialBoundary =
     }>
   | Readonly<{
       readonly kind: "tableAuthored";
-      readonly spatialFingerprint: StateFingerprint;
+      readonly spatialFingerprint: ScenarioTableSpatialFingerprint;
       readonly tableAuthoredDecisions: readonly ScenarioTableSpatialDecision[];
     }>;
 
@@ -439,7 +445,7 @@ export type ScenarioTableSpatialDecision = Readonly<{
     readonly battleId: BattleId;
     readonly scenarioSessionLineageId: ScenarioSessionLineageId;
     readonly battleRuntimeSessionIdentity: string;
-    readonly spatialFingerprint: StateFingerprint;
+    readonly spatialFingerprint: ScenarioTableSpatialFingerprint;
   }>;
 }>;
 
@@ -471,7 +477,7 @@ export type ScenarioSpatialWitnessSource =
         readonly battleId: BattleId;
         readonly scenarioSessionLineageId: ScenarioSessionLineageId;
         readonly battleRuntimeSessionIdentity: string;
-        readonly spatialFingerprint: StateFingerprint;
+        readonly spatialFingerprint: ScenarioTableSpatialFingerprint;
       }>;
     }>;
 
@@ -513,18 +519,21 @@ export function stableSpatialDecisionJson(value: unknown): string {
 
 export function scenarioTableSpatialFingerprint(
   value: unknown,
-): StateFingerprint {
+): ScenarioTableSpatialFingerprint {
   const digest = createHash("sha256")
     .update(stableSpatialDecisionJson(value))
     .digest("hex");
   const fingerprint = `sha256:${digest}`;
-  // This assertion covers only the digest generated above; authored
-  // fingerprints cross the parser boundary and return a typed issue instead.
-  /* v8 ignore next -- @preserve -- SHA-256 hex encoding guarantees this shape. */
-  if (!isStateFingerprint(fingerprint)) {
-    throw new Error("SHA-256 digest did not produce a StateFingerprint.");
+  const decoded = Schema.decodeUnknownEither(ScenarioTableSpatialFingerprint)(
+    fingerprint,
+  );
+  if (Either.isLeft(decoded)) {
+    // The digest is constructed locally; this branch asserts an internal hash invariant, not authored input.
+    throw new Error(
+      "SHA-256 digest did not produce a table spatial fingerprint.",
+    );
   }
-  return fingerprint;
+  return decoded.right;
 }
 
 export function scenarioDistanceFeet(
@@ -631,60 +640,6 @@ export function isNonMovementSpatialDecision(
   decision: ScenarioSpatialDecision,
 ): decision is ScenarioNonMovementSpatialDecision {
   return decision.question.kind !== "movementRoute";
-}
-
-function isRelationSpatialDecisionInput(
-  input: ScenarioSpatialDecisionInput,
-): input is ScenarioRelationSpatialDecisionInput {
-  return input.question.kind === "relation";
-}
-
-function isSpellTargetSpatialDecisionInput(
-  input: ScenarioSpatialDecisionInput,
-): input is ScenarioSpellTargetSpatialDecisionInput {
-  return input.question.kind === "spellTarget";
-}
-
-function isObjectTargetSpatialDecisionInput(
-  input: ScenarioSpatialDecisionInput,
-): input is ScenarioObjectTargetSpatialDecisionInput {
-  return input.question.kind === "objectTarget";
-}
-
-function isAttackTargetSpatialDecisionInput(
-  input: ScenarioSpatialDecisionInput,
-): input is ScenarioAttackTargetSpatialDecisionInput {
-  return input.question.kind === "attackTarget";
-}
-
-function isGrappleTargetSpatialDecisionInput(
-  input: ScenarioSpatialDecisionInput,
-): input is ScenarioGrappleTargetSpatialDecisionInput {
-  return input.question.kind === "grappleTarget";
-}
-
-function isShoveTargetSpatialDecisionInput(
-  input: ScenarioSpatialDecisionInput,
-): input is ScenarioShoveTargetSpatialDecisionInput {
-  return input.question.kind === "shoveTarget";
-}
-
-function isSleepShakeAwakeTargetSpatialDecisionInput(
-  input: ScenarioSpatialDecisionInput,
-): input is ScenarioSleepShakeAwakeTargetSpatialDecisionInput {
-  return input.question.kind === "sleepShakeAwakeTarget";
-}
-
-function isHypnoticPatternShakeAwakeTargetSpatialDecisionInput(
-  input: ScenarioSpatialDecisionInput,
-): input is ScenarioHypnoticPatternShakeAwakeTargetSpatialDecisionInput {
-  return input.question.kind === "hypnoticPatternShakeAwakeTarget";
-}
-
-function isHelpAttackTargetSpatialDecisionInput(
-  input: ScenarioSpatialDecisionInput,
-): input is ScenarioHelpAttackTargetSpatialDecisionInput {
-  return input.question.kind === "helpAttackTarget";
 }
 
 function isMovementRouteSpatialDecisionInput(
@@ -856,10 +811,6 @@ function isString(value: unknown): value is string {
 
 function isNonEmptyTrimmedString(value: unknown): value is string {
   return isString(value) && value.length > 0 && value === value.trim();
-}
-
-function isStateFingerprint(value: unknown): value is StateFingerprint {
-  return isString(value) && /^sha256:[0-9a-f]{64}$/.test(value);
 }
 
 function parseProcedureRef(
@@ -1429,7 +1380,6 @@ function parseMovementAnswer(
     );
   }
   const postMove = value.postMoveSpatialState;
-  const spatialFingerprint = postMove.spatialFingerprint;
   if (
     postMove.kind !== "tableAuthored" ||
     !hasOnlyKeys(postMove, [
@@ -1437,12 +1387,20 @@ function parseMovementAnswer(
       "spatialFingerprint",
       "tableAuthoredDecisions",
     ]) ||
-    !isStateFingerprint(spatialFingerprint) ||
     !Array.isArray(postMove.tableAuthoredDecisions)
   ) {
     return malformedDecision(
       input,
-      "A Table-authored movement route requires a tagged post-move state with a non-empty fingerprint and decision array.",
+      "A Table-authored movement route requires a tagged post-move state with a fingerprint and decision array.",
+    );
+  }
+  const spatialFingerprint = Schema.decodeUnknownEither(
+    ScenarioTableSpatialFingerprint,
+  )(postMove.spatialFingerprint);
+  if (Either.isLeft(spatialFingerprint)) {
+    return malformedDecision(
+      input,
+      "A Table-authored movement route requires a canonical table spatial fingerprint.",
     );
   }
   if (!rememberObject(postMove, seen)) {
@@ -1470,7 +1428,7 @@ function parseMovementAnswer(
     creatureSpaceTraversal: traversal.right,
     postMoveSpatialState: {
       kind: "tableAuthored",
-      spatialFingerprint,
+      spatialFingerprint: spatialFingerprint.right,
       tableAuthoredDecisions: nested,
     },
   });
@@ -1525,14 +1483,71 @@ function parseSpatialDecisionInput(
   }
   const answer = parseRelationAnswer(input.answer, input);
   if (Either.isLeft(answer)) return Either.left(answer.left);
-  // Cast proof: question.right is narrowed to every non-movement question and
-  // answer.right is the shared relation-answer shape; TypeScript cannot retain
-  // that correlation across the independently parsed values.
   return Either.right({
-    decisionId: input.decisionId,
-    question: question.right,
-    answer: answer.right,
-  } as ScenarioSpatialDecisionInput);
+    ...makeNonMovementSpatialDecisionInput(
+      input.decisionId,
+      question.right,
+      answer.right,
+    ),
+  });
+}
+
+function makeNonMovementSpatialDecisionInput(
+  decisionId: string,
+  question: Exclude<
+    ScenarioSpatialDecisionQuestionCore,
+    { readonly kind: "movementRoute" }
+  >,
+  answer: ScenarioSpatialRelationAnswer,
+): ScenarioSpatialDecisionInput {
+  return Match.value(question).pipe(
+    Match.when({ kind: "relation" }, (question) => ({
+      decisionId,
+      question,
+      answer,
+    })),
+    Match.when({ kind: "spellTarget" }, (question) => ({
+      decisionId,
+      question,
+      answer,
+    })),
+    Match.when({ kind: "objectTarget" }, (question) => ({
+      decisionId,
+      question,
+      answer,
+    })),
+    Match.when({ kind: "attackTarget" }, (question) => ({
+      decisionId,
+      question,
+      answer,
+    })),
+    Match.when({ kind: "grappleTarget" }, (question) => ({
+      decisionId,
+      question,
+      answer,
+    })),
+    Match.when({ kind: "shoveTarget" }, (question) => ({
+      decisionId,
+      question,
+      answer,
+    })),
+    Match.when({ kind: "sleepShakeAwakeTarget" }, (question) => ({
+      decisionId,
+      question,
+      answer,
+    })),
+    Match.when({ kind: "hypnoticPatternShakeAwakeTarget" }, (question) => ({
+      decisionId,
+      question,
+      answer,
+    })),
+    Match.when({ kind: "helpAttackTarget" }, (question) => ({
+      decisionId,
+      question,
+      answer,
+    })),
+    Match.exhaustive,
+  );
 }
 
 function validateSpatialDecisionInput(
@@ -1580,30 +1595,11 @@ function validateSpatialDecisionInput(
       );
     }
     const postMoveSpatialState = input.answer.postMoveSpatialState;
-    if (
-      postMoveSpatialState.kind !== "tableAuthored" ||
-      typeof postMoveSpatialState.spatialFingerprint !== "string" ||
-      postMoveSpatialState.spatialFingerprint.length === 0 ||
-      !Array.isArray(postMoveSpatialState.tableAuthoredDecisions)
-    ) {
-      return spatialDecisionIssue(
-        "invalid-spatial-decision",
-        decisionId,
-        "A Table-authored movement route requires a canonical post-move spatial state.",
-      );
-    }
     const nestedDecisionsByQuestion = new Map<
       string,
       ScenarioNonMovementSpatialDecisionInput
     >();
     for (const nestedDecision of postMoveSpatialState.tableAuthoredDecisions) {
-      if (nestedDecision.question.kind === "movementRoute") {
-        return spatialDecisionIssue(
-          "invalid-spatial-decision",
-          decisionId,
-          "A post-move spatial state cannot contain another movement-route decision.",
-        );
-      }
       const nestedIssue = validateSpatialDecisionInput(nestedDecision);
       if (nestedIssue !== undefined) return nestedIssue;
       const nestedQuestionKey = spatialQuestionKey(nestedDecision.question);
@@ -1708,116 +1704,58 @@ function normalizeSpatialDecision(
       "A Table-authored spatial decision requires a non-empty trimmed decision id.",
     );
   }
-  if (isRelationSpatialDecisionInput(input)) {
-    const decision: ScenarioRelationSpatialDecision = {
-      decisionId: decodedDecisionId.right,
-      question: input.question,
-      answer: input.answer,
-    };
-    return Either.right(freezeParsedSpatialValue(decision));
-  }
-  if (isSpellTargetSpatialDecisionInput(input)) {
-    const decision: ScenarioSpellTargetSpatialDecision = {
-      decisionId: decodedDecisionId.right,
-      question: input.question,
-      answer: input.answer,
-    };
-    return Either.right(freezeParsedSpatialValue(decision));
-  }
-  if (isObjectTargetSpatialDecisionInput(input)) {
-    const decision: ScenarioObjectTargetSpatialDecision = {
-      decisionId: decodedDecisionId.right,
-      question: input.question,
-      answer: input.answer,
-    };
-    return Either.right(freezeParsedSpatialValue(decision));
-  }
-  if (isAttackTargetSpatialDecisionInput(input)) {
-    const decision: ScenarioAttackTargetSpatialDecision = {
-      decisionId: decodedDecisionId.right,
-      question: input.question,
-      answer: input.answer,
-    };
-    return Either.right(freezeParsedSpatialValue(decision));
-  }
-  if (isGrappleTargetSpatialDecisionInput(input)) {
-    const decision: ScenarioGrappleTargetSpatialDecision = {
-      decisionId: decodedDecisionId.right,
-      question: input.question,
-      answer: input.answer,
-    };
-    return Either.right(freezeParsedSpatialValue(decision));
-  }
-  if (isShoveTargetSpatialDecisionInput(input)) {
-    const decision: ScenarioShoveTargetSpatialDecision = {
-      decisionId: decodedDecisionId.right,
-      question: input.question,
-      answer: input.answer,
-    };
-    return Either.right(freezeParsedSpatialValue(decision));
-  }
-  if (isSleepShakeAwakeTargetSpatialDecisionInput(input)) {
-    const decision: ScenarioSleepShakeAwakeTargetSpatialDecision = {
-      decisionId: decodedDecisionId.right,
-      question: input.question,
-      answer: input.answer,
-    };
-    return Either.right(freezeParsedSpatialValue(decision));
-  }
-  if (isHypnoticPatternShakeAwakeTargetSpatialDecisionInput(input)) {
-    const decision: ScenarioHypnoticPatternShakeAwakeTargetSpatialDecision = {
-      decisionId: decodedDecisionId.right,
-      question: input.question,
-      answer: input.answer,
-    };
-    return Either.right(freezeParsedSpatialValue(decision));
-  }
-  if (isHelpAttackTargetSpatialDecisionInput(input)) {
-    const decision: ScenarioHelpAttackTargetSpatialDecision = {
-      decisionId: decodedDecisionId.right,
-      question: input.question,
-      answer: input.answer,
-    };
-    return Either.right(freezeParsedSpatialValue(decision));
-  }
-  if (!isMovementRouteSpatialDecisionInput(input)) {
-    return Either.left(
-      spatialDecisionIssue(
-        "invalid-spatial-decision",
-        decodedDecisionId.right,
-        "A spatial decision question has no supported correlated answer variant.",
-      ),
-    );
-  }
-  const postMoveSpatialState = input.answer.postMoveSpatialState;
-  const nestedDecisions: ScenarioNonMovementSpatialDecision[] = [];
-  for (const nestedInput of postMoveSpatialState.tableAuthoredDecisions) {
-    const nested = normalizeSpatialDecision(nestedInput);
-    if (Either.isLeft(nested)) return Either.left(nested.left);
-    if (!isNonMovementSpatialDecision(nested.right)) {
-      return Either.left(
-        spatialDecisionIssue(
-          "invalid-spatial-decision",
-          decodedDecisionId.right,
-          "A post-move spatial state cannot contain another movement-route decision.",
+  return Match.value(input).pipe(
+    Match.when(isNonMovementSpatialDecisionInput, (nonMovement) =>
+      Either.right(
+        freezeParsedSpatialValue(
+          normalizeNonMovementSpatialDecision(
+            nonMovement,
+            decodedDecisionId.right,
+          ),
         ),
-      );
-    }
-    nestedDecisions.push(nested.right);
-  }
-  const decision: ScenarioMovementRouteSpatialDecision = {
-    decisionId: decodedDecisionId.right,
-    question: input.question,
-    answer: {
-      ...input.answer,
-      postMoveSpatialState: {
-        kind: "tableAuthored",
-        spatialFingerprint: postMoveSpatialState.spatialFingerprint,
-        tableAuthoredDecisions: nestedDecisions,
-      },
-    },
-  };
-  return Either.right(freezeParsedSpatialValue(decision));
+      ),
+    ),
+    Match.when(isMovementRouteSpatialDecisionInput, (movement) => {
+      const postMoveSpatialState = movement.answer.postMoveSpatialState;
+      const nestedDecisions: ScenarioNonMovementSpatialDecision[] = [];
+      for (const nestedInput of postMoveSpatialState.tableAuthoredDecisions) {
+        const nested = normalizeSpatialDecision(nestedInput);
+        if (Either.isLeft(nested)) return Either.left(nested.left);
+        if (!isNonMovementSpatialDecision(nested.right)) {
+          return Either.left(
+            spatialDecisionIssue(
+              "invalid-spatial-decision",
+              decodedDecisionId.right,
+              "A post-move spatial state cannot contain another movement-route decision.",
+            ),
+          );
+        }
+        nestedDecisions.push(nested.right);
+      }
+      const decision: ScenarioMovementRouteSpatialDecision = {
+        decisionId: decodedDecisionId.right,
+        question: movement.question,
+        answer: {
+          ...movement.answer,
+          postMoveSpatialState: {
+            kind: "tableAuthored",
+            spatialFingerprint:
+              movement.answer.postMoveSpatialState.spatialFingerprint,
+            tableAuthoredDecisions: nestedDecisions,
+          },
+        },
+      };
+      return Either.right(freezeParsedSpatialValue(decision));
+    }),
+    Match.exhaustive,
+  );
+}
+
+function normalizeNonMovementSpatialDecision(
+  input: ScenarioNonMovementSpatialDecisionInput,
+  decisionId: ScenarioSpatialDecisionId,
+): ScenarioNonMovementSpatialDecision {
+  return { ...input, decisionId };
 }
 
 export function tableAuthoredSpatialDecision(
