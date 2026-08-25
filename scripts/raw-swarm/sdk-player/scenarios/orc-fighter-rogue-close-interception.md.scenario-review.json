@@ -18,9 +18,9 @@
     "classification": "supplied",
     "evidence": "The scenario selects Wolf (Wolf A and Wolf B) and Goblin Warrior (Goblin Warrior A) as canonical stat-block identities, and both are included in the supplied availability profile."
   },
-  "sdkCapabilityIntent": "supportedOnly",
+  "sdkCapabilityIntent": "probeUnsupportedCapability",
   "sdkCapabilityReview": {
-    "classification": "supported",
-    "evidence": "The documented creation flow supports the two Orc Fighter/Rogue builds, their backgrounds, ability assignments and increases, Fighting Style, Weapon Mastery, Expertise, Magic Initiate selections, equipment/loadouts, and fresh full-resource sheets. Setup supports stat-block creatures, fixed HP/state initialization, initiative scores, ammunition stock, static damage notation, grid placements, illumination, vertical facts, directed relationship facts, and scenario objects with AC, HP, openness/Cover, and canonical damage disposition. Play supports derived distance, sight, Cover, traversal, movement routes, opportunity-attack interrupts, creature and object targeting, ammunition/resource state, object HP advancement, and table-defined conclusion assertions. The racks use explicit Half Cover without requiring the documented-absent height-based Advantage/Disadvantage witness."
+    "classification": "explicitUnsupportedProbe",
+    "evidence": "The surrounding Character Sheet authoring, stat-block setup, creature-target attacks, movement, damage, and object state are documented. The required Wolf Bite against the synthetic prism is the deliberate unsupported branch for issue #283 ordinary-object targeting: it cannot be treated as a creature target, and the SRD Bite's Prone rider applies only to a Large or smaller creature. The scenario therefore probes, rather than claims support for, this object-target execution boundary."
   }
 }
