@@ -1,0 +1,116 @@
+{
+  "scenarioId": "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+  "scenarioSha256": "1a05e37b54115fa0bf05a7427627eed2523ba27b55ca27d212604ec8e36b2b29",
+  "gitSha": "1a107d1a7db3dbb5b484c3053ecacb7b5b03a07f",
+  "admitReviewedUnsupported": true,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "SRD 5.2.1 defines Large space as 10 by 10 feet, movement around occupied spaces, reach, Reactions, Dash, Disengage, and Opportunity Attacks. The supplied Riding Horse, Goblin Warrior, Wolf, and Skeleton stat blocks provide legal participants and attacks. No relevant ASSUMPTIONS entry conflicts, and geometry-derived space requires no Table Decision."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The supplied scenario uses canonical SRD identities and contains no protected PHB+ identity, crosswalk, or copied expressive material."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicyQuality",
+  "scenarioQuality": {
+    "classification": "ready",
+    "evidence": "The statBlocksOnly and geometryAssisted facts align with the configured purpose. Every combatant or group has an authored objective, delegated choices fit the distribution preference, and the complete comparison retains a meaningfullyDistinct result supported by non-spatial dimensions."
+  },
+  "catalogueComparison": {
+    "schemaVersion": 1,
+    "conclusion": "meaningfullyDistinct",
+    "comparedScenarioIds": [
+      "four-way-crank-control-cycle",
+      "goblin-warrior-skeleton-tracer",
+      "lantern-intercept-pairwise-control",
+      "mounted-dispatch-through-flooded-orchard",
+      "open-grid-wolf-skeleton-pursuit",
+      "orc-fighter-rogue-close-interception",
+      "prone-target-roll-mode-distance-probe",
+      "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+      "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+      "sand-band-four-skeleton-skirmish",
+      "synthetic-beacon-eight-round-defense",
+      "table-authored-shove-then-grapple",
+      "table-authored-three-shove-cycle",
+      "table-d20-circumstance-advantage-probe-repair-retry",
+      "two-goblins-pursue-skeleton"
+    ],
+    "closestMatches": [
+      {
+        "scenarioId": "open-grid-wolf-skeleton-pursuit",
+        "reason": "Shares open geometry, canonical stat-block pursuit, melee engagement, movement objectives, and explicit Opportunity Attack relationships. The Candidate instead makes an unmounted Large Riding Horse footprint, multi-creature flanking, and reaction-sensitive route changes the probe."
+      },
+      {
+        "scenarioId": "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+        "reason": "Shares a geometry encounter containing a Riding Horse, Goblin Warrior, Skeleton, and Wolf with multiple rounds, adaptive movement, reactions, and individual objectives. Its supported pillar-based target-priority rotation differs from the Candidate's open-arena Large-footprint boundary."
+      },
+      {
+        "scenarioId": "mounted-dispatch-through-flooded-orchard",
+        "reason": "Shares a Riding Horse, route-sensitive objectives, and an explicit unsupported-capability intent. That Scenario probes mounting, object transfer, elevation, terrain, and gate passage; the Candidate explicitly excludes those mechanics and probes unmounted footprint-aware movement and Opportunity Attacks."
+      },
+      {
+        "scenarioId": "table-d20-circumstance-advantage-probe-repair-retry",
+        "reason": "Shares geometry-assisted Riding Horse pursuit and an explicit unsupported probe. Its distinct boundary is one Table-imposed Disadvantage on one Bite D20 Test, not Large-footprint spatial legality or Opportunity Attack participation."
+      },
+      {
+        "scenarioId": "two-goblins-pursue-skeleton",
+        "reason": "Shares two Goblin Warriors, pursuit, route blocking, and changing attack tactics. That Scenario tests a Skeleton's passage through Table-owned portcullis Cover; the Candidate adds a Large mover, allied Skeleton pressure, objective-zone reversal, and geometry-derived reach exits."
+      }
+    ],
+    "materialDifferentiators": [
+      "The Candidate's primary purpose is an explicit unsupported probe of canonical Large-creature footprint-aware geometry movement combined with Opportunity Attack participation, rather than ordinary pursuit, target rotation, or mounted transport.",
+      "Every placement, adjacency, route-clearance decision, movement distance, reach entry, and reach exit uses every square occupied by the Large Riding Horse; no admitted Scenario makes that complete-footprint constraint its central boundary.",
+      "The encounter has six canonical stat-block creatures in two opposed alliances: one unmounted Riding Horse, two Goblin Warriors, one Wolf, and two Skeletons. The opposite-edge Goblin pressure, allied Skeleton pursuit, and Wolf/Goblin coordination create a materially different interaction graph.",
+      "The sequence has a staged objective route: choose one southern zone by round 2, then reach the northern zone by round 5; after the first entry, one Goblin changes to the unchosen zone while the other Goblin and Wolf pursue north, forcing route and target reprioritization.",
+      "The Candidate isolates ordinary open geometry by excluding mounts, object transfer, cover, elevation, difficult terrain, and transferable items, while still testing whether controllers can risk or avoid reach exits and spend or conserve Reactions for Opportunity Attacks."
+    ],
+    "basis": {
+      "tag": "compared",
+      "batches": [
+        {
+          "batchIndex": 0,
+          "comparedScenarioIds": [
+            "four-way-crank-control-cycle",
+            "goblin-warrior-skeleton-tracer",
+            "lantern-intercept-pairwise-control",
+            "mounted-dispatch-through-flooded-orchard",
+            "open-grid-wolf-skeleton-pursuit",
+            "orc-fighter-rogue-close-interception",
+            "prone-target-roll-mode-distance-probe",
+            "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+            "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+            "sand-band-four-skeleton-skirmish",
+            "synthetic-beacon-eight-round-defense",
+            "table-authored-shove-then-grapple",
+            "table-authored-three-shove-cycle",
+            "table-d20-circumstance-advantage-probe-repair-retry",
+            "two-goblins-pursue-skeleton"
+          ],
+          "dimensions": {
+            "exploratoryPurpose": "The Candidate probes unsupported Large-creature footprint-aware geometry movement and Opportunity Attack participation across a multi-turn, round-bounded pursuit with changing objective direction. This differs from four-way-crank-control-cycle's fixed Table-authored Shove/Grapple control cycle; goblin-warrior-skeleton-tracer's minimal direct battle; lantern-intercept-pairwise-control's supported pillar interception; mounted-dispatch-through-flooded-orchard's mounted dispatch and object-transfer probe; open-grid-wolf-skeleton-pursuit's supported Wolf/Skeleton pursuit and Opportunity Attacks; orc-fighter-rogue-close-interception's Character Sheet interception; prone-target-roll-mode-distance-probe's Prone roll-mode setup; rs48h-20260824t155852z-synthetic-total-cover-transition-001's Total Cover eligibility transition; rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001's supported target-priority rotation; sand-band-four-skeleton-skirmish's difficult-terrain ranged skirmish; synthetic-beacon-eight-round-defense's Character Sheet objective defense; table-authored-shove-then-grapple and table-authored-three-shove-cycle's fixed control acts; table-d20-circumstance-advantage-probe-repair-retry's per-test circumstance modifier; and two-goblins-pursue-skeleton's cover-bearing escape pursuit. All 15 referenced authored sources were read completely and matched their declared byte-length and SHA-256 bindings.",
+            "materiallyRelevantMechanics": "The Candidate depends on geometry-derived Large occupancy, route clearance, occupied-space distance, reach entry and exit, Dash, Disengage, ordinary attacks, hostile reach, Opportunity Attack reactions, reaction preservation, and staged objective zones. four-way-crank-control-cycle, table-authored-shove-then-grapple, and table-authored-three-shove-cycle instead center on fixed Table reach with Shove, Grapple, and Prone outcomes and little or no movement. goblin-warrior-skeleton-tracer uses the basic direct attack path; lantern-intercept-pairwise-control uses pillars, visibility, Cover, and screened routes; mounted-dispatch-through-flooded-orchard adds mounting, dismounting, object transfer, Difficult Terrain, Cover, elevation, flight, and Invisibility; open-grid-wolf-skeleton-pursuit uses Medium Wolf/Skeleton pursuit and directed Opportunity Attacks; orc-fighter-rogue-close-interception, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense add Character Sheets, equipment or resources, ranged pressure, terrain, barricades, or object defense; prone-target-roll-mode-distance-probe uses initial Prone and caller Initiative; rs48h-20260824t155852z-synthetic-total-cover-transition-001 uses pair-specific Total Cover target eligibility; rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001 uses pillars and supported target redirection; table-d20-circumstance-advantage-probe-repair-retry uses one exact circumstance Disadvantage; and two-goblins-pursue-skeleton uses ranged/melee pursuit, a portcullis, Three-Quarters Cover, and an opening. None combines the Candidate's complete Large-footprint and Opportunity-Attack boundary.",
+            "encounterComposition": "The Candidate has six stat-block-only participants: one unmounted Riding Horse, two Goblin Warriors, one Wolf, and two Skeletons, with the Horse and Skeletons allied against the Goblins and Wolf; no Character Sheets or transferable object are present. four-way-crank-control-cycle has two Goblins, a Skeleton, and a Wolf; goblin-warrior-skeleton-tracer has a Goblin/Skeleton pair; lantern-intercept-pairwise-control has a Wolf, Skeleton, and Hawk; mounted-dispatch-through-flooded-orchard has a mounted Goblin/Horse carrier, two additional Goblins, an Imp, a Wolf, and a dispatch object; open-grid-wolf-skeleton-pursuit has a Wolf/Skeleton pair; orc-fighter-rogue-close-interception has two Character Sheets, two Wolves, a Goblin, and a prism; prone-target-roll-mode-distance-probe has two Goblins and a Wolf; rs48h-20260824t155852z-synthetic-total-cover-transition-001 has two Skeletons, a Goblin, and a synthetic seal; rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001 has one Goblin, one Skeleton, one Wolf, and one Riding Horse; sand-band-four-skeleton-skirmish has two adventurers and four Skeletons; synthetic-beacon-eight-round-defense has four adventurers, four Goblins, two Wolves, and a beacon; table-authored-shove-then-grapple has a Skeleton, Goblin, and case; table-authored-three-shove-cycle has a Goblin, Skeleton, and Wolf; table-d20-circumstance-advantage-probe-repair-retry has a Horse/Wolf pair; and two-goblins-pursue-skeleton has two Goblins and a Skeleton. No admitted composition matches the Candidate's Horse-centered six-creature alliance structure.",
+            "interactionSequence": "The Candidate uses normal initiative and controller-selected legal routes, actions, targets, and reactions. The Horse chooses a southern zone, attempts that entry by round 2, then pursues the northern zone by round 5; its departure may cross hostile reach, and after the first entry one Goblin leaves toward the unchosen zone while the Horse controller decides whether to spend a Reaction on an Opportunity Attack. The Skeletons pursue the Goblins and the remaining Goblin and Wolf pursue the Horse. This differs from four-way-crank-control-cycle's four fixed stationary turns; goblin-warrior-skeleton-tracer's open-ended minimal battle; lantern-intercept-pairwise-control's Hawk traversal and pillar triage; mounted-dispatch-through-flooded-orchard's carrying, dropping, passing, retrieving, and dismounting branches; open-grid-wolf-skeleton-pursuit's fixed lane-changing Wolf/Skeleton chase; orc-fighter-rogue-close-interception's prism-defense sequence; prone-target-roll-mode-distance-probe's two required attacks before Wolf action; rs48h-20260824t155852z-synthetic-total-cover-transition-001's one-Skeleton movement and pair-specific reassessment; rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001's three-round pillar-based target rotation; sand-band-four-skeleton-skirmish's adaptive difficult-terrain skirmish; synthetic-beacon-eight-round-defense's eight-round breach; table-authored-shove-then-grapple's branch-specific Shove/Grapple sequence; table-authored-three-shove-cycle's three fixed Shoves; table-d20-circumstance-advantage-probe-repair-retry's Horse/Wolf chase with one modified Bite; and two-goblins-pursue-skeleton's ranged-to-melee pursuit through a portcullis.",
+            "tacticalQuestion": "The Candidate asks whether the public SDK can preserve an independent Large creature's full occupied-space legality, route clearance, changing reach relationships, and Opportunity Attack exposure during a multi-faction pursuit whose objective direction changes, while controllers choose Dash, Disengage, attacks, and Reaction conservation. The admitted tactical questions instead concern Shove/Grapple control, direct battle tracing, pillar interception, mounted object delivery, ordinary Wolf/Skeleton pursuit, Character Sheet interception or defense, Prone attack-roll branches, Total Cover target eligibility, supported target-priority rotation, difficult-terrain and ranged pressure, fixed Shove branches, one circumstance-modified D20 Test, or containing an escaping Skeleton through Table-owned Cover. The Candidate therefore adds a distinct footprint-and-reaction capability question.",
+            "sdkSupportBoundary": "The Candidate explicitly declares a probeUnsupportedCapability/explicitUnsupportedProbe for Large-creature footprint-aware geometry movement and Opportunity Attack participation. The admitted projections are supportedOnly/supported for four-way-crank-control-cycle, lantern-intercept-pairwise-control, open-grid-wolf-skeleton-pursuit, orc-fighter-rogue-close-interception, rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001, table-authored-shove-then-grapple, table-authored-three-shove-cycle, and two-goblins-pursue-skeleton; notAssessed for goblin-warrior-skeleton-tracer, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense; and probeUnsupportedCapability/explicitUnsupportedProbe for mounted-dispatch-through-flooded-orchard, prone-target-roll-mode-distance-probe, rs48h-20260824t155852z-synthetic-total-cover-transition-001, and table-d20-circumstance-advantage-probe-repair-retry. Those explicit admitted probes target mounted/object/elevation state, Prone and Initiative setup, Total Cover eligibility, or a Table circumstance modifier, not the Candidate's Large-footprint/OA combination.",
+            "spatialContext": {
+              "tag": "supporting",
+              "evidence": "The Candidate uses a geometry-derived, brightly illuminated, open 75-foot-square arena with a level floor, no objects, Cover, elevation, Difficult Terrain, mounts, or transferable items, plus exact placements around the Horse's occupied footprint and three nonphysical objective zones. Geometry supports the distinct footprint, route, distance, adjacency, and reach questions; arena size and lighting are not treated as novel by themselves. The Table-authored contexts are four-way-crank-control-cycle, mounted-dispatch-through-flooded-orchard, table-authored-shove-then-grapple, table-authored-three-shove-cycle, and two-goblins-pursue-skeleton; the geometry-assisted contexts are goblin-warrior-skeleton-tracer, lantern-intercept-pairwise-control, open-grid-wolf-skeleton-pursuit, orc-fighter-rogue-close-interception, prone-target-roll-mode-distance-probe, rs48h-20260824t155852z-synthetic-total-cover-transition-001, rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001, sand-band-four-skeleton-skirmish, synthetic-beacon-eight-round-defense, and table-d20-circumstance-advantage-probe-repair-retry. Their spatial differences concern open grids, pillars, terrain, partitions, barricades, mounted routes, or Table-owned Cover rather than the Candidate's primary boundary."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "Riding Horse, Goblin Warrior, Wolf, and Skeleton all appear in the supplied availability list, matching the availableOnly intent."
+  },
+  "sdkCapabilityIntent": "probeUnsupportedCapability",
+  "sdkCapabilityReview": {
+    "classification": "explicitUnsupportedProbe",
+    "evidence": "The supplied public SDK projection makes tactical-space optional and excludes geometry expansion from Battle Runtime or Target SDK completeness. The configured purpose explicitly probes Large-footprint movement and Opportunity Attack geometry as unsupported."
+  }
+}
