@@ -180,6 +180,42 @@ function processStartTime(pid: number): string {
   return startTime;
 }
 
+function processIsLive(pid: number): boolean {
+  try {
+    const stat = readFileSync(`/proc/${pid}/stat`, "utf8");
+    const state = stat
+      .slice(stat.lastIndexOf(")") + 2)
+      .trim()
+      .split(/\s+/)[0];
+    return state !== undefined && state !== "Z" && state !== "X";
+  } catch {
+    return false;
+  }
+}
+
+async function waitForFile(path: string, timeoutMilliseconds = 2_000) {
+  const deadline = Date.now() + timeoutMilliseconds;
+  while (!existsSync(path) && Date.now() < deadline) {
+    await new Promise((resolveWait) => setTimeout(resolveWait, 20));
+  }
+  if (!existsSync(path)) {
+    throw new Error(`Timed out waiting for ${path}.`);
+  }
+}
+
+async function waitForProcessExit(
+  pid: number,
+  timeoutMilliseconds = 3_000,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMilliseconds;
+  while (processIsLive(pid) && Date.now() < deadline) {
+    await new Promise((resolveWait) => setTimeout(resolveWait, 20));
+  }
+  if (processIsLive(pid)) {
+    throw new Error(`Timed out waiting for process ${pid} to exit.`);
+  }
+}
+
 function modelLaneTestEnvironment(
   commandRoot: string,
   deadline: string,
@@ -654,6 +690,105 @@ esac
       expect(result.status).toBe(124);
       expect(Date.now() - startedAt).toBeLessThan(4_000);
     } finally {
+      rmSync(commandRoot, { recursive: true, force: true });
+      rmSync(commonRoot, { recursive: true, force: true });
+    }
+  }, 15_000);
+
+  test("terminates an owned model group when its recorded owner dies", async () => {
+    const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-owner-git-"));
+    const commonRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-model-owner-common-"),
+    );
+    const fakeGit = resolve(commandRoot, "git");
+    const ownerScript = resolve(commandRoot, "owner.sh");
+    const wrapperPidPath = resolve(commandRoot, "wrapper.pid");
+    const childPidPath = resolve(commandRoot, "child.pid");
+    const firstDeadline = new Date(Date.now() + 3_000).toISOString();
+    let owner: ReturnType<typeof spawn> | undefined;
+    let wrapperPid: number | undefined;
+    let childPid: number | undefined;
+    writeFileSync(
+      fakeGit,
+      `#!/bin/sh
+set -eu
+case "$*" in
+  *--git-common-dir*) printf '%s\\n' '${commonRoot}' ;;
+  *) exit 1 ;;
+esac
+`,
+    );
+    writeFileSync(
+      ownerScript,
+      `#!/usr/bin/env bash
+set -euo pipefail
+owner_pid=$$
+owner_start_time=$(sed 's/^.*) //' "/proc/$owner_pid/stat" | awk '{ print $20 }')
+export DND_RESOURCE_LOCK_OWNER_PID="$owner_pid"
+export DND_RESOURCE_LOCK_OWNER_START_TIME="$owner_start_time"
+"$RAW_SWARM_MODEL_LANE_LOCK" campaign "$@" &
+wrapper_pid=$!
+printf '%s\\n' "$wrapper_pid" > "$RAW_SWARM_WRAPPER_PID"
+wait "$wrapper_pid"
+`,
+    );
+    chmodSync(fakeGit, 0o755);
+    chmodSync(ownerScript, 0o755);
+    try {
+      const childSource = [
+        'const fs = require("node:fs");',
+        "fs.writeFileSync(process.env.RAW_SWARM_CHILD_PID, String(process.pid));",
+        "setInterval(() => {}, 1000);",
+      ].join(" ");
+      owner = spawn(ownerScript, [process.execPath, "-e", childSource], {
+        cwd: repoRoot,
+        env: {
+          ...modelLaneTestEnvironment(commandRoot, firstDeadline),
+          RAW_SWARM_MODEL_LANE_LOCK: modelLaneLock,
+          RAW_SWARM_WRAPPER_PID: wrapperPidPath,
+          RAW_SWARM_CHILD_PID: childPidPath,
+        },
+        stdio: "ignore",
+      });
+      await waitForFile(wrapperPidPath);
+      await waitForFile(childPidPath);
+      wrapperPid = Number(readFileSync(wrapperPidPath, "utf8").trim());
+      childPid = Number(readFileSync(childPidPath, "utf8").trim());
+      expect(Number.isSafeInteger(wrapperPid)).toBe(true);
+      expect(Number.isSafeInteger(childPid)).toBe(true);
+      expect(processIsLive(wrapperPid)).toBe(true);
+      expect(processIsLive(childPid)).toBe(true);
+
+      owner.kill("SIGKILL");
+      await waitForProcessExit(wrapperPid);
+      await waitForProcessExit(childPid);
+
+      const reacquired = spawnSync(
+        modelLaneLock,
+        ["campaign", process.execPath, modelLaneCapability, "--assert"],
+        {
+          cwd: repoRoot,
+          env: modelLaneTestEnvironment(
+            commandRoot,
+            new Date(Date.now() + 1_500).toISOString(),
+          ),
+          encoding: "utf8",
+        },
+      );
+      expect(reacquired.status).toBe(0);
+      expect(`${reacquired.stdout}${reacquired.stderr}`).toContain(
+        "acquired lane",
+      );
+    } finally {
+      if (owner !== undefined && owner.exitCode === null) {
+        owner.kill("SIGKILL");
+      }
+      if (wrapperPid !== undefined && processIsLive(wrapperPid)) {
+        process.kill(wrapperPid, "SIGTERM");
+      }
+      if (childPid !== undefined && processIsLive(childPid)) {
+        process.kill(childPid, "SIGKILL");
+      }
       rmSync(commandRoot, { recursive: true, force: true });
       rmSync(commonRoot, { recursive: true, force: true });
     }

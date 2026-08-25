@@ -245,7 +245,9 @@ operation identity and UTC deadline as documented in [`README.md`](README.md):
 
 ```sh
 export RAW_SWARM_EXPECTED_GIT_SHA=$(git rev-parse HEAD)
-mise exec -- pnpm raw-swarm:model:trial -- scenario-campaign \
+export RAW_SWARM_OPERATION_ID="campaign-$(date -u +%Y%m%d-%H%M%S)"
+export RAW_SWARM_OPERATION_DEADLINE_UTC="$(date -u -d '+8 hours' '+%Y-%m-%dT%H:%M:%SZ')"
+mise exec -- pnpm raw-swarm:model:campaign -- scenario-campaign \
   scripts/raw-swarm/scenario-campaign.example.json
 ```
 

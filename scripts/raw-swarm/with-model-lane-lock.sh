@@ -64,6 +64,89 @@ owner_is_alive() {
   [[ "${owner_fields[19]}" == "$owner_start_time" ]]
 }
 
+command_pid=""
+pending_signal_status=0
+cleanup_in_progress=false
+lane_fd=""
+
+group_exists() {
+  [[ -n "$command_pid" ]] && kill -0 -- "-$command_pid" 2>/dev/null
+}
+
+terminate_group() {
+  group_exists || return 0
+  kill -TERM -- "-$command_pid" 2>/dev/null || true
+  for _ in {1..100}; do
+    group_exists || return 0
+    sleep 0.02
+  done
+  printf '%s\n' "[raw-swarm-model] EMERGENCY: process group $command_pid ignored SIGTERM; sending SIGKILL" >&2
+  kill -KILL -- "-$command_pid" 2>/dev/null || true
+  for _ in {1..100}; do
+    group_exists || return 137
+    sleep 0.02
+  done
+  printf '%s\n' "[raw-swarm-model] process group $command_pid survived SIGKILL" >&2
+  return 137
+}
+
+reap_command() {
+  [[ -n "$command_pid" ]] || return 0
+  set +e
+  wait "$command_pid"
+  local wait_status=$?
+  set -e
+  return "$wait_status"
+}
+
+release_lane() {
+  if [[ -n "$lane_fd" ]]; then
+    exec {lane_fd}>&-
+    lane_fd=""
+  fi
+}
+
+abort_for_lost_owner() {
+  printf '%s\n' '[raw-swarm-model] canceled: recorded parent owner exited' >&2
+  cleanup_in_progress=true
+  set +e
+  terminate_group
+  local cleanup_status=$?
+  reap_command
+  local reap_status=$?
+  set -e
+  release_lane
+  (( cleanup_status == 137 || reap_status == 137 )) && exit 137
+  exit 125
+}
+
+handle_signal() {
+  local status="$1"
+  if (( pending_signal_status == 0 )); then
+    pending_signal_status="$status"
+  fi
+  status="$pending_signal_status"
+  [[ "$cleanup_in_progress" == false ]] || return 0
+  if [[ -n "$command_pid" ]]; then
+    cleanup_in_progress=true
+    set +e
+    terminate_group
+    local cleanup_status=$?
+    reap_command
+    local reap_status=$?
+    set -e
+    release_lane
+    (( cleanup_status == 137 || reap_status == 137 )) && exit 137
+    exit "$status"
+  fi
+  release_lane
+  exit "$status"
+}
+
+trap 'handle_signal 129' HUP
+trap 'handle_signal 130' INT
+trap 'handle_signal 143' TERM
+
 git_common_dir=$(git rev-parse --path-format=absolute --git-common-dir)
 model_lane_owner_pid=$$
 model_lane_owner_start_time=$(sed 's/^.*) //' "/proc/$model_lane_owner_pid/stat" | awk '{ print $20 }')
@@ -98,9 +181,32 @@ while true; do
       export DND_RAW_SWARM_MODEL_LANE_OWNER_PID=$model_lane_owner_pid
       export DND_RAW_SWARM_MODEL_LANE_OWNER_START_TIME=$model_lane_owner_start_time
       printf '[raw-swarm-model] acquired lane %s: %s\n' "$lane" "${1##*/}" >&2
-      exec timeout --signal=TERM --kill-after=30s "$timeout_duration" "$@"
+      setsid -- timeout --signal=TERM --kill-after=30s "$timeout_duration" "$@" &
+      command_pid=$!
+      (( pending_signal_status == 0 )) || handle_signal "$pending_signal_status"
+      while [[ -r "/proc/$command_pid/stat" ]]; do
+        command_state=$(ps -o stat= -p "$command_pid" 2>/dev/null || true)
+        [[ -z "$command_state" || "$command_state" == Z* ]] && break
+        owner_is_alive || abort_for_lost_owner
+        (( pending_signal_status == 0 )) || handle_signal "$pending_signal_status"
+        sleep 0.1
+      done
+      set +e
+      wait "$command_pid"
+      command_status=$?
+      set -e
+      cleanup_in_progress=true
+      set +e
+      terminate_group
+      cleanup_status=$?
+      set -e
+      release_lane
+      trap - HUP INT TERM
+      (( cleanup_status == 137 )) && exit 137
+      exit "$command_status"
     fi
     exec {lane_fd}>&-
+    lane_fd=""
   done
   owner_is_alive || exit 125
   sleep 0.2
