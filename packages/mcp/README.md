@@ -63,10 +63,16 @@ and recreated from the committed current projection.
 
 The first public acceptance witness creates a Guest Play Session, creates and
 mutates one Character Draft, replaces the HTTP server and SQLite connection,
-and continues from revision 1 through `/mcp`. Finalized Character Sessions and
-Battle recovery require their later acceptance slices before they are claimed
-as public recovery coverage. Authentication, guest grants, retention, and
-deletion remain the later public-boundary increment defined by ADR 0007.
+and continues from revision 1 through `/mcp`. The next witness finalizes that
+recoverable workflow into a Character Session, replaces the HTTP server and
+SQLite connection, lists and inspects the reconstructed sheet, advances its
+Fighter class level, replaces those owners again, and observes the updated
+canonical build. Derived Hit Points, Hit Dice, labels, and other sheet projections are
+recomputed from the retained commands, installed Units, and runtime owners;
+they are not session-record fields. Battle recovery still requires its later
+acceptance slices before it is claimed as public recovery coverage.
+Authentication, guest grants, retention, and deletion remain the later
+public-boundary increment defined by ADR 0007.
 
 Run the provider-neutral Node HTTP entrypoint with an explicit database path:
 

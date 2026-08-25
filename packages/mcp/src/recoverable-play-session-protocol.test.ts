@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
@@ -9,6 +10,10 @@ import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { Either } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
 
+import {
+  acceptancePlaySessionId,
+  createBaselineCharacterSession,
+} from "../test-support/mcp-acceptance-scenarios.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import { createDndMcpHttpServer } from "./public-http-server.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
@@ -303,6 +308,139 @@ describe("recoverable Play Session protocol", () => {
       expect(failed.structuredContent).toBeUndefined();
     } finally {
       await connection.close();
+    }
+  });
+
+  test("continues a finalized Character Session mutation across recovery", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "dnd-character-session-"));
+    temporaryDirectories.push(directory);
+    const databasePath = join(directory, "play-sessions.sqlite");
+    const firstRepository = openRepository(databasePath);
+    const firstServer = createDndMcpHttpServer({
+      playSessionRepository: firstRepository,
+    });
+    const firstClient = await connectHttpClient(await listen(firstServer));
+    const playSessionId = await acceptancePlaySessionId(firstClient);
+    const baseline = await createBaselineCharacterSession(firstClient);
+    await firstClient.close();
+    await close(firstServer);
+    firstRepository.close();
+
+    const mutationRepository = openRepository(databasePath);
+    const mutationServer = createDndMcpHttpServer({
+      playSessionRepository: mutationRepository,
+    });
+    const mutationClient = await connectHttpClient(
+      await listen(mutationServer),
+    );
+    const listed = await callStructuredTool(mutationClient, {
+      name: "list_characters",
+      arguments: { playSessionId },
+    });
+    expect(operationResult(listed)).toMatchObject({
+      characters: [
+        {
+          characterId: baseline.characterId,
+          status: "available",
+          hitPoints: { current: 12, maximum: 12 },
+        },
+      ],
+    });
+    await callStructuredTool(mutationClient, {
+      name: "apply_character_session_operation",
+      arguments: {
+        playSessionId,
+        characterId: baseline.characterId,
+        operation: {
+          kind: "advanceClassLevel",
+          levelGain: {
+            tag: "classLevelGain",
+            classUnitId: "class_fighter",
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+          },
+        },
+      },
+    });
+    await mutationClient.close();
+    await close(mutationServer);
+    mutationRepository.close();
+
+    const readRepository = openRepository(databasePath);
+    const readServer = createDndMcpHttpServer({
+      playSessionRepository: readRepository,
+    });
+    const readClient = await connectHttpClient(await listen(readServer));
+    try {
+      const inspected = await callStructuredTool(readClient, {
+        name: "inspect_character_session",
+        arguments: {
+          playSessionId,
+          characterId: baseline.characterId,
+        },
+      });
+      expect(operationResult(inspected)).toMatchObject({
+        detail: {
+          tag: "available",
+          characterId: baseline.characterId,
+          build: {
+            progression: {
+              startingClass: "class_fighter",
+              advancements: [{ classUnitId: "class_fighter" }],
+            },
+          },
+        },
+      });
+    } finally {
+      await readClient.close();
+      await close(readServer);
+      readRepository.close();
+    }
+  }, 90_000);
+
+  test("rejects a stored command that cannot reconstruct application state", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "dnd-invalid-session-"));
+    temporaryDirectories.push(directory);
+    const databasePath = join(directory, "play-sessions.sqlite");
+    const initialRepository = openRepository(databasePath);
+    const initialConnection = await connectClient(initialRepository);
+    const created = await callStructuredTool(initialConnection.client, {
+      name: "create_play_session",
+      arguments: {},
+    });
+    const playSessionId = stringField(created, "playSessionId");
+    await initialConnection.close();
+    initialRepository.close();
+
+    const database = new DatabaseSync(databasePath);
+    database
+      .prepare(
+        "UPDATE play_sessions SET revision = 1, operations_json = ? WHERE play_session_id = ?",
+      )
+      .run(
+        JSON.stringify([{ name: "discover_creation_holes", args: {} }]),
+        playSessionId,
+      );
+    database.close();
+
+    const recoveredRepository = openRepository(databasePath);
+    const recoveredConnection = await connectClient(recoveredRepository);
+    try {
+      const failed = await recoveredConnection.client.callTool({
+        name: "read_play_session",
+        arguments: { playSessionId },
+      });
+      expect(failed.isError).toBe(true);
+      if (!Array.isArray(failed.content) || !isJsonObject(failed.content[0])) {
+        throw new Error("Expected a typed stored-record failure response.");
+      }
+      expect(failed.content[0].type).toBe("text");
+      expect(failed.content[0].text).toEqual(
+        expect.stringContaining('"reason": "invalidStoredRecord"'),
+      );
+      expect(failed.structuredContent).toBeUndefined();
+    } finally {
+      await recoveredConnection.close();
+      recoveredRepository.close();
     }
   });
 });

@@ -650,9 +650,14 @@ export type BaselineVerticalFacts = {
   readonly statBlockId: string;
 };
 
-export async function verifyBaselineVertical(
+export type BaselineCharacterSessionFacts = Pick<
+  BaselineVerticalFacts,
+  "draftId" | "characterId"
+>;
+
+export async function createBaselineCharacterSession(
   client: Client,
-): Promise<BaselineVerticalFacts> {
+): Promise<BaselineCharacterSessionFacts> {
   const requestedDraftId = "draft:stdio-accepted-orc-soldier-fighter";
   const created = await callTool(client, "create_character_draft", {
     draftId: requestedDraftId,
@@ -791,6 +796,14 @@ export async function verifyBaselineVertical(
   assert.deepEqual(get(detailBeforeBattle, "detail.sheetProjection.hitDice"), [
     { classUnitId: "class_fighter", dieSize: 10, total: 1, spent: 0 },
   ]);
+
+  return { draftId, characterId };
+}
+
+export async function verifyBaselineVertical(
+  client: Client,
+): Promise<BaselineVerticalFacts> {
+  const { draftId, characterId } = await createBaselineCharacterSession(client);
 
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
