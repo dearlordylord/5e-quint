@@ -1,213 +1,213 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { Either, ParseResult, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
   PORTABLE_SURFACE_ISSUE_CODES,
   decodePortableSrdSurface,
+  decodePortableSrdSurfaceText,
+  derivePortableSrdDependencyFieldRoles,
+  type PortableSrdSurfaceDecodeResult,
   type PortableSrdSurfaceIssueCode,
 } from "./portable-surface.ts";
+import {
+  SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS,
+  SURFACE_UNIT_DEPENDENCY_RELATIONS,
+} from "./schema-base.ts";
 
-type PortableCaseOperation =
-  | {
-      readonly op: "add" | "replace";
-      readonly path: string;
-      readonly value: unknown;
-    }
-  | { readonly op: "remove"; readonly path: string }
-  | { readonly op: "copy"; readonly from: string; readonly path: string };
-
-type PortableCaseIndex = {
-  readonly version: number;
-  readonly baseArtifact: string;
-  readonly cases: readonly {
-    readonly name: string;
-    readonly operations: readonly PortableCaseOperation[];
-    readonly expected: {
-      readonly tag: "accepted" | "rejected";
-      readonly productionIssueCodes: readonly PortableSrdSurfaceIssueCode[];
-      readonly independentIssueCodes: readonly string[];
-    };
-  }[];
-};
-
-const caseIndexPath = fileURLToPath(
-  new URL("../../portable-cases/srd-surface-case-index.json", import.meta.url),
+const issueCodeSchema = Schema.Literal(...PORTABLE_SURFACE_ISSUE_CODES);
+const dependencyRelationSchema = Schema.Literal(
+  ...[
+    ...SURFACE_UNIT_DEPENDENCY_RELATIONS,
+    ...SURFACE_STAT_BLOCK_DEPENDENCY_RELATIONS,
+  ],
 );
-// The checked-in case index is the portable fixture contract consumed by this
-// test; each operation and expected issue code is exercised below.
-const caseIndex = JSON.parse(
-  readFileSync(caseIndexPath, "utf8"),
-) as PortableCaseIndex;
-if (caseIndex.version !== 1) {
-  throw new Error(
-    `Unsupported portable Surface case index: ${caseIndex.version}`,
-  );
-}
-const publication: unknown = JSON.parse(
-  readFileSync(join(dirname(caseIndexPath), caseIndex.baseArtifact), "utf8"),
+const outcomeSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("accepted"),
+    issueCodes: Schema.Tuple(),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("rejected"),
+    issueCodes: Schema.Array(issueCodeSchema),
+  }),
+);
+const dependencyRoleSchema = Schema.Struct({
+  sourceKind: Schema.Literal("unit", "statBlock"),
+  path: Schema.NonEmptyTrimmedString,
+  fieldName: Schema.NonEmptyTrimmedString,
+  targetKind: Schema.Literal("unit", "statBlock"),
+  relation: dependencyRelationSchema,
+});
+const caseWithInputSchema = Schema.Struct({
+  name: Schema.NonEmptyTrimmedString,
+  input: Schema.Unknown,
+  expected: Schema.Struct({
+    production: outcomeSchema,
+    independent: outcomeSchema,
+  }),
+});
+const caseWithTextSchema = Schema.Struct({
+  name: Schema.NonEmptyTrimmedString,
+  inputText: Schema.NonEmptyTrimmedString,
+  expected: Schema.Struct({
+    production: outcomeSchema,
+    independent: outcomeSchema,
+  }),
+});
+const portableCaseSchema = Schema.Union(
+  caseWithInputSchema,
+  caseWithTextSchema,
+);
+const portableCaseDocumentSchema = Schema.Struct({
+  version: Schema.Literal(1),
+  dependencyContract: Schema.Array(dependencyRoleSchema),
+  cases: Schema.NonEmptyArray(portableCaseSchema),
+});
+
+type PortableCaseDocument = Schema.Schema.Type<
+  typeof portableCaseDocumentSchema
+>;
+type PortableCase = PortableCaseDocument["cases"][number];
+
+const caseDocumentPath = fileURLToPath(
+  new URL("../../portable-cases/srd-surface-cases.json", import.meta.url),
 );
 
-function pointerSegments(pointer: string): readonly string[] {
-  if (pointer === "") return [];
-  if (!pointer.startsWith("/")) {
-    throw new Error(`Expected a JSON Pointer, received ${pointer}`);
+function readPortableCaseDocument(): PortableCaseDocument {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(caseDocumentPath, "utf8"));
+  } catch (error) {
+    throw new Error(
+      `Portable case document is not valid JSON: ${String(error)}`,
+    );
   }
-  return pointer
-    .slice(1)
-    .split("/")
-    .map((segment) => segment.replaceAll("~1", "/").replaceAll("~0", "~"));
+  const decoded = Schema.decodeUnknownEither(portableCaseDocumentSchema, {
+    onExcessProperty: "error",
+  })(parsed);
+  if (Either.isLeft(decoded)) {
+    throw new Error(
+      `Portable case document failed its schema: ${ParseResult.TreeFormatter.formatErrorSync(decoded.left)}`,
+    );
+  }
+  return decoded.right;
 }
 
-function readPointer(root: unknown, pointer: string): unknown {
-  let current = root;
-  for (const segment of pointerSegments(pointer)) {
-    if (Array.isArray(current)) {
-      const index = Number(segment);
-      if (!Number.isInteger(index) || index < 0 || index >= current.length) {
-        throw new Error(`Array pointer segment is not present: ${pointer}`);
-      }
-      current = current[index];
-    } else if (isRecord(current)) {
-      if (!Object.hasOwn(current, segment)) {
-        throw new Error(`Object pointer segment is not present: ${pointer}`);
-      }
-      current = current[segment];
-    } else {
-      throw new Error(`Cannot descend through a scalar: ${pointer}`);
-    }
-  }
-  return current;
+const caseDocument = readPortableCaseDocument();
+
+function productionResultForCase(
+  portableCase: PortableCase,
+): PortableSrdSurfaceDecodeResult {
+  return "inputText" in portableCase
+    ? decodePortableSrdSurfaceText(portableCase.inputText)
+    : decodePortableSrdSurface(portableCase.input);
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function writePointer(
-  root: unknown,
-  pointer: string,
-  value: unknown,
-  operation: "add" | "replace" | "remove",
-): void {
-  const segments = pointerSegments(pointer);
-  const key = segments.at(-1);
-  if (key === undefined) {
-    throw new Error("Portable case operations cannot replace the root");
-  }
-  let parent = root;
-  for (const segment of segments.slice(0, -1)) {
-    parent = readPointer(parent, `/${segment}`);
-  }
-
-  if (Array.isArray(parent)) {
-    const index = key === "-" ? parent.length : Number(key);
-    if (!Number.isInteger(index) || index < 0 || index > parent.length) {
-      throw new Error(`Array pointer target is not present: ${pointer}`);
-    }
-    if (operation === "add") parent.splice(index, 0, value);
-    else if (operation === "replace") {
-      if (index === parent.length) {
-        throw new Error(`Array replacement target is not present: ${pointer}`);
-      }
-      parent[index] = value;
-    } else {
-      if (index === parent.length) {
-        throw new Error(`Array removal target is not present: ${pointer}`);
-      }
-      parent.splice(index, 1);
-    }
-    return;
-  }
-  if (!isRecord(parent)) {
-    throw new Error(`Portable case target is not a container: ${pointer}`);
-  }
-  if (operation === "remove") {
-    if (!Object.hasOwn(parent, key)) {
-      throw new Error(`Object removal target is not present: ${pointer}`);
-    }
-    delete parent[key];
-  } else {
-    parent[key] = value;
-  }
-}
-
-function applyOperations(
-  base: unknown,
-  operations: readonly PortableCaseOperation[],
-): unknown {
-  const result = structuredClone(base);
-  for (const operation of operations) {
-    if (operation.op === "copy") {
-      writePointer(
-        result,
-        operation.path,
-        structuredClone(readPointer(result, operation.from)),
-        "add",
-      );
-    } else if (operation.op === "remove") {
-      writePointer(result, operation.path, undefined, "remove");
-    } else {
-      writePointer(result, operation.path, operation.value, operation.op);
-    }
-  }
-  return result;
-}
-
-type PortableTestCase = {
-  readonly name: string;
-  readonly input: unknown;
-  readonly expected:
-    | { readonly tag: "accepted" }
+function expectedCodes(
+  outcome:
+    | { readonly tag: "accepted"; readonly issueCodes: readonly [] }
     | {
         readonly tag: "rejected";
         readonly issueCodes: readonly PortableSrdSurfaceIssueCode[];
-      };
-  readonly independentIssueCodes: readonly string[];
-};
-
-const cases: readonly PortableTestCase[] = caseIndex.cases.map((entry) => ({
-  name: entry.name,
-  input: applyOperations(publication, entry.operations),
-  expected:
-    entry.expected.tag === "accepted"
-      ? { tag: "accepted" }
-      : {
-          tag: "rejected",
-          issueCodes: entry.expected.productionIssueCodes,
-        },
-  independentIssueCodes: entry.expected.independentIssueCodes,
-}));
+      },
+): readonly PortableSrdSurfaceIssueCode[] {
+  return outcome.issueCodes;
+}
 
 describe("portable SRD Surface boundary", () => {
-  test("cases exercise the complete typed issue vocabulary", () => {
-    const caseIssueCodes = new Set(
-      cases.flatMap((portableCase) =>
-        portableCase.expected.tag === "rejected"
-          ? portableCase.expected.issueCodes
-          : [],
-      ),
+  test("case outcomes use the published typed issue vocabulary", () => {
+    const expectedCodeSet = new Set(
+      caseDocument.cases.flatMap((portableCase) => [
+        ...expectedCodes(portableCase.expected.production),
+        ...expectedCodes(portableCase.expected.independent),
+      ]),
     );
-    expect([...caseIssueCodes].sort()).toEqual(
-      [...PORTABLE_SURFACE_ISSUE_CODES].sort(),
+    expect(
+      [...expectedCodeSet].every((code) =>
+        PORTABLE_SURFACE_ISSUE_CODES.includes(code),
+      ),
+    ).toBe(true);
+    expect(PORTABLE_SURFACE_ISSUE_CODES).toContain("duplicate-json-member");
+    expect(PORTABLE_SURFACE_ISSUE_CODES).toContain("unsupported-schema-node");
+  });
+
+  test("the dependency contract is derived from the canonical schema", () => {
+    const validCase = caseDocument.cases.find(
+      (portableCase) => portableCase.name === "valid published aggregate",
+    );
+    if (validCase === undefined || !("input" in validCase)) {
+      throw new Error("Portable cases lost their valid aggregate input");
+    }
+    const result = decodePortableSrdSurface(validCase.input);
+    expect(result.tag).toBe("accepted");
+    if (result.tag !== "accepted") return;
+    expect(derivePortableSrdDependencyFieldRoles(result.surface)).toEqual(
+      caseDocument.dependencyContract,
     );
   });
 
-  test.each(cases)("$name", (portableCase) => {
-    const result = decodePortableSrdSurface(portableCase.input);
+  test("issue variants carry only their code-specific metadata", () => {
+    const duplicateCase = caseDocument.cases.find(
+      (portableCase) => portableCase.name === "duplicate JSON member",
+    );
+    const danglingCase = caseDocument.cases.find(
+      (portableCase) => portableCase.name === "dangling authored dependency",
+    );
+    const schemaCase = caseDocument.cases.find(
+      (portableCase) => portableCase.name === "unknown field",
+    );
+    if (
+      duplicateCase === undefined ||
+      danglingCase === undefined ||
+      schemaCase === undefined
+    ) {
+      throw new Error("Portable issue metadata cases are incomplete");
+    }
 
-    if (portableCase.expected.tag === "accepted") {
+    const duplicate = productionResultForCase(duplicateCase);
+    const dangling = productionResultForCase(danglingCase);
+    const schema = productionResultForCase(schemaCase);
+    expect(duplicate.tag).toBe("rejected");
+    expect(dangling.tag).toBe("rejected");
+    expect(schema.tag).toBe("rejected");
+    if (
+      duplicate.tag !== "rejected" ||
+      dangling.tag !== "rejected" ||
+      schema.tag !== "rejected"
+    ) {
+      return;
+    }
+    expect(duplicate.issues[0]).toMatchObject({
+      code: "duplicate-json-member",
+      memberName: "units",
+    });
+    expect(duplicate.issues[0]).not.toHaveProperty("targetId");
+    expect(dangling.issues[0]).toMatchObject({
+      code: "dangling-authored-dependency",
+      targetKind: "statBlock",
+      targetId: "stat_block_bat",
+      relation: "stat-block-reference",
+    });
+    expect(dangling.issues[0]).not.toHaveProperty("memberName");
+    expect(schema.issues[0]).toMatchObject({ code: "schema" });
+    expect(schema.issues[0]).not.toHaveProperty("targetId");
+  });
+
+  test.each(caseDocument.cases)("$name", (portableCase) => {
+    const result = productionResultForCase(portableCase);
+    const expected = portableCase.expected.production;
+    expect(result.tag).toBe(expected.tag);
+    if (expected.tag === "accepted") {
       expect(result).toEqual({ tag: "accepted", surface: expect.anything() });
       return;
     }
-
-    expect(result.tag).toBe("rejected");
     if (result.tag !== "rejected") return;
     expect(result.issues.map((issue) => issue.code)).toEqual(
-      portableCase.expected.issueCodes,
+      expected.issueCodes,
     );
     expect(result).not.toHaveProperty("surface");
   });
@@ -226,19 +226,101 @@ describe("portable SRD Surface boundary", () => {
           import { readFileSync } from "node:fs";
           import Ajv2020 from "ajv/dist/2020.js";
 
-          const cases = JSON.parse(readFileSync(0, "utf8"));
+          const document = JSON.parse(readFileSync(0, "utf8"));
           const schema = JSON.parse(readFileSync(${JSON.stringify(schemaPath)}, "utf8"));
           const validate = new Ajv2020({
             strict: false,
             inlineRefs: false,
+            allErrors: true,
             code: { optimize: 0 },
           }).compile(schema);
+
+          const duplicateJsonMembers = (text) => {
+            let cursor = 0;
+            const duplicates = [];
+            const skipWhitespace = () => {
+              while (/\\s/.test(text[cursor] ?? "")) cursor += 1;
+            };
+            const parseString = () => {
+              if (text[cursor] !== '"') return undefined;
+              const start = cursor++;
+              let escaped = false;
+              while (cursor < text.length) {
+                const character = text[cursor++];
+                if (escaped) escaped = false;
+                else if (character === "\\\\") escaped = true;
+                else if (character === '"') {
+                  try {
+                    const value = JSON.parse(text.slice(start, cursor));
+                    return typeof value === "string" ? value : undefined;
+                  } catch {
+                    return undefined;
+                  }
+                }
+              }
+              return undefined;
+            };
+            const value = () => {
+              skipWhitespace();
+              if (text[cursor] === '"') return parseString() !== undefined;
+              if (text[cursor] === "{") {
+                cursor += 1;
+                skipWhitespace();
+                const names = new Set();
+                if (text[cursor] === "}") { cursor += 1; return true; }
+                while (cursor < text.length) {
+                  skipWhitespace();
+                  const name = parseString();
+                  if (name === undefined) return false;
+                  if (names.has(name)) duplicates.push(name);
+                  names.add(name);
+                  skipWhitespace();
+                  if (text[cursor++] !== ":" || !value()) return false;
+                  skipWhitespace();
+                  if (text[cursor] === "}") { cursor += 1; return true; }
+                  if (text[cursor++] !== ",") return false;
+                }
+                return false;
+              }
+              if (text[cursor] === "[") {
+                cursor += 1;
+                skipWhitespace();
+                if (text[cursor] === "]") { cursor += 1; return true; }
+                while (cursor < text.length) {
+                  if (!value()) return false;
+                  skipWhitespace();
+                  if (text[cursor] === "]") { cursor += 1; return true; }
+                  if (text[cursor++] !== ",") return false;
+                }
+                return false;
+              }
+              const start = cursor;
+              while (cursor < text.length && !/[\\s,\\]}]/.test(text[cursor] ?? "")) cursor += 1;
+              return cursor > start;
+            };
+            const valid = value();
+            skipWhitespace();
+            return valid && cursor === text.length ? duplicates : [];
+          };
+
+          const structuralIssueCodes = (input) => {
+            const structurallyValid = validate(input);
+            const paths = new Set();
+            for (const error of validate.errors ?? []) {
+              const recordPath = error.instancePath.match(/^\\/(?:units|statBlocks)\\/\\d+/)?.[0];
+              paths.add(recordPath ?? (error.instancePath || "$"));
+            }
+            return {
+              structurallyValid,
+              issueCodes: [...paths].map(() => "schema"),
+            };
+          };
 
           const identityIssues = (aggregate) => {
             const seen = new Set();
             const issues = [];
             for (const family of ["units", "statBlocks"]) {
-              for (const [index, record] of aggregate[family].entries()) {
+              for (const record of Array.isArray(aggregate[family]) ? aggregate[family] : []) {
                 if (seen.has(record.id)) issues.push("duplicate-authored-identity");
                 else seen.add(record.id);
               }
@@ -247,37 +329,66 @@ describe("portable SRD Surface boundary", () => {
           };
 
           const dependencyIssues = (aggregate) => {
-            const statBlockIds = new Set(aggregate.statBlocks.map((record) => record.id));
+            const unitIds = new Set((aggregate.units ?? []).map((record) => record.id));
+            const statBlockIds = new Set((aggregate.statBlocks ?? []).map((record) => record.id));
             const issues = [];
-            const visit = (value) => {
+            const visit = (value, sourceKind, path) => {
               if (Array.isArray(value)) {
-                for (const item of value) visit(item);
+                for (const item of value) visit(item, sourceKind, path + "[]");
                 return;
               }
               if (value === null || typeof value !== "object") return;
               for (const [key, member] of Object.entries(value)) {
-                if (
-                  (key === "statBlockId" || key === "monsterId") &&
-                  typeof member === "string" &&
-                  !statBlockIds.has(member)
-                ) {
-                  issues.push("dangling-authored-dependency");
+                const childPath = path === "" ? key : path + "." + key;
+                const roles = document.dependencyContract.filter((role) =>
+                  role.sourceKind === sourceKind && role.path === childPath,
+                );
+                if (typeof member === "string") {
+                  for (const role of roles) {
+                    const ids = role.targetKind === "unit" ? unitIds : statBlockIds;
+                    if (!ids.has(member)) issues.push("dangling-authored-dependency");
+                  }
                 }
-                visit(member);
+                visit(member, sourceKind, childPath);
               }
             };
-            visit(aggregate.units);
-            visit(aggregate.statBlocks);
+            for (const record of aggregate.units ?? []) visit(record, "unit", "");
+            for (const record of aggregate.statBlocks ?? []) visit(record, "statBlock", "");
             return issues;
           };
 
-          for (const portableCase of cases) {
-            const structurallyValid = validate(portableCase.input);
-            const issueCodes = structurallyValid
-              ? [...identityIssues(portableCase.input), ...dependencyIssues(portableCase.input)]
-              : ["schema"];
-            const expected = portableCase.independentIssueCodes;
-            if (JSON.stringify(issueCodes) !== JSON.stringify(expected)) {
+          for (const portableCase of document.cases) {
+            if (portableCase.inputText !== undefined) {
+              if (duplicateJsonMembers(portableCase.inputText).length > 0) {
+                if (JSON.stringify(portableCase.expected.independent.issueCodes) !== JSON.stringify(["duplicate-json-member"])) {
+                  console.error(portableCase.name + " duplicate-member mismatch");
+                  process.exit(1);
+                }
+                continue;
+              }
+            }
+            let input = portableCase.input;
+            if (portableCase.inputText !== undefined) {
+              try {
+                input = JSON.parse(portableCase.inputText);
+              } catch {
+                if (
+                  JSON.stringify(portableCase.expected.independent.issueCodes) !==
+                  JSON.stringify(["json"])
+                ) {
+                  console.error(portableCase.name + " malformed-json mismatch");
+                  process.exit(1);
+                }
+                continue;
+              }
+            }
+            const structural = structuralIssueCodes(input);
+            const issueCodes = [
+              ...structural.issueCodes,
+              ...identityIssues(input ?? {}),
+              ...dependencyIssues(input ?? {}),
+            ];
+            if (JSON.stringify(issueCodes) !== JSON.stringify(portableCase.expected.independent.issueCodes)) {
               console.error(portableCase.name + " mismatch: " + JSON.stringify(issueCodes));
               process.exit(1);
             }
@@ -286,7 +397,7 @@ describe("portable SRD Surface boundary", () => {
         `,
       ],
       {
-        input: JSON.stringify(cases),
+        input: JSON.stringify(caseDocument),
         encoding: "utf8",
         timeout: 120_000,
       },

@@ -15,21 +15,49 @@ import {
 const STRICT_DECODE_OPTIONS = { onExcessProperty: "error" } as const;
 
 export const PORTABLE_SURFACE_ISSUE_CODES = [
+  "json",
   "shape",
   "schema",
+  "duplicate-json-member",
   "duplicate-authored-identity",
   "dangling-authored-dependency",
+  "unsupported-schema-node",
 ] as const;
 export type PortableSrdSurfaceIssueCode =
   (typeof PORTABLE_SURFACE_ISSUE_CODES)[number];
 
-export type PortableSrdSurfaceIssue = {
-  readonly code: PortableSrdSurfaceIssueCode;
+type PortableSrdSurfaceIssueBase = {
   readonly path: string;
   readonly message: string;
-  readonly targetKind?: "unit" | "statBlock";
-  readonly targetId?: string;
 };
+
+export type PortableSrdSurfaceIssue =
+  | (PortableSrdSurfaceIssueBase & { readonly code: "json" })
+  | (PortableSrdSurfaceIssueBase & { readonly code: "shape" })
+  | (PortableSrdSurfaceIssueBase & { readonly code: "schema" })
+  | (PortableSrdSurfaceIssueBase & {
+      readonly code: "duplicate-json-member";
+      readonly memberName: string;
+    })
+  | (PortableSrdSurfaceIssueBase & {
+      readonly code: "duplicate-authored-identity";
+      readonly targetKind: "unit" | "statBlock";
+      readonly targetId: string;
+      readonly priorPath: string;
+    })
+  | (PortableSrdSurfaceIssueBase & {
+      readonly code: "dangling-authored-dependency";
+      readonly targetKind: "unit" | "statBlock";
+      readonly targetId: string;
+      readonly relation: Extract<
+        SurfaceSchemaFieldRole,
+        { readonly category: "dependency" }
+      >["relation"];
+    })
+  | (PortableSrdSurfaceIssueBase & {
+      readonly code: "unsupported-schema-node";
+      readonly astTag: SchemaAST.AST["_tag"];
+    });
 
 export type PortableSrdSurfaceDecodeResult =
   | { readonly tag: "accepted"; readonly surface: PublishedSrdSurface }
@@ -56,6 +84,22 @@ type AuthoredDependency = {
   >["relation"];
 };
 
+type AuthoredDependencyCollection = {
+  readonly dependencies: readonly AuthoredDependency[];
+  readonly issues: readonly PortableSrdSurfaceIssue[];
+};
+
+export type PortableSrdDependencyFieldRole = {
+  readonly sourceKind: "unit" | "statBlock";
+  readonly path: string;
+  readonly fieldName: string;
+  readonly targetKind: "unit" | "statBlock";
+  readonly relation: Extract<
+    SurfaceSchemaFieldRole,
+    { readonly category: "dependency" }
+  >["relation"];
+};
+
 type RecordFamilyLabel = "Unit" | "Stat Block";
 
 type DecodedMembers = {
@@ -66,21 +110,72 @@ type DecodedMembers = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-function issue(
-  code: PortableSrdSurfaceIssueCode,
+function jsonIssue(path: string, message: string): PortableSrdSurfaceIssue {
+  return { code: "json", path, message };
+}
+
+function shapeIssue(path: string, message: string): PortableSrdSurfaceIssue {
+  return { code: "shape", path, message };
+}
+
+function duplicateJsonMemberIssue(
+  path: string,
+  memberName: string,
+): PortableSrdSurfaceIssue {
+  return {
+    code: "duplicate-json-member",
+    path,
+    message: `Duplicate JSON object member: ${memberName}`,
+    memberName,
+  };
+}
+
+function duplicateIdentityIssue(
   path: string,
   message: string,
-  details: Pick<PortableSrdSurfaceIssue, "targetKind" | "targetId"> = {},
+  details: Omit<
+    Extract<
+      PortableSrdSurfaceIssue,
+      { readonly code: "duplicate-authored-identity" }
+    >,
+    "path" | "message"
+  >,
 ): PortableSrdSurfaceIssue {
-  return { code, path, message, ...details };
+  return { ...details, path, message };
+}
+
+function danglingDependencyIssue(
+  path: string,
+  message: string,
+  details: Omit<
+    Extract<
+      PortableSrdSurfaceIssue,
+      { readonly code: "dangling-authored-dependency" }
+    >,
+    "path" | "message"
+  >,
+): PortableSrdSurfaceIssue {
+  return { ...details, path, message };
+}
+
+function unsupportedSchemaNodeIssue(
+  path: string,
+  astTag: SchemaAST.AST["_tag"],
+): PortableSrdSurfaceIssue {
+  return {
+    code: "unsupported-schema-node",
+    path,
+    message: `Unsupported Surface schema AST node: ${astTag}`,
+    astTag,
+  };
 }
 
 function schemaIssue(path: string, error: ParseResult.ParseError) {
-  return issue(
-    "schema",
+  return {
+    code: "schema" as const,
     path,
-    ParseResult.TreeFormatter.formatErrorSync(error),
-  );
+    message: ParseResult.TreeFormatter.formatErrorSync(error),
+  } satisfies PortableSrdSurfaceIssue;
 }
 
 function nonEmpty<T>(values: readonly T[]): readonly [T, ...T[]] | undefined {
@@ -88,27 +183,166 @@ function nonEmpty<T>(values: readonly T[]): readonly [T, ...T[]] | undefined {
   return first === undefined ? undefined : [first, ...rest];
 }
 
+type JsonMemberScan = {
+  readonly path: string;
+  readonly memberName: string;
+};
+
+type JsonScanResult = {
+  readonly valid: boolean;
+  readonly duplicateMembers: readonly JsonMemberScan[];
+};
+
+function scanJsonMembers(text: string): JsonScanResult {
+  let cursor = 0;
+  const duplicateMembers: JsonMemberScan[] = [];
+
+  const skipWhitespace = () => {
+    while (/\s/.test(text[cursor] ?? "")) cursor += 1;
+  };
+
+  const parseString = (): string | undefined => {
+    const start = cursor;
+    if (text[cursor] !== '"') return undefined;
+    cursor += 1;
+    let escaped = false;
+    while (cursor < text.length) {
+      const character = text[cursor];
+      cursor += 1;
+      if (escaped) {
+        escaped = false;
+      } else if (character === "\\") {
+        escaped = true;
+      } else if (character === '"') {
+        const encoded = text.slice(start, cursor);
+        try {
+          const decoded: unknown = JSON.parse(encoded);
+          return typeof decoded === "string" ? decoded : undefined;
+        } catch {
+          return undefined;
+        }
+      }
+    }
+    return undefined;
+  };
+
+  const parseValue = (path: string): boolean => {
+    skipWhitespace();
+    const character = text[cursor];
+    if (character === '"') return parseString() !== undefined;
+    if (character === "{") {
+      cursor += 1;
+      skipWhitespace();
+      const members = new Set<string>();
+      if (text[cursor] === "}") {
+        cursor += 1;
+        return true;
+      }
+      while (cursor < text.length) {
+        skipWhitespace();
+        const memberName = parseString();
+        if (memberName === undefined) return false;
+        if (members.has(memberName)) {
+          duplicateMembers.push({
+            path: `${path}.${memberName}`,
+            memberName,
+          });
+        }
+        members.add(memberName);
+        skipWhitespace();
+        if (text[cursor] !== ":") return false;
+        cursor += 1;
+        if (!parseValue(`${path}.${memberName}`)) return false;
+        skipWhitespace();
+        if (text[cursor] === "}") {
+          cursor += 1;
+          return true;
+        }
+        if (text[cursor] !== ",") return false;
+        cursor += 1;
+      }
+      return false;
+    }
+    if (character === "[") {
+      cursor += 1;
+      skipWhitespace();
+      if (text[cursor] === "]") {
+        cursor += 1;
+        return true;
+      }
+      let index = 0;
+      while (cursor < text.length) {
+        if (!parseValue(`${path}[${index}]`)) return false;
+        index += 1;
+        skipWhitespace();
+        if (text[cursor] === "]") {
+          cursor += 1;
+          return true;
+        }
+        if (text[cursor] !== ",") return false;
+        cursor += 1;
+      }
+      return false;
+    }
+    const start = cursor;
+    while (cursor < text.length && !/[\s,\]}]/.test(text[cursor] ?? "")) {
+      cursor += 1;
+    }
+    return cursor > start;
+  };
+
+  const valid = parseValue("$");
+  skipWhitespace();
+  return {
+    valid: valid && cursor === text.length,
+    duplicateMembers,
+  };
+}
+
+export function decodePortableSrdSurfaceText(
+  text: string,
+): PortableSrdSurfaceDecodeResult {
+  const scan = scanJsonMembers(text);
+  if (scan.valid && scan.duplicateMembers.length > 0) {
+    return rejected(
+      scan.duplicateMembers.map(({ path, memberName }) =>
+        duplicateJsonMemberIssue(path, memberName),
+      ),
+    );
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    return rejected([
+      jsonIssue(
+        "$",
+        `Surface aggregate JSON could not be parsed: ${String(error)}`,
+      ),
+    ]);
+  }
+  return decodePortableSrdSurface(parsed);
+}
+
 function rootShapeIssues(raw: unknown): PortableSrdSurfaceIssue[] {
   if (!isRecord(raw)) {
-    return [issue("shape", "$", "Surface aggregate must be a JSON object")];
+    return [shapeIssue("$", "Surface aggregate must be a JSON object")];
   }
 
   const issues: PortableSrdSurfaceIssue[] = [];
   for (const key of Object.keys(raw)) {
     if (key !== "kind" && key !== "units" && key !== "statBlocks") {
-      issues.push(
-        issue(
-          "schema",
-          `$.${key}`,
-          `Unknown Surface aggregate property: ${key}`,
-        ),
-      );
+      issues.push({
+        code: "schema",
+        path: `$.${key}`,
+        message: `Unknown Surface aggregate property: ${key}`,
+      });
     }
   }
   if (raw.kind !== "srd-5.2.1-surface-catalog") {
     issues.push(
-      issue(
-        "shape",
+      shapeIssue(
         "$.kind",
         "Surface aggregate kind must be srd-5.2.1-surface-catalog",
       ),
@@ -118,8 +352,7 @@ function rootShapeIssues(raw: unknown): PortableSrdSurfaceIssue[] {
     const value = raw[member];
     if (!Array.isArray(value) || value.length === 0) {
       issues.push(
-        issue(
-          "shape",
+        shapeIssue(
           `$.${member}`,
           `Surface aggregate ${member} must be a non-empty array`,
         ),
@@ -183,10 +416,15 @@ function duplicateIdentityIssues(
       const prior = seen.get(record.id);
       if (prior !== undefined) {
         issues.push(
-          issue(
-            "duplicate-authored-identity",
+          duplicateIdentityIssue(
             `$.${member}[${index}].id`,
             `${family} identity ${record.id} duplicates ${prior.family} at ${prior.path}`,
+            {
+              code: "duplicate-authored-identity",
+              targetKind: member === "units" ? "unit" : "statBlock",
+              targetId: String(record.id),
+              priorPath: prior.path,
+            },
           ),
         );
       } else {
@@ -203,6 +441,10 @@ function duplicateIdentityIssues(
 const isObjectLike = (value: unknown): value is object =>
   typeof value === "object" && value !== null;
 
+function unsupportedSchemaAst(ast: SchemaAST.AST): never {
+  throw new Error(`Unsupported Surface schema AST node: ${ast._tag}`);
+}
+
 function astChild(ast: SchemaAST.AST): SchemaAST.AST | undefined {
   if (ast._tag === "Transformation") return ast.to;
   if (ast._tag === "Refinement") return ast.from;
@@ -217,7 +459,27 @@ function structuralAst(ast: SchemaAST.AST): SchemaAST.AST {
     current = child;
   }
   if (current._tag === "Suspend") return structuralAst(current.f());
-  return current;
+  switch (current._tag) {
+    case "AnyKeyword":
+    case "BigIntKeyword":
+    case "BooleanKeyword":
+    case "Declaration":
+    case "Literal":
+    case "NeverKeyword":
+    case "NumberKeyword":
+    case "ObjectKeyword":
+    case "StringKeyword":
+    case "SymbolKeyword":
+    case "TupleType":
+    case "TypeLiteral":
+    case "UndefinedKeyword":
+    case "Union":
+    case "UnknownKeyword":
+    case "VoidKeyword":
+      return current;
+    default:
+      return unsupportedSchemaAst(current);
+  }
 }
 
 function literalStrings(ast: SchemaAST.AST): readonly string[] {
@@ -228,7 +490,25 @@ function literalStrings(ast: SchemaAST.AST): readonly string[] {
   if (current._tag === "Union") {
     return current.types.flatMap(literalStrings);
   }
-  return [];
+  switch (current._tag) {
+    case "AnyKeyword":
+    case "BigIntKeyword":
+    case "BooleanKeyword":
+    case "Declaration":
+    case "NeverKeyword":
+    case "NumberKeyword":
+    case "ObjectKeyword":
+    case "StringKeyword":
+    case "SymbolKeyword":
+    case "TupleType":
+    case "TypeLiteral":
+    case "UndefinedKeyword":
+    case "UnknownKeyword":
+    case "VoidKeyword":
+      return [];
+    default:
+      return unsupportedSchemaAst(current);
+  }
 }
 
 function branchDiscriminatorMatches(
@@ -267,8 +547,9 @@ function collectAuthoredDependencies(
   schema: Schema.Schema.AnyNoContext,
   value: unknown,
   rootPath: string,
-): readonly AuthoredDependency[] {
+): AuthoredDependencyCollection {
   const dependencies: AuthoredDependency[] = [];
+  const issues: PortableSrdSurfaceIssue[] = [];
   const pending: Array<{
     readonly ast: SchemaAST.AST;
     readonly value: unknown;
@@ -296,12 +577,21 @@ function collectAuthoredDependencies(
           typeof current.value === "string" &&
           role?.category === "dependency"
         ) {
-          dependencies.push({
-            path: current.path,
-            targetKind: role.targetKind,
-            targetId: current.value,
-            relation: role.relation,
-          });
+          const key = `${current.path}\u0000${role.targetKind}\u0000${current.value}\u0000${role.relation}`;
+          if (
+            !dependencies.some(
+              (dependency) =>
+                `${dependency.path}\u0000${dependency.targetKind}\u0000${dependency.targetId}\u0000${dependency.relation}` ===
+                key,
+            )
+          ) {
+            dependencies.push({
+              path: current.path,
+              targetKind: role.targetKind,
+              targetId: current.value,
+              relation: role.relation,
+            });
+          }
         }
         break;
       }
@@ -361,20 +651,39 @@ function collectAuthoredDependencies(
         }
         break;
       case "Declaration":
+        issues.push(unsupportedSchemaNodeIssue(current.path, current.ast._tag));
         break;
       default:
+        issues.push(unsupportedSchemaNodeIssue(current.path, current.ast._tag));
         break;
     }
   }
 
-  return dependencies;
+  return { dependencies, issues };
 }
 
-function dependencyIssues(members: DecodedMembers): PortableSrdSurfaceIssue[] {
+function dependencyIssues(
+  members: DecodedMembers,
+  raw: unknown,
+): PortableSrdSurfaceIssue[] {
   const unitIds = new Set(members.units.map((record) => String(record.id)));
   const statBlockIds = new Set(
     members.statBlocks.map((record) => String(record.id)),
   );
+  if (isRecord(raw)) {
+    for (const [member, ids] of [
+      ["units", unitIds] as const,
+      ["statBlocks", statBlockIds] as const,
+    ]) {
+      const records = raw[member];
+      if (!Array.isArray(records)) continue;
+      for (const record of records) {
+        if (isRecord(record) && typeof record.id === "string") {
+          ids.add(record.id);
+        }
+      }
+    }
+  }
   const issues: PortableSrdSurfaceIssue[] = [];
 
   for (const [member, records, schema] of [
@@ -386,22 +695,25 @@ function dependencyIssues(members: DecodedMembers): PortableSrdSurfaceIssue[] {
     ] as const,
   ]) {
     records.forEach((record, index) => {
-      for (const dependency of collectAuthoredDependencies(
+      const collected = collectAuthoredDependencies(
         schema,
         record,
         `$.${member}[${index}]`,
-      )) {
+      );
+      issues.push(...collected.issues);
+      for (const dependency of collected.dependencies) {
         const targetIds =
           dependency.targetKind === "unit" ? unitIds : statBlockIds;
         if (targetIds.has(dependency.targetId)) continue;
         issues.push(
-          issue(
-            "dangling-authored-dependency",
+          danglingDependencyIssue(
             dependency.path,
             `Authored ${dependency.targetKind} dependency ${dependency.targetId} (${dependency.relation}) is not installed`,
             {
+              code: "dangling-authored-dependency",
               targetKind: dependency.targetKind,
               targetId: dependency.targetId,
+              relation: dependency.relation,
             },
           ),
         );
@@ -409,6 +721,70 @@ function dependencyIssues(members: DecodedMembers): PortableSrdSurfaceIssue[] {
     });
   }
   return issues;
+}
+
+function dependencyFieldName(path: string): string {
+  const separator = path.lastIndexOf(".");
+  return separator < 0 ? path : path.slice(separator + 1);
+}
+
+function dependencyRelativePath(rootPath: string, path: string): string {
+  const relative = path.startsWith(rootPath)
+    ? path.slice(rootPath.length)
+    : path;
+  return relative.replace(/\[\d+\]/g, "[]").replace(/^\./, "");
+}
+
+export function derivePortableSrdDependencyFieldRoles(
+  surface: PublishedSrdSurface,
+): readonly PortableSrdDependencyFieldRole[] {
+  const members: DecodedMembers = {
+    units: surface.units,
+    statBlocks: surface.statBlocks,
+  };
+  const roles = new Map<string, PortableSrdDependencyFieldRole>();
+  for (const [member, records, schema] of [
+    ["units", members.units, PublishedSrdUnitRecordSchema] as const,
+    [
+      "statBlocks",
+      members.statBlocks,
+      PublishedSrdStatBlockRecordSchema,
+    ] as const,
+  ]) {
+    records.forEach((record, index) => {
+      const collected = collectAuthoredDependencies(
+        schema,
+        record,
+        `$.${member}[${index}]`,
+      );
+      if (collected.issues.length > 0) {
+        throw new Error(
+          collected.issues[0]?.message ?? "Unsupported schema AST",
+        );
+      }
+      for (const dependency of collected.dependencies) {
+        const role = {
+          sourceKind: member === "units" ? "unit" : "statBlock",
+          path: dependencyRelativePath(
+            `$.${member}[${index}]`,
+            dependency.path,
+          ),
+          fieldName: dependencyFieldName(dependency.path),
+          targetKind: dependency.targetKind,
+          relation: dependency.relation,
+        } satisfies PortableSrdDependencyFieldRole;
+        roles.set(
+          `${role.sourceKind}\u0000${role.path}\u0000${role.targetKind}\u0000${role.relation}`,
+          role,
+        );
+      }
+    });
+  }
+  return [...roles.values()].sort((left, right) =>
+    `${left.sourceKind}\u0000${left.path}\u0000${left.targetKind}\u0000${left.relation}`.localeCompare(
+      `${right.sourceKind}\u0000${right.path}\u0000${right.targetKind}\u0000${right.relation}`,
+    ),
+  );
 }
 
 function rejected(
@@ -427,9 +803,7 @@ export function decodePortableSrdSurface(
   const issues = rootShapeIssues(raw);
   const members = decodeMembers(raw, issues);
   issues.push(...duplicateIdentityIssues(members));
-  if (!issues.some((candidate) => candidate.code === "schema")) {
-    issues.push(...dependencyIssues(members));
-  }
+  issues.push(...dependencyIssues(members, raw));
   if (issues.length > 0) return rejected(issues);
 
   const record = isRecord(raw) ? raw : undefined;
@@ -442,7 +816,7 @@ export function decodePortableSrdSurface(
     record.kind !== "srd-5.2.1-surface-catalog"
   ) {
     return rejected([
-      issue("shape", "$", "Surface aggregate failed its structural shape"),
+      shapeIssue("$", "Surface aggregate failed its structural shape"),
     ]);
   }
 

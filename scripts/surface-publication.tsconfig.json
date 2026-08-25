@@ -3,6 +3,7 @@
     "check-surface-content-json-sync.ts",
     "check-surface-content-json-sync.test.ts",
     "generate-surface-publication.ts",
+    "generate-surface-portable-cases.ts",
     "srd-surface-publication-artifacts.ts"
   ],
   "compilerOptions": {

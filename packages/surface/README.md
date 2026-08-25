@@ -70,10 +70,10 @@ The portable publication boundary is `surface/portable-surface`. Its
 validates every member, rejects duplicate authored identities and missing
 authored dependencies, and returns either the complete published Surface or a
 non-empty issue list. A rejected aggregate never exposes a partial Surface.
-The language-neutral cases in
-`portable-cases/srd-surface-case-index.json` are applied to the checked-in
-publication artifact and are also checked by an independent Draft 2020-12
-validator.
+The self-contained language-neutral cases in
+`portable-cases/srd-surface-cases.json` are also checked by an independent
+Draft 2020-12 validator. Regenerate them with
+`pnpm generate:surface-portable-cases` after publication changes.
 This boundary changes no D&D rules; it only validates the already-authored
 publication contract.
 
